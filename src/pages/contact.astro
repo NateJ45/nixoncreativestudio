@@ -1,6 +1,407 @@
 ---
+/* ============================================================================
+   /contact | Contact
+   ============================================================================
+   Form-driven inquiry page. Phase 10 builds the LAYOUT only; Phase 11 wires
+   the form to Web3Forms (the serverless handler documented in the migration
+   walkthrough).
+
+   The HTML form is deliberately functional: real labels, native input
+   types, required attributes, and a honeypot field for spam. When Phase 11
+   adds the access key and action URL, the form will work end to end with
+   no JavaScript required.
+
+   Layout:
+     - Hero with positioning line and contact details
+     - Two-column inquiry section: form on the left, sidebar with email +
+       phone + "what to expect" copy on the right
+
+   BEM:
+     contact-hero                 Top hero block.
+     contact-body                 Two-column inquiry section.
+     contact-form                 The form itself.
+     contact-form__field          Single label+input pair.
+     contact-form__label          Visible field label.
+     contact-form__input          Text / email input.
+     contact-form__select         Dropdown.
+     contact-form__textarea       Multi-line input.
+     contact-form__honeypot       Bot trap, hidden visually.
+     contact-form__submit         Primary submit button.
+     contact-sidebar              Right column with direct contact details.
+   ============================================================================ */
+
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Contact details. Same source of truth as the footer block. If these
+// change, update both surfaces; pulling them into a shared module is a
+// future refactor.
+const contact = {
+  email: 'hello@nixoncreativestudio.com',
+  phone: '(513) 555-0100',
+};
+
+// Organization type options. Match the sectors used in the case-studies
+// schema so the data we collect lines up with how we describe the work.
+const orgTypes = [
+  { value: 'church',         label: 'Church'             },
+  { value: 'preschool',      label: 'Preschool or school' },
+  { value: 'nonprofit',      label: 'Nonprofit'          },
+  { value: 'small-business', label: 'Small business'     },
+  { value: 'other',          label: 'Something else'     },
+];
+
+// Budget ranges. Match the marketing range on services page; small enough
+// brackets that the picker isn't overwhelming.
+const budgets = [
+  { value: 'under-2k',  label: 'Under $2,000'    },
+  { value: '2k-5k',     label: '$2,000 to $5,000'  },
+  { value: '5k-10k',    label: '$5,000 to $10,000' },
+  { value: '10k-plus',  label: '$10,000 or more' },
+  { value: 'not-sure',  label: 'Not sure yet'    },
+];
 ---
-<BaseLayout title="Contact">
-  <!-- Contact page placeholder -->
+
+<BaseLayout
+  title="Contact | Nixon Creative Studio"
+  description="Get in touch about a web design, brand, or photography project."
+>
+
+  <!-- ----------------------------------------------------------------------
+       Hero
+       ---------------------------------------------------------------------- -->
+  <section class="contact-hero">
+    <div class="ncs-container">
+      <p class="contact-hero__overline">
+        <span class="contact-hero__num">C1</span>
+        <span>Contact</span>
+      </p>
+      <h1 class="contact-hero__title">Start a project, or just say hello.</h1>
+      <p class="contact-hero__intro">
+        The form below sends straight to my inbox. If you'd rather skip the form, my email and phone are on the right.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Form + sidebar
+       ----------------------------------------------------------------------
+       Two-column on wide screens: the form takes the bigger column, a
+       sidebar with direct contact details and a short "what to expect"
+       paragraph sits to the right.
+       ---------------------------------------------------------------------- -->
+  <section class="contact-body">
+    <div class="ncs-container contact-body__inner">
+
+      <!-- Form column. -->
+      <form class="contact-form" method="post" action="#" novalidate>
+        <!--
+          Phase 11 will:
+            - Set action="https://api.web3forms.com/submit"
+            - Add <input type="hidden" name="access_key" value={import.meta.env.PUBLIC_WEB3FORMS_KEY} />
+            - Add success/error JS handlers
+          For now, action="#" means submit does nothing destructive.
+        -->
+
+        <div class="contact-form__field">
+          <label class="contact-form__label" for="name">Your name</label>
+          <input
+            class="contact-form__input"
+            type="text"
+            id="name"
+            name="name"
+            required
+            autocomplete="name"
+          />
+        </div>
+
+        <div class="contact-form__field">
+          <label class="contact-form__label" for="email">Email</label>
+          <input
+            class="contact-form__input"
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="contact-form__field">
+          <label class="contact-form__label" for="org_type">Organization type</label>
+          <select class="contact-form__select" id="org_type" name="org_type" required>
+            <option value="" disabled selected>Pick the closest</option>
+            {orgTypes.map((opt) => (
+              <option value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="contact-form__field">
+          <label class="contact-form__label" for="budget">Budget range</label>
+          <select class="contact-form__select" id="budget" name="budget" required>
+            <option value="" disabled selected>Pick the closest</option>
+            {budgets.map((opt) => (
+              <option value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="contact-form__field">
+          <label class="contact-form__label" for="message">Project description</label>
+          <textarea
+            class="contact-form__textarea"
+            id="message"
+            name="message"
+            required
+            minlength="30"
+            rows="6"
+            placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
+          ></textarea>
+          <p class="contact-form__hint">At least a few sentences, please. The more you share, the better I can scope the first conversation.</p>
+        </div>
+
+        <!-- Honeypot. Real users never fill this; bots usually do. The
+             visually-hidden utility keeps it off-screen for humans and
+             screen readers alike. Phase 11 will read this server-side and
+             discard submissions where it's non-empty. -->
+        <div class="visually-hidden" aria-hidden="true">
+          <label for="botcheck">Leave this field empty</label>
+          <input class="contact-form__honeypot" type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <button class="contact-form__submit" type="submit">Send</button>
+
+        <p class="contact-form__note">The form submit is not wired up yet (Phase 11 of the migration). Use the email or phone on the right in the meantime.</p>
+      </form>
+
+
+      <!-- Sidebar column. Direct contact details and a short
+           expectation-setting paragraph. -->
+      <aside class="contact-sidebar">
+
+        <div class="contact-sidebar__block">
+          <h2 class="contact-sidebar__heading">Direct</h2>
+          <ul class="contact-sidebar__list">
+            <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
+            <li><a href={`tel:${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a></li>
+          </ul>
+        </div>
+
+        <div class="contact-sidebar__block">
+          <h2 class="contact-sidebar__heading">What to expect</h2>
+          <p class="contact-sidebar__body">
+            I read every inquiry myself and reply within one or two business days. If we look like a fit, the next step is a half-hour call to talk through what you're trying to do.
+          </p>
+        </div>
+
+        <div class="contact-sidebar__block">
+          <h2 class="contact-sidebar__heading">Where I am</h2>
+          <p class="contact-sidebar__body">
+            West Chester, Ohio. I work with organizations across the greater Cincinnati region in person, and beyond it remotely when the work calls for it.
+          </p>
+        </div>
+
+      </aside>
+
+    </div>
+  </section>
+
 </BaseLayout>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Hero. Same single-column hero treatment as Services and Photography.
+     -------------------------------------------------------------------------- */
+  .contact-hero {
+    padding-block: var(--space-2xl);
+  }
+
+  .contact-hero__overline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-s);
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: var(--space-m);
+  }
+
+  .contact-hero__num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+  }
+
+  .contact-hero__title {
+    line-height: 0.95;
+    max-width: 22ch;
+    margin-bottom: var(--space-m);
+  }
+
+  .contact-hero__intro {
+    font-size: 1.125rem;
+    color: var(--color-text);
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Body. Two-column on wide, stacked on narrow.
+     -------------------------------------------------------------------------- */
+  .contact-body {
+    padding-block: var(--space-2xl);
+    background-color: var(--color-bg-soft);
+  }
+
+  .contact-body__inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+  }
+
+  @media (min-width: 56rem) {
+    .contact-body__inner {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Form. Vertical stack of fields with consistent rhythm.
+     -------------------------------------------------------------------------- */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+    background-color: var(--color-bg);
+    padding: var(--space-l);
+    border-radius: 12px;
+  }
+
+  /* Single field. Label sits above the input. */
+  .contact-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .contact-form__label {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-primary);
+  }
+
+  /* Shared base for input, select, textarea so they all look alike. */
+  .contact-form__input,
+  .contact-form__select,
+  .contact-form__textarea {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-text);
+    padding: 0.625rem 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
+    background-color: var(--color-bg);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  /* Subtle focus ring in the accent color. */
+  .contact-form__input:focus,
+  .contact-form__select:focus,
+  .contact-form__textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+
+  .contact-form__textarea {
+    resize: vertical;
+    min-height: 8rem;
+  }
+
+  /* Field hint below a textarea or input. Small, muted, soft tone. */
+  .contact-form__hint {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-top: var(--space-xs);
+  }
+
+  /* Submit button. Same recipe as the Hero CTA. */
+  .contact-form__submit {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.875rem 1.5rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1rem;
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 150ms ease, transform 150ms ease;
+  }
+
+  .contact-form__submit:hover,
+  .contact-form__submit:focus-visible {
+    background-color: var(--color-secondary);
+    transform: translateY(-1px);
+  }
+
+  /* Phase-11 placeholder note. Small, muted, italicized so it's clear this
+     is temporary scaffolding. */
+  .contact-form__note {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Sidebar. Stacked blocks: direct, what to expect, where I am.
+     -------------------------------------------------------------------------- */
+  .contact-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-l);
+  }
+
+  .contact-sidebar__block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+  }
+
+  .contact-sidebar__heading {
+    color: var(--color-primary);
+    font-size: var(--font-size-h4);
+  }
+
+  .contact-sidebar__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .contact-sidebar__list a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .contact-sidebar__list a:hover,
+  .contact-sidebar__list a:focus-visible {
+    color: var(--color-secondary);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .contact-sidebar__body {
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+</style>

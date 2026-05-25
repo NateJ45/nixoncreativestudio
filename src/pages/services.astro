@@ -1,6 +1,389 @@
 ---
+/* ============================================================================
+   /services | Services
+   ============================================================================
+   The full-detail services page. Visitors who land here are usually already
+   evaluating whether NCS fits their project, so the page goes deeper than
+   the homepage's "What I do" strip.
+
+   Structure:
+     - Hero with positioning line
+     - Three expanded service chapters (Strategy, Web Design, Photography)
+     - Process recap (reuses the homepage Process component)
+     - FAQ
+     - CTA banner
+
+   The Process component is intentionally reused, not duplicated, so any
+   change to the steps in one place updates both surfaces.
+
+   BEM:
+     services-hero               Top hero block.
+     services-chapters           Wrapper for the expanded chapters.
+     service-detail              Single expanded chapter.
+     service-detail__num         Mono chapter marker.
+     service-detail__title       Chapter title.
+     service-detail__body        Paragraph body.
+     service-detail__points      Bulleted list of what's included.
+     services-faq                FAQ block.
+     services-faq__item          One Q + A pair.
+   ============================================================================ */
+
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Process from '../components/Process.astro';
+import CtaBanner from '../components/CtaBanner.astro';
+
+// Three expanded chapters. Each gets a longer description than the homepage
+// and a short list of what's actually included so prospects can match the
+// scope to what they need.
+const services = [
+  {
+    num: 'i',
+    title: 'Strategy',
+    body: 'Strategy is the planning work that decides what the site is for, who it serves, and how it earns its keep. It always comes first. Without it, design becomes decoration.',
+    points: [
+      'Half-day workshop with your team',
+      'Audience map and conversion path',
+      'Content inventory of what you already have',
+      'A one-page brief that the rest of the project follows',
+    ],
+  },
+  {
+    num: 'ii',
+    title: 'Web design',
+    body: 'Modern, accessible, fast websites built in plain HTML and CSS. No page builder subscription layer between you and your site. Real fonts, real images, code a future maintainer can read.',
+    points: [
+      'Hand-built component design system',
+      'Self-hosted typography and imagery',
+      'Mobile-first responsive layouts',
+      'WCAG-aware accessibility from day one',
+      'Deployed to Cloudflare Pages with auto-rebuild on every commit',
+    ],
+  },
+  {
+    num: 'iii',
+    title: 'Photography',
+    body: 'Headshots, event coverage, environmental photography for the website. Same person who designed the site shows up with the camera, so the photos match the layout instead of fighting it.',
+    points: [
+      'On-site Sunday or weekday coverage',
+      'Headshots for team and staff',
+      'Environmental photography of your space',
+      'Edited, web-optimized images delivered alongside the website',
+    ],
+  },
+];
+
+// FAQ entries. Three to start; add more as common questions surface.
+const faq = [
+  {
+    q: 'How long does a typical project take?',
+    a: 'Most websites land between six and ten weeks from kickoff to launch. Larger projects with custom photography or multiple content collections can run twelve to sixteen weeks. The brief at the end of strategy sets the real timeline.',
+  },
+  {
+    q: 'What does it cost?',
+    a: 'Projects start at $3,500 for a small business site and scale up depending on scope, photography, and content. The first conversation is always free and ends with an honest ballpark before either of us is committed.',
+  },
+  {
+    q: 'Do you offer maintenance?',
+    a: 'Optional. After launch you own the site outright and can leave it alone for years if nothing breaks. If you want hands-on support, I offer a flat monthly retainer for ongoing edits and content updates.',
+  },
+  {
+    q: 'Can you work with my existing brand?',
+    a: 'Yes. If you already have a logo, palette, and type system, we use it. If you do not, brand work can be folded into the strategy phase or scoped separately.',
+  },
+];
 ---
-<BaseLayout title="Services">
-  <!-- Services page placeholder -->
+
+<BaseLayout
+  title="Services | Nixon Creative Studio"
+  description="Strategy, web design, and photography for organizations in the Cincinnati region."
+>
+
+  <!-- ----------------------------------------------------------------------
+       Hero
+       ----------------------------------------------------------------------
+       Positioning statement and intro paragraph. Single column, centered
+       reading width, because there's no portrait to balance against here.
+       ---------------------------------------------------------------------- */
+  -->
+  <section class="services-hero">
+    <div class="ncs-container">
+      <p class="services-hero__overline">
+        <span class="services-hero__num">S1</span>
+        <span>Services</span>
+      </p>
+      <h1 class="services-hero__title">Strategy, web design, and photography for organizations that care about the long run.</h1>
+      <p class="services-hero__intro">
+        Most projects use all three services, in that order. Some use one or two. The first conversation always ends with an honest scope, not a sales pitch.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Expanded chapters
+       ----------------------------------------------------------------------
+       Each chapter pairs a long description with a bulleted "what's
+       included" list. Two-column on wide screens (description left,
+       inclusions right), stacked on narrow screens.
+       ---------------------------------------------------------------------- */
+  -->
+  <section class="services-chapters">
+    <div class="ncs-container">
+      <ol class="services-chapters__list">
+        {services.map((service) => (
+          <li class="service-detail">
+
+            <header class="service-detail__heading">
+              <span class="service-detail__num" aria-hidden="true">{service.num}</span>
+              <h2 class="service-detail__title">{service.title}</h2>
+            </header>
+
+            <div class="service-detail__columns">
+              <p class="service-detail__body">{service.body}</p>
+              <ul class="service-detail__points">
+                {service.points.map((point) => (
+                  <li>{point}</li>
+                ))}
+              </ul>
+            </div>
+
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Process recap
+       ----------------------------------------------------------------------
+       Reuses the Process component from the homepage so there's one source
+       of truth for the four steps. The component carries its own padding
+       and tinted background.
+       ---------------------------------------------------------------------- */
+  -->
+  <Process />
+
+
+  <!-- ----------------------------------------------------------------------
+       FAQ
+       ----------------------------------------------------------------------
+       <details>/<summary> is the right element here: native disclosure
+       widget, keyboard-accessible, no JavaScript required.
+       ---------------------------------------------------------------------- */
+  -->
+  <section class="services-faq">
+    <div class="ncs-container">
+      <header class="services-faq__heading">
+        <span class="services-faq__num" aria-hidden="true">S5</span>
+        <h2 class="services-faq__title">Common questions</h2>
+      </header>
+      <div class="services-faq__list">
+        {faq.map((item) => (
+          <details class="services-faq__item">
+            <summary class="services-faq__q">{item.q}</summary>
+            <p class="services-faq__a">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+
+  <CtaBanner
+    title="Ready to scope a project?"
+    sub="The first conversation is free and lands at an honest ballpark by the end. Email is fastest, but a phone call works too."
+  />
+
 </BaseLayout>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Hero. Centered single column, generous block padding.
+     -------------------------------------------------------------------------- */
+  .services-hero {
+    padding-block: var(--space-2xl);
+  }
+
+  .services-hero__overline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-s);
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: var(--space-m);
+  }
+
+  .services-hero__num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+  }
+
+  .services-hero__title {
+    line-height: 0.95;
+    max-width: 22ch;
+    margin-bottom: var(--space-m);
+  }
+
+  .services-hero__intro {
+    font-size: 1.125rem;
+    color: var(--color-text);
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Chapters list.
+     -------------------------------------------------------------------------- */
+  .services-chapters {
+    padding-block: var(--space-2xl);
+  }
+
+  .services-chapters__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xl);
+    padding-left: 0;
+  }
+
+  /* Single chapter. Heading + two-column body. */
+  .service-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-l);
+  }
+
+  /* Heading row. Mono number prefix in front of the title. */
+  .service-detail__heading {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-m);
+  }
+
+  .service-detail__num {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    color: var(--color-accent);
+    letter-spacing: 0.05em;
+  }
+
+  .service-detail__title {
+    color: var(--color-primary);
+  }
+
+  /* Two-column body: description on the left, inclusions on the right. */
+  .service-detail__columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-l);
+  }
+
+  @media (min-width: 48rem) {
+    .service-detail__columns {
+      grid-template-columns: 1.2fr 1fr;
+    }
+  }
+
+  .service-detail__body {
+    color: var(--color-text);
+    line-height: 1.7;
+    font-size: 1.0625rem;
+    max-width: 56ch;
+  }
+
+  /* Inclusions list. Real bullets restored because the global ul reset
+     stripped them; this is a content list, not nav. */
+  .service-detail__points {
+    list-style: disc;
+    padding-left: 1.25rem;
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+
+  .service-detail__points li {
+    margin-bottom: 0.5rem;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     FAQ. <details> + <summary> styled to match the rest of the page.
+     -------------------------------------------------------------------------- */
+  .services-faq {
+    padding-block: var(--space-2xl);
+  }
+
+  .services-faq__heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-l);
+  }
+
+  .services-faq__num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .services-faq__title {
+    color: var(--color-primary);
+  }
+
+  /* FAQ list. Hairline divider between items so the disclosure pattern
+     reads as a stack instead of a row of cards. */
+  .services-faq__list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .services-faq__item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding-block: var(--space-m);
+  }
+
+  /* The summary is the question. Bigger than body, weight 600 so it reads
+     as a heading. cursor:pointer signals the disclosure affordance. */
+  .services-faq__q {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--color-primary);
+    cursor: pointer;
+    list-style: none;             /* Drop the default disclosure triangle... */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+  }
+
+  /* ...and replace with a + that rotates to × when the details is open. */
+  .services-faq__q::after {
+    content: "+";
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+    transition: transform 200ms ease;
+  }
+
+  .services-faq__item[open] .services-faq__q::after {
+    transform: rotate(45deg);     /* + becomes × */
+  }
+
+  /* Webkit hides the marker via this pseudo. Combined with list-style: none
+     above, both browser families drop the default triangle. */
+  .services-faq__q::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Answer. Indented slightly so it reads as a child of the question. */
+  .services-faq__a {
+    color: var(--color-text);
+    line-height: 1.7;
+    margin-top: var(--space-s);
+    max-width: 64ch;
+  }
+</style>

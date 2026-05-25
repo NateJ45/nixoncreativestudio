@@ -1,6 +1,272 @@
 ---
+/* ============================================================================
+   /photography | Photography
+   ============================================================================
+   Image-heavy showcase page. Three categories: Events, Portraits,
+   Environments. Each gets a short intro plus a gallery grid of tiles.
+
+   For now, every tile is a brand-gradient placeholder div. When real
+   photography lands in src/assets/photography/, swap each tile's
+   placeholder for Astro's <Image /> component to get WebP, srcset, and
+   lazy-load for free.
+
+   Structure:
+     - Hero with positioning line
+     - Category overview (three buckets, each a deep-link anchor)
+     - Per-category gallery sections
+     - CTA banner
+
+   BEM:
+     photo-hero               Top hero block.
+     photo-categories         Overview cards strip.
+     photo-category-card      Single overview card.
+     photo-gallery            Per-category gallery section.
+     photo-gallery__grid      Tile grid inside a gallery.
+     photo-gallery__tile      Single image tile.
+     photo-gallery__caption   Optional caption row.
+   ============================================================================ */
+
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CtaBanner from '../components/CtaBanner.astro';
+
+// Category overview. The id field doubles as the anchor target for the
+// in-page links and the gallery section id below.
+const categories = [
+  {
+    id: 'events',
+    title: 'Events',
+    body: 'Sunday mornings, school assemblies, fundraisers, ribbon cuttings. Coverage that tells the story without making the room perform for the camera.',
+    tiles: 6,
+  },
+  {
+    id: 'portraits',
+    title: 'Portraits',
+    body: 'Team headshots, staff portraits, leadership pages. Comfortable lighting, consistent treatment, edited for web so the file size stays sane.',
+    tiles: 6,
+  },
+  {
+    id: 'environments',
+    title: 'Environments',
+    body: 'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.',
+    tiles: 4,
+  },
+];
 ---
-<BaseLayout title="Photography">
-  <!-- Photography page placeholder -->
+
+<BaseLayout
+  title="Photography | Nixon Creative Studio"
+  description="Events, portraits, and environmental photography for organizations in the Cincinnati region."
+>
+
+  <!-- ----------------------------------------------------------------------
+       Hero
+       ---------------------------------------------------------------------- -->
+  <section class="photo-hero">
+    <div class="ncs-container">
+      <p class="photo-hero__overline">
+        <span class="photo-hero__num">P1</span>
+        <span>Photography</span>
+      </p>
+      <h1 class="photo-hero__title">Photography that matches the website it lives on.</h1>
+      <p class="photo-hero__intro">
+        Most of these photos came from the same projects as the web work. Same person designed the site and showed up with the camera, so the imagery and the layout speak the same language.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Category overview
+       ----------------------------------------------------------------------
+       Three quick-jump cards that scroll the visitor to the matching
+       gallery section below.
+       ---------------------------------------------------------------------- -->
+  <section class="photo-categories">
+    <div class="ncs-container">
+      <ul class="photo-categories__list">
+        {categories.map((category) => (
+          <li>
+            <a class="photo-category-card" href={`#${category.id}`}>
+              <h2 class="photo-category-card__title">{category.title}</h2>
+              <p class="photo-category-card__body">{category.body}</p>
+              <span class="card-link">Jump to gallery</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Galleries
+       ----------------------------------------------------------------------
+       One section per category. Each section has its own id so the
+       overview cards above can scroll directly to it. Tiles are colored
+       placeholders for now; swap each one for an <Image /> when real
+       photography is in src/assets/photography/.
+       ---------------------------------------------------------------------- -->
+  {categories.map((category) => (
+    <section class="photo-gallery" id={category.id}>
+      <div class="ncs-container">
+
+        <header class="photo-gallery__heading">
+          <h2 class="photo-gallery__title">{category.title}</h2>
+          <p class="photo-gallery__body">{category.body}</p>
+        </header>
+
+        <ul class="photo-gallery__grid">
+          {Array.from({ length: category.tiles }).map((_, idx) => (
+            <li class="photo-gallery__tile" aria-label={`${category.title} placeholder ${idx + 1}`}></li>
+          ))}
+        </ul>
+
+      </div>
+    </section>
+  ))}
+
+
+  <CtaBanner
+    title="Need photography for your project?"
+    sub="Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own."
+  />
+
 </BaseLayout>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Hero. Same recipe as the Services hero.
+     -------------------------------------------------------------------------- */
+  .photo-hero {
+    padding-block: var(--space-2xl);
+  }
+
+  .photo-hero__overline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-s);
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: var(--space-m);
+  }
+
+  .photo-hero__num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+  }
+
+  .photo-hero__title {
+    line-height: 0.95;
+    max-width: 22ch;
+    margin-bottom: var(--space-m);
+  }
+
+  .photo-hero__intro {
+    font-size: 1.125rem;
+    color: var(--color-text);
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Category overview cards.
+     -------------------------------------------------------------------------- */
+  .photo-categories {
+    padding-block: var(--space-l) var(--space-2xl);
+    background-color: var(--color-bg-soft);
+  }
+
+  .photo-categories__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--space-l);
+  }
+
+  .photo-category-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+    text-decoration: none;
+    color: inherit;
+    padding: var(--space-m);
+    background-color: var(--color-bg);
+    border-radius: 8px;
+    transition: transform 200ms ease;
+  }
+
+  .photo-category-card:hover,
+  .photo-category-card:focus-visible {
+    transform: translateY(-2px);
+  }
+
+  .photo-category-card:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .photo-category-card__title {
+    color: var(--color-primary);
+    font-size: var(--font-size-h3);
+  }
+
+  .photo-category-card__body {
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Gallery sections.
+     -------------------------------------------------------------------------- */
+  .photo-gallery {
+    padding-block: var(--space-2xl);
+    /* Scroll-margin so the in-page anchor jumps clear of the fixed header
+       (no fixed header currently, but reserves the behavior if added). */
+    scroll-margin-top: var(--space-l);
+  }
+
+  .photo-gallery__heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+    margin-bottom: var(--space-l);
+  }
+
+  .photo-gallery__title {
+    color: var(--color-primary);
+  }
+
+  .photo-gallery__body {
+    color: var(--color-text-muted);
+    font-size: 1.125rem;
+    max-width: 56ch;
+    line-height: 1.5;
+  }
+
+  /* Tile grid. Three columns at wide, two at tablet, one at phone. */
+  .photo-gallery__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--space-m);
+  }
+
+  /* Single tile. Square aspect, brand gradient placeholder. Each tile
+     gets a tiny background-position variation so the strip doesn't read
+     as one big repeated block. */
+  .photo-gallery__tile {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    border-radius: 6px;
+  }
+
+  /* Modifier-style variation: every other tile flips the gradient
+     direction so the strip has a little internal rhythm even without
+     real imagery. */
+  .photo-gallery__tile:nth-child(even) {
+    background: linear-gradient(225deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  }
+</style>
