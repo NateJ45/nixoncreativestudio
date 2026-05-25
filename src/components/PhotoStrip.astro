@@ -1,29 +1,19 @@
 ---
+// Foundation, edit with care. Phase 4 swaps the gradient placeholders for
+// the new Photo component backed by real JPGs in src/assets/photography/.
 /* ============================================================================
    Section 04 | Selected Photography
    ============================================================================
-   Full-bleed-ish photo grid. Four tiles on desktop, two on mobile. Each tile
-   is a link wrapping an image, so the whole tile is clickable.
-
-   Image area is a colored placeholder for now. Once real photography is in
-   src/assets/photography/, swap the placeholder div for an Astro <Image />
-   inside the <a>.
-
-   Note on tag choice (matches the walkthrough doc): the tile is an <a> with
-   the image nested inside, not a separate text link. The whole tile is the
-   target.
-
-   BEM:
-     photo-strip                Section wrapper.
-     photo-strip__grid          Tile grid.
-     photo-strip__tile          One tile, an <a> wrapping the image.
-     photo-strip__placeholder   Colored block standing in for the image.
-     photo-strip__caption       Optional caption row below the image.
+   Photo grid. Four tiles on desktop, two on tablet, one on phone via
+   auto-fit + minmax(15rem,1fr). Each tile is an <a> wrapping the
+   placeholder div (and later, the <Image />), so the whole tile is the
+   click target.
    ============================================================================ */
 
 import SectionHeading from './SectionHeading.astro';
 
-// Placeholder tiles. Replace with real entries once photography is in.
+// Placeholder tiles. Phase 4 wires this into the new Photo component
+// backed by JPGs in src/assets/photography/.
 const tiles = [
   { slug: 'event-night',     label: 'Event night',     category: 'Events'       },
   { slug: 'team-headshot',   label: 'Team headshot',   category: 'Portraits'    },
@@ -32,7 +22,7 @@ const tiles = [
 ];
 ---
 
-<section class="photo-strip" aria-labelledby="photo-strip-heading">
+<section class="py-2xl" aria-labelledby="photo-strip-heading">
   <div class="ncs-container">
 
     <SectionHeading
@@ -41,17 +31,28 @@ const tiles = [
       sub="A short strip of recent work. Most photos here come from the same projects as the web work above."
     />
 
-    <!-- Tile grid. 4 cols at wide, 2 cols at narrow, controlled by minmax. -->
-    <ul class="photo-strip__grid">
+    <!-- Tile grid. Four columns at wide, two at tablet, one at phone. -->
+    <ul class="grid gap-m [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))]">
       {tiles.map((tile) => (
         <li>
-          <!-- Whole tile is the link. Inner placeholder div will become an
-               <Image /> once real photography lands. -->
-          <a class="photo-strip__tile" href={`/photography#${tile.slug}`}>
-            <div class="photo-strip__placeholder" aria-hidden="true"></div>
-            <div class="photo-strip__caption">
-              <span class="photo-strip__category">{tile.category}</span>
-              <span class="photo-strip__label">{tile.label}</span>
+          <!-- Whole tile is the link. Inner placeholder will become an
+               <Image /> via the Photo component in Phase 4. -->
+          <a
+            class="flex flex-col gap-s text-inherit no-underline transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+            href={`/photography#${tile.slug}`}
+          >
+            <!-- Square placeholder so all tiles line up cleanly. Brand
+                 gradient stand-in until real photography lands. -->
+            <div
+              class="aspect-square w-full rounded-md bg-gradient-to-br from-primary to-secondary"
+              aria-hidden="true"
+            ></div>
+            <!-- Caption row: category small mono uppercase above label body font. -->
+            <div class="flex flex-col gap-[2px]">
+              <span class="font-mono text-xs uppercase tracking-[0.06em] text-text-muted">
+                {tile.category}
+              </span>
+              <span class="text-[0.95rem] text-text">{tile.label}</span>
             </div>
           </a>
         </li>
@@ -60,81 +61,3 @@ const tiles = [
 
   </div>
 </section>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Section padding. Standard 2xl block rhythm.
-     -------------------------------------------------------------------------- */
-  .photo-strip {
-    padding-block: var(--space-2xl);
-  }
-
-  /* --------------------------------------------------------------------------
-     Tile grid. minmax(15rem, 1fr) drops to 2 columns on tablet and 1 on
-     phones without media queries. On desktop it lands on 4 columns once
-     the viewport is wide enough.
-     -------------------------------------------------------------------------- */
-  .photo-strip__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: var(--space-m);
-  }
-
-  /* --------------------------------------------------------------------------
-     Tile. Block-level link wrapping the image and caption. No underline,
-     subtle hover lift so it reads as tappable.
-     -------------------------------------------------------------------------- */
-  .photo-strip__tile {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-    text-decoration: none;
-    color: inherit;
-    transition: transform 200ms ease;
-  }
-
-  .photo-strip__tile:hover,
-  .photo-strip__tile:focus-visible {
-    transform: translateY(-2px);
-  }
-
-  .photo-strip__tile:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 4px;
-  }
-
-  /* --------------------------------------------------------------------------
-     Image placeholder. Square aspect so tiles all line up regardless of
-     viewport, and the eye reads them as a grid rather than a mason layout.
-     Gradient hints at brand colors without committing to specific imagery.
-     -------------------------------------------------------------------------- */
-  .photo-strip__placeholder {
-    aspect-ratio: 1 / 1;
-    width: 100%;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-    border-radius: 6px;
-  }
-
-  /* --------------------------------------------------------------------------
-     Caption row. Category (small, mono, muted) above the label (body font).
-     -------------------------------------------------------------------------- */
-  .photo-strip__caption {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .photo-strip__category {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .photo-strip__label {
-    font-size: 0.95rem;
-    color: var(--color-text);
-  }
-</style>
