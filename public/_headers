@@ -1,0 +1,54 @@
+# =============================================================================
+# Cloudflare Pages | Custom Response Headers
+# =============================================================================
+# Anything in this file ships with the deploy and Cloudflare applies the
+# headers to matching routes. Documentation:
+#   https://developers.cloudflare.com/pages/configuration/headers/
+#
+# Format:
+#   /pattern
+#     Header-Name: value
+#     Other-Header: value
+#
+# Patterns use Cloudflare's match syntax. `/*` matches every route, which
+# is what we want for security headers that should apply site-wide.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Site-wide security headers
+# -----------------------------------------------------------------------------
+# These are the "easy wins" from a Lighthouse Trust & Safety audit. None of
+# them require code changes; they just instruct the browser to behave more
+# defensively.
+# -----------------------------------------------------------------------------
+/*
+  # Force HTTPS for one year, including all subdomains. After this header
+  # is seen once, the browser will refuse to connect over plain HTTP until
+  # the max-age expires. `preload` is intentionally omitted: it requires
+  # submission to https://hstspreload.org/ and is hard to reverse, so we
+  # leave it off until we're confident in the configuration.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # Refuse to be embedded in an iframe. Prevents clickjacking, where an
+  # attacker overlays our site under a transparent layer on a malicious
+  # page and tricks visitors into clicking through our UI.
+  X-Frame-Options: DENY
+
+  # Stop the browser from guessing MIME types based on content. If we send
+  # a file with Content-Type: text/css, the browser must treat it as CSS
+  # even if the bytes look like JavaScript. Closes a small attack vector
+  # around MIME confusion.
+  X-Content-Type-Options: nosniff
+
+  # Trim what referrer info is sent to other origins. `strict-origin-when-
+  # cross-origin` sends the full URL on same-origin navigation (useful for
+  # internal analytics) and only the origin (no path) when leaving the
+  # site. Default is `strict-origin-when-cross-origin` in modern browsers,
+  # but stating it explicitly removes any doubt.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Cross-Origin-Opener-Policy. Isolates the top-level window from
+  # documents loaded via window.open or as popups. Mostly defense-in-depth
+  # for a static portfolio, but it's free and good hygiene.
+  Cross-Origin-Opener-Policy: same-origin
