@@ -59,6 +59,17 @@ const budgets = [
   { value: '10k-plus',  label: '$10,000 or more' },
   { value: 'not-sure',  label: 'Not sure yet'    },
 ];
+
+// Web3Forms access key. Loaded from .env (or Cloudflare env in production).
+// The PUBLIC_ prefix is required because the form runs in the browser and
+// needs to read this value at render time. The key is sent as a hidden
+// field with the submission; Web3Forms uses it to route the email.
+//
+// If the key is missing (e.g. someone forgot to set it in Cloudflare), the
+// form falls back to a no-op action so the page still renders without
+// throwing, and a small inline notice appears below the submit button.
+const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
+const formActive = web3formsKey.length > 0;
 ---
 
 <BaseLayout
@@ -93,15 +104,32 @@ const budgets = [
   <section class="contact-body">
     <div class="ncs-container contact-body__inner">
 
-      <!-- Form column. -->
-      <form class="contact-form" method="post" action="#" novalidate>
+      <!-- Form column.
+           Three-state container: the form itself is shown by default; the
+           thank-you block and error block start hidden and the inline
+           script below swaps visibility based on the fetch result. -->
+      <div class="contact-states" data-contact-states>
+
+      <form
+        class="contact-form"
+        method="post"
+        action="https://api.web3forms.com/submit"
+        novalidate
+        data-contact-form
+      >
         <!--
-          Phase 11 will:
-            - Set action="https://api.web3forms.com/submit"
-            - Add <input type="hidden" name="access_key" value={import.meta.env.PUBLIC_WEB3FORMS_KEY} />
-            - Add success/error JS handlers
-          For now, action="#" means submit does nothing destructive.
+          Web3Forms convention:
+            - access_key: required; routes the submission to Nathan's inbox.
+            - subject: optional; controls the email subject line so
+              inquiries are obvious in the inbox.
+            - from_name: optional; sets the visible sender name.
+          The form still posts natively if JavaScript is disabled, so a
+          form submission ALWAYS reaches Web3Forms even without the fetch
+          handler at the bottom of the file.
         -->
+        <input type="hidden" name="access_key" value={web3formsKey} />
+        <input type="hidden" name="subject"    value="New project inquiry from nixoncreativestudio.com" />
+        <input type="hidden" name="from_name"  value="Nixon Creative Studio website" />
 
         <div class="contact-form__field">
           <label class="contact-form__label" for="name">Your name</label>
@@ -170,10 +198,34 @@ const budgets = [
           <input class="contact-form__honeypot" type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
         </div>
 
-        <button class="contact-form__submit" type="submit">Send</button>
+        <button class="contact-form__submit" type="submit" data-contact-submit>
+          <span data-contact-submit-label>Send</span>
+        </button>
 
-        <p class="contact-form__note">The form submit is not wired up yet (Phase 11 of the migration). Use the email or phone on the right in the meantime.</p>
+        {!formActive && (
+          <p class="contact-form__note">
+            The Web3Forms access key is missing. Set <code>PUBLIC_WEB3FORMS_KEY</code> in <code>.env</code> locally and in Cloudflare Pages settings before launch.
+          </p>
+        )}
       </form>
+
+      <!-- Thank-you state. Hidden until the fetch in the script below
+           reports success, at which point the script removes [hidden]. -->
+      <div class="contact-thanks" data-contact-thanks hidden>
+        <h2 class="contact-thanks__title">Thanks, your message is in.</h2>
+        <p class="contact-thanks__body">
+          I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from nixoncreativestudio.com, then try the email link on the right.
+        </p>
+      </div>
+
+      <!-- Error state. Shown if the fetch fails. The form stays visible
+           above so the visitor can correct anything and resubmit, or fall
+           back to the email link in the sidebar. -->
+      <div class="contact-error" data-contact-error hidden role="alert">
+        <p>Something went wrong on our end. Please try again, or email <a href={`mailto:${contact.email}`}>{contact.email}</a> directly.</p>
+      </div>
+
+      </div>
 
 
       <!-- Sidebar column. Direct contact details and a short
@@ -206,6 +258,82 @@ const budgets = [
 
     </div>
   </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Submit handler
+       ----------------------------------------------------------------------
+       Intercepts the form submit, posts to Web3Forms via fetch, and swaps
+       the visible state to thank-you on success or shows an inline error
+       on failure. Falls back gracefully: if JavaScript is disabled, the
+       form still submits natively to the same endpoint and Web3Forms
+       handles the redirect itself.
+       ---------------------------------------------------------------------- -->
+  <script>
+    // Look up the elements the handler swaps. Querying inside an IIFE
+    // keeps these refs out of the global scope. Each ref is hooked off a
+    // dedicated data-attribute so future restyling never breaks the JS.
+    const form     = document.querySelector('[data-contact-form]')     as HTMLFormElement | null;
+    const thanks   = document.querySelector('[data-contact-thanks]')   as HTMLElement | null;
+    const errorEl  = document.querySelector('[data-contact-error]')    as HTMLElement | null;
+    const submit   = document.querySelector('[data-contact-submit]')   as HTMLButtonElement | null;
+    const label    = document.querySelector('[data-contact-submit-label]') as HTMLElement | null;
+
+    if (form && thanks && errorEl && submit && label) {
+
+      const originalLabel = label.textContent ?? 'Send';
+
+      form.addEventListener('submit', async (event) => {
+
+        // Honeypot. The visible form should never have a value here; bots
+        // typically fill every field. If it's filled, pretend the submit
+        // worked but quietly drop the request.
+        const honeypot = (form.elements.namedItem('botcheck') as HTMLInputElement | null)?.value;
+        if (honeypot) {
+          event.preventDefault();
+          thanks.hidden = false;
+          form.hidden = true;
+          return;
+        }
+
+        event.preventDefault();
+        errorEl.hidden = true;
+        submit.disabled = true;
+        label.textContent = 'Sending...';
+
+        try {
+          // Send the form as multipart/form-data; Web3Forms accepts that
+          // exact shape from the standard FormData constructor.
+          const data = new FormData(form);
+          const response = await fetch(form.action, {
+            method: 'POST',
+            body: data,
+            headers: { Accept: 'application/json' },
+          });
+
+          if (response.ok) {
+            // Success: hide the form, show the thank-you panel, scroll
+            // the thank-you into view (helpful on mobile where the panel
+            // can land off-screen).
+            form.hidden = true;
+            thanks.hidden = false;
+            thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            // Web3Forms returned a non-2xx; surface the inline error.
+            errorEl.hidden = false;
+          }
+        } catch (_err) {
+          // Network failure (offline, blocked, CORS). Same UX as a 5xx:
+          // show the inline error and let the visitor retry.
+          errorEl.hidden = false;
+        } finally {
+          submit.disabled = false;
+          label.textContent = originalLabel;
+        }
+
+      });
+    }
+  </script>
 
 </BaseLayout>
 
@@ -352,12 +480,91 @@ const budgets = [
     transform: translateY(-1px);
   }
 
-  /* Phase-11 placeholder note. Small, muted, italicized so it's clear this
-     is temporary scaffolding. */
+  /* Note shown when the access key is missing. Mostly a heads-up for
+     deploys before the env var is set; should never appear in production. */
   .contact-form__note {
     font-size: 0.85rem;
     color: var(--color-text-muted);
     font-style: italic;
+  }
+
+  .contact-form__note code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background-color: var(--color-bg-soft);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-style: normal;
+  }
+
+  /* --------------------------------------------------------------------------
+     Hidden-attribute override.
+     --------------------------------------------------------------------------
+     The `hidden` HTML attribute relies on the user-agent's
+     `[hidden] { display: none }` rule. Because our component classes set
+     `display: flex` with higher specificity, that default loses. The
+     declarations below re-apply `display: none` whenever a stateful
+     container carries `hidden`, so the JS-driven state swap actually
+     hides the form. !important keeps this win against any future
+     component-level overrides.
+     -------------------------------------------------------------------------- */
+  [data-contact-form][hidden],
+  [data-contact-thanks][hidden],
+  [data-contact-error][hidden] {
+    display: none !important;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Loading + thank-you + error states.
+     -------------------------------------------------------------------------- */
+
+  /* Disabled submit button during fetch. Pointer cue + lower opacity. */
+  .contact-form__submit[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+    transform: none;
+  }
+
+  /* Thank-you panel. Same card visual as the form so the swap reads as
+     a state change in the same container, not a layout jump. */
+  .contact-thanks {
+    background-color: var(--color-bg);
+    padding: var(--space-l);
+    border-radius: 12px;
+    border-left: 4px solid var(--color-accent);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+  }
+
+  .contact-thanks__title {
+    color: var(--color-primary);
+    font-size: var(--font-size-h3);
+  }
+
+  .contact-thanks__body {
+    color: var(--color-text);
+    line-height: 1.6;
+    max-width: 56ch;
+  }
+
+  /* Error panel. Sits above the form (or below; CSS order controls this
+     via source order). Subtle warning style: not red shouting, but
+     visibly distinct from the rest of the page. */
+  .contact-error {
+    margin-top: var(--space-m);
+    padding: var(--space-m);
+    background-color: color-mix(in srgb, var(--color-tertiary) 18%, var(--color-bg));
+    border-left: 4px solid var(--color-tertiary);
+    border-radius: 6px;
+    color: var(--color-text);
+  }
+
+  .contact-error a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 
 
