@@ -1,4 +1,5 @@
 ---
+// Foundation, edit with care.
 /* ============================================================================
    Site Header
    ============================================================================
@@ -10,13 +11,13 @@
    prefixes are the visual through-line that ties the header to the section
    headings on the homepage.
 
-   Mobile note: at narrow widths the four links will compress and may overflow.
-   A hamburger / off-canvas pattern is on the to-do list (carried over from the
-   Bricks build). For now the desktop layout is the priority.
+   Mobile note: at narrow widths the four links will compress and may
+   overflow. Phase 6 swaps in a shadcn Sheet for the mobile nav. For now
+   the desktop layout is the priority.
    ============================================================================ */
 
-// Studio name comes from the central site data so a rebrand updates the
-// wordmark, the footer, and meta together.
+// Studio name comes from the central site data module so a rebrand updates
+// the wordmark, the footer, and meta together.
 import { site } from '../data/site';
 
 // The nav model lives in the script so it's easy to reorder, rename, or
@@ -29,24 +30,36 @@ const navLinks = [
 ];
 ---
 
-<!-- Outer header is full-bleed (background and border-bottom span the page),
-     while the inner uses .ncs-container to align with the rest of the content. -->
-<header class="site-header">
-  <div class="ncs-container site-header__inner">
+<!--
+  Outer header is full-bleed: the background and the hairline divider span the
+  whole page width. The inner row uses .ncs-container to align with the rest
+  of the content column. .ncs-container stays as a utility class in
+  globals.css since the same pattern repeats across every section component.
+-->
+<header class="border-b border-black/[0.08] bg-bg py-m">
+  <div class="ncs-container flex items-center justify-between gap-m">
 
-    <!-- Wordmark links home. Display font, brand color, deliberately set in rem
-         so it scales with the user's root font-size preference. -->
-    <a class="site-header__wordmark" href="/">{site.studioName}</a>
+    <!-- Wordmark links home. Display font at a fixed 1.5rem so it stays
+         steady even as the hero h1 scales fluidly on wide screens. -->
+    <a
+      class="font-display text-2xl leading-none tracking-[0.01em] text-primary no-underline"
+      href="/"
+    >
+      {site.studioName}
+    </a>
 
-    <!-- aria-label distinguishes this nav from the footer nav for screen readers. -->
-    <nav class="site-nav" aria-label="Primary">
-      <ul class="site-nav__list">
+    <!-- aria-label distinguishes this nav from the footer nav for assistive tech. -->
+    <nav aria-label="Primary">
+      <ul class="flex items-center gap-m">
         {navLinks.map(({ num, label, href }) => (
           <li>
-            <a class="site-nav__link" href={href}>
-              <!-- Section number sits before the label, muted and in mono so it
-                   reads as a label, not as part of the link text. -->
-              <span class="site-nav__num">{num}</span>
+            <a
+              class="inline-flex items-baseline gap-xs font-body text-base text-text no-underline transition-colors duration-150 hover:text-accent focus-visible:text-accent"
+              href={href}
+            >
+              <!-- Section number prefix. Smaller, mono, muted. Reads as a
+                   label rather than as part of the link text. -->
+              <span class="font-mono text-xs text-text-muted">{num}</span>
               {label}
             </a>
           </li>
@@ -56,81 +69,3 @@ const navLinks = [
 
   </div>
 </header>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Outer wrapper. Full-bleed background plus the thin hairline divider that
-     separates the header from the page content below.
-     -------------------------------------------------------------------------- */
-  .site-header {
-    padding-block: var(--space-m);
-    /* Low-alpha black for the hairline, so it stays neutral if the section
-       below ever changes background color. */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    background-color: var(--color-bg);
-  }
-
-  /* --------------------------------------------------------------------------
-     Inner row. Wordmark on the left, nav on the right, vertically centered.
-     -------------------------------------------------------------------------- */
-  .site-header__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-m);
-  }
-
-  /* --------------------------------------------------------------------------
-     Wordmark. Display font at a fixed 1.5rem so it stays steady in the header
-     even as the hero h1 scales fluidly below.
-     -------------------------------------------------------------------------- */
-  .site-header__wordmark {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    line-height: 1;             /* Tight so the row sits at a predictable height. */
-    color: var(--color-primary);
-    text-decoration: none;
-    letter-spacing: 0.01em;     /* A whisper of tracking so the caps breathe. */
-  }
-
-  /* --------------------------------------------------------------------------
-     Nav list. Horizontal row of links with consistent gaps.
-     -------------------------------------------------------------------------- */
-  .site-nav__list {
-    display: flex;
-    align-items: center;
-    gap: var(--space-m);
-  }
-
-  /* --------------------------------------------------------------------------
-     Nav link. Body font, near-black, transitions to the accent color on hover
-     and keyboard focus. inline-flex with a small gap is what positions the
-     number and label side by side.
-     -------------------------------------------------------------------------- */
-  .site-nav__link {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-xs);
-    font-family: var(--font-body);
-    font-size: 1rem;
-    color: var(--color-text);
-    text-decoration: none;
-    transition: color 150ms ease;
-  }
-
-  .site-nav__link:hover,
-  .site-nav__link:focus-visible {
-    color: var(--color-accent);
-  }
-
-  /* --------------------------------------------------------------------------
-     Section number prefix. Smaller, mono, muted. Reads as a label rather
-     than as part of the clickable text.
-     -------------------------------------------------------------------------- */
-  .site-nav__num {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-  }
-</style>
