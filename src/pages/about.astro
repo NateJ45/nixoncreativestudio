@@ -1,32 +1,23 @@
 ---
+// Safe to edit. The story prose and the principles array hold all of the
+// user-facing copy on this page.
 /* ============================================================================
    /about | About Nathan Nixon
    ============================================================================
-   Single-page biography and positioning. Built from four blocks:
-
-     - Hero (portrait + short intro)
-     - Story (2-3 paragraphs on the journey)
-     - Principles (the small set of values that drive how I work)
-     - Currently (what's on my plate right now)
+   Four blocks down the page:
+     1. Hero (portrait placeholder + intro)
+     2. Story (a few paragraphs on the why)
+     3. How I work (three principle cards on the soft tinted band)
+     4. Currently (short list of what's on the docket)
 
    Closes with the shared CtaBanner so every page funnels to /contact.
-
-   BEM:
-     about-hero               Top hero block.
-     about-section            Reusable section wrapper for story, principles, currently.
-     about-section__num       Mono section number.
-     about-section__title     Section title.
-     about-section__body      Body paragraph(s).
-     about-principles         Grid of principle cards.
-     about-principle          Single principle card.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 
-// The three principles. Each is a short title plus one or two sentences.
-// Keep these honest; they should describe how I actually work, not how I
-// wish I worked.
+// Three working principles. Keep these honest; they should describe how
+// I actually work, not how I wish I worked.
 const principles = [
   {
     title: 'Strategy before pixels',
@@ -42,12 +33,17 @@ const principles = [
   },
 ];
 
-// "Currently" blurb. Short, present-tense, swappable per season.
+// Currently list. Short, present-tense, swappable per season.
 const currently = [
   'Wrapping a small business site for a West Chester piano teacher.',
   'Photographing a Sunday morning shoot for a partner church in February.',
   'Booking one more nonprofit project for the spring cohort.',
 ];
+
+// Section heading style shared by the three lower sections.
+const sectionHeadingClass = 'flex flex-col gap-xs';
+const sectionNumClass = 'font-mono text-sm tracking-[0.05em] text-text-muted';
+const sectionInnerClass = 'flex flex-col gap-l';
 ---
 
 <BaseLayout
@@ -56,26 +52,29 @@ const currently = [
 >
 
   <!-- ----------------------------------------------------------------------
-       Hero
-       ----------------------------------------------------------------------
-       Two-column on wide screens: portrait on the left, copy on the right.
-       The portrait is a colored placeholder until the real headshot is in
-       src/assets/brand/. Reverses on narrow screens so the intro reads
-       first when the layout stacks.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="about-hero">
-    <div class="ncs-container about-hero__inner">
+       Hero: portrait + copy two-column at >= 56rem, stacked below that.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl">
+    <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-[1fr_1.2fr]">
 
-      <div class="about-hero__portrait" role="img" aria-label="Portrait placeholder"></div>
+      <!-- Portrait placeholder. Same brand-gradient pattern as the
+           homepage Hero. Swap for an Astro <Image /> once the real
+           headshot is in src/assets/brand/. -->
+      <div
+        class="aspect-[4/5] w-full rounded-lg bg-gradient-to-br from-bg-soft to-secondary"
+        role="img"
+        aria-label="Portrait placeholder"
+      ></div>
 
-      <div class="about-hero__copy">
-        <p class="about-hero__overline">
-          <span class="about-hero__num">A1</span>
+      <div class="flex flex-col gap-m">
+        <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
+          <span class="font-mono text-sm tracking-[0.05em]">A1</span>
           <span>About</span>
         </p>
-        <h1 class="about-hero__title">A one-person studio for organizations that take their work seriously.</h1>
-        <p class="about-hero__intro">
+        <h1 class="max-w-[22ch] leading-[0.95]">
+          A one-person studio for organizations that take their work seriously.
+        </h1>
+        <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
           I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools across the Cincinnati region. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
         </p>
       </div>
@@ -85,21 +84,18 @@ const currently = [
 
 
   <!-- ----------------------------------------------------------------------
-       Story
-       ----------------------------------------------------------------------
-       Two or three paragraphs of background. Keeps the page personal
-       without turning into a biography.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="about-section">
-    <div class="ncs-container about-section__inner">
+       Story: a few paragraphs of background. Keeps the page personal
+       without turning into a full biography.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl">
+    <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class="about-section__heading">
-        <span class="about-section__num" aria-hidden="true">A2</span>
-        <h2 class="about-section__title">The short version</h2>
+      <header class={sectionHeadingClass}>
+        <span class={sectionNumClass} aria-hidden="true">A2</span>
+        <h2>The short version</h2>
       </header>
 
-      <div class="about-section__body">
+      <div class="flex max-w-[64ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text">
         <p>
           I started Nixon Creative Studio after a decade of doing communications work for churches and schools, where the people building the website were always one volunteer or one budget cycle away from disappearing. The pattern was the same every time: the project ran on a page builder, the launch went well, and the maintenance fell apart within a year.
         </p>
@@ -116,25 +112,24 @@ const currently = [
 
 
   <!-- ----------------------------------------------------------------------
-       Principles
-       ----------------------------------------------------------------------
-       Three short principle cards. Each is a title plus a one or two
-       sentence description.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="about-section about-section--tinted">
-    <div class="ncs-container about-section__inner">
+       How I work: three principle cards on the soft tinted band. Sits
+       between the white Story and the white Currently sections.
+       ---------------------------------------------------------------------- -->
+  <section class="bg-bg-soft py-2xl">
+    <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class="about-section__heading">
-        <span class="about-section__num" aria-hidden="true">A3</span>
-        <h2 class="about-section__title">How I work</h2>
+      <header class={sectionHeadingClass}>
+        <span class={sectionNumClass} aria-hidden="true">A3</span>
+        <h2>How I work</h2>
       </header>
 
-      <ul class="about-principles">
+      <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
         {principles.map((principle) => (
-          <li class="about-principle">
-            <h3 class="about-principle__title">{principle.title}</h3>
-            <p class="about-principle__body">{principle.body}</p>
+          <li class="flex flex-col gap-s">
+            <!-- text-h4 utility for the principle title (smaller than the
+                 default h3 so the card stays compact). -->
+            <h3 class="text-h4 text-primary">{principle.title}</h3>
+            <p class="leading-[1.6] text-text">{principle.body}</p>
           </li>
         ))}
       </ul>
@@ -144,22 +139,22 @@ const currently = [
 
 
   <!-- ----------------------------------------------------------------------
-       Currently
-       ----------------------------------------------------------------------
-       Short list of what I'm working on this season. Updated by hand a few
-       times a year. Honest signal that the studio is an active practice,
-       not a placeholder page.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="about-section">
-    <div class="ncs-container about-section__inner">
+       Currently: short list of what's on the docket. Updated by hand a
+       few times a year so visitors can tell the studio is an active
+       practice, not a placeholder page.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl">
+    <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class="about-section__heading">
-        <span class="about-section__num" aria-hidden="true">A4</span>
-        <h2 class="about-section__title">Currently</h2>
+      <header class={sectionHeadingClass}>
+        <span class={sectionNumClass} aria-hidden="true">A4</span>
+        <h2>Currently</h2>
       </header>
 
-      <ul class="about-currently">
+      <!-- list-disc restores real bullets that the globals.css base reset
+           strips by default. This is a content list, not nav, so bullets
+           are appropriate. -->
+      <ul class="ml-5 max-w-[64ch] list-disc space-y-1 text-[1.0625rem] leading-[1.7] text-text">
         {currently.map((item) => (
           <li>{item}</li>
         ))}
@@ -175,171 +170,3 @@ const currently = [
   />
 
 </BaseLayout>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Hero. Two-column grid, portrait + copy. Generous block padding.
-     -------------------------------------------------------------------------- */
-  .about-hero {
-    padding-block: var(--space-2xl);
-  }
-
-  .about-hero__inner {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-xl);
-    align-items: center;
-  }
-
-  @media (min-width: 56rem) {
-    .about-hero__inner {
-      grid-template-columns: 1fr 1.2fr;
-    }
-  }
-
-  /* Portrait placeholder. Same recipe as the homepage Hero so the brand
-     gesture stays consistent. Swap to an Astro <Image /> once the real
-     headshot lands in src/assets/brand/. */
-  .about-hero__portrait {
-    aspect-ratio: 4 / 5;
-    width: 100%;
-    background: linear-gradient(135deg, var(--color-bg-soft) 0%, var(--color-secondary) 100%);
-    border-radius: 8px;
-  }
-
-  /* Copy column. */
-  .about-hero__copy {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-  }
-
-  /* Overline: mono number + label, matching the homepage Hero pattern. */
-  .about-hero__overline {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-s);
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-  }
-
-  .about-hero__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-  }
-
-  /* Hero title. Inherits h1 size from the global scale. */
-  .about-hero__title {
-    line-height: 0.95;
-    max-width: 22ch;
-  }
-
-  /* Intro paragraph. Larger than body, but capped to a comfortable reading
-     width so the line doesn't sprawl. */
-  .about-hero__intro {
-    font-size: 1.125rem;
-    color: var(--color-text);
-    max-width: 60ch;
-    line-height: 1.6;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Reusable section wrapper used by Story, Principles, and Currently.
-     -------------------------------------------------------------------------- */
-  .about-section {
-    padding-block: var(--space-2xl);
-  }
-
-  /* Modifier: tinted background. Used on the Principles section so the page
-     gets a visual alternation. */
-  .about-section--tinted {
-    background-color: var(--color-bg-soft);
-  }
-
-  /* Inner column. Single-column stack; the inner pieces (heading, body)
-     control their own widths. */
-  .about-section__inner {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-l);
-  }
-
-  /* Section heading row. Number + title stacked. */
-  .about-section__heading {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  .about-section__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    letter-spacing: 0.05em;
-  }
-
-  .about-section__title {
-    color: var(--color-primary);
-  }
-
-  /* Body paragraph stack. Vertical rhythm between paragraphs. */
-  .about-section__body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-    color: var(--color-text);
-    max-width: 64ch;
-    line-height: 1.7;
-    font-size: 1.0625rem;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Principles grid. Three columns at wide, two at tablet, one at phone,
-     via auto-fit minmax with no media queries.
-     -------------------------------------------------------------------------- */
-  .about-principles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: var(--space-l);
-  }
-
-  /* Single principle card. Plain block on the tinted background; no border
-     or fill so the row stays calm. */
-  .about-principle {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-  }
-
-  .about-principle__title {
-    color: var(--color-primary);
-    font-size: var(--font-size-h4);
-  }
-
-  .about-principle__body {
-    color: var(--color-text);
-    line-height: 1.6;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Currently list. Bulleted list of one-line items. The global ul reset
-     stripped bullets; restore them here because this is a content list.
-     -------------------------------------------------------------------------- */
-  .about-currently {
-    list-style: disc;
-    padding-left: 1.25rem;
-    color: var(--color-text);
-    line-height: 1.7;
-    font-size: 1.0625rem;
-    max-width: 64ch;
-  }
-
-  .about-currently li {
-    margin-bottom: 0.25rem;
-  }
-</style>
