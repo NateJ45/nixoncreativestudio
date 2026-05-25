@@ -1,72 +1,54 @@
 ---
+// Foundation, edit with care. The form structure and Web3Forms wiring are
+// the production inquiry pipeline; touch only with intent.
 /* ============================================================================
    /contact | Contact
    ============================================================================
-   Form-driven inquiry page. Phase 10 builds the LAYOUT only; Phase 11 wires
-   the form to Web3Forms (the serverless handler documented in the migration
-   walkthrough).
+   Form-driven inquiry page. Posts to Web3Forms.
 
-   The HTML form is deliberately functional: real labels, native input
-   types, required attributes, and a honeypot field for spam. When Phase 11
-   adds the access key and action URL, the form will work end to end with
-   no JavaScript required.
+   The HTML form is functional: real labels, native input types, required
+   attributes, and a honeypot. Even without JavaScript the form submits
+   natively to Web3Forms; the inline script just enhances the UX by
+   swapping to a thank-you state without a page reload.
 
-   Layout:
-     - Hero with positioning line and contact details
-     - Two-column inquiry section: form on the left, sidebar with email +
-       phone + "what to expect" copy on the right
-
-   BEM:
-     contact-hero                 Top hero block.
-     contact-body                 Two-column inquiry section.
-     contact-form                 The form itself.
-     contact-form__field          Single label+input pair.
-     contact-form__label          Visible field label.
-     contact-form__input          Text / email input.
-     contact-form__select         Dropdown.
-     contact-form__textarea       Multi-line input.
-     contact-form__honeypot       Bot trap, hidden visually.
-     contact-form__submit         Primary submit button.
-     contact-sidebar              Right column with direct contact details.
+   Layout: hero + two-column body (form left, sidebar right).
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-// Contact details come from the central site data module so a single edit
-// updates the footer, the contact sidebar, the form's subject line, and
-// the thank-you body all at once.
 import { site } from '../data/site';
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
 const orgTypes = [
-  { value: 'church',         label: 'Church'             },
+  { value: 'church',         label: 'Church'              },
   { value: 'preschool',      label: 'Preschool or school' },
-  { value: 'nonprofit',      label: 'Nonprofit'          },
-  { value: 'small-business', label: 'Small business'     },
-  { value: 'other',          label: 'Something else'     },
+  { value: 'nonprofit',      label: 'Nonprofit'           },
+  { value: 'small-business', label: 'Small business'      },
+  { value: 'other',          label: 'Something else'      },
 ];
 
-// Budget ranges. Match the marketing range on services page; small enough
-// brackets that the picker isn't overwhelming.
+// Budget brackets, small enough that the picker isn't overwhelming.
 const budgets = [
-  { value: 'under-2k',  label: 'Under $2,000'    },
+  { value: 'under-2k',  label: 'Under $2,000'      },
   { value: '2k-5k',     label: '$2,000 to $5,000'  },
   { value: '5k-10k',    label: '$5,000 to $10,000' },
-  { value: '10k-plus',  label: '$10,000 or more' },
-  { value: 'not-sure',  label: 'Not sure yet'    },
+  { value: '10k-plus',  label: '$10,000 or more'   },
+  { value: 'not-sure',  label: 'Not sure yet'      },
 ];
 
-// Web3Forms access key. Loaded from .env (or Cloudflare env in production).
-// The PUBLIC_ prefix is required because the form runs in the browser and
-// needs to read this value at render time. The key is sent as a hidden
-// field with the submission; Web3Forms uses it to route the email.
-//
-// If the key is missing (e.g. someone forgot to set it in Cloudflare), the
-// form falls back to a no-op action so the page still renders without
-// throwing, and a small inline notice appears below the submit button.
+// Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
+// time, which is required because the form runs in the browser.
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
-const formActive = web3formsKey.length > 0;
+const formActive  = web3formsKey.length > 0;
+
+// Shared class strings for the form. Pulled into consts because each
+// input/select/textarea repeats the same base styling.
+const fieldClass = 'flex flex-col gap-xs';
+const labelClass = 'font-body text-[0.95rem] font-semibold text-primary';
+const inputClass =
+  'rounded-md border border-black/[0.12] bg-bg px-3 py-2.5 font-body text-base text-text ' +
+  'transition-[border-color,box-shadow] duration-150 ' +
+  'focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25';
 ---
 
 <BaseLayout
@@ -77,14 +59,16 @@ const formActive = web3formsKey.length > 0;
   <!-- ----------------------------------------------------------------------
        Hero
        ---------------------------------------------------------------------- -->
-  <section class="contact-hero">
+  <section class="py-2xl">
     <div class="ncs-container">
-      <p class="contact-hero__overline">
-        <span class="contact-hero__num">C1</span>
+      <p class="mb-m inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
+        <span class="font-mono text-sm tracking-[0.05em]">C1</span>
         <span>Contact</span>
       </p>
-      <h1 class="contact-hero__title">Start a project, or just say hello.</h1>
-      <p class="contact-hero__intro">
+      <h1 class="mb-m max-w-[22ch] leading-[0.95]">
+        Start a project, or just say hello.
+      </h1>
+      <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
         The form below sends straight to my inbox. If you'd rather skip the form, my email and phone are on the right.
       </p>
     </div>
@@ -92,69 +76,48 @@ const formActive = web3formsKey.length > 0;
 
 
   <!-- ----------------------------------------------------------------------
-       Form + sidebar
-       ----------------------------------------------------------------------
-       Two-column on wide screens: the form takes the bigger column, a
-       sidebar with direct contact details and a short "what to expect"
-       paragraph sits to the right.
+       Form + sidebar. Two-column on >= 56rem, stacked on narrow screens.
        ---------------------------------------------------------------------- -->
-  <section class="contact-body">
-    <div class="ncs-container contact-body__inner">
+  <section class="bg-bg-soft py-2xl">
+    <div class="ncs-container grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
 
-      <!-- Form column.
-           Three-state container: the form itself is shown by default; the
-           thank-you block and error block start hidden and the inline
-           script below swaps visibility based on the fetch result. -->
-      <div class="contact-states" data-contact-states>
+      <!-- Three-state container. Form is shown by default; the thanks and
+           error blocks below start with the .hidden Tailwind utility class
+           and the inline script toggles it via classList. -->
+      <div>
 
       <form
-        class="contact-form"
+        class="flex flex-col gap-m rounded-xl bg-bg p-l"
         method="post"
         action="https://api.web3forms.com/submit"
         novalidate
         data-contact-form
       >
         <!--
-          Web3Forms convention:
-            - access_key: required; routes the submission to Nathan's inbox.
-            - subject: optional; controls the email subject line so
-              inquiries are obvious in the inbox.
-            - from_name: optional; sets the visible sender name.
-          The form still posts natively if JavaScript is disabled, so a
-          form submission ALWAYS reaches Web3Forms even without the fetch
-          handler at the bottom of the file.
+          Web3Forms hidden fields:
+            - access_key: routes the submission to Nathan's inbox.
+            - subject: sets the email subject so inquiries are obvious.
+            - from_name: sets the visible sender name.
+          The form posts natively to the same endpoint if JS is disabled,
+          so submissions always reach Web3Forms.
         -->
         <input type="hidden" name="access_key" value={web3formsKey} />
         <input type="hidden" name="subject"    value={`New project inquiry from ${site.domain}`} />
         <input type="hidden" name="from_name"  value={`${site.studioName} website`} />
 
-        <div class="contact-form__field">
-          <label class="contact-form__label" for="name">Your name</label>
-          <input
-            class="contact-form__input"
-            type="text"
-            id="name"
-            name="name"
-            required
-            autocomplete="name"
-          />
+        <div class={fieldClass}>
+          <label class={labelClass} for="name">Your name</label>
+          <input class={inputClass} type="text" id="name" name="name" required autocomplete="name" />
         </div>
 
-        <div class="contact-form__field">
-          <label class="contact-form__label" for="email">Email</label>
-          <input
-            class="contact-form__input"
-            type="email"
-            id="email"
-            name="email"
-            required
-            autocomplete="email"
-          />
+        <div class={fieldClass}>
+          <label class={labelClass} for="email">Email</label>
+          <input class={inputClass} type="email" id="email" name="email" required autocomplete="email" />
         </div>
 
-        <div class="contact-form__field">
-          <label class="contact-form__label" for="org_type">Organization type</label>
-          <select class="contact-form__select" id="org_type" name="org_type" required>
+        <div class={fieldClass}>
+          <label class={labelClass} for="org_type">Organization type</label>
+          <select class={inputClass} id="org_type" name="org_type" required>
             <option value="" disabled selected>Pick the closest</option>
             {orgTypes.map((opt) => (
               <option value={opt.value}>{opt.label}</option>
@@ -162,9 +125,9 @@ const formActive = web3formsKey.length > 0;
           </select>
         </div>
 
-        <div class="contact-form__field">
-          <label class="contact-form__label" for="budget">Budget range</label>
-          <select class="contact-form__select" id="budget" name="budget" required>
+        <div class={fieldClass}>
+          <label class={labelClass} for="budget">Budget range</label>
+          <select class={inputClass} id="budget" name="budget" required>
             <option value="" disabled selected>Pick the closest</option>
             {budgets.map((opt) => (
               <option value={opt.value}>{opt.label}</option>
@@ -172,10 +135,10 @@ const formActive = web3formsKey.length > 0;
           </select>
         </div>
 
-        <div class="contact-form__field">
-          <label class="contact-form__label" for="message">Project description</label>
+        <div class={fieldClass}>
+          <label class={labelClass} for="message">Project description</label>
           <textarea
-            class="contact-form__textarea"
+            class={`${inputClass} min-h-32 resize-y`}
             id="message"
             name="message"
             required
@@ -183,70 +146,97 @@ const formActive = web3formsKey.length > 0;
             rows="6"
             placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
           ></textarea>
-          <p class="contact-form__hint">At least a few sentences, please. The more you share, the better I can scope the first conversation.</p>
+          <p class="mt-xs text-[0.85rem] text-text-muted">
+            At least a few sentences, please. The more you share, the better I can scope the first conversation.
+          </p>
         </div>
 
-        <!-- Honeypot. Real users never fill this; bots usually do. The
-             visually-hidden utility keeps it off-screen for humans and
-             screen readers alike. Phase 11 will read this server-side and
-             discard submissions where it's non-empty. -->
-        <div class="visually-hidden" aria-hidden="true">
+        <!-- Honeypot. sr-only is Tailwind's equivalent of the old
+             .visually-hidden utility. Hidden from sighted users and
+             screen readers; bots tend to fill every field, so the
+             script discards submissions where this is non-empty. -->
+        <div class="sr-only" aria-hidden="true">
           <label for="botcheck">Leave this field empty</label>
-          <input class="contact-form__honeypot" type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
+          <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
         </div>
 
-        <button class="contact-form__submit" type="submit" data-contact-submit>
+        <!-- Submit. Same recipe as Hero CTA. Phase 6 unifies both to shadcn Button. -->
+        <button
+          class="inline-flex items-center self-start rounded-lg bg-accent px-6 py-3.5 font-body text-base font-semibold text-bg transition-[background-color,transform] duration-150 hover:-translate-y-px hover:bg-secondary focus-visible:-translate-y-px focus-visible:bg-secondary disabled:cursor-progress disabled:opacity-60 disabled:transform-none"
+          type="submit"
+          data-contact-submit
+        >
           <span data-contact-submit-label>Send</span>
         </button>
 
         {!formActive && (
-          <p class="contact-form__note">
-            The Web3Forms access key is missing. Set <code>PUBLIC_WEB3FORMS_KEY</code> in <code>.env</code> locally and in Cloudflare Pages settings before launch.
+          <p class="text-[0.85rem] italic text-text-muted">
+            The Web3Forms access key is missing. Set <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">PUBLIC_WEB3FORMS_KEY</code> in <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">.env</code> locally and in Cloudflare Pages settings before launch.
           </p>
         )}
       </form>
 
-      <!-- Thank-you state. Hidden until the fetch in the script below
-           reports success, at which point the script removes [hidden]. -->
-      <div class="contact-thanks" data-contact-thanks hidden>
-        <h2 class="contact-thanks__title">Thanks, your message is in.</h2>
-        <p class="contact-thanks__body">
+      <!-- Thank-you panel. Starts hidden; the submit handler removes the
+           hidden class on success. Same outer card surface as the form so
+           the swap reads as a state change in the same container. -->
+      <div
+        class="hidden flex-col gap-s rounded-xl border-l-4 border-accent bg-bg p-l"
+        data-contact-thanks
+      >
+        <h2 class="text-h3 text-primary">Thanks, your message is in.</h2>
+        <p class="max-w-[56ch] leading-[1.6] text-text">
           I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from {site.domain}, then try the email link on the right.
         </p>
       </div>
 
-      <!-- Error state. Shown if the fetch fails. The form stays visible
-           above so the visitor can correct anything and resubmit, or fall
-           back to the email link in the sidebar. -->
-      <div class="contact-error" data-contact-error hidden role="alert">
-        <p>Something went wrong on our end. Please try again, or email <a href={site.emailHref}>{site.email}</a> directly.</p>
+      <!-- Error panel. Same hidden-class pattern. Amber band signals
+           something went wrong without screaming red. -->
+      <div
+        class="mt-m hidden rounded-md border-l-4 border-tertiary p-m text-text [background-color:color-mix(in_srgb,var(--color-tertiary)_18%,var(--color-bg))]"
+        data-contact-error
+        role="alert"
+      >
+        <p>
+          Something went wrong on our end. Please try again, or email
+          <a class="text-accent underline underline-offset-2" href={site.emailHref}>{site.email}</a>
+          directly.
+        </p>
       </div>
 
       </div>
 
 
-      <!-- Sidebar column. Direct contact details and a short
-           expectation-setting paragraph. -->
-      <aside class="contact-sidebar">
+      <!-- ------------------------------------------------------------------
+           Sidebar column. Direct contact details + expectation-setting copy.
+           ------------------------------------------------------------------ -->
+      <aside class="flex flex-col gap-l">
 
-        <div class="contact-sidebar__block">
-          <h2 class="contact-sidebar__heading">Direct</h2>
-          <ul class="contact-sidebar__list">
-            <li><a href={site.emailHref}>{site.email}</a></li>
-            <li><a href={site.phoneHref}>{site.phone}</a></li>
+        <div class="flex flex-col gap-s">
+          <h2 class="text-h4 text-primary">Direct</h2>
+          <ul class="flex flex-col gap-xs">
+            <li>
+              <a class="text-accent no-underline transition-colors duration-150 hover:text-secondary hover:underline hover:underline-offset-2 focus-visible:text-secondary focus-visible:underline" href={site.emailHref}>
+                {site.email}
+              </a>
+            </li>
+            <li>
+              <a class="text-accent no-underline transition-colors duration-150 hover:text-secondary hover:underline hover:underline-offset-2 focus-visible:text-secondary focus-visible:underline" href={site.phoneHref}>
+                {site.phone}
+              </a>
+            </li>
           </ul>
         </div>
 
-        <div class="contact-sidebar__block">
-          <h2 class="contact-sidebar__heading">What to expect</h2>
-          <p class="contact-sidebar__body">
+        <div class="flex flex-col gap-s">
+          <h2 class="text-h4 text-primary">What to expect</h2>
+          <p class="leading-[1.6] text-text">
             I read every inquiry myself and reply within one or two business days. If we look like a fit, the next step is a half-hour call to talk through what you're trying to do.
           </p>
         </div>
 
-        <div class="contact-sidebar__block">
-          <h2 class="contact-sidebar__heading">Where I am</h2>
-          <p class="contact-sidebar__body">
+        <div class="flex flex-col gap-s">
+          <h2 class="text-h4 text-primary">Where I am</h2>
+          <p class="leading-[1.6] text-text">
             {site.address}. I work with organizations across the greater Cincinnati region in person, and beyond it remotely when the work calls for it.
           </p>
         </div>
@@ -258,18 +248,12 @@ const formActive = web3formsKey.length > 0;
 
 
   <!-- ----------------------------------------------------------------------
-       Submit handler
-       ----------------------------------------------------------------------
-       Intercepts the form submit, posts to Web3Forms via fetch, and swaps
-       the visible state to thank-you on success or shows an inline error
-       on failure. Falls back gracefully: if JavaScript is disabled, the
-       form still submits natively to the same endpoint and Web3Forms
-       handles the redirect itself.
+       Submit handler. Posts via fetch, swaps form for thank-you panel on
+       success, shows inline error on failure. Switched from the `hidden`
+       HTML attribute to the .hidden Tailwind class because the attribute
+       loses specificity against class-based display rules.
        ---------------------------------------------------------------------- -->
   <script>
-    // Look up the elements the handler swaps. Querying inside an IIFE
-    // keeps these refs out of the global scope. Each ref is hooked off a
-    // dedicated data-attribute so future restyling never breaks the JS.
     const form     = document.querySelector('[data-contact-form]')     as HTMLFormElement | null;
     const thanks   = document.querySelector('[data-contact-thanks]')   as HTMLElement | null;
     const errorEl  = document.querySelector('[data-contact-error]')    as HTMLElement | null;
@@ -280,27 +264,35 @@ const formActive = web3formsKey.length > 0;
 
       const originalLabel = label.textContent ?? 'Send';
 
+      // Helpers that toggle visibility via the Tailwind .hidden class. The
+      // thanks panel needs `flex` when shown because it's a flex column.
+      const show = (el: HTMLElement, displayClass = 'flex') => {
+        el.classList.remove('hidden');
+        if (displayClass) el.classList.add(displayClass);
+      };
+      const hide = (el: HTMLElement, displayClass = 'flex') => {
+        if (displayClass) el.classList.remove(displayClass);
+        el.classList.add('hidden');
+      };
+
       form.addEventListener('submit', async (event) => {
 
-        // Honeypot. The visible form should never have a value here; bots
-        // typically fill every field. If it's filled, pretend the submit
-        // worked but quietly drop the request.
+        // Honeypot. Real users never fill this; bots usually do. Pretend
+        // the submit worked but silently drop the request.
         const honeypot = (form.elements.namedItem('botcheck') as HTMLInputElement | null)?.value;
         if (honeypot) {
           event.preventDefault();
-          thanks.hidden = false;
-          form.hidden = true;
+          hide(form);
+          show(thanks);
           return;
         }
 
         event.preventDefault();
-        errorEl.hidden = true;
+        hide(errorEl, 'block');
         submit.disabled = true;
         label.textContent = 'Sending...';
 
         try {
-          // Send the form as multipart/form-data; Web3Forms accepts that
-          // exact shape from the standard FormData constructor.
           const data = new FormData(form);
           const response = await fetch(form.action, {
             method: 'POST',
@@ -309,20 +301,14 @@ const formActive = web3formsKey.length > 0;
           });
 
           if (response.ok) {
-            // Success: hide the form, show the thank-you panel, scroll
-            // the thank-you into view (helpful on mobile where the panel
-            // can land off-screen).
-            form.hidden = true;
-            thanks.hidden = false;
+            hide(form);
+            show(thanks);
             thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
           } else {
-            // Web3Forms returned a non-2xx; surface the inline error.
-            errorEl.hidden = false;
+            show(errorEl, 'block');
           }
         } catch (_err) {
-          // Network failure (offline, blocked, CORS). Same UX as a 5xx:
-          // show the inline error and let the visitor retry.
-          errorEl.hidden = false;
+          show(errorEl, 'block');
         } finally {
           submit.disabled = false;
           label.textContent = originalLabel;
@@ -333,279 +319,3 @@ const formActive = web3formsKey.length > 0;
   </script>
 
 </BaseLayout>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Hero. Same single-column hero treatment as Services and Photography.
-     -------------------------------------------------------------------------- */
-  .contact-hero {
-    padding-block: var(--space-2xl);
-  }
-
-  .contact-hero__overline {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-s);
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    margin-bottom: var(--space-m);
-  }
-
-  .contact-hero__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-  }
-
-  .contact-hero__title {
-    line-height: 0.95;
-    max-width: 22ch;
-    margin-bottom: var(--space-m);
-  }
-
-  .contact-hero__intro {
-    font-size: 1.125rem;
-    color: var(--color-text);
-    max-width: 60ch;
-    line-height: 1.6;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Body. Two-column on wide, stacked on narrow.
-     -------------------------------------------------------------------------- */
-  .contact-body {
-    padding-block: var(--space-2xl);
-    background-color: var(--color-bg-soft);
-  }
-
-  .contact-body__inner {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-xl);
-  }
-
-  @media (min-width: 56rem) {
-    .contact-body__inner {
-      grid-template-columns: 1.4fr 1fr;
-    }
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Form. Vertical stack of fields with consistent rhythm.
-     -------------------------------------------------------------------------- */
-  .contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-    background-color: var(--color-bg);
-    padding: var(--space-l);
-    border-radius: 12px;
-  }
-
-  /* Single field. Label sits above the input. */
-  .contact-form__field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  .contact-form__label {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-primary);
-  }
-
-  /* Shared base for input, select, textarea so they all look alike. */
-  .contact-form__input,
-  .contact-form__select,
-  .contact-form__textarea {
-    font-family: var(--font-body);
-    font-size: 1rem;
-    color: var(--color-text);
-    padding: 0.625rem 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 6px;
-    background-color: var(--color-bg);
-    transition: border-color 150ms ease, box-shadow 150ms ease;
-  }
-
-  /* Subtle focus ring in the accent color. */
-  .contact-form__input:focus,
-  .contact-form__select:focus,
-  .contact-form__textarea:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
-  }
-
-  .contact-form__textarea {
-    resize: vertical;
-    min-height: 8rem;
-  }
-
-  /* Field hint below a textarea or input. Small, muted, soft tone. */
-  .contact-form__hint {
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    margin-top: var(--space-xs);
-  }
-
-  /* Submit button. Same recipe as the Hero CTA. */
-  .contact-form__submit {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    padding: 0.875rem 1.5rem;
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 1rem;
-    background-color: var(--color-accent);
-    color: var(--color-bg);
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: background-color 150ms ease, transform 150ms ease;
-  }
-
-  .contact-form__submit:hover,
-  .contact-form__submit:focus-visible {
-    background-color: var(--color-secondary);
-    transform: translateY(-1px);
-  }
-
-  /* Note shown when the access key is missing. Mostly a heads-up for
-     deploys before the env var is set; should never appear in production. */
-  .contact-form__note {
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    font-style: italic;
-  }
-
-  .contact-form__note code {
-    font-family: var(--font-mono);
-    font-size: 0.85em;
-    background-color: var(--color-bg-soft);
-    padding: 0.1em 0.3em;
-    border-radius: 3px;
-    font-style: normal;
-  }
-
-  /* --------------------------------------------------------------------------
-     Hidden-attribute override.
-     --------------------------------------------------------------------------
-     The `hidden` HTML attribute relies on the user-agent's
-     `[hidden] { display: none }` rule. Because our component classes set
-     `display: flex` with higher specificity, that default loses. The
-     declarations below re-apply `display: none` whenever a stateful
-     container carries `hidden`, so the JS-driven state swap actually
-     hides the form. !important keeps this win against any future
-     component-level overrides.
-     -------------------------------------------------------------------------- */
-  [data-contact-form][hidden],
-  [data-contact-thanks][hidden],
-  [data-contact-error][hidden] {
-    display: none !important;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Loading + thank-you + error states.
-     -------------------------------------------------------------------------- */
-
-  /* Disabled submit button during fetch. Pointer cue + lower opacity. */
-  .contact-form__submit[disabled] {
-    opacity: 0.6;
-    cursor: progress;
-    transform: none;
-  }
-
-  /* Thank-you panel. Same card visual as the form so the swap reads as
-     a state change in the same container, not a layout jump. */
-  .contact-thanks {
-    background-color: var(--color-bg);
-    padding: var(--space-l);
-    border-radius: 12px;
-    border-left: 4px solid var(--color-accent);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-  }
-
-  .contact-thanks__title {
-    color: var(--color-primary);
-    font-size: var(--font-size-h3);
-  }
-
-  .contact-thanks__body {
-    color: var(--color-text);
-    line-height: 1.6;
-    max-width: 56ch;
-  }
-
-  /* Error panel. Sits above the form (or below; CSS order controls this
-     via source order). Subtle warning style: not red shouting, but
-     visibly distinct from the rest of the page. */
-  .contact-error {
-    margin-top: var(--space-m);
-    padding: var(--space-m);
-    background-color: color-mix(in srgb, var(--color-tertiary) 18%, var(--color-bg));
-    border-left: 4px solid var(--color-tertiary);
-    border-radius: 6px;
-    color: var(--color-text);
-  }
-
-  .contact-error a {
-    color: var(--color-accent);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Sidebar. Stacked blocks: direct, what to expect, where I am.
-     -------------------------------------------------------------------------- */
-  .contact-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-l);
-  }
-
-  .contact-sidebar__block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-  }
-
-  .contact-sidebar__heading {
-    color: var(--color-primary);
-    font-size: var(--font-size-h4);
-  }
-
-  .contact-sidebar__list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  .contact-sidebar__list a {
-    color: var(--color-accent);
-    text-decoration: none;
-    transition: color 150ms ease;
-  }
-
-  .contact-sidebar__list a:hover,
-  .contact-sidebar__list a:focus-visible {
-    color: var(--color-secondary);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-  .contact-sidebar__body {
-    color: var(--color-text);
-    line-height: 1.6;
-  }
-</style>
