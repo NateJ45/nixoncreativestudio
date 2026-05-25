@@ -20,7 +20,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 
 ## Stack
 
-- **Astro 5** with MDX content collections for case studies
+- **Astro 6.3.7** with MDX content collections for case studies
 - **Plain CSS with BEM naming.** No CSS framework. No utility libraries. Tokens in `src/styles/tokens.css`, global resets and `@font-face` in `src/styles/global.css`, per-component styles in `src/styles/components/`.
 - **Cloudflare Pages** for hosting. Build command `npm run build`, output `dist/`.
 

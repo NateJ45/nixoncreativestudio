@@ -1,4 +1,116 @@
-/* Design tokens placeholder */
+/* ============================================================================
+   Nixon Creative Studio | Design Tokens
+   ============================================================================
+   Single source of truth for color, spacing, layout, and type.
+   Everything else in the stylesheet should reference these variables instead
+   of hardcoding values. If a token is missing, add it here first, then use it.
+
+   Naming convention: --<category>-<role>(-<modifier>).
+   Examples: --color-primary, --color-text-muted, --space-m, --font-display.
+   ============================================================================ */
+
 :root {
-  /* color, type, spacing tokens go here */
+
+  /* --------------------------------------------------------------------------
+     COLORS
+     --------------------------------------------------------------------------
+     The NCS brand palette. Four brand colors plus a small set of neutrals.
+
+     Use --color-primary for the dominant brand surface (headers, deep accents).
+     Use --color-accent for the workhorse call-to-action color (buttons, links).
+     Use --color-secondary sparingly, mostly for hover or highlight states.
+     Use --color-tertiary (amber) as a punch color, never as a large surface.
+     -------------------------------------------------------------------------- */
+
+  /* Brand */
+  --color-primary:   #0A1628;  /* Dark navy. Header background, hero copy. */
+  --color-accent:    #3B82C4;  /* NCS blue. Buttons, links, primary CTAs. */
+  --color-secondary: #40AAED;  /* Sky blue. Hover and highlight states. */
+  --color-tertiary:  #FFA334;  /* Amber. Accent badges, small flourishes. */
+
+  /* Text */
+  --color-text:       #1A1A1A; /* Near-black body text. Higher contrast than pure black. */
+  --color-text-muted: #6B7280; /* Muted gray for meta info, captions, labels. */
+
+  /* Surfaces */
+  --color-bg:      #FFFFFF;    /* Default page background. */
+  --color-bg-soft: #F4F7FA;    /* Light blue-gray. Alternating section backgrounds. */
+
+
+  /* --------------------------------------------------------------------------
+     SPACING (fluid scale)
+     --------------------------------------------------------------------------
+     clamp(min, preferred, max) gives one value that grows with the viewport
+     but stays inside sensible bounds. This means a section padded with
+     --space-2xl is roomy on desktop and stays usable on a phone without a
+     single media query.
+
+     Pick the closest token; don't invent half-steps. Most layouts only need
+     three or four of these.
+     -------------------------------------------------------------------------- */
+
+  --space-xs:  clamp(0.25rem, 0.5vw, 0.5rem);   /* Hairline gaps, icon spacing. */
+  --space-s:   clamp(0.5rem,  1vw,   1rem);     /* Tight padding, small gaps. */
+  --space-m:   clamp(1rem,    2vw,   1.5rem);   /* Default rhythm: card padding, paragraph gaps. */
+  --space-l:   clamp(2rem,    4vw,   3rem);     /* Section internal spacing. */
+  --space-xl:  clamp(3rem,    6vw,   5rem);     /* Between major blocks. */
+  --space-2xl: clamp(4rem,    8vw,   7rem);     /* Section block padding. Biggest breathing room. */
+
+
+  /* --------------------------------------------------------------------------
+     LAYOUT
+     --------------------------------------------------------------------------
+     Content width caps the line length so reading stays comfortable on wide
+     monitors. The padding token keeps content off the screen edge on phones.
+
+     Most full-bleed sections use the page width for their background and
+     constrain their inner column with the .ncs-container utility.
+     -------------------------------------------------------------------------- */
+
+  --content-width:   82.5rem;  /* 1320px. Outer cap on the main column. */
+  --content-padding: 1.5rem;   /* Side padding inside .ncs-container. */
+
+
+  /* --------------------------------------------------------------------------
+     TYPOGRAPHY (font families)
+     --------------------------------------------------------------------------
+     Bebas Neue handles all headings (display). It's a condensed all-caps
+     face, so it's set at weight 400 only and used at large sizes.
+
+     Source Sans 3 (variable) handles body, UI, and buttons. Variable axis
+     means we get every weight from one font file.
+
+     The mono stack is system-only for labels and section numbers (the small
+     "01" / "02" markers that appear in the homepage section structure).
+
+     The system-ui fallback in each stack keeps text legible if the webfont
+     fails to load. Don't remove the fallback.
+     -------------------------------------------------------------------------- */
+
+  --font-display: 'Bebas Neue', system-ui, sans-serif;
+  --font-body:    'Source Sans 3 Variable', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', Consolas, monospace;
+
+
+  /* --------------------------------------------------------------------------
+     TYPOGRAPHY (heading sizes)
+     --------------------------------------------------------------------------
+     Fluid type scale. Each step uses clamp() so the size grows with the
+     viewport between a sensible mobile minimum and a desktop maximum.
+
+     h6 is the floor (essentially body size, used as a small overline).
+     h1 is the ceiling (hero statement, page titles).
+
+     The vw values look small but compound. On a 1440px viewport, 6vw is
+     about 86px, so the clamp ceiling kicks in fast on wide screens. That
+     matters because Bebas Neue gets unwieldy past about 80px.
+     -------------------------------------------------------------------------- */
+
+  --font-size-h6: 1rem;                                /* Overline, smallest heading. */
+  --font-size-h5: clamp(1.125rem, 1.5vw, 1.25rem);     /* Card titles, list headings. */
+  --font-size-h4: clamp(1.25rem,  2vw,   1.5rem);      /* Sub-section headings. */
+  --font-size-h3: clamp(1.5rem,   2.5vw, 2rem);        /* Section titles inside a block. */
+  --font-size-h2: clamp(2rem,     4vw,   3rem);        /* Major section headings. */
+  --font-size-h1: clamp(2.5rem,   6vw,   5rem);        /* Hero, page titles. */
+
 }

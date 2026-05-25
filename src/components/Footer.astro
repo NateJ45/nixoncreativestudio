@@ -1,5 +1,182 @@
 ---
+/* ============================================================================
+   Site Footer
+   ============================================================================
+   Bottom of every page. Mirrors the structure of the WordPress build's footer
+   so the content model carries over without surprises.
+
+   Top row: three columns (Contact, Connect, Currently).
+   Bottom row: copyright on the left, tagline on the right, separated from the
+   top row by a hairline divider.
+
+   Real values to fill in:
+   - Phone number (placeholder used below)
+   - Instagram and LinkedIn handles (placeholder URLs used below)
+   - The "Currently" sentence updates over time. Edit the string directly.
+   ============================================================================ */
+
+// Year stamp on the copyright. Recomputed at build time for SSG, or per-request
+// for SSR. Either way it stays accurate without manual edits each January.
+const year = new Date().getFullYear();
+
+// Contact details. Email is the primary inbox; phone is the secondary path.
+const contact = {
+  email: 'hello@nixoncreativestudio.com',
+  phone: '(513) 555-0100',  // TODO: replace with real number.
+};
+
+// Social links. URLs are placeholders for now.
+const social = [
+  { label: 'Instagram', href: 'https://instagram.com/nixoncreativestudio' },
+  { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/nathanjnixon'  },
+];
+
+// "Currently" blurb. Short, present-tense, swappable per season.
+const currently = 'Booking small business and nonprofit web projects for the season ahead, with a few photography days mixed in.';
+
+const tagline = 'Modern websites for small businesses, nonprofits, churches, and schools in the Cincinnati region.';
 ---
-<footer>
-  <!-- Footer placeholder -->
+
+<!-- Full-bleed footer; inner column constrained via .ncs-container. -->
+<footer class="site-footer">
+  <div class="ncs-container site-footer__inner">
+
+    <!-- Top section: three columns side by side on desktop, stacked on mobile. -->
+    <div class="site-footer__top">
+      <div class="site-footer__cols">
+
+        <!-- Column 1: Contact -->
+        <div>
+          <h2 class="site-footer__heading">Contact</h2>
+          <ul>
+            <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
+            <li><a href={`tel:${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 2: Connect -->
+        <div>
+          <h2 class="site-footer__heading">Connect</h2>
+          <ul>
+            {social.map(({ label, href }) => (
+              <li>
+                <!-- rel="noopener" on external links is a small security default
+                     that also stops the new tab from poking at window.opener. -->
+                <a href={href} target="_blank" rel="noopener noreferrer">{label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Column 3: Currently. Short blurb on what's on the docket. -->
+        <div>
+          <h2 class="site-footer__heading">Currently</h2>
+          <p class="site-footer__currently">{currently}</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom row: copyright on the left, tagline on the right. -->
+    <div class="site-footer__bottom">
+      <small>© {year} Nixon Creative Studio</small>
+      <small>{tagline}</small>
+    </div>
+
+  </div>
 </footer>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Outer footer. Dark navy background, light text. Padding-block uses the
+     --space-xl token so the breathing room scales with the viewport.
+     -------------------------------------------------------------------------- */
+  .site-footer {
+    background-color: var(--color-primary);
+    color: var(--color-bg);
+    padding-block: var(--space-xl);
+  }
+
+  /* All links inside the footer default to the brand accent. Underlines off by
+     default for a cleaner look; hover gets an underline as the affordance cue. */
+  .site-footer a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .site-footer a:hover,
+  .site-footer a:focus-visible {
+    color: var(--color-secondary);  /* Lighter sky blue, higher contrast on navy. */
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* --------------------------------------------------------------------------
+     Top section. Wraps the three-column row. The bottom margin separates it
+     from the copyright row below.
+     -------------------------------------------------------------------------- */
+  .site-footer__top {
+    margin-bottom: var(--space-l);
+  }
+
+  /* --------------------------------------------------------------------------
+     Three-column grid. auto-fit + minmax means columns collapse to one on
+     narrow screens with no media query needed: as soon as a column would be
+     thinner than ~16rem, the grid wraps it to a new row.
+     -------------------------------------------------------------------------- */
+  .site-footer__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--space-l);
+  }
+
+  /* Column-level list resets. global.css already strips bullets; this just
+     adds vertical rhythm between list items. */
+  .site-footer__cols ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  /* --------------------------------------------------------------------------
+     Column headings. Display font, modest size, brand accent so they read as
+     section labels rather than competing with body text.
+     -------------------------------------------------------------------------- */
+  .site-footer__heading {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--color-bg);         /* Override the global heading color (which is primary). */
+    margin-bottom: var(--space-s);
+    letter-spacing: 0.02em;
+  }
+
+  /* --------------------------------------------------------------------------
+     "Currently" paragraph. Slightly muted compared to the column links so it
+     reads as supporting copy.
+     -------------------------------------------------------------------------- */
+  .site-footer__currently {
+    /* color-mix gives a faded version of the body text against the navy bg.
+       Slightly more readable than pure muted gray on a dark surface. */
+    color: color-mix(in srgb, var(--color-bg) 75%, transparent);
+    line-height: 1.5;
+  }
+
+  /* --------------------------------------------------------------------------
+     Bottom row. Copyright left, tagline right, separated from the top section
+     by a hairline divider. Stacks vertically on narrow screens.
+     -------------------------------------------------------------------------- */
+  .site-footer__bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: var(--space-m);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-s);
+    /* Small, muted; this is fine print, not headline material. */
+    color: color-mix(in srgb, var(--color-bg) 65%, transparent);
+    font-size: 0.875rem;
+  }
+</style>

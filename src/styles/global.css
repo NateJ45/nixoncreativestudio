@@ -1,1 +1,247 @@
-/* Global styles placeholder */
+/* ============================================================================
+   Nixon Creative Studio | Global Stylesheet
+   ============================================================================
+   Imports tokens, brings in web fonts, then applies the reset, base type
+   defaults, and a small set of site-wide utility classes.
+
+   Per-component styles live in src/styles/components/*.css and get imported
+   from the component file that uses them (Astro scopes them automatically).
+   Anything in this file applies site-wide.
+   ============================================================================ */
+
+
+/* ----------------------------------------------------------------------------
+   IMPORTS
+   ----------------------------------------------------------------------------
+   tokens.css first so its variables are available to every rule that follows.
+
+   Bebas Neue ships at weight 400 only (it's an all-caps display face, no
+   other weights would be useful). We import just that one file.
+
+   Source Sans 3 Variable ships as one file covering every weight via the
+   wght axis, so a bare import covers all body weights without us listing
+   each one.
+   ---------------------------------------------------------------------------- */
+
+@import "./tokens.css";
+@import "@fontsource/bebas-neue/400.css";
+@import "@fontsource-variable/source-sans-3";
+
+
+/* ----------------------------------------------------------------------------
+   RESET
+   ----------------------------------------------------------------------------
+   Modern, opinionated baseline. Strips browser defaults that get in the way
+   without nuking useful semantics.
+
+   * Border-box on every element so width and padding don't fight each other.
+   * Zero margin and padding on common block elements; we add spacing back
+     deliberately via tokens.
+   * smooth scroll so in-page anchors glide rather than jump.
+   * prefers-reduced-motion override below honors users who've asked the OS
+     to dial down animation.
+   ---------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body,
+h1, h2, h3, h4, h5, h6,
+p, ul, ol, figure, blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* 16px = 1rem. Keeping the root at the browser default lets users scale
+     up via their own accessibility settings. Don't override font-size on html. */
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.55;          /* Comfortable for body copy. Tighter on headings below. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Lists used as nav menus or layout groups shouldn't carry bullets by default.
+   When you want bullets (an actual content list), add them back in the
+   component's own stylesheet. */
+ul, ol {
+  list-style: none;
+}
+
+/* Images are block-level and fluid by default. This stops the trailing
+   line-height gap under inline images and keeps responsive sizing simple. */
+img, picture, svg, video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form elements should inherit the body font, not the browser's mystery default. */
+button, input, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Honor reduced-motion. Anyone who's asked the OS for less animation gets it. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* ----------------------------------------------------------------------------
+   HEADINGS (base defaults)
+   ----------------------------------------------------------------------------
+   All headings use the display family (Bebas Neue). Tight line-height since
+   Bebas is condensed and looks airy with the body line-height. A small
+   negative letter-spacing on the larger sizes keeps the all-caps from
+   spreading out too much.
+
+   Sizes come from the token scale (--font-size-h1 through --font-size-h6).
+   Individual components can override these, but the defaults should look
+   correct on a stub page with no per-component CSS.
+   ---------------------------------------------------------------------------- */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 400;             /* Bebas only ships weight 400. */
+  color: var(--color-primary);  /* Headings carry the brand color by default. */
+  text-wrap: balance;           /* Avoids orphan words on multi-line headings. */
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  line-height: 0.95;            /* Tight; Bebas is tall enough to handle this. */
+  letter-spacing: -0.01em;      /* Slight negative on the largest size. */
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  line-height: 1.0;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+  line-height: 1.05;
+}
+
+h4 {
+  font-size: var(--font-size-h4);
+  line-height: 1.1;
+}
+
+h5 {
+  font-size: var(--font-size-h5);
+  line-height: 1.1;
+}
+
+h6 {
+  font-size: var(--font-size-h6);
+  line-height: 1.1;
+  text-transform: uppercase;    /* h6 doubles as an overline marker. */
+  letter-spacing: 0.05em;
+}
+
+
+/* ----------------------------------------------------------------------------
+   UTILITY: .ncs-container
+   ----------------------------------------------------------------------------
+   The content-width constraint. Wrap a section's inner content in a
+   <div class="ncs-container"> to cap its width and add side padding.
+
+   Full-bleed sections still use the page width for background color; their
+   inner column uses this utility to align with the rest of the content.
+   ---------------------------------------------------------------------------- */
+
+.ncs-container {
+  max-width: var(--content-width);
+  margin-inline: auto;                  /* Center the column. */
+  padding-inline: var(--content-padding); /* Keep content off the screen edge on phones. */
+  width: 100%;
+}
+
+
+/* ----------------------------------------------------------------------------
+   UTILITY: .card-link
+   ----------------------------------------------------------------------------
+   A CTA link with an arrow appended via ::after. Used on case-card panels,
+   service chapters, and other "Read more" affordances throughout the site.
+
+   The arrow is a Unicode rightward arrow (→). On hover it slides a few
+   pixels to the right as a subtle motion cue.
+
+   Pattern matches the Bricks-era catalogue; keep the class name stable so
+   the BEM list in CLAUDE.md still maps cleanly.
+   ---------------------------------------------------------------------------- */
+
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-weight: 600;
+  text-decoration: none;
+  /* Smooth out the arrow's slide. Falls back to instant on reduced-motion. */
+  transition: color 150ms ease;
+}
+
+.card-link::after {
+  content: "→";
+  display: inline-block;
+  /* The arrow slides on hover. Translate is cheap to animate and doesn't
+     trigger layout. */
+  transition: transform 150ms ease;
+}
+
+.card-link:hover,
+.card-link:focus-visible {
+  color: var(--color-secondary);
+}
+
+.card-link:hover::after,
+.card-link:focus-visible::after {
+  transform: translateX(0.25rem);
+}
+
+
+/* ----------------------------------------------------------------------------
+   UTILITY: .visually-hidden
+   ----------------------------------------------------------------------------
+   Hides content visually but keeps it accessible to screen readers. Use for
+   skip links, form labels that have a visible substitute, and icon-button
+   text alternatives.
+
+   This is the standard a11y "visually-hidden" pattern, not display:none
+   (which would also hide it from assistive tech) and not visibility:hidden
+   (which still leaves space in the layout).
+   ---------------------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
