@@ -1,12 +1,267 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+/* ============================================================================
+   /work/[slug] | Case Study Detail Page
+   ============================================================================
+   One page per case study, generated at build time from the case-studies
+   content collection. The page is the same shape for every entry: a hero
+   block with meta + image, the MDX body, and a CTA banner.
 
-export function getStaticPaths() {
-  return [];
+   Why getStaticPaths: Astro pre-renders every case study to plain HTML at
+   build time so the page is fast to load and easy to host on any CDN. The
+   collection becomes the source of truth: adding a new MDX file in
+   src/content/case-studies/ auto-creates its page on the next build.
+
+   BEM:
+     case-study              Outer wrapper.
+     case-study__hero        Hero block at the top.
+     case-study__meta        Year + sector + services badges row.
+     case-study__title       Display title.
+     case-study__summary     One-sentence pitch beneath the title.
+     case-study__media       Hero image block.
+     case-study__body        Prose body container (styles MDX output).
+   ============================================================================ */
+
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CtaBanner from '../../components/CtaBanner.astro';
+
+// One static path per case study entry. Astro calls this once at build time;
+// each returned object becomes a generated page at /work/{id}/.
+export async function getStaticPaths() {
+  const entries = await getCollection('case-studies');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
 }
 
-const { slug } = Astro.params;
+// `entry` is fully typed against the schema in src/content.config.ts.
+const { entry } = Astro.props;
+
+// `render()` returns a Content component that renders the MDX body. The
+// destructured headings/etc. are available too if we want a table of contents
+// later (Phase 12 territory).
+const { Content } = await render(entry);
+
+const { title, client, sector, services, summary, hero_image, year } = entry.data;
+
+// Pretty-printed sector label for the meta row. The raw value is kebab-case;
+// the display value is title case.
+const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 ---
-<BaseLayout title={slug}>
-  <!-- Case study detail placeholder -->
+
+<BaseLayout title={`${title} | Nixon Creative Studio`} description={summary}>
+
+  <article class="case-study">
+
+    <!-- Hero block. Two-column on desktop (copy left, image right),
+         stacked on mobile. Inside .ncs-container so it aligns with the
+         rest of the site's content column. -->
+    <header class="case-study__hero">
+      <div class="ncs-container case-study__hero-inner">
+
+        <div class="case-study__copy">
+
+          <!-- Meta row: year, sector, services. Mono and muted, reads as
+               a stamp before the title lands. -->
+          <p class="case-study__meta">
+            <span>{year}</span>
+            <span aria-hidden="true">·</span>
+            <span>{sectorLabel}</span>
+          </p>
+
+          <h1 class="case-study__title">{title}</h1>
+
+          <!-- Client name beneath the title since title and client often
+               differ for ministry or program-level engagements. -->
+          <p class="case-study__client">{client}</p>
+
+          <!-- Summary sentence. Doubles as the page's meta description. -->
+          <p class="case-study__summary">{summary}</p>
+
+          <!-- Services badges. Each rendered as a small pill so visitors
+               can see at a glance what was delivered. -->
+          <ul class="case-study__services" aria-label="Services delivered">
+            {services.map((service) => (
+              <li class="case-study__service">{service}</li>
+            ))}
+          </ul>
+
+        </div>
+
+        <!-- Hero image. Astro's <Image /> processes it: WebP conversion,
+             srcset for multiple viewports, explicit width/height to prevent
+             layout shift. The original is in src/assets/case-studies/. -->
+        <div class="case-study__media">
+          <Image src={hero_image} alt={`${title} hero image`} widths={[600, 900, 1200]} sizes="(min-width: 56rem) 50vw, 100vw" />
+        </div>
+
+      </div>
+    </header>
+
+    <!-- MDX body. Lives inside .ncs-container so the prose column lines up
+         with the hero copy column above. The .case-study__body class wraps
+         the rendered MDX so we can style markdown output (h2, p, ul, etc.)
+         without leaking those rules to the rest of the site. -->
+    <div class="ncs-container">
+      <div class="case-study__body">
+        <Content />
+      </div>
+    </div>
+
+  </article>
+
+  <!-- Reusable CTA. Same banner the homepage uses; on inner pages we
+       could pass tuned copy via props. Keeping defaults here for now. -->
+  <CtaBanner />
+
 </BaseLayout>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Hero block. Generous block padding so the case study feels like its
+     own landing, not a continuation of the previous page.
+     -------------------------------------------------------------------------- */
+  .case-study__hero {
+    padding-block: var(--space-2xl);
+  }
+
+  /* Two-column grid on wide screens. Collapses to one column at narrower
+     widths so the copy and the image each get full width on mobile. */
+  .case-study__hero-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  @media (min-width: 56rem) {
+    .case-study__hero-inner {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* Copy column. Vertical stack with consistent gaps. */
+  .case-study__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+  }
+
+  /* Meta row. Mono, muted, dot-separated stamp. */
+  .case-study__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Title. Inherits h1 size from the global scale. */
+  .case-study__title {
+    line-height: 0.95;
+  }
+
+  /* Client line. Slightly smaller than the title but still display font. */
+  .case-study__client {
+    font-family: var(--font-display);
+    font-size: var(--font-size-h4);
+    color: var(--color-accent);
+  }
+
+  /* Summary sentence. Capped reading width so it doesn't sprawl. */
+  .case-study__summary {
+    font-size: 1.125rem;
+    color: var(--color-text);
+    max-width: 56ch;
+    line-height: 1.6;
+  }
+
+  /* Services badge list. Inline flex with wrap so badges wrap on narrow
+     screens instead of overflowing. */
+  .case-study__services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-s);
+  }
+
+  /* Single badge. Outlined pill in the accent color. */
+  .case-study__service {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+  }
+
+  /* Media column. Astro's <Image /> renders an <img> inside this div;
+     give the container a soft rounded corner and let the image fill it. */
+  .case-study__media {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .case-study__media :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* --------------------------------------------------------------------------
+     Body. Wraps the rendered MDX. Global selectors (`:global`) reach into
+     the MDX output to style its h2/p/ul/etc. without leaking those rules
+     beyond this block.
+     -------------------------------------------------------------------------- */
+  .case-study__body {
+    padding-block: var(--space-l) var(--space-2xl);
+    max-width: 72ch;             /* Comfortable reading width for long-form. */
+    margin-inline: auto;
+    color: var(--color-text);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+
+  .case-study__body :global(h2) {
+    font-size: var(--font-size-h3);
+    color: var(--color-primary);
+    margin-top: var(--space-l);
+    margin-bottom: var(--space-s);
+  }
+
+  .case-study__body :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .case-study__body :global(p) {
+    margin-bottom: var(--space-m);
+  }
+
+  .case-study__body :global(ul) {
+    list-style: disc;
+    padding-left: 1.25rem;
+    margin-bottom: var(--space-m);
+  }
+
+  .case-study__body :global(li) {
+    margin-bottom: 0.25rem;
+  }
+
+  .case-study__body :global(a) {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .case-study__body :global(a:hover) {
+    color: var(--color-secondary);
+  }
+</style>
