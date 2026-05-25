@@ -1,0 +1,147 @@
+---
+/* ============================================================================
+   Section 06 | Testimonials
+   ============================================================================
+   Three quote cards. Each card has a pull-quote, the attribution name, and
+   a small role + organization line.
+
+   Testimonials lean on social proof for trust. The visual treatment keeps
+   the quote primary and the attribution small, so the reader's eye goes to
+   the words first.
+
+   BEM:
+     testimonials                Section wrapper.
+     testimonials__grid          Card grid.
+     testimonial                 Single quote card.
+     testimonial__quote          The pull quote text.
+     testimonial__attribution    Block with name + role.
+     testimonial__name           Quoted person's name.
+     testimonial__role           Title + organization line.
+   ============================================================================ */
+
+import SectionHeading from './SectionHeading.astro';
+
+// Placeholder quotes. Replace with real testimonials as they come in.
+// Each entry: quote text, name of the person quoted, role + organization.
+const quotes = [
+  {
+    quote: 'Nathan listened first and built second. The site launched on time and the form started filling up the same week.',
+    name: 'Placeholder Name',
+    role: 'Communications Director, Crestview Presbyterian',
+  },
+  {
+    quote: 'For the first time our parents can find tour signup, tuition, and the calendar without calling the office. That alone paid for the project.',
+    name: 'Placeholder Name',
+    role: 'Director, Oakwood Preschool',
+  },
+  {
+    quote: 'The photos and the website match because the same person made both. That sounds small until you see what we had before.',
+    name: 'Placeholder Name',
+    role: 'Executive Director, Cincy Table',
+  },
+];
+---
+
+<section class="testimonials" aria-labelledby="testimonials-heading">
+  <div class="ncs-container">
+
+    <SectionHeading
+      num="06"
+      title="What people say"
+      sub="A few words from the people I have worked with recently."
+    />
+
+    <ul class="testimonials__grid">
+      {quotes.map((entry) => (
+        <li>
+          <figure class="testimonial">
+            <!-- The pull quote. blockquote inside figure is the most accurate
+                 semantic pairing for a quote with attribution. -->
+            <blockquote class="testimonial__quote">
+              <p>{entry.quote}</p>
+            </blockquote>
+            <figcaption class="testimonial__attribution">
+              <span class="testimonial__name">{entry.name}</span>
+              <span class="testimonial__role">{entry.role}</span>
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+
+  </div>
+</section>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Section padding.
+     -------------------------------------------------------------------------- */
+  .testimonials {
+    padding-block: var(--space-2xl);
+  }
+
+  /* --------------------------------------------------------------------------
+     Card grid. Three columns at wide, two at tablet, one at phone, all via
+     auto-fit minmax with a comfortable minimum of 18rem.
+     -------------------------------------------------------------------------- */
+  .testimonials__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--space-l);
+  }
+
+  /* --------------------------------------------------------------------------
+     Single card. Light surface with a soft border. Padding sits at space-l
+     so the quote has air around it. Border-left in the accent color acts
+     as a quotation marker without dropping a literal quote mark.
+     -------------------------------------------------------------------------- */
+  .testimonial {
+    background-color: var(--color-bg-soft);
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0 8px 8px 0;
+    padding: var(--space-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+    margin: 0;     /* Reset default figure margin. */
+    height: 100%;  /* Equal-height cards in the grid. */
+  }
+
+  /* --------------------------------------------------------------------------
+     Quote text. Slightly larger and italicized so it reads as a quote
+     without needing literal quote marks.
+     -------------------------------------------------------------------------- */
+  .testimonial__quote {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  .testimonial__quote p {
+    font-size: 1.125rem;
+    line-height: 1.55;
+    font-style: italic;
+  }
+
+  /* --------------------------------------------------------------------------
+     Attribution block. Sits at the bottom of the card thanks to the
+     flex-direction column + margin-top auto on this block (not set here,
+     but achievable if cards need to push the attribution to the bottom).
+     -------------------------------------------------------------------------- */
+  .testimonial__attribution {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: auto;  /* Pushes attribution to the bottom of taller cards. */
+  }
+
+  .testimonial__name {
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  .testimonial__role {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+</style>

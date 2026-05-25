@@ -1,6 +1,41 @@
 ---
+/* ============================================================================
+   Homepage
+   ============================================================================
+   The eight-section homepage architecture in order. Each section is a
+   self-contained component with its own scoped styles, so this file stays
+   thin: import, compose, ship.
+
+   Section order is fixed (documented in CLAUDE.md):
+     01 Hero
+     02 Selected work
+     03 What I do
+     04 Selected photography
+     05 How we work
+     06 Testimonials
+     07 CTA banner
+     08 Footer (rendered by BaseLayout)
+
+   Don't reorder. Don't drop. If a section's content isn't ready, the
+   component itself holds the placeholder.
+   ============================================================================ */
+
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import SelectedWork from '../components/SelectedWork.astro';
+import Services from '../components/Services.astro';
+import PhotoStrip from '../components/PhotoStrip.astro';
+import Process from '../components/Process.astro';
+import Testimonials from '../components/Testimonials.astro';
+import CtaBanner from '../components/CtaBanner.astro';
 ---
-<BaseLayout title="Home">
-  <!-- Home page placeholder -->
+
+<BaseLayout title="Nixon Creative Studio | Strategy-led design and photography">
+  <Hero />
+  <SelectedWork />
+  <Services />
+  <PhotoStrip />
+  <Process />
+  <Testimonials />
+  <CtaBanner />
 </BaseLayout>

@@ -1,0 +1,215 @@
+---
+/* ============================================================================
+   Section 01 | Hero
+   ============================================================================
+   First impression. Two columns on large screens, single column on mobile.
+
+   Left column: small mono overline "01 / Hello.", a large Bebas Neue
+   statement headline, a two-sentence positioning paragraph, then a primary
+   button to /contact and a secondary text link to /work.
+
+   Right column: portrait slot. Placeholder colored div for now; swap to an
+   Astro <Image /> once the real headshot lands in src/assets/brand/.
+
+   Content is hardcoded here on purpose. The Hero is bespoke; not a candidate
+   for content collections or props.
+   ============================================================================ */
+
+// The headline statement. Edit in place when the positioning sharpens.
+const statement = 'I make websites that pull their weight.';
+
+// Two-sentence positioning paragraph. Conversational, not corporate.
+const intro = 'Nixon Creative Studio designs and builds modern websites for small businesses, nonprofits, churches, and schools in the Cincinnati region. Strategy first, then design, then code, all done by one person who cares about how the whole thing works together.';
+
+// Locale tag under the headline. Small, muted, reinforces the regional focus.
+const locale = 'West Chester, OH · Greater Cincinnati';
+---
+
+<section class="page-hero" aria-labelledby="hero-statement">
+  <div class="ncs-container page-hero__inner">
+
+    <!-- Left column: copy stack. -->
+    <div class="page-hero__copy">
+
+      <!-- Overline mirrors the section-heading number pattern but with a
+           short "Hello." greeting next to it so the Hero feels personal. -->
+      <p class="page-hero__overline">
+        <span class="page-hero__num">01</span>
+        <span class="page-hero__greeting">Hello.</span>
+      </p>
+
+      <!-- Statement headline. id is referenced by the section's aria-labelledby. -->
+      <h1 id="hero-statement" class="page-hero__statement">{statement}</h1>
+
+      <!-- Locale line. Tiny detail, but it tells visitors quickly that this
+           is a local studio, not a faceless agency. -->
+      <p class="page-hero__locale">{locale}</p>
+
+      <!-- Two-sentence positioning paragraph. -->
+      <p class="page-hero__name">{intro}</p>
+
+      <!-- CTA row. Primary button + secondary text link side by side, stacks
+           on narrow screens via flex-wrap. -->
+      <div class="page-hero__ctas">
+        <a class="page-hero__cta page-hero__cta--primary" href="/contact">Start a project</a>
+        <a class="card-link" href="/work/">See selected work</a>
+      </div>
+
+    </div>
+
+    <!-- Right column: portrait placeholder. Aspect 4/5 with rounded corners.
+         Replace this div with an Astro <Image /> once the headshot is in
+         src/assets/brand/. -->
+    <div class="page-hero__portrait" role="img" aria-label="Portrait placeholder"></div>
+
+  </div>
+</section>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Outer section. Generous block padding via the largest spacing token so
+     the Hero has room to breathe above the next section.
+     -------------------------------------------------------------------------- */
+  .page-hero {
+    padding-block: var(--space-2xl);
+  }
+
+  /* --------------------------------------------------------------------------
+     Two-column grid on large screens. Falls back to a single column on
+     anything narrower than 56rem (about 896px) so the portrait and the copy
+     don't squeeze each other on tablets.
+
+     Grid template: copy gets a slightly wider share so the headline has
+     room to land at full size; portrait takes the remaining minmax slot.
+     -------------------------------------------------------------------------- */
+  .page-hero__inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  @media (min-width: 56rem) {
+    .page-hero__inner {
+      grid-template-columns: 1.2fr 1fr;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Copy column. Vertical stack with consistent gaps. Max-width on the
+     paragraph elements (set below) keeps line length comfortable on wide
+     screens; this container itself stays full width of its grid cell.
+     -------------------------------------------------------------------------- */
+  .page-hero__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+  }
+
+  /* --------------------------------------------------------------------------
+     Overline row. "01" in mono followed by "Hello." in body font. Inline
+     flex with a small gap so the two pieces sit on one line.
+     -------------------------------------------------------------------------- */
+  .page-hero__overline {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-s);
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  /* Mono number prefix matches the section-heading pattern site-wide. */
+  .page-hero__num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Greeting word. Slightly larger than the number for read order. */
+  .page-hero__greeting {
+    font-family: var(--font-body);
+  }
+
+  /* --------------------------------------------------------------------------
+     Statement headline. Inherits size from the global h1 (clamped fluid scale)
+     so we don't restate it here. Optical tweaks only.
+     -------------------------------------------------------------------------- */
+  .page-hero__statement {
+    /* Slightly tighter line-height than the global h1 default so a long
+       three-line headline reads as a single block. */
+    line-height: 0.95;
+    max-width: 18ch;
+  }
+
+  /* --------------------------------------------------------------------------
+     Locale line. Small, muted, sits below the headline as a place tag.
+     -------------------------------------------------------------------------- */
+  .page-hero__locale {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  /* --------------------------------------------------------------------------
+     Positioning paragraph. Capped to ~58 characters so the line stays
+     comfortable to read at the desktop heading size.
+     -------------------------------------------------------------------------- */
+  .page-hero__name {
+    font-size: 1.125rem;
+    color: var(--color-text);
+    max-width: 58ch;
+    line-height: 1.6;
+  }
+
+  /* --------------------------------------------------------------------------
+     CTA row. Primary button + secondary link. Flex with wrap so the
+     secondary link drops to a new line below the button on narrow screens.
+     -------------------------------------------------------------------------- */
+  .page-hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-m);
+    margin-top: var(--space-s);
+  }
+
+  /* --------------------------------------------------------------------------
+     Primary button. Filled with the accent color, white text, generous
+     padding. Hover swaps to the deeper sky blue and lifts a hair.
+     -------------------------------------------------------------------------- */
+  .page-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.875rem 1.5rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: background-color 150ms ease, transform 150ms ease;
+  }
+
+  .page-hero__cta--primary {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .page-hero__cta--primary:hover,
+  .page-hero__cta--primary:focus-visible {
+    background-color: var(--color-secondary);
+    transform: translateY(-1px);
+  }
+
+  /* --------------------------------------------------------------------------
+     Portrait placeholder. Soft brand color, 4:5 aspect, gentle rounded
+     corners. Swap to an Astro <Image /> when the real headshot is ready.
+     -------------------------------------------------------------------------- */
+  .page-hero__portrait {
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    /* Subtle gradient just so the placeholder doesn't read as broken layout. */
+    background: linear-gradient(135deg, var(--color-bg-soft) 0%, var(--color-secondary) 100%);
+    border-radius: 8px;
+  }
+</style>

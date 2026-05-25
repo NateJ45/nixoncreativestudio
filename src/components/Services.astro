@@ -1,0 +1,145 @@
+---
+/* ============================================================================
+   Section 03 | What I Do (Services)
+   ============================================================================
+   Three service chapters laid out as a vertical sequence of numbered
+   sections, not a card grid. Each chapter pairs a mono number with a display
+   title and a short body paragraph.
+
+   Why a stacked sequence rather than cards: services are different chapters
+   of the same offering, not three competing options. Stacking lets each one
+   breathe at its own size.
+
+   BEM:
+     services             Outer section wrapper.
+     services__list       Stack of chapters.
+     service-chapter      One chapter row.
+     service-chapter__num Mono number marker.
+     service-chapter__title Display heading.
+     service-chapter__body Paragraph copy.
+   ============================================================================ */
+
+import SectionHeading from './SectionHeading.astro';
+
+// The three service chapters. Numbers here are the chapter labels visitors
+// see (i, ii, iii) rather than section numbers; they read as steps of one
+// offering rather than separate sections of the site.
+const chapters = [
+  {
+    num: 'i',
+    title: 'Strategy',
+    body: 'Every project starts with the same question: what does this organization actually need a website to do? We map the audience, the conversion path, and the content you already have, then write the brief together.',
+  },
+  {
+    num: 'ii',
+    title: 'Web design',
+    body: 'Modern, accessible, fast. Plain CSS, BEM naming, real fonts, real images. Built to load quickly on a phone in a parking lot and to keep working for years without a maintenance subscription.',
+  },
+  {
+    num: 'iii',
+    title: 'Photography',
+    body: 'Headshots, event coverage, environmental shots for the site. Same person who designed the site shows up with the camera, so the visuals match the layout instead of fighting it.',
+  },
+];
+---
+
+<section class="services" aria-labelledby="services-heading">
+  <div class="ncs-container">
+
+    <SectionHeading
+      num="03"
+      title="What I do"
+      sub="Three connected services. Most projects use all three; some use one or two."
+    />
+
+    <!-- List of chapters. Plain ordered list because they're sequential, but
+         the marker is hidden visually (we render our own number prefix). -->
+    <ol class="services__list">
+      {chapters.map((chapter) => (
+        <li class="service-chapter">
+          <span class="service-chapter__num" aria-hidden="true">{chapter.num}</span>
+          <div class="service-chapter__copy">
+            <h3 class="service-chapter__title">{chapter.title}</h3>
+            <p class="service-chapter__body">{chapter.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+  </div>
+</section>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Section padding. Soft background tint differentiates this section from
+     the white sections above and below it.
+     -------------------------------------------------------------------------- */
+  .services {
+    padding-block: var(--space-2xl);
+    background-color: var(--color-bg-soft);
+  }
+
+  /* --------------------------------------------------------------------------
+     Chapter list. Vertical stack with generous gaps so each chapter reads
+     as its own block. Padding-left zero because we render our own number.
+     -------------------------------------------------------------------------- */
+  .services__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+    padding-left: 0;
+    list-style: none;
+  }
+
+  /* --------------------------------------------------------------------------
+     Single chapter row. Two-column grid: a narrow column for the number
+     and a wider column for the heading + body. Collapses to a stacked
+     layout on narrow screens.
+     -------------------------------------------------------------------------- */
+  .service-chapter {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-s);
+    align-items: start;
+  }
+
+  @media (min-width: 40rem) {
+    .service-chapter {
+      grid-template-columns: 6rem 1fr;
+      gap: var(--space-m);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Number marker. Mono, accent color, sized just under h3 so it reads as
+     a heading-mate, not body text. Padding-top nudges it to baseline-align
+     visually with the title text rather than the top of the title block.
+     -------------------------------------------------------------------------- */
+  .service-chapter__num {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    color: var(--color-accent);
+    letter-spacing: 0.05em;
+    padding-top: 0.25rem;
+  }
+
+  /* Copy column. Standard vertical rhythm between title and paragraph. */
+  .service-chapter__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+  }
+
+  /* Title sits at h3 size from the global scale. */
+  .service-chapter__title {
+    color: var(--color-primary);
+  }
+
+  /* Body paragraph. Capped at a comfortable reading width. */
+  .service-chapter__body {
+    color: var(--color-text);
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+</style>

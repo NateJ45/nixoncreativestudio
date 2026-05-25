@@ -1,0 +1,85 @@
+---
+/* ============================================================================
+   Section Heading
+   ============================================================================
+   Reusable heading block for every homepage section except the Hero. Keeps the
+   numbered visual map (01 through 08) consistent and the typography rhythm in
+   one place: a small mono number, a large Bebas Neue title, and an optional
+   muted sub paragraph for context.
+
+   Sections 02 through 08 import this. The Hero builds its own heading because
+   it has a different visual treatment (overline + large statement headline).
+
+   Usage:
+     <SectionHeading num="02" title="Selected work" />
+     <SectionHeading num="03" title="What I do" sub="Strategy, design, photography." />
+   ============================================================================ */
+
+interface Props {
+  num: string;       // Two-digit section number, e.g. "02". Quoted so leading zero stays.
+  title: string;     // The section's display title.
+  sub?: string;      // Optional supporting sentence beneath the title.
+}
+
+const { num, title, sub } = Astro.props;
+---
+
+<!-- The heading is a header element so screen readers and search engines see
+     a clear section landmark, not just a row of styled text. -->
+<header class="section-heading">
+
+  <!-- Small mono label with the section number. Reads as a marker, not a heading. -->
+  <span class="section-heading__num" aria-hidden="true">{num}</span>
+
+  <!-- Section title in the display font. -->
+  <h2 class="section-heading__title">{title}</h2>
+
+  <!-- Optional supporting line. Rendered only when provided so empty space
+       doesn't pile up under sections that don't need a sub. -->
+  {sub && <p class="section-heading__sub">{sub}</p>}
+
+</header>
+
+
+<style>
+  /* --------------------------------------------------------------------------
+     Outer block. Vertical stack with comfortable gaps between number, title,
+     and sub. Bottom margin separates the heading from the section content.
+     -------------------------------------------------------------------------- */
+  .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-l);
+  }
+
+  /* --------------------------------------------------------------------------
+     Section number. Mono and muted so it reads as a label, mirroring the
+     numbered nav links in the site header.
+     -------------------------------------------------------------------------- */
+  .section-heading__num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* --------------------------------------------------------------------------
+     Section title. Inherits most styling from the global h2 rule; overrides
+     here are tiny so the global scale stays in charge.
+     -------------------------------------------------------------------------- */
+  .section-heading__title {
+    /* No size override; let the global h2 token handle it. */
+  }
+
+  /* --------------------------------------------------------------------------
+     Sub paragraph. Muted and capped to a comfortable reading width so the
+     line doesn't sprawl across the full content column on wide screens.
+     -------------------------------------------------------------------------- */
+  .section-heading__sub {
+    color: var(--color-text-muted);
+    font-size: 1.125rem;
+    max-width: 48ch;
+    line-height: 1.5;
+  }
+</style>
