@@ -19,22 +19,22 @@
 // for SSR. Either way it stays accurate without manual edits each January.
 const year = new Date().getFullYear();
 
-// Contact details. Email is the primary inbox; phone is the secondary path.
-const contact = {
-  email: 'hello@nixoncreativestudio.com',
-  phone: '(513) 555-0100',  // TODO: replace with real number.
-};
+// Pull contact, social, studio name, and tagline from the single source of
+// truth in src/data/site.ts so updating any field there flows here on the
+// next build. The Footer adds its own page-local content (year and the
+// "Currently" blurb) below.
+import { site } from '../data/site';
 
-// Social links. URLs are placeholders for now.
+// Social links rendered as a list. Driving this from site.social keeps the
+// labels in one place; if a new network is added there, just add a row here.
 const social = [
-  { label: 'Instagram', href: 'https://instagram.com/nixoncreativestudio' },
-  { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/nathanjnixon'  },
+  { label: 'Instagram', href: site.social.instagram },
+  { label: 'LinkedIn',  href: site.social.linkedin  },
 ];
 
-// "Currently" blurb. Short, present-tense, swappable per season.
+// "Currently" blurb. Short, present-tense, swappable per season. Lives here
+// rather than in site.ts because it's marketing copy, not contact info.
 const currently = 'Booking small business and nonprofit web projects for the season ahead, with a few photography days mixed in.';
-
-const tagline = 'Modern websites for small businesses, nonprofits, churches, and schools in the Cincinnati region.';
 ---
 
 <!-- Full-bleed footer; inner column constrained via .ncs-container. -->
@@ -49,8 +49,9 @@ const tagline = 'Modern websites for small businesses, nonprofits, churches, and
         <div>
           <h2 class="site-footer__heading">Contact</h2>
           <ul>
-            <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
-            <li><a href={`tel:${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a></li>
+            <li><a href={site.emailHref}>{site.email}</a></li>
+            <li><a href={site.phoneHref}>{site.phone}</a></li>
+            <li>{site.address}</li>
           </ul>
         </div>
 
@@ -82,9 +83,9 @@ const tagline = 'Modern websites for small businesses, nonprofits, churches, and
          purpose so it doesn't compete with the brand line, but it stays
          easy to find for anyone who's looking for it. -->
     <div class="site-footer__bottom">
-      <small>© {year} Nixon Creative Studio</small>
+      <small>© {year} {site.studioName}</small>
       <small><a href="/privacy">Privacy</a></small>
-      <small>{tagline}</small>
+      <small>{site.tagline}</small>
     </div>
 
   </div>

@@ -15,6 +15,10 @@
    Bricks build). For now the desktop layout is the priority.
    ============================================================================ */
 
+// Studio name comes from the central site data so a rebrand updates the
+// wordmark, the footer, and meta together.
+import { site } from '../data/site';
+
 // The nav model lives in the script so it's easy to reorder, rename, or
 // extend later without hunting through markup.
 const navLinks = [
@@ -32,7 +36,7 @@ const navLinks = [
 
     <!-- Wordmark links home. Display font, brand color, deliberately set in rem
          so it scales with the user's root font-size preference. -->
-    <a class="site-header__wordmark" href="/">Nixon Creative Studio</a>
+    <a class="site-header__wordmark" href="/">{site.studioName}</a>
 
     <!-- aria-label distinguishes this nav from the footer nav for screen readers. -->
     <nav class="site-nav" aria-label="Primary">

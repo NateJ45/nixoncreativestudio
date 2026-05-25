@@ -32,13 +32,10 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-// Contact details. Same source of truth as the footer block. If these
-// change, update both surfaces; pulling them into a shared module is a
-// future refactor.
-const contact = {
-  email: 'hello@nixoncreativestudio.com',
-  phone: '(513) 555-0100',
-};
+// Contact details come from the central site data module so a single edit
+// updates the footer, the contact sidebar, the form's subject line, and
+// the thank-you body all at once.
+import { site } from '../data/site';
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
@@ -128,8 +125,8 @@ const formActive = web3formsKey.length > 0;
           handler at the bottom of the file.
         -->
         <input type="hidden" name="access_key" value={web3formsKey} />
-        <input type="hidden" name="subject"    value="New project inquiry from nixoncreativestudio.com" />
-        <input type="hidden" name="from_name"  value="Nixon Creative Studio website" />
+        <input type="hidden" name="subject"    value={`New project inquiry from ${site.domain}`} />
+        <input type="hidden" name="from_name"  value={`${site.studioName} website`} />
 
         <div class="contact-form__field">
           <label class="contact-form__label" for="name">Your name</label>
@@ -214,7 +211,7 @@ const formActive = web3formsKey.length > 0;
       <div class="contact-thanks" data-contact-thanks hidden>
         <h2 class="contact-thanks__title">Thanks, your message is in.</h2>
         <p class="contact-thanks__body">
-          I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from nixoncreativestudio.com, then try the email link on the right.
+          I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from {site.domain}, then try the email link on the right.
         </p>
       </div>
 
@@ -222,7 +219,7 @@ const formActive = web3formsKey.length > 0;
            above so the visitor can correct anything and resubmit, or fall
            back to the email link in the sidebar. -->
       <div class="contact-error" data-contact-error hidden role="alert">
-        <p>Something went wrong on our end. Please try again, or email <a href={`mailto:${contact.email}`}>{contact.email}</a> directly.</p>
+        <p>Something went wrong on our end. Please try again, or email <a href={site.emailHref}>{site.email}</a> directly.</p>
       </div>
 
       </div>
@@ -235,8 +232,8 @@ const formActive = web3formsKey.length > 0;
         <div class="contact-sidebar__block">
           <h2 class="contact-sidebar__heading">Direct</h2>
           <ul class="contact-sidebar__list">
-            <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
-            <li><a href={`tel:${contact.phone.replace(/\D/g, '')}`}>{contact.phone}</a></li>
+            <li><a href={site.emailHref}>{site.email}</a></li>
+            <li><a href={site.phoneHref}>{site.phone}</a></li>
           </ul>
         </div>
 
@@ -250,7 +247,7 @@ const formActive = web3formsKey.length > 0;
         <div class="contact-sidebar__block">
           <h2 class="contact-sidebar__heading">Where I am</h2>
           <p class="contact-sidebar__body">
-            West Chester, Ohio. I work with organizations across the greater Cincinnati region in person, and beyond it remotely when the work calls for it.
+            {site.address}. I work with organizations across the greater Cincinnati region in person, and beyond it remotely when the work calls for it.
           </p>
         </div>
 
