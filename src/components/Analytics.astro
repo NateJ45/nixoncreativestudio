@@ -1,0 +1,41 @@
+---
+/* ============================================================================
+   Cloudflare Web Analytics
+   ============================================================================
+   Privacy-friendly, cookie-free traffic measurement. Free at our volume.
+   The beacon script reports page views and Web Vitals to Cloudflare's
+   analytics endpoint; no cookie banner needed because nothing is stored
+   on the visitor's device.
+
+   Setup:
+     1. dash.cloudflare.com > Analytics & Logs > Web Analytics > Add a site
+     2. Cloudflare gives you a token (a hex string).
+     3. Set PUBLIC_CF_ANALYTICS_TOKEN in .env locally and in
+        Cloudflare Pages > Settings > Build > Variables and secrets.
+     4. Push a small commit (or click Retry deployment) so the new build
+        bakes the token into the beacon script.
+
+   This component renders nothing if the token is missing, so local dev
+   and any preview deploy without the variable stays clean.
+   ============================================================================ */
+
+// PUBLIC_ prefix is required because the script tag runs in the browser.
+// The value is inlined at build time (this is a prerendered layout), so
+// the env var must be set on the BUILD environment in Cloudflare, not
+// the runtime environment.
+const token = import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN ?? '';
+const hasToken = token.length > 0;
+
+// JSON-encode the token into the data attribute exactly the way
+// Cloudflare's snippet does. JSON.stringify takes care of escaping in
+// case the token ever contains characters that would break the markup.
+const beaconConfig = JSON.stringify({ token });
+---
+
+{hasToken && (
+  <script
+    defer
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={beaconConfig}
+  ></script>
+)}

@@ -1,7 +1,35 @@
 ---
+/* ============================================================================
+   Base Layout
+   ============================================================================
+   The shell every page renders inside. Owns the document <head>, the
+   global stylesheet import, the Header, the Footer, and any sitewide
+   bookkeeping like analytics and font preloads.
+
+   Page-specific content goes in the <slot /> inside <main>.
+   ============================================================================ */
+
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Analytics from '../components/Analytics.astro';
+
+// Resolve the Bebas Neue woff2 file through Vite's URL pipeline. The ?url
+// query asks Vite to copy the file into the build output and hand us the
+// hashed public path at build time. The same path appears in the global
+// stylesheet (loaded by @fontsource/bebas-neue/400.css), so the preload
+// link below points at the exact resource the browser will fetch.
+//
+// Why preload Bebas Neue specifically: it's the display font used by every
+// h1/h2 on the site, including the hero headline. The hero headline is
+// almost always the LCP (Largest Contentful Paint) element, so getting
+// the font loaded as early as possible shortens LCP measurably.
+//
+// Source Sans 3 (body) is not preloaded on purpose. It's a variable font
+// with multiple weights baked in; preloading it would cost more bandwidth
+// than the LCP gain is worth.
+import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
+
 interface Props { title: string; description?: string; }
 const { title, description = 'Nixon Creative Studio' } = Astro.props;
 ---
@@ -12,6 +40,23 @@ const { title, description = 'Nixon Creative Studio' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
+
+    <!-- Bebas Neue preload. `crossorigin` is required for font preloads:
+         without it, the preload and the eventual CSS font fetch are
+         considered different requests, and the browser would download the
+         font twice. With it, the second fetch hits the preload cache. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={bebasNeueWoff2}
+      crossorigin
+    />
+
+    <!-- Cloudflare Web Analytics. Component renders the beacon script
+         only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
+         deploy without the token simply emits nothing. -->
+    <Analytics />
   </head>
   <body>
     <Header />
