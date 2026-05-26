@@ -34,12 +34,20 @@ import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
 
 // The nav model lives in the script so it's easy to reorder, rename, or
-// extend later without hunting through markup.
+// extend later without hunting through markup. MobileNav consumes the
+// same array, so a change here flows to both surfaces.
+//
+// Numbering is the visual map; Work / Services / About / Contact match
+// the original section architecture, with Journal and Now slotted in
+// between About and Contact so the contact link stays at the right
+// edge as the primary CTA.
 const navLinks = [
   { num: '01', label: 'Work',     href: '/work/'    },
   { num: '02', label: 'Services', href: '/services' },
   { num: '03', label: 'About',    href: '/about'    },
-  { num: '04', label: 'Contact',  href: '/contact'  },
+  { num: '04', label: 'Journal',  href: '/journal/' },
+  { num: '05', label: 'Now',      href: '/now/'     },
+  { num: '06', label: 'Contact',  href: '/contact'  },
 ];
 ---
 
@@ -67,11 +75,12 @@ const navLinks = [
          next to the hamburger at < sm. -->
     <div class="flex items-center gap-s">
 
-      <!-- Desktop nav. Visible at >= sm so the four links don't compress
-           and overflow on narrow screens; the MobileNav drawer below
-           handles the same links at small widths. -->
-      <nav aria-label="Primary" class="hidden sm:block">
-        <ul class="flex items-center gap-m">
+      <!-- Desktop nav. Visible at >= md (768px) because six items don't
+           fit comfortably at sm alongside the wordmark and theme toggle;
+           the MobileNav drawer below takes over below md. gap-s instead
+           of gap-m so the six links breathe without crowding. -->
+      <nav aria-label="Primary" class="hidden md:block">
+        <ul class="flex items-center gap-s">
           {navLinks.map(({ num, label, href }) => (
             <li>
               <a
@@ -92,18 +101,18 @@ const navLinks = [
            copy for touch users. client:load so the icon hydrates quickly
            and the click handler is wired before the visitor would
            reasonably try to use it. -->
-      <div class="hidden sm:block">
+      <div class="hidden md:block">
         <ThemeToggle client:load />
       </div>
 
-      <!-- Mobile drawer. Hidden at >= sm; the desktop nav above takes over.
+      <!-- Mobile drawer. Hidden at >= md; the desktop nav above takes over.
            client:only='react' skips server-side rendering of the Sheet
            primitive (Radix Dialog uses portals + hooks that don't SSR
            cleanly inside Astro). Trade-off: a brief moment with no
-           hamburger button visible on mobile before React hydrates. The
+           hamburger button visible below md before React hydrates. The
            desktop nav users never see this delay since the wrapper is
-           display:none above sm. -->
-      <div class="sm:hidden">
+           display:none above md. -->
+      <div class="md:hidden">
         <MobileNav client:only="react" links={navLinks} studioName={site.studioName} />
       </div>
 

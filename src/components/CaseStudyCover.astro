@@ -1,0 +1,125 @@
+---
+/* ============================================================================
+   CaseStudyCover
+   ============================================================================
+   Foundation, edit with care.
+
+   Wraps Astro's <Image /> with a base64 plaiceholder painted as the
+   wrapper's CSS background. Visitors see the blurred preview while
+   the full image downloads, then the full image fades in on top via
+   the inline script below.
+
+   Why a wrapper and not the existing Photo React island: Photo renders
+   a plain <img>, losing Astro's srcset / WebP / dimension processing.
+   This wrapper keeps the Astro <Image /> for those features and just
+   adds the blur-up behavior around it.
+
+   Props:
+     - cover       ImageMetadata (from a content-collection image() field)
+     - placeholder base64 data URL (typically from getCoverPlaceholder())
+     - alt         accessibility text (use "" for decorative covers next
+                   to a heading carrying the same name)
+     - widths      array of widths Astro should emit srcset entries for
+     - sizes       sizes attribute for srcset selection
+     - class       optional extra classes on the wrapper div
+     - rounded     "lg" | "md" | "none" — convenience for the corner radius
+   ============================================================================ */
+
+import { Image } from 'astro:assets';
+
+interface Props {
+  cover:        ImageMetadata;
+  placeholder?: string;
+  alt:          string;
+  widths:       number[];
+  sizes:        string;
+  class?:       string;
+  rounded?:     'lg' | 'md' | 'none';
+  /** "natural" keeps the cover at its true aspect ratio (used by the
+      case study detail page hero). "cover" crops the image to the
+      wrapper's aspect ratio via object-fit (used by /work index cards
+      where every card needs a uniform 4:3 box). */
+  fit?:         'natural' | 'cover';
+}
+
+const {
+  cover,
+  placeholder,
+  alt,
+  widths,
+  sizes,
+  class: className = '',
+  rounded = 'lg',
+  fit = 'natural',
+} = Astro.props;
+
+const radiusClass =
+  rounded === 'lg'  ? 'rounded-lg' :
+  rounded === 'md'  ? 'rounded-md' : '';
+
+const imgFitClass = fit === 'cover' ? 'h-full w-full object-cover' : 'h-auto w-full';
+
+// Wrapper background. When a placeholder data URL is present, paint it
+// as a stretched cover background. The bg-bg-soft acts as a fallback
+// surface for covers that don't have a placeholder (older entries or
+// covers that don't match the src/assets/case-studies/{slug}.{ext}
+// convention). filter: blur(20px) softens the tiny base64 image so
+// the upscale doesn't look pixelated through the wrapper.
+const wrapperStyle = placeholder
+  ? `background-image: url("${placeholder}"); background-size: cover; background-position: center;`
+  : undefined;
+---
+
+<div
+  class={`relative overflow-hidden bg-bg-soft ${radiusClass} ${className}`}
+  style={wrapperStyle}
+>
+  {/* The blur layer sits on top of the wrapper bg and is removed once
+      the image loads. Avoids the brief moment where the bg-image source
+      is still visible underneath a partially-loaded WebP. */}
+  {placeholder && (
+    <div
+      aria-hidden="true"
+      data-blur-up-layer
+      class="pointer-events-none absolute inset-0 transition-opacity duration-500"
+      style={`background-image: url("${placeholder}"); background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1);`}
+    ></div>
+  )}
+
+  <Image
+    src={cover}
+    alt={alt}
+    widths={widths}
+    sizes={sizes}
+    class={`relative block opacity-0 transition-opacity duration-500 ${imgFitClass}`}
+    data-blur-up-img
+  />
+</div>
+
+<script>
+  // Blur-up handler. Fade each image in on load, and fade its sibling
+  // blur layer out on the same tick. Idempotent + runs again on
+  // ClientRouter swap so it works after view transitions.
+
+  function activate(img: HTMLImageElement) {
+    const layer = img.parentElement?.querySelector<HTMLElement>('[data-blur-up-layer]');
+    img.classList.remove('opacity-0');
+    if (layer) layer.classList.add('opacity-0');
+  }
+
+  function init() {
+    document.querySelectorAll<HTMLImageElement>('img[data-blur-up-img]').forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        activate(img);
+      } else {
+        img.addEventListener('load',  () => activate(img), { once: true });
+        // Even if load fails, lift the opacity so a broken image icon
+        // shows instead of an indefinite blur preview.
+        img.addEventListener('error', () => activate(img), { once: true });
+      }
+    });
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

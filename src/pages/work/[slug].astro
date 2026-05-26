@@ -14,12 +14,14 @@
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
-import { Image, getImage } from 'astro:assets';
+import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
+import CaseStudyCover from '../../components/CaseStudyCover.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { Badge } from '../../components/ui/badge';
 import { readingTime } from '../../lib/readingTime';
+import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 import { site } from '../../data/site';
 
 // getStaticPaths now passes neighbors as props (for the next/prev nav at
@@ -68,6 +70,12 @@ const updatedLabel   = updated ? fmt.format(updated) : null;
 // 1200px anyway.
 const ogCover = await getImage({ src: cover, width: 1200, format: 'jpg' });
 const ogCoverUrl = new URL(ogCover.src, site.url).toString();
+
+// Build-time plaiceholder blur preview. Returns undefined when the
+// source file doesn't follow the src/assets/case-studies/{slug}.{ext}
+// convention, in which case CaseStudyCover falls back to its bg-soft
+// solid placeholder.
+const coverBlur = getCoverPlaceholder(entry.id);
 
 // Article + CreativeWork JSON-LD for this case study. CreativeWork is
 // the more general type that fits portfolio entries; Article gives
@@ -183,23 +191,23 @@ const schemas = [
 
         </div>
 
-        <!-- Hero image. Astro <Image /> handles WebP, srcset, explicit
-             dimensions. overflow-hidden + rounded rounds the corners.
+        <!-- Hero image. CaseStudyCover wraps Astro <Image /> with a
+             plaiceholder blur preview painted as the wrapper's bg, then
+             fades the full image in once it loads.
+
              alt="" because the case study's h1 sits just above the image
              inside the same <header>, so a descriptive alt would make
-             screen readers announce the title twice. When a richer
-             description is needed (e.g. "Photo of the Crestview team in
-             the sanctuary"), add a coverAlt field to the case-studies
+             screen readers announce the title twice. For a richer
+             description (e.g. "Photo of the Crestview team in the
+             sanctuary"), add a coverAlt field to the case-studies
              schema in content.config.ts and thread it through here. -->
-        <div class="overflow-hidden rounded-lg bg-bg-soft">
-          <Image
-            src={cover}
-            alt=""
-            widths={[600, 900, 1200]}
-            sizes="(min-width: 56rem) 50vw, 100vw"
-            class="block h-auto w-full"
-          />
-        </div>
+        <CaseStudyCover
+          cover={cover}
+          placeholder={coverBlur}
+          alt=""
+          widths={[600, 900, 1200]}
+          sizes="(min-width: 56rem) 50vw, 100vw"
+        />
 
       </div>
     </header>

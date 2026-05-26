@@ -7,11 +7,13 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "npm run placeholders && astro build",
     "preview": "npm run build && wrangler dev",
     "astro": "astro",
     "generate-types": "wrangler types",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "placeholders": "node scripts/generate-placeholders.mjs",
+    "og": "node scripts/generate-og-default.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.5.4",
