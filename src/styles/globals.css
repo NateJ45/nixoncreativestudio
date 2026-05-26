@@ -414,11 +414,16 @@
      rather than pure white; subtle warmth keeps them on-brand. */
   --heading:            #F4F7FA;
 
-  /* Secondary/accent stay constant: brand blues read well on dark. */
-  --secondary:            #40AAED;
-  --secondary-foreground: #FFFFFF;
-  --accent:               #3B82C4;
+  /* Accent and secondary are brightened in dark mode for WCAG AA contrast.
+     On the dark surfaces below, the light-mode accent (#3B82C4) only hits
+     ~4.1:1, just under the 4.5:1 threshold for body-size accent text
+     (Process / Services step numbers, Footer accent links). The shifts
+     below clear AA on both #0F1E33 (bg-bg-soft) and #0A1628 (bg-primary)
+     while preserving the accent -> secondary lift on hover. */
+  --accent:               #40AAED;    /* was #3B82C4 in light; lifted to sky blue for AA */
   --accent-foreground:    #FFFFFF;
+  --secondary:            #7AC8F0;    /* was #40AAED in light; lighter sky for the hover step up */
+  --secondary-foreground: #FFFFFF;
 
   /* Muted surface: navy-tinted elevated dark.
      Muted-foreground: lighter gray so secondary copy still has contrast. */
@@ -429,8 +434,8 @@
   --border:             rgba(255, 255, 255, 0.08);
   --input:              rgba(255, 255, 255, 0.12);
 
-  /* Focus ring keeps the NCS blue accent in both modes. */
-  --ring:               #3B82C4;
+  /* Focus ring lifted to match the brighter dark-mode accent. */
+  --ring:               #40AAED;
 
   /* Destructive: shadcn red lifted slightly for dark mode contrast. */
   --destructive:        oklch(0.704 0.191 22.216);
