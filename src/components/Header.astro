@@ -26,6 +26,13 @@ import { site } from '../data/site';
 // at >= sm via its wrapper.
 import MobileNav from './MobileNav';
 
+// ThemeToggle is a React island that cycles light -> dark -> system and
+// writes to localStorage["ncs-theme"]. The anti-FOUC script in
+// BaseLayout reads that key on initial paint, so the visitor's choice
+// survives reloads with no flash. Visible at >= sm; on small screens
+// the toggle lives inside the MobileNav drawer instead.
+import ThemeToggle from './ThemeToggle';
+
 // The nav model lives in the script so it's easy to reorder, rename, or
 // extend later without hunting through markup.
 const navLinks = [
@@ -42,48 +49,64 @@ const navLinks = [
   of the content column. .ncs-container stays as a utility class in
   globals.css since the same pattern repeats across every section component.
 -->
-<header class="border-b border-black/[0.08] bg-bg py-m">
+<header class="border-b border-border bg-bg py-m">
   <div class="ncs-container flex items-center justify-between gap-m">
 
     <!-- Wordmark links home. Display font at a fixed 1.5rem so it stays
-         steady even as the hero h1 scales fluidly on wide screens. -->
+         steady even as the hero h1 scales fluidly on wide screens.
+         text-heading flips between navy and near-white with the theme. -->
     <a
-      class="font-display text-2xl leading-none tracking-[0.01em] text-primary no-underline"
+      class="font-display text-2xl leading-none tracking-[0.01em] text-heading no-underline"
       href="/"
     >
       {site.studioName}
     </a>
 
-    <!-- Desktop nav. Visible at >= sm so the four links don't compress
-         and overflow on narrow screens; the MobileNav drawer below
-         handles the same links at small widths. -->
-    <nav aria-label="Primary" class="hidden sm:block">
-      <ul class="flex items-center gap-m">
-        {navLinks.map(({ num, label, href }) => (
-          <li>
-            <a
-              class="inline-flex items-baseline gap-xs font-body text-base text-text no-underline transition-colors duration-150 hover:text-accent focus-visible:text-accent"
-              href={href}
-            >
-              <!-- Section number prefix. Smaller, mono, muted. Reads as a
-                   label rather than as part of the link text. -->
-              <span class="font-mono text-xs text-text-muted">{num}</span>
-              {label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer.
+         The flex wrapper keeps the toggle next to the nav at >= sm and
+         next to the hamburger at < sm. -->
+    <div class="flex items-center gap-s">
 
-    <!-- Mobile drawer. Hidden at >= sm; the desktop nav above takes over.
-         client:only='react' skips server-side rendering of the Sheet
-         primitive (Radix Dialog uses portals + hooks that don't SSR
-         cleanly inside Astro). Trade-off: a brief moment with no
-         hamburger button visible on mobile before React hydrates. The
-         desktop nav users never see this delay since the wrapper is
-         display:none above sm. -->
-    <div class="sm:hidden">
-      <MobileNav client:only="react" links={navLinks} studioName={site.studioName} />
+      <!-- Desktop nav. Visible at >= sm so the four links don't compress
+           and overflow on narrow screens; the MobileNav drawer below
+           handles the same links at small widths. -->
+      <nav aria-label="Primary" class="hidden sm:block">
+        <ul class="flex items-center gap-m">
+          {navLinks.map(({ num, label, href }) => (
+            <li>
+              <a
+                class="inline-flex items-baseline gap-xs font-body text-base text-text no-underline transition-colors duration-150 hover:text-accent focus-visible:text-accent"
+                href={href}
+              >
+                <!-- Section number prefix. Smaller, mono, muted. Reads as a
+                     label rather than as part of the link text. -->
+                <span class="font-mono text-xs text-text-muted">{num}</span>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own
+           copy for touch users. client:load so the icon hydrates quickly
+           and the click handler is wired before the visitor would
+           reasonably try to use it. -->
+      <div class="hidden sm:block">
+        <ThemeToggle client:load />
+      </div>
+
+      <!-- Mobile drawer. Hidden at >= sm; the desktop nav above takes over.
+           client:only='react' skips server-side rendering of the Sheet
+           primitive (Radix Dialog uses portals + hooks that don't SSR
+           cleanly inside Astro). Trade-off: a brief moment with no
+           hamburger button visible on mobile before React hydrates. The
+           desktop nav users never see this delay since the wrapper is
+           display:none above sm. -->
+      <div class="sm:hidden">
+        <MobileNav client:only="react" links={navLinks} studioName={site.studioName} />
+      </div>
+
     </div>
 
   </div>

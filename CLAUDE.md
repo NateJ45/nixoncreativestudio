@@ -238,6 +238,7 @@ Content-Security-Policy is intentionally not included; doing it right requires t
 - Pause for confirmation before installing new dependencies.
 - When proposing design changes, describe the visual outcome in plain language, not just the code.
 - For board, church, or client-facing copy, frame options collaboratively rather than top-down.
+- For browser-based verification (clicking through the site, screenshotting changes), prefer the Playwright MCP over chrome-devtools unless you specifically need DevTools-style inspection (network, console, Lighthouse).
 
 ---
 

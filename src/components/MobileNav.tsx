@@ -27,6 +27,7 @@ import {
   SheetTrigger,
 } from './ui/sheet';
 import { Button } from './ui/button';
+import ThemeToggle from './ThemeToggle';
 
 export interface MobileNavLink {
   num:   string;
@@ -55,17 +56,22 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
           variant="ghost"
           size="icon-lg"
           aria-label="Open menu"
-          className="text-primary"
+          className="text-heading"
         >
           <Menu className="size-6" />
         </Button>
       </SheetTrigger>
 
       <SheetContent side="right" className="bg-bg p-l">
-        <SheetHeader className="border-b border-black/[0.08] pb-m">
-          <SheetTitle className="font-display text-2xl tracking-[0.01em] text-primary">
+        <SheetHeader className="flex flex-row items-center justify-between gap-m border-b border-border pb-m">
+          <SheetTitle className="font-display text-2xl tracking-[0.01em] text-heading">
             {studioName}
           </SheetTitle>
+
+          {/* Theme toggle inside the drawer so touch users can switch
+              modes without a separate header control. Sits next to the
+              wordmark, mirroring the desktop placement. */}
+          <ThemeToggle />
         </SheetHeader>
 
         {/*

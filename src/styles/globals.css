@@ -48,11 +48,19 @@
    ---------------------------------------------------------------------------- */
 @theme {
 
-  /* Brand palette. --color-* drives bg-*, text-*, border-*. */
-  --color-primary:   #0A1628;  /* Dark navy. Header background, hero text. */
-  --color-accent:    #3B82C4;  /* NCS blue. Buttons, links, primary CTAs. */
-  --color-secondary: #40AAED;  /* Sky blue. Hover and highlight states. */
-  --color-tertiary:  #FFA334;  /* Amber. Accent badges, small flourishes. */
+  /* Brand palette. --color-* drives bg-*, text-*, border-*.
+     NOTE: The surface and text tokens below (bg, bg-soft, text, text-muted,
+     primary, heading) are re-aliased in the @theme inline block further
+     down so they switch with light/dark mode. The literals here are the
+     default light-mode values and the source-of-truth reference. */
+  --color-primary:   #0A1628;  /* Dark navy. Footer surface, headings (light mode). */
+  --color-accent:    #3B82C4;  /* NCS blue. Buttons, links, primary CTAs. Stays in dark mode. */
+  --color-secondary: #40AAED;  /* Sky blue. Hover and highlight states. Stays in dark mode. */
+  --color-tertiary:  #FFA334;  /* Amber. Accent badges, small flourishes. Stays in dark mode. */
+
+  /* Heading color. New token so headings can flip independently in dark
+     mode without dragging the rest of the palette with them. */
+  --color-heading:    #0A1628; /* Navy in light, near-white in dark. */
 
   /* Text */
   --color-text:       #1A1A1A; /* Near-black body. */
@@ -111,11 +119,14 @@
     @apply bg-background text-foreground;
   }
 
-  /* All headings inherit the display face and brand color by default. */
+  /* All headings inherit the display face and brand color by default.
+     --color-heading is aliased to the shadcn --heading token (see @theme
+     inline below), so this flips automatically between navy in light
+     mode and near-white in dark mode. */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 400;
-    color: var(--color-primary);
+    color: var(--color-heading);
     text-wrap: balance;
   }
 
@@ -213,6 +224,17 @@
 }
 
 @theme inline {
+
+  /* Brand surface and text tokens are aliased here (rather than defined
+     as literals in the first @theme block above) so they pick up the
+     :root / .dark switch below. Result: bg-bg, bg-bg-soft, text-text,
+     text-text-muted, and text-heading all flip with the theme. */
+  --color-bg:         var(--background);
+  --color-bg-soft:    var(--muted);
+  --color-text:       var(--foreground);
+  --color-text-muted: var(--muted-foreground);
+  --color-heading:    var(--heading);
+
   --font-heading:   var(--font-sans);
   --font-sans:   'Geist Variable', sans-serif;
   --color-sidebar-ring:   var(--sidebar-ring);
@@ -299,9 +321,14 @@
   --popover-foreground: #1A1A1A;
 
   /* Primary action color. Navy is the dominant brand surface; primitives
-     like Button (default variant) pick this up. */
+     like Button (default variant) pick this up. Stays navy in dark mode
+     so the Footer and CtaBanner read as a slightly elevated dark surface
+     rather than inverting to light, and the default Button stays on-brand. */
   --primary:            #0A1628;        /* = brand --color-primary */
   --primary-foreground: #FFFFFF;
+
+  /* Heading color. Navy in light mode; flips to near-white in .dark. */
+  --heading:            #0A1628;
 
   /* Secondary surface and accent. Both map to brand blues. */
   --secondary:            #40AAED;      /* = brand --color-secondary (sky blue) */
@@ -347,36 +374,74 @@
   --sidebar-ring:                 #3B82C4;
 }
 
+/* ----------------------------------------------------------------------------
+   Dark mode overrides.
+   ----------------------------------------------------------------------------
+   Applied when <html> carries the .dark class. The anti-FOUC script in
+   BaseLayout.astro decides whether to add that class on initial paint,
+   reading from localStorage["ncs-theme"] and prefers-color-scheme.
+
+   Design notes:
+     - --background is a deeper near-black (#050B16) so the navy --primary
+       still has a visible step against the page surface (used by Footer
+       and CtaBanner).
+     - --foreground is off-white rather than pure white; easier on the
+       eyes for long reading.
+     - --muted is a navy-tinted elevated dark, so bg-bg-soft sections
+       (Process, Services, Testimonials) get subtle hierarchy against
+       the page background without going gray.
+     - Brand colors (accent NCS blue, secondary sky blue, tertiary amber)
+       stay constant in both modes; they read fine on either surface.
+     - --primary stays navy so the Footer and CtaBanner read as the
+       darkest section, and the default Button stays on-brand.
+     - --border becomes white at low alpha so hairlines flip from
+       dark-on-light to light-on-dark.
+   ---------------------------------------------------------------------------- */
 .dark {
-  --background:   oklch(0.145 0 0);
-  --foreground:   oklch(0.985 0 0);
-  --card:   oklch(0.205 0 0);
-  --card-foreground:   oklch(0.985 0 0);
-  --popover:   oklch(0.205 0 0);
-  --popover-foreground:   oklch(0.985 0 0);
-  --primary:   oklch(0.922 0 0);
-  --primary-foreground:   oklch(0.205 0 0);
-  --secondary:   oklch(0.269 0 0);
-  --secondary-foreground:   oklch(0.985 0 0);
-  --muted:   oklch(0.269 0 0);
-  --muted-foreground:   oklch(0.708 0 0);
-  --accent:   oklch(0.269 0 0);
-  --accent-foreground:   oklch(0.985 0 0);
-  --destructive:   oklch(0.704 0.191 22.216);
-  --border:   oklch(1 0 0 / 10%);
-  --input:   oklch(1 0 0 / 15%);
-  --ring:   oklch(0.556 0 0);
-  --chart-1:   oklch(0.87 0 0);
-  --chart-2:   oklch(0.556 0 0);
-  --chart-3:   oklch(0.439 0 0);
-  --chart-4:   oklch(0.371 0 0);
-  --chart-5:   oklch(0.269 0 0);
-  --sidebar:   oklch(0.205 0 0);
-  --sidebar-foreground:   oklch(0.985 0 0);
-  --sidebar-primary:   oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground:   oklch(0.985 0 0);
-  --sidebar-accent:   oklch(0.269 0 0);
-  --sidebar-accent-foreground:   oklch(0.985 0 0);
-  --sidebar-border:   oklch(1 0 0 / 10%);
-  --sidebar-ring:   oklch(0.556 0 0);
+  /* Surfaces */
+  --background:         #050B16;
+  --foreground:         #E5E7EB;
+  --card:               #0A1628;
+  --card-foreground:    #E5E7EB;
+  --popover:            #0A1628;
+  --popover-foreground: #E5E7EB;
+
+  /* Primary stays navy in dark mode (see :root comment for why). */
+  --primary:            #0A1628;
+  --primary-foreground: #FFFFFF;
+
+  /* Headings flip to a near-white that still reads as "brand light"
+     rather than pure white; subtle warmth keeps them on-brand. */
+  --heading:            #F4F7FA;
+
+  /* Secondary/accent stay constant: brand blues read well on dark. */
+  --secondary:            #40AAED;
+  --secondary-foreground: #FFFFFF;
+  --accent:               #3B82C4;
+  --accent-foreground:    #FFFFFF;
+
+  /* Muted surface: navy-tinted elevated dark.
+     Muted-foreground: lighter gray so secondary copy still has contrast. */
+  --muted:              #0F1E33;
+  --muted-foreground:   #9CA3AF;
+
+  /* Borders and inputs invert to white at low alpha. */
+  --border:             rgba(255, 255, 255, 0.08);
+  --input:              rgba(255, 255, 255, 0.12);
+
+  /* Focus ring keeps the NCS blue accent in both modes. */
+  --ring:               #3B82C4;
+
+  /* Destructive: shadcn red lifted slightly for dark mode contrast. */
+  --destructive:        oklch(0.704 0.191 22.216);
+
+  /* Sidebar palette (not used today, but kept coherent for future). */
+  --sidebar:                      #0A1628;
+  --sidebar-foreground:           #E5E7EB;
+  --sidebar-primary:              #FFFFFF;
+  --sidebar-primary-foreground:   #0A1628;
+  --sidebar-accent:               #0F1E33;
+  --sidebar-accent-foreground:    #E5E7EB;
+  --sidebar-border:               rgba(255, 255, 255, 0.08);
+  --sidebar-ring:                 #3B82C4;
 }

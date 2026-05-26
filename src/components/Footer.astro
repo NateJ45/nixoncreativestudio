@@ -44,16 +44,19 @@ const linkClass =
   'focus-visible:text-secondary focus-visible:underline focus-visible:underline-offset-2';
 
 // Section heading style inside each column. Same display font as h2 but
-// dialed down in size so it reads as a label, with the light bg color so
-// it contrasts against the navy footer.
-const headingClass = 'font-display text-xl tracking-[0.02em] text-bg mb-s';
+// dialed down in size so it reads as a label. text-primary-foreground is
+// white in both light and dark modes (since --primary stays navy in dark),
+// so the heading stays readable on the navy footer regardless of theme.
+const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foreground mb-s';
 ---
 
 <!--
   Full-bleed footer; the inner column uses .ncs-container to align with
-  the rest of the content above.
+  the rest of the content above. bg-primary stays navy in both modes
+  (see globals.css), so this remains the darkest band on the page in
+  light mode and a slightly elevated dark band in dark mode.
 -->
-<footer class="bg-primary text-bg py-xl">
+<footer class="bg-primary text-primary-foreground py-xl">
   <div class="ncs-container">
 
     <!-- Top section: three columns side by side on desktop, stacked on mobile.
@@ -90,7 +93,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-bg mb-s';
         <!-- Column 3: Currently. Short blurb on what's on the docket. -->
         <div>
           <h2 class={headingClass}>Currently</h2>
-          <p class="leading-[1.5] text-bg/75">{currently}</p>
+          <p class="leading-[1.5] text-primary-foreground/75">{currently}</p>
         </div>
 
       </div>
@@ -99,7 +102,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-bg mb-s';
     <!-- Bottom row: copyright on the left, privacy link in the middle, tagline
          on the right. Hairline divider above. Wraps and stacks on narrow
          screens via flex-wrap. -->
-    <div class="flex flex-wrap items-center justify-between gap-s border-t border-white/10 pt-m text-sm text-bg/65">
+    <div class="flex flex-wrap items-center justify-between gap-s border-t border-white/10 pt-m text-sm text-primary-foreground/65">
       <small>© {year} {site.studioName}</small>
       <small><a class={linkClass} href="/privacy">Privacy</a></small>
       <small>{site.tagline}</small>

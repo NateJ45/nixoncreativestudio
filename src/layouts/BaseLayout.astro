@@ -46,6 +46,47 @@ const { title, description = 'Nixon Creative Studio' } = Astro.props;
     <meta name="description" content={description} />
     <title>{title}</title>
 
+    <!--
+      Anti-FOUC theme bootstrap. Runs synchronously before <body> paints so
+      the .dark class lands on <html> in time for the first frame; otherwise
+      a visitor who prefers dark would see a flash of light theme.
+
+      Decision order:
+        1. localStorage["ncs-theme"] (the visitor's explicit choice)
+           - "dark" -> force dark
+           - "light" -> force light
+           - "system" (or missing) -> fall through
+        2. window.matchMedia('(prefers-color-scheme: dark)') for system.
+
+      ThemeToggle.tsx writes to the same localStorage key, and Astro's
+      View Transitions ClientRouter preserves <html> attributes across
+      same-origin navigations, so the class survives page changes.
+
+      is:inline keeps this out of the Vite module graph so it's literally
+      the first script the browser executes, with no async delay.
+      data-astro-rerun lets View Transitions re-execute it on swap, which
+      matters if the visitor changes their OS theme on a system-pref tab
+      mid-session and then navigates.
+    -->
+    <script is:inline data-astro-rerun>
+      (function () {
+        try {
+          var stored = localStorage.getItem('ncs-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
+          var root = document.documentElement;
+          root.classList.toggle('dark', isDark);
+          root.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch (e) {
+          /* localStorage blocked (private mode / cookies disabled). Fall back
+             to system preference only. */
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', prefersDark);
+          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
+        }
+      })();
+    </script>
+
     <!-- Bebas Neue preload. `crossorigin` is required for font preloads:
          without it, the preload and the eventual CSS font fetch are
          considered different requests, and the browser would download the

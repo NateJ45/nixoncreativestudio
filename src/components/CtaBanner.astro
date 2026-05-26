@@ -30,18 +30,18 @@ const {
 } = Astro.props;
 ---
 
-<section class="bg-primary py-xl text-bg" aria-labelledby="cta-banner-title">
+<section class="bg-primary py-xl text-primary-foreground" aria-labelledby="cta-banner-title">
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
        below the copy on narrow screens. -->
   <div class="ncs-container flex flex-wrap items-center justify-between gap-l">
 
     <!-- Copy column. Capped at 50ch so the subtitle doesn't sprawl on
-         wide screens where the button is far to the right. -->
+         wide screens where the button is far to the right.
+         text-primary-foreground is white in both modes (since --primary
+         stays navy in dark mode), so the copy reads correctly regardless. -->
     <div class="flex max-w-[50ch] flex-col gap-s">
-      <!-- Light text on dark surface; overrides the default heading color
-           which is primary. -->
-      <h2 id="cta-banner-title" class="text-bg">{title}</h2>
-      <p class="text-lg leading-[1.5] text-bg/80">{sub}</p>
+      <h2 id="cta-banner-title" class="text-primary-foreground">{title}</h2>
+      <p class="text-lg leading-[1.5] text-primary-foreground/80">{sub}</p>
     </div>
 
     <!-- Primary button. Shared shadcn Button so this banner, the Hero,
