@@ -1,40 +1,58 @@
 ---
-// Foundation, edit with care. Phase 4 swaps the gradient tile placeholders
-// for real photography backed by the new Photo and PhotoGallery components.
+// Foundation, edit with care. The categories array drives both the
+// overview cards and the per-category gallery sections. Add a new
+// category by extending the array; add new photos by editing the
+// `photos` array inside the category.
 /* ============================================================================
    /photography | Photography
    ============================================================================
    Image-heavy showcase. Three categories: Events, Portraits, Environments.
-   Each gets a short intro plus a gallery grid of square tiles.
+   Each gets a short intro plus a PhotoGallery (react-photo-album +
+   yet-another-react-lightbox) that opens fullscreen on click.
 
-   For now every tile is a brand-gradient placeholder. Phase 4 wires the
-   new PhotoGallery (react-photo-album + yet-another-react-lightbox)
-   into the gallery sections and the Photo component into PhotoStrip.
+   The four placeholder JPGs in src/assets/photography/ stand in for real
+   photos. Replace any of them at the same filename to swap a tile, or
+   drop in new files and update the categories array below.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
+import PhotoGallery from '../components/PhotoGallery';
 
-// Category overview. id doubles as both the in-page anchor target and
-// the gallery section id below.
+// Asset imports. ImageMetadata objects carry { src, width, height, ... }.
+// PhotoGallery extracts the fields it needs.
+import eventsOne       from '../assets/photography/events-01.jpg';
+import portraitsOne    from '../assets/photography/portraits-01.jpg';
+import environmentsOne from '../assets/photography/environments-01.jpg';
+import eventsTwo       from '../assets/photography/events-02.jpg';
+
+// Category overview. Each category's `photos` array holds the gallery
+// entries. PhotoGallery expects { src, width, height, alt?, caption? }.
 const categories = [
   {
     id: 'events',
     title: 'Events',
     body: 'Sunday mornings, school assemblies, fundraisers, ribbon cuttings. Coverage that tells the story without making the room perform for the camera.',
-    tiles: 6,
+    photos: [
+      { src: eventsOne.src, width: eventsOne.width, height: eventsOne.height, alt: 'Event night placeholder',    caption: 'Event night'    },
+      { src: eventsTwo.src, width: eventsTwo.width, height: eventsTwo.height, alt: 'Sunday morning placeholder', caption: 'Sunday morning' },
+    ],
   },
   {
     id: 'portraits',
     title: 'Portraits',
     body: 'Team headshots, staff portraits, leadership pages. Comfortable lighting, consistent treatment, edited for web so the file size stays sane.',
-    tiles: 6,
+    photos: [
+      { src: portraitsOne.src, width: portraitsOne.width, height: portraitsOne.height, alt: 'Team headshot placeholder', caption: 'Team headshot' },
+    ],
   },
   {
     id: 'environments',
     title: 'Environments',
     body: 'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.',
-    tiles: 4,
+    photos: [
+      { src: environmentsOne.src, width: environmentsOne.width, height: environmentsOne.height, alt: 'Classroom light placeholder', caption: 'Classroom light' },
+    ],
   },
 ];
 ---
@@ -65,8 +83,7 @@ const categories = [
 
   <!-- ----------------------------------------------------------------------
        Category overview. Three quick-jump cards that scroll the visitor
-       to the matching gallery section. Soft tinted band so the strip
-       reads as a separate navigation block.
+       to the matching gallery section.
        ---------------------------------------------------------------------- -->
   <section class="bg-bg-soft pb-2xl pt-l">
     <div class="ncs-container">
@@ -77,7 +94,6 @@ const categories = [
               class="flex flex-col gap-s rounded-lg bg-bg p-m text-inherit no-underline transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
               href={`#${category.id}`}
             >
-              <!-- Bumped to text-h3 so the card title reads as a heading. -->
               <h2 class="text-h3 text-primary">{category.title}</h2>
               <p class="leading-[1.5] text-text">{category.body}</p>
               <span class="card-link">Jump to gallery</span>
@@ -90,14 +106,12 @@ const categories = [
 
 
   <!-- ----------------------------------------------------------------------
-       Gallery sections. One per category. Each has its own id so the
-       overview cards above scroll directly to it. Tiles are gradient
-       placeholders for now; Phase 4 swaps to real photography via the
-       Photo component.
+       Gallery sections. One per category, each with its own anchor id so
+       the overview cards above scroll directly to it. The PhotoGallery
+       React island runs react-photo-album for the justified grid and
+       yet-another-react-lightbox for the fullscreen viewer on click.
        ---------------------------------------------------------------------- -->
   {categories.map((category) => (
-    <!-- scroll-mt-l reserves space above the section for a fixed header
-         if one is ever added later. -->
     <section class="scroll-mt-l py-2xl" id={category.id}>
       <div class="ncs-container">
 
@@ -106,17 +120,10 @@ const categories = [
           <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
         </header>
 
-        <ul class="grid gap-m [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))]">
-          {Array.from({ length: category.tiles }).map((_, idx) => (
-            <!-- Square placeholder. Even-index tiles flip the gradient
-                 direction (via [&:nth-child(even)] arbitrary selector) so
-                 the strip has internal rhythm without real imagery. -->
-            <li
-              class="aspect-square w-full rounded-md bg-gradient-to-br from-primary to-secondary [&:nth-child(even)]:bg-gradient-to-bl"
-              aria-label={`${category.title} placeholder ${idx + 1}`}
-            ></li>
-          ))}
-        </ul>
+        <!-- client:load hydrates the gallery on initial page load so the
+             lightbox is ready for the first click. With more photos and
+             a higher cost, client:visible would defer until scroll. -->
+        <PhotoGallery client:load photos={category.photos} />
 
       </div>
     </section>
