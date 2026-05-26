@@ -19,12 +19,16 @@
    ============================================================================ */
 
 interface Props {
-  num: string;       // Two-digit section number, e.g. "02". Quoted so the leading zero stays.
-  title: string;     // The section's display title.
-  sub?: string;      // Optional supporting sentence beneath the title.
+  num: string;          // Two-digit section number, e.g. "02". Quoted so the leading zero stays.
+  title: string;        // The section's display title.
+  sub?: string;         // Optional supporting sentence beneath the title.
+  headingId?: string;   // Optional id rendered on the <h2>. Pair with the parent
+                        // section's aria-labelledby so the heading actually labels
+                        // the landmark. Without this, aria-labelledby references on
+                        // the parent point at nothing.
 }
 
-const { num, title, sub } = Astro.props;
+const { num, title, sub, headingId } = Astro.props;
 ---
 
 <!--
@@ -39,8 +43,10 @@ const { num, title, sub } = Astro.props;
     {num}
   </span>
 
-  <!-- Section title. Inherits size from the global h2 rule, no overrides. -->
-  <h2>{title}</h2>
+  <!-- Section title. Inherits size from the global h2 rule, no overrides.
+       The id (when provided) is the anchor for the parent section's
+       aria-labelledby. -->
+  <h2 id={headingId}>{title}</h2>
 
   <!-- Optional supporting line. Rendered only when provided so empty space
        doesn't pile up under sections that don't need a sub. -->

@@ -24,11 +24,13 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
-        // brand: filled NCS-blue button with a soft hover lift. This is
-        // the recipe the migration-era markup used inline for every
-        // marketing CTA, lifted here so the spec lives in one place.
+        // brand: filled NCS-blue button with a soft hover lift. Hover and
+        // focus darken to bg-link (rather than brighten to bg-secondary)
+        // because brighter sky-blue with white text fails WCAG AA. The
+        // darken-on-press read works fine visually and keeps the translate
+        // as the primary lift cue.
         brand:
-          "bg-accent text-accent-foreground hover:bg-secondary hover:-translate-y-px focus-visible:bg-secondary focus-visible:-translate-y-px disabled:hover:translate-y-0 disabled:hover:bg-accent",
+          "bg-accent text-accent-foreground hover:bg-link hover:-translate-y-px focus-visible:bg-link focus-visible:-translate-y-px disabled:hover:translate-y-0 disabled:hover:bg-accent",
       },
       size: {
         default:

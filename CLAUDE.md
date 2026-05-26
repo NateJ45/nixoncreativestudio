@@ -64,13 +64,24 @@ Declared in the `@theme` block inside `src/styles/globals.css`. Reference via ut
 | Role | Hex |
 |---|---|
 | Primary (dark navy) | `#0A1628` |
-| Accent (NCS blue) | `#3B82C4` |
+| Accent (NCS blue) | `#3478BD` |
+| Link (deeper NCS blue, accent body text) | `#2A6FB0` |
 | Secondary (sky blue) | `#40AAED` |
 | Tertiary (amber) | `#FFA334` |
+| Heading | `#0A1628` |
 | Base text | `#1A1A1A` |
 | Section background (ultra light) | `#F4F7FA` |
-| Muted text | `#6B7280` |
+| Muted text | `#5F6573` |
 | White | `#FFFFFF` |
+
+The accent and muted-text values are shifted slightly darker from their
+original brand swatches (`#3B82C4` and `#6B7280`) so white-on-accent and
+muted-on-soft-bg both clear WCAG AA 4.5:1. The shifts are small enough
+to be visually unchanged in normal use. `--link` is a dedicated darker
+NCS blue used for accent-toned body text (Footer rest links, card-link
+arrows, Process / Services step numbers, prose anchors) so the brand
+`--accent` can keep its vibrancy for buttons, focus rings, and large
+CTAs where the white foreground carries the contrast.
 
 ### shadcn token mapping (foundation, do not change casually)
 
@@ -145,6 +156,60 @@ shadcn primitives that wrap Radix's Dialog (Sheet, Dialog, DropdownMenu with por
 - For individual photos that need a fade-in or future blur-placeholder, use the `Photo` React island in `src/components/Photo.tsx`. It expects a build-resolved src URL (typically from an Astro `import` of a JPG asset) plus width and height. The `placeholder` prop accepts a base64 data URL when blur generation gets wired later.
 - For the photography page galleries, use the `PhotoGallery` React island. It composes `react-photo-album` for the justified grid with `yet-another-react-lightbox` (Zoom + Thumbnails plugins) for the fullscreen viewer. Pass a `photos` array of `{ src, width, height, alt?, caption? }`.
 - `plaiceholder` is installed but not currently integrated; the `Photo` component's `placeholder` prop is the hook for it.
+
+---
+
+## Accessibility
+
+Target: WCAG 2.1 AA in both light and dark modes. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar.
+
+### Required patterns
+
+**Landmarks and structure.** `BaseLayout` provides `<header>`, `<main id="main">`, `<footer>`, and a "Skip to main content" link as the first focusable element. Each top-level `<section>` needs an accessible name, via either `aria-labelledby` pointing at its heading (preferred when there's a visible heading) or `aria-label="..."` (for sections without one). When using `SectionHeading`, always pass `headingId="..."` so the parent's `aria-labelledby` actually resolves; without it, the reference points at nothing.
+
+**Heading hierarchy.** One `<h1>` per page (usually inside the hero). Don't skip levels. Section headings are `<h2>`; subsections inside them are `<h3>`. Heading text describes the content, not its position ("How we work", not "Section 5").
+
+**Forms.** Every input gets an associated `<label for="...">`. Use native input types (`email`, `tel`, `url`) and `autocomplete` hints so browsers and password managers help. Required fields get `required`. Error containers get `role="alert"`. The contact form is the working reference pattern.
+
+**Images.**
+- Content images: descriptive `alt`. "Hero image" / "Image of X" is filler; describe what the image shows.
+- Image immediately adjacent to a heading that names the same thing (card thumbnails, case-study hero below an `h1`): `alt=""`. Empty alt explicitly marks the image decorative so screen readers skip it instead of announcing the title twice.
+- Decorative gradients, shapes, or pseudo-elements: `aria-hidden="true"` on the wrapper.
+
+**Interactive elements.**
+- Icon-only buttons and links require `aria-label`. Lucide SVG icons carry no accessible name on their own; the label lives on the wrapper. See `MobileNav.tsx`, `ThemeToggle.tsx` for the pattern.
+- Hover and focus states must not be color-only. Pair color changes with underline, motion, or icon swap.
+- Stick to native interactive elements (`<button>`, `<a>`, `<details>`, `<summary>`) whenever possible. Custom controls take real work to make accessible.
+
+**Color tokens by responsibility** (definitions and contrast math in `globals.css`):
+- `--accent` (`#3478BD` light, `#40AAED` dark): buttons, focus rings, large CTAs. Paired with white text in light mode, navy in dark.
+- `--link` (`#2A6FB0` light, `#40AAED` dark): accent-toned body text (card-link arrows, Process / Services step numbers, prose anchors). Darker than `--accent` in light so body-size text clears AA.
+- `--secondary` (`#40AAED`): decorative gradients and Footer body links sitting on the navy footer.
+- `--muted-foreground` (`#5F6573` light, `#9CA3AF` dark): meta and supporting text on bg-soft surfaces.
+
+New tokens or hex literals must clear WCAG AA against every surface they appear on (4.5:1 body text, 3:1 large text and UI components). Run the math in both modes before introducing one.
+
+**Motion.** `globals.css` disables animations and transitions globally under `prefers-reduced-motion: reduce`, and the Lenis smooth scroll becomes a no-op. New animations inherit this; no per-component handling needed.
+
+**Language and metadata.** `<html lang="en">` and the document `title` / `description` come from `BaseLayout`. Pass `title` and `description` through every page that uses the layout.
+
+### Before merging
+
+Run Lighthouse against any page you changed. Accessibility should stay at 100. Common regressions and what they mean:
+- `color-contrast`: a token or literal used in a new context that doesn't pass. Check both modes.
+- `image-alt`: missing `alt` attribute (empty `alt=""` is fine; missing isn't).
+- `label`: input without an associated label.
+- `link-name` / `button-name`: icon-only element without `aria-label`.
+
+Lighthouse can't catch everything. For structural changes, also do a manual keyboard pass: Tab from the address bar through every interactive element. Each should be reachable, the focus indicator visible, and the order logical. The "Skip to main content" link should be the first thing focused after the address bar.
+
+### Don't
+
+- `aria-hidden="true"` on a focusable element (Tab still lands on it; screen reader hides the context).
+- `tabindex` greater than 0 (breaks natural focus order).
+- Remove focus outlines (`outline: none`) without a clearly visible replacement. shadcn primitives provide `focus-visible` rings already; preserve them.
+- Use color as the only state cue (error red, success green) without an icon or text companion.
+- Add ARIA roles to native elements that already have the right role (`role="button"` on a `<button>` is redundant).
 
 ---
 

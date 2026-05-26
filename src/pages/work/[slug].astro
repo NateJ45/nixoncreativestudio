@@ -102,11 +102,17 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
         </div>
 
         <!-- Hero image. Astro <Image /> handles WebP, srcset, explicit
-             dimensions. overflow-hidden + rounded rounds the corners. -->
+             dimensions. overflow-hidden + rounded rounds the corners.
+             alt="" because the case study's h1 sits just above the image
+             inside the same <header>, so a descriptive alt would make
+             screen readers announce the title twice. When a richer
+             description is needed (e.g. "Photo of the Crestview team in
+             the sanctuary"), add a coverAlt field to the case-studies
+             schema in content.config.ts and thread it through here. -->
         <div class="overflow-hidden rounded-lg">
           <Image
             src={cover}
-            alt={`${title} hero image`}
+            alt=""
             widths={[600, 900, 1200]}
             sizes="(min-width: 56rem) 50vw, 100vw"
             class="block h-auto w-full"

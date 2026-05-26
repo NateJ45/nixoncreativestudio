@@ -109,8 +109,22 @@ const { title, description = 'Nixon Creative Studio' } = Astro.props;
     <ClientRouter />
   </head>
   <body>
+
+    <!--
+      Skip link. Hidden off-screen until it receives focus (Tab from the
+      address bar), then jumps into view at top-left. Lets keyboard and
+      screen reader users bypass the header / nav and land directly on
+      page content. The href targets the <main id="main"> below.
+    -->
+    <a
+      href="#main"
+      class="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-primary focus-visible:px-3 focus-visible:py-2 focus-visible:font-body focus-visible:text-sm focus-visible:font-semibold focus-visible:text-primary-foreground focus-visible:no-underline focus-visible:ring-3 focus-visible:ring-accent/50"
+    >
+      Skip to main content
+    </a>
+
     <Header />
-    <main><slot /></main>
+    <main id="main" tabindex="-1"><slot /></main>
     <Footer />
 
     <!--

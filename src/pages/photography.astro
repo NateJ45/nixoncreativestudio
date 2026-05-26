@@ -65,13 +65,13 @@ const categories = [
   <!-- ----------------------------------------------------------------------
        Hero
        ---------------------------------------------------------------------- -->
-  <section class="py-2xl">
+  <section class="py-2xl" aria-labelledby="photography-hero-heading">
     <div class="ncs-container">
       <p class="mb-m inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
         <span class="font-mono text-sm tracking-[0.05em]">P1</span>
         <span>Photography</span>
       </p>
-      <h1 class="mb-m max-w-[22ch] leading-[0.95]">
+      <h1 id="photography-hero-heading" class="mb-m max-w-[22ch] leading-[0.95]">
         Photography that matches the website it lives on.
       </h1>
       <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
@@ -85,7 +85,7 @@ const categories = [
        Category overview. Three quick-jump cards that scroll the visitor
        to the matching gallery section.
        ---------------------------------------------------------------------- -->
-  <section class="bg-bg-soft pb-2xl pt-l">
+  <section class="bg-bg-soft pb-2xl pt-l" aria-label="Category overview">
     <div class="ncs-container">
       <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
         {categories.map((category) => (
@@ -112,11 +112,11 @@ const categories = [
        yet-another-react-lightbox for the fullscreen viewer on click.
        ---------------------------------------------------------------------- -->
   {categories.map((category) => (
-    <section class="scroll-mt-l py-2xl" id={category.id}>
+    <section class="scroll-mt-l py-2xl" id={category.id} aria-labelledby={`${category.id}-heading`}>
       <div class="ncs-container">
 
         <header class="mb-l flex flex-col gap-s">
-          <h2 class="text-heading">{category.title}</h2>
+          <h2 id={`${category.id}-heading`} class="text-heading">{category.title}</h2>
           <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
         </header>
 

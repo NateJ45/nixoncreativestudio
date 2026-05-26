@@ -54,8 +54,12 @@
      down so they switch with light/dark mode. The literals here are the
      default light-mode values and the source-of-truth reference. */
   --color-primary:   #0A1628;  /* Dark navy. Footer surface, headings (light mode). */
-  --color-accent:    #3B82C4;  /* NCS blue. Buttons, links, primary CTAs. Stays in dark mode. */
-  --color-secondary: #40AAED;  /* Sky blue. Hover and highlight states. Stays in dark mode. */
+  --color-accent:    #3478BD;  /* NCS blue. Buttons, links, primary CTAs.
+                                  Slightly darker than the original #3B82C4 so
+                                  white-on-accent text clears WCAG AA (4.67:1
+                                  vs the old 4.05:1). Same brand family, dialed
+                                  down a hair for the contrast budget. */
+  --color-secondary: #40AAED;  /* Sky blue. Decorative + Footer-link rest color. */
   --color-tertiary:  #FFA334;  /* Amber. Accent badges, small flourishes. Stays in dark mode. */
 
   /* Heading color. New token so headings can flip independently in dark
@@ -334,7 +338,7 @@
   /* Secondary surface and accent. Both map to brand blues. */
   --secondary:            #40AAED;      /* = brand --color-secondary (sky blue) */
   --secondary-foreground: #FFFFFF;
-  --accent:               #3B82C4;      /* = brand --color-accent (NCS blue) */
+  --accent:               #3478BD;      /* = brand --color-accent (darker NCS blue for AA) */
   --accent-foreground:    #FFFFFF;
 
   /* Muted surface and supporting text.
@@ -361,9 +365,9 @@
   --border:             rgba(0, 0, 0, 0.08);
   --input:              rgba(0, 0, 0, 0.12);
 
-  /* Focus ring. NCS blue at 25% opacity is what the contact form was
-     hand-rolling; centralize here so every shadcn input picks it up too. */
-  --ring:               #3B82C4;
+  /* Focus ring. Matches the brand --accent so every shadcn input + button
+     gets a brand-coordinated ring. */
+  --ring:               #3478BD;
 
   /* Destructive surfaces (form errors, delete buttons). Keep shadcn's
      default red since we don't have a brand-coordinated alarm color. */
@@ -435,11 +439,17 @@
      ~4.1:1, just under the 4.5:1 threshold for body-size accent text
      (Process / Services step numbers, Footer accent links). The shifts
      below clear AA on both #0F1E33 (bg-bg-soft) and #0A1628 (bg-primary)
-     while preserving the accent -> secondary lift on hover. */
+     while preserving the accent -> secondary lift on hover.
+
+     accent-foreground flips to navy because white text on the brightened
+     sky-blue accent surface (#40AAED) only hits 2.56:1; navy text on
+     the same surface is ~8.2:1. This affects the brand Button variant,
+     shadcn primitives that pair bg-accent with text-accent-foreground
+     on hover/focus, and anything else that follows the same pattern. */
   --accent:               #40AAED;    /* was #3B82C4 in light; lifted to sky blue for AA */
-  --accent-foreground:    #FFFFFF;
+  --accent-foreground:    #0A1628;    /* navy on sky blue, 8.2:1 */
   --secondary:            #7AC8F0;    /* was #40AAED in light; lighter sky for the hover step up */
-  --secondary-foreground: #FFFFFF;
+  --secondary-foreground: #0A1628;    /* navy on lighter sky, ~10:1 */
 
   /* Muted surface: navy-tinted elevated dark.
      Muted-foreground: lighter gray so secondary copy still has contrast. */

@@ -27,14 +27,14 @@ const entries = (await getCollection('case-studies')).sort(
   description="A list of recent web design, brand, and photography projects from Nixon Creative Studio."
 >
 
-  <section class="py-2xl">
+  <section class="py-2xl" aria-labelledby="work-index-heading">
     <div class="ncs-container">
 
       <!-- Intro block. Same number + title + sub pattern as SectionHeading,
            but rendered as an h1 since this page is the work landing. -->
       <header class="mb-xl flex flex-col gap-xs">
         <p class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">01</p>
-        <h1>Selected work</h1>
+        <h1 id="work-index-heading">Selected work</h1>
         <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">
           A list of recent projects. Each one started with a conversation about what the organization actually needed.
         </p>
@@ -57,11 +57,14 @@ const entries = (await getCollection('case-studies')).sort(
 
                 <!-- Image block. 4:3 aspect keeps cards uniform. Astro
                      <Image /> emits a real img with srcset; the wrapper
-                     handles aspect ratio + rounding. -->
+                     handles aspect ratio + rounding. alt="" because the
+                     card's h2 immediately below carries the same name;
+                     describing the image too would make screen readers
+                     announce the title twice for one card. -->
                 <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-bg-soft">
                   <Image
                     src={entry.data.cover}
-                    alt={`${entry.data.title} hero image`}
+                    alt=""
                     widths={[400, 600, 900]}
                     sizes="(min-width: 56rem) 33vw, 100vw"
                     class="block h-full w-full object-cover"
