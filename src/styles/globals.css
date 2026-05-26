@@ -1,0 +1,382 @@
+/* ============================================================================
+   Nixon Creative Studio | Globals
+   ============================================================================
+   Foundation, edit with care.
+
+   Single stylesheet imported by BaseLayout.astro. Loads Tailwind 4, the
+   two self-hosted webfonts, the brand tokens via @theme (which doubles
+   as utility class wiring), and base styles that survive Tailwind
+   preflight.
+
+   The @theme block makes every token here available two ways at once:
+     - As a Tailwind utility class. --color-primary becomes bg-primary,
+       text-primary, border-primary; --font-display becomes font-display;
+       --spacing-m becomes p-m, gap-m, etc.
+     - As a CSS variable. var(--color-primary) still works inside any
+       inline style.
+
+   Order of contents below:
+     1. Tailwind core import
+     2. Webfont imports
+     3. @theme: brand tokens for utility wiring
+     4. Base styles (body, headings, motion respect, list resets)
+     5. Site-wide utility classes (.ncs-container, .card-link)
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. Tailwind core. Brings in preflight (modern reset) + the utility engine.
+   ---------------------------------------------------------------------------- */
+@import "tailwindcss";
+
+/* ----------------------------------------------------------------------------
+   2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
+      Both default to font-display: swap from @fontsource.
+   ---------------------------------------------------------------------------- */
+@import "@fontsource/bebas-neue/400.css";
+@import "@fontsource-variable/source-sans-3";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ----------------------------------------------------------------------------
+   3. Brand theme tokens.
+   Tailwind 4 turns @theme variables into utility classes. Add a token
+   here and the matching utility is available everywhere on the next
+   reload.
+   ---------------------------------------------------------------------------- */
+@theme {
+
+  /* Brand palette. --color-* drives bg-*, text-*, border-*. */
+  --color-primary:   #0A1628;  /* Dark navy. Header background, hero text. */
+  --color-accent:    #3B82C4;  /* NCS blue. Buttons, links, primary CTAs. */
+  --color-secondary: #40AAED;  /* Sky blue. Hover and highlight states. */
+  --color-tertiary:  #FFA334;  /* Amber. Accent badges, small flourishes. */
+
+  /* Text */
+  --color-text:       #1A1A1A; /* Near-black body. */
+  --color-text-muted: #6B7280; /* Muted gray for meta info and captions. */
+
+  /* Surfaces */
+  --color-bg:      #FFFFFF;    /* Default page background. */
+  --color-bg-soft: #F4F7FA;    /* Light blue-gray for alternating sections. */
+
+  /* Font families. --font-* drives font-display, font-body, font-mono. */
+  --font-display: "Bebas Neue", system-ui, sans-serif;
+  --font-body:    "Source Sans 3 Variable", system-ui, sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* Heading sizes (fluid clamp). --text-h1 etc. drive text-h1 utilities. */
+  --text-h6: 1rem;
+  --text-h5: clamp(1.125rem, 1.5vw, 1.25rem);
+  --text-h4: clamp(1.25rem,  2vw,   1.5rem);
+  --text-h3: clamp(1.5rem,   2.5vw, 2rem);
+  --text-h2: clamp(2rem,     4vw,   3rem);
+  --text-h1: clamp(2.5rem,   6vw,   5rem);
+
+  /* Fluid spacing scale. --spacing-* drives p-xs, gap-m, m-l, etc. */
+  --spacing-xs:  clamp(0.25rem, 0.5vw, 0.5rem);
+  --spacing-s:   clamp(0.5rem,  1vw,   1rem);
+  --spacing-m:   clamp(1rem,    2vw,   1.5rem);
+  --spacing-l:   clamp(2rem,    4vw,   3rem);
+  --spacing-xl:  clamp(3rem,    6vw,   5rem);
+  --spacing-2xl: clamp(4rem,    8vw,   7rem);
+
+  /* Container width cap. --container-content drives a max-w-content utility. */
+  --container-content: 82.5rem;  /* 1320px outer cap on the main column. */
+}
+
+/* ----------------------------------------------------------------------------
+   4. Base styles.
+   Tailwind preflight resets a lot, including removing default heading
+   sizes and stripping body font. The rules below put the brand defaults
+   back so even un-styled paragraphs and headings look right.
+   ---------------------------------------------------------------------------- */
+@layer base {
+
+  html {
+    scroll-behavior: smooth;
+    @apply font-sans;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    @apply bg-background text-foreground;
+  }
+
+  /* All headings inherit the display face and brand color by default. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    color: var(--color-primary);
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--text-h1);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+
+  h2 {
+    font-size: var(--text-h2);
+    line-height: 1.0;
+    letter-spacing: -0.005em;
+  }
+
+  h3 { font-size: var(--text-h3); line-height: 1.05; }
+  h4 { font-size: var(--text-h4); line-height: 1.1;  }
+  h5 { font-size: var(--text-h5); line-height: 1.1;  }
+  h6 {
+    font-size: var(--text-h6);
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Lists used as nav menus or layout groups shouldn't carry bullets by
+     default. When you want bullets, add list-disc or restore via
+     component-level utility classes. */
+  ul, ol {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  /* Form elements inherit body font (preflight does this; explicit for
+     discoverability). */
+  button, input, textarea, select {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Respect prefers-reduced-motion. */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   5. Site-wide utility classes.
+   Two patterns that repeat across many components, well past the four-uses
+   threshold from CLAUDE.md, so they're worth keeping as named classes:
+     - .ncs-container: content-width cap with side padding.
+     - .card-link: accent arrow link that slides on hover.
+   ---------------------------------------------------------------------------- */
+
+.ncs-container {
+  max-width: var(--container-content);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  width: 100%;
+}
+
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.card-link::after {
+  content: "→";
+  display: inline-block;
+  transition: transform 150ms ease;
+}
+
+.card-link:hover,
+.card-link:focus-visible {
+  color: var(--color-secondary);
+}
+
+.card-link:hover::after,
+.card-link:focus-visible::after {
+  transform: translateX(0.25rem);
+}
+
+@theme inline {
+  --font-heading:   var(--font-sans);
+  --font-sans:   'Geist Variable', sans-serif;
+  --color-sidebar-ring:   var(--sidebar-ring);
+  --color-sidebar-border:   var(--sidebar-border);
+  --color-sidebar-accent-foreground:   var(--sidebar-accent-foreground);
+  --color-sidebar-accent:   var(--sidebar-accent);
+  --color-sidebar-primary-foreground:   var(--sidebar-primary-foreground);
+  --color-sidebar-primary:   var(--sidebar-primary);
+  --color-sidebar-foreground:   var(--sidebar-foreground);
+  --color-sidebar:   var(--sidebar);
+  --color-chart-5:   var(--chart-5);
+  --color-chart-4:   var(--chart-4);
+  --color-chart-3:   var(--chart-3);
+  --color-chart-2:   var(--chart-2);
+  --color-chart-1:   var(--chart-1);
+  --color-ring:   var(--ring);
+  --color-input:   var(--input);
+  --color-border:   var(--border);
+  --color-destructive:   var(--destructive);
+  --color-accent-foreground:   var(--accent-foreground);
+  --color-accent:   var(--accent);
+  --color-muted-foreground:   var(--muted-foreground);
+  --color-muted:   var(--muted);
+  --color-secondary-foreground:   var(--secondary-foreground);
+  --color-secondary:   var(--secondary);
+  --color-primary-foreground:   var(--primary-foreground);
+  --color-primary:   var(--primary);
+  --color-popover-foreground:   var(--popover-foreground);
+  --color-popover:   var(--popover);
+  --color-card-foreground:   var(--card-foreground);
+  --color-card:   var(--card);
+  --color-foreground:   var(--foreground);
+  --color-background:   var(--background);
+  --radius-sm:   calc(var(--radius) * 0.6);
+  --radius-md:   calc(var(--radius) * 0.8);
+  --radius-lg:   var(--radius);
+  --radius-xl:   calc(var(--radius) * 1.4);
+  --radius-2xl:   calc(var(--radius) * 1.8);
+  --radius-3xl:   calc(var(--radius) * 2.2);
+  --radius-4xl:   calc(var(--radius) * 2.6);
+  --animate-marquee:   marquee var(--duration) infinite linear;
+  --animate-marquee-vertical:   marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform:   translateX(0);
+    }
+  to {
+    transform:   translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform:   translateY(0);
+    }
+  to {
+    transform:   translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   shadcn semantic tokens (overridden with brand values)
+   ----------------------------------------------------------------------------
+   shadcn's @theme inline block above remaps Tailwind utilities like
+   bg-primary, bg-secondary, bg-accent to read from these variables. The
+   shadcn CLI seeded them with neutral oklch values; we override here so
+   the same utility names produce our brand colors.
+
+   Result: bg-primary stays navy, bg-secondary stays sky blue, bg-accent
+   stays NCS blue, exactly as Phase 1b set up. shadcn primitives
+   (Button, Card, Dialog, etc.) also pick up the brand palette because
+   they reference the same shadcn token names.
+
+   Use hex (or any valid CSS color) directly; oklch is shadcn's default
+   but not required.
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Surfaces */
+  --background:         #FFFFFF;        /* = brand --color-bg */
+  --foreground:         #1A1A1A;        /* = brand --color-text */
+  --card:               #FFFFFF;
+  --card-foreground:    #1A1A1A;
+  --popover:            #FFFFFF;
+  --popover-foreground: #1A1A1A;
+
+  /* Primary action color. Navy is the dominant brand surface; primitives
+     like Button (default variant) pick this up. */
+  --primary:            #0A1628;        /* = brand --color-primary */
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary surface and accent. Both map to brand blues. */
+  --secondary:            #40AAED;      /* = brand --color-secondary (sky blue) */
+  --secondary-foreground: #FFFFFF;
+  --accent:               #3B82C4;      /* = brand --color-accent (NCS blue) */
+  --accent-foreground:    #FFFFFF;
+
+  /* Muted surface and supporting text. */
+  --muted:              #F4F7FA;        /* = brand --color-bg-soft */
+  --muted-foreground:   #6B7280;        /* = brand --color-text-muted */
+
+  /* Borders and inputs. Match the alpha-on-black tones used across forms
+     and section dividers. */
+  --border:             rgba(0, 0, 0, 0.08);
+  --input:              rgba(0, 0, 0, 0.12);
+
+  /* Focus ring. NCS blue at 25% opacity is what the contact form was
+     hand-rolling; centralize here so every shadcn input picks it up too. */
+  --ring:               #3B82C4;
+
+  /* Destructive surfaces (form errors, delete buttons). Keep shadcn's
+     default red since we don't have a brand-coordinated alarm color. */
+  --destructive:        oklch(0.577 0.245 27.325);
+
+  /* Chart palette — left at shadcn neutrals; we don't ship data viz today. */
+  --chart-1:            oklch(0.87 0 0);
+  --chart-2:            oklch(0.556 0 0);
+  --chart-3:            oklch(0.439 0 0);
+  --chart-4:            oklch(0.371 0 0);
+  --chart-5:            oklch(0.269 0 0);
+
+  /* Corner radius scale used by shadcn primitives. */
+  --radius:             0.5rem;
+
+  /* Sidebar palette — left at shadcn neutrals; no sidebar in this site. */
+  --sidebar:                      #FFFFFF;
+  --sidebar-foreground:           #1A1A1A;
+  --sidebar-primary:              #0A1628;
+  --sidebar-primary-foreground:   #FFFFFF;
+  --sidebar-accent:               #F4F7FA;
+  --sidebar-accent-foreground:    #0A1628;
+  --sidebar-border:               rgba(0, 0, 0, 0.08);
+  --sidebar-ring:                 #3B82C4;
+}
+
+.dark {
+  --background:   oklch(0.145 0 0);
+  --foreground:   oklch(0.985 0 0);
+  --card:   oklch(0.205 0 0);
+  --card-foreground:   oklch(0.985 0 0);
+  --popover:   oklch(0.205 0 0);
+  --popover-foreground:   oklch(0.985 0 0);
+  --primary:   oklch(0.922 0 0);
+  --primary-foreground:   oklch(0.205 0 0);
+  --secondary:   oklch(0.269 0 0);
+  --secondary-foreground:   oklch(0.985 0 0);
+  --muted:   oklch(0.269 0 0);
+  --muted-foreground:   oklch(0.708 0 0);
+  --accent:   oklch(0.269 0 0);
+  --accent-foreground:   oklch(0.985 0 0);
+  --destructive:   oklch(0.704 0.191 22.216);
+  --border:   oklch(1 0 0 / 10%);
+  --input:   oklch(1 0 0 / 15%);
+  --ring:   oklch(0.556 0 0);
+  --chart-1:   oklch(0.87 0 0);
+  --chart-2:   oklch(0.556 0 0);
+  --chart-3:   oklch(0.439 0 0);
+  --chart-4:   oklch(0.371 0 0);
+  --chart-5:   oklch(0.269 0 0);
+  --sidebar:   oklch(0.205 0 0);
+  --sidebar-foreground:   oklch(0.985 0 0);
+  --sidebar-primary:   oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground:   oklch(0.985 0 0);
+  --sidebar-accent:   oklch(0.269 0 0);
+  --sidebar-accent-foreground:   oklch(0.985 0 0);
+  --sidebar-border:   oklch(1 0 0 / 10%);
+  --sidebar-ring:   oklch(0.556 0 0);
+}

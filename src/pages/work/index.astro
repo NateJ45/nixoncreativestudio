@@ -1,25 +1,15 @@
 ---
+// Safe to edit. Page content is driven from the case-studies content
+// collection; add new MDX files in src/content/case-studies/ to grow the list.
 /* ============================================================================
    /work | Selected Work Index
    ============================================================================
-   The landing for the full case study list. Loads every entry from the
-   case-studies collection, sorts by published date descending, and renders
-   each one as a card linking to /work/{slug}.
+   Landing for the full case study list. Loads every entry from the
+   case-studies collection, sorts newest first by published date, and
+   renders each as a card linking to /work/{slug}.
 
-   This is the only place the full catalogue lives. The homepage's Selected
-   Work section is a curated subset (filtered by featured === true); this
-   page is the comprehensive list.
-
-   BEM:
-     work-index                 Outer page wrapper section.
-     work-index__intro          Hero/intro block at the top.
-     work-index__grid           Card grid below the intro.
-     work-card                  Single case study card (link).
-     work-card__media           Hero image block.
-     work-card__body            Text content below the image.
-     work-card__meta            Year + sector + services row.
-     work-card__title           Case study title.
-     work-card__summary         One-sentence pitch.
+   This is the only place the full catalogue lives. The homepage Selected
+   Work section is a curated subset (featured===true).
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
@@ -27,8 +17,6 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 
-// Load all case studies, then sort newest first. `entries` is fully typed
-// against the schema in src/content.config.ts.
 const entries = (await getCollection('case-studies')).sort(
   (a, b) => b.data.published.valueOf() - a.data.published.valueOf()
 );
@@ -39,51 +27,55 @@ const entries = (await getCollection('case-studies')).sort(
   description="A list of recent web design, brand, and photography projects from Nixon Creative Studio."
 >
 
-  <section class="work-index">
+  <section class="py-2xl">
     <div class="ncs-container">
 
-      <!-- Intro block. Pulls a similar visual treatment to the homepage
-           section heading so the catalogue feels of-a-piece with the
-           homepage Selected Work strip. -->
-      <header class="work-index__intro">
-        <p class="work-index__num" aria-hidden="true">01</p>
-        <h1 class="work-index__title">Selected work</h1>
-        <p class="work-index__sub">
+      <!-- Intro block. Same number + title + sub pattern as SectionHeading,
+           but rendered as an h1 since this page is the work landing. -->
+      <header class="mb-xl flex flex-col gap-xs">
+        <p class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">01</p>
+        <h1>Selected work</h1>
+        <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">
           A list of recent projects. Each one started with a conversation about what the organization actually needed.
         </p>
       </header>
 
-      <!-- Card grid. Same auto-fit minmax pattern as the homepage Selected
-           Work strip so the listing feels consistent. -->
-      <ul class="work-index__grid">
+      <!-- Card grid. Same auto-fit minmax pattern as the homepage strip. -->
+      <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
         {entries.map((entry) => {
-          // Pretty sector label for the meta row. kebab-case → Title Case.
+          // Pretty sector label for the meta row: kebab-case → Title Case.
           const sectorLabel = entry.data.sector
             .replace(/-/g, ' ')
             .replace(/\b\w/g, (c) => c.toUpperCase());
           return (
             <li>
-              <a class="work-card" href={`/work/${entry.id}/`}>
+              <!-- Whole card is the link, standard card a11y pattern. -->
+              <a
+                class="group flex flex-col gap-m rounded-xl text-inherit no-underline transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+                href={`/work/${entry.id}/`}
+              >
 
-                <!-- Hero image. Same Astro <Image /> pipeline as the case
-                     study detail page, sized down for the card. -->
-                <div class="work-card__media">
+                <!-- Image block. 4:3 aspect keeps cards uniform. Astro
+                     <Image /> emits a real img with srcset; the wrapper
+                     handles aspect ratio + rounding. -->
+                <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-bg-soft">
                   <Image
-                    src={entry.data.hero_image}
+                    src={entry.data.cover}
                     alt={`${entry.data.title} hero image`}
                     widths={[400, 600, 900]}
                     sizes="(min-width: 56rem) 33vw, 100vw"
+                    class="block h-full w-full object-cover"
                   />
                 </div>
 
-                <div class="work-card__body">
-                  <p class="work-card__meta">
+                <div class="flex flex-col gap-xs">
+                  <p class="flex items-center gap-s font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
                     <span>{entry.data.year}</span>
                     <span aria-hidden="true">·</span>
                     <span>{sectorLabel}</span>
                   </p>
-                  <h2 class="work-card__title">{entry.data.title}</h2>
-                  <p class="work-card__summary">{entry.data.summary}</p>
+                  <h2 class="text-h3 text-primary">{entry.data.title}</h2>
+                  <p class="leading-[1.5] text-text">{entry.data.summary}</p>
                   <span class="card-link">Read the case study</span>
                 </div>
 
@@ -99,120 +91,3 @@ const entries = (await getCollection('case-studies')).sort(
   <CtaBanner />
 
 </BaseLayout>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Outer section padding. Standard 2xl block rhythm.
-     -------------------------------------------------------------------------- */
-  .work-index {
-    padding-block: var(--space-2xl);
-  }
-
-  /* --------------------------------------------------------------------------
-     Intro block. Same number + title + sub pattern as the SectionHeading
-     component, but as an h1 since this page is the work landing.
-     -------------------------------------------------------------------------- */
-  .work-index__intro {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-xl);
-  }
-
-  .work-index__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    letter-spacing: 0.05em;
-  }
-
-  .work-index__title {
-    /* h1 inherits its size from the global scale. */
-  }
-
-  .work-index__sub {
-    color: var(--color-text-muted);
-    font-size: 1.125rem;
-    max-width: 56ch;
-    line-height: 1.5;
-  }
-
-  /* --------------------------------------------------------------------------
-     Card grid. Three columns at wide, collapsing to two then one via
-     auto-fit minmax with no media queries.
-     -------------------------------------------------------------------------- */
-  .work-index__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-    gap: var(--space-l);
-  }
-
-  /* --------------------------------------------------------------------------
-     Single card. The whole card is the link (recommended a11y pattern).
-     Subtle hover lift to read as tappable.
-     -------------------------------------------------------------------------- */
-  .work-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-    text-decoration: none;
-    color: inherit;
-    border-radius: 12px;
-    transition: transform 200ms ease;
-  }
-
-  .work-card:hover,
-  .work-card:focus-visible {
-    transform: translateY(-2px);
-  }
-
-  .work-card:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 4px;
-  }
-
-  /* Image block. 4:3 aspect keeps cards uniform regardless of source image. */
-  .work-card__media {
-    aspect-ratio: 4 / 3;
-    width: 100%;
-    background-color: var(--color-bg-soft);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .work-card__media :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  /* Body stack. */
-  .work-card__body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  .work-card__meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-s);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .work-card__title {
-    color: var(--color-primary);
-    font-size: var(--font-size-h3);
-  }
-
-  .work-card__summary {
-    color: var(--color-text);
-    line-height: 1.5;
-  }
-</style>

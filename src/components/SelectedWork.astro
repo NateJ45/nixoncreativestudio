@@ -1,27 +1,19 @@
 ---
+// Safe to edit. The featured array below is hardcoded today; Phase 5
+// schema work + future page refinement will swap this to a content
+// collection query that filters where featured === true.
 /* ============================================================================
    Section 02 | Selected Work
    ============================================================================
-   Three featured case study cards. Hardcoded placeholder content for now;
-   once the content collection in Phase 9 is wired, this section will read
-   from src/content/case-studies/ and filter where featured === true.
-
-   Cards link to /work/{slug}. Image area is a colored block placeholder
-   that gets swapped to an Astro <Image /> when the case study art is ready.
-
-   BEM:
-     case-card                  Outer link wrapper.
-     case-card__media           Placeholder image area.
-     case-card__body            Text content stack below the image.
-     case-card__meta            Small label row: client + year.
-     case-card__title           Project title in the display font.
-     case-card__summary         One-sentence pitch.
+   Three featured case study cards. Cards link to /work/{slug}. Each card's
+   image area is a brand-gradient placeholder for now; replace with an
+   Astro <Image /> once the case study art is in src/assets/case-studies/.
    ============================================================================ */
 
 import SectionHeading from './SectionHeading.astro';
 
-// Placeholder feed. Replace with a getCollection('case-studies') query in
-// Phase 9 once the content collection schema exists.
+// Placeholder feed. Replace with getCollection('case-studies') filtered to
+// featured===true once the schema work in Phase 5 lands.
 const featured = [
   {
     slug: 'crestview-presbyterian',
@@ -50,36 +42,43 @@ const featured = [
 ];
 ---
 
-<section class="selected-work" aria-labelledby="selected-work-heading">
+<section class="py-2xl" aria-labelledby="selected-work-heading">
   <div class="ncs-container">
 
-    <!-- Section heading uses the shared component so number, title, and sub
-         match the rest of the page. -->
     <SectionHeading
       num="02"
       title="Selected work"
       sub="A few recent projects. Each one started with a conversation about what the organization actually needed, not which template to pick."
     />
 
-    <!-- Card grid. auto-fit + minmax means the three cards drop to two then
-         one as the viewport narrows, without media queries. -->
-    <ul class="selected-work__grid">
+    <!-- Card grid. auto-fit + minmax means the row drops cleanly from
+         three columns at wide to two then one as viewport narrows. -->
+    <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
       {featured.map((entry) => (
         <li>
-          <a class="case-card" href={`/work/${entry.slug}`}>
+          <!-- Whole card is a single link (recommended a11y pattern for
+               card UIs) so the click target covers image and body. -->
+          <a
+            class="flex flex-col gap-m rounded-xl text-inherit no-underline transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+            href={`/work/${entry.slug}`}
+          >
 
-            <!-- Image area placeholder. Will become an Astro <Image /> later. -->
-            <div class="case-card__media" aria-hidden="true"></div>
+            <!-- Media placeholder. 4:3 aspect keeps cards uniform until
+                 real imagery lands. Soft brand gradient signals intent. -->
+            <div
+              class="aspect-[4/3] w-full rounded-lg bg-gradient-to-br from-bg-soft to-secondary"
+              aria-hidden="true"
+            ></div>
 
-            <!-- Text body. Stacked label, title, summary, arrow link. -->
-            <div class="case-card__body">
-              <p class="case-card__meta">
+            <!-- Body stack: meta stamp, title, summary, arrow link. -->
+            <div class="flex flex-col gap-xs">
+              <p class="flex items-center gap-s font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
                 <span>{entry.sector}</span>
                 <span aria-hidden="true">·</span>
                 <span>{entry.year}</span>
               </p>
-              <h3 class="case-card__title">{entry.title}</h3>
-              <p class="case-card__summary">{entry.summary}</p>
+              <h3 class="text-primary">{entry.title}</h3>
+              <p class="leading-[1.5] text-text">{entry.summary}</p>
               <span class="card-link">Read the case study</span>
             </div>
 
@@ -90,95 +89,3 @@ const featured = [
 
   </div>
 </section>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Section padding. Same rhythm as every other major section: 2xl block
-     padding gives generous breathing room.
-     -------------------------------------------------------------------------- */
-  .selected-work {
-    padding-block: var(--space-2xl);
-  }
-
-  /* --------------------------------------------------------------------------
-     Card grid. Three columns on wide screens, automatically collapsing to
-     two or one as columns approach 18rem. No media queries needed.
-     -------------------------------------------------------------------------- */
-  .selected-work__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-    gap: var(--space-l);
-  }
-
-  /* --------------------------------------------------------------------------
-     Card. The whole card is a single link (recommended a11y pattern for
-     card UIs) so the click target covers the image plus the body.
-     -------------------------------------------------------------------------- */
-  .case-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-    text-decoration: none;
-    color: inherit;
-    border-radius: 12px;
-    /* Subtle hover lift so the card feels tappable without shouting. */
-    transition: transform 200ms ease;
-  }
-
-  .case-card:hover,
-  .case-card:focus-visible {
-    transform: translateY(-2px);
-  }
-
-  /* Show the visible focus ring on the whole card when reached via keyboard. */
-  .case-card:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 4px;
-  }
-
-  /* --------------------------------------------------------------------------
-     Media placeholder. 4:3 aspect so cards keep a consistent silhouette
-     even before real imagery arrives. Soft gradient hints at the brand
-     palette without committing to a specific image.
-     -------------------------------------------------------------------------- */
-  .case-card__media {
-    aspect-ratio: 4 / 3;
-    width: 100%;
-    background: linear-gradient(135deg, var(--color-bg-soft) 0%, var(--color-secondary) 100%);
-    border-radius: 8px;
-  }
-
-  /* --------------------------------------------------------------------------
-     Card body. Vertical stack with small gaps. The meta row reads like a
-     stamp; the title and summary do the work.
-     -------------------------------------------------------------------------- */
-  .case-card__body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  /* Sector + year row. Mono, muted, dot-separator. */
-  .case-card__meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-s);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  /* Title sits at h3 size from the global scale. No override here. */
-  .case-card__title {
-    color: var(--color-primary);
-  }
-
-  /* Summary line. Slightly tighter than body copy so cards read as compact. */
-  .case-card__summary {
-    color: var(--color-text);
-    line-height: 1.5;
-  }
-</style>

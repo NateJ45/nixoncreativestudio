@@ -9,10 +9,15 @@
    Page-specific content goes in the <slot /> inside <main>.
    ============================================================================ */
 
-import '../styles/global.css';
+import '../styles/globals.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
+
+// Astro View Transitions. Wires same-origin link clicks into the browser's
+// View Transitions API for a smooth fade between pages instead of a hard
+// reload. Same-origin navigation only; external links work as normal.
+import { ClientRouter } from 'astro:transitions';
 
 // Resolve the Bebas Neue woff2 file through Vite's URL pipeline. The ?url
 // query asks Vite to copy the file into the build output and hand us the
@@ -57,10 +62,29 @@ const { title, description = 'Nixon Creative Studio' } = Astro.props;
          only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
          deploy without the token simply emits nothing. -->
     <Analytics />
+
+    <!-- Astro View Transitions. Renders in <head> so the client router
+         is in place before the first navigation. -->
+    <ClientRouter />
   </head>
   <body>
     <Header />
     <main><slot /></main>
     <Footer />
+
+    <!--
+      Lenis smooth scroll initializer. The script is a normal client-side
+      module (no is:inline) so Astro bundles it and hashes the URL. Lives
+      at the end of body so Lenis has the document mounted before it
+      attaches its scroll listeners.
+
+      View Transitions reuse loaded modules across same-origin navigations,
+      so the Lenis instance keeps running without re-initializing on every
+      page change. The script itself honors prefers-reduced-motion and
+      becomes a no-op when the user has reduced-motion set.
+    -->
+    <script>
+      import '../scripts/lenis-init';
+    </script>
   </body>
 </html>

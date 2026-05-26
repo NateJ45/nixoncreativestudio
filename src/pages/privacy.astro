@@ -1,26 +1,33 @@
 ---
+// Safe to edit. The prose below is the legal/transparency content; rewrite
+// any paragraph in place. Bump lastUpdated when meaningful changes ship.
 /* ============================================================================
    /privacy | Privacy notice
    ============================================================================
-   Short, honest accounting of what the site collects. Nothing fancy: a
-   contact form, an analytics beacon, and a couple of standard server-log
-   items. No marketing pixels, no advertising trackers, no cookies that
-   need a banner.
-
-   Easy to update when something changes about the data we collect. Edit
-   the section that changed and update the "Last updated" line at the
-   bottom.
-
-   BEM:
-     privacy                  Outer section wrapper.
-     privacy__intro           Hero/intro block.
-     privacy__body            Prose body container.
+   Short, honest accounting of what the site collects. Contact form,
+   analytics beacon, server logs. No marketing pixels, no advertising
+   trackers, no cookies that need a banner.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 
 const lastUpdated = 'May 25, 2026';
+
+// Anchors inside the prose share the same styling: accent, underlined,
+// hovers to secondary. Pulled into a const since five anchors in this
+// file would otherwise repeat the same class chain.
+const linkClass =
+  'text-accent underline underline-offset-2 ' +
+  'hover:text-secondary focus-visible:text-secondary';
+
+// Inline h2 styling: bumped to h3 visual size since the page already has
+// an h1 at the top and we want body-level subheadings to read as
+// in-content section markers, not full-page heading scale.
+const h2Class = 'mt-l mb-s text-h3 text-primary first:mt-0';
+
+// Paragraphs in the prose body get standard margin-bottom rhythm.
+const pClass = 'mb-m';
 ---
 
 <BaseLayout
@@ -28,56 +35,62 @@ const lastUpdated = 'May 25, 2026';
   description="What this site collects, and what it does with it."
 >
 
-  <section class="privacy">
+  <section class="py-2xl">
     <div class="ncs-container">
 
-      <header class="privacy__intro">
-        <p class="privacy__overline">
-          <span class="privacy__num">L1</span>
+      <!-- Intro block. Mirrors the hero treatment on the other inner
+           pages but at a smaller scale, since this is a utility page. -->
+      <header class="mb-xl flex max-w-[70ch] flex-col gap-m">
+        <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
+          <span class="font-mono text-sm tracking-[0.05em]">L1</span>
           <span>Privacy</span>
         </p>
-        <h1 class="privacy__title">What this site collects.</h1>
-        <p class="privacy__lead">
-          Short version: a contact form, an analytics beacon, and the things any web server logs. No advertising trackers, no third-party cookies. If you have questions, email <a href={site.emailHref}>{site.email}</a>.
+        <h1 class="leading-[0.95]">What this site collects.</h1>
+        <p class="text-lg leading-[1.6] text-text">
+          Short version: a contact form, an analytics beacon, and the things any web server logs. No advertising trackers, no third-party cookies. If you have questions, email <a class={linkClass} href={site.emailHref}>{site.email}</a>.
         </p>
       </header>
 
-      <div class="privacy__body">
+      <!-- Body. Comfortable reading width, slightly larger than default
+           body size for long-form prose, line-height bumped up. -->
+      <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
 
-        <h2>Contact form</h2>
-        <p>
-          When you submit the form on the Contact page, the fields you fill in (your name, email, organization type, budget range, and project description) are sent through <a href="https://web3forms.com/" target="_blank" rel="noopener noreferrer">Web3Forms</a> and delivered to my inbox. Web3Forms acts as the delivery pipe and does not retain submissions beyond the brief window needed to deliver them. I keep the email in my inbox the same way I'd keep any project inquiry.
+        <h2 class={h2Class}>Contact form</h2>
+        <p class={pClass}>
+          When you submit the form on the Contact page, the fields you fill in (your name, email, organization type, budget range, and project description) are sent through <a class={linkClass} href="https://web3forms.com/" target="_blank" rel="noopener noreferrer">Web3Forms</a> and delivered to my inbox. Web3Forms acts as the delivery pipe and does not retain submissions beyond the brief window needed to deliver them. I keep the email in my inbox the same way I'd keep any project inquiry.
         </p>
-        <p>
+        <p class={pClass}>
           The form also includes a hidden "honeypot" field that real visitors never fill in. If a bot submits the form and trips the honeypot, the message is quietly discarded.
         </p>
 
-        <h2>Analytics</h2>
-        <p>
-          The site uses <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a>, which counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network. I use the totals to see which pages are useful and which aren't.
+        <h2 class={h2Class}>Analytics</h2>
+        <p class={pClass}>
+          The site uses <a class={linkClass} href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a>, which counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network. I use the totals to see which pages are useful and which aren't.
         </p>
 
-        <h2>Server logs</h2>
-        <p>
+        <h2 class={h2Class}>Server logs</h2>
+        <p class={pClass}>
           The hosting platform (Cloudflare Pages) records standard request data: IP address, user agent, requested URL, response code, timestamp. These logs are retained for a short window and used for operational purposes like blocking abuse and diagnosing errors. They are not used to build profiles of visitors.
         </p>
 
-        <h2>Cookies</h2>
-        <p>
+        <h2 class={h2Class}>Cookies</h2>
+        <p class={pClass}>
           The site itself does not set tracking cookies. If a future change adds one, this page will say so first.
         </p>
 
-        <h2>Your data</h2>
-        <p>
-          If you've sent a project inquiry and want me to delete it from my inbox, email <a href={site.emailHref}>{site.email}</a> with the email address you used to send it. I'll confirm when it's deleted.
+        <h2 class={h2Class}>Your data</h2>
+        <p class={pClass}>
+          If you've sent a project inquiry and want me to delete it from my inbox, email <a class={linkClass} href={site.emailHref}>{site.email}</a> with the email address you used to send it. I'll confirm when it's deleted.
         </p>
 
-        <h2>Changes</h2>
-        <p>
+        <h2 class={h2Class}>Changes</h2>
+        <p class={pClass}>
           If what the site collects changes, I'll update this page and bump the date at the bottom. There's no separate notification list for privacy updates.
         </p>
 
-        <p class="privacy__updated">Last updated: {lastUpdated}.</p>
+        <p class="mt-l text-[0.95rem] italic text-text-muted">
+          Last updated: {lastUpdated}.
+        </p>
 
       </div>
 
@@ -85,96 +98,3 @@ const lastUpdated = 'May 25, 2026';
   </section>
 
 </BaseLayout>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Section. Single-column reading layout with generous block padding.
-     -------------------------------------------------------------------------- */
-  .privacy {
-    padding-block: var(--space-2xl);
-  }
-
-  /* Intro block. Mirrors the hero treatment on the other inner pages but
-     smaller, since this is a utility page rather than a marketing page. */
-  .privacy__intro {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-    margin-bottom: var(--space-xl);
-    max-width: 70ch;
-  }
-
-  .privacy__overline {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-s);
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-  }
-
-  .privacy__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-  }
-
-  .privacy__title {
-    line-height: 0.95;
-  }
-
-  .privacy__lead {
-    font-size: 1.125rem;
-    color: var(--color-text);
-    line-height: 1.6;
-  }
-
-  .privacy__lead a {
-    color: var(--color-accent);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-  /* --------------------------------------------------------------------------
-     Body. Long-form prose, comfortable reading width.
-     -------------------------------------------------------------------------- */
-  .privacy__body {
-    max-width: 70ch;
-    color: var(--color-text);
-    line-height: 1.7;
-    font-size: 1.0625rem;
-  }
-
-  .privacy__body h2 {
-    color: var(--color-primary);
-    font-size: var(--font-size-h3);
-    margin-top: var(--space-l);
-    margin-bottom: var(--space-s);
-  }
-
-  .privacy__body h2:first-child {
-    margin-top: 0;
-  }
-
-  .privacy__body p {
-    margin-bottom: var(--space-m);
-  }
-
-  .privacy__body a {
-    color: var(--color-accent);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-  .privacy__body a:hover,
-  .privacy__body a:focus-visible {
-    color: var(--color-secondary);
-  }
-
-  .privacy__updated {
-    margin-top: var(--space-l);
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    font-style: italic;
-  }
-</style>

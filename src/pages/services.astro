@@ -1,40 +1,24 @@
 ---
+// Safe to edit. The services and faq arrays below hold every word of
+// user-facing copy on this page.
 /* ============================================================================
    /services | Services
    ============================================================================
-   The full-detail services page. Visitors who land here are usually already
-   evaluating whether NCS fits their project, so the page goes deeper than
-   the homepage's "What I do" strip.
+   Five-block stack:
+     1. Hero (positioning statement)
+     2. Three expanded service chapters with description + included-items
+     3. Process recap (reuses the homepage Process component)
+     4. FAQ (native <details>/<summary>, no JS required)
+     5. CTA banner
 
-   Structure:
-     - Hero with positioning line
-     - Three expanded service chapters (Strategy, Web Design, Photography)
-     - Process recap (reuses the homepage Process component)
-     - FAQ
-     - CTA banner
-
-   The Process component is intentionally reused, not duplicated, so any
-   change to the steps in one place updates both surfaces.
-
-   BEM:
-     services-hero               Top hero block.
-     services-chapters           Wrapper for the expanded chapters.
-     service-detail              Single expanded chapter.
-     service-detail__num         Mono chapter marker.
-     service-detail__title       Chapter title.
-     service-detail__body        Paragraph body.
-     service-detail__points      Bulleted list of what's included.
-     services-faq                FAQ block.
-     services-faq__item          One Q + A pair.
+   The Process component is reused, not duplicated. Edit Process.astro
+   once and both the homepage and this page update.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Process from '../components/Process.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 
-// Three expanded chapters. Each gets a longer description than the homepage
-// and a short list of what's actually included so prospects can match the
-// scope to what they need.
 const services = [
   {
     num: 'i',
@@ -72,7 +56,6 @@ const services = [
   },
 ];
 
-// FAQ entries. Three to start; add more as common questions surface.
 const faq = [
   {
     q: 'How long does a typical project take?',
@@ -99,20 +82,19 @@ const faq = [
 >
 
   <!-- ----------------------------------------------------------------------
-       Hero
-       ----------------------------------------------------------------------
-       Positioning statement and intro paragraph. Single column, centered
-       reading width, because there's no portrait to balance against here.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="services-hero">
+       Hero. Single column, no portrait to balance, so positioning line
+       and intro paragraph sit left-aligned.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl">
     <div class="ncs-container">
-      <p class="services-hero__overline">
-        <span class="services-hero__num">S1</span>
+      <p class="mb-m inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
+        <span class="font-mono text-sm tracking-[0.05em]">S1</span>
         <span>Services</span>
       </p>
-      <h1 class="services-hero__title">Strategy, web design, and photography for organizations that care about the long run.</h1>
-      <p class="services-hero__intro">
+      <h1 class="mb-m max-w-[22ch] leading-[0.95]">
+        Strategy, web design, and photography for organizations that care about the long run.
+      </h1>
+      <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
         Most projects use all three services, in that order. Some use one or two. The first conversation always ends with an honest scope, not a sales pitch.
       </p>
     </div>
@@ -120,27 +102,32 @@ const faq = [
 
 
   <!-- ----------------------------------------------------------------------
-       Expanded chapters
-       ----------------------------------------------------------------------
-       Each chapter pairs a long description with a bulleted "what's
-       included" list. Two-column on wide screens (description left,
-       inclusions right), stacked on narrow screens.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="services-chapters">
+       Expanded chapters. Each chapter: heading row (number + title),
+       then two-column body at >= 48rem (description left, inclusions
+       right). Stacks on narrow screens.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl">
     <div class="ncs-container">
-      <ol class="services-chapters__list">
+      <ol class="flex flex-col gap-2xl pl-0">
         {services.map((service) => (
-          <li class="service-detail">
+          <li class="flex flex-col gap-l">
 
-            <header class="service-detail__heading">
-              <span class="service-detail__num" aria-hidden="true">{service.num}</span>
-              <h2 class="service-detail__title">{service.title}</h2>
+            <header class="flex items-baseline gap-m">
+              <span
+                class="font-mono text-2xl tracking-[0.05em] text-accent"
+                aria-hidden="true"
+              >
+                {service.num}
+              </span>
+              <h2 class="text-primary">{service.title}</h2>
             </header>
 
-            <div class="service-detail__columns">
-              <p class="service-detail__body">{service.body}</p>
-              <ul class="service-detail__points">
+            <div class="grid grid-cols-1 gap-l md:grid-cols-[1.2fr_1fr]">
+              <p class="max-w-[56ch] text-[1.0625rem] leading-[1.7] text-text">
+                {service.body}
+              </p>
+              <!-- Inclusions list. Real bullets restored via list-disc. -->
+              <ul class="ml-5 list-disc space-y-2 leading-[1.6] text-text">
                 {service.points.map((point) => (
                   <li>{point}</li>
                 ))}
@@ -154,38 +141,37 @@ const faq = [
   </section>
 
 
-  <!-- ----------------------------------------------------------------------
-       Process recap
-       ----------------------------------------------------------------------
-       Reuses the Process component from the homepage so there's one source
-       of truth for the four steps. The component carries its own padding
-       and tinted background.
-       ---------------------------------------------------------------------- */
-  -->
+  <!-- Process recap. Reuses the homepage Process component verbatim. -->
   <Process />
 
 
   <!-- ----------------------------------------------------------------------
-       FAQ
-       ----------------------------------------------------------------------
-       <details>/<summary> is the right element here: native disclosure
-       widget, keyboard-accessible, no JavaScript required.
-       ---------------------------------------------------------------------- */
-  -->
-  <section class="services-faq">
+       FAQ. Native <details>/<summary> for accessible disclosure without
+       JavaScript. The "+" indicator rotates to "×" when open via the
+       group-open: variant on the summary's ::after pseudo.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl">
     <div class="ncs-container">
-      <header class="services-faq__heading">
-        <span class="services-faq__num" aria-hidden="true">S5</span>
-        <h2 class="services-faq__title">Common questions</h2>
+
+      <header class="mb-l flex flex-col gap-xs">
+        <span class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">S5</span>
+        <h2 class="text-primary">Common questions</h2>
       </header>
-      <div class="services-faq__list">
+
+      <div class="flex flex-col border-t border-black/[0.08]">
         {faq.map((item) => (
-          <details class="services-faq__item">
-            <summary class="services-faq__q">{item.q}</summary>
-            <p class="services-faq__a">{item.a}</p>
+          <!-- `group` lets the summary's open-state pseudo react via group-open: -->
+          <details class="group border-b border-black/[0.08] py-m">
+            <!-- list-none drops the default disclosure triangle. The webkit
+                 marker pseudo hides the Safari version. -->
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-m font-body text-lg font-semibold text-primary [&::-webkit-details-marker]:hidden after:font-mono after:text-accent after:transition-transform after:duration-200 after:content-['+'] group-open:after:rotate-45">
+              {item.q}
+            </summary>
+            <p class="mt-s max-w-[64ch] leading-[1.7] text-text">{item.a}</p>
           </details>
         ))}
       </div>
+
     </div>
   </section>
 
@@ -196,194 +182,3 @@ const faq = [
   />
 
 </BaseLayout>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Hero. Centered single column, generous block padding.
-     -------------------------------------------------------------------------- */
-  .services-hero {
-    padding-block: var(--space-2xl);
-  }
-
-  .services-hero__overline {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--space-s);
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    margin-bottom: var(--space-m);
-  }
-
-  .services-hero__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-  }
-
-  .services-hero__title {
-    line-height: 0.95;
-    max-width: 22ch;
-    margin-bottom: var(--space-m);
-  }
-
-  .services-hero__intro {
-    font-size: 1.125rem;
-    color: var(--color-text);
-    max-width: 60ch;
-    line-height: 1.6;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     Chapters list.
-     -------------------------------------------------------------------------- */
-  .services-chapters {
-    padding-block: var(--space-2xl);
-  }
-
-  .services-chapters__list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xl);
-    padding-left: 0;
-  }
-
-  /* Single chapter. Heading + two-column body. */
-  .service-detail {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-l);
-  }
-
-  /* Heading row. Mono number prefix in front of the title. */
-  .service-detail__heading {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-m);
-  }
-
-  .service-detail__num {
-    font-family: var(--font-mono);
-    font-size: 1.5rem;
-    color: var(--color-accent);
-    letter-spacing: 0.05em;
-  }
-
-  .service-detail__title {
-    color: var(--color-primary);
-  }
-
-  /* Two-column body: description on the left, inclusions on the right. */
-  .service-detail__columns {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-l);
-  }
-
-  @media (min-width: 48rem) {
-    .service-detail__columns {
-      grid-template-columns: 1.2fr 1fr;
-    }
-  }
-
-  .service-detail__body {
-    color: var(--color-text);
-    line-height: 1.7;
-    font-size: 1.0625rem;
-    max-width: 56ch;
-  }
-
-  /* Inclusions list. Real bullets restored because the global ul reset
-     stripped them; this is a content list, not nav. */
-  .service-detail__points {
-    list-style: disc;
-    padding-left: 1.25rem;
-    color: var(--color-text);
-    line-height: 1.6;
-  }
-
-  .service-detail__points li {
-    margin-bottom: 0.5rem;
-  }
-
-
-  /* --------------------------------------------------------------------------
-     FAQ. <details> + <summary> styled to match the rest of the page.
-     -------------------------------------------------------------------------- */
-  .services-faq {
-    padding-block: var(--space-2xl);
-  }
-
-  .services-faq__heading {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-l);
-  }
-
-  .services-faq__num {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    letter-spacing: 0.05em;
-  }
-
-  .services-faq__title {
-    color: var(--color-primary);
-  }
-
-  /* FAQ list. Hairline divider between items so the disclosure pattern
-     reads as a stack instead of a row of cards. */
-  .services-faq__list {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-  }
-
-  .services-faq__item {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    padding-block: var(--space-m);
-  }
-
-  /* The summary is the question. Bigger than body, weight 600 so it reads
-     as a heading. cursor:pointer signals the disclosure affordance. */
-  .services-faq__q {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 1.125rem;
-    color: var(--color-primary);
-    cursor: pointer;
-    list-style: none;             /* Drop the default disclosure triangle... */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-m);
-  }
-
-  /* ...and replace with a + that rotates to × when the details is open. */
-  .services-faq__q::after {
-    content: "+";
-    font-family: var(--font-mono);
-    color: var(--color-accent);
-    transition: transform 200ms ease;
-  }
-
-  .services-faq__item[open] .services-faq__q::after {
-    transform: rotate(45deg);     /* + becomes × */
-  }
-
-  /* Webkit hides the marker via this pseudo. Combined with list-style: none
-     above, both browser families drop the default triangle. */
-  .services-faq__q::-webkit-details-marker {
-    display: none;
-  }
-
-  /* Answer. Indented slightly so it reads as a child of the question. */
-  .services-faq__a {
-    color: var(--color-text);
-    line-height: 1.7;
-    margin-top: var(--space-s);
-    max-width: 64ch;
-  }
-</style>

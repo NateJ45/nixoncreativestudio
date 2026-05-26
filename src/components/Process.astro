@@ -1,21 +1,17 @@
 ---
+// Safe to edit. Step titles and bodies are content that Nathan rewrites
+// as the process evolves.
 /* ============================================================================
    Section 05 | How We Work (Process)
    ============================================================================
-   Four numbered steps. Each step has a title and a two-sentence description.
-   Visually a four-column row on desktop, two-column grid on tablet, single
-   column on mobile.
+   Four numbered steps in a row. Auto-fit grid drops cleanly from four
+   columns at wide to two then one as viewport narrows.
 
-   The numbered step pattern matches the section-number theme used across
-   the homepage; here the numbers ground each step in sequence.
+   Sits on the soft tinted band, same as Services, so sections 03 and 05
+   bookend the white sections in between visually.
 
-   BEM:
-     process            Section wrapper.
-     process__grid      Step grid.
-     process-step       Single step block.
-     process-step__num  Big mono number marker.
-     process-step__title Step title.
-     process-step__body Paragraph description.
+   Each step has a heavy top border that ties it to the numbered-step
+   pattern from the original WordPress build.
    ============================================================================ */
 
 import SectionHeading from './SectionHeading.astro';
@@ -44,7 +40,7 @@ const steps = [
 ];
 ---
 
-<section class="process" aria-labelledby="process-heading">
+<section class="bg-bg-soft py-2xl" aria-labelledby="process-heading">
   <div class="ncs-container">
 
     <SectionHeading
@@ -53,75 +49,20 @@ const steps = [
       sub="Four steps, in order. Everything else follows from the first conversation."
     />
 
-    <ol class="process__grid">
+    <!-- Step grid. Four columns at wide, reflows via auto-fit minmax. -->
+    <ol class="grid gap-l pl-0 [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))]">
       {steps.map((step) => (
-        <li class="process-step">
-          <span class="process-step__num" aria-hidden="true">{step.num}</span>
-          <h3 class="process-step__title">{step.title}</h3>
-          <p class="process-step__body">{step.body}</p>
+        <li class="flex flex-col gap-s border-t-2 border-primary pt-m">
+          <span class="font-mono text-[0.95rem] tracking-[0.06em] text-accent" aria-hidden="true">
+            {step.num}
+          </span>
+          <!-- Step title at h4 size override (tighter than the default h3
+               size that h3 normally pulls from globals.css). -->
+          <h3 class="text-h4 text-primary">{step.title}</h3>
+          <p class="leading-[1.5] text-text">{step.body}</p>
         </li>
       ))}
     </ol>
 
   </div>
 </section>
-
-
-<style>
-  /* --------------------------------------------------------------------------
-     Section padding. Soft background tint, same as Services, so the two
-     "tinted" sections (03 and 05) bookend the white sections in between.
-     -------------------------------------------------------------------------- */
-  .process {
-    padding-block: var(--space-2xl);
-    background-color: var(--color-bg-soft);
-  }
-
-  /* --------------------------------------------------------------------------
-     Step grid. Four columns on wide screens, falling back via auto-fit
-     minmax so the grid reflows automatically as the viewport shrinks.
-     Reset the default ol padding so the row aligns with the section.
-     -------------------------------------------------------------------------- */
-  .process__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    gap: var(--space-l);
-    padding-left: 0;
-  }
-
-  /* --------------------------------------------------------------------------
-     Single step. Vertical stack: big number, title, body. Top border on
-     each step echoes the numbered-step pattern from the WordPress build.
-     -------------------------------------------------------------------------- */
-  .process-step {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-    padding-top: var(--space-m);
-    border-top: 2px solid var(--color-primary);
-  }
-
-  /* --------------------------------------------------------------------------
-     Step number. Mono, big enough to read as a marker without competing
-     with the title. Accent color so it carries a little brand presence.
-     -------------------------------------------------------------------------- */
-  .process-step__num {
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    color: var(--color-accent);
-    letter-spacing: 0.06em;
-  }
-
-  /* Title at h4 scale; tighter than h3 because steps are compact blocks. */
-  .process-step__title {
-    color: var(--color-primary);
-    font-size: var(--font-size-h4);
-  }
-
-  /* Body. Slightly tighter line-height than full body copy because step
-     descriptions are short and dense. */
-  .process-step__body {
-    color: var(--color-text);
-    line-height: 1.5;
-  }
-</style>
