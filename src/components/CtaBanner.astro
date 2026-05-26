@@ -13,6 +13,8 @@
    Phase 6 will swap the inline button styling for a shadcn Button.
    ============================================================================ */
 
+import { Button } from './ui/button';
+
 interface Props {
   title?:    string;
   sub?:      string;
@@ -42,14 +44,11 @@ const {
       <p class="text-lg leading-[1.5] text-bg/80">{sub}</p>
     </div>
 
-    <!-- Primary button. Same recipe as the Hero CTA. Phase 6 swaps in a
-         shadcn Button for both surfaces in one pass. -->
-    <a
-      class="inline-flex items-center rounded-lg bg-accent px-6 py-3.5 font-body text-base font-semibold text-bg no-underline transition-[background-color,transform] duration-150 hover:-translate-y-px hover:bg-secondary focus-visible:-translate-y-px focus-visible:bg-secondary"
-      href={ctaHref}
-    >
-      {ctaLabel}
-    </a>
+    <!-- Primary button. Shared shadcn Button so this banner, the Hero,
+         and the contact form submit all share one styling recipe. -->
+    <Button asChild variant="brand" size="cta">
+      <a href={ctaHref}>{ctaLabel}</a>
+    </Button>
 
   </div>
 </section>

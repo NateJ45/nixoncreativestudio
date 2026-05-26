@@ -16,6 +16,7 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
+import { Button } from '../components/ui/button';
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
@@ -160,14 +161,18 @@ const inputClass =
           <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
         </div>
 
-        <!-- Submit. Same recipe as Hero CTA. Phase 6 unifies both to shadcn Button. -->
-        <button
-          class="inline-flex items-center self-start rounded-lg bg-accent px-6 py-3.5 font-body text-base font-semibold text-bg transition-[background-color,transform] duration-150 hover:-translate-y-px hover:bg-secondary focus-visible:-translate-y-px focus-visible:bg-secondary disabled:cursor-progress disabled:opacity-60 disabled:transform-none"
+        <!-- Submit. Shared shadcn Button (brand variant + cta size)
+             matches the Hero and CtaBanner CTAs. self-start keeps it
+             at content width inside the flex-column form layout. -->
+        <Button
           type="submit"
+          variant="brand"
+          size="cta"
+          className="self-start"
           data-contact-submit
         >
           <span data-contact-submit-label>Send</span>
-        </button>
+        </Button>
 
         {!formActive && (
           <p class="text-[0.85rem] italic text-text-muted">

@@ -23,6 +23,11 @@
 // his service area.
 import { site } from '../data/site';
 
+// shadcn Button. Used here for the primary "Start a project" CTA so the
+// button styling lives in one place site-wide (CtaBanner and the contact
+// form submit use the same variant + size).
+import { Button } from './ui/button';
+
 // Headline statement. Edit in place when the positioning sharpens.
 const statement = 'I make websites that pull their weight.';
 
@@ -72,18 +77,17 @@ const locale = `${site.address} · Greater Cincinnati`;
            flex-wrap so the link drops to a new line on narrow screens. -->
       <div class="mt-s flex flex-wrap items-center gap-m">
 
-        <!-- Primary button. Same recipe as the CtaBanner action. Will become
-             a shadcn Button in Phase 6. -->
-        <a
-          class="inline-flex items-center rounded-lg bg-accent px-6 py-3.5 font-body text-base font-semibold text-bg no-underline transition-[background-color,transform] duration-150 hover:-translate-y-px hover:bg-secondary focus-visible:-translate-y-px focus-visible:bg-secondary"
-          href="/contact"
-        >
-          Start a project
-        </a>
+        <!-- Primary button. asChild forwards Button's classes to the <a>
+             inside so the link gets the brand styling + focus ring while
+             remaining a real anchor for keyboard navigation and prefetch.
+             Same variant + size as CtaBanner and the contact submit. -->
+        <Button asChild variant="brand" size="cta">
+          <a href="/contact">Start a project</a>
+        </Button>
 
-        <!-- Secondary text link with arrow. .card-link stays as a utility
-             class in globals.css since the same pattern repeats across
-             multiple components. -->
+        <!-- Secondary text link with arrow. card-link stays as a global
+             utility class for the arrow + hover slide; shadcn doesn't
+             have a direct equivalent and the pattern repeats elsewhere. -->
         <a class="card-link" href="/work/">See selected work</a>
 
       </div>
