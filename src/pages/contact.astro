@@ -37,6 +37,28 @@ const budgets = [
   { value: 'not-sure',  label: 'Not sure yet'      },
 ];
 
+// Project timeline brackets. Lets Nathan triage against the limited number
+// of projects he takes per quarter without asking for exact dates.
+const timelines = [
+  { value: 'asap',        label: 'Right away'                  },
+  { value: '1-3-months',  label: 'In the next 1 to 3 months'   },
+  { value: '3-6-months',  label: '3 to 6 months from now'      },
+  { value: '6-plus',      label: 'More than 6 months out'      },
+  { value: 'flexible',    label: 'Flexible, no fixed deadline' },
+];
+
+// Attribution options. Cheap signal on what marketing channels are
+// working. "Referral" first because that's the most common path for
+// preschools, churches, and small businesses in the region.
+const heardFromOptions = [
+  { value: 'referral',    label: 'A referral from someone I know'           },
+  { value: 'search',      label: 'Google or another search engine'          },
+  { value: 'social',      label: 'Instagram, LinkedIn, or other social'     },
+  { value: 'past-client', label: "I've worked with Nathan before"           },
+  { value: 'event',       label: 'In person, at an event or through a church or school' },
+  { value: 'other',       label: 'Somewhere else'                            },
+];
+
 // Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
 // time, which is required because the form runs in the browser.
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
@@ -46,6 +68,11 @@ const formActive  = web3formsKey.length > 0;
 // input/select/textarea repeats the same base styling.
 const fieldClass = 'flex flex-col gap-xs';
 const labelClass = 'font-body text-[0.95rem] font-semibold text-heading';
+// Suffix span styling for "(optional)" markers. Lower weight + muted
+// color so the label still reads as "<field name>" with optional as
+// supporting text rather than competing with it. Required fields stay
+// unmarked because required is the default expectation.
+const optionalMark = 'ml-1 font-normal text-text-muted';
 const inputClass =
   'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
   'transition-[border-color,box-shadow] duration-150 ' +
@@ -116,6 +143,25 @@ const inputClass =
           <input class={inputClass} type="email" id="email" name="email" required autocomplete="email" />
         </div>
 
+        <!-- Phone: optional. type="tel" lets mobile browsers pop the
+             numeric keypad; autocomplete="tel" lets the OS / password
+             manager pre-fill. -->
+        <div class={fieldClass}>
+          <label class={labelClass} for="phone">
+            Phone <span class={optionalMark}>(optional)</span>
+          </label>
+          <input class={inputClass} type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" />
+        </div>
+
+        <!-- Organization name: optional. Lets Nathan look the org up
+             before the first reply. -->
+        <div class={fieldClass}>
+          <label class={labelClass} for="organization">
+            Organization name <span class={optionalMark}>(optional)</span>
+          </label>
+          <input class={inputClass} type="text" id="organization" name="organization" autocomplete="organization" />
+        </div>
+
         <div class={fieldClass}>
           <label class={labelClass} for="org_type">Organization type</label>
           <select class={inputClass} id="org_type" name="org_type" required>
@@ -126,11 +172,42 @@ const inputClass =
           </select>
         </div>
 
+        <!-- Current website: optional. URL input gives mobile keyboard
+             the dot/slash keys. Placeholder hints at expected format. -->
+        <div class={fieldClass}>
+          <label class={labelClass} for="current_website">
+            Current website <span class={optionalMark}>(optional)</span>
+          </label>
+          <input
+            class={inputClass}
+            type="url"
+            id="current_website"
+            name="current_website"
+            autocomplete="url"
+            inputmode="url"
+            placeholder="https://"
+          />
+        </div>
+
         <div class={fieldClass}>
           <label class={labelClass} for="budget">Budget range</label>
           <select class={inputClass} id="budget" name="budget" required>
             <option value="" disabled selected>Pick the closest</option>
             {budgets.map((opt) => (
+              <option value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Timeline: optional. Helps triage against Nathan's per-quarter
+             project cap without asking for exact dates. -->
+        <div class={fieldClass}>
+          <label class={labelClass} for="timeline">
+            Project timeline <span class={optionalMark}>(optional)</span>
+          </label>
+          <select class={inputClass} id="timeline" name="timeline">
+            <option value="" selected>No preference</option>
+            {timelines.map((opt) => (
               <option value={opt.value}>{opt.label}</option>
             ))}
           </select>
@@ -150,6 +227,20 @@ const inputClass =
           <p class="mt-xs text-[0.85rem] text-text-muted">
             At least a few sentences, please. The more you share, the better I can scope the first conversation.
           </p>
+        </div>
+
+        <!-- Attribution: optional. Cheap signal on what marketing
+             channels are bringing inquiries in. -->
+        <div class={fieldClass}>
+          <label class={labelClass} for="heard_from">
+            How did you hear about Nixon Creative Studio? <span class={optionalMark}>(optional)</span>
+          </label>
+          <select class={inputClass} id="heard_from" name="heard_from">
+            <option value="" selected>Pick one if you'd like</option>
+            {heardFromOptions.map((opt) => (
+              <option value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
 
         <!-- Honeypot. sr-only is Tailwind's equivalent of the old
