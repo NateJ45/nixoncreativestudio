@@ -364,18 +364,33 @@ Set in Cloudflare Pages → **Settings → Variables and Secrets** (the Build se
 - `PUBLIC_WEB3FORMS_KEY` — contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action and shows an inline notice.
 - `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics token from dash.cloudflare.com → Analytics & Logs → Web Analytics. Without it the analytics beacon doesn't render.
 - `PUBLIC_COMING_SOON` — set to the literal string `true` to gate the entire site behind the coming-soon page (see below). Unset, or any other value, takes the site live.
+- `PREVIEW_TOKEN` — random secret string used by the coming-soon middleware to recognize your bypass. Required for the bypass to work; pick something long and unguessable. Anyone who knows this value can bypass the gate, so treat it like a password.
 
-All three are documented in `.env.example`; copy to `.env` and fill in real values for local dev.
+All four are documented in `.env.example`; copy to `.env` and fill in real values for local dev.
 
 ### Coming Soon mode
 
-Site-wide WIP gate controlled by `PUBLIC_COMING_SOON`. When set to `true` at build time, every page that uses BaseLayout renders the `ComingSoon` component in place of its real header / main / footer. `/coming-soon/` itself is always live (it has its own minimal HTML doc, doesn't go through BaseLayout) so the page can be previewed without flipping the gate.
+Site-wide WIP gate controlled by `PUBLIC_COMING_SOON`, enforced at the Cloudflare edge by `functions/_middleware.js`. When the env var is `true`, the middleware redirects every visitor to `/coming-soon/` unless they're carrying a valid preview cookie. Pages always build with their real content; the gate is a runtime decision, which is what enables the bypass.
 
-To flip on for production: set `PUBLIC_COMING_SOON=true` in Cloudflare Pages Variables, click Retry Deployment (or push any commit). About a minute later, the whole live site becomes the coming-soon page.
+`/coming-soon/` itself is always live and reachable regardless of the gate (the middleware allowlists it), so the page can be previewed without flipping any env var.
 
-To take live: change the variable to any other value or delete it entirely, then redeploy. Normal routing returns.
+**To enable the gate**: set `PUBLIC_COMING_SOON=true` and `PREVIEW_TOKEN=<your-secret>` in Cloudflare Pages → Variables and Secrets. Trigger a redeploy. About a minute later, every visitor to the site (except you, see below) is redirected to `/coming-soon/`.
 
-Locally: control via `.env`. Unset = full WIP site; `PUBLIC_COMING_SOON=true` = preview the gated view in dev.
+**To bypass on a device you own**: visit any URL with `?preview=<your-secret>` appended, e.g.
+
+```
+https://nixoncreativestudio.com/?preview=<your-secret>
+```
+
+The function sets a 30-day `ncs-preview` cookie (HttpOnly, Secure, SameSite=Lax) and 302-redirects to the URL without the query param. From then on that browser bypasses the gate on every page.
+
+**To revoke your bypass**: clear cookies for the site in your browser.
+
+**To rotate the token**: change `PREVIEW_TOKEN` in Cloudflare and redeploy. Old cookies stop matching; visit the bypass URL again with the new token to re-enable.
+
+**To take the site live**: change `PUBLIC_COMING_SOON` to any other value (or delete it entirely) and redeploy. The middleware becomes a no-op and normal routing returns.
+
+**Local dev caveat**: the middleware only runs in Cloudflare deploys and under `npm run preview` (which spins up wrangler). Plain `npm run dev` (Astro dev server) always shows the full WIP site regardless of these env vars, which is what you usually want during local work.
 
 ### Security headers
 
@@ -431,6 +446,7 @@ Things that still need configuration before / during the public launch. Everythi
 - [ ] `PUBLIC_WEB3FORMS_KEY` — contact form delivery (web3forms.com).
 - [ ] `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics.
 - [ ] `PUBLIC_COMING_SOON` — set to `true` while the site is WIP; unset to launch.
+- [ ] `PREVIEW_TOKEN` — required only when the gate is on. Pick something long and random. Visit `?preview=<token>` once per browser to bypass.
 
 ### `src/data/site.ts` — fields that enable scaffolds when set
 

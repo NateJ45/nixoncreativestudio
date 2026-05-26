@@ -15,7 +15,6 @@ import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
 import BackToTop from '../components/BackToTop';
 import StructuredData from '../components/StructuredData.astro';
-import ComingSoon from '../components/ComingSoon.astro';
 import { site } from '../data/site';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
@@ -39,17 +38,12 @@ import { ClientRouter } from 'astro:transitions';
 // than the LCP gain is worth.
 import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
 
-// Site-wide "coming soon" gate. When PUBLIC_COMING_SOON=true at build
-// time, every page that uses BaseLayout replaces its content with the
-// ComingSoon component. /coming-soon/ is independent (renders its own
-// minimal HTML doc directly), so previewing the gate page doesn't
-// require flipping the env var.
-//
-// To toggle:
-//   - Cloudflare Pages: Settings > Variables > Production env vars.
-//     Add PUBLIC_COMING_SOON=true to gate the site; remove it to launch.
-//   - Local: set the value in .env (.env.example documents the pattern).
-const comingSoonMode = import.meta.env.PUBLIC_COMING_SOON === 'true';
+// Coming-soon gating is handled at the Cloudflare edge by
+// functions/_middleware.js, not in this file. The middleware reads the
+// same PUBLIC_COMING_SOON env var, redirects non-bypassed visitors to
+// /coming-soon/, and lets visitors with a valid preview cookie through.
+// Pages always build with their real content; the gate is a runtime
+// decision, which is what enables the bypass.
 
 interface Props {
   title:        string;
@@ -198,19 +192,15 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
       Skip to main content
     </a>
 
-    {/* Coming-soon gate. When PUBLIC_COMING_SOON=true at build time,
-        every page renders the ComingSoon component in place of the
-        normal header, main, and footer. */}
-    {comingSoonMode ? (
-      <ComingSoon />
-    ) : (
-      <Fragment>
-        <Header />
-        <main id="main" tabindex="-1"><slot /></main>
-        <Footer />
-        <BackToTop client:idle />
-      </Fragment>
-    )}
+    <Header />
+    <main id="main" tabindex="-1"><slot /></main>
+    <Footer />
+
+    {/* Floating back-to-top affordance. client:idle defers hydration
+        until after critical content; the button starts hidden and only
+        fades in after the visitor scrolls past 600px, so the delay is
+        invisible. */}
+    <BackToTop client:idle />
 
     <!--
       Lenis smooth scroll initializer. The script is a normal client-side
