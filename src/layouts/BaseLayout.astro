@@ -15,6 +15,7 @@ import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
 import BackToTop from '../components/BackToTop';
 import StructuredData from '../components/StructuredData.astro';
+import ComingSoon from '../components/ComingSoon.astro';
 import { site } from '../data/site';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
@@ -38,12 +39,35 @@ import { ClientRouter } from 'astro:transitions';
 // than the LCP gain is worth.
 import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
 
-// Coming-soon gating is handled at the Cloudflare edge by
-// functions/_middleware.js, not in this file. The middleware reads the
-// same PUBLIC_COMING_SOON env var, redirects non-bypassed visitors to
-// /coming-soon/, and lets visitors with a valid preview cookie through.
-// Pages always build with their real content; the gate is a runtime
-// decision, which is what enables the bypass.
+// Coming-soon gate. Implemented client-side so the owner can bypass
+// per-device by visiting a magic URL, while everyone else lands on
+// the ComingSoon view. See the gate <script> further down in <head>
+// for the runtime logic.
+//
+// PUBLIC_COMING_SOON=true at build time:
+//   - Every page ships with BOTH the real content (Header / Main /
+//     Footer) AND the ComingSoon overlay div.
+//   - A blocking inline <script> in <head> adds class="ncs-gated" to
+//     <html> unless the visitor's localStorage carries the bypass
+//     token (or the current URL contains ?preview=<TOKEN>).
+//   - CSS in globals.css hides everything but .ncs-overlay when
+//     html.ncs-gated is present, and hides .ncs-overlay otherwise.
+//   - <meta name="robots" content="noindex"> ships so search engines
+//     don't index the WIP content while gated.
+//
+// PUBLIC_COMING_SOON unset (or anything other than "true") at build time:
+//   - No overlay, no gating script, no noindex. Normal site.
+//
+// PUBLIC_PREVIEW_TOKEN is the bypass secret. Visit any page with
+// ?preview=<PUBLIC_PREVIEW_TOKEN> once and the script saves it to
+// localStorage; from then on, that browser bypasses on every page.
+//
+// PUBLIC_ prefix on both: required because they're read at build
+// time AND inlined into the client script. The token is technically
+// visible in shipped HTML for anyone viewing source — soft gate, not
+// security. For real auth, use Cloudflare Access at the DNS layer.
+const comingSoonEnabled = import.meta.env.PUBLIC_COMING_SOON === 'true';
+const previewToken      = import.meta.env.PUBLIC_PREVIEW_TOKEN || '';
 
 interface Props {
   title:        string;
@@ -88,6 +112,36 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
          for this page, even if it's reached through alternate query
          strings or aliased paths. -->
     <link rel="canonical" href={canonical} />
+
+    {comingSoonEnabled && (
+      <meta name="robots" content="noindex, follow" />
+    )}
+
+    {comingSoonEnabled && (
+      <script is:inline define:vars={{ previewToken }}>
+        (function () {
+          try {
+            var url   = new URL(window.location.href);
+            var param = url.searchParams.get('preview');
+
+            if (param && previewToken && param === previewToken) {
+              localStorage.setItem('ncs-preview', param);
+              url.searchParams.delete('preview');
+              window.location.replace(url.toString());
+              return;
+            }
+
+            var stored = localStorage.getItem('ncs-preview');
+            if (stored && previewToken && stored === previewToken) {
+              return;
+            }
+          } catch (e) {
+            /* localStorage blocked: fall through to gating */
+          }
+          document.documentElement.classList.add('ncs-gated');
+        })();
+      </script>
+    )}
 
     <!-- RSS auto-discovery. Lets feed readers (and browser extensions
          that detect feeds) pick up /rss.xml without manual entry. -->
@@ -201,6 +255,12 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
         fades in after the visitor scrolls past 600px, so the delay is
         invisible. */}
     <BackToTop client:idle />
+
+    {comingSoonEnabled && (
+      <div class="ncs-overlay" aria-label="Launching soon">
+        <ComingSoon />
+      </div>
+    )}
 
     <!--
       Lenis smooth scroll initializer. The script is a normal client-side

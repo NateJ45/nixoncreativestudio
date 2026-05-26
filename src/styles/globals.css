@@ -238,6 +238,37 @@
 }
 
 /* ----------------------------------------------------------------------------
+   Coming-soon gate.
+   ----------------------------------------------------------------------------
+   The site ships with both the real content (Header / Main / Footer) and
+   the .ncs-overlay (ComingSoon) when PUBLIC_COMING_SOON=true at build
+   time. The inline gate script in BaseLayout's <head> decides which to
+   show by toggling html.ncs-gated synchronously before first paint:
+
+     - bypassed (matching localStorage / URL token): no class, overlay
+       hidden, real site visible.
+     - not bypassed: html.ncs-gated, overlay covers the viewport, real
+       content stripped from layout flow.
+
+   This is a soft gate, not security: the real HTML is in the source
+   either way. See BaseLayout's comment and the Coming Soon section
+   in CLAUDE.md for the bypass workflow.
+   ---------------------------------------------------------------------- */
+.ncs-overlay {
+  display: none;
+}
+html.ncs-gated body > header,
+html.ncs-gated body > main,
+html.ncs-gated body > footer,
+html.ncs-gated body > a[href="#main"],
+html.ncs-gated body > button[aria-label="Back to top"] {
+  display: none !important;
+}
+html.ncs-gated .ncs-overlay {
+  display: block;
+}
+
+/* ----------------------------------------------------------------------------
    Print stylesheet.
    Boards, committees, and clients sometimes print case studies (or any
    prose page) for discussion. Strip the parts that don't translate
