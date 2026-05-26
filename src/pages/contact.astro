@@ -17,6 +17,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { Button } from '../components/ui/button';
+import CopyEmail from '../components/CopyEmail';
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
@@ -311,9 +312,7 @@ const inputClass =
           <h2 class="text-h4 text-heading">Direct</h2>
           <ul class="flex flex-col gap-xs">
             <li>
-              <a class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2" href={site.emailHref}>
-                {site.email}
-              </a>
+              <CopyEmail client:load email={site.email} />
             </li>
             <li>
               <a class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2" href={site.phoneHref}>
@@ -360,6 +359,78 @@ const inputClass =
 
       const originalLabel = label.textContent ?? 'Send';
 
+      /* ---- Draft auto-save ----------------------------------------------
+         If a visitor types a long message then accidentally navigates away
+         or refreshes, we want their draft to come back. localStorage save
+         on every input (with a tiny debounce), restore on mount, clear
+         after a successful submit. The honeypot field is never saved.
+
+         Skipped under private browsing / blocked storage; both blocks are
+         wrapped in try/catch so a SecurityError doesn't break the form.
+      --------------------------------------------------------------------- */
+
+      const DRAFT_KEY = 'ncs-contact-draft';
+
+      // Fields we persist. The hidden Web3Forms admin fields and the
+      // honeypot are intentionally excluded.
+      const persistedNames = [
+        'name', 'email', 'phone',
+        'organization', 'org_type',
+        'current_website', 'budget', 'timeline',
+        'message', 'heard_from',
+      ];
+
+      function restoreDraft(): void {
+        try {
+          const raw = localStorage.getItem(DRAFT_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw) as Record<string, string>;
+          persistedNames.forEach((name) => {
+            const el = form!.elements.namedItem(name) as
+              | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+            if (el && typeof data[name] === 'string' && data[name].length > 0) {
+              el.value = data[name];
+            }
+          });
+        } catch {
+          /* swallow */
+        }
+      }
+
+      function saveDraft(): void {
+        try {
+          const out: Record<string, string> = {};
+          persistedNames.forEach((name) => {
+            const el = form!.elements.namedItem(name) as
+              | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+            if (el && el.value) out[name] = el.value;
+          });
+          if (Object.keys(out).length === 0) {
+            localStorage.removeItem(DRAFT_KEY);
+            return;
+          }
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
+        } catch {
+          /* swallow */
+        }
+      }
+
+      function clearDraft(): void {
+        try { localStorage.removeItem(DRAFT_KEY); } catch { /* swallow */ }
+      }
+
+      // Tiny debounce so typing in the textarea doesn't write to storage
+      // on every keystroke.
+      let saveTimer: number | undefined;
+      function scheduleSave(): void {
+        if (saveTimer) window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(saveDraft, 250);
+      }
+
+      restoreDraft();
+      form.addEventListener('input',  scheduleSave);
+      form.addEventListener('change', scheduleSave);
+
       // Helpers that toggle visibility via the Tailwind .hidden class. The
       // thanks panel needs `flex` when shown because it's a flex column.
       const show = (el: HTMLElement, displayClass = 'flex') => {
@@ -380,6 +451,7 @@ const inputClass =
           event.preventDefault();
           hide(form);
           show(thanks);
+          clearDraft();
           return;
         }
 
@@ -399,6 +471,7 @@ const inputClass =
           if (response.ok) {
             hide(form);
             show(thanks);
+            clearDraft();
             thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
           } else {
             show(errorEl, 'block');

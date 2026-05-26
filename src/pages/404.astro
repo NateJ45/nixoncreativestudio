@@ -1,0 +1,49 @@
+---
+// Safe to edit. Friendly 404. Astro picks this up automatically for any
+// route that doesn't match a real page; Cloudflare Pages serves it as
+// the static fallback for unknown paths in production.
+/* ============================================================================
+   /404 | Page not found
+   ============================================================================
+   Hero-style single column. Mirrors the Hero treatment so the page reads
+   as part of the site, not a system error. Two CTAs: back to home and
+   straight to /work for visitors who probably mistyped a case-study slug.
+   ============================================================================ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Button } from '../components/ui/button';
+---
+
+<BaseLayout
+  title="Page not found | Nixon Creative Studio"
+  description="That page wandered off. Here's how to get back on track."
+>
+
+  <section class="py-2xl" aria-labelledby="notfound-heading">
+    <div class="ncs-container flex max-w-[60ch] flex-col gap-m">
+
+      <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
+        <span class="font-mono text-sm tracking-[0.05em]">404</span>
+        <span>Page not found</span>
+      </p>
+
+      <h1 id="notfound-heading" class="max-w-[18ch] leading-[0.95]">
+        That page wandered off.
+      </h1>
+
+      <p class="text-lg leading-[1.6] text-text">
+        The link you followed might be old, or the address might be a typo. Nothing's broken on this end. Here are a few places to try instead.
+      </p>
+
+      <div class="mt-s flex flex-wrap items-center gap-m">
+        <Button asChild variant="brand" size="cta">
+          <a href="/">Back to home</a>
+        </Button>
+        <a class="card-link" href="/work/">See selected work</a>
+        <a class="card-link" href="/contact">Get in touch</a>
+      </div>
+
+    </div>
+  </section>
+
+</BaseLayout>

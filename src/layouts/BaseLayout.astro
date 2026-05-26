@@ -13,6 +13,8 @@ import '../styles/globals.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
+import BackToTop from '../components/BackToTop';
+import { site } from '../data/site';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
 // View Transitions API for a smooth fade between pages instead of a hard
@@ -35,8 +37,30 @@ import { ClientRouter } from 'astro:transitions';
 // than the LCP gain is worth.
 import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
 
-interface Props { title: string; description?: string; }
-const { title, description = 'Nixon Creative Studio' } = Astro.props;
+interface Props {
+  title:        string;
+  description?: string;
+  /** Open Graph image URL. Defaults to the site-wide OG image in
+      public/. Pages with a richer hero (case studies) pass their own
+      cover so social shares render the project's actual artwork. */
+  ogImage?:     string;
+  /** Override the default og:type. Case study detail pages set this to
+      "article" so platforms that treat articles specially (search,
+      readers) render them correctly. */
+  ogType?:      'website' | 'article';
+}
+const {
+  title,
+  description = 'Nixon Creative Studio',
+  ogImage     = '/og-default.png',
+  ogType      = 'website',
+} = Astro.props;
+
+// Build a canonical URL for the current page so og:url and JSON-LD have
+// the right absolute reference. Astro.url is the live request URL in
+// dev and the resolved page URL at build time.
+const canonical = new URL(Astro.url.pathname, site.url).toString();
+const ogImageUrl = new URL(ogImage, site.url).toString();
 ---
 <!doctype html>
 <html lang="en">
@@ -45,6 +69,27 @@ const { title, description = 'Nixon Creative Studio' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
+
+    <!-- Canonical URL. Tells search engines the authoritative location
+         for this page, even if it's reached through alternate query
+         strings or aliased paths. -->
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph + Twitter card meta. Drives the rich preview that
+         appears when the URL is shared on Slack, iMessage, LinkedIn, etc.
+         Pages that pass an `ogImage` prop (typically case studies, using
+         their cover) get a project-specific preview; everything else
+         falls back to the site-wide default in public/og-default.png. -->
+    <meta property="og:type"        content={ogType} />
+    <meta property="og:url"         content={canonical} />
+    <meta property="og:title"       content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image"       content={ogImageUrl} />
+    <meta property="og:site_name"   content={site.studioName} />
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image"       content={ogImageUrl} />
 
     <!--
       Anti-FOUC theme bootstrap. Runs synchronously before <body> paints so
@@ -126,6 +171,12 @@ const { title, description = 'Nixon Creative Studio' } = Astro.props;
     <Header />
     <main id="main" tabindex="-1"><slot /></main>
     <Footer />
+
+    <!-- Floating "back to top" affordance. client:idle so the script
+         doesn't compete with above-the-fold content for hydration; the
+         button starts hidden anyway and only fades in after the visitor
+         has scrolled past 600px, so a slightly delayed mount is invisible. -->
+    <BackToTop client:idle />
 
     <!--
       Lenis smooth scroll initializer. The script is a normal client-side

@@ -21,6 +21,7 @@
 const year = new Date().getFullYear();
 
 import { site } from '../data/site';
+import CopyEmail from './CopyEmail';
 
 // Social links rendered as a list. Driving this from site.social keeps
 // labels in one place; add a network there and add a row here.
@@ -73,7 +74,10 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
         <div>
           <h2 class={headingClass}>Contact</h2>
           <ul class="flex flex-col gap-xs">
-            <li><a class={linkClass} href={site.emailHref}>{site.email}</a></li>
+            <!-- CopyEmail renders the address as a mailto link plus a
+                 small copy-to-clipboard button. The link still works
+                 normally; the button is the convenience layer. -->
+            <li><CopyEmail client:load email={site.email} /></li>
             <li><a class={linkClass} href={site.phoneHref}>{site.phone}</a></li>
             <li>{site.address}</li>
           </ul>

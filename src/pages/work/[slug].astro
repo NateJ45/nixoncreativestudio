@@ -7,35 +7,67 @@
    One static page per case study, generated at build time from the
    case-studies content collection.
 
-   Same shape for every entry: hero block (meta + title + client + summary
-   + service badges + image), then the MDX body, then CtaBanner. Adding
-   a new MDX file in src/content/case-studies/ auto-creates its page on
-   the next build.
+   Same shape for every entry: reading progress bar, hero block (meta +
+   title + client + summary + service badges + image), MDX body, then
+   next/previous navigation + CtaBanner. Adding a new MDX file in
+   src/content/case-studies/ auto-creates its page on the next build.
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
 import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
+import ReadingProgress from '../../components/ReadingProgress';
 import { Badge } from '../../components/ui/badge';
+import { readingTime } from '../../lib/readingTime';
 
+// getStaticPaths now passes neighbors as props (for the next/prev nav at
+// the bottom of each case study). The full sorted list is computed once
+// here; each route gets only its own entry plus the neighbor stubs it
+// needs to render the nav, so we don't ship the whole catalogue per page.
 export async function getStaticPaths() {
-  const entries = await getCollection('case-studies');
-  return entries.map((entry) => ({
-    params: { slug: entry.id },
-    props:  { entry },
-  }));
+  const all = (await getCollection('case-studies')).sort(
+    (a, b) => b.data.published.valueOf() - a.data.published.valueOf()
+  );
+  return all.map((entry, i) => {
+    const previous = i < all.length - 1 ? all[i + 1] : undefined;
+    const next     = i > 0             ? all[i - 1] : undefined;
+    // Strip neighbors down to just the fields the nav block uses; keeps
+    // props payload small and the page free of incidental data.
+    const trim = (e: typeof entry | undefined) =>
+      e ? { id: e.id, title: e.data.title, summary: e.data.summary } : undefined;
+    return {
+      params: { slug: entry.id },
+      props:  { entry, previous: trim(previous), next: trim(next) },
+    };
+  });
 }
 
-const { entry } = Astro.props;
-const { Content } = await render(entry);
-const { title, client, sector, services, summary, cover, year, role, tags } = entry.data;
+const { entry, previous, next } = Astro.props;
+const { Content, headings } = await render(entry);
+const { title, client, sector, services, summary, cover, year, role, tags, published, updated, stack } = entry.data;
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Reading time from the raw MDX body. ~200 wpm rounded up. Renders next
+// to the meta row so visitors know how long the case study is before
+// committing to scroll.
+const minutes = readingTime(entry.body ?? '');
+
+// Date formatter for "Published" and "Updated". Short, US-friendly.
+// e.g. "Mar 2026" reads better than ISO in body copy.
+const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
+const publishedLabel = fmt.format(published);
+const updatedLabel   = updated ? fmt.format(updated) : null;
 ---
 
 <BaseLayout title={`${title} | Nixon Creative Studio`} description={summary}>
+
+  {/* Reading progress bar pinned to the top of the viewport. Only
+      rendered here, not in BaseLayout, because the rest of the site has
+      mostly short pages where a progress bar would be visual noise. */}
+  <ReadingProgress client:idle />
 
   <article>
 
@@ -47,11 +79,13 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
 
         <div class="flex flex-col gap-m">
 
-          <!-- Meta stamp: year + sector. Mono and muted. -->
-          <p class="flex items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
+          <!-- Meta stamp: year + sector + read time. Mono and muted. -->
+          <p class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
             <span>{year}</span>
             <span aria-hidden="true">·</span>
             <span>{sectorLabel}</span>
+            <span aria-hidden="true">·</span>
+            <span>{minutes} min read</span>
           </p>
 
           <h1 class="leading-[0.95]">{title}</h1>
@@ -72,6 +106,15 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
             </p>
           )}
 
+          {/* Stack list (optional). When present, render a tiny tools
+              line so designers and devs evaluating the work can scan
+              what was used. Plain text, no styling flourish. */}
+          {stack && stack.length > 0 && (
+            <p class="font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
+              <span class="text-text">Built with:</span> {stack.join(', ')}
+            </p>
+          )}
+
           <!-- Service badges. Each rendered as an outlined accent-color
                pill. flex-wrap so they wrap on narrow screens. -->
           <ul class="mt-s flex flex-wrap gap-xs" aria-label="Services delivered">
@@ -84,9 +127,7 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
 
           {/* Tag chips (optional). Smaller and quieter than the service
               pills above so the eye reads them as supporting metadata
-              rather than primary scope. Each tag is a shadcn Badge in
-              the outline variant with a className that pushes text and
-              border to the muted gray. */}
+              rather than primary scope. */}
           {tags && tags.length > 0 && (
             <ul class="flex flex-wrap gap-xs" aria-label="Tags">
               {tags.map((tag) => (
@@ -99,6 +140,13 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
             </ul>
           )}
 
+          {/* Publish / updated stamp. Sits at the bottom of the meta
+              column as a trust signal: visitors can see whether the
+              work shown is recent. */}
+          <p class="mt-xs font-mono text-[0.8rem] text-text-muted">
+            Published {publishedLabel}{updatedLabel && updatedLabel !== publishedLabel ? ` · Updated ${updatedLabel}` : ''}
+          </p>
+
         </div>
 
         <!-- Hero image. Astro <Image /> handles WebP, srcset, explicit
@@ -109,7 +157,7 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
              description is needed (e.g. "Photo of the Crestview team in
              the sanctuary"), add a coverAlt field to the case-studies
              schema in content.config.ts and thread it through here. -->
-        <div class="overflow-hidden rounded-lg">
+        <div class="overflow-hidden rounded-lg bg-bg-soft">
           <Image
             src={cover}
             alt=""
@@ -122,22 +170,113 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
       </div>
     </header>
 
-    <!-- MDX body. The arbitrary descendant selectors on this wrapper style
-         the MDX output (h2/p/ul/li/a) without using the typography plugin
-         and without leaking those rules to the rest of the site. -->
+    <!-- MDX body + optional TOC sidebar. Two-column at xl (sidebar at
+         left, prose middle); single-column below.
+
+         Sidebar renders only when the MDX body has at least two h2s, so
+         short case studies with one or no h2 just show the prose at full
+         width. -->
     <div class="ncs-container">
-      <div
-        class={`mx-auto max-w-[72ch] pb-2xl pt-l text-[1.0625rem] leading-[1.7] text-text
-          [&_h2]:mt-l [&_h2]:mb-s [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0
-          [&_p]:mb-m
-          [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5
-          [&_li]:mb-1
-          [&_a]:text-link [&_a]:underline [&_a]:underline-offset-2
-          hover:[&_a]:underline-offset-4`}
-      >
-        <Content />
+      <div class={`mx-auto grid max-w-[88rem] gap-l pb-2xl pt-l ${
+        headings && headings.filter((h) => h.depth === 2).length >= 2
+          ? 'xl:grid-cols-[14rem_minmax(0,72ch)_1fr]'
+          : 'xl:grid-cols-1'
+      }`}>
+
+        {/* Sticky TOC. Lists every h2 in the MDX body as a jump link.
+            Hidden below xl since the sidebar would crowd narrow viewports.
+            Native <nav aria-label> so screen readers identify it. */}
+        {headings && headings.filter((h) => h.depth === 2).length >= 2 && (
+          <nav aria-label="In this case study" class="hidden xl:block">
+            <div class="sticky top-l flex flex-col gap-xs">
+              <p class="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
+                In this case study
+              </p>
+              <ul class="flex flex-col gap-xs">
+                {headings
+                  .filter((h) => h.depth === 2)
+                  .map((h) => (
+                    <li>
+                      <a
+                        href={`#${h.slug}`}
+                        class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link"
+                      >
+                        {h.text}
+                      </a>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </nav>
+        )}
+
+        {/* MDX prose. The arbitrary descendant selectors here style the
+            MDX output (h2/p/ul/li/a) without using the typography plugin
+            and without leaking those rules to the rest of the site. */}
+        <div
+          class="mx-auto w-full max-w-[72ch] text-[1.0625rem] leading-[1.7] text-text
+            [&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0
+            [&_p]:mb-m
+            [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5
+            [&_li]:mb-1
+            [&_a]:text-link [&_a]:underline [&_a]:underline-offset-2
+            hover:[&_a]:underline-offset-4"
+        >
+          <Content />
+        </div>
+
       </div>
     </div>
+
+    {/* Next / previous case study nav. Sits between the body and the
+        CtaBanner so visitors who finished reading have a forward path
+        before hitting the "Start a project" CTA. Hidden entirely when
+        there's only one case study in the catalogue. */}
+    {(previous || next) && (
+      <nav class="border-t border-border py-xl" aria-label="More case studies">
+        <div class="ncs-container grid grid-cols-1 gap-l sm:grid-cols-2">
+
+          {previous ? (
+            <a
+              href={`/work/${previous.id}/`}
+              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            >
+              <span class="font-mono text-[0.8rem] uppercase tracking-[0.06em] text-text-muted">
+                ← Previous case study
+              </span>
+              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                {previous.title}
+              </span>
+              <span class="text-[0.95rem] leading-[1.5] text-text-muted">
+                {previous.summary}
+              </span>
+            </a>
+          ) : (
+            <span></span>
+          )}
+
+          {next ? (
+            <a
+              href={`/work/${next.id}/`}
+              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 sm:text-right"
+            >
+              <span class="font-mono text-[0.8rem] uppercase tracking-[0.06em] text-text-muted">
+                Next case study →
+              </span>
+              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                {next.title}
+              </span>
+              <span class="text-[0.95rem] leading-[1.5] text-text-muted">
+                {next.summary}
+              </span>
+            </a>
+          ) : (
+            <span></span>
+          )}
+
+        </div>
+      </nav>
+    )}
 
   </article>
 

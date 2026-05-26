@@ -91,6 +91,16 @@ const caseStudies = defineCollection({
     // Publish date. Drives ordering on the work index (newest first).
     published: z.date(),
 
+    // Optional last-updated date. Surfaces on the case study detail
+    // page as "Updated <date>" so visitors know whether the work is
+    // recent. Falls back to `published` when absent.
+    updated: z.date().optional(),
+
+    // Optional toolkit / stack list. Shown on the case study card hover
+    // and inline at the top of the case study detail page when present.
+    // Example: ['Astro', 'Tailwind', 'Cloudflare Pages'].
+    stack: z.array(z.string()).optional(),
+
   }),
 });
 
