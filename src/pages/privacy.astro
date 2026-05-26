@@ -14,12 +14,13 @@ import { site } from '../data/site';
 
 const lastUpdated = 'May 25, 2026';
 
-// Anchors inside the prose share the same styling: accent, underlined,
-// hovers to secondary. Pulled into a const since five anchors in this
-// file would otherwise repeat the same class chain.
+// Anchors inside the prose share the same styling: --link (darker than
+// --accent so it clears WCAG AA on white prose), always underlined.
+// Hover/focus keep the same color since the only AA-compliant step would
+// be the same shade; the underline weight increase carries the cue.
 const linkClass =
-  'text-accent underline underline-offset-2 ' +
-  'hover:text-secondary focus-visible:text-secondary';
+  'text-link underline underline-offset-2 ' +
+  'hover:underline-offset-4 focus-visible:underline-offset-4';
 
 // Inline h2 styling: bumped to h3 visual size since the page already has
 // an h1 at the top and we want body-level subheadings to read as

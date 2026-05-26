@@ -34,14 +34,18 @@ const social = [
 // info, and Nathan updates it often.
 const currently = 'Booking small business and nonprofit web projects for the season ahead, with a few photography days mixed in.';
 
-// All anchor tags inside the footer share the same styling: accent blue
-// by default, brighter sky blue on hover, no underline until focus or
-// hover. Pulled into a const so each <a> in the markup can apply the
-// same set without copy-paste drift.
+// All anchor tags inside the footer share the same styling: --secondary
+// (sky blue) at rest, underline appearing on hover/focus as the cue.
+// Sky blue is the right token for footer links because the footer surface
+// stays navy in both themes, and only a brighter blue clears WCAG AA on
+// navy. --link (used elsewhere) is too dark for the footer; --accent only
+// hits 4.46:1 on navy. --secondary is 7:1 on navy in light mode and 9.7:1
+// in dark, so it passes comfortably in both. Pulled into a const so each
+// <a> in the markup can apply the same set without copy-paste drift.
 const linkClass =
-  'text-accent no-underline transition-colors duration-150 ' +
-  'hover:text-secondary hover:underline hover:underline-offset-2 ' +
-  'focus-visible:text-secondary focus-visible:underline focus-visible:underline-offset-2';
+  'text-secondary no-underline transition-colors duration-150 ' +
+  'hover:underline hover:underline-offset-2 ' +
+  'focus-visible:underline focus-visible:underline-offset-2';
 
 // Section heading style inside each column. Same display font as h2 but
 // dialed down in size so it reads as a label. text-primary-foreground is

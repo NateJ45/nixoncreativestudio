@@ -200,7 +200,10 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  color: var(--color-accent);
+  /* Uses --color-link (not --color-accent) so accent-toned body text
+     hits WCAG AA on white and bg-bg-soft. --link is darker than --accent
+     in light mode; in dark mode the two converge. */
+  color: var(--color-link);
   font-family: var(--font-body);
   font-weight: 600;
   text-decoration: none;
@@ -213,11 +216,8 @@
   transition: transform 150ms ease;
 }
 
-.card-link:hover,
-.card-link:focus-visible {
-  color: var(--color-secondary);
-}
-
+/* Hover cue is the arrow sliding right. Color stays at --link because the
+   only AA-compliant brighter step would defeat the purpose. */
 .card-link:hover::after,
 .card-link:focus-visible::after {
   transform: translateX(0.25rem);
@@ -228,12 +228,13 @@
   /* Brand surface and text tokens are aliased here (rather than defined
      as literals in the first @theme block above) so they pick up the
      :root / .dark switch below. Result: bg-bg, bg-bg-soft, text-text,
-     text-text-muted, and text-heading all flip with the theme. */
+     text-text-muted, text-heading, and text-link all flip with the theme. */
   --color-bg:         var(--background);
   --color-bg-soft:    var(--muted);
   --color-text:       var(--foreground);
   --color-text-muted: var(--muted-foreground);
   --color-heading:    var(--heading);
+  --color-link:       var(--link);
 
   --font-heading:   var(--font-sans);
   --font-sans:   'Geist Variable', sans-serif;
@@ -336,9 +337,24 @@
   --accent:               #3B82C4;      /* = brand --color-accent (NCS blue) */
   --accent-foreground:    #FFFFFF;
 
-  /* Muted surface and supporting text. */
+  /* Muted surface and supporting text.
+     --muted-foreground was bumped from #6B7280 to #5F6573 so meta copy
+     on bg-bg-soft (#F4F7FA) clears WCAG AA 4.5:1. The shift is small
+     enough to be visually unchanged in normal use. */
   --muted:              #F4F7FA;        /* = brand --color-bg-soft */
-  --muted-foreground:   #6B7280;        /* = brand --color-text-muted */
+  --muted-foreground:   #5F6573;        /* slightly darkened for AA on bg-bg-soft */
+
+  /* Link color for accent-toned body text (Footer links, .card-link
+     arrows, Process / Services step number prefixes, MDX prose anchors).
+     Distinct from --accent because the brand --accent (#3B82C4) only hits
+     ~4.05:1 on white and ~3.77:1 on bg-bg-soft, both under the AA 4.5:1
+     threshold for body-size text. --link runs darker in light mode so
+     accent-text contexts pass AA; in dark mode it matches the brightened
+     --accent so the two read identically against deep surfaces.
+     --accent itself keeps its brand value and continues to drive buttons,
+     focus rings, borders, and large CTAs where the higher-contrast
+     foreground (white) carries the AA requirement. */
+  --link:               #2A6FB0;        /* AA on #FFFFFF, #F4F7FA, and #0A1628 */
 
   /* Borders and inputs. Match the alpha-on-black tones used across forms
      and section dividers. */
@@ -429,6 +445,11 @@
      Muted-foreground: lighter gray so secondary copy still has contrast. */
   --muted:              #0F1E33;
   --muted-foreground:   #9CA3AF;
+
+  /* Link color matches the brightened dark-mode --accent so accent text
+     and surface accents read identically on dark. See :root for why
+     --link exists as a separate token. */
+  --link:               #40AAED;
 
   /* Borders and inputs invert to white at low alpha. */
   --border:             rgba(255, 255, 255, 0.08);
