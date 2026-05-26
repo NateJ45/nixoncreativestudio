@@ -1,0 +1,67 @@
+---
+/* ============================================================================
+   ComingSoon
+   ============================================================================
+   Safe to edit. The actual visual treatment for the WIP gate. Renders
+   as the entire <body> contents on:
+     - /coming-soon/ (always)
+     - every other route when PUBLIC_COMING_SOON=true (via BaseLayout)
+
+   Standalone visual: large wordmark, short pitch, contact options. No
+   nav, no footer, no theme toggle.
+   ============================================================================ */
+
+import { site } from '../data/site';
+---
+
+<main class="flex min-h-screen items-center justify-center bg-bg px-l py-2xl text-text">
+  <div class="ncs-container max-w-[40rem] text-center">
+
+    <!-- Small accent rule above the wordmark. Decorative, gives the
+         eye an anchor before the big display text. -->
+    <span
+      class="mx-auto mb-l block h-[3px] w-12 bg-accent"
+      aria-hidden="true"
+    ></span>
+
+    <h1 class="font-display text-h1 leading-[0.95] tracking-[0.01em] text-heading">
+      {site.studioName}
+    </h1>
+
+    <p class="mt-m font-mono text-sm uppercase tracking-[0.18em] text-text-muted">
+      Launching soon
+    </p>
+
+    <p class="mx-auto mt-l max-w-[42ch] text-lg leading-[1.6] text-text">
+      A small studio in {site.address}: strategy-led web design, brand work, and photography for small businesses, nonprofits, churches, and schools across the Cincinnati region.
+    </p>
+
+    <p class="mt-m max-w-[42ch] text-text-muted">
+      The new site goes live this season. If you have a project in mind in the meantime, email or call me directly. I read every inquiry myself.
+    </p>
+
+    <!-- Contact CTAs. Larger tap targets than typical body links since
+         this is a near-empty page; visitors expect to be able to click
+         without hunting. -->
+    <ul class="mt-xl flex flex-col items-center gap-s sm:flex-row sm:justify-center sm:gap-l">
+      <li>
+        <a
+          class="inline-flex items-center gap-xs font-body text-base font-semibold text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-4 focus-visible:underline focus-visible:underline-offset-4"
+          href={site.emailHref}
+        >
+          {site.email}
+        </a>
+      </li>
+      <li class="hidden text-text-muted sm:block" aria-hidden="true">·</li>
+      <li>
+        <a
+          class="inline-flex items-center gap-xs font-body text-base font-semibold text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-4 focus-visible:underline focus-visible:underline-offset-4"
+          href={site.phoneHref}
+        >
+          {site.phone}
+        </a>
+      </li>
+    </ul>
+
+  </div>
+</main>

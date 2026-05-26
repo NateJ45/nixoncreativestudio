@@ -1,0 +1,67 @@
+---
+// Safe to edit. Standalone "coming soon" landing page. Always live, even
+// when PUBLIC_COMING_SOON is unset — useful for previewing the page
+// without flipping the site-wide gate.
+/* ============================================================================
+   /coming-soon | Coming Soon landing
+   ============================================================================
+   Renders the ComingSoon component as the entire body. Uses its own
+   minimal HTML doc rather than BaseLayout because the goal is full
+   isolation from the WIP nav and footer: visitors should see one
+   focused page with the wordmark, a short pitch, and direct contact
+   options.
+
+   When PUBLIC_COMING_SOON=true is set at build time, every other route
+   on the site also renders this same component (see BaseLayout). To
+   take the site live, unset the env var (Cloudflare Pages > Settings >
+   Variables) and redeploy.
+   ============================================================================ */
+
+import '../styles/globals.css';
+import { site } from '../data/site';
+import ComingSoon from '../components/ComingSoon.astro';
+import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
+
+const title = `${site.studioName} | Launching soon`;
+const description = `${site.studioName} is a small studio in ${site.address}: strategy-led web design, brand work, and photography for organizations in the Cincinnati region. The new site launches soon.`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <!-- Theme bootstrap. Same logic as BaseLayout so dark / light is
+         consistent if a visitor has a theme preference. -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('ncs-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
+          document.documentElement.classList.toggle('dark', isDark);
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch (e) {
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', prefersDark);
+          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
+        }
+      })();
+    </script>
+
+    <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
+
+    <meta property="og:type"        content="website" />
+    <meta property="og:title"       content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url"         content={`${site.url}/coming-soon/`} />
+    <meta property="og:image"       content={`${site.url}/og-default.png`} />
+    <meta name="twitter:card"        content="summary_large_image" />
+  </head>
+  <body>
+    <ComingSoon />
+  </body>
+</html>
