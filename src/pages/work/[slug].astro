@@ -28,7 +28,7 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
-const { title, client, sector, services, summary, hero_image, year } = entry.data;
+const { title, client, sector, services, summary, cover, year } = entry.data;
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -77,7 +77,7 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
              dimensions. overflow-hidden + rounded rounds the corners. -->
         <div class="overflow-hidden rounded-lg">
           <Image
-            src={hero_image}
+            src={cover}
             alt={`${title} hero image`}
             widths={[600, 900, 1200]}
             sizes="(min-width: 56rem) 50vw, 100vw"
