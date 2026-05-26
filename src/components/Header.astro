@@ -20,6 +20,12 @@
 // the wordmark, the footer, and meta together.
 import { site } from '../data/site';
 
+// MobileNav is a React island that handles the small-viewport drawer.
+// Same links array drives both surfaces; the desktop <ul> below is
+// hidden at narrow widths via Tailwind classes, and MobileNav is hidden
+// at >= sm via its wrapper.
+import MobileNav from './MobileNav';
+
 // The nav model lives in the script so it's easy to reorder, rename, or
 // extend later without hunting through markup.
 const navLinks = [
@@ -48,8 +54,10 @@ const navLinks = [
       {site.studioName}
     </a>
 
-    <!-- aria-label distinguishes this nav from the footer nav for assistive tech. -->
-    <nav aria-label="Primary">
+    <!-- Desktop nav. Visible at >= sm so the four links don't compress
+         and overflow on narrow screens; the MobileNav drawer below
+         handles the same links at small widths. -->
+    <nav aria-label="Primary" class="hidden sm:block">
       <ul class="flex items-center gap-m">
         {navLinks.map(({ num, label, href }) => (
           <li>
@@ -66,6 +74,17 @@ const navLinks = [
         ))}
       </ul>
     </nav>
+
+    <!-- Mobile drawer. Hidden at >= sm; the desktop nav above takes over.
+         client:only='react' skips server-side rendering of the Sheet
+         primitive (Radix Dialog uses portals + hooks that don't SSR
+         cleanly inside Astro). Trade-off: a brief moment with no
+         hamburger button visible on mobile before React hydrates. The
+         desktop nav users never see this delay since the wrapper is
+         display:none above sm. -->
+    <div class="sm:hidden">
+      <MobileNav client:only="react" links={navLinks} studioName={site.studioName} />
+    </div>
 
   </div>
 </header>
