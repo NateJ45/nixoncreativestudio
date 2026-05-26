@@ -15,6 +15,7 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
+import { site } from '../data/site';
 
 // Three working principles. Keep these honest; they should describe how
 // I actually work, not how I wish I worked.
@@ -44,11 +45,31 @@ const currently = [
 const sectionHeadingClass = 'flex flex-col gap-xs';
 const sectionNumClass = 'font-mono text-sm tracking-[0.05em] text-text-muted';
 const sectionInnerClass = 'flex flex-col gap-l';
+
+// JSON-LD schemas specific to the About page: Person for the studio
+// owner, linked back to the Organization defined site-wide. Powers
+// Google's "About this page" panel and knowledge graph entries.
+const schemas = [
+  {
+    '@context':     'https://schema.org',
+    '@type':        'Person',
+    '@id':          `${site.url}/about/#person`,
+    name:           site.ownerName,
+    jobTitle:       'Founder, Designer, Developer',
+    worksFor:       { '@id': `${site.url}#organization` },
+    url:            `${site.url}/about/`,
+    sameAs: [
+      site.social.instagram,
+      site.social.linkedin,
+    ],
+  },
+];
 ---
 
 <BaseLayout
   title="About | Nixon Creative Studio"
   description="About Nathan Nixon, sole owner of Nixon Creative Studio in West Chester, Ohio."
+  schemas={schemas}
 >
 
   <!-- ----------------------------------------------------------------------

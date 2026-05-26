@@ -14,6 +14,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
 import BackToTop from '../components/BackToTop';
+import StructuredData from '../components/StructuredData.astro';
 import { site } from '../data/site';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
@@ -48,12 +49,18 @@ interface Props {
       "article" so platforms that treat articles specially (search,
       readers) render them correctly. */
   ogType?:      'website' | 'article';
+  /** Page-specific schema.org JSON-LD blocks. Layered on top of the
+      site-wide Organization schema by StructuredData. Used by About
+      (Person), case study detail pages (Article + CreativeWork),
+      /services (Service + FAQPage). */
+  schemas?:     Array<Record<string, unknown>>;
 }
 const {
   title,
   description = 'Nixon Creative Studio',
   ogImage     = '/og-default.png',
   ogType      = 'website',
+  schemas     = [],
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -74,6 +81,10 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
          for this page, even if it's reached through alternate query
          strings or aliased paths. -->
     <link rel="canonical" href={canonical} />
+
+    <!-- RSS auto-discovery. Lets feed readers (and browser extensions
+         that detect feeds) pick up /rss.xml without manual entry. -->
+    <link rel="alternate" type="application/rss+xml" title={`${site.studioName} — Case Studies`} href="/rss.xml" />
 
     <!-- Open Graph + Twitter card meta. Drives the rich preview that
          appears when the URL is shared on Slack, iMessage, LinkedIn, etc.
@@ -152,6 +163,12 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
     <!-- Astro View Transitions. Renders in <head> so the client router
          is in place before the first navigation. -->
     <ClientRouter />
+
+    <!-- schema.org JSON-LD. Always emits the studio's Organization /
+         LocalBusiness blocks; pages can layer in per-page schemas
+         (Article for case studies, Service for /services, etc.) via
+         the schemas prop. -->
+    <StructuredData extra={schemas} />
   </head>
   <body>
 

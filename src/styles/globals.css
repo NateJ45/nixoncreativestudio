@@ -227,6 +227,95 @@
   transform: translateX(0.25rem);
 }
 
+/* ----------------------------------------------------------------------------
+   [data-hidden] utility.
+   Used by client-side filters (e.g. WorkFilter) to toggle visibility of
+   server-rendered elements without re-rendering. The presence of the
+   attribute is the on/off switch; the value doesn't matter.
+   ---------------------------------------------------------------------- */
+[data-hidden] {
+  display: none !important;
+}
+
+/* ----------------------------------------------------------------------------
+   Print stylesheet.
+   Boards, committees, and clients sometimes print case studies (or any
+   prose page) for discussion. Strip the parts that don't translate
+   (navigation, theme toggle, back-to-top, footer link styling, etc.)
+   so the print version reads as a clean document with the wordmark
+   intact and the body legible.
+   ---------------------------------------------------------------------- */
+@media print {
+
+  /* Hide chrome that doesn't help a printed page. */
+  header nav,
+  [data-work-card] + ul,
+  .sm\:hidden,
+  [aria-label="Open menu"],
+  [data-astro-rerun],
+  [aria-hidden="true"]:not(svg) {
+    display: none !important;
+  }
+
+  /* Always print the back-to-top hidden — never the right tool on paper. */
+  button[aria-label="Back to top"] {
+    display: none !important;
+  }
+
+  /* Drop colored backgrounds + flatten to black text on white so print
+     ink isn't burned on hero banners or CTA bands. */
+  *,
+  *::before,
+  *::after {
+    background:    transparent !important;
+    color:         #000 !important;
+    box-shadow:    none !important;
+    text-shadow:   none !important;
+  }
+
+  /* Headings stay serif-friendly. The display font has personality but
+     limited print legibility. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: Georgia, 'Times New Roman', serif !important;
+    page-break-after: avoid;
+  }
+
+  /* Body type tightens to comfortable print measure. */
+  body {
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size:   11pt;
+    line-height: 1.5;
+  }
+
+  /* Show link URLs after the link text so printed pages preserve their
+     references. Skip in-page anchors. */
+  a[href]:not([href^="#"])::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+
+  /* Images should never break across pages mid-element. */
+  img,
+  figure,
+  pre,
+  blockquote {
+    page-break-inside: avoid;
+  }
+
+  /* Force a page break before the next/prev case study nav so each
+     case study reads as a standalone document. */
+  nav[aria-label="More case studies"] {
+    page-break-before: always;
+  }
+
+  /* CTA banner and footer aren't useful in print. */
+  section[aria-labelledby="cta-banner-title"],
+  footer {
+    display: none !important;
+  }
+}
+
 @theme inline {
 
   /* Brand surface and text tokens are aliased here (rather than defined

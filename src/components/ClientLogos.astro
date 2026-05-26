@@ -1,0 +1,67 @@
+---
+/* ============================================================================
+   ClientLogos
+   ============================================================================
+   Safe to edit. Renders a marquee strip of client logos when the array
+   below is populated, nothing otherwise. The scaffold lives here so the
+   integration is one-step when Nathan has logos + permission to display.
+
+   Setup:
+     1. Get written permission from each client to display their logo on
+        the studio site. Most are happy to grant it; some (especially
+        churches with denominational branding rules) need to ask first.
+     2. Drop the logo SVGs (or transparent PNGs at 2x display size) in
+        src/assets/clients/.
+     3. Populate the `logos` array below: each entry has an imported
+        asset, the client's name (used as alt text), and an optional
+        URL to link to.
+     4. Drop <ClientLogos /> into wherever it fits (likely About page
+        or homepage between Hero and SelectedWork).
+
+   Visual treatment uses the Magic UI marquee primitive that's already
+   installed. Speed is on the slow side (60s loop) because logo bars
+   that whip past too fast read as desperate.
+   ============================================================================ */
+
+import { Marquee } from './ui/marquee';
+
+// Populate this array when logos + permissions are ready. Each entry is:
+//   {
+//     name: 'Crestview Presbyterian',
+//     // import logo from '../assets/clients/crestview.svg';
+//     // logo,
+//     // href: 'https://crestviewpresbyterian.org',
+//   }
+const logos: Array<{ name: string; logo?: ImageMetadata; href?: string }> = [];
+---
+
+{logos.length > 0 && (
+  <section class="py-xl" aria-label="A few of the organizations I've worked with">
+    <div class="ncs-container">
+      <p class="mb-m text-center font-mono text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">
+        Trusted by
+      </p>
+      <Marquee client:visible pauseOnHover repeat={2} className="[--duration:60s] [--gap:3rem]">
+        {logos.map((entry) => (
+          entry.href ? (
+            <a
+              href={entry.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="opacity-60 transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+              title={entry.name}
+            >
+              {/* When logo files are added, render an <img> here with
+                  alt={entry.name} at a reasonable display height. */}
+              <span class="text-text">{entry.name}</span>
+            </a>
+          ) : (
+            <span class="opacity-60" title={entry.name}>
+              <span class="text-text">{entry.name}</span>
+            </span>
+          )
+        ))}
+      </Marquee>
+    </div>
+  </section>
+)}

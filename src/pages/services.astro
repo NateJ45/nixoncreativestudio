@@ -18,6 +18,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Process from '../components/Process.astro';
 import CtaBanner from '../components/CtaBanner.astro';
+import { site } from '../data/site';
 
 const services = [
   {
@@ -74,11 +75,38 @@ const faq = [
     a: 'Yes. If you already have a logo, palette, and type system, we use it. If you do not, brand work can be folded into the strategy phase or scoped separately.',
   },
 ];
+
+// JSON-LD schemas for /services: Service (one per offering) and FAQPage.
+// FAQPage is the highest-leverage schema here — Google will surface FAQ
+// answers directly in search results for matching queries.
+const schemas = [
+  ...services.map((service) => ({
+    '@context':     'https://schema.org',
+    '@type':        'Service',
+    name:           service.title,
+    description:    service.body,
+    provider:       { '@id': `${site.url}#organization` },
+    areaServed:     'Greater Cincinnati region',
+  })),
+  {
+    '@context': 'https://schema.org',
+    '@type':    'FAQPage',
+    mainEntity: faq.map(({ q, a }) => ({
+      '@type': 'Question',
+      name:    q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text:    a,
+      },
+    })),
+  },
+];
 ---
 
 <BaseLayout
   title="Services | Nixon Creative Studio"
   description="Strategy, web design, and photography for organizations in the Cincinnati region."
+  schemas={schemas}
 >
 
   <!-- ----------------------------------------------------------------------

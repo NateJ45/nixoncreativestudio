@@ -52,6 +52,16 @@ interface SiteData {
   // Marketing
   tagline: string;         // One-line studio positioning.
 
+  // External scheduling. Empty string disables the "Book a call" CTAs.
+  // Plug in a Cal.com / Calendly URL when ready — every "Book a call"
+  // link on the site reads from this one value.
+  bookingUrl: string;
+
+  // Newsletter signup target. Empty string disables the Newsletter
+  // block. Buttondown publish URL works directly; for other providers
+  // (ConvertKit, Mailchimp), wire up the form's `action` differently.
+  newsletterUrl: string;
+
   // Helpers
   phoneHref: string;       // Pre-computed tel: target.
   emailHref: string;       // Pre-computed mailto: target.
@@ -92,6 +102,17 @@ export const site: SiteData = {
   },
 
   tagline: 'Modern websites for small businesses, nonprofits, churches, and schools in the Cincinnati region.',
+
+  // External scheduling URL. Leave empty to hide the "Book a call" CTAs
+  // site-wide; paste a Cal.com or Calendly link to enable them. Cal.com
+  // is the recommended pick (open source, free at this volume); the URL
+  // looks like https://cal.com/nathannixon/30min.
+  bookingUrl: '',
+
+  // Newsletter publish URL. Leave empty to hide the Newsletter block.
+  // Buttondown's publish URL works as the form action directly; the
+  // URL looks like https://buttondown.email/api/emails/embed-subscribe/<your-username>.
+  newsletterUrl: '',
 
   // Pre-computed link targets so consumers don't have to repeat the
   // string-stripping logic at every call site.

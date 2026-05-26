@@ -14,12 +14,13 @@
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { Badge } from '../../components/ui/badge';
 import { readingTime } from '../../lib/readingTime';
+import { site } from '../../data/site';
 
 // getStaticPaths now passes neighbors as props (for the next/prev nav at
 // the bottom of each case study). The full sorted list is computed once
@@ -60,9 +61,42 @@ const minutes = readingTime(entry.body ?? '');
 const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
 const publishedLabel = fmt.format(published);
 const updatedLabel   = updated ? fmt.format(updated) : null;
+
+// Resolve the cover through Astro's image pipeline so we can use the
+// optimized URL for both the OG image meta tag and the CreativeWork
+// schema. Width caps the file size; social platforms cap previews at
+// 1200px anyway.
+const ogCover = await getImage({ src: cover, width: 1200, format: 'jpg' });
+const ogCoverUrl = new URL(ogCover.src, site.url).toString();
+
+// Article + CreativeWork JSON-LD for this case study. CreativeWork is
+// the more general type that fits portfolio entries; Article gives
+// search engines a date / headline / image they can show in rich
+// results. Both reference the studio Organization via @id.
+const schemas = [
+  {
+    '@context':     'https://schema.org',
+    '@type':        ['Article', 'CreativeWork'],
+    headline:       title,
+    description:    summary,
+    image:          ogCoverUrl,
+    datePublished:  published.toISOString(),
+    ...(updated ? { dateModified: updated.toISOString() } : {}),
+    author:         { '@id': `${site.url}#organization` },
+    publisher:      { '@id': `${site.url}#organization` },
+    about:          client,
+    keywords:       services.join(', '),
+  },
+];
 ---
 
-<BaseLayout title={`${title} | Nixon Creative Studio`} description={summary}>
+<BaseLayout
+  title={`${title} | Nixon Creative Studio`}
+  description={summary}
+  ogImage={ogCover.src}
+  ogType="article"
+  schemas={schemas}
+>
 
   {/* Reading progress bar pinned to the top of the viewport. Only
       rendered here, not in BaseLayout, because the rest of the site has

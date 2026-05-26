@@ -1,0 +1,74 @@
+---
+/* ============================================================================
+   StructuredData
+   ============================================================================
+   Foundation, edit with care.
+
+   Emits schema.org JSON-LD blocks. Search engines (Google, Bing, DuckDuckGo)
+   parse these to build knowledge panels and rich-result tiles.
+
+   The Organization block always renders so search engines can attribute
+   every page on the site to the studio. Page-specific schemas (Article
+   for case studies, Person + LocalBusiness for About, Service for
+   /services, etc.) layer on top via the `extra` slot prop.
+
+   Usage:
+     <StructuredData />                 // org only
+     <StructuredData extra={[article]} /> // org + extra schemas
+
+   The `extra` prop is an array of plain objects shaped like schema.org
+   types. They're stringified into a single <script type="application/ld+json">
+   block as a JSON array, which is the cleanest way to ship multiple
+   schemas for one page.
+
+   schema.org docs:
+   https://schema.org/Organization
+   https://schema.org/LocalBusiness
+   https://schema.org/Person
+   https://schema.org/CreativeWork
+   https://schema.org/Article
+   https://schema.org/Service
+   https://schema.org/FAQPage
+   ============================================================================ */
+
+import { site } from '../data/site';
+
+interface Props {
+  /** Extra schema objects appended to the Organization root schema. */
+  extra?: Array<Record<string, unknown>>;
+}
+
+const { extra = [] } = Astro.props;
+
+const organization = {
+  '@context':     'https://schema.org',
+  '@type':        ['Organization', 'LocalBusiness'],
+  '@id':          `${site.url}#organization`,
+  name:           site.studioName,
+  url:            site.url,
+  email:          site.email,
+  telephone:      site.phone,
+  founder:        { '@type': 'Person', name: site.ownerName },
+  description:    site.tagline,
+  address: {
+    '@type':          'PostalAddress',
+    addressLocality:  'West Chester',
+    addressRegion:    'OH',
+    addressCountry:   'US',
+  },
+  areaServed: {
+    '@type':  'Place',
+    name:     'Greater Cincinnati region',
+  },
+  sameAs: [
+    site.social.instagram,
+    site.social.linkedin,
+  ],
+};
+
+// Build the final array of schemas. Organization always first; extras
+// (per-page) follow.
+const graph = [organization, ...extra];
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(graph, null, 0)} />

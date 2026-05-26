@@ -334,7 +334,42 @@ const inputClass =
           <p class="leading-[1.6] text-text">
             {site.address}. I work with organizations across the greater Cincinnati region in person, and beyond it remotely when the work calls for it.
           </p>
+          <!-- Service-area map. Static OpenStreetMap embed centered on
+               the Cincinnati region. No API key, no third-party tracker,
+               loads only the visible tiles. The bbox parameter frames
+               the area; adjust if Nathan wants to widen the scope.
+               loading="lazy" keeps it off the critical path. -->
+          <div class="mt-s overflow-hidden rounded-md border border-border">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-85.05%2C38.85%2C-83.95%2C39.55&amp;layer=mapnik&amp;marker=39.20%2C-84.40"
+              title="Map of the Greater Cincinnati service area"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              class="block h-56 w-full"
+            ></iframe>
+          </div>
         </div>
+
+        {site.bookingUrl && (
+          <!-- Book-a-call CTA. Renders only when site.bookingUrl is set
+               (e.g. a Cal.com link). Reads as a lighter-weight option
+               next to "use the form" for warm leads who'd rather skip
+               straight to scheduling. -->
+          <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
+            <h2 class="text-h4 text-heading">Rather book a call?</h2>
+            <p class="leading-[1.6] text-text">
+              Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a working conversation.
+            </p>
+            <a
+              class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+              href={site.bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open my calendar →
+            </a>
+          </div>
+        )}
 
       </aside>
 
