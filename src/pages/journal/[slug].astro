@@ -1,0 +1,120 @@
+---
+// Foundation, edit with care. Renders every journal entry from the
+// content collection; layout changes here apply to every entry.
+/* ============================================================================
+   /journal/[slug] | Journal Entry Detail
+   ============================================================================
+   One static page per journal entry, generated at build time. Lighter-
+   weight than the case study detail layout: single column, no service
+   badges, no sidebar TOC. The reading progress bar and reading time
+   stamp from the case study toolkit still apply because long journal
+   posts deserve the same QoL.
+   ============================================================================ */
+
+import { getCollection, render } from 'astro:content';
+import { Image, getImage } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CtaBanner from '../../components/CtaBanner.astro';
+import ReadingProgress from '../../components/ReadingProgress';
+import { readingTime } from '../../lib/readingTime';
+import { site } from '../../data/site';
+
+export async function getStaticPaths() {
+  const all = await getCollection('journal');
+  return all.map((entry) => ({
+    params: { slug: entry.id },
+    props:  { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, summary, published, updated, cover, tags } = entry.data;
+
+const minutes = readingTime(entry.body ?? '');
+const fmt = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const publishedLabel = fmt.format(published);
+const updatedLabel = updated ? fmt.format(updated) : null;
+
+// Use cover as OG image when present; fall back to site default otherwise.
+const ogCover = cover ? await getImage({ src: cover, width: 1200, format: 'jpg' }) : null;
+const ogImage = ogCover ? ogCover.src : undefined;
+
+const schemas = [
+  {
+    '@context':     'https://schema.org',
+    '@type':        'Article',
+    headline:       title,
+    description:    summary,
+    ...(ogCover ? { image: new URL(ogCover.src, site.url).toString() } : {}),
+    datePublished:  published.toISOString(),
+    ...(updated ? { dateModified: updated.toISOString() } : {}),
+    author:         { '@id': `${site.url}#organization` },
+    publisher:      { '@id': `${site.url}#organization` },
+    ...(tags ? { keywords: tags.join(', ') } : {}),
+  },
+];
+---
+
+<BaseLayout
+  title={`${title} | Nixon Creative Studio`}
+  description={summary}
+  ogImage={ogImage}
+  ogType="article"
+  schemas={schemas}
+>
+
+  <ReadingProgress client:idle />
+
+  <article>
+
+    <header class="py-2xl" aria-labelledby="journal-entry-heading">
+      <div class="ncs-container max-w-[64rem]">
+        <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
+          <span>{publishedLabel}</span>
+          <span aria-hidden="true">·</span>
+          <span>{minutes} min read</span>
+          {updatedLabel && updatedLabel !== publishedLabel && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>Updated {updatedLabel}</span>
+            </>
+          )}
+        </p>
+
+        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">{title}</h1>
+        <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
+
+        {cover && (
+          <div class="mt-l overflow-hidden rounded-lg bg-bg-soft">
+            <Image
+              src={cover}
+              alt=""
+              widths={[600, 900, 1200]}
+              sizes="(min-width: 56rem) 64rem, 100vw"
+              class="block h-auto w-full"
+            />
+          </div>
+        )}
+      </div>
+    </header>
+
+    <div class="ncs-container">
+      <div
+        class="mx-auto max-w-[72ch] pb-2xl pt-l text-[1.0625rem] leading-[1.7] text-text
+          [&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0
+          [&_p]:mb-m
+          [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5
+          [&_li]:mb-1
+          [&_a]:text-link [&_a]:underline [&_a]:underline-offset-2
+          hover:[&_a]:underline-offset-4"
+      >
+        <Content />
+      </div>
+    </div>
+
+  </article>
+
+  <CtaBanner />
+
+</BaseLayout>

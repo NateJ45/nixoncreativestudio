@@ -163,7 +163,54 @@ const photos = defineCollection({
    become the collection names used in getCollection() and getEntry().
    ---------------------------------------------------------------------------- */
 
+/* ----------------------------------------------------------------------------
+   journal
+   ----------------------------------------------------------------------------
+   Short-form essays, process notes, and field reports. Lives at /journal/
+   on the site. Lower-stakes than case studies: not every post needs a
+   custom cover image or production-grade prose, but every post should
+   land at /journal/{slug}/ as a real URL the reader can share.
+   ---------------------------------------------------------------------- */
+
+const journal = defineCollection({
+
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/journal' }),
+
+  schema: ({ image }) => z.object({
+
+    // Display title for the entry and its listing card.
+    title: z.string(),
+
+    // One-sentence pitch. Shown on the journal index card and used as
+    // the meta description and og:description on the detail page.
+    summary: z.string().max(200),
+
+    // Publish date. Drives ordering on /journal (newest first).
+    published: z.date(),
+
+    // Optional last-updated date. Same pattern as case studies.
+    updated: z.date().optional(),
+
+    // Optional cover image. When present, drives the listing-card art
+    // and the per-entry og:image. When absent, the listing card just
+    // renders the title + summary block.
+    cover: image().optional(),
+
+    // Optional tags for filtering and topical grouping. Free-form
+    // strings; light-touch taxonomy.
+    tags: z.array(z.string()).optional(),
+
+    // Draft flag. Entries with draft:true don't appear in production
+    // builds (the listing page filters them out). Use to stage posts
+    // without exposing them publicly.
+    draft: z.boolean().default(false),
+
+  }),
+});
+
+
 export const collections = {
   'case-studies': caseStudies,
   'photos':       photos,
+  'journal':      journal,
 };

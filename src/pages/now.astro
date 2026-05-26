@@ -1,0 +1,120 @@
+---
+// Safe to edit. This page is a Derek Sivers-style /now page. The arrays
+// below hold the content; rewrite them when the season changes (about
+// once a quarter is the right cadence).
+/* ============================================================================
+   /now | What I'm working on right now
+   ============================================================================
+   Standalone page that gives a present-tense snapshot of the studio:
+   client work, personal projects, what I'm reading, what I'm shooting,
+   what I'm learning. Updated quarterly-ish.
+
+   This format originated from Derek Sivers (https://nownownow.com/about)
+   as an antidote to outdated "about" pages. It works well for a one-
+   person studio because it gives returning visitors a fresh signal
+   without forcing them to dig through a blog.
+
+   The "Last updated" stamp at the bottom is important: it's the trust
+   signal that this page reflects current reality, not a forgotten
+   placeholder.
+   ============================================================================ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CtaBanner from '../components/CtaBanner.astro';
+
+// Update this when you edit the page. Plain ISO date.
+const lastUpdated = '2026-05-25';
+const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
+  month: 'long', day: 'numeric', year: 'numeric',
+}).format(new Date(lastUpdated));
+
+// Working on. Active client and studio work.
+const workingOn = [
+  'Wrapping a small business site for a West Chester piano teacher.',
+  'Photographing a Sunday morning shoot for a partner church next month.',
+  'Sketching the next iteration of this studio site (the one you\'re reading).',
+];
+
+// Booking. Capacity signals for prospective clients.
+const booking = [
+  'Open to one more nonprofit or small business project for the spring cohort.',
+  'Photography days available in May and June around existing client work.',
+];
+
+// Reading. Books / longer-form pieces.
+const reading = [
+  'Design as Art — Bruno Munari',
+  'How Buildings Learn — Stewart Brand',
+  'The Mom Test — Rob Fitzpatrick (re-read)',
+];
+
+// Learning. Skills / topics I'm trying to get sharper on.
+const learning = [
+  'View Transitions and the new web animation APIs',
+  'Long-exposure photography in low-light interiors',
+];
+---
+
+<BaseLayout
+  title="Now | Nixon Creative Studio"
+  description="What I'm working on, reading, and learning right now. Updated quarterly."
+>
+
+  <section class="py-2xl" aria-labelledby="now-heading">
+    <div class="ncs-container max-w-[64rem]">
+
+      <header class="mb-xl flex flex-col gap-m">
+        <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
+          <span class="font-mono text-sm tracking-[0.05em]">N1</span>
+          <span>Now</span>
+        </p>
+        <h1 id="now-heading" class="max-w-[22ch] leading-[0.95]">
+          What's on the docket right now.
+        </h1>
+        <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
+          A snapshot of current client work, what I'm reading, and what I'm trying to get sharper on. The whole page rewrites every couple of months. This format started with <a class="text-link underline underline-offset-2" href="https://nownownow.com/about" target="_blank" rel="noopener noreferrer">Derek Sivers</a>.
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 gap-xl md:grid-cols-2">
+
+        <section class="flex flex-col gap-s" aria-labelledby="now-working">
+          <h2 id="now-working" class="text-h4 text-heading">Working on</h2>
+          <ul class="ml-5 list-disc space-y-2 leading-[1.6] text-text">
+            {workingOn.map((item) => (<li>{item}</li>))}
+          </ul>
+        </section>
+
+        <section class="flex flex-col gap-s" aria-labelledby="now-booking">
+          <h2 id="now-booking" class="text-h4 text-heading">Booking</h2>
+          <ul class="ml-5 list-disc space-y-2 leading-[1.6] text-text">
+            {booking.map((item) => (<li>{item}</li>))}
+          </ul>
+        </section>
+
+        <section class="flex flex-col gap-s" aria-labelledby="now-reading">
+          <h2 id="now-reading" class="text-h4 text-heading">Reading</h2>
+          <ul class="ml-5 list-disc space-y-2 leading-[1.6] text-text">
+            {reading.map((item) => (<li>{item}</li>))}
+          </ul>
+        </section>
+
+        <section class="flex flex-col gap-s" aria-labelledby="now-learning">
+          <h2 id="now-learning" class="text-h4 text-heading">Learning</h2>
+          <ul class="ml-5 list-disc space-y-2 leading-[1.6] text-text">
+            {learning.map((item) => (<li>{item}</li>))}
+          </ul>
+        </section>
+
+      </div>
+
+      <p class="mt-2xl font-mono text-[0.85rem] italic text-text-muted">
+        Last updated {lastUpdatedLabel}.
+      </p>
+
+    </div>
+  </section>
+
+  <CtaBanner />
+
+</BaseLayout>

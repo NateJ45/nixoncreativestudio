@@ -130,6 +130,33 @@ const categories = [
   ))}
 
 
+  {/* Where the photos come from. Static OpenStreetMap centered on
+      Greater Cincinnati. When per-photo latitude/longitude fields are
+      added to the photos collection (src/content.config.ts), this block
+      can swap to a clustered pin map (e.g. Leaflet + react-leaflet).
+      For now, the regional crop tells visitors the work is genuinely
+      local without claiming pin-level precision we don't have. */}
+  <section class="py-2xl" aria-labelledby="photo-area-heading">
+    <div class="ncs-container">
+      <header class="mb-l flex flex-col gap-s">
+        <h2 id="photo-area-heading" class="text-heading">Where these photos come from</h2>
+        <p class="max-w-[56ch] leading-[1.5] text-text-muted">
+          Almost everything here was shot within an hour of downtown Cincinnati. When I add per-photo locations to the catalogue, this map will get real pins.
+        </p>
+      </header>
+      <div class="overflow-hidden rounded-md border border-border">
+        <iframe
+          src="https://www.openstreetmap.org/export/embed.html?bbox=-85.05%2C38.85%2C-83.95%2C39.55&amp;layer=mapnik&amp;marker=39.10%2C-84.51"
+          title="Map of the Greater Cincinnati region where most photographs were taken"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          class="block h-80 w-full"
+        ></iframe>
+      </div>
+    </div>
+  </section>
+
+
   <CtaBanner
     title="Need photography for your project?"
     sub="Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own."
