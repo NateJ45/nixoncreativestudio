@@ -21,7 +21,10 @@
    for the full convention.
    ============================================================================ */
 
-import placeholders from './coverPlaceholders.json';
+// The `with { type: 'json' }` attribute is required by Node's native ESM
+// loader (used by the test runner) and is equally accepted by Vite during the
+// Astro build, so this one import works in both places.
+import placeholders from './coverPlaceholders.json' with { type: 'json' };
 
 const map = placeholders as Record<string, string>;
 
