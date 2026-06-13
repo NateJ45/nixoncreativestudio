@@ -16,8 +16,14 @@ the code.
 - **Astro 6** with TypeScript in strict mode and `output: 'static'`
 - **Tailwind 4** via the Vite plugin, brand tokens declared in
   `@theme` blocks inside `src/styles/globals.css`
-- **shadcn/ui** primitives in `src/components/ui/`, plus Aceternity UI
-  (bento-grid, spotlight) and Magic UI (marquee, animated-beam) blocks
+- **shadcn/ui** primitives in `src/components/ui/` (radix-nova style,
+  plus the `@fulldev` registry), with Aceternity UI (bento-grid,
+  spotlight) and Magic UI (marquee, animated-beam) for motion flourishes
+- **Starwind UI** Astro-native, zero-JS primitives in
+  `src/components/starwind/` (accordion, dialog, dropdown, tabs)
+- **PrimeReact** unstyled escape hatch in `src/components/primereact/`
+  for heavy widgets (data tables, file upload, complex pickers) when
+  nothing lighter fits
 - **React 19** islands for anything interactive (mobile nav drawer,
   contact form handler, photo gallery + lightbox)
 - **MDX content collections** for case studies and a JSON-backed
@@ -28,6 +34,8 @@ the code.
   Thumbnails plugins) + **sharp** for the photography page
 - **Web3Forms** for the contact form, **Cloudflare Web Analytics** for
   privacy-friendly traffic measurement
+- **eslint** + **prettier** + **node --test** unit suites, with a
+  **GitHub Actions** CI run (install, build, test) on every push and PR
 - **Cloudflare Pages** for hosting, GitHub for version control
 
 
@@ -46,6 +54,10 @@ Other commands:
 npm run build      # production build into dist/
 npm run preview    # build + serve with wrangler dev
 npm run deploy     # build + wrangler deploy (only run from main)
+npm test           # node --test unit suites in src/lib/
+npm run lint       # eslint over src + scripts (advisory, see CLAUDE.md)
+npm run format     # prettier --write across the repo
+npm run check      # build + test in one shot
 ```
 
 Two environment variables drive the contact form and analytics. Both
@@ -65,14 +77,17 @@ production.
 src/
 ├── assets/             # source images that Astro optimizes at build time
 ├── components/         # site-wide components (Header, Footer, Hero, ...)
-│   └── ui/             # shadcn primitives + Aceternity + Magic UI blocks
+│   ├── ui/             # shadcn primitives + Aceternity + Magic UI blocks
+│   ├── starwind/       # Starwind Astro primitives (accordion, dialog, dropdown, tabs)
+│   └── primereact/     # PrimeReact unstyled escape hatch (heavy widgets)
 ├── content/            # MDX case studies + JSON photo entries
 ├── content.config.ts   # schema for both collections
 ├── data/site.ts        # single source of truth for contact info
 ├── layouts/            # BaseLayout.astro
+├── lib/                # typed helpers + node --test suites (*.test.ts)
 ├── pages/              # routes (homepage, about, work, contact, ...)
 ├── scripts/            # client-side modules (Lenis init)
-└── styles/globals.css  # Tailwind + brand tokens + base styles
+└── styles/             # globals.css (brand tokens) + starwind.css (Starwind tokens)
 
 public/
 ├── _headers            # Cloudflare Pages security response headers
@@ -80,6 +95,12 @@ public/
 ├── favicon.svg
 └── favicon.ico
 ```
+
+Root also carries `starwind.config.json`, `components.json`,
+`eslint.config.js`, `.prettierrc`, and `.github/workflows/ci.yml`.
+Agent-facing notes live in `docs/agent/`; start with
+[`component-sources.md`](./docs/agent/component-sources.md) for where to
+pull more UI components.
 
 
 ## Deployment

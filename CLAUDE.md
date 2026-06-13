@@ -26,9 +26,11 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - MDX content collections for case studies and journal entries; JSON-backed collection for the photography catalogue
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
 - React 19 islands for anything interactive: mobile nav drawer, contact form handler, photo lightbox, theme toggle, back-to-top, copy-email, /work filter chips. Astro components for everything static
-- shadcn/ui primitives in `src/components/ui/` (Nova preset, Radix base). Includes a Nathan-added `brand` variant and `cta` size on Button for marketing CTAs
+- shadcn/ui primitives in `src/components/ui/` (Nova preset, Radix base). Includes a Nathan-added `brand` variant and `cta` size on Button for marketing CTAs. `components.json` also wires the `@fulldev` registry for more free shadcn-compatible components
 - Aceternity UI for motion-rich blocks (bento-grid, spotlight)
 - Magic UI for smaller flourishes (marquee, animated-beam)
+- Starwind UI for Astro-native, zero-JS primitives in `src/components/starwind/` (accordion, dialog, dropdown, tabs). Token-native: it reads the same semantic CSS vars as shadcn, with its own extras (`--outline`, status colors) declared in `globals.css` and mapped in `src/styles/starwind.css` (imported in BaseLayout right after globals.css). Pulls Tabler SVG icons via `@tabler/icons` and uses `tailwind-variants`
+- PrimeReact as an unstyled escape hatch in `src/components/primereact/` for heavy, behavior-rich widgets (data tables, file upload, complex date or range pickers, steppers) that have no Radix / shadcn / Starwind equivalent. See `src/components/primereact/README.md` for when to reach for it and when not to
 - Motion (formerly Framer Motion), Astro View Transitions, Lenis smooth scroll (respecting `prefers-reduced-motion`)
 - react-photo-album for justified gallery layouts on the photography page
 - yet-another-react-lightbox for fullscreen photo viewing (with Zoom and Thumbnails plugins)
@@ -38,6 +40,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - Dark / light / system theme system: `ThemeToggle.tsx` React island + anti-FOUC bootstrap script in BaseLayout, persisted to `localStorage["ncs-theme"]`
 - `src/data/site.ts` as the single source of truth for contact info (name, email, phone, address, studio name, social URLs, tagline, domain) plus the optional `bookingUrl` and `newsletterUrl` that gate the Cal.com and Newsletter scaffolds
 - Web3Forms for the contact form, Cloudflare Web Analytics for privacy-friendly traffic
+- eslint (flat config) + prettier for linting and formatting, `node --test` unit suites in `src/lib/*.test.ts`, and a GitHub Actions CI run (install, build, test) on every push and PR. See "Testing, linting, and CI" below
 - Cloudflare Pages for hosting (build command `npm run build`, output `dist/`)
 - GitHub for version control
 
@@ -129,6 +132,20 @@ Both `src/lib/coverPlaceholders.json` and `public/og-default.png` are committed 
 
 ---
 
+## Testing, linting, and CI
+
+The repo carries a light quality-gate layer, matched to the rest of Nathan's Astro + Cloudflare sites.
+
+- `npm test` runs the `node --test` unit suites in `src/lib/*.test.ts` (currently `cn`, `readingTime`, and `coverPlaceholder`). They run under Node's native type stripping, so they import the `.ts` modules directly with no build step.
+- `npm run lint` runs eslint (flat config in `eslint.config.js`) over `src` and `scripts`. It is advisory, not a hard gate: `eslint-plugin-astro` currently reports a false "JSX expressions must have one parent element" parse error on valid Astro where an HTML comment (`<!-- -->`) sits inside a `{ ... }` expression. The build is the source of truth; lint is a helper.
+- `npm run format` runs prettier across the repo (config in `.prettierrc`, ignore list in `.prettierignore`).
+- `npm run check` is the one-shot gate: `npm run build && npm test`.
+- `.github/workflows/ci.yml` runs on every push and pull request: install, build, test. It does not run lint, for the reason above.
+
+One JSON-import note: `src/lib/coverPlaceholder.ts` imports its JSON with `with { type: 'json' }`. Node's native ESM loader (used by the test runner) requires that attribute, and Vite accepts it during the build, so the one import works in both places.
+
+---
+
 ## Typography
 
 - Headings (h1 through h6): Bebas Neue, weight 400. Self-hosted via `@fontsource/bebas-neue`.
@@ -144,10 +161,14 @@ Font families are declared in the `@theme` block in `src/styles/globals.css` as 
 When building UI, reach for components in this order:
 
 1. Existing components in `src/components/` that already match this site's design
-2. shadcn/ui primitives in `src/components/ui/`
-3. Aceternity UI for motion-rich blocks (hero, bento, parallax)
-4. Magic UI for smaller flourishes (marquee, animated text)
-5. Custom build only if nothing above fits
+2. shadcn/ui primitives in `src/components/ui/` (radix-nova style, plus the `@fulldev` registry)
+3. Starwind UI in `src/components/starwind/` for Astro-native, zero-JS primitives (accordion, dialog, dropdown, tabs) where no React state is needed
+4. Aceternity UI for motion-rich blocks (hero, bento, parallax)
+5. Magic UI for smaller flourishes (marquee, animated text)
+6. PrimeReact (`src/components/primereact/`) only for heavy, behavior-rich widgets with no lighter equivalent (data tables, file upload, complex pickers)
+7. Custom build only if nothing above fits
+
+For where to pull each of these from (free sources, the shadcn CLI commands, the token-remap cheat sheet), see `docs/agent/component-sources.md`.
 
 File naming:
 
@@ -324,10 +345,13 @@ Static routes generated at build time:
 
 ## Foundation, edit with care (route through a planned Claude session)
 
-- `src/styles/globals.css` (Tailwind 4 `@theme` blocks for brand tokens, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility)
+- `src/styles/globals.css` (Tailwind 4 `@theme` blocks for brand tokens, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the Starwind extra semantic tokens `--outline` + status colors in `:root` / `.dark`)
+- `src/styles/starwind.css` (Starwind accordion keyframes + `@theme inline` mappings for its extra tokens; imported in BaseLayout right after globals.css)
 - `src/content.config.ts` (schemas for case-studies, journal, and photos collections)
 - `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter, Lenis script tag, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
 - `src/components/ui/` shadcn primitives (installed via shadcn CLI; the custom `brand` variant and `cta` size in `button.tsx` are the only Nathan-edits)
+- `src/components/starwind/` Starwind Astro-native primitives + `starwind.config.json` (vendored as a unit with `src/styles/starwind.css`)
+- `src/components/primereact/` PrimeReact escape hatch (passthrough + island + README)
 - Aceternity / Magic UI component swaps in `src/components/ui/aceternity/` and `src/components/ui/`
 - React islands: `Photo.tsx`, `PhotoGallery.tsx`, `MobileNav.tsx`, `ThemeToggle.tsx`, `BackToTop.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`, `WorkFilter.tsx`
 - Astro wrappers: `CaseStudyCover.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
@@ -335,7 +359,7 @@ Static routes generated at build time:
 - `src/lib/readingTime.ts`
 - `src/scripts/lenis-init.ts` (smooth scroll setup)
 - `scripts/generate-placeholders.mjs`, `scripts/generate-og-default.mjs`
-- `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`
+- `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`, `eslint.config.js`, `.prettierrc`, `.github/workflows/ci.yml`
 - `public/_headers` (security response headers shipped with the deploy)
 - `public/og-default.png` (regenerate via `npm run og`)
 - `public/robots.txt`
