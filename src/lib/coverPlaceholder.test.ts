@@ -8,17 +8,17 @@ import { getCoverPlaceholder } from './coverPlaceholder.ts';
 // exercise the real exported accessor.
 
 test('returns a string for a known slug', () => {
-  const result = getCoverPlaceholder('crestview-presbyterian');
+  const result = getCoverPlaceholder('presbyterian-academy');
   assert.ok(typeof result === 'string', 'expected a string value');
 });
 
 test('returned value starts with a data URI prefix', () => {
-  const result = getCoverPlaceholder('crestview-presbyterian');
+  const result = getCoverPlaceholder('presbyterian-academy');
   assert.ok(result?.startsWith('data:image/'), `unexpected prefix: ${result?.slice(0, 20)}`);
 });
 
 test('returned value is a non-empty string', () => {
-  const result = getCoverPlaceholder('crestview-presbyterian');
+  const result = getCoverPlaceholder('presbyterian-academy');
   assert.ok(result && result.length > 0, 'expected a non-empty string');
 });
 
@@ -32,13 +32,13 @@ test('returns undefined for an empty string slug', () => {
 
 test('returns undefined for a slug with different casing', () => {
   // The lookup is case-sensitive (plain object key access).
-  assert.equal(getCoverPlaceholder('Crestview-Presbyterian'), undefined);
+  assert.equal(getCoverPlaceholder('Presbyterian-Academy'), undefined);
 });
 
 test('returns undefined for a slug with a trailing slash', () => {
-  assert.equal(getCoverPlaceholder('crestview-presbyterian/'), undefined);
+  assert.equal(getCoverPlaceholder('presbyterian-academy/'), undefined);
 });
 
 test('returns undefined for a slug that is a partial prefix of a known key', () => {
-  assert.equal(getCoverPlaceholder('crestview'), undefined);
+  assert.equal(getCoverPlaceholder('presbyterian'), undefined);
 });

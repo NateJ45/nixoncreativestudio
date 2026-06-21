@@ -16,8 +16,8 @@
    do the work in Node before the prerender worker ever spins up.
 
    Convention: cover filename matches the case study slug (the .mdx
-   filename without extension). e.g. crestview-presbyterian.mdx pairs
-   with crestview-presbyterian.png in src/assets/case-studies/.
+   filename without extension). e.g. theology-matters.mdx pairs
+   with theology-matters.png in src/assets/case-studies/.
 
    Run with:
      node scripts/generate-placeholders.mjs

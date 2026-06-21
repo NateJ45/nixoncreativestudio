@@ -1,21 +1,41 @@
 ---
-// Safe to edit. The story prose and the principles array hold all of the
-// user-facing copy on this page.
+// Safe to edit. The story prose, the principles array, the facts array, and
+// the currently list hold all of the user-facing copy on this page.
 /* ============================================================================
-   /about | About Nathan Nixon
+   /about | About Nathan Nixon  [revamp]
    ============================================================================
-   Four blocks down the page:
-     1. Hero (portrait placeholder + intro)
-     2. Story (a few paragraphs on the why)
-     3. How I work (three principle cards on the soft tinted band)
-     4. Currently (short list of what's on the docket)
+   Five blocks down the page:
+     1. Hero (framed portrait placeholder + intro, gradient-accent headline)
+     2. Facts (honest, verifiable count-up trio: 1 person, 4 sectors, region)
+     3. Story (a few paragraphs on the why)
+     4. How I work (three principle spotlight-cards on the soft tinted band)
+     5. Currently (short list of what's on the docket)
 
    Closes with the shared CtaBanner so every page funnels to /contact.
+
+   Motion vocabulary used here (all reduced-motion safe by the global system):
+     - data-reveal + --reveal-delay stagger on every section and its items
+     - spotlight-card + data-spotlight on the three principle cards
+     - text-gradient on the headline accent
+     - data-countup on the three honest facts
+     - bg-aurora behind the portrait frame for a drifting brand glow
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
+
+// Honest facts trio. Every figure is verifiable from the rest of the site,
+// no invented project counts, metrics, or awards. Only the middle fact has
+// a real climbing number (four sectors served), so it gets the count-up
+// animation; the two "one" facts read as plain figures since animating a
+// count to 1 looks like a glitch, not a flourish. `countup` flags which
+// fact animates.
+const facts = [
+  { figure: '1', countup: false, to: 0, label: 'person on every project, start to finish' },
+  { figure: '4', countup: true, to: 4, label: 'sectors served: churches, schools, nonprofits, small business' },
+  { figure: '1', countup: false, to: 0, label: 'region, the greater Cincinnati area' },
+];
 
 // Three working principles. Keep these honest; they should describe how
 // I actually work, not how I wish I worked.
@@ -36,14 +56,14 @@ const principles = [
 
 // Currently list. Short, present-tense, swappable per season.
 const currently = [
-  'Wrapping a small business site for a West Chester piano teacher.',
-  'Photographing a Sunday morning shoot for a partner church in February.',
-  'Booking one more nonprofit project for the spring cohort.',
+  'Wrapping a small business site for a West Chester music teacher.',
+  'Photographing a summer Sunday morning shoot for a partner church.',
+  'Booking one more nonprofit project for the season ahead.',
 ];
 
-// Section heading style shared by the three lower sections.
-const sectionHeadingClass = 'flex flex-col gap-xs';
-const sectionNumClass = 'font-mono text-sm tracking-[0.05em] text-text-muted';
+// Shared section-header layout. No mono "eyebrow" number scaffold: the
+// heading carries its own weight, and a short sub line does the framing
+// work an eyebrow would otherwise fake.
 const sectionInnerClass = 'flex flex-col gap-l';
 
 // JSON-LD schemas specific to the About page: Person for the studio
@@ -73,27 +93,57 @@ const schemas = [
 >
 
   <!-- ----------------------------------------------------------------------
-       Hero: portrait + copy two-column at >= 56rem, stacked below that.
+       Hero: framed portrait + copy two-column at >= 56rem, stacked below.
+       The portrait is still a placeholder until the real headshot lands in
+       src/assets/brand/, but it is now a designed frame: an aurora glow
+       drifts behind a tilted gradient panel, and an accent shape peeks out
+       behind the corner so the empty block reads as intentional craft
+       rather than a missing image. Swap the inner panel for an Astro
+       <Image /> once the headshot exists, and keep the frame wrapper.
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="about-hero-heading"><!-- h1 id below carries the label -->
     <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-[1fr_1.2fr]">
 
-      <!-- Portrait placeholder. Same brand-gradient pattern as the
-           homepage Hero. Swap for an Astro <Image /> once the real
-           headshot is in src/assets/brand/. -->
-      <div
-        class="aspect-[4/5] w-full rounded-lg bg-gradient-to-br from-bg-soft to-secondary"
-        role="img"
-        aria-label="Portrait placeholder"
-      ></div>
+      <!-- Portrait frame. position-relative so the accent shape can sit
+           behind one corner; isolate + overflow-visible let the glow bleed
+           a little past the panel edge for depth. -->
+      <div class="relative isolate" data-reveal="scale">
+        <!-- Amber accent shape behind the lower-right corner. Decorative,
+             so it is hidden from assistive tech. -->
+        <div
+          class="absolute -bottom-4 -right-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
+          aria-hidden="true"
+        ></div>
 
-      <div class="flex flex-col gap-m">
-        <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
-          <span class="font-mono text-sm tracking-[0.05em]">A1</span>
-          <span>About</span>
+        <!-- The framed panel. bg-aurora paints the drifting brand mesh; the
+             role/aria-label keep it announced as the portrait placeholder.
+             A subtle border + ring make the empty panel feel like a real
+             framed photo waiting to be dropped in. -->
+        <div
+          class="bg-aurora relative isolate aspect-[4/5] w-full overflow-hidden rounded-xl border border-border shadow-lg ring-1 ring-black/5"
+          role="img"
+          aria-label="Portrait of Nathan Nixon, coming soon"
+        >
+          <!-- Quiet caption so the placeholder reads as deliberate. Sits
+               above the aurora (z-10) and is decorative for screen readers
+               since the panel already carries the aria-label. -->
+          <div
+            class="relative z-10 flex h-full w-full items-end p-m"
+            aria-hidden="true"
+          >
+            <span class="font-mono text-sm tracking-[0.05em] text-primary-foreground/80">
+              Portrait coming soon
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-m" data-reveal="right" style="--reveal-delay: 120ms;">
+        <p class="text-[0.95rem] font-semibold uppercase tracking-[0.08em] text-link">
+          About the studio
         </p>
         <h1 id="about-hero-heading" class="max-w-[22ch] leading-[0.95]">
-          A one-person studio for organizations that take their work seriously.
+          A one-person studio for <span class="text-gradient">organizations that take their work seriously.</span>
         </h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
           I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools across the Cincinnati region. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
@@ -105,18 +155,52 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
+       Facts: an honest count-up trio. Every figure is verifiable from the
+       rest of the site, no invented metrics. The numbers animate up when
+       scrolled into view, then sit as plain proof points.
+       ---------------------------------------------------------------------- -->
+  <section class="pb-2xl" aria-label="Studio at a glance">
+    <div class="ncs-container">
+      <dl class="grid gap-l text-center [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))]">
+        {facts.map((fact, index) => (
+          <div
+            class="flex flex-col items-center gap-xs rounded-xl border border-border bg-bg p-l hover-lift"
+            data-reveal
+            style={`--reveal-delay: ${index * 120}ms;`}
+          >
+            <dt class="sr-only">{fact.label}</dt>
+            <dd class="flex flex-col items-center gap-xs">
+              <span class="font-display text-[3.25rem] leading-none text-link">
+                {fact.countup
+                  ? <span data-countup data-countup-to={fact.to}>{fact.to}</span>
+                  : <span>{fact.figure}</span>}
+              </span>
+              <span class="max-w-[26ch] text-[0.95rem] leading-[1.5] text-text-muted">
+                {fact.label}
+              </span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
        Story: a few paragraphs of background. Keeps the page personal
        without turning into a full biography.
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="about-story-heading">
     <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class={sectionHeadingClass}>
-        <span class={sectionNumClass} aria-hidden="true">A2</span>
+      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="about-story-heading">The short version</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          Why a one-person studio, and why plain code under the hood.
+        </p>
       </header>
 
-      <div class="flex max-w-[64ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text">
+      <div class="flex max-w-[64ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text" data-reveal style="--reveal-delay: 120ms;">
         <p>
           I started Nixon Creative Studio after a decade of doing communications work for churches and schools, where the people building the website were always one volunteer or one budget cycle away from disappearing. The pattern was the same every time: the project ran on a page builder, the launch went well, and the maintenance fell apart within a year.
         </p>
@@ -133,24 +217,37 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
-       How I work: three principle cards on the soft tinted band. Sits
-       between the white Story and the white Currently sections.
+       How I work: three principle spotlight-cards on the soft tinted band.
+       Each card is an elevated surface (bg-bg + border + rounded) that
+       lifts on hover and shows a cursor-following NCS-blue glow. The card
+       content sits in a relative z-10 layer so it stays above the glow.
+       Sits between the white Story and the white Currently sections.
        ---------------------------------------------------------------------- -->
   <section class="bg-bg-soft py-2xl" aria-labelledby="about-how-heading">
     <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class={sectionHeadingClass}>
-        <span class={sectionNumClass} aria-hidden="true">A3</span>
+      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="about-how-heading">How I work</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          Three principles that hold across every project, big or small.
+        </p>
       </header>
 
       <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
-        {principles.map((principle) => (
-          <li class="flex flex-col gap-s">
-            <!-- text-h4 utility for the principle title (smaller than the
-                 default h3 so the card stays compact). -->
-            <h3 class="text-h4 text-heading">{principle.title}</h3>
-            <p class="leading-[1.6] text-text">{principle.body}</p>
+        {principles.map((principle, index) => (
+          <li
+            class="spotlight-card relative flex flex-col rounded-xl border border-border bg-bg p-l hover-lift"
+            data-spotlight
+            data-reveal
+            style={`--reveal-delay: ${index * 120}ms;`}
+          >
+            <!-- Content sits above the spotlight glow. -->
+            <div class="relative z-10 flex flex-col gap-s">
+              <!-- text-h4 utility for the principle title (smaller than the
+                   default h3 so the card stays compact). -->
+              <h3 class="text-h4 text-heading">{principle.title}</h3>
+              <p class="leading-[1.6] text-text">{principle.body}</p>
+            </div>
           </li>
         ))}
       </ul>
@@ -162,22 +259,36 @@ const schemas = [
   <!-- ----------------------------------------------------------------------
        Currently: short list of what's on the docket. Updated by hand a
        few times a year so visitors can tell the studio is an active
-       practice, not a placeholder page.
+       practice, not a placeholder page. Each item reveals on scroll with a
+       small stagger and carries an amber marker instead of a default bullet
+       so the list feels alive without leaning on color alone (the marker is
+       a real shape, and the text remains the primary cue).
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="about-currently-heading">
     <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class={sectionHeadingClass}>
-        <span class={sectionNumClass} aria-hidden="true">A4</span>
+      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="about-currently-heading">Currently</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          A snapshot of what's on the bench right now.
+        </p>
       </header>
 
-      <!-- list-disc restores real bullets that the globals.css base reset
-           strips by default. This is a content list, not nav, so bullets
-           are appropriate. -->
-      <ul class="ml-5 max-w-[64ch] list-disc space-y-1 text-[1.0625rem] leading-[1.7] text-text">
-        {currently.map((item) => (
-          <li>{item}</li>
+      <ul class="flex max-w-[64ch] flex-col gap-s text-[1.0625rem] leading-[1.7] text-text">
+        {currently.map((item, index) => (
+          <li
+            class="flex items-start gap-s rounded-lg border border-border bg-bg p-m hover-lift"
+            data-reveal="left"
+            style={`--reveal-delay: ${index * 120}ms;`}
+          >
+            <!-- Amber square marker. Decorative shape, hidden from assistive
+                 tech since the list text is the real content. -->
+            <span
+              class="mt-[0.55rem] h-2 w-2 shrink-0 rounded-[2px] bg-tertiary"
+              aria-hidden="true"
+            ></span>
+            <span>{item}</span>
+          </li>
         ))}
       </ul>
 

@@ -9,6 +9,12 @@
    badges, no sidebar TOC. The reading progress bar and reading time
    stamp from the case study toolkit still apply because long journal
    posts deserve the same QoL.
+
+   The body is treated as an editorial reading surface: a drop-cap on the
+   first paragraph, scroll-revealed h2 headings, styled blockquotes and
+   figures, and an end-of-article tag list. The cover carries a shared
+   transition:name so it morphs from the index card during a View
+   Transition. All motion is reduced-motion safe via globals.css.
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
@@ -69,7 +75,12 @@ const schemas = [
   <article>
 
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
-      <div class="ncs-container max-w-[64rem]">
+      <div class="ncs-container max-w-[64rem]" data-reveal>
+        <a class="link-underline mb-l inline-flex items-center gap-1 font-mono text-[0.8rem] uppercase tracking-[0.1em] text-link no-underline" href="/journal/">
+          <span aria-hidden="true">&larr;</span>
+          <span>Journal</span>
+        </a>
+
         <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
           <span>{publishedLabel}</span>
           <span aria-hidden="true">·</span>
@@ -85,14 +96,28 @@ const schemas = [
         <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">{title}</h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
 
+        {tags && tags.length > 0 && (
+          <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((tag) => (
+              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.06em] text-text-muted">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )}
+
         {cover && (
-          <div class="mt-l overflow-hidden rounded-lg bg-bg-soft">
+          <div
+            class="mt-l overflow-hidden rounded-2xl bg-bg-soft"
+            data-reveal="scale"
+          >
             <Image
               src={cover}
               alt=""
               widths={[600, 900, 1200]}
               sizes="(min-width: 56rem) 64rem, 100vw"
               class="block h-auto w-full"
+              transition:name={`journal-cover-${entry.id}`}
             />
           </div>
         )}
@@ -100,17 +125,34 @@ const schemas = [
     </header>
 
     <div class="ncs-container">
+      <!-- Editorial reading surface. Prose styling lives in this scoped
+           wrapper so the MDX body renders as a designed article:
+             - a drop-cap on the very first paragraph
+             - generous line-length and rhythm
+             - styled blockquotes (the pull-quote pattern) and figures
+           Scroll-reveal on the h2 headings is wired by the small script
+           below, which tags each one with data-reveal after mount. -->
       <div
-        class="mx-auto max-w-[72ch] pb-2xl pt-l text-[1.0625rem] leading-[1.7] text-text
-          [&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0
-          [&_p]:mb-m
-          [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5
-          [&_li]:mb-1
-          [&_a]:text-link [&_a]:underline [&_a]:underline-offset-2
-          hover:[&_a]:underline-offset-4"
+        class="journal-prose mx-auto max-w-[72ch] pb-2xl pt-l text-[1.0625rem] leading-[1.8] text-text"
       >
         <Content />
       </div>
+
+      {/* End-of-article tag list. Mirrors the chips in the header but reads
+          as a footer to the piece, a natural stopping point before the CTA. */}
+      {tags && tags.length > 0 && (
+        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+          <p class="mb-s font-mono text-[0.75rem] uppercase tracking-[0.12em] text-text-muted">Filed under</p>
+          <ul class="flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((tag) => (
+              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] uppercase tracking-[0.06em] text-text">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        </footer>
+      )}
+
     </div>
 
   </article>
@@ -118,3 +160,182 @@ const schemas = [
   <CtaBanner />
 
 </BaseLayout>
+
+<style>
+  /* ==========================================================================
+     Journal prose styling
+     ==========================================================================
+     Scoped to .journal-prose so it only dresses the MDX body, never the
+     chrome around it. Astro's <style> is component-scoped, so the child
+     selectors need :global() to reach the HTML that <Content /> emits.
+     ========================================================================== */
+
+  /* Headings inside the body. h2 is the main subsection level; h3 a step
+     below. scroll-mt keeps a revealed heading clear of the reading-progress
+     bar when jumped to via an in-page anchor. */
+  .journal-prose :global(h2) {
+    margin-top: var(--spacing-l, 2rem);
+    margin-bottom: var(--spacing-s, 0.75rem);
+    scroll-margin-top: var(--spacing-l, 2rem);
+    font-size: var(--text-h3);
+    line-height: 1.1;
+    color: var(--heading);
+  }
+  .journal-prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .journal-prose :global(h3) {
+    margin-top: var(--spacing-m, 1.5rem);
+    margin-bottom: var(--spacing-xs, 0.5rem);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    color: var(--heading);
+  }
+
+  /* Body paragraphs. */
+  .journal-prose :global(p) {
+    margin-bottom: var(--spacing-m, 1.5rem);
+  }
+
+  /* Drop-cap on the first paragraph of the article. An editorial flourish
+     that signals "this is a piece to read." Only the very first paragraph
+     gets it, and only when it is a direct child of the prose wrapper so a
+     leading heading or figure doesn't trigger it mid-flow. */
+  .journal-prose > :global(p:first-of-type::first-letter) {
+    float: left;
+    margin: 0.05em 0.12em 0 0;
+    font-family: var(--font-display);
+    font-size: 3.6em;
+    line-height: 0.7;
+    color: var(--link);
+  }
+
+  /* Lists. */
+  .journal-prose :global(ul) {
+    margin-bottom: var(--spacing-m, 1.5rem);
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  .journal-prose :global(ol) {
+    margin-bottom: var(--spacing-m, 1.5rem);
+    padding-left: 1.25rem;
+    list-style: decimal;
+  }
+  .journal-prose :global(li) {
+    margin-bottom: 0.35rem;
+  }
+
+  /* Inline links. */
+  .journal-prose :global(a) {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: text-underline-offset 0.15s ease;
+  }
+  .journal-prose :global(a:hover) {
+    text-underline-offset: 4px;
+  }
+
+  /* Pull-quote. A blockquote in the body reads as a designed pull-quote:
+     centered, larger display-leaning type, set apart from the body rhythm
+     by a big decorative opening quote-mark rather than a side rule (the
+     left-border treatment is the most common AI-UI tell). Markdown `> ...`
+     and MDX <blockquote> both land here. */
+  .journal-prose :global(blockquote) {
+    position: relative;
+    margin: var(--spacing-l, 2rem) auto;
+    max-width: 56ch;
+    padding-top: 1.75rem;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1.4;
+    font-style: italic;
+    color: var(--heading);
+  }
+  /* Oversized opening quote glyph, brand accent, sitting above the quote. */
+  .journal-prose :global(blockquote::before) {
+    content: '\201C';
+    position: absolute;
+    top: -0.35em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 3.2rem;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .journal-prose :global(blockquote p) {
+    margin-bottom: 0.5rem;
+  }
+  .journal-prose :global(blockquote p:last-child) {
+    margin-bottom: 0;
+  }
+  /* A cite line inside a quote reads as the attribution, smaller and muted. */
+  .journal-prose :global(blockquote cite) {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-foreground);
+  }
+
+  /* Figures and images in the body. Full-width within the reading column,
+     rounded to match the cover, with a muted caption beneath. */
+  .journal-prose :global(figure) {
+    margin: var(--spacing-l, 2rem) 0;
+  }
+  .journal-prose :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+  }
+  .journal-prose :global(figcaption) {
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+  }
+
+  /* Horizontal rule as a soft section break. */
+  .journal-prose :global(hr) {
+    margin: var(--spacing-l, 2rem) 0;
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Inline code + code blocks. Light touch so a stray code sample reads
+     cleanly without pulling a full syntax theme into the journal. */
+  .journal-prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+  .journal-prose :global(pre) {
+    margin-bottom: var(--spacing-m, 1.5rem);
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+  }
+</style>
+
+<script>
+  // Scroll-reveal for the body's h2 headings. The MDX body renders raw
+  // HTML, so the headings can't carry data-reveal in source. This tags each
+  // h2 in the prose wrapper after the DOM is ready, letting the shared
+  // reveal observer in BaseLayout.astro fade them in as they scroll into
+  // view. Runs on first load and after every View Transition so the effect
+  // survives client-side navigation between journal entries.
+  function tagJournalHeadings() {
+    document
+      .querySelectorAll('.journal-prose h2:not([data-reveal])')
+      .forEach((h) => h.setAttribute('data-reveal', ''));
+  }
+
+  tagJournalHeadings();
+  document.addEventListener('astro:page-load', tagJournalHeadings);
+</script>

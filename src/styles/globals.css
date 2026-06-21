@@ -238,6 +238,257 @@
 }
 
 /* ----------------------------------------------------------------------------
+   6. Motion + effects system  [revamp]
+   ----------------------------------------------------------------------------
+   The site's animation layer: scroll-reveal, animated backgrounds, gradient
+   text, hover micro-interactions, and the keyframes shared across components.
+
+   Accessibility: every looping or scroll-triggered animation here is gated
+   behind `prefers-reduced-motion: no-preference`. The global reduced-motion
+   block in section 4 already neutralizes transitions/animations for everyone
+   who opts out, and the reveal init script in BaseLayout force-shows every
+   [data-reveal] element immediately under reduced motion, so no content ever
+   depends on motion to become visible.
+   ---------------------------------------------------------------------------- */
+
+/* ---- Scroll reveal --------------------------------------------------------
+   Tag any element with data-reveal. The global IntersectionObserver in
+   BaseLayout adds .is-visible the first time it scrolls into view. Variants
+   change the entrance vector; --reveal-delay (inline style) staggers
+   siblings, e.g. style="--reveal-delay: 120ms". */
+/* The hidden-until-revealed state is scoped to .js (added to <html> by the
+   anti-FOUC script in BaseLayout before first paint). Without JavaScript the
+   class is absent, so [data-reveal] elements keep their default opacity:1 and
+   are fully visible: nothing depends on JS to be seen. With JS, the observer
+   in BaseLayout adds .is-visible as each element scrolls into view. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(1.75rem);
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.7s ease;
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js [data-reveal="fade"]  { transform: none; }
+  .js [data-reveal="scale"] { transform: scale(0.93); }
+  .js [data-reveal="left"]  { transform: translateX(-2rem); }
+  .js [data-reveal="right"] { transform: translateX(2rem); }
+  .js [data-reveal="blur"]  { filter: blur(14px); }
+  .js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ---- Gradient text --------------------------------------------------------
+   Clips a brand gradient to the text. Add .text-gradient-animate to pan it. */
+.text-gradient {
+  /* Light-surface safe: these stops clear WCAG AA large-text 3:1 on white
+     (#FFFFFF) and bg-soft (#F4F7FA). For text on a dark/navy surface use
+     .text-gradient-bright instead, which keeps the vivid brand stops. */
+  background-image: linear-gradient(100deg, #2a6fb0, #1f5c95 48%, #b3650f);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+/* In dark mode the surface behind a .text-gradient heading is deep navy, so
+   the vivid brand stops both read well and clear AA there. */
+.dark .text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-accent),
+    var(--color-secondary) 45%,
+    var(--color-tertiary)
+  );
+}
+/* Always-vivid variant for headings that sit on a dark/navy surface in BOTH
+   themes (the homepage hero, the photography hero). The bright accent -> sky
+   -> amber stops clear AA large-text on navy. */
+.text-gradient-bright {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-accent),
+    var(--color-secondary) 45%,
+    var(--color-tertiary)
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .text-gradient-animate {
+    animation: gradient-pan 6s linear infinite;
+  }
+}
+
+/* ---- Aurora / mesh background ---------------------------------------------
+   Drifting layered radial gradients for dark surfaces (hero, CTA bands). The
+   host element needs position + isolate; the gradient paints in ::before at
+   z-0, so foreground content should sit at z-10. Pair with .grain. */
+.bg-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  z-index: 0;
+  background:
+    radial-gradient(38% 48% at 18% 22%, color-mix(in oklab, var(--color-accent) 60%, transparent), transparent 70%),
+    radial-gradient(36% 44% at 82% 26%, color-mix(in oklab, var(--color-secondary) 50%, transparent), transparent 70%),
+    radial-gradient(48% 52% at 62% 86%, color-mix(in oklab, var(--color-tertiary) 30%, transparent), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bg-aurora::before {
+    animation: aurora-drift 20s ease-in-out infinite alternate;
+  }
+}
+
+/* ---- Film grain -----------------------------------------------------------
+   Subtle fractal-noise overlay via an inline SVG. Host needs position;
+   sits above the aurora (z-1) but below content (z-10). */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- Hover micro-interactions --------------------------------------------- */
+.hover-lift {
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s ease;
+}
+.hover-lift:hover,
+.hover-lift:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--color-primary) 55%, transparent);
+}
+
+/* Shine sweep: add .shine to a position:relative, overflow:hidden element
+   (e.g. a button) and a light band sweeps across it on hover. */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  transform: translateX(-150%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .shine:hover::after,
+  .shine:focus-visible::after {
+    animation: shine-sweep 0.85s ease;
+  }
+}
+
+/* Cursor-following spotlight. Add .spotlight-card to a position:relative card;
+   the enhancement script sets --mx/--my on pointer move and a soft brand glow
+   tracks the cursor. Glow sits above the surface but is pointer-transparent and
+   low-alpha so content stays legible. Give inner content `relative z-10` if a
+   card's text ever needs to sit above the glow explicitly. */
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    16rem 16rem at var(--mx, 50%) var(--my, 50%),
+    color-mix(in oklab, var(--color-accent) 18%, transparent),
+    transparent 60%
+  );
+}
+.spotlight-card:hover::before,
+.spotlight-card:focus-within::before {
+  opacity: 1;
+}
+
+/* Magnetic elements. The enhancement script translates these toward the cursor;
+   the transition gives the pull a smooth, springy trail and an easy return. */
+[data-magnetic] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* Animated underline link. Grows from the left on hover/focus. */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-underline:hover::after,
+.link-underline:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Soft float loop for decorative accents. */
+@media (prefers-reduced-motion: no-preference) {
+  .float-slow { animation: float-slow 7s ease-in-out infinite; }
+}
+
+/* ---- Shared keyframes ----------------------------------------------------- */
+@keyframes gradient-pan {
+  to { background-position: 200% center; }
+}
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  100% { transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes shine-sweep {
+  to { transform: translateX(320%) skewX(-18deg); }
+}
+@keyframes scroll-cue {
+  0%   { transform: translateY(0);    opacity: 1;   }
+  100% { transform: translateY(0.5rem); opacity: 0.15; }
+}
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ----------------------------------------------------------------------------
    Coming-soon gate.
    ----------------------------------------------------------------------------
    The site ships with both the real content (Header / Main / Footer) and

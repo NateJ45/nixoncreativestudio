@@ -48,7 +48,7 @@ export async function getStaticPaths() {
 
 const { entry, previous, next } = Astro.props;
 const { Content, headings } = await render(entry);
-const { title, client, sector, services, summary, cover, year, role, tags, published, updated, stack } = entry.data;
+const { title, client, sector, services, summary, cover, year, role, tags, published, updated, stack, liveUrl, outcome, testimonial } = entry.data;
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -119,7 +119,7 @@ const schemas = [
     <header class="py-2xl">
       <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-2">
 
-        <div class="flex flex-col gap-m">
+        <div class="flex flex-col gap-m" data-reveal>
 
           <!-- Meta stamp: year + sector + read time. Mono and muted. -->
           <p class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
@@ -137,6 +137,32 @@ const schemas = [
           <p class="font-display text-h4 text-link">{client}</p>
 
           <p class="max-w-[56ch] text-lg leading-[1.6] text-text">{summary}</p>
+
+          {/* Outcome callout (optional). The honest, one-line result of the
+              project, lifted out of the body so the proof reads at first
+              scan. Accent left-border + --link color marks it as the
+              takeaway, not body copy. */}
+          {outcome && (
+            <p class="max-w-[56ch] border-l-2 border-accent pl-m text-lg font-semibold leading-[1.45] text-link">
+              {outcome}
+            </p>
+          )}
+
+          {/* Live site link (optional). For a web design portfolio this is
+              the strongest single trust signal: a click straight to real,
+              working proof. Rendered as a brand-weight link with an external
+              cue; opens in a new tab with rel noopener for safety. */}
+          {liveUrl && (
+            <a
+              href={liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex w-fit items-center gap-2 font-body text-base font-semibold text-link underline underline-offset-4 transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+            >
+              Visit the live site
+              <span aria-hidden="true">↗</span>
+            </a>
+          )}
 
           {/* Role line (optional). Tiny mono uppercase, sits below the
               summary as a credit. Useful when the case study wants to
@@ -201,13 +227,15 @@ const schemas = [
              description (e.g. "Photo of the Crestview team in the
              sanctuary"), add a coverAlt field to the case-studies
              schema in content.config.ts and thread it through here. -->
-        <CaseStudyCover
-          cover={cover}
-          placeholder={coverBlur}
-          alt=""
-          widths={[600, 900, 1200]}
-          sizes="(min-width: 56rem) 50vw, 100vw"
-        />
+        <div transition:name={`cover-${entry.id}`}>
+          <CaseStudyCover
+            cover={cover}
+            placeholder={coverBlur}
+            alt=""
+            widths={[600, 900, 1200]}
+            sizes="(min-width: 56rem) 50vw, 100vw"
+          />
+        </div>
 
       </div>
     </header>
@@ -269,6 +297,23 @@ const schemas = [
 
       </div>
     </div>
+
+    {/* Testimonial pull-quote (optional). Real client social proof, set
+        apart from the body as a centered editorial quote. Renders nothing
+        when the frontmatter has no testimonial, so it is safe to leave off
+        until a real quote is collected. Never fabricated. */}
+    {testimonial && (
+      <aside class="border-t border-border py-2xl" aria-label="Client testimonial" data-reveal>
+        <figure class="ncs-container mx-auto max-w-[60ch] text-center">
+          <blockquote class="font-display text-h3 leading-[1.2] text-heading">
+            <p>“{testimonial.quote}”</p>
+          </blockquote>
+          <figcaption class="mt-m font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
+            <span class="text-text">{testimonial.name}</span>{testimonial.title ? ` · ${testimonial.title}` : ''}
+          </figcaption>
+        </figure>
+      </aside>
+    )}
 
     {/* Next / previous case study nav. Sits between the body and the
         CtaBanner so visitors who finished reading have a forward path

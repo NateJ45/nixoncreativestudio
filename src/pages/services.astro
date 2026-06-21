@@ -1,18 +1,30 @@
 ---
-// Safe to edit. The services and faq arrays below hold every word of
-// user-facing copy on this page.
+// Safe to edit. The services, tiers, and faq arrays below hold every word
+// of user-facing copy on this page.
 /* ============================================================================
    /services | Services
    ============================================================================
-   Five-block stack:
-     1. Hero (positioning statement)
-     2. Three expanded service chapters with description + included-items
+   Six-block stack:
+     1. Hero (positioning statement, gradient-text headline)
+     2. Three service chapters as elevated, alternating spotlight-cards
      3. Process recap (reuses the homepage Process component)
-     4. FAQ (native <details>/<summary>, no JS required)
-     5. CTA banner
+     4. "What it costs" band: three pricing tier cards (honest numbers only)
+     5. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
+     6. CTA banner
 
    The Process component is reused, not duplicated. Edit Process.astro
    once and both the homepage and this page update.
+
+   Motion vocabulary used here (all reduced-motion safe, defined globally):
+     data-reveal / data-reveal="left|right"  scroll fade+rise
+     spotlight-card + data-spotlight          cursor-following glow on a card
+     hover-lift                               lift on hover
+     data-countup                             number animates up when in view
+     text-gradient                            brand gradient clipped onto text
+
+   Pricing numbers come ONLY from the FAQ answers below (small business
+   from $3,500, optional photography add-on, optional monthly retainer).
+   Do not invent prices here; the tier cards and the FAQ must agree.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -20,40 +32,86 @@ import Process from '../components/Process.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
 
+// The three services are a genuine sequence (strategy first, then design,
+// then photography), so the 01/02/03 numerals are honest, not decoration.
 const services = [
   {
-    num: 'i',
+    num: '01',
     title: 'Strategy',
-    body: 'Strategy is the planning work that decides what the site is for, who it serves, and how it earns its keep. It always comes first. Without it, design becomes decoration.',
+    lede: 'The planning work that decides what the site is for, who it serves, and how it earns its keep.',
+    body: 'Strategy always comes first. Without it, design becomes decoration. We start with a working session, then I write a short brief that the rest of the project follows.',
     points: [
       'Half-day workshop with your team',
       'Audience map and conversion path',
       'Content inventory of what you already have',
-      'A one-page brief that the rest of the project follows',
+      'A one-page brief the rest of the project follows',
     ],
   },
   {
-    num: 'ii',
+    num: '02',
     title: 'Web design',
-    body: 'Modern, accessible, fast websites built in plain HTML and CSS. No page builder subscription layer between you and your site. Real fonts, real images, code a future maintainer can read.',
+    lede: 'Modern, accessible, fast websites built in plain HTML and CSS, with no page builder tax between you and your site.',
+    body: 'Real fonts, real images, code a future maintainer can actually read. Everything is built mobile-first and tested for accessibility from the very first component.',
     points: [
       'Hand-built component design system',
       'Self-hosted typography and imagery',
       'Mobile-first responsive layouts',
       'WCAG-aware accessibility from day one',
-      'Deployed to Cloudflare Pages with auto-rebuild on every commit',
+      'Deployed to Cloudflare Pages, auto-rebuild on every commit',
     ],
   },
   {
-    num: 'iii',
+    num: '03',
     title: 'Photography',
-    body: 'Headshots, event coverage, environmental photography for the website. Same person who designed the site shows up with the camera, so the photos match the layout instead of fighting it.',
+    lede: 'Headshots, event coverage, and environmental photography shot for your website by the same person who designed it.',
+    body: 'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.',
     points: [
       'On-site Sunday or weekday coverage',
       'Headshots for team and staff',
       'Environmental photography of your space',
-      'Edited, web-optimized images delivered alongside the website',
+      'Edited, web-optimized images delivered with the website',
     ],
+  },
+];
+
+// Pricing tiers. Every number here is pulled straight from the FAQ answers
+// below so the two never drift. Strategy is the entry point of the project,
+// not a separately priced product, so it lives inside the build price.
+const tiers = [
+  {
+    name: 'Small business site',
+    priceFrom: 3500, // honest floor from the FAQ "What does it cost?" answer
+    priceSuffix: '+',
+    note: 'Strategy, design, and build for a small business or organization. Scope, photography, and content move the number from there.',
+    features: [
+      'Strategy session and one-page brief',
+      'Hand-built, accessible, fast site',
+      'Deployed and yours to own outright',
+    ],
+    highlighted: true,
+    badge: 'Most projects start here',
+  },
+  {
+    name: 'Photography add-on',
+    priceLabel: 'Add-on',
+    note: 'Headshots, event, and environmental photography folded into the project so the imagery is made for the layout, not borrowed from a stock library.',
+    features: [
+      'On-site coverage, weekday or Sunday',
+      'Team headshots and your space',
+      'Edited, web-ready files delivered with the site',
+    ],
+    highlighted: false,
+  },
+  {
+    name: 'Monthly care',
+    priceLabel: 'Optional',
+    note: 'A flat monthly retainer for ongoing edits and content updates. Skip it entirely and the site is still yours to leave alone for years.',
+    features: [
+      'Ongoing edits and content updates',
+      'A simple way to reach me when something comes up',
+      'Cancel any time, no lock-in',
+    ],
+    highlighted: false,
   },
 ];
 
@@ -77,7 +135,7 @@ const faq = [
 ];
 
 // JSON-LD schemas for /services: Service (one per offering) and FAQPage.
-// FAQPage is the highest-leverage schema here — Google will surface FAQ
+// FAQPage does the most work here. Google will surface FAQ
 // answers directly in search results for matching queries.
 const schemas = [
   ...services.map((service) => ({
@@ -110,19 +168,31 @@ const schemas = [
 >
 
   <!-- ----------------------------------------------------------------------
-       Hero. Single column, no portrait to balance, so positioning line
-       and intro paragraph sit left-aligned.
+       Hero. Single column, left-aligned. The eyebrow is a clean text
+       kicker (no mono "S1" scaffold). The headline uses text-gradient so
+       the brand blues sweep across the positioning line.
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="services-hero-heading">
     <div class="ncs-container">
-      <p class="mb-m inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
-        <span class="font-mono text-sm tracking-[0.05em]">S1</span>
-        <span>Services</span>
+      <p
+        class="mb-m text-sm font-semibold uppercase tracking-[0.18em] text-link"
+        data-reveal="fade"
+      >
+        What I do
       </p>
-      <h1 id="services-hero-heading" class="mb-m max-w-[22ch] leading-[0.95]">
+      <h1
+        id="services-hero-heading"
+        class="text-gradient mb-m max-w-[22ch] leading-[0.95]"
+        data-reveal
+        style="--reveal-delay: 80ms;"
+      >
         Strategy, web design, and photography for organizations that care about the long run.
       </h1>
-      <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
+      <p
+        class="max-w-[60ch] text-lg leading-[1.6] text-text"
+        data-reveal
+        style="--reveal-delay: 180ms;"
+      >
         Most projects use all three services, in that order. Some use one or two. The first conversation always ends with an honest scope, not a sales pitch.
       </p>
     </div>
@@ -130,38 +200,70 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
-       Expanded chapters. Each chapter: heading row (number + title),
-       then two-column body at >= 48rem (description left, inclusions
-       right). Stacks on narrow screens.
+       Service chapters. Each service is its own elevated spotlight-card
+       with a cursor-following glow, a hover lift, an oversized ghost numeral
+       for the genuine 01/02/03 sequence, and a staggered scroll-reveal.
+       The cards alternate reveal direction (left / right / left) so they
+       arrive with a little choreography instead of all sliding the same way.
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-label="Service details">
     <div class="ncs-container">
-      <ol class="flex flex-col gap-2xl pl-0">
-        {services.map((service) => (
-          <li class="flex flex-col gap-l">
+      <ol class="flex list-none flex-col gap-l p-0">
+        {services.map((service, index) => (
+          <li
+            class="spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl border border-border bg-bg-soft p-l md:p-xl"
+            data-spotlight
+            data-reveal={index % 2 === 0 ? 'left' : 'right'}
+            style={`--reveal-delay: ${index * 90}ms;`}
+          >
+            <!-- Oversized ghost numeral, decorative. The small accent number
+                 in the header is the labelled, ordered one. -->
+            <span
+              class="pointer-events-none absolute -right-2 -top-6 select-none font-display text-[7rem] leading-none text-accent/10 transition-transform duration-500 group-hover:scale-110 md:text-[9rem]"
+              aria-hidden="true"
+            >
+              {service.num}
+            </span>
 
-            <header class="flex items-baseline gap-m">
-              <span
-                class="font-mono text-2xl tracking-[0.05em] text-accent"
-                aria-hidden="true"
-              >
-                {service.num}
-              </span>
-              <h2 class="text-heading">{service.title}</h2>
-            </header>
+            <div class="relative z-10 grid grid-cols-1 gap-l md:grid-cols-[1.25fr_1fr] md:gap-xl">
 
-            <div class="grid grid-cols-1 gap-l md:grid-cols-[1.2fr_1fr]">
-              <p class="max-w-[56ch] text-[1.0625rem] leading-[1.7] text-text">
-                {service.body}
-              </p>
-              <!-- Inclusions list. Real bullets restored via list-disc. -->
-              <ul class="ml-5 list-disc space-y-2 leading-[1.6] text-text">
-                {service.points.map((point) => (
-                  <li>{point}</li>
-                ))}
-              </ul>
+              <!-- Left column: number tag, title, lede, body. -->
+              <div class="flex flex-col gap-s">
+                <span
+                  class="font-mono text-sm tracking-[0.06em] text-link"
+                  aria-hidden="true"
+                >
+                  {service.num}
+                </span>
+                <h2 class="text-heading">{service.title}</h2>
+                <p class="max-w-[48ch] text-[1.0625rem] font-medium leading-[1.55] text-text">
+                  {service.lede}
+                </p>
+                <p class="max-w-[52ch] leading-[1.7] text-text-muted">
+                  {service.body}
+                </p>
+              </div>
+
+              <!-- Right column: what's included, as a checked list. The
+                   check glyph is decorative; the text carries the meaning. -->
+              <div class="flex flex-col gap-s">
+                <p class="text-sm font-semibold uppercase tracking-[0.12em] text-text-muted">
+                  What's included
+                </p>
+                <ul class="flex flex-col gap-2 leading-[1.5] text-text">
+                  {service.points.map((point) => (
+                    <li class="flex items-start gap-s">
+                      <span
+                        class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                        aria-hidden="true"
+                      ></span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
             </div>
-
           </li>
         ))}
       </ol>
@@ -174,28 +276,134 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
-       FAQ. Native <details>/<summary> for accessible disclosure without
-       JavaScript. The "+" indicator rotates to "×" when open via the
-       group-open: variant on the summary's ::after pseudo.
+       What it costs. The pricing that used to hide inside the FAQ, now a
+       scannable band of three tier cards. Every number traces back to the
+       FAQ answers: $3,500 floor, photography add-on, optional retainer.
+       The featured tier's price counts up when it scrolls into view.
+       ---------------------------------------------------------------------- -->
+  <section class="bg-bg-soft py-2xl" aria-labelledby="services-pricing-heading">
+    <div class="ncs-container">
+
+      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
+        <h2 id="services-pricing-heading" class="text-heading">What it costs</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          A starting point, not a fixed menu. The free first conversation ends with a real ballpark for your project.
+        </p>
+      </header>
+
+      <ul class="grid list-none gap-l p-0 [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
+        {tiers.map((tier, index) => (
+          <li
+            class:list={[
+              'spotlight-card hover-lift relative isolate flex flex-col gap-m overflow-hidden rounded-2xl border p-l',
+              tier.highlighted
+                ? 'border-accent bg-bg shadow-[0_1px_30px_-12px_var(--color-accent)]'
+                : 'border-border bg-bg',
+            ]}
+            data-spotlight
+            data-reveal
+            style={`--reveal-delay: ${index * 110}ms;`}
+          >
+            {tier.badge && (
+              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold uppercase tracking-[0.1em] text-primary-foreground">
+                {tier.badge}
+              </span>
+            )}
+
+            <div class="relative z-10 flex flex-col gap-m">
+              <h3 class="text-h4 text-heading">{tier.name}</h3>
+
+              <!-- Price line. The floor price counts up; the add-on and
+                   retainer tiers carry a plain word because they are
+                   genuinely "depends on scope," not a published number. -->
+              <p class="flex items-baseline gap-xs">
+                {tier.priceFrom ? (
+                  <>
+                    <span class="text-sm font-medium text-text-muted">from</span>
+                    <span class="font-display text-h2 leading-none text-heading">
+                      $<span
+                        data-countup
+                        data-countup-to={tier.priceFrom}
+                        data-countup-duration="1200"
+                      >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
+                    </span>
+                  </>
+                ) : (
+                  <span class="font-display text-h3 leading-none text-link">
+                    {tier.priceLabel}
+                  </span>
+                )}
+              </p>
+
+              <p class="leading-[1.6] text-text-muted">{tier.note}</p>
+
+              <ul class="mt-xs flex flex-col gap-2 leading-[1.5] text-text">
+                {tier.features.map((feature) => (
+                  <li class="flex items-start gap-s">
+                    <span
+                      class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                      aria-hidden="true"
+                    ></span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
+        Strategy is the front of every project, not a line item. The price above already includes the session and the brief.
+      </p>
+
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       FAQ. Native <details>/<summary> for accessible, JS-free disclosure.
+       The answer wrapper animates open and closed with a CSS grid trick:
+       grid-template-rows goes from 0fr (collapsed) to 1fr (open), which
+       transitions smoothly without needing a fixed pixel height. The "+"
+       marker rotates to "x" via the group-open: variant. The whole row
+       still works with keyboard and screen readers because it is a real
+       <details> element.
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="services-faq-heading">
     <div class="ncs-container">
 
-      <header class="mb-l flex flex-col gap-xs">
-        <span class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">S5</span>
+      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="services-faq-heading" class="text-heading">Common questions</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          The things people ask before the first call.
+        </p>
       </header>
 
       <div class="flex flex-col border-t border-border">
-        {faq.map((item) => (
-          <!-- `group` lets the summary's open-state pseudo react via group-open: -->
-          <details class="group border-b border-border py-m">
+        {faq.map((item, index) => (
+          <!-- `group` lets the summary's open-state pseudo and the answer
+               wrapper both react via group-open:. -->
+          <details
+            class="faq-item group border-b border-border"
+            data-reveal="fade"
+            style={`--reveal-delay: ${index * 70}ms;`}
+          >
             <!-- list-none drops the default disclosure triangle. The webkit
-                 marker pseudo hides the Safari version. -->
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-m font-body text-lg font-semibold text-heading [&::-webkit-details-marker]:hidden after:font-mono after:text-accent after:transition-transform after:duration-200 after:content-['+'] group-open:after:rotate-45">
+                 marker pseudo hides the Safari version. The "+" rotates to an
+                 "x" when open; the rotation plus the smooth panel are two
+                 non-color cues, so state is never signalled by color alone. -->
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 hover:text-link [&::-webkit-details-marker]:hidden after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg]">
               {item.q}
             </summary>
-            <p class="mt-s max-w-[64ch] leading-[1.7] text-text">{item.a}</p>
+            <!-- Animated reveal: the grid row scales from 0fr to 1fr. The
+                 inner div needs overflow-hidden so the clipped content does
+                 not spill while the row is collapsing. -->
+            <div class="faq-answer grid">
+              <div class="overflow-hidden">
+                <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.a}</p>
+              </div>
+            </div>
           </details>
         ))}
       </div>
@@ -210,3 +418,29 @@ const schemas = [
   />
 
 </BaseLayout>
+
+<style>
+  /* FAQ smooth open/close, JS-free.
+     The answer wrapper is a CSS grid whose single row animates from 0fr
+     (height collapsed to nothing) to 1fr (full natural height). Animating
+     grid-template-rows transitions cleanly between the two without us ever
+     knowing the pixel height, which is what makes a content-driven panel
+     animate at all. The inner overflow-hidden div clips the text while the
+     row is mid-transition. */
+  .faq-answer {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 300ms ease;
+  }
+
+  .faq-item[open] .faq-answer {
+    grid-template-rows: 1fr;
+  }
+
+  /* Respect reduced-motion: the panel still opens and closes, just instantly,
+     matching the global motion policy. */
+  @media (prefers-reduced-motion: reduce) {
+    .faq-answer {
+      transition: none;
+    }
+  }
+</style>

@@ -65,6 +65,15 @@ const heardFromOptions = [
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
 const formActive  = web3formsKey.length > 0;
 
+// Web3Forms shared hCaptcha sitekey. Web3Forms verifies the response
+// server-side using their own secret tied to this public sitekey, so
+// there's no hCaptcha account to set up and no secret for us to manage.
+// The value is the documented Web3Forms public sitekey, identical on
+// every site using their free hCaptcha integration. Web3Forms only
+// supports hCaptcha (not Cloudflare Turnstile or Google reCAPTCHA).
+// Docs: https://docs.web3forms.com/getting-started/customizations/captcha-spam-protection/h-captcha-spam-protection
+const hcaptchaSiteKey = '50b2fe65-86a5-4534-a5e3-9f7c6f4e1f4d';
+
 // Shared class strings for the form. Pulled into consts because each
 // input/select/textarea repeats the same base styling.
 const fieldClass = 'flex flex-col gap-xs';
@@ -89,13 +98,10 @@ const inputClass =
        Hero
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="contact-hero-heading">
-    <div class="ncs-container">
-      <p class="mb-m inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
-        <span class="font-mono text-sm tracking-[0.05em]">C1</span>
-        <span>Contact</span>
-      </p>
+    <div class="ncs-container" data-reveal>
+      <p class="mb-m font-mono text-sm uppercase tracking-[0.08em] text-text-muted">Contact</p>
       <h1 id="contact-hero-heading" class="mb-m max-w-[22ch] leading-[0.95]">
-        Start a project, or just say hello.
+        Start a project, or just <span class="text-gradient">say hello.</span>
       </h1>
       <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
         The form below sends straight to my inbox. If you'd rather skip the form, my email and phone are on the right.
@@ -113,7 +119,7 @@ const inputClass =
       <!-- Three-state container. Form is shown by default; the thanks and
            error blocks below start with the .hidden Tailwind utility class
            and the inline script toggles it via classList. -->
-      <div>
+      <div data-reveal>
 
       <form
         class="flex flex-col gap-m rounded-xl bg-bg p-l"
@@ -253,18 +259,43 @@ const inputClass =
           <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
         </div>
 
+        <!-- hCaptcha widget. The async API script (loaded right after
+             the closing </form> below) finds this element by class and
+             renders the "I'm not a robot" challenge into it. On solve,
+             hCaptcha injects a hidden <input name="h-captcha-response">
+             into the form, which rides along on the existing FormData
+             submit. Web3Forms verifies the response server-side using
+             the shared secret tied to the public sitekey.
+
+             The inline script immediately below mirrors the current
+             site theme onto data-theme before hCaptcha reads it, so
+             the widget paints to match light or dark mode on load.
+             It doesn't live-update on a mid-session theme flip; the
+             contact page is short enough that this isn't worth wiring. -->
+        <div class="h-captcha self-start" data-sitekey={hcaptchaSiteKey} data-theme="light"></div>
+        <script is:inline>
+          (function () {
+            if (document.documentElement.classList.contains('dark')) {
+              var el = document.querySelector('.h-captcha');
+              if (el) el.setAttribute('data-theme', 'dark');
+            }
+          })();
+        </script>
+
         <!-- Submit. Shared shadcn Button (brand variant + cta size)
              matches the Hero and CtaBanner CTAs. self-start keeps it
              at content width inside the flex-column form layout. -->
-        <Button
-          type="submit"
-          variant="brand"
-          size="cta"
-          className="self-start"
-          data-contact-submit
-        >
-          <span data-contact-submit-label>Send</span>
-        </Button>
+        <span class="inline-block self-start" data-magnetic="0.35">
+          <Button
+            type="submit"
+            variant="brand"
+            size="cta"
+            className="shine"
+            data-contact-submit
+          >
+            <span data-contact-submit-label>Send</span>
+          </Button>
+        </span>
 
         {!formActive && (
           <p class="text-[0.85rem] italic text-text-muted">
@@ -273,13 +304,23 @@ const inputClass =
         )}
       </form>
 
+      <!-- hCaptcha API script. is:inline keeps Astro from touching it so
+           the tag ships exactly as written. async defer lets it download
+           in the background while the page paints; once loaded, hCaptcha
+           auto-renders every .h-captcha element on the page using their
+           data-* attributes. Loaded only on /contact, not site-wide. -->
+      <script is:inline src="https://js.hcaptcha.com/1/api.js" async defer></script>
+
       <!-- Thank-you panel. Starts hidden; the submit handler removes the
            hidden class on success. Same outer card surface as the form so
            the swap reads as a state change in the same container. -->
       <div
-        class="hidden flex-col gap-s rounded-xl border-l-4 border-accent bg-bg p-l"
+        class="hidden flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] animate-in fade-in zoom-in-95 duration-500"
         data-contact-thanks
       >
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><path d="M20 6 9 17l-5-5" /></svg>
+        </span>
         <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
         <p class="max-w-[56ch] leading-[1.6] text-text">
           I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from {site.domain}, then try the email link on the right.
@@ -289,7 +330,7 @@ const inputClass =
       <!-- Error panel. Same hidden-class pattern. Amber band signals
            something went wrong without screaming red. -->
       <div
-        class="mt-m hidden rounded-md border-l-4 border-tertiary p-m text-text [background-color:color-mix(in_srgb,var(--color-tertiary)_18%,var(--color-bg))]"
+        class="mt-m hidden rounded-lg border border-tertiary/45 p-m text-text [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] animate-in fade-in slide-in-from-top-1 duration-300"
         data-contact-error
         role="alert"
       >
@@ -306,7 +347,7 @@ const inputClass =
       <!-- ------------------------------------------------------------------
            Sidebar column. Direct contact details + expectation-setting copy.
            ------------------------------------------------------------------ -->
-      <aside class="flex flex-col gap-l">
+      <aside class="flex flex-col gap-l" data-reveal style="--reveal-delay: 120ms;">
 
         <div class="flex flex-col gap-s">
           <h2 class="text-h4 text-heading">Direct</h2>
@@ -384,11 +425,19 @@ const inputClass =
        loses specificity against class-based display rules.
        ---------------------------------------------------------------------- -->
   <script>
+    // Wrapped in astro:page-load so the form's JS layer (honeypot, hCaptcha
+    // pre-check, draft save/restore, thank-you/error swap) re-binds after a
+    // View Transitions navigation, not just on a hard load. The dataset guard
+    // keeps it from binding twice to the same form instance.
+    function initContactForm() {
     const form     = document.querySelector('[data-contact-form]')     as HTMLFormElement | null;
     const thanks   = document.querySelector('[data-contact-thanks]')   as HTMLElement | null;
     const errorEl  = document.querySelector('[data-contact-error]')    as HTMLElement | null;
     const submit   = document.querySelector('[data-contact-submit]')   as HTMLButtonElement | null;
     const label    = document.querySelector('[data-contact-submit-label]') as HTMLElement | null;
+
+    if (form && form.dataset.enhanced) return;
+    if (form) form.dataset.enhanced = 'true';
 
     if (form && thanks && errorEl && submit && label) {
 
@@ -491,6 +540,21 @@ const inputClass =
         }
 
         event.preventDefault();
+
+        // Captcha check. hCaptcha injects h-captcha-response into the form
+        // once the visitor solves the challenge. If it's empty, scroll the
+        // widget into view and stop here — no point round-tripping to
+        // Web3Forms for a known rejection, and the smooth scroll gives the
+        // visitor a clear cue about what's left to do. We don't show the
+        // generic error panel in this case; the widget itself is the
+        // affordance.
+        const captchaInput = form.elements.namedItem('h-captcha-response') as HTMLInputElement | null;
+        if (!captchaInput?.value) {
+          const widget = form.querySelector('.h-captcha') as HTMLElement | null;
+          if (widget) widget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
         hide(errorEl, 'block');
         submit.disabled = true;
         label.textContent = 'Sending...';
@@ -520,6 +584,9 @@ const inputClass =
 
       });
     }
+    }
+    document.addEventListener('astro:page-load', initContactForm);
+    initContactForm();
   </script>
 
 </BaseLayout>

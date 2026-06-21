@@ -1,0 +1,137 @@
+---
+// Safe to edit. The stat figures are honest and brand-aligned; keep them that
+// way. Client names are pulled live from the case-studies collection.
+/* ============================================================================
+   Proof Band  [revamp]
+   ============================================================================
+   A credibility strip between Act 1 (Hero) and Act 2 (Selected Work). Two
+   layers of social proof the homepage was missing:
+
+     1. A count-up stat row (animates when scrolled into view via the
+        data-countup enhancement; reduced-motion shows final values at once).
+     2. A continuous marquee of real client names, drawn from the case-studies
+        collection so it stays in sync as the portfolio grows. The marquee is
+        decorative (aria-hidden) and paired with an sr-only list so screen
+        readers get the same information without the motion.
+
+   Figures are deliberately honest: project count is the live collection size,
+   four is the real sector spread, and "100% hand-built" reflects the studio's
+   no-page-builder approach documented in CLAUDE.md.
+   ============================================================================ */
+
+import { getCollection } from 'astro:content';
+
+const studies = await getCollection('case-studies');
+const total = studies.length;
+
+// Distinct client names for the marquee, in newest-first order.
+const clients = [
+  ...new Set(
+    studies
+      .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
+      .map((s) => s.data.client)
+  ),
+];
+
+// Duplicated once so the CSS marquee can loop seamlessly at translateX(-50%).
+const marqueeItems = [...clients, ...clients];
+
+const stats = [
+  { to: total, suffix: '',  label: 'Projects shipped' },
+  { to: 4,     suffix: '',  label: 'Sectors served' },
+  { to: 100,   suffix: '%', label: 'Owner-built, start to finish' },
+];
+---
+
+<section class="overflow-hidden bg-bg-soft py-2xl" aria-label="Studio at a glance">
+
+  <!-- Stat row. -->
+  <div class="ncs-container">
+    <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))]">
+      {stats.map((stat, index) => (
+        <li
+          class="flex flex-col items-center gap-xs text-center"
+          data-reveal
+          style={`--reveal-delay: ${index * 110}ms;`}
+        >
+          <span class="font-display text-6xl leading-none text-heading sm:text-7xl">
+            <!-- Static content is the real final value so no-JS visitors and
+                 crawlers see the true figure; enhance.ts animates from 0 up to
+                 it when scrolled into view. -->
+            <span data-countup data-countup-to={stat.to} data-countup-suffix={stat.suffix}>{stat.to}{stat.suffix}</span>
+          </span>
+          <span class="font-mono text-sm uppercase tracking-[0.08em] text-text-muted">
+            {stat.label}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- Client marquee. Decorative; the sr-only list below carries the same
+       names for assistive tech. -->
+  <div class="proof-marquee mt-2xl" data-reveal="fade" aria-hidden="true">
+    <div class="proof-track">
+      {marqueeItems.map((client) => (
+        <span class="proof-item font-display text-2xl uppercase tracking-[0.03em] text-text-muted">
+          {client}
+        </span>
+      ))}
+    </div>
+  </div>
+
+  <p class="sr-only">Clients include {clients.join(', ')}.</p>
+
+</section>
+
+<style>
+  /* Edge-faded, continuously scrolling client marquee. The track is two
+     copies of the client list, so translateX(-50%) lands exactly on the
+     start of the second copy for a continuous loop with no visible seam. */
+  .proof-marquee {
+    width: 100%;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+
+  .proof-track {
+    display: inline-flex;
+    width: max-content;
+    gap: 3.5rem;
+    padding-inline: 1.75rem;
+    white-space: nowrap;
+  }
+
+  .proof-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Brand-dot separator before each name. */
+  .proof-item::before {
+    content: "";
+    position: absolute;
+    left: -1.9rem;
+    height: 0.4rem;
+    width: 0.4rem;
+    border-radius: 9999px;
+    background: var(--color-accent);
+    opacity: 0.6;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .proof-track {
+      animation: proof-marquee 45s linear infinite;
+    }
+    .proof-marquee:hover .proof-track {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes proof-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+</style>
