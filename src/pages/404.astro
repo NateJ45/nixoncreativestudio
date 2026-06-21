@@ -5,9 +5,11 @@
 /* ============================================================================
    /404 | Page not found
    ============================================================================
-   Hero-style single column. Mirrors the Hero treatment so the page reads
-   as part of the site, not a system error. Two CTAs: back to home and
-   straight to /work for visitors who probably mistyped a case-study slug.
+   Hero-style single column, centered. An oversized gradient "404" anchors
+   the page as a quiet centerpiece, the warm "that page wandered off" copy
+   sits below, and the same helpful links carry visitors back into the site.
+   The whole block reveals in on load. The "404" floats gently (and the
+   float pauses under prefers-reduced-motion via the local @media rule).
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -19,26 +21,59 @@ import { Button } from '../components/ui/button';
   description="That page wandered off. Here's how to get back on track."
 >
 
-  <section class="py-2xl" aria-labelledby="notfound-heading">
-    <div class="ncs-container flex max-w-[60ch] flex-col gap-m">
+  <section
+    class="relative isolate flex min-h-[70vh] items-center overflow-hidden py-2xl"
+    aria-labelledby="notfound-heading"
+  >
+    <div class="ncs-container flex flex-col items-center gap-m text-center">
 
-      <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
-        <span class="font-mono text-sm tracking-[0.05em]">404</span>
-        <span>Page not found</span>
+      {/* Oversized gradient centerpiece. Decorative: the real "404" meaning
+          is announced in the kicker line below, so this is aria-hidden. */}
+      <div
+        class="notfound-figure pointer-events-none select-none leading-none"
+        aria-hidden="true"
+        data-reveal="scale"
+      >
+        <span
+          class="text-gradient text-gradient-animate block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight"
+        >404</span>
+      </div>
+
+      <p
+        class="text-[0.95rem] uppercase tracking-[0.15em] text-text-muted"
+        data-reveal
+        style="--reveal-delay: 80ms"
+      >
+        Page not found
       </p>
 
-      <h1 id="notfound-heading" class="max-w-[18ch] leading-[0.95]">
+      <h1
+        id="notfound-heading"
+        class="max-w-[18ch] leading-[0.95]"
+        data-reveal
+        style="--reveal-delay: 160ms"
+      >
         That page wandered off.
       </h1>
 
-      <p class="text-lg leading-[1.6] text-text">
+      <p
+        class="max-w-[50ch] text-lg leading-[1.6] text-text"
+        data-reveal
+        style="--reveal-delay: 240ms"
+      >
         The link you followed might be old, or the address might be a typo. Nothing's broken on this end. Here are a few places to try instead.
       </p>
 
-      <div class="mt-s flex flex-wrap items-center gap-m">
-        <Button asChild variant="brand" size="cta">
-          <a href="/">Back to home</a>
-        </Button>
+      <div
+        class="mt-s flex flex-wrap items-center justify-center gap-m"
+        data-reveal
+        style="--reveal-delay: 320ms"
+      >
+        <span class="inline-block" data-magnetic="0.4">
+          <Button asChild variant="brand" size="cta" className="shine">
+            <a href="/">Back to home</a>
+          </Button>
+        </span>
         <a class="card-link" href="/work/">See selected work</a>
         <a class="card-link" href="/contact">Get in touch</a>
       </div>
@@ -47,3 +82,29 @@ import { Button } from '../components/ui/button';
   </section>
 
 </BaseLayout>
+
+<style>
+  /* Gentle drift for the oversized 404. The reveal vocabulary handles the
+     entrance; this keeps it quietly alive afterward. Paused for visitors who
+     prefer reduced motion. */
+  .notfound-figure {
+    animation: notfound-float 7s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes notfound-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .notfound-figure {
+      animation: none;
+    }
+  }
+</style>

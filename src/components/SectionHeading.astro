@@ -1,25 +1,28 @@
 ---
-// Foundation, edit with care. This block sets the visual rhythm for every
-// section heading on the homepage and on inner pages that use the same pattern.
+// Foundation, edit with care. This block sets the visual rhythm for inner-page
+// section headings that still benefit from a numbered marker (currently /work
+// and the Process steps on /services). The homepage no longer uses it; the
+// three-act rewrite dropped the eyebrow-grammar numbering across the
+// non-sequential sections.
 /* ============================================================================
    Section Heading
    ============================================================================
-   Reusable heading block. Keeps the numbered visual map (01 through 08)
-   consistent across the homepage and any inner page that imports it: a
-   small mono number, a display-font title, and an optional muted sub
-   paragraph for context.
+   Reusable heading block: optional mono section number, a display-font
+   title, and an optional muted sub paragraph for context.
 
-   Sections 02 through 08 on the homepage import this. The Hero builds
-   its own heading because it has a different treatment (overline +
-   statement headline).
+   The num prop is optional on purpose. Pass it only when the section is
+   genuinely a numbered sequence (an ordered list of steps, a chapter
+   index). Skip it for stand-alone sections where a number would be
+   eyebrow decoration rather than information.
 
    Usage:
-     <SectionHeading num="02" title="Selected work" />
-     <SectionHeading num="03" title="What I do" sub="Strategy, design, photography." />
+     <SectionHeading title="Selected work" />
+     <SectionHeading title="How we work" sub="Four steps, in order." />
+     <SectionHeading num="03" title="Strategy" />   // when num is real IA
    ============================================================================ */
 
 interface Props {
-  num: string;          // Two-digit section number, e.g. "02". Quoted so the leading zero stays.
+  num?: string;         // Optional two-digit number, e.g. "02". Quoted so the leading zero stays.
   title: string;        // The section's display title.
   sub?: string;         // Optional supporting sentence beneath the title.
   headingId?: string;   // Optional id rendered on the <h2>. Pair with the parent
@@ -37,11 +40,14 @@ const { num, title, sub, headingId } = Astro.props;
 -->
 <header class="flex flex-col gap-xs mb-l">
 
-  <!-- Mono section number. aria-hidden so screen readers don't announce
-       the digits separately from the heading they label. -->
-  <span class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">
-    {num}
-  </span>
+  <!-- Mono section number. Rendered only when num is provided. aria-hidden
+       so screen readers don't announce the digits separately from the
+       heading they label. -->
+  {num && (
+    <span class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">
+      {num}
+    </span>
+  )}
 
   <!-- Section title. Inherits size from the global h2 rule, no overrides.
        The id (when provided) is the anchor for the parent section's

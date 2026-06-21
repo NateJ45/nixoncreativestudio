@@ -193,6 +193,10 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
     -->
     <script is:inline data-astro-rerun>
       (function () {
+        // Mark that JS is running so CSS can scope the scroll-reveal hidden
+        // state to .js only. Without JS the class is absent and [data-reveal]
+        // content stays fully visible (see globals.css section 6).
+        document.documentElement.classList.add('js');
         try {
           var stored = localStorage.getItem('ncs-theme');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -281,6 +285,57 @@ const ogImageUrl = new URL(ogImage, site.url).toString();
     -->
     <script>
       import '../scripts/lenis-init';
+    </script>
+
+    <!--
+      Progressive enhancement layer. Wires the declarative data-* effects
+      (magnetic CTAs, cursor spotlight, count-up numbers, scroll-aware header)
+      on every page including View Transitions navigations. Everything it does
+      is optional polish: the page is fully functional without it, and each
+      effect self-disables under prefers-reduced-motion or coarse pointers.
+    -->
+    <script>
+      import '../scripts/enhance';
+    </script>
+
+    <!--
+      Scroll-reveal observer. Reveals every [data-reveal] element as it
+      enters the viewport by toggling .is-visible (styled in globals.css
+      section 6). Re-runs on every View Transitions navigation via the
+      astro:page-load event, which fires on the initial load too, so the
+      listener registered once here covers all pages.
+
+      Accessibility: when the visitor prefers reduced motion (or the browser
+      lacks IntersectionObserver), every tagged element is shown immediately,
+      so nothing depends on motion to appear.
+    -->
+    <script>
+      function initReveal() {
+        const els = Array.from(document.querySelectorAll('[data-reveal]:not(.is-visible)'));
+        if (!els.length) return;
+
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce || !('IntersectionObserver' in window)) {
+          els.forEach((el) => el.classList.add('is-visible'));
+          return;
+        }
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+        );
+
+        els.forEach((el) => io.observe(el));
+      }
+
+      document.addEventListener('astro:page-load', initReveal);
     </script>
   </body>
 </html>

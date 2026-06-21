@@ -58,20 +58,22 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
 <!--
   Full-bleed footer; the inner column uses .ncs-container to align with
   the rest of the content above. bg-primary stays navy in both modes
-  (see globals.css), so this remains the darkest band on the page in
-  light mode and a slightly elevated dark band in dark mode.
+  (see globals.css), so this remains the darkest band on the page. A faint
+  accent glow line at the very top seams it to the CtaBanner above so the two
+  navy blocks read as one continuous dark field. An oversized wordmark sits
+  behind the bottom row as a brand graphic.
 -->
-<footer class="bg-primary text-primary-foreground py-xl">
-  <div class="ncs-container">
+<footer class="footer-seam relative isolate overflow-hidden bg-primary py-2xl text-primary-foreground">
+  <div class="ncs-container relative z-10">
 
     <!-- Top section: three columns side by side on desktop, stacked on mobile.
          auto-fit + minmax(16rem,1fr) means columns collapse to one as soon as
          a column would be thinner than 16rem, with no media query needed. -->
-    <div class="mb-l">
+    <div class="mb-2xl">
       <div class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
 
         <!-- Column 1: Contact -->
-        <div>
+        <div data-reveal style="--reveal-delay: 0ms;">
           <h2 class={headingClass}>Contact</h2>
           <ul class="flex flex-col gap-xs">
             <!-- CopyEmail renders the address as a mailto link plus a
@@ -84,7 +86,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
         </div>
 
         <!-- Column 2: Connect -->
-        <div>
+        <div data-reveal style="--reveal-delay: 90ms;">
           <h2 class={headingClass}>Connect</h2>
           <ul class="flex flex-col gap-xs">
             {social.map(({ label, href }) => (
@@ -98,9 +100,21 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
           </ul>
         </div>
 
-        <!-- Column 3: Currently. Short blurb on what's on the docket. -->
-        <div>
+        <!-- Column 3: Currently. Status chip + blurb, linking to /now where
+             the full current snapshot lives. -->
+        <div data-reveal style="--reveal-delay: 180ms;">
           <h2 class={headingClass}>Currently</h2>
+          <a
+            href="/now/"
+            class="group mb-s inline-flex items-center gap-s rounded-full border border-white/15 px-3 py-1.5 text-sm text-primary-foreground/90 no-underline transition-colors duration-150 hover:border-white/30"
+          >
+            <span class="relative flex h-2 w-2" aria-hidden="true">
+              <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-tertiary"></span>
+            </span>
+            <span>Booking projects</span>
+            <span aria-hidden="true" class="transition-transform duration-150 group-hover:translate-x-0.5">→</span>
+          </a>
           <p class="leading-[1.5] text-primary-foreground/75">{currently}</p>
         </div>
 
@@ -117,4 +131,46 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
     </div>
 
   </div>
+
+  <!-- Oversized brand wordmark, bottom-anchored as a graphic. Decorative, so
+       aria-hidden and clipped by the footer's overflow-hidden. -->
+  <div
+    class="pointer-events-none absolute inset-x-0 bottom-0 z-0 select-none overflow-hidden"
+    aria-hidden="true"
+  >
+    <span class="block translate-y-[28%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-primary-foreground/5 [font-size:22vw]">
+      {site.studioName}
+    </span>
+  </div>
 </footer>
+
+<style>
+  /* Accent seam: a soft glow line at the very top of the footer so it joins
+     the CtaBanner above into one continuous dark field. */
+  .footer-seam::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--color-secondary) 55%, transparent),
+      transparent
+    );
+    z-index: 1;
+  }
+
+  /* Availability status dot pulse. Honors reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .status-ping {
+      animation: status-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+  }
+  @keyframes status-ping {
+    0%   { transform: scale(1);   opacity: 0.75; }
+    75%, 100% { transform: scale(2.4); opacity: 0; }
+  }
+</style>

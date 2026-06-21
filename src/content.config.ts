@@ -21,7 +21,7 @@ import { glob } from 'astro/loaders';
    ----------------------------------------------------------------------------
    Long-form portfolio entries. Each entry is one .mdx file in
    src/content/case-studies/, named with the slug used in the URL
-   (e.g. crestview-presbyterian.mdx -> /work/crestview-presbyterian/).
+   (e.g. theology-matters.mdx -> /work/theology-matters/).
    ---------------------------------------------------------------------------- */
 
 const caseStudies = defineCollection({
@@ -100,6 +100,34 @@ const caseStudies = defineCollection({
     // and inline at the top of the case study detail page when present.
     // Example: ['Astro', 'Tailwind', 'Cloudflare Pages'].
     stack: z.array(z.string()).optional(),
+
+    // Optional URL to the live, shipped site. When present, the case study
+    // card and detail page render a prominent "Visit the live site" link.
+    // For a web design portfolio this is the single strongest trust signal:
+    // it lets a prospect click straight through to real, working proof.
+    // Leave it off for work that is no longer live or not yours to link.
+    liveUrl: z.string().url().optional(),
+
+    // Optional one-line outcome. The honest, specific result of the project,
+    // phrased as intent + qualitative change rather than an invented metric.
+    // Surfaces as a highlighted line on the work index card, the homepage
+    // Selected Work strip, and the top of the case study detail page, so the
+    // proof-point reads at first scan instead of buried in the body. Capped
+    // so it stays a single scannable line. Example: 'A quote-first flow that
+    // sets the price before a customer spends a dollar.'
+    outcome: z.string().max(160).optional(),
+
+    // Optional client testimonial. Renders as a pull-quote on the detail
+    // page when present; renders nothing when absent, so it is safe to leave
+    // off until a real quote is collected. Never fabricate this: it is
+    // social proof, and an invented quote on a live client-facing portfolio
+    // is both dishonest and a liability. quote + name are required when the
+    // object is present; title (role / organization) is optional.
+    testimonial: z.object({
+      quote: z.string(),
+      name:  z.string(),
+      title: z.string().optional(),
+    }).optional(),
 
   }),
 });

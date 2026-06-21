@@ -52,12 +52,17 @@ export default function ReadingProgress() {
       className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] bg-transparent"
     >
       <div
-        className="h-full origin-left bg-accent"
+        className="h-full origin-left"
         style={{
           // transform scaleX is GPU-accelerated; width-based updates
           // would trigger layout on every scroll tick.
           transform: `scaleX(${progress})`,
           transition: 'transform 80ms linear',
+          // Brand gradient (navy → NCS blue → amber) with a soft glow at the
+          // leading edge so the bar reads as a crafted element, not a default.
+          backgroundImage:
+            'linear-gradient(90deg, var(--color-primary), var(--color-accent) 45%, var(--color-tertiary))',
+          boxShadow: '0 0 12px color-mix(in oklab, var(--color-accent) 65%, transparent)',
         }}
       />
     </div>

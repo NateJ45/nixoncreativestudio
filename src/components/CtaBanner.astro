@@ -1,16 +1,16 @@
 ---
-// Foundation, edit with care. The default props handle the homepage CTA;
+// Foundation, edit with care. The default props handle the homepage-style CTA;
 // inner pages tune the copy by passing title, sub, ctaLabel, ctaHref.
 /* ============================================================================
-   Section 07 | CTA Banner
+   CTA Banner  [revamp]
    ============================================================================
-   Reusable call-to-action band. Sits above the footer on the homepage and
-   at the end of inner pages.
+   Reusable call-to-action band that closes most inner pages and sits above the
+   footer. Now a designed closing moment rather than a flat rectangle: an
+   animated aurora mesh over the navy surface, a cursor-following spotlight, a
+   scroll-reveal on the copy, and a magnetic shine button. The navy base still
+   flows into the navy footer so the bottom of the page reads as one dark field.
 
-   Dark navy background mirrors the footer below it, so the two heavy
-   blocks at the bottom of the page read as one continuous dark band.
-
-   Phase 6 will swap the inline button styling for a shadcn Button.
+   All motion is reduced-motion safe (see globals.css section 6).
    ============================================================================ */
 
 import { Button } from './ui/button';
@@ -23,32 +23,35 @@ interface Props {
 }
 
 const {
-  title    = 'Have a project in mind?',
+  title    = "Let's build something that lasts.",
   sub      = 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.',
   ctaLabel = 'Start a project',
   ctaHref  = '/contact',
 } = Astro.props;
 ---
 
-<section class="bg-primary py-xl text-primary-foreground" aria-labelledby="cta-banner-title">
+<section
+  class="bg-aurora spotlight-card relative isolate overflow-hidden bg-primary py-2xl text-primary-foreground"
+  aria-labelledby="cta-banner-title"
+  data-spotlight
+>
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
        below the copy on narrow screens. -->
-  <div class="ncs-container flex flex-wrap items-center justify-between gap-l">
+  <div
+    class="ncs-container relative z-10 flex flex-wrap items-center justify-between gap-l"
+    data-reveal
+  >
 
-    <!-- Copy column. Capped at 50ch so the subtitle doesn't sprawl on
-         wide screens where the button is far to the right.
-         text-primary-foreground is white in both modes (since --primary
-         stays navy in dark mode), so the copy reads correctly regardless. -->
     <div class="flex max-w-[50ch] flex-col gap-s">
       <h2 id="cta-banner-title" class="text-primary-foreground">{title}</h2>
       <p class="text-lg leading-[1.5] text-primary-foreground/80">{sub}</p>
     </div>
 
-    <!-- Primary button. Shared shadcn Button so this banner, the Hero,
-         and the contact form submit all share one styling recipe. -->
-    <Button asChild variant="brand" size="cta">
-      <a href={ctaHref}>{ctaLabel}</a>
-    </Button>
+    <span class="inline-block" data-magnetic="0.4">
+      <Button asChild variant="brand" size="cta" className="shine">
+        <a href={ctaHref}>{ctaLabel}</a>
+      </Button>
+    </span>
 
   </div>
 </section>

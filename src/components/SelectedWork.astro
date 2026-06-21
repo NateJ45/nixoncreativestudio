@@ -1,92 +1,210 @@
 ---
-// Safe to edit. The featured array below is hardcoded today; Phase 5
-// schema work + future page refinement will swap this to a content
-// collection query that filters where featured === true.
+// Safe to edit. Now collection-driven: this component reads real case
+// studies from the content collection instead of the old hardcoded
+// placeholder array. To control what shows here, set `featured: true` in a
+// case study's frontmatter. The three most recently published featured
+// entries appear, newest as the large primary card.
 /* ============================================================================
-   Section 02 | Selected Work
+   Selected Work (Act 2 of the three-act homepage)
    ============================================================================
-   Three featured case study cards. Cards link to /work/{slug}. Each card's
-   image area is a brand-gradient placeholder for now; replace with an
-   Astro <Image /> once the case study art is in src/assets/case-studies/.
+   Three featured case studies, asymmetric. The first project sits at full
+   container width as a hero card with a two-column layout (image left,
+   body right at desktop, stacked on mobile). The other two sit beneath
+   in a 50/50 grid as medium cards, each stacked image-then-body.
+
+   Differentiation matters here: at the old three-equal-cards layout the
+   visitor pattern-matched every project to the previous one. The new
+   asymmetric layout puts the strongest piece up front and lets the eye
+   travel through the work instead of scanning a feature row.
+
+   Each case study card is a single <a> wrapping image + body so the click
+   target covers everything. The list is an <ol> because curation order
+   matters: the first featured entry is the leading recommendation, not
+   an interchangeable tile in a grid.
+
+   Data source: getCollection('case-studies'), filtered to featured===true,
+   sorted newest-first, capped at three. Covers come through CaseStudyCover
+   (real optimized images + blur placeholders), and the highlighted line
+   under each title is the case study's `outcome` field when present.
    ============================================================================ */
 
-import SectionHeading from './SectionHeading.astro';
+import { getCollection } from 'astro:content';
+import CaseStudyCover from './CaseStudyCover.astro';
+import { getCoverPlaceholder } from '../lib/coverPlaceholder';
 
-// Placeholder feed. Replace with getCollection('case-studies') filtered to
-// featured===true once the schema work in Phase 5 lands.
-const featured = [
-  {
-    slug: 'crestview-presbyterian',
-    title: 'Crestview Presbyterian',
-    client: 'Crestview Presbyterian Church',
-    sector: 'Church',
-    year: 2026,
-    summary: 'Site refresh that doubled visit-planning form submissions in the first month.',
-  },
-  {
-    slug: 'oakwood-preschool',
-    title: 'Oakwood Preschool',
-    client: 'Oakwood Preschool',
-    sector: 'Preschool',
-    year: 2026,
-    summary: 'Brand and website built around how parents actually shop for early childhood care.',
-  },
-  {
-    slug: 'cincy-table',
-    title: 'Cincy Table',
-    client: 'Cincy Table Nonprofit',
-    sector: 'Nonprofit',
-    year: 2025,
-    summary: 'Photography and a new home page that put the people, not the program names, up front.',
-  },
-];
+// Pull the featured case studies, newest first, and take the top three to
+// fill the one-primary + two-secondary layout. If fewer than three are
+// flagged featured, the layout still renders with whatever exists.
+const allStudies = await getCollection('case-studies');
+const totalCount = allStudies.length;
+const featured = allStudies
+  .filter((entry) => entry.data.featured)
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
+  .slice(0, 3);
+
+// Pretty sector label for the meta row: kebab-case → Title Case.
+const sectorLabel = (sector: string) =>
+  sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+const [primary, ...secondaries] = featured;
 ---
 
+{primary && (
 <section class="py-2xl" aria-labelledby="selected-work-heading">
   <div class="ncs-container">
 
-    <SectionHeading
-      num="02"
-      title="Selected work"
-      sub="A few recent projects. Each one started with a conversation about what the organization actually needed, not which template to pick."
-      headingId="selected-work-heading"
-    />
+    <!-- Section header. No mono-uppercase eyebrow, no numbered scaffold:
+         the title carries its own weight, and the sub paragraph does the
+         explanatory work that an eyebrow would otherwise pretend to do. -->
+    <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+      <h2 id="selected-work-heading">Selected work</h2>
+      <p class="text-lg leading-[1.55] text-text-muted">
+        A few recent projects. Each one started with a conversation about what the organization actually needed, not which template to pick.
+      </p>
+    </header>
 
-    <!-- Card grid. auto-fit + minmax means the row drops cleanly from
-         three columns at wide to two then one as viewport narrows. -->
-    <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
-      {featured.map((entry) => (
-        <li>
-          <!-- Whole card is a single link (recommended a11y pattern for
-               card UIs) so the click target covers image and body. -->
-          <a
-            class="flex flex-col gap-m rounded-xl text-inherit no-underline transition-transform duration-200 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-            href={`/work/${entry.slug}`}
-          >
+    <!-- Asymmetric card list. The grid is built with named template areas
+         so the visual layout reads cleanly in CSS even though the list is
+         a flat <ol> of three items. Single-column on mobile; primary spans
+         the full width on desktop while secondaries split the row below. -->
+    <ol
+      class="grid list-none gap-l p-0 [grid-template-areas:'primary'_'secondary-a'_'secondary-b'] md:grid-cols-2 md:[grid-template-areas:'primary_primary'_'secondary-a_secondary-b']"
+    >
 
-            <!-- Media placeholder. 4:3 aspect keeps cards uniform until
-                 real imagery lands. Soft brand gradient signals intent. -->
-            <div
-              class="aspect-[4/3] w-full rounded-lg bg-gradient-to-br from-bg-soft to-secondary"
-              aria-hidden="true"
-            ></div>
+      <!-- Primary card. Hero-sized: 4:3 image at the desktop width of the
+           image column, generous body column with a heading at h2 sizing
+           that's noticeably larger than the secondaries. -->
+      <li class="[grid-area:primary]" data-reveal>
+        <a
+          class="work-card spotlight-card group grid grid-cols-1 items-center gap-l rounded-xl p-s text-inherit no-underline md:grid-cols-[1.15fr_1fr]"
+          href={`/work/${primary.id}/`}
+          data-spotlight
+        >
+          <!-- Real cover image (blur-up). alt="" because the card's heading
+               immediately below names the same project. transition:name shares
+               the cover with the /work/[slug] hero for a morph on navigation. -->
+          <div class="relative z-10" transition:name={`cover-${primary.id}`}>
+            <CaseStudyCover
+              cover={primary.data.cover}
+              placeholder={getCoverPlaceholder(primary.id)}
+              alt=""
+              widths={[600, 900, 1200]}
+              sizes="(min-width: 48rem) 60vw, 100vw"
+              fit="cover"
+              class="work-cover aspect-[4/3] w-full rounded-lg"
+            />
+          </div>
 
-            <!-- Body stack: meta stamp, title, summary, arrow link. -->
-            <div class="flex flex-col gap-xs">
-              <p class="flex items-center gap-s font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
-                <span>{entry.sector}</span>
-                <span aria-hidden="true">·</span>
-                <span>{entry.year}</span>
+          <div class="relative z-10 flex flex-col gap-s">
+            <p class="text-sm font-semibold text-text-muted">
+              {sectorLabel(primary.data.sector)} · {primary.data.year}
+            </p>
+            <h3 class="text-h2 leading-[1.05] text-heading">{primary.data.title}</h3>
+            {primary.data.outcome && (
+              <p class="text-lg font-semibold leading-[1.35] text-link">
+                {primary.data.outcome}
               </p>
-              <h3 class="text-heading">{entry.title}</h3>
-              <p class="leading-[1.5] text-text">{entry.summary}</p>
-              <span class="card-link">Read the case study</span>
+            )}
+            <p class="text-text leading-[1.55]">{primary.data.summary}</p>
+            <span class="card-link mt-xs">Read the case study</span>
+          </div>
+        </a>
+      </li>
+
+      {secondaries.map((entry, index) => (
+        <li
+          class={index === 0 ? '[grid-area:secondary-a]' : '[grid-area:secondary-b]'}
+          data-reveal
+          style={`--reveal-delay: ${120 + index * 120}ms;`}
+        >
+          <a
+            class="work-card spotlight-card group flex flex-col gap-m rounded-xl p-s text-inherit no-underline"
+            href={`/work/${entry.id}/`}
+            data-spotlight
+          >
+            <div class="relative z-10" transition:name={`cover-${entry.id}`}>
+              <CaseStudyCover
+                cover={entry.data.cover}
+                placeholder={getCoverPlaceholder(entry.id)}
+                alt=""
+                widths={[400, 600, 900]}
+                sizes="(min-width: 48rem) 30vw, 100vw"
+                fit="cover"
+                class="work-cover aspect-[4/3] w-full rounded-lg"
+              />
             </div>
 
+            <div class="relative z-10 flex flex-col gap-xs">
+              <p class="text-sm font-semibold text-text-muted">
+                {sectorLabel(entry.data.sector)} · {entry.data.year}
+              </p>
+              <h3 class="text-heading">{entry.data.title}</h3>
+              {entry.data.outcome && (
+                <p class="font-semibold leading-[1.4] text-link">
+                  {entry.data.outcome}
+                </p>
+              )}
+              <p class="text-text leading-[1.55]">{entry.data.summary}</p>
+              <span class="card-link mt-xs">Read the case study</span>
+            </div>
           </a>
         </li>
       ))}
-    </ul>
 
+    </ol>
+
+    <!-- Tail link so the section opens onto the full catalogue instead of
+         dead-ending after three featured projects. -->
+    <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
+      <a class="card-link text-lg" href="/work/">
+        Explore all {totalCount} projects
+      </a>
+    </div>
   </div>
 </section>
+)}
+
+<style>
+  /* ----------------------------------------------------------------------
+     Card hover. Lifts on hover/focus, and the cover image scales a touch
+     so the click feels alive instead of static. Reduced motion strips
+     both effects so the page stays calm for visitors who need it.
+     ---------------------------------------------------------------------- */
+  .work-card {
+    transition: transform 200ms ease;
+  }
+
+  /* The cover scale lives on the image wrapper. overflow-hidden keeps the
+     scaled image inside its rounded corners. */
+  .work-cover {
+    overflow: hidden;
+    transition: transform 400ms ease;
+  }
+
+  .work-card:hover,
+  .work-card:focus-visible {
+    transform: translateY(-0.25rem);
+  }
+
+  .work-card:hover .work-cover,
+  .work-card:focus-visible .work-cover {
+    transform: scale(1.015);
+  }
+
+  .work-card:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 0.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .work-card,
+    .work-cover,
+    .work-card:hover,
+    .work-card:focus-visible,
+    .work-card:hover .work-cover,
+    .work-card:focus-visible .work-cover {
+      transform: none;
+      transition: none;
+    }
+  }
+</style>

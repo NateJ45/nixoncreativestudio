@@ -49,6 +49,16 @@ const navLinks = [
   { num: '05', label: 'Now',      href: '/now/'     },
   { num: '06', label: 'Contact',  href: '/contact'  },
 ];
+
+// Active-route detection so the current section is marked in the nav. Compares
+// the normalized current path against each link, treating a link as active when
+// the path matches it or sits beneath it (e.g. /work/crestview → Work).
+const path = Astro.url.pathname.replace(/\/+$/, '');
+const isActive = (href: string): boolean => {
+  const h = href.replace(/\/+$/, '');
+  if (h === '') return path === '';
+  return path === h || path.startsWith(`${h}/`);
+};
 ---
 
 <!--
@@ -57,15 +67,27 @@ const navLinks = [
   of the content column. .ncs-container stays as a utility class in
   globals.css since the same pattern repeats across every section component.
 -->
-<header class="border-b border-border bg-bg py-m">
+<!--
+  Sticky, scroll-aware header. data-header is toggled to data-scrolled by the
+  enhancement script once the page scrolls past 8px; the data-[scrolled]
+  utilities frost the backdrop, deepen the shadow, and shrink the padding so the
+  bar condenses as the visitor descends. Always carries a background so the
+  wordmark and nav stay legible over both the navy homepage hero and the light
+  inner-page heroes.
+-->
+<header
+  data-header
+  class="sticky top-0 z-50 border-b border-border bg-bg/95 py-m backdrop-blur-sm transition-[background-color,box-shadow,padding] duration-300 data-[scrolled]:bg-bg/90 data-[scrolled]:py-3 data-[scrolled]:shadow-[0_10px_30px_-18px_rgba(10,22,40,0.45)] data-[scrolled]:backdrop-blur-md"
+>
   <div class="ncs-container flex items-center justify-between gap-m">
 
-    <!-- Wordmark links home. Display font at a fixed 1.5rem so it stays
-         steady even as the hero h1 scales fluidly on wide screens.
-         text-heading flips between navy and near-white with the theme. -->
+    <!-- Wordmark links home. transition:name gives it cross-page continuity:
+         the View Transitions router morphs it in place on navigation instead
+         of a hard cut. text-heading flips navy/near-white with the theme. -->
     <a
-      class="font-display text-2xl leading-none tracking-[0.01em] text-heading no-underline"
+      class="group font-display text-2xl leading-none tracking-[0.01em] text-heading no-underline transition-colors duration-200 hover:text-accent"
       href="/"
+      transition:name="site-wordmark"
     >
       {site.studioName}
     </a>
@@ -80,12 +102,16 @@ const navLinks = [
            the MobileNav drawer below takes over below md. gap-s instead
            of gap-m so the six links breathe without crowding. -->
       <nav aria-label="Primary" class="hidden md:block">
-        <ul class="flex items-center gap-s">
+        <ul class="flex items-center gap-m">
           {navLinks.map(({ num, label, href }) => (
             <li>
               <a
-                class="inline-flex items-baseline gap-xs font-body text-base text-text no-underline transition-colors duration-150 hover:text-accent focus-visible:text-accent"
+                class:list={[
+                  'nav-link link-underline inline-flex items-baseline gap-xs font-body text-base no-underline transition-colors duration-150',
+                  isActive(href) ? 'is-active text-link' : 'text-text hover:text-link focus-visible:text-link',
+                ]}
                 href={href}
+                aria-current={isActive(href) ? 'page' : undefined}
               >
                 <!-- Section number prefix. Smaller, mono, muted. Reads as a
                      label rather than as part of the link text. -->
@@ -120,3 +146,12 @@ const navLinks = [
 
   </div>
 </header>
+
+<style>
+  /* Active nav item keeps its underline drawn (the .link-underline base hides
+     it until hover). Paired with text-accent + aria-current for a non-color
+     cue, so the active state is conveyed by more than color alone. */
+  .nav-link.is-active::after {
+    transform: scaleX(1);
+  }
+</style>

@@ -1,0 +1,146 @@
+---
+// Safe to edit. The four steps and the closing CTA copy below are content;
+// rewrite in place when the process or the offer sharpens.
+/* ============================================================================
+   Process Band (Act 3 of the three-act homepage)
+   ============================================================================
+   The closing band of the homepage. Combines the four-step process and the
+   project-inquiry CTA into a single dark navy surface so the page ends on
+   one decisive block rather than three thin sections stacked together.
+
+   Why one band and not two: the old layout had Process on a soft tinted
+   band, then Testimonials on white, then CtaBanner on navy, then Footer
+   on navy. Two navy bands stacked at the bottom read as one continuous
+   dark wall but with a visual seam in the middle. Folding Process and
+   CTA into one navy band gives the bottom of the page one strong
+   identity instead of a layered stack.
+
+   Numbering note: the four step numbers ARE the only deliberately
+   numbered sequence on the homepage. They earn their place because the
+   process is genuinely ordered (each step depends on the previous one).
+   The outer section has no number; that was the eyebrow grammar the
+   critique flagged.
+
+   Component lives separately from the existing Process.astro because
+   that file is still imported by the /services page where the
+   no-CTA, soft-band version is the right fit.
+   ============================================================================ */
+
+import { Button } from './ui/button';
+
+const steps = [
+  {
+    num: '01',
+    title: 'Conversation',
+    body: 'We meet for an hour, in person or on video, and talk about what you actually need. No pitch deck, no agency theater. Just a working session that ends with a one-page brief we both agree on.',
+  },
+  {
+    num: '02',
+    title: 'Strategy',
+    body: 'I write the audience map, the page architecture, and the conversion path. You read it, push back, we revise. The strategy doc is the source of truth for every design choice that follows.',
+  },
+  {
+    num: '03',
+    title: 'Design and build',
+    body: 'Components, content, and pages built in the open. Preview links land in your inbox at every milestone so you can react early instead of seeing the whole thing for the first time at launch.',
+  },
+  {
+    num: '04',
+    title: 'Launch and follow-through',
+    body: 'We go live together, then I stay close for the first month to fix anything that surfaces. After that you own the site outright, with documentation and a simple way to reach me when something comes up.',
+  },
+];
+
+// Closing CTA copy. Title is specific to audience and intentionally human;
+// the old "Have a project in mind?" was sales-template cliché.
+const ctaTitle = 'Tell me what you are building.';
+const ctaSub  = 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.';
+---
+
+<section
+  class="bg-aurora relative isolate overflow-hidden bg-primary py-2xl text-primary-foreground"
+  aria-labelledby="process-band-heading"
+>
+  <div class="ncs-container relative z-10 flex flex-col gap-2xl">
+
+    <!-- Header. Title carries the weight; no eyebrow, no number. -->
+    <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
+      <h2 id="process-band-heading" class="text-primary-foreground">How we work</h2>
+      <p class="text-lg leading-[1.55] text-primary-foreground/80">
+        Four steps, in order. Everything else follows from the first conversation.
+      </p>
+    </header>
+
+    <!-- Four process steps. Auto-fit drops cleanly from 4 to 2 to 1 column.
+         Each step carries an oversized ghosted numeral that reinforces the
+         ordered sequence, a gradient top rule that anchors it to the band,
+         and a staggered scroll-reveal. -->
+    <ol class="grid list-none gap-l p-0 [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))]">
+      {steps.map((step, index) => (
+        <li
+          class="process-step relative flex flex-col gap-s pt-m"
+          data-reveal
+          style={`--reveal-delay: ${index * 110}ms;`}
+        >
+          <!-- Oversized ghost numeral. Decorative; the small mono number
+               below is the labelled one. -->
+          <span
+            class="pointer-events-none absolute -top-2 right-0 select-none font-display text-7xl leading-none text-primary-foreground/10"
+            aria-hidden="true"
+          >
+            {step.num}
+          </span>
+          <span
+            class="font-mono text-sm tracking-[0.06em] text-secondary"
+            aria-hidden="true"
+          >
+            {step.num}
+          </span>
+          <h3 class="text-h4 text-primary-foreground">{step.title}</h3>
+          <p class="leading-[1.55] text-primary-foreground/80">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <!-- Closing CTA. Title + sub on the left, button on the right.
+         flex-wrap so the button drops below on narrow screens. -->
+    <div
+      class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-primary-foreground/20 pt-2xl"
+      data-reveal
+    >
+
+      <div class="flex max-w-[50ch] flex-col gap-s">
+        <p class="text-h3 leading-[1.1] text-primary-foreground font-display">{ctaTitle}</p>
+        <p class="text-lg leading-[1.55] text-primary-foreground/80">{ctaSub}</p>
+      </div>
+
+      <span class="inline-block" data-magnetic="0.4">
+        <Button asChild variant="brand" size="cta" className="shine">
+          <a href="/contact">Start a project</a>
+        </Button>
+      </span>
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+  /* Gradient top rule on each step: a bright accent at the left fading to
+     transparent, so the steps read as a connected sequence on the navy band
+     rather than four detached hairlines. */
+  .process-step::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(
+      90deg,
+      var(--color-secondary),
+      color-mix(in oklab, var(--color-secondary) 10%, transparent)
+    );
+    opacity: 0.7;
+  }
+</style>

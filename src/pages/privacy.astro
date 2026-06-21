@@ -7,6 +7,14 @@
    Short, honest accounting of what the site collects. Contact form,
    analytics beacon, server logs. No marketing pixels, no advertising
    trackers, no cookies that need a banner.
+
+   Layout: on wide screens the prose sits next to a sticky in-page table of
+   contents. The TOC links jump to each section by id. A tiny scroll-spy
+   script (at the bottom) highlights the section you're reading by toggling
+   aria-current on the matching link; it's purely additive, so the page
+   degrades to plain anchor links if the script never runs. Each section
+   block fades and rises in via the global data-reveal system as you scroll,
+   which is reduced-motion safe automatically.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -20,15 +28,29 @@ const lastUpdated = 'May 25, 2026';
 // be the same shade; the underline weight increase carries the cue.
 const linkClass =
   'text-link underline underline-offset-2 ' +
-  'hover:underline-offset-4 focus-visible:underline-offset-4';
+  'hover:underline-offset-4 focus-visible:underline-offset-4 ' +
+  'transition-[text-underline-offset] duration-200';
 
 // Inline h2 styling: bumped to h3 visual size since the page already has
 // an h1 at the top and we want body-level subheadings to read as
-// in-content section markers, not full-page heading scale.
-const h2Class = 'mt-l mb-s text-h3 text-heading first:mt-0';
+// in-content section markers, not full-page heading scale. scroll-mt keeps
+// the anchored heading clear of the sticky site header when jumped to.
+const h2Class = 'mb-s text-h3 text-heading scroll-mt-[6rem]';
 
 // Paragraphs in the prose body get standard margin-bottom rhythm.
-const pClass = 'mb-m';
+const pClass = 'mb-m last:mb-0';
+
+// Single source of truth for the section ids + TOC labels. The prose below
+// reuses these ids on each <h2> so the table of contents can never drift
+// out of sync with the headings it points at.
+const sections = [
+  { id: 'contact-form', label: 'Contact form' },
+  { id: 'analytics', label: 'Analytics' },
+  { id: 'server-logs', label: 'Server logs' },
+  { id: 'cookies', label: 'Cookies' },
+  { id: 'your-data', label: 'Your data' },
+  { id: 'changes', label: 'Changes' },
+];
 ---
 
 <BaseLayout
@@ -41,61 +63,194 @@ const pClass = 'mb-m';
 
       <!-- Intro block. Mirrors the hero treatment on the other inner
            pages but at a smaller scale, since this is a utility page. -->
-      <header class="mb-xl flex max-w-[70ch] flex-col gap-m">
-        <p class="inline-flex items-baseline gap-s text-[0.95rem] text-text-muted">
-          <span class="font-mono text-sm tracking-[0.05em]">L1</span>
-          <span>Privacy</span>
+      <header class="mb-xl flex max-w-[70ch] flex-col gap-m" data-reveal>
+        <p class="text-sm uppercase tracking-[0.18em] text-text-muted">
+          Privacy notice
         </p>
         <h1 id="privacy-heading" class="leading-[0.95]">What this site collects.</h1>
         <p class="text-lg leading-[1.6] text-text">
           Short version: a contact form, an analytics beacon, and the things any web server logs. No advertising trackers, no third-party cookies. If you have questions, email <a class={linkClass} href={site.emailHref}>{site.email}</a>.
         </p>
+
+        <!-- Last updated badge. A small pill so the freshness of the notice
+             reads at a glance, paired with a label so color isn't the only
+             cue. The dot is decorative. -->
+        <p>
+          <span
+            class="inline-flex items-center gap-xs rounded-full border border-border bg-bg-soft px-s py-xs text-sm text-text-muted"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-accent"
+              aria-hidden="true"
+            ></span>
+            Last updated {lastUpdated}
+          </span>
+        </p>
       </header>
 
-      <!-- Body. Comfortable reading width, slightly larger than default
-           body size for long-form prose, line-height bumped up. -->
-      <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
+      <!-- Two-column shell on wide screens: sticky TOC rail + prose. Below
+           lg the TOC drops out (the page is short enough that the headings
+           themselves are the index) and the prose spans full width. -->
+      <div class="flex flex-col gap-xl lg:flex-row lg:items-start lg:gap-2xl">
 
-        <h2 class={h2Class}>Contact form</h2>
-        <p class={pClass}>
-          When you submit the form on the Contact page, the fields you fill in (your name, email, organization type, budget range, and project description) are sent through <a class={linkClass} href="https://web3forms.com/" target="_blank" rel="noopener noreferrer">Web3Forms</a> and delivered to my inbox. Web3Forms acts as the delivery pipe and does not retain submissions beyond the brief window needed to deliver them. I keep the email in my inbox the same way I'd keep any project inquiry.
-        </p>
-        <p class={pClass}>
-          The form also includes a hidden "honeypot" field that real visitors never fill in. If a bot submits the form and trips the honeypot, the message is quietly discarded.
-        </p>
+        <!-- In-page table of contents. Sticky on wide screens so it stays
+             beside the prose as you scroll. Hidden below lg; the prose still
+             carries every heading, so nothing is lost. -->
+        <nav
+          class="hidden shrink-0 lg:block lg:sticky lg:top-[6rem] lg:w-56"
+          aria-label="On this page"
+          data-privacy-toc
+          data-reveal="left"
+        >
+          <p class="mb-s text-sm uppercase tracking-[0.16em] text-text-muted">
+            On this page
+          </p>
+          <ul class="flex flex-col gap-2xs border-l border-border">
+            {
+              sections.map((s) => (
+                <li>
+                  <a
+                    href={`#${s.id}`}
+                    data-toc-link={s.id}
+                    class={
+                      'block border-l-2 border-transparent py-2xs pl-m text-[0.95rem] ' +
+                      'text-text-muted transition-colors duration-200 ' +
+                      'hover:text-link focus-visible:text-link ' +
+                      'aria-[current=true]:border-accent aria-[current=true]:font-semibold ' +
+                      'aria-[current=true]:text-link'
+                    }
+                    style="margin-left: -1px;"
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
 
-        <h2 class={h2Class}>Analytics</h2>
-        <p class={pClass}>
-          The site uses <a class={linkClass} href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a>, which counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network. I use the totals to see which pages are useful and which aren't.
-        </p>
+        <!-- Body. Comfortable reading width, slightly larger than default
+             body size for long-form prose, line-height bumped up. -->
+        <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
 
-        <h2 class={h2Class}>Server logs</h2>
-        <p class={pClass}>
-          The hosting platform (Cloudflare Pages) records standard request data: IP address, user agent, requested URL, response code, timestamp. These logs are retained for a short window and used for operational purposes like blocking abuse and diagnosing errors. They are not used to build profiles of visitors.
-        </p>
+          <!-- Each section is a block that reveals on scroll and carries the
+               shared id so the TOC anchors land on the heading. -->
+          <div class="mt-0" data-reveal>
+            <h2 id="contact-form" class={h2Class}>Contact form</h2>
+            <p class={pClass}>
+              When you submit the form on the Contact page, the fields you fill in (your name, email, organization type, budget range, and project description) are sent through <a class={linkClass} href="https://web3forms.com/" target="_blank" rel="noopener noreferrer">Web3Forms</a> and delivered to my inbox. Web3Forms acts as the delivery pipe and does not retain submissions beyond the brief window needed to deliver them. I keep the email in my inbox the same way I'd keep any project inquiry.
+            </p>
+            <p class={pClass}>
+              The form also includes a hidden "honeypot" field that real visitors never fill in. If a bot submits the form and trips the honeypot, the message is quietly discarded.
+            </p>
+          </div>
 
-        <h2 class={h2Class}>Cookies</h2>
-        <p class={pClass}>
-          The site itself does not set tracking cookies. If a future change adds one, this page will say so first.
-        </p>
+          <div class="mt-xl" data-reveal>
+            <h2 id="analytics" class={h2Class}>Analytics</h2>
+            <p class={pClass}>
+              The site uses <a class={linkClass} href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a>, which counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network. I use the totals to see which pages are useful and which aren't.
+            </p>
+          </div>
 
-        <h2 class={h2Class}>Your data</h2>
-        <p class={pClass}>
-          If you've sent a project inquiry and want me to delete it from my inbox, email <a class={linkClass} href={site.emailHref}>{site.email}</a> with the email address you used to send it. I'll confirm when it's deleted.
-        </p>
+          <div class="mt-xl" data-reveal>
+            <h2 id="server-logs" class={h2Class}>Server logs</h2>
+            <p class={pClass}>
+              The hosting platform (Cloudflare Pages) records standard request data: IP address, user agent, requested URL, response code, timestamp. These logs are retained for a short window and used for operational purposes like blocking abuse and diagnosing errors. They are not used to build profiles of visitors.
+            </p>
+          </div>
 
-        <h2 class={h2Class}>Changes</h2>
-        <p class={pClass}>
-          If what the site collects changes, I'll update this page and bump the date at the bottom. There's no separate notification list for privacy updates.
-        </p>
+          <div class="mt-xl" data-reveal>
+            <h2 id="cookies" class={h2Class}>Cookies</h2>
+            <p class={pClass}>
+              The site itself does not set tracking cookies. If a future change adds one, this page will say so first.
+            </p>
+          </div>
 
-        <p class="mt-l text-[0.95rem] italic text-text-muted">
-          Last updated: {lastUpdated}.
-        </p>
+          <div class="mt-xl" data-reveal>
+            <h2 id="your-data" class={h2Class}>Your data</h2>
+            <p class={pClass}>
+              If you've sent a project inquiry and want me to delete it from my inbox, email <a class={linkClass} href={site.emailHref}>{site.email}</a> with the email address you used to send it. I'll confirm when it's deleted.
+            </p>
+          </div>
+
+          <div class="mt-xl" data-reveal>
+            <h2 id="changes" class={h2Class}>Changes</h2>
+            <p class={pClass}>
+              If what the site collects changes, I'll update this page and bump the date at the bottom. There's no separate notification list for privacy updates.
+            </p>
+          </div>
+
+          <p class="mt-xl border-t border-border pt-l text-[0.95rem] italic text-text-muted" data-reveal="fade">
+            Last updated: {lastUpdated}.
+          </p>
+
+        </div>
 
       </div>
 
     </div>
   </section>
+
+  <!-- Scroll-spy: highlights the TOC link for the section currently in view
+       by toggling aria-current. Purely additive. If this never runs (JS off,
+       no IntersectionObserver), the TOC stays a list of working anchor links
+       and the prose is unaffected. Honors reduced-motion by not introducing
+       any motion of its own; it only changes which link is marked current. -->
+  <script>
+    // Wrapped in astro:page-load so the scroll-spy re-binds after View
+    // Transitions navigations (the footer Privacy link is the common entry
+    // path). The dataset flag keeps it from observing twice.
+    function initPrivacyToc() {
+      const toc = document.querySelector<HTMLElement>('[data-privacy-toc]');
+      if (!toc || toc.dataset.spyBound || !('IntersectionObserver' in window)) return;
+      toc.dataset.spyBound = 'true';
+
+      const links = new Map<string, HTMLAnchorElement>();
+      toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
+        const id = a.getAttribute('data-toc-link');
+        if (id) links.set(id, a);
+      });
+      if (links.size === 0) return;
+
+      // Track which sections are currently intersecting; the topmost one wins.
+      const visible = new Set<string>();
+
+      const setCurrent = (id: string | null) => {
+        links.forEach((a, key) => {
+          if (key === id) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const id = entry.target.id;
+            if (entry.isIntersecting) visible.add(id);
+            else visible.delete(id);
+          }
+          // Pick the visible section nearest the top of the document order.
+          let topId: string | null = null;
+          for (const id of links.keys()) {
+            if (visible.has(id)) {
+              topId = id;
+              break;
+            }
+          }
+          setCurrent(topId);
+        },
+        // Bias the active zone toward the upper portion of the viewport so a
+        // heading is marked current as it reaches reading position.
+        { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
+      );
+
+      links.forEach((_, id) => {
+        const heading = document.getElementById(id);
+        if (heading) observer.observe(heading);
+      });
+    }
+    document.addEventListener('astro:page-load', initPrivacyToc);
+    initPrivacyToc();
+  </script>
 
 </BaseLayout>

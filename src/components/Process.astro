@@ -2,16 +2,18 @@
 // Safe to edit. Step titles and bodies are content that Nathan rewrites
 // as the process evolves.
 /* ============================================================================
-   Section 05 | How We Work (Process)
+   Process (used on /services only)
    ============================================================================
    Four numbered steps in a row. Auto-fit grid drops cleanly from four
    columns at wide to two then one as viewport narrows.
 
-   Sits on the soft tinted band, same as Services, so sections 03 and 05
-   bookend the white sections in between visually.
+   The homepage version of this content now lives in ProcessBand.astro
+   (combined with the inquiry CTA on a navy band). This file stays
+   because /services still imports it as a soft-tint section without
+   the trailing CTA.
 
-   Each step has a heavy top border that ties it to the numbered-step
-   pattern from the original WordPress build.
+   Each step has a thin top border that gives the row visual rhythm
+   without dominating the section.
    ============================================================================ */
 
 import SectionHeading from './SectionHeading.astro';
@@ -44,16 +46,16 @@ const steps = [
   <div class="ncs-container">
 
     <SectionHeading
-      num="05"
       title="How we work"
       sub="Four steps, in order. Everything else follows from the first conversation."
       headingId="process-heading"
     />
 
-    <!-- Step grid. Four columns at wide, reflows via auto-fit minmax. -->
+    <!-- Step grid. Four columns at wide, reflows via auto-fit minmax.
+         Thin hairline top border per step gives rhythm without dominating. -->
     <ol class="grid gap-l pl-0 [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))]">
       {steps.map((step) => (
-        <li class="flex flex-col gap-s border-t-2 border-heading pt-m">
+        <li class="flex flex-col gap-s border-t border-border pt-m">
           <span class="font-mono text-[0.95rem] tracking-[0.06em] text-link" aria-hidden="true">
             {step.num}
           </span>
