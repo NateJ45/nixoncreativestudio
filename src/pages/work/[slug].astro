@@ -48,7 +48,7 @@ export async function getStaticPaths() {
 
 const { entry, previous, next } = Astro.props;
 const { Content, headings } = await render(entry);
-const { title, client, sector, services, summary, cover, year, role, tags, published, updated, stack, liveUrl, outcome, testimonial } = entry.data;
+const { title, client, sector, services, summary, cover, role, tags, published, updated, stack, liveUrl, outcome, testimonial } = entry.data;
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -58,11 +58,9 @@ const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperC
 // committing to scroll.
 const minutes = readingTime(entry.body ?? '');
 
-// Date formatter for "Published" and "Updated". Short, US-friendly.
-// e.g. "Mar 2026" reads better than ISO in body copy.
-const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
-const publishedLabel = fmt.format(published);
-const updatedLabel   = updated ? fmt.format(updated) : null;
+// Note: published / updated dates are intentionally NOT displayed in the UI
+// (the client doesn't want project timing showcased). They stay in the
+// frontmatter and feed sort order, the RSS feed, and the JSON-LD below.
 
 // Resolve the cover through Astro's image pipeline so we can use the
 // optimized URL for both the OG image meta tag and the CreativeWork
@@ -121,10 +119,8 @@ const schemas = [
 
         <div class="flex flex-col gap-m" data-reveal>
 
-          <!-- Meta stamp: year + sector + read time. Mono and muted. -->
+          <!-- Meta stamp: sector + read time. Mono and muted. No year. -->
           <p class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
-            <span>{year}</span>
-            <span aria-hidden="true">·</span>
             <span>{sectorLabel}</span>
             <span aria-hidden="true">·</span>
             <span>{minutes} min read</span>
@@ -207,13 +203,6 @@ const schemas = [
               ))}
             </ul>
           )}
-
-          {/* Publish / updated stamp. Sits at the bottom of the meta
-              column as a trust signal: visitors can see whether the
-              work shown is recent. */}
-          <p class="mt-xs font-mono text-[0.8rem] text-text-muted">
-            Published {publishedLabel}{updatedLabel && updatedLabel !== publishedLabel ? ` · Updated ${updatedLabel}` : ''}
-          </p>
 
         </div>
 

@@ -3,34 +3,34 @@
    ============================================================================
    Safe to edit.
 
-   Client-side filter for the /work index card grid. Renders two rows of
-   chips (sector + year), and toggles a `data-hidden` attribute on the
-   matching card list items so CSS can hide them. The cards themselves
-   are rendered server-side by /work/index.astro; this component just
-   tags them as visible / hidden based on chip selection.
+   Client-side filter for the /work index card grid. Renders a row of sector
+   chips and toggles a `data-hidden` attribute on the matching card list items
+   so CSS can hide them. The cards themselves are rendered server-side by
+   /work/index.astro; this component just tags them visible / hidden based on
+   the active chip.
+
+   Year is intentionally NOT a filter here: the studio doesn't want to surface
+   project timing or how many projects happened per year. Filtering is sector
+   only.
 
    Why DOM manipulation rather than re-rendering the card list in React:
    the cards have rich Astro Image markup with srcsets that we don't want
    to duplicate in JSX or re-render on filter changes. Hiding via a CSS
    class is one paint, no hydration of card content needed.
 
-   The cards expect data attributes:
-     data-work-card data-sector="..." data-year="..."
+   The cards expect: data-work-card data-sector="..."
    ============================================================================ */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export interface WorkFilterProps {
   /** Distinct sector values across all case studies, in display order. */
   sectors: Array<{ value: string; label: string }>;
-  /** Distinct year values across all case studies, sorted newest first. */
-  years:   number[];
 }
 
-export default function WorkFilter({ sectors, years }: WorkFilterProps) {
+export default function WorkFilter({ sectors }: WorkFilterProps) {
 
   const [sector, setSector] = useState<string>('all');
-  const [year,   setYear]   = useState<string>('all');
 
   // The chip styles — pulled into one place so the render below stays
   // focused on which one is active.
@@ -45,10 +45,7 @@ export default function WorkFilter({ sectors, years }: WorkFilterProps) {
     let visible = 0;
     cards.forEach((card) => {
       const cardSector = card.getAttribute('data-sector') ?? '';
-      const cardYear   = card.getAttribute('data-year')   ?? '';
-      const match =
-        (sector === 'all' || cardSector === sector) &&
-        (year   === 'all' || cardYear   === year);
+      const match = sector === 'all' || cardSector === sector;
       card.toggleAttribute('data-hidden', !match);
       if (match) visible += 1;
     });
@@ -56,66 +53,33 @@ export default function WorkFilter({ sectors, years }: WorkFilterProps) {
     // Toggle the "no results" notice (server-rendered, starts hidden).
     const empty = document.querySelector<HTMLElement>('[data-work-empty]');
     if (empty) empty.toggleAttribute('data-hidden', visible !== 0);
-  }, [sector, year]);
-
-  // Memoize because the parent passes a fresh array on each render.
-  const yearOptions = useMemo(() => years.map((y) => String(y)), [years]);
+  }, [sector]);
 
   return (
-    <div className="flex flex-col gap-s">
-
-      <fieldset className="flex flex-wrap items-center gap-xs">
-        <legend className="sr-only">Filter by sector</legend>
-        <span className="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
-          Sector
-        </span>
+    <fieldset className="flex flex-wrap items-center gap-xs">
+      <legend className="sr-only">Filter by sector</legend>
+      <span className="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
+        Sector
+      </span>
+      <button
+        type="button"
+        onClick={() => setSector('all')}
+        className={`${chipBase} ${sector === 'all' ? chipOn : chipOff}`}
+        aria-pressed={sector === 'all'}
+      >
+        All
+      </button>
+      {sectors.map((s) => (
         <button
+          key={s.value}
           type="button"
-          onClick={() => setSector('all')}
-          className={`${chipBase} ${sector === 'all' ? chipOn : chipOff}`}
-          aria-pressed={sector === 'all'}
+          onClick={() => setSector(s.value)}
+          className={`${chipBase} ${sector === s.value ? chipOn : chipOff}`}
+          aria-pressed={sector === s.value}
         >
-          All
+          {s.label}
         </button>
-        {sectors.map((s) => (
-          <button
-            key={s.value}
-            type="button"
-            onClick={() => setSector(s.value)}
-            className={`${chipBase} ${sector === s.value ? chipOn : chipOff}`}
-            aria-pressed={sector === s.value}
-          >
-            {s.label}
-          </button>
-        ))}
-      </fieldset>
-
-      <fieldset className="flex flex-wrap items-center gap-xs">
-        <legend className="sr-only">Filter by year</legend>
-        <span className="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
-          Year
-        </span>
-        <button
-          type="button"
-          onClick={() => setYear('all')}
-          className={`${chipBase} ${year === 'all' ? chipOn : chipOff}`}
-          aria-pressed={year === 'all'}
-        >
-          All
-        </button>
-        {yearOptions.map((y) => (
-          <button
-            key={y}
-            type="button"
-            onClick={() => setYear(y)}
-            className={`${chipBase} ${year === y ? chipOn : chipOff}`}
-            aria-pressed={year === y}
-          >
-            {y}
-          </button>
-        ))}
-      </fieldset>
-
-    </div>
+      ))}
+    </fieldset>
   );
 }

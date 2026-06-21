@@ -31,8 +31,9 @@ for (const entry of entries) {
   placeholders.set(entry.id, getCoverPlaceholder(entry.id));
 }
 
-// Distinct sectors + years for the filter chips. Sectors stay in a
-// fixed display order; years sort newest first.
+// Distinct sectors for the filter chips, in a fixed display order. Year is
+// intentionally not surfaced anywhere on the portfolio (no year filter, no
+// year on cards), so clients can't read project timing or count per year.
 const sectorLabels: Record<string, string> = {
   church:          'Church',
   preschool:       'Preschool',
@@ -43,7 +44,6 @@ const presentSectors = Array.from(new Set(entries.map((e) => e.data.sector)));
 const sectors = (['church', 'preschool', 'nonprofit', 'small-business'] as const)
   .filter((s) => presentSectors.includes(s))
   .map((value) => ({ value, label: sectorLabels[value] }));
-const years = Array.from(new Set(entries.map((e) => e.data.year))).sort((a, b) => b - a);
 ---
 
 <BaseLayout
@@ -79,12 +79,12 @@ const years = Array.from(new Set(entries.map((e) => e.data.year))).sort((a, b) =
         </p>
       </header>
 
-      {/* Filter chips. Sector + year, client-side. The chips toggle a
+      {/* Filter chips. Sector only, client-side. The chips toggle a
           data-hidden attribute on the cards below; matching CSS in
           globals.css hides them with display:none. */}
-      {(sectors.length > 1 || years.length > 1) && (
+      {sectors.length > 1 && (
         <div class="mb-l">
-          <WorkFilter client:load sectors={sectors} years={years} />
+          <WorkFilter client:load sectors={sectors} />
         </div>
       )}
 
@@ -101,7 +101,7 @@ const years = Array.from(new Set(entries.map((e) => e.data.year))).sort((a, b) =
             .replace(/-/g, ' ')
             .replace(/\b\w/g, (c) => c.toUpperCase());
           return (
-            <li data-work-card data-sector={entry.data.sector} data-year={entry.data.year}>
+            <li data-work-card data-sector={entry.data.sector}>
               <!-- Whole card is the link, standard card a11y pattern. The
                    spotlight-card class + data-spotlight wire the hover glow;
                    data-reveal fades it up on scroll with a staggered delay
@@ -146,10 +146,8 @@ const years = Array.from(new Set(entries.map((e) => e.data.year))).sort((a, b) =
                   </div>
 
                   <div class="flex flex-col gap-xs">
-                    <p class="flex items-center gap-s font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
-                      <span>{entry.data.year}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>{sectorLabel}</span>
+                    <p class="font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
+                      {sectorLabel}
                     </p>
                     <h2 class="text-h3 text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link">
                       {entry.data.title}
