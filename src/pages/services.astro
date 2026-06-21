@@ -20,7 +20,6 @@
      spotlight-card + data-spotlight          cursor-following glow on a card
      hover-lift                               lift on hover
      data-countup                             number animates up when in view
-     text-gradient                            brand gradient clipped onto text
 
    Pricing numbers come ONLY from the FAQ answers below (small business
    from $3,500, optional photography add-on, optional monthly retainer).
@@ -32,11 +31,12 @@ import Process from '../components/Process.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
 
-// The three services are a genuine sequence (strategy first, then design,
-// then photography), so the 01/02/03 numerals are honest, not decoration.
+// The three services are parallel offerings a client picks from, not an
+// ordered sequence (you can buy photography without strategy), so they carry
+// no 01/02/03 numerals. Numbered markers live only on the genuinely-ordered
+// Process band. Strategy is listed first because most projects start there.
 const services = [
   {
-    num: '01',
     title: 'Strategy',
     lede: 'The planning work that decides what the site is for, who it serves, and how it earns its keep.',
     body: 'Strategy always comes first. Without it, design becomes decoration. We start with a working session, then I write a short brief that the rest of the project follows.',
@@ -48,7 +48,6 @@ const services = [
     ],
   },
   {
-    num: '02',
     title: 'Web design',
     lede: 'Modern, accessible, fast websites built on the platform that fits you, from a hand-coded site to Squarespace, Wix, or WordPress, and set up so your team can actually run it.',
     body: 'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.',
@@ -61,7 +60,6 @@ const services = [
     ],
   },
   {
-    num: '03',
     title: 'Photography',
     lede: 'Headshots, event coverage, and environmental photography shot for your website by the same person who designed it.',
     body: 'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.',
@@ -168,21 +166,14 @@ const schemas = [
 >
 
   <!-- ----------------------------------------------------------------------
-       Hero. Single column, left-aligned. The eyebrow is a clean text
-       kicker (no mono "S1" scaffold). The headline uses text-gradient so
-       the brand blues sweep across the positioning line.
+       Hero. Single column, left-aligned. No eyebrow kicker (the headline
+       carries the section) and a solid heading color (no gradient text).
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="services-hero-heading">
     <div class="ncs-container">
-      <p
-        class="mb-m text-sm font-semibold uppercase tracking-[0.18em] text-link"
-        data-reveal="fade"
-      >
-        What I do
-      </p>
       <h1
         id="services-hero-heading"
-        class="text-gradient mb-m max-w-[22ch] leading-[0.95]"
+        class="mb-m max-w-[22ch] leading-[0.95]"
         data-reveal
         style="--reveal-delay: 80ms;"
       >
@@ -200,41 +191,27 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
-       Service chapters. Each service is its own elevated spotlight-card
-       with a cursor-following glow, a hover lift, an oversized ghost numeral
-       for the genuine 01/02/03 sequence, and a staggered scroll-reveal.
-       The cards alternate reveal direction (left / right / left) so they
-       arrive with a little choreography instead of all sliding the same way.
+       Service offerings. Each is its own elevated spotlight-card with a
+       cursor-following glow, a hover lift, and a staggered scroll-reveal.
+       These are parallel services (not an ordered sequence), so the list is
+       a <ul> and carries no numerals. The cards alternate reveal direction
+       (left / right / left) so they arrive with a little choreography.
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-label="Service details">
     <div class="ncs-container">
-      <ol class="flex list-none flex-col gap-l p-0">
+      <ul class="flex list-none flex-col gap-l p-0">
         {services.map((service, index) => (
           <li
-            class="spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl border border-border bg-bg-soft p-l md:p-xl"
+            class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
             data-spotlight
             data-reveal={index % 2 === 0 ? 'left' : 'right'}
             style={`--reveal-delay: ${index * 90}ms;`}
           >
-            <!-- Oversized ghost numeral, decorative. The small accent number
-                 in the header is the labelled, ordered one. -->
-            <span
-              class="pointer-events-none absolute -right-2 -top-6 select-none font-display text-[7rem] leading-none text-accent/10 transition-transform duration-500 group-hover:scale-110 md:text-[9rem]"
-              aria-hidden="true"
-            >
-              {service.num}
-            </span>
-
             <div class="relative z-10 grid grid-cols-1 gap-l md:grid-cols-[1.25fr_1fr] md:gap-xl">
 
-              <!-- Left column: number tag, title, lede, body. -->
+              <!-- Left column: title, lede, body. No sequence numeral: these
+                   are parallel offerings, not ordered steps. -->
               <div class="flex flex-col gap-s">
-                <span
-                  class="font-mono text-sm tracking-[0.06em] text-link"
-                  aria-hidden="true"
-                >
-                  {service.num}
-                </span>
                 <h2 class="text-heading">{service.title}</h2>
                 <p class="max-w-[48ch] text-[1.0625rem] font-medium leading-[1.55] text-text">
                   {service.lede}
@@ -266,7 +243,7 @@ const schemas = [
             </div>
           </li>
         ))}
-      </ol>
+      </ul>
     </div>
   </section>
 

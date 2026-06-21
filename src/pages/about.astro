@@ -16,7 +16,7 @@
    Motion vocabulary used here (all reduced-motion safe by the global system):
      - data-reveal + --reveal-delay stagger on every section and its items
      - spotlight-card + data-spotlight on the three principle cards
-     - text-gradient on the headline accent
+     - solid text-link accent phrase on the headline (no gradient text)
      - data-countup on the three honest facts
      - bg-aurora behind the portrait frame for a drifting brand glow
    ============================================================================ */
@@ -24,18 +24,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
-
-// Honest facts trio. Every figure is verifiable from the rest of the site,
-// no invented project counts, metrics, or awards. Only the middle fact has
-// a real climbing number (four sectors served), so it gets the count-up
-// animation; the two "one" facts read as plain figures since animating a
-// count to 1 looks like a glitch, not a flourish. `countup` flags which
-// fact animates.
-const facts = [
-  { figure: '1', countup: false, to: 0, label: 'person on every project, start to finish' },
-  { figure: '4', countup: true, to: 4, label: 'sectors served: churches, schools, nonprofits, small business' },
-  { figure: '1', countup: false, to: 0, label: 'region, the greater Cincinnati area' },
-];
 
 // Three working principles. Keep these honest; they should describe how
 // I actually work, not how I wish I worked.
@@ -139,11 +127,8 @@ const schemas = [
       </div>
 
       <div class="flex flex-col gap-m" data-reveal="right" style="--reveal-delay: 120ms;">
-        <p class="text-[0.95rem] font-semibold uppercase tracking-[0.08em] text-link">
-          About the studio
-        </p>
         <h1 id="about-hero-heading" class="max-w-[22ch] leading-[0.95]">
-          A one-person studio for <span class="text-gradient">organizations that take their work seriously.</span>
+          A one-person studio for <span class="text-link">organizations that take their work seriously.</span>
         </h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
           I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools across the Cincinnati region. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
@@ -155,33 +140,20 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
-       Facts: an honest count-up trio. Every figure is verifiable from the
-       rest of the site, no invented metrics. The numbers animate up when
-       scrolled into view, then sit as plain proof points.
+       At a glance. One honest, specific statement instead of a KPI-style
+       stat triplet (the old "1 / 4 / 1 region" trio was the hero-metric tell
+       with two non-metric "1"s). bg-mesh-soft gives light mode a quiet beat.
        ---------------------------------------------------------------------- -->
-  <section class="pb-2xl" aria-label="Studio at a glance">
+  <section class="bg-mesh-soft pb-2xl" aria-label="Studio at a glance">
     <div class="ncs-container">
-      <dl class="grid gap-l text-center [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))]">
-        {facts.map((fact, index) => (
-          <div
-            class="flex flex-col items-center gap-xs rounded-xl border border-border bg-bg p-l hover-lift"
-            data-reveal
-            style={`--reveal-delay: ${index * 120}ms;`}
-          >
-            <dt class="sr-only">{fact.label}</dt>
-            <dd class="flex flex-col items-center gap-xs">
-              <span class="font-display text-[3.25rem] leading-none text-link">
-                {fact.countup
-                  ? <span data-countup data-countup-to={fact.to}>{fact.to}</span>
-                  : <span>{fact.figure}</span>}
-              </span>
-              <span class="max-w-[26ch] text-[0.95rem] leading-[1.5] text-text-muted">
-                {fact.label}
-              </span>
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <p
+        class="mx-auto max-w-[46ch] text-center text-h4 leading-[1.3] text-heading"
+        data-reveal
+      >
+        One person on every project, start to finish: strategy, design, photography, and code.
+        I work with <span class="text-link">churches, schools, nonprofits, and small businesses</span>
+        across the greater Cincinnati region.
+      </p>
     </div>
   </section>
 
@@ -233,21 +205,19 @@ const schemas = [
         </p>
       </header>
 
-      <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
+      <!-- Editorial ruled list, not a card grid. These are a short manifesto,
+           not parallel feature tiles, so each principle is a hairline-separated
+           row with the title and body in two columns at md. Reads as authored
+           rather than scaffolded, and drops the spotlight-on-every-tile. -->
+      <ul class="mt-l flex flex-col">
         {principles.map((principle, index) => (
           <li
-            class="spotlight-card relative flex flex-col rounded-xl border border-border bg-bg p-l hover-lift"
-            data-spotlight
+            class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
             data-reveal
-            style={`--reveal-delay: ${index * 120}ms;`}
+            style={`--reveal-delay: ${index * 100}ms;`}
           >
-            <!-- Content sits above the spotlight glow. -->
-            <div class="relative z-10 flex flex-col gap-s">
-              <!-- text-h4 utility for the principle title (smaller than the
-                   default h3 so the card stays compact). -->
-              <h3 class="text-h4 text-heading">{principle.title}</h3>
-              <p class="leading-[1.6] text-text">{principle.body}</p>
-            </div>
+            <h3 class="text-h4 text-heading">{principle.title}</h3>
+            <p class="max-w-[60ch] leading-[1.7] text-text">{principle.body}</p>
           </li>
         ))}
       </ul>

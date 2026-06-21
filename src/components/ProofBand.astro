@@ -4,25 +4,28 @@
 /* ============================================================================
    Proof Band  [revamp]
    ============================================================================
-   A credibility strip between Act 1 (Hero) and Act 2 (Selected Work). Two
-   layers of social proof the homepage was missing:
+   A credibility strip between Act 1 (Hero) and Act 2 (Selected Work). It does
+   the proof job WITHOUT the SaaS hero-metric template (big-number / small-label
+   / count-up triplet) that the earlier version used. That pattern is an AI tell,
+   and two of its three figures were empty calories ("100% owner-built" is a
+   tautology for a sole owner; "4 sectors" is thin). It is replaced by:
 
-     1. A count-up stat row (animates when scrolled into view via the
-        data-countup enhancement; reduced-motion shows final values at once).
+     1. One honest, specific positioning line. The live project count is woven
+        into the sentence as prose, not blown up into an animated KPI.
      2. A continuous marquee of real client names, drawn from the case-studies
         collection so it stays in sync as the portfolio grows. The marquee is
         decorative (aria-hidden) and paired with an sr-only list so screen
         readers get the same information without the motion.
-
-   Figures are deliberately honest: project count is the live collection size,
-   four is the real sector spread, and "100%" reflects that Nathan builds every
-   project himself, start to finish, with no agency handoff.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
 
 const studies = await getCollection('case-studies');
 const total = studies.length;
+
+// Spell small counts as words so the sentence reads like prose, not a metric.
+const numberWords = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const totalWord = total <= 12 ? numberWords[total] : String(total);
 
 // Distinct client names for the marquee, in newest-first order.
 const clients = [
@@ -35,37 +38,20 @@ const clients = [
 
 // Duplicated once so the CSS marquee can loop seamlessly at translateX(-50%).
 const marqueeItems = [...clients, ...clients];
-
-const stats = [
-  { to: total, suffix: '',  label: 'Projects shipped' },
-  { to: 4,     suffix: '',  label: 'Sectors served' },
-  { to: 100,   suffix: '%', label: 'Owner-built, start to finish' },
-];
 ---
 
-<section class="overflow-hidden bg-bg-soft py-2xl" aria-label="Studio at a glance">
+<section class="bg-mesh-soft overflow-hidden bg-bg-soft py-2xl" aria-label="Studio at a glance">
 
-  <!-- Stat row. -->
+  <!-- Honest positioning line, not a KPI grid. The count is prose. -->
   <div class="ncs-container">
-    <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))]">
-      {stats.map((stat, index) => (
-        <li
-          class="flex flex-col items-center gap-xs text-center"
-          data-reveal
-          style={`--reveal-delay: ${index * 110}ms;`}
-        >
-          <span class="font-display text-6xl leading-none text-heading sm:text-7xl">
-            <!-- Static content is the real final value so no-JS visitors and
-                 crawlers see the true figure; enhance.ts animates from 0 up to
-                 it when scrolled into view. -->
-            <span data-countup data-countup-to={stat.to} data-countup-suffix={stat.suffix}>{stat.to}{stat.suffix}</span>
-          </span>
-          <span class="font-mono text-sm uppercase tracking-[0.08em] text-text-muted">
-            {stat.label}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <p
+      class="mx-auto max-w-[42ch] text-center text-h4 leading-[1.3] text-heading"
+      data-reveal
+    >
+      {totalWord.charAt(0).toUpperCase() + totalWord.slice(1)} sites shipped for churches, schools,
+      nonprofits, and small businesses around Cincinnati. Every one designed, built, and photographed
+      by <span class="text-link">one person</span>, start to finish.
+    </p>
   </div>
 
   <!-- Client marquee. Decorative; the sr-only list below carries the same

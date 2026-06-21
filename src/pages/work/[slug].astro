@@ -135,13 +135,14 @@ const schemas = [
           <p class="max-w-[56ch] text-lg leading-[1.6] text-text">{summary}</p>
 
           {/* Outcome callout (optional). The honest, one-line result of the
-              project, lifted out of the body so the proof reads at first
-              scan. Accent left-border + --link color marks it as the
-              takeaway, not body copy. */}
+              project, lifted out of the body so the proof reads at first scan.
+              Marked as the takeaway by a small label + larger --link type and
+              whitespace, not a side-stripe border (an absolute-ban tell). */}
           {outcome && (
-            <p class="max-w-[56ch] border-l-2 border-accent pl-m text-lg font-semibold leading-[1.45] text-link">
-              {outcome}
-            </p>
+            <div class="mt-s max-w-[56ch]">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-text-muted">Outcome</p>
+              <p class="mt-1 text-xl font-semibold leading-[1.4] text-link">{outcome}</p>
+            </div>
           )}
 
           {/* Live site link (optional). For a web design portfolio this is

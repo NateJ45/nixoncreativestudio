@@ -3,56 +3,44 @@
 /* ============================================================================
    Site Header
    ============================================================================
-   Top of every page. Wordmark on the left, primary navigation on the right.
-   Renders inside BaseLayout.astro above the <main> slot.
+   Top of every page. Wordmark lockup on the left, primary navigation on the
+   right. Renders inside BaseLayout.astro above the <main> slot.
 
-   The four nav links match the homepage section architecture documented in
-   CLAUDE.md (01 Work, 02 Services, 03 About, 04 Contact). The numbered
-   prefixes are the visual through-line that ties the header to the section
-   headings on the homepage.
+   Context-aware background (driven by enhance.ts):
+     - data-over-hero : the page has a dark hero at the top and it still covers
+       the bar, so the header is transparent with white text and the brand mark.
+       Pages without a [data-hero-dark] element never get this state, so their
+       header is the frosted bar from the first paint.
+     - data-scrolled  : the page has scrolled past 8px; the bar frosts and
+       condenses. When both are present, over-hero wins (stays transparent
+       while the dark hero is still behind it).
 
-   Mobile note: at narrow widths the four links will compress and may
-   overflow. Phase 6 swaps in a shadcn Sheet for the mobile nav. For now
-   the desktop layout is the priority.
+   All three visual states live in the scoped <style> block below rather than
+   in Tailwind data-variant utilities, so the precedence between them is
+   controlled by source order instead of specificity guesswork.
+
+   The nav carries no 01-06 numerals: it is a flat set of destinations, not an
+   ordered sequence, so numbered markers (which live only on the genuinely
+   ordered Process band) would be decorative scaffolding here.
    ============================================================================ */
 
-// Studio name comes from the central site data module so a rebrand updates
-// the wordmark, the footer, and meta together.
 import { site } from '../data/site';
-
-// MobileNav is a React island that handles the small-viewport drawer.
-// Same links array drives both surfaces; the desktop <ul> below is
-// hidden at narrow widths via Tailwind classes, and MobileNav is hidden
-// at >= sm via its wrapper.
 import MobileNav from './MobileNav';
-
-// ThemeToggle is a React island that cycles light -> dark -> system and
-// writes to localStorage["ncs-theme"]. The anti-FOUC script in
-// BaseLayout reads that key on initial paint, so the visitor's choice
-// survives reloads with no flash. Visible at >= sm; on small screens
-// the toggle lives inside the MobileNav drawer instead.
 import ThemeToggle from './ThemeToggle';
 
-// The nav model lives in the script so it's easy to reorder, rename, or
-// extend later without hunting through markup. MobileNav consumes the
-// same array, so a change here flows to both surfaces.
-//
-// Numbering is the visual map; Work / Services / About / Contact match
-// the original section architecture, with Journal and Now slotted in
-// between About and Contact so the contact link stays at the right
-// edge as the primary CTA.
+// The nav model lives in the script so it's easy to reorder, rename, or extend
+// without hunting through markup. MobileNav consumes the same array.
 const navLinks = [
-  { num: '01', label: 'Work',     href: '/work/'    },
-  { num: '02', label: 'Services', href: '/services' },
-  { num: '03', label: 'About',    href: '/about'    },
-  { num: '04', label: 'Journal',  href: '/journal/' },
-  { num: '05', label: 'Now',      href: '/now/'     },
-  { num: '06', label: 'Contact',  href: '/contact'  },
+  { label: 'Work',     href: '/work/'    },
+  { label: 'Services', href: '/services' },
+  { label: 'About',    href: '/about'    },
+  { label: 'Journal',  href: '/journal/' },
+  { label: 'Now',      href: '/now/'     },
+  { label: 'Contact',  href: '/contact'  },
 ];
 
-// Active-route detection so the current section is marked in the nav. Compares
-// the normalized current path against each link, treating a link as active when
-// the path matches it or sits beneath it (e.g. /work/crestview → Work).
+// Active-route detection so the current section is marked in the nav. Treats a
+// link as active when the path matches it or sits beneath it (e.g. /work/foo).
 const path = Astro.url.pathname.replace(/\/+$/, '');
 const isActive = (href: string): boolean => {
   const h = href.replace(/\/+$/, '');
@@ -61,61 +49,41 @@ const isActive = (href: string): boolean => {
 };
 ---
 
-<!--
-  Outer header is full-bleed: the background and the hairline divider span the
-  whole page width. The inner row uses .ncs-container to align with the rest
-  of the content column. .ncs-container stays as a utility class in
-  globals.css since the same pattern repeats across every section component.
--->
-<!--
-  Sticky, scroll-aware header. data-header is toggled to data-scrolled by the
-  enhancement script once the page scrolls past 8px; the data-[scrolled]
-  utilities frost the backdrop, deepen the shadow, and shrink the padding so the
-  bar condenses as the visitor descends. Always carries a background so the
-  wordmark and nav stay legible over both the navy homepage hero and the light
-  inner-page heroes.
--->
-<header
-  data-header
-  class="sticky top-0 z-50 border-b border-border bg-bg/95 py-m backdrop-blur-sm transition-[background-color,box-shadow,padding] duration-300 data-[scrolled]:bg-bg/90 data-[scrolled]:py-3 data-[scrolled]:shadow-[0_10px_30px_-18px_rgba(10,22,40,0.45)] data-[scrolled]:backdrop-blur-md"
->
+<header data-header class="ncs-header sticky top-0 z-50">
   <div class="ncs-container flex items-center justify-between gap-m">
 
-    <!-- Wordmark links home. transition:name gives it cross-page continuity:
-         the View Transitions router morphs it in place on navigation instead
-         of a hard cut. text-heading flips navy/near-white with the theme. -->
+    <!-- Wordmark lockup: a small amber brand mark plus the studio name. The
+         mark stays amber over every background; the text flips with theme and
+         goes white over the dark hero. transition:name morphs it across View
+         Transitions navigations. -->
     <a
-      class="group font-display text-2xl leading-none tracking-[0.01em] text-heading no-underline transition-colors duration-200 hover:text-accent"
+      class="wordmark group inline-flex items-center gap-s no-underline"
       href="/"
       transition:name="site-wordmark"
     >
-      {site.studioName}
+      <span class="wordmark-mark" aria-hidden="true"></span>
+      <span class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]">
+        {site.studioName}
+      </span>
     </a>
 
-    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer.
-         The flex wrapper keeps the toggle next to the nav at >= sm and
-         next to the hamburger at < sm. -->
+    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer. -->
     <div class="flex items-center gap-s">
 
-      <!-- Desktop nav. Visible at >= md (768px) because six items don't
-           fit comfortably at sm alongside the wordmark and theme toggle;
-           the MobileNav drawer below takes over below md. gap-s instead
-           of gap-m so the six links breathe without crowding. -->
+      <!-- Desktop nav at >= md (six items don't fit at sm next to the wordmark
+           and toggle); the MobileNav drawer takes over below md. -->
       <nav aria-label="Primary" class="hidden md:block">
         <ul class="flex items-center gap-m">
-          {navLinks.map(({ num, label, href }) => (
+          {navLinks.map(({ label, href }) => (
             <li>
               <a
                 class:list={[
-                  'nav-link link-underline inline-flex items-baseline gap-xs font-body text-base no-underline transition-colors duration-150',
+                  'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
                   isActive(href) ? 'is-active text-link' : 'text-text hover:text-link focus-visible:text-link',
                 ]}
                 href={href}
                 aria-current={isActive(href) ? 'page' : undefined}
               >
-                <!-- Section number prefix. Smaller, mono, muted. Reads as a
-                     label rather than as part of the link text. -->
-                <span class="font-mono text-xs text-text-muted">{num}</span>
                 {label}
               </a>
             </li>
@@ -123,21 +91,13 @@ const isActive = (href: string): boolean => {
         </ul>
       </nav>
 
-      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own
-           copy for touch users. client:load so the icon hydrates quickly
-           and the click handler is wired before the visitor would
-           reasonably try to use it. -->
+      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own. -->
       <div class="hidden md:block">
         <ThemeToggle client:load />
       </div>
 
-      <!-- Mobile drawer. Hidden at >= md; the desktop nav above takes over.
-           client:only='react' skips server-side rendering of the Sheet
-           primitive (Radix Dialog uses portals + hooks that don't SSR
-           cleanly inside Astro). Trade-off: a brief moment with no
-           hamburger button visible below md before React hydrates. The
-           desktop nav users never see this delay since the wrapper is
-           display:none above md. -->
+      <!-- Mobile drawer. Hidden at >= md. client:only='react' skips SSR of the
+           Radix-portal Sheet, which doesn't render cleanly inside Astro. -->
       <div class="md:hidden">
         <MobileNav client:only="react" links={navLinks} studioName={site.studioName} />
       </div>
@@ -148,10 +108,82 @@ const isActive = (href: string): boolean => {
 </header>
 
 <style>
+  /* ---- Header surface states ---------------------------------------------
+     Default: a frosted bar with a hairline divider, always legible over the
+     light inner-page heroes. */
+  .ncs-header {
+    padding-block: var(--spacing-m);
+    background-color: color-mix(in oklab, var(--color-bg) 95%, transparent);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition:
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      padding 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  /* Scrolled: frost deepens, the bar condenses and lifts. */
+  .ncs-header[data-scrolled] {
+    padding-block: 0.75rem;
+    background-color: color-mix(in oklab, var(--color-bg) 90%, transparent);
+    box-shadow: 0 10px 30px -18px rgba(10, 22, 40, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Over the dark hero: transparent, no border, white foreground. Declared
+     after [data-scrolled] so it wins while the hero is still behind the bar. */
+  .ncs-header[data-over-hero] {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .ncs-header[data-over-hero] .wordmark-text,
+  .ncs-header[data-over-hero] .nav-link {
+    color: #ffffff;
+  }
+  /* Theme toggle + mobile hamburger are React islands that set their own icon
+     color via a text-* class; reach them with :global and a hook class so they
+     flip to white over the hero too. */
+  .ncs-header[data-over-hero] :global(.theme-toggle),
+  .ncs-header[data-over-hero] :global(.mobile-trigger) {
+    color: #ffffff;
+  }
+
+  /* ---- Wordmark ----------------------------------------------------------- */
+  .wordmark-text {
+    color: var(--color-heading);
+    transition: color 0.2s ease;
+  }
+  /* Amber diamond brand mark. Stays amber on every background. */
+  .wordmark-mark {
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    rotate: 45deg;
+    border-radius: 1px;
+    background-color: var(--color-tertiary);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .wordmark:hover .wordmark-mark,
+  .wordmark:focus-visible .wordmark-mark {
+    transform: scale(1.25) rotate(90deg);
+  }
+
   /* Active nav item keeps its underline drawn (the .link-underline base hides
-     it until hover). Paired with text-accent + aria-current for a non-color
-     cue, so the active state is conveyed by more than color alone. */
+     it until hover). Paired with text-link + aria-current for a non-color cue. */
   .nav-link.is-active::after {
     transform: scaleX(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ncs-header { transition: none; }
+    .wordmark-mark { transition: none; }
+    .wordmark:hover .wordmark-mark,
+    .wordmark:focus-visible .wordmark-mark { transform: none; }
   }
 </style>

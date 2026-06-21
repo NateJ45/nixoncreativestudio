@@ -48,7 +48,7 @@ const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 <figure class="site-showcase my-l">
   <a
-    class="showcase group block overflow-hidden rounded-xl border border-border bg-bg no-underline shadow-[0_30px_70px_-42px_rgba(10,22,40,0.6)] transition-transform duration-300 hover:-translate-y-1"
+    class="showcase group block overflow-hidden rounded-xl border border-border bg-bg no-underline shadow-[var(--shadow-frame)] transition-transform duration-300 hover:-translate-y-1"
     href={href}
     target="_blank"
     rel="noopener noreferrer"
@@ -85,7 +85,7 @@ const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
   </a>
 
   <figcaption class="mt-xs text-center font-mono text-[0.75rem] text-text-muted">
-    Live at <span class="text-link">{shown}</span>. Hover to pause.
+    Live at <span class="text-link">{shown}</span>.
   </figcaption>
 </figure>
 
@@ -108,23 +108,33 @@ const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .showcase-scroll :global(img) {
-      animation: showcase-scroll 24s ease-in-out infinite alternate;
+    /* Scroll variant: pan the full-page screenshot top-to-bottom in lockstep
+       with the visitor's own scroll as the frame crosses the viewport, so it
+       feels like scrolling the real site through a window rather than watching
+       a timed loop. Where scroll-timeline is unsupported, the image simply
+       sits at the top (a clean static frame); the link still works. */
+    @supports (animation-timeline: view()) {
+      .showcase-scroll :global(img) {
+        animation: showcase-scroll linear both;
+        animation-timeline: view();
+        animation-range: entry 12% exit 88%;
+      }
     }
+
+    /* Zoom variant keeps a slow Ken Burns loop and pauses on hover/focus. */
     .showcase-zoom :global(img) {
       transform-origin: top center;
       animation: showcase-zoom 18s ease-in-out infinite alternate;
     }
-    /* Pause whichever animation is running while the visitor hovers/focuses. */
-    .showcase:hover .showcase-window :global(img),
-    .showcase:focus-visible .showcase-window :global(img) {
+    .showcase:hover .showcase-zoom :global(img),
+    .showcase:focus-visible .showcase-zoom :global(img) {
       animation-play-state: paused;
     }
   }
 
   @keyframes showcase-scroll {
-    0%, 7%    { transform: translateY(0); }
-    93%, 100% { transform: translateY(calc(-100% + var(--wh))); }
+    from { transform: translateY(0); }
+    to   { transform: translateY(calc(-100% + var(--wh))); }
   }
 
   @keyframes showcase-zoom {

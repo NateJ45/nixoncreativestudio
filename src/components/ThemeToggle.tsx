@@ -138,7 +138,7 @@ export default function ThemeToggle() {
       onClick={cycle}
       aria-label={label}
       title={label}
-      className="text-text hover:text-accent"
+      className="theme-toggle text-text hover:text-accent"
     >
       {icon}
     </Button>

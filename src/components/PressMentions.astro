@@ -59,10 +59,11 @@ const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }
               title={entry.title}
             >
               <span class="font-display text-h4">{entry.publication}</span>
-              {entry.title && <span class="text-text"> — {entry.title}</span>}
+              {entry.title && <span class="text-text"> · {entry.title}</span>}
             </a>
             {entry.quote && (
-              <blockquote class="mt-xs max-w-[60ch] border-l-4 border-accent pl-m text-text italic">
+              <blockquote class="relative mt-s max-w-[60ch] pl-l text-text italic leading-[1.6]">
+                <span aria-hidden="true" class="absolute left-0 top-0 font-display text-4xl leading-none text-accent/30">“</span>
                 {entry.quote}
               </blockquote>
             )}

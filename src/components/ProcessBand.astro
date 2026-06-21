@@ -71,29 +71,27 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
       </p>
     </header>
 
-    <!-- Four process steps. Auto-fit drops cleanly from 4 to 2 to 1 column.
-         Each step carries an oversized ghosted numeral that reinforces the
-         ordered sequence, a gradient top rule that anchors it to the band,
-         and a staggered scroll-reveal. -->
-    <ol class="grid list-none gap-l p-0 [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))]">
+    <!-- Four process steps as numbered nodes on a single connector line. The
+         one connector (drawn across on scroll at lg) carries the "ordered
+         sequence" meaning, replacing the four separate top-rules and the
+         doubled ghost+mono numerals from before. Grid: 1 col on mobile, 2 at
+         sm, the full 4-across row at lg where the connector lives. -->
+    <ol class="process-steps relative grid list-none gap-l p-0 sm:grid-cols-2 lg:grid-cols-4">
+
+      <!-- Single connector rail behind the number nodes (lg row only). Draws
+           left-to-right on scroll where supported; otherwise fully drawn. -->
+      <span class="process-connector hidden lg:block" aria-hidden="true"></span>
+
       {steps.map((step, index) => (
         <li
-          class="process-step relative flex flex-col gap-s pt-m"
+          class="relative flex flex-col items-start gap-s"
           data-reveal
           style={`--reveal-delay: ${index * 110}ms;`}
         >
-          <!-- Oversized ghost numeral. Decorative; the small mono number
-               below is the labelled one. -->
-          <span
-            class="pointer-events-none absolute -top-2 right-0 select-none font-display text-7xl leading-none text-heading/10"
-            aria-hidden="true"
-          >
-            {step.num}
-          </span>
-          <span
-            class="font-mono text-sm tracking-[0.06em] text-link"
-            aria-hidden="true"
-          >
+          <!-- One numbered node. The badge IS the step number (no second
+               ghost numeral). accent-foreground keeps it readable on the
+               accent fill in both themes. -->
+          <span class="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent font-mono text-sm text-accent-foreground">
             {step.num}
           </span>
           <h3 class="text-h4 text-heading">{step.title}</h3>
@@ -126,21 +124,36 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
 </section>
 
 <style>
-  /* Gradient top rule on each step: a bright accent at the left fading to
-     transparent, so the steps read as a connected sequence on the navy band
-     rather than four detached hairlines. */
-  .process-step::before {
-    content: "";
+  /* Single connector rail behind the number nodes. Sits at the vertical
+     centre of the h-9 (2.25rem) badges and reads as one timeline through the
+     ordered steps, replacing four detached top-rules. */
+  .process-connector {
     position: absolute;
-    top: 0;
+    top: 1.125rem;
     left: 0;
-    height: 2px;
-    width: 100%;
-    background: linear-gradient(
-      90deg,
-      var(--color-secondary),
-      color-mix(in oklab, var(--color-secondary) 10%, transparent)
-    );
-    opacity: 0.7;
+    right: 0;
+    height: 1px;
+    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+    transform: scaleX(1);
+    transform-origin: left;
+    z-index: 0;
+  }
+
+  /* Draw the rail across as the band scrolls into view. Progressive
+     enhancement: only where scroll-timeline is supported and motion is
+     allowed; otherwise the rail is simply fully drawn from first paint. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .process-connector {
+        transform: scaleX(0);
+        animation: connector-draw linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 35%;
+      }
+    }
+  }
+  @keyframes connector-draw {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
   }
 </style>

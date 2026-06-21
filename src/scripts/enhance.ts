@@ -118,10 +118,26 @@ function initCountUp(): void {
 /* ---- Scroll-aware header --------------------------------------------------
    The header element is replaced on each View Transitions navigation, so the
    scroll listener re-queries the current header rather than closing over a
-   stale node. The listener itself is registered once via a window flag. */
+   stale node. The listener itself is registered once via a window flag.
+
+   Two states:
+     data-scrolled  : the page has scrolled past 8px (frost + condense).
+     data-over-hero : a [data-hero-dark] element exists AND still covers the
+                      bar (its bottom is below the header height). Drives the
+                      transparent, white-text treatment over the navy hero.
+                      Pages without a dark hero never get this state, so their
+                      header is the frosted bar from first paint. */
+const HEADER_HEIGHT = 72; // approx; the threshold the hero must clear to "pass"
+
 function setHeaderState(): void {
   const header = document.querySelector('[data-header]');
-  if (header) header.toggleAttribute('data-scrolled', window.scrollY > 8);
+  if (!header) return;
+  header.toggleAttribute('data-scrolled', window.scrollY > 8);
+
+  const heroDark = document.querySelector('[data-hero-dark]');
+  const overHero =
+    !!heroDark && heroDark.getBoundingClientRect().bottom > HEADER_HEIGHT;
+  header.toggleAttribute('data-over-hero', overHero);
 }
 
 function initHeader(): void {

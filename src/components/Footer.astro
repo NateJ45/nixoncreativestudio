@@ -64,6 +64,12 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
   behind the bottom row as a brand graphic.
 -->
 <footer class="footer-seam relative isolate overflow-hidden bg-primary py-2xl text-primary-foreground">
+
+  <!-- Drifting brand aurora behind the columns. A child layer rather than the
+       .bg-aurora ::before (the footer-seam already owns ::before). Decorative;
+       freezes under reduced motion via the global rule. -->
+  <div class="bg-aurora pointer-events-none absolute inset-0 opacity-50" aria-hidden="true"></div>
+
   <div class="ncs-container relative z-10">
 
     <!-- Top section: three columns side by side on desktop, stacked on mobile.
@@ -138,7 +144,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
     class="pointer-events-none absolute inset-x-0 bottom-0 z-0 select-none overflow-hidden"
     aria-hidden="true"
   >
-    <span class="block translate-y-[28%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-primary-foreground/5 [font-size:22vw]">
+    <span class="footer-watermark block translate-y-[28%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-primary-foreground/5 [font-size:22vw]">
       {site.studioName}
     </span>
   </div>
@@ -161,6 +167,24 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
       transparent
     );
     z-index: 1;
+  }
+
+  /* Watermark parallax. Scroll-driven (ties motion to the visitor's scroll,
+     not a timer) and progressively enhanced: only where animation-timeline is
+     supported and motion is allowed. Otherwise the static translate-y-[28%]
+     utility holds. Tiny amplitude so it reads as crafted, not flashy. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .footer-watermark {
+        animation: footer-drift linear both;
+        animation-timeline: view();
+        animation-range: entry 0% exit 100%;
+      }
+    }
+  }
+  @keyframes footer-drift {
+    from { transform: translateY(40%); }
+    to   { transform: translateY(20%); }
   }
 
   /* Availability status dot pulse. Honors reduced motion. */

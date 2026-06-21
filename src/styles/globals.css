@@ -36,7 +36,6 @@
 @import "@fontsource-variable/source-sans-3";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -68,7 +67,11 @@
 
   /* Text */
   --color-text:       #1A1A1A; /* Near-black body. */
-  --color-text-muted: #6B7280; /* Muted gray for meta info and captions. */
+  /* Real muted value. This literal is re-aliased to --muted-foreground in the
+     @theme inline block below, which the :root / .dark switch sets to #5F6573
+     (light) and #9CA3AF (dark). Kept in sync here so the source-of-truth
+     reference is not misleading. */
+  --color-text-muted: #5F6573;
 
   /* Surfaces */
   --color-bg:      #FFFFFF;    /* Default page background. */
@@ -283,50 +286,13 @@
   }
 }
 
-/* ---- Gradient text --------------------------------------------------------
-   Clips a brand gradient to the text. Add .text-gradient-animate to pan it. */
-.text-gradient {
-  /* Light-surface safe: these stops clear WCAG AA large-text 3:1 on white
-     (#FFFFFF) and bg-soft (#F4F7FA). For text on a dark/navy surface use
-     .text-gradient-bright instead, which keeps the vivid brand stops. */
-  background-image: linear-gradient(100deg, #2a6fb0, #1f5c95 48%, #b3650f);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-}
-/* In dark mode the surface behind a .text-gradient heading is deep navy, so
-   the vivid brand stops both read well and clear AA there. */
-.dark .text-gradient {
-  background-image: linear-gradient(
-    100deg,
-    var(--color-accent),
-    var(--color-secondary) 45%,
-    var(--color-tertiary)
-  );
-}
-/* Always-vivid variant for headings that sit on a dark/navy surface in BOTH
-   themes (the homepage hero, the photography hero). The bright accent -> sky
-   -> amber stops clear AA large-text on navy. */
-.text-gradient-bright {
-  background-image: linear-gradient(
-    100deg,
-    var(--color-accent),
-    var(--color-secondary) 45%,
-    var(--color-tertiary)
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .text-gradient-animate {
-    animation: gradient-pan 6s linear infinite;
-  }
-}
+/* ---- Heading emphasis -----------------------------------------------------
+   Gradient text (background-clip:text over a gradient) was removed site-wide.
+   It is an impeccable absolute ban: decorative, never meaningful, and a top
+   AI-portfolio tell. Heading emphasis is now carried by a solid brand token
+   plus weight/size: amber (text-tertiary) on dark/navy heroes, NCS blue
+   (text-link) on light surfaces. If you ever want a colored accent phrase,
+   wrap it in a solid token span, never a clipped gradient. */
 
 /* ---- Aurora / mesh background ---------------------------------------------
    Drifting layered radial gradients for dark surfaces (hero, CTA bands). The
@@ -387,10 +353,14 @@
   inset: -25%;
   z-index: -1;
   pointer-events: none;
-  /* Light mode: a quiet accent/sky glow drifting over the light surface. */
+  /* Light mode: a confident accent/sky/amber glow over the light surface.
+     Raised from the original 10-12% so the band actually reads as a designed
+     surface in light mode instead of flat bg-soft (the third amber stop adds
+     warmth without tipping past AA on the text that sits over it). */
   background:
-    radial-gradient(42% 52% at 20% 16%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 70%),
-    radial-gradient(40% 48% at 82% 26%, color-mix(in oklab, var(--color-secondary) 10%, transparent), transparent 70%);
+    radial-gradient(46% 56% at 18% 14%, color-mix(in oklab, var(--color-accent) 22%, transparent), transparent 72%),
+    radial-gradient(42% 50% at 84% 24%, color-mix(in oklab, var(--color-secondary) 16%, transparent), transparent 72%),
+    radial-gradient(50% 54% at 64% 92%, color-mix(in oklab, var(--color-tertiary) 10%, transparent), transparent 72%);
 }
 .dark .band-themed::before {
   /* Dark mode: the full navy aurora. */
@@ -416,6 +386,71 @@
 .hover-lift:focus-visible {
   transform: translateY(-4px);
   box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--color-primary) 55%, transparent);
+}
+
+/* ---- Elevated card surface -------------------------------------------------
+   Add .surface-card to a card so it reads as lifted in BOTH themes: a tinted
+   card surface, a soft layered shadow, a 1px top highlight, and a border. This
+   is the fix for "light mode cards dissolve into the page" — light mode has no
+   color-step for elevation, so the shadow + highlight do the work the dark-mode
+   navy-on-near-black step does for free. Compose with data-spotlight for the
+   cursor glow and .hover-lift for the rise. */
+.surface-card {
+  background-color: var(--card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card), var(--card-highlight);
+  transition: box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.surface-card:hover,
+.surface-card:focus-within {
+  box-shadow: var(--shadow-card-hover), var(--card-highlight);
+}
+
+/* ---- Quiet texture / atmosphere washes (static, light + dark) --------------
+   .bg-dotgrid lays a faint dot grid that fades out toward the content via a
+   radial mask, so a section gains texture instead of reading as blank paper.
+   .bg-mesh-soft drops a low-opacity brand glow behind a light section, the
+   light-mode counterpart to the dark aurora. Both are decorative (z-index:-1
+   inside an isolated stacking context), carry no text, and are fully static so
+   there is nothing to gate for reduced motion. Host content sits naturally on
+   top; no z-10 needed because the decoration is below the local stack. */
+.bg-dotgrid {
+  position: relative;
+  isolation: isolate;
+}
+.bg-dotgrid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-heading) 9%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
+          mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
+  opacity: 0.55;
+}
+.bg-mesh-soft {
+  position: relative;
+  isolation: isolate;
+}
+.bg-mesh-soft::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 52% at 10% 0%, color-mix(in oklab, var(--color-accent) 7%, transparent), transparent 70%),
+    radial-gradient(40% 48% at 94% 6%, color-mix(in oklab, var(--color-secondary) 6%, transparent), transparent 70%);
+}
+.dark .bg-mesh-soft::before {
+  background:
+    radial-gradient(44% 54% at 10% 0%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 72%),
+    radial-gradient(42% 50% at 94% 6%, color-mix(in oklab, var(--color-secondary) 10%, transparent), transparent 72%);
 }
 
 /* Shine sweep: add .shine to a position:relative, overflow:hidden element
@@ -507,9 +542,6 @@
 }
 
 /* ---- Shared keyframes ----------------------------------------------------- */
-@keyframes gradient-pan {
-  to { background-position: 200% center; }
-}
 @keyframes aurora-drift {
   0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
   100% { transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14); }
@@ -653,8 +685,11 @@ html.ncs-gated .ncs-overlay {
   --color-heading:    var(--heading);
   --color-link:       var(--link);
 
-  --font-heading:   var(--font-sans);
-  --font-sans:   'Geist Variable', sans-serif;
+  /* font-heading utility points at the display face (Bebas Neue), the real
+     heading font. font-sans tracks the body face so the utility and the
+     base body style agree (the unused Geist webfont was removed). */
+  --font-heading:   var(--font-display);
+  --font-sans:   "Source Sans 3 Variable", system-ui, sans-serif;
   --color-sidebar-ring:   var(--sidebar-ring);
   --color-sidebar-border:   var(--sidebar-border);
   --color-sidebar-accent-foreground:   var(--sidebar-accent-foreground);
@@ -733,10 +768,22 @@ html.ncs-gated .ncs-overlay {
   /* Surfaces */
   --background:         #FFFFFF;        /* = brand --color-bg */
   --foreground:         #1A1A1A;        /* = brand --color-text */
-  --card:               #FFFFFF;
+  /* Card surface sits a hair off pure white so a soft shadow has something
+     to separate from. Imperceptible as a color, but it lets light-mode cards
+     read as elevated instead of dissolving into a white page. */
+  --card:               #FCFDFE;
   --card-foreground:    #1A1A1A;
   --popover:            #FFFFFF;
   --popover-foreground: #1A1A1A;
+
+  /* Elevation + framing shadows. Light mode has no color-step to lean on the
+     way dark mode does (deep-navy card on near-black bg), so depth has to come
+     from real, soft shadows plus a 1px top highlight. --shadow-frame is the
+     shared recipe for framed artifacts (SiteShowcase, BeforeAfter). */
+  --shadow-card:        0 1px 2px rgba(10, 22, 40, 0.06), 0 12px 28px -16px rgba(10, 22, 40, 0.14);
+  --shadow-card-hover:  0 2px 6px rgba(10, 22, 40, 0.08), 0 22px 48px -22px rgba(10, 22, 40, 0.20);
+  --shadow-frame:       0 30px 70px -42px rgba(10, 22, 40, 0.55);
+  --card-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.65);
 
   /* Primary action color. Navy is the dominant brand surface; primitives
      like Button (default variant) pick this up. Stays navy in dark mode
@@ -804,7 +851,7 @@ html.ncs-gated .ncs-overlay {
   --sidebar-accent:               #F4F7FA;
   --sidebar-accent-foreground:    #0A1628;
   --sidebar-border:               rgba(0, 0, 0, 0.08);
-  --sidebar-ring:                 #3B82C4;
+  --sidebar-ring:                 #3478BD;   /* matches the live --ring (AA accent) */
 
   /* --------------------------------------------------------------------
      Starwind UI extra semantic tokens.
@@ -859,6 +906,14 @@ html.ncs-gated .ncs-overlay {
   --popover:            #0A1628;
   --popover-foreground: #E5E7EB;
 
+  /* Dark mode already has a real color-step for elevation (navy card on
+     near-black bg), so shadows go deeper-and-softer and the top highlight
+     drops to a faint sheen rather than a white line. */
+  --shadow-card:        0 1px 2px rgba(0, 0, 0, 0.40), 0 14px 32px -18px rgba(0, 0, 0, 0.60);
+  --shadow-card-hover:  0 2px 8px rgba(0, 0, 0, 0.45), 0 26px 54px -24px rgba(0, 0, 0, 0.70);
+  --shadow-frame:       0 30px 70px -40px rgba(0, 0, 0, 0.70);
+  --card-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
   /* Primary stays navy in dark mode (see :root comment for why). */
   --primary:            #0A1628;
   --primary-foreground: #FFFFFF;
@@ -912,7 +967,7 @@ html.ncs-gated .ncs-overlay {
   --sidebar-accent:               #0F1E33;
   --sidebar-accent-foreground:    #E5E7EB;
   --sidebar-border:               rgba(255, 255, 255, 0.08);
-  --sidebar-ring:                 #3B82C4;
+  --sidebar-ring:                 #40AAED;   /* matches the live dark --ring */
 
   /* Starwind UI extra semantic tokens — dark mode variants. */
   --primary-accent:     #1E3A5F;   /* lifted navy for dark primary hover */

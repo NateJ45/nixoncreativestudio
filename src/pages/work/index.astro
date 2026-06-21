@@ -65,7 +65,7 @@ const sectors = (['church', 'preschool', 'nonprofit', 'small-business'] as const
         >
           Portfolio
         </p>
-        <h1 id="work-index-heading" data-reveal class="text-gradient">Selected work</h1>
+        <h1 id="work-index-heading" data-reveal>Selected work</h1>
         <p
           data-reveal
           style="--reveal-delay: 90ms"
@@ -88,95 +88,92 @@ const sectors = (['church', 'preschool', 'nonprofit', 'small-business'] as const
         </div>
       )}
 
-      <!-- Card grid. Same auto-fit minmax pattern as the homepage strip.
-           Each card scroll-reveals with a per-card stagger (delay derived
-           from its index), lifts on hover, lights a cursor-following NCS-blue
-           spotlight glow, and gently zooms its cover. The cover sits in a
-           transition:name wrapper so it morphs into the matching hero on the
-           case-study detail page (which declares the same cover-${id} name). -->
-      <ul class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))]">
+      <!-- Card grid with an editorial feature row. The newest entry spans the
+           full width as a large horizontal card (image + body side by side at
+           md), then the rest fall into a 2/3-up grid. This breaks the
+           identical-card-grid look so the page reads as curated, not generated,
+           while staying a single <ul> the sector filter can hide/show.
+           Each card is an elevated .surface-card (real depth in light mode),
+           lifts on hover, lights a cursor-following glow, gently zooms its
+           cover, and morphs that cover into the detail-page hero via the
+           shared cover-${id} transition name. -->
+      <ul class="grid gap-l md:grid-cols-2 lg:grid-cols-3">
         {entries.map((entry, i) => {
           // Pretty sector label for the meta row: kebab-case → Title Case.
           const sectorLabel = entry.data.sector
             .replace(/-/g, ' ')
             .replace(/\b\w/g, (c) => c.toUpperCase());
+          // The first (newest) entry is the feature card: full-width, horizontal.
+          const isFeature = i === 0;
           return (
-            <li data-work-card data-sector={entry.data.sector}>
-              <!-- Whole card is the link, standard card a11y pattern. The
-                   spotlight-card class + data-spotlight wire the hover glow;
-                   data-reveal fades it up on scroll with a staggered delay
-                   so the grid populates row by row instead of all at once.
-                   The stagger is capped so a long catalogue never feels slow. -->
+            <li
+              data-work-card
+              data-sector={entry.data.sector}
+              class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
+            >
+              <!-- Whole card is the link (standard card a11y pattern). Stagger
+                   is capped per row so the cascade stays consistent at any
+                   catalogue length. -->
               <a
                 data-reveal
                 data-spotlight
-                style={`--reveal-delay: ${Math.min(i, 7) * 80}ms`}
-                class="spotlight-card group hover-lift flex h-full flex-col gap-m rounded-xl border border-border bg-bg-soft p-s text-inherit no-underline transition-transform duration-200 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
+                style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
+                class:list={[
+                  'surface-card spotlight-card group hover-lift rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4',
+                  isFeature
+                    ? 'flex flex-col gap-m md:grid md:grid-cols-2 md:items-center md:gap-l'
+                    : 'flex h-full flex-col gap-m',
+                ]}
                 href={`/work/${entry.id}/`}
               >
 
-                <!-- z-10 wrapper keeps the card content above the spotlight
-                     glow that the spotlight-card paints behind it. -->
-                <div class="relative z-10 flex h-full flex-col gap-m">
+                <!-- Cover. alt="" because the card's h2 carries the same name;
+                     the transition:name wrapper morphs this cover into the
+                     detail page's hero during a View Transition. -->
+                <div
+                  transition:name={`cover-${entry.id}`}
+                  class="relative z-10 overflow-hidden rounded-lg"
+                >
+                  <CaseStudyCover
+                    cover={entry.data.cover}
+                    placeholder={placeholders.get(entry.id)}
+                    alt=""
+                    widths={isFeature ? [600, 900, 1280] : [400, 600, 900]}
+                    sizes={isFeature ? '(min-width: 64rem) 60vw, 100vw' : '(min-width: 56rem) 33vw, 100vw'}
+                    fit="cover"
+                    class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
+                  />
+                </div>
 
-                  <!-- Cover. CaseStudyCover wraps Astro <Image /> with a
-                       plaiceholder blur preview that paints while the full
-                       image downloads, then fades the real image in.
-                       alt="" because the card's h2 immediately below carries
-                       the same name; describing the image too would make
-                       screen readers announce the title twice per card.
-
-                       The wrapper carries transition:name so this exact
-                       cover element morphs into the detail page's hero image
-                       during a View Transition. overflow-hidden clips the
-                       inner zoom; the cover scales up a touch on hover. -->
-                  <div
-                    transition:name={`cover-${entry.id}`}
-                    class="overflow-hidden rounded-lg"
-                  >
-                    <CaseStudyCover
-                      cover={entry.data.cover}
-                      placeholder={placeholders.get(entry.id)}
-                      alt=""
-                      widths={[400, 600, 900]}
-                      sizes="(min-width: 56rem) 33vw, 100vw"
-                      fit="cover"
-                      class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
-                    />
-                  </div>
-
-                  <div class="flex flex-col gap-xs">
-                    <p class="font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
-                      {sectorLabel}
+                <div class="relative z-10 flex flex-1 flex-col gap-xs">
+                  <p class="text-xs font-semibold uppercase tracking-[0.06em] text-text-muted">
+                    {sectorLabel}
+                  </p>
+                  <h2 class:list={[
+                    'text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link',
+                    isFeature ? 'text-h2' : 'text-h3',
+                  ]}>
+                    {entry.data.title}
+                  </h2>
+                  {entry.data.outcome && (
+                    <!-- Outcome line: the honest one-line result, in --link so
+                         the proof-point reads at first scan. -->
+                    <p class="font-semibold leading-[1.4] text-link">{entry.data.outcome}</p>
+                  )}
+                  <p class="leading-[1.5] text-text">{entry.data.summary}</p>
+                  {entry.data.stack && entry.data.stack.length > 0 && (
+                    <!-- Stack reveal (mono is the right register here: it is a
+                         genuine technical "inside the build" label). Collapsed
+                         until hover/focus; aria-hidden since the detail page
+                         carries the same info. -->
+                    <p
+                      aria-hidden="true"
+                      class="max-h-0 overflow-hidden font-mono text-[0.75rem] uppercase tracking-[0.06em] text-text-muted opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
+                    >
+                      Built with {entry.data.stack.join(', ')}
                     </p>
-                    <h2 class="text-h3 text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link">
-                      {entry.data.title}
-                    </h2>
-                    {entry.data.outcome && (
-                      <!-- Outcome line. The honest one-line result, lifted to
-                           the top of the card body so the proof-point reads at
-                           first scan. --link color marks it as the takeaway. -->
-                      <p class="font-semibold leading-[1.4] text-link">{entry.data.outcome}</p>
-                    )}
-                    <p class="leading-[1.5] text-text">{entry.data.summary}</p>
-                    {entry.data.stack && entry.data.stack.length > 0 && (
-                      <!-- Stack reveal. Collapsed (opacity 0 + max-height 0)
-                           until the card is hovered or focus-visible. Reads
-                           as a designer-y "inside the build" detail without
-                           crowding the card at rest. Hidden from screen
-                           readers via aria-hidden because the same info is
-                           on the case study detail page and announcing it
-                           here would clutter the link's accessible name. -->
-                      <p
-                        aria-hidden="true"
-                        class="max-h-0 overflow-hidden font-mono text-[0.75rem] uppercase tracking-[0.06em] text-text-muted opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
-                      >
-                        Built with {entry.data.stack.join(', ')}
-                      </p>
-                    )}
-                    <span class="card-link mt-auto pt-xs">Read the case study</span>
-                  </div>
-
+                  )}
+                  <span class="card-link mt-auto pt-xs">Read the case study</span>
                 </div>
 
               </a>
