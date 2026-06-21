@@ -409,6 +409,7 @@ Site visitors include potential clients (small businesses, churches, schools, pr
 - Previews: any other branch gets its own `*-nixoncreativestudio.nathanjnixon86.workers.dev` URL.
 - Build command: `npm run build`. Output directory: `dist`.
 - `output: 'static'` in `astro.config.mjs` prerenders every page to HTML at build time. The `@astrojs/cloudflare` adapter is installed but inert for static pages. To opt a single page into server rendering, add `export const prerender = false` in that page's frontmatter.
+- The adapter is configured with `imageService: 'compile'` so `<Image />` is optimized at build time into static `dist/_astro/*.webp` files. Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
 
 ### Environment variables
 

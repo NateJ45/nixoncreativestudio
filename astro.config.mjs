@@ -28,7 +28,15 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
-  adapter: cloudflare(),
+  // imageService: 'compile' makes Astro optimize <Image /> at BUILD time with
+  // Sharp, emitting static .webp files into dist/_astro/. Without it the
+  // Cloudflare adapter defaults to its runtime image service, so the built
+  // HTML points at a /_image?... endpoint that only works if the Cloudflare
+  // Images binding is configured on the Pages project. On this fully-static
+  // site that runtime dependency left every case-study cover stuck on its
+  // blur-up placeholder in production. Build-time images need no binding and
+  // work on any host.
+  adapter: cloudflare({ imageService: 'compile' }),
   integrations: [mdx(), sitemap(), react()],
 
   vite: {
