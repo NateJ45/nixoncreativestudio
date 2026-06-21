@@ -364,6 +364,48 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* ---- Theme-aware band -----------------------------------------------------
+   A closing/process band that reads LIGHT in light mode and navy in dark mode,
+   each with its own decorative glow. Lets light mode stay genuinely light while
+   dark mode keeps the navy aurora. Host needs nothing extra; the decoration
+   lives in ::before at z-(-1) so content sits naturally above it. Use
+   theme-aware text tokens on top (text-heading, text-text-muted, text-link),
+   not text-primary-foreground. The Hero and Footer deliberately do NOT use
+   this (they stay navy in both themes as the page's dark anchors). */
+.band-themed {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--color-bg-soft);
+}
+.dark .band-themed {
+  background-color: var(--color-primary);
+}
+.band-themed::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  /* Light mode: a quiet accent/sky glow drifting over the light surface. */
+  background:
+    radial-gradient(42% 52% at 20% 16%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 70%),
+    radial-gradient(40% 48% at 82% 26%, color-mix(in oklab, var(--color-secondary) 10%, transparent), transparent 70%);
+}
+.dark .band-themed::before {
+  /* Dark mode: the full navy aurora. */
+  background:
+    radial-gradient(38% 48% at 18% 22%, color-mix(in oklab, var(--color-accent) 55%, transparent), transparent 70%),
+    radial-gradient(36% 44% at 82% 26%, color-mix(in oklab, var(--color-secondary) 45%, transparent), transparent 70%),
+    radial-gradient(48% 52% at 62% 86%, color-mix(in oklab, var(--color-tertiary) 28%, transparent), transparent 70%);
+  filter: blur(10px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .band-themed::before {
+    animation: aurora-drift 22s ease-in-out infinite alternate;
+  }
+}
+
 /* ---- Hover micro-interactions --------------------------------------------- */
 .hover-lift {
   transition:

@@ -5,10 +5,12 @@
    CTA Banner  [revamp]
    ============================================================================
    Reusable call-to-action band that closes most inner pages and sits above the
-   footer. Now a designed closing moment rather than a flat rectangle: an
-   animated aurora mesh over the navy surface, a cursor-following spotlight, a
-   scroll-reveal on the copy, and a magnetic shine button. The navy base still
-   flows into the navy footer so the bottom of the page reads as one dark field.
+   footer. Uses the theme-aware `.band-themed` surface: a light surface with a
+   soft accent glow in light mode, and the full navy aurora in dark mode. So in
+   light mode it reads light (not a dark block before the footer), while in dark
+   mode it still flows into the navy footer. Text uses theme-aware tokens
+   (text-heading / text-text-muted) so it stays legible on either surface.
+   Scroll-reveal on the copy plus a magnetic shine button carry the motion.
 
    All motion is reduced-motion safe (see globals.css section 6).
    ============================================================================ */
@@ -31,9 +33,8 @@ const {
 ---
 
 <section
-  class="bg-aurora spotlight-card relative isolate overflow-hidden bg-primary py-2xl text-primary-foreground"
+  class="band-themed py-2xl"
   aria-labelledby="cta-banner-title"
-  data-spotlight
 >
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
        below the copy on narrow screens. -->
@@ -43,8 +44,8 @@ const {
   >
 
     <div class="flex max-w-[50ch] flex-col gap-s">
-      <h2 id="cta-banner-title" class="text-primary-foreground">{title}</h2>
-      <p class="text-lg leading-[1.5] text-primary-foreground/80">{sub}</p>
+      <h2 id="cta-banner-title" class="text-heading">{title}</h2>
+      <p class="text-lg leading-[1.5] text-text-muted">{sub}</p>
     </div>
 
     <span class="inline-block" data-magnetic="0.4">
