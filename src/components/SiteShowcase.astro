@@ -1,0 +1,134 @@
+---
+// Safe to edit.
+/* ============================================================================
+   SiteShowcase  [revamp]
+   ============================================================================
+   An animated "live site" showcase: a browser-chrome window whose full-page
+   screenshot scrolls (or slowly zooms) on a loop, so a case study can show the
+   whole shipped site in motion instead of a single static frame. The frame is
+   a link to the live site and pauses the scroll on hover so a visitor can stop
+   and read.
+
+   Usage inside a case study .mdx (imports go right under the frontmatter):
+
+     import SiteShowcase from '../../components/SiteShowcase.astro';
+     import homeShot from '../../assets/case-studies/shots/<slug>-home.png';
+
+     <SiteShowcase
+       src={homeShot}
+       alt="The <Client> homepage, top to bottom"
+       href="https://example.com"
+       label="example.com"
+     />
+
+   Accessibility: the scroll/zoom is gated behind prefers-reduced-motion, so a
+   reduced-motion visitor sees a static frame (the top of the page) and the
+   link still works. The chrome dots are decorative (aria-hidden) and the link
+   carries an explicit aria-label.
+   ============================================================================ */
+
+import { Image } from 'astro:assets';
+
+interface Props {
+  /** Full-page screenshot, imported so Astro optimizes it. */
+  src: ImageMetadata;
+  /** Descriptive alt for the screenshot. */
+  alt: string;
+  /** Live site URL the frame links to. */
+  href: string;
+  /** Address-bar label. Defaults to the href host without protocol. */
+  label?: string;
+  /** 'scroll' (default) auto-scrolls the whole page; 'zoom' slow Ken Burns. */
+  variant?: 'scroll' | 'zoom';
+}
+
+const { src, alt, href, label, variant = 'scroll' } = Astro.props;
+const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
+---
+
+<figure class="site-showcase my-l">
+  <a
+    class="showcase group block overflow-hidden rounded-xl border border-border bg-bg no-underline shadow-[0_30px_70px_-42px_rgba(10,22,40,0.6)] transition-transform duration-300 hover:-translate-y-1"
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={`Visit the live ${shown} site (opens in a new tab)`}
+  >
+    <!-- Browser chrome bar: traffic-light dots + a fake address bar. -->
+    <div class="flex items-center gap-s border-b border-border bg-bg-soft px-3 py-2">
+      <span class="flex gap-1.5" aria-hidden="true">
+        <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
+      </span>
+      <span class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-bg px-3 py-1 font-mono text-[0.72rem] text-text-muted">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="9" rx="2" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        {shown}
+      </span>
+      <span class="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-link opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+        Visit ↗
+      </span>
+    </div>
+
+    <!-- Scrolling / zooming viewport. -->
+    <div class={`showcase-window ${variant === 'zoom' ? 'showcase-zoom' : 'showcase-scroll'}`}>
+      <Image
+        src={src}
+        alt={alt}
+        widths={[600, 900, 1200]}
+        sizes="(min-width: 56rem) 70vw, 100vw"
+      />
+    </div>
+  </a>
+
+  <figcaption class="mt-xs text-center font-mono text-[0.75rem] text-text-muted">
+    Live at <span class="text-link">{shown}</span>. Hover to pause.
+  </figcaption>
+</figure>
+
+<style>
+  /* The fixed-height window crops the tall screenshot; the inner image is
+     animated to reveal the whole page. --wh is shared between the window
+     height and the scroll keyframe so the image stops exactly at its bottom. */
+  .showcase-window {
+    --wh: clamp(17rem, 52vh, 28rem);
+    position: relative;
+    height: var(--wh);
+    overflow: hidden;
+    background: var(--color-bg-soft);
+  }
+
+  .showcase-window :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .showcase-scroll :global(img) {
+      animation: showcase-scroll 24s ease-in-out infinite alternate;
+    }
+    .showcase-zoom :global(img) {
+      transform-origin: top center;
+      animation: showcase-zoom 18s ease-in-out infinite alternate;
+    }
+    /* Pause whichever animation is running while the visitor hovers/focuses. */
+    .showcase:hover .showcase-window :global(img),
+    .showcase:focus-visible .showcase-window :global(img) {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes showcase-scroll {
+    0%, 7%    { transform: translateY(0); }
+    93%, 100% { transform: translateY(calc(-100% + var(--wh))); }
+  }
+
+  @keyframes showcase-zoom {
+    from { transform: scale(1); }
+    to   { transform: scale(1.16) translateY(-6%); }
+  }
+</style>
