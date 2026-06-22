@@ -9,27 +9,30 @@
    don't tell" instinct the brand is built on) and fills the right side of the
    hero next to the headline.
 
-   How duplicates are impossible: the cover pool is PARTITIONED across the three
-   frames (round-robin), so each frame owns a distinct, non-overlapping set of
-   sites. Two frames can never show the same site, by construction, no matter
-   where each is in its rotation.
+   Motion is deliberately restrained (research on UI motion is consistent that
+   peripheral motion steals attention from the headline if it is busy):
+     - Slow cadence. One shared timer advances ONE frame per tick, so only one
+       frame crossfades at a time, and the cadence is long (each frame is shown
+       ~8s), so it reads ambient, not frantic.
+     - Gentle Ken Burns. The active shot zooms very slightly over its dwell, so
+       it feels alive without a hard motion.
+     - Hover to explore. On a fine pointer, hovering a frame lifts it, pans its
+       screenshot down to reveal more of the page, and PAUSES the rotation so
+       you can take it in. The whole cluster links to /work so a click is never
+       a dead end.
+   All of the above is gated to (prefers-reduced-motion: no-preference); with
+   reduced motion the cascade is a still three-site collage.
 
-   How blanks are impossible: every slide image is loading="eager". The pool is
-   small (a handful of covers, deduped by Astro to one optimized asset each), so
-   a frame can never crossfade to an image that hasn't loaded yet.
+   Why duplicates and blanks are impossible: the cover pool is PARTITIONED
+   across the three frames (round-robin), so each frame owns a distinct set and
+   no two can show the same site; every slide image is loading="eager", so a
+   crossfade never lands on an unloaded image. Wider `widths` keep the frames
+   crisp on retina screens.
 
-   How the rotation stays calm: one shared timer advances ONE frame per tick
-   (round-robin), so only one frame ever crossfades at a time.
-
-   Collection-driven: it reads the case-studies covers (real hero screenshots of
-   the live sites) so it stays in sync as the portfolio grows. featured entries
-   lead; the newest others fill in.
-
-   Decorative by design: the whole cluster is aria-hidden and not interactive.
-   The navigable work lives in the "See the work" CTA beside it and the Selected
-   Work section below, so this auto-advancing visual never becomes an
-   accessibility trap. The crossfade is disabled under prefers-reduced-motion
-   (each frame holds its first, distinct shot) and pauses when the tab is hidden.
+   Decorative by design: the cluster is aria-hidden and out of the tab order
+   (the real navigation is the "See the work" CTA beside it and the Selected
+   Work section below), so the /work link is a mouse-only bonus, not an
+   accessibility trap.
    ============================================================================ */
 
 import { Image } from 'astro:assets';
@@ -67,7 +70,7 @@ const renderable = frames.filter((f) => f.length > 0);
 ---
 
 {pool.length >= FRAME_COUNT && (
-  <div class="hero-showcase" aria-hidden="true" data-hero-showcase>
+  <a class="hero-showcase" href="/work/" aria-hidden="true" tabindex="-1" data-hero-showcase>
     {renderable.map((covers, fi) => (
       <div class:list={['showcase-frame', `frame-${fi}`]} data-frame>
         {/* Browser chrome: traffic-light dots + an address bar whose text the
@@ -82,17 +85,17 @@ const renderable = frames.filter((f) => f.length > 0);
         </div>
 
         {/* Crossfading viewport. Every cover stacks absolutely; the script
-            fades between them. object-top so each shot reads from the top of
-            the page. All eager so a crossfade never lands on a blank. */}
+            fades between them. All eager so a crossfade never lands on a blank.
+            wider `widths` so the frames stay crisp on retina screens. */}
         <div class="frame-viewport">
           {covers.map((s, i) => (
             <div class="frame-slide" data-slide data-host={s.host} data-active={i === 0 ? 'true' : undefined}>
               <Image
                 src={s.cover}
                 alt=""
-                widths={[400, 640, 900]}
-                sizes="(min-width: 64rem) 40vw, 80vw"
-                class="h-full w-full object-cover object-top"
+                widths={[480, 760, 1100]}
+                sizes="(min-width: 64rem) 34vw, 80vw"
+                class="frame-img h-full w-full"
                 loading="eager"
               />
             </div>
@@ -100,15 +103,15 @@ const renderable = frames.filter((f) => f.length > 0);
         </div>
       </div>
     ))}
-  </div>
+  </a>
 )}
 
 <style>
-  /* The cascade lives in a height-clamped relative box so the three absolutely
-     positioned frames have a definite height to resolve their % offsets
-     against, and so the whole cluster shrinks on short laptops instead of
-     overflowing the 100svh hero. */
+  /* A clickable, height-clamped relative box. The three absolutely positioned
+     frames resolve their % offsets against this height, and it shrinks on short
+     laptops instead of overflowing the 100svh hero. */
   .hero-showcase {
+    display: block;
     position: relative;
     width: 100%;
     height: clamp(22rem, 58vh, 40rem);
@@ -121,12 +124,15 @@ const renderable = frames.filter((f) => f.length > 0);
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: var(--shadow-frame);
     background-color: color-mix(in oklab, var(--color-primary) 70%, #000);
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.4s ease,
+      opacity 0.4s ease;
   }
 
   /* Diagonal cascade. Widths are generous and the offsets push the set to span
      the full column width (frame-1 reaches the right edge), so the cluster
-     fills the horizontal space instead of clustering in the middle. Light
-     vertical overlap gives depth without hiding much of each shot. */
+     fills the horizontal space. Light vertical overlap gives depth. */
   .frame-0 {
     top: 0;
     left: 0;
@@ -183,27 +189,65 @@ const renderable = frames.filter((f) => f.length > 0);
     position: absolute;
     inset: 0;
     opacity: 0;
-    transition: opacity 0.8s ease;
+    transition: opacity 1.2s ease;
   }
   .frame-slide[data-active] {
     opacity: 1;
   }
+  .frame-img {
+    object-fit: cover;
+    /* Shows the top of each page by default; hover pans this toward the
+       bottom (see below) to reveal more of the site. */
+    object-position: 50% 0%;
+  }
 
-  /* No transition under reduced motion; each frame simply holds its first,
-     distinct shot, so the cluster is still a three-site collage. */
-  @media (prefers-reduced-motion: reduce) {
-    .frame-slide {
-      transition: none;
+  /* ---- Motion layer, all gated to motion-OK ----------------------------- */
+  @media (prefers-reduced-motion: no-preference) {
+    /* Gentle Ken Burns on whichever slide is active: a slow, slight zoom over
+       roughly the dwell time so the visible shot feels alive, not static. */
+    .frame-slide[data-active] .frame-img {
+      animation: hero-kenburns 9s ease-out both;
+    }
+  }
+
+  /* ---- Hover to explore (fine pointers only) ---------------------------- */
+  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .frame-img {
+      transition: object-position 3.5s ease;
+    }
+    /* Lift the hovered frame forward; gently dim the others so it reads as
+       "examine this one." */
+    .hero-showcase:hover .showcase-frame {
+      opacity: 0.72;
+    }
+    .showcase-frame:hover {
+      transform: translateY(-6px);
+      z-index: 40;
+      opacity: 1;
+      box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.6);
+    }
+    /* Pan the hovered frame's shot down to reveal more of the page. */
+    .showcase-frame:hover .frame-slide[data-active] .frame-img {
+      object-position: 50% 100%;
+    }
+  }
+
+  @keyframes hero-kenburns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.06);
     }
   }
 </style>
 
 <script>
-  // Crossfade the cascade and keep each frame's address bar in sync. Runs on
-  // astro:page-load (survives View Transitions) with a dataset bind guard;
-  // disabled under reduced motion; pauses while the tab is hidden. Frames hold
-  // disjoint cover sets (see the frontmatter), so there is no cross-frame
-  // de-duplication to do here: each just advances through its own list.
+  // Crossfade the cascade, keep each frame's address bar in sync, and pause on
+  // hover so an explored shot does not swap mid-look. Runs on astro:page-load
+  // (survives View Transitions) with a dataset bind guard; disabled under
+  // reduced motion; pauses while the tab is hidden. Frames hold disjoint cover
+  // sets (see the frontmatter), so each just advances through its own list.
   function initHeroShowcase() {
     document
       .querySelectorAll<HTMLElement>('[data-hero-showcase]:not([data-showcase-bound])')
@@ -228,13 +272,15 @@ const renderable = frames.filter((f) => f.length > 0);
 
         let tick = 0;
         let timer: ReturnType<typeof setInterval> | undefined;
-        // One frame per tick, round-robin: only one crossfade happens at a time.
+        let paused = false; // set true while a pointer is hovering the cluster
+        // One frame per tick, round-robin, on a slow cadence: only one crossfade
+        // at a time and each frame changes roughly every FRAME_COUNT * interval.
         const onTick = () => {
           advance(frames[tick % frames.length]);
           tick++;
         };
         const start = () => {
-          if (!timer) timer = setInterval(onTick, 1600);
+          if (!timer && !paused) timer = setInterval(onTick, 2800);
         };
         const stop = () => {
           if (timer) {
@@ -243,6 +289,20 @@ const renderable = frames.filter((f) => f.length > 0);
           }
         };
         start();
+
+        // Pause the rotation while a fine pointer hovers, so the shot you are
+        // exploring holds still. Touch devices have no hover, so this is gated.
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+          root.addEventListener('pointerenter', () => {
+            paused = true;
+            stop();
+          });
+          root.addEventListener('pointerleave', () => {
+            paused = false;
+            if (!document.hidden) start();
+          });
+        }
+
         document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
       });
   }
