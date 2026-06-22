@@ -11,9 +11,10 @@
    headline carries the hero.
 
    Why layered instead of side-by-side: a strict right column made the cascade
-   either clip at the viewport edge or leave dead space. As a contained scene
-   behind the text it uses the whole width, never spills past the viewport
-   (the hero is overflow-hidden), and reads as one composed image.
+   either clip at the viewport edge or leave dead space. As a scene behind the
+   text, held to the site's content width (.ncs-container) so its right edge
+   lines up with the header nav, it reads as one composed image without bleeding
+   into the page margins.
 
    Stacking (the section is `isolate`, so these z-indexes are local):
      z-0  background: animated aurora + WebGL flow
@@ -72,15 +73,22 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 
   <!-- ====================================================================
        z-1 Showcase scene. A right-weighted layer of real client sites behind
-       the headline, contained inside the hero so it never spills past the
-       viewport. Hidden below lg (mobile leads with the headline alone).
+       the headline, held inside the site's content width (.ncs-container) so
+       its right edge lines up with the header nav and it never bleeds into the
+       outer margins (those show the WebGL flow). Hidden below lg (mobile leads
+       with the headline alone). The wrapper is pointer-events-none so the copy
+       stays usable; the showcase itself re-enables them for hover/explore.
        ==================================================================== -->
   <div
-    class="hero-scene absolute inset-y-0 right-0 z-[1] hidden items-center lg:flex"
+    class="hero-scene pointer-events-none absolute inset-0 z-[1] hidden lg:block"
     data-reveal="fade"
     style="--reveal-delay: 320ms;"
   >
-    <HeroShowcase />
+    <div class="ncs-container relative h-full">
+      <div class="hero-scene-inner pointer-events-auto absolute inset-y-0 right-0 flex items-center">
+        <HeroShowcase />
+      </div>
+    </div>
   </div>
 
   <!-- ====================================================================
@@ -185,9 +193,11 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
      cascade from touching the viewport edge so it reads as contained, not
      bled. Width is generous so the work is prominent.
      ---------------------------------------------------------------------- */
-  .hero-scene {
-    width: 60%;
-    padding-right: 1.5rem;
+  .hero-scene-inner {
+    /* Right-aligned within .ncs-container, so the cascade ends at the content
+       edge (level with the header nav) and the wide-screen margins stay clear
+       for the WebGL flow. */
+    width: 56%;
   }
 
   /* ----------------------------------------------------------------------
