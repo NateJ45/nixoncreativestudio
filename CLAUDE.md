@@ -35,8 +35,15 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - react-photo-album for justified gallery layouts on the photography page
 - yet-another-react-lightbox for fullscreen photo viewing (with Zoom and Thumbnails plugins)
 - sharp for image processing; plaiceholder wired into case study covers via `scripts/generate-placeholders.mjs` (build-time generation into `src/lib/coverPlaceholders.json`) and the `CaseStudyCover.astro` wrapper
-- opentype.js (dev-only) for the OG image generator at `scripts/generate-og-default.mjs`
+- opentype.js (dev-only) for the OG image generators: `scripts/generate-og-default.mjs` (the fallback card) and `scripts/generate-og.mjs` (per-page cards into `public/og/`, run in the build chain). Both render Bebas glyphs to SVG then rasterize with sharp, out-of-process (the CF prerender isolate has no node built-ins, so an `astro-og-canvas` route can't run here)
 - `@astrojs/rss` for `/rss.xml`, surfacing case study entries to feed readers (`<link rel="alternate">` auto-discovery wired in BaseLayout)
+- `astro-pagefind` for static full-text search: builds an index from the prerendered HTML at build time, queried client-side by the `SearchPalette.tsx` Cmd/Ctrl-K island. No backend
+- `astro-expressive-code` for themed code blocks in MDX (journal dev posts); its dark theme is tied to the site's `.dark` class. Must sit before `mdx()` in the integrations array
+- `@astrojs/partytown` runs the Cloudflare Web Analytics beacon in a web worker (the beacon script in `Analytics.astro` carries `type="text/partytown"`)
+- Astro `prefetch` enabled (`prefetchAll`, viewport strategy) so links preload as they enter the viewport, pairing with the View Transitions router
+- `three` + `@react-three/fiber` for the optional WebGL hero background (`HeroCanvas.tsx`), guarded behind WebGL support + reduced-motion with the CSS aurora as the fallback
+- `embla-carousel-react` + `embla-carousel-autoplay` for the client-testimonials carousel (`TestimonialCarousel.tsx`)
+- `@lhci/cli` (dev-only) for Lighthouse CI; see "Testing, linting, and CI" below
 - Dark / light / system theme system: `ThemeToggle.tsx` React island + anti-FOUC bootstrap script in BaseLayout, persisted to `localStorage["ncs-theme"]`
 - `src/data/site.ts` as the single source of truth for contact info (name, email, phone, address, studio name, social URLs, tagline, domain) plus the optional `bookingUrl` and `newsletterUrl` that gate the Cal.com and Newsletter scaffolds
 - Web3Forms for the contact form, with hCaptcha spam protection using Web3Forms' shared public sitekey (`50b2fe65-…`) and their server-side secret, so there's no hCaptcha account to set up. Web3Forms supports hCaptcha only, not Cloudflare Turnstile or Google reCAPTCHA. Cloudflare Web Analytics for privacy-friendly traffic
@@ -150,14 +157,16 @@ Vocabulary (use these; don't reinvent):
 `npm run build` is a chain:
 
 1. `npm run placeholders` runs `scripts/generate-placeholders.mjs`. Scans `src/assets/case-studies/` for cover images, generates a tiny base64 PNG blur preview per cover via plaiceholder, writes the lot to `src/lib/coverPlaceholders.json`. Runs out-of-process because the Cloudflare Pages prerender worker is a V8 isolate without `node:fs`.
-2. `astro build` runs as normal. Pages import `coverPlaceholders.json` via the typed lookup in `src/lib/coverPlaceholder.ts` and pass blurs to `CaseStudyCover`.
+2. `npm run og:pages` runs `scripts/generate-og.mjs`. Generates one per-page Open Graph card (navy gradient + title in Bebas Neue + studio name in amber) into `public/og/`: one per main route plus one per case study (`og/work/<slug>.png`) and journal entry. Runs out-of-process for the same V8-isolate reason (an Astro route can't: it would need `node:crypto` in the CF prerender worker, which is why `astro-og-canvas` as a route fails here). `BaseLayout.astro` maps the current pathname to `/og/<slug>.png`. Output is deterministic, so re-running with unchanged content produces identical bytes.
+3. `astro build` runs as normal. Pages import `coverPlaceholders.json` via the typed lookup in `src/lib/coverPlaceholder.ts` and pass blurs to `CaseStudyCover`. After the build, `astro-pagefind` indexes the prerendered HTML into `dist/client/pagefind/` for `SearchPalette`.
 
 Standalone scripts:
 
 - `npm run placeholders` — re-run blur generation on demand (after adding a cover during local dev).
-- `npm run og` — re-run `scripts/generate-og-default.mjs` to regenerate `public/og-default.png` (after changing brand colors, the tagline, or the wordmark in the script's inputs block).
+- `npm run og:pages` — re-run the per-page OG card generator (after adding a case study / journal entry, or changing a page title).
+- `npm run og` — re-run `scripts/generate-og-default.mjs` to regenerate `public/og-default.png`, the manual fallback card (after changing brand colors, the tagline, or the wordmark).
 
-Both `src/lib/coverPlaceholders.json` and `public/og-default.png` are committed to the repo because they're real assets shipped to visitors, not transient build artifacts. `npm run dev` reads the committed versions without re-running the scripts.
+`src/lib/coverPlaceholders.json`, `public/og-default.png`, and the generated `public/og/*.png` cards are committed to the repo because they're real assets shipped to visitors. `npm run dev` reads the committed versions without re-running the scripts.
 
 ---
 
@@ -170,6 +179,7 @@ The repo carries a light quality-gate layer, matched to the rest of Nathan's Ast
 - `npm run format` runs prettier across the repo (config in `.prettierrc`, ignore list in `.prettierignore`).
 - `npm run check` is the one-shot gate: `npm run build && npm test`.
 - `.github/workflows/ci.yml` runs on every push and pull request: install, build, test. It does not run lint, for the reason above.
+- `.github/workflows/lighthouse.yml` runs Lighthouse CI (`@lhci/cli`, config in `lighthouserc.json`) against the built static output on every push / PR. **Accessibility is a hard gate at minScore 1** (the 100-a11y bar the studio sells); performance / best-practices / SEO are warnings so normal CI variance doesn't block a PR. Run locally with `npm run build && npx lhci autorun`.
 
 One JSON-import note: `src/lib/coverPlaceholder.ts` imports its JSON with `with { type: 'json' }`. Node's native ESM loader (used by the test runner) requires that attribute, and Vite accepts it during the build, so the one import works in both places.
 
@@ -226,6 +236,9 @@ Beyond the homepage-section components (Hero, SelectedWork, ProcessBand) and the
 - `CopyEmail.tsx` — mailto link plus a one-click copy-to-clipboard button with sr-live "Copied" status. Footer Contact column + Contact page sidebar.
 - `ThemeToggle.tsx` — light / dark / system cycle. Header (desktop) + MobileNav drawer.
 - `MobileNav.tsx` — small-viewport nav drawer via shadcn Sheet. Below md (768px).
+- `SearchPalette.tsx` — Cmd/Ctrl-K command palette over the site's own content, powered by Pagefind (static index built from the prerendered HTML by `astro-pagefind`). Rendered once in the Header. Loads `/pagefind/pagefind.js` lazily on first open via a runtime-built specifier (so the bundler externalizes it); renders excerpt `<mark>` hits through DOMParser, never `innerHTML`. Pagefind only exists after a build, so search is empty under `astro dev` and live in preview/production.
+- `Testimonials.astro` + `TestimonialCarousel.tsx` — a "What clients say" carousel on /about. The `.astro` wrapper is collection-driven: it reads the `testimonial` field from case studies (so quotes stay tied to the client and nothing is fabricated) and renders nothing until at least one case study carries a real quote. The `.tsx` island is the Embla carousel: keyboard arrows, prev/next/dot controls, a Pause/Play toggle (SC 2.2.2), autoplay that is off under reduced motion and pauses on hover/focus, and `inert` on off-screen slides. To populate it, fill a case study's `testimonial:` frontmatter.
+- `HeroCanvas.tsx` — the WebGL hero background (Three.js + `@react-three/fiber`): a fullscreen shader quad drifting brand-color clouds (navy / NCS blue / sky / a faint amber bloom). Layers over the `.bg-aurora` fallback in Hero.astro and renders nothing (so the aurora shows) under reduced motion or without WebGL; pauses (frameloop "never") when the hero is off-screen or the tab is hidden; DPR capped, `powerPreference: 'low-power'`. `client:only="react"` because R3F does not server-render. Edit the GLSL in this file to retune the look; keep it subtle and on-brand (not neon).
 - `CaseStudyCover.astro` — wraps Astro `<Image />` with a plaiceholder blur preview painted as the wrapper bg, fades the real image in on load. Used by /work index cards (`fit="cover"`) and /work/[slug] hero (`fit="natural"`).
 - `SiteShowcase.astro` — animated "live site" frame embedded inside case study MDX. Renders a browser-chrome window whose full-page screenshot auto-scrolls (or slow-zooms with `variant="zoom"`), pausing on hover, and links to the live site. Reduced-motion safe (the scroll freezes to a static frame). Import it plus the screenshot at the top of a case study `.mdx` and place `<SiteShowcase src={shot} alt="..." href="..." label="..." />`. Full-page screenshots live in `src/assets/case-studies/shots/{slug}-home.png` (captured with Playwright at 1440px wide). Covers in `src/assets/case-studies/{slug}.png` are real hero screenshots of the same sites.
 - `BeforeAfter.astro` — draggable before/after image comparison slider for redesign case studies. Keyboard-operable (native range input). NOT yet used anywhere: it needs a real "before" screenshot, and the Wayback Machine is not a reliable source (archived Wix / Squarespace / WordPress pages render broken). Use a screenshot saved when the project started; drop it at `src/assets/case-studies/shots/{slug}-before.png` and follow the usage block in the component header.

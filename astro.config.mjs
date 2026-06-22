@@ -2,8 +2,11 @@
 import { defineConfig } from 'astro/config';
 
 import cloudflare from '@astrojs/cloudflare';
+import expressiveCode from 'astro-expressive-code';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import partytown from '@astrojs/partytown';
+import pagefind from 'astro-pagefind';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
@@ -17,10 +20,22 @@ import react from '@astrojs/react';
 // rendering later via `export const prerender = false`, but in the static
 // default it's effectively inert for this site.
 //
-// Integrations:
-//   - mdx       : powers the case-studies content collection
+// Integrations (order matters: expressiveCode must precede mdx):
+//   - expressiveCode : themed code blocks in MDX (journal dev posts). Maps its
+//                      dark theme to the site's .dark class so code follows the
+//                      site theme.
+//   - mdx       : powers the case-studies + journal content collections
 //   - sitemap   : emits sitemap-index.xml and sitemap-0.xml at build time
-//   - react     : enables React islands (shadcn/ui, photo lightbox, motion)
+//   - partytown : runs the Cloudflare Web Analytics beacon in a web worker so
+//                 it stays off the main thread (the beacon script carries
+//                 type="text/partytown" in Analytics.astro)
+//   - pagefind  : builds a static full-text search index from the prerendered
+//                 HTML at build time; the SearchPalette island queries it
+//   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
+//                 the WebGL hero, the search palette)
+//
+// prefetch: links preload as they enter the viewport, so navigation feels
+// instant and pairs with the View Transitions router.
 //
 // Tailwind 4 wires in via Vite plugin (not the older @astrojs/tailwind
 // integration). Theme tokens live in src/styles/globals.css via @theme.
@@ -28,6 +43,10 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'viewport',
+  },
   // imageService: 'compile' makes Astro optimize <Image /> at BUILD time with
   // Sharp, emitting static .webp files into dist/_astro/. Without it the
   // Cloudflare adapter defaults to its runtime image service, so the built
@@ -37,7 +56,22 @@ export default defineConfig({
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
   adapter: cloudflare({ imageService: 'compile' }),
-  integrations: [mdx(), sitemap(), react()],
+  integrations: [
+    // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
+    // so a code sample flips with the theme toggle instead of prefers-color-scheme.
+    expressiveCode({
+      themes: ['github-dark', 'github-light'],
+      themeCssSelector: (theme) => (theme.name === 'github-dark' ? '.dark' : ':root'),
+      styleOverrides: { borderRadius: '0.5rem' },
+    }),
+    mdx(),
+    sitemap(),
+    // Run the Cloudflare analytics beacon in a worker. forward is empty: the
+    // beacon fires its own requests and exposes no global push API to proxy.
+    partytown({ config: { forward: [] } }),
+    pagefind(),
+    react(),
+  ],
 
   vite: {
     plugins: [tailwindcss()],

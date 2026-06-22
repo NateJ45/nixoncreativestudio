@@ -27,6 +27,7 @@
 import { site } from '../data/site';
 import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
+import SearchPalette from './SearchPalette';
 
 // The nav model lives in the script so it's easy to reorder, rename, or extend
 // without hunting through markup. MobileNav consumes the same array.
@@ -61,14 +62,34 @@ const isActive = (href: string): boolean => {
       href="/"
       transition:name="site-wordmark"
     >
-      <span class="wordmark-mark" aria-hidden="true"></span>
+      <span class="wordmark-glyph" aria-hidden="true">
+        <!-- Inline-SVG monogram: an "N" stroke that draws itself on load, with
+             the amber brand diamond at its shoulder. The stroke inherits the
+             wordmark color (currentColor) so it flips with theme and over-hero;
+             the diamond stays amber. -->
+        <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+          <path
+            class="wordmark-stroke"
+            d="M7 24V9l14 15V9"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <rect class="wordmark-dot" x="20.4" y="6.4" width="5" height="5" rx="1" transform="rotate(45 22.9 8.9)" />
+        </svg>
+      </span>
       <span class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]">
         {site.studioName}
       </span>
     </a>
 
-    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer. -->
+    <!-- Right-side cluster: desktop nav, search, theme toggle, mobile drawer. -->
     <div class="flex items-center gap-s">
+
+      <!-- Search palette (Cmd/Ctrl-K). Visible at all widths; the global
+           shortcut works everywhere, this is the visible affordance. -->
+      <SearchPalette client:load />
 
       <!-- Desktop nav at >= md (six items don't fit at sm next to the wordmark
            and toggle); the MobileNav drawer takes over below md. -->
@@ -143,6 +164,7 @@ const isActive = (href: string): boolean => {
     -webkit-backdrop-filter: none;
   }
   .ncs-header[data-over-hero] .wordmark-text,
+  .ncs-header[data-over-hero] .wordmark-glyph,
   .ncs-header[data-over-hero] .nav-link {
     color: #ffffff;
   }
@@ -150,7 +172,8 @@ const isActive = (href: string): boolean => {
      color via a text-* class; reach them with :global and a hook class so they
      flip to white over the hero too. */
   .ncs-header[data-over-hero] :global(.theme-toggle),
-  .ncs-header[data-over-hero] :global(.mobile-trigger) {
+  .ncs-header[data-over-hero] :global(.mobile-trigger),
+  .ncs-header[data-over-hero] :global(.search-trigger) {
     color: #ffffff;
   }
 
@@ -159,19 +182,29 @@ const isActive = (href: string): boolean => {
     color: var(--color-heading);
     transition: color 0.2s ease;
   }
-  /* Amber diamond brand mark. Stays amber on every background. */
-  .wordmark-mark {
-    display: inline-block;
-    width: 0.55rem;
-    height: 0.55rem;
-    rotate: 45deg;
-    border-radius: 1px;
-    background-color: var(--color-tertiary);
+  /* Monogram glyph: the N stroke inherits the wordmark color; the diamond
+     stays amber. The whole glyph nudges up on hover. */
+  .wordmark-glyph {
+    display: inline-flex;
+    color: var(--color-heading);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .wordmark:hover .wordmark-mark,
-  .wordmark:focus-visible .wordmark-mark {
-    transform: scale(1.25) rotate(90deg);
+  .wordmark-glyph svg { display: block; }
+  .wordmark-dot { fill: var(--color-tertiary); }
+  .wordmark:hover .wordmark-glyph,
+  .wordmark:focus-visible .wordmark-glyph {
+    transform: translateY(-1px);
+  }
+  /* Draw the N on first paint. */
+  @media (prefers-reduced-motion: no-preference) {
+    .wordmark-stroke {
+      stroke-dasharray: 64;
+      animation: wordmark-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+  }
+  @keyframes wordmark-draw {
+    from { stroke-dashoffset: 64; }
+    to   { stroke-dashoffset: 0; }
   }
 
   /* Active nav item keeps its underline drawn (the .link-underline base hides
@@ -182,8 +215,8 @@ const isActive = (href: string): boolean => {
 
   @media (prefers-reduced-motion: reduce) {
     .ncs-header { transition: none; }
-    .wordmark-mark { transition: none; }
-    .wordmark:hover .wordmark-mark,
-    .wordmark:focus-visible .wordmark-mark { transform: none; }
+    .wordmark-glyph { transition: none; }
+    .wordmark:hover .wordmark-glyph,
+    .wordmark:focus-visible .wordmark-glyph { transform: none; }
   }
 </style>

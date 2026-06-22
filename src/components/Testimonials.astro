@@ -1,0 +1,62 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Testimonials
+   ============================================================================
+   A "What clients say" band that reads real testimonials from the case-studies
+   collection (the optional `testimonial` frontmatter field) and rotates them in
+   an Embla carousel (TestimonialCarousel island).
+
+   It is collection-driven so quotes stay tied to the client they came from and
+   nothing is fabricated: a case study only contributes a quote when its
+   frontmatter actually carries one. If no case study has a `testimonial`, this
+   whole section renders nothing, so it is safe to place anywhere and it lights
+   up as real quotes are added.
+
+   To add a testimonial: fill the `testimonial` block on a case study's
+   frontmatter, e.g.
+
+     testimonial:
+       quote: "Nathan rebuilt our site and visit-planning got far simpler."
+       name: "Jane Doe"
+       title: "Office Administrator, First Presbyterian"
+
+   The band uses .band-themed (light in light mode, navy aurora in dark) so it
+   reads as a deliberate beat in both themes. Used on /about before the CTA.
+   ============================================================================ */
+
+import { getCollection } from 'astro:content';
+import TestimonialCarousel from './TestimonialCarousel';
+
+const studies = await getCollection('case-studies');
+
+const items = studies
+  .filter((s) => s.data.testimonial)
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
+  .map((s) => ({
+    quote: s.data.testimonial!.quote,
+    name: s.data.testimonial!.name,
+    title: s.data.testimonial!.title ?? s.data.client,
+    href: `/work/${s.id}/`,
+    hrefLabel: 'Read the case study',
+  }));
+---
+
+{items.length > 0 && (
+  <section class="band-themed py-2xl" aria-labelledby="testimonials-heading">
+    <div class="ncs-container">
+      <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+        <h2 id="testimonials-heading" class="text-heading">What clients say</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          Real words from the churches, schools, and businesses I've built for.
+        </p>
+      </header>
+
+      <!-- client:visible: the carousel hydrates when scrolled near, so the
+           Embla + autoplay JS never blocks initial load. -->
+      <div data-reveal style="--reveal-delay: 100ms;">
+        <TestimonialCarousel client:visible items={items} />
+      </div>
+    </div>
+  </section>
+)}

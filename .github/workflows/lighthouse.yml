@@ -1,0 +1,31 @@
+name: Lighthouse CI
+
+# Guards the quality bar the studio sells: accessibility must stay at 100, and
+# performance / best-practices / SEO drops surface as warnings. Runs against the
+# built static output. Config + thresholds live in lighthouserc.json.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        run: npx lhci autorun

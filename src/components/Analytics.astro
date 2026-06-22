@@ -33,8 +33,11 @@ const beaconConfig = JSON.stringify({ token });
 ---
 
 {hasToken && (
+  <!-- type="text/partytown" hands this off to the Partytown web worker so the
+       beacon never touches the main thread. Partytown rewrites the script and
+       proxies its network calls; the analytics still report normally. -->
   <script
-    defer
+    type="text/partytown"
     src="https://static.cloudflareinsights.com/beacon.min.js"
     data-cf-beacon={beaconConfig}
   ></script>

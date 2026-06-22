@@ -28,6 +28,7 @@
 
 import { site } from '../data/site';
 import { Button } from './ui/button';
+import HeroCanvas from './HeroCanvas';
 // import { Image } from 'astro:assets';
 // import heroPhoto from '../assets/brand/hero.jpg';
 
@@ -62,10 +63,16 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
     />
     -->
 
-    <!-- Animated aurora mesh + film grain. Drifting brand-color blooms over
-         the navy base, with a subtle grain overlay for texture. Both freeze
-         on a single frame under prefers-reduced-motion (globals.css). -->
+    <!-- Animated aurora mesh + film grain. This is the fallback / base layer:
+         it paints immediately (SSR, no JS) and shows whenever the WebGL canvas
+         below it is not active (reduced motion, no WebGL, before hydration). -->
     <div class="bg-aurora grain absolute inset-0"></div>
+
+    <!-- WebGL brand-cloud shader. Layers over the aurora once hydrated; renders
+         nothing (so the aurora shows) under reduced motion or without WebGL,
+         and pauses when the hero is off-screen. client:only because R3F does
+         not server-render. -->
+    <HeroCanvas client:only="react" />
 
     <!-- Vertical scrim. Keeps the bottom-anchored headline + CTAs legible
          over any background, photo or aurora. -->
