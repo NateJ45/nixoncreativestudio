@@ -1,286 +1,343 @@
 ---
 // Safe to edit.
 /* ============================================================================
-   HeroShowcase
+   HeroShowcase  [device pairing]
    ============================================================================
-   A staggered cascade of three browser-chrome frames in the homepage hero,
-   each crossfading real screenshots of shipped client sites with the live URL
-   in its address bar. It puts a "wall of real work" above the fold (the "show,
-   don't tell" instinct the brand is built on) and fills the right side of the
-   hero next to the headline.
+   The portfolio scene in the homepage hero (at lg and up): a landscape DESKTOP
+   browser and a PHONE, both showing the SAME client site, both auto-scrolling
+   the real page, and crossfading to the NEXT site every 5 seconds. Showing one
+   site on two screens at once reads as "I build sites that work on every
+   device," and cycling the set shows the range of work (church, preschool,
+   journal, race, shop, school).
 
-   Motion is deliberately restrained (research on UI motion is consistent that
-   peripheral motion steals attention from the headline if it is busy):
-     - Slow cadence. One shared timer advances ONE frame per tick, so only one
-       frame crossfades at a time, and the cadence is long (each frame is shown
-       ~8s), so it reads ambient, not frantic.
-     - Gentle Ken Burns. The active shot zooms very slightly over its dwell, so
-       it feels alive without a hard motion.
-     - Hover to explore. On a fine pointer, hovering a frame lifts it, pans its
-       screenshot down to reveal more of the page, and PAUSES the rotation so
-       you can take it in. The whole cluster links to /work so a click is never
-       a dead end.
-   All of the above is gated to (prefers-reduced-motion: no-preference); with
-   reduced motion the cascade is a still three-site collage.
+   How it cycles (script below, gated to motion-OK):
+     - One site is active at a time; both devices show that site's desktop +
+       mobile full-page screenshot, each slowly panning down the page.
+     - Every 5s the active site advances and the frames crossfade. The address
+       bar in the desktop chrome updates to the new host.
+     - The next site is preloaded one step ahead, so a crossfade never lands on
+       a blank, and only the sites you have seen have been downloaded.
+     - Hovering (fine pointer) pauses the cycle and the scroll so you can look;
+       it also pauses while the browser tab is hidden.
 
-   Why duplicates and blanks are impossible: the cover pool is PARTITIONED
-   across the three frames (round-robin), so each frame owns a distinct set and
-   no two can show the same site; every slide image is loading="eager", so a
-   crossfade never lands on an unloaded image. Wider `widths` keep the frames
-   crisp on retina screens.
+   Performance: inactive screenshots are display:none until the script promotes
+   them, so the browser only downloads the first site on load and then ~one site
+   per cycle, instead of the whole set up front. Desktop shots reuse the
+   full-page captures that drive the case-study SiteShowcase; the phone shots are
+   real mobile captures at src/assets/case-studies/shots/{slug}-mobile.png.
 
-   Decorative by design: the cluster is aria-hidden and out of the tab order
-   (the real navigation is the "See the work" CTA beside it and the Selected
-   Work section below), so the /work link is a mouse-only bonus, not an
-   accessibility trap.
+   Reduced motion / no-JS: the first site stays shown on both devices as a still,
+   honest two-device collage (no cycle, no scroll).
+
+   Decorative by design: the whole cluster is aria-hidden and out of the tab
+   order. The real navigation is the "See the work" CTA beside it and the
+   Selected Work section below, so the /work link here is a mouse-only bonus, not
+   an accessibility trap.
+
+   To curate: edit the `sites` array. Each needs a `-home.png` (desktop, captured
+   at 1440 wide, full page) and a `-mobile.png` (phone, captured ~390 wide, full
+   page) in src/assets/case-studies/shots/. Recapture with Playwright if a client
+   redesigns.
    ============================================================================ */
 
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 
-const studies = (await getCollection('case-studies')).sort(
-  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
-);
+// Desktop full-page captures (shared with the case-study SiteShowcase).
+import dSecondPres from '../assets/case-studies/shots/second-presbyterian-chicago-home.png';
+import dWcp from '../assets/case-studies/shots/west-chester-preschool-home.png';
+import dTheology from '../assets/case-studies/shots/theology-matters-home.png';
+import dStoneSteps from '../assets/case-studies/shots/stone-steps-50k-home.png';
+import dMas from '../assets/case-studies/shots/mas-monograms-home.png';
+import dAcademy from '../assets/case-studies/shots/presbyterian-academy-home.png';
 
-// featured first, then newest others.
-const ordered = [
-  ...studies.filter((s) => s.data.featured),
-  ...studies.filter((s) => !s.data.featured),
+// Phone full-page captures (real mobile renders of the same sites).
+import mSecondPres from '../assets/case-studies/shots/second-presbyterian-chicago-mobile.png';
+import mWcp from '../assets/case-studies/shots/west-chester-preschool-mobile.png';
+import mTheology from '../assets/case-studies/shots/theology-matters-mobile.png';
+import mStoneSteps from '../assets/case-studies/shots/stone-steps-50k-mobile.png';
+import mMas from '../assets/case-studies/shots/mas-monograms-mobile.png';
+import mAcademy from '../assets/case-studies/shots/presbyterian-academy-mobile.png';
+
+// Curated set, ordered for variety. `host` is what the desktop address bar
+// shows. Second Pres uses its real domain in the bar even though the screenshot
+// was taken from the staging worker (the domain switch is pending).
+const sites = [
+  { host: 'secondpreschicago.org', desktop: dSecondPres, mobile: mSecondPres },
+  { host: 'westchesterpreschool.org', desktop: dWcp, mobile: mWcp },
+  { host: 'theologymatters.com', desktop: dTheology, mobile: mTheology },
+  { host: 'stonesteps50k.com', desktop: dStoneSteps, mobile: mStoneSteps },
+  { host: 'mas-monograms.com', desktop: dMas, mobile: mMas },
+  { host: 'presbyterianacademy.org', desktop: dAcademy, mobile: mAcademy },
 ];
-
-const host = (s: (typeof ordered)[number]) =>
-  s.data.liveUrl ? new URL(s.data.liveUrl).host.replace(/^www\./, '') : s.data.client;
-
-const FRAME_COUNT = 3;
-
-// Pool of covers, capped at three per frame so the DOM stays light.
-const pool = ordered.slice(0, FRAME_COUNT * 3).map((s) => ({ cover: s.data.cover, host: host(s) }));
-
-// Partition the pool across the frames round-robin: frame 0 gets covers
-// 0,3,6; frame 1 gets 1,4,7; frame 2 gets 2,5,8. Disjoint sets, so no two
-// frames ever show the same site, and each frame opens on one of the top three.
-const frames: { cover: (typeof pool)[number]['cover']; host: string }[][] = Array.from(
-  { length: FRAME_COUNT },
-  () => [],
-);
-pool.forEach((item, i) => frames[i % FRAME_COUNT].push(item));
-
-// Only render frames that actually received a cover (needs pool.length >= 3).
-const renderable = frames.filter((f) => f.length > 0);
 ---
 
-{pool.length >= FRAME_COUNT && (
-  <a class="hero-showcase" href="/work/" aria-hidden="true" tabindex="-1" data-hero-showcase>
-    {renderable.map((covers, fi) => (
-      <div class:list={['showcase-frame', `frame-${fi}`]} data-frame>
-        {/* Browser chrome: traffic-light dots + an address bar whose text the
-            crossfade script updates to the active site's host. */}
-        <div class="frame-chrome">
-          <span class="frame-dots">
-            <span class="bg-[#ff5f57]"></span>
-            <span class="bg-[#febc2e]"></span>
-            <span class="bg-[#28c840]"></span>
-          </span>
-          <span class="frame-address" data-frame-address>{covers[0].host}</span>
+<a
+  class="hero-stage"
+  href="/work/"
+  aria-hidden="true"
+  tabindex="-1"
+  data-hero-showcase
+  data-count={sites.length}
+>
+  {/* ---- Desktop / laptop browser (landscape) ---- */}
+  <div class="dev dev-desktop">
+    <div class="dev-chrome">
+      <span class="dev-dots">
+        <span class="bg-[#ff5f57]"></span>
+        <span class="bg-[#febc2e]"></span>
+        <span class="bg-[#28c840]"></span>
+      </span>
+      <span class="dev-address" data-address>
+        <svg class="dev-lock" viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        <span data-address-text>{sites[0].host}</span>
+      </span>
+    </div>
+    <div class="dev-screen dev-screen-desktop">
+      {sites.map((s, i) => (
+        <div class:list={['shot', i === 0 && 'is-active is-loaded']} data-shot={i} data-host={s.host}>
+          <Image
+            src={s.desktop}
+            alt=""
+            widths={[600, 900, 1200, 1440]}
+            sizes="(min-width: 64rem) 640px, 80vw"
+            class="shot-img"
+            loading={i === 0 ? 'eager' : 'lazy'}
+          />
         </div>
+      ))}
+    </div>
+  </div>
 
-        {/* Crossfading viewport. Every cover stacks absolutely; the script
-            fades between them. All eager so a crossfade never lands on a blank.
-            wider `widths` so the frames stay crisp on retina screens. */}
-        <div class="frame-viewport">
-          {covers.map((s, i) => (
-            <div class="frame-slide" data-slide data-host={s.host} data-active={i === 0 ? 'true' : undefined}>
-              <Image
-                src={s.cover}
-                alt=""
-                widths={[480, 760, 1100]}
-                sizes="(min-width: 64rem) 34vw, 80vw"
-                class="frame-img h-full w-full"
-                loading="eager"
-              />
-            </div>
-          ))}
+  {/* ---- Phone (portrait), overlapping the desktop's lower-left ---- */}
+  <div class="dev dev-phone">
+    <div class="dev-screen dev-screen-phone">
+      {sites.map((s, i) => (
+        <div class:list={['shot', i === 0 && 'is-active is-loaded']} data-shot={i}>
+          <Image
+            src={s.mobile}
+            alt=""
+            widths={[180, 260, 375]}
+            sizes="(min-width: 64rem) 180px, 40vw"
+            class="shot-img"
+            loading={i === 0 ? 'eager' : 'lazy'}
+          />
         </div>
-      </div>
-    ))}
-  </a>
-)}
+      ))}
+    </div>
+  </div>
+</a>
 
 <style>
-  /* A clickable, height-clamped relative box. The three absolutely positioned
-     frames resolve their % offsets against this height, and it shrinks on short
-     laptops instead of overflowing the 100svh hero. */
-  .hero-showcase {
+  /* The stage fills the hero scene (Hero.astro holds it to the content width,
+     right-aligned) and clamps its height so it never overflows the 100svh hero
+     on short laptops. The two devices are positioned against it. */
+  .hero-stage {
     display: block;
     position: relative;
     width: 100%;
-    height: clamp(22rem, 58vh, 40rem);
+    height: clamp(24rem, 62vh, 42rem);
   }
 
-  .showcase-frame {
+  .dev {
     position: absolute;
+  }
+
+  /* Desktop: the larger element, top-right. */
+  .dev-desktop {
+    top: 1%;
+    right: 0;
+    width: 82%;
+    border-radius: 0.6rem;
     overflow: hidden;
-    border-radius: 0.65rem;
+    background-color: color-mix(in oklab, var(--color-primary) 72%, #000);
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: var(--shadow-frame);
-    background-color: color-mix(in oklab, var(--color-primary) 70%, #000);
-    transition:
-      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.4s ease,
-      opacity 0.4s ease;
   }
 
-  /* Diagonal cascade. Widths are generous and the offsets push the set to span
-     the full column width (frame-1 reaches the right edge), so the cluster
-     fills the horizontal space. Light vertical overlap gives depth. */
-  .frame-0 {
-    top: 0;
+  /* Phone: smaller, bottom-left, in front, with a dark device bezel. */
+  .dev-phone {
     left: 0;
-    width: 68%;
-    z-index: 10;
-    opacity: 0.9;
+    bottom: 0;
+    width: 26%;
+    z-index: 5;
+    border-radius: 1.5rem;
+    padding: 0.42rem;
+    background: #0b0e14;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: var(--shadow-frame);
   }
-  .frame-1 {
-    top: 24%;
-    right: 0;
-    width: 74%;
-    z-index: 20;
-    opacity: 0.96;
-  }
-  .frame-2 {
-    top: 47%;
-    left: 6%;
-    width: 70%;
-    z-index: 30;
+  /* Phone speaker/notch pill. */
+  .dev-phone::before {
+    content: '';
+    position: absolute;
+    top: 0.62rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26%;
+    height: 0.28rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.25);
+    z-index: 2;
   }
 
-  .frame-chrome {
+  /* Browser chrome on the desktop frame: traffic-light dots + address bar. */
+  .dev-chrome {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.35rem 0.6rem;
+    padding: 0.4rem 0.6rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.06);
   }
-  .frame-dots {
+  .dev-dots {
     display: inline-flex;
-    gap: 0.28rem;
+    gap: 0.3rem;
+    flex: none;
   }
-  .frame-dots span {
-    width: 0.45rem;
-    height: 0.45rem;
+  .dev-dots span {
+    width: 0.5rem;
+    height: 0.5rem;
     border-radius: 9999px;
   }
-  .frame-address {
-    overflow: hidden;
+  .dev-address {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.12rem 0.6rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: 0.66rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+  .dev-lock {
+    flex: none;
+    opacity: 0.7;
+  }
+  .dev-address [data-address-text] {
+    overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: rgba(255, 255, 255, 0.72);
   }
 
-  /* 16:9 viewport keeps the (wide) frames from getting too tall to cascade. */
-  .frame-viewport {
+  /* Screens: a fixed-aspect window with the (taller) page screenshot panning
+     inside it. overflow hidden clips to the viewport. */
+  .dev-screen {
     position: relative;
-    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background-color: color-mix(in oklab, var(--color-primary) 60%, #000);
   }
-  .frame-slide {
+  .dev-screen-desktop {
+    aspect-ratio: 16 / 10;
+  }
+  .dev-screen-phone {
+    aspect-ratio: 9 / 19;
+    border-radius: 1.1rem;
+  }
+
+  /* Each site's screenshot stacks absolutely. display:none until the script (or
+     the SSR is-active on the first site) promotes it, so inactive shots are not
+     downloaded. Crossfade via opacity. */
+  .shot {
     position: absolute;
     inset: 0;
+    display: none;
     opacity: 0;
-    transition: opacity 1.2s ease;
+    transition: opacity 0.8s ease;
   }
-  .frame-slide[data-active] {
+  .shot.is-loaded,
+  .shot.is-active {
+    display: block;
+  }
+  .shot.is-active {
     opacity: 1;
   }
-  .frame-img {
-    object-fit: cover;
-    /* Shows the top of each page by default; hover pans this toward the
-       bottom (see below) to reveal more of the site. */
-    object-position: 50% 0%;
+  .shot-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* The image is taller than its screen; the pan animation slides it up. */
   }
 
-  /* ---- Motion layer, all gated to motion-OK ----------------------------- */
+  /* ---- Motion: the active page pans down, gated to motion-OK ------------- */
   @media (prefers-reduced-motion: no-preference) {
-    /* Gentle Ken Burns on whichever slide is active: a slow, slight zoom over
-       roughly the dwell time so the visible shot feels alive, not static. */
-    .frame-slide[data-active] .frame-img {
-      animation: hero-kenburns 9s ease-out both;
+    .shot.is-active .shot-img {
+      animation: hero-pan 9s linear both;
+    }
+    /* Hover (or tab hidden) pauses the scroll via the script's is-paused flag. */
+    .hero-stage.is-paused .shot.is-active .shot-img {
+      animation-play-state: paused;
     }
   }
 
-  /* ---- Hover to explore (fine pointers only) ---------------------------- */
-  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
-    .frame-img {
-      transition: object-position 3.5s ease;
-    }
-    /* Lift the hovered frame forward; gently dim the others so it reads as
-       "examine this one." */
-    .hero-showcase:hover .showcase-frame {
-      opacity: 0.72;
-    }
-    .showcase-frame:hover {
-      transform: translateY(-6px);
-      z-index: 40;
-      opacity: 1;
-      box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.6);
-    }
-    /* Pan the hovered frame's shot down to reveal more of the page. */
-    .showcase-frame:hover .frame-slide[data-active] .frame-img {
-      object-position: 50% 100%;
-    }
-  }
-
-  @keyframes hero-kenburns {
+  @keyframes hero-pan {
     from {
-      transform: scale(1);
+      transform: translateY(0);
     }
     to {
-      transform: scale(1.06);
+      /* Percentage is of the image's own height, so it scrolls a consistent
+         share of each page regardless of how tall the capture is. */
+      transform: translateY(-42%);
+    }
+  }
+
+  /* Lift the cluster slightly on hover so it invites a look. */
+  @media (hover: hover) and (pointer: fine) {
+    .hero-stage {
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hero-stage:hover {
+      transform: translateY(-4px);
     }
   }
 </style>
 
 <script>
-  // Crossfade the cascade, keep each frame's address bar in sync, and pause on
-  // hover so an explored shot does not swap mid-look. Runs on astro:page-load
-  // (survives View Transitions) with a dataset bind guard; disabled under
-  // reduced motion; pauses while the tab is hidden. Frames hold disjoint cover
-  // sets (see the frontmatter), so each just advances through its own list.
+  // Cycle the active site every 5s, crossfade both devices, keep the address bar
+  // in sync, and preload one site ahead so a crossfade never lands on a blank.
+  // Runs on astro:page-load (survives View Transitions) with a bind guard;
+  // disabled under reduced motion; pauses on hover and while the tab is hidden.
   function initHeroShowcase() {
     document
       .querySelectorAll<HTMLElement>('[data-hero-showcase]:not([data-showcase-bound])')
       .forEach((root) => {
         root.dataset.showcaseBound = 'true';
+
+        // Reduced motion: leave the first site shown on both devices, static.
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-        const frames = Array.from(root.querySelectorAll<HTMLElement>('[data-frame]')).map((frame) => ({
-          slides: Array.from(frame.querySelectorAll<HTMLElement>('[data-slide]')),
-          address: frame.querySelector<HTMLElement>('[data-frame-address]'),
-          idx: 0,
-        }));
-        if (!frames.length) return;
+        const count = Number(root.dataset.count || '0');
+        if (count < 2) return;
 
-        const advance = (f: (typeof frames)[number]) => {
-          if (f.slides.length < 2) return;
-          f.slides[f.idx].removeAttribute('data-active');
-          f.idx = (f.idx + 1) % f.slides.length;
-          f.slides[f.idx].setAttribute('data-active', 'true');
-          if (f.address) f.address.textContent = f.slides[f.idx].dataset.host ?? '';
-        };
+        const addr = root.querySelector<HTMLElement>('[data-address-text]');
+        const shots = (i: number) =>
+          Array.from(root.querySelectorAll<HTMLElement>(`[data-shot="${i}"]`));
+        const hostOf = (i: number) =>
+          root.querySelector<HTMLElement>(`[data-shot="${i}"][data-host]`)?.dataset.host ?? '';
 
-        let tick = 0;
+        let cur = 0;
+        const load = (i: number) => shots(i).forEach((e) => e.classList.add('is-loaded'));
+        const setActive = (i: number, on: boolean) =>
+          shots(i).forEach((e) => e.classList.toggle('is-active', on));
+
+        load((cur + 1) % count); // preload the next site during the first dwell
+
         let timer: ReturnType<typeof setInterval> | undefined;
-        let paused = false; // set true while a pointer is hovering the cluster
-        // One frame per tick, round-robin, on a slow cadence: only one crossfade
-        // at a time and each frame changes roughly every FRAME_COUNT * interval.
-        const onTick = () => {
-          advance(frames[tick % frames.length]);
-          tick++;
+        let paused = false;
+
+        const tick = () => {
+          const next = (cur + 1) % count;
+          setActive(cur, false);
+          setActive(next, true);
+          if (addr) addr.textContent = hostOf(next);
+          load((next + 1) % count); // stay one ahead
+          cur = next;
         };
         const start = () => {
-          if (!timer && !paused) timer = setInterval(onTick, 2800);
+          if (!timer && !paused) timer = setInterval(tick, 5000);
         };
         const stop = () => {
           if (timer) {
@@ -290,20 +347,23 @@ const renderable = frames.filter((f) => f.length > 0);
         };
         start();
 
-        // Pause the rotation while a fine pointer hovers, so the shot you are
-        // exploring holds still. Touch devices have no hover, so this is gated.
+        // Pause on hover (fine pointers only) so an explored shot holds still.
         if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
           root.addEventListener('pointerenter', () => {
             paused = true;
+            root.classList.add('is-paused');
             stop();
           });
           root.addEventListener('pointerleave', () => {
             paused = false;
+            root.classList.remove('is-paused');
             if (!document.hidden) start();
           });
         }
 
-        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+        document.addEventListener('visibilitychange', () =>
+          document.hidden ? stop() : start(),
+        );
       });
   }
   document.addEventListener('astro:page-load', initHeroShowcase);
