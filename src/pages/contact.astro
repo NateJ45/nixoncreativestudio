@@ -588,4 +588,19 @@ const inputClass =
     initContactForm();
   </script>
 
+  <style>
+    /* hCaptcha renders a fixed 302px-wide iframe. On very small phones that is
+       wider than the form's content box, which forces the whole page to scroll
+       sideways. Scale the widget down just enough to fit on sub-360px screens;
+       the transform is visual only, so the checkbox stays fully tappable. The
+       widget fits on its own from ~360px up, so this only touches the smallest
+       devices. */
+    @media (max-width: 360px) {
+      .h-captcha {
+        transform: scale(0.8);
+        transform-origin: left top;
+      }
+    }
+  </style>
+
 </BaseLayout>

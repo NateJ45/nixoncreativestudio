@@ -27,7 +27,6 @@
 import { site } from '../data/site';
 import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
-import SearchPalette from './SearchPalette';
 
 // The nav model lives in the script so it's easy to reorder, rename, or extend
 // without hunting through markup. MobileNav consumes the same array.
@@ -84,12 +83,8 @@ const isActive = (href: string): boolean => {
       </span>
     </a>
 
-    <!-- Right-side cluster: desktop nav, search, theme toggle, mobile drawer. -->
+    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer. -->
     <div class="flex items-center gap-s">
-
-      <!-- Search palette (Cmd/Ctrl-K). Visible at all widths; the global
-           shortcut works everywhere, this is the visible affordance. -->
-      <SearchPalette client:load />
 
       <!-- Desktop nav at >= md (six items don't fit at sm next to the wordmark
            and toggle); the MobileNav drawer takes over below md. -->
@@ -177,8 +172,7 @@ const isActive = (href: string): boolean => {
      color via a text-* class; reach them with :global and a hook class so they
      flip to white over the hero too. */
   .ncs-header[data-over-hero] :global(.theme-toggle),
-  .ncs-header[data-over-hero] :global(.mobile-trigger),
-  .ncs-header[data-over-hero] :global(.search-trigger) {
+  .ncs-header[data-over-hero] :global(.mobile-trigger) {
     color: #ffffff;
   }
 

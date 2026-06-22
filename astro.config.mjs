@@ -6,7 +6,6 @@ import expressiveCode from 'astro-expressive-code';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import partytown from '@astrojs/partytown';
-import pagefind from 'astro-pagefind';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
@@ -29,10 +28,8 @@ import react from '@astrojs/react';
 //   - partytown : runs the Cloudflare Web Analytics beacon in a web worker so
 //                 it stays off the main thread (the beacon script carries
 //                 type="text/partytown" in Analytics.astro)
-//   - pagefind  : builds a static full-text search index from the prerendered
-//                 HTML at build time; the SearchPalette island queries it
 //   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
-//                 the WebGL hero, the search palette)
+//                 the WebGL hero)
 //
 // prefetch: links preload as they enter the viewport, so navigation feels
 // instant and pairs with the View Transitions router.
@@ -69,7 +66,6 @@ export default defineConfig({
     // Run the Cloudflare analytics beacon in a worker. forward is empty: the
     // beacon fires its own requests and exposes no global push API to proxy.
     partytown({ config: { forward: [] } }),
-    pagefind(),
     react(),
   ],
 
