@@ -255,34 +255,46 @@ const sites = [
 
   /* Each site's screenshot stacks absolutely. display:none until the script (or
      the SSR is-active on the first site) promotes it, so inactive shots are not
-     downloaded. The swap is a STACKED crossfade (see is-prev / is-active): the
-     incoming site fades in over the outgoing one, which is held solid beneath,
-     so the screen is always a full site and never dims to the background. */
+     downloaded. There is NO opacity fade: a crossfade always blends two
+     different sites (a ghosty double-exposure), so the swap is a SLIDE instead.
+     Every rendered shot is fully opaque; the active one sits on top and covers
+     the screen, hiding the loaded-but-inactive ones stacked beneath it. The pan
+     lives on the inner .shot-img and the slide on the .shot, so they never
+     fight. */
   .shot {
     position: absolute;
     inset: 0;
     display: none;
-    opacity: 0;
     z-index: 1;
   }
+  /* Loaded shots render (so the browser downloads them) but sit beneath the
+     active one, which is opaque and covers the whole screen. */
   .shot.is-loaded,
   .shot.is-active,
-  .shot.is-prev {
+  .shot.is-leaving {
     display: block;
   }
-  /* Outgoing site: held fully opaque BENEATH the incoming during a swap, so a
-     crossfade never shows the navy background through both screens (which read
-     as a dim flicker). */
-  .shot.is-prev {
-    opacity: 1;
-    z-index: 1;
-  }
-  /* Incoming site: fades in ON TOP of the outgoing, so the composite stays a
-     solid site the whole time. */
-  .shot.is-active {
-    opacity: 1;
+  /* Active site sits flat on top. The leaving one keeps the same level so it
+     stays above the other loaded shots while the incoming slides over it. */
+  .shot.is-active,
+  .shot.is-leaving {
     z-index: 2;
-    transition: opacity 0.55s ease;
+  }
+  /* Incoming site slides up from below to cover the outgoing one. Gated to
+     motion-OK; with reduced motion the script does not cycle at all. */
+  @media (prefers-reduced-motion: no-preference) {
+    .shot.is-entering {
+      z-index: 3;
+      animation: hero-slide-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+  }
+  @keyframes hero-slide-in {
+    from {
+      transform: translateY(101%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
   .shot-img {
     display: block;
@@ -293,11 +305,14 @@ const sites = [
 
   /* ---- Motion: the active page pans down, gated to motion-OK ------------- */
   @media (prefers-reduced-motion: no-preference) {
-    .shot.is-active .shot-img {
+    /* Pan only once the slide-in has finished (is-entering removed), so the page
+       does not scroll while it is still sliding into view. */
+    .shot.is-active:not(.is-entering) .shot-img {
       animation: hero-pan 9s linear both;
     }
-    /* Hover (or tab hidden) pauses the scroll via the script's is-paused flag. */
-    .hero-stage.is-paused .shot.is-active .shot-img {
+    /* Hover (or tab hidden) pauses the scroll and any in-flight slide. */
+    .hero-stage.is-paused .shot.is-active:not(.is-entering) .shot-img,
+    .hero-stage.is-paused .shot.is-entering {
       animation-play-state: paused;
     }
   }
@@ -325,8 +340,9 @@ const sites = [
 </style>
 
 <script>
-  // Cycle the active site every 5s, crossfade both devices, keep the address bar
-  // in sync, and preload one site ahead so a crossfade never lands on a blank.
+  // Cycle the active site every 5s, sliding the next one in over both devices,
+  // keep the address bar in sync, and preload one site ahead so a swap never
+  // lands on a blank.
   // Runs on astro:page-load (survives View Transitions) with a bind guard;
   // disabled under reduced motion; pauses on hover and while the tab is hidden.
   function initHeroShowcase() {
@@ -349,30 +365,59 @@ const sites = [
 
         let cur = 0;
         const load = (i: number) => shots(i).forEach((e) => e.classList.add('is-loaded'));
-        const setClass = (i: number, cls: string, on: boolean) =>
-          shots(i).forEach((e) => e.classList.toggle(cls, on));
 
         load((cur + 1) % count); // preload the next site during the first dwell
 
         let timer: ReturnType<typeof setInterval> | undefined;
         let cleanup: ReturnType<typeof setTimeout> | undefined;
         let paused = false;
+        const SLIDE_MS = 620;
 
         const tick = () => {
           const next = (cur + 1) % count;
-          // Drop the current site to "prev" (solid, beneath) and fade the next
-          // in on top, so neither screen ever shows through to the background.
-          setClass(cur, 'is-active', false);
-          setClass(cur, 'is-prev', true);
-          setClass(next, 'is-prev', false);
-          setClass(next, 'is-active', true);
+          const leaving = cur;
+
+          // Outgoing: freeze its scroll exactly where it is (so it cannot snap
+          // back to the top while it is still partly visible), and hold it
+          // beneath as "leaving" until the incoming has covered it.
+          shots(leaving).forEach((s) => {
+            const img = s.querySelector<HTMLElement>('.shot-img');
+            if (img) {
+              const t = getComputedStyle(img).transform;
+              img.style.animation = 'none';
+              if (t && t !== 'none') img.style.transform = t;
+            }
+            s.classList.remove('is-active');
+            s.classList.add('is-leaving');
+          });
+
+          // Incoming: slide up over the outgoing. It becomes active now, but its
+          // pan is deferred until the slide finishes (the :not(.is-entering)
+          // rule), so the page does not scroll while it is still sliding in.
+          shots(next).forEach((s) => {
+            s.classList.remove('is-leaving');
+            s.classList.add('is-active', 'is-entering');
+          });
+
           if (addr) addr.textContent = hostOf(next);
           load((next + 1) % count); // stay one ahead
-          const leaving = cur;
           cur = next;
-          // Once the incoming has fully faded in over it, retire the old site.
+
           clearTimeout(cleanup);
-          cleanup = setTimeout(() => setClass(leaving, 'is-prev', false), 650);
+          cleanup = setTimeout(() => {
+            // Retire the old site (now covered) and clear its frozen transform
+            // so it is fresh next time it appears.
+            shots(leaving).forEach((s) => {
+              s.classList.remove('is-leaving');
+              const img = s.querySelector<HTMLElement>('.shot-img');
+              if (img) {
+                img.style.animation = '';
+                img.style.transform = '';
+              }
+            });
+            // Let the new site start panning now that it has settled.
+            shots(next).forEach((s) => s.classList.remove('is-entering'));
+          }, SLIDE_MS);
         };
         const start = () => {
           if (!timer && !paused) timer = setInterval(tick, 5000);
