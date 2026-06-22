@@ -1,8 +1,21 @@
 {
-  "//": "Lighthouse CI config. Runs against the built static output so the dev-server SSR-dedup quirks never affect scores. Accessibility is a hard gate (the site holds 100 and that bar must not regress); performance / best-practices / SEO are warnings so normal CI variance doesn't block a PR while still surfacing drops. Run locally with: npm run build && npx lhci autorun",
+  "//": "Lighthouse CI config. Runs against the built static output so dev-server SSR quirks never affect scores. The url list is EXPLICIT on purpose: with staticDistDir alone, lhci auto-discovers pages but caps at maxAutodiscoverUrls (default 5), so it was testing a near-random 5 of 22 pages, including the /404 page and the Google Search Console verification stub (googlebc11aa9bca0fae39.html), which dragged the accessibility gate below 100. Listing the urls disables auto-discovery (lhci still serves staticDistDir and swaps in its own port), so the run covers every distinct template and skips the non-page stub. One case study stands in for all ten since they share a layout. Accessibility is a hard gate (the site holds 100 and that bar must not regress); performance / best-practices / SEO are warnings so normal CI variance doesn't block a PR while still surfacing drops. Run locally with: npm run build && npx lhci autorun",
   "ci": {
     "collect": {
       "staticDistDir": "./dist/client",
+      "url": [
+        "http://localhost/index.html",
+        "http://localhost/about/index.html",
+        "http://localhost/services/index.html",
+        "http://localhost/work/index.html",
+        "http://localhost/work/second-presbyterian-chicago/index.html",
+        "http://localhost/journal/index.html",
+        "http://localhost/photography/index.html",
+        "http://localhost/now/index.html",
+        "http://localhost/contact/index.html",
+        "http://localhost/privacy/index.html",
+        "http://localhost/404.html"
+      ],
       "numberOfRuns": 1,
       "settings": {
         "skipAudits": ["uses-http2", "canonical"]

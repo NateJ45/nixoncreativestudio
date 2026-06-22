@@ -25,9 +25,15 @@ export interface CopyEmailProps {
   /** Optional className forwarded to the wrapping element. Lets the
       parent control spacing without this component making assumptions. */
   className?: string;
+  /** Surface the component sits on. 'dark' (the navy footer) switches the
+      link + icon to sky --secondary, which clears WCAG AA on navy; the
+      darker --link token does not. 'light' (default, e.g. the Contact
+      sidebar) keeps --link, which flips with the page theme on light
+      surfaces. */
+  tone?: 'light' | 'dark';
 }
 
-export default function CopyEmail({ email, className }: CopyEmailProps) {
+export default function CopyEmail({ email, className, tone = 'light' }: CopyEmailProps) {
 
   // Stores the "Copied" toast state. Cleared after 2 seconds so the
   // icon returns to the copy state.
@@ -45,11 +51,26 @@ export default function CopyEmail({ email, className }: CopyEmailProps) {
     }
   }
 
+  // Token choice depends on the surface (see the `tone` prop doc). On navy
+  // the darker --link fails AA, so the dark tone uses --secondary (sky), the
+  // same token the footer's other links use; the icon goes to a legible
+  // white so it does not vanish on the dark band.
+  const linkClass =
+    'transition-colors duration-150 hover:underline hover:underline-offset-2 ' +
+    'focus-visible:underline focus-visible:underline-offset-2 ' +
+    (tone === 'dark' ? 'text-secondary' : 'text-link');
+
+  const buttonClass =
+    'inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-none ' +
+    (tone === 'dark'
+      ? 'text-primary-foreground/70 hover:bg-white/10 hover:text-secondary focus-visible:bg-white/10 focus-visible:text-secondary'
+      : 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link');
+
   return (
     <span className={`inline-flex items-center gap-xs ${className ?? ''}`}>
       <a
         href={`mailto:${email}`}
-        className="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+        className={linkClass}
       >
         {email}
       </a>
@@ -58,7 +79,7 @@ export default function CopyEmail({ email, className }: CopyEmailProps) {
         onClick={handleCopy}
         aria-label={copied ? 'Email copied to clipboard' : 'Copy email address'}
         title={copied ? 'Copied' : 'Copy email address'}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link focus-visible:outline-none"
+        className={buttonClass}
       >
         {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
       </button>
