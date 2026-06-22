@@ -25,7 +25,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - Astro 6.3.7 with TypeScript in strict mode and `output: 'static'`
 - MDX content collections for case studies and journal entries; JSON-backed collection for the photography catalogue
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
-- React 19 islands for anything interactive: mobile nav drawer, contact form handler, photo lightbox, theme toggle, back-to-top, copy-email, /work filter chips. Astro components for everything static
+- React 19 islands for anything interactive: full-screen mobile nav panel, contact form handler, photo lightbox, theme toggle, WebGL hero canvas, testimonials carousel, back-to-top, copy-email, /work filter chips. Astro components for everything static
 - shadcn/ui primitives in `src/components/ui/` (Nova preset, Radix base). Includes a Nathan-added `brand` variant and `cta` size on Button for marketing CTAs. `components.json` also wires the `@fulldev` registry for more free shadcn-compatible components
 - Aceternity UI for motion-rich blocks (bento-grid, spotlight)
 - Magic UI for smaller flourishes (marquee, animated-beam)
@@ -37,7 +37,6 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - sharp for image processing; plaiceholder wired into case study covers via `scripts/generate-placeholders.mjs` (build-time generation into `src/lib/coverPlaceholders.json`) and the `CaseStudyCover.astro` wrapper
 - opentype.js (dev-only) for the OG image generators: `scripts/generate-og-default.mjs` (the fallback card) and `scripts/generate-og.mjs` (per-page cards into `public/og/`, run in the build chain). Both render Bebas glyphs to SVG then rasterize with sharp, out-of-process (the CF prerender isolate has no node built-ins, so an `astro-og-canvas` route can't run here)
 - `@astrojs/rss` for `/rss.xml`, surfacing case study entries to feed readers (`<link rel="alternate">` auto-discovery wired in BaseLayout)
-- `astro-pagefind` for static full-text search: builds an index from the prerendered HTML at build time, queried client-side by the `SearchPalette.tsx` Cmd/Ctrl-K island. No backend
 - `astro-expressive-code` for themed code blocks in MDX (journal dev posts); its dark theme is tied to the site's `.dark` class. Must sit before `mdx()` in the integrations array
 - `@astrojs/partytown` runs the Cloudflare Web Analytics beacon in a web worker (the beacon script in `Analytics.astro` carries `type="text/partytown"`)
 - Astro `prefetch` enabled (`prefetchAll`, viewport strategy) so links preload as they enter the viewport, pairing with the View Transitions router
@@ -53,24 +52,25 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 
 ---
 
-## Homepage architecture (three acts)
+## Homepage architecture
 
-The homepage is structured as three deliberate acts plus the Footer, in this order in the rendered output. Section order IS the IA, not decoration. The previous eight-section frame (Hero, SelectedWork, Services, PhotoStrip, Process, Testimonials, CtaBanner, Footer) was retired during the three-act rewrite documented in PRODUCT.md; an impeccable critique flagged numbered-eyebrow scaffolds, three-stacked-card-grid monotony, and photo-shy presentation as the loudest AI tells on the page, and the rewrite undoes them.
+The homepage renders in this order: Hero, Proof band, Selected Work, Process Band, then the Footer (from `BaseLayout`). Section order IS the IA, not decoration. The previous eight-section frame (Hero, SelectedWork, Services, PhotoStrip, Process, Testimonials, CtaBanner, Footer) was retired during the rewrite documented in PRODUCT.md; an impeccable critique flagged numbered-eyebrow scaffolds, three-stacked-card-grid monotony, and photo-shy presentation as the loudest AI tells on the page, and the rewrite undoes them.
 
-1. **Act 1 — Hero** (`src/components/Hero.astro`). One decisive Cincinnati photograph fills the surface. The studio wordmark anchors the top, a positioning headline ("I make websites that pull their weight.") plus a one-sentence audience line plus two CTAs anchor the bottom. A vertical scrim darkens the lower half so the overlaid copy reads in both light and dark modes. Until a real Nathan-shot photo lands at `src/assets/brand/hero.jpg`, a quiet navy gradient placeholder sits in its place; the swap is documented at the top of the component.
-2. **Act 2 — Selected Work** (`src/components/SelectedWork.astro`). Three featured case studies, asymmetric: one large primary card (4:3 image + body in a two-column grid at desktop, stacked on mobile) followed by two medium cards in a 50/50 row. It is collection-driven: the component reads `getCollection('case-studies')`, filters to `featured === true`, sorts newest-first, and takes the top three (newest is the primary). Cards render real optimized covers through `CaseStudyCover`, and each surfaces the case study's `outcome` line in `--link` color above the summary so the proof-point reads at first scan instead of buried in body copy. Curate the homepage by setting `featured: true` on exactly the three entries you want here. The whole list is an `<ol>` because curation order matters; each card is a single `<a>` so the click target covers image + body together.
-3. **Act 3 — Process Band** (`src/components/ProcessBand.astro`). A band that combines the four-step process and the inquiry CTA. It uses the theme-aware `.band-themed` surface: light (with a soft accent glow) in light mode, navy aurora in dark mode. Step numbers (01–04) are the ONLY deliberately numbered sequence on the homepage; they earn their place because the process is genuinely ordered. The CTA title is specific to audience ("Tell me what you are building.") and the button leads to `/contact`. Closes the page on one strong block instead of three stacked sections.
-4. **Footer**, rendered by `BaseLayout`, stays navy in both themes. In dark mode it continues the navy from Act 3 as one continuous dark block; in light mode the Hero photo and the Footer are the only deliberately dark sections (Act 3 reads light), which keeps light mode genuinely light while dark mode stays immersive.
+1. **Hero** (`src/components/Hero.astro`). A full-viewport (100svh) opening, navy in both themes. Two columns at `lg`: an oversized Bebas headline ("I make websites that pull their weight.") with a one-line audience statement and two CTAs on the left, and a crossfading portfolio showcase (`HeroShowcase.astro`) of real shipped client sites on the right, so real work sits above the fold. Below `lg` the showcase is hidden and the headline carries the hero. The background is a domain-warped WebGL brand-color flow (`HeroCanvas.tsx`, cursor-reactive) over an animated `.bg-aurora` + grain fallback, with a left-favoring scrim keeping the left-column copy legible. The headline scales by both viewport width and height (`clamp(..., min(9vw, 14.5vh), ...)`) so the CTAs never clip on short laptops. The studio wordmark lives in the sticky header (navy over this hero), not in the hero itself. A real Nathan-shot photo is an optional layer, not a content gate: the `<Image />` slot is commented at the top of the component and would sit over the WebGL/aurora.
+2. **Proof band** (`src/components/ProofBand.astro`). One honest sentence of proof (how many sites shipped, for whom, all by one person) over a `.bg-mesh-soft` glow, followed by the client-name marquee. It is the quiet "is this real" beat between the hero and the work, and it carries no KPI stat blocks (the old 10 / 4 / 100% triplet was an AI tell and was cut).
+3. **Selected Work** (`src/components/SelectedWork.astro`). Three featured case studies, asymmetric: one large primary card (4:3 image + body in a two-column grid at desktop, stacked on mobile) followed by two medium cards in a 50/50 row. It is collection-driven: the component reads `getCollection('case-studies')`, filters to `featured === true`, sorts newest-first, and takes the top three (newest is the primary). Cards render real optimized covers through `CaseStudyCover`, and each surfaces the case study's `outcome` line in `--link` color above the summary so the proof-point reads at first scan instead of buried in body copy. Curate the homepage by setting `featured: true` on exactly the three entries you want here. The whole list is an `<ol>` because curation order matters; each card is a single `<a>` so the click target covers image + body together.
+4. **Process Band** (`src/components/ProcessBand.astro`). A band that combines the four-step process and the inquiry CTA. It uses the theme-aware `.band-themed` surface: light (with a soft accent glow) in light mode, navy aurora in dark mode. Step numbers (01–04) are the ONLY deliberately numbered sequence on the homepage; they earn their place because the process is genuinely ordered. The CTA title is specific to audience ("Tell me what you are building.") and the button leads to `/contact`. Closes the page on one strong block instead of three stacked sections.
+5. **Footer**, rendered by `BaseLayout`, stays navy in both themes. In dark mode it continues the navy from the Process Band as one continuous dark block; in light mode the Hero and the Footer are the only deliberately dark sections (the Process Band reads light), which keeps light mode genuinely light while dark mode stays immersive.
 
 The Services, PhotoStrip, and Testimonials components were deleted during the rewrite. Each had its real home elsewhere:
 
 - **Services** copy lives on `/services` and `/about`.
-- **Photography** has its own `/photography` page; on the homepage Nathan's photographic craft is carried by the Hero image itself rather than by a four-up tile strip.
-- **Testimonials** belong inside individual case study pages where the quote has earned context. A standalone "what people say" band on the homepage at three equal cards put quotes at the lowest-impact layout for the format.
+- **Photography** has its own `/photography` page; on the homepage the work itself is carried above the fold by the crossfading `HeroShowcase`, not by a four-up photo tile strip.
+- **Testimonials** belong inside individual case study pages where the quote has earned context (and the /about carousel reads the same `testimonial` frontmatter). A standalone "what people say" band on the homepage at three equal cards put quotes at the lowest-impact layout for the format.
 
 The `Process` component is preserved separately because `/services` still imports it as a soft-band, no-CTA version (it no longer carries a section number; it never should have on `/services`). The `CtaBanner` component is preserved because `/about`, `/now`, `/photography`, and `/services` all still use it as a tail-of-page inquiry block.
 
-Don't reorder the three acts. If a section's content isn't ready yet (the Hero photograph is the one real content gate), the component holds the placeholder until it lands.
+Don't reorder these sections. The hero no longer depends on any single content gate: the WebGL flow and the crossfading showcase fill it today, so it ships complete.
 
 ---
 
@@ -120,7 +120,7 @@ Three-state toggle (light / dark / system), persisted to `localStorage["ncs-them
 The wiring, in order of execution:
 
 1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint. Reads `localStorage["ncs-theme"]` and `prefers-color-scheme`, applies the `.dark` class on `<html>` plus an inline `color-scheme` style so native widgets (scrollbars, form controls) follow. No flash of the wrong theme on initial paint or after View Transitions.
-2. **`ThemeToggle.tsx`** (React island in Header + MobileNav drawer) cycles light → dark → system on click, writes to the same localStorage key, and re-binds the matchMedia listener whenever the chosen theme changes.
+2. **`ThemeToggle.tsx`** (React island in the Header and the mobile nav panel) cycles light → dark → system on click, writes to the same localStorage key, and re-binds the matchMedia listener whenever the chosen theme changes.
 3. **`globals.css`** defines color tokens for both modes. `:root` carries light; `.dark` carries the overrides. Brand `--accent` and `--secondary` keep their visual identity in both modes; only the surface and text tokens flip. See Brand colors above for the exact token responsibilities.
 
 `--primary` (navy) deliberately stays navy in dark mode so the Footer + CtaBanner read as the darkest band on the page in both modes, and the default Button stays on-brand. `--accent-foreground` flips to navy in dark mode so white text on the brightened sky-blue accent doesn't fail contrast.
@@ -158,7 +158,7 @@ Vocabulary (use these; don't reinvent):
 
 1. `npm run placeholders` runs `scripts/generate-placeholders.mjs`. Scans `src/assets/case-studies/` for cover images, generates a tiny base64 PNG blur preview per cover via plaiceholder, writes the lot to `src/lib/coverPlaceholders.json`. Runs out-of-process because the Cloudflare Pages prerender worker is a V8 isolate without `node:fs`.
 2. `npm run og:pages` runs `scripts/generate-og.mjs`. Generates one per-page Open Graph card (navy gradient + title in Bebas Neue + studio name in amber) into `public/og/`: one per main route plus one per case study (`og/work/<slug>.png`) and journal entry. Runs out-of-process for the same V8-isolate reason (an Astro route can't: it would need `node:crypto` in the CF prerender worker, which is why `astro-og-canvas` as a route fails here). `BaseLayout.astro` maps the current pathname to `/og/<slug>.png`. Output is deterministic, so re-running with unchanged content produces identical bytes.
-3. `astro build` runs as normal. Pages import `coverPlaceholders.json` via the typed lookup in `src/lib/coverPlaceholder.ts` and pass blurs to `CaseStudyCover`. After the build, `astro-pagefind` indexes the prerendered HTML into `dist/client/pagefind/` for `SearchPalette`.
+3. `astro build` runs as normal. Pages import `coverPlaceholders.json` via the typed lookup in `src/lib/coverPlaceholder.ts` and pass blurs to `CaseStudyCover`.
 
 Standalone scripts:
 
@@ -229,23 +229,23 @@ shadcn primitives that wrap Radix's Dialog (Sheet, Dialog, DropdownMenu with por
 
 ### Studio components reference
 
-Beyond the homepage-section components (Hero, SelectedWork, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `Process` and `CtaBanner` are retained as off-homepage components (`/services` uses `Process`; `/about`, `/now`, `/photography`, `/services` use `CtaBanner`).
+Beyond the homepage-section components (Hero, HeroShowcase, ProofBand, SelectedWork, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `Process` and `CtaBanner` are retained as off-homepage components (`/services` uses `Process`; `/about`, `/now`, `/photography`, `/services` use `CtaBanner`).
 
 - `BackToTop.tsx` — floating button bottom-right, rendered once in BaseLayout. Fades in after 600px scroll, honors `prefers-reduced-motion`.
 - `ReadingProgress.tsx` — thin top bar that fills as the visitor scrolls. Rendered only on case study and journal detail pages.
 - `CopyEmail.tsx` — mailto link plus a one-click copy-to-clipboard button with sr-live "Copied" status. Footer Contact column + Contact page sidebar.
-- `ThemeToggle.tsx` — light / dark / system cycle. Header (desktop) + MobileNav drawer.
-- `MobileNav.tsx` — small-viewport nav drawer via shadcn Sheet. Below md (768px).
-- `SearchPalette.tsx` — Cmd/Ctrl-K command palette over the site's own content, powered by Pagefind (static index built from the prerendered HTML by `astro-pagefind`). Rendered once in the Header. Loads `/pagefind/pagefind.js` lazily on first open via a runtime-built specifier (so the bundler externalizes it); renders excerpt `<mark>` hits through DOMParser, never `innerHTML`. Pagefind only exists after a build, so search is empty under `astro dev` and live in preview/production.
+- `ThemeToggle.tsx` — light / dark / system cycle. Header (desktop) + the mobile nav panel.
+- `MobileNav.tsx` — the small-viewport navigation: a full-screen navy panel (a shadcn Sheet underneath, so focus-trap, Escape, scroll-lock, and dialog ARIA all stay intact). Oversized Bebas nav links, each with a short honest descriptor, hairline-divided like an editorial index, with a staggered entrance on open. Navy in both themes (matching the Hero and Footer). Carries an amber "Start a project" CTA and a "Get in touch" block (email, phone, inline Instagram / LinkedIn glyphs, and the theme toggle). The active route shows in amber with a persistent arrow. Below md (768px); `client:only="react"`.
 - `Testimonials.astro` + `TestimonialCarousel.tsx` — a "What clients say" carousel on /about. The `.astro` wrapper is collection-driven: it reads the `testimonial` field from case studies (so quotes stay tied to the client and nothing is fabricated) and renders nothing until at least one case study carries a real quote. The `.tsx` island is the Embla carousel: keyboard arrows, prev/next/dot controls, a Pause/Play toggle (SC 2.2.2), autoplay that is off under reduced motion and pauses on hover/focus, and `inert` on off-screen slides. To populate it, fill a case study's `testimonial:` frontmatter.
-- `HeroCanvas.tsx` — the WebGL hero background (Three.js + `@react-three/fiber`): a fullscreen shader quad drifting brand-color clouds (navy / NCS blue / sky / a faint amber bloom). Layers over the `.bg-aurora` fallback in Hero.astro and renders nothing (so the aurora shows) under reduced motion or without WebGL; pauses (frameloop "never") when the hero is off-screen or the tab is hidden; DPR capped, `powerPreference: 'low-power'`. `client:only="react"` because R3F does not server-render. Edit the GLSL in this file to retune the look; keep it subtle and on-brand (not neon).
+- `HeroCanvas.tsx` — the WebGL hero background (Three.js + `@react-three/fiber`): a fullscreen shader quad drawing a domain-warped flow of brand colors (navy / NCS blue / sky / a faint amber bloom) that visibly swirls, plus a soft sky bloom that follows the cursor. Layers over the `.bg-aurora` fallback in Hero.astro and renders nothing (so the aurora shows) under reduced motion or without WebGL; pauses (frameloop "never") when the hero is off-screen or the tab is hidden; DPR capped, `powerPreference: 'low-power'`. `client:only="react"` because R3F does not server-render. Edit the GLSL in this file to retune the look; keep it subtle and on-brand (not neon).
+- `HeroShowcase.astro` — the crossfading portfolio frame in the hero's right column (at `lg` and up). A browser-chrome window that cycles real case-study cover screenshots, collection-driven (featured first, then newest others, capped at five), with the address bar tracking the active site's host. Entirely `aria-hidden` (decorative; the real navigation is the "See the work" CTA beside it and the Selected Work section below), reduced-motion safe (the first shot holds), and pauses when the tab is hidden.
 - `CaseStudyCover.astro` — wraps Astro `<Image />` with a plaiceholder blur preview painted as the wrapper bg, fades the real image in on load. Used by /work index cards (`fit="cover"`) and /work/[slug] hero (`fit="natural"`).
 - `SiteShowcase.astro` — animated "live site" frame embedded inside case study MDX. Renders a browser-chrome window whose full-page screenshot auto-scrolls (or slow-zooms with `variant="zoom"`), pausing on hover, and links to the live site. Reduced-motion safe (the scroll freezes to a static frame). Import it plus the screenshot at the top of a case study `.mdx` and place `<SiteShowcase src={shot} alt="..." href="..." label="..." />`. Full-page screenshots live in `src/assets/case-studies/shots/{slug}-home.png` (captured with Playwright at 1440px wide). Covers in `src/assets/case-studies/{slug}.png` are real hero screenshots of the same sites.
 - `BeforeAfter.astro` — draggable before/after image comparison slider for redesign case studies. Keyboard-operable (native range input). NOT yet used anywhere: it needs a real "before" screenshot, and the Wayback Machine is not a reliable source (archived Wix / Squarespace / WordPress pages render broken). Use a screenshot saved when the project started; drop it at `src/assets/case-studies/shots/{slug}-before.png` and follow the usage block in the component header.
 - `WorkFilter.tsx` — sector + year chip filters on /work index. Filters server-rendered cards by toggling a `data-hidden` attribute (no card re-render).
 - `ComingSoon.astro` — the standalone "launching soon" view. Used by `/coming-soon/` directly and by BaseLayout's site-wide gate when `PUBLIC_COMING_SOON=true`.
 - `StructuredData.astro` — emits JSON-LD. BaseLayout always renders the Organization / LocalBusiness schema; pages pass page-specific schemas via the `schemas` prop (Person on About, Article + CreativeWork on case studies, Service + FAQPage on /services).
-- `SectionHeading.astro` — reusable section header (optional number, title, optional sub paragraph). `num` is optional on purpose; pass it only when the section is genuinely a numbered sequence. The homepage three-act rewrite stopped using it; `/services` and any future inner page that wants a clean numbered or unnumbered title still can. **Always pass `headingId`** when the parent `<section>` carries `aria-labelledby`; without it, the reference points at nothing.
+- `SectionHeading.astro` — reusable section header (optional number, title, optional sub paragraph). `num` is optional on purpose; pass it only when the section is genuinely a numbered sequence. The homepage sections stopped using it; `/services` and any future inner page that wants a clean numbered or unnumbered title still can. **Always pass `headingId`** when the parent `<section>` carries `aria-labelledby`; without it, the reference points at nothing.
 - `Photo.tsx` — generic `<img>` wrapper with fade-in. Used by `PhotoGallery` on the photography page (and available for any future image-on-content-page use).
 - `PhotoGallery.tsx` — react-photo-album justified grid + yet-another-react-lightbox. Used by the /photography per-category galleries.
 - `Newsletter.astro`, `ClientLogos.astro`, `PressMentions.astro` — scaffolds that render nothing until configured. See the Setup checklist at the end of this doc.
@@ -277,7 +277,17 @@ Beyond the homepage-section components (Hero, SelectedWork, ProcessBand) and the
 
 ## Accessibility
 
-Target: WCAG 2.1 AA in both light and dark modes. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar.
+Target: WCAG 2.1 AA in both light and dark modes. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. Verified with axe-core (WCAG 2.0 A + AA, 2.1 AA) across every page in both themes: zero violations. The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
+
+### Conformance target is AA, deliberately (not AAA)
+
+AA is the standard for this site, by choice, in line with W3C's own guidance that AAA is not recommended as a blanket requirement for whole sites. AAA is not targeted because a few of its criteria pull against a brand-led design, and the gap is small and intentional, not an oversight:
+
+- **1.4.6 Enhanced contrast (7:1):** the accent-toned tokens clear AA but sit just under 7:1 by design, to keep the NCS-blue identity vivid: `--link` `#2A6FB0` on white (5.25:1), `--muted-foreground` `#5F6573` on white (5.84:1), white-on-`--accent` buttons (~4.7:1), footer sky-on-navy (~6.5:1). Body text and headings already exceed 7:1. Pushing these to 7:1 would mean darkening the brand blues; that trade was declined.
+- **2.5.5 Target Size (44px):** controls meet the AA size rule (2.5.8, 24px) but some (carousel dots, small inline links) are under the AAA 44px.
+- **3.1.5 Reading Level / 2.4.9 Link Purpose (link-only):** confident marketing copy and repeated "Read the case study" links don't meet the AAA bars.
+
+If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 large/UI) in both themes; AA is the line that must not regress.
 
 ### Required patterns
 
@@ -331,7 +341,7 @@ Lighthouse can't catch everything. For structural changes, also do a manual keyb
 
 ## Content data and contact info
 
-`src/data/site.ts` is the single source of truth for the studio's contact and identity values. Every component that displays an email, phone, name, studio name, business address, social URL, tagline, or domain imports from this module. Update a value here once and the Header wordmark, Footer columns, Hero locale tag, Contact sidebar, contact form's subject line, and the analytics + meta description all pick it up on the next build.
+`src/data/site.ts` is the single source of truth for the studio's contact and identity values. Every component that displays an email, phone, name, studio name, business address, social URL, tagline, or domain imports from this module. Update a value here once and the Header wordmark, Footer columns, Contact sidebar, contact form's subject line, and the analytics + meta description all pick it up on the next build.
 
 Edit `src/data/site.ts` when contact info, social URLs, or the studio name change. Do not hardcode any of those strings inside `.astro` components or pages; route them through `site`.
 
@@ -355,7 +365,7 @@ Static routes generated at build time:
 
 | Path | Source |
 |---|---|
-| `/` | `src/pages/index.astro` (8-section homepage) |
+| `/` | `src/pages/index.astro` (homepage: hero, proof band, selected work, process band) |
 | `/about/` | `src/pages/about.astro` |
 | `/services` | `src/pages/services.astro` |
 | `/work/` | `src/pages/work/index.astro` (with filter chips) |
@@ -397,8 +407,8 @@ Static routes generated at build time:
 - `src/components/starwind/` Starwind Astro-native primitives + `starwind.config.json` (vendored as a unit with `src/styles/starwind.css`)
 - `src/components/primereact/` PrimeReact escape hatch (passthrough + island + README)
 - Aceternity / Magic UI component swaps in `src/components/ui/aceternity/` and `src/components/ui/`
-- React islands: `Photo.tsx`, `PhotoGallery.tsx`, `MobileNav.tsx`, `ThemeToggle.tsx`, `BackToTop.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`, `WorkFilter.tsx`
-- Astro wrappers: `CaseStudyCover.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
+- React islands: `Photo.tsx`, `PhotoGallery.tsx`, `MobileNav.tsx`, `ThemeToggle.tsx`, `HeroCanvas.tsx`, `TestimonialCarousel.tsx`, `BackToTop.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`, `WorkFilter.tsx`
+- Astro wrappers: `CaseStudyCover.astro`, `HeroShowcase.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
 - `src/lib/coverPlaceholder.ts` + `src/lib/coverPlaceholders.json` (the JSON is regenerated by the build script; don't edit by hand)
 - `src/lib/readingTime.ts`
 - `src/scripts/lenis-init.ts` (smooth scroll setup)
@@ -524,7 +534,7 @@ Things that still need configuration before / during the public launch. Everythi
 ### `src/data/site.ts` — fields that enable scaffolds when set
 
 - [ ] `bookingUrl` — Cal.com / Calendly URL. When set, the Contact sidebar shows a "Book a call" block. Recommended: Cal.com (open source, free at this volume, the URL looks like `https://cal.com/nathannixon/30min`).
-- [ ] `newsletterUrl` — Buttondown publish URL (or other provider's form action). When set, the `Newsletter` component renders a subscribe form. Drop `<Newsletter />` into a page (most natural fit: near the bottom of `/about` or `/journal`; the homepage three-act frame intentionally doesn't carry a newsletter block) once configured.
+- [ ] `newsletterUrl` — Buttondown publish URL (or other provider's form action). When set, the `Newsletter` component renders a subscribe form. Drop `<Newsletter />` into a page (most natural fit: near the bottom of `/about` or `/journal`; the homepage intentionally doesn't carry a newsletter block) once configured.
 
 ### Component scaffolds waiting on content
 
@@ -533,8 +543,8 @@ Things that still need configuration before / during the public launch. Everythi
 
 ### Real content to ship
 
-- [ ] **Real hero photograph** at `src/assets/brand/hero.jpg` and uncomment the `<Image />` import + tag in `Hero.astro` (delete the `.hero-placeholder` div). This is the single hardest content gate for the homepage — until it lands, the navy gradient placeholder sits there. Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a preschool classroom, a West Chester storefront.
-- [ ] **Real attributed testimonials** embedded inside each case study page (the homepage three-act rewrite no longer carries a standalone testimonials band; quotes live where the context lives).
+- [ ] **Optional hero photograph** at `src/assets/brand/hero.jpg`. No longer a content gate: the hero ships complete today with the domain-warp WebGL flow plus the crossfading portfolio showcase. To use a real photo instead, drop it at that path and uncomment the `<Image />` import + tag in `Hero.astro`; it layers over the WebGL / aurora (there is no `.hero-placeholder` div anymore). Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a preschool classroom, a West Chester storefront.
+- [ ] **Real attributed testimonials** filled into a case study's `testimonial:` frontmatter. That renders a pull-quote on the case study page and populates the /about carousel (`Testimonials.astro` + `TestimonialCarousel.tsx`), which shows nothing until at least one real quote exists. The homepage carries no standalone testimonials band; quotes live where the context lives. Never fabricate one.
 - [ ] Drop a **real headshot** in `src/assets/brand/` for the `/about` page and swap the gradient placeholder div in `about.astro` for an Astro `<Image />`.
 - [x] **Real cover images** for the case studies in `src/assets/case-studies/{slug}.png`. Done: each is a real hero screenshot of the live site (captured with Playwright). Full-page screenshots also live in `src/assets/case-studies/shots/{slug}-home.png` and drive the animated `SiteShowcase` inside each study. Re-capture if a client redesigns their site.
 - [ ] **Before/after sliders** on the redesign case studies via `BeforeAfter.astro`. Needs a real "before" screenshot per project (one you saved when the project started, not the Wayback Machine, whose archives of these sites render broken). Drop it at `src/assets/case-studies/shots/{slug}-before.png` and follow the usage block in the component.

@@ -45,7 +45,7 @@ Reference sites pulled in early research (kept as positive anchors, not slavish 
 ## Design Principles
 
 1. **Show, don't tell.** Portfolio work is the proof. Adjective-heavy copy ("thoughtful," "bespoke," "creative") loses to a real screenshot of a real church website for a real congregation. Every page should put the work in front of the talk.
-2. **Warm restraint.** Professional without cold, confident without flash. The visual system uses one accent (NCS blue), a single display face (Bebas Neue), generous whitespace, and warmth carried by photography and copy rather than decorative flourishes.
+2. **Warm restraint.** Professional without cold, confident without flash. The visual system uses one accent (NCS blue), a single display face (Bebas Neue), and generous whitespace. The site is deliberately polished and animation-rich (a WebGL hero flow, scroll-in reveals, hover micro-interactions, depth on cards), but the motion is purposeful and on-brand, never decorative noise, and every effect stays WCAG AA and reduced-motion safe. Warmth is carried by real photography, real client work, and plain-spoken copy, not by gimmicks.
 3. **Practice what you preach.** The site itself is evidence of the craft Nathan sells. If it's slow, off-brand, broken on mobile, or inaccessible, the pitch collapses. Every shipped change has to clear the bar Nathan would set for a paying client.
 
 ## Accessibility & Inclusion

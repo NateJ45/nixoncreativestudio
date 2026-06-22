@@ -24,8 +24,9 @@ the code.
 - **PrimeReact** unstyled escape hatch in `src/components/primereact/`
   for heavy widgets (data tables, file upload, complex pickers) when
   nothing lighter fits
-- **React 19** islands for anything interactive (mobile nav drawer,
-  contact form handler, photo gallery + lightbox)
+- **React 19** islands for anything interactive (full-screen mobile
+  nav, contact form handler, photo gallery + lightbox, WebGL hero,
+  theme toggle)
 - **MDX content collections** for case studies and a JSON-backed
   collection for photography entries
 - **Motion** library (formerly Framer Motion), **Lenis** smooth
@@ -86,7 +87,7 @@ src/
 ├── layouts/            # BaseLayout.astro
 ├── lib/                # typed helpers + node --test suites (*.test.ts)
 ├── pages/              # routes (homepage, about, work, contact, ...)
-├── scripts/            # client-side modules (Lenis init)
+├── scripts/            # client-side modules (Lenis init, motion/enhance layer)
 └── styles/             # globals.css (brand tokens) + starwind.css (Starwind tokens)
 
 public/

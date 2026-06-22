@@ -2,34 +2,36 @@
 /* ============================================================================
    Homepage
    ============================================================================
-   Three-act homepage architecture (replaces the previous eight-section frame).
+   Homepage architecture (replaces the previous eight-section frame).
    Section order is the IA, not decoration:
 
-     Act 1  Hero        — full-bleed Cincinnati photograph + studio wordmark +
-                          positioning + two CTAs. The one decisive image that
-                          sets register for the rest of the page.
-     Act 2  Selected    — three featured case studies, asymmetric (one large
-            Work          + two medium). Real client names, real metrics, real
-                          links into /work/{slug} for the long form.
-     Act 3  Process     — single dark navy band that combines the four-step
-            Band          process and the inquiry CTA. Closes the page with
-                          one strong block instead of three stacked sections.
+     Hero          — full-viewport (100svh) opening, navy in both themes. An
+                     oversized headline + positioning + two CTAs on the left, a
+                     crossfading showcase of real client sites on the right (at
+                     lg), over a domain-warped WebGL flow. Studio wordmark lives
+                     in the header, not here.
+     Proof band    — one honest line of proof + the client-name marquee. The
+                     quiet "is this real" beat between the hero and the work.
+     Selected Work — three featured case studies, asymmetric (one large + two
+                     medium). Real client names, real outcomes, real links into
+                     /work/{slug} for the long form.
+     Process Band  — single band that combines the four-step process and the
+                     inquiry CTA. Closes the page with one strong block instead
+                     of three stacked sections.
 
-   The Footer is rendered by BaseLayout, immediately under Act 3, so the page
-   ends on one continuous navy block from Act 3 through Footer.
+   The Footer is rendered by BaseLayout, immediately under the Process Band.
 
    Services, PhotoStrip, and Testimonials are no longer separate homepage
    sections; each was re-homed where it belongs:
      - Services        → /services and /about already carry the offering copy.
-     - PhotoStrip      → /photography is the dedicated photography surface;
-                         a single Nathan-shot photograph carries the brand on
-                         the homepage via the Hero image itself.
-     - Testimonials    → embedded inside individual case study pages where
-                         the quote has earned context.
+     - PhotoStrip      → /photography is the dedicated photography surface; the
+                         homepage carries the work via the hero showcase, not a
+                         photo tile strip.
+     - Testimonials    → embedded inside individual case study pages, and the
+                         /about carousel, where the quote has earned context.
 
-   Architecture decision documented in PRODUCT.md and the rewrite-homepage
-   shape brief (run via /impeccable shape) — refresh that doc if the three-act
-   frame ever needs to shift.
+   Architecture decision documented in PRODUCT.md and CLAUDE.md — refresh those
+   if the section frame ever needs to shift.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
