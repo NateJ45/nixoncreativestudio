@@ -58,7 +58,7 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
 ---
 
 <section
-  class="band-themed py-2xl"
+  class="band-themed process-band py-2xl"
   aria-labelledby="process-band-heading"
 >
   <div class="ncs-container relative z-10 flex flex-col gap-2xl">
@@ -155,5 +155,21 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
   @keyframes connector-draw {
     from { transform: scaleX(0); }
     to   { transform: scaleX(1); }
+  }
+
+  /* Dark mode: fade the band's bottom to solid navy so it merges into the navy
+     footer below instead of ending on the aurora's amber glow, which read as an
+     abrupt seam. Sits above the aurora (z 0 vs the ::before at z -1) and below
+     the content (z 10). Light mode keeps its light surface meeting the navy
+     footer as a deliberate section change, so no fade there. */
+  :global(.dark) .process-band::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 45%;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, var(--color-primary));
   }
 </style>
