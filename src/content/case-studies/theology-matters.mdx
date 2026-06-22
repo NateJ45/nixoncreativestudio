@@ -40,7 +40,11 @@ outcome: "A quarterly journal, annual conference, and growing institute, all sel
 ---
 
 import SiteShowcase from '../../components/SiteShowcase.astro';
+import FeatureHighlight from '../../components/FeatureHighlight.astro';
+import Lightbox from '../../components/Lightbox.astro';
 import homeShot from '../../assets/case-studies/shots/theology-matters-home.png';
+import audioShot from '../../assets/case-studies/shots/theology-matters-feature-audio.png';
+import archiveShot from '../../assets/case-studies/shots/theology-matters-feature-archive.png';
 
 <SiteShowcase
   src={homeShot}
@@ -67,6 +71,24 @@ The editorial design system took its cues from academic press publishing: a crea
 
 ## What we built
 
+<FeatureHighlight
+  src={audioShot}
+  alt="A Theology Matters article with its audio player"
+  title="Every article, read aloud"
+  body="An audio version sits on every piece, generated at the template level with ElevenLabs, so the whole back catalogue can be listened to, not just new work, with no production overhead for the editors."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={archiveShot}
+  alt="The Theology Matters article archive"
+  title="A real publication archive"
+  body="More than a hundred articles, sortable and filterable by topic and author, structured so a reader can research the catalogue instead of just scrolling a blog."
+  side="right"
+/>
+
+The full build, including the pieces above:
+
 - Fourteen page and post templates covering the full content architecture
 - Seven custom post types with ACF field groups: articles, journal editions, conference sessions, speakers, courses, faculty, board references
 - Journal edition taxonomy so each issue can be browsed as a distinct publication entity with PDF download
@@ -88,3 +110,5 @@ The site launched April 27, 2026. The editorial team can now publish a new journ
 ## Reflections
 
 The ElevenLabs integration was the call that had the most outside-the-scope impact. Adding audio to a theological publication would normally mean recording sessions, editing files, and uploading to a podcast host. By wiring the text-to-audio generation at the template level, every article in the archive got audio retroactively when the site launched. A reader who prefers to listen rather than read now has that option for the entire back catalog, not just new content going forward.
+
+<Lightbox />
