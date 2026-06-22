@@ -94,24 +94,24 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
        headline carries the hero. The studio wordmark lives in the sticky header
        (navy over this hero), so there is no second wordmark here.
        ==================================================================== -->
-  <div class="ncs-container relative z-10 flex flex-1 items-center py-2xl">
-    <div class="grid w-full items-center gap-2xl lg:grid-cols-[1.05fr_0.95fr]">
+  <div class="ncs-container relative z-10 flex flex-1 items-center py-l">
+    <div class="grid w-full items-center gap-xl lg:grid-cols-2">
 
       <!-- Left: headline + positioning + CTAs, choreographed in. -->
-      <div class="flex max-w-[40ch] flex-col gap-m">
+      <div class="flex flex-col gap-m">
 
         <h1
           id="hero-statement"
-          class="text-primary-foreground leading-[0.92]"
+          class="hero-headline text-primary-foreground"
           data-reveal
-          style="--reveal-delay: 120ms; text-wrap: balance;"
+          style="--reveal-delay: 120ms;"
         >
           {statementLead}{' '}
           <span class="text-tertiary">{statementAccent}</span>
         </h1>
 
         <p
-          class="text-lg leading-[1.5] text-primary-foreground/90 sm:text-xl"
+          class="max-w-[32ch] text-xl leading-[1.45] text-primary-foreground/90 sm:text-2xl"
           data-reveal
           style="--reveal-delay: 240ms;"
         >
@@ -119,7 +119,7 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
         </p>
 
         <div
-          class="mt-s flex flex-wrap items-center gap-m"
+          class="flex flex-wrap items-center gap-m"
           data-reveal
           style="--reveal-delay: 360ms;"
         >
@@ -133,7 +133,7 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
           </span>
 
           <a
-            class="hero-secondary inline-flex items-center gap-s font-body font-semibold text-primary-foreground no-underline"
+            class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-primary-foreground no-underline"
             href="/work/"
           >
             <span>See the work</span>
@@ -167,6 +167,24 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 </section>
 
 <style>
+  /* ----------------------------------------------------------------------
+     Hero headline. Deliberately oversized, well past the global h1 clamp:
+     this is the showpiece and the LCP element, so it scales up to fill the
+     full-viewport hero instead of floating in empty space. Bebas is heavily
+     condensed, so even "WEBSITES" at this size sits comfortably inside the
+     ~600px left column (the .ncs-container caps at 1320px). Tight line-height
+     stacks the lines into one dense block.
+     ---------------------------------------------------------------------- */
+  .hero-headline {
+    /* min(vw, vh) so the headline scales to viewport WIDTH on tall windows but
+       is capped by HEIGHT on short laptops, keeping the whole cluster (headline,
+       positioning, CTAs) inside the 100svh hero without pushing the buttons
+       below the fold. */
+    font-size: clamp(3.25rem, min(9vw, 14.5vh), 9rem);
+    line-height: 0.86;
+    text-wrap: balance;
+  }
+
   /* ----------------------------------------------------------------------
      Secondary CTA hover. Arrow slides right; opacity softens.
      ---------------------------------------------------------------------- */
