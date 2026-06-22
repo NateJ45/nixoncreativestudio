@@ -144,11 +144,12 @@ const sites = [
     position: absolute;
   }
 
-  /* Desktop: the larger element, top-right. */
+  /* Desktop: top-right. Pulled in a touch so the (now larger) phone has room
+     to sit forward without crowding the edge. */
   .dev-desktop {
-    top: 1%;
+    top: 0;
     right: 0;
-    width: 82%;
+    width: 76%;
     border-radius: 0.6rem;
     overflow: hidden;
     background-color: color-mix(in oklab, var(--color-primary) 72%, #000);
@@ -156,17 +157,31 @@ const sites = [
     box-shadow: var(--shadow-frame);
   }
 
-  /* Phone: smaller, bottom-left, in front, with a dark device bezel. */
+  /* Phone: the front element, deliberately prominent and large enough to be a
+     real focal point, not a thumbnail. It sits over the desktop's lower half so
+     the two read as one paired set, and it stays clear of the headline, which
+     owns the left of the hero. A deeper shadow lifts it in front. Its left edge
+     shifts further right on narrow desktops (media query below), where the
+     headline wraps wider and reaches further across. */
   .dev-phone {
-    left: 0;
-    bottom: 0;
-    width: 26%;
+    left: 22%;
+    bottom: 1%;
+    width: 34%;
     z-index: 5;
-    border-radius: 1.5rem;
-    padding: 0.42rem;
+    border-radius: 1.7rem;
+    padding: 0.5rem;
     background: #0b0e14;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: var(--shadow-frame);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 50px 80px -32px rgba(0, 0, 0, 0.7);
+  }
+  /* Narrow desktops (small laptops, tablet landscape): the headline wraps wider
+     and reaches further into the scene, so slide the phone further over the
+     desktop and trim it slightly to keep it clear of the headline text. */
+  @media (max-width: 1279px) {
+    .dev-phone {
+      left: 44%;
+      width: 31%;
+    }
   }
   /* Phone speaker/notch pill. */
   .dev-phone::before {
@@ -240,20 +255,34 @@ const sites = [
 
   /* Each site's screenshot stacks absolutely. display:none until the script (or
      the SSR is-active on the first site) promotes it, so inactive shots are not
-     downloaded. Crossfade via opacity. */
+     downloaded. The swap is a STACKED crossfade (see is-prev / is-active): the
+     incoming site fades in over the outgoing one, which is held solid beneath,
+     so the screen is always a full site and never dims to the background. */
   .shot {
     position: absolute;
     inset: 0;
     display: none;
     opacity: 0;
-    transition: opacity 0.8s ease;
+    z-index: 1;
   }
   .shot.is-loaded,
-  .shot.is-active {
+  .shot.is-active,
+  .shot.is-prev {
     display: block;
   }
+  /* Outgoing site: held fully opaque BENEATH the incoming during a swap, so a
+     crossfade never shows the navy background through both screens (which read
+     as a dim flicker). */
+  .shot.is-prev {
+    opacity: 1;
+    z-index: 1;
+  }
+  /* Incoming site: fades in ON TOP of the outgoing, so the composite stays a
+     solid site the whole time. */
   .shot.is-active {
     opacity: 1;
+    z-index: 2;
+    transition: opacity 0.55s ease;
   }
   .shot-img {
     display: block;
@@ -320,21 +349,30 @@ const sites = [
 
         let cur = 0;
         const load = (i: number) => shots(i).forEach((e) => e.classList.add('is-loaded'));
-        const setActive = (i: number, on: boolean) =>
-          shots(i).forEach((e) => e.classList.toggle('is-active', on));
+        const setClass = (i: number, cls: string, on: boolean) =>
+          shots(i).forEach((e) => e.classList.toggle(cls, on));
 
         load((cur + 1) % count); // preload the next site during the first dwell
 
         let timer: ReturnType<typeof setInterval> | undefined;
+        let cleanup: ReturnType<typeof setTimeout> | undefined;
         let paused = false;
 
         const tick = () => {
           const next = (cur + 1) % count;
-          setActive(cur, false);
-          setActive(next, true);
+          // Drop the current site to "prev" (solid, beneath) and fade the next
+          // in on top, so neither screen ever shows through to the background.
+          setClass(cur, 'is-active', false);
+          setClass(cur, 'is-prev', true);
+          setClass(next, 'is-prev', false);
+          setClass(next, 'is-active', true);
           if (addr) addr.textContent = hostOf(next);
           load((next + 1) % count); // stay one ahead
+          const leaving = cur;
           cur = next;
+          // Once the incoming has fully faded in over it, retire the old site.
+          clearTimeout(cleanup);
+          cleanup = setTimeout(() => setClass(leaving, 'is-prev', false), 650);
         };
         const start = () => {
           if (!timer && !paused) timer = setInterval(tick, 5000);
