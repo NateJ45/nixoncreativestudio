@@ -3,53 +3,145 @@
    ============================================================================
    Foundation, edit with care.
 
-   React island that handles the small-viewport nav: a hamburger Button
-   that triggers a shadcn Sheet drawer with the same nav links as the
-   desktop Header.
+   The small-viewport navigation: a hamburger Button that opens a full-screen
+   navy panel (a shadcn Sheet under the hood, so focus-trap, Escape-to-close,
+   scroll-lock, and the dialog ARIA all come for free).
 
-   Rendered inside Header.astro and hidden at >= sm via Tailwind classes
-   on the wrapper. The desktop <nav> in Header.astro is hidden below sm
-   so only one nav is visible at any width.
+   Why navy in BOTH themes: the Hero and the Footer are the brand's two
+   deliberate dark anchors, and the menu is a third "big moment" surface. A
+   navy panel with white type, sky links, and an amber CTA reads as one
+   continuous brand gesture and feels far more like a design studio's menu
+   than the default white side-drawer. The theme toggle still lives in the
+   panel so visitors can flip the rest of the site.
 
-   The nav model is passed in from Header.astro so both surfaces stay
-   in sync. Add a link there and both the desktop nav and this drawer
-   pick it up.
+   The flat six-item nav is given body the way a church mega-menu leans on
+   sub-items: each big Bebas label carries a short, honest descriptor, the
+   rows are hairline-divided like an editorial index, and they cascade in on
+   open. No 01-06 numbering: that marker is reserved for the genuinely ordered
+   Process band, and a numbered nav would read as scaffolding here.
+
+   Rendered inside Header.astro (hidden at >= md). The nav links come from
+   Header so the desktop nav and this panel never drift; add a link there and
+   it appears in both. Descriptors live in the DESCRIPTIONS map below; a link
+   with no entry simply renders its label, so adding a nav item never breaks
+   this menu.
    ============================================================================ */
 
-import { useState } from 'react';
-import { Menu } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { Menu, X } from 'lucide-react';
 
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
+  SheetClose,
 } from './ui/sheet';
 import { Button } from './ui/button';
 import ThemeToggle from './ThemeToggle';
+import { site } from '../data/site';
+
+// Social glyphs as inline SVG. lucide-react dropped its brand/logo icons in
+// recent versions (trademark reasons), so these are the classic Feather
+// stroke marks, drawn in currentColor so they inherit the link's text color.
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect x="2" y="9" width="4" height="12" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  );
+}
 
 export interface MobileNavLink {
   label: string;
-  href:  string;
+  href: string;
 }
 
 export interface MobileNavProps {
-  links:      MobileNavLink[];
-  /** Accessible label announced to assistive tech when the drawer opens. */
+  links: MobileNavLink[];
+  /** Accessible label announced to assistive tech when the panel opens. */
   studioName: string;
 }
 
-export default function MobileNav({ links, studioName }: MobileNavProps) {
+// Short descriptor shown under each big nav label, keyed by the exact href
+// from Header. Honest and tight: it names what the page actually is, never a
+// page we don't have. A missing key just renders the label with no descriptor.
+const DESCRIPTIONS: Record<string, string> = {
+  '/work/': 'Selected client projects',
+  '/services': 'What I build, and how',
+  '/about': 'The studio, and me',
+  '/journal/': 'Notes on the work',
+  '/now/': "What I'm focused on",
+  '/contact': 'Email, phone, or the form',
+};
 
-  // Sheet controls its own open state via this React state. Closing on
-  // link click is done by setting open back to false in the link's
-  // onClick handler, so the drawer doesn't linger after navigation.
+// Social destinations, driven from site.ts so a network change flows here.
+const socials = [
+  { label: 'Instagram', href: site.social.instagram, Icon: InstagramIcon },
+  { label: 'LinkedIn', href: site.social.linkedin, Icon: LinkedinIcon },
+];
+
+// Shared focus ring for the custom links inside the panel: a sky ring with a
+// navy offset so keyboard focus is clearly visible on the dark surface.
+const focusRing =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary ' +
+  'focus-visible:ring-offset-2 focus-visible:ring-offset-primary';
+
+export default function MobileNav({ links, studioName }: MobileNavProps) {
+  // Sheet owns its open state; link clicks set it back to false so the panel
+  // doesn't linger over the next page.
   const [open, setOpen] = useState<boolean>(false);
+
+  // Current path, read when the panel opens so the active item is right even
+  // after a View Transitions navigation (which doesn't remount this island).
+  const [path, setPath] = useState<string>('');
+  useEffect(() => {
+    if (open) setPath(window.location.pathname.replace(/\/+$/, ''));
+  }, [open]);
+
+  const isActive = (href: string): boolean => {
+    const h = href.replace(/\/+$/, '');
+    if (h === '') return path === '';
+    return path === h || path.startsWith(`${h}/`);
+  };
+
+  // Stagger helper: each row animates in a beat after the previous one.
+  const delay = (ms: number): CSSProperties => ({ '--mnav-delay': `${ms}ms` }) as CSSProperties;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -61,36 +153,183 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="bg-bg p-l">
-        <SheetHeader className="flex flex-row items-center justify-between gap-m border-b border-border pb-m">
-          <SheetTitle className="font-display text-2xl tracking-[0.01em] text-heading">
-            {studioName}
-          </SheetTitle>
+      {/* Full-screen navy panel. showCloseButton off so we place our own white
+          close control in the top bar; overflow-y-auto so a short phone in
+          landscape can still scroll the whole menu.
 
-          {/* Theme toggle inside the drawer so touch users can switch
-              modes without a separate header control. Sits next to the
-              wordmark, mirroring the desktop placement. */}
-          <ThemeToggle />
-        </SheetHeader>
+          The !w-full / !max-w-full / !border-0 important modifiers are
+          deliberate: the Sheet primitive sets its width and a left border via
+          data-[side=right]: variants, whose attribute selector outranks a plain
+          utility, so only !important reliably makes this go full-screen. */}
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className="!w-full !max-w-full overflow-y-auto !border-0 bg-primary p-0 text-primary-foreground"
+      >
+        {/* Entrance cascade, kept in-file so the whole menu lives in one place.
+            The opacity:0 start sits inside the no-preference query, so with
+            reduced motion every row is simply visible from the first frame. */}
+        <style>{`
+          @keyframes mnav-in {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          @media (prefers-reduced-motion: no-preference) {
+            .mnav-item {
+              opacity: 0;
+              animation: mnav-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+              animation-delay: var(--mnav-delay, 0ms);
+            }
+          }
+        `}</style>
 
-        {/*
-          Nav links. Vertical stack with comfortable padding so each link
-          is a generous tap target on touch screens.
-        */}
-        <nav aria-label="Mobile primary" className="mt-l flex flex-col">
-          {links.map(({ label, href }) => (
-            <a
-              key={href}
-              href={href}
-              onClick={() => setOpen(false)}
-              className="rounded-md px-2 py-3 font-body text-lg text-text no-underline transition-colors duration-150 hover:text-accent focus-visible:bg-bg-soft focus-visible:text-accent focus-visible:outline-none"
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
+        <div className="relative isolate flex min-h-full flex-col px-l py-l">
+          {/* Drifting brand aurora for atmosphere. Decorative; freezes under
+              reduced motion via the global rule. */}
+          <div
+            className="bg-aurora pointer-events-none absolute inset-0 opacity-60"
+            aria-hidden="true"
+          ></div>
+
+          {/* Top bar: wordmark (doubles as the dialog's accessible name) + close. */}
+          <div className="relative z-10 flex items-center justify-between gap-m">
+            <SheetTitle className="font-display text-2xl tracking-[0.02em] text-primary-foreground">
+              {studioName}
+            </SheetTitle>
+            {/* Visually hidden, but wired to the dialog via aria-describedby by
+                Radix so screen readers announce what this panel contains. */}
+            <SheetDescription className="sr-only">
+              Site navigation, contact details, and theme options.
+            </SheetDescription>
+            <SheetClose asChild>
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                aria-label="Close menu"
+                className="text-primary-foreground hover:text-secondary"
+              >
+                <X className="size-6" />
+              </Button>
+            </SheetClose>
+          </div>
+
+          {/* Positioning line, echoing the hero so the brand voice carries in. */}
+          <p
+            className="mnav-item relative z-10 mt-m max-w-[34ch] font-body text-base leading-[1.5] text-primary-foreground/70"
+            style={delay(60)}
+          >
+            For churches, schools, and small businesses in the Cincinnati region.
+          </p>
+
+          {/* Big editorial nav. Hairline dividers give the flat list structure. */}
+          <nav
+            aria-label="Mobile primary"
+            className="relative z-10 mt-l flex flex-col divide-y divide-white/10 border-y border-white/10"
+          >
+            {links.map(({ label, href }, i) => {
+              const active = isActive(href);
+              const desc = DESCRIPTIONS[href];
+              return (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`mnav-item group flex items-center justify-between gap-m rounded-md py-4 no-underline ${focusRing}`}
+                  style={delay(140 + i * 55)}
+                >
+                  <span className="flex flex-col gap-0.5">
+                    <span
+                      className={
+                        'font-display text-4xl leading-[0.95] tracking-[0.01em] transition-colors duration-150 group-hover:text-secondary group-focus-visible:text-secondary ' +
+                        (active ? 'text-tertiary' : 'text-primary-foreground')
+                      }
+                    >
+                      {label}
+                    </span>
+                    {desc && (
+                      <span className="font-body text-sm text-primary-foreground/65">{desc}</span>
+                    )}
+                  </span>
+
+                  {/* Arrow is the non-color focus/hover cue: it slides in from
+                      the left. On the active row it stays put, in amber. */}
+                  <span
+                    aria-hidden="true"
+                    className={
+                      'text-2xl transition-all duration-200 ' +
+                      (active
+                        ? 'translate-x-0 text-tertiary opacity-100'
+                        : '-translate-x-2 text-secondary opacity-0 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100')
+                    }
+                  >
+                    &rarr;
+                  </span>
+                </a>
+              );
+            })}
+          </nav>
+
+          {/* Primary conversion action, matching the hero's amber CTA. */}
+          <div className="mnav-item relative z-10 mt-l" style={delay(140 + links.length * 55 + 40)}>
+            <Button asChild variant="brand" size="cta" className="shine w-full">
+              <a href="/contact" onClick={() => setOpen(false)}>
+                Start a project
+              </a>
+            </Button>
+          </div>
+
+          {/* Get in touch: direct contact, socials, and the theme toggle.
+              mt-auto pins this to the bottom when the menu is shorter than the
+              viewport, and it scrolls naturally when it isn't. */}
+          <div
+            className="mnav-item relative z-10 mt-auto pt-l"
+            style={delay(140 + links.length * 55 + 100)}
+          >
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-primary-foreground/60">
+              Get in touch
+            </p>
+            <div className="mt-s flex flex-col gap-1">
+              <a
+                href={site.emailHref}
+                className={`w-fit rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+              >
+                {site.email}
+              </a>
+              <a
+                href={site.phoneHref}
+                className={`w-fit rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+              >
+                {site.phone}
+              </a>
+            </div>
+
+            <div className="mt-m flex items-center justify-between">
+              <div className="flex items-center gap-xs">
+                {socials.map(({ label, href, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-md text-primary-foreground/70 transition-colors duration-150 hover:bg-white/10 hover:text-primary-foreground ${focusRing}`}
+                  >
+                    <Icon className="size-5" />
+                  </a>
+                ))}
+              </div>
+
+              {/* Theme toggle. It paints itself text-text by default, which
+                  would vanish on navy, so force the icon white here (and sky on
+                  hover) via a descendant override on its .theme-toggle hook. */}
+              <div className="[&_.theme-toggle:hover]:text-secondary [&_.theme-toggle]:text-primary-foreground">
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
+        </div>
       </SheetContent>
-
     </Sheet>
   );
 }
