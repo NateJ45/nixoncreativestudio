@@ -9,21 +9,21 @@
    don't tell" instinct the brand is built on) and fills the right side of the
    hero next to the headline.
 
-   Why three frames instead of one: a single frame left the tall right column
-   half empty. Three frames cascade down the column, overlap lightly for depth,
-   and rotate through the portfolio so the hero always shows several real sites
-   at once.
+   How duplicates are impossible: the cover pool is PARTITIONED across the three
+   frames (round-robin), so each frame owns a distinct, non-overlapping set of
+   sites. Two frames can never show the same site, by construction, no matter
+   where each is in its rotation.
 
-   How the rotation stays calm:
-     - Each frame starts on a different cover, so the three are always distinct.
-     - One shared timer advances ONE frame per tick (round-robin), so only one
-       frame ever crossfades at a time. No chaotic all-at-once flipping.
-     - When a frame advances it skips covers the other frames are showing, so no
-       two frames ever display the same site.
+   How blanks are impossible: every slide image is loading="eager". The pool is
+   small (a handful of covers, deduped by Astro to one optimized asset each), so
+   a frame can never crossfade to an image that hasn't loaded yet.
+
+   How the rotation stays calm: one shared timer advances ONE frame per tick
+   (round-robin), so only one frame ever crossfades at a time.
 
    Collection-driven: it reads the case-studies covers (real hero screenshots of
    the live sites) so it stays in sync as the portfolio grows. featured entries
-   lead; the newest others fill in. The pool is capped so the DOM stays light.
+   lead; the newest others fill in.
 
    Decorative by design: the whole cluster is aria-hidden and not interactive.
    The navigable work lives in the "See the work" CTA beside it and the Selected
@@ -48,55 +48,58 @@ const ordered = [
 const host = (s: (typeof ordered)[number]) =>
   s.data.liveUrl ? new URL(s.data.liveUrl).host.replace(/^www\./, '') : s.data.client;
 
-// Pool of covers every frame rotates through. Capped so three frames worth of
-// <Image> tags stay light (Astro dedupes identical covers to one optimized
-// asset, so this is a handful of files even across the three frames).
-const pool = ordered.slice(0, 6).map((s) => ({ cover: s.data.cover, host: host(s) }));
+const FRAME_COUNT = 3;
 
-// Three frames, each starting on a different cover so the cascade opens on
-// three distinct sites. Frame 0 is the back (top), frame 2 is the front
-// (bottom); see the position rules in the <style> block.
-const frameCount = Math.min(3, pool.length);
-const startOffsets = [0, 2, 4];
+// Pool of covers, capped at three per frame so the DOM stays light.
+const pool = ordered.slice(0, FRAME_COUNT * 3).map((s) => ({ cover: s.data.cover, host: host(s) }));
+
+// Partition the pool across the frames round-robin: frame 0 gets covers
+// 0,3,6; frame 1 gets 1,4,7; frame 2 gets 2,5,8. Disjoint sets, so no two
+// frames ever show the same site, and each frame opens on one of the top three.
+const frames: { cover: (typeof pool)[number]['cover']; host: string }[][] = Array.from(
+  { length: FRAME_COUNT },
+  () => [],
+);
+pool.forEach((item, i) => frames[i % FRAME_COUNT].push(item));
+
+// Only render frames that actually received a cover (needs pool.length >= 3).
+const renderable = frames.filter((f) => f.length > 0);
 ---
 
-{pool.length >= 3 && (
+{pool.length >= FRAME_COUNT && (
   <div class="hero-showcase" aria-hidden="true" data-hero-showcase>
-    {Array.from({ length: frameCount }).map((_, fi) => {
-      const start = startOffsets[fi] % pool.length;
-      return (
-        <div class:list={['showcase-frame', `frame-${fi}`]} data-frame>
-          {/* Browser chrome: traffic-light dots + an address bar whose text the
-              crossfade script updates to the active site's host. */}
-          <div class="frame-chrome">
-            <span class="frame-dots">
-              <span class="bg-[#ff5f57]"></span>
-              <span class="bg-[#febc2e]"></span>
-              <span class="bg-[#28c840]"></span>
-            </span>
-            <span class="frame-address" data-frame-address>{pool[start].host}</span>
-          </div>
-
-          {/* Crossfading viewport. Every cover stacks absolutely; the script
-              fades between them. object-top so each shot reads from the top of
-              the page. */}
-          <div class="frame-viewport">
-            {pool.map((s, i) => (
-              <div class="frame-slide" data-slide data-host={s.host} data-active={i === start ? 'true' : undefined}>
-                <Image
-                  src={s.cover}
-                  alt=""
-                  widths={[360, 520, 720]}
-                  sizes="(min-width: 64rem) 34vw, 80vw"
-                  class="h-full w-full object-cover object-top"
-                  loading={i === start ? 'eager' : 'lazy'}
-                />
-              </div>
-            ))}
-          </div>
+    {renderable.map((covers, fi) => (
+      <div class:list={['showcase-frame', `frame-${fi}`]} data-frame>
+        {/* Browser chrome: traffic-light dots + an address bar whose text the
+            crossfade script updates to the active site's host. */}
+        <div class="frame-chrome">
+          <span class="frame-dots">
+            <span class="bg-[#ff5f57]"></span>
+            <span class="bg-[#febc2e]"></span>
+            <span class="bg-[#28c840]"></span>
+          </span>
+          <span class="frame-address" data-frame-address>{covers[0].host}</span>
         </div>
-      );
-    })}
+
+        {/* Crossfading viewport. Every cover stacks absolutely; the script
+            fades between them. object-top so each shot reads from the top of
+            the page. All eager so a crossfade never lands on a blank. */}
+        <div class="frame-viewport">
+          {covers.map((s, i) => (
+            <div class="frame-slide" data-slide data-host={s.host} data-active={i === 0 ? 'true' : undefined}>
+              <Image
+                src={s.cover}
+                alt=""
+                widths={[400, 640, 900]}
+                sizes="(min-width: 64rem) 40vw, 80vw"
+                class="h-full w-full object-cover object-top"
+                loading="eager"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
   </div>
 )}
 
@@ -108,7 +111,7 @@ const startOffsets = [0, 2, 4];
   .hero-showcase {
     position: relative;
     width: 100%;
-    height: clamp(24rem, 56vh, 39rem);
+    height: clamp(22rem, 58vh, 40rem);
   }
 
   .showcase-frame {
@@ -120,26 +123,28 @@ const startOffsets = [0, 2, 4];
     background-color: color-mix(in oklab, var(--color-primary) 70%, #000);
   }
 
-  /* Diagonal cascade: top-left behind, middle-right, bottom-left in front.
-     Light vertical overlap gives depth without hiding much of each shot. */
+  /* Diagonal cascade. Widths are generous and the offsets push the set to span
+     the full column width (frame-1 reaches the right edge), so the cluster
+     fills the horizontal space instead of clustering in the middle. Light
+     vertical overlap gives depth without hiding much of each shot. */
   .frame-0 {
     top: 0;
     left: 0;
-    width: 72%;
+    width: 68%;
     z-index: 10;
     opacity: 0.9;
   }
   .frame-1 {
-    top: 26%;
+    top: 24%;
     right: 0;
     width: 74%;
     z-index: 20;
     opacity: 0.96;
   }
   .frame-2 {
-    top: 50%;
+    top: 47%;
     left: 6%;
-    width: 68%;
+    width: 70%;
     z-index: 30;
   }
 
@@ -147,7 +152,7 @@ const startOffsets = [0, 2, 4];
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.35rem 0.55rem;
+    padding: 0.35rem 0.6rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     background-color: rgba(255, 255, 255, 0.05);
   }
@@ -169,9 +174,10 @@ const startOffsets = [0, 2, 4];
     color: rgba(255, 255, 255, 0.72);
   }
 
+  /* 16:9 viewport keeps the (wide) frames from getting too tall to cascade. */
   .frame-viewport {
     position: relative;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
   }
   .frame-slide {
     position: absolute;
@@ -195,7 +201,9 @@ const startOffsets = [0, 2, 4];
 <script>
   // Crossfade the cascade and keep each frame's address bar in sync. Runs on
   // astro:page-load (survives View Transitions) with a dataset bind guard;
-  // disabled under reduced motion; pauses while the tab is hidden.
+  // disabled under reduced motion; pauses while the tab is hidden. Frames hold
+  // disjoint cover sets (see the frontmatter), so there is no cross-frame
+  // de-duplication to do here: each just advances through its own list.
   function initHeroShowcase() {
     document
       .querySelectorAll<HTMLElement>('[data-hero-showcase]:not([data-showcase-bound])')
@@ -203,39 +211,24 @@ const startOffsets = [0, 2, 4];
         root.dataset.showcaseBound = 'true';
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-        const frames = Array.from(root.querySelectorAll<HTMLElement>('[data-frame]')).map((frame) => {
-          const slides = Array.from(frame.querySelectorAll<HTMLElement>('[data-slide]'));
-          let idx = slides.findIndex((s) => s.hasAttribute('data-active'));
-          if (idx < 0) idx = 0;
-          return {
-            slides,
-            address: frame.querySelector<HTMLElement>('[data-frame-address]'),
-            idx,
-          };
-        });
+        const frames = Array.from(root.querySelectorAll<HTMLElement>('[data-frame]')).map((frame) => ({
+          slides: Array.from(frame.querySelectorAll<HTMLElement>('[data-slide]')),
+          address: frame.querySelector<HTMLElement>('[data-frame-address]'),
+          idx: 0,
+        }));
         if (!frames.length) return;
 
-        // Advance one frame to the next cover NOT currently shown by another
-        // frame, so the three stay distinct.
         const advance = (f: (typeof frames)[number]) => {
           if (f.slides.length < 2) return;
-          const taken = new Set(frames.filter((o) => o !== f).map((o) => o.idx));
-          let next = (f.idx + 1) % f.slides.length;
-          let guard = 0;
-          while (taken.has(next) && guard < f.slides.length) {
-            next = (next + 1) % f.slides.length;
-            guard++;
-          }
           f.slides[f.idx].removeAttribute('data-active');
-          f.idx = next;
-          f.slides[next].setAttribute('data-active', 'true');
-          if (f.address) f.address.textContent = f.slides[next].dataset.host ?? '';
+          f.idx = (f.idx + 1) % f.slides.length;
+          f.slides[f.idx].setAttribute('data-active', 'true');
+          if (f.address) f.address.textContent = f.slides[f.idx].dataset.host ?? '';
         };
 
         let tick = 0;
         let timer: ReturnType<typeof setInterval> | undefined;
-        // One frame per tick, round-robin: only one crossfade happens at a time,
-        // and each frame changes roughly every frameCount * interval.
+        // One frame per tick, round-robin: only one crossfade happens at a time.
         const onTick = () => {
           advance(frames[tick % frames.length]);
           tick++;

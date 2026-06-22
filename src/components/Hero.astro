@@ -94,8 +94,8 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
        headline carries the hero. The studio wordmark lives in the sticky header
        (navy over this hero), so there is no second wordmark here.
        ==================================================================== -->
-  <div class="ncs-container relative z-10 flex flex-1 items-center py-l">
-    <div class="grid w-full items-center gap-xl lg:grid-cols-2">
+  <div class="hero-inner relative z-10 flex flex-1 items-center py-l">
+    <div class="grid w-full items-center gap-xl lg:grid-cols-[1fr_1.15fr]">
 
       <!-- Left: headline + positioning + CTAs, choreographed in. -->
       <div class="flex flex-col gap-m">
@@ -180,9 +180,27 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
        is capped by HEIGHT on short laptops, keeping the whole cluster (headline,
        positioning, CTAs) inside the 100svh hero without pushing the buttons
        below the fold. */
-    font-size: clamp(3.25rem, min(9vw, 14.5vh), 9rem);
+    font-size: clamp(3.25rem, min(9.5vw, 15vh), 9.5rem);
     line-height: 0.86;
     text-wrap: balance;
+  }
+
+  /* ----------------------------------------------------------------------
+     Hero inner frame. A full-width wrapper (not .ncs-container) so the
+     showcase can bleed toward the right viewport edge and use more
+     horizontal space. The left padding still aligns the headline with the
+     header wordmark and the sections below (it matches .ncs-container's
+     content-left edge); only the right side bleeds in.
+     ---------------------------------------------------------------------- */
+  .hero-inner {
+    width: 100%;
+    padding-left: max(1.5rem, calc((100vw - 82.5rem) / 2 + 1.5rem));
+    padding-right: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .hero-inner {
+      padding-right: 2.5rem;
+    }
   }
 
   /* ----------------------------------------------------------------------
