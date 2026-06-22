@@ -40,9 +40,14 @@ outcome: "A historic congregation's deep programming, finally organized behind a
 
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import BeforeAfter from '../../components/BeforeAfter.astro';
+import FeatureHighlight from '../../components/FeatureHighlight.astro';
+import Lightbox from '../../components/Lightbox.astro';
 import homeShot from '../../assets/case-studies/shots/second-presbyterian-chicago-home.png';
 import beforeShot from '../../assets/case-studies/shots/second-presbyterian-chicago-before.png';
 import afterShot from '../../assets/case-studies/second-presbyterian-chicago.png';
+import visitShot from '../../assets/case-studies/shots/second-presbyterian-chicago-feature-visit.png';
+import sermonsShot from '../../assets/case-studies/shots/second-presbyterian-chicago-feature-sermons.png';
+import communityShot from '../../assets/case-studies/shots/second-presbyterian-chicago-feature-community.png';
 
 <SiteShowcase
   src={homeShot}
@@ -74,6 +79,32 @@ For the CMS, we chose Sanity so the team could manage the sermon archive, event 
 
 ## What we built
 
+<FeatureHighlight
+  src={visitShot}
+  alt="The Plan a Visit page on the new Second Presbyterian site"
+  title="A front door built for first-time guests"
+  body="Service times, what to expect on a Sunday, and how to find the building, answered up front so a guest never has to dig for the basics."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={sermonsShot}
+  alt="The sermon archive on the new Second Presbyterian site"
+  title="A sermon archive with real depth"
+  body="Every message carries its full liturgical metadata, officiant, scripture, hymns, and a streaming link, so it serves personal study and the denominational record alike."
+  side="right"
+/>
+
+<FeatureHighlight
+  src={communityShot}
+  alt="The Get Involved section with its four ministry tracks"
+  title="Deep programming, clearly organized"
+  body="The week's ministries sit behind four plain doors, Grow, Serve, Kids, and Food, so members reach their next step in a click without crowding the guest path."
+  side="left"
+/>
+
+The full build, including the pieces above:
+
 - Headless CMS (Sanity) for sermons, events, staff, and all content the team updates weekly
 - Single-sourced worship time that populates the site header, footer, visit page, and Google structured data from one field, so a service-time change requires exactly one edit
 - Sermon archive with liturgical metadata: officiant, choir, lectionary day, hymns, bulletins, and streaming links
@@ -91,3 +122,6 @@ The rebuild changed who can keep the site current. Updating the staff directory 
 ## Reflections
 
 Second Pres is a congregation with real depth: a serious music program and a food ministry that feeds the neighborhood every week. A site for a congregation like this has to take the programming seriously enough to give it real estate. The temptation to simplify everything down to a three-section homepage would have underserved the people who actually use the site every week.
+
+{/* Renders once: wires click-to-zoom for the FeatureHighlight screenshots above. */}
+<Lightbox />

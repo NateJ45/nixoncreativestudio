@@ -1,0 +1,158 @@
+---
+// Safe to edit.
+/* ============================================================================
+   FeatureHighlight
+   ============================================================================
+   An annotated "feature spotlight" row for case studies: a framed, click-to-
+   zoom screenshot of a REAL shipped feature beside a short title and caption.
+   Alternate the `side` down the page and a run of them reads as a guided tour
+   of what was built, instead of a bare bullet list.
+
+   Pairs with <Lightbox /> for the zoom (render Lightbox once on the page; the
+   screenshot is a [data-zoom] trigger that opens full size). Reduced-motion
+   safe: the entrance uses the site reveal system, and the hover lift / zoom
+   hint are gated to fine pointers + motion-OK.
+
+   Honesty rule: only ever screenshot a feature that is actually live on the
+   site. A captioned screenshot of a feature that does not exist is a
+   fabrication and a client-facing liability.
+
+   Usage in a case study .mdx (imports under the frontmatter):
+
+     import FeatureHighlight from '../../components/FeatureHighlight.astro';
+     import Lightbox from '../../components/Lightbox.astro';
+     import visitShot from '../../assets/case-studies/shots/<slug>-feature-visit.png';
+
+     <FeatureHighlight
+       src={visitShot}
+       alt="The <Client> visit page"
+       title="A front door for first-time guests"
+       body="One short sentence on what the feature does and why it matters."
+       side="left"
+     />
+     ... more, alternating side ...
+     <Lightbox />
+   ============================================================================ */
+
+import { Image } from 'astro:assets';
+
+interface Props {
+  /** Real feature screenshot, imported so Astro optimizes it. */
+  src: ImageMetadata;
+  alt: string;
+  title: string;
+  body: string;
+  /** Image side at >= md. Alternate ('left' then 'right') down the page. */
+  side?: 'left' | 'right';
+  /** Optional small label above the title. */
+  eyebrow?: string;
+}
+
+const { src, alt, title, body, side = 'left', eyebrow } = Astro.props;
+---
+
+<div class="feature-highlight grid items-center gap-l md:grid-cols-2 md:gap-xl" data-reveal>
+  <figure class:list={['feature-figure', side === 'right' && 'md:order-2']}>
+    <button type="button" class="feature-zoom" data-zoom aria-label={`View ${title} full size`}>
+      <Image
+        src={src}
+        alt={alt}
+        widths={[480, 800, 1200, 1440]}
+        sizes="(min-width: 48rem) 46vw, 92vw"
+        class="block w-full"
+      />
+      <span class="feature-zoom-hint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /><path d="M11 8v6M8 11h6" />
+        </svg>
+      </span>
+    </button>
+  </figure>
+
+  <div class:list={['feature-copy', side === 'right' && 'md:order-1']}>
+    {eyebrow && (
+      <p class="mb-xs font-mono text-xs uppercase tracking-[0.14em] text-link">{eyebrow}</p>
+    )}
+    <h3 class="text-heading">{title}</h3>
+    <p class="mt-s max-w-[44ch] leading-[1.6] text-text">{body}</p>
+  </div>
+</div>
+
+<style>
+  .feature-highlight {
+    margin-block: var(--spacing-l);
+  }
+  .feature-figure {
+    margin: 0;
+  }
+
+  /* The screenshot is a real button (keyboard-focusable) that opens the
+     lightbox. Framed like the other case-study artifacts via --shadow-frame. */
+  .feature-zoom {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-bg-soft);
+    box-shadow: var(--shadow-frame);
+    cursor: zoom-in;
+    transition:
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.3s ease;
+  }
+  .feature-zoom :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Zoom affordance: a magnifier badge that fades in on hover/focus. */
+  .feature-zoom-hint {
+    position: absolute;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--color-primary) 86%, transparent);
+    color: #fff;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .feature-zoom:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  .feature-zoom:focus-visible .feature-zoom-hint {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .feature-zoom:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 36px 64px -30px rgba(10, 22, 40, 0.5);
+    }
+    .feature-zoom:hover .feature-zoom-hint {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feature-zoom,
+    .feature-zoom-hint {
+      transition: none;
+    }
+  }
+</style>

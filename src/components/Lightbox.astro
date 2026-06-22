@@ -1,0 +1,145 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Lightbox
+   ============================================================================
+   Click-to-zoom for any [data-zoom] trigger on the page. Render it once (the
+   case-study pages do, near the FeatureHighlights). On click it clones the
+   trigger's <img> into a native <dialog> at full size.
+
+   Why a native <dialog>: showModal() gives a focus trap, Escape-to-close, a
+   ::backdrop, and focus return to the trigger for free, so the zoom is
+   keyboard- and screen-reader-friendly with almost no custom a11y code. The
+   clone is given sizes="95vw" so the browser pulls the largest srcset entry
+   (the screenshots carry retina widths), making the zoom genuinely crisp.
+
+   The dialog is built with DOM methods (no innerHTML) and there is no motion
+   to gate for reduced motion (it just appears; the dim backdrop is static).
+   ============================================================================ */
+---
+
+<script>
+  function initLightbox() {
+    let dialog = document.querySelector<HTMLDialogElement>('dialog[data-ncs-lightbox]');
+
+    const ensureDialog = (): HTMLDialogElement => {
+      if (dialog) return dialog;
+      const d = document.createElement('dialog');
+      d.setAttribute('data-ncs-lightbox', '');
+      d.className = 'ncs-lightbox';
+
+      const inner = document.createElement('div');
+      inner.className = 'ncs-lightbox-inner';
+
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'ncs-lightbox-close';
+      close.setAttribute('aria-label', 'Close full-size view');
+      close.textContent = '×'; // ×
+
+      const stage = document.createElement('div');
+      stage.className = 'ncs-lightbox-stage';
+
+      inner.append(close, stage);
+      d.append(inner);
+
+      // Backdrop click (the dialog itself, outside the inner) closes it.
+      d.addEventListener('click', (e) => {
+        if (e.target === d) d.close();
+      });
+      close.addEventListener('click', () => d.close());
+      // Drop the heavy image when closed so it isn't left in the DOM.
+      d.addEventListener('close', () => stage.replaceChildren());
+
+      document.body.appendChild(d);
+      dialog = d;
+      return d;
+    };
+
+    document
+      .querySelectorAll<HTMLElement>('[data-zoom]:not([data-zoom-bound])')
+      .forEach((trigger) => {
+        trigger.dataset.zoomBound = 'true';
+        trigger.addEventListener('click', () => {
+          const img = trigger.querySelector('img');
+          if (!img) return;
+          const d = ensureDialog();
+          const stage = d.querySelector<HTMLElement>('.ncs-lightbox-stage');
+          if (!stage) return;
+          const clone = img.cloneNode(true) as HTMLImageElement;
+          clone.removeAttribute('class');
+          clone.removeAttribute('style');
+          clone.setAttribute('loading', 'eager');
+          clone.setAttribute('sizes', '95vw'); // pull the largest srcset entry
+          stage.replaceChildren(clone);
+          d.showModal();
+        });
+      });
+  }
+  document.addEventListener('astro:page-load', initLightbox);
+</script>
+
+<style is:global>
+  /* The dialog is created in <body>, outside this component's scoped DOM, so
+     these styles are global on purpose. */
+  dialog.ncs-lightbox {
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  dialog.ncs-lightbox::backdrop {
+    background: rgba(10, 22, 40, 0.82);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .ncs-lightbox-inner {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 4vw, 3rem);
+    overflow: auto;
+  }
+  .ncs-lightbox-stage {
+    width: 100%;
+    max-width: 96rem;
+  }
+  .ncs-lightbox-stage img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.65);
+  }
+  .ncs-lightbox-close {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(10, 22, 40, 0.7);
+    color: #fff;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .ncs-lightbox-close:hover {
+    background: rgba(10, 22, 40, 0.92);
+  }
+  .ncs-lightbox-close:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+</style>
