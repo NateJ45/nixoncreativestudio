@@ -26,7 +26,6 @@
    Content is hardcoded here on purpose. The hero is bespoke.
    ============================================================================ */
 
-import { site } from '../data/site';
 import { Button } from './ui/button';
 import HeroCanvas from './HeroCanvas';
 // import { Image } from 'astro:assets';
@@ -82,20 +81,14 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 
   <!-- ====================================================================
        Foreground content. Tall enough that the surface feels decisive
-       (~88vh, capped). Wordmark up top, headline cluster at the bottom.
+       (~88vh, capped). The studio wordmark lives in the sticky header (navy
+       over this hero), so the hero itself just anchors the headline cluster at
+       the bottom; no second wordmark here.
        ==================================================================== -->
   <div
-    class="ncs-container relative z-10 flex flex-1 flex-col justify-between gap-2xl py-2xl"
+    class="ncs-container relative z-10 flex flex-1 flex-col justify-end gap-2xl py-2xl"
     style="min-height: clamp(38rem, 88vh, 52rem);"
   >
-
-    <!-- Top anchor: studio wordmark. -->
-    <p
-      class="font-display text-3xl uppercase tracking-[0.04em] text-primary-foreground sm:text-4xl"
-      data-reveal="fade"
-    >
-      {site.studioName}
-    </p>
 
     <!-- Bottom anchor: headline + positioning + CTAs, choreographed in. -->
     <div class="flex max-w-[36ch] flex-col gap-m">

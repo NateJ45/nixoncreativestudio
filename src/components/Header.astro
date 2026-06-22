@@ -154,10 +154,15 @@ const isActive = (href: string): boolean => {
     -webkit-backdrop-filter: blur(12px);
   }
 
-  /* Over the dark hero: transparent, no border, white foreground. Declared
-     after [data-scrolled] so it wins while the hero is still behind the bar. */
+  /* Over the dark hero: a solid navy bar (matching --primary, which is navy in
+     both themes) with white foreground, so it reads as one continuous block
+     with the navy hero directly below it. Navy (not transparent) is deliberate:
+     the header sits ABOVE the hero in flow rather than overlapping it, so a
+     transparent bar would reveal the page background (white in light mode) and
+     the white wordmark would vanish. Declared after [data-scrolled] so it wins
+     while the hero is still behind the bar. */
   .ncs-header[data-over-hero] {
-    background-color: transparent;
+    background-color: var(--primary);
     border-color: transparent;
     box-shadow: none;
     backdrop-filter: none;
