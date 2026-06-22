@@ -112,23 +112,20 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 
       <h1
         id="hero-statement"
-        class="hero-headline text-primary-foreground"
-        data-reveal
-        style="--reveal-delay: 120ms;"
+        class="hero-headline hero-anim text-primary-foreground"
       >
         {statementLead}{' '}
         <span class="text-tertiary">{statementAccent}</span>
       </h1>
 
       <p
-        class="hero-sub max-w-[32ch] text-xl leading-[1.45] text-primary-foreground/90 sm:text-2xl"
-        data-reveal
-        style="--reveal-delay: 240ms;"
+        class="hero-sub hero-anim max-w-[32ch] text-xl leading-[1.45] text-primary-foreground/90 sm:text-2xl"
+        style="--enter-delay: 120ms;"
       >
         {positioning}
       </p>
 
-      <div class="flex flex-wrap items-center gap-m" data-reveal style="--reveal-delay: 360ms;">
+      <div class="hero-anim flex flex-wrap items-center gap-m" style="--enter-delay: 240ms;">
 
         <!-- Magnetic wrapper so the button drifts toward the cursor; the shine
              class sweeps a light band across it on hover. -->
@@ -186,6 +183,35 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
      soft halo to stay crisp if an image edge creeps under it. */
   .hero-sub {
     text-shadow: 0 1px 14px rgba(10, 22, 40, 0.6);
+  }
+
+  /* ----------------------------------------------------------------------
+     Hero copy entrance. The copy holds the LCP headline, so it is animated
+     with a CSS-only entrance that runs at first render rather than the JS
+     reveal system. The reveal observer fires only after the page scripts
+     run, and on a throttled phone (behind the WebGL bundle) that pushed the
+     headline's paint past 6s. A CSS animation leaves opacity:0 within the
+     first frame, so LCP lands at first paint instead. Base state is visible,
+     so reduced-motion and no-JS visitors get the copy immediately; the
+     keyframes only play when motion is OK. The headline carries no delay so
+     it is the first thing to paint; the sub and CTAs stagger behind it.
+     ---------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-anim {
+      opacity: 0;
+      animation: hero-copy-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: var(--enter-delay, 0ms);
+    }
+  }
+  @keyframes hero-copy-in {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* ----------------------------------------------------------------------

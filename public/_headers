@@ -52,3 +52,17 @@
   # documents loaded via window.open or as popups. Mostly defense-in-depth
   # for a static portfolio, but it's free and good hygiene.
   Cross-Origin-Opener-Policy: same-origin
+
+
+# -----------------------------------------------------------------------------
+# Immutable, content-hashed build assets
+# -----------------------------------------------------------------------------
+# Everything Astro emits under /_astro/ carries a content hash in its filename
+# (e.g. HeroCanvas.X9zOFzxX.js, a-font.woff2, an-image.webp), so the bytes for
+# any given URL never change. Tell the browser it can keep these for a year and
+# never revalidate. A content change ships a new filename, so this is safe and
+# saves a round of requests on repeat visits and across pages. Lighthouse's
+# "uses-long-cache-ttl" diagnostic flags these when the header is missing.
+# -----------------------------------------------------------------------------
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

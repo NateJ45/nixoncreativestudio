@@ -31,8 +31,13 @@
 /* ----------------------------------------------------------------------------
    2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
       Both default to font-display: swap from @fontsource.
+
+      Bebas is imported as the LATIN subset only (not the full 400.css, which
+      ships @font-face blocks for latin-ext, cyrillic, greek, etc.). The site
+      is English, so the extra subsets were dead weight in a render-blocking
+      stylesheet, and the latin woff2 is the exact file BaseLayout preloads.
    ---------------------------------------------------------------------------- */
-@import "@fontsource/bebas-neue/400.css";
+@import "@fontsource/bebas-neue/latin-400.css";
 @import "@fontsource-variable/source-sans-3";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
