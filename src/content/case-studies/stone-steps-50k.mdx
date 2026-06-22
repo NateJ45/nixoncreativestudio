@@ -39,7 +39,11 @@ outcome: "A 20-year race finally given a home that honors its history and helps 
 ---
 
 import SiteShowcase from '../../components/SiteShowcase.astro';
+import FeatureHighlight from '../../components/FeatureHighlight.astro';
+import Lightbox from '../../components/Lightbox.astro';
 import homeShot from '../../assets/case-studies/shots/stone-steps-50k-home.png';
+import recordsShot from '../../assets/case-studies/shots/stone-steps-50k-feature-records.png';
+import courseShot from '../../assets/case-studies/shots/stone-steps-50k-feature-course.png';
 
 <SiteShowcase
   src={homeShot}
@@ -66,6 +70,24 @@ Registration and results both run through RunSignUp, which is the right tool for
 
 ## What we built
 
+<FeatureHighlight
+  src={recordsShot}
+  alt="The all-time records database on the Stone Steps 50K site"
+  title="A records database runners actually check"
+  body="All-time records broken out by age group across both distances, plus top-ten leaderboards by gender, sortable and kept current, so a twenty-year community can finally see its history in one place."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={courseShot}
+  alt="The course and trails detail on the Stone Steps 50K homepage"
+  title="How hard is it, answered up front"
+  body="The course detail leads with what a trail runner needs before committing: loop structure, total elevation, and aid stations, sitting right next to the registration link."
+  side="right"
+/>
+
+The full build, including the pieces above:
+
 - Event homepage with the essential information: date, location, race distances, and prominent registration link
 - Course detail pages for the 50K and 27K with elevation data, loop structure, and aid station information
 - All-time records database with age-group breakdowns (seven age groups for 50K, six for 27K) and top-ten leaderboards by gender for each distance
@@ -82,3 +104,5 @@ Runners now have one place that answers every pre-race and post-race question, f
 ## Reflections
 
 The records database took more planning than any other feature on this site. Getting the data structure right for age-group records across two distances, with separate leaderboards for all-time performance, required thinking through the display before writing a line of code. But it was the feature the community noticed most. Runners who have been doing this race for fifteen years saw their names in a real records table for the first time, and that matters to people who have been showing up to a forest in Cincinnati every October for two decades.
+
+<Lightbox />
