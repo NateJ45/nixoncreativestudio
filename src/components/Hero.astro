@@ -3,31 +3,35 @@
 /* ============================================================================
    Hero (Act 1 of the three-act homepage)  [revamp]
    ============================================================================
-   A full-bleed, kinetic opening. Until a real Nathan-shot photo lands at
-   src/assets/brand/hero.jpg, an animated aurora mesh-gradient + film grain
-   fills the surface (a genuine designed background, not a "placeholder"
-   look). The wordmark anchors the top; the positioning headline, audience
-   line, and CTAs anchor the bottom and choreograph in on load.
+   A full-viewport (100svh), kinetic opening. Two columns at lg: the positioning
+   headline + CTAs on the left, a crossfading showcase of real shipped client
+   sites (HeroShowcase) on the right, so real work sits above the fold. Below lg
+   the showcase is hidden and the headline carries the hero.
 
-   Motion (all reduced-motion safe via globals.css section 6):
-     - aurora drift + grain texture in the background
+   Background: a domain-warped WebGL brand-color flow (HeroCanvas, cursor
+   reactive) over an animated aurora + grain fallback. A left-favoring scrim
+   keeps the left-column copy legible while the right stays open for the flow
+   and the showcase.
+
+   Motion (all reduced-motion safe via globals.css section 6 + the canvas guard):
+     - WebGL flow / aurora drift in the background
      - staggered entrance reveal on the copy cluster (data-reveal + delays)
      - solid amber (--tertiary) accent phrase on the headline (no gradient text)
      - magnetic + shine primary CTA
      - animated scroll cue at the base
 
-   To swap in the real photo:
+   To swap in a real Nathan-shot hero photo as the background:
      1. Drop the image at src/assets/brand/hero.jpg (jpg, png, or webp).
      2. Uncomment the Astro <Image /> import + the <Image /> tag below; it
-        layers above the aurora, which then reads as an edge bloom rather
-        than the whole background.
-     3. Optionally soften the aurora opacity once a photo carries the surface.
+        layers above the aurora/WebGL, which then read as an edge bloom.
+     3. Optionally soften or drop the WebGL once a photo carries the surface.
 
    Content is hardcoded here on purpose. The hero is bespoke.
    ============================================================================ */
 
 import { Button } from './ui/button';
 import HeroCanvas from './HeroCanvas';
+import HeroShowcase from './HeroShowcase.astro';
 // import { Image } from 'astro:assets';
 // import heroPhoto from '../assets/brand/hero.jpg';
 
@@ -40,7 +44,8 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 ---
 
 <section
-  class="hero relative isolate flex flex-col overflow-hidden bg-primary text-primary-foreground"
+  class="hero relative isolate flex min-h-screen flex-col overflow-hidden bg-primary text-primary-foreground"
+  style="min-height: 100svh;"
   aria-labelledby="hero-statement"
   data-hero-dark
 >
@@ -73,70 +78,79 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
          not server-render. -->
     <HeroCanvas client:only="react" />
 
-    <!-- Vertical scrim. Keeps the bottom-anchored headline + CTAs legible
-         over any background, photo or aurora. -->
-    <div class="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/50 to-primary/90"></div>
+    <!-- Left-favoring scrim. Darkens the left (where the headline + CTAs sit)
+         so copy stays legible, and fades toward the right so the WebGL flow and
+         the showcase frame read clearly. A faint bottom darken anchors the
+         scroll cue. -->
+    <div class="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/45 to-primary/10"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent"></div>
 
   </div>
 
   <!-- ====================================================================
-       Foreground content. Tall enough that the surface feels decisive
-       (~88vh, capped). The studio wordmark lives in the sticky header (navy
-       over this hero), so the hero itself just anchors the headline cluster at
-       the bottom; no second wordmark here.
+       Foreground content. Full-viewport hero (100svh), vertically centered.
+       Two columns at lg: the headline cluster on the left, the crossfading
+       portfolio showcase on the right. Below lg the showcase is hidden and the
+       headline carries the hero. The studio wordmark lives in the sticky header
+       (navy over this hero), so there is no second wordmark here.
        ==================================================================== -->
-  <div
-    class="ncs-container relative z-10 flex flex-1 flex-col justify-end gap-2xl py-2xl"
-    style="min-height: clamp(38rem, 88vh, 52rem);"
-  >
+  <div class="ncs-container relative z-10 flex flex-1 items-center py-2xl">
+    <div class="grid w-full items-center gap-2xl lg:grid-cols-[1.05fr_0.95fr]">
 
-    <!-- Bottom anchor: headline + positioning + CTAs, choreographed in. -->
-    <div class="flex max-w-[36ch] flex-col gap-m">
+      <!-- Left: headline + positioning + CTAs, choreographed in. -->
+      <div class="flex max-w-[40ch] flex-col gap-m">
 
-      <h1
-        id="hero-statement"
-        class="text-primary-foreground leading-[0.92]"
-        data-reveal
-        style="--reveal-delay: 120ms; text-wrap: balance;"
-      >
-        {statementLead}{' '}
-        <span class="text-tertiary">{statementAccent}</span>
-      </h1>
-
-      <p
-        class="text-lg leading-[1.5] text-primary-foreground/90 sm:text-xl"
-        data-reveal
-        style="--reveal-delay: 240ms;"
-      >
-        {positioning}
-      </p>
-
-      <div
-        class="mt-s flex flex-wrap items-center gap-m"
-        data-reveal
-        style="--reveal-delay: 360ms;"
-      >
-
-        <!-- Magnetic wrapper so the button drifts toward the cursor; the
-             shine class sweeps a light band across it on hover. -->
-        <span class="inline-block" data-magnetic="0.4">
-          <Button asChild variant="brand" size="cta" className="shine">
-            <a href="/contact">Start a project</a>
-          </Button>
-        </span>
-
-        <a
-          class="hero-secondary inline-flex items-center gap-s font-body font-semibold text-primary-foreground no-underline"
-          href="/work/"
+        <h1
+          id="hero-statement"
+          class="text-primary-foreground leading-[0.92]"
+          data-reveal
+          style="--reveal-delay: 120ms; text-wrap: balance;"
         >
-          <span>See the work</span>
-          <span aria-hidden="true" class="hero-secondary-arrow">→</span>
-        </a>
+          {statementLead}{' '}
+          <span class="text-tertiary">{statementAccent}</span>
+        </h1>
+
+        <p
+          class="text-lg leading-[1.5] text-primary-foreground/90 sm:text-xl"
+          data-reveal
+          style="--reveal-delay: 240ms;"
+        >
+          {positioning}
+        </p>
+
+        <div
+          class="mt-s flex flex-wrap items-center gap-m"
+          data-reveal
+          style="--reveal-delay: 360ms;"
+        >
+
+          <!-- Magnetic wrapper so the button drifts toward the cursor; the
+               shine class sweeps a light band across it on hover. -->
+          <span class="inline-block" data-magnetic="0.4">
+            <Button asChild variant="brand" size="cta" className="shine">
+              <a href="/contact">Start a project</a>
+            </Button>
+          </span>
+
+          <a
+            class="hero-secondary inline-flex items-center gap-s font-body font-semibold text-primary-foreground no-underline"
+            href="/work/"
+          >
+            <span>See the work</span>
+            <span aria-hidden="true" class="hero-secondary-arrow">→</span>
+          </a>
+
+        </div>
 
       </div>
 
-    </div>
+      <!-- Right: crossfading portfolio showcase (real shipped client sites).
+           Hidden below lg so the mobile hero stays focused on the headline. -->
+      <div class="hidden lg:block" data-reveal="right" style="--reveal-delay: 320ms;">
+        <HeroShowcase />
+      </div>
 
+    </div>
   </div>
 
   <!-- Animated scroll cue, centered at the base of the hero. Decorative. -->

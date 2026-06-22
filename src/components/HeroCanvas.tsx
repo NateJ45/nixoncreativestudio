@@ -3,18 +3,20 @@
    ============================================================================
    Foundation, edit with care.
 
-   A WebGL hero background: a single fullscreen shader quad drawing a slow,
-   organic drift of brand colors (navy base, NCS blue and sky highlights, a
-   faint amber bloom). It is atmosphere, not particles or neon, so it reads as
-   premium for a warm studio rather than a generic "techy" hero.
+   A WebGL hero background: a fullscreen shader quad drawing a slow, organic
+   FLOW of brand colors (navy base, NCS blue + sky highlights, a faint amber
+   bloom). It uses domain-warped fbm noise so the field visibly swirls and
+   morphs rather than sitting nearly still, plus a soft sky bloom that follows
+   the cursor, so it reads as alive and responsive. It is atmosphere, not
+   particles or neon, so it stays premium for a warm studio.
 
-   This layers OVER the CSS .bg-aurora fallback in Hero.astro. It only mounts
+   This layers OVER the CSS .bg-aurora fallback in Hero.astro and only mounts
    when it is genuinely safe and useful:
      - prefers-reduced-motion: reduce  -> renders nothing (the static aurora shows)
      - no WebGL support                -> renders nothing (aurora shows)
-   and it stops rendering (frameloop "never") whenever the hero is scrolled off
-   screen or the tab is hidden, so it never burns GPU in the background. DPR is
-   capped and powerPreference is "low-power" to stay gentle on older laptops.
+   It stops rendering (frameloop "never") whenever the hero is scrolled off
+   screen or the tab is hidden. DPR is capped and powerPreference is "low-power"
+   to stay gentle on older laptops.
 
    Hydrated with client:only="react" (R3F does not server-render); the aurora
    beneath it means there is never a blank frame before this mounts.
@@ -39,6 +41,7 @@ const fragmentShader = /* glsl */ `
   varying vec2 vUv;
   uniform float uTime;
   uniform vec2  uResolution;
+  uniform vec2  uMouse; // 0..1, smoothed pointer position (gl uv space)
 
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -56,21 +59,22 @@ const fragmentShader = /* glsl */ `
     float v = 0.0, a = 0.5;
     for (int i = 0; i < 4; i++) {
       v += a * noise(p);
-      p *= 2.0;
+      p = p * 2.0 + vec2(1.3, 1.7);
       a *= 0.5;
     }
     return v;
   }
 
   void main() {
-    // Aspect-correct coordinates so the drift is not stretched.
+    float aspect = uResolution.x / max(uResolution.y, 1.0);
     vec2 uv = vUv;
-    vec2 p = uv * vec2(uResolution.x / max(uResolution.y, 1.0), 1.0);
-    float t = uTime * 0.025;
+    vec2 p = vec2(uv.x * aspect, uv.y) * 1.5;
+    float t = uTime * 0.09;
 
-    float n1 = fbm(p * 1.6 + vec2(t, t * 0.6));
-    float n2 = fbm(p * 2.4 - vec2(t * 0.8, t));
-    float nA = fbm(p * 1.2 + vec2(-t * 0.5, t * 0.4));
+    // Domain warp: offset the sample point by another noise field so the
+    // pattern flows and swirls instead of drifting rigidly.
+    vec2 q = vec2(fbm(p + t), fbm(p + vec2(5.2, 1.3) - t * 0.55));
+    float f = fbm(p + 2.6 * q);
 
     vec3 navy  = vec3(0.039, 0.086, 0.157); // #0A1628
     vec3 blue  = vec3(0.204, 0.471, 0.741); // #3478BD
@@ -78,14 +82,20 @@ const fragmentShader = /* glsl */ `
     vec3 amber = vec3(1.000, 0.639, 0.204); // #FFA334
 
     vec3 col = navy;
-    col = mix(col, blue, smoothstep(0.35, 0.78, n1) * 0.55);
-    col = mix(col, sky,  smoothstep(0.55, 0.92, n2) * 0.30);
-    // One quiet warm bloom so the field is not all-blue.
-    col = mix(col, amber, smoothstep(0.62, 0.96, nA) * 0.10);
+    col = mix(col, blue, clamp(f * 1.5, 0.0, 1.0));
+    col = mix(col, sky, clamp(pow(f, 2.0) * 1.4, 0.0, 1.0) * 0.6);
+    col = mix(col, amber, clamp(q.y * 0.5, 0.0, 1.0) * 0.10);
+    // Bright flowing streaks along the crests of the warped field.
+    col += sky * smoothstep(0.74, 1.0, f) * 0.18;
 
-    // Gentle vignette keeps the edges moody and the center alive.
-    float vig = smoothstep(1.25, 0.20, length(uv - 0.5));
-    col *= mix(0.82, 1.06, vig);
+    // Soft sky bloom that tracks the cursor (aspect-corrected).
+    vec2 m  = vec2(uMouse.x * aspect, uMouse.y);
+    vec2 pu = vec2(uv.x * aspect, uv.y);
+    col = mix(col, sky, smoothstep(0.45, 0.0, distance(pu, m)) * 0.18);
+
+    // Vignette keeps the edges moody and the centre alive.
+    float vig = smoothstep(1.3, 0.22, length(uv - 0.5));
+    col *= mix(0.78, 1.10, vig);
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -95,17 +105,34 @@ function ShaderPlane() {
   const material = useRef<THREE.ShaderMaterial>(null);
   const { size } = useThree();
 
+  // Smoothed pointer: target is set on pointermove, current eases toward it.
+  const target = useRef(new THREE.Vector2(0.5, 0.5));
+  const current = useRef(new THREE.Vector2(0.5, 0.5));
+
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
+      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
     }),
-    // size handled in the effect below; uniforms object stays stable
     [],
   );
 
+  useEffect(() => {
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    const onMove = (e: PointerEvent) => {
+      target.current.set(e.clientX / window.innerWidth, 1.0 - e.clientY / window.innerHeight);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, []);
+
   useFrame((_, delta) => {
-    if (material.current) material.current.uniforms.uTime.value += delta;
+    if (!material.current) return;
+    material.current.uniforms.uTime.value += delta;
+    // ease current toward target (frame-rate independent)
+    current.current.lerp(target.current, Math.min(1, delta * 3));
+    material.current.uniforms.uMouse.value.copy(current.current);
   });
 
   useEffect(() => {
@@ -132,7 +159,6 @@ export default function HeroCanvas() {
   const [frameloop, setFrameloop] = useState<'always' | 'never'>('always');
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Decide once on mount whether to render at all.
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     try {
@@ -145,7 +171,6 @@ export default function HeroCanvas() {
     setEnabled(true);
   }, []);
 
-  // Pause rendering when the hero is off-screen or the tab is hidden.
   useEffect(() => {
     if (!enabled) return;
     const el = wrapRef.current;

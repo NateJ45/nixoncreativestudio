@@ -1,0 +1,145 @@
+---
+// Safe to edit.
+/* ============================================================================
+   HeroShowcase
+   ============================================================================
+   A browser-chrome frame in the homepage hero that crossfades real screenshots
+   of shipped client sites, with the live URL in the address bar. It puts real
+   work above the fold (the "show, don't tell" instinct the brand is built on)
+   and fills the right side of the hero next to the headline.
+
+   Collection-driven: it reads the case-studies covers (real hero screenshots of
+   the live sites) so it stays in sync as the portfolio grows. featured entries
+   lead; the newest others fill in, capped at five.
+
+   Decorative by design: the whole frame is aria-hidden and not interactive. The
+   navigable work lives in the "See the work" CTA beside it and the Selected
+   Work section below, so this auto-advancing visual never becomes an
+   accessibility trap. The crossfade is disabled under prefers-reduced-motion
+   (the first shot stays) and pauses when the tab is hidden.
+   ============================================================================ */
+
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+
+const studies = (await getCollection('case-studies')).sort(
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+);
+
+// featured first, then newest others; cap at five, no duplicates.
+const ordered = [
+  ...studies.filter((s) => s.data.featured),
+  ...studies.filter((s) => !s.data.featured),
+].slice(0, 5);
+
+const host = (s: (typeof ordered)[number]) =>
+  s.data.liveUrl ? new URL(s.data.liveUrl).host.replace(/^www\./, '') : s.data.client;
+
+const slides = ordered.map((s) => ({ cover: s.data.cover, host: host(s) }));
+---
+
+{slides.length > 0 && (
+  <div class="hero-showcase" aria-hidden="true" data-hero-showcase>
+    <!-- Browser chrome: traffic-light dots + an address bar whose text the
+         crossfade script updates to the active site's host. -->
+    <div class="flex items-center gap-s border-b border-white/10 bg-white/5 px-3 py-2">
+      <span class="flex gap-1.5">
+        <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
+        <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
+      </span>
+      <span class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1 font-mono text-[0.72rem] text-primary-foreground/80">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        <span data-showcase-address>{slides[0].host}</span>
+      </span>
+    </div>
+
+    <!-- Crossfading viewport. Every cover stacks absolutely; the script fades
+         between them. object-top so each shot reads from the top of the page. -->
+    <div class="showcase-viewport">
+      {slides.map((s, i) => (
+        <div class="showcase-slide" data-slide data-host={s.host} data-active={i === 0 ? 'true' : undefined}>
+          <Image
+            src={s.cover}
+            alt=""
+            widths={[600, 900, 1200]}
+            sizes="(min-width: 64rem) 42vw, 80vw"
+            class="h-full w-full object-cover object-top"
+            loading={i === 0 ? 'eager' : 'lazy'}
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  .hero-showcase {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-frame);
+    background-color: color-mix(in oklab, var(--color-primary) 70%, #000);
+  }
+  .showcase-viewport {
+    position: relative;
+    aspect-ratio: 16 / 10;
+  }
+  .showcase-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .showcase-slide[data-active] {
+    opacity: 1;
+  }
+  /* No transition under reduced motion; the first (active) shot simply stays. */
+  @media (prefers-reduced-motion: reduce) {
+    .showcase-slide {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Crossfade the hero showcase covers and keep the address bar in sync. Runs
+  // on astro:page-load (survives View Transitions) with a dataset bind guard;
+  // disabled under reduced motion; pauses while the tab is hidden.
+  function initHeroShowcase() {
+    document
+      .querySelectorAll<HTMLElement>('[data-hero-showcase]:not([data-showcase-bound])')
+      .forEach((root) => {
+        root.dataset.showcaseBound = 'true';
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-slide]'));
+        const address = root.querySelector<HTMLElement>('[data-showcase-address]');
+        if (slides.length < 2) return;
+
+        let i = 0;
+        let timer: ReturnType<typeof setInterval> | undefined;
+        const advance = () => {
+          slides[i].removeAttribute('data-active');
+          i = (i + 1) % slides.length;
+          slides[i].setAttribute('data-active', 'true');
+          if (address) address.textContent = slides[i].dataset.host ?? '';
+        };
+        const start = () => {
+          if (!timer) timer = setInterval(advance, 3600);
+        };
+        const stop = () => {
+          if (timer) {
+            clearInterval(timer);
+            timer = undefined;
+          }
+        };
+        start();
+        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+      });
+  }
+  document.addEventListener('astro:page-load', initHeroShowcase);
+</script>
