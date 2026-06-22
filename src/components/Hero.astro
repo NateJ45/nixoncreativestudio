@@ -1,30 +1,37 @@
 ---
 // Safe to edit.
 /* ============================================================================
-   Hero (Act 1 of the three-act homepage)  [revamp]
+   Hero (Act 1 of the homepage)  [revamp]
    ============================================================================
-   A full-viewport (100svh), kinetic opening. Two columns at lg: the positioning
-   headline + CTAs on the left, a crossfading showcase of real shipped client
-   sites (HeroShowcase) on the right, so real work sits above the fold. Below lg
-   the showcase is hidden and the headline carries the hero.
+   A full-viewport (100svh), kinetic opening. The layout is LAYERED, not a
+   two-column split: a right-weighted "scene" of real shipped client sites
+   (HeroShowcase) sits BEHIND an oversized headline. A left-strong scrim keeps
+   the headline + CTAs fully legible even where the screenshots sit under them,
+   while the far-right images stay crisp. Below lg the scene is hidden and the
+   headline carries the hero.
 
-   Background: a domain-warped WebGL brand-color flow (HeroCanvas, cursor
-   reactive) over an animated aurora + grain fallback. A left-favoring scrim
-   keeps the left-column copy legible while the right stays open for the flow
-   and the showcase.
+   Why layered instead of side-by-side: a strict right column made the cascade
+   either clip at the viewport edge or leave dead space. As a contained scene
+   behind the text it uses the whole width, never spills past the viewport
+   (the hero is overflow-hidden), and reads as one composed image.
 
-   Motion (all reduced-motion safe via globals.css section 6 + the canvas guard):
-     - WebGL flow / aurora drift in the background
-     - staggered entrance reveal on the copy cluster (data-reveal + delays)
-     - solid amber (--tertiary) accent phrase on the headline (no gradient text)
-     - magnetic + shine primary CTA
-     - animated scroll cue at the base
+   Stacking (the section is `isolate`, so these z-indexes are local):
+     z-0  background: animated aurora + WebGL flow
+     z-1  showcase scene (right-weighted, contained)
+     z-2  scrim (left-strong, fades right) + bottom darken
+     z-10 copy + scroll cue
 
-   To swap in a real Nathan-shot hero photo as the background:
-     1. Drop the image at src/assets/brand/hero.jpg (jpg, png, or webp).
-     2. Uncomment the Astro <Image /> import + the <Image /> tag below; it
-        layers above the aurora/WebGL, which then read as an edge bloom.
-     3. Optionally soften or drop the WebGL once a photo carries the surface.
+   The copy container is click-through (pointer-events-none) so the showcase
+   behind it stays hoverable on the right; the copy column re-enables pointer
+   events for its own links.
+
+   Legibility over the images comes from three things together: the left-strong
+   scrim, a soft text-shadow on the headline, and the densest part of the
+   cascade sitting to the right, away from the headline's core.
+
+   To swap in a real Nathan-shot hero photo as the background: drop it at
+   src/assets/brand/hero.jpg and uncomment the <Image /> import + tag below; it
+   layers over the aurora/WebGL.
 
    Content is hardcoded here on purpose. The hero is bespoke.
    ============================================================================ */
@@ -35,7 +42,7 @@ import HeroShowcase from './HeroShowcase.astro';
 // import { Image } from 'astro:assets';
 // import heroPhoto from '../assets/brand/hero.jpg';
 
-// Headline statement. The trailing phrase is lifted into a gradient span.
+// Headline statement. The trailing phrase is lifted into a solid amber span.
 const statementLead = 'I make websites that';
 const statementAccent = 'pull their weight.';
 
@@ -51,103 +58,86 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 >
 
   <!-- ====================================================================
-       Background surface. Either the real photograph (once it lands) or the
-       animated aurora + grain. The scrim deepens toward the bottom so the
-       overlaid copy always has contrast.
+       z-0 Background: animated aurora + grain (paints immediately, SSR) with
+       the WebGL brand-cloud flow layered over it once hydrated. Real photo
+       slot is commented until src/assets/brand/hero.jpg lands.
        ==================================================================== -->
-  <div class="absolute inset-0 -z-10" aria-hidden="true">
-
-    <!-- Real photograph slot. Uncomment when src/assets/brand/hero.jpg lands.
-    <Image
-      src={heroPhoto}
-      alt=""
-      class="h-full w-full object-cover"
-      loading="eager"
-      decoding="async"
-    />
+  <div class="absolute inset-0 z-0" aria-hidden="true">
+    <!--
+    <Image src={heroPhoto} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
     -->
-
-    <!-- Animated aurora mesh + film grain. This is the fallback / base layer:
-         it paints immediately (SSR, no JS) and shows whenever the WebGL canvas
-         below it is not active (reduced motion, no WebGL, before hydration). -->
     <div class="bg-aurora grain absolute inset-0"></div>
-
-    <!-- WebGL brand-cloud shader. Layers over the aurora once hydrated; renders
-         nothing (so the aurora shows) under reduced motion or without WebGL,
-         and pauses when the hero is off-screen. client:only because R3F does
-         not server-render. -->
     <HeroCanvas client:only="react" />
-
-    <!-- Left-favoring scrim. Darkens the left (where the headline + CTAs sit)
-         so copy stays legible, and fades toward the right so the WebGL flow and
-         the showcase frame read clearly. A faint bottom darken anchors the
-         scroll cue. -->
-    <div class="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/45 to-primary/10"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent"></div>
-
   </div>
 
   <!-- ====================================================================
-       Foreground content. Full-viewport hero (100svh), vertically centered.
-       Two columns at lg: the headline cluster on the left, the crossfading
-       portfolio showcase on the right. Below lg the showcase is hidden and the
-       headline carries the hero. The studio wordmark lives in the sticky header
-       (navy over this hero), so there is no second wordmark here.
+       z-1 Showcase scene. A right-weighted layer of real client sites behind
+       the headline, contained inside the hero so it never spills past the
+       viewport. Hidden below lg (mobile leads with the headline alone).
        ==================================================================== -->
-  <div class="hero-inner relative z-10 flex flex-1 items-center py-l">
-    <div class="grid w-full items-center gap-xl lg:grid-cols-[1fr_1.15fr]">
+  <div
+    class="hero-scene absolute inset-y-0 right-0 z-[1] hidden items-center lg:flex"
+    data-reveal="fade"
+    style="--reveal-delay: 320ms;"
+  >
+    <HeroShowcase />
+  </div>
 
-      <!-- Left: headline + positioning + CTAs, choreographed in. -->
-      <div class="flex flex-col gap-m">
+  <!-- ====================================================================
+       z-2 Scrim. Left-strong and fading right so the headline stays legible
+       over the screenshots while the far-right images read clearly. Plus a
+       faint bottom darken to anchor the scroll cue. Both click-through.
+       ==================================================================== -->
+  <div class="hero-scrim pointer-events-none absolute inset-0 z-[2]" aria-hidden="true"></div>
+  <div
+    class="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-primary/45 to-transparent"
+    aria-hidden="true"
+  ></div>
 
-        <h1
-          id="hero-statement"
-          class="hero-headline text-primary-foreground"
-          data-reveal
-          style="--reveal-delay: 120ms;"
+  <!-- ====================================================================
+       z-10 Foreground copy. The container is pointer-events-none so the scene
+       behind it stays hoverable on the right; the copy column re-enables
+       pointer events for its links.
+       ==================================================================== -->
+  <div class="ncs-container pointer-events-none relative z-10 flex flex-1 items-center py-l">
+    <div class="hero-copy pointer-events-auto flex max-w-[46rem] flex-col gap-m">
+
+      <h1
+        id="hero-statement"
+        class="hero-headline text-primary-foreground"
+        data-reveal
+        style="--reveal-delay: 120ms;"
+      >
+        {statementLead}{' '}
+        <span class="text-tertiary">{statementAccent}</span>
+      </h1>
+
+      <p
+        class="hero-sub max-w-[32ch] text-xl leading-[1.45] text-primary-foreground/90 sm:text-2xl"
+        data-reveal
+        style="--reveal-delay: 240ms;"
+      >
+        {positioning}
+      </p>
+
+      <div class="flex flex-wrap items-center gap-m" data-reveal style="--reveal-delay: 360ms;">
+
+        <!-- Magnetic wrapper so the button drifts toward the cursor; the shine
+             class sweeps a light band across it on hover. -->
+        <span class="inline-block" data-magnetic="0.4">
+          <Button asChild variant="brand" size="cta" className="shine">
+            <a href="/contact">Start a project</a>
+          </Button>
+        </span>
+
+        <a
+          class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-primary-foreground no-underline"
+          href="/work/"
         >
-          {statementLead}{' '}
-          <span class="text-tertiary">{statementAccent}</span>
-        </h1>
+          <span>See the work</span>
+          <span aria-hidden="true" class="hero-secondary-arrow">→</span>
+        </a>
 
-        <p
-          class="max-w-[32ch] text-xl leading-[1.45] text-primary-foreground/90 sm:text-2xl"
-          data-reveal
-          style="--reveal-delay: 240ms;"
-        >
-          {positioning}
-        </p>
-
-        <div
-          class="flex flex-wrap items-center gap-m"
-          data-reveal
-          style="--reveal-delay: 360ms;"
-        >
-
-          <!-- Magnetic wrapper so the button drifts toward the cursor; the
-               shine class sweeps a light band across it on hover. -->
-          <span class="inline-block" data-magnetic="0.4">
-            <Button asChild variant="brand" size="cta" className="shine">
-              <a href="/contact">Start a project</a>
-            </Button>
-          </span>
-
-          <a
-            class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-primary-foreground no-underline"
-            href="/work/"
-          >
-            <span>See the work</span>
-            <span aria-hidden="true" class="hero-secondary-arrow">→</span>
-          </a>
-
-        </div>
-
-      </div>
-
-      <!-- Right: crossfading portfolio showcase (real shipped client sites).
-           Hidden below lg so the mobile hero stays focused on the headline. -->
-      <div class="hidden lg:block" data-reveal="right" style="--reveal-delay: 320ms;">
-        <HeroShowcase />
       </div>
 
     </div>
@@ -168,39 +158,52 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 
 <style>
   /* ----------------------------------------------------------------------
-     Hero headline. Deliberately oversized, well past the global h1 clamp:
-     this is the showpiece and the LCP element, so it scales up to fill the
-     full-viewport hero instead of floating in empty space. Bebas is heavily
-     condensed, so even "WEBSITES" at this size sits comfortably inside the
-     ~600px left column (the .ncs-container caps at 1320px). Tight line-height
-     stacks the lines into one dense block.
+     Hero headline. Deliberately oversized (well past the global h1 clamp):
+     this is the showpiece and the LCP element. min(vw, vh) so it scales to
+     viewport WIDTH on tall windows but is capped by HEIGHT on short laptops,
+     keeping the cluster inside 100svh. The text-shadow is what lets it stay
+     readable where the screenshots sit beneath it: a tight shadow for a crisp
+     edge plus a soft navy glow that separates the letters from busy images.
      ---------------------------------------------------------------------- */
   .hero-headline {
-    /* min(vw, vh) so the headline scales to viewport WIDTH on tall windows but
-       is capped by HEIGHT on short laptops, keeping the whole cluster (headline,
-       positioning, CTAs) inside the 100svh hero without pushing the buttons
-       below the fold. */
     font-size: clamp(3.25rem, min(9.5vw, 15vh), 9.5rem);
     line-height: 0.86;
     text-wrap: balance;
+    text-shadow:
+      0 1px 2px rgba(10, 22, 40, 0.5),
+      0 6px 34px rgba(10, 22, 40, 0.55);
+  }
+
+  /* Positioning line sits in the strong part of the scrim, so it only needs a
+     soft halo to stay crisp if an image edge creeps under it. */
+  .hero-sub {
+    text-shadow: 0 1px 14px rgba(10, 22, 40, 0.6);
   }
 
   /* ----------------------------------------------------------------------
-     Hero inner frame. A full-width wrapper (not .ncs-container) so the
-     showcase can bleed toward the right viewport edge and use more
-     horizontal space. The left padding still aligns the headline with the
-     header wordmark and the sections below (it matches .ncs-container's
-     content-left edge); only the right side bleeds in.
+     Showcase scene. A right-weighted band; a small right inset keeps the
+     cascade from touching the viewport edge so it reads as contained, not
+     bled. Width is generous so the work is prominent.
      ---------------------------------------------------------------------- */
-  .hero-inner {
-    width: 100%;
-    padding-left: max(1.5rem, calc((100vw - 82.5rem) / 2 + 1.5rem));
+  .hero-scene {
+    width: 60%;
     padding-right: 1.5rem;
   }
-  @media (min-width: 1024px) {
-    .hero-inner {
-      padding-right: 2.5rem;
-    }
+
+  /* ----------------------------------------------------------------------
+     Scrim. Solid navy on the left (headline core), fading to transparent on
+     the right so the far images stay crisp. Tuned so the headline's right
+     edge still sits over enough navy to read with its shadow.
+     ---------------------------------------------------------------------- */
+  .hero-scrim {
+    background: linear-gradient(
+      to right,
+      var(--color-primary) 0%,
+      var(--color-primary) 30%,
+      color-mix(in oklab, var(--color-primary) 75%, transparent) 50%,
+      color-mix(in oklab, var(--color-primary) 32%, transparent) 68%,
+      transparent 86%
+    );
   }
 
   /* ----------------------------------------------------------------------
@@ -215,8 +218,8 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
     opacity: 0.85;
   }
 
-  /* Explicit focus ring (sky blue is ~7:1 on navy) so keyboard focus is
-     clearly visible over the aurora rather than relying on the UA default. */
+  /* Explicit focus ring (sky blue is ~7:1 on navy) so keyboard focus is clearly
+     visible over the scene rather than relying on the UA default. */
   .hero-secondary:focus-visible {
     outline: 2px solid var(--color-secondary);
     outline-offset: 4px;
