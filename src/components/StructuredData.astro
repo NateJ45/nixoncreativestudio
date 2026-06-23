@@ -56,10 +56,13 @@ const organization = {
     addressRegion:    'OH',
     addressCountry:   'US',
   },
-  areaServed: {
-    '@type':  'Place',
-    name:     'Greater Cincinnati region',
-  },
+  // Based locally, but web/strategy/brand work serves clients nationally; the
+  // region Place plus the country signals both (photography stays regional, see
+  // the per-Service areaServed on /services).
+  areaServed: [
+    { '@type': 'Place',   name: 'Greater Cincinnati region' },
+    { '@type': 'Country', name: 'United States' },
+  ],
   sameAs: [
     site.social.instagram,
     site.social.linkedin,

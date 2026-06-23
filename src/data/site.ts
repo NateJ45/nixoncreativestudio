@@ -101,7 +101,7 @@ export const site: SiteData = {
     linkedin:  'https://www.linkedin.com/in/nathanjnixon',
   },
 
-  tagline: 'Modern websites for small businesses, nonprofits, churches, and schools in the Cincinnati region.',
+  tagline: 'Modern websites for small businesses, nonprofits, churches, and schools. Based in Cincinnati, working with clients anywhere.',
 
   // External scheduling URL. Leave empty to hide the "Book a call" CTAs
   // site-wide; paste a Cal.com or Calendly link to enable them. Cal.com

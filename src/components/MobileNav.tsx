@@ -218,7 +218,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             className="mnav-item relative z-10 mt-m max-w-[34ch] font-body text-base leading-[1.5] text-primary-foreground/70"
             style={delay(60)}
           >
-            For churches, schools, and small businesses in the Cincinnati region.
+            For churches, schools, nonprofits, and small businesses, wherever you are.
           </p>
 
           {/* Big editorial nav. Hairline dividers give the flat list structure. */}

@@ -110,7 +110,7 @@ const sites = [
     </div>
   </div>
 
-  {/* ---- Phone (portrait), overlapping the desktop's lower-left ---- */}
+  {/* ---- Phone (portrait), overlapping the desktop's lower-right ---- */}
   <div class="dev dev-phone">
     <div class="dev-screen dev-screen-phone">
       {sites.map((s, i) => (
@@ -160,12 +160,14 @@ const sites = [
     position: absolute;
   }
 
-  /* Desktop: top-right. Pulled in a touch so the (now larger) phone has room
-     to sit forward without crowding the edge. */
+  /* Desktop: top-LEFT of the stage and the larger of the two, with the phone now
+     riding its lower-right. Left-aligned so the phone can take the right edge
+     (which lines up with the header nav) and the cluster stays inside the content
+     width. Enlarged from 76% for more presence. */
   .dev-desktop {
     top: 0;
-    right: 0;
-    width: 76%;
+    left: 0;
+    width: 95%;
     z-index: 2;
     border-radius: 0.6rem;
     overflow: hidden;
@@ -174,16 +176,15 @@ const sites = [
     box-shadow: var(--shadow-frame);
   }
 
-  /* Phone: the front element, deliberately prominent and large enough to be a
-     real focal point, not a thumbnail. It sits over the desktop's lower half so
-     the two read as one paired set, and it stays clear of the headline, which
-     owns the left of the hero. A deeper shadow lifts it in front. Its left edge
-     shifts further right on narrow desktops (media query below), where the
-     headline wraps wider and reaches further across. */
+  /* Phone: the front element, deliberately prominent. It now sits on the RIGHT,
+     over the desktop's lower-right, with its right edge at the content edge
+     (level with the header nav). Far from the headline on the left, so it never
+     needs to dodge the copy. A deeper shadow lifts it in front. Enlarged from
+     34% to stay a real focal point beside the bigger desktop. */
   .dev-phone {
-    left: 22%;
+    right: 0;
     bottom: 1%;
-    width: 34%;
+    width: 39%;
     z-index: 5;
     border-radius: 1.7rem;
     padding: 0.5rem;
@@ -192,12 +193,14 @@ const sites = [
     box-shadow: 0 50px 80px -32px rgba(0, 0, 0, 0.7);
   }
   /* Narrow desktops (small laptops, tablet landscape): the headline wraps wider
-     and reaches further into the scene, so slide the phone further over the
-     desktop and trim it slightly to keep it clear of the headline text. */
+     and reaches further into the scene, so trim the cluster a touch (the desktop
+     now sits on the left, nearest the headline) to keep it from crowding. */
   @media (max-width: 1279px) {
+    .dev-desktop {
+      width: 88%;
+    }
     .dev-phone {
-      left: 44%;
-      width: 31%;
+      width: 37%;
     }
   }
   /* Phone speaker/notch pill. */

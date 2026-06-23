@@ -6,7 +6,7 @@ brand
 
 ## Users
 
-Decision-makers at small businesses, churches, preschools, schools, and nonprofits in the Cincinnati / West Chester region. They're often on a board, a staff team, or running the business themselves, evaluating Nathan as a potential vendor with a real budget and a real timeline. Their context when landing on the site is "I heard about Nathan / saw his work / met him in person, is this the right fit?" — they want to understand the services on offer, see proof, and decide whether to start a conversation.
+Decision-makers at small businesses, churches, preschools, schools, and nonprofits in the Cincinnati / West Chester region, plus web clients further afield who find the studio online. They're often on a board, a staff team, or running the business themselves, evaluating Nathan as a potential vendor with a real budget and a real timeline. Their context when landing on the site is "I heard about Nathan / saw his work / met him in person, is this the right fit?" — they want to understand the services on offer, see proof, and decide whether to start a conversation.
 
 A secondary audience is other designers and creative peers who read the site as portfolio, not as sales material. They're useful for referrals and credibility but they're not the primary buyer.
 
@@ -14,7 +14,7 @@ The job to be done is quick, confident evaluation: see real work, understand ser
 
 ## Product Purpose
 
-This is Nixon Creative Studio's home on the web. Nathan Nixon is the sole owner and operator — web designer, photographer, and brand strategist serving the Cincinnati region.
+This is Nixon Creative Studio's home on the web. Nathan Nixon is the sole owner and operator: web designer, photographer, and brand strategist based in Cincinnati. Web design, strategy, and brand work serve clients anywhere; photography stays across the Cincinnati region.
 
 The site is doing three jobs in equal measure:
 

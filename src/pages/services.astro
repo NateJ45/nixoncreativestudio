@@ -130,6 +130,10 @@ const faq = [
     q: 'Can you work with my existing brand?',
     a: 'Yes. If you already have a logo, palette, and type system, we use it. If you do not, brand work can be folded into the strategy phase or scoped separately.',
   },
+  {
+    q: 'Where are you based, and do you work with clients outside Cincinnati?',
+    a: "I'm based in Cincinnati, but web design, strategy, and brand work happen with clients anywhere, fully remote when that is easier. Photography is the one piece that needs me on site, so that stays within the greater Cincinnati region.",
+  },
 ];
 
 // JSON-LD schemas for /services: Service (one per offering) and FAQPage.
@@ -142,7 +146,11 @@ const schemas = [
     name:           service.title,
     description:    service.body,
     provider:       { '@id': `${site.url}#organization` },
-    areaServed:     'Greater Cincinnati region',
+    // Photography needs me on site, so it stays regional; strategy, web design,
+    // and brand work serve clients anywhere (region + country).
+    areaServed:     service.title === 'Photography'
+      ? 'Greater Cincinnati region'
+      : ['Greater Cincinnati region', 'United States'],
   })),
   {
     '@context': 'https://schema.org',
@@ -161,7 +169,7 @@ const schemas = [
 
 <BaseLayout
   title="Services | Nixon Creative Studio"
-  description="Strategy, web design, and photography for organizations in the Cincinnati region."
+  description="Strategy, web design, and brand work for clients anywhere, plus photography across the greater Cincinnati region. Based in Cincinnati."
   schemas={schemas}
 >
 
