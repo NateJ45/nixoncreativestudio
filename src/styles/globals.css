@@ -131,6 +131,44 @@
     @apply bg-background text-foreground;
   }
 
+  /* ---- Finishing details ---------------------------------------------------
+     Small craft touches: a brand-tinted text selection, a themed scrollbar, and
+     tabular figures so animated/changing numbers do not shift width. All flip
+     with the theme via the same tokens and stay legible in both modes. */
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 28%, transparent);
+    color: var(--color-heading);
+  }
+  .dark ::selection {
+    background-color: color-mix(in oklab, var(--color-secondary) 32%, transparent);
+    color: #ffffff;
+  }
+
+  /* Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-accent) 50%, transparent) transparent;
+  }
+  /* WebKit / Blink. The thumb carries a bg-colored border so it reads as an
+     inset pill with breathing room; the border flips with the theme. */
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: color-mix(in oklab, var(--color-accent) 45%, transparent);
+    border: 3px solid var(--color-bg);
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--color-accent) 68%, transparent);
+  }
+
+  /* Numbers that animate or change should not jiggle as digit widths vary. */
+  [data-countup] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
   /* All headings inherit the display face and brand color by default.
      --color-heading is aliased to the shadcn --heading token (see @theme
      inline below), so this flips automatically between navy in light
@@ -248,8 +286,8 @@
 /* ----------------------------------------------------------------------------
    6. Motion + effects system  [revamp]
    ----------------------------------------------------------------------------
-   The site's animation layer: scroll-reveal, animated backgrounds, gradient
-   text, hover micro-interactions, and the keyframes shared across components.
+   The site's animation layer: scroll-reveal, animated backgrounds, hover
+   micro-interactions, and the keyframes shared across components.
 
    Accessibility: every looping or scroll-triggered animation here is gated
    behind `prefers-reduced-motion: no-preference`. The global reduced-motion

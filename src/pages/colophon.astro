@@ -1,0 +1,100 @@
+---
+// Safe to edit. Every line on this page must stay TRUE: it is the studio's
+// honest account of how the site is built. If a fact changes (stack, fonts,
+// hosting, the accessibility commitment), change it here too.
+/* ============================================================================
+   /colophon | How this site is made
+   ============================================================================
+   The classic designer's "house" page: a plain, honest account of the stack,
+   the type, and the standards behind the site. It is the home for the
+   technical-craft signal (peers read the stack and nod; non-technical visitors
+   read "accessible, fast, private, photographed by Nathan" in plain language
+   and feel reassured). It deliberately reads quiet and factual, not boastful.
+
+   The "Last built" stamp is generated at build time, so it never goes stale.
+   ============================================================================ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+import { buttonVariants } from '../components/ui/button';
+
+// Build-time stamp. This is about the SITE (when it was last deployed), not
+// about any project's timing, so it is fine to show.
+const lastBuilt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date());
+
+// The honest account, as label + detail rows. Keep every claim verifiable.
+const rows = [
+  {
+    label: 'Built with',
+    body: 'Hand-coded in Astro with TypeScript, styled with Tailwind CSS, and deployed to Cloudflare. No page builder, no stock template, no lock-in.',
+  },
+  {
+    label: 'Typography',
+    body: 'Headings are set in Bebas Neue and everything else in Source Sans 3, both self-hosted so nothing loads from a third party.',
+  },
+  {
+    label: 'Accessibility',
+    body: 'Built to WCAG AA and checked automatically on every deploy to hold a 100 accessibility score. In plain terms: it works with a keyboard, with a screen reader, and in light or dark.',
+  },
+  {
+    label: 'Performance',
+    body: 'Every page is static HTML, images are optimized at build time, and the fonts ship with the site, so it stays fast on a phone and a slow connection.',
+  },
+  {
+    label: 'Photography',
+    body: 'Every photograph on the site was shot by Nathan.',
+  },
+  {
+    label: 'Privacy',
+    body: 'Privacy-friendly analytics, no advertising trackers, and nothing following you from page to page.',
+  },
+  {
+    label: 'Last built',
+    body: lastBuilt,
+  },
+];
+---
+
+<BaseLayout
+  title="Colophon | Nixon Creative Studio"
+  description="How this site is built: the tools, the type, and the accessibility and privacy standards behind it."
+>
+
+  <section class="py-2xl" aria-labelledby="colophon-heading">
+    <div class="ncs-container flex flex-col gap-l">
+
+      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
+        <h1 id="colophon-heading">Colophon</h1>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          How this site is made, and the standards behind it. Built by hand, so the same
+          care that goes into client work goes into my own.
+        </p>
+      </header>
+
+      <!-- Ruled label/detail list, matching the /about principles pattern so the
+           page reads as authored rather than scaffolded. -->
+      <dl class="mt-l flex flex-col">
+        {rows.map((row, index) => (
+          <div
+            class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
+            data-reveal
+            style={`--reveal-delay: ${index * 80}ms;`}
+          >
+            <dt class="font-mono text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">{row.label}</dt>
+            <dd class="max-w-[60ch] leading-[1.7] text-text">{row.body}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <!-- Quiet close, funnels onward like the rest of the site. -->
+      <div class="mt-l flex flex-wrap items-center gap-m border-t border-border pt-2xl" data-reveal>
+        <a href="/contact" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
+          Start a project
+        </a>
+        <a class="card-link text-lg" href="/work/">See the work</a>
+      </div>
+
+    </div>
+  </section>
+
+</BaseLayout>
