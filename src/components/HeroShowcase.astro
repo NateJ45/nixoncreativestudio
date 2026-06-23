@@ -160,47 +160,53 @@ const sites = [
     position: absolute;
   }
 
-  /* Desktop: top-LEFT of the stage and the larger of the two, with the phone now
-     riding its lower-right. Left-aligned so the phone can take the right edge
-     (which lines up with the header nav) and the cluster stays inside the content
-     width. Enlarged from 76% for more presence. */
+  /* Desktop: anchored to the BOTTOM-left of the stage and floating just above the
+     marquee strip at the hero's base, lifted by a deep soft drop shadow. The
+     taller phone rises beside it on the right. Left-aligned so the phone keeps
+     the right edge (level with the header nav) and the cluster stays inside the
+     content width. */
   .dev-desktop {
-    top: 0;
+    bottom: 0;
     left: 0;
-    width: 95%;
+    width: 90%;
     z-index: 2;
     border-radius: 0.6rem;
     overflow: hidden;
     background-color: color-mix(in oklab, var(--color-primary) 72%, #000);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: var(--shadow-frame);
+    /* Floating drop: a deep, soft shadow offset downward so the desktop reads as
+       hovering above the group below rather than sitting flat on it. */
+    box-shadow:
+      0 42px 80px -30px rgba(0, 0, 0, 0.66),
+      0 14px 34px -24px rgba(0, 0, 0, 0.5);
   }
 
-  /* Phone: the front element, deliberately prominent. It now sits on the RIGHT,
-     over the desktop's lower-right, with its right edge at the content edge
-     (level with the header nav). Far from the headline on the left, so it never
-     needs to dodge the copy. A deeper shadow lifts it in front. Enlarged from
-     34% to stay a real focal point beside the bigger desktop. */
+  /* Phone: the front element, deliberately prominent. Taller and wider than the
+     desktop, anchored near the TOP-right so it reaches up close to the headline,
+     floating in front with an even deeper drop shadow. Its right edge sits at the
+     content edge (level with the header nav); far from the headline on the left,
+     so it never needs to dodge the copy. */
   .dev-phone {
     right: 0;
-    bottom: 1%;
-    width: 39%;
+    top: 4%;
+    width: 43%;
     z-index: 5;
     border-radius: 1.7rem;
     padding: 0.5rem;
     background: #0b0e14;
     border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 50px 80px -32px rgba(0, 0, 0, 0.7);
+    box-shadow:
+      0 54px 92px -30px rgba(0, 0, 0, 0.72),
+      0 20px 46px -26px rgba(0, 0, 0, 0.55);
   }
   /* Narrow desktops (small laptops, tablet landscape): the headline wraps wider
-     and reaches further into the scene, so trim the cluster a touch (the desktop
-     now sits on the left, nearest the headline) to keep it from crowding. */
+     and reaches further into the scene, so trim the cluster a touch. */
   @media (max-width: 1279px) {
     .dev-desktop {
-      width: 88%;
+      width: 86%;
     }
     .dev-phone {
-      width: 37%;
+      width: 41%;
     }
   }
   /* Phone speaker/notch pill. */
