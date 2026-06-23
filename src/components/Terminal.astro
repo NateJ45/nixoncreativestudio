@@ -1,0 +1,165 @@
+---
+// Safe to edit (the `lines` below are the content).
+/* ============================================================================
+   Terminal  [About-page motif]
+   ============================================================================
+   A small, honest terminal window that signals "this is hand-built, not pulled
+   from a page builder" without the developer-portfolio cliche of fake scrolling
+   code. The point is HONESTY: it shows the real stack (Astro, Tailwind,
+   TypeScript, Cloudflare) and the real promises (accessible, fast, yours to
+   own), so a technical visitor reads it as genuine while the gist still lands
+   for everyone. Nothing here is invented; if a claim stops being true, change it.
+
+   The lines reveal in sequence on scroll via the shared [data-reveal] system
+   (reduced-motion safe and visible without JS), and a cursor blinks on the final
+   prompt. The whole window is decorative for assistive tech (aria-hidden); the
+   sr-only paragraph after it carries the same message in plain language.
+
+   To edit: change `title` and `lines`. A line's `type` is one of:
+     cmd  a $-prompted command (white)
+     ok   a checkmarked result line (amber check)
+     out  a plain output line (muted)
+   ============================================================================ */
+
+interface Line {
+  type: 'cmd' | 'ok' | 'out';
+  text: string;
+}
+
+const title = 'nathan@nixon-creative-studio: ~/your-project';
+
+const lines: Line[] = [
+  { type: 'cmd', text: 'whoami' },
+  { type: 'out', text: 'Nathan. Strategy, design, photography, and code, all from one person.' },
+  { type: 'cmd', text: 'npm run build' },
+  { type: 'ok',  text: 'Hand-built on Astro and Tailwind, typed in TypeScript' },
+  { type: 'ok',  text: 'Accessible and fast by default, a real 100 on accessibility' },
+  { type: 'ok',  text: 'Shipped to Cloudflare, then handed to you to own outright' },
+];
+
+// Plain-language equivalent for screen readers (the window itself is aria-hidden).
+const srSummary =
+  'How the studio builds: by hand on Astro, Tailwind, and TypeScript, deployed to ' +
+  'Cloudflare, accessible and fast, and handed to you to own outright.';
+
+// Reveal cadence: each line eases in a beat after the previous one, so it reads
+// like the session is being typed out.
+const step = 240;
+const baseDelay = 120;
+---
+
+<div class="terminal" aria-hidden="true" data-reveal="scale">
+  <div class="terminal-bar">
+    <span class="terminal-dots">
+      <span></span><span></span><span></span>
+    </span>
+    <span class="terminal-title">{title}</span>
+  </div>
+
+  <div class="terminal-body">
+    {lines.map((line, i) => (
+      <p class:list={['terminal-line', `is-${line.type}`]} data-reveal style={`--reveal-delay: ${baseDelay + i * step}ms;`}>
+        {line.type === 'cmd' && <span class="terminal-prompt">$ </span>}
+        {line.type === 'ok' && <span class="terminal-check">✓ </span>}
+        <span>{line.text}</span>
+      </p>
+    ))}
+    <p class="terminal-line is-cmd" data-reveal style={`--reveal-delay: ${baseDelay + lines.length * step}ms;`}>
+      <span class="terminal-prompt">$ </span><span class="terminal-cursor"></span>
+    </p>
+  </div>
+</div>
+
+<p class="sr-only">{srSummary}</p>
+
+<style>
+  /* Always-dark surface so it reads as a real code window on either theme. */
+  .terminal {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #0b0e14;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-frame);
+  }
+
+  /* Window chrome: traffic-light dots + a path title, matching the hero device. */
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.8rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .terminal-dots {
+    display: inline-flex;
+    gap: 0.35rem;
+    flex: none;
+  }
+  .terminal-dots span {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 9999px;
+  }
+  .terminal-dots span:nth-child(1) { background: #ff5f57; }
+  .terminal-dots span:nth-child(2) { background: #febc2e; }
+  .terminal-dots span:nth-child(3) { background: #28c840; }
+  .terminal-title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .terminal-body {
+    padding: 1rem 1.1rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.86);
+  }
+
+  .terminal-line {
+    margin: 0;
+  }
+  /* A little air before each new command so the two commands read as separate. */
+  .terminal-line.is-cmd {
+    margin-top: 0.55rem;
+    color: #ffffff;
+  }
+  .terminal-line.is-cmd:first-child {
+    margin-top: 0;
+  }
+  .terminal-line.is-out { color: rgba(255, 255, 255, 0.7); }
+  .terminal-line.is-ok  { color: rgba(255, 255, 255, 0.82); }
+
+  .terminal-prompt {
+    color: var(--color-secondary);
+    font-weight: 600;
+  }
+  .terminal-check {
+    color: var(--color-tertiary);
+  }
+
+  /* Blinking block cursor on the final prompt. Static (no blink) under reduced
+     motion; the cursor block still shows so the prompt reads as a terminal. */
+  .terminal-cursor {
+    display: inline-block;
+    width: 0.55rem;
+    height: 1.05em;
+    vertical-align: text-bottom;
+    background: var(--color-secondary);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .terminal-cursor {
+      animation: terminal-blink 1.1s steps(1, end) infinite;
+    }
+  }
+  @keyframes terminal-blink {
+    0%, 50%      { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
+  }
+</style>
