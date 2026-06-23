@@ -275,13 +275,16 @@ const schemas = [
           </nav>
         )}
 
-        {/* MDX prose. When the TOC is present the content column is wide, so the
-            TEXT blocks (h2/p/ul) are capped to a readable measure while the media
-            in the body (SiteShowcase, FeatureHighlight, images) fills the column
-            to the right, using the space that used to be a dead empty column.
-            Without a TOC the prose is simply centered at a readable width. The
-            arbitrary descendant selectors style the MDX output without the
-            typography plugin and without leaking to the rest of the site. */}
+        {/* MDX prose. When the TOC is present the content column is wide. The
+            TEXT blocks (h2/p/ul/...) are capped to a readable measure AND
+            centered (mx-auto) so they share one center axis with the full-width
+            media (SiteShowcase, FeatureHighlight, images). That turns the old
+            one-sided "empty column to the right" into balanced breathing room on
+            both sides, with media still stretching the full width. Every text
+            block uses the SAME max-width so their left edges line up. Without a
+            TOC the prose is simply centered at a readable width. The arbitrary
+            descendant selectors style the MDX output without the typography
+            plugin and without leaking to the rest of the site. */}
         <div
           data-prose
           class:list={[
@@ -290,7 +293,9 @@ const schemas = [
             '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
             '[&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
             '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
-            hasToc ? '[&_h2]:max-w-[58ch] [&_p]:max-w-[70ch] [&_ul]:max-w-[70ch]' : '',
+            hasToc
+              ? '[&_p]:mx-auto [&_p]:max-w-[70ch] [&_h2]:mx-auto [&_h2]:max-w-[70ch] [&_h3]:mx-auto [&_h3]:max-w-[70ch] [&_ul]:mx-auto [&_ul]:max-w-[70ch] [&_ol]:mx-auto [&_ol]:max-w-[70ch] [&_blockquote]:mx-auto [&_blockquote]:max-w-[70ch]'
+              : '',
           ]}
         >
           <Content />
