@@ -57,6 +57,19 @@ const shotFor = (id: string): ImageMetadata | null => {
   return match ? match[1].default : null;
 };
 
+// Mobile site captures ({slug}-mobile.png, the same ones the hero showcase
+// phone uses). On hover a small phone fades in at the card's bottom-right and
+// scrolls the mobile view in step with the desktop, so the card reads as a
+// responsive build. Skipped gracefully for any slug without a mobile capture.
+const mobileShotModules = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/case-studies/shots/*-mobile.png',
+  { eager: true },
+);
+const mobileShotFor = (id: string): ImageMetadata | null => {
+  const match = Object.entries(mobileShotModules).find(([path]) => path.endsWith(`/${id}-mobile.png`));
+  return match ? match[1].default : null;
+};
+
 // Pretty sector label for the meta row: kebab-case → Title Case.
 const sectorLabel = (sector: string) =>
   sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -116,6 +129,20 @@ const [primary, ...secondaries] = featured;
                 class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
                 loading="lazy"
               />
+              {mobileShotFor(primary.id) && (
+                <div class="work-phone" aria-hidden="true">
+                  <div class="work-phone-screen">
+                    <Image
+                      src={mobileShotFor(primary.id)!}
+                      alt=""
+                      widths={[180, 340]}
+                      sizes="200px"
+                      class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div class="relative z-10" transition:name={`cover-${primary.id}`}>
@@ -172,6 +199,20 @@ const [primary, ...secondaries] = featured;
                   class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
                   loading="lazy"
                 />
+                {mobileShotFor(entry.id) && (
+                  <div class="work-phone" aria-hidden="true">
+                    <div class="work-phone-screen">
+                      <Image
+                        src={mobileShotFor(entry.id)!}
+                        alt=""
+                        widths={[160, 300]}
+                        sizes="170px"
+                        class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div class="relative z-10" transition:name={`cover-${entry.id}`}>
@@ -243,9 +284,48 @@ const [primary, ...secondaries] = featured;
     will-change: transform;
   }
 
+  /* A small phone that fades in at the card's bottom-right on hover and scrolls
+     the mobile capture in step with the desktop, so the card reads as a
+     responsive build. The phone's dark bg shows through the screen inset as the
+     bezel. Padded off the corner (right/bottom %). */
+  .work-phone {
+    position: absolute;
+    right: 5%;
+    bottom: 6%;
+    z-index: 2;
+    width: 21%;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 0.7rem;
+    background: #0b0e14;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.75);
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+  }
+  .work-phone-screen {
+    position: absolute;
+    inset: 0.28rem;
+    overflow: hidden;
+    border-radius: 0.45rem;
+    background: #ffffff;
+  }
+  .work-phone-scroll {
+    transition: transform 0.8s ease;
+    will-change: transform;
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     .work-card:hover .work-scroll {
       transform: translateY(-62%);
+      transition: transform 7s ease-out;
+    }
+    .work-card:hover .work-phone {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .work-card:hover .work-phone-scroll {
+      transform: translateY(-58%);
       transition: transform 7s ease-out;
     }
   }
@@ -269,5 +349,7 @@ const [primary, ...secondaries] = featured;
       transform: none;
       transition: none;
     }
+    /* The hover phone is a motion flourish; keep it out under reduced motion. */
+    .work-phone { display: none; }
   }
 </style>
