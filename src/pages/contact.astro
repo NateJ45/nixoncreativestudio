@@ -511,6 +511,33 @@ const inputClass =
       }
 
       restoreDraft();
+
+      // Context-aware preselect. A case study's closing CTA links here as
+      // /contact?org_type=<sector>, so a visitor arriving from a church study
+      // lands with "Church" already chosen. Only applied when the field is still
+      // empty, so it never overrides a restored draft; the param is then stripped
+      // from the URL so a refresh doesn't re-apply it. Convenience only: the form
+      // works identically without it.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const wanted = params.get('org_type');
+        if (wanted) {
+          const orgSelect = form.elements.namedItem('org_type') as HTMLSelectElement | null;
+          if (orgSelect && !orgSelect.value &&
+              Array.from(orgSelect.options).some((o) => o.value === wanted)) {
+            orgSelect.value = wanted;
+            scheduleSave();
+          }
+          params.delete('org_type');
+          const qs = params.toString();
+          window.history.replaceState(
+            null, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
+          );
+        }
+      } catch {
+        /* URL / select access guarded; the preselect is never required */
+      }
+
       form.addEventListener('input',  scheduleSave);
       form.addEventListener('change', scheduleSave);
 

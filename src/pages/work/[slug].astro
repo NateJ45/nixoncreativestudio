@@ -59,6 +59,23 @@ const { title, client, sector, services, summary, cover, role, tags, published, 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
+// Sector-aware copy for the closing CTA, plus a deep link that preselects the
+// matching Organization type on the contact form (/contact?org_type=<sector>).
+// So a visitor finishing a church study sees "your church" and lands on the form
+// with "Church" already chosen. Keyed by the schema's four sectors.
+const sectorCopy: Record<string, { phrase: string; plural: string }> = {
+  'church':         { phrase: 'church',              plural: 'churches' },
+  'preschool':      { phrase: 'preschool or school', plural: 'preschools and schools' },
+  'nonprofit':      { phrase: 'nonprofit',           plural: 'nonprofits' },
+  'small-business': { phrase: 'small business',      plural: 'small businesses' },
+};
+const sc = sectorCopy[sector];
+const ctaTitle = sc ? `Planning something for your ${sc.phrase}?` : undefined;
+const ctaSub = sc
+  ? `I work with ${sc.plural} like this one all the time. The earlier we talk, the better we can pace it together.`
+  : undefined;
+const ctaHref = sc ? `/contact?org_type=${sector}` : undefined;
+
 // Reading time from the raw MDX body. ~200 wpm rounded up. Renders next
 // to the meta row so visitors know how long the case study is before
 // committing to scroll.
@@ -373,6 +390,6 @@ const schemas = [
 
   </article>
 
-  <CtaBanner />
+  <CtaBanner title={ctaTitle} sub={ctaSub} ctaHref={ctaHref} />
 
 </BaseLayout>
