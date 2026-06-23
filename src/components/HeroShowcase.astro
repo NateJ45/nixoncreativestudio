@@ -17,8 +17,8 @@
        bar in the desktop chrome updates to the new host.
      - The next site is preloaded one step ahead, so a crossfade never lands on
        a blank, and only the sites you have seen have been downloaded.
-     - Hovering (fine pointer) pauses the cycle and the scroll so you can look;
-       it also pauses while the browser tab is hidden.
+     - The cycle and scroll run continuously and never pause on hover; they
+       pause only while the browser tab is hidden (a battery/perf courtesy).
 
    Performance: inactive screenshots are display:none until the script promotes
    them, so the browser only downloads the first site on load and then ~one site
@@ -29,10 +29,9 @@
    Reduced motion / no-JS: the first site stays shown on both devices as a still,
    honest two-device collage (no cycle, no scroll).
 
-   Decorative by design: the whole cluster is aria-hidden and out of the tab
-   order. The real navigation is the "See the work" CTA beside it and the
-   Selected Work section below, so the /work link here is a mouse-only bonus, not
-   an accessibility trap.
+   Decorative by design: the whole cluster is aria-hidden and not interactive
+   (a plain <div>, not a link, with no hover state). The real navigation is the
+   "See the work" CTA beside it and the Selected Work section below.
 
    To curate: edit the `sites` array. Each needs a `-home.png` (desktop, captured
    at 1440 wide, full page) and a `-mobile.png` (phone, captured ~390 wide, full
@@ -71,11 +70,9 @@ const sites = [
 ];
 ---
 
-<a
+<div
   class="hero-stage"
-  href="/work/"
   aria-hidden="true"
-  tabindex="-1"
   data-hero-showcase
   data-count={sites.length}
 >
@@ -128,7 +125,7 @@ const sites = [
     </div>
   </div>
 
-</a>
+</div>
 
 <style>
   /* The stage fills the hero scene (Hero.astro holds it to the content width,
@@ -336,11 +333,6 @@ const sites = [
     .shot.is-active:not(.is-entering) .shot-img {
       animation: hero-pan 9s linear both;
     }
-    /* Hover (or tab hidden) pauses the scroll and any in-flight slide. */
-    .hero-stage.is-paused .shot.is-active:not(.is-entering) .shot-img,
-    .hero-stage.is-paused .shot.is-entering {
-      animation-play-state: paused;
-    }
   }
 
   @keyframes hero-pan {
@@ -354,15 +346,6 @@ const sites = [
     }
   }
 
-  /* Lift the cluster slightly on hover so it invites a look. */
-  @media (hover: hover) and (pointer: fine) {
-    .hero-stage {
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .hero-stage:hover {
-      transform: translateY(-4px);
-    }
-  }
 
 </style>
 
@@ -397,7 +380,6 @@ const sites = [
 
         let timer: ReturnType<typeof setInterval> | undefined;
         let cleanup: ReturnType<typeof setTimeout> | undefined;
-        let paused = false;
         const SLIDE_MS = 620;
 
         const tick = () => {
@@ -447,7 +429,7 @@ const sites = [
           }, SLIDE_MS);
         };
         const start = () => {
-          if (!timer && !paused) timer = setInterval(tick, 5000);
+          if (!timer) timer = setInterval(tick, 5000);
         };
         const stop = () => {
           if (timer) {
@@ -457,20 +439,9 @@ const sites = [
         };
         start();
 
-        // Pause on hover (fine pointers only) so an explored shot holds still.
-        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-          root.addEventListener('pointerenter', () => {
-            paused = true;
-            root.classList.add('is-paused');
-            stop();
-          });
-          root.addEventListener('pointerleave', () => {
-            paused = false;
-            root.classList.remove('is-paused');
-            if (!document.hidden) start();
-          });
-        }
-
+        // The cycle runs indefinitely with no hover pause (the showcase is
+        // decorative and just scrolls). Only pause while the tab is hidden, a
+        // battery/perf courtesy the visitor never sees.
         document.addEventListener('visibilitychange', () =>
           document.hidden ? stop() : start(),
         );
