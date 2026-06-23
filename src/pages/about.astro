@@ -1,24 +1,32 @@
 ---
-// Safe to edit. The story prose, the principles array, the facts array, and
-// the currently list hold all of the user-facing copy on this page.
+// Safe to edit. The story prose, the principles array, and the Currently arrays
+// hold all of the user-facing copy on this page.
 /* ============================================================================
-   /about | About Nathan Nixon  [revamp]
+   /about | About Nathan Nixon  [editorial-grid revamp]
    ============================================================================
-   Five blocks down the page:
-     1. Hero (framed portrait placeholder + intro, gradient-accent headline)
-     2. Facts (honest, verifiable count-up trio: 1 person, 4 sectors, region)
-     3. Story (a few paragraphs on the why)
-     4. How I work (three principle spotlight-cards on the soft tinted band)
-     5. Currently (short list of what's on the docket)
+   One page-wide editorial grid, reused by every section, so the whole page
+   reads as a single ruled document with ONE dead-straight left axis:
 
-   Closes with the shared CtaBanner so every page funnels to /contact.
+     [ 13rem marker rail ] [ content track ]
 
-   Motion vocabulary used here (all reduced-motion safe by the global system):
-     - data-reveal + --reveal-delay stagger on every section and its items
-     - spotlight-card + data-spotlight on the three principle cards
-     - solid text-link accent phrase on the headline (no gradient text)
-     - data-countup on the three honest facts
-     - bg-aurora behind the portrait frame for a drifting brand glow
+   - The LEFT rail is a quiet mono WORD label (ABOUT / IN SHORT / STORY /
+     PRACTICE / NOW) plus a little real meta where it helps (the location stamp,
+     the Currently freshness + last-updated). The labels are decorative
+     (aria-hidden), never headings, so the heading tree stays clean. Below lg the
+     rail collapses and its label sits as a small kicker above each heading.
+   - The RIGHT track holds every heading and all real content on one left edge.
+     Running prose is capped to a readable measure; the h1, the thesis quote, the
+     Terminal, and the principle bodies break out to the full track width, so no
+     row leaves a lonely text ribbon in a wide field and nothing is centered.
+
+   Section rhythm is one token (py) plus a single border-t hairline opening every
+   section after the masthead, so the page is one continuous ruled column instead
+   of a stack of slabs. The page is ONE surface in both themes: no full-bleed
+   background bands mid-page (the old bg-mesh-soft seam is gone). The only surface
+   change is the single Currently .surface-card and the closing CtaBanner.
+
+   Motion: the existing data-reveal / spotlight vocabulary only, reduced-motion
+   safe. No scroll-spy, no sticky positioning, no new JS.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -80,12 +88,11 @@ const booking = [
   { status: 'limited' as const, label: 'Photography', detail: 'A few shoot days left in July and August around existing work.' },
 ];
 const statusMeta = {
-  // Chip text sits on a white (bg-bg) pill, so it must clear AA on white. The
-  // brand amber (--tertiary) only passes on the navy heroes, not on white, so
-  // the limited chip uses amber-700 (light) / amber-400 (dark), mirroring the
-  // emerald pattern. The dot + ring stay brand amber: they are decorative.
-  open:    { word: 'Open',    dot: 'bg-emerald-500', ring: 'ring-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400' },
-  limited: { word: 'Limited', dot: 'bg-tertiary',    ring: 'ring-tertiary/40',    text: 'text-amber-700 dark:text-amber-400' },
+  // Status text must clear AA on the now-sheet surface. The brand amber
+  // (--tertiary) only passes on the navy heroes, not on light, so "limited" uses
+  // amber-700 / amber-400, mirroring the emerald pattern. The dot stays brand.
+  open:    { word: 'Open',    dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-400' },
+  limited: { word: 'Limited', dot: 'bg-tertiary',    text: 'text-amber-700 dark:text-amber-400' },
 };
 
 // Books / longer-form pieces, and skills I'm sharpening.
@@ -100,14 +107,14 @@ const learning = [
   'Faster turnarounds on photo culling and edits',
 ];
 
-// Shared section-header layout. No mono "eyebrow" number scaffold: the
-// heading carries its own weight, and a short sub line does the framing
-// work an eyebrow would otherwise fake.
-const sectionInnerClass = 'flex flex-col gap-l';
+// Reused layout tokens. railGrid is the page's one asymmetric grid; railLabel is
+// the quiet mono word-label in the left rail.
+const railGrid =
+  'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
+const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 
-// JSON-LD schemas specific to the About page: Person for the studio
-// owner, linked back to the Organization defined site-wide. Powers
-// Google's "About this page" panel and knowledge graph entries.
+// JSON-LD schemas specific to the About page: Person for the studio owner,
+// linked back to the Organization defined site-wide.
 const schemas = [
   {
     '@context':     'https://schema.org',
@@ -131,272 +138,285 @@ const schemas = [
   schemas={schemas}
 >
 
-  <!-- ----------------------------------------------------------------------
-       Hero: framed portrait + copy two-column at >= 56rem, stacked below.
-       The portrait is still a placeholder until the real headshot lands in
-       src/assets/brand/, but it is now a designed frame: an aurora glow
-       drifts behind a tilted gradient panel, and an accent shape peeks out
-       behind the corner so the empty block reads as intentional craft
-       rather than a missing image. Swap the inner panel for an Astro
-       <Image /> once the headshot exists, and keep the frame wrapper.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="about-hero-heading"><!-- h1 id below carries the label -->
-    <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-[1fr_1.2fr]">
+  <!-- ====================================================================
+       Masthead (ABOUT). The page head: who Nathan is, paired with the
+       portrait placeholder. Establishes the rail + track spine on the first
+       screen. No top hairline (it opens the page).
+       ==================================================================== -->
+  <section class="pt-2xl pb-2xl" aria-labelledby="about-hero-heading">
+    <div class="ncs-container">
+      <div class={railGrid}>
 
-      <!-- Portrait frame. position-relative so the accent shape can sit
-           behind one corner; isolate + overflow-visible let the glow bleed
-           a little past the panel edge for depth. -->
-      <div class="relative isolate" data-reveal="scale">
-        <!-- Amber accent shape behind the lower-right corner. Decorative,
-             so it is hidden from assistive tech. -->
-        <div
-          class="absolute -bottom-4 -right-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
-          aria-hidden="true"
-        ></div>
+        <!-- Rail: decorative word-label + a quiet location stamp. -->
+        <div class="flex flex-col gap-2" aria-hidden="true">
+          <p class={railLabel}>About</p>
+          <p class="font-mono text-[0.8rem] text-text-muted">West Chester, OH</p>
+        </div>
 
-        <!-- The framed panel. bg-aurora paints the drifting brand mesh; the
-             role/aria-label keep it announced as the portrait placeholder.
-             A subtle border + ring make the empty panel feel like a real
-             framed photo waiting to be dropped in. -->
-        <div
-          class="band-themed aspect-[4/5] w-full rounded-xl border border-border shadow-lg ring-1 ring-black/5"
-          role="img"
-          aria-label="Portrait of Nathan Nixon, coming soon"
-        >
-          <!-- Quiet caption so the placeholder reads as deliberate. Sits
-               above the aurora (z-10) and is decorative for screen readers
-               since the panel already carries the aria-label. -->
-          <div
-            class="relative z-10 flex h-full w-full items-end p-m"
-            aria-hidden="true"
-          >
-            <span class="font-mono text-sm tracking-[0.05em] text-text-muted">
-              Portrait coming soon
-            </span>
+        <!-- Track: oversized h1 breakout, then intro | portrait split. -->
+        <div class="min-w-0">
+          <h1 id="about-hero-heading" class="max-w-[20ch] leading-[0.95]" data-reveal>
+            A one-person studio for <span class="text-link">organizations that take their work seriously.</span>
+          </h1>
+
+          <div class="mt-l grid items-start gap-xl min-[52rem]:grid-cols-[1.4fr_1fr]">
+            <p
+              class="max-w-[58ch] text-lg leading-[1.6] text-text"
+              data-reveal="right"
+              style="--reveal-delay: 120ms;"
+            >
+              I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools, around Cincinnati in person and anywhere for web work. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
+            </p>
+
+            <!-- Portrait placeholder. A deliberate framed object until the real
+                 4:5 headshot lands in src/assets/brand/ (then swap the inner panel
+                 for an Astro <Image /> and keep this frame). -->
+            <div class="relative isolate w-full max-w-[18rem]" data-reveal="scale" style="--reveal-delay: 120ms;">
+              <div class="absolute -bottom-4 -right-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl" aria-hidden="true"></div>
+              <div
+                class="band-themed aspect-[4/5] w-full rounded-xl border border-border shadow-lg ring-1 ring-black/5"
+                role="img"
+                aria-label="Portrait of Nathan Nixon, coming soon"
+              >
+                <div class="relative z-10 flex h-full w-full items-end p-m" aria-hidden="true">
+                  <span class="font-mono text-sm tracking-[0.05em] text-text-muted">Portrait coming soon</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="flex flex-col gap-m" data-reveal="right" style="--reveal-delay: 120ms;">
-        <h1 id="about-hero-heading" class="max-w-[22ch] leading-[0.95]">
-          A one-person studio for <span class="text-link">organizations that take their work seriously.</span>
-        </h1>
-        <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
-          I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools, around Cincinnati in person and anywhere for web work. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
-        </p>
       </div>
-
     </div>
   </section>
 
 
-  <!-- ----------------------------------------------------------------------
-       At a glance. One honest, specific statement instead of a KPI-style
-       stat triplet (the old "1 / 4 / 1 region" trio was the hero-metric tell
-       with two non-metric "1"s). No background band here on purpose: this page
-       is a continuous surface (navy in dark mode), and the old bg-mesh-soft glow
-       put a hard-edged band right at the section seam with the statement jammed
-       against it. The line now flows on the page surface, a quiet beat carried by
-       its centered, oversized type, with symmetric padding so it breathes.
-       ---------------------------------------------------------------------- -->
-  <section class="pb-2xl" aria-label="Studio at a glance">
+  <!-- ====================================================================
+       Thesis (IN SHORT). The studio's one-line thesis, promoted from a stray
+       centered sentence to a left-aligned breakout pull-quote on the shared
+       axis. This is the only home for this line.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-label="In short">
     <div class="ncs-container">
-      <p
-        class="mx-auto max-w-[46ch] text-center text-h4 leading-[1.3] text-heading"
-        data-reveal
-      >
-        One person on every project, start to finish: strategy, design, photography, and code.
-        I work with <span class="text-link">churches, schools, nonprofits, and small businesses</span>
-        around Cincinnati in person, and anywhere for web work.
-      </p>
-    </div>
-  </section>
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
 
+        <div class="flex flex-col gap-3" aria-hidden="true">
+          <p class={railLabel}>In short</p>
+          <span class="h-px w-12 bg-tertiary"></span>
+        </div>
 
-  <!-- ----------------------------------------------------------------------
-       Story: a few paragraphs of background. Keeps the page personal
-       without turning into a full biography.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="about-story-heading">
-    <div class={`ncs-container ${sectionInnerClass}`}>
+        <p
+          class="max-w-[52ch] text-h4 leading-[1.3] text-heading"
+          data-reveal="blur"
+        >
+          One person on every project, start to finish: strategy, design, photography, and code.
+          I work with <span class="text-link">churches, schools, nonprofits, and small businesses</span>
+          around Cincinnati in person, and anywhere for web work.
+        </p>
 
-      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="about-story-heading">The short version</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          Why a one-person studio, and why plain code under the hood.
-        </p>
-      </header>
-
-      <div class="flex max-w-[64ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text" data-reveal style="--reveal-delay: 120ms;">
-        <p>
-          I started Nixon Creative Studio after a decade of doing communications work for churches and schools, where the people building the website were always one volunteer or one budget cycle away from disappearing. The pattern was the same every time: the launch went well, then the one person who knew how to update the site moved on, and within a year nobody could touch it without starting over.
-        </p>
-        <p>
-          The studio is my answer to that pattern. I choose the platform that fits the client and the people who will maintain it, then build it cleanly enough that the next person can follow it. The same person on every project so there's no agency handoff at the worst moment. Strategy first so the design is doing real work instead of just looking new.
-        </p>
-        <p>
-          I live in West Chester with my family. When I'm not at a screen I'm usually behind a camera, on a basketball court, or pretending I know how to fix something at the house.
-        </p>
       </div>
+    </div>
+  </section>
 
-      <!-- "Plain code under the hood," shown rather than just told: a small,
-           honest terminal of the real stack and build. Decorative for assistive
-           tech (it carries its own sr-only summary). -->
-      <div class="w-full max-w-[42rem]">
-        <Terminal />
+
+  <!-- ====================================================================
+       Story + Terminal (STORY). The why behind a one-person studio, with
+       "plain code under the hood" SHOWN via the Terminal as a wide figure
+       beside the prose.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="about-story-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
+
+        <p class={railLabel} aria-hidden="true">Story</p>
+
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="about-story-heading">The short version</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              Why a one-person studio, and why plain code under the hood.
+            </p>
+          </header>
+
+          <div class="mt-l grid items-start gap-xl lg:grid-cols-2">
+            <div class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text" data-reveal style="--reveal-delay: 120ms;">
+              <p>
+                I started Nixon Creative Studio after a decade of doing communications work for churches and schools, where the people building the website were always one volunteer or one budget cycle away from disappearing. The pattern was the same every time: the launch went well, then the one person who knew how to update the site moved on, and within a year nobody could touch it without starting over.
+              </p>
+              <p>
+                The studio is my answer to that pattern. I choose the platform that fits the client and the people who will maintain it, then build it cleanly enough that the next person can follow it. The same person on every project so there's no agency handoff at the worst moment. Strategy first so the design is doing real work instead of just looking new.
+              </p>
+              <p>
+                I live in West Chester with my family. When I'm not at a screen I'm usually behind a camera, on a basketball court, or pretending I know how to fix something at the house.
+              </p>
+            </div>
+
+            <!-- "Plain code under the hood," shown rather than told. Decorative
+                 for assistive tech (it carries its own sr-only summary). -->
+            <div class="w-full" data-reveal="scale" style="--reveal-delay: 200ms;">
+              <Terminal />
+            </div>
+          </div>
+        </div>
+
       </div>
-
     </div>
   </section>
 
 
-  <!-- ----------------------------------------------------------------------
-       How I work: three principle spotlight-cards on the soft tinted band.
-       Each card is an elevated surface (bg-bg + border + rounded) that
-       lifts on hover and shows a cursor-following NCS-blue glow. The card
-       content sits in a relative z-10 layer so it stays above the glow.
-       Sits between the white Story and the white Currently sections.
-       ---------------------------------------------------------------------- -->
-  <section class="bg-bg-soft py-2xl" aria-labelledby="about-how-heading">
-    <div class={`ncs-container ${sectionInnerClass}`}>
+  <!-- ====================================================================
+       How I work (PRACTICE). Three principles as an authored manifesto: a
+       hairline-ruled list (not a card grid), the body running to the track
+       edge so text finally reaches the right margin. No section background.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="about-how-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
 
-      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="about-how-heading">How I work</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          Three principles that hold across every project, big or small.
-        </p>
-      </header>
+        <p class={railLabel} aria-hidden="true">Practice</p>
 
-      <!-- Editorial ruled list, not a card grid. These are a short manifesto,
-           not parallel feature tiles, so each principle is a hairline-separated
-           row with the title and body in two columns at md. Reads as authored
-           rather than scaffolded, and drops the spotlight-on-every-tile. -->
-      <ul class="mt-l flex flex-col">
-        {principles.map((principle, index) => (
-          <li
-            class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-            data-reveal
-            style={`--reveal-delay: ${index * 100}ms;`}
-          >
-            <h3 class="text-h4 text-heading">{principle.title}</h3>
-            <p class="max-w-[60ch] leading-[1.7] text-text">{principle.body}</p>
-          </li>
-        ))}
-      </ul>
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="about-how-heading">How I work</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              Three principles that hold across every project, big or small.
+            </p>
+          </header>
 
-    </div>
-  </section>
-
-
-  <!-- ----------------------------------------------------------------------
-       Currently: short list of what's on the docket. Updated by hand a
-       few times a year so visitors can tell the studio is an active
-       practice, not a placeholder page. Each item reveals on scroll with a
-       small stagger and carries an amber marker instead of a default bullet
-       so the list feels alive without leaning on color alone (the marker is
-       a real shape, and the text remains the primary cue).
-       ---------------------------------------------------------------------- -->
-  <!-- Currently: the present-tense studio snapshot, merged in from the old
-       standalone /now page. Freshness pill + working-on timeline + booking
-       chips + reading/learning + a "last updated" stamp. id="now" so the old
-       footer link (and any /now bookmarks via the redirect) land here. -->
-  <section id="now" class="scroll-mt-2xl py-2xl" aria-labelledby="about-currently-heading">
-    <div class={`ncs-container ${sectionInnerClass}`}>
-
-      <header class="flex max-w-[60ch] flex-col gap-m" data-reveal>
-        <!-- Freshness pill: a live pulsing dot + relative-freshness label. The
-             dot is decorative; the label text carries the meaning. -->
-        <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-4 py-1.5 text-sm font-medium text-text">
-          <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
-            <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
-            <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-          </span>
-          <span>{freshness}</span>
-        </p>
-        <h2 id="about-currently-heading">Currently</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          A present-tense snapshot of the studio: current work, what I'm reading, and what I'm trying to get sharper on. Rewritten every couple of months.
-        </p>
-      </header>
-
-      <!-- Working on: a connected vertical timeline, most front-of-mind first. -->
-      <section class="flex flex-col gap-l" aria-labelledby="now-working">
-        <h3 id="now-working" class="text-h4 text-heading" data-reveal>Working on</h3>
-        <ol class="now-timeline relative m-0 list-none p-0">
-          {workingOn.map((item, index) => (
-            <li class="now-timeline-item relative pb-l pl-10 last:pb-0" data-reveal="left" style={`--reveal-delay: ${index * 110}ms;`}>
-              <p class="leading-[1.6] text-text">{item}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <!-- Booking: availability chips. Status word + dot + detail, never color
-           alone. -->
-      <section class="flex flex-col gap-l" aria-labelledby="now-booking">
-        <h3 id="now-booking" class="text-h4 text-heading" data-reveal>Booking</h3>
-        <ul class="grid list-none gap-m p-0 sm:grid-cols-2">
-          {booking.map((slot, index) => {
-            const meta = statusMeta[slot.status];
-            return (
-              <li class="spotlight-card hover-lift relative overflow-hidden rounded-xl border border-border bg-bg-soft p-l" data-spotlight data-reveal="scale" style={`--reveal-delay: ${index * 110}ms;`}>
-                <div class="relative z-10 flex flex-col gap-s">
-                  <span class:list={['inline-flex w-fit items-center gap-s rounded-full bg-bg px-3 py-1 text-xs font-semibold uppercase tracking-[0.06em] ring-1', meta.ring, meta.text]}>
-                    <span class:list={['h-2 w-2 rounded-full', meta.dot]} aria-hidden="true"></span>
-                    {meta.word}
-                  </span>
-                  <span class="text-h5 font-display text-heading">{slot.label}</span>
-                  <p class="leading-[1.55] text-text">{slot.detail}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <!-- Reading + Learning: two scroll-revealed card columns. -->
-      <div class="grid grid-cols-1 gap-2xl md:grid-cols-2">
-        <section class="flex flex-col gap-l" aria-labelledby="now-reading">
-          <h3 id="now-reading" class="text-h4 text-heading" data-reveal>Reading</h3>
-          <ul class="flex list-none flex-col gap-s p-0">
-            {reading.map((book, index) => (
-              <li class="spotlight-card hover-lift relative overflow-hidden rounded-xl border border-border bg-bg-soft p-m" data-spotlight data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
-                <div class="relative z-10 flex flex-col gap-1">
-                  <span class="font-display text-h5 leading-tight text-heading">
-                    {book.title}
-                    {book.note && (<span class="ml-2 align-middle text-xs font-medium uppercase tracking-[0.06em] text-link">({book.note})</span>)}
-                  </span>
-                  <span class="text-sm text-text-muted">{book.author}</span>
-                </div>
+          <ul class="mt-l flex flex-col">
+            {principles.map((principle, index) => (
+              <li
+                class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
+                data-reveal
+                style={`--reveal-delay: ${index * 100}ms;`}
+              >
+                <h3 class="text-h4 text-heading">{principle.title}</h3>
+                <p class="leading-[1.7] text-text">{principle.body}</p>
               </li>
             ))}
           </ul>
-        </section>
+        </div>
 
-        <section class="flex flex-col gap-l" aria-labelledby="now-learning">
-          <h3 id="now-learning" class="text-h4 text-heading" data-reveal>Learning</h3>
-          <ul class="flex list-none flex-col gap-s p-0">
-            {learning.map((item, index) => (
-              <li class="spotlight-card hover-lift relative overflow-hidden rounded-xl border border-border bg-bg-soft p-m" data-spotlight data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
-                <p class="relative z-10 leading-[1.55] text-text">{item}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
       </div>
+    </div>
+  </section>
 
-      <p class="font-mono text-[0.85rem] italic text-text-muted" data-reveal="fade">
-        Last updated {lastUpdatedLabel}.
-      </p>
 
+  <!-- ====================================================================
+       Currently (NOW). The present-tense snapshot, calmed from four loose
+       carded sub-sections into one dated now-sheet. The freshness pill +
+       last-updated stamp move into the rail; the body is a single
+       .surface-card ledger (the only inset card on the page). id="now" +
+       scroll-mt so the /now redirect and footer link still land here.
+       ==================================================================== -->
+  <section id="now" class="scroll-mt-2xl pb-2xl" aria-labelledby="about-currently-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
+
+        <!-- Rail: word-label (decorative) + the real freshness meta. -->
+        <div class="flex flex-col gap-s">
+          <p class={railLabel} aria-hidden="true">Now</p>
+          <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text">
+            <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+              <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
+              <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            </span>
+            <span>{freshness}</span>
+          </p>
+          <p class="font-mono text-[0.8rem] italic text-text-muted">Last updated {lastUpdatedLabel}.</p>
+        </div>
+
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="about-currently-heading">Currently</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              A present-tense snapshot of the studio: current work, what I'm reading, and what I'm trying to get sharper on. Rewritten every couple of months.
+            </p>
+          </header>
+
+          <!-- One now-sheet: the page's single inset card. Two-column ledger at
+               md; stacks to one column below. -->
+          <div class="surface-card mt-l rounded-xl p-l md:p-xl" data-reveal style="--reveal-delay: 120ms;">
+            <div class="grid gap-xl md:grid-cols-2 md:gap-2xl">
+
+              <!-- Left: Working on, then Booking. -->
+              <div class="flex flex-col gap-l">
+                <section aria-labelledby="now-working">
+                  <h3 id="now-working" class="text-h5 text-heading">Working on</h3>
+                  <ul class="mt-s flex flex-col">
+                    {workingOn.map((item, index) => (
+                      <li class="flex items-start gap-s border-t border-border py-s" data-reveal="left" style={`--reveal-delay: ${index * 90}ms;`}>
+                        <span class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary" aria-hidden="true"></span>
+                        <span class="leading-[1.55] text-text">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section aria-labelledby="now-booking">
+                  <h3 id="now-booking" class="text-h5 text-heading">Booking</h3>
+                  <ul class="mt-s flex flex-col">
+                    {booking.map((slot, index) => {
+                      const meta = statusMeta[slot.status];
+                      return (
+                        <li class="border-t border-border py-s" data-reveal style={`--reveal-delay: ${index * 90}ms;`}>
+                          <span class:list={['inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em]', meta.text]}>
+                            <span class:list={['h-2 w-2 rounded-full', meta.dot]} aria-hidden="true"></span>
+                            {meta.word}
+                          </span>
+                          <span class="ml-2 align-middle font-display text-h5 text-heading">{slot.label}</span>
+                          <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              </div>
+
+              <!-- Right: Reading, then Learning. -->
+              <div class="flex flex-col gap-l">
+                <section aria-labelledby="now-reading">
+                  <h3 id="now-reading" class="text-h5 text-heading">Reading</h3>
+                  <ul class="mt-s flex flex-col">
+                    {reading.map((book, index) => (
+                      <li class="border-t border-border py-s" data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
+                        <span class="font-display text-h5 leading-tight text-heading">
+                          {book.title}
+                          {book.note && (<span class="ml-2 align-middle text-xs font-medium uppercase tracking-[0.06em] text-link">({book.note})</span>)}
+                        </span>
+                        <span class="block text-sm text-text-muted">{book.author}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section aria-labelledby="now-learning">
+                  <h3 id="now-learning" class="text-h5 text-heading">Learning</h3>
+                  <ul class="mt-s flex flex-col">
+                    {learning.map((item, index) => (
+                      <li class="border-t border-border py-s leading-[1.55] text-text" data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </section>
 
 
   <!-- Client testimonials. Renders only when a case study carries a real
-       `testimonial` in its frontmatter; otherwise this is silent. -->
+       `testimonial` in its frontmatter; otherwise this is silent (no empty
+       block, no fabricated quote). -->
   <Testimonials />
 
+  <!-- Closing CTA: the one deliberate full-bleed break, outside the grid. -->
   <CtaBanner
     title="Want to talk about a project?"
     sub="I take on a small number of projects each quarter. The earlier we talk, the easier it is to schedule the work."
@@ -405,43 +425,9 @@ const schemas = [
 </BaseLayout>
 
 <style>
-  /* Vertical timeline rail for "Working on" (merged from the old /now page). A
-     single gradient line runs behind the nodes and fades out at the bottom so
-     the last item reads as the end of the feed. */
-  .now-timeline::before {
-    content: "";
-    position: absolute;
-    top: 0.4rem;
-    bottom: 1.5rem;
-    left: 0.3125rem;
-    width: 2px;
-    background: linear-gradient(
-      to bottom,
-      var(--color-accent),
-      color-mix(in oklab, var(--color-accent) 15%, transparent)
-    );
-  }
-  /* Each node: a ringed dot on the rail; the ring matches the page bg so it
-     reads as a bead on the line. */
-  .now-timeline-item::before {
-    content: "";
-    position: absolute;
-    top: 0.35rem;
-    left: 0;
-    height: 0.625rem;
-    width: 0.625rem;
-    border-radius: 9999px;
-    background: var(--color-accent);
-    box-shadow: 0 0 0 4px var(--color-bg);
-  }
-  .now-timeline-item:first-child::before {
-    box-shadow:
-      0 0 0 4px var(--color-bg),
-      0 0 0 8px color-mix(in oklab, var(--color-accent) 25%, transparent);
-  }
-
-  /* Freshness-pill pulse: an expanding, fading ring behind the solid dot. The
-     label text carries the meaning, so this is reinforcement only. */
+  /* Freshness-pill pulse: an expanding, fading ring behind the solid dot (now in
+     the Currently rail). The label text carries the meaning, so this is
+     reinforcement only; disabled under reduced motion. */
   .now-pulse-ring {
     animation: now-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
