@@ -36,7 +36,6 @@ import { getCoverPlaceholder } from '../lib/coverPlaceholder';
 // fill the one-primary + two-secondary layout. If fewer than three are
 // flagged featured, the layout still renders with whatever exists.
 const allStudies = await getCollection('case-studies');
-const totalCount = allStudies.length;
 const featured = allStudies
   .filter((entry) => entry.data.featured)
   .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
@@ -157,7 +156,7 @@ const [primary, ...secondaries] = featured;
          dead-ending after three featured projects. -->
     <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
       <a class="card-link text-lg" href="/work/">
-        Explore all {totalCount} projects
+        Explore more projects
       </a>
     </div>
   </div>
