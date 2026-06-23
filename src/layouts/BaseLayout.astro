@@ -128,6 +128,18 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
          strings or aliased paths. -->
     <link rel="canonical" href={canonical} />
 
+    {/* Favicon / app-icon set. The mark is a white Bebas "N" on a navy squircle
+        with one amber spark, generated from the real wordmark glyph by
+        scripts/generate-icons.mjs (run `npm run icons` after a brand change).
+        Modern browsers take the SVG; the .ico is the legacy fallback; iOS uses
+        the apple-touch PNG; the manifest carries the PWA / maskable icons.
+        theme-color is brand navy, matching the hero and the over-hero header. */}
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0A1628" />
+
     {comingSoonEnabled && (
       <meta name="robots" content="noindex, follow" />
     )}
