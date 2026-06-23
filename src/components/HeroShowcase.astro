@@ -58,6 +58,11 @@ import mStoneSteps from '../assets/case-studies/shots/stone-steps-50k-mobile.png
 import mMas from '../assets/case-studies/shots/mas-monograms-mobile.png';
 import mAcademy from '../assets/case-studies/shots/presbyterian-academy-mobile.png';
 
+// Sample REAL feature crops for the 'margin' variant preview (floating UI chips).
+import chipA from '../assets/case-studies/shots/theology-matters-feature-audio.png';
+import chipB from '../assets/case-studies/shots/west-chester-preschool-feature-portal.png';
+import chipC from '../assets/case-studies/shots/stone-steps-50k-feature-records.png';
+
 // Curated set, ordered for variety. `host` is what the desktop address bar
 // shows. Second Pres uses its real domain in the bar even though the screenshot
 // was taken from the staging worker (the domain switch is pending).
@@ -126,6 +131,28 @@ const sites = [
         </div>
       ))}
     </div>
+  </div>
+
+  {/* ====================================================================
+       VARIANT-PREVIEW EXTRAS. All hidden unless data-hero-variant is set on
+       the stage (for A/B comparison). The shipped default shows none of them.
+       ==================================================================== */}
+
+  {/* Variant: plinth. A recessed navy shelf the devices nestle into. */}
+  <div class="hero-plinth" aria-hidden="true"></div>
+
+  {/* Variant: contact. A typographic credit keyed to the active site. The
+       kicker is design-only (never a photography claim). */}
+  <div class="hero-credit" aria-hidden="true">
+    <span class="hero-credit-kicker">Designed + built by Nathan</span>
+    <span class="hero-credit-host" data-credit-host>{sites[0].host}</span>
+  </div>
+
+  {/* Variant: margin. Real feature crops floating around the cluster. */}
+  <div class="hero-chips" aria-hidden="true">
+    <div class="hero-chip hero-chip-1"><Image src={chipA} alt="" widths={[220, 380]} sizes="240px" /></div>
+    <div class="hero-chip hero-chip-2"><Image src={chipB} alt="" widths={[220, 380]} sizes="240px" /></div>
+    <div class="hero-chip hero-chip-3"><Image src={chipC} alt="" widths={[220, 380]} sizes="240px" /></div>
   </div>
 </a>
 
@@ -353,6 +380,121 @@ const sites = [
       transform: translateY(-4px);
     }
   }
+
+  /* ======================================================================
+     VARIANT PREVIEWS. Set data-hero-variant="lightfall|plinth|contact|margin"
+     on .hero-stage to try one. No attribute = the shipped look (base glow
+     above). These are for side-by-side comparison; the winner gets cleaned up.
+     ====================================================================== */
+  .hero-plinth,
+  .hero-credit,
+  .hero-chips { display: none; }
+
+  /* ---- Variant: lightfall (relit set, no hard card) -------------------- */
+  /* Overhead key light + a soft white highlight + a low amber catchlight,
+     replacing the flat two-blob glow so the screens read as lit from above. */
+  .hero-stage[data-hero-variant='lightfall']::before {
+    background:
+      radial-gradient(78% 46% at 56% -8%, color-mix(in oklab, var(--color-secondary) 34%, transparent), transparent 64%),
+      radial-gradient(46% 38% at 62% 26%, color-mix(in oklab, #ffffff 12%, transparent), transparent 70%),
+      radial-gradient(42% 30% at 28% 86%, color-mix(in oklab, var(--color-tertiary) 16%, transparent), transparent 72%);
+  }
+  /* A soft contact floor the devices rest on (grounds them). */
+  .hero-stage[data-hero-variant='lightfall']::after {
+    content: '';
+    position: absolute;
+    left: 4%; right: 2%; bottom: 1%;
+    height: 24%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(62% 100% at 48% 0%, rgba(0, 0, 0, 0.5), transparent 72%);
+    filter: blur(9px);
+  }
+
+  /* ---- Variant: plinth (recessed shelf) ------------------------------- */
+  .hero-stage[data-hero-variant='plinth']::before { opacity: 0; }
+  .hero-stage[data-hero-variant='plinth'] .hero-plinth {
+    display: block;
+    position: absolute;
+    inset: 6% 2% 9% 4%;
+    z-index: 0;
+    border-radius: 1.25rem;
+    background:
+      radial-gradient(58% 52% at 58% 36%, color-mix(in oklab, var(--color-secondary) 24%, transparent), transparent 70%),
+      radial-gradient(54% 58% at 40% 78%, color-mix(in oklab, var(--color-accent) 18%, transparent), transparent 72%),
+      color-mix(in oklab, var(--color-primary) 86%, #000);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 1px 0 0 rgba(255, 255, 255, 0.06),
+      inset 0 -26px 44px -28px rgba(0, 0, 0, 0.7),
+      inset -18px 0 40px -30px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+  }
+  .hero-stage[data-hero-variant='plinth'] .hero-plinth::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 14%; bottom: 14%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-secondary) 50%, transparent), transparent);
+  }
+  /* Phone contact shadow cast onto the shelf. */
+  .hero-stage[data-hero-variant='plinth'] .dev-phone::after {
+    content: '';
+    position: absolute;
+    left: 8%; right: 8%; bottom: -5%;
+    height: 7%;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    filter: blur(10px);
+    z-index: -1;
+  }
+
+  /* ---- Variant: contact (typographic credit) ------------------------- */
+  .hero-stage[data-hero-variant='contact'] .hero-credit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    position: absolute;
+    left: 0; bottom: 1%;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .hero-credit-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-secondary) 88%, #fff);
+  }
+  .hero-credit-host {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+  }
+
+  /* ---- Variant: margin (floating real UI chips) ---------------------- */
+  .hero-stage[data-hero-variant='margin'] .hero-chips { display: block; }
+  .hero-chip {
+    position: absolute;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 26px 50px -24px rgba(0, 0, 0, 0.65);
+    background: color-mix(in oklab, var(--color-primary) 70%, #000);
+  }
+  .hero-chip :global(img) { display: block; width: 100%; height: auto; }
+  .hero-chip-1 { top: 0; right: 0; width: 25%; z-index: 6; }
+  .hero-chip-2 { bottom: 6%; left: 5%; width: 23%; z-index: 1; }
+  .hero-chip-3 { top: 44%; right: 5%; width: 27%; z-index: 6; }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-chip-1 { animation: chip-drift-a 9s ease-in-out infinite alternate; }
+    .hero-chip-2 { animation: chip-drift-b 11s ease-in-out infinite alternate; }
+    .hero-chip-3 { animation: chip-drift-a 10s ease-in-out infinite alternate; }
+  }
+  @keyframes chip-drift-a { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+  @keyframes chip-drift-b { from { transform: translateY(0); } to { transform: translateY(9px); } }
 </style>
 
 <script>
@@ -367,6 +509,14 @@ const sites = [
       .forEach((root) => {
         root.dataset.showcaseBound = 'true';
 
+        // TEMPORARY A/B PREVIEW: ?hero=lightfall|plinth|contact|margin sets the
+        // variant on the stage so the treatments can be compared on the deploy.
+        // No param = the shipped look. Remove this block once a direction is chosen.
+        const variantParam = new URLSearchParams(location.search).get('hero');
+        if (variantParam && ['lightfall', 'plinth', 'contact', 'margin'].includes(variantParam)) {
+          root.dataset.heroVariant = variantParam;
+        }
+
         // Reduced motion: leave the first site shown on both devices, static.
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -374,6 +524,7 @@ const sites = [
         if (count < 2) return;
 
         const addr = root.querySelector<HTMLElement>('[data-address-text]');
+        const credit = root.querySelector<HTMLElement>('[data-credit-host]');
         const shots = (i: number) =>
           Array.from(root.querySelectorAll<HTMLElement>(`[data-shot="${i}"]`));
         const hostOf = (i: number) =>
@@ -416,6 +567,7 @@ const sites = [
           });
 
           if (addr) addr.textContent = hostOf(next);
+          if (credit) credit.textContent = hostOf(next);
           load((next + 1) % count); // stay one ahead
           cur = next;
 
