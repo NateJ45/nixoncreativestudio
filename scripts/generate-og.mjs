@@ -140,9 +140,84 @@ function buildSvg(title) {
 </svg>`.trim();
 }
 
-async function writeCard(relPath, title) {
-  const svg = buildSvg(title);
-  const png = await sharp(Buffer.from(svg)).png().toBuffer();
+// --- Cover-card builder (case studies) -------------------------------------
+// For a case study we put the REAL hero screenshot behind the card, with a navy
+// scrim for legibility and the title anchored bottom-left. A share of a case
+// study then shows the actual shipped work, which is the strongest trust signal
+// the studio has. Non-case-study pages keep the plain navy card above.
+function buildCoverOverlay(title) {
+  const maxWidth = WIDTH - PAD * 2;
+
+  // Same greedy shrink-to-fit as the navy card, a touch smaller to leave room
+  // for the screenshot to breathe behind it.
+  let size = 92;
+  let lines = wrap(title, size, maxWidth);
+  while (lines.length > 3 && size > 50) {
+    size -= 8;
+    lines = wrap(title, size, maxWidth);
+  }
+  const lineHeight = size * 1.0;
+
+  // Anchor the text to the bottom-left, building baselines upward from the
+  // studio line so the block always sits the same distance off the bottom edge.
+  const studioSize = 32;
+  const studioBaseline = HEIGHT - 60;
+  const gap = 30;
+  const studioTop = studioBaseline - studioSize * 0.82;
+  const lastBaseline = studioTop - gap;
+  const firstBaseline = lastBaseline - (lines.length - 1) * lineHeight;
+  const barY = firstBaseline - size * 0.82 - 30;
+
+  const titlePaths = lines
+    .map((line, i) => {
+      const baseline = firstBaseline + i * lineHeight;
+      return `<g transform="translate(${PAD}, ${baseline})" fill="${COLORS.fg}"><path d="${pathData(line, size)}" /></g>`;
+    })
+    .join('\n  ');
+  const studioPath = `<g transform="translate(${PAD}, ${studioBaseline})" fill="${COLORS.amber}"><path d="${pathData(STUDIO, studioSize)}" /></g>`;
+
+  // Two scrims: a vertical one (darkens the bottom for the text) and a
+  // horizontal one (darkens the left where the text sits), so off-white type
+  // clears contrast over any screenshot.
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
+  <defs>
+    <linearGradient id="scrimV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.12" stop-color="${COLORS.bg0}" stop-opacity="0" />
+      <stop offset="1" stop-color="${COLORS.bg0}" stop-opacity="0.94" />
+    </linearGradient>
+    <linearGradient id="scrimH" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${COLORS.bg0}" stop-opacity="0.72" />
+      <stop offset="0.62" stop-color="${COLORS.bg0}" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#scrimV)" />
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#scrimH)" />
+
+  <rect x="${PAD}" y="${barY}" width="84" height="6" rx="3" fill="${COLORS.accent}" />
+  ${titlePaths}
+  ${studioPath}
+
+  <rect x="0" y="${HEIGHT - 12}" width="${WIDTH}" height="12" fill="${COLORS.accent}" />
+</svg>`.trim();
+}
+
+async function writeCard(relPath, title, cover) {
+  const hasCover = cover && existsSync(cover);
+  let png;
+  if (hasCover) {
+    // Hero screenshot fills the card (top-anchored so the site header/hero
+    // shows), then the scrim + title overlay paints on top.
+    const coverBuf = await sharp(cover)
+      .resize(WIDTH, HEIGHT, { fit: 'cover', position: 'top' })
+      .toBuffer();
+    png = await sharp(coverBuf)
+      .composite([{ input: Buffer.from(buildCoverOverlay(title)), left: 0, top: 0 }])
+      .png()
+      .toBuffer();
+  } else {
+    png = await sharp(Buffer.from(buildSvg(title))).png().toBuffer();
+  }
   const outPath = resolve(projectRoot, 'public/og', `${relPath}.png`);
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, png);
@@ -167,7 +242,18 @@ function collectionEntries(dir, prefix) {
     .map((f) => {
       const slug = f.replace(/\.mdx$/, '');
       const title = readTitle(join(base, f)) ?? slug;
-      return { route: `${prefix}/${slug}`, title };
+      const entry = { route: `${prefix}/${slug}`, title };
+      // Case study covers (real hero screenshots) drive the cover OG card.
+      if (prefix === 'work') {
+        for (const ext of ['png', 'jpg', 'jpeg', 'webp']) {
+          const c = resolve(projectRoot, 'src/assets/case-studies', `${slug}.${ext}`);
+          if (existsSync(c)) {
+            entry.cover = c;
+            break;
+          }
+        }
+      }
+      return entry;
     });
 }
 
@@ -193,7 +279,7 @@ const pages = [
 
 let count = 0;
 for (const page of pages) {
-  await writeCard(page.route, page.title);
+  await writeCard(page.route, page.title, page.cover);
   count += 1;
 }
 console.log(`Generated ${count} OG cards into public/og/`);
