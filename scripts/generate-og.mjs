@@ -180,7 +180,7 @@ const STATIC_PAGES = [
   { route: 'photography', title: 'Photography' },
   { route: 'journal',     title: 'Journal' },
   { route: 'contact',     title: 'Start a project' },
-  { route: 'now',         title: 'Now' },
+  { route: 'colophon',    title: 'Colophon' },
   { route: 'privacy',     title: 'Privacy' },
   { route: '404',         title: 'Page not found' },
 ];

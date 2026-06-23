@@ -44,11 +44,60 @@ const principles = [
   },
 ];
 
-// Currently list. Short, present-tense, swappable per season.
-const currently = [
-  'Wrapping a small business site for a West Chester music teacher.',
-  'Photographing a summer Sunday morning shoot for a partner church.',
-  'Booking one more nonprofit project for the season ahead.',
+// "Currently" content, merged in from the old standalone /now page (a Derek
+// Sivers-style snapshot). Rewrite these arrays about once a quarter; the
+// freshness pill and the "last updated" stamp keep the section honest.
+const lastUpdated = '2026-06-15'; // bump whenever the arrays below change
+const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
+  month: 'long', day: 'numeric', year: 'numeric',
+}).format(new Date(lastUpdated));
+
+// Relative freshness for the status pill: today / N days / N weeks / N months.
+// If it ever reads "8 months ago," that is the nudge to rewrite the arrays.
+function freshnessLabel(iso: string): string {
+  const days = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000));
+  if (days <= 0) return 'Updated today';
+  if (days === 1) return 'Updated yesterday';
+  if (days < 14) return `Updated ${days} days ago`;
+  if (days < 60) return `Updated ${Math.round(days / 7)} weeks ago`;
+  const months = Math.round(days / 30);
+  return `Updated ${months} ${months === 1 ? 'month' : 'months'} ago`;
+}
+const freshness = freshnessLabel(lastUpdated);
+
+// Active client + studio work, most front-of-mind first. Warm and generic:
+// describe the shape of the work, not named clients.
+const workingOn = [
+  'Building a small business site for a West Chester music teacher, copy and photography included.',
+  'Planning a summer Sunday-morning photo shoot with a partner church.',
+  'Sketching the next iteration of this studio site (the one you are reading).',
+];
+
+// Capacity signals. status drives the chip color and the readable label, so
+// availability never reads on color alone. open -> green, limited -> amber.
+const booking = [
+  { status: 'open' as const,    label: 'Web design',  detail: 'Open for one more small business or nonprofit project this summer.' },
+  { status: 'limited' as const, label: 'Photography', detail: 'A few shoot days left in July and August around existing work.' },
+];
+const statusMeta = {
+  // Chip text sits on a white (bg-bg) pill, so it must clear AA on white. The
+  // brand amber (--tertiary) only passes on the navy heroes, not on white, so
+  // the limited chip uses amber-700 (light) / amber-400 (dark), mirroring the
+  // emerald pattern. The dot + ring stay brand amber: they are decorative.
+  open:    { word: 'Open',    dot: 'bg-emerald-500', ring: 'ring-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400' },
+  limited: { word: 'Limited', dot: 'bg-tertiary',    ring: 'ring-tertiary/40',    text: 'text-amber-700 dark:text-amber-400' },
+};
+
+// Books / longer-form pieces, and skills I'm sharpening.
+const reading = [
+  { title: 'Design as Art', author: 'Bruno Munari' },
+  { title: 'How Buildings Learn', author: 'Stewart Brand' },
+  { title: 'The Mom Test', author: 'Rob Fitzpatrick', note: 're-read' },
+];
+const learning = [
+  'View Transitions and the newer web animation APIs',
+  'Long-exposure photography in low-light interiors',
+  'Faster turnarounds on photo culling and edits',
 ];
 
 // Shared section-header layout. No mono "eyebrow" number scaffold: the
@@ -243,33 +292,98 @@ const schemas = [
        so the list feels alive without leaning on color alone (the marker is
        a real shape, and the text remains the primary cue).
        ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="about-currently-heading">
+  <!-- Currently: the present-tense studio snapshot, merged in from the old
+       standalone /now page. Freshness pill + working-on timeline + booking
+       chips + reading/learning + a "last updated" stamp. id="now" so the old
+       footer link (and any /now bookmarks via the redirect) land here. -->
+  <section id="now" class="scroll-mt-2xl py-2xl" aria-labelledby="about-currently-heading">
     <div class={`ncs-container ${sectionInnerClass}`}>
 
-      <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
+      <header class="flex max-w-[60ch] flex-col gap-m" data-reveal>
+        <!-- Freshness pill: a live pulsing dot + relative-freshness label. The
+             dot is decorative; the label text carries the meaning. -->
+        <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-4 py-1.5 text-sm font-medium text-text">
+          <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+            <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
+            <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+          </span>
+          <span>{freshness}</span>
+        </p>
         <h2 id="about-currently-heading">Currently</h2>
         <p class="text-lg leading-[1.55] text-text-muted">
-          A snapshot of what's on the bench right now.
+          A present-tense snapshot of the studio: current work, what I'm reading, and what I'm trying to get sharper on. Rewritten every couple of months.
         </p>
       </header>
 
-      <ul class="flex max-w-[64ch] flex-col gap-s text-[1.0625rem] leading-[1.7] text-text">
-        {currently.map((item, index) => (
-          <li
-            class="flex items-start gap-s rounded-lg border border-border bg-bg p-m hover-lift"
-            data-reveal="left"
-            style={`--reveal-delay: ${index * 120}ms;`}
-          >
-            <!-- Amber square marker. Decorative shape, hidden from assistive
-                 tech since the list text is the real content. -->
-            <span
-              class="mt-[0.55rem] h-2 w-2 shrink-0 rounded-[2px] bg-tertiary"
-              aria-hidden="true"
-            ></span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+      <!-- Working on: a connected vertical timeline, most front-of-mind first. -->
+      <section class="flex flex-col gap-l" aria-labelledby="now-working">
+        <h3 id="now-working" class="text-h4 text-heading" data-reveal>Working on</h3>
+        <ol class="now-timeline relative m-0 list-none p-0">
+          {workingOn.map((item, index) => (
+            <li class="now-timeline-item relative pb-l pl-10 last:pb-0" data-reveal="left" style={`--reveal-delay: ${index * 110}ms;`}>
+              <p class="leading-[1.6] text-text">{item}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- Booking: availability chips. Status word + dot + detail, never color
+           alone. -->
+      <section class="flex flex-col gap-l" aria-labelledby="now-booking">
+        <h3 id="now-booking" class="text-h4 text-heading" data-reveal>Booking</h3>
+        <ul class="grid list-none gap-m p-0 sm:grid-cols-2">
+          {booking.map((slot, index) => {
+            const meta = statusMeta[slot.status];
+            return (
+              <li class="spotlight-card hover-lift relative overflow-hidden rounded-xl border border-border bg-bg-soft p-l" data-spotlight data-reveal="scale" style={`--reveal-delay: ${index * 110}ms;`}>
+                <div class="relative z-10 flex flex-col gap-s">
+                  <span class:list={['inline-flex w-fit items-center gap-s rounded-full bg-bg px-3 py-1 text-xs font-semibold uppercase tracking-[0.06em] ring-1', meta.ring, meta.text]}>
+                    <span class:list={['h-2 w-2 rounded-full', meta.dot]} aria-hidden="true"></span>
+                    {meta.word}
+                  </span>
+                  <span class="text-h5 font-display text-heading">{slot.label}</span>
+                  <p class="leading-[1.55] text-text">{slot.detail}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <!-- Reading + Learning: two scroll-revealed card columns. -->
+      <div class="grid grid-cols-1 gap-2xl md:grid-cols-2">
+        <section class="flex flex-col gap-l" aria-labelledby="now-reading">
+          <h3 id="now-reading" class="text-h4 text-heading" data-reveal>Reading</h3>
+          <ul class="flex list-none flex-col gap-s p-0">
+            {reading.map((book, index) => (
+              <li class="spotlight-card hover-lift relative overflow-hidden rounded-xl border border-border bg-bg-soft p-m" data-spotlight data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
+                <div class="relative z-10 flex flex-col gap-1">
+                  <span class="font-display text-h5 leading-tight text-heading">
+                    {book.title}
+                    {book.note && (<span class="ml-2 align-middle text-xs font-medium uppercase tracking-[0.06em] text-link">({book.note})</span>)}
+                  </span>
+                  <span class="text-sm text-text-muted">{book.author}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section class="flex flex-col gap-l" aria-labelledby="now-learning">
+          <h3 id="now-learning" class="text-h4 text-heading" data-reveal>Learning</h3>
+          <ul class="flex list-none flex-col gap-s p-0">
+            {learning.map((item, index) => (
+              <li class="spotlight-card hover-lift relative overflow-hidden rounded-xl border border-border bg-bg-soft p-m" data-spotlight data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
+                <p class="relative z-10 leading-[1.55] text-text">{item}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <p class="font-mono text-[0.85rem] italic text-text-muted" data-reveal="fade">
+        Last updated {lastUpdatedLabel}.
+      </p>
 
     </div>
   </section>
@@ -285,3 +399,53 @@ const schemas = [
   />
 
 </BaseLayout>
+
+<style>
+  /* Vertical timeline rail for "Working on" (merged from the old /now page). A
+     single gradient line runs behind the nodes and fades out at the bottom so
+     the last item reads as the end of the feed. */
+  .now-timeline::before {
+    content: "";
+    position: absolute;
+    top: 0.4rem;
+    bottom: 1.5rem;
+    left: 0.3125rem;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-accent),
+      color-mix(in oklab, var(--color-accent) 15%, transparent)
+    );
+  }
+  /* Each node: a ringed dot on the rail; the ring matches the page bg so it
+     reads as a bead on the line. */
+  .now-timeline-item::before {
+    content: "";
+    position: absolute;
+    top: 0.35rem;
+    left: 0;
+    height: 0.625rem;
+    width: 0.625rem;
+    border-radius: 9999px;
+    background: var(--color-accent);
+    box-shadow: 0 0 0 4px var(--color-bg);
+  }
+  .now-timeline-item:first-child::before {
+    box-shadow:
+      0 0 0 4px var(--color-bg),
+      0 0 0 8px color-mix(in oklab, var(--color-accent) 25%, transparent);
+  }
+
+  /* Freshness-pill pulse: an expanding, fading ring behind the solid dot. The
+     label text carries the meaning, so this is reinforcement only. */
+  .now-pulse-ring {
+    animation: now-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  @keyframes now-ping {
+    0%        { transform: scale(1);   opacity: 0.7; }
+    75%, 100% { transform: scale(2.4); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .now-pulse-ring { animation: none; }
+  }
+</style>

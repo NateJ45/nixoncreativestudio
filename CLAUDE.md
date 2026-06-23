@@ -67,7 +67,7 @@ The Services, PhotoStrip, and Testimonials components were deleted during the re
 - **Photography** has its own `/photography` page; on the homepage the work itself is carried above the fold by the device-pairing `HeroShowcase`, not by a four-up photo tile strip.
 - **Testimonials** belong inside individual case study pages where the quote has earned context (and the /about carousel reads the same `testimonial` frontmatter). A standalone "what people say" band on the homepage at three equal cards put quotes at the lowest-impact layout for the format.
 
-The `Process` component is preserved separately because `/services` still imports it as a soft-band, no-CTA version (it no longer carries a section number; it never should have on `/services`). The `CtaBanner` component is preserved because `/about`, `/now`, `/photography`, and `/services` all still use it as a tail-of-page inquiry block.
+The `Process` component is preserved separately because `/services` still imports it as a soft-band, no-CTA version (it no longer carries a section number; it never should have on `/services`). The `CtaBanner` component is preserved because `/about`, `/photography`, and `/services` all still use it as a tail-of-page inquiry block.
 
 Don't reorder these sections. The hero no longer depends on any single content gate: the WebGL flow and the device-pairing showcase fill it today, so it ships complete.
 
@@ -228,7 +228,7 @@ shadcn primitives that wrap Radix's Dialog (Sheet, Dialog, DropdownMenu with por
 
 ### Studio components reference
 
-Beyond the homepage-section components (Hero, HeroShowcase, ClientMarquee, SelectedWork, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `Process` and `CtaBanner` are retained as off-homepage components (`/services` uses `Process`; `/about`, `/now`, `/photography`, `/services` use `CtaBanner`).
+Beyond the homepage-section components (Hero, HeroShowcase, ClientMarquee, SelectedWork, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `Process` and `CtaBanner` are retained as off-homepage components (`/services` uses `Process`; `/about`, `/photography`, `/services` use `CtaBanner`).
 
 - `BackToTop.tsx` — floating button bottom-right, rendered once in BaseLayout. Fades in after 600px scroll, honors `prefers-reduced-motion`.
 - `ReadingProgress.tsx` — thin top bar that fills as the visitor scrolls. Rendered only on case study and journal detail pages.
@@ -368,16 +368,17 @@ Static routes generated at build time:
 | Path | Source |
 |---|---|
 | `/` | `src/pages/index.astro` (homepage: hero with client marquee, selected work, process band) |
-| `/about/` | `src/pages/about.astro` |
+| `/about/` | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section) |
 | `/services` | `src/pages/services.astro` |
 | `/work/` | `src/pages/work/index.astro` (with filter chips) |
 | `/work/{slug}/` | `src/pages/work/[slug].astro` (per case study) |
 | `/photography/` | `src/pages/photography.astro` |
 | `/journal/` | `src/pages/journal/index.astro` |
 | `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry) |
-| `/now/` | `src/pages/now.astro` (Sivers-style snapshot, rewrite quarterly) |
 | `/contact/` | `src/pages/contact.astro` (Web3Forms inquiry) |
+| `/colophon/` | `src/pages/colophon.astro` (how the site is built) |
 | `/privacy/` | `src/pages/privacy.astro` |
+| `/now` | redirects to `/about/#now` (the page was merged into About) |
 | `/coming-soon/` | `src/pages/coming-soon.astro` (always live, standalone) |
 | `/404` | `src/pages/404.astro` (custom not-found) |
 | `/rss.xml` | `src/pages/rss.xml.js` (case studies feed) |
@@ -393,7 +394,7 @@ Static routes generated at build time:
 - Copy strings and `href` values in component files
 - Tailwind utility classes on existing components, when content needs different visual weight
 - The "Currently" blurb in `Footer.astro` and the principles / currently arrays in `About.astro` (seasonal copy)
-- The four arrays in `src/pages/now.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date — rewrite quarterly
+- The four arrays in the Currently section of `src/pages/about.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date — rewrite quarterly (this is the old /now snapshot, merged into About)
 - The `press` array in `PressMentions.astro` (populate when press happens)
 - The `logos` array in `ClientLogos.astro` (populate once you have client permissions)
 - Heading / sub copy on `Newsletter.astro` via props
@@ -555,7 +556,7 @@ Things that still need configuration before / during the public launch. Everythi
 
 ### Recurring upkeep
 
-- [ ] Refresh the four arrays + `lastUpdated` in `src/pages/now.astro` about once a quarter.
+- [ ] Refresh the four arrays + `lastUpdated` in the Currently section of `src/pages/about.astro` about once a quarter.
 - [ ] Refresh the "Currently" blurb in `Footer.astro` seasonally.
 - [ ] Re-run `npm run og` after editing brand colors, tagline, or wordmark.
 - [ ] Plaiceholder regen happens automatically on `npm run build`. During local dev, re-run `npm run placeholders` after adding a new case study cover so the dev server sees it.

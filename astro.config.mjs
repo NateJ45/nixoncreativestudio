@@ -40,6 +40,11 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
+  // The standalone /now page was merged into the About page (its Currently
+  // section). Keep old links and bookmarks working with a static redirect.
+  redirects: {
+    '/now': '/about/#now',
+  },
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport',

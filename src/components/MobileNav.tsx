@@ -103,7 +103,6 @@ const DESCRIPTIONS: Record<string, string> = {
   '/services': 'What I build, and how',
   '/about': 'The studio, and me',
   '/journal/': 'Notes on the work',
-  '/now/': "What I'm focused on",
   '/contact': 'Email, phone, or the form',
 };
 
