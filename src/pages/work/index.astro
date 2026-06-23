@@ -23,6 +23,14 @@ const entries = (await getCollection('case-studies')).sort(
   (a, b) => b.data.published.valueOf() - a.data.published.valueOf()
 );
 
+// Entries that ship a real, public live URL, for the "open any of them" proof
+// wall below the cards. The strongest trust signal a web vendor has is work a
+// visitor can click and inspect in five seconds, so these link straight to the
+// live site (not the case study). Domains are shown as plain text.
+const entriesLive = entries.filter((e) => e.data.liveUrl);
+const prettyDomain = (url: string) =>
+  url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+
 // Pre-baked blur placeholders for every cover. The data was generated
 // by scripts/generate-placeholders.mjs at build time; the lookup here
 // is a synchronous map read.
@@ -196,6 +204,45 @@ const sectors = (['church', 'preschool', 'nonprofit', 'small-business'] as const
 
     </div>
   </section>
+
+  {/* "Open any of them" proof wall: every shipped site as a clickable real
+      domain, linking straight to the live site in a new tab. A different, faster
+      affordance than the cards above (which open the case studies). Real domains
+      only, shown as plain text so it never reads as a fabricated badge. */}
+  {entriesLive.length > 1 && (
+    <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
+      <div class="ncs-container">
+        <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
+          <h2 id="live-sites-heading">Open any of them</h2>
+          <p class="text-lg leading-[1.55] text-text-muted">
+            Every project here is a real, shipped site. Do not take my word for it,
+            click through and look around.
+          </p>
+        </header>
+
+        <ul class="grid gap-x-l sm:grid-cols-2 lg:grid-cols-3">
+          {entriesLive.map((e, i) => (
+            <li data-reveal style={`--reveal-delay: ${Math.min(i, 5) * 60}ms`}>
+              <a
+                href={e.data.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-baseline justify-between gap-s border-b border-border py-s text-inherit no-underline transition-colors duration-150 hover:border-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              >
+                <span class="font-display text-h4 leading-[1.1] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                  {e.data.client}
+                </span>
+                <span class="inline-flex shrink-0 items-center gap-1 font-mono text-[0.8rem] text-text-muted transition-colors group-hover:text-link group-focus-visible:text-link">
+                  {prettyDomain(e.data.liveUrl)}
+                  <span aria-hidden="true">↗</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
 
   <CtaBanner />
 
