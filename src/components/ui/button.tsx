@@ -24,13 +24,14 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
-        // brand: filled NCS-blue button with a soft hover lift. Hover and
-        // focus darken to bg-link (rather than brighten to bg-secondary)
-        // because brighter sky-blue with white text fails WCAG AA. The
-        // darken-on-press read works fine visually and keeps the translate
-        // as the primary lift cue.
+        // brand: filled NCS-blue button. On hover/focus it lifts and casts a
+        // brand-colored glow so the hover reads clearly in BOTH themes (in dark
+        // mode --accent and --link are the same value, so the old darken was a
+        // no-op and the hover looked dead; the lift + glow are the real cue). It
+        // still darkens to bg-link in light mode. The glow is a shadow, so it
+        // never touches text contrast (stays WCAG AA).
         brand:
-          "bg-accent text-accent-foreground hover:bg-link hover:-translate-y-px focus-visible:bg-link focus-visible:-translate-y-px disabled:hover:translate-y-0 disabled:hover:bg-accent",
+          "bg-accent text-accent-foreground hover:bg-link hover:-translate-y-0.5 hover:shadow-lg hover:shadow-accent/45 focus-visible:bg-link focus-visible:-translate-y-0.5 focus-visible:shadow-lg focus-visible:shadow-accent/45 disabled:hover:translate-y-0 disabled:hover:bg-accent disabled:hover:shadow-none",
       },
       size: {
         default:

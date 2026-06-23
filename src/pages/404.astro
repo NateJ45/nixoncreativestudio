@@ -13,7 +13,7 @@
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { Button } from '../components/ui/button';
+import { buttonVariants } from '../components/ui/button';
 ---
 
 <BaseLayout
@@ -71,9 +71,9 @@ import { Button } from '../components/ui/button';
         style="--reveal-delay: 320ms"
       >
         <span class="inline-block" data-magnetic="0.4">
-          <Button asChild variant="brand" size="cta" className="shine">
-            <a href="/">Back to home</a>
-          </Button>
+          <a href="/" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
+            Back to home
+          </a>
         </span>
         <a class="card-link" href="/work/">See selected work</a>
         <a class="card-link" href="/contact">Get in touch</a>

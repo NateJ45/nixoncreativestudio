@@ -24,9 +24,19 @@
    ordered Process band) would be decorative scaffolding here.
    ============================================================================ */
 
+import { getCollection } from 'astro:content';
 import { site } from '../data/site';
 import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
+
+// Hide the Journal nav link until the journal has something to show. Uses the
+// SAME visibility filter as the journal index (drafts hidden in production,
+// visible in dev), so the link appears exactly when the page has real content.
+// While the collection is empty the link is omitted from both the desktop nav
+// and the mobile drawer (they share this array).
+const journalCount = (await getCollection('journal', ({ data }) =>
+  import.meta.env.PROD ? data.draft !== true : true,
+)).length;
 
 // The nav model lives in the script so it's easy to reorder, rename, or extend
 // without hunting through markup. MobileNav consumes the same array.
@@ -34,7 +44,7 @@ const navLinks = [
   { label: 'Work',     href: '/work/'    },
   { label: 'Services', href: '/services' },
   { label: 'About',    href: '/about'    },
-  { label: 'Journal',  href: '/journal/' },
+  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
   { label: 'Now',      href: '/now/'     },
   { label: 'Contact',  href: '/contact'  },
 ];

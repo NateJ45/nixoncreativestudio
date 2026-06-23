@@ -39,7 +39,7 @@
    Content is hardcoded here on purpose. The hero is bespoke.
    ============================================================================ */
 
-import { Button } from './ui/button';
+import { buttonVariants } from './ui/button';
 import HeroCanvas from './HeroCanvas';
 import HeroShowcase from './HeroShowcase.astro';
 import ClientMarquee from './ClientMarquee.astro';
@@ -145,11 +145,16 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
 
       <div class="hero-anim flex flex-wrap items-center gap-m" style="--enter-delay: 320ms;">
 
-        <!-- Simple hover button (brand lift + shine sweep on hover); no
-             cursor-tracking magnetic pull on the hero CTA. -->
-        <Button asChild variant="brand" size="cta" className="shine">
-          <a href="/contact">Start a project</a>
-        </Button>
+        <!-- Brand CTA as a styled <a>. buttonVariants is applied directly rather
+             than via <Button asChild>, which does NOT merge its classes onto a
+             slotted <a> during Astro SSR (the link rendered bare, no fill/hover).
+             Simple hover (brand fill + lift + shine sweep); no cursor-tracking. -->
+        <a
+          href="/contact"
+          class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+        >
+          Start a project
+        </a>
 
         <a
           class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-primary-foreground no-underline"
