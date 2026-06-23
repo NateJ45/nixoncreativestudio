@@ -104,10 +104,7 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
        cue. Both click-through.
        ==================================================================== -->
   <div class="hero-scrim pointer-events-none absolute inset-0 z-[2]" aria-hidden="true"></div>
-  <div
-    class="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-primary/20 to-transparent"
-    aria-hidden="true"
-  ></div>
+  <div class="hero-floor pointer-events-none absolute inset-0 z-[2]" aria-hidden="true"></div>
 
   <!-- ====================================================================
        z-10 Foreground copy. The container is pointer-events-none so the scene
@@ -261,6 +258,26 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     display: flex;
     align-items: center;
     min-height: var(--hero-marquee-h);
+  }
+
+  /* ----------------------------------------------------------------------
+     Hero floor. The floating device frames cast large downward drop shadows,
+     and the hero is overflow-hidden, so those shadows were being clipped at the
+     hero's bottom edge, leaving a hard horizontal line right where the navy hero
+     meets the section below. This gradient paints the bottom band back to solid
+     navy, so the shadows dissolve into the floor and the clip lands in uniform
+     navy (no visible shadow edge). It stops well below the desktop frame so it
+     never dims the screenshots, and it sits beneath the marquee names (z-10), so
+     those stay crisp. Replaces the old faint bottom-darken (whose scroll cue is
+     gone, replaced by the marquee).
+     ---------------------------------------------------------------------- */
+  .hero-floor {
+    background: linear-gradient(
+      to top,
+      var(--color-primary) 0%,
+      var(--color-primary) 4%,
+      transparent 12%
+    );
   }
 
   /* ----------------------------------------------------------------------
