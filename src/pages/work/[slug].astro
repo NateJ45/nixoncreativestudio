@@ -48,6 +48,12 @@ export async function getStaticPaths() {
 
 const { entry, previous, next } = Astro.props;
 const { Content, headings } = await render(entry);
+
+// Table-of-contents headings (the body h2s). Both the sticky sidebar TOC and the
+// wide two-column body layout only kick in when there are at least two, so short
+// studies stay single-column and centered.
+const tocHeadings = (headings ?? []).filter((h) => h.depth === 2);
+const hasToc = tocHeadings.length >= 2;
 const { title, client, sector, services, summary, cover, role, tags, published, updated, stack, liveUrl, outcome, testimonial } = entry.data;
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
@@ -237,50 +243,54 @@ const schemas = [
          short case studies with one or no h2 just show the prose at full
          width. -->
     <div class="ncs-container">
-      <div class={`mx-auto grid max-w-[88rem] gap-l pb-2xl pt-l ${
-        headings && headings.filter((h) => h.depth === 2).length >= 2
-          ? 'xl:grid-cols-[14rem_minmax(0,72ch)_1fr]'
-          : 'xl:grid-cols-1'
-      }`}>
+      <div
+        class:list={[
+          'mx-auto grid max-w-[84rem] gap-xl pb-2xl pt-l',
+          hasToc ? 'xl:grid-cols-[14rem_minmax(0,1fr)]' : 'xl:grid-cols-1',
+        ]}
+      >
 
         {/* Sticky TOC. Lists every h2 in the MDX body as a jump link.
             Hidden below xl since the sidebar would crowd narrow viewports.
             Native <nav aria-label> so screen readers identify it. */}
-        {headings && headings.filter((h) => h.depth === 2).length >= 2 && (
+        {hasToc && (
           <nav aria-label="In this case study" class="hidden xl:block">
             <div class="sticky top-l flex flex-col gap-xs">
               <p class="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                 In this case study
               </p>
               <ul class="flex flex-col gap-xs">
-                {headings
-                  .filter((h) => h.depth === 2)
-                  .map((h) => (
-                    <li>
-                      <a
-                        href={`#${h.slug}`}
-                        class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link"
-                      >
-                        {h.text}
-                      </a>
-                    </li>
-                  ))}
+                {tocHeadings.map((h) => (
+                  <li>
+                    <a
+                      href={`#${h.slug}`}
+                      class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link"
+                    >
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           </nav>
         )}
 
-        {/* MDX prose. The arbitrary descendant selectors here style the
-            MDX output (h2/p/ul/li/a) without using the typography plugin
-            and without leaking those rules to the rest of the site. */}
+        {/* MDX prose. When the TOC is present the content column is wide, so the
+            TEXT blocks (h2/p/ul) are capped to a readable measure while the media
+            in the body (SiteShowcase, FeatureHighlight, images) fills the column
+            to the right, using the space that used to be a dead empty column.
+            Without a TOC the prose is simply centered at a readable width. The
+            arbitrary descendant selectors style the MDX output without the
+            typography plugin and without leaking to the rest of the site. */}
         <div
-          class="mx-auto w-full max-w-[72ch] text-[1.0625rem] leading-[1.7] text-text
-            [&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0
-            [&_p]:mb-m
-            [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5
-            [&_li]:mb-1
-            [&_a]:text-link [&_a]:underline [&_a]:underline-offset-2
-            hover:[&_a]:underline-offset-4"
+          class:list={[
+            'text-[1.0625rem] leading-[1.7] text-text',
+            hasToc ? 'w-full' : 'mx-auto w-full max-w-[72ch]',
+            '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
+            '[&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
+            '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
+            hasToc ? '[&_h2]:max-w-[58ch] [&_p]:max-w-[70ch] [&_ul]:max-w-[70ch]' : '',
+          ]}
         >
           <Content />
         </div>

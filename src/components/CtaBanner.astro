@@ -33,7 +33,7 @@ const {
 ---
 
 <section
-  class="band-themed py-2xl"
+  class="band-themed cta-band py-2xl"
   aria-labelledby="cta-banner-title"
 >
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
@@ -56,3 +56,25 @@ const {
 
   </div>
 </section>
+
+<style>
+  /* Dark mode: melt the band into the page above and the footer below. The band
+     base is navy and the footer is navy too, but the dark aurora's amber glow
+     pools at the band's bottom (a hard orange-to-navy seam where the footer
+     starts) while the page background above is a deeper near-black. Two edge
+     gradients fade the bottom to the footer navy (--color-primary) and the top
+     to the page background (--color-bg), so the band emerges from the content
+     and dissolves into the footer. It sits above the aurora (z-index:0) and
+     below the copy (z-10). Light mode keeps its deliberate light-band-to-navy-
+     footer change, so no fade there. */
+  :global(.dark) .cta-band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, var(--color-bg) 0%, transparent 26%),
+      linear-gradient(to top, var(--color-primary) 0%, transparent 30%);
+  }
+</style>
