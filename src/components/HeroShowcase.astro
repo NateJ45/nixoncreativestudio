@@ -128,12 +128,6 @@ const sites = [
     </div>
   </div>
 
-  {/* ====================================================================
-       VARIANT-PREVIEW EXTRA. Hidden unless data-hero-variant="plinth" is set on
-       the stage (A/B comparison against the lightfall variant, which is pure
-       CSS and needs no markup). The shipped default shows neither.
-       ==================================================================== */}
-  <div class="hero-plinth" aria-hidden="true"></div>
 </a>
 
 <style>
@@ -362,94 +356,220 @@ const sites = [
   }
 
   /* ======================================================================
-     VARIANT PREVIEWS. Set data-hero-variant="lightfall|plinth" on .hero-stage
-     to try one. No attribute = the shipped look (base glow above). For A/B
-     comparison; the chosen one gets folded in and this block removed.
+     SHOWCASE LIGHTING VARIANTS. Set data-hero-variant="lightfall|window|
+     radiance" on .hero-stage to try one; no attribute = the shipped base glow
+     above. All three light the two devices like a photographic set: a
+     screen-blended brand key on .hero-stage::before, a navy vignette + grounded
+     contact floor on ::after (BOTH at z-index:0, behind the devices, so nothing
+     dark ever sits over a screenshot), and key-biased rim/bloom + a deep drop
+     shadow on each device frame (box-shadow draws outside the frame and is NOT
+     clipped by its overflow:hidden). No panel/card behind the devices. For A/B
+     comparison; the chosen one gets folded in as the default and this trimmed.
      ====================================================================== */
-  .hero-plinth { display: none; }
 
-  /* ---- Variant: lightfall (relit set, no hard card) -------------------- */
-  /* Overhead key light + a soft white highlight + a low amber catchlight,
-     replacing the flat two-blob glow so the screens read as lit from above. */
+  /* ---- PRIMARY: "Spotlight Chiaroscuro" (data-hero-variant="lightfall") ----
+     A hard key cone from the top-center-right, a four-corner navy vignette that
+     crushes the surround, a contact floor dropped below the phone, and
+     key-biased rim/bloom + deep drop on both frames. The brightest, most
+     directional read. */
   .hero-stage[data-hero-variant='lightfall']::before {
     background:
-      radial-gradient(85% 65% at 55% -22%, color-mix(in oklab, var(--color-secondary) 60%, transparent), transparent 58%),
-      radial-gradient(44% 36% at 60% 2%, color-mix(in oklab, #ffffff 22%, transparent), transparent 62%),
-      radial-gradient(46% 34% at 24% 92%, color-mix(in oklab, var(--color-tertiary) 24%, transparent), transparent 70%);
+      radial-gradient(24% 19% at 60% -8%,
+        rgba(255, 255, 255, 0.88),
+        color-mix(in oklab, var(--color-secondary) 70%, transparent) 44%,
+        transparent 72%),
+      radial-gradient(72% 80% at 61% -6%,
+        color-mix(in oklab, var(--color-secondary) 82%, transparent),
+        color-mix(in oklab, var(--color-accent) 52%, transparent) 46%,
+        transparent 74%),
+      conic-gradient(from 180deg at 61% -12%,
+        transparent 0deg,
+        transparent 150deg,
+        color-mix(in oklab, var(--color-secondary) 44%, transparent) 168deg,
+        color-mix(in oklab, var(--color-secondary) 28%, transparent) 192deg,
+        transparent 210deg,
+        transparent 360deg),
+      radial-gradient(40% 34% at 26% 98%,
+        color-mix(in oklab, var(--color-tertiary) 42%, transparent),
+        transparent 70%);
+    filter: blur(5px) saturate(1.18) brightness(1.05);
+    mix-blend-mode: screen;
+    opacity: 1;
   }
-  /* A clear contact floor the devices rest on (grounds them). */
   .hero-stage[data-hero-variant='lightfall']::after {
     content: '';
     position: absolute;
-    left: 2%; right: 0; bottom: -1%;
-    height: 32%;
+    inset: -16% -8% -12% -6%;
     z-index: 0;
     pointer-events: none;
-    background: radial-gradient(56% 100% at 50% 0%, rgba(0, 0, 0, 0.66), transparent 68%);
-    filter: blur(11px);
+    background:
+      radial-gradient(34% 16% at 50% 103%,
+        rgba(0, 0, 0, 0.80),
+        rgba(0, 0, 0, 0.32) 46%,
+        transparent 72%),
+      radial-gradient(86% 96% at 60% 34%,
+        transparent 58%,
+        color-mix(in oklab, var(--color-primary) 72%, transparent) 78%,
+        color-mix(in oklab, var(--color-primary) 97%, transparent) 90%,
+        var(--color-primary) 100%);
+    filter: blur(2px);
+  }
+  .hero-stage[data-hero-variant='lightfall'] .dev-desktop {
+    box-shadow:
+      0 -1px 0 0 rgba(255, 255, 255, 0.42),
+      6px -8px 30px -6px color-mix(in oklab, var(--color-secondary) 78%, transparent),
+      10px -22px 64px -12px color-mix(in oklab, var(--color-accent) 58%, transparent),
+      0 8px 40px -6px color-mix(in oklab, var(--color-secondary) 26%, transparent),
+      -14px 44px 72px -28px rgba(0, 0, 0, 0.82),
+      -6px 18px 36px -22px rgba(0, 0, 0, 0.66);
+  }
+  .hero-stage[data-hero-variant='lightfall'] .dev-phone {
+    box-shadow:
+      0 -1px 0 0 rgba(255, 255, 255, 0.50),
+      4px -6px 24px -4px color-mix(in oklab, var(--color-secondary) 88%, transparent),
+      8px -16px 50px -10px color-mix(in oklab, var(--color-accent) 64%, transparent),
+      -12px 16px 44px -12px color-mix(in oklab, var(--color-tertiary) 46%, transparent),
+      -8px 56px 88px -30px rgba(0, 0, 0, 0.84),
+      -4px 24px 46px -24px rgba(0, 0, 0, 0.70);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-stage[data-hero-variant='lightfall']::before {
+      animation: LF-beam-breathe 8s ease-in-out infinite;
+      will-change: opacity, filter;
+    }
+    @keyframes LF-beam-breathe {
+      0%, 100% { opacity: 0.92; filter: blur(5px) saturate(1.12) brightness(1); }
+      50%      { opacity: 1;    filter: blur(6px) saturate(1.22) brightness(1.10); }
+    }
   }
 
-  /* ---- Variant: plinth (lit recessed shelf) --------------------------- */
-  .hero-stage[data-hero-variant='plinth']::before { opacity: 0; }
-  /* The shelf reads as a lit SURFACE, not a flat card: a strong overhead light
-     lands on the top and the fill recedes into shadow toward the base (vertical
-     gradient), a bright front lip catches the light, and a deep inner shadow at
-     the bottom carves it into a recess the devices sit down into. */
-  .hero-stage[data-hero-variant='plinth'] .hero-plinth {
-    display: block;
-    position: absolute;
-    inset: 3% 0 5% 2%;
-    z-index: 0;
-    border-radius: 1rem 1rem 1.4rem 1.4rem;
+  /* ---- ALTERNATE A: "Window Light" (data-hero-variant="window") ----
+     Softer, daylight feel: an upper-left north-window key rakes the stage and
+     throws long brand-tinted shadows down to the lower-right. Reads as a real
+     daylight set rather than a stage spotlight. */
+  .hero-stage[data-hero-variant='window']::before {
     background:
-      radial-gradient(75% 38% at 56% -4%, color-mix(in oklab, var(--color-secondary) 38%, transparent), transparent 60%),
-      radial-gradient(64% 50% at 44% 88%, color-mix(in oklab, var(--color-accent) 14%, transparent), transparent 76%),
-      linear-gradient(
-        to bottom,
-        color-mix(in oklab, var(--color-secondary) 16%, var(--color-primary)) 0%,
-        var(--color-primary) 36%,
-        color-mix(in oklab, var(--color-primary) 70%, #000) 100%
-      );
+      radial-gradient(38% 32% at 42% 4%,
+        rgba(255, 255, 255, 0.50), transparent 62%),
+      radial-gradient(78% 70% at 38% -10%,
+        color-mix(in oklab, var(--color-secondary) 76%, transparent),
+        color-mix(in oklab, var(--color-secondary) 24%, transparent) 46%,
+        transparent 66%),
+      radial-gradient(72% 66% at 58% 16%,
+        color-mix(in oklab, var(--color-accent) 60%, transparent), transparent 68%),
+      radial-gradient(56% 46% at 74% 98%,
+        color-mix(in oklab, var(--color-tertiary) 40%, transparent), transparent 72%);
+    filter: saturate(1.16) brightness(1.05) blur(2px);
+    mix-blend-mode: screen;
+  }
+  .hero-stage[data-hero-variant='window']::after {
+    content: '';
+    position: absolute;
+    inset: -16% -8% -12% -6%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(56% 19% at 70% 100%,
+        rgba(0, 0, 0, 0.68), transparent 74%),
+      radial-gradient(30% 15% at 40% 103%,
+        rgba(0, 0, 0, 0.55), transparent 76%),
+      radial-gradient(130% 112% at 48% 28%,
+        transparent 54%,
+        color-mix(in oklab, var(--color-primary) 68%, transparent) 82%,
+        color-mix(in oklab, var(--color-primary) 96%, transparent) 100%);
+    filter: blur(13px);
+  }
+  .hero-stage[data-hero-variant='window'] .dev-desktop {
     box-shadow:
-      inset 0 3px 0 rgba(255, 255, 255, 0.22),          /* lit front lip */
-      inset 0 0 0 1px rgba(255, 255, 255, 0.05),         /* faint rim */
-      inset 28px 0 50px -36px rgba(255, 255, 255, 0.1),  /* light grazing the left wall */
-      inset 0 -64px 80px -40px rgba(0, 0, 0, 0.92);      /* deep recessed floor */
-    pointer-events: none;
+      -6px -6px 22px -6px color-mix(in oklab, #ffffff 50%, transparent),
+      -1px -1px 1px 1px color-mix(in oklab, #ffffff 30%, transparent),
+      -10px -12px 46px -10px color-mix(in oklab, var(--color-secondary) 60%, transparent),
+      0 0 110px 16px color-mix(in oklab, var(--color-secondary) 22%, transparent),
+      -14px -8px 56px -14px color-mix(in oklab, var(--color-accent) 48%, transparent),
+      28px 46px 84px -32px rgba(0, 0, 0, 0.80);
   }
-  /* A bright catch along the top so the front lip of the shelf clearly reads. */
-  .hero-stage[data-hero-variant='plinth'] .hero-plinth::before {
+  .hero-stage[data-hero-variant='window'] .dev-phone {
+    box-shadow:
+      -6px -6px 20px -6px color-mix(in oklab, #ffffff 55%, transparent),
+      -1.5px -1.5px 1px 1.5px color-mix(in oklab, #ffffff 38%, transparent),
+      -12px -14px 48px -10px color-mix(in oklab, var(--color-secondary) 64%, transparent),
+      0 0 100px 14px color-mix(in oklab, var(--color-secondary) 24%, transparent),
+      14px 20px 56px -14px color-mix(in oklab, var(--color-tertiary) 40%, transparent),
+      34px 60px 92px -30px rgba(0, 0, 0, 0.84);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-stage[data-hero-variant='window']::before {
+      animation: LF-window-breathe 9s ease-in-out infinite alternate;
+    }
+    @keyframes LF-window-breathe { from { opacity: 0.9; } to { opacity: 1; } }
+  }
+
+  /* ---- ALTERNATE B: "Brand Radiance Pool" (data-hero-variant="radiance") ----
+     The loudest: a saturated sky-to-accent glow pools right behind the devices
+     with a hot near-white core, the frames carry a bright brand rim, and a
+     heavy navy vignette crushes the surround. Pick if the others read too
+     quiet. */
+  .hero-stage[data-hero-variant='radiance']::before {
+    background:
+      radial-gradient(28% 24% at 62% 22%,
+        rgba(255, 255, 255, 0.66),
+        color-mix(in oklab, var(--color-secondary) 50%, transparent) 44%,
+        transparent 66%),
+      radial-gradient(58% 52% at 62% 34%,
+        color-mix(in oklab, var(--color-secondary) 88%, transparent),
+        color-mix(in oklab, var(--color-secondary) 40%, transparent) 46%,
+        transparent 70%),
+      radial-gradient(74% 70% at 58% 40%,
+        color-mix(in oklab, var(--color-accent) 70%, transparent),
+        color-mix(in oklab, var(--color-accent) 22%, transparent) 52%,
+        transparent 78%),
+      radial-gradient(46% 40% at 30% 98%,
+        color-mix(in oklab, var(--color-tertiary) 46%, transparent), transparent 72%),
+      radial-gradient(40% 36% at 88% 6%,
+        color-mix(in oklab, var(--color-secondary) 40%, transparent), transparent 66%);
+    filter: saturate(1.32) brightness(1.10) blur(2px);
+    mix-blend-mode: screen;
+    opacity: 1;
+  }
+  .hero-stage[data-hero-variant='radiance']::after {
     content: '';
     position: absolute;
-    inset: 0 0 auto 0;
-    height: 38%;
-    border-radius: 1rem 1rem 0 0;
-    background: linear-gradient(to bottom, color-mix(in oklab, var(--color-secondary) 10%, transparent), transparent);
+    inset: -16% -8% -12% -6%;
+    z-index: 0;
     pointer-events: none;
+    background:
+      radial-gradient(36% 17% at 48% 103%,
+        rgba(0, 0, 0, 0.62), transparent 72%),
+      radial-gradient(84% 92% at 60% 38%,
+        transparent 56%,
+        color-mix(in oklab, var(--color-primary) 64%, transparent) 80%,
+        color-mix(in oklab, var(--color-primary) 96%, transparent) 100%);
+    filter: blur(4px);
   }
-  /* A broad soft ground shadow under the whole cluster, anchoring it to the
-     shelf floor so the devices read as standing on the surface. */
-  .hero-stage[data-hero-variant='plinth'] .hero-plinth::after {
-    content: '';
-    position: absolute;
-    left: 10%; right: 6%; bottom: 4%;
-    height: 16%;
-    border-radius: 50%;
-    background: radial-gradient(60% 100% at 50% 50%, rgba(0, 0, 0, 0.55), transparent 72%);
-    filter: blur(14px);
-    pointer-events: none;
+  .hero-stage[data-hero-variant='radiance'] .dev-desktop {
+    box-shadow:
+      0 -1px 0 0 rgba(255, 255, 255, 0.38),
+      4px -6px 30px -4px color-mix(in oklab, var(--color-secondary) 82%, transparent),
+      8px -10px 84px 4px color-mix(in oklab, var(--color-accent) 55%, transparent),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.20),
+      -12px 44px 72px -28px rgba(0, 0, 0, 0.80);
   }
-  /* The phone casts a tight contact shadow where it meets the surface, the cue
-     that sells "resting on" rather than "floating over". */
-  .hero-stage[data-hero-variant='plinth'] .dev-phone::after {
-    content: '';
-    position: absolute;
-    left: 2%; right: 2%; bottom: -4%;
-    height: 10%;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.72);
-    filter: blur(12px);
-    z-index: -1;
+  .hero-stage[data-hero-variant='radiance'] .dev-phone {
+    box-shadow:
+      0 -1px 0 0 rgba(255, 255, 255, 0.46),
+      3px -5px 24px -2px color-mix(in oklab, var(--color-secondary) 90%, transparent),
+      6px -8px 66px 2px color-mix(in oklab, var(--color-accent) 62%, transparent),
+      -10px 18px 42px -12px color-mix(in oklab, var(--color-tertiary) 34%, transparent),
+      -8px 56px 88px -30px rgba(0, 0, 0, 0.84);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-stage[data-hero-variant='radiance']::before {
+      animation: LF-radiance-breathe 9s ease-in-out infinite alternate;
+    }
+    @keyframes LF-radiance-breathe {
+      from { filter: saturate(1.26) brightness(1.04) blur(2px); opacity: 0.9; }
+      to   { filter: saturate(1.40) brightness(1.18) blur(2px); opacity: 1; }
+    }
   }
 </style>
 
@@ -465,11 +585,11 @@ const sites = [
       .forEach((root) => {
         root.dataset.showcaseBound = 'true';
 
-        // TEMPORARY A/B PREVIEW: ?hero=lightfall|plinth sets the variant on the
-        // stage so the two treatments can be compared on the deploy. No param =
-        // the shipped look. Remove this block once a direction is chosen.
+        // TEMPORARY A/B PREVIEW: ?hero=lightfall|window|radiance sets the
+        // lighting variant on the stage so the treatments can be compared on the
+        // deploy. No param = the shipped look. Remove once a direction is chosen.
         const variantParam = new URLSearchParams(location.search).get('hero');
-        if (variantParam && ['lightfall', 'plinth'].includes(variantParam)) {
+        if (variantParam && ['lightfall', 'window', 'radiance'].includes(variantParam)) {
           root.dataset.heroVariant = variantParam;
         }
 
