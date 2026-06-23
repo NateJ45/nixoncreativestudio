@@ -29,6 +29,8 @@
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import CaseStudyCover from './CaseStudyCover.astro';
 import { getCoverPlaceholder } from '../lib/coverPlaceholder';
 
@@ -40,6 +42,20 @@ const featured = allStudies
   .filter((entry) => entry.data.featured)
   .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
   .slice(0, 3);
+
+// Full-page site captures (the same {slug}-home.png that drive the case-study
+// SiteShowcase). These power the hover-scroll: on hover the card image pans
+// down the live page, then eases back to the top on hover-off. Every case study
+// has one; if a future featured entry is missing its capture, the card falls
+// back to the static CaseStudyCover below.
+const shotModules = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/case-studies/shots/*-home.png',
+  { eager: true },
+);
+const shotFor = (id: string): ImageMetadata | null => {
+  const match = Object.entries(shotModules).find(([path]) => path.endsWith(`/${id}-home.png`));
+  return match ? match[1].default : null;
+};
 
 // Pretty sector label for the meta row: kebab-case → Title Case.
 const sectorLabel = (sector: string) =>
@@ -79,20 +95,41 @@ const [primary, ...secondaries] = featured;
           href={`/work/${primary.id}/`}
           data-spotlight
         >
-          <!-- Real cover image (blur-up). alt="" because the card's heading
-               immediately below names the same project. transition:name shares
-               the cover with the /work/[slug] hero for a morph on navigation. -->
-          <div class="relative z-10" transition:name={`cover-${primary.id}`}>
-            <CaseStudyCover
-              cover={primary.data.cover}
-              placeholder={getCoverPlaceholder(primary.id)}
-              alt=""
-              widths={[600, 900, 1200]}
-              sizes="(min-width: 48rem) 60vw, 100vw"
-              fit="cover"
-              class="work-cover aspect-[4/3] w-full rounded-lg"
-            />
-          </div>
+          <!-- Hover-scroll cover: the full-page capture sits top-aligned in a
+               4:3 frame and pans down the page on hover (CSS below), easing back
+               on hover-off. The cover's blur preview is painted as the frame bg
+               so there is no flash before the capture loads. alt="" because the
+               heading names the project. transition:name morphs to the
+               /work/[slug] hero on navigation. Falls back to the static cover if
+               a capture is ever missing. -->
+          {shotFor(primary.id) ? (
+            <div
+              class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
+              transition:name={`cover-${primary.id}`}
+              style={`background-image:url('${getCoverPlaceholder(primary.id)}');background-size:cover;background-position:top center;`}
+            >
+              <Image
+                src={shotFor(primary.id)!}
+                alt=""
+                widths={[600, 900, 1200]}
+                sizes="(min-width: 48rem) 60vw, 100vw"
+                class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <div class="relative z-10" transition:name={`cover-${primary.id}`}>
+              <CaseStudyCover
+                cover={primary.data.cover}
+                placeholder={getCoverPlaceholder(primary.id)}
+                alt=""
+                widths={[600, 900, 1200]}
+                sizes="(min-width: 48rem) 60vw, 100vw"
+                fit="cover"
+                class="work-cover aspect-[4/3] w-full rounded-lg"
+              />
+            </div>
+          )}
 
           <div class="relative z-10 flex flex-col gap-s">
             <p class="text-sm font-semibold text-text-muted">
@@ -121,17 +158,34 @@ const [primary, ...secondaries] = featured;
             href={`/work/${entry.id}/`}
             data-spotlight
           >
-            <div class="relative z-10" transition:name={`cover-${entry.id}`}>
-              <CaseStudyCover
-                cover={entry.data.cover}
-                placeholder={getCoverPlaceholder(entry.id)}
-                alt=""
-                widths={[400, 600, 900]}
-                sizes="(min-width: 48rem) 30vw, 100vw"
-                fit="cover"
-                class="work-cover aspect-[4/3] w-full rounded-lg"
-              />
-            </div>
+            {shotFor(entry.id) ? (
+              <div
+                class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
+                transition:name={`cover-${entry.id}`}
+                style={`background-image:url('${getCoverPlaceholder(entry.id)}');background-size:cover;background-position:top center;`}
+              >
+                <Image
+                  src={shotFor(entry.id)!}
+                  alt=""
+                  widths={[400, 600, 900]}
+                  sizes="(min-width: 48rem) 30vw, 100vw"
+                  class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <div class="relative z-10" transition:name={`cover-${entry.id}`}>
+                <CaseStudyCover
+                  cover={entry.data.cover}
+                  placeholder={getCoverPlaceholder(entry.id)}
+                  alt=""
+                  widths={[400, 600, 900]}
+                  sizes="(min-width: 48rem) 30vw, 100vw"
+                  fit="cover"
+                  class="work-cover aspect-[4/3] w-full rounded-lg"
+                />
+              </div>
+            )}
 
             <div class="relative z-10 flex flex-col gap-xs">
               <p class="text-sm font-semibold text-text-muted">
@@ -165,9 +219,9 @@ const [primary, ...secondaries] = featured;
 
 <style>
   /* ----------------------------------------------------------------------
-     Card hover. Lifts on hover/focus, and the cover image scales a touch
-     so the click feels alive instead of static. Reduced motion strips
-     both effects so the page stays calm for visitors who need it.
+     Card hover. The card lifts on hover/focus, and the cover (a full-page site
+     capture) slowly pans down the page, easing back to the top on hover-off.
+     Reduced motion strips both so the page stays calm for visitors who need it.
      ---------------------------------------------------------------------- */
   .work-card {
     transition: transform 200ms ease;
@@ -177,17 +231,28 @@ const [primary, ...secondaries] = featured;
      scaled image inside its rounded corners. */
   .work-cover {
     overflow: hidden;
-    transition: transform 400ms ease;
+  }
+
+  /* Hover-scroll: the full-page capture pans down the live page on hover, then
+     eases back to the top when the pointer leaves. The short base transition is
+     the graceful reset; the long hover transition is the slow scroll. Pure CSS,
+     gated to motion-OK so reduced-motion visitors get a still top-of-page frame.
+     -62% is a safe share for these tall captures (never scrolls past the end). */
+  .work-scroll {
+    transition: transform 0.8s ease;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .work-card:hover .work-scroll {
+      transform: translateY(-62%);
+      transition: transform 7s ease-out;
+    }
   }
 
   .work-card:hover,
   .work-card:focus-visible {
     transform: translateY(-0.25rem);
-  }
-
-  .work-card:hover .work-cover,
-  .work-card:focus-visible .work-cover {
-    transform: scale(1.015);
   }
 
   .work-card:focus-visible {
@@ -198,10 +263,9 @@ const [primary, ...secondaries] = featured;
   @media (prefers-reduced-motion: reduce) {
     .work-card,
     .work-cover,
+    .work-scroll,
     .work-card:hover,
-    .work-card:focus-visible,
-    .work-card:hover .work-cover,
-    .work-card:focus-visible .work-cover {
+    .work-card:focus-visible {
       transform: none;
       transition: none;
     }
