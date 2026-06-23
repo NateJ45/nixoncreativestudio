@@ -5,45 +5,54 @@
    ============================================================================
    The client-name ticker that rides the base of the hero. Names are pulled live
    from the case-studies collection (newest-first, de-duped), so the marquee
-   stays in sync as the portfolio grows.
+   stays in sync as the portfolio grows. Each name is now a LINK to that client's
+   case study, so the ticker doubles as a fast path into the work.
 
    Styled for the navy hero floor: muted-white names with sky-blue dot
-   separators, edge-faded, auto-scrolling, pausing on hover. Decorative
-   (aria-hidden); the sr-only list right after it carries the same names for
-   assistive tech and crawlers.
+   separators, edge-faded, auto-scrolling, pausing on hover AND on keyboard focus
+   so a focused link never scrolls away. Reduced-motion safe: with motion off the
+   ticker is static, so the links are easy targets.
 
-   Used at the bottom of Hero.astro. (It used to live in a separate proof band
-   section; that section was retired and its differentiator line folded into the
-   hero copy, with this ticker moved to the hero floor.)
+   Accessibility: a labelled <nav> of client links. The list is rendered twice so
+   the CSS loop is seamless; the second copy is aria-hidden + removed from the tab
+   order, so assistive tech and the keyboard only ever see one set.
+
+   Used at the bottom of Hero.astro.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
 
-const studies = await getCollection('case-studies');
+const studies = (await getCollection('case-studies')).sort(
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf()
+);
 
-// Distinct client names, newest-first.
-const clients = [
-  ...new Set(
-    studies
-      .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
-      .map((s) => s.data.client)
-  ),
-];
+// Distinct clients, newest-first, each linked to its newest case study.
+const seen = new Set<string>();
+const clients: { name: string; slug: string }[] = [];
+for (const s of studies) {
+  if (!seen.has(s.data.client)) {
+    seen.add(s.data.client);
+    clients.push({ name: s.data.client, slug: s.id });
+  }
+}
 
-// Duplicated once so the CSS marquee loops seamlessly at translateX(-50%).
-const marqueeItems = [...clients, ...clients];
+const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]';
 ---
 
-<div class="client-marquee" aria-hidden="true">
+<nav class="client-marquee" aria-label="Recent clients">
   <div class="client-track">
-    {marqueeItems.map((client) => (
-      <span class="client-item font-display text-lg uppercase tracking-[0.04em]">
-        {client}
-      </span>
+    {/* Real, focusable links (the set assistive tech and the keyboard use). */}
+    {clients.map((c) => (
+      <a class={itemClass} href={`/work/${c.slug}/`}>{c.name}</a>
+    ))}
+    {/* Visual duplicate for the seamless loop: hidden from AT + the tab order. */}
+    {clients.map((c) => (
+      <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
+        {c.name}
+      </a>
     ))}
   </div>
-</div>
-<p class="sr-only">Clients include {clients.join(', ')}.</p>
+</nav>
 
 <style>
   /* Edge-faded, continuously scrolling ticker. The track is two copies of the
@@ -64,13 +73,26 @@ const marqueeItems = [...clients, ...clients];
     white-space: nowrap;
   }
 
-  /* Muted white on the navy hero floor. Decorative, so this is a quiet ticker,
-     not a high-contrast line. */
+  /* Muted white on the navy hero floor, brightening to a clear link on hover or
+     keyboard focus. Quiet at rest so it reads as a ticker, not a loud nav. */
   .client-item {
     position: relative;
     display: inline-flex;
     align-items: center;
     color: color-mix(in oklab, #ffffff 62%, transparent);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .client-item:hover,
+  .client-item:focus-visible {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+  .client-item:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 4px;
+    border-radius: 4px;
   }
 
   /* Sky-blue dot separator before each name. */
@@ -89,7 +111,10 @@ const marqueeItems = [...clients, ...clients];
     .client-track {
       animation: client-marquee 48s linear infinite;
     }
-    .client-marquee:hover .client-track {
+    /* Pause on hover (mouse) and on focus-within (keyboard), so a focused or
+       hovered link is a stationary target. */
+    .client-marquee:hover .client-track,
+    .client-marquee:focus-within .client-track {
       animation-play-state: paused;
     }
   }
