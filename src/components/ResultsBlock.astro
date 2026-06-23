@@ -1,0 +1,75 @@
+---
+// Safe to edit.
+/* ============================================================================
+   ResultsBlock
+   ============================================================================
+   A scannable "What changed" outcomes list for a case study, rendered from the
+   `results` frontmatter array. It replaces the old prose "The result" section:
+   a busy reader (a board member, a pastor, a shop owner) gets the real outcomes
+   at a glance instead of mining a paragraph.
+
+   HONESTY: only list changes the case study's own prose supports. Never invent a
+   metric or an outcome. These lines were drafted from each study's existing
+   "The result" / outcome copy and honesty-checked before they were wired in.
+
+   Rendered by src/pages/work/[slug].astro (outside the prose container, so it
+   carries its own clean styling). To edit the points, edit `results:` in the
+   case study's frontmatter.
+   ============================================================================ */
+interface Props {
+  /** The "what changed" lines, each a short real outcome. */
+  changes: string[];
+  /** Section heading; defaults to "What changed". */
+  title?: string;
+}
+const { changes, title = 'What changed' } = Astro.props;
+---
+
+<section class="ncs-results" aria-labelledby="ncs-results-title" data-reveal>
+  <h2 id="ncs-results-title">{title}</h2>
+  <ul class="ncs-results-list" role="list">
+    {changes.map((change) => (
+      <li>
+        <!-- Checkmark marks an achieved change. Decorative; the text carries it. -->
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+        <span>{change}</span>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .ncs-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .ncs-results h2 {
+    font-size: var(--text-h3, 1.75rem);
+    color: var(--color-heading);
+    margin: 0;
+  }
+  .ncs-results-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .ncs-results-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    line-height: 1.55;
+    color: var(--color-text);
+    font-size: 1.0625rem;
+  }
+  .ncs-results-list svg {
+    flex: none;
+    margin-top: 0.15rem;
+    color: var(--color-link);
+  }
+</style>

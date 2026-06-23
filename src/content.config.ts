@@ -129,6 +129,18 @@ const caseStudies = defineCollection({
       title: z.string().optional(),
     }).optional(),
 
+    // Optional "what changed" results list. Each entry is a short, real outcome
+    // of the project. Rendered by the detail page as a scannable ResultsBlock in
+    // place of a prose "result" paragraph. HONESTY: only list changes the study
+    // actually delivered; never invent a metric or outcome.
+    results: z.array(z.string()).optional(),
+
+    // Optional signed designer's note: a short (1-3 sentence) first-person
+    // reflection from Nathan, rendered as a signed DesignerNote on the detail
+    // page. Specific to the project and honest; the signature is added by the
+    // component.
+    designerNote: z.string().optional(),
+
   }),
 });
 

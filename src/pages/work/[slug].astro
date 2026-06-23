@@ -18,6 +18,8 @@ import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import CaseStudyCover from '../../components/CaseStudyCover.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
+import DesignerNote from '../../components/DesignerNote.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { Badge } from '../../components/ui/badge';
 import { readingTime } from '../../lib/readingTime';
@@ -54,7 +56,7 @@ const { Content, headings } = await render(entry);
 // studies stay single-column and centered.
 const tocHeadings = (headings ?? []).filter((h) => h.depth === 2);
 const hasToc = tocHeadings.length >= 2;
-const { title, client, sector, services, summary, cover, role, tags, published, updated, stack, liveUrl, outcome, testimonial } = entry.data;
+const { title, client, sector, services, summary, cover, role, tags, published, updated, stack, liveUrl, outcome, testimonial, results, designerNote } = entry.data;
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -320,6 +322,19 @@ const schemas = [
 
       </div>
     </div>
+
+    {/* "What changed" results block + signed designer's note. Rendered from
+        frontmatter (results / designerNote), outside the prose container so they
+        carry their own clean styling. They replace the old prose "The result" /
+        "Reflections" sections, so the body now closes on "What we built". */}
+    {(results?.length || designerNote) && (
+      <div class="ncs-container">
+        <div class="mx-auto flex max-w-[72ch] flex-col gap-2xl border-t border-border pb-xl pt-2xl">
+          {results && results.length > 0 && <ResultsBlock changes={results} />}
+          {designerNote && <DesignerNote note={designerNote} />}
+        </div>
+      </div>
+    )}
 
     {/* Testimonial pull-quote (optional). Real client social proof, set
         apart from the body as a centered editorial quote. Renders nothing
