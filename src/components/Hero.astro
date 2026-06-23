@@ -42,6 +42,7 @@
 import { Button } from './ui/button';
 import HeroCanvas from './HeroCanvas';
 import HeroShowcase from './HeroShowcase.astro';
+import ClientMarquee from './ClientMarquee.astro';
 // import { Image } from 'astro:assets';
 // import heroPhoto from '../assets/brand/hero.jpg';
 
@@ -55,7 +56,7 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
 
 <section
   class="hero relative isolate flex flex-col overflow-hidden bg-primary text-primary-foreground"
-  style="min-height: clamp(36rem, 70svh, 46rem);"
+  style="--hero-marquee-h: 3.25rem; min-height: clamp(39rem, 72svh, 49rem);"
   aria-labelledby="hero-statement"
   data-hero-dark
 >
@@ -82,7 +83,7 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
        stays usable; the showcase itself re-enables them for hover/explore.
        ==================================================================== -->
   <div
-    class="hero-scene pointer-events-none absolute inset-0 z-[1] hidden lg:block"
+    class="hero-scene pointer-events-none absolute inset-x-0 top-0 z-[1] hidden lg:block"
     data-reveal="fade"
     style="--reveal-delay: 320ms;"
   >
@@ -152,16 +153,15 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
     </div>
   </div>
 
-  <!-- Animated scroll cue, centered at the base of the hero. Decorative. -->
-  <div
-    class="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center"
-    aria-hidden="true"
-    data-reveal="fade"
-    style="--reveal-delay: 600ms;"
-  >
-    <span class="scroll-cue flex h-10 w-6 items-start justify-center rounded-full border border-primary-foreground/40 p-1.5">
-      <span class="scroll-cue-dot h-1.5 w-1.5 rounded-full bg-primary-foreground/80"></span>
-    </span>
+  <!-- ====================================================================
+       z-10 Client marquee. A thin, full-width ticker pinned to the base of the
+       hero (in flow, after the copy, so it lands at the bottom of the flex
+       column). Light client names on the navy, edge-faded, auto-scrolling. The
+       device scene above is inset by --hero-marquee-h so it never crosses these
+       names. Replaces the old scroll cue, which would have collided with it.
+       ==================================================================== -->
+  <div class="hero-marquee relative z-10 mt-auto">
+    <ClientMarquee />
   </div>
 </section>
 
@@ -230,6 +230,22 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
     width: 56%;
   }
 
+  /* The device scene stops above the marquee strip so the screenshots never
+     cross the client names at the hero's base. (Set on the wrapper, which is
+     absolute inset-x-0 top-0 in markup; this supplies the bottom.) */
+  .hero-scene {
+    bottom: var(--hero-marquee-h);
+  }
+
+  /* Client marquee strip: a thin band at the very bottom of the hero, lifted
+     off the content by a hairline. Holds the ClientMarquee ticker centered. */
+  .hero-marquee {
+    display: flex;
+    align-items: center;
+    min-height: var(--hero-marquee-h);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
   /* ----------------------------------------------------------------------
      Scrim. Solid navy on the left (headline core), fading to transparent on
      the right so the far images stay crisp. Tuned so the headline's right
@@ -268,15 +284,6 @@ const positioning = 'For churches, schools, and small businesses in the Cincinna
   .hero-secondary:hover .hero-secondary-arrow,
   .hero-secondary:focus-visible .hero-secondary-arrow {
     transform: translateX(0.25rem);
-  }
-
-  /* ----------------------------------------------------------------------
-     Scroll cue. The dot bobs down inside the mouse-shaped outline.
-     ---------------------------------------------------------------------- */
-  @media (prefers-reduced-motion: no-preference) {
-    .scroll-cue-dot {
-      animation: scroll-cue 1.6s ease-in-out infinite;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

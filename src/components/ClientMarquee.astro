@@ -1,0 +1,100 @@
+---
+// Safe to edit.
+/* ============================================================================
+   ClientMarquee
+   ============================================================================
+   The client-name ticker that rides the base of the hero. Names are pulled live
+   from the case-studies collection (newest-first, de-duped), so the marquee
+   stays in sync as the portfolio grows.
+
+   Styled for the navy hero floor: muted-white names with sky-blue dot
+   separators, edge-faded, auto-scrolling, pausing on hover. Decorative
+   (aria-hidden); the sr-only list right after it carries the same names for
+   assistive tech and crawlers.
+
+   Used at the bottom of Hero.astro. (It used to live inside ProofBand; the proof
+   sentence stayed there, the ticker moved up into the hero.)
+   ============================================================================ */
+
+import { getCollection } from 'astro:content';
+
+const studies = await getCollection('case-studies');
+
+// Distinct client names, newest-first.
+const clients = [
+  ...new Set(
+    studies
+      .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
+      .map((s) => s.data.client)
+  ),
+];
+
+// Duplicated once so the CSS marquee loops seamlessly at translateX(-50%).
+const marqueeItems = [...clients, ...clients];
+---
+
+<div class="client-marquee" aria-hidden="true">
+  <div class="client-track">
+    {marqueeItems.map((client) => (
+      <span class="client-item font-display text-lg uppercase tracking-[0.04em]">
+        {client}
+      </span>
+    ))}
+  </div>
+</div>
+<p class="sr-only">Clients include {clients.join(', ')}.</p>
+
+<style>
+  /* Edge-faded, continuously scrolling ticker. The track is two copies of the
+     client list, so translateX(-50%) lands exactly on the start of the second
+     copy for a seamless loop. */
+  .client-marquee {
+    width: 100%;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .client-track {
+    display: inline-flex;
+    width: max-content;
+    gap: 3rem;
+    padding-inline: 1.5rem;
+    white-space: nowrap;
+  }
+
+  /* Muted white on the navy hero floor. Decorative, so this is a quiet ticker,
+     not a high-contrast line. */
+  .client-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    color: color-mix(in oklab, #ffffff 62%, transparent);
+  }
+
+  /* Sky-blue dot separator before each name. */
+  .client-item::before {
+    content: "";
+    position: absolute;
+    left: -1.55rem;
+    height: 0.35rem;
+    width: 0.35rem;
+    border-radius: 9999px;
+    background: var(--color-secondary);
+    opacity: 0.7;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .client-track {
+      animation: client-marquee 48s linear infinite;
+    }
+    .client-marquee:hover .client-track {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes client-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+</style>
