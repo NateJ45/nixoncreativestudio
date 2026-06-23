@@ -169,6 +169,69 @@
     font-feature-settings: "tnum";
   }
 
+  /* Copy-link controls that enhance.ts appends to long-form headings
+     (case studies, journal). Hidden until the heading is hovered or the
+     control is focused; faintly visible on touch (no hover). Rules are scoped
+     under [data-prose] so they beat the prose's generic [&_a] link styling.
+     The box is 1.5rem (a 24px AA target) around a 1rem icon. */
+  [data-prose] :is(h2, h3) {
+    position: relative;
+  }
+  [data-prose] .heading-anchor {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: 0.25em;
+    vertical-align: middle;
+    color: var(--color-muted-foreground);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+  [data-prose] .heading-anchor svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  [data-prose] :is(h2, h3):hover .heading-anchor,
+  [data-prose] .heading-anchor:focus-visible {
+    opacity: 1;
+  }
+  [data-prose] .heading-anchor:hover {
+    color: var(--color-link);
+  }
+  [data-prose] .heading-anchor:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+    opacity: 1;
+  }
+  /* Touch devices have no hover, so keep the control findable. */
+  @media (hover: none) {
+    [data-prose] .heading-anchor {
+      opacity: 0.5;
+    }
+  }
+  /* "Copied" confirmation bubble above the control. Sizes are absolute so they
+     stay constant regardless of the heading's font size. */
+  [data-prose] .heading-anchor[data-copied]::after {
+    content: "Copied";
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.3rem 0.45rem;
+    border-radius: 0.3rem;
+    pointer-events: none;
+  }
+
   /* All headings inherit the display face and brand color by default.
      --color-heading is aliased to the shadcn --heading token (see @theme
      inline below), so this flips automatically between navy in light
