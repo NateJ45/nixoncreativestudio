@@ -1,23 +1,36 @@
 ---
-// Foundation, edit with care. The form structure and Web3Forms wiring are
-// the production inquiry pipeline; touch only with intent.
+// Foundation, edit with care. The form structure, the Web3Forms wiring, and the
+// inline enhancement script are the production inquiry pipeline; touch only with
+// intent. The layout shell around them is on the shared editorial grid.
 /* ============================================================================
    /contact | Contact
    ============================================================================
    Form-driven inquiry page. Posts to Web3Forms.
 
-   The HTML form is functional: real labels, native input types, required
-   attributes, and a honeypot. Even without JavaScript the form submits
-   natively to Web3Forms; the inline script just enhances the UX by
-   swapping to a thank-you state without a page reload.
+   Layout: a full-width masthead (h1 + intro) over a two-column body, the form in
+   a surface-card on the left beside a ways-to-reach-me sidebar on the right. The
+   form spans the full content width so it stays roomy with no empty side column.
+   The old bg-bg-soft band is dissolved, so the page is one seamless surface and
+   dark mode is a single navy sheet; depth comes from the form's surface-card, and
+   the page closes on the shared band-themed CtaBanner.
 
-   Layout: hero + two-column body (form left, sidebar right).
+   The form itself is unchanged where it counts: real labels, native input types,
+   required attributes, a honeypot, the three Web3Forms hidden inputs, the
+   hCaptcha widget, and the inline enhancement script (draft save/restore,
+   ?org_type preselect, honeypot, captcha gate, fetch submit, thank-you/error
+   swap) are all preserved byte-for-byte. The only change inside the form is
+   visual grouping: the flat field stack is split into three labeled fieldsets
+   and two short field pairs sit side by side. Every field name, id, label/for,
+   required, and autocomplete is untouched, so the script's selectors still bind.
+
+   Even without JavaScript the form submits natively to Web3Forms.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { Button } from '../components/ui/button';
 import CopyEmail from '../components/CopyEmail';
+import CtaBanner from '../components/CtaBanner.astro';
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
@@ -60,6 +73,14 @@ const heardFromOptions = [
   { value: 'other',       label: 'Somewhere else'                            },
 ];
 
+// What-happens-next, derived from the existing "What to expect" copy so nothing
+// is fabricated. A quiet three-row ledger, not a numbered scaffold.
+const nextSteps = [
+  'You send the form.',
+  'I read it myself and reply within one or two business days.',
+  "If we're a fit, a half-hour call to talk it through.",
+];
+
 // Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
 // time, which is required because the form runs in the browser.
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
@@ -87,6 +108,11 @@ const inputClass =
   'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
   'transition-[border-color,box-shadow] duration-150 ' +
   'focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25';
+// Borderless fieldset reset so the groups don't break the grid or add chrome;
+// fieldsets after the first open with a hairline. The legend is styled mono +
+// uppercase so the form reads as a short, sectioned document.
+const fieldsetClass = 'm-0 flex min-w-0 flex-col gap-m border-0 p-0';
+const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 ---
 
 <BaseLayout
@@ -94,327 +120,380 @@ const inputClass =
   description="Get in touch about a web design, brand, or photography project."
 >
 
-  <!-- ----------------------------------------------------------------------
-       Hero
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="contact-hero-heading">
-    <div class="ncs-container" data-reveal>
-      <h1 id="contact-hero-heading" class="mb-m max-w-[22ch] leading-[0.95]">
+  <!-- ====================================================================
+       Masthead. The only h1. Full content width, left-aligned.
+       ==================================================================== -->
+  <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
+    <div class="ncs-container">
+      <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
         Start a project, or just <span class="text-link">say hello.</span>
       </h1>
-      <p class="max-w-[60ch] text-lg leading-[1.6] text-text">
-        The form below sends straight to my inbox. If you'd rather skip the form, my email and phone are on the right.
+      <p
+        class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
+        data-reveal
+        style="--reveal-delay: 120ms;"
+      >
+        The form sends straight to my inbox. If you'd rather email or call, those work just as well.
       </p>
     </div>
   </section>
 
 
-  <!-- ----------------------------------------------------------------------
-       Form + sidebar. Two-column on >= 56rem, stacked on narrow screens.
-       ---------------------------------------------------------------------- -->
-  <section class="bg-bg-soft py-2xl" aria-label="Contact form and direct contact details">
-    <div class="ncs-container grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
+  <!-- ====================================================================
+       The inquiry. The form in a surface-card beside the ways-to-reach-me
+       sidebar, spanning the full content width so the form is roomy and there
+       is no empty left column. The old bg-bg-soft band is gone, so the page is
+       one seamless surface.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-label="Inquiry form and ways to reach me">
+    <div class="ncs-container">
+      <div class="border-t border-border pt-2xl">
 
-      <!-- Three-state container. Form is shown by default; the thanks and
-           error blocks below start with the .hidden Tailwind utility class
-           and the inline script toggles it via classList. -->
-      <div data-reveal>
+        <div class="min-w-0">
+          <div class="grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
 
-      <form
-        class="flex flex-col gap-m rounded-xl bg-bg p-l"
-        method="post"
-        action="https://api.web3forms.com/submit"
-        novalidate
-        data-contact-form
-      >
-        <!--
-          Web3Forms hidden fields:
-            - access_key: routes the submission to Nathan's inbox.
-            - subject: sets the email subject so inquiries are obvious.
-            - from_name: sets the visible sender name.
-          The form posts natively to the same endpoint if JS is disabled,
-          so submissions always reach Web3Forms.
-        -->
-        <input type="hidden" name="access_key" value={web3formsKey} />
-        <input type="hidden" name="subject"    value={`New project inquiry from ${site.domain}`} />
-        <input type="hidden" name="from_name"  value={`${site.studioName} website`} />
+            <!-- Three-state container. Form is shown by default; the thanks and
+                 error blocks below start with the .hidden Tailwind utility class
+                 and the inline script toggles it via classList. -->
+            <div data-reveal>
 
-        <div class={fieldClass}>
-          <label class={labelClass} for="name">Your name</label>
-          <input class={inputClass} type="text" id="name" name="name" required autocomplete="name" />
-        </div>
-
-        <div class={fieldClass}>
-          <label class={labelClass} for="email">Email</label>
-          <input class={inputClass} type="email" id="email" name="email" required autocomplete="email" />
-        </div>
-
-        <!-- Phone: optional. type="tel" lets mobile browsers pop the
-             numeric keypad; autocomplete="tel" lets the OS / password
-             manager pre-fill. -->
-        <div class={fieldClass}>
-          <label class={labelClass} for="phone">
-            Phone <span class={optionalMark}>(optional)</span>
-          </label>
-          <input class={inputClass} type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" />
-        </div>
-
-        <!-- Organization name: optional. Lets Nathan look the org up
-             before the first reply. -->
-        <div class={fieldClass}>
-          <label class={labelClass} for="organization">
-            Organization name <span class={optionalMark}>(optional)</span>
-          </label>
-          <input class={inputClass} type="text" id="organization" name="organization" autocomplete="organization" />
-        </div>
-
-        <div class={fieldClass}>
-          <label class={labelClass} for="org_type">Organization type</label>
-          <select class={inputClass} id="org_type" name="org_type" required>
-            <option value="" disabled selected>Pick the closest</option>
-            {orgTypes.map((opt) => (
-              <option value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <!-- Current website: optional. URL input gives mobile keyboard
-             the dot/slash keys. Placeholder hints at expected format. -->
-        <div class={fieldClass}>
-          <label class={labelClass} for="current_website">
-            Current website <span class={optionalMark}>(optional)</span>
-          </label>
-          <input
-            class={inputClass}
-            type="url"
-            id="current_website"
-            name="current_website"
-            autocomplete="url"
-            inputmode="url"
-            placeholder="https://"
-          />
-        </div>
-
-        <div class={fieldClass}>
-          <label class={labelClass} for="budget">Budget range</label>
-          <select class={inputClass} id="budget" name="budget" required>
-            <option value="" disabled selected>Pick the closest</option>
-            {budgets.map((opt) => (
-              <option value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <!-- Timeline: optional. Helps triage against Nathan's per-quarter
-             project cap without asking for exact dates. -->
-        <div class={fieldClass}>
-          <label class={labelClass} for="timeline">
-            Project timeline <span class={optionalMark}>(optional)</span>
-          </label>
-          <select class={inputClass} id="timeline" name="timeline">
-            <option value="" selected>No preference</option>
-            {timelines.map((opt) => (
-              <option value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div class={fieldClass}>
-          <label class={labelClass} for="message">Project description</label>
-          <textarea
-            class={`${inputClass} min-h-32 resize-y`}
-            id="message"
-            name="message"
-            required
-            minlength="30"
-            rows="6"
-            placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
-          ></textarea>
-          <p class="mt-xs text-[0.85rem] text-text-muted">
-            At least a few sentences, please. The more you share, the better I can scope the first conversation.
-          </p>
-        </div>
-
-        <!-- Attribution: optional. Cheap signal on what marketing
-             channels are bringing inquiries in. -->
-        <div class={fieldClass}>
-          <label class={labelClass} for="heard_from">
-            How did you hear about Nixon Creative Studio? <span class={optionalMark}>(optional)</span>
-          </label>
-          <select class={inputClass} id="heard_from" name="heard_from">
-            <option value="" selected>Pick one if you'd like</option>
-            {heardFromOptions.map((opt) => (
-              <option value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <!-- Honeypot. sr-only is Tailwind's equivalent of the old
-             .visually-hidden utility. Hidden from sighted users and
-             screen readers; bots tend to fill every field, so the
-             script discards submissions where this is non-empty. -->
-        <div class="sr-only" aria-hidden="true">
-          <label for="botcheck">Leave this field empty</label>
-          <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
-        </div>
-
-        <!-- hCaptcha widget. The async API script (loaded right after
-             the closing </form> below) finds this element by class and
-             renders the "I'm not a robot" challenge into it. On solve,
-             hCaptcha injects a hidden <input name="h-captcha-response">
-             into the form, which rides along on the existing FormData
-             submit. Web3Forms verifies the response server-side using
-             the shared secret tied to the public sitekey.
-
-             The inline script immediately below mirrors the current
-             site theme onto data-theme before hCaptcha reads it, so
-             the widget paints to match light or dark mode on load.
-             It doesn't live-update on a mid-session theme flip; the
-             contact page is short enough that this isn't worth wiring. -->
-        <div class="h-captcha self-start" data-sitekey={hcaptchaSiteKey} data-theme="light"></div>
-        <script is:inline>
-          (function () {
-            if (document.documentElement.classList.contains('dark')) {
-              var el = document.querySelector('.h-captcha');
-              if (el) el.setAttribute('data-theme', 'dark');
-            }
-          })();
-        </script>
-
-        <!-- Submit. Shared shadcn Button (brand variant + cta size)
-             matches the Hero and CtaBanner CTAs. self-start keeps it
-             at content width inside the flex-column form layout. -->
-        <span class="inline-block self-start" data-magnetic="0.35">
-          <Button
-            type="submit"
-            variant="brand"
-            size="cta"
-            className="shine"
-            data-contact-submit
-          >
-            <span data-contact-submit-label>Send</span>
-          </Button>
-        </span>
-
-        {!formActive && (
-          <p class="text-[0.85rem] italic text-text-muted">
-            The Web3Forms access key is missing. Set <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">PUBLIC_WEB3FORMS_KEY</code> in <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">.env</code> locally and in Cloudflare Pages settings before launch.
-          </p>
-        )}
-      </form>
-
-      <!-- hCaptcha API script. is:inline keeps Astro from touching it so
-           the tag ships exactly as written. async defer lets it download
-           in the background while the page paints; once loaded, hCaptcha
-           auto-renders every .h-captcha element on the page using their
-           data-* attributes. Loaded only on /contact, not site-wide. -->
-      <script is:inline src="https://js.hcaptcha.com/1/api.js" async defer></script>
-
-      <!-- Thank-you panel. Starts hidden; the submit handler removes the
-           hidden class on success. Same outer card surface as the form so
-           the swap reads as a state change in the same container. -->
-      <div
-        class="hidden flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] animate-in fade-in zoom-in-95 duration-500"
-        data-contact-thanks
-      >
-        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><path d="M20 6 9 17l-5-5" /></svg>
-        </span>
-        <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
-        <p class="max-w-[56ch] leading-[1.6] text-text">
-          I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from {site.domain}, then try the email link on the right.
-        </p>
-      </div>
-
-      <!-- Error panel. Same hidden-class pattern. Amber band signals
-           something went wrong without screaming red. -->
-      <div
-        class="mt-m hidden rounded-lg border border-tertiary/45 p-m text-text [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] animate-in fade-in slide-in-from-top-1 duration-300"
-        data-contact-error
-        role="alert"
-      >
-        <p>
-          Something went wrong on our end. Please try again, or email
-          <a class="text-link underline underline-offset-2" href={site.emailHref}>{site.email}</a>
-          directly.
-        </p>
-      </div>
-
-      </div>
-
-
-      <!-- ------------------------------------------------------------------
-           Sidebar column. Direct contact details + expectation-setting copy.
-           ------------------------------------------------------------------ -->
-      <aside class="flex flex-col gap-l" data-reveal style="--reveal-delay: 120ms;">
-
-        <div class="flex flex-col gap-s">
-          <h2 class="text-h4 text-heading">Direct</h2>
-          <ul class="flex flex-col gap-xs">
-            <li>
-              <CopyEmail client:load email={site.email} />
-            </li>
-            <li>
-              <a class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2" href={site.phoneHref}>
-                {site.phone}
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <div class="flex flex-col gap-s">
-          <h2 class="text-h4 text-heading">What to expect</h2>
-          <p class="leading-[1.6] text-text">
-            I read every inquiry myself and reply within one or two business days. If we look like a fit, the next step is a half-hour call to talk through what you're trying to do.
-          </p>
-        </div>
-
-        <div class="flex flex-col gap-s">
-          <h2 class="text-h4 text-heading">Where I am</h2>
-          <p class="leading-[1.6] text-text">
-            {site.address}. In-person work and photography across the greater Cincinnati region; web design and strategy with clients anywhere, fully remote when that is easier.
-          </p>
-          <!-- Service-area map. Static OpenStreetMap embed centered on
-               the Cincinnati region. No API key, no third-party tracker,
-               loads only the visible tiles. The bbox parameter frames
-               the area; adjust if Nathan wants to widen the scope.
-               loading="lazy" keeps it off the critical path. -->
-          <div class="mt-s overflow-hidden rounded-md border border-border">
-            <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox=-85.05%2C38.85%2C-83.95%2C39.55&amp;layer=mapnik&amp;marker=39.20%2C-84.40"
-              title="Map of the Greater Cincinnati service area"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              class="block h-56 w-full"
-            ></iframe>
-          </div>
-        </div>
-
-        {site.bookingUrl && (
-          <!-- Book-a-call CTA. Renders only when site.bookingUrl is set
-               (e.g. a Cal.com link). Reads as a lighter-weight option
-               next to "use the form" for warm leads who'd rather skip
-               straight to scheduling. -->
-          <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
-            <h2 class="text-h4 text-heading">Rather book a call?</h2>
-            <p class="leading-[1.6] text-text">
-              Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a working conversation.
-            </p>
-            <a
-              class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
-              href={site.bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <form
+              class="flex flex-col gap-l rounded-xl surface-card p-l"
+              method="post"
+              action="https://api.web3forms.com/submit"
+              novalidate
+              data-contact-form
             >
-              Open my calendar →
-            </a>
+              <!--
+                Web3Forms hidden fields:
+                  - access_key: routes the submission to Nathan's inbox.
+                  - subject: sets the email subject so inquiries are obvious.
+                  - from_name: sets the visible sender name.
+                The form posts natively to the same endpoint if JS is disabled,
+                so submissions always reach Web3Forms.
+              -->
+              <input type="hidden" name="access_key" value={web3formsKey} />
+              <input type="hidden" name="subject"    value={`New project inquiry from ${site.domain}`} />
+              <input type="hidden" name="from_name"  value={`${site.studioName} website`} />
+
+              <!-- Fieldset 1: about you. -->
+              <fieldset class={fieldsetClass}>
+                <legend class={legendClass}>About you</legend>
+
+                <!-- name + email side by side on wider screens. -->
+                <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="name">Your name</label>
+                    <input class={inputClass} type="text" id="name" name="name" required autocomplete="name" />
+                  </div>
+
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="email">Email</label>
+                    <input class={inputClass} type="email" id="email" name="email" required autocomplete="email" />
+                  </div>
+                </div>
+
+                <!-- Phone: optional. type="tel" lets mobile browsers pop the
+                     numeric keypad; autocomplete="tel" lets the OS / password
+                     manager pre-fill. -->
+                <div class={fieldClass}>
+                  <label class={labelClass} for="phone">
+                    Phone <span class={optionalMark}>(optional)</span>
+                  </label>
+                  <input class={inputClass} type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" />
+                </div>
+
+                <!-- Organization name: optional. Lets Nathan look the org up
+                     before the first reply. -->
+                <div class={fieldClass}>
+                  <label class={labelClass} for="organization">
+                    Organization name <span class={optionalMark}>(optional)</span>
+                  </label>
+                  <input class={inputClass} type="text" id="organization" name="organization" autocomplete="organization" />
+                </div>
+              </fieldset>
+
+              <!-- Fieldset 2: about the project. Opens with a hairline. -->
+              <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
+                <legend class={legendClass}>About the project</legend>
+
+                <div class={fieldClass}>
+                  <label class={labelClass} for="org_type">Organization type</label>
+                  <select class={inputClass} id="org_type" name="org_type" required>
+                    <option value="" disabled selected>Pick the closest</option>
+                    {orgTypes.map((opt) => (
+                      <option value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <!-- Current website: optional. URL input gives mobile keyboard
+                     the dot/slash keys. Placeholder hints at expected format. -->
+                <div class={fieldClass}>
+                  <label class={labelClass} for="current_website">
+                    Current website <span class={optionalMark}>(optional)</span>
+                  </label>
+                  <input
+                    class={inputClass}
+                    type="url"
+                    id="current_website"
+                    name="current_website"
+                    autocomplete="url"
+                    inputmode="url"
+                    placeholder="https://"
+                  />
+                </div>
+
+                <!-- budget + timeline side by side on wider screens. -->
+                <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="budget">Budget range</label>
+                    <select class={inputClass} id="budget" name="budget" required>
+                      <option value="" disabled selected>Pick the closest</option>
+                      {budgets.map((opt) => (
+                        <option value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <!-- Timeline: optional. Helps triage against Nathan's
+                       per-quarter project cap without asking for exact dates. -->
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="timeline">
+                      Project timeline <span class={optionalMark}>(optional)</span>
+                    </label>
+                    <select class={inputClass} id="timeline" name="timeline">
+                      <option value="" selected>No preference</option>
+                      {timelines.map((opt) => (
+                        <option value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div class={fieldClass}>
+                  <label class={labelClass} for="message">Project description</label>
+                  <textarea
+                    class={`${inputClass} min-h-32 resize-y`}
+                    id="message"
+                    name="message"
+                    required
+                    minlength="30"
+                    rows="6"
+                    placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
+                  ></textarea>
+                  <p class="mt-xs text-[0.85rem] text-text-muted">
+                    At least a few sentences, please. The more you share, the better I can scope the first conversation.
+                  </p>
+                </div>
+              </fieldset>
+
+              <!-- Fieldset 3: one more thing. Opens with a hairline. -->
+              <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
+                <legend class={legendClass}>One more thing</legend>
+
+                <!-- Attribution: optional. Cheap signal on what marketing
+                     channels are bringing inquiries in. -->
+                <div class={fieldClass}>
+                  <label class={labelClass} for="heard_from">
+                    How did you hear about Nixon Creative Studio? <span class={optionalMark}>(optional)</span>
+                  </label>
+                  <select class={inputClass} id="heard_from" name="heard_from">
+                    <option value="" selected>Pick one if you'd like</option>
+                    {heardFromOptions.map((opt) => (
+                      <option value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </fieldset>
+
+              <!-- Honeypot. sr-only is Tailwind's equivalent of the old
+                   .visually-hidden utility. Hidden from sighted users and
+                   screen readers; bots tend to fill every field, so the
+                   script discards submissions where this is non-empty. -->
+              <div class="sr-only" aria-hidden="true">
+                <label for="botcheck">Leave this field empty</label>
+                <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
+              </div>
+
+              <!-- hCaptcha widget. The async API script (loaded right after
+                   the closing </form> below) finds this element by class and
+                   renders the "I'm not a robot" challenge into it. On solve,
+                   hCaptcha injects a hidden <input name="h-captcha-response">
+                   into the form, which rides along on the existing FormData
+                   submit. Web3Forms verifies the response server-side using
+                   the shared secret tied to the public sitekey.
+
+                   The inline script immediately below mirrors the current
+                   site theme onto data-theme before hCaptcha reads it, so
+                   the widget paints to match light or dark mode on load.
+                   It doesn't live-update on a mid-session theme flip; the
+                   contact page is short enough that this isn't worth wiring. -->
+              <div class="h-captcha self-start" data-sitekey={hcaptchaSiteKey} data-theme="light"></div>
+              <script is:inline>
+                (function () {
+                  if (document.documentElement.classList.contains('dark')) {
+                    var el = document.querySelector('.h-captcha');
+                    if (el) el.setAttribute('data-theme', 'dark');
+                  }
+                })();
+              </script>
+
+              <!-- Submit. Shared shadcn Button (brand variant + cta size)
+                   matches the Hero and CtaBanner CTAs. self-start keeps it
+                   at content width inside the flex-column form layout. -->
+              <span class="inline-block self-start" data-magnetic="0.35">
+                <Button
+                  type="submit"
+                  variant="brand"
+                  size="cta"
+                  className="shine"
+                  data-contact-submit
+                >
+                  <span data-contact-submit-label>Send</span>
+                </Button>
+              </span>
+
+              {!formActive && (
+                <p class="text-[0.85rem] italic text-text-muted">
+                  The Web3Forms access key is missing. Set <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">PUBLIC_WEB3FORMS_KEY</code> in <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">.env</code> locally and in Cloudflare Pages settings before launch.
+                </p>
+              )}
+            </form>
+
+            <!-- hCaptcha API script. is:inline keeps Astro from touching it so
+                 the tag ships exactly as written. async defer lets it download
+                 in the background while the page paints; once loaded, hCaptcha
+                 auto-renders every .h-captcha element on the page using their
+                 data-* attributes. Loaded only on /contact, not site-wide. -->
+            <script is:inline src="https://js.hcaptcha.com/1/api.js" async defer></script>
+
+            <!-- Thank-you panel. Starts hidden; the submit handler removes the
+                 hidden class on success. Same outer card surface as the form so
+                 the swap reads as a state change in the same container. -->
+            <div
+              class="hidden flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] animate-in fade-in zoom-in-95 duration-500"
+              data-contact-thanks
+            >
+              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><path d="M20 6 9 17l-5-5" /></svg>
+              </span>
+              <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
+              <p class="max-w-[56ch] leading-[1.6] text-text">
+                I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from {site.domain}, then try the email link on the right.
+              </p>
+            </div>
+
+            <!-- Error panel. Same hidden-class pattern. Amber band signals
+                 something went wrong without screaming red. -->
+            <div
+              class="mt-m hidden rounded-lg border border-tertiary/45 p-m text-text [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] animate-in fade-in slide-in-from-top-1 duration-300"
+              data-contact-error
+              role="alert"
+            >
+              <p>
+                Something went wrong on our end. Please try again, or email
+                <a class="text-link underline underline-offset-2" href={site.emailHref}>{site.email}</a>
+                directly.
+              </p>
+            </div>
+
+            </div>
+
+
+            <!-- --------------------------------------------------------------
+                 Sidebar. Direct contact details + what-happens-next + where.
+                 Sits in the track beside the form (stacks under it on narrow
+                 screens). The email and phone are also in the footer.
+                 -------------------------------------------------------------- -->
+            <aside class="flex flex-col gap-l" data-reveal style="--reveal-delay: 120ms;">
+
+              <div class="flex flex-col gap-s">
+                <h2 class="text-h4 text-heading">Direct</h2>
+                <ul class="flex flex-col gap-xs">
+                  <li>
+                    <CopyEmail client:load email={site.email} />
+                  </li>
+                  <li>
+                    <a class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2" href={site.phoneHref}>
+                      {site.phone}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="flex flex-col gap-s">
+                <h2 class="text-h4 text-heading">What happens next</h2>
+                <!-- A quiet three-row ledger (the About "currently" tick motif),
+                     not a numbered 01/02/03 scaffold. Ordered list, list-none. -->
+                <ol class="flex list-none flex-col border-b border-border p-0">
+                  {nextSteps.map((step) => (
+                    <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
+                      <span class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary" aria-hidden="true"></span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div class="flex flex-col gap-s">
+                <h2 class="text-h4 text-heading">Where I am</h2>
+                <p class="leading-[1.6] text-text">
+                  {site.address}. In-person work and photography across the greater Cincinnati region; web design and strategy with clients anywhere, fully remote when that is easier.
+                </p>
+                <!-- Service-area map. Static OpenStreetMap embed centered on
+                     the Cincinnati region. No API key, no third-party tracker,
+                     loads only the visible tiles. The bbox parameter frames
+                     the area; adjust if Nathan wants to widen the scope.
+                     loading="lazy" keeps it off the critical path. -->
+                <div class="mt-s overflow-hidden rounded-md border border-border">
+                  <iframe
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=-85.05%2C38.85%2C-83.95%2C39.55&amp;layer=mapnik&amp;marker=39.20%2C-84.40"
+                    title="Map of the Greater Cincinnati service area"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="block h-48 w-full"
+                  ></iframe>
+                </div>
+              </div>
+
+              {site.bookingUrl && (
+                <!-- Book-a-call CTA. Renders only when site.bookingUrl is set
+                     (e.g. a Cal.com link). Reads as a lighter-weight option
+                     next to "use the form" for warm leads who'd rather skip
+                     straight to scheduling. -->
+                <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
+                  <h2 class="text-h4 text-heading">Rather book a call?</h2>
+                  <p class="leading-[1.6] text-text">
+                    Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a working conversation.
+                  </p>
+                  <a
+                    class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+                    href={site.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open my calendar →
+                  </a>
+                </div>
+              )}
+
+            </aside>
+
           </div>
-        )}
+        </div>
 
-      </aside>
-
+      </div>
     </div>
   </section>
+
+
+  <CtaBanner
+    title="Rather skip the form?"
+    sub="Email or call me directly. A sentence about your project is enough to get started."
+    ctaLabel="Email me"
+    ctaHref={site.emailHref}
+  />
 
 
   <!-- ----------------------------------------------------------------------
