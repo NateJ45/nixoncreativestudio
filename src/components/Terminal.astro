@@ -3,12 +3,20 @@
 /* ============================================================================
    Terminal  [About-page motif]
    ============================================================================
-   A small, honest terminal window that signals "this is hand-built, not pulled
-   from a page builder" without the developer-portfolio cliche of fake scrolling
-   code. The point is HONESTY: it shows the real stack (Astro, Tailwind,
-   TypeScript, Cloudflare) and the real promises (accessible, fast, yours to
-   own), so a technical visitor reads it as genuine while the gist still lands
-   for everyone. Nothing here is invented; if a claim stops being true, change it.
+   A small, honest terminal window that does two jobs at once:
+
+   1. It signals technical depth, this studio site is hand-built, not pulled
+      from a page builder, without the developer-portfolio cliche of fake
+      scrolling code.
+   2. It makes the RANGE clear: the `platforms` command shows that hand-coding is
+      one option among several (WordPress, Squarespace, Wix), and that the
+      platform is chosen to fit the client, not the designer's habits. So a
+      visitor never reads "Astro is the only thing he does."
+
+   Everything here is HONEST: the platforms are the ones the studio actually works
+   in (see the "right platform for the job" principle), and the build claims are
+   real (this site is hand-coded on Astro/Tailwind/TypeScript, 100 on
+   accessibility, deployed to Cloudflare). If a claim stops being true, change it.
 
    The lines reveal in sequence on scroll via the shared [data-reveal] system
    (reduced-motion safe and visible without JS), and a cursor blinks on the final
@@ -16,35 +24,49 @@
    sr-only paragraph after it carries the same message in plain language.
 
    To edit: change `title` and `lines`. A line's `type` is one of:
-     cmd  a $-prompted command (white)
-     ok   a checkmarked result line (amber check)
-     out  a plain output line (muted)
+     cmd   a $-prompted command (white)
+     ok    a checkmarked result line (amber check)
+     out   a plain output line (muted)
+     note  a # comment line (quiet, italic)
+     list  a row of highlighted words from `items` (used for the platforms)
    ============================================================================ */
 
 interface Line {
-  type: 'cmd' | 'ok' | 'out';
-  text: string;
+  type: 'cmd' | 'ok' | 'out' | 'note' | 'list';
+  text?: string;
+  items?: string[];
 }
 
-const title = 'nathan@nixon-creative-studio: ~/your-project';
+const title = 'nathan@nixon-creative-studio: ~/studio';
 
 const lines: Line[] = [
   { type: 'cmd', text: 'whoami' },
   { type: 'out', text: 'Nathan. Strategy, design, photography, and code, all from one person.' },
+
+  // The range: hand-coding is one option among several. Keep this in sync with
+  // the "right platform for the job" principle on the About page.
+  { type: 'cmd', text: 'platforms' },
+  { type: 'list', items: ['hand-coded', 'WordPress', 'Squarespace', 'Wix'] },
+  { type: 'note', text: '# I pick whichever one fits your budget and your team, not my habits.' },
+
+  // This site as the proof that the hand-coded option is done well.
   { type: 'cmd', text: 'npm run build' },
-  { type: 'ok',  text: 'Hand-built on Astro and Tailwind, typed in TypeScript' },
-  { type: 'ok',  text: 'Accessible and fast by default, a real 100 on accessibility' },
+  { type: 'ok',  text: 'This site is hand-coded on Astro + Tailwind, typed in TypeScript' },
+  { type: 'ok',  text: 'A real 100 on accessibility, fast on any connection' },
   { type: 'ok',  text: 'Shipped to Cloudflare, then handed to you to own outright' },
 ];
 
 // Plain-language equivalent for screen readers (the window itself is aria-hidden).
 const srSummary =
-  'How the studio builds: by hand on Astro, Tailwind, and TypeScript, deployed to ' +
-  'Cloudflare, accessible and fast, and handed to you to own outright.';
+  'How the studio works: one person doing strategy, design, photography, and code. ' +
+  'I build on whichever platform fits the project, hand-coded, WordPress, ' +
+  'Squarespace, or Wix, not just one. This site is hand-coded on Astro, Tailwind, ' +
+  'and TypeScript, a real 100 on accessibility, deployed to Cloudflare and handed ' +
+  'to you to own outright.';
 
 // Reveal cadence: each line eases in a beat after the previous one, so it reads
 // like the session is being typed out.
-const step = 240;
+const step = 170;
 const baseDelay = 120;
 ---
 
@@ -61,7 +83,13 @@ const baseDelay = 120;
       <p class:list={['terminal-line', `is-${line.type}`]} data-reveal style={`--reveal-delay: ${baseDelay + i * step}ms;`}>
         {line.type === 'cmd' && <span class="terminal-prompt">$ </span>}
         {line.type === 'ok' && <span class="terminal-check">✓ </span>}
-        <span>{line.text}</span>
+        {line.type === 'list' ? (
+          <span class="terminal-list">
+            {line.items?.map((item) => <span class="terminal-plat">{item}</span>)}
+          </span>
+        ) : (
+          <span>{line.text}</span>
+        )}
       </p>
     ))}
     <p class="terminal-line is-cmd" data-reveal style={`--reveal-delay: ${baseDelay + lines.length * step}ms;`}>
@@ -125,7 +153,7 @@ const baseDelay = 120;
   .terminal-line {
     margin: 0;
   }
-  /* A little air before each new command so the two commands read as separate. */
+  /* A little air before each new command so the commands read as separate. */
   .terminal-line.is-cmd {
     margin-top: 0.55rem;
     color: #ffffff;
@@ -135,6 +163,12 @@ const baseDelay = 120;
   }
   .terminal-line.is-out { color: rgba(255, 255, 255, 0.7); }
   .terminal-line.is-ok  { color: rgba(255, 255, 255, 0.82); }
+  /* A shell comment: quiet and italic so it reads as an aside, not a result. */
+  .terminal-line.is-note {
+    margin-top: 0.15rem;
+    color: rgba(255, 255, 255, 0.42);
+    font-style: italic;
+  }
 
   .terminal-prompt {
     color: var(--color-secondary);
@@ -142,6 +176,16 @@ const baseDelay = 120;
   }
   .terminal-check {
     color: var(--color-tertiary);
+  }
+
+  /* Platform list: the words pop in sky so the range registers at a glance. */
+  .terminal-list {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 1.15rem;
+  }
+  .terminal-plat {
+    color: var(--color-secondary);
   }
 
   /* Blinking block cursor on the final prompt. Static (no blink) under reduced
