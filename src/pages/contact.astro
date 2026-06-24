@@ -3,20 +3,16 @@
 // inline enhancement script are the production inquiry pipeline; touch only with
 // intent. The layout shell around them is on the shared editorial grid.
 /* ============================================================================
-   /contact | Contact  [editorial-grid revamp]
+   /contact | Contact
    ============================================================================
    Form-driven inquiry page. Posts to Web3Forms.
 
-   Rebuilt on the same editorial-grid spine as About / Work / Services so the
-   four read as one ruled document:
-
-     [ 13rem marker rail ] [ content track ]
-
-   REACH / SEND run down the rail as quiet mono word-labels; everything hangs off
-   the same left axis (296px, matching the other pages). The old bg-bg-soft band
-   is dissolved, so the page is one seamless surface and dark mode is a single
-   navy sheet; the form sits in a surface-card for depth, and the page closes on
-   the shared band-themed CtaBanner.
+   Layout: a full-width masthead (h1 + intro) over a two-column body, the form in
+   a surface-card on the left beside a ways-to-reach-me sidebar on the right. The
+   form spans the full content width so it stays roomy with no empty side column.
+   The old bg-bg-soft band is dissolved, so the page is one seamless surface and
+   dark mode is a single navy sheet; depth comes from the form's surface-card, and
+   the page closes on the shared band-themed CtaBanner.
 
    The form itself is unchanged where it counts: real labels, native input types,
    required attributes, a honeypot, the three Web3Forms hidden inputs, the
@@ -113,16 +109,10 @@ const inputClass =
   'transition-[border-color,box-shadow] duration-150 ' +
   'focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25';
 // Borderless fieldset reset so the groups don't break the grid or add chrome;
-// fieldsets after the first open with a hairline. The legend is styled like the
-// section rail labels (mono, uppercase) so the form reads as a short document.
+// fieldsets after the first open with a hairline. The legend is styled mono +
+// uppercase so the form reads as a short, sectioned document.
 const fieldsetClass = 'm-0 flex min-w-0 flex-col gap-m border-0 p-0';
 const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
-
-// The shared editorial grid + rail label, copied from about.astro so /contact
-// reads as the same ruled document as the other pages, on one left axis.
-const railGrid =
-  'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
-const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 ---
 
 <BaseLayout
@@ -131,48 +121,36 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
 >
 
   <!-- ====================================================================
-       Masthead (REACH). The only h1. No top hairline (it opens the page).
+       Masthead. The only h1. Full content width, left-aligned.
        ==================================================================== -->
   <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
     <div class="ncs-container">
-      <div class={railGrid}>
-
-        <div class="flex flex-col gap-2" aria-hidden="true">
-          <p class={railLabel}>Reach</p>
-          <p class="font-mono text-[0.8rem] text-text-muted">Cincinnati, OH</p>
-        </div>
-
-        <div class="min-w-0">
-          <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
-            Start a project, or just <span class="text-link">say hello.</span>
-          </h1>
-          <p
-            class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
-            data-reveal
-            style="--reveal-delay: 120ms;"
-          >
-            The form sends straight to my inbox. If you'd rather email or call, those work just as well.
-          </p>
-        </div>
-
-      </div>
+      <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
+        Start a project, or just <span class="text-link">say hello.</span>
+      </h1>
+      <p
+        class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
+        data-reveal
+        style="--reveal-delay: 120ms;"
+      >
+        The form sends straight to my inbox. If you'd rather email or call, those work just as well.
+      </p>
     </div>
   </section>
 
 
   <!-- ====================================================================
-       The inquiry (SEND). On the shared axis: the form in a surface-card
-       (left of the track) beside the ways-to-reach-me sidebar (right). The
-       old bg-bg-soft band is gone, so the page is one seamless surface.
+       The inquiry. The form in a surface-card beside the ways-to-reach-me
+       sidebar, spanning the full content width so the form is roomy and there
+       is no empty left column. The old bg-bg-soft band is gone, so the page is
+       one seamless surface.
        ==================================================================== -->
   <section class="pb-2xl" aria-label="Inquiry form and ways to reach me">
     <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-
-        <p class={railLabel} aria-hidden="true">Send</p>
+      <div class="border-t border-border pt-2xl">
 
         <div class="min-w-0">
-          <div class="grid grid-cols-1 gap-xl min-[60rem]:grid-cols-[1.5fr_1fr]">
+          <div class="grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
 
             <!-- Three-state container. Form is shown by default; the thanks and
                  error blocks below start with the .hidden Tailwind utility class

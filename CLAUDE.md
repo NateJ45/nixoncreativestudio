@@ -67,32 +67,9 @@ The Services, PhotoStrip, and Testimonials components were deleted during the re
 - **Photography** has its own `/photography` page; on the homepage the work itself is carried above the fold by the device-pairing `HeroShowcase`, not by a four-up photo tile strip.
 - **Testimonials** belong inside individual case study pages where the quote has earned context (and the /about carousel reads the same `testimonial` frontmatter). A standalone "what people say" band on the homepage at three equal cards put quotes at the lowest-impact layout for the format.
 
-The `Process` component is no longer imported anywhere. `/services` used to import it as a soft-band section, but the editorial-grid rebuild inlined the same four steps as a ruled list on the page's own axis (see "Inner page architecture" below), so the page stays one seamless surface. `Process.astro` is left on disk as a ready-made soft-tint process section for any future page; its four-step copy is the source of truth Nathan edits. The `CtaBanner` component closes `/about`, `/work`, `/services`, `/contact`, and `/photography` as a tail-of-page inquiry block (band-themed, the one deliberate surface change on those pages).
+The `Process` component is preserved separately because `/services` still imports it as a soft-band, no-CTA version (it no longer carries a section number; it never should have on `/services`). The `CtaBanner` component is preserved because `/about`, `/photography`, and `/services` all still use it as a tail-of-page inquiry block.
 
 Don't reorder these sections. The hero no longer depends on any single content gate: the WebGL flow and the device-pairing showcase fill it today, so it ships complete.
-
----
-
-## Inner page architecture (the editorial grid)
-
-`/about`, `/work`, `/services`, and `/contact` share one layout spine so they read as a single ruled document. The homepage is deliberately its own thing (Hero / SelectedWork / ProcessBand); these four inner pages are the "editorial grid" set. They were rebuilt onto this spine one at a time, each anchored to the same reference set in the strategy doc (Brittany Chiang v4, Olia Gozha) via a design pass.
-
-The spine is two consts, declared verbatim at the top of each of those page files (intentionally duplicated, not imported, so each page stays self-contained and readable three months later):
-
-```
-const railGrid = 'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
-const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
-```
-
-The rules that make the four pages cohere:
-
-1. **One asymmetric grid per section.** A ~13rem mono "marker rail" (a decorative `aria-hidden` uppercase WORD label, plus a sliver of real meta where it earns the margin) beside a content track. The rail labels are the page's index: ABOUT / IN SHORT / STORY / PRACTICE / NOW, WORK / FILTER / INDEX / LIVE, SERVICES / WHAT I DO / PROCESS / PRICING / FAQ, REACH / SEND.
-2. **One dead-straight left axis.** Every heading, paragraph, list row, and the contact form all hang off the same left edge of the track (it lands at the same x on every page, ~296px at desktop width). Nothing is centered, no `mx-auto`, no dead right-gap. Keep the 13rem rail on every section so the axis never shifts between sections; a wider rail on one section would break the alignment (the contact form keeps the 13rem rail and puts its form + sidebar inside the track instead).
-3. **One hairline rhythm.** Each section after the masthead opens with a single `border-t border-border pt-2xl` on the grid block and closes with `pb-2xl`, so the whole page is one continuous ruled column. The masthead has no top hairline (it opens the page).
-4. **One surface in both themes.** No mid-page `bg-bg-soft` or full-bleed bands. Dark mode is one seamless navy sheet; light-mode depth comes only from the occasional `.surface-card` and the closing `band-themed` `CtaBanner` (the same theme-safety rule the homepage Hero and Footer follow).
-5. **Minimal carding.** Catalogue and offering lists are hairline-ruled rows, not card grids: the `/work` index is one `<ol>` of ruled rows (each with a small cover thumbnail), and the `/services` offerings and pricing tiers are ruled two-column lists. The only card left on these pages is the closing `CtaBanner` and the contact form's own `surface-card`.
-
-Motion stays the existing `data-reveal` vocabulary, reduced-motion safe. When editing one of these pages, keep it on the spine: reuse `railGrid` / `railLabel`, open new sections with the `border-t` hairline, and don't reintroduce a `bg-bg-soft` band or a card grid as the main structure.
 
 ---
 
@@ -252,7 +229,7 @@ shadcn primitives that wrap Radix's Dialog (Sheet, Dialog, DropdownMenu with por
 
 ### Studio components reference
 
-Beyond the homepage-section components (Hero, HeroShowcase, ClientMarquee, SelectedWork, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `CtaBanner` is the shared tail-of-page inquiry block (`/about`, `/work`, `/services`, `/contact`, `/photography`). `Process` is currently unused (its steps were inlined into `/services` during the editorial-grid rebuild) but kept on disk as a ready-made soft-band process section.
+Beyond the homepage-section components (Hero, HeroShowcase, ClientMarquee, SelectedWork, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `Process` and `CtaBanner` are retained as off-homepage components (`/services` uses `Process`; `/about`, `/photography`, `/services` use `CtaBanner`).
 
 - `BackToTop.tsx` — floating button bottom-right, rendered once in BaseLayout. Fades in after 600px scroll, honors `prefers-reduced-motion`.
 - `ReadingProgress.tsx` — thin top bar that fills as the visitor scrolls. Rendered only on case study and journal detail pages.
