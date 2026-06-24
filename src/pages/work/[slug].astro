@@ -255,26 +255,35 @@ const schemas = [
       </div>
     </header>
 
-    <!-- MDX body + optional TOC sidebar. Two-column at xl (sidebar at
-         left, prose middle); single-column below.
+    <!-- MDX body + optional TOC sidebar. Two-column at xl (sticky TOC left,
+         content right); single column below. The content column holds the prose,
+         the "what changed" block, AND the designer's note, so they all share one
+         alignment instead of drifting to different centers.
 
-         Sidebar renders only when the MDX body has at least two h2s, so
-         short case studies with one or no h2 just show the prose at full
-         width. -->
+         Every text block is capped to ONE rem-based measure (max-w-[40rem]) and
+         centered, so headings and paragraphs line up. (The old code capped them
+         in `ch`, which is font-size relative, so the bigger h2s came out wider
+         than the paragraphs and their left edges did not match.) Full-width media
+         (FeatureHighlight, SiteShowcase) still spans the column. The sticky TOC
+         and the h2 scroll targets sit below the ~83px sticky header so neither
+         gets covered.
+
+         The TOC renders only when the body has at least two h2s; short studies
+         stay single column. -->
     <div class="ncs-container">
       <div
         class:list={[
-          'mx-auto grid max-w-[84rem] gap-xl pb-2xl pt-l',
+          'mx-auto grid max-w-[62rem] gap-xl pb-2xl pt-l',
           hasToc ? 'xl:grid-cols-[14rem_minmax(0,1fr)]' : 'xl:grid-cols-1',
         ]}
       >
 
-        {/* Sticky TOC. Lists every h2 in the MDX body as a jump link.
-            Hidden below xl since the sidebar would crowd narrow viewports.
-            Native <nav aria-label> so screen readers identify it. */}
+        {/* Sticky TOC. Lists every h2 in the MDX body as a jump link. Hidden
+            below xl. top-[6.5rem] clears the sticky header. Native <nav
+            aria-label> so screen readers identify it. */}
         {hasToc && (
           <nav aria-label="In this case study" class="hidden xl:block">
-            <div class="sticky top-l flex flex-col gap-xs">
+            <div class="sticky top-[6.5rem] flex flex-col gap-xs">
               <p class="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                 In this case study
               </p>
@@ -294,47 +303,42 @@ const schemas = [
           </nav>
         )}
 
-        {/* MDX prose. When the TOC is present the content column is wide. The
-            TEXT blocks (h2/p/ul/...) are capped to a readable measure AND
-            centered (mx-auto) so they share one center axis with the full-width
-            media (SiteShowcase, FeatureHighlight, images). That turns the old
-            one-sided "empty column to the right" into balanced breathing room on
-            both sides, with media still stretching the full width. Every text
-            block uses the SAME max-width so their left edges line up. Without a
-            TOC the prose is simply centered at a readable width. The arbitrary
-            descendant selectors style the MDX output without the typography
-            plugin and without leaking to the rest of the site. */}
-        <div
-          data-prose
-          class:list={[
-            'text-[1.0625rem] leading-[1.7] text-text',
-            hasToc ? 'w-full' : 'mx-auto w-full max-w-[72ch]',
-            '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-l [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
-            '[&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
-            '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
-            hasToc
-              ? '[&_p]:mx-auto [&_p]:max-w-[70ch] [&_h2]:mx-auto [&_h2]:max-w-[70ch] [&_h3]:mx-auto [&_h3]:max-w-[70ch] [&_ul]:mx-auto [&_ul]:max-w-[70ch] [&_ol]:mx-auto [&_ol]:max-w-[70ch] [&_blockquote]:mx-auto [&_blockquote]:max-w-[70ch]'
-              : '',
-          ]}
-        >
-          <Content />
+        {/* Content column: prose, then results, then the designer's note, all on
+            one alignment. */}
+        <div class="min-w-0">
+
+          {/* MDX prose. Text blocks centered at one consistent rem measure so
+              their edges line up; media (FeatureHighlight, SiteShowcase) spans
+              the column. The arbitrary descendant selectors style the MDX output
+              without the typography plugin and without leaking site-wide; the
+              scroll-mt clears the sticky header on a jump-link click. */}
+          <div
+            data-prose
+            class:list={[
+              'text-[1.0625rem] leading-[1.7] text-text',
+              '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-[6.5rem] [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
+              '[&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
+              '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
+              '[&_h2]:max-w-[40rem] [&_h3]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem] [&_ol]:max-w-[40rem] [&_blockquote]:max-w-[40rem]',
+            ]}
+          >
+            <Content />
+          </div>
+
+          {/* "What changed" + the signed designer's note, in the SAME column and
+              at the same measure as the prose, so the body closes in alignment
+              instead of jumping to a different center. */}
+          {(results?.length || designerNote) && (
+            <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
+              {results && results.length > 0 && <ResultsBlock changes={results} />}
+              {designerNote && <DesignerNote note={designerNote} />}
+            </div>
+          )}
+
         </div>
 
       </div>
     </div>
-
-    {/* "What changed" results block + signed designer's note. Rendered from
-        frontmatter (results / designerNote), outside the prose container so they
-        carry their own clean styling. They replace the old prose "The result" /
-        "Reflections" sections, so the body now closes on "What we built". */}
-    {(results?.length || designerNote) && (
-      <div class="ncs-container">
-        <div class="mx-auto flex max-w-[72ch] flex-col gap-2xl border-t border-border pb-xl pt-2xl">
-          {results && results.length > 0 && <ResultsBlock changes={results} />}
-          {designerNote && <DesignerNote note={designerNote} />}
-        </div>
-      </div>
-    )}
 
     {/* Testimonial pull-quote (optional). Real client social proof, set
         apart from the body as a centered editorial quote. Renders nothing
