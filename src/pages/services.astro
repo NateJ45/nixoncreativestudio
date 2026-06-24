@@ -1,40 +1,40 @@
 ---
-// Safe to edit. The services, tiers, and faq arrays below hold every word
-// of user-facing copy on this page.
+// Safe to edit. The services, tiers, processSteps, and faq arrays below hold
+// every word of user-facing copy on this page.
 /* ============================================================================
-   /services | Services
+   /services | Services  [editorial-grid revamp]
    ============================================================================
-   Six-block stack:
-     1. Hero (positioning statement, gradient-text headline)
-     2. Three service chapters as elevated, alternating spotlight-cards
-     3. Process recap (reuses the homepage Process component)
-     4. "What it costs" band: three pricing tier cards (honest numbers only)
-     5. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
-     6. CTA banner
+   Rebuilt on the same editorial-grid spine as the About page so the two read as
+   one ruled document:
 
-   The Process component is reused, not duplicated. Edit Process.astro
-   once and both the homepage and this page update.
+     [ 13rem marker rail ] [ content track ]
 
-   Motion vocabulary used here (all reduced-motion safe, defined globally):
-     data-reveal / data-reveal="left|right"  scroll fade+rise
-     spotlight-card + data-spotlight          cursor-following glow on a card
-     hover-lift                               lift on hover
-     data-countup                             number animates up when in view
+   SERVICES / WHAT I DO / PROCESS / PRICING / FAQ run down the rail as quiet mono
+   word-labels; everything else hangs off one left axis. The three services and
+   the three pricing tiers are now hairline-ruled editorial lists (the About
+   "Practice" manifesto pattern), not card grids. The four process beats are
+   inlined as a ruled list on the same axis (so this page no longer imports the
+   soft-band Process component, and Process.astro stays on disk untouched). No
+   bg-bg-soft bands anywhere, so dark mode is one seamless navy sheet and the
+   only surface change is the closing CtaBanner.
 
-   Pricing numbers come ONLY from the FAQ answers below (small business
-   from $3,500, optional photography add-on, optional monthly retainer).
-   Do not invent prices here; the tier cards and the FAQ must agree.
+   Honesty rules (unchanged): every price traces back to the FAQ answers below.
+   $3,500 floor, optional photography add-on, optional monthly retainer. The
+   tier numbers and the FAQ must agree; do not invent prices.
+
+   Motion vocabulary (all reduced-motion safe, defined globally):
+     data-reveal           scroll fade+rise (stagger siblings with --reveal-delay)
+     data-countup          number animates up when it scrolls into view
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Process from '../components/Process.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
 
 // The three services are parallel offerings a client picks from, not an
 // ordered sequence (you can buy photography without strategy), so they carry
 // no 01/02/03 numerals. Numbered markers live only on the genuinely-ordered
-// Process band. Strategy is listed first because most projects start there.
+// Process steps below. Strategy is listed first because most projects start there.
 const services = [
   {
     title: 'Strategy',
@@ -69,6 +69,34 @@ const services = [
       'Environmental photography of your space',
       'Edited, web-optimized images delivered with the website',
     ],
+  },
+];
+
+// The four genuinely-ordered process beats, inlined here (previously the
+// imported Process.astro soft-band). The 01-04 numerals are the page's one
+// sanctioned numbered sequence; they stay because the process is truly ordered.
+// Copy is preserved verbatim from Process.astro; that file stays on disk for
+// any future caller, /services just no longer imports it.
+const processSteps = [
+  {
+    num: '01',
+    title: 'Conversation',
+    body: 'We meet for an hour, in person or on video, and talk about what you actually need. No pitch deck, no agency theater. Just a working session that ends with a one-page brief we both agree on.',
+  },
+  {
+    num: '02',
+    title: 'Strategy',
+    body: 'I write the audience map, the page architecture, and the conversion path. You read it, push back, we revise. The strategy doc is the source of truth for every design choice that follows.',
+  },
+  {
+    num: '03',
+    title: 'Design and build',
+    body: 'Components, content, and pages built in the open. Preview links land in your inbox at every milestone so you can react early instead of seeing the whole thing for the first time at launch.',
+  },
+  {
+    num: '04',
+    title: 'Launch and follow-through',
+    body: 'We go live together, then I stay close for the first month to fix anything that surfaces. After that you own the site outright, with documentation and a simple way to reach me when something comes up.',
   },
 ];
 
@@ -165,6 +193,17 @@ const schemas = [
     })),
   },
 ];
+
+// The shared editorial grid + rail label, copied from about.astro so /services
+// and /about read as one ruled document with one left axis.
+const railGrid =
+  'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
+const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
+// One ruled row inside the track: the About "Practice" manifesto pattern, used
+// by the services, the process steps, and the pricing tiers.
+const ruledRow = 'grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l';
+// Shared accent-dot bullet for the "what's included" / feature lists.
+const dotList = 'flex flex-col gap-2 leading-[1.5] text-text';
 ---
 
 <BaseLayout
@@ -173,226 +212,293 @@ const schemas = [
   schemas={schemas}
 >
 
-  <!-- ----------------------------------------------------------------------
-       Hero. Single column, left-aligned. No eyebrow kicker (the headline
-       carries the section) and a solid heading color (no gradient text).
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-hero-heading">
+  <!-- ====================================================================
+       Masthead (SERVICES). The only h1. No top hairline (it opens the page).
+       ==================================================================== -->
+  <section class="pt-2xl pb-2xl" aria-labelledby="services-hero-heading">
     <div class="ncs-container">
-      <h1
-        id="services-hero-heading"
-        class="mb-m max-w-[22ch] leading-[0.95]"
-        data-reveal
-        style="--reveal-delay: 80ms;"
-      >
-        Strategy, web design, and photography for organizations that care about the long run.
-      </h1>
-      <p
-        class="max-w-[60ch] text-lg leading-[1.6] text-text"
-        data-reveal
-        style="--reveal-delay: 180ms;"
-      >
-        Most projects use all three services, in that order. Some use one or two. The first conversation always ends with an honest scope, not a sales pitch.
-      </p>
-    </div>
-  </section>
+      <div class={railGrid}>
 
+        <div class="flex flex-col gap-2" aria-hidden="true">
+          <p class={railLabel}>Services</p>
+          <p class="font-mono text-[0.8rem] text-text-muted">Cincinnati based, clients anywhere</p>
+        </div>
 
-  <!-- ----------------------------------------------------------------------
-       Service offerings. Each is its own elevated spotlight-card with a
-       cursor-following glow, a hover lift, and a staggered scroll-reveal.
-       These are parallel services (not an ordered sequence), so the list is
-       a <ul> and carries no numerals. The cards alternate reveal direction
-       (left / right / left) so they arrive with a little choreography.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-label="Service details">
-    <div class="ncs-container">
-      <ul class="flex list-none flex-col gap-l p-0">
-        {services.map((service, index) => (
-          <li
-            class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
-            data-spotlight
-            data-reveal={index % 2 === 0 ? 'left' : 'right'}
-            style={`--reveal-delay: ${index * 90}ms;`}
-          >
-            <div class="relative z-10 grid grid-cols-1 gap-l md:grid-cols-[1.25fr_1fr] md:gap-xl">
-
-              <!-- Left column: title, lede, body. No sequence numeral: these
-                   are parallel offerings, not ordered steps. -->
-              <div class="flex flex-col gap-s">
-                <h2 class="text-heading">{service.title}</h2>
-                <p class="max-w-[48ch] text-[1.0625rem] font-medium leading-[1.55] text-text">
-                  {service.lede}
-                </p>
-                <p class="max-w-[52ch] leading-[1.7] text-text-muted">
-                  {service.body}
-                </p>
-              </div>
-
-              <!-- Right column: what's included, as a checked list. The
-                   check glyph is decorative; the text carries the meaning. -->
-              <div class="flex flex-col gap-s">
-                <p class="text-sm font-semibold uppercase tracking-[0.12em] text-text-muted">
-                  What's included
-                </p>
-                <ul class="flex flex-col gap-2 leading-[1.5] text-text">
-                  {service.points.map((point) => (
-                    <li class="flex items-start gap-s">
-                      <span
-                        class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                        aria-hidden="true"
-                      ></span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </section>
-
-
-  <!-- Process recap. Reuses the homepage Process component verbatim. -->
-  <Process />
-
-
-  <!-- ----------------------------------------------------------------------
-       What it costs. The pricing that used to hide inside the FAQ, now a
-       scannable band of three tier cards. Every number traces back to the
-       FAQ answers: $3,500 floor, photography add-on, optional retainer.
-       The featured tier's price counts up when it scrolls into view.
-       ---------------------------------------------------------------------- -->
-  <section class="bg-bg-soft py-2xl" aria-labelledby="services-pricing-heading">
-    <div class="ncs-container">
-
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-pricing-heading" class="text-heading">What it costs</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          A starting point, not a fixed menu. The free first conversation ends with a real ballpark for your project.
-        </p>
-      </header>
-
-      <ul class="grid list-none gap-l p-0 [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
-        {tiers.map((tier, index) => (
-          <li
-            class:list={[
-              'spotlight-card hover-lift relative isolate flex flex-col gap-m overflow-hidden rounded-2xl border p-l',
-              tier.highlighted
-                ? 'border-accent bg-bg shadow-[0_1px_30px_-12px_var(--color-accent)]'
-                : 'border-border bg-bg',
-            ]}
-            data-spotlight
+        <div class="min-w-0">
+          <h1
+            id="services-hero-heading"
+            class="max-w-[24ch] leading-[0.95]"
             data-reveal
-            style={`--reveal-delay: ${index * 110}ms;`}
           >
-            {tier.badge && (
-              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold uppercase tracking-[0.1em] text-primary-foreground">
-                {tier.badge}
-              </span>
-            )}
+            Strategy, web design, and photography for organizations that care about the long run.
+          </h1>
+          <p
+            class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
+            data-reveal
+            style="--reveal-delay: 120ms;"
+          >
+            Most projects use all three services, in that order. Some use one or two. The first conversation always ends with an honest scope, not a sales pitch.
+          </p>
+        </div>
 
-            <div class="relative z-10 flex flex-col gap-m">
-              <h3 class="text-h4 text-heading">{tier.name}</h3>
-
-              <!-- Price line. The floor price counts up; the add-on and
-                   retainer tiers carry a plain word because they are
-                   genuinely "depends on scope," not a published number. -->
-              <p class="flex items-baseline gap-xs">
-                {tier.priceFrom ? (
-                  <>
-                    <span class="text-sm font-medium text-text-muted">from</span>
-                    <span class="font-display text-h2 leading-none text-heading">
-                      $<span
-                        data-countup
-                        data-countup-to={tier.priceFrom}
-                        data-countup-duration="1200"
-                      >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
-                    </span>
-                  </>
-                ) : (
-                  <span class="font-display text-h3 leading-none text-link">
-                    {tier.priceLabel}
-                  </span>
-                )}
-              </p>
-
-              <p class="leading-[1.6] text-text-muted">{tier.note}</p>
-
-              <ul class="mt-xs flex flex-col gap-2 leading-[1.5] text-text">
-                {tier.features.map((feature) => (
-                  <li class="flex items-start gap-s">
-                    <span
-                      class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                      aria-hidden="true"
-                    ></span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
-        Strategy is the front of every project, not a line item. The price above already includes the session and the brief.
-      </p>
-
+      </div>
     </div>
   </section>
 
 
-  <!-- ----------------------------------------------------------------------
-       FAQ. Native <details>/<summary> for accessible, JS-free disclosure.
-       The answer wrapper animates open and closed with a CSS grid trick:
-       grid-template-rows goes from 0fr (collapsed) to 1fr (open), which
-       transitions smoothly without needing a fixed pixel height. The "+"
-       marker rotates to "x" via the group-open: variant. The whole row
-       still works with keyboard and screen readers because it is a real
-       <details> element.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-faq-heading">
+  <!-- ====================================================================
+       The offer (WHAT I DO). The three services as a hairline-ruled
+       two-column editorial list (title + lede left, body + included right),
+       not a card grid. Parallel offerings, so no numerals.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="services-offer-heading">
     <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
 
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-faq-heading" class="text-heading">Common questions</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          The things people ask before the first call.
-        </p>
-      </header>
+        <p class={railLabel} aria-hidden="true">What I do</p>
 
-      <div class="flex flex-col border-t border-border">
-        {faq.map((item, index) => (
-          <!-- `group` lets the summary's open-state pseudo and the answer
-               wrapper both react via group-open:. -->
-          <details
-            class="faq-item group border-b border-border"
-            data-reveal="fade"
-            style={`--reveal-delay: ${index * 70}ms;`}
-          >
-            <!-- list-none drops the default disclosure triangle. The webkit
-                 marker pseudo hides the Safari version. The "+" rotates to an
-                 "x" when open; the rotation plus the smooth panel are two
-                 non-color cues, so state is never signalled by color alone. -->
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 hover:text-link [&::-webkit-details-marker]:hidden after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg]">
-              {item.q}
-            </summary>
-            <!-- Animated reveal: the grid row scales from 0fr to 1fr. The
-                 inner div needs overflow-hidden so the clipped content does
-                 not spill while the row is collapsing. -->
-            <div class="faq-answer grid">
-              <div class="overflow-hidden">
-                <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.a}</p>
-              </div>
-            </div>
-          </details>
-        ))}
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="services-offer-heading" class="text-heading">Three services, one person</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              Most projects use all three. Some use one or two.
+            </p>
+          </header>
+
+          <ul class="mt-l flex list-none flex-col border-b border-border p-0">
+            {services.map((service, index) => (
+              <li
+                class={ruledRow}
+                data-reveal
+                style={`--reveal-delay: ${index * 100}ms;`}
+              >
+                <!-- Left: title + lede. -->
+                <div class="flex flex-col gap-2">
+                  <h3 class="text-h4 text-heading">{service.title}</h3>
+                  <p class="max-w-[42ch] font-medium leading-[1.5] text-text">
+                    {service.lede}
+                  </p>
+                </div>
+
+                <!-- Right: body + what's included. The dot glyph is
+                     decorative; the text carries the meaning. -->
+                <div class="flex flex-col gap-s">
+                  <p class="max-w-[60ch] leading-[1.7] text-text-muted">{service.body}</p>
+                  <div class="flex flex-col gap-2">
+                    <p class="text-sm font-semibold uppercase tracking-[0.12em] text-text-muted">
+                      What's included
+                    </p>
+                    <ul class={dotList}>
+                      {service.points.map((point) => (
+                        <li class="flex items-start gap-s">
+                          <span
+                            class="mt-[0.5em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                            aria-hidden="true"
+                          ></span>
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
       </div>
+    </div>
+  </section>
 
+
+  <!-- ====================================================================
+       How we work (PROCESS). The four ordered beats inlined as a ruled list
+       on the shared axis (replacing the imported bg-bg-soft Process band).
+       The 01-04 numerals are the page's one sanctioned numbered sequence.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="services-process-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
+
+        <p class={railLabel} aria-hidden="true">Process</p>
+
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="services-process-heading" class="text-heading">How we work</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              Four steps, in order. Everything else follows from the first conversation.
+            </p>
+          </header>
+
+          <ol class="mt-l flex flex-col border-b border-border p-0">
+            {processSteps.map((step, index) => (
+              <li
+                class={ruledRow}
+                data-reveal
+                style={`--reveal-delay: ${index * 90}ms;`}
+              >
+                <!-- Left: numeral + step title. The numeral is aria-hidden;
+                     the title carries the meaning in the heading tree. -->
+                <div class="flex flex-col gap-2">
+                  <span class="font-mono text-[0.95rem] tracking-[0.06em] text-link" aria-hidden="true">
+                    {step.num}
+                  </span>
+                  <h3 class="text-h4 text-heading">{step.title}</h3>
+                </div>
+                <!-- Right: the step body. -->
+                <p class="max-w-[60ch] leading-[1.6] text-text">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====================================================================
+       What it costs (PRICING). The three tiers as a clean hairline-ruled
+       comparison on the same axis, not a card grid. Every number traces back
+       to the FAQ: $3,500 floor (count-up preserved), photography add-on,
+       optional retainer. The "Most projects start here" marker is quiet text,
+       not a filled pill.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="services-pricing-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
+
+        <div class="flex flex-col gap-2" aria-hidden="true">
+          <p class={railLabel}>Pricing</p>
+          <p class="font-mono text-[0.8rem] text-text-muted">From $3,500</p>
+        </div>
+
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="services-pricing-heading" class="text-heading">What it costs</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              A starting point, not a fixed menu. The free first conversation ends with a real ballpark for your project.
+            </p>
+          </header>
+
+          <ul class="mt-l flex list-none flex-col border-b border-border p-0">
+            {tiers.map((tier, index) => (
+              <li
+                class={`${ruledRow} md:grid-cols-[minmax(0,15rem)_1fr]`}
+                data-reveal
+                style={`--reveal-delay: ${index * 100}ms;`}
+              >
+                <!-- Left: tier name, the quiet "most projects" marker, and the
+                     price line. The floor price counts up; the add-on and
+                     retainer carry a plain word (genuinely "depends on scope"). -->
+                <div class="flex flex-col gap-2">
+                  <h3 class="text-h4 text-heading">{tier.name}</h3>
+                  {tier.badge && (
+                    <p class="text-xs font-semibold uppercase tracking-[0.1em] text-link">
+                      {tier.badge}
+                    </p>
+                  )}
+                  <p class="mt-1 flex items-baseline gap-xs">
+                    {tier.priceFrom ? (
+                      <>
+                        <span class="text-sm font-medium text-text-muted">from</span>
+                        <span class="font-display text-h2 leading-none text-heading">
+                          $<span
+                            data-countup
+                            data-countup-to={tier.priceFrom}
+                            data-countup-duration="1200"
+                          >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
+                        </span>
+                      </>
+                    ) : (
+                      <span class="font-display text-h3 leading-none text-link">
+                        {tier.priceLabel}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <!-- Right: the note + what's included. -->
+                <div class="flex flex-col gap-s">
+                  <p class="max-w-[60ch] leading-[1.6] text-text-muted">{tier.note}</p>
+                  <ul class={dotList}>
+                    {tier.features.map((feature) => (
+                      <li class="flex items-start gap-s">
+                        <span
+                          class="mt-[0.5em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                          aria-hidden="true"
+                        ></span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
+            Strategy is the front of every project, not a line item. The price above already includes the session and the brief.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====================================================================
+       Common questions (FAQ). Native <details>/<summary> for accessible,
+       JS-free disclosure, moved onto the shared axis. The answer wrapper
+       animates open and closed with a CSS grid trick: grid-template-rows
+       0fr -> 1fr. The "+" marker rotates to "x" via group-open. The whole
+       row works with keyboard and screen readers because it is a real
+       <details> element. Markup + scoped styles preserved verbatim.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="services-faq-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
+
+        <p class={railLabel} aria-hidden="true">FAQ</p>
+
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="services-faq-heading" class="text-heading">Common questions</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              The things people ask before the first call.
+            </p>
+          </header>
+
+          <div class="mt-l flex flex-col border-t border-border">
+            {faq.map((item, index) => (
+              <!-- `group` lets the summary's open-state pseudo and the answer
+                   wrapper both react via group-open:. -->
+              <details
+                class="faq-item group border-b border-border"
+                data-reveal="fade"
+                style={`--reveal-delay: ${index * 70}ms;`}
+              >
+                <!-- list-none drops the default disclosure triangle. The webkit
+                     marker pseudo hides the Safari version. The "+" rotates to an
+                     "x" when open; the rotation plus the smooth panel are two
+                     non-color cues, so state is never signalled by color alone. -->
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 hover:text-link [&::-webkit-details-marker]:hidden after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg]">
+                  {item.q}
+                </summary>
+                <!-- Animated reveal: the grid row scales from 0fr to 1fr. The
+                     inner div needs overflow-hidden so the clipped content does
+                     not spill while the row is collapsing. -->
+                <div class="faq-answer grid">
+                  <div class="overflow-hidden">
+                    <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.a}</p>
+                  </div>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   </section>
 
