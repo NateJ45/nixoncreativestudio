@@ -20,8 +20,25 @@
 // accurate without manual edits each January.
 const year = new Date().getFullYear();
 
+import { getCollection } from 'astro:content';
 import { site } from '../data/site';
 import CopyEmail from './CopyEmail';
+
+// Footer site nav, mirroring the header's primary nav so the two never drift.
+// Journal appears only once the journal has a published entry, exactly as in
+// Header.astro (same visibility filter: drafts hidden in production). This is a
+// quiet repeat of the menu for visitors who reach the bottom of a page and want
+// to know where to go next, rather than scrolling back up to the header.
+const journalCount = (await getCollection('journal', ({ data }) =>
+  import.meta.env.PROD ? data.draft !== true : true,
+)).length;
+const navLinks = [
+  { label: 'Work',     href: '/work/'    },
+  { label: 'Services', href: '/services' },
+  { label: 'About',    href: '/about'    },
+  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
+  { label: 'Contact',  href: '/contact'  },
+];
 
 // Social links rendered as a list. Driving this from site.social keeps
 // labels in one place; add a network there and add a row here.
@@ -84,8 +101,21 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
     <div class="mb-2xl">
       <div class="grid gap-l [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
 
-        <!-- Column 1: Contact -->
-        <div data-reveal style="--reveal-delay: 0ms;">
+        <!-- Column 1: Explore. A quiet repeat of the primary nav so a visitor
+             at the bottom of a page has the site map without scrolling back up.
+             A real <nav> landmark (distinct aria-label) so assistive tech can
+             jump to it. -->
+        <nav aria-label="Site pages" data-reveal style="--reveal-delay: 0ms;">
+          <h2 class={headingClass}>Explore</h2>
+          <ul class="flex flex-col gap-xs">
+            {navLinks.map(({ label, href }) => (
+              <li><a class={linkClass} href={href}>{label}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        <!-- Column 2: Contact -->
+        <div data-reveal style="--reveal-delay: 90ms;">
           <h2 class={headingClass}>Contact</h2>
           <ul class="flex flex-col gap-xs">
             <!-- CopyEmail renders the address as a mailto link plus a
@@ -97,8 +127,8 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
           </ul>
         </div>
 
-        <!-- Column 2: Connect -->
-        <div data-reveal style="--reveal-delay: 90ms;">
+        <!-- Column 3: Connect -->
+        <div data-reveal style="--reveal-delay: 180ms;">
           <h2 class={headingClass}>Connect</h2>
           <ul class="flex flex-col gap-xs">
             {social.map(({ label, href }) => (
@@ -112,10 +142,10 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
           </ul>
         </div>
 
-        <!-- Column 3: Currently. Status chip + blurb, linking to the Currently
+        <!-- Column 4: Currently. Status chip + blurb, linking to the Currently
              section on /about, where the full snapshot now lives (the standalone
              /now page was merged into About). -->
-        <div data-reveal style="--reveal-delay: 180ms;">
+        <div data-reveal style="--reveal-delay: 270ms;">
           <h2 class={headingClass}>Currently</h2>
           <a
             href="/about/#now"
@@ -134,16 +164,22 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
       </div>
     </div>
 
-    <!-- Bottom row: copyright on the left, privacy link in the middle, tagline
-         on the right. Hairline divider above. Wraps and stacks on narrow
-         screens via flex-wrap. -->
-    <div class="flex flex-wrap items-center justify-between gap-s border-t border-white/10 pt-m text-sm text-primary-foreground/65">
-      <small>© {year} {site.studioName}</small>
-      <small class="flex gap-m">
-        <a class={linkClass} href="/colophon">Colophon</a>
-        <a class={linkClass} href="/privacy">Privacy</a>
-      </small>
-      <small>{site.tagline}</small>
+    <!-- Bottom row: the meta line (copyright + the utility links, joined by
+         hairline middots so the links read as one continuous group instead of
+         floating in the middle of the bar) sits on the left, the studio
+         tagline on the right. Stacks on narrow screens. -->
+    <div class="flex flex-col gap-s border-t border-white/10 pt-m text-sm text-primary-foreground/60 sm:flex-row sm:items-center sm:justify-between sm:gap-m">
+      <div class="flex flex-wrap items-center gap-x-m gap-y-1">
+        <small>© {year} {site.studioName}</small>
+        <nav aria-label="Legal and accessibility" class="flex flex-wrap items-center gap-x-s gap-y-1">
+          <a class={linkClass} href="/colophon">Colophon</a>
+          <span aria-hidden="true" class="text-primary-foreground/30">·</span>
+          <a class={linkClass} href="/privacy">Privacy</a>
+          <span aria-hidden="true" class="text-primary-foreground/30">·</span>
+          <a class={linkClass} href="/accessibility">Accessibility</a>
+        </nav>
+      </div>
+      <small class="text-primary-foreground/55 sm:text-right">{site.tagline}</small>
     </div>
 
   </div>

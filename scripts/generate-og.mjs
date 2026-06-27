@@ -268,6 +268,7 @@ const STATIC_PAGES = [
   { route: 'contact',     title: 'Start a project' },
   { route: 'colophon',    title: 'Colophon' },
   { route: 'privacy',     title: 'Privacy' },
+  { route: 'accessibility', title: 'Accessibility' },
   { route: '404',         title: 'Page not found' },
 ];
 

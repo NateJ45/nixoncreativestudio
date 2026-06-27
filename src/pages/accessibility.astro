@@ -1,0 +1,247 @@
+---
+// Safe to edit. The prose below is the public accessibility statement; rewrite
+// any paragraph in place. Bump lastUpdated when meaningful changes ship. Keep
+// it honest: only claim what the site actually does.
+/* ============================================================================
+   /accessibility | Accessibility statement
+   ============================================================================
+   The studio sells accessible work (WCAG AA, 100 Lighthouse a11y), so this
+   page is the public version of that commitment: the standard targeted, what
+   it means in practice, how it's checked, where it deliberately stops short,
+   and how to report a problem. The honesty (the "where it stops short" and
+   "found a problem" sections) is what makes it a real statement rather than a
+   marketing boast.
+
+   Layout mirrors /privacy and /colophon: an intro block, then a sticky in-page
+   table of contents beside the prose on wide screens. The scroll-spy script at
+   the bottom highlights the section in view; it's purely additive, so the page
+   degrades to plain anchor links if it never runs, and every section block
+   reveals on scroll via the global data-reveal system (reduced-motion safe).
+   ============================================================================ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+
+const lastUpdated = 'June 27, 2026';
+
+// Prose anchors share one style: --link (clears WCAG AA on white prose),
+// always underlined, with the underline offset growing on hover/focus as the
+// cue (the only AA-safe color step would be the same shade).
+const linkClass =
+  'text-link underline underline-offset-2 ' +
+  'hover:underline-offset-4 focus-visible:underline-offset-4 ' +
+  'transition-[text-underline-offset] duration-200';
+
+// In-content subheadings read at h3 scale (the page already has its h1 up
+// top). scroll-mt keeps an anchored heading clear of the sticky site header.
+const h2Class = 'mb-s text-h3 text-heading scroll-mt-[6rem]';
+const pClass = 'mb-m last:mb-0';
+
+// Single source of truth for the section ids + TOC labels, so the table of
+// contents can never drift out of sync with the headings it points at.
+const sections = [
+  { id: 'the-standard', label: 'The standard' },
+  { id: 'in-practice', label: 'In practice' },
+  { id: 'how-its-checked', label: 'How it is checked' },
+  { id: 'where-it-stops', label: 'Where it stops short' },
+  { id: 'report', label: 'Found a problem?' },
+];
+
+// The practical commitments, rendered as a tick list (the amber-dash ledger
+// motif used on About and the Contact "what happens next" block).
+const practices = [
+  'Everything you can do with a mouse, you can do with a keyboard. The focus outline is always visible, and a "Skip to main content" link is the first thing you reach.',
+  'Real landmarks and a clean heading order, so a screen reader can move through a page by region and by heading instead of reading it all top to bottom.',
+  'Every form field has a visible label, uses the right input type, and announces its own errors rather than signalling them with color alone.',
+  'Text is chosen to clear the AA contrast bar against its background in both the light and the dark theme. Images that carry meaning have descriptions; purely decorative ones are hidden from assistive tech.',
+  'If your device is set to reduce motion, the animations and the smooth scrolling switch off automatically.',
+];
+---
+
+<BaseLayout
+  title="Accessibility | Nixon Creative Studio"
+  description="How this site is built for keyboard and screen-reader users, how it's tested, and how to report a problem."
+>
+
+  <section class="py-2xl" aria-labelledby="accessibility-heading">
+    <div class="ncs-container">
+
+      <!-- Intro block. Mirrors the other utility pages at a smaller scale. -->
+      <header class="mb-xl flex max-w-[70ch] flex-col gap-m" data-reveal>
+        <p class="text-sm uppercase tracking-[0.18em] text-text-muted">
+          Accessibility
+        </p>
+        <h1 id="accessibility-heading" class="leading-[0.95]">Built to be used by everyone.</h1>
+        <p class="text-lg leading-[1.6] text-text">
+          I build this site toward WCAG 2.1 AA, in both the light and the dark theme, and I check it on every change. No website is ever perfectly accessible, so if anything is hard to use with a keyboard or a screen reader, tell me and I'll fix it: <a class={linkClass} href={site.emailHref}>{site.email}</a>.
+        </p>
+
+        <!-- Last-updated pill. Freshness at a glance, with a text label so
+             color isn't the only cue. The dot is decorative. -->
+        <p>
+          <span
+            class="inline-flex items-center gap-xs rounded-full border border-border bg-bg-soft px-s py-xs text-sm text-text-muted"
+          >
+            <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
+            Last updated {lastUpdated}
+          </span>
+        </p>
+      </header>
+
+      <!-- Two-column shell on wide screens: sticky TOC rail + prose. Below lg
+           the TOC drops out (the prose carries every heading) and the body
+           spans full width. -->
+      <div class="flex flex-col gap-xl lg:flex-row lg:items-start lg:gap-2xl">
+
+        <nav
+          class="hidden shrink-0 lg:block lg:sticky lg:top-[6rem] lg:w-56"
+          aria-label="On this page"
+          data-a11y-toc
+          data-reveal="left"
+        >
+          <p class="mb-s text-sm uppercase tracking-[0.16em] text-text-muted">
+            On this page
+          </p>
+          <ul class="flex flex-col gap-2xs border-l border-border">
+            {
+              sections.map((s) => (
+                <li>
+                  <a
+                    href={`#${s.id}`}
+                    data-toc-link={s.id}
+                    class={
+                      'block border-l-2 border-transparent py-2xs pl-m text-[0.95rem] ' +
+                      'text-text-muted transition-colors duration-200 ' +
+                      'hover:text-link focus-visible:text-link ' +
+                      'aria-[current=true]:border-accent aria-[current=true]:font-semibold ' +
+                      'aria-[current=true]:text-link'
+                    }
+                    style="margin-left: -1px;"
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+
+        <!-- Body. Comfortable reading measure, slightly larger body size and
+             looser line-height for long-form prose. -->
+        <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
+
+          <div class="mt-0" data-reveal>
+            <h2 id="the-standard" class={h2Class}>The standard</h2>
+            <p class={pClass}>
+              The goal is WCAG 2.1 AA, the same standard most public bodies and larger organizations are held to, and it applies in both the light and the dark theme. Each page is built to score 100 on Lighthouse's accessibility audit, and an automated check runs on every change so that score does not quietly slip. That automated score is a useful floor, not a certificate: it catches the machine-checkable issues, which are only one part of the picture.
+            </p>
+          </div>
+
+          <div class="mt-xl" data-reveal>
+            <h2 id="in-practice" class={h2Class}>In practice</h2>
+            <p class={pClass}>A few of the things that means on this site:</p>
+            <ul class="mb-m flex flex-col gap-s">
+              {
+                practices.map((item) => (
+                  <li class="flex items-start gap-s">
+                    <span class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary" aria-hidden="true"></span>
+                    <span>{item}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <div class="mt-xl" data-reveal>
+            <h2 id="how-its-checked" class={h2Class}>How it is checked</h2>
+            <p class={pClass}>
+              The accessibility score is a hard gate: a change cannot ship if it drops a page below 100. On top of that, the pages are run through <a class={linkClass} href="https://github.com/dequelabs/axe-core" target="_blank" rel="noopener noreferrer">axe-core</a> (a widely used accessibility testing engine) in both themes, and structural changes get a manual keyboard pass from the address bar through every control. Automated tools like these only cover part of WCAG; the rest is judgment, whether the alt text is actually useful, whether the reading order makes sense, so I treat the tooling as a safety net under the hands-on work, not a stand-in for it.
+            </p>
+          </div>
+
+          <div class="mt-xl" data-reveal>
+            <h2 id="where-it-stops" class={h2Class}>Where it stops short</h2>
+            <p class={pClass}>
+              I aim for AA, not the stricter AAA, on purpose, in line with the W3C's own guidance that AAA is not meant as a blanket requirement for a whole site. A couple of AAA rules pull against a brand-led design: the deepest brand-blue text sits just under the 7:1 enhanced-contrast bar, for one. So the work targets AA and stops there by choice, not by oversight.
+            </p>
+            <p class={pClass}>
+              That is a line about polish, not about whether the site works. If a specific thing is genuinely hard for you to use, that is a bug, and the next section is how to flag it.
+            </p>
+          </div>
+
+          <div class="mt-xl" data-reveal>
+            <h2 id="report" class={h2Class}>Found a problem?</h2>
+            <p class={pClass}>
+              If a page is hard to read, hard to get through, or breaks with the assistive technology you rely on, email <a class={linkClass} href={site.emailHref}>{site.email}</a> and tell me what happened and what you were using. It reaches a real person, me, and I treat accessibility problems as real problems to fix, not as nice-to-haves.
+            </p>
+          </div>
+
+          <p class="mt-xl border-t border-border pt-l text-[0.95rem] italic text-text-muted" data-reveal="fade">
+            Last updated: {lastUpdated}.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Scroll-spy: marks the TOC link for the section in view via aria-current.
+       Purely additive: with no JS or no IntersectionObserver the TOC stays a
+       list of working anchors and the prose is unaffected. It introduces no
+       motion of its own, so there is nothing to gate for reduced motion. -->
+  <script>
+    // Wrapped in astro:page-load so the scroll-spy re-binds after a View
+    // Transitions navigation (the footer Accessibility link is a common entry
+    // path). The dataset flag keeps it from observing twice.
+    function initA11yToc() {
+      const toc = document.querySelector<HTMLElement>('[data-a11y-toc]');
+      if (!toc || toc.dataset.spyBound || !('IntersectionObserver' in window)) return;
+      toc.dataset.spyBound = 'true';
+
+      const links = new Map<string, HTMLAnchorElement>();
+      toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
+        const id = a.getAttribute('data-toc-link');
+        if (id) links.set(id, a);
+      });
+      if (links.size === 0) return;
+
+      const visible = new Set<string>();
+
+      const setCurrent = (id: string | null) => {
+        links.forEach((a, key) => {
+          if (key === id) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const id = entry.target.id;
+            if (entry.isIntersecting) visible.add(id);
+            else visible.delete(id);
+          }
+          let topId: string | null = null;
+          for (const id of links.keys()) {
+            if (visible.has(id)) {
+              topId = id;
+              break;
+            }
+          }
+          setCurrent(topId);
+        },
+        { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
+      );
+
+      links.forEach((_, id) => {
+        const heading = document.getElementById(id);
+        if (heading) observer.observe(heading);
+      });
+    }
+    document.addEventListener('astro:page-load', initA11yToc);
+    initA11yToc();
+  </script>
+
+</BaseLayout>
