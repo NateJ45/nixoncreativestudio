@@ -344,22 +344,29 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
      those stay crisp. Replaces the old faint bottom-darken (whose scroll cue is
      gone, replaced by the marquee).
      ---------------------------------------------------------------------- */
+  /* The floor blends the bottom of the hero into the surface colour behind the
+     marquee. Now that the WebGL flow fills the hero (brightly, in dark mode),
+     this is a long multi-stop fade rather than a short one, so there is no harsh
+     horizontal line where the flow meets the marquee band. It still hides the
+     device drop shadows clipping at the hero's bottom edge. */
   .hero-floor {
-    /* Light mode: fade to the light hero surface so the device drop shadows
-       dissolve instead of leaving a hard clip line at the hero's bottom edge. */
     background: linear-gradient(
       to top,
       var(--color-bg-soft) 0%,
-      var(--color-bg-soft) 4%,
-      transparent 12%
+      var(--color-bg-soft) 5%,
+      color-mix(in oklab, var(--color-bg-soft) 60%, transparent) 12%,
+      color-mix(in oklab, var(--color-bg-soft) 25%, transparent) 20%,
+      transparent 30%
     );
   }
   :global(.dark) .hero-floor {
     background: linear-gradient(
       to top,
       var(--color-primary) 0%,
-      var(--color-primary) 4%,
-      transparent 12%
+      var(--color-primary) 5%,
+      color-mix(in oklab, var(--color-primary) 60%, transparent) 12%,
+      color-mix(in oklab, var(--color-primary) 25%, transparent) 20%,
+      transparent 30%
     );
   }
 
