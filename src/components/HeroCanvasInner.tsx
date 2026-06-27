@@ -95,17 +95,22 @@ const fragmentShader = /* glsl */ `
     vec2 pu = vec2(uv.x * aspect, uv.y);
     col = mix(col, sky, smoothstep(0.45, 0.0, distance(pu, m)) * mix(0.10, 0.18, uDark));
 
-    // Vignette: moody edges on dark; barely-there on light so it never greys the
-    // bright surface.
+    // Vignette: nearly flat now so the flow fills the hero edge to edge (a soft
+    // moody falloff on dark, barely-there on light so it never greys the bright
+    // surface).
     float vig = smoothstep(1.3, 0.22, length(uv - 0.5));
-    col *= mix(mix(0.97, 1.01, vig), mix(0.78, 1.10, vig), uDark);
+    col *= mix(mix(0.97, 1.01, vig), mix(0.90, 1.08, vig), uDark);
 
-    // Left-bias: fade the whole flow back to the (theme) base on the RIGHT, so
-    // the colour lives on the left half (around the headline) and the device
-    // side stays calmer. (GLSL smoothstep needs edge0 < edge1, so the left
-    // weighting is 1.0 - smoothstep, not swapped edges.) The long falloff keeps
-    // it a soft horizontal gradient, no hard seam.
-    col = mix(base, col, 1.0 - smoothstep(0.34, 0.95, uv.x));
+    // Horizontal weighting, theme-aware:
+    //  - light: fade the flow back to the base on the RIGHT so the colour lives
+    //    on the left half (around the headline) and the device side stays calmer.
+    //  - dark: let the flow fill basically the whole hero, leaning to the left,
+    //    so the navy field reads as one continuous moving surface (the scrim
+    //    still protects the headline on the left).
+    // (GLSL smoothstep needs edge0 < edge1, hence the 1.0 - smoothstep form.)
+    float biasLight = 1.0 - smoothstep(0.34, 0.95, uv.x);
+    float biasDark  = mix(0.82, 1.0, 1.0 - smoothstep(0.0, 1.0, uv.x));
+    col = mix(base, col, mix(biasLight, biasDark, uDark));
 
     gl_FragColor = vec4(col, 1.0);
   }
