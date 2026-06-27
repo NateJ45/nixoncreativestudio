@@ -33,7 +33,33 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import Testimonials from '../components/Testimonials.astro';
 import Terminal from '../components/Terminal.astro';
+import Lightbox from '../components/Lightbox.astro';
+import { Image } from 'astro:assets';
 import { site } from '../data/site';
+
+// Headshot for the masthead portrait frame, and the personal snapshots for the
+// "Outside the studio" gallery. All resized into src/assets at build-friendly
+// sizes from the originals.
+import headshot from '../assets/brand/headshot.jpg';
+import familyPhoto from '../assets/about/family.jpg';
+import runningPhoto from '../assets/about/running.jpg';
+import exploringPhoto from '../assets/about/exploring.jpg';
+import weddingPhoto from '../assets/about/wedding.jpg';
+import preschoolPhoto from '../assets/about/preschool.jpg';
+import portraitBwPhoto from '../assets/about/portrait-bw.jpg';
+
+// "Outside the studio" gallery. Real, lightly captioned snapshots of the life
+// behind the one-person studio. Captions are honest and deliberately generic
+// (no names), so nothing presumes more than the photo shows. Each photo is a
+// click / keyboard zoom trigger for the shared Lightbox at the foot of the page.
+const photos = [
+  { src: familyPhoto,     caption: 'A park afternoon',               alt: 'Nathan with his family on a picnic blanket in a park, a young child eating watermelon.' },
+  { src: runningPhoto,    caption: 'Race day',                       alt: 'Nathan and a friend at the end of a charity 5K, race bibs on, in a sunny parking lot.' },
+  { src: exploringPhoto,  caption: 'Out exploring',                  alt: 'Nathan carrying a small child on a sunny day in front of old railroad cars.' },
+  { src: weddingPhoto,    caption: 'Wedding day',                    alt: 'Nathan and his wife laughing together on their wedding day, beside a lake.' },
+  { src: preschoolPhoto,  caption: 'West Chester Preschool',         alt: 'Nathan with three others in West Chester Preschool t-shirts, outdoors under a tree.' },
+  { src: portraitBwPhoto, caption: 'From the other side of the lens', alt: 'A black-and-white studio portrait of Nathan looking off to the side.' },
+];
 
 // Three working principles. Keep these honest; they should describe how
 // I actually work, not how I wish I worked.
@@ -168,20 +194,19 @@ const schemas = [
               I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools, around Cincinnati in person and anywhere for web work. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
             </p>
 
-            <!-- Portrait placeholder. A deliberate framed object until the real
-                 4:5 headshot lands in src/assets/brand/ (then swap the inner panel
-                 for an Astro <Image /> and keep this frame). -->
+            <!-- Portrait. The headshot fills the original 4:5 frame (the square
+                 source is center-cropped via object-cover); the amber glow behind
+                 and the ring/shadow are kept from the placeholder treatment. -->
             <div class="relative isolate w-full max-w-[18rem]" data-reveal="scale" style="--reveal-delay: 120ms;">
               <div class="absolute -bottom-4 -right-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl" aria-hidden="true"></div>
-              <div
-                class="band-themed aspect-[4/5] w-full rounded-xl border border-border shadow-lg ring-1 ring-black/5"
-                role="img"
-                aria-label="Portrait of Nathan Nixon, coming soon"
-              >
-                <div class="relative z-10 flex h-full w-full items-end p-m" aria-hidden="true">
-                  <span class="font-mono text-sm tracking-[0.05em] text-text-muted">Portrait coming soon</span>
-                </div>
-              </div>
+              <Image
+                src={headshot}
+                alt="Nathan Nixon, smiling outdoors"
+                widths={[288, 432, 576, 864]}
+                sizes="(min-width: 52rem) 18rem, 60vw"
+                loading="eager"
+                class="aspect-[4/5] w-full rounded-xl border border-border object-cover shadow-lg ring-1 ring-black/5"
+              />
             </div>
           </div>
         </div>
@@ -257,6 +282,60 @@ const schemas = [
               <Terminal />
             </div>
           </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====================================================================
+       Outside the studio (OUTSIDE). Real snapshots of the life behind the
+       one-person studio, picking up the "when I'm not at a screen" line that
+       closes the Story. A CSS-columns masonry so every photo keeps its real
+       aspect ratio (no uniform-grid cropping across the mix of portraits and
+       landscapes); each photo is a keyboard- and click-operable zoom trigger
+       (a real <button>) for the shared Lightbox rendered at the foot of the page.
+       ==================================================================== -->
+  <section class="pb-2xl" aria-labelledby="about-outside-heading">
+    <div class="ncs-container">
+      <div class={`${railGrid} border-t border-border pt-2xl`}>
+
+        <p class={railLabel} aria-hidden="true">Outside</p>
+
+        <div class="min-w-0">
+          <header class="max-w-[60ch]" data-reveal>
+            <h2 id="about-outside-heading">Outside the studio</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
+              A few snapshots from the rest of life around West Chester: family, the trails, and the occasional turn in front of the camera.
+            </p>
+          </header>
+
+          <ul class="mt-l columns-2 gap-m lg:columns-3 [&>li]:mb-m [&>li]:break-inside-avoid">
+            {photos.map((photo, index) => (
+              <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
+                <figure>
+                  <button
+                    type="button"
+                    data-zoom
+                    title="View larger"
+                    class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+                  >
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt}
+                      widths={[320, 560, 840, 1200, 1600]}
+                      sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
+                      class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </button>
+                  <figcaption class="mt-xs font-mono text-xs uppercase tracking-[0.06em] text-text-muted">
+                    {photo.caption}
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
         </div>
 
       </div>
@@ -421,6 +500,9 @@ const schemas = [
     title="Want to talk about a project?"
     sub="I take on a small number of projects each quarter. The earlier we talk, the easier it is to schedule the work."
   />
+
+  <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
+  <Lightbox />
 
 </BaseLayout>
 

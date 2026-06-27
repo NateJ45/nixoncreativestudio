@@ -163,10 +163,13 @@ const baseDelay = 120;
   }
   .terminal-line.is-out { color: rgba(255, 255, 255, 0.7); }
   .terminal-line.is-ok  { color: rgba(255, 255, 255, 0.82); }
-  /* A shell comment: quiet and italic so it reads as an aside, not a result. */
+  /* A shell comment: quiet and italic so it reads as an aside, not a result.
+     Alpha holds at 0.52 (not lower) so the small italic text clears WCAG AA
+     contrast on the terminal's dark surface while staying quieter than the
+     command/output lines above. */
   .terminal-line.is-note {
     margin-top: 0.15rem;
-    color: rgba(255, 255, 255, 0.42);
+    color: rgba(255, 255, 255, 0.52);
     font-style: italic;
   }
 
