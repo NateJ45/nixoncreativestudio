@@ -93,6 +93,12 @@ const fragmentShader = /* glsl */ `
     float vig = smoothstep(1.3, 0.22, length(uv - 0.5));
     col *= mix(0.78, 1.10, vig);
 
+    // Right-bias: fade the whole flow back to the navy base on the left so the
+    // colour lives on the right half (behind the device scene) and the headline
+    // side stays calm. The smoothstep gives a long, soft horizontal falloff
+    // instead of a hard seam where the flow used to meet the scrim.
+    col = mix(navy, col, smoothstep(0.2, 0.66, uv.x));
+
     gl_FragColor = vec4(col, 1.0);
   }
 `;
