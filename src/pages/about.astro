@@ -81,15 +81,20 @@ const principles = [
 // "Currently" content, merged in from the old standalone /now page (a Derek
 // Sivers-style snapshot). Rewrite these arrays about once a quarter; the
 // freshness pill and the "last updated" stamp keep the section honest.
-const lastUpdated = '2026-06-15'; // bump whenever the arrays below change
+const lastUpdated = '2026-06-27'; // bump whenever the arrays below change
+
+// Parse the ISO day as LOCAL midnight. A bare 'YYYY-MM-DD' parses as UTC, so in
+// a timezone behind UTC both the label and the freshness would read a day early
+// (e.g. "yesterday" / the prior date). The T00:00:00 suffix forces local time.
+const lastUpdatedDate = new Date(`${lastUpdated}T00:00:00`);
 const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
   month: 'long', day: 'numeric', year: 'numeric',
-}).format(new Date(lastUpdated));
+}).format(lastUpdatedDate);
 
 // Relative freshness for the status pill: today / N days / N weeks / N months.
 // If it ever reads "8 months ago," that is the nudge to rewrite the arrays.
 function freshnessLabel(iso: string): string {
-  const days = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000));
+  const days = Math.max(0, Math.floor((Date.now() - new Date(`${iso}T00:00:00`).getTime()) / 86_400_000));
   if (days <= 0) return 'Updated today';
   if (days === 1) return 'Updated yesterday';
   if (days < 14) return `Updated ${days} days ago`;
@@ -99,19 +104,21 @@ function freshnessLabel(iso: string): string {
 }
 const freshness = freshnessLabel(lastUpdated);
 
-// Active client + studio work, most front-of-mind first. Warm and generic:
-// describe the shape of the work, not named clients.
+// Active client + studio work, most front-of-mind first. Named orgs here are
+// ones I'm public with (the Presbyterian Academy is a case study on this site;
+// West Chester Preschool is where I'm the volunteer Publicity Chair); keep any
+// private client generic rather than named.
 const workingOn = [
-  'Building a small business site for a West Chester music teacher, copy and photography included.',
-  'Planning a summer Sunday-morning photo shoot with a partner church.',
-  'Sketching the next iteration of this studio site (the one you are reading).',
+  'Finishing the Presbyterian Academy website ahead of the school\'s first term.',
+  'Back as Publicity Chair at West Chester Preschool for another year, this round gathering photo and video of the students and families for 2027-2028 enrollment.',
+  'Buying our first house, here in Cincinnati.',
 ];
 
 // Capacity signals. status drives the chip color and the readable label, so
 // availability never reads on color alone. open -> green, limited -> amber.
 const booking = [
-  { status: 'open' as const,    label: 'Web design',  detail: 'Open for one more small business or nonprofit project this summer.' },
-  { status: 'limited' as const, label: 'Photography', detail: 'A few shoot days left in July and August around existing work.' },
+  { status: 'open' as const,    label: 'Web design',  detail: 'Open to new web design projects of every kind this quarter, from a single landing page to a full rebuild.' },
+  { status: 'limited' as const, label: 'Photography', detail: 'A few shoot days each month, fit around the web work, for portraits, families, events, and the brand photography that pairs with a new site.' },
 ];
 const statusMeta = {
   // Status text must clear AA on the now-sheet surface. The brand amber
@@ -123,14 +130,14 @@ const statusMeta = {
 
 // Books / longer-form pieces, and skills I'm sharpening.
 const reading = [
-  { title: 'Design as Art', author: 'Bruno Munari' },
-  { title: 'How Buildings Learn', author: 'Stewart Brand' },
-  { title: 'The Mom Test', author: 'Rob Fitzpatrick', note: 're-read' },
+  { title: 'John Adams', author: 'David McCullough' },
+  { title: 'The New Father', author: 'Armin A. Brott' },
+  { title: 'The Lord of the Rings', author: 'J.R.R. Tolkien', note: 're-reading' },
 ];
 const learning = [
-  'View Transitions and the newer web animation APIs',
-  'Long-exposure photography in low-light interiors',
-  'Faster turnarounds on photo culling and edits',
+  'Smoother, steadier video out of my gimbal',
+  'Coaxing a genuinely lush green lawn out of the backyard',
+  'Going deeper on Astro, the framework this very site runs on',
 ];
 
 // Reused layout tokens. railGrid is the page's one asymmetric grid; railLabel is
@@ -147,7 +154,7 @@ const schemas = [
     '@type':        'Person',
     '@id':          `${site.url}/about/#person`,
     name:           site.ownerName,
-    jobTitle:       'Founder, Designer, Developer',
+    jobTitle:       'Founder, Designer, Developer, Photographer',
     worksFor:       { '@id': `${site.url}#organization` },
     url:            `${site.url}/about/`,
     sameAs: [
@@ -160,7 +167,7 @@ const schemas = [
 
 <BaseLayout
   title="About | Nixon Creative Studio"
-  description="About Nathan Nixon, sole owner of Nixon Creative Studio in West Chester, Ohio."
+  description="About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio."
   schemas={schemas}
 >
 
@@ -176,7 +183,7 @@ const schemas = [
         <!-- Rail: decorative word-label + a quiet location stamp. -->
         <div class="flex flex-col gap-2" aria-hidden="true">
           <p class={railLabel}>About</p>
-          <p class="font-mono text-[0.8rem] text-text-muted">West Chester, OH</p>
+          <p class="font-mono text-[0.8rem] text-text-muted">Cincinnati, OH</p>
         </div>
 
         <!-- Track: oversized h1 breakout, then intro | portrait split. -->
@@ -191,7 +198,7 @@ const schemas = [
               data-reveal="right"
               style="--reveal-delay: 120ms;"
             >
-              I'm Nathan Nixon. I run Nixon Creative Studio out of West Chester, Ohio, and I work with small businesses, nonprofits, churches, and schools, around Cincinnati in person and anywhere for web work. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
+              I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with small businesses, nonprofits, churches, and schools, in person around the region and anywhere for web work. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
             </p>
 
             <!-- Portrait. The headshot fills the original 4:5 frame (the square
@@ -257,22 +264,25 @@ const schemas = [
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-story-heading">The short version</h2>
+            <h2 id="about-story-heading">The longer story</h2>
             <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              Why a one-person studio, and why plain code under the hood.
+              From behind the camera to the web, and why one person handles all of it.
             </p>
           </header>
 
           <div class="mt-l grid items-start gap-xl lg:grid-cols-2">
             <div class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text" data-reveal style="--reveal-delay: 120ms;">
               <p>
-                I started Nixon Creative Studio after a decade of doing communications work for churches and schools, where the people building the website were always one volunteer or one budget cycle away from disappearing. The pattern was the same every time: the launch went well, then the one person who knew how to update the site moved on, and within a year nobody could touch it without starting over.
+                I came to this work through a camera. For years I photographed portraits, families, weddings, the events people most want to remember, and the part I loved was helping someone show up at their best. When the shoots dried up in 2020, I started building websites for a few of those same clients, and it turned out to be the same job in a new medium: work out what someone is really trying to say, then make it clear. Web design is the studio's main work now, but the photographer's eye stayed, and most projects still end up with real photography in them.
               </p>
               <p>
-                The studio is my answer to that pattern. I choose the platform that fits the client and the people who will maintain it, then build it cleanly enough that the next person can follow it. The same person on every project so there's no agency handoff at the worst moment. Strategy first so the design is doing real work instead of just looking new.
+                Before any of that I studied mechanical engineering at the University of Edinburgh, back home in Scotland. The degree did not make me a designer, but it taught me to take a thing apart, understand why each piece is there, and put it back together so it holds. That is how I approach a website too: structure first, surface second, and built so the person who inherits it can actually keep it running.
               </p>
               <p>
-                I live in West Chester with my family. When I'm not at a screen I'm usually behind a camera, on a basketball court, or pretending I know how to fix something at the house.
+                I'm also the Publicity Chair at West Chester Preschool, the co-op where my children go and every parent takes a job to keep the place running. That role is my whole business in miniature: the branding, the website, the social media, the photo and video for enrollment, the outreach to new families. Doing all of it for a place I belong to keeps me honest about what a small team can actually maintain, where the volunteer running the site one year might hand it to a different one the next, so it has to survive the handoff.
+              </p>
+              <p>
+                Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a US citizen in 2022, and these days we're raising two kids and buying our first house here. When I'm away from a screen I'm usually out on a long run, chasing landscapes with a camera, deep in an ambitious Lego build with the kids, or a few episodes into a history drama.
               </p>
             </div>
 
@@ -307,7 +317,7 @@ const schemas = [
           <header class="max-w-[60ch]" data-reveal>
             <h2 id="about-outside-heading">Outside the studio</h2>
             <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A few snapshots from the rest of life around West Chester: family, the trails, and the occasional turn in front of the camera.
+              A few snapshots from the rest of life around Cincinnati: family, the trails, and the occasional turn in front of the camera.
             </p>
           </header>
 
