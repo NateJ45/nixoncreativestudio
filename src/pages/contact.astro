@@ -405,14 +405,16 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                 <p class="leading-[1.6] text-text">
                   {site.address}. In-person work and photography across the greater Cincinnati region; web design and strategy with clients anywhere, fully remote when that is easier.
                 </p>
-                <!-- Service-area map. Static OpenStreetMap embed centered on
-                     the Cincinnati region. No API key, no third-party tracker,
-                     loads only the visible tiles. The bbox parameter frames
-                     the area; adjust if Nathan wants to widen the scope.
-                     loading="lazy" keeps it off the critical path. -->
+                <!-- Service-area map: a keyless Google Maps embed centered on
+                     the Cincinnati region (the ?output=embed form needs no API
+                     key). Unlike the old OpenStreetMap embed this loads Google's
+                     scripts, so it does add Google as a third party on this page;
+                     that's the trade for the Google Maps look. Change the q=
+                     place or z= zoom to reframe. loading="lazy" keeps it off the
+                     critical path. -->
                 <div class="mt-s overflow-hidden rounded-md border border-border">
                   <iframe
-                    src="https://www.openstreetmap.org/export/embed.html?bbox=-85.05%2C38.85%2C-83.95%2C39.55&amp;layer=mapnik&amp;marker=39.20%2C-84.40"
+                    src="https://maps.google.com/maps?q=Cincinnati,+OH&z=10&output=embed"
                     title="Map of the Greater Cincinnati service area"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
