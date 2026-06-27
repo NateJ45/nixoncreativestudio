@@ -97,8 +97,8 @@ export const site: SiteData = {
   url:    `https://${_domain}`,
 
   social: {
-    instagram: 'https://instagram.com/nixoncreativestudio',
-    linkedin:  'https://www.linkedin.com/in/nathanjnixon',
+    instagram: 'https://www.instagram.com/thenate_n/',
+    linkedin:  'https://www.linkedin.com/in/nathannixon/',
   },
 
   tagline: 'Modern websites for small businesses, nonprofits, churches, and schools. Based in Cincinnati, working with clients anywhere.',
