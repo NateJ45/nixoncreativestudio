@@ -6,7 +6,7 @@ brand
 
 ## Users
 
-Decision-makers at small businesses, churches, preschools, schools, and nonprofits in the Cincinnati / West Chester region, plus web clients further afield who find the studio online. They're often on a board, a staff team, or running the business themselves, evaluating Nathan as a potential vendor with a real budget and a real timeline. Their context when landing on the site is "I heard about Nathan / saw his work / met him in person, is this the right fit?" — they want to understand the services on offer, see proof, and decide whether to start a conversation.
+Decision-makers at small businesses, churches, preschools, schools, and nonprofits in the Cincinnati region, plus web clients further afield who find the studio online. They're often on a board, a staff team, or running the business themselves, evaluating Nathan as a potential vendor with a real budget and a real timeline. Their context when landing on the site is "I heard about Nathan / saw his work / met him in person, is this the right fit?" — they want to understand the services on offer, see proof, and decide whether to start a conversation.
 
 A secondary audience is other designers and creative peers who read the site as portfolio, not as sales material. They're useful for referrals and credibility but they're not the primary buyer.
 
@@ -20,7 +20,7 @@ The site is doing three jobs in equal measure:
 
 1. **Drive qualified inquiries** — a steady flow of well-fit project requests from small businesses, churches, schools, and nonprofits.
 2. **Build local credibility** — the trustworthy anchor people land on after meeting Nathan in person, at the chamber of commerce, or through a referral.
-3. **Surface in regional search** — discoverable for queries like "West Chester web design," "Cincinnati church website," and "preschool photographer Cincinnati."
+3. **Surface in regional search** — discoverable for queries like "Cincinnati web design," "Cincinnati church website," and "preschool photographer Cincinnati."
 
 Success looks like steady inbound flow from the region, a portfolio that grows visibly over time, and a site that consistently reads as the same studio across the homepage, the case studies, and the photography gallery.
 

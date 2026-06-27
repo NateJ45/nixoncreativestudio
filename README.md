@@ -1,7 +1,7 @@
 # Nixon Creative Studio
 
 Astro portfolio for Nathan Nixon, sole owner of Nixon Creative Studio
-in West Chester, Ohio. Web design, photography, and brand strategy for
+in Cincinnati, Ohio. Web design, photography, and brand strategy for
 preschools, churches, nonprofits, and small businesses: web design and
 strategy for clients anywhere, photography across the Cincinnati region.
 Lives at [nixoncreativestudio.com](https://nixoncreativestudio.com).
