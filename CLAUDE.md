@@ -45,7 +45,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - `@lhci/cli` (dev-only) for Lighthouse CI; see "Testing, linting, and CI" below
 - Dark / light / system theme system: `ThemeToggle.tsx` React island + anti-FOUC bootstrap script in BaseLayout, persisted to `localStorage["ncs-theme"]`
 - `src/data/site.ts` as the single source of truth for contact info (name, email, phone, address, studio name, social URLs, tagline, domain) plus the optional `bookingUrl` and `newsletterUrl` that gate the Cal.com and Newsletter scaffolds
-- Web3Forms for the contact form, with hCaptcha spam protection using Web3Forms' shared public sitekey (`50b2fe65-…`) and their server-side secret, so there's no hCaptcha account to set up. Web3Forms supports hCaptcha only, not Cloudflare Turnstile or Google reCAPTCHA. Cloudflare Web Analytics for privacy-friendly traffic
+- Web3Forms for the contact form. Spam protection is the form's hidden honeypot field (`botcheck`) alone; the hCaptcha widget was removed. To re-add it, restore the `.h-captcha` div, the `js.hcaptcha.com/1/api.js` script tag, and the captcha gate in the contact form's submit handler, then turn hCaptcha back on in the Web3Forms dashboard (Web3Forms supports hCaptcha only, not Cloudflare Turnstile or Google reCAPTCHA). Cloudflare Web Analytics for privacy-friendly traffic
 - eslint (flat config) + prettier for linting and formatting, `node --test` unit suites in `src/lib/*.test.ts`, and a GitHub Actions CI run (install, build, test) on every push and PR. See "Testing, linting, and CI" below
 - Cloudflare Pages for hosting (build command `npm run build`, output `dist/`)
 - GitHub for version control

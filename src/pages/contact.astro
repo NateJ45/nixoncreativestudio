@@ -14,14 +14,17 @@
    dark mode is a single navy sheet; depth comes from the form's surface-card, and
    the page closes on the shared band-themed CtaBanner.
 
-   The form itself is unchanged where it counts: real labels, native input types,
-   required attributes, a honeypot, the three Web3Forms hidden inputs, the
-   hCaptcha widget, and the inline enhancement script (draft save/restore,
-   ?org_type preselect, honeypot, captcha gate, fetch submit, thank-you/error
-   swap) are all preserved byte-for-byte. The only change inside the form is
-   visual grouping: the flat field stack is split into three labeled fieldsets
-   and two short field pairs sit side by side. Every field name, id, label/for,
-   required, and autocomplete is untouched, so the script's selectors still bind.
+   The form keeps real labels, native input types, required attributes, a hidden
+   honeypot, the three Web3Forms hidden inputs, and the inline enhancement script
+   (draft save/restore, ?org_type preselect, honeypot, fetch submit,
+   thank-you/error swap). Fields are grouped into three labeled fieldsets, with two
+   short field pairs side by side. Every field name, id, label/for, required, and
+   autocomplete routes to Web3Forms.
+
+   Spam protection is the hidden honeypot field (botcheck) alone. The optional
+   hCaptcha widget was removed. To bring it back: restore the .h-captcha div, the
+   js.hcaptcha.com/1/api.js script tag, the captcha gate in the submit handler,
+   and turn hCaptcha back on in the Web3Forms dashboard.
 
    Even without JavaScript the form submits natively to Web3Forms.
    ============================================================================ */
@@ -85,15 +88,6 @@ const nextSteps = [
 // time, which is required because the form runs in the browser.
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
 const formActive  = web3formsKey.length > 0;
-
-// Web3Forms shared hCaptcha sitekey. Web3Forms verifies the response
-// server-side using their own secret tied to this public sitekey, so
-// there's no hCaptcha account to set up and no secret for us to manage.
-// The value is the documented Web3Forms public sitekey, identical on
-// every site using their free hCaptcha integration. Web3Forms only
-// supports hCaptcha (not Cloudflare Turnstile or Google reCAPTCHA).
-// Docs: https://docs.web3forms.com/getting-started/customizations/captcha-spam-protection/h-captcha-spam-protection
-const hcaptchaSiteKey = '50b2fe65-86a5-4534-a5e3-9f7c6f4e1f4d';
 
 // Shared class strings for the form. Pulled into consts because each
 // input/select/textarea repeats the same base styling.
@@ -316,29 +310,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                 <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
               </div>
 
-              <!-- hCaptcha widget. The async API script (loaded right after
-                   the closing </form> below) finds this element by class and
-                   renders the "I'm not a robot" challenge into it. On solve,
-                   hCaptcha injects a hidden <input name="h-captcha-response">
-                   into the form, which rides along on the existing FormData
-                   submit. Web3Forms verifies the response server-side using
-                   the shared secret tied to the public sitekey.
-
-                   The inline script immediately below mirrors the current
-                   site theme onto data-theme before hCaptcha reads it, so
-                   the widget paints to match light or dark mode on load.
-                   It doesn't live-update on a mid-session theme flip; the
-                   contact page is short enough that this isn't worth wiring. -->
-              <div class="h-captcha self-start" data-sitekey={hcaptchaSiteKey} data-theme="light"></div>
-              <script is:inline>
-                (function () {
-                  if (document.documentElement.classList.contains('dark')) {
-                    var el = document.querySelector('.h-captcha');
-                    if (el) el.setAttribute('data-theme', 'dark');
-                  }
-                })();
-              </script>
-
               <!-- Submit. Shared shadcn Button (brand variant + cta size)
                    matches the Hero and CtaBanner CTAs. self-start keeps it
                    at content width inside the flex-column form layout. -->
@@ -360,13 +331,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                 </p>
               )}
             </form>
-
-            <!-- hCaptcha API script. is:inline keeps Astro from touching it so
-                 the tag ships exactly as written. async defer lets it download
-                 in the background while the page paints; once loaded, hCaptcha
-                 auto-renders every .h-captcha element on the page using their
-                 data-* attributes. Loaded only on /contact, not site-wide. -->
-            <script is:inline src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
             <!-- Thank-you panel. Starts hidden; the submit handler removes the
                  hidden class on success. Same outer card surface as the form so
@@ -503,8 +467,8 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
        loses specificity against class-based display rules.
        ---------------------------------------------------------------------- -->
   <script>
-    // Wrapped in astro:page-load so the form's JS layer (honeypot, hCaptcha
-    // pre-check, draft save/restore, thank-you/error swap) re-binds after a
+    // Wrapped in astro:page-load so the form's JS layer (honeypot, draft
+    // save/restore, thank-you/error swap) re-binds after a
     // View Transitions navigation, not just on a hard load. The dataset guard
     // keeps it from binding twice to the same form instance.
     function initContactForm() {
@@ -646,20 +610,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
 
         event.preventDefault();
 
-        // Captcha check. hCaptcha injects h-captcha-response into the form
-        // once the visitor solves the challenge. If it's empty, scroll the
-        // widget into view and stop here — no point round-tripping to
-        // Web3Forms for a known rejection, and the smooth scroll gives the
-        // visitor a clear cue about what's left to do. We don't show the
-        // generic error panel in this case; the widget itself is the
-        // affordance.
-        const captchaInput = form.elements.namedItem('h-captcha-response') as HTMLInputElement | null;
-        if (!captchaInput?.value) {
-          const widget = form.querySelector('.h-captcha') as HTMLElement | null;
-          if (widget) widget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          return;
-        }
-
         hide(errorEl, 'block');
         submit.disabled = true;
         label.textContent = 'Sending...';
@@ -693,20 +643,5 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
     document.addEventListener('astro:page-load', initContactForm);
     initContactForm();
   </script>
-
-  <style>
-    /* hCaptcha renders a fixed 302px-wide iframe. On very small phones that is
-       wider than the form's content box, which forces the whole page to scroll
-       sideways. Scale the widget down just enough to fit on sub-360px screens;
-       the transform is visual only, so the checkbox stays fully tappable. The
-       widget fits on its own from ~360px up, so this only touches the smallest
-       devices. */
-    @media (max-width: 360px) {
-      .h-captcha {
-        transform: scale(0.8);
-        transform-origin: left top;
-      }
-    }
-  </style>
 
 </BaseLayout>
