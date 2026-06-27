@@ -146,7 +146,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
           variant="ghost"
           size="icon-lg"
           aria-label="Open menu"
-          className="mobile-trigger text-heading"
+          className="mobile-trigger size-11 text-heading"
         >
           <Menu className="size-6" />
         </Button>
@@ -180,9 +180,19 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
               animation-delay: var(--mnav-delay, 0ms);
             }
           }
+          /* Panel padding carries the safe-area insets so the wordmark + close
+             button clear the notch and the bottom contact block clears the home
+             indicator when the page runs under viewport-fit=cover. env() is 0 on
+             non-notched devices, so this reads as a flat --spacing-l there. */
+          .mnav-shell {
+            padding-top: calc(var(--spacing-l) + env(safe-area-inset-top));
+            padding-bottom: calc(var(--spacing-l) + env(safe-area-inset-bottom));
+            padding-left: calc(var(--spacing-l) + env(safe-area-inset-left));
+            padding-right: calc(var(--spacing-l) + env(safe-area-inset-right));
+          }
         `}</style>
 
-        <div className="relative isolate flex min-h-full flex-col px-l py-l">
+        <div className="mnav-shell relative isolate flex min-h-full flex-col">
           {/* Drifting brand aurora for atmosphere. Decorative; freezes under
               reduced motion via the global rule. */}
           <div
@@ -205,7 +215,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                 variant="ghost"
                 size="icon-lg"
                 aria-label="Close menu"
-                className="text-primary-foreground hover:text-secondary"
+                className="size-11 text-primary-foreground hover:text-secondary"
               >
                 <X className="size-6" />
               </Button>
@@ -291,13 +301,13 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             <div className="mt-s flex flex-col gap-1">
               <a
                 href={site.emailHref}
-                className={`w-fit rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
               >
                 {site.email}
               </a>
               <a
                 href={site.phoneHref}
-                className={`w-fit rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
               >
                 {site.phone}
               </a>
@@ -312,7 +322,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className={`inline-flex h-10 w-10 items-center justify-center rounded-md text-primary-foreground/70 transition-colors duration-150 hover:bg-white/10 hover:text-primary-foreground ${focusRing}`}
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-primary-foreground/70 transition-colors duration-150 hover:bg-white/10 hover:text-primary-foreground ${focusRing}`}
                   >
                     <Icon className="size-5" />
                   </a>
@@ -323,7 +333,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                   would vanish on navy, so force the icon white here (and sky on
                   hover) via a descendant override on its .theme-toggle hook. */}
               <div className="[&_.theme-toggle:hover]:text-secondary [&_.theme-toggle]:text-primary-foreground">
-                <ThemeToggle />
+                <ThemeToggle className="size-11" />
               </div>
             </div>
           </div>

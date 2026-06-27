@@ -119,7 +119,12 @@ const isActive = (href: string): boolean => {
      Default: a frosted bar with a hairline divider, always legible over the
      light inner-page heroes. */
   .ncs-header {
-    padding-block: var(--spacing-m);
+    /* Top padding carries the status-bar / notch inset when the page runs
+       edge-to-edge under viewport-fit=cover, so the wordmark and nav never
+       slide under the notch in a standalone/landscape context. env() is 0 in
+       normal browser chrome, so this reads as a flat --spacing-m there. */
+    padding-top: calc(var(--spacing-m) + env(safe-area-inset-top));
+    padding-bottom: var(--spacing-m);
     background-color: color-mix(in oklab, var(--color-bg) 95%, transparent);
     border-bottom: 1px solid var(--color-border);
     backdrop-filter: blur(4px);
@@ -133,7 +138,8 @@ const isActive = (href: string): boolean => {
 
   /* Scrolled: frost deepens, the bar condenses and lifts. */
   .ncs-header[data-scrolled] {
-    padding-block: 0.75rem;
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+    padding-bottom: 0.75rem;
     background-color: color-mix(in oklab, var(--color-bg) 90%, transparent);
     box-shadow: 0 10px 30px -18px rgba(10, 22, 40, 0.45);
     backdrop-filter: blur(12px);

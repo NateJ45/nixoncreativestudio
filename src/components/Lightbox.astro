@@ -119,8 +119,11 @@
   }
   .ncs-lightbox-close {
     position: fixed;
-    top: 1rem;
-    right: 1rem;
+    /* max() keeps the 1rem inset on normal screens but pushes the close button
+       clear of the notch / dynamic island when the page runs under
+       viewport-fit=cover. env() is 0 on non-notched devices. */
+    top: max(1rem, env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
     z-index: 1;
     display: inline-flex;
     align-items: center;

@@ -119,7 +119,12 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover lets the navy hero and footer run edge-to-edge into
+         the notch / rounded-corner area on modern phones. The safe-area insets
+         that pairs with (so content never sits under the notch or home
+         indicator) are handled in .ncs-container, the sticky header, the mobile
+         nav panel, the footer, and the fixed back-to-top / lightbox controls. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <title>{title}</title>
 

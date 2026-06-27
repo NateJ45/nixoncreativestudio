@@ -305,7 +305,13 @@
 .ncs-container {
   max-width: var(--container-content);
   margin-inline: auto;
-  padding-inline: 1.5rem;
+  /* Side padding holds a 1.5rem minimum, but grows to clear a display cutout
+     when the page runs edge-to-edge under viewport-fit=cover (landscape notch,
+     rounded corners). env() resolves to 0 on every non-notched device, so this
+     is identical to a flat 1.5rem everywhere except the phones that need it. */
+  padding-inline:
+    max(1.5rem, env(safe-area-inset-left))
+    max(1.5rem, env(safe-area-inset-right));
   width: 100%;
 }
 

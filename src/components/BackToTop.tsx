@@ -55,7 +55,12 @@ export default function BackToTop() {
       aria-label="Back to top"
       title="Back to top"
       className={
-        'fixed bottom-6 right-6 z-40 rounded-full shadow-lg transition-opacity duration-200 ' +
+        // size-11 (44px) is the comfortable touch target; icon-lg alone is 36px.
+        // The bottom/right offsets hold a 1.5rem gap but grow to clear the home
+        // indicator / notch when the page runs under viewport-fit=cover. env() is
+        // 0 on non-notched devices, so this reads as a flat 1.5rem there.
+        'fixed z-40 size-11 rounded-full shadow-lg transition-opacity duration-200 ' +
+        'bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] ' +
         (visible ? 'opacity-100' : 'pointer-events-none opacity-0')
       }
     >

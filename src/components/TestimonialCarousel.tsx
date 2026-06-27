@@ -142,12 +142,15 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
             type="button"
             onClick={scrollPrev}
             aria-label="Previous testimonial"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
           >
             <ChevronLeft className="size-5" aria-hidden="true" />
           </button>
 
           <div className="flex items-center gap-2" role="group" aria-label="Choose a testimonial">
+            {/* Each dot is a 44px-tall, >=24px-wide tap target; the visible pill
+                (the inner span) stays small and carries the focus ring so the
+                ring hugs the dot, not the invisible tap box. */}
             {items.map((t, i) => (
               <button
                 key={`dot-${t.name}-${i}`}
@@ -155,10 +158,14 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
                 onClick={() => scrollTo(i)}
                 aria-label={`Go to testimonial ${i + 1}`}
                 aria-current={i === selected ? 'true' : undefined}
-                className={`h-2.5 rounded-full transition-all duration-200 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
-                  i === selected ? 'w-6 bg-link' : 'w-2.5 bg-border hover:bg-text-muted'
-                }`}
-              />
+                className="group/dot flex h-11 items-center justify-center px-2 focus-visible:outline-none"
+              >
+                <span
+                  className={`block h-2.5 rounded-full transition-all duration-200 group-focus-visible/dot:outline-2 group-focus-visible/dot:outline-accent group-focus-visible/dot:outline-offset-2 ${
+                    i === selected ? 'w-6 bg-link' : 'w-2.5 bg-border group-hover/dot:bg-text-muted'
+                  }`}
+                />
+              </button>
             ))}
           </div>
 
@@ -166,7 +173,7 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
             type="button"
             onClick={scrollNext}
             aria-label="Next testimonial"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
           >
             <ChevronRight className="size-5" aria-hidden="true" />
           </button>
@@ -176,7 +183,7 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
               type="button"
               onClick={togglePlay}
               aria-label={playing ? 'Pause testimonials' : 'Play testimonials'}
-              className="ml-xs inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="ml-xs inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
             >
               {playing ? <Pause className="size-4" aria-hidden="true" /> : <Play className="size-4" aria-hidden="true" />}
             </button>

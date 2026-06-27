@@ -43,10 +43,16 @@ const currently = 'Booking small business and nonprofit web projects for the sea
 // hits 4.46:1 on navy. --secondary is 7:1 on navy in light mode and 9.7:1
 // in dark, so it passes comfortably in both. Pulled into a const so each
 // <a> in the markup can apply the same set without copy-paste drift.
+// On a touch device the links become 44px-tall flex rows so they're a
+// comfortable tap target (at rest they render ~16-22px tall, fine for a mouse
+// but cramped for a thumb). Gating on pointer:coarse, not screen width, means
+// phones AND touch tablets (iPads) both get the larger target, while a
+// mouse-driven desktop keeps the footer's tuned compact density.
 const linkClass =
   'text-secondary no-underline transition-colors duration-150 ' +
   'hover:underline hover:underline-offset-2 ' +
-  'focus-visible:underline focus-visible:underline-offset-2';
+  'focus-visible:underline focus-visible:underline-offset-2 ' +
+  'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center';
 
 // Section heading style inside each column. Same display font as h2 but
 // dialed down in size so it reads as a label. text-primary-foreground is

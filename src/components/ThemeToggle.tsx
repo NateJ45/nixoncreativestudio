@@ -73,7 +73,10 @@ function readStored(): Theme {
   return 'system';
 }
 
-export default function ThemeToggle() {
+// `className` is forwarded onto the Button so a parent can resize the control
+// per context: the desktop Header keeps the compact 32px icon (mouse target),
+// while the mobile nav panel passes size-11 for a 44px touch target.
+export default function ThemeToggle({ className = '' }: { className?: string }) {
 
   // Initial state matches the SSR placeholder. The useEffect below pulls
   // the real value from localStorage on the client. Until then we render
@@ -138,7 +141,7 @@ export default function ThemeToggle() {
       onClick={cycle}
       aria-label={label}
       title={label}
-      className="theme-toggle text-text hover:text-accent"
+      className={`theme-toggle text-text hover:text-accent ${className}`}
     >
       {icon}
     </Button>
