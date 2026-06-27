@@ -7,13 +7,14 @@
    right. Renders inside BaseLayout.astro above the <main> slot.
 
    Context-aware background (driven by enhance.ts):
-     - data-over-hero : the page has a dark hero at the top and it still covers
-       the bar, so the header is transparent with white text and the brand mark.
+     - data-over-hero : a hero covers the bar at the top of the page, so the
+       header takes the hero's own surface colour. Theme-aware: the light hero
+       surface in light mode, navy with white text over the navy hero in dark.
        Pages without a [data-hero-dark] element never get this state, so their
        header is the frosted bar from the first paint.
      - data-scrolled  : the page has scrolled past 8px; the bar frosts and
-       condenses. When both are present, over-hero wins (stays transparent
-       while the dark hero is still behind it).
+       condenses. When both are present, over-hero wins (holds the hero
+       treatment while the hero is still behind it).
 
    All three visual states live in the scoped <style> block below rather than
    in Tailwind data-variant utilities, so the precedence between them is
@@ -146,29 +147,33 @@ const isActive = (href: string): boolean => {
     -webkit-backdrop-filter: blur(12px);
   }
 
-  /* Over the dark hero: a solid navy bar (matching --primary, which is navy in
-     both themes) with white foreground, so it reads as one continuous block
-     with the navy hero directly below it. Navy (not transparent) is deliberate:
-     the header sits ABOVE the hero in flow rather than overlapping it, so a
-     transparent bar would reveal the page background (white in light mode) and
-     the white wordmark would vanish. Declared after [data-scrolled] so it wins
-     while the hero is still behind the bar. */
+  /* Over the hero: a solid bar that takes the hero's own surface colour so the
+     two read as one continuous block. The header sits ABOVE the hero in flow
+     (not overlapping), so a transparent bar would reveal the page background,
+     not the hero, hence solid. Theme-aware: the light hero surface (bg-soft) in
+     light mode, navy in dark. Declared after [data-scrolled] so it wins while
+     the hero is still behind the bar. */
   .ncs-header[data-over-hero] {
-    background-color: var(--primary);
+    background-color: var(--color-bg-soft);
     border-color: transparent;
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .ncs-header[data-over-hero] .wordmark-text,
-  .ncs-header[data-over-hero] .nav-link {
+  :global(.dark) .ncs-header[data-over-hero] {
+    background-color: var(--primary);
+  }
+  /* Over the navy hero (dark mode) the wordmark + nav flip to white. In light
+     mode the default dark heading / nav-link colours already read cleanly on the
+     light hero surface, so no override is needed. The theme toggle + mobile
+     hamburger are React islands that set their own icon colour via a text-*
+     class; reach them with :global + a hook class so they flip white too. */
+  :global(.dark) .ncs-header[data-over-hero] .wordmark-text,
+  :global(.dark) .ncs-header[data-over-hero] .nav-link {
     color: #ffffff;
   }
-  /* Theme toggle + mobile hamburger are React islands that set their own icon
-     color via a text-* class; reach them with :global and a hook class so they
-     flip to white over the hero too. */
-  .ncs-header[data-over-hero] :global(.theme-toggle),
-  .ncs-header[data-over-hero] :global(.mobile-trigger) {
+  :global(.dark) .ncs-header[data-over-hero] :global(.theme-toggle),
+  :global(.dark) .ncs-header[data-over-hero] :global(.mobile-trigger) {
     color: #ffffff;
   }
 

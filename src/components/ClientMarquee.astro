@@ -73,21 +73,29 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
     white-space: nowrap;
   }
 
-  /* Muted white on the navy hero floor, brightening to a clear link on hover or
-     keyboard focus. Quiet at rest so it reads as a ticker, not a loud nav. */
+  /* Quiet at rest so it reads as a ticker, not a loud nav. Muted dark on the
+     light hero floor / muted white on the navy one, brightening to the heading
+     colour on hover or keyboard focus. */
   .client-item {
     position: relative;
     display: inline-flex;
     align-items: center;
-    color: color-mix(in oklab, #ffffff 62%, transparent);
+    color: var(--color-text-muted);
     text-decoration: none;
     transition: color 0.15s ease;
   }
+  :global(.dark) .client-item {
+    color: color-mix(in oklab, #ffffff 62%, transparent);
+  }
   .client-item:hover,
   .client-item:focus-visible {
-    color: #ffffff;
+    color: var(--color-heading);
     text-decoration: underline;
     text-underline-offset: 0.25em;
+  }
+  :global(.dark) .client-item:hover,
+  :global(.dark) .client-item:focus-visible {
+    color: #ffffff;
   }
   .client-item:focus-visible {
     outline: 2px solid var(--color-secondary);

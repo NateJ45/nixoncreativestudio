@@ -71,10 +71,11 @@ const sites = [
 
 interface Props {
   /** 'full' (default) = the desktop two-device cluster (browser + phone), sized
-      to sit absolute-right in the hero. 'phone' = just the phone, in the
-      document flow and centered, for the mobile hero where the full scene is
-      hidden. Both reuse the same cycling script (keyed off [data-hero-showcase])
-      and the same captures. */
+      to sit absolute-right in the hero. 'phone' = just the phone, used as a
+      faded, oversized BACKDROP behind the copy on the mobile hero (Hero.astro's
+      .hero-mobile-scene positions, scales, and fades it), where the full desktop
+      scene is hidden. Both reuse the same cycling script (keyed off
+      [data-hero-showcase]) and the same captures. */
   variant?: 'full' | 'phone';
 }
 const { variant = 'full' } = Astro.props;
@@ -360,11 +361,13 @@ const { variant = 'full' } = Astro.props;
   }
 
   /* ----------------------------------------------------------------------
-     Phone-only variant (variant="phone"): the whole mobile-hero showcase.
-     The stage drops its fixed desktop height and just wraps the single phone,
-     centered in the document flow; the phone goes from absolute (part of the
-     desktop cluster) to a relative, centered, mobile-sized frame, and the
-     brand glow recenters behind it.
+     Phone-only variant (variant="phone"): the single phone, used as the mobile
+     hero's faded backdrop. These are the BASE styles (the stage drops its fixed
+     desktop height and wraps the single phone as a relative, mobile-sized frame
+     with the brand glow recentered); Hero.astro's .hero-mobile-scene then
+     enlarges it, anchors it to the lower-right, drops the glow, and fades it
+     behind the copy. Editing the backdrop's size/position/opacity happens THERE,
+     not here.
      ---------------------------------------------------------------------- */
   .hero-stage.is-phone {
     width: auto;

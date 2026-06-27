@@ -25,11 +25,10 @@ export interface CopyEmailProps {
   /** Optional className forwarded to the wrapping element. Lets the
       parent control spacing without this component making assumptions. */
   className?: string;
-  /** Surface the component sits on. 'dark' (the navy footer) switches the
-      link + icon to sky --secondary, which clears WCAG AA on navy; the
-      darker --link token does not. 'light' (default, e.g. the Contact
-      sidebar) keeps --link, which flips with the page theme on light
-      surfaces. */
+  /** Surface the component sits on. 'dark' is the theme-aware footer: --link on
+      the light footer, switching to sky --secondary over the navy footer in
+      dark mode (the darker --link fails WCAG AA on navy). 'light' (default,
+      e.g. the Contact sidebar) keeps --link, which flips with the page theme. */
   tone?: 'light' | 'dark';
 }
 
@@ -51,14 +50,14 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
     }
   }
 
-  // Token choice depends on the surface (see the `tone` prop doc). On navy
-  // the darker --link fails AA, so the dark tone uses --secondary (sky), the
-  // same token the footer's other links use; the icon goes to a legible
-  // white so it does not vanish on the dark band.
+  // Token choice depends on the surface (see the `tone` prop doc). The footer
+  // ('dark') is theme-aware: --link on the light footer, and over the navy
+  // footer in dark mode the darker --link fails AA, so it switches to sky
+  // --secondary (the token the footer's other links use) with a white icon.
   const linkClass =
     'transition-colors duration-150 hover:underline hover:underline-offset-2 ' +
     'focus-visible:underline focus-visible:underline-offset-2 ' +
-    (tone === 'dark' ? 'text-secondary' : 'text-link');
+    (tone === 'dark' ? 'text-link dark:text-secondary' : 'text-link');
 
   const buttonClass =
     // 36px on a mouse desktop, 44px on any touch device (phone or tablet) where
@@ -66,7 +65,7 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
     // iPads too. The icon stays size-4; the larger box is invisible until hover.
     'inline-flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-none ' +
     (tone === 'dark'
-      ? 'text-primary-foreground/70 hover:bg-white/10 hover:text-secondary focus-visible:bg-white/10 focus-visible:text-secondary'
+      ? 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link dark:text-primary-foreground/70 dark:hover:bg-white/10 dark:hover:text-secondary dark:focus-visible:bg-white/10 dark:focus-visible:text-secondary'
       : 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link');
 
   return (

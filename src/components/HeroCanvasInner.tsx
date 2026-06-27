@@ -38,6 +38,7 @@ const fragmentShader = /* glsl */ `
   uniform float uTime;
   uniform vec2  uResolution;
   uniform vec2  uMouse; // 0..1, smoothed pointer position (gl uv space)
+  uniform float uDark;  // 1.0 = dark theme (navy flow), 0.0 = light theme (pastel wash)
 
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -72,32 +73,39 @@ const fragmentShader = /* glsl */ `
     vec2 q = vec2(fbm(p + t), fbm(p + vec2(5.2, 1.3) - t * 0.55));
     float f = fbm(p + 2.6 * q);
 
-    vec3 navy  = vec3(0.039, 0.086, 0.157); // #0A1628
-    vec3 blue  = vec3(0.204, 0.471, 0.741); // #3478BD
-    vec3 sky   = vec3(0.251, 0.667, 0.929); // #40AAED
-    vec3 amber = vec3(1.000, 0.639, 0.204); // #FFA334
+    // Theme-aware palette. uDark=1 reproduces the dark navy flow exactly; uDark=0
+    // swaps the same field to a soft, light pastel wash for light mode (a very
+    // light blue-white base with gentle sky/blue variation, so it reads bright
+    // and airy rather than as dark clouds on white).
+    vec3 base  = mix(vec3(0.925, 0.946, 0.980), vec3(0.039, 0.086, 0.157), uDark);
+    vec3 blue  = mix(vec3(0.690, 0.808, 0.940), vec3(0.204, 0.471, 0.741), uDark);
+    vec3 sky   = mix(vec3(0.769, 0.878, 0.972), vec3(0.251, 0.667, 0.929), uDark);
+    vec3 amber = mix(vec3(1.000, 0.902, 0.757), vec3(1.000, 0.639, 0.204), uDark);
 
-    vec3 col = navy;
+    vec3 col = base;
     col = mix(col, blue, clamp(f * 1.5, 0.0, 1.0));
     col = mix(col, sky, clamp(pow(f, 2.0) * 1.4, 0.0, 1.0) * 0.6);
-    col = mix(col, amber, clamp(q.y * 0.5, 0.0, 1.0) * 0.10);
-    // Bright flowing streaks along the crests of the warped field.
-    col += sky * smoothstep(0.74, 1.0, f) * 0.18;
+    col = mix(col, amber, clamp(q.y * 0.5, 0.0, 1.0) * mix(0.06, 0.10, uDark));
+    // Bright flowing streaks along the crests: strong on dark, very gentle on
+    // light (where adding light sky would only wash toward white).
+    col += sky * smoothstep(0.74, 1.0, f) * mix(0.05, 0.18, uDark);
 
     // Soft sky bloom that tracks the cursor (aspect-corrected).
     vec2 m  = vec2(uMouse.x * aspect, uMouse.y);
     vec2 pu = vec2(uv.x * aspect, uv.y);
-    col = mix(col, sky, smoothstep(0.45, 0.0, distance(pu, m)) * 0.18);
+    col = mix(col, sky, smoothstep(0.45, 0.0, distance(pu, m)) * mix(0.10, 0.18, uDark));
 
-    // Vignette keeps the edges moody and the centre alive.
+    // Vignette: moody edges on dark; barely-there on light so it never greys the
+    // bright surface.
     float vig = smoothstep(1.3, 0.22, length(uv - 0.5));
-    col *= mix(0.78, 1.10, vig);
+    col *= mix(mix(0.97, 1.01, vig), mix(0.78, 1.10, vig), uDark);
 
-    // Right-bias: fade the whole flow back to the navy base on the left so the
-    // colour lives on the right half (behind the device scene) and the headline
-    // side stays calm. The smoothstep gives a long, soft horizontal falloff
-    // instead of a hard seam where the flow used to meet the scrim.
-    col = mix(navy, col, smoothstep(0.2, 0.66, uv.x));
+    // Left-bias: fade the whole flow back to the (theme) base on the RIGHT, so
+    // the colour lives on the left half (around the headline) and the device
+    // side stays calmer. (GLSL smoothstep needs edge0 < edge1, so the left
+    // weighting is 1.0 - smoothstep, not swapped edges.) The long falloff keeps
+    // it a soft horizontal gradient, no hard seam.
+    col = mix(base, col, 1.0 - smoothstep(0.34, 0.95, uv.x));
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -116,9 +124,27 @@ function ShaderPlane() {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      // Initial theme read; the anti-FOUC script has already set .dark before
+      // React hydrates, so this is accurate on first paint.
+      uDark: { value: document.documentElement.classList.contains('dark') ? 1 : 0 },
     }),
     [],
   );
+
+  // Keep the shader palette in sync with the live theme: the ThemeToggle flips
+  // the .dark class on <html>, so watch that and update uDark.
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = () => {
+      if (material.current) {
+        material.current.uniforms.uDark.value = root.classList.contains('dark') ? 1 : 0;
+      }
+    };
+    apply();
+    const obs = new MutationObserver(apply);
+    obs.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return;

@@ -53,46 +53,42 @@ const social = [
 // info, and Nathan updates it often.
 const currently = 'Booking small business and nonprofit web projects for the season ahead, with a few photography days mixed in.';
 
-// All anchor tags inside the footer share the same styling: --secondary
-// (sky blue) at rest, underline appearing on hover/focus as the cue.
-// Sky blue is the right token for footer links because the footer surface
-// stays navy in both themes, and only a brighter blue clears WCAG AA on
-// navy. --link (used elsewhere) is too dark for the footer; --accent only
-// hits 4.46:1 on navy. --secondary is 7:1 on navy in light mode and 9.7:1
-// in dark, so it passes comfortably in both. Pulled into a const so each
-// <a> in the markup can apply the same set without copy-paste drift.
+// All anchor tags inside the footer share the same styling: an accent blue at
+// rest, underline appearing on hover/focus as the cue. The token is theme-aware
+// because the footer is now light in light mode and navy in dark: --link
+// (#2A6FB0, AA on the light footer) by default, switching to the brighter sky
+// --secondary over the navy footer in dark mode (--link is too dark to clear AA
+// on navy; --secondary is 9.7:1 there). Pulled into a const so each <a> applies
+// the same set without copy-paste drift.
 // On a touch device the links become 44px-tall flex rows so they're a
 // comfortable tap target (at rest they render ~16-22px tall, fine for a mouse
 // but cramped for a thumb). Gating on pointer:coarse, not screen width, means
 // phones AND touch tablets (iPads) both get the larger target, while a
 // mouse-driven desktop keeps the footer's tuned compact density.
 const linkClass =
-  'text-secondary no-underline transition-colors duration-150 ' +
+  'text-link dark:text-secondary no-underline transition-colors duration-150 ' +
   'hover:underline hover:underline-offset-2 ' +
   'focus-visible:underline focus-visible:underline-offset-2 ' +
   'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center';
 
 // Section heading style inside each column. Same display font as h2 but
-// dialed down in size so it reads as a label. text-primary-foreground is
-// white in both light and dark modes (since --primary stays navy in dark),
-// so the heading stays readable on the navy footer regardless of theme.
-const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foreground mb-s';
+// dialed down in size so it reads as a label. text-heading is theme-aware
+// (navy on the light footer, near-white on the navy footer in dark mode), so
+// the label stays readable in both themes.
+const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
 ---
 
 <!--
-  Full-bleed footer; the inner column uses .ncs-container to align with
-  the rest of the content above. bg-primary stays navy in both modes
-  (see globals.css), so this remains the darkest band on the page. A faint
-  accent glow line at the very top seams it to the CtaBanner above so the two
-  navy blocks read as one continuous dark field. An oversized wordmark sits
-  behind the bottom row as a brand graphic.
+  Full-bleed footer; the inner column uses .ncs-container to align with the
+  rest of the content above. .band-themed makes it theme-aware: a light surface
+  with a soft brand glow in light mode, the navy aurora in dark mode, matching
+  the CtaBanner / ProcessBand above it so they read as one continuous field.
+  In dark mode this is still the page's darkest band. A faint accent seam line
+  at the very top joins it to a dark band above (dark mode only). An oversized
+  wordmark sits behind the bottom row as a brand graphic. The glow is the
+  band-themed ::before; no separate aurora child is needed.
 -->
-<footer class="footer-seam relative isolate overflow-hidden bg-primary py-2xl text-primary-foreground">
-
-  <!-- Drifting brand aurora behind the columns. A child layer rather than the
-       .bg-aurora ::before (the footer-seam already owns ::before). Decorative;
-       freezes under reduced motion via the global rule. -->
-  <div class="bg-aurora pointer-events-none absolute inset-0 opacity-50" aria-hidden="true"></div>
+<footer class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground">
 
   <div class="ncs-container relative z-10">
 
@@ -150,7 +146,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
           <h2 class={headingClass}>Currently</h2>
           <a
             href="/about/#now"
-            class="group mb-s inline-flex items-center gap-s rounded-full border border-white/15 px-3 py-1.5 text-sm text-primary-foreground/90 no-underline transition-colors duration-150 hover:border-white/30"
+            class="group mb-s inline-flex items-center gap-s rounded-full border border-border px-3 py-1.5 text-sm text-text-muted no-underline transition-colors duration-150 hover:border-heading/40 dark:border-white/15 dark:text-primary-foreground/90 dark:hover:border-white/30"
           >
             <span class="relative flex h-2 w-2" aria-hidden="true">
               <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
@@ -159,7 +155,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
             <span>Booking projects</span>
             <span aria-hidden="true" class="transition-transform duration-150 group-hover:translate-x-0.5">→</span>
           </a>
-          <p class="leading-[1.5] text-primary-foreground/75">{currently}</p>
+          <p class="leading-[1.5] text-text-muted dark:text-primary-foreground/75">{currently}</p>
 
           <!-- Booking CTA. The status pill above links to the availability
                snapshot on /about; this is the action: a clear brand button
@@ -179,18 +175,18 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
          hairline middots so the links read as one continuous group instead of
          floating in the middle of the bar) sits on the left, the studio
          tagline on the right. Stacks on narrow screens. -->
-    <div class="flex flex-col gap-s border-t border-white/10 pt-m text-sm text-primary-foreground/60 sm:flex-row sm:items-center sm:justify-between sm:gap-m">
+    <div class="flex flex-col gap-s border-t border-border pt-m text-sm text-text-muted dark:border-white/10 dark:text-primary-foreground/60 sm:flex-row sm:items-center sm:justify-between sm:gap-m">
       <div class="flex flex-wrap items-center gap-x-m gap-y-1">
         <small>© {year} {site.studioName}</small>
         <nav aria-label="Legal and accessibility" class="flex flex-wrap items-center gap-x-s gap-y-1">
           <a class={linkClass} href="/colophon">Colophon</a>
-          <span aria-hidden="true" class="text-primary-foreground/30">·</span>
+          <span aria-hidden="true" class="text-text-muted/50 dark:text-primary-foreground/30">·</span>
           <a class={linkClass} href="/privacy">Privacy</a>
-          <span aria-hidden="true" class="text-primary-foreground/30">·</span>
+          <span aria-hidden="true" class="text-text-muted/50 dark:text-primary-foreground/30">·</span>
           <a class={linkClass} href="/accessibility">Accessibility</a>
         </nav>
       </div>
-      <small class="text-primary-foreground/55 sm:text-right">{site.tagline}</small>
+      <small class="text-text-muted dark:text-primary-foreground/55 sm:text-right">{site.tagline}</small>
     </div>
 
   </div>
@@ -201,16 +197,19 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
     class="pointer-events-none absolute inset-x-0 bottom-0 z-0 select-none overflow-hidden"
     aria-hidden="true"
   >
-    <span class="footer-watermark block translate-y-[20%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-primary-foreground/5 [font-size:12.5vw]">
+    <span class="footer-watermark block translate-y-[20%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-heading/[0.06] dark:text-primary-foreground/5 [font-size:12.5vw]">
       {site.studioName}
     </span>
   </div>
 </footer>
 
 <style>
-  /* Accent seam: a soft glow line at the very top of the footer so it joins
-     the CtaBanner above into one continuous dark field. */
-  .footer-seam::before {
+  /* Accent seam: a soft glow line at the very top of the footer so it joins a
+     dark band above into one continuous field. Uses ::after because .band-themed
+     owns ::before (the glow). Dark mode only: in light mode the footer and the
+     band above are both the light surface, already continuous, so an accent line
+     would read as a stray rule. */
+  :global(.dark) .footer-seam::after {
     content: "";
     position: absolute;
     top: 0;

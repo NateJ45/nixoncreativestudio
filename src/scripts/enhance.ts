@@ -104,9 +104,11 @@ function initCountUp(): void {
      data-scrolled  : the page has scrolled past 8px (frost + condense).
      data-over-hero : a [data-hero-dark] element exists AND still covers the
                       bar (its bottom is below the header height). Drives the
-                      transparent, white-text treatment over the navy hero.
-                      Pages without a dark hero never get this state, so their
-                      header is the frosted bar from first paint. */
+                      header's over-hero treatment, which takes the hero's own
+                      surface colour (theme-aware: light in light mode, navy
+                      with white text in dark). Pages without a hero never get
+                      this state, so their header is the frosted bar from first
+                      paint. */
 const HEADER_HEIGHT = 72; // approx; the threshold the hero must clear to "pass"
 
 function setHeaderState(): void {

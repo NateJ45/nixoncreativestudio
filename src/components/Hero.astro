@@ -9,8 +9,10 @@
    real shipped client sites
    (HeroShowcase) sits BEHIND an oversized headline. A left-strong scrim keeps
    the headline + CTAs fully legible even where the screenshots sit under them,
-   while the far-right images stay crisp. Below lg the scene is hidden and the
-   headline carries the hero.
+   while the far-right images stay crisp. Below lg the desktop scene is hidden;
+   the single phone showcase becomes a faded, oversized backdrop that the copy
+   sits OVER (the .hero-mobile-scene layer), so the hero fills the screen instead
+   of stacking the copy above a separate device block.
 
    Why layered instead of side-by-side: a strict right column made the cascade
    either clip at the viewport edge or leave dead space. As a scene behind the
@@ -19,10 +21,10 @@
    into the page margins.
 
    Stacking (the section is `isolate`, so these z-indexes are local):
-     z-0  background: animated aurora + WebGL flow
-     z-1  showcase scene (right-weighted, contained)
-     z-2  scrim (left-strong, fades right) + bottom darken
-     z-10 copy + scroll cue
+     z-0  background: band-themed glow + WebGL flow (left-weighted in light mode)
+     z-1  showcase scene (desktop: right-weighted, contained; mobile: faded backdrop)
+     z-2  scrim (dark mode only) + bottom floor
+     z-10 copy + marquee
 
    The copy container is click-through (pointer-events-none) so the showcase
    behind it stays hoverable on the right; the copy column re-enables pointer
@@ -57,7 +59,7 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
 ---
 
 <section
-  class="hero relative isolate flex flex-col overflow-hidden bg-primary text-primary-foreground"
+  class="hero band-themed relative isolate flex flex-col overflow-hidden"
   style="--hero-marquee-h: 3.25rem; min-height: clamp(39rem, 72svh, 49rem);"
   aria-labelledby="hero-statement"
   data-hero-dark
@@ -72,7 +74,7 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     <!--
     <Image src={heroPhoto} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
     -->
-    <div class="bg-aurora grain absolute inset-0"></div>
+    <div class="grain absolute inset-0"></div>
     <HeroCanvas client:only="react" />
   </div>
 
@@ -97,6 +99,19 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
   </div>
 
   <!-- ====================================================================
+       z-1 Mobile phone backdrop. On phones the desktop two-device scene is
+       hidden; instead the single phone showcase becomes a faded, oversized
+       backdrop that the copy sits OVER, so the hero fills the screen instead of
+       stacking the copy above a separate device block. Absolute and behind the
+       copy, reduced opacity, anchored to the lower-right and bleeding off the
+       edges; hidden at lg where the full scene takes over. It is inset above the
+       marquee so the device never crosses the client names.
+       ==================================================================== -->
+  <div class="hero-mobile-scene pointer-events-none absolute z-[1] lg:hidden" aria-hidden="true">
+    <HeroShowcase variant="phone" />
+  </div>
+
+  <!-- ====================================================================
        z-2 Scrim. Left-only now: it fades to transparent before the device
        scene begins, so it keeps the headline legible over the navy/WebGL
        background WITHOUT dimming the screenshots (which used to sit under the
@@ -116,14 +131,14 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
 
       <h1
         id="hero-statement"
-        class="hero-headline hero-anim text-primary-foreground"
+        class="hero-headline hero-anim text-heading"
       >
         {statementLead}{' '}
-        <span class="text-tertiary">{statementAccent}</span>
+        <span class="text-link dark:text-tertiary">{statementAccent}</span>
       </h1>
 
       <p
-        class="hero-sub hero-anim max-w-[32ch] text-xl leading-[1.45] text-primary-foreground/90 sm:text-2xl"
+        class="hero-sub hero-anim max-w-[32ch] text-xl leading-[1.45] text-text sm:text-2xl"
         style="--enter-delay: 120ms;"
       >
         {positioning}
@@ -133,11 +148,11 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
            base + one person does the whole job. "one person" is lifted into sky
            (AA on navy). Base here, "wherever you are" reach in the line above. -->
       <p
-        class="hero-proof hero-anim max-w-[42ch] text-base font-medium leading-[1.5] text-primary-foreground/75 sm:text-lg"
+        class="hero-proof hero-anim max-w-[42ch] text-base font-medium leading-[1.5] text-text-muted sm:text-lg"
         style="--enter-delay: 220ms;"
       >
         Based in Cincinnati. Every site designed, built, and photographed by
-        <a href="/about" class="hero-person font-semibold text-secondary">one person</a>, start to finish.
+        <a href="/about" class="hero-person font-semibold text-link">one person</a>, start to finish.
       </p>
 
       <div class="hero-anim flex flex-wrap items-center gap-m" style="--enter-delay: 320ms;">
@@ -154,7 +169,7 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
         </a>
 
         <a
-          class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-primary-foreground no-underline"
+          class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-text no-underline"
           href="/work/"
         >
           <span>See the work</span>
@@ -163,13 +178,6 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
 
       </div>
 
-    </div>
-
-    <!-- Mobile phone showcase: brings the work into the hero on phones, where
-         the desktop two-device scene is hidden. In the flow below the copy;
-         hidden at lg, where the absolute scene takes over. -->
-    <div class="pointer-events-auto lg:hidden" data-reveal="fade" style="--reveal-delay: 260ms;">
-      <HeroShowcase variant="phone" />
     </div>
   </div>
 
@@ -198,14 +206,18 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     font-size: clamp(3.25rem, min(9.5vw, 15vh), 9.5rem);
     line-height: 0.86;
     text-wrap: balance;
+  }
+  /* Soft navy glow under the headline so it stays crisp over the dark hero.
+     Dark mode only: in light mode the dark headline on the light surface reads
+     cleanly and a navy shadow would only muddy it. */
+  :global(.dark) .hero-headline {
     text-shadow:
       0 1px 2px rgba(10, 22, 40, 0.5),
       0 6px 34px rgba(10, 22, 40, 0.55);
   }
 
-  /* Positioning line sits in the strong part of the scrim, so it only needs a
-     soft halo to stay crisp if an image edge creeps under it. */
-  .hero-sub {
+  /* Positioning line: a soft halo in dark mode for the same reason. */
+  :global(.dark) .hero-sub {
     text-shadow: 0 1px 14px rgba(10, 22, 40, 0.6);
   }
 
@@ -275,6 +287,41 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     bottom: var(--hero-marquee-h);
   }
 
+  /* ----------------------------------------------------------------------
+     Mobile phone backdrop (below lg). The phone showcase, enlarged and faded,
+     anchored to the lower-right and bleeding off the right + bottom edges so it
+     fills the otherwise-empty lower half of the hero BEHIND the copy. A top-down
+     mask fades the device out under the headline (which stays on clear surface)
+     and shows it through the lower copy; the reduced opacity plus the
+     theme-aware scrim keep the copy AA. Inset above the marquee so the device
+     never crosses the client names.
+     ---------------------------------------------------------------------- */
+  .hero-mobile-scene {
+    inset: 0 0 var(--hero-marquee-h) 0;
+    opacity: 0.28;
+    /* Clear at the very top (headline), ramping in through the middle/lower
+       where the device fills the space. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
+    mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
+  }
+  /* The phone variant defaults to a small centered frame; for the backdrop it is
+     enlarged and pushed to the lower-right so it bleeds off both edges. */
+  .hero-mobile-scene :global(.hero-stage.is-phone) {
+    height: 100%;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 0;
+  }
+  .hero-mobile-scene :global(.hero-stage.is-phone .dev-phone) {
+    width: min(74vw, 22rem);
+    transform: translate(14%, 8%);
+  }
+  /* The brand glow behind the backdrop phone is redundant with the hero's own
+     glow and would brighten the lower-right; drop it in this context. */
+  .hero-mobile-scene :global(.hero-stage.is-phone::before) {
+    display: none;
+  }
+
   /* Client marquee strip: a thin band at the very bottom of the hero. No top
      hairline, so it blends into the hero floor instead of reading as a hard line
      where the device drop shadows fade out just above it. Holds the
@@ -297,6 +344,16 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
      gone, replaced by the marquee).
      ---------------------------------------------------------------------- */
   .hero-floor {
+    /* Light mode: fade to the light hero surface so the device drop shadows
+       dissolve instead of leaving a hard clip line at the hero's bottom edge. */
+    background: linear-gradient(
+      to top,
+      var(--color-bg-soft) 0%,
+      var(--color-bg-soft) 4%,
+      transparent 12%
+    );
+  }
+  :global(.dark) .hero-floor {
     background: linear-gradient(
       to top,
       var(--color-primary) 0%,
@@ -310,7 +367,13 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
      the right so the far images stay crisp. Tuned so the headline's right
      edge still sits over enough navy to read with its shadow.
      ---------------------------------------------------------------------- */
+  /* Scrim: dark mode only. In light mode the hero surface is light and the WebGL
+     fades to the light base under the headline, so the dark headline is legible
+     with no dimming veil at all. */
   .hero-scrim {
+    background: transparent;
+  }
+  :global(.dark) .hero-scrim {
     /* Mobile: a cohesive navy veil so the hero reads as one dark field rather
        than a bright aurora band across the empty right half (the device scene
        that the right side was clearing for is desktop-only). Darkest behind the
@@ -327,7 +390,7 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
   @media (min-width: 64rem) {
     /* Desktop: the original left-strong horizontal scrim, solid navy under the
        headline and clearing before the device scene begins on the right. */
-    .hero-scrim {
+    :global(.dark) .hero-scrim {
       background: linear-gradient(
         to right,
         var(--color-primary) 0%,
