@@ -35,6 +35,7 @@ import Lenis from 'lenis';
 declare global {
   interface Window {
     __lenis?: Lenis;
+    __lenisNavBound?: boolean;
   }
 }
 
@@ -106,8 +107,62 @@ function applyMotionPreference() {
 }
 
 
+/* ----------------------------------------------------------------------------
+   Navigation scroll behavior (Astro View Transitions + Lenis)
+   ----------------------------------------------------------------------------
+   Astro's ClientRouter sets the window scroll on each client-side navigation
+   (the top for a new page, the saved position for back/forward), but Lenis keeps
+   its own scroll target and only catches up a frame later, it resyncs to
+   external scroll changes. Under real wheel momentum that one-frame gap lets
+   Lenis re-apply the OLD target and fight the reset, so a forward navigation can
+   fail to land at the top. And for back/forward Astro restores the position only
+   AFTER the transition settles, so the page would otherwise flash the top first.
+
+   So reset Lenis explicitly on each swap, deterministically:
+     - back / forward (navigationType "traverse"): the saved position, read from
+       Astro's own history.state.scrollY (already populated by astro:after-swap,
+       whereas window.scrollY is not restored until later).
+     - any other new navigation: the very top.
+
+   A new navigation to a #hash is left alone, so Astro's own anchor handling
+   lands on the target element (forcing a position at swap-time would be wrong
+   anyway, since lazy images below the fold reflow the page afterward).
+
+   Only acts when Lenis is running; under reduced motion (no Lenis) Astro's
+   native scroll handling is left untouched. Registered once and survives View
+   Transitions because this module is reused across client-side navigations. */
+let lastNavType = 'push';
+
+function initNavigationScroll(): void {
+  if (window.__lenisNavBound) return;
+  window.__lenisNavBound = true;
+
+  // Captured before each swap so the after-swap handler knows the direction.
+  document.addEventListener('astro:before-preparation', (event) => {
+    lastNavType = (event as Event & { navigationType?: string }).navigationType ?? 'push';
+  });
+
+  document.addEventListener('astro:after-swap', () => {
+    const lenis = window.__lenis;
+    if (!lenis) return; // reduced motion: native scroll, Astro handles it
+
+    if (lastNavType === 'traverse') {
+      const saved =
+        history.state && typeof history.state.scrollY === 'number' ? history.state.scrollY : 0;
+      lenis.scrollTo(saved, { immediate: true, force: true });
+      return;
+    }
+
+    // New navigation: a #hash keeps Astro's own anchor scroll; everything else
+    // lands at the very top.
+    if (location.hash) return;
+    lenis.scrollTo(0, { immediate: true, force: true });
+  });
+}
+
 // Initial application on script load.
 applyMotionPreference();
+initNavigationScroll();
 
 // Listen for preference changes. Most users won't toggle this mid-session,
 // but it's free coverage for anyone who does.
