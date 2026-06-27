@@ -331,6 +331,17 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     </script>
 
     <!--
+      Mailto graceful fallback. A mailto: link only opens anything if the device
+      has a mail app registered for it; without one (common on desktops) the
+      click is a silent dead-end. This watches for that case and, when nothing
+      opens, copies the address and shows a confirmation toast. It never blocks
+      the real mailto for visitors who do have a mail app. See the script header.
+    -->
+    <script>
+      import '../scripts/mailto-fallback';
+    </script>
+
+    <!--
       Scroll-reveal observer. Reveals every [data-reveal] element as it
       enters the viewport by toggling .is-visible (styled in globals.css
       section 6). Re-runs on every View Transitions navigation via the
