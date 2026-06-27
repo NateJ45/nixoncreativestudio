@@ -111,7 +111,7 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
        behind it stays hoverable on the right; the copy column re-enables
        pointer events for its links.
        ==================================================================== -->
-  <div class="ncs-container pointer-events-none relative z-10 flex flex-1 items-center py-l">
+  <div class="ncs-container pointer-events-none relative z-10 flex flex-1 flex-col justify-center gap-l py-l">
     <div class="hero-copy pointer-events-auto flex max-w-[46rem] flex-col gap-m">
 
       <h1
@@ -163,6 +163,13 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
 
       </div>
 
+    </div>
+
+    <!-- Mobile phone showcase: brings the work into the hero on phones, where
+         the desktop two-device scene is hidden. In the flow below the copy;
+         hidden at lg, where the absolute scene takes over. -->
+    <div class="pointer-events-auto lg:hidden" data-reveal="fade" style="--reveal-delay: 260ms;">
+      <HeroShowcase variant="phone" />
     </div>
   </div>
 
@@ -304,13 +311,31 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
      edge still sits over enough navy to read with its shadow.
      ---------------------------------------------------------------------- */
   .hero-scrim {
+    /* Mobile: a cohesive navy veil so the hero reads as one dark field rather
+       than a bright aurora band across the empty right half (the device scene
+       that the right side was clearing for is desktop-only). Darkest behind the
+       copy at the top and the marquee at the bottom; a touch lighter through the
+       middle so the brand glow behind the phone showcase still reads. */
     background: linear-gradient(
-      to right,
+      to bottom,
       var(--color-primary) 0%,
-      var(--color-primary) 34%,
-      color-mix(in oklab, var(--color-primary) 55%, transparent) 44%,
-      transparent 52%
+      color-mix(in oklab, var(--color-primary) 86%, transparent) 30%,
+      color-mix(in oklab, var(--color-primary) 72%, transparent) 58%,
+      var(--color-primary) 100%
     );
+  }
+  @media (min-width: 64rem) {
+    /* Desktop: the original left-strong horizontal scrim, solid navy under the
+       headline and clearing before the device scene begins on the right. */
+    .hero-scrim {
+      background: linear-gradient(
+        to right,
+        var(--color-primary) 0%,
+        var(--color-primary) 34%,
+        color-mix(in oklab, var(--color-primary) 55%, transparent) 44%,
+        transparent 52%
+      );
+    }
   }
 
   /* ----------------------------------------------------------------------

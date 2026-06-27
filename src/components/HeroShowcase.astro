@@ -68,15 +68,26 @@ const sites = [
   { host: 'mas-monograms.com', desktop: dMas, mobile: mMas },
   { host: 'presbyterianacademy.org', desktop: dAcademy, mobile: mAcademy },
 ];
+
+interface Props {
+  /** 'full' (default) = the desktop two-device cluster (browser + phone), sized
+      to sit absolute-right in the hero. 'phone' = just the phone, in the
+      document flow and centered, for the mobile hero where the full scene is
+      hidden. Both reuse the same cycling script (keyed off [data-hero-showcase])
+      and the same captures. */
+  variant?: 'full' | 'phone';
+}
+const { variant = 'full' } = Astro.props;
 ---
 
 <div
-  class="hero-stage"
+  class:list={['hero-stage', variant === 'phone' && 'is-phone']}
   aria-hidden="true"
   data-hero-showcase
   data-count={sites.length}
 >
-  {/* ---- Desktop / laptop browser (landscape) ---- */}
+  {/* ---- Desktop / laptop browser (landscape). Full variant only. ---- */}
+  {variant === 'full' && (
   <div class="dev dev-desktop">
     <div class="dev-chrome">
       <span class="dev-dots">
@@ -100,14 +111,16 @@ const sites = [
             widths={[600, 900, 1200, 1440]}
             sizes="(min-width: 64rem) 640px, 80vw"
             class="shot-img"
-            loading={i === 0 ? 'eager' : 'lazy'}
+            loading="lazy"
           />
         </div>
       ))}
     </div>
   </div>
+  )}
 
-  {/* ---- Phone (portrait), overlapping the desktop's lower-right ---- */}
+  {/* ---- Phone (portrait). The front element on desktop; the whole showcase on
+       mobile (variant="phone"). ---- */}
   <div class="dev dev-phone">
     <div class="dev-screen dev-screen-phone">
       {sites.map((s, i) => (
@@ -118,7 +131,7 @@ const sites = [
             widths={[280, 420, 545]}
             sizes="(min-width: 64rem) 270px, 40vw"
             class="shot-img"
-            loading={i === 0 ? 'eager' : 'lazy'}
+            loading="lazy"
           />
         </div>
       ))}
@@ -346,6 +359,35 @@ const sites = [
     }
   }
 
+  /* ----------------------------------------------------------------------
+     Phone-only variant (variant="phone"): the whole mobile-hero showcase.
+     The stage drops its fixed desktop height and just wraps the single phone,
+     centered in the document flow; the phone goes from absolute (part of the
+     desktop cluster) to a relative, centered, mobile-sized frame, and the
+     brand glow recenters behind it.
+     ---------------------------------------------------------------------- */
+  .hero-stage.is-phone {
+    width: auto;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5rem;
+  }
+  .hero-stage.is-phone::before {
+    inset: -8% 0 -4%;
+    background: radial-gradient(
+      48% 46% at 50% 44%,
+      color-mix(in oklab, var(--color-secondary) 42%, transparent),
+      transparent 72%
+    );
+  }
+  .hero-stage.is-phone .dev-phone {
+    position: relative;
+    right: auto;
+    top: auto;
+    width: clamp(12rem, 44vw, 18rem);
+    z-index: 1;
+  }
 
 </style>
 
