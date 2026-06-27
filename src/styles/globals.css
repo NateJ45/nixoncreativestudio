@@ -594,11 +594,17 @@
   }
 }
 
-/* Cursor-following spotlight. Add .spotlight-card to a position:relative card;
-   the enhancement script sets --mx/--my on pointer move and a soft brand glow
-   tracks the cursor. Glow sits above the surface but is pointer-transparent and
+/* Cursor-following spotlight. Add .spotlight-card to a card; it sets its own
+   position:relative so the glow's ::before is always positioned against the
+   card (without it, a card that forgot `relative` anchors the glow to the
+   nearest positioned ancestor, which floats it off outside the card). The
+   enhancement script sets --mx/--my on pointer move so a soft brand glow tracks
+   the cursor. The glow sits above the surface but is pointer-transparent and
    low-alpha so content stays legible. Give inner content `relative z-10` if a
    card's text ever needs to sit above the glow explicitly. */
+.spotlight-card {
+  position: relative;
+}
 .spotlight-card::before {
   content: "";
   position: absolute;

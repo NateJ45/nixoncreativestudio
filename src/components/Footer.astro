@@ -23,6 +23,7 @@ const year = new Date().getFullYear();
 import { getCollection } from 'astro:content';
 import { site } from '../data/site';
 import CopyEmail from './CopyEmail';
+import { buttonVariants } from './ui/button';
 
 // Footer site nav, mirroring the header's primary nav so the two never drift.
 // Journal appears only once the journal has a published entry, exactly as in
@@ -159,6 +160,16 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-primary-foregr
             <span aria-hidden="true" class="transition-transform duration-150 group-hover:translate-x-0.5">→</span>
           </a>
           <p class="leading-[1.5] text-primary-foreground/75">{currently}</p>
+
+          <!-- Booking CTA. The status pill above links to the availability
+               snapshot on /about; this is the action: a clear brand button
+               straight to the contact form. -->
+          <a
+            href="/contact"
+            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine mt-m' })}
+          >
+            Start a project
+          </a>
         </div>
 
       </div>
