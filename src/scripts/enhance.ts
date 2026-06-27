@@ -6,9 +6,6 @@
    degrades safely, so the page works with this script absent or blocked.
 
    Attributes:
-     [data-magnetic]   pointer-follow translate toward the cursor. Optional
-                       numeric value = strength (default 0.3). Fine pointer +
-                       motion only.
      [data-spotlight]  sets --mx / --my (px, relative to the element) on
                        pointer move so a CSS radial glow can track the cursor.
                        See .spotlight-card in globals.css.
@@ -32,26 +29,6 @@ const prefersReduced = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const finePointer = (): boolean => window.matchMedia('(pointer: fine)').matches;
-
-/* ---- Magnetic ------------------------------------------------------------- */
-function initMagnetic(): void {
-  if (prefersReduced() || !finePointer()) return;
-  document
-    .querySelectorAll<HTMLElement>('[data-magnetic]:not([data-magnetic-bound])')
-    .forEach((el) => {
-      el.dataset.magneticBound = 'true';
-      const strength = Number(el.dataset.magnetic) || 0.3;
-      el.addEventListener('pointermove', (event) => {
-        const rect = el.getBoundingClientRect();
-        const mx = event.clientX - (rect.left + rect.width / 2);
-        const my = event.clientY - (rect.top + rect.height / 2);
-        el.style.transform = `translate(${mx * strength}px, ${my * strength}px)`;
-      });
-      el.addEventListener('pointerleave', () => {
-        el.style.transform = '';
-      });
-    });
-}
 
 /* ---- Spotlight ------------------------------------------------------------ */
 function initSpotlight(): void {
@@ -236,7 +213,6 @@ function initHeadingAnchors(): void {
 
 /* ---- Boot ----------------------------------------------------------------- */
 function enhance(): void {
-  initMagnetic();
   initSpotlight();
   initCountUp();
   initHeader();

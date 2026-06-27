@@ -132,14 +132,14 @@ The site runs a deliberately animation-rich, polished design. This supersedes an
 
 The motion layer is two files plus a vocabulary of declarative classes and `data-*` attributes, all defined once in `src/styles/globals.css` (section 6) and wired in `src/layouts/BaseLayout.astro`:
 
-- **`src/scripts/enhance.ts`** (imported in BaseLayout, runs on every `astro:page-load`) powers `[data-magnetic]` (cursor-follow pull, fine-pointer + motion only), `[data-spotlight]` (sets `--mx`/`--my` for a cursor-tracking glow), `[data-countup]` (animates a number up to `data-countup-to` when scrolled into view; optional `-suffix`/`-prefix`/`-duration`), and `[data-header]` (toggles `data-scrolled` for the sticky frosted header).
+- **`src/scripts/enhance.ts`** (imported in BaseLayout, runs on every `astro:page-load`) powers `[data-spotlight]` (sets `--mx`/`--my` for a cursor-tracking glow), `[data-countup]` (animates a number up to `data-countup-to` when scrolled into view; optional `-suffix`/`-prefix`/`-duration`), and `[data-header]` (toggles `data-scrolled` for the sticky frosted header). (The old `[data-magnetic]` cursor-follow button pull was removed.)
 - **The reveal observer** (inline `<script>` at the end of BaseLayout, also on `astro:page-load`) adds `.is-visible` to `[data-reveal]` elements as they enter the viewport.
 
 Vocabulary (use these; don't reinvent):
 
 - `data-reveal` (+ variants `fade` / `scale` / `left` / `right` / `blur`) for scroll-in reveals; stagger siblings with inline `style="--reveal-delay: 120ms"`.
 - `.spotlight-card` + `data-spotlight` on a `position:relative` card for a cursor glow (put inner content in `relative z-10`).
-- wrap a CTA in `<span class="inline-block" data-magnetic="0.4">` for the magnetic pull; add `.shine` (or `className="shine"` on the shadcn Button) for a hover light sweep.
+- add `.shine` (or `className="shine"` on the shadcn Button) to a CTA for a hover light sweep. (There is no cursor-follow "magnetic" pull anymore; it was removed site-wide.)
 - `data-countup data-countup-to="10"` for count-ups. **Always render the real final value as the span's static text** so no-JS visitors and crawlers see the true number; `enhance.ts` animates from 0 up to it.
 - **Heading emphasis: solid tokens, never gradient text.** Gradient text (`background-clip:text` over a gradient) was removed site-wide; it is an impeccable absolute-ban tell. The old `.text-gradient` / `.text-gradient-bright` utilities are deleted. For an accent phrase, wrap it in a solid token span: `text-tertiary` (amber, AA on the navy/dark heroes) or `text-link` (NCS blue, AA on light surfaces). Carry the rest of the emphasis with Bebas Neue weight and size.
 - `.surface-card` for an elevated card in **both** themes (tinted card surface + soft layered shadow + 1px top highlight + border, all from the `--shadow-card` / `--card-highlight` tokens). This is how light mode gets real depth (light has no color-step for elevation the way dark does). Compose with `data-spotlight` + `.hover-lift`. Used by /work cards, homepage Selected Work, /services offerings. The framed-artifact shadow (SiteShowcase, BeforeAfter) is the shared `--shadow-frame` token.
