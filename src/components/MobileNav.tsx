@@ -4,15 +4,14 @@
    Foundation, edit with care.
 
    The small-viewport navigation: a hamburger Button that opens a full-screen
-   navy panel (a shadcn Sheet under the hood, so focus-trap, Escape-to-close,
+   panel (a shadcn Sheet under the hood, so focus-trap, Escape-to-close,
    scroll-lock, and the dialog ARIA all come for free).
 
-   Why navy in BOTH themes: the Hero and the Footer are the brand's two
-   deliberate dark anchors, and the menu is a third "big moment" surface. A
-   navy panel with white type, sky links, and an amber CTA reads as one
-   continuous brand gesture and feels far more like a design studio's menu
-   than the default white side-drawer. The theme toggle still lives in the
-   panel so visitors can flip the rest of the site.
+   Theme-aware to match the rest of the site: a light surface with dark type,
+   NCS-blue links, and a soft brand glow in light mode; navy with white type,
+   sky links, and the drifting aurora in dark. Either way it reads as a "big
+   moment" brand surface, far more like a design studio's menu than the default
+   side-drawer. The brand-blue CTA and the theme toggle carry across both.
 
    The flat six-item nav is given body the way a church mega-menu leans on
    sub-items: each big Bebas label carries a short, honest descriptor, the
@@ -112,11 +111,13 @@ const socials = [
   { label: 'LinkedIn', href: site.social.linkedin, Icon: LinkedinIcon },
 ];
 
-// Shared focus ring for the custom links inside the panel: a sky ring with a
-// navy offset so keyboard focus is clearly visible on the dark surface.
+// Shared focus ring for the custom links inside the panel. Theme-aware so the
+// ring + offset stay visible on either surface: an accent (NCS blue) ring on a
+// light offset in light mode, a sky ring on a navy offset in dark.
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary ' +
-  'focus-visible:ring-offset-2 focus-visible:ring-offset-primary';
+  'focus-visible:outline-none focus-visible:ring-2 ' +
+  'focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-soft ' +
+  'dark:focus-visible:ring-secondary dark:focus-visible:ring-offset-primary';
 
 export default function MobileNav({ links, studioName }: MobileNavProps) {
   // Sheet owns its open state; link clicks set it back to false so the panel
@@ -152,8 +153,9 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
         </Button>
       </SheetTrigger>
 
-      {/* Full-screen navy panel. showCloseButton off so we place our own white
-          close control in the top bar; overflow-y-auto so a short phone in
+      {/* Full-screen panel, theme-aware: a light surface with dark type in light
+          mode, navy with white type in dark. showCloseButton off so we place our
+          own close control in the top bar; overflow-y-auto so a short phone in
           landscape can still scroll the whole menu.
 
           The !w-full / !max-w-full / !border-0 important modifiers are
@@ -163,7 +165,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="!w-full !max-w-full overflow-y-auto !border-0 bg-primary p-0 text-primary-foreground"
+        className="!w-full !max-w-full overflow-y-auto !border-0 bg-bg-soft p-0 text-text dark:bg-primary dark:text-primary-foreground"
       >
         {/* Entrance cascade, kept in-file so the whole menu lives in one place.
             The opacity:0 start sits inside the no-preference query, so with
@@ -193,16 +195,21 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
         `}</style>
 
         <div className="mnav-shell relative isolate flex min-h-full flex-col">
-          {/* Drifting brand aurora for atmosphere. Decorative; freezes under
-              reduced motion via the global rule. */}
+          {/* Atmosphere, theme-aware: a soft static brand glow in light mode, the
+              drifting navy aurora in dark. Decorative; the aurora freezes under
+              reduced motion via the global rule, the light glow is static. */}
           <div
-            className="bg-aurora pointer-events-none absolute inset-0 opacity-60"
+            className="bg-mesh-soft pointer-events-none absolute inset-0 dark:hidden"
+            aria-hidden="true"
+          ></div>
+          <div
+            className="bg-aurora pointer-events-none absolute inset-0 hidden opacity-60 dark:block"
             aria-hidden="true"
           ></div>
 
           {/* Top bar: wordmark (doubles as the dialog's accessible name) + close. */}
           <div className="relative z-10 flex items-center justify-between gap-m">
-            <SheetTitle className="font-display text-2xl tracking-[0.02em] text-primary-foreground">
+            <SheetTitle className="font-display text-2xl tracking-[0.02em] text-heading">
               {studioName}
             </SheetTitle>
             {/* Visually hidden, but wired to the dialog via aria-describedby by
@@ -215,7 +222,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                 variant="ghost"
                 size="icon-lg"
                 aria-label="Close menu"
-                className="size-11 text-primary-foreground hover:text-secondary"
+                className="size-11 text-heading hover:text-link dark:text-primary-foreground dark:hover:text-secondary"
               >
                 <X className="size-6" />
               </Button>
@@ -224,7 +231,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
 
           {/* Positioning line, echoing the hero so the brand voice carries in. */}
           <p
-            className="mnav-item relative z-10 mt-m max-w-[34ch] font-body text-base leading-[1.5] text-primary-foreground/70"
+            className="mnav-item relative z-10 mt-m max-w-[34ch] font-body text-base leading-[1.5] text-text-muted dark:text-primary-foreground/70"
             style={delay(60)}
           >
             For churches, schools, nonprofits, and small businesses, wherever you are.
@@ -233,7 +240,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
           {/* Big editorial nav. Hairline dividers give the flat list structure. */}
           <nav
             aria-label="Mobile primary"
-            className="relative z-10 mt-l flex flex-col divide-y divide-white/10 border-y border-white/10"
+            className="relative z-10 mt-l flex flex-col divide-y divide-border border-y border-border dark:divide-white/10 dark:border-white/10"
           >
             {links.map(({ label, href }, i) => {
               const active = isActive(href);
@@ -250,14 +257,14 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                   <span className="flex flex-col gap-0.5">
                     <span
                       className={
-                        'font-display text-4xl leading-[0.95] tracking-[0.01em] transition-colors duration-150 group-hover:text-secondary group-focus-visible:text-secondary ' +
-                        (active ? 'text-tertiary' : 'text-primary-foreground')
+                        'font-display text-4xl leading-[0.95] tracking-[0.01em] transition-colors duration-150 group-hover:text-link group-focus-visible:text-link dark:group-hover:text-secondary dark:group-focus-visible:text-secondary ' +
+                        (active ? 'text-link dark:text-tertiary' : 'text-heading dark:text-primary-foreground')
                       }
                     >
                       {label}
                     </span>
                     {desc && (
-                      <span className="font-body text-sm text-primary-foreground/65">{desc}</span>
+                      <span className="font-body text-sm text-text-muted dark:text-primary-foreground/65">{desc}</span>
                     )}
                   </span>
 
@@ -268,8 +275,8 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                     className={
                       'text-2xl transition-all duration-200 ' +
                       (active
-                        ? 'translate-x-0 text-tertiary opacity-100'
-                        : '-translate-x-2 text-secondary opacity-0 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100')
+                        ? 'translate-x-0 text-link opacity-100 dark:text-tertiary'
+                        : '-translate-x-2 text-link opacity-0 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 dark:text-secondary')
                     }
                   >
                     &rarr;
@@ -295,19 +302,19 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             className="mnav-item relative z-10 mt-auto pt-l"
             style={delay(140 + links.length * 55 + 100)}
           >
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-primary-foreground/60">
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted dark:text-primary-foreground/60">
               Get in touch
             </p>
             <div className="mt-s flex flex-col gap-1">
               <a
                 href={site.emailHref}
-                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link dark:text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
               >
                 {site.email}
               </a>
               <a
                 href={site.phoneHref}
-                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link dark:text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
               >
                 {site.phone}
               </a>
@@ -322,17 +329,18 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-primary-foreground/70 transition-colors duration-150 hover:bg-white/10 hover:text-primary-foreground ${focusRing}`}
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-heading/5 hover:text-heading dark:text-primary-foreground/70 dark:hover:bg-white/10 dark:hover:text-primary-foreground ${focusRing}`}
                   >
                     <Icon className="size-5" />
                   </a>
                 ))}
               </div>
 
-              {/* Theme toggle. It paints itself text-text by default, which
-                  would vanish on navy, so force the icon white here (and sky on
-                  hover) via a descendant override on its .theme-toggle hook. */}
-              <div className="[&_.theme-toggle:hover]:text-secondary [&_.theme-toggle]:text-primary-foreground">
+              {/* Theme toggle. It paints itself text-text by default, which reads
+                  fine on the light panel but would vanish on navy, so force the
+                  icon white (and sky on hover) in dark mode only, via a descendant
+                  override on its .theme-toggle hook. */}
+              <div className="dark:[&_.theme-toggle:hover]:text-secondary dark:[&_.theme-toggle]:text-primary-foreground">
                 <ThemeToggle className="size-11" />
               </div>
             </div>
