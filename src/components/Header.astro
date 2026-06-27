@@ -29,6 +29,8 @@ import { getCollection } from 'astro:content';
 import { site } from '../data/site';
 import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
+import { buttonVariants } from './ui/button';
+import { cn } from '@/lib/utils';
 
 // Hide the Journal nav link until the journal has something to show. Uses the
 // SAME visibility filter as the journal index (drafts hidden in production,
@@ -40,13 +42,14 @@ const journalCount = (await getCollection('journal', ({ data }) =>
 )).length;
 
 // The nav model lives in the script so it's easy to reorder, rename, or extend
-// without hunting through markup. MobileNav consumes the same array.
+// without hunting through markup. MobileNav consumes the same array. Contact is
+// NOT in this list: it is promoted to the "Start a project" CTA button (desktop
+// header below, and the drawer's own CTA on mobile), both pointing at /contact.
 const navLinks = [
   { label: 'Work',     href: '/work/'    },
   { label: 'Services', href: '/services' },
   { label: 'About',    href: '/about'    },
   ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
-  { label: 'Contact',  href: '/contact'  },
 ];
 
 // Active-route detection so the current section is marked in the nav. Treats a
@@ -98,6 +101,19 @@ const isActive = (href: string): boolean => {
           ))}
         </ul>
       </nav>
+
+      <!-- Primary CTA, promoted from the old Contact nav link: a prominent brand
+           button straight to the inquiry form. Desktop only; the MobileNav drawer
+           carries its own "Start a project" CTA. The brand fill stands out in
+           every header state (over the light or navy hero, and when scrolled). -->
+      <div class="hidden md:block">
+        <a
+          href="/contact"
+          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'shine px-5 py-2.5')}
+        >
+          Start a project
+        </a>
+      </div>
 
       <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own. -->
       <div class="hidden md:block">
