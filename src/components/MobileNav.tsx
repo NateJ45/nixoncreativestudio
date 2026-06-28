@@ -202,8 +202,16 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             className="bg-mesh-soft pointer-events-none absolute inset-0 dark:hidden"
             aria-hidden="true"
           ></div>
+          {/* overflow-hidden clips the aurora's ::before, which is drawn at
+              inset:-25% so its blurred blobs sit off the edges. Without the clip
+              that bleed extends ~25% below the panel and, because SheetContent
+              is overflow-y-auto, becomes phantom scroll into empty space (a
+              dark-mode-only bug, since the light-mode .bg-mesh-soft glow is
+              inset:0 and can't bleed). Every other .bg-aurora host clips the
+              same way: .band-themed self-clips, the photography hero clips on
+              its section. */}
           <div
-            className="bg-aurora pointer-events-none absolute inset-0 hidden opacity-60 dark:block"
+            className="bg-aurora pointer-events-none absolute inset-0 hidden overflow-hidden opacity-60 dark:block"
             aria-hidden="true"
           ></div>
 
