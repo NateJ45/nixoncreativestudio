@@ -43,10 +43,10 @@ const caseStudies = defineCollection({
     // organization.
     client: z.string(),
 
-    // High-level industry bucket. Constrained to four buckets so listing
+    // High-level industry bucket. Constrained to a fixed set so listing
     // pages can filter cleanly. Add more values here when the work
     // expands into new sectors.
-    sector: z.enum(['church', 'preschool', 'nonprofit', 'small-business']),
+    sector: z.enum(['church', 'school', 'nonprofit', 'small-business']),
 
     // Services delivered on the project. Free-form strings so we can
     // phrase them however reads best in context. Typical values:

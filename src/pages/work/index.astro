@@ -44,12 +44,12 @@ for (const entry of entries) {
 // year on cards), so clients can't read project timing or count per year.
 const sectorLabels: Record<string, string> = {
   church:          'Church',
-  preschool:       'Preschool',
+  school:          'School',
   nonprofit:       'Nonprofit',
   'small-business':'Small Business',
 };
 const presentSectors = Array.from(new Set(entries.map((e) => e.data.sector)));
-const sectors = (['church', 'preschool', 'nonprofit', 'small-business'] as const)
+const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
   .filter((s) => presentSectors.includes(s))
   .map((value) => ({ value, label: sectorLabels[value] }));
 ---
