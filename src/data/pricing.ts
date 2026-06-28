@@ -7,8 +7,8 @@
    updates on the next build. Same single-source pattern as src/data/site.ts.
 
    The numbers reflect the 2026 market for an agency-grade solo studio:
-   Launch from $4,000, Signature from $8,000 (where most projects land),
-   Flagship from $18,000, plus the add-ons. If a number changes here, also
+   Launch from $4,000, Signature from $7,000 (where most projects land),
+   Flagship from $12,000, plus the add-ons. If a number changes here, also
    update the matching /services FAQ answer (the FAQ is prose, so it can't
    import these values) and the strategy doc.
    ============================================================================ */
@@ -34,51 +34,54 @@ export interface WebTier {
   badge?: string;
 }
 
-// The three web design tiers. These map to the real range of work in the
-// portfolio: a focused platform/lean build (Launch), a content-rich custom
-// site (Signature, where most projects land), and a fully bespoke custom-coded
-// build (Flagship). Order is intentional: ascending, with the anchor second.
+// The three web design tiers. Every build is custom-designed and ships with a
+// content system the client can run themselves after launch, so the tiers do
+// NOT differ in whether the work is custom or whether there is a CMS (both are
+// baseline). They differ in SCOPE and how much bespoke functionality the site
+// needs: Launch is a focused site; Signature (the anchor, where most projects
+// land) is a larger, content-rich site; Flagship adds real custom functionality
+// (tools, advanced integrations, headless). Order is ascending, anchor second.
 export const webTiers: WebTier[] = [
   {
     name: 'Launch',
     priceFrom: 4000,
     priceSuffix: '+',
     who: 'Smaller organizations',
-    range: 'Most land between $4,000 and $7,000',
-    note: 'A focused site for a smaller organization, built on the platform that fits your team (often Squarespace) or custom-coded when that is the better call. Lean, but built to be run by whoever inherits it.',
+    range: 'Most land between $4,000 and $6,500',
+    note: 'A focused custom site for a smaller organization: the essential pages done well, with content you can keep current yourself. The right fit when you want a clear, strong presence without a lot of moving parts.',
     features: [
-      'Strategy session and one-page brief',
-      'A custom design, never a stock template',
+      'A focused set of core pages, designed around your goals',
+      'Content you can keep current yourself',
       'Accessible and fast, set up and handed off',
     ],
     highlighted: false,
   },
   {
     name: 'Signature',
-    priceFrom: 8000,
+    priceFrom: 7000,
     priceSuffix: '+',
     who: 'Most projects',
-    range: 'Most land between $8,000 and $16,000',
-    note: 'The right fit for most projects: a content-rich custom site your team maintains itself, with the depth a serious church, school, or growing business actually needs.',
+    range: 'Most land between $7,000 and $11,000',
+    note: 'The right fit for most projects: a larger custom site with real content depth, several content types your team manages itself, and the integrations a serious church, school, or growing business needs.',
     features: [
-      'Everything in Launch, built fully custom',
-      'A content system your staff can run, no developer needed',
-      'Deeper structure, integrations, and search-engine work',
+      'A larger site with deeper content sections',
+      'Several content types your team manages itself',
+      'Integrations and search-engine work built in',
     ],
     highlighted: true,
     badge: 'Where most projects land',
   },
   {
     name: 'Flagship',
-    priceFrom: 18000,
+    priceFrom: 12000,
     priceSuffix: '+',
     who: 'Bespoke builds',
-    range: 'Typically $18,000 and up',
-    note: 'A bespoke, custom-coded build for organizations that need real custom functionality: a headless content system, interactive tools, or a large, deep site. The kind of work an agency charges far more for.',
+    range: 'Typically $12,000 and up',
+    note: 'For organizations that need the site to do real work, not just present it: custom interactive tools, advanced integrations, or a headless build for a large, complex site. The kind of work an agency charges far more for.',
     features: [
-      'Fully bespoke design and front-end build',
-      'Custom features, tools, and integrations',
-      'The fastest, most capable foundation I build',
+      'Custom interactive tools and features',
+      'Advanced and third-party integrations',
+      'A headless build for a large, deep site',
     ],
     highlighted: false,
   },
@@ -97,16 +100,16 @@ export const addOns: AddOn[] = [
   {
     name: 'Photography',
     price: 'from $900',
-    note: 'Headshots, brand, and environmental photos shot for your site by the person who designed it. From about $1,200 a day when folded into a build, or booked on its own across the Cincinnati region.',
+    note: 'Headshots, brand, and environmental photos shot for your site by the person who designed it. A half-day starts at $900 and a full day runs about $1,200, often folded into a build or booked on its own across the Cincinnati region.',
   },
   {
     name: 'Brand & strategy',
-    price: '$1,500 to $5,000',
+    price: '$1,500 to $2,000',
     note: 'Standalone strategy or brand-identity work for when you need it on its own. Strategy is already built into every website project.',
   },
   {
     name: 'Care plan',
     price: 'from $75/mo',
-    note: 'Optional. Updates, backups, security, and a monthly bucket of edits on the higher tiers. Skip it and the site is still yours to leave alone for years, with no lock-in.',
+    note: 'Optional. Updates, backups, security, and, on the higher tiers, a monthly bucket of small content edits. It does not cover major revisions or new features, which are quoted separately. Skip it and the site is still yours to leave alone for years, with no lock-in.',
   },
 ];
