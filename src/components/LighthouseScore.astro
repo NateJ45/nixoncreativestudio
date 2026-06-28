@@ -1,0 +1,121 @@
+---
+// Safe to edit (the `scores` below are the content).
+/* ============================================================================
+   LighthouseScore  [About-page motif, pairs with the Terminal]
+   ============================================================================
+   A small dark panel that sits under the Terminal in the About story column,
+   matching the terminal's window aesthetic so the two read as one artifact.
+
+   It shows THIS SITE's real Lighthouse scores from a MOBILE run (the stricter,
+   default Lighthouse profile), measured by Nathan on the /about page. Mobile is
+   the harder test, so these are honest and a genuine flex. Accessibility is also
+   gated at 100 on every build (.github/workflows/lighthouse.yml). Performance is
+   shown as the real 92, not rounded to 100: a real number reads as more credible
+   than four suspiciously-perfect scores, and all four are in Lighthouse's green
+   (90+) band.
+
+   If the site changes, re-run a mobile Lighthouse on /about and update `scores`.
+   Don't fabricate numbers; show what a real run reports. Decorative for assistive
+   tech (aria-hidden); the sr-only line carries the same facts in words. The
+   greens clear WCAG AA on the near-black panel, matching the Terminal's floor.
+   ============================================================================ */
+
+interface Score {
+  label: string;
+  value: number;
+}
+
+// Real mobile Lighthouse scores for this site's /about page. Re-measure and
+// update if the site changes; never invent these.
+const scores: Score[] = [
+  { label: 'Performance', value: 92 },
+  { label: 'Accessibility', value: 100 },
+  { label: 'Best Practices', value: 100 },
+  { label: 'SEO', value: 100 },
+];
+
+// Plain-language equivalent for screen readers (the panel itself is aria-hidden).
+const srText =
+  'Lighthouse mobile scores for this site, measured on the about page: ' +
+  scores.map((s) => `${s.label} ${s.value} out of 100`).join(', ') +
+  '. Accessibility is held at 100 on every build.';
+---
+
+<figure class="lh" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 80ms;">
+  <figcaption class="lh-title">lighthouse &middot; mobile &middot; this page</figcaption>
+  <div class="lh-grid">
+    {scores.map((s) => (
+      <div class="lh-cell">
+        <span class="lh-score">{s.value}</span>
+        <span class="lh-label">{s.label}</span>
+      </div>
+    ))}
+  </div>
+</figure>
+
+<p class="sr-only">{srText}</p>
+
+<style>
+  /* Always-dark surface, matching the Terminal so the pair reads as one window. */
+  .lh {
+    margin: 0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #0b0e14;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-frame);
+    padding: 0.95rem 1.1rem 1.1rem;
+  }
+
+  .lh-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.85rem;
+  }
+
+  /* Two-by-two so the panel stays compact under the terminal in the narrow
+     About column; collapses to one column only on very narrow screens. */
+  .lh-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 1rem;
+  }
+  @media (max-width: 22rem) {
+    .lh-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .lh-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  /* The score as a ringed number, the way Lighthouse rings a passing (90+)
+     score in green. Bright emerald on the near-black panel clears AA. */
+  .lh-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    flex: none;
+    border-radius: 9999px;
+    border: 2px solid #10b981;
+    color: #34d399;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .lh-label {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.82);
+  }
+</style>

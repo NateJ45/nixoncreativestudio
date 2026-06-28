@@ -33,6 +33,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import Testimonials from '../components/Testimonials.astro';
 import Terminal from '../components/Terminal.astro';
+import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { Image } from 'astro:assets';
 import { site } from '../data/site';
@@ -270,7 +271,7 @@ const schemas = [
             </p>
           </header>
 
-          <div class="mt-l grid items-start gap-xl lg:grid-cols-2">
+          <div class="mt-l grid gap-xl lg:grid-cols-2">
             <div class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text" data-reveal style="--reveal-delay: 120ms;">
               <p>
                 I came to this work through a camera. For years I photographed portraits, families, weddings, the events people most want to remember, and the part I loved was helping someone show up at their best. When the shoots dried up in 2020, I started building websites for a few of those same clients, and it turned out to be the same job in a new medium: work out what someone is really trying to say, then make it clear. Web design is the studio's main work now, but the photographer's eye stayed, and most projects still end up with real photography in them.
@@ -289,10 +290,18 @@ const schemas = [
               </p>
             </div>
 
-            <!-- "Plain code under the hood," shown rather than told. Decorative
-                 for assistive tech (it carries its own sr-only summary). -->
-            <div class="w-full" data-reveal="scale" style="--reveal-delay: 200ms;">
-              <Terminal />
+            <!-- "Plain code under the hood," shown rather than told. The terminal
+                 and the Lighthouse panel pair as one column that rides alongside
+                 the story on desktop (lg:sticky), so the column never leaves a
+                 gap below it. The grid is stretch (no items-start) so this cell
+                 is as tall as the prose, giving the sticky element room to travel.
+                 Both are decorative for assistive tech (each carries its own
+                 sr-only summary). -->
+            <div class="w-full">
+              <div class="flex flex-col gap-m lg:sticky lg:top-24" data-reveal="scale" style="--reveal-delay: 200ms;">
+                <Terminal />
+                <LighthouseScore />
+              </div>
             </div>
           </div>
         </div>
