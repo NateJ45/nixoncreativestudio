@@ -425,7 +425,13 @@ const { variant = 'full' } = Astro.props;
 
         let timer: ReturnType<typeof setInterval> | undefined;
         let cleanup: ReturnType<typeof setTimeout> | undefined;
+        let resume: ReturnType<typeof setTimeout> | undefined;
         const SLIDE_MS = 620;
+        const CYCLE_MS = 5000;
+        // When the tab comes back to the foreground, advance after only this
+        // brief beat instead of a full CYCLE_MS (see the visibilitychange
+        // handler for why).
+        const RESUME_MS = 1200;
 
         const tick = () => {
           const next = (cur + 1) % count;
@@ -474,12 +480,16 @@ const { variant = 'full' } = Astro.props;
           }, SLIDE_MS);
         };
         const start = () => {
-          if (!timer) timer = setInterval(tick, 5000);
+          if (!timer) timer = setInterval(tick, CYCLE_MS);
         };
         const stop = () => {
           if (timer) {
             clearInterval(timer);
             timer = undefined;
+          }
+          if (resume) {
+            clearTimeout(resume);
+            resume = undefined;
           }
         };
         start();
@@ -487,9 +497,26 @@ const { variant = 'full' } = Astro.props;
         // The cycle runs indefinitely with no hover pause (the showcase is
         // decorative and just scrolls). Only pause while the tab is hidden, a
         // battery/perf courtesy the visitor never sees.
-        document.addEventListener('visibilitychange', () =>
-          document.hidden ? stop() : start(),
-        );
+        //
+        // On RETURN, do NOT just re-arm the interval: a fresh setInterval does
+        // not fire its first tick until a whole CYCLE_MS later, so the visitor
+        // comes back to a scene that sits frozen for up to ~5s before the next
+        // site slides in (the long pause this fixes). The CSS pan + slide resume
+        // on their own the moment the tab is visible again; we just need the
+        // cycle clock to catch up. So give the current site a short beat, advance
+        // once, then restore the normal cadence.
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            stop();
+            return;
+          }
+          if (timer || resume) return; // already running or already scheduled
+          resume = setTimeout(() => {
+            resume = undefined;
+            tick();
+            start();
+          }, RESUME_MS);
+        });
       });
   }
   document.addEventListener('astro:page-load', initHeroShowcase);
