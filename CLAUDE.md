@@ -4,7 +4,7 @@ Astro portfolio for Nathan Nixon, sole owner of Nixon Creative Studio in Cincinn
 
 This is a one-person project. Nathan is the owner, the designer, the photographer, and the only person editing the repo. Build for a future Nathan who hasn't touched the code in three months.
 
-Reid Design LLC is a separate business entity. Do not conflate it with Nixon Creative Studio.
+Reid Design is a separate business entity. Do not conflate it with Nixon Creative Studio.
 
 ---
 
