@@ -220,16 +220,29 @@ const hasPhone = !!mobileSrc;
        a timed loop. Where scroll-timeline is unsupported, the image simply
        sits at the top (a clean static frame); the link still works. */
     @supports (animation-timeline: view()) {
+      /* The timeline must be NAMED and declared on the outer figure. An
+         anonymous view() set on the image binds to the image's NEAREST scroll
+         container, which is the overflow:hidden .showcase-window (and, for the
+         phone, .showcase-phone-window), NOT the page. Those inner boxes never
+         scroll, so the timeline never advances and the screenshot sits frozen
+         at one position (the bug this fixes). Naming the timeline on
+         .site-showcase, whose nearest scroll container IS the page, and
+         referencing it by name from both images, crosses the overflow boundary
+         so the pan tracks real page scroll as the frame travels the viewport. */
+      .site-showcase {
+        view-timeline-name: --ncs-showcase-view;
+        view-timeline-axis: block;
+      }
       .showcase-scroll :global(img) {
         animation: showcase-scroll linear both;
-        animation-timeline: view();
+        animation-timeline: --ncs-showcase-view;
         animation-range: entry 12% exit 88%;
       }
       /* The phone pans its (taller) mobile page on the same scroll, a touch
          further since a mobile layout stacks taller. */
       .showcase-phone-img {
         animation: showcase-phone-scroll linear both;
-        animation-timeline: view();
+        animation-timeline: --ncs-showcase-view;
         animation-range: entry 12% exit 88%;
       }
     }
