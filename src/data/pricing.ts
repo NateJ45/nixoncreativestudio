@@ -104,7 +104,7 @@ export const addOns: AddOn[] = [
   },
   {
     name: 'Brand & strategy',
-    price: '$1,500 to $2,000',
+    price: '$500 to $2,000',
     note: 'Standalone strategy or brand-identity work for when you need it on its own. Strategy is already built into every website project.',
   },
   {
