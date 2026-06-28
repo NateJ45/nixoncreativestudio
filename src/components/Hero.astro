@@ -299,11 +299,21 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
      ---------------------------------------------------------------------- */
   .hero-mobile-scene {
     inset: 0 0 var(--hero-marquee-h) 0;
-    opacity: 0.28;
+    /* Light mode has no scrim over this backdrop, so the copy reads directly
+       against the device screenshot; 0.5 is about the legibility ceiling here. */
+    opacity: 0.5;
     /* Clear at the very top (headline), ramping in through the middle/lower
        where the device fills the space. */
     -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
     mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
+  }
+  /* Dark mode: the navy scrim (z-2) sits OVER this backdrop and veils it for
+     legibility, so dark mode can carry a much higher raw opacity than light
+     before the copy is at risk. At the light-mode 0.5 the device stayed a faint
+     ghost under that veil; pushing it up lets the screenshot actually read
+     through, while the scrim still keeps the headline + CTAs AA. */
+  :global(.dark) .hero-mobile-scene {
+    opacity: 0.85;
   }
   /* The phone variant defaults to a small centered frame; for the backdrop it is
      enlarged and pushed to the lower-right so it bleeds off both edges. */
