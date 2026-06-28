@@ -51,7 +51,7 @@ const services = [
     body: 'Strategy always comes first. Without it, design becomes decoration. We start with a working session, then I write a short brief that the rest of the project follows.',
     priceFrom: 1500, // standalone floor; included free inside every build
     points: [
-      'Half-day workshop with your team',
+      'A working session, then back-and-forth until the plan is right',
       'Audience map and conversion path',
       'Content inventory of what you already have',
       'A one-page brief the rest of the project follows',
@@ -296,10 +296,8 @@ const schemas = [
         {tiers.map((tier, index) => (
           <li
             class:list={[
-              'spotlight-card hover-lift relative isolate flex flex-col gap-m overflow-hidden rounded-2xl border p-l',
-              tier.highlighted
-                ? 'border-accent bg-bg shadow-[0_1px_30px_-12px_var(--color-accent)]'
-                : 'border-border bg-bg',
+              'tier-card spotlight-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
+              tier.highlighted && 'tier-card--featured',
             ]}
             data-spotlight
             data-reveal
@@ -473,6 +471,80 @@ const schemas = [
 </BaseLayout>
 
 <style>
+  /* ----------------------------------------------------------------------
+     Pricing tier cards. Built on .surface-card (real depth in both themes),
+     .spotlight-card (cursor glow), and the price count-up. Added here:
+       - a top accent rule as a shared highlight motif (full on the featured
+         tier, drawing in on hover for the others),
+       - a soft accent-glow bloom + warmed border + deeper shadow on hover, so
+         the card reads as rising. The rise is shadow-based, not transform-based:
+         these <li>s carry data-reveal, whose .is-visible sets transform:none on
+         the same element and would cancel a transform lift.
+       - the featured (Signature) tier carries an always-on accent glow and an
+         accent border so the recommended option draws the eye at rest.
+     Transitions are disabled by the global reduced-motion rule; every rest
+     state is complete and legible without motion. Decorative only (text and
+     contrast untouched), and a top-edge rule, never a side stripe. */
+  .tier-card {
+    transition:
+      box-shadow 0.32s ease,
+      border-color 0.3s ease;
+  }
+
+  /* Top accent rule on the top edge, clipped to the rounded corners by the
+     card's own overflow-hidden. Faint and slightly short at rest, drawing to
+     full width + full opacity on hover/focus. */
+  .tier-card::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    z-index: 4;
+    background: var(--color-accent);
+    opacity: 0.3;
+    transform: scaleX(0.88);
+    transform-origin: center;
+    transition:
+      opacity 0.3s ease,
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .tier-card:hover,
+  .tier-card:focus-within {
+    box-shadow:
+      var(--shadow-card-hover),
+      var(--card-highlight),
+      0 26px 52px -28px color-mix(in oklab, var(--color-accent) 60%, transparent);
+    border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
+  }
+  .tier-card:hover::after,
+  .tier-card:focus-within::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  /* Featured (Signature): accent border, the top rule already at full, and a
+     soft always-on accent glow layered over the surface-card shadow. */
+  .tier-card--featured {
+    border-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-border));
+    box-shadow:
+      var(--shadow-card),
+      var(--card-highlight),
+      0 20px 46px -30px color-mix(in oklab, var(--color-accent) 60%, transparent);
+  }
+  .tier-card--featured::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  .tier-card--featured:hover,
+  .tier-card--featured:focus-within {
+    box-shadow:
+      var(--shadow-card-hover),
+      var(--card-highlight),
+      0 30px 58px -26px color-mix(in oklab, var(--color-accent) 68%, transparent);
+  }
+
   /* FAQ smooth open/close, JS-free.
      The answer wrapper is a CSS grid whose single row animates from 0fr
      (height collapsed to nothing) to 1fr (full natural height). Animating
