@@ -36,7 +36,7 @@ export interface WebTier {
 
 // The three web design tiers. These map to the real range of work in the
 // portfolio: a focused platform/lean build (Launch), a content-rich custom
-// site (Signature, where most projects land), and a fully bespoke hand-coded
+// site (Signature, where most projects land), and a fully bespoke custom-coded
 // build (Flagship). Order is intentional: ascending, with the anchor second.
 export const webTiers: WebTier[] = [
   {
@@ -45,7 +45,7 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'Smaller organizations',
     range: 'Most land between $4,000 and $7,000',
-    note: 'A focused site for a smaller organization, built on the platform that fits your team (often Squarespace or Wix) or hand-coded when that is the better call. Lean, but built to be run by whoever inherits it.',
+    note: 'A focused site for a smaller organization, built on the platform that fits your team (often Squarespace) or custom-coded when that is the better call. Lean, but built to be run by whoever inherits it.',
     features: [
       'Strategy session and one-page brief',
       'A custom design, never a stock template',
@@ -74,7 +74,7 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'Bespoke builds',
     range: 'Typically $18,000 and up',
-    note: 'A bespoke, hand-coded build for organizations that need real custom functionality: a headless content system, interactive tools, or a large, deep site. The kind of work an agency charges far more for.',
+    note: 'A bespoke, custom-coded build for organizations that need real custom functionality: a headless content system, interactive tools, or a large, deep site. The kind of work an agency charges far more for.',
     features: [
       'Fully bespoke design and front-end build',
       'Custom features, tools, and integrations',

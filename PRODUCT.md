@@ -37,7 +37,7 @@ Emotional goal: visitors should leave feeling they've found a real person doing 
 What this should explicitly NOT look like:
 
 - **Generic agency vibe** — floating gradient hero blobs, abstract stock photography, "we craft bespoke digital experiences," buzzword copy, no actual client work visible above the fold.
-- **Templated platform look** — Wix, Squarespace, and Webflow-template defaults that signal "someone bought a theme" rather than "someone designed this." The site needs to read as bespoke without being self-consciously artisanal.
+- **Templated platform look** — Squarespace and Webflow-template defaults that signal "someone bought a theme" rather than "someone designed this." The site needs to read as bespoke without being self-consciously artisanal.
 - **Over-minimal portfolio** — brutalist or stark-minimal portfolio sites that hide the services, omit clear next steps, and force the visitor to guess what the studio actually does.
 
 Reference sites pulled in early research (kept as positive anchors, not slavish copies): Brittany Chiang v4, Gianluca Gradogna, Elliott Mangham, Olia Gozha. Each contributes a different thing — Chiang's clarity of hierarchy, Gradogna's restraint with color, Mangham's confident typography, Gozha's warmth — but the studio's own voice has to win, not the references.
