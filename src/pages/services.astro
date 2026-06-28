@@ -4,13 +4,15 @@
 /* ============================================================================
    /services | Services
    ============================================================================
-   Six-block stack:
-     1. Hero (positioning statement, gradient-text headline)
+   Seven-block stack:
+     1. Hero (positioning statement, solid-token headline)
      2. Three service chapters as elevated, alternating spotlight-cards
      3. Process recap (reuses the homepage Process component)
-     4. "What it costs" band: three pricing tier cards (honest numbers only)
-     5. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
-     6. CTA banner
+     4. "What a website costs" band: three web tiers (Launch / Signature /
+        Flagship) + an "add to any project" strip (photography, brand, care)
+     5. "Why it costs what it costs" justification block
+     6. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
+     7. CTA banner
 
    The Process component is reused, not duplicated. Edit Process.astro
    once and both the homepage and this page update.
@@ -21,15 +23,22 @@
      hover-lift                               lift on hover
      data-countup                             number animates up when in view
 
-   Pricing numbers come ONLY from the FAQ answers below (small business
-   from $3,500, optional photography add-on, optional monthly retainer).
-   Do not invent prices here; the tier cards and the FAQ must agree.
+   PRICING LIVES IN src/data/pricing.ts: the `tiers` and `addOns` arrays are
+   imported below and shared with the homepage PricingTeaser, so the two never
+   drift. The FAQ answers here are prose and can't import those values, so when
+   a price changes, change it in pricing.ts AND in the matching FAQ answer. The
+   numbers reflect the 2026 market for an agency-grade solo studio: Launch
+   from $4,000, Signature from $8,000 (where most projects land), Flagship
+   from $18,000, photography from $900, brand $1,500+, care from $75/mo.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Process from '../components/Process.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
+// Tiers + add-ons come from the shared single source of truth (also used by
+// the homepage PricingTeaser), so the numbers can never drift between pages.
+import { webTiers as tiers, addOns } from '../data/pricing';
 
 // The three services are parallel offerings a client picks from, not an
 // ordered sequence (you can buy photography without strategy), so they carry
@@ -40,6 +49,7 @@ const services = [
     title: 'Strategy',
     lede: 'The planning work that decides what the site is for, who it serves, and how it earns its keep.',
     body: 'Strategy always comes first. Without it, design becomes decoration. We start with a working session, then I write a short brief that the rest of the project follows.',
+    priceFrom: 1500, // standalone floor; included free inside every build
     points: [
       'Half-day workshop with your team',
       'Audience map and conversion path',
@@ -51,6 +61,7 @@ const services = [
     title: 'Web design',
     lede: 'Modern, accessible, fast websites built on the platform that fits you, from a hand-coded site to Squarespace, Wix, or WordPress, and set up so your team can actually run it.',
     body: 'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.',
+    priceFrom: 4000, // Launch tier floor; see the pricing band below
     points: [
       'A custom design built to your brand, not a stock template',
       'Self-hosted typography and imagery',
@@ -63,6 +74,7 @@ const services = [
     title: 'Photography',
     lede: 'Headshots, event coverage, and environmental photography shot for your website by the same person who designed it.',
     body: 'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.',
+    priceFrom: 900, // half-day floor; ~$1,200/day folded into a build
     points: [
       'On-site Sunday or weekday coverage',
       'Headshots for team and staff',
@@ -72,59 +84,49 @@ const services = [
   },
 ];
 
-// Pricing tiers. Every number here is pulled straight from the FAQ answers
-// below so the two never drift. Strategy is the entry point of the project,
-// not a separately priced product, so it lives inside the build price.
-const tiers = [
+// `tiers` (the three web design tiers: Launch / Signature / Flagship) and
+// `addOns` (photography, brand, care) are imported above from
+// src/data/pricing.ts, the single source shared with the homepage teaser.
+// Edit any price there, not here.
+
+// "Why it costs what it costs." The honest justification block: what the price
+// buys and what a cheaper quote usually leaves out. Each point is tied to how
+// the studio actually works, so it reads as true rather than as a sales pitch.
+const whyItCosts = [
   {
-    name: 'Small business site',
-    priceFrom: 3500, // honest floor from the FAQ "What does it cost?" answer
-    priceSuffix: '+',
-    note: 'Strategy, design, and build for a small business or organization. Scope, photography, and content move the number from there.',
-    features: [
-      'Strategy session and one-page brief',
-      'A custom, accessible, fast site',
-      'Set up and handed off for you to run',
-    ],
-    highlighted: true,
-    badge: 'Most projects start here',
+    title: 'One person, no handoffs',
+    body: 'The person who plans your site designs it, builds it, and shoots the photos. No agency markup, and nothing lost in translation between a strategist, a designer, and a developer who never quite talk to each other.',
   },
   {
-    name: 'Photography add-on',
-    priceLabel: 'Add-on',
-    note: 'Headshots, event, and environmental photography folded into the project so the imagery is made for the layout, not borrowed from a stock library.',
-    features: [
-      'On-site coverage, weekday or Sunday',
-      'Team headshots and your space',
-      'Edited, web-ready files delivered with the site',
-    ],
-    highlighted: false,
+    title: 'Built to be handed off',
+    body: 'Every site is set up so the next volunteer or staff member can keep it running, and you own it outright. A cheaper site that leaves you stranded the day the freelancer goes quiet costs far more to replace than it saved.',
   },
   {
-    name: 'Monthly care',
-    priceLabel: 'Optional',
-    note: 'A flat monthly retainer for ongoing edits and content updates. Skip it entirely and the site is still yours to leave alone for years.',
-    features: [
-      'Ongoing edits and content updates',
-      'A simple way to reach me when something comes up',
-      'Cancel any time, no lock-in',
-    ],
-    highlighted: false,
+    title: 'Accessible by default',
+    body: 'Every page meets WCAG AA and scores 100 for accessibility. Most budget builds fail this badly. For a church, school, or nonprofit it is both the right thing to do and real legal cover, included, not an upsell.',
+  },
+  {
+    title: 'Cheap is expensive later',
+    body: 'A bargain site quietly runs into thousands a year once you bolt on the features it could not handle up front. I would rather build it once, on a stack that is nearly free to run and is yours to keep.',
   },
 ];
 
 const faq = [
   {
+    q: 'What does it cost?',
+    a: 'Websites start at $4,000 for a focused Launch site. Most projects land between $8,000 and $16,000, and large custom builds go higher. Photography, content, and scope move the number from there. The first conversation is free and ends with an honest ballpark before either of us is committed, and larger projects can be split into monthly payments so the budget is about cash flow, not one big wall.',
+  },
+  {
+    q: 'What if I have been quoted less somewhere else?',
+    a: 'You probably can find a cheaper quote, and for a very simple need that might be the right call. What a low quote usually leaves out is the part that matters later: accessibility, a content system your team can actually run, a plan for who maintains the site after launch, and someone who still answers the phone in a year. A site you have to rebuild in eighteen months is the expensive one. I would rather build it once.',
+  },
+  {
     q: 'How long does a typical project take?',
     a: 'Most websites land between six and ten weeks from kickoff to launch. Larger projects with custom photography or multiple content collections can run twelve to sixteen weeks. The brief at the end of strategy sets the real timeline.',
   },
   {
-    q: 'What does it cost?',
-    a: 'Projects start at $3,500 for a small business site and scale up depending on scope, photography, and content. The first conversation is always free and ends with an honest ballpark before either of us is committed.',
-  },
-  {
     q: 'Do you offer maintenance?',
-    a: 'Optional. After launch you own the site outright and can leave it alone for years if nothing breaks. If you want hands-on support, I offer a flat monthly retainer for ongoing edits and content updates.',
+    a: 'Optional. After launch you own the site outright and can leave it alone for years if nothing breaks. If you want hands-on support, care plans start at $75 a month for updates, backups, and security, with higher tiers that add a monthly bucket of content edits.',
   },
   {
     q: 'Can you work with my existing brand?',
@@ -151,6 +153,18 @@ const schemas = [
     areaServed:     service.title === 'Photography'
       ? 'Greater Cincinnati region'
       : ['Greater Cincinnati region', 'United States'],
+    // Publish the "from" floor as an Offer so the price shows in structured
+    // data alongside the visible page. Spread in only when the service has one.
+    ...(service.priceFrom ? {
+      offers: {
+        '@type': 'Offer',
+        priceSpecification: {
+          '@type':       'PriceSpecification',
+          minPrice:      service.priceFrom,
+          priceCurrency: 'USD',
+        },
+      },
+    } : {}),
   })),
   {
     '@context': 'https://schema.org',
@@ -261,18 +275,20 @@ const schemas = [
 
 
   <!-- ----------------------------------------------------------------------
-       What it costs. The pricing that used to hide inside the FAQ, now a
-       scannable band of three tier cards. Every number traces back to the
-       FAQ answers: $3,500 floor, photography add-on, optional retainer.
-       The featured tier's price counts up when it scrolls into view.
+       What a website costs. Three web tiers (Launch / Signature / Flagship),
+       each publishing an honest "from" floor plus the typical range, then a
+       lighter "add to any project" strip for photography, brand, and care.
+       Numbers live in the `tiers` and `addOns` arrays; the FAQ must agree.
+       The floor counts up on scroll, but the static text is always the real
+       number so no-JS visitors and crawlers see the true figure.
        ---------------------------------------------------------------------- -->
   <section class="bg-bg-soft py-2xl" aria-labelledby="services-pricing-heading">
     <div class="ncs-container">
 
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-pricing-heading" class="text-heading">What it costs</h2>
+      <header class="mb-l flex max-w-[62ch] flex-col gap-xs" data-reveal>
+        <h2 id="services-pricing-heading" class="text-heading">What a website costs</h2>
         <p class="text-lg leading-[1.55] text-text-muted">
-          A starting point, not a fixed menu. The free first conversation ends with a real ballpark for your project.
+          A starting point, not a fixed menu. Every project is quoted from its real scope, and the free first conversation ends with an honest ballpark. Larger projects can be split into monthly payments.
         </p>
       </header>
 
@@ -298,27 +314,21 @@ const schemas = [
             <div class="relative z-10 flex flex-col gap-m">
               <h3 class="text-h4 text-heading">{tier.name}</h3>
 
-              <!-- Price line. The floor price counts up; the add-on and
-                   retainer tiers carry a plain word because they are
-                   genuinely "depends on scope," not a published number. -->
-              <p class="flex items-baseline gap-xs">
-                {tier.priceFrom ? (
-                  <>
-                    <span class="text-sm font-medium text-text-muted">from</span>
-                    <span class="font-display text-h2 leading-none text-heading">
-                      $<span
-                        data-countup
-                        data-countup-to={tier.priceFrom}
-                        data-countup-duration="1200"
-                      >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
-                    </span>
-                  </>
-                ) : (
-                  <span class="font-display text-h3 leading-none text-link">
-                    {tier.priceLabel}
+              <!-- Price line: the floor counts up to its real value, with the
+                   typical range stated underneath so the "from" is honest. -->
+              <div class="flex flex-col gap-1">
+                <p class="flex items-baseline gap-xs">
+                  <span class="text-sm font-medium text-text-muted">from</span>
+                  <span class="font-display text-h2 leading-none text-heading">
+                    $<span
+                      data-countup
+                      data-countup-to={tier.priceFrom}
+                      data-countup-duration="1200"
+                    >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
                   </span>
-                )}
-              </p>
+                </p>
+                <p class="text-sm text-text-muted">{tier.range}</p>
+              </div>
 
               <p class="leading-[1.6] text-text-muted">{tier.note}</p>
 
@@ -341,6 +351,57 @@ const schemas = [
       <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
         Strategy is the front of every project, not a line item. The price above already includes the session and the brief.
       </p>
+
+      <!-- Add to any project: photography, standalone brand, optional care.
+           Lighter cards than the tiers above; these attach to a build. -->
+      <div class="mt-2xl" data-reveal>
+        <h3 class="text-h5 text-heading">Add to any project</h3>
+        <ul class="mt-m grid list-none gap-m p-0 [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))]">
+          {addOns.map((addOn, index) => (
+            <li
+              class="surface-card flex flex-col gap-xs rounded-xl p-m"
+              data-reveal
+              style={`--reveal-delay: ${index * 90}ms;`}
+            >
+              <h4 class="text-h5 text-heading">{addOn.name}</h4>
+              <p class="font-display text-xl leading-none text-link">{addOn.price}</p>
+              <p class="text-sm leading-[1.6] text-text-muted">{addOn.note}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ----------------------------------------------------------------------
+       Why it costs what it costs. The honest justification block that follows
+       the price immediately, so the "someone quoted me less" objection is
+       answered the moment it forms. Two-column hairline-ruled list, not cards.
+       ---------------------------------------------------------------------- -->
+  <section class="py-2xl" aria-labelledby="services-why-heading">
+    <div class="ncs-container">
+
+      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
+        <h2 id="services-why-heading" class="text-heading">Why it costs what it costs</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          Plenty of people will quote you less. Here is what the price actually buys, and what a cheaper one usually leaves out.
+        </p>
+      </header>
+
+      <ul class="grid list-none gap-l p-0 md:grid-cols-2">
+        {whyItCosts.map((point, index) => (
+          <li
+            class="flex flex-col gap-xs border-t border-border pt-m"
+            data-reveal
+            style={`--reveal-delay: ${index * 90}ms;`}
+          >
+            <h3 class="text-h5 text-heading">{point.title}</h3>
+            <p class="max-w-[52ch] leading-[1.7] text-text-muted">{point.body}</p>
+          </li>
+        ))}
+      </ul>
 
     </div>
   </section>

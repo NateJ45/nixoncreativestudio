@@ -1,0 +1,69 @@
+---
+// Safe to edit. The numbers come from src/data/pricing.ts (the single source
+// of truth shared with /services); the copy below is the only content here.
+/* ============================================================================
+   Pricing Teaser (slim "What it costs" band on the homepage)
+   ============================================================================
+   Sits between Selected Work and the Process Band. A deliberately lightweight
+   band: it surfaces the three web-tier floors so a visitor can size up the fit
+   at a glance, then routes them to /services for the full pricing, add-ons,
+   and the justification copy.
+
+   Why an editorial hairline row, not three spotlight cards: the old homepage
+   leaned on stacked card grids, which an impeccable critique flagged as the
+   loudest AI tell on the page. This uses the same hairline-ruled treatment as
+   the /about principles and the /services justification block, so it reads as
+   a quiet, considered row rather than a pricing-table sales slab.
+
+   Surface: the base background. It sits between the light Selected Work and the
+   themed Process Band, so a plain surface keeps the page rhythm (no competing
+   band). Numbers are static (no countup) to keep the band slim; /services
+   carries the animated version. Reduced-motion safe via the shared data-reveal.
+   ============================================================================ */
+
+import { webTiers } from '../data/pricing';
+---
+
+<section class="py-2xl" aria-labelledby="home-pricing-heading">
+  <div class="ncs-container">
+
+    <!-- Header. Title carries it; the sub does the explaining an eyebrow would
+         otherwise fake. Matches the Selected Work / Process Band header grammar. -->
+    <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+      <h2 id="home-pricing-heading">What it costs</h2>
+      <p class="text-lg leading-[1.55] text-text-muted">
+        Honest from the first conversation, so you can size up the fit before we ever talk.
+      </p>
+    </header>
+
+    <!-- Three tier floors as a hairline-ruled editorial row: name, from $X, and
+         one line of who it's for. No cards, no elevation, no numbered eyebrow.
+         Three across at md, stacked on mobile. -->
+    <ul class="grid list-none gap-l p-0 md:grid-cols-3">
+      {webTiers.map((tier, index) => (
+        <li
+          class="flex flex-col gap-2 border-t border-border pt-m"
+          data-reveal
+          style={`--reveal-delay: ${index * 110}ms;`}
+        >
+          <h3 class="font-display text-h5 text-heading">{tier.name}</h3>
+          <p class="flex items-baseline gap-xs">
+            <span class="text-sm font-medium text-text-muted">from</span>
+            <span class="font-display text-h3 leading-none text-link">
+              ${tier.priceFrom.toLocaleString()}{tier.priceSuffix}
+            </span>
+          </p>
+          <p class="text-text-muted">{tier.who}</p>
+        </li>
+      ))}
+    </ul>
+
+    <!-- Route to the full pricing, add-ons, and justification copy on /services. -->
+    <div class="mt-xl" data-reveal style="--reveal-delay: 200ms;">
+      <a class="card-link text-lg" href="/services/">
+        See full pricing and services
+      </a>
+    </div>
+
+  </div>
+</section>
