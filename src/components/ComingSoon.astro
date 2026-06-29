@@ -218,9 +218,13 @@ import { site } from '../data/site';
   }
 
   /* ==========================================================================
-     Content panel. Sits above the background. In light mode it gets a soft
-     translucent card so the dark mesh behind it never hurts text contrast;
-     in dark mode the page is already navy, so the panel stays transparent.
+     Content panel. Sits above the background. A SOLID light surface in light
+     mode (the site's bg-soft) and a SOLID navy in dark, each lifted off the
+     mesh by a real soft shadow plus a thin border, so the copy always reads
+     cleanly over the moving background. No backdrop blur, no translucent
+     white border (that glassmorphism pattern is banned site-wide); depth here
+     comes from the shadow and the surface step, the same way .surface-card
+     does it in the main design system.
      ========================================================================== */
   .ncs-cs__inner {
     position: relative;
@@ -229,18 +233,23 @@ import { site } from '../data/site';
     max-width: 42rem;
     padding: clamp(1.75rem, 5vw, 3rem);
     border-radius: 1.25rem;
-    /* Light: frosted card keeps body copy readable over the navy mesh. */
-    background: rgba(244, 247, 250, 0.86);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 24px 60px -28px rgba(10, 22, 40, 0.55);
+    /* Light: solid bg-soft panel keeps body copy fully readable over the navy
+       mesh, lifted by a soft layered shadow and a hairline border. */
+    background: var(--cs-bg);
+    border: 1px solid rgba(10, 22, 40, 0.08);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
+      0 24px 60px -28px rgba(10, 22, 40, 0.55);
   }
 
   :global(.dark) .ncs-cs__inner {
-    background: rgba(10, 22, 40, 0.4);
-    border-color: rgba(64, 170, 237, 0.18);
-    box-shadow: 0 24px 70px -30px rgba(0, 0, 0, 0.7);
+    /* Dark: a solid navy a touch lighter than the field so the panel still
+       reads as a raised surface, with a subtle sky-toned edge. */
+    background: #0d1c33;
+    border-color: rgba(64, 170, 237, 0.22);
+    box-shadow:
+      0 1px 0 0 rgba(64, 170, 237, 0.12) inset,
+      0 24px 70px -30px rgba(0, 0, 0, 0.7);
   }
 
   /* Accent rule above the wordmark. */
@@ -254,11 +263,11 @@ import { site } from '../data/site';
   }
 
   /* ==========================================================================
-     Wordmark with a sheen sweep. The text itself is painted with a
-     gradient (navy/heading base with a bright NCS-blue highlight band) and
-     clipped to the glyphs; the highlight band slides across on a loop.
-     A static heading color is set first as a fallback for browsers without
-     background-clip:text support.
+     Wordmark. A single SOLID heading color carried by Bebas weight and size,
+     with a soft brand glow behind the glyphs via text-shadow. No clipped
+     paint on the text, which the site bans; the glow is faint navy in light
+     mode and a sky-toned halo in dark, so the wordmark reads as the
+     centerpiece without any moving sheen.
      ========================================================================== */
   .ncs-cs__wordmark {
     margin: 0;
@@ -268,32 +277,13 @@ import { site } from '../data/site';
     letter-spacing: 0.01em;
     font-size: clamp(2.75rem, 11vw, 6rem);
     color: var(--cs-heading);
+    text-shadow: 0 2px 18px rgba(10, 22, 40, 0.12);
   }
 
-  @supports (background-clip: text) or (-webkit-background-clip: text) {
-    .ncs-cs__wordmark {
-      background-image: linear-gradient(
-        100deg,
-        var(--cs-heading) 0%,
-        var(--cs-heading) 38%,
-        var(--cs-sky) 50%,
-        var(--cs-heading) 62%,
-        var(--cs-heading) 100%
-      );
-      background-size: 220% 100%;
-      background-position: 120% 0;
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-      animation: cs-sheen 5.5s ease-in-out 1.2s infinite;
-    }
-  }
-
-  @keyframes cs-sheen {
-    0%   { background-position: 120% 0; }
-    55%  { background-position: -20% 0; }
-    100% { background-position: -20% 0; }
+  /* Dark: a subtle sky-blue halo gives the navy field some lift behind the
+     light wordmark. Still a glow, not text-clip. */
+  :global(.dark) .ncs-cs__wordmark {
+    text-shadow: 0 2px 28px rgba(64, 170, 237, 0.22);
   }
 
   .ncs-cs__eyebrow {
@@ -417,22 +407,15 @@ import { site } from '../data/site';
 
   /* ==========================================================================
      Reduced-motion: freeze every animation. The mesh holds a static
-     position, the sheen settles on the plain heading color, the entrance
-     fade is skipped (content shown immediately). Hover transitions on the
-     links are short and intentional, so they stay.
+     position and the entrance fade is skipped (content shown immediately).
+     The wordmark is a static solid color now, so it needs no special
+     handling here. Hover transitions on the links are short and
+     intentional, so they stay.
      ========================================================================== */
   @media (prefers-reduced-motion: reduce) {
     .ncs-cs__mesh,
     .ncs-cs__grain {
       animation: none !important;
-    }
-    .ncs-cs__wordmark {
-      animation: none !important;
-      /* Drop back to a solid heading color so no half-swept gradient is
-         frozen mid-sweep. */
-      background-image: none !important;
-      -webkit-text-fill-color: var(--cs-heading);
-      color: var(--cs-heading);
     }
     .ncs-cs__rise {
       animation: none !important;

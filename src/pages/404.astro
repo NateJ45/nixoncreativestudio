@@ -5,9 +5,9 @@
 /* ============================================================================
    /404 | Page not found
    ============================================================================
-   Hero-style single column, centered. An oversized gradient "404" anchors
-   the page as a quiet centerpiece, the warm "that page wandered off" copy
-   sits below, and the same helpful links carry visitors back into the site.
+   Hero-style single column, centered. An oversized low-opacity navy "404"
+   anchors the page as a quiet centerpiece, the warm "that page wandered off"
+   copy sits below, and the same helpful links carry visitors back into the site.
    The whole block reveals in on load. The "404" floats gently (and the
    float pauses under prefers-reduced-motion via the local @media rule).
    ============================================================================ */
@@ -27,21 +27,23 @@ import { buttonVariants } from '../components/ui/button';
   >
     <div class="ncs-container flex flex-col items-center gap-m text-center">
 
-      {/* Oversized quiet centerpiece. A low-opacity navy numeral as a backdrop,
-          not a gradient flourish. Decorative: the real "404" meaning is
-          announced in the kicker line below, so this is aria-hidden. */}
+      {/* Oversized quiet centerpiece. A low-opacity navy numeral as a backdrop.
+          Decorative: the real "404" meaning is announced in the line below, so
+          this is aria-hidden. */}
       <div
         class="notfound-figure pointer-events-none select-none leading-none"
         aria-hidden="true"
         data-reveal="scale"
       >
         <span
-          class="block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10"
+          class="block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"
         >404</span>
       </div>
 
+      {/* Quiet mono label above the heading. Lowercase and lightly tracked so
+          it reads as a small status line, not a shouted section eyebrow. */}
       <p
-        class="text-[0.95rem] uppercase tracking-[0.15em] text-text-muted"
+        class="font-mono text-sm text-text-muted"
         data-reveal
         style="--reveal-delay: 80ms"
       >
