@@ -193,10 +193,13 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
       {/* "No matches" placeholder. Server-rendered, hidden by default
           via data-hidden, revealed by WorkFilter when all cards are
           filtered out. Lets visitors know the filter is doing something
-          and isn't broken. */}
+          and isn't broken. aria-live="polite" so screen readers hear the
+          notice announced when the filter empties the grid (without it the
+          change is silent to assistive tech). */}
       <p
         data-work-empty
         data-hidden
+        aria-live="polite"
         class="mt-l text-text-muted"
       >
         Nothing matches that filter yet. Try clearing one of the chips above.

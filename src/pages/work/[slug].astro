@@ -21,7 +21,6 @@ import CaseStudyCover from '../../components/CaseStudyCover.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
 import ReadingProgress from '../../components/ReadingProgress';
-import { Badge } from '../../components/ui/badge';
 import { readingTime } from '../../lib/readingTime';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 import { site } from '../../data/site';
@@ -215,19 +214,15 @@ const schemas = [
             ))}
           </ul>
 
-          {/* Tag chips (optional). Smaller and quieter than the service
-              pills above so the eye reads them as supporting metadata
-              rather than primary scope. */}
+          {/* Tags (optional). The service pills above are the primary scope,
+              so the tags read as quiet supporting metadata: plain muted text,
+              comma-separated, NOT a second row of pills (two near-identical
+              pill rows read as two filter-chip rows). A "Tags:" lead-in mirrors
+              the Role / Built with credit lines above. */}
           {tags && tags.length > 0 && (
-            <ul class="flex flex-wrap gap-xs" aria-label="Tags">
-              {tags.map((tag) => (
-                <li>
-                  <Badge variant="outline" className="border-border text-text-muted">
-                    {tag}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
+            <p class="font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
+              <span class="text-text">Tags:</span> {tags.join(', ')}
+            </p>
           )}
 
         </div>
@@ -280,9 +275,14 @@ const schemas = [
 
         {/* Sticky TOC. Lists every h2 in the MDX body as a jump link. Hidden
             below xl. top-[6.5rem] clears the sticky header. Native <nav
-            aria-label> so screen readers identify it. */}
+            aria-label> so screen readers identify it.
+
+            data-case-toc + per-link data-toc-link="<slug>" wire the scroll-spy
+            at the end of <article>: an IntersectionObserver marks the link for
+            the section in view as active. With JS off (or no IntersectionObserver)
+            this stays a plain list of working jump links. */}
         {hasToc && (
-          <nav aria-label="In this case study" class="hidden xl:block">
+          <nav aria-label="In this case study" class="hidden xl:block" data-case-toc>
             <div class="sticky top-[6.5rem] flex flex-col gap-xs">
               <p class="font-mono text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                 In this case study
@@ -292,7 +292,8 @@ const schemas = [
                   <li>
                     <a
                       href={`#${h.slug}`}
-                      class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link"
+                      data-toc-link={h.slug}
+                      class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link aria-[current=true]:font-medium aria-[current=true]:text-link"
                     >
                       {h.text}
                     </a>
@@ -317,9 +318,21 @@ const schemas = [
             class:list={[
               'text-[1.0625rem] leading-[1.7] text-text',
               '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-[6.5rem] [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
+              // h3 is a quieter subsection head: display face, heading color, one
+              // step smaller (text-h4) and tighter top space than the h2.
+              '[&_h3]:text-h4 [&_h3]:font-display [&_h3]:text-heading [&_h3]:mt-l [&_h3]:mb-s [&_h3]:max-w-[40rem]',
               '[&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
+              // Ordered lists mirror the bullet list spacing but number their items.
+              '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-m [&_ol]:max-w-[40rem] [&_ol]:text-text',
               '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
-              '[&_h2]:max-w-[40rem] [&_h3]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem] [&_ol]:max-w-[40rem] [&_blockquote]:max-w-[40rem]',
+              // Inline emphasis: bold runs lift to the heading color; inline code
+              // drops to the mono face at a slightly smaller size so it reads as code.
+              '[&_strong]:font-semibold [&_strong]:text-heading',
+              '[&_code]:font-mono [&_code]:text-[0.9em]',
+              // Blockquote: italic, muted, held to the body measure. NO side-stripe
+              // border (an absolute-ban tell) — the italic + muted color carries it.
+              '[&_blockquote]:max-w-[40rem] [&_blockquote]:italic [&_blockquote]:text-text-muted',
+              '[&_h2]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem]',
             ]}
           >
             <Content />
@@ -341,12 +354,17 @@ const schemas = [
     </div>
 
     {/* Testimonial pull-quote (optional). Real client social proof, set
-        apart from the body as a centered editorial quote. Renders nothing
-        when the frontmatter has no testimonial, so it is safe to leave off
-        until a real quote is collected. Never fabricated. */}
+        apart from the body as an editorial quote. Renders nothing when the
+        frontmatter has no testimonial, so it is safe to leave off until a
+        real quote is collected. Never fabricated.
+
+        Left-aligned at the same measure (max-w-[40rem]) as the body prose,
+        results, and designer note above, so the page closes in alignment
+        instead of jumping to a centered block. It still reads as a pull-quote
+        through the larger display type, not through centering. */}
     {testimonial && (
       <aside class="border-t border-border py-2xl" aria-label="Client testimonial" data-reveal>
-        <figure class="ncs-container mx-auto max-w-[60ch] text-center">
+        <figure class="ncs-container max-w-[40rem]">
           <blockquote class="font-display text-h3 leading-[1.2] text-heading">
             <p>“{testimonial.quote}”</p>
           </blockquote>
@@ -408,6 +426,70 @@ const schemas = [
     )}
 
   </article>
+
+  {/* Sticky-TOC scroll-spy. Marks the TOC link for the section currently in
+      view with aria-current (which the link's aria-[current=true] classes paint
+      as text-link + font-medium). Purely additive: with JS off, no
+      IntersectionObserver, or fewer than two h2s (no TOC rendered), the TOC
+      stays a plain list of working jump links and the prose is unaffected.
+      No motion of its own, so nothing to gate for reduced-motion. */}
+  <script>
+    // Wrapped in astro:page-load so the scroll-spy re-binds after View
+    // Transitions navigations. The dataset flag keeps it from observing twice.
+    function initCaseToc() {
+      const toc = document.querySelector<HTMLElement>('[data-case-toc]');
+      if (!toc || toc.dataset.spyBound || !('IntersectionObserver' in window)) return;
+      toc.dataset.spyBound = 'true';
+
+      // Map each section slug to its TOC link, in document order.
+      const links = new Map<string, HTMLAnchorElement>();
+      toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
+        const id = a.getAttribute('data-toc-link');
+        if (id) links.set(id, a);
+      });
+      if (links.size === 0) return;
+
+      // Track which sections are currently intersecting; the topmost one wins.
+      const visible = new Set<string>();
+
+      const setCurrent = (id: string | null) => {
+        links.forEach((a, key) => {
+          if (key === id) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const id = entry.target.id;
+            if (entry.isIntersecting) visible.add(id);
+            else visible.delete(id);
+          }
+          // Pick the visible section nearest the top of the document order.
+          let topId: string | null = null;
+          for (const id of links.keys()) {
+            if (visible.has(id)) {
+              topId = id;
+              break;
+            }
+          }
+          setCurrent(topId);
+        },
+        // Bias the active zone toward the upper portion of the viewport so a
+        // heading is marked current as it reaches reading position.
+        { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
+      );
+
+      // Observe the real h2 heading elements (the MDX output ids match the slugs).
+      links.forEach((_, id) => {
+        const heading = document.getElementById(id);
+        if (heading) observer.observe(heading);
+      });
+    }
+    document.addEventListener('astro:page-load', initCaseToc);
+    initCaseToc();
+  </script>
 
   <CtaBanner title={ctaTitle} sub={ctaSub} ctaHref={ctaHref} />
 

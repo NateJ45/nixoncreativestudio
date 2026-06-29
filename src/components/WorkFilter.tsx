@@ -33,8 +33,11 @@ export default function WorkFilter({ sectors }: WorkFilterProps) {
   const [sector, setSector] = useState<string>('all');
 
   // The chip styles — pulled into one place so the render below stays
-  // focused on which one is active.
-  const chipBase = 'inline-flex items-center rounded-full border px-3 py-1 font-body text-[0.85rem] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2';
+  // focused on which one is active. The coarse-pointer padding bumps the
+  // chips to the ~44px touch target the rest of the site holds on phones
+  // and tablets, while a mouse keeps the compact density (gated on input
+  // type, not screen width, so tablets are covered too).
+  const chipBase = 'inline-flex items-center rounded-full border px-3 py-1 font-body text-[0.85rem] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 pointer-coarse:py-2.5 pointer-coarse:px-4';
   const chipOff  = 'border-border bg-bg text-text hover:bg-bg-soft';
   const chipOn   = 'border-link bg-link text-accent-foreground';
 
