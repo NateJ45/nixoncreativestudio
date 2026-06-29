@@ -192,13 +192,14 @@ const schemas = [
        animated "three-service flow" on the right (Strategy -> Web design ->
        Photography, the order the copy names), so the empty right half now carries
        a visual that illustrates the sentence. Single column below lg, where the
-       flow stacks under the copy. The headline uses its own clamp (smaller than
+       flow is hidden (it only earns its place beside the copy at lg+) and the
+       hero tightens to just the headline + sub. The headline uses its own clamp (smaller than
        the global h1) so the long title sits comfortably and never runs off the
        bottom on short or mobile screens. The flow is decorative (aria-hidden);
        the headline carries the real content and the solid heading color (no
        gradient text).
        ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-hero-heading">
+  <section class="py-xl lg:py-2xl" aria-labelledby="services-hero-heading">
     <div class="ncs-container">
       <div class="grid items-center gap-xl lg:grid-cols-[1.05fr_0.95fr]">
 
@@ -220,11 +221,12 @@ const schemas = [
           </p>
         </div>
 
-        <!-- Animated three-service flow. Decorative reinforcement of the headline
-             (aria-hidden); a light flows down a rail and the markers glow in turn,
-             top to bottom, so the visual animates "in that order". Reduced-motion
-             safe: a clean static rail + markers when motion is off. -->
-        <div class="services-flow" aria-hidden="true" data-reveal="fade" style="--reveal-delay: 300ms;">
+        <!-- Three-service flow. Decorative reinforcement of the headline
+             (aria-hidden), and the right half of the two-column hero. It only
+             earns its place beside the copy at lg+, so it is hidden below lg
+             rather than stacked under the copy on mobile (where it just repeated
+             the headline and pushed the page down). -->
+        <div class="services-flow hidden lg:block" aria-hidden="true" data-reveal="fade" style="--reveal-delay: 300ms;">
           <div class="flow-card surface-card spotlight-card hover-lift rounded-2xl" data-spotlight>
             <ol class="flow-track relative z-10">
 
