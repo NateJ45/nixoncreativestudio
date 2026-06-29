@@ -222,6 +222,17 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     text-shadow: 0 1px 14px rgba(10, 22, 40, 0.6);
   }
 
+  /* Light mode: the WebGL flow is more active/colourful now, so give the muted
+     proof line a soft LIGHT halo to keep it legible over it. The headline and
+     sub are near-black and clear the flow on their own; only this muted-grey
+     line needs the lift. Dark mode handles legibility with its scrim, so this is
+     scoped light-only. */
+  :global(html:not(.dark)) .hero-proof {
+    text-shadow:
+      0 1px 2px rgba(244, 247, 250, 0.92),
+      0 0 12px rgba(244, 247, 250, 0.75);
+  }
+
   /* "one person" links to the About page. It keeps its sky-blue emphasis at rest
      (it already read as the highlight in the line) and gains a clear underline on
      hover/focus so it reads as a link, with a sky focus ring (AA on navy). */
@@ -385,11 +396,24 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
      the right so the far images stay crisp. Tuned so the headline's right
      edge still sits over enough navy to read with its shadow.
      ---------------------------------------------------------------------- */
-  /* Scrim: dark mode only. In light mode the hero surface is light and the WebGL
-     fades to the light base under the headline, so the dark headline is legible
-     with no dimming veil at all. */
+  /* Mobile, light mode: a soft light veil behind the copy, the light-surface
+     counterpart to the dark navy scrim below. The phone backdrop (z-1) still
+     shows through under the headline (masked out up top) and low near the
+     marquee, but the dark copy band sits over enough bg-soft to stay legible,
+     the same job the navy veil does in dark mode. Without it, the brighter
+     backdrop made light mode noticeably harder to read than dark. Reset to
+     transparent on desktop (the lg block below), where the device sits to the
+     RIGHT, not under the copy, and the WebGL fade carries the headline. */
   .hero-scrim {
-    background: transparent;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 22%,
+      color-mix(in oklab, var(--color-bg-soft) 82%, transparent) 38%,
+      color-mix(in oklab, var(--color-bg-soft) 82%, transparent) 66%,
+      color-mix(in oklab, var(--color-bg-soft) 38%, transparent) 84%,
+      transparent 96%
+    );
   }
   :global(.dark) .hero-scrim {
     /* Mobile: a cohesive navy veil so the hero reads as one dark field rather
@@ -406,6 +430,12 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     );
   }
   @media (min-width: 64rem) {
+    /* Desktop light: no veil. The device scene sits to the RIGHT (not under the
+       copy) and the WebGL fades to the light base under the headline, so the
+       mobile light veil above is reset away here. */
+    .hero-scrim {
+      background: transparent;
+    }
     /* Desktop: a softened left scrim so the WebGL flow can fill basically the
        whole hero in dark mode while the headline stays legible. Semi-opaque navy
        under the headline (not the old solid column), fading to clear before the

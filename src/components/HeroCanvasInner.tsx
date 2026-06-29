@@ -77,23 +77,25 @@ const fragmentShader = /* glsl */ `
     // swaps the same field to a soft, light pastel wash for light mode (a very
     // light blue-white base with gentle sky/blue variation, so it reads bright
     // and airy rather than as dark clouds on white).
-    vec3 base  = mix(vec3(0.925, 0.946, 0.980), vec3(0.039, 0.086, 0.157), uDark);
-    vec3 blue  = mix(vec3(0.690, 0.808, 0.940), vec3(0.204, 0.471, 0.741), uDark);
-    vec3 sky   = mix(vec3(0.769, 0.878, 0.972), vec3(0.251, 0.667, 0.929), uDark);
-    vec3 amber = mix(vec3(1.000, 0.902, 0.757), vec3(1.000, 0.639, 0.204), uDark);
+    vec3 base  = mix(vec3(0.917, 0.940, 0.978), vec3(0.039, 0.086, 0.157), uDark);
+    vec3 blue  = mix(vec3(0.560, 0.730, 0.918), vec3(0.204, 0.471, 0.741), uDark);
+    vec3 sky   = mix(vec3(0.640, 0.812, 0.960), vec3(0.251, 0.667, 0.929), uDark);
+    vec3 amber = mix(vec3(1.000, 0.860, 0.660), vec3(1.000, 0.639, 0.204), uDark);
 
     vec3 col = base;
     col = mix(col, blue, clamp(f * 1.5, 0.0, 1.0));
     col = mix(col, sky, clamp(pow(f, 2.0) * 1.4, 0.0, 1.0) * 0.6);
-    col = mix(col, amber, clamp(q.y * 0.5, 0.0, 1.0) * mix(0.06, 0.10, uDark));
-    // Bright flowing streaks along the crests: strong on dark, very gentle on
-    // light (where adding light sky would only wash toward white).
-    col += sky * smoothstep(0.74, 1.0, f) * mix(0.05, 0.18, uDark);
+    col = mix(col, amber, clamp(q.y * 0.5, 0.0, 1.0) * mix(0.10, 0.10, uDark));
+    // Bright flowing streaks along the crests: strong on dark, and now clearly
+    // present on light too (bumped from near-invisible) so the flow visibly moves
+    // in light mode. These lighten the crests, so they add motion without
+    // darkening the area under the copy.
+    col += sky * smoothstep(0.74, 1.0, f) * mix(0.14, 0.18, uDark);
 
     // Soft sky bloom that tracks the cursor (aspect-corrected).
     vec2 m  = vec2(uMouse.x * aspect, uMouse.y);
     vec2 pu = vec2(uv.x * aspect, uv.y);
-    col = mix(col, sky, smoothstep(0.45, 0.0, distance(pu, m)) * mix(0.10, 0.18, uDark));
+    col = mix(col, sky, smoothstep(0.45, 0.0, distance(pu, m)) * mix(0.16, 0.18, uDark));
 
     // Vignette: nearly flat now so the flow fills the hero edge to edge (a soft
     // moody falloff on dark, barely-there on light so it never greys the bright
