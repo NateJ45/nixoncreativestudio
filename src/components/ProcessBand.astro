@@ -2,31 +2,40 @@
 // Safe to edit. The four steps and the closing CTA copy below are content;
 // rewrite in place when the process or the offer sharpens.
 /* ============================================================================
-   Process Band (Act 3 of the three-act homepage)
+   ProcessBand — the four-step "how we work" sequence
    ============================================================================
-   The closing band of the homepage. Combines the four-step process and the
-   project-inquiry CTA into a single dark navy surface so the page ends on
-   one decisive block rather than three thin sections stacked together.
+   ONE component, two placements, so the process reads identically everywhere:
 
-   Why one band and not two: the old layout had Process on a soft tinted
-   band, then Testimonials on white, then CtaBanner on navy, then Footer
-   on navy. Two navy bands stacked at the bottom read as one continuous
-   dark wall but with a visual seam in the middle. Folding Process and
-   CTA into one navy band gives the bottom of the page one strong
-   identity instead of a layered stack.
+     - Homepage close:  <ProcessBand />
+         The navy band-themed closing band with the inquiry CTA folded in
+         (variant 'band', showCta true). Ends the page on one decisive block.
 
-   Numbering note: the four step numbers ARE the only deliberately
-   numbered sequence on the homepage. They earn their place because the
-   process is genuinely ordered (each step depends on the previous one).
-   The outer section has no number; that was the eyebrow grammar the
-   critique flagged.
+     - /services mid-page:  <ProcessBand variant="soft" showCta={false} headingId="process-heading" />
+         The same numbered connector-rail steps on the soft surface, no CTA.
 
-   Component lives separately from the existing Process.astro because
-   that file is still imported by the /services page where the
-   no-CTA, soft-band version is the right fit.
+   Both render the same treatment: four numbered nodes on a single connector
+   line that draws across on scroll. The four step numbers are the ONE
+   deliberately numbered sequence on the site (the process is genuinely
+   ordered); the section itself carries no number.
+
+   This replaces the old separate Process.astro, which used a different
+   (detached top-rule + bare-numeral) treatment and made the process look like
+   two different things across a two-click journey.
    ============================================================================ */
 
 import { buttonVariants } from './ui/button';
+
+interface Props {
+  /** 'band' = navy band-themed closing band (homepage); 'soft' = bg-soft mid-page section (/services). */
+  variant?: 'band' | 'soft';
+  /** Render the closing inquiry CTA tail. Defaults on (the homepage close). */
+  showCta?: boolean;
+  /** id on the <h2> so a parent section's aria-labelledby resolves. */
+  headingId?: string;
+}
+
+const { variant = 'band', showCta = true, headingId = 'process-band-heading' } = Astro.props;
+const isBand = variant === 'band';
 
 const steps = [
   {
@@ -58,14 +67,17 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
 ---
 
 <section
-  class="band-themed process-band py-2xl"
-  aria-labelledby="process-band-heading"
+  class:list={[
+    'process-band py-2xl',
+    isBand ? 'band-themed process-band--closing' : 'bg-bg-soft',
+  ]}
+  aria-labelledby={headingId}
 >
   <div class="ncs-container relative z-10 flex flex-col gap-2xl">
 
     <!-- Header. Title carries the weight; no eyebrow, no number. -->
     <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
-      <h2 id="process-band-heading" class="text-heading">How we work</h2>
+      <h2 id={headingId} class="text-heading">How we work</h2>
       <p class="text-lg leading-[1.55] text-text-muted">
         Four steps, in order. Everything else follows from the first conversation.
       </p>
@@ -73,9 +85,8 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
 
     <!-- Four process steps as numbered nodes on a single connector line. The
          one connector (drawn across on scroll at lg) carries the "ordered
-         sequence" meaning, replacing the four separate top-rules and the
-         doubled ghost+mono numerals from before. Grid: 1 col on mobile, 2 at
-         sm, the full 4-across row at lg where the connector lives. -->
+         sequence" meaning. Grid: 1 col on mobile, 2 at sm, 4 across at lg
+         where the connector lives. -->
     <ol class="process-steps relative grid list-none gap-l p-0 sm:grid-cols-2 lg:grid-cols-4">
 
       <!-- Single connector rail behind the number nodes (lg row only). Draws
@@ -100,25 +111,25 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
       ))}
     </ol>
 
-    <!-- Closing CTA. Title + sub on the left, button on the right.
+    <!-- Closing CTA (homepage). Title + sub on the left, button on the right.
          flex-wrap so the button drops below on narrow screens. -->
-    <div
-      class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
-      data-reveal
-    >
+    {showCta && (
+      <div
+        class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
+        data-reveal
+      >
+        <div class="flex max-w-[50ch] flex-col gap-s">
+          <p class="text-h3 leading-[1.1] text-heading font-display">{ctaTitle}</p>
+          <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
+        </div>
 
-      <div class="flex max-w-[50ch] flex-col gap-s">
-        <p class="text-h3 leading-[1.1] text-heading font-display">{ctaTitle}</p>
-        <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
+        <span class="inline-block">
+          <a href="/contact" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
+            Start a project
+          </a>
+        </span>
       </div>
-
-      <span class="inline-block">
-        <a href="/contact" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
-          Start a project
-        </a>
-      </span>
-
-    </div>
+    )}
 
   </div>
 </section>
@@ -126,7 +137,7 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
 <style>
   /* Single connector rail behind the number nodes. Sits at the vertical
      centre of the h-9 (2.25rem) badges and reads as one timeline through the
-     ordered steps, replacing four detached top-rules. */
+     ordered steps. */
   .process-connector {
     position: absolute;
     top: 1.125rem;
@@ -139,7 +150,7 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
     z-index: 0;
   }
 
-  /* Draw the rail across as the band scrolls into view. Progressive
+  /* Draw the rail across as the section scrolls into view. Progressive
      enhancement: only where scroll-timeline is supported and motion is
      allowed; otherwise the rail is simply fully drawn from first paint. */
   @media (prefers-reduced-motion: no-preference) {
@@ -157,12 +168,12 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
     to   { transform: scaleX(1); }
   }
 
-  /* Dark mode: fade the band's bottom to solid navy so it merges into the navy
-     footer below instead of ending on the aurora's amber glow, which read as an
-     abrupt seam. Sits above the aurora (z 0 vs the ::before at z -1) and below
-     the content (z 10). Light mode keeps its light surface meeting the navy
-     footer as a deliberate section change, so no fade there. */
-  :global(.dark) .process-band::after {
+  /* Closing band only (homepage): in dark mode fade the band's bottom to solid
+     navy so it merges into the navy footer below instead of ending on the
+     aurora's amber glow. Sits above the aurora (z 0 vs the ::before at z -1)
+     and below the content (z 10). The soft /services variant is mid-page, so it
+     gets no fade. */
+  :global(.dark) .process-band--closing::after {
     content: "";
     position: absolute;
     inset-inline: 0;

@@ -14,8 +14,8 @@
      6. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
      7. CTA banner
 
-   The Process component is reused, not duplicated. Edit Process.astro
-   once and both the homepage and this page update.
+   The process steps reuse ProcessBand (the homepage's closing band) in its
+   soft, no-CTA variant, so the four steps read identically across the site.
 
    Motion vocabulary used here (all reduced-motion safe, defined globally):
      data-reveal / data-reveal="left|right"  scroll fade+rise
@@ -33,7 +33,7 @@
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Process from '../components/Process.astro';
+import ProcessBand from '../components/ProcessBand.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import { site } from '../data/site';
 // Tiers + add-ons come from the shared single source of truth (also used by
@@ -335,8 +335,10 @@ const schemas = [
   </section>
 
 
-  <!-- Process recap. Reuses the homepage Process component verbatim. -->
-  <Process />
+  <!-- Process recap. The same ProcessBand the homepage closes with, in its
+       soft mid-page variant with no CTA, so the four steps read identically
+       across the site. -->
+  <ProcessBand variant="soft" showCta={false} headingId="process-heading" />
 
 
   <!-- ----------------------------------------------------------------------
