@@ -17,6 +17,13 @@
    the CSS loop is seamless; the second copy is aria-hidden + removed from the tab
    order, so assistive tech and the keyboard only ever see one set.
 
+   Seamless on ANY width: two copies are only gap-free while one copy is at least
+   as wide as the viewport. On a wide screen one copy is narrower, so the loop
+   would open a gap at the tail before restarting. The script below progressively
+   tops the track up with extra (aria-hidden) copies until the repeating half
+   always exceeds the viewport, and pins a constant scroll speed. Without JS the
+   two-copy base still loops seamlessly on the common case (viewport <= one copy).
+
    Used at the bottom of Hero.astro.
    ============================================================================ */
 
@@ -40,7 +47,7 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
 ---
 
 <nav class="client-marquee" aria-label="Recent clients">
-  <div class="client-track">
+  <div class="client-track" data-unit={clients.length}>
     {/* Real, focusable links (the set assistive tech and the keyboard use). */}
     {clients.map((c) => (
       <a class={itemClass} href={`/work/${c.slug}/`}>{c.name}</a>
@@ -132,3 +139,83 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
     to   { transform: translateX(-50%); }
   }
 </style>
+
+<script>
+  /* Make the ticker loop seamlessly at ANY width. The CSS animates two copies by
+     -50%, which is gap-free only while ONE copy is at least as wide as the
+     viewport. On a wide screen one copy is narrower, so the loop opens a gap at
+     the tail before restarting. This tops the track up with extra copies until
+     one half is wider than the viewport (the two halves stay identical, so the
+     exact -50% landing still holds), and sets the duration from the distance so
+     the scroll speed stays constant no matter how many copies there are.
+
+     Runs on astro:page-load (survives View Transitions) and on resize. Skipped
+     under reduced motion, where the ticker is intentionally static. */
+  const MARQUEE_SPEED = 46; // px per second, matching the original ~48s-per-copy feel
+
+  function fitClientMarquee(marquee: HTMLElement) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const track = marquee.querySelector<HTMLElement>('.client-track');
+    const unit = Number(track?.dataset.unit || '0');
+    if (!track || unit < 1 || track.children.length < unit) return;
+
+    // The canonical copy is the first `unit` links (the real, focusable set).
+    const base = Array.from(track.children).slice(0, unit);
+    const first = track.children[0] as HTMLElement | undefined;
+    const copy2first = track.children[unit] as HTMLElement | undefined;
+    if (!first || !copy2first) return;
+
+    // One copy's layout width (offsetLeft is unaffected by the animation transform).
+    const copyWidth = copy2first.offsetLeft - first.offsetLeft;
+    if (copyWidth <= 0) return;
+
+    // Copies per half so one half exceeds the viewport; total stays even so the
+    // two halves are identical and -50% lands exactly on the loop point.
+    const perHalf = Math.floor(marquee.clientWidth / copyWidth) + 1;
+    const target = perHalf * 2;
+
+    let copies = Math.round(track.children.length / unit);
+    while (copies < target) {
+      const frag = document.createDocumentFragment();
+      for (const node of base) {
+        const clone = node.cloneNode(true) as HTMLElement;
+        clone.setAttribute('aria-hidden', 'true');
+        clone.setAttribute('tabindex', '-1');
+        frag.appendChild(clone);
+      }
+      track.appendChild(frag);
+      copies++;
+    }
+    while (copies > target && copies > 2) {
+      for (let i = 0; i < unit; i++) track.lastElementChild?.remove();
+      copies--;
+    }
+
+    // One -50% cycle now covers one half; scale the duration to its width so the
+    // pixels-per-second speed is the same on a phone and an ultrawide.
+    track.style.animationDuration = `${Math.max(20, track.scrollWidth / 2 / MARQUEE_SPEED)}s`;
+  }
+
+  function initClientMarquees() {
+    document.querySelectorAll<HTMLElement>('.client-marquee').forEach((marquee) => {
+      // Bebas changes the measured width, so wait for it before measuring.
+      if (document.fonts?.ready) document.fonts.ready.then(() => fitClientMarquee(marquee));
+      else fitClientMarquee(marquee);
+    });
+  }
+
+  // A single debounced resize handler re-fits every marquee, registered once.
+  if (!(window as unknown as { __clientMarqueeResize?: boolean }).__clientMarqueeResize) {
+    (window as unknown as { __clientMarqueeResize?: boolean }).__clientMarqueeResize = true;
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(
+        () => document.querySelectorAll<HTMLElement>('.client-marquee').forEach(fitClientMarquee),
+        200,
+      );
+    });
+  }
+
+  document.addEventListener('astro:page-load', initClientMarquees);
+</script>
