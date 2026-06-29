@@ -108,18 +108,16 @@ const [leadCategory, ...restCategories] = categories;
       <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90"></div>
     </div>
 
-    <!-- Foreground copy cluster, anchored to the bottom of the frame. -->
+    <!-- Foreground copy cluster, anchored to the bottom of the frame. Opens
+         straight on the headline (no tracked-uppercase eyebrow); the Cincinnati
+         base reads in the lede below. -->
     <div class="ncs-container relative z-10 py-2xl">
-
-      <p class="mb-m text-primary-foreground/80" data-reveal="fade">
-        <span class="text-sm font-semibold uppercase tracking-[0.14em]">Cincinnati region</span>
-      </p>
 
       <h1
         id="photography-hero-heading"
         class="mb-m max-w-[20ch] text-primary-foreground leading-[0.92]"
         data-reveal
-        style="--reveal-delay: 120ms; text-wrap: balance;"
+        style="text-wrap: balance;"
       >
         Photography that matches the{' '}
         <span class="text-tertiary">website it lives on.</span>
@@ -128,9 +126,9 @@ const [leadCategory, ...restCategories] = categories;
       <p
         class="max-w-[58ch] text-lg leading-[1.6] text-primary-foreground/90"
         data-reveal
-        style="--reveal-delay: 240ms;"
+        style="--reveal-delay: 120ms;"
       >
-        Most of these photos came from the same projects as the web work. Same person designed the site and showed up with the camera, so the imagery and the layout speak the same language.
+        Events, portraits, and environments for organizations across the Cincinnati region. Most of these photos came from the same projects as the web work. Same person designed the site and showed up with the camera, so the imagery and the layout speak the same language.
       </p>
 
     </div>
@@ -143,7 +141,9 @@ const [leadCategory, ...restCategories] = categories;
       <!-- ------------------------------------------------------------------
            Category overview. Asymmetric spotlight cards: the lead category
            fills a tall feature card, the rest stack beside it. Each shows its
-           newest photo behind the label and jumps to that category's gallery.
+           newest photo behind the label and a small count, then jumps to that
+           category's gallery. The full blurb lives on the gallery section header
+           below, so it isn't repeated here.
            ------------------------------------------------------------------ -->
       <section class="bg-bg-soft py-2xl" aria-label="Browse photography by category">
         <div class="ncs-container">
@@ -165,13 +165,11 @@ const [leadCategory, ...restCategories] = categories;
                   sizes="(min-width: 1024px) 50vw, 100vw"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10" aria-hidden="true"></div>
-                <div class="relative z-10 flex h-full flex-col justify-end gap-s p-l text-primary-foreground">
+                <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
                   <h2 class="text-h3 text-primary-foreground">{leadCategory.title}</h2>
-                  <p class="max-w-[40ch] leading-[1.5] text-primary-foreground/90">{leadCategory.body}</p>
-                  <span class="mt-s inline-flex items-center gap-s font-body font-semibold text-primary-foreground">
-                    <span>Jump to gallery</span>
-                    <span aria-hidden="true" class="card-jump-arrow">→</span>
-                  </span>
+                  <p class="font-mono text-sm text-primary-foreground/80">
+                    {leadCategory.photos.length} {leadCategory.photos.length === 1 ? 'photo' : 'photos'}
+                  </p>
                 </div>
               </a>
             </li>
@@ -193,13 +191,11 @@ const [leadCategory, ...restCategories] = categories;
                     sizes="(min-width: 1024px) 25vw, 100vw"
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10" aria-hidden="true"></div>
-                  <div class="relative z-10 flex h-full flex-col justify-end gap-s p-l text-primary-foreground">
+                  <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
                     <h2 class="text-h3 text-primary-foreground">{category.title}</h2>
-                    <p class="max-w-[44ch] leading-[1.5] text-primary-foreground/90">{category.body}</p>
-                    <span class="mt-s inline-flex items-center gap-s font-body font-semibold text-primary-foreground">
-                      <span>Jump to gallery</span>
-                      <span aria-hidden="true" class="card-jump-arrow">→</span>
-                    </span>
+                    <p class="font-mono text-sm text-primary-foreground/80">
+                      {category.photos.length} {category.photos.length === 1 ? 'photo' : 'photos'}
+                    </p>
                   </div>
                 </a>
               </li>
@@ -214,14 +210,15 @@ const [leadCategory, ...restCategories] = categories;
            react-photo-album (justified grid) + yet-another-react-lightbox.
            ------------------------------------------------------------------ -->
       {categories.map((category) => (
-        <section class="scroll-mt-l py-2xl" id={category.id} aria-labelledby={`${category.id}-heading`}>
+        <section class="scroll-mt-2xl py-2xl" id={category.id} aria-labelledby={`${category.id}-heading`}>
           <div class="ncs-container">
             <header class="mb-l flex flex-col gap-s" data-reveal>
               <h2 id={`${category.id}-heading`} class="text-heading">{category.title}</h2>
               <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
             </header>
             <div data-reveal style="--reveal-delay: 120ms;">
-              <PhotoGallery client:load photos={category.photos} />
+              {/* client:visible so each gallery hydrates only as it scrolls into view */}
+              <PhotoGallery client:visible photos={category.photos} />
             </div>
           </div>
         </section>
@@ -264,26 +261,3 @@ const [leadCategory, ...restCategories] = categories;
   />
 
 </BaseLayout>
-
-<style>
-  /* Category card "Jump to gallery" arrow. Slides right on hover/focus of
-     the parent card. Reduced-motion users get no transition. */
-  .card-jump-arrow {
-    display: inline-block;
-    transition: transform 150ms ease;
-  }
-  .group:hover .card-jump-arrow,
-  .group:focus-visible .card-jump-arrow {
-    transform: translateX(0.25rem);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .card-jump-arrow {
-      transition: none;
-    }
-    .group:hover .card-jump-arrow,
-    .group:focus-visible .card-jump-arrow {
-      transform: none;
-    }
-  }
-</style>

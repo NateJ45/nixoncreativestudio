@@ -24,6 +24,8 @@ import { useState } from 'react';
 import {
   RowsPhotoAlbum,
   type Photo,
+  type RenderImageContext,
+  type RenderImageProps,
 } from 'react-photo-album';
 import 'react-photo-album/rows.css';
 
@@ -34,10 +36,11 @@ import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 
 // Local extension of the react-photo-album Photo type to carry an
-// optional caption. The lightbox renders captions from `title` and
-// `description`, and react-photo-album passes the original Photo to its
+// optional caption. react-photo-album passes the original Photo to its
 // click handler, so we pass the array through and let the lightbox read
-// the same shape.
+// the same shape. `title` is optional: callers usually only set `alt`
+// (the photo's name) and `caption`; the lightbox below falls back to
+// `alt` for its title so a real label always shows.
 export interface GalleryPhoto extends Photo {
   alt?:     string;
   title?:   string;
@@ -49,6 +52,43 @@ export interface PhotoGalleryProps {
   /** Target row height in pixels for react-photo-album's rows layout.
       Lower = denser grid, higher = bigger photos. Defaults to 300. */
   targetRowHeight?: number;
+}
+
+// Custom grid-image renderer: each photo starts transparent and fades in
+// once the browser has decoded it (onLoad), so slow connections get a soft
+// reveal instead of a cold pop. Already-cached images that fire load before
+// React attaches the handler are caught by checking `complete` on mount via
+// the ref callback. Reduced-motion users get an instant show (the CSS
+// transition is disabled globally in globals.css under the reduce query).
+function renderFadeImage(
+  { alt = '', title, sizes }: RenderImageProps,
+  { photo, width, height }: RenderImageContext<GalleryPhoto>,
+) {
+  return (
+    <img
+      src={photo.src}
+      alt={alt}
+      title={title}
+      sizes={sizes}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+      style={{
+        display: 'block',
+        width: '100%',
+        height: 'auto',
+        opacity: 0,
+        transition: 'opacity 400ms ease',
+      }}
+      ref={(node) => {
+        if (node?.complete) node.style.opacity = '1';
+      }}
+      onLoad={(e) => {
+        e.currentTarget.style.opacity = '1';
+      }}
+    />
+  );
 }
 
 export default function PhotoGallery({
@@ -66,6 +106,7 @@ export default function PhotoGallery({
         onClick={({ index }) => setIndex(index)}
         targetRowHeight={targetRowHeight}
         spacing={12}
+        render={{ image: renderFadeImage }}
       />
 
       <Lightbox
@@ -74,14 +115,15 @@ export default function PhotoGallery({
           width:       p.width,
           height:      p.height,
           alt:         p.alt,
-          title:       p.title,
+          // Fall back to the photo's alt (its name) when no explicit title is
+          // set, so the lightbox always shows a real label above the caption.
+          title:       p.title ?? p.alt,
           description: p.caption,
         }))}
         open={index >= 0}
         index={index >= 0 ? index : 0}
         close={() => setIndex(-1)}
         plugins={[Zoom, Thumbnails]}
-        // Accessible labels for the lightbox controls.
         controller={{ closeOnBackdropClick: true }}
       />
     </>
