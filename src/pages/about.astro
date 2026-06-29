@@ -21,9 +21,16 @@
 
    Section rhythm is one token (py) plus a single border-t hairline opening every
    section after the masthead, so the page is one continuous ruled column instead
-   of a stack of slabs. The page is ONE surface in both themes: no full-bleed
-   background bands mid-page (the old bg-mesh-soft seam is gone). The only surface
-   change is the single Currently .surface-card and the closing CtaBanner.
+   of a stack of slabs. The page is mostly ONE surface in both themes: the ruled
+   editorial column carries no full-bleed background bands mid-page (the old
+   bg-mesh-soft seam is gone). The inset surface changes are the single Currently
+   .surface-card and, near the foot, the Testimonials band.
+
+   Two deliberate full-bleed exceptions sit at the TAIL of the page, after the
+   ruled column ends: the Testimonials .band-themed band (the .band-themed surface
+   is owned by Testimonials.astro itself, not set here) and the closing CtaBanner.
+   Both are intentional closing beats, not mid-column slabs, so the editorial
+   one-surface read holds through every section above them.
 
    Motion: the existing data-reveal / spotlight vocabulary only, reduced-motion
    safe. No scroll-spy, no sticky positioning, no new JS.
@@ -122,11 +129,15 @@ const booking = [
   { status: 'limited' as const, label: 'Photography', detail: 'A few shoot days each month, fit around the web work, for portraits, families, events, and the brand photography that pairs with a new site.' },
 ];
 const statusMeta = {
-  // Status text must clear AA on the now-sheet surface. The brand amber
-  // (--tertiary) only passes on the navy heroes, not on light, so "limited" uses
-  // amber-700 / amber-400, mirroring the emerald pattern. The dot stays brand.
-  open:    { word: 'Open',    dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-400' },
-  limited: { word: 'Limited', dot: 'bg-tertiary',    text: 'text-amber-700 dark:text-amber-400' },
+  // Status text must clear AA (4.5:1, it is text-xs small text) on the now-sheet
+  // .surface-card in BOTH themes. The brand amber (--tertiary) only passes on the
+  // navy heroes, not on light, so "limited" uses amber-700 on light, mirroring the
+  // emerald pattern. In dark mode the shades are lifted to amber-300 / emerald-300:
+  // lighter shades on the dark navy card give more headroom over the 4.5:1 line
+  // than the -400s, so the small chip text stays comfortably legible. The dot color
+  // stays brand and is decorative; the readable word carries the meaning, never color.
+  open:    { word: 'Open',    dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
+  limited: { word: 'Limited', dot: 'bg-tertiary',    text: 'text-amber-700 dark:text-amber-300' },
 };
 
 // Books / longer-form pieces, and skills I'm sharpening.
@@ -193,7 +204,10 @@ const schemas = [
             A one-person studio for <span class="text-link">organizations that take their work seriously.</span>
           </h1>
 
-          <div class="mt-l grid items-start gap-xl min-[52rem]:grid-cols-[1.4fr_1fr]">
+          <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
+               rail collapses at, so the portrait never goes side-by-side before the
+               rail is beside it (no awkward mid-range two-column-before-the-rail). -->
+          <div class="mt-l grid items-start gap-xl lg:grid-cols-[1.4fr_1fr]">
             <p
               class="max-w-[58ch] text-lg leading-[1.6] text-text"
               data-reveal="right"
@@ -211,7 +225,7 @@ const schemas = [
                 src={headshot}
                 alt="Nathan Nixon, smiling outdoors"
                 widths={[288, 432, 576, 864]}
-                sizes="(min-width: 52rem) 18rem, 60vw"
+                sizes="(min-width: 64rem) 18rem, 60vw"
                 loading="eager"
                 class="aspect-[4/5] w-full rounded-xl border border-border object-cover shadow-lg ring-1 ring-black/5"
               />
@@ -514,10 +528,12 @@ const schemas = [
 
   <!-- Client testimonials. Renders only when a case study carries a real
        `testimonial` in its frontmatter; otherwise this is silent (no empty
-       block, no fabricated quote). -->
+       block, no fabricated quote). This is the first of the two deliberate
+       full-bleed beats at the tail of the page (after the ruled column ends):
+       its .band-themed surface is set inside Testimonials.astro, not here. -->
   <Testimonials />
 
-  <!-- Closing CTA: the one deliberate full-bleed break, outside the grid. -->
+  <!-- Closing CTA: the second deliberate full-bleed break, outside the grid. -->
   <CtaBanner
     title="Want to talk about a project?"
     sub="I take on a small number of projects each quarter. The earlier we talk, the easier it is to schedule the work."
