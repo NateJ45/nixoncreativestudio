@@ -1,65 +1,148 @@
 ---
 // Safe to edit. The numbers come from src/data/pricing.ts (the single source
-// of truth shared with /services); the copy below is the only content here.
+// of truth shared with /services); the copy below (the value floor + the
+// reassurance line) is the only content authored here.
 /* ============================================================================
-   Pricing Teaser (slim "What it costs" band on the homepage)
+   Pricing Teaser ("What it costs" band on the homepage)
    ============================================================================
-   Sits between Selected Work and the Process Band. A deliberately lightweight
-   band: it surfaces the three web-tier floors so a visitor can size up the fit
-   at a glance, then routes them to /services for the full pricing, add-ons,
-   and the justification copy.
+   Sits between Selected Work and the Process Band. Goal: make the prices feel
+   EARNED, not read as sticker shock. Three moves do that:
 
-   Why an editorial hairline row, not three spotlight cards: the old homepage
-   leaned on stacked card grids, which an impeccable critique flagged as the
-   loudest AI tell on the page. This uses the same hairline-ruled treatment as
-   the /about principles and the /services justification block, so it reads as
-   a quiet, considered row rather than a pricing-table sales slab.
+     1. A value floor first. Before any number, one line of what EVERY build
+        includes whatever the tier (own it, 100/100 accessible, strategy + a CMS,
+        one person start to finish). The price is then read against the value,
+        never in a vacuum.
+     2. An anchored progression, not a card slab. The three tiers are a
+        hairline-ruled editorial row (NOT three identical elevated cards, the AI
+        pricing-table tell). The Signature tier is the anchor: an accent top rule,
+        a "where most projects land" line, and a brighter price draw the eye to
+        the recommended scope; the other two stay quiet. Each tier carries its
+        typical range and its scope points so the number has substance.
+     3. A reassurance line. "Starting point / free first conversation / monthly
+        payments" removes the one-big-wall feeling right before the CTA.
 
-   Surface: the base background. It sits between the light Selected Work and the
-   themed Process Band, so a plain surface keeps the page rhythm (no competing
-   band). Numbers are static (no countup) to keep the band slim; /services
-   carries the animated version. Reduced-motion safe via the shared data-reveal.
+   Motion: the prices count up on scroll (real value is the static fallback, so
+   no-JS and crawlers see the true number); staggered reveals via the shared
+   data-reveal. All reduced-motion safe. A soft brand glow (.bg-mesh-soft) gives
+   the band atmosphere without turning it into another full themed band (the
+   Process Band below already owns that), so the page rhythm holds.
    ============================================================================ */
 
 import { webTiers } from '../data/pricing';
+
+// The value floor: what every build includes regardless of tier. Stated once,
+// above the prices, so the cost is always read against the value. Every claim is
+// true and matches the /services justification copy; these are cross-cutting
+// guarantees, deliberately distinct from the per-tier scope points below.
+const includes = [
+  'A custom design, yours to keep',
+  '100 / 100 accessibility',
+  'Strategy and a content system, included',
+  'One person, start to finish',
+];
 ---
 
-<section class="py-2xl" aria-labelledby="home-pricing-heading">
+<section class="pricing-teaser bg-mesh-soft py-2xl" aria-labelledby="home-pricing-heading">
   <div class="ncs-container">
 
     <!-- Header. Title carries it; the sub does the explaining an eyebrow would
          otherwise fake. Matches the Selected Work / Process Band header grammar. -->
-    <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+    <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
       <h2 id="home-pricing-heading">What it costs</h2>
       <p class="text-lg leading-[1.55] text-text-muted">
         Honest from the first conversation, so you can size up the fit before we ever talk.
       </p>
     </header>
 
-    <!-- Three tier floors as a hairline-ruled editorial row: name, from $X, and
-         one line of who it's for. No cards, no elevation, no numbered eyebrow.
-         Three across at md, stacked on mobile. -->
+    <!-- Value floor: what every build includes, whatever the tier. Read first so
+         the prices below land against the value, not in a vacuum. An inline
+         editorial row with accent markers, not cards. -->
+    <div class="mb-2xl" data-reveal style="--reveal-delay: 80ms;">
+      <p class="mb-s font-semibold text-text">Every build includes, whatever the tier:</p>
+      <ul class="flex flex-wrap gap-x-l gap-y-2 p-0 leading-[1.4] text-text-muted">
+        {includes.map((item) => (
+          <li class="flex items-center gap-s">
+            <span
+              class="inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+              aria-hidden="true"
+            ></span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- The three tiers as a hairline-ruled progression (no card slab). The
+         Signature anchor carries an accent top rule, a "where most projects land"
+         line, and a brighter accent price so the recommended scope draws the eye;
+         the other two stay quiet on a 1px hairline. Prices count up on scroll,
+         with the real number as the static fallback. -->
     <ul class="grid list-none gap-l p-0 md:grid-cols-3">
       {webTiers.map((tier, index) => (
         <li
-          class="flex flex-col gap-2 border-t border-border pt-m"
+          class:list={[
+            'pricing-tier flex flex-col gap-s pt-m',
+            tier.highlighted ? 'pricing-tier--anchor' : 'border-t border-border',
+          ]}
           data-reveal
           style={`--reveal-delay: ${index * 110}ms;`}
         >
           <h3 class="font-display text-h5 text-heading">{tier.name}</h3>
+
+          {/* Caption row, present on every tier so the prices below stay aligned
+              across the three columns. The anchor shows its "where most projects
+              land" badge in accent so it reads as the recommendation; the others
+              show who the tier is for. */}
+          <p
+            class:list={[
+              'text-sm',
+              tier.highlighted ? 'font-semibold text-link' : 'text-text-muted',
+            ]}
+          >
+            {tier.highlighted && tier.badge ? tier.badge : tier.who}
+          </p>
+
           <p class="flex items-baseline gap-xs">
             <span class="text-sm font-medium text-text-muted">from</span>
-            <span class="font-display text-h3 leading-none text-link">
-              ${tier.priceFrom.toLocaleString()}{tier.priceSuffix}
+            <span
+              class:list={[
+                'font-display text-h2 leading-none',
+                tier.highlighted ? 'text-accent' : 'text-link',
+              ]}
+            >
+              $<span
+                data-countup
+                data-countup-to={tier.priceFrom}
+                data-countup-duration="1200"
+              >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
             </span>
           </p>
-          <p class="text-text-muted">{tier.who}</p>
+          <p class="text-sm text-text-muted">{tier.range}</p>
+
+          {/* Scope points: what grows at this tier. The cross-cutting guarantees
+              live in the value floor above, so these stay about scale. */}
+          <ul class="mt-xs flex list-none flex-col gap-2 p-0 text-sm leading-[1.45] text-text">
+            {tier.features.map((feature) => (
+              <li class="flex items-start gap-s">
+                <span
+                  class="mt-[0.4em] inline-block h-[0.35rem] w-[0.35rem] shrink-0 rounded-full bg-accent/70"
+                  aria-hidden="true"
+                ></span>
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
         </li>
       ))}
     </ul>
 
-    <!-- Route to the full pricing, add-ons, and justification copy on /services. -->
-    <div class="mt-xl" data-reveal style="--reveal-delay: 200ms;">
+    <!-- Reassurance + route to the full pricing, add-ons, and justification copy
+         on /services. The "starting point / free / monthly payments" line takes
+         the one-big-wall feeling out before the CTA. -->
+    <div class="mt-2xl flex flex-col gap-s" data-reveal style="--reveal-delay: 220ms;">
+      <p class="max-w-[62ch] leading-[1.6] text-text-muted">
+        Every number is a starting point. The first conversation is free and ends with an honest ballpark, and larger projects can split into monthly payments.
+      </p>
       <a class="card-link text-lg" href="/services/">
         See full pricing and services
       </a>
@@ -67,3 +150,12 @@ import { webTiers } from '../data/pricing';
 
   </div>
 </section>
+
+<style>
+  /* The Signature anchor: a 2px accent top rule against the 1px hairline on the
+     other two tiers, so the recommended scope reads as the emphasis without
+     becoming a boxed card. Editorial emphasis, not a pricing-table slab. */
+  .pricing-tier--anchor {
+    border-top: 2px solid var(--color-accent);
+  }
+</style>
