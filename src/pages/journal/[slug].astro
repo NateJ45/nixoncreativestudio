@@ -198,11 +198,13 @@ const schemas = [
     margin-bottom: var(--spacing-m, 1.5rem);
   }
 
-  /* Drop-cap on the first paragraph of the article. An editorial flourish
-     that signals "this is a piece to read." Only the very first paragraph
-     gets it, and only when it is a direct child of the prose wrapper so a
-     leading heading or figure doesn't trigger it mid-flow. */
-  .journal-prose > :global(p:first-of-type::first-letter) {
+  /* Drop-cap on the lead paragraph of the article. An editorial flourish
+     that signals "this is a piece to read." Guarded to p:first-child (not
+     :first-of-type) so it ONLY fires when a paragraph is the very first
+     element in the body. If a post opens with a list, figure, or heading,
+     :first-of-type would still grab the first paragraph further down and
+     drop-cap it mid-flow; :first-child correctly skips the drop-cap then. */
+  .journal-prose > :global(p:first-child::first-letter) {
     float: left;
     margin: 0.05em 0.12em 0 0;
     font-family: var(--font-display);
@@ -321,6 +323,24 @@ const schemas = [
     overflow-x: auto;
     border-radius: 0.75rem;
     padding: 1rem 1.25rem;
+  }
+
+  /* astro-expressive-code blocks. EC renders its own .expressive-code wrapper
+     (containing a .frame and the highlighted <pre>) and brings its own theme,
+     bound to the site's .dark class, so colors are left to EC. What it does NOT
+     do is sit inside this reading column: an EC block ships full-bleed and with
+     no vertical rhythm of its own here. These rules contain it to the same
+     max-width as the prose, give it block margin matching the other blocks, and
+     round its frame to match the cover / pre radius. Works in both themes since
+     it only touches layout, never color. The inner .frame inherits the radius
+     and clips its corners so the rounded edge reads cleanly. */
+  .journal-prose :global(.expressive-code) {
+    margin-top: var(--spacing-m, 1.5rem);
+    margin-bottom: var(--spacing-m, 1.5rem);
+  }
+  .journal-prose :global(.expressive-code .frame) {
+    border-radius: 0.75rem;
+    overflow: hidden;
   }
 </style>
 
