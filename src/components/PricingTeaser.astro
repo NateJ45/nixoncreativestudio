@@ -81,13 +81,13 @@ const includes = [
       {webTiers.map((tier, index) => (
         <li
           class:list={[
-            'pricing-tier flex flex-col gap-s pt-m',
-            tier.highlighted ? 'pricing-tier--anchor' : 'border-t border-border',
+            'pricing-tier flex flex-col gap-s border-t border-border pt-m',
+            tier.highlighted && 'pricing-tier--anchor',
           ]}
           data-reveal
           style={`--reveal-delay: ${index * 110}ms;`}
         >
-          <h3 class="font-display text-h5 text-heading">{tier.name}</h3>
+          <h3 class="pricing-name font-display text-h5 text-heading">{tier.name}</h3>
 
           {/* Caption row, present on every tier so the prices below stay aligned
               across the three columns. The anchor shows its "where most projects
@@ -106,7 +106,7 @@ const includes = [
             <span class="text-sm font-medium text-text-muted">from</span>
             <span
               class:list={[
-                'font-display text-h2 leading-none',
+                'pricing-price font-display text-h2 leading-none',
                 tier.highlighted ? 'text-accent' : 'text-link',
               ]}
             >
@@ -152,10 +152,73 @@ const includes = [
 </section>
 
 <style>
-  /* The Signature anchor: a 2px accent top rule against the 1px hairline on the
-     other two tiers, so the recommended scope reads as the emphasis without
-     becoming a boxed card. Editorial emphasis, not a pricing-table slab. */
-  .pricing-tier--anchor {
-    border-top: 2px solid var(--color-accent);
+  /* Every tier carries a 1px hairline top border (set in markup). On top of it
+     sits an accent rule (::after) used as a "this one" cue: it draws in from the
+     left on hover for the two quiet tiers, and is always drawn on the Signature
+     anchor, where it also draws in on scroll as the section's one signature
+     entrance. Same motif as the /services tier cards, kept editorial here (no
+     card slab). */
+  .pricing-tier {
+    position: relative;
+  }
+  .pricing-tier::after {
+    content: "";
+    position: absolute;
+    top: -1px; /* sit over the 1px hairline border */
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .pricing-tier:hover::after,
+  .pricing-tier:focus-within::after {
+    transform: scaleX(1);
+  }
+  /* The anchor's rule is its standing emphasis: drawn at rest, and drawn in from
+     the left as the band scrolls into view where scroll-timeline is supported
+     (otherwise simply drawn from first paint). */
+  .pricing-tier--anchor::after {
+    transform: scaleX(1);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .pricing-tier--anchor::after {
+        transform: scaleX(0);
+        animation: pricing-rule-draw linear both;
+        animation-timeline: view();
+        animation-range: entry 14% cover 32%;
+      }
+    }
+  }
+  @keyframes pricing-rule-draw {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* Hover feedback on the whole tier: the name brightens to the link blue and
+     the price brightens to accent and lifts a touch, so the column responds as
+     one unit (the rule above draws at the same time). Transitions inherit the
+     global reduced-motion off-switch. */
+  .pricing-name {
+    transition: color 0.2s ease;
+  }
+  .pricing-price {
+    display: inline-block;
+    transition:
+      color 0.2s ease,
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pricing-tier:hover .pricing-name,
+  .pricing-tier:focus-within .pricing-name {
+    color: var(--color-link);
+  }
+  .pricing-tier:hover .pricing-price,
+  .pricing-tier:focus-within .pricing-price {
+    color: var(--color-accent);
+    transform: translateY(-2px);
   }
 </style>
