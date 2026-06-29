@@ -192,14 +192,15 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
   </div>
 
   <!-- Oversized brand wordmark, bottom-anchored as a graphic. Decorative, so
-       aria-hidden. Sits fully inside the footer (not bled off the bottom) so the
-       whole studio name reads; translate-y-0 keeps its baseline near the bottom
-       edge, and the subtle scroll drift below stays non-clipping. -->
+       aria-hidden. translate-y-[20%] pushes the all-caps glyphs down by Bebas's
+       ~0.2em descent so the LETTER bottoms sit right on the footer's bottom edge;
+       the empty descent space below is clipped by overflow-hidden, so no glyph is
+       lost. Static, not drifting: any vertical motion would lift it off the edge. -->
   <div
     class="pointer-events-none absolute inset-x-0 bottom-0 z-0 select-none overflow-hidden"
     aria-hidden="true"
   >
-    <span class="footer-watermark block translate-y-0 whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-heading/[0.06] dark:text-primary-foreground/5 [font-size:12.5vw]">
+    <span class="footer-watermark block translate-y-[20%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-heading/[0.06] dark:text-primary-foreground/5 [font-size:12.5vw]">
       {site.studioName}
     </span>
   </div>
@@ -225,24 +226,6 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
       transparent
     );
     z-index: 1;
-  }
-
-  /* Watermark parallax. Scroll-driven (ties motion to the visitor's scroll,
-     not a timer) and progressively enhanced: only where animation-timeline is
-     supported and motion is allowed. Otherwise the static translate-y-[28%]
-     utility holds. Tiny amplitude so it reads as crafted, not flashy. */
-  @media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      .footer-watermark {
-        animation: footer-drift linear both;
-        animation-timeline: view();
-        animation-range: entry 0% exit 100%;
-      }
-    }
-  }
-  @keyframes footer-drift {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-6%); }
   }
 
   /* Availability status dot pulse. Honors reduced motion. */
