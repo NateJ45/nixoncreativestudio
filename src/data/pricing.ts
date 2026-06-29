@@ -62,7 +62,7 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'Most projects',
     range: 'Most land between $7,000 and $11,000',
-    note: 'The right fit for most projects: a larger custom site with real content depth, several content types your team manages itself, and the integrations a serious church, school, or growing business needs.',
+    note: 'The right fit for most projects: a larger custom site with deeper content, several content types your team manages itself, and the integrations a growing church, school, or business needs.',
     features: [
       'A larger site with deeper content sections',
       'Several content types your team manages itself',
@@ -75,9 +75,9 @@ export const webTiers: WebTier[] = [
     name: 'Flagship',
     priceFrom: 12000,
     priceSuffix: '+',
-    who: 'Bespoke builds',
+    who: 'Advanced builds',
     range: 'Typically $12,000 and up',
-    note: 'For organizations that need the site to do real work, not just present it: custom interactive tools, advanced integrations, or a headless build for a large, complex site. The kind of work an agency charges far more for.',
+    note: 'For organizations that need the site to do real work: custom interactive tools, advanced integrations, or a headless build for a large, complex site. The kind of build an agency would charge far more for.',
     features: [
       'Custom interactive tools and features',
       'Advanced and third-party integrations',
