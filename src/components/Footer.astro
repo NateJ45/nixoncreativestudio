@@ -192,12 +192,14 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
   </div>
 
   <!-- Oversized brand wordmark, bottom-anchored as a graphic. Decorative, so
-       aria-hidden and clipped by the footer's overflow-hidden. -->
+       aria-hidden. Sits fully inside the footer (not bled off the bottom) so the
+       whole studio name reads; translate-y-0 keeps its baseline near the bottom
+       edge, and the subtle scroll drift below stays non-clipping. -->
   <div
     class="pointer-events-none absolute inset-x-0 bottom-0 z-0 select-none overflow-hidden"
     aria-hidden="true"
   >
-    <span class="footer-watermark block translate-y-[20%] whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-heading/[0.06] dark:text-primary-foreground/5 [font-size:12.5vw]">
+    <span class="footer-watermark block translate-y-0 whitespace-nowrap text-center font-display uppercase leading-none tracking-[0.02em] text-heading/[0.06] dark:text-primary-foreground/5 [font-size:12.5vw]">
       {site.studioName}
     </span>
   </div>
@@ -239,8 +241,8 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
     }
   }
   @keyframes footer-drift {
-    from { transform: translateY(40%); }
-    to   { transform: translateY(20%); }
+    from { transform: translateY(0); }
+    to   { transform: translateY(-6%); }
   }
 
   /* Availability status dot pulse. Honors reduced motion. */
