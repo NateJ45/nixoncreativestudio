@@ -34,7 +34,7 @@ const projectRoot = resolve(__dirname, '..');
 // import .ts modules without extra tooling, and an OG image regenerated
 // rarely is fine to update by hand.
 const WORDMARK   = 'NIXON CREATIVE STUDIO';
-const TAGLINE    = 'Strategy-led web design, brand work, and photography.';
+const TAGLINE    = 'PHOTOGRAPHY, WEB DESIGN, STRATEGY';
 const LOCALE     = 'CINCINNATI REGION';
 
 const COLORS = {
@@ -42,6 +42,7 @@ const COLORS = {
   fg:       '#F4F7FA',  // off-white, matches dark-mode heading color
   muted:    '#9CA3AF',  // dark-mode --muted-foreground
   accent:   '#40AAED',  // bright accent for the rule (passes AA on navy)
+  amber:    '#FFA334',  // brand amber for the tagline
 };
 
 // OG image canonical dimensions. 1200x630 is the spec all major social
@@ -87,11 +88,20 @@ function textToPathData(font, text, fontSizePx) {
 
 const font = loadFont(fontPath);
 
-// Sizes tuned by eye to balance the canvas. The wordmark is the
-// dominant element; tagline and locale are quieter supporting lines.
-const WORDMARK_SIZE = 120;
-const TAGLINE_SIZE  = 36;
-const LOCALE_SIZE   = 24;
+// Largest size at or below `start` whose rendered width fits within `target`.
+// Lets the wordmark fill nearly the full card without overflowing.
+function fitSize(text, target, start, min) {
+  let s = start;
+  while (s > min && font.getAdvanceWidth(text, s) > target) s -= 2;
+  return s;
+}
+
+// The wordmark is the hero: fit it to nearly the full width. The tagline sits
+// under it in amber, with the locale as a quiet stamp below. This matches the
+// brand-forward per-page navy cards (generate-og.mjs).
+const WORDMARK_SIZE = fitSize(WORDMARK, WIDTH - 128, 150, 90);
+const TAGLINE_SIZE  = fitSize(TAGLINE, WIDTH - 360, 56, 30);
+const LOCALE_SIZE   = 26;
 
 // Generate path data + measured widths for each line. y-offsets are
 // applied via translate() in the SVG so we don't have to recompute
@@ -100,13 +110,28 @@ const wordmark = textToPathData(font, WORDMARK, WORDMARK_SIZE);
 const tagline  = textToPathData(font, TAGLINE,  TAGLINE_SIZE);
 const locale   = textToPathData(font, LOCALE,   LOCALE_SIZE);
 
-// Stack the three lines vertically with a small accent rule above. y
-// values are baseline positions; opentype.js positions glyphs above
-// the baseline by default.
-const accentY    = 220;             // accent rule
-const wordmarkY  = 360;             // wordmark baseline
-const taglineY   = 440;             // tagline baseline
-const localeY    = 510;             // locale baseline
+// Vertically balance the lockup: accent rule, wordmark, tagline, locale. Walk
+// down the centered group computing each baseline from cap-height estimates
+// (opentype.js positions glyphs above the baseline by default).
+const cap = 0.8;
+const barH = 6;
+const gapBar = 36;  // accent rule -> wordmark
+const gapWord = 28; // wordmark -> tagline
+const gapTag = 46;  // tagline -> locale
+
+const wH = WORDMARK_SIZE * cap;
+const tH = TAGLINE_SIZE * cap;
+const lH = LOCALE_SIZE * cap;
+const total = barH + gapBar + wH + gapWord + tH + gapTag + lH;
+
+let top = (HEIGHT - total) / 2;
+const accentY = top;
+top += barH + gapBar;
+const wordmarkY = top + wH;
+top = wordmarkY + gapWord;
+const taglineY = top + tH;
+top = taglineY + gapTag;
+const localeY = top + lH;
 
 // Center horizontally by translating each path by (WIDTH - lineWidth) / 2.
 const wordmarkX = (WIDTH - wordmark.width) / 2;
@@ -123,25 +148,25 @@ const svg = `
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}" />
 
   <!-- Accent rule. Small bright bar centered horizontally to anchor
-       the eye before the wordmark. -->
+       the eye above the wordmark. -->
   <rect
-    x="${(WIDTH - 80) / 2}"
+    x="${(WIDTH - 84) / 2}"
     y="${accentY}"
-    width="80"
+    width="84"
     height="6"
     fill="${COLORS.accent}"
     rx="3"
   />
 
-  <!-- Wordmark. Bebas Neue glyph outlines rendered as path data so the
-       result is independent of what fonts the build host has. -->
+  <!-- Wordmark. The dominant brand element, fit to nearly full width. Bebas
+       Neue glyph outlines rendered as path data so the result is independent
+       of what fonts the build host has. -->
   <g transform="translate(${wordmarkX}, ${wordmarkY})" fill="${COLORS.fg}">
     <path d="${wordmark.d}" />
   </g>
 
-  <!-- Tagline. Same typeface at a smaller size; the consistency reads
-       as "one studio voice" rather than two-font hierarchy. -->
-  <g transform="translate(${taglineX}, ${taglineY})" fill="${COLORS.fg}" opacity="0.85">
+  <!-- Tagline in brand amber, one clear notch down from the wordmark. -->
+  <g transform="translate(${taglineX}, ${taglineY})" fill="${COLORS.amber}">
     <path d="${tagline.d}" />
   </g>
 

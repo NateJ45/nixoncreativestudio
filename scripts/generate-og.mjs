@@ -36,12 +36,16 @@ const projectRoot = resolve(__dirname, '..');
 
 // --- Brand constants (keep in sync with globals.css / generate-og-default) ---
 const STUDIO = 'Nixon Creative Studio';
+// Short brand tagline that sits under the studio name on every card. Bebas is
+// an all-caps display face, so this renders uppercased.
+const TAGLINE = 'photography, web design, strategy';
 const COLORS = {
   bg0:    '#0A1628', // navy
   bg1:    '#0F1E33', // lifted navy for the gradient
-  fg:     '#F4F7FA', // off-white title
-  amber:  '#FFA334', // brand amber for the studio line
+  fg:     '#F4F7FA', // off-white studio name
+  amber:  '#FFA334', // brand amber for the tagline
   accent: '#3478BD', // NCS blue accent rule
+  muted:  '#9CA3AF', // muted off-white for the small page label
 };
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -86,38 +90,55 @@ function wrap(text, size, maxWidth) {
   return lines;
 }
 
+// Largest size at or below `start` whose rendered width fits within `target`.
+// Lets the studio name fill the card without overflowing the edges.
+function fitSize(text, target, start, min) {
+  let s = start;
+  while (s > min && advance(text, s) > target) s -= 2;
+  return s;
+}
+
 // --- Card builder ----------------------------------------------------------
-function buildSvg(title) {
-  const maxWidth = WIDTH - PAD * 2;
+// Brand-forward navy card: the studio name is the hero, the tagline sits under
+// it in amber, and the page name is a small muted label below. The whole lockup
+// is centered and vertically balanced. (Bebas is all-caps; everything renders
+// uppercased.)
+function buildSvg(pageLabel) {
+  const cap = 0.8; // Bebas cap height as a fraction of em, for the vertical math.
 
-  // Start large, shrink until the title fits in at most 3 lines.
-  let size = 104;
-  let lines = wrap(title, size, maxWidth);
-  while (lines.length > 3 && size > 54) {
-    size -= 8;
-    lines = wrap(title, size, maxWidth);
-  }
-  const lineHeight = size * 1.0;
-  const titleBlock = lines.length * lineHeight;
+  // Size each line: the studio name fills nearly the full width, the tagline is
+  // a clear second, the page label is a quiet third.
+  const wSize = fitSize(STUDIO, WIDTH - 128, 150, 90);
+  const tSize = fitSize(TAGLINE, WIDTH - 360, 56, 30);
+  const lSize = fitSize(pageLabel, WIDTH - 360, 30, 20);
 
-  const studioSize = 34;
-  const gap = 44;
-  const groupHeight = titleBlock + gap + studioSize;
-  const groupTop = (HEIGHT - groupHeight) / 2;
+  const barH = 6;
+  const gapBar = 34; // accent bar -> studio name
+  const gapWord = 26; // studio name -> tagline
+  const gapTag = 42; // tagline -> page label
 
-  // Accent bar sits just above the title block.
-  const barY = groupTop - 34;
+  const wH = wSize * cap;
+  const tH = tSize * cap;
+  const lH = lSize * cap;
+  const total = barH + gapBar + wH + gapWord + tH + gapTag + lH;
 
-  // Title line baselines (opentype positions glyphs above the baseline).
-  const titlePaths = lines
-    .map((line, i) => {
-      const baseline = groupTop + size * 0.82 + i * lineHeight;
-      return `<g transform="translate(${PAD}, ${baseline})" fill="${COLORS.fg}"><path d="${pathData(line, size)}" /></g>`;
-    })
-    .join('\n  ');
+  const centerX = (text, size) => (WIDTH - advance(text, size)) / 2;
 
-  const studioBaseline = groupTop + titleBlock + gap + studioSize * 0.82;
-  const studioPath = `<g transform="translate(${PAD}, ${studioBaseline})" fill="${COLORS.amber}"><path d="${pathData(STUDIO, studioSize)}" /></g>`;
+  // Walk down the centered group, computing each baseline as we go.
+  let top = (HEIGHT - total) / 2;
+  const barY = top;
+  top += barH + gapBar;
+
+  const wBaseline = top + wH;
+  const wordmarkPath = `<g transform="translate(${centerX(STUDIO, wSize)}, ${wBaseline})" fill="${COLORS.fg}"><path d="${pathData(STUDIO, wSize)}" /></g>`;
+  top = wBaseline + gapWord;
+
+  const tBaseline = top + tH;
+  const taglinePath = `<g transform="translate(${centerX(TAGLINE, tSize)}, ${tBaseline})" fill="${COLORS.amber}"><path d="${pathData(TAGLINE, tSize)}" /></g>`;
+  top = tBaseline + gapTag;
+
+  const lBaseline = top + lH;
+  const labelPath = `<g transform="translate(${centerX(pageLabel, lSize)}, ${lBaseline})" fill="${COLORS.muted}"><path d="${pathData(pageLabel, lSize)}" /></g>`;
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
@@ -129,11 +150,12 @@ function buildSvg(title) {
   </defs>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bg)" />
 
-  <!-- Short accent bar above the title. -->
-  <rect x="${PAD}" y="${barY}" width="84" height="6" rx="3" fill="${COLORS.accent}" />
+  <!-- Short accent bar centered above the studio name. -->
+  <rect x="${(WIDTH - 84) / 2}" y="${barY}" width="84" height="6" rx="3" fill="${COLORS.accent}" />
 
-  ${titlePaths}
-  ${studioPath}
+  ${wordmarkPath}
+  ${taglinePath}
+  ${labelPath}
 
   <!-- Bottom brand edge (full-width accent rule, not a side stripe). -->
   <rect x="0" y="${HEIGHT - 12}" width="${WIDTH}" height="12" fill="${COLORS.accent}" />
@@ -147,10 +169,11 @@ function buildSvg(title) {
 // the studio has. Non-case-study pages keep the plain navy card above.
 function buildCoverOverlay(title) {
   const maxWidth = WIDTH - PAD * 2;
+  const cap = 0.8;
 
-  // Same greedy shrink-to-fit as the navy card, a touch smaller to leave room
-  // for the screenshot to breathe behind it.
-  let size = 92;
+  // The case study title stays the hero (the work itself is the trust signal).
+  // Greedy shrink-to-fit at up to 3 lines.
+  let size = 88;
   let lines = wrap(title, size, maxWidth);
   while (lines.length > 3 && size > 50) {
     size -= 8;
@@ -158,15 +181,19 @@ function buildCoverOverlay(title) {
   }
   const lineHeight = size * 1.0;
 
-  // Anchor the text to the bottom-left, building baselines upward from the
-  // studio line so the block always sits the same distance off the bottom edge.
-  const studioSize = 32;
-  const studioBaseline = HEIGHT - 60;
-  const gap = 30;
-  const studioTop = studioBaseline - studioSize * 0.82;
-  const lastBaseline = studioTop - gap;
+  // Brand sign-off under the title: the studio name larger than before (amber)
+  // with the tagline beneath it. Anchored bottom-left, built upward so the
+  // block always sits the same distance off the bottom edge.
+  const studioSize = 46;
+  const tSize = 26;
+
+  const taglineBaseline = HEIGHT - 56;
+  const taglineTop = taglineBaseline - tSize * cap;
+  const studioBaseline = taglineTop - 16;
+  const studioTop = studioBaseline - studioSize * cap;
+  const lastBaseline = studioTop - 34;
   const firstBaseline = lastBaseline - (lines.length - 1) * lineHeight;
-  const barY = firstBaseline - size * 0.82 - 30;
+  const barY = firstBaseline - size * cap - 28;
 
   const titlePaths = lines
     .map((line, i) => {
@@ -175,6 +202,7 @@ function buildCoverOverlay(title) {
     })
     .join('\n  ');
   const studioPath = `<g transform="translate(${PAD}, ${studioBaseline})" fill="${COLORS.amber}"><path d="${pathData(STUDIO, studioSize)}" /></g>`;
+  const taglinePath = `<g transform="translate(${PAD}, ${taglineBaseline})" fill="${COLORS.fg}" opacity="0.78"><path d="${pathData(TAGLINE, tSize)}" /></g>`;
 
   // Two scrims: a vertical one (darkens the bottom for the text) and a
   // horizontal one (darkens the left where the text sits), so off-white type
@@ -197,6 +225,7 @@ function buildCoverOverlay(title) {
   <rect x="${PAD}" y="${barY}" width="84" height="6" rx="3" fill="${COLORS.accent}" />
   ${titlePaths}
   ${studioPath}
+  ${taglinePath}
 
   <rect x="0" y="${HEIGHT - 12}" width="${WIDTH}" height="12" fill="${COLORS.accent}" />
 </svg>`.trim();
