@@ -35,6 +35,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProcessBand from '../components/ProcessBand.astro';
 import CtaBanner from '../components/CtaBanner.astro';
+import SelectedWork from '../components/SelectedWork.astro';
+import { Image } from 'astro:assets';
+// Real proof for the Web design service: a shipped client site, shown at full
+// strength. Swap this import for any other case-study cover to feature a
+// different project.
+import webDesignShot from '../assets/case-studies/second-presbyterian-chicago.png';
 import { site } from '../data/site';
 // Tiers + add-ons come from the shared single source of truth (also used by
 // the homepage PricingTeaser), so the numbers can never drift between pages.
@@ -50,6 +56,12 @@ const services = [
     lede: 'The planning work that decides what the site is for, who it serves, and how it earns its keep.',
     body: 'Strategy always comes first. Without it, design becomes decoration. We start with a working session, then I write a short brief that the rest of the project follows.',
     priceFrom: 1500, // standalone floor; included free inside every build
+    // No screenshot for strategy (it is planning work, not a screen). A
+    // labelled placeholder panel stands in until a real artifact (a sitemap or
+    // brief) is dropped here; see Web design below for the real-image pattern.
+    image: null,
+    imageAlt: '',
+    placeholderIcon: 'strategy',
     points: [
       'A working session, then back-and-forth until the plan is right',
       'Audience map and conversion path',
@@ -62,6 +74,11 @@ const services = [
     lede: 'Modern, accessible, fast websites built on the platform that fits you, from a custom-coded site to Squarespace or WordPress, and set up so your team can actually run it.',
     body: 'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.',
     priceFrom: 4000, // Launch tier floor; see the pricing band below
+    // Real shipped site, shown at full strength (research: show the work, do
+    // not fade it behind text). Swap webDesignShot above to feature another.
+    image: webDesignShot,
+    imageAlt: 'The Second Presbyterian Church of Chicago website, designed and built by the studio',
+    placeholderIcon: null,
     points: [
       'A custom design built to your brand, not a stock template',
       'Self-hosted typography and imagery',
@@ -75,6 +92,12 @@ const services = [
     lede: 'Headshots, event coverage, and environmental photography shot for your website by the same person who designed it.',
     body: 'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.',
     priceFrom: 900, // half-day floor; ~$1,200/day folded into a build
+    // Placeholder until a real photo is dropped in. Replace with:
+    //   import photoShot from '../assets/photography/<file>.jpg';
+    // then set image: photoShot and a real imageAlt.
+    image: null,
+    imageAlt: '',
+    placeholderIcon: 'photography',
     points: [
       'On-site Sunday or weekday coverage',
       'Headshots for team and staff',
@@ -83,6 +106,16 @@ const services = [
     ],
   },
 ];
+
+// Placeholder glyphs for the services without a real image yet (Strategy,
+// Photography). Inner SVG markup, drawn into the placeholder panel; they match
+// the hero three-service flow icons so the page reads as one set.
+const placeholderIcons: Record<string, string> = {
+  strategy:
+    '<circle cx="12" cy="12" r="9" /><polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5" />',
+  photography:
+    '<path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13" r="3.2" />',
+};
 
 // `tiers` (the three web design tiers: Launch / Signature / Flagship) and
 // `addOns` (photography, brand, care) are imported above from
@@ -286,52 +319,92 @@ const schemas = [
        a <ul> and carries no numerals. The cards alternate reveal direction
        (left / right / left) so they arrive with a little choreography.
        ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-label="Service details">
+  <section class="bg-dotgrid py-2xl" aria-label="Service details">
     <div class="ncs-container">
       <ul class="flex list-none flex-col gap-l p-0">
-        {services.map((service, index) => (
+        {services.map((service, index) => {
+          // The proof visual sits left for even services, right for odd, so the
+          // run reads as a guided tour rather than a stack. On mobile the copy
+          // leads and the visual follows (DOM order: copy first, visual second).
+          const visualLeft = index % 2 === 0;
+          return (
           <li
             class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
             data-spotlight
-            data-reveal={index % 2 === 0 ? 'left' : 'right'}
+            data-reveal={visualLeft ? 'left' : 'right'}
             style={`--reveal-delay: ${index * 90}ms;`}
           >
-            <div class="relative z-10 grid grid-cols-1 gap-l md:grid-cols-[1.25fr_1fr] md:gap-xl">
+            <div class="relative z-10 grid grid-cols-1 items-center gap-l md:grid-cols-2 md:gap-xl">
 
-              <!-- Left column: title, lede, body. No sequence numeral: these
-                   are parallel offerings, not ordered steps. -->
-              <div class="flex flex-col gap-s">
-                <h2 class="text-heading">{service.title}</h2>
-                <p class="max-w-[48ch] text-[1.0625rem] font-medium leading-[1.55] text-text">
-                  {service.lede}
-                </p>
-                <p class="max-w-[52ch] leading-[1.7] text-text-muted">
-                  {service.body}
-                </p>
+              <!-- Copy: title, lede, body, and the what's-included list. No
+                   sequence numeral: these are parallel offerings, not steps. -->
+              <div class:list={['flex flex-col gap-m', visualLeft ? 'md:order-2' : 'md:order-1']}>
+                <div class="flex flex-col gap-s">
+                  <h2 class="text-heading">{service.title}</h2>
+                  <p class="max-w-[48ch] text-[1.0625rem] font-medium leading-[1.55] text-text">
+                    {service.lede}
+                  </p>
+                  <p class="max-w-[52ch] leading-[1.7] text-text-muted">
+                    {service.body}
+                  </p>
+                </div>
+
+                <!-- What's included, as a checked list. The dot glyph is
+                     decorative; the text carries the meaning. -->
+                <div class="flex flex-col gap-s">
+                  <p class="text-sm font-semibold uppercase tracking-[0.12em] text-text-muted">
+                    What's included
+                  </p>
+                  <ul class="flex flex-col gap-2 leading-[1.5] text-text">
+                    {service.points.map((point) => (
+                      <li class="flex items-start gap-s">
+                        <span
+                          class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                          aria-hidden="true"
+                        ></span>
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
-              <!-- Right column: what's included, as a checked list. The
-                   check glyph is decorative; the text carries the meaning. -->
-              <div class="flex flex-col gap-s">
-                <p class="text-sm font-semibold uppercase tracking-[0.12em] text-text-muted">
-                  What's included
-                </p>
-                <ul class="flex flex-col gap-2 leading-[1.5] text-text">
-                  {service.points.map((point) => (
-                    <li class="flex items-start gap-s">
-                      <span
-                        class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                        aria-hidden="true"
-                      ></span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
+              <!-- Proof visual: a real shipped site for Web design; a labelled
+                   placeholder panel for the services without an image yet. Drop
+                   a real <Image> in (set `image` on the service) and it inherits
+                   the same frame. -->
+              <div class:list={[visualLeft ? 'md:order-1' : 'md:order-2']}>
+                {service.image ? (
+                  <div class="services-shot-frame">
+                    <Image
+                      src={service.image}
+                      alt={service.imageAlt}
+                      widths={[400, 640, 900]}
+                      sizes="(min-width: 768px) 42vw, 90vw"
+                      class="services-shot-img"
+                    />
+                  </div>
+                ) : (
+                  <div class="services-shot-frame services-shot-placeholder" aria-hidden="true">
+                    <svg
+                      class="services-shot-ph-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      set:html={service.placeholderIcon ? placeholderIcons[service.placeholderIcon] : ''}
+                    />
+                    <span class="services-shot-ph-label">{service.title}</span>
+                  </div>
+                )}
               </div>
 
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   </section>
@@ -447,7 +520,7 @@ const schemas = [
        the price immediately, so the "someone quoted me less" objection is
        answered the moment it forms. Two-column hairline-ruled list, not cards.
        ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-why-heading">
+  <section class="bg-dotgrid py-2xl" aria-labelledby="services-why-heading">
     <div class="ncs-container">
 
       <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
@@ -531,6 +604,11 @@ const schemas = [
     </div>
   </section>
 
+
+  <!-- Recent work proof strip. Reuses the homepage Selected Work block
+       (collection-driven, featured===true), so the services page proves the
+       work with real shipped sites right before it asks for the inquiry. -->
+  <SelectedWork />
 
   <CtaBanner
     title="Ready to scope a project?"
@@ -660,6 +738,59 @@ const schemas = [
   .flow-desc {
     font-size: 0.9rem;
     line-height: 1.4;
+    color: var(--color-text-muted);
+  }
+
+  /* ----------------------------------------------------------------------
+     Service proof visuals. Each offering carries a framed visual: a real
+     shipped-site screenshot for Web design, and a labelled placeholder panel
+     for the services without a real image yet (Strategy, Photography). One
+     frame treatment for all, so the run reads as a system; swap a placeholder
+     for a real <Image> and it inherits the same frame. The framed-artifact
+     shadow is the shared --shadow-frame token (same as SiteShowcase).
+     ---------------------------------------------------------------------- */
+  .services-shot-frame {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 0.9rem;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-frame);
+    background: var(--color-bg-soft);
+  }
+  .services-shot-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top; /* show the site header, not a mid-page crop */
+    display: block;
+  }
+  /* Placeholder panel: a faint brand dot texture plus the service glyph and
+     name, so an un-filled slot reads as a deliberate panel, not a broken
+     image. Decorative (aria-hidden); the service <h2> carries the name to AT. */
+  .services-shot-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    background-color: var(--color-bg-soft);
+    background-image: radial-gradient(
+      color-mix(in oklab, var(--color-heading) 12%, transparent) 1px,
+      transparent 1px
+    );
+    background-size: 18px 18px;
+    color: var(--color-link);
+  }
+  .services-shot-ph-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    opacity: 0.9;
+  }
+  .services-shot-ph-label {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
     color: var(--color-text-muted);
   }
 
