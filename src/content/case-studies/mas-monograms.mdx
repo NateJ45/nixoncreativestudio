@@ -4,11 +4,11 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/mas-monograms.png
-# with a real photo when one is available. Current file is a placeholder.
-#
-# NOTE: Verify the year — this project predates the Nixon Creative Studio
-# rebrand and may be from 2023 or 2024.
+# This is the REBUILD study: the studio moved off Squarespace onto
+# Astro + Sanity + Cloudflare with a full redesign. The "before" screenshot
+# (shots/mas-monograms-before.png) is the old Squarespace home, captured live
+# while masmonograms.squarespace.com was still up. The rest of the shots are
+# the new site; recapture them if it changes.
 title: MAS Monograms
 client: MAS Monograms
 sector: small-business
@@ -18,36 +18,44 @@ services:
 role: Designer, Developer
 tags:
   - Small Business
-  - E-commerce
   - Custom Orders
-  - Squarespace
+  - Headless CMS
+  - Site Rebuild
 stack:
-  - Squarespace
-summary: An online home for a solo embroidery studio that replaced a broken ordering experience with a quote-first flow that sets expectations before a customer spends a dollar.
+  - Astro
+  - Sanity
+  - Tailwind
+  - Cloudflare
+summary: A solo embroidery studio moved off Squarespace onto a faster site Mary Ann owns, redesigned to lead with real finished work while keeping the quote-first flow custom embroidery needs.
 cover: ../../assets/case-studies/mas-monograms.png
-year: 2024
+year: 2026
 featured: false
-published: 2024-06-01
+published: 2026-07-01
 liveUrl: https://mas-monograms.com
-outcome: "A quote-first flow that sets the price expectation before a customer spends a dollar."
+outcome: "A Squarespace studio site rebuilt on a faster platform Mary Ann owns, redesigned to lead with real finished work."
 # Add a real client quote here when you have one, then uncomment. Never invent it.
 # testimonial:
 #   quote: ""
 #   name: ""
 #   title: ""
 results:
-  - "Customers now see the price expectation before they spend a dollar, instead of hitting a cart price that turns out wrong."
-  - "Quote requests now arrive with enough detail to quote against directly, so Mary Ann does less email back-and-forth."
-  - "Customers reach the form already fluent in the options, having seen the gallery, picked a font, and gotten a realistic sense of price."
-  - "A broken ordering experience is replaced by a quote-first flow that sets expectations before a customer commits."
-designerNote: "Skipping the cart for custom work took some convincing, since the instinct on any e-commerce build is to put products in a cart. For handmade embroidery, though, a price that turns out wrong does more damage than asking someone to fill out a form, so the quote flow ended up being the better path: it sets the right expectations before any money changes hands."
+  - "Mary Ann owns her site now, built on Astro and hosted on Cloudflare, with no monthly Squarespace bill for the platform underneath it."
+  - "The rebuilt site loads faster than the Squarespace template it replaced, served as static pages from Cloudflare's edge."
+  - "The homepage and shop lead with real photos of her finished work instead of clip-art category icons."
+  - "A custom quote form captures the font, placement, size, thread colors, and reference photos up front, more than the old form could ask, so requests arrive ready to price."
+  - "Content lives in Sanity now, so a light gallery or pricing edit is a quick update instead of a fight with a page builder."
+designerNote: "I built the first MAS Monograms site on Squarespace, and it did its job. Rebuilding it on Astro and Sanity was about giving Mary Ann something faster that she truly owns, and a design that finally puts her real work first. The quote-first flow stayed, because for handmade embroidery it is still the honest way to set a price."
 ---
 
 import SiteShowcase from '../../components/SiteShowcase.astro';
+import BeforeAfter from '../../components/BeforeAfter.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
-import galleryShot from '../../assets/case-studies/shots/mas-monograms-feature-gallery.png';
+import beforeShot from '../../assets/case-studies/shots/mas-monograms-before.png';
+import afterShot from '../../assets/case-studies/mas-monograms.png';
+import shopShot from '../../assets/case-studies/shots/mas-monograms-feature-shop.png';
 import quoteShot from '../../assets/case-studies/shots/mas-monograms-feature-quote.png';
+import galleryShot from '../../assets/case-studies/shots/mas-monograms-feature-gallery.png';
 
 <SiteShowcase
   slug="mas-monograms"
@@ -58,49 +66,65 @@ import quoteShot from '../../assets/case-studies/shots/mas-monograms-feature-quo
 
 ## The brief
 
-MAS Monograms is a home-based custom embroidery studio run by Mary Ann Stone in St. Matthews, South Carolina. Every item she produces is made to order: the stitch count, thread color, font style, and placement all vary by customer, and each of those variables affects the price. She had a growing customer base, strong reviews, and work worth showing. She did not have a website that could handle the ordering model.
+MAS Monograms is a home-based custom embroidery studio run by Mary Ann Stone in St. Matthews, South Carolina. Every piece is made to order: the font, thread color, placement, and stitch count all change from one customer to the next, and each of those choices moves the price. The first site I built for her lived on Squarespace and worked around that reality with a quote-first flow, educate first, quote second, collect payment third.
 
-The core problem with standard e-commerce for custom embroidery is that there is no fixed price to put in a cart. A monogram on a tote bag is not the same price as a custom applique on a jacket, and the customer does not know what they want until they see the options. A standard add-to-cart flow either undersells the work or forces Mary Ann to issue refunds when the real quote comes back different from what the product page suggested.
+That site did its job. What it could not do was keep up with where the studio was headed. Mary Ann was paying a monthly platform fee for a site she did not really own. The template put clip-art category icons where her actual finished work should have been. The built-in form could only ask so much, so quotes still needed a round of back-and-forth. And the whole thing was slower than it needed to be.
+
+She wanted to keep the quote-first strategy, because it fits handmade work, and move everything else onto something faster, more custom, and hers.
+
+<BeforeAfter
+  before={beforeShot}
+  after={afterShot}
+  beforeAlt="The previous Squarespace MAS Monograms site"
+  afterAlt="The redesigned MAS Monograms homepage"
+/>
 
 ## The approach
 
-We built around a different idea: educate first, quote second, collect payment third.
+We kept the strategy and rebuilt the foundation. The new site runs on Astro, with content in Sanity and hosting on Cloudflare, so it ships as fast static pages and belongs to Mary Ann outright, with no monthly platform rent.
 
-The site's job before the quote form is to give customers enough information to make a confident request. The Style Gallery shows 60+ real finished pieces organized by technique, so a customer can point at what they want. The Font and Lettering Guide lays out every available style with examples. The Thread Color Chart shows the full palette organized by color family. The pricing page explains the four tiers and the factors that affect final cost.
+The redesign leads with proof. Where the old category grid used small clip-art icons, the new one uses real photographs of Mary Ann's finished pieces, so a customer browsing tote bags or baby gifts sees the actual quality of the stitching before they read a word. That same real work carries the hero, the shop, and the Style Gallery.
 
-By the time a customer fills out the quote form, they already know what font they want, what color thread they are thinking about, roughly what they expect to pay, and what a realistic turnaround looks like. That changes the quoting conversation from estimation to confirmation.
+Content lives in Sanity, split the way a one-person studio actually works. I handle the structure and the heavier changes, and Mary Ann can make the light edits herself, adding a piece to the gallery or nudging a price, without wrestling a page builder or waiting on a template.
 
-Squarespace handled everything cleanly at this scale: the shop organization, the gallery, the blog, and the inquiry form. The cart and checkout feature stays active only for the Clearance section where pre-made, fixed-price items are available to ship immediately.
+The quote-first flow stayed, and the form that ends it got a real upgrade.
 
 ## What we built
 
 <FeatureHighlight
-  src={galleryShot}
-  alt="The Style Gallery of finished work on the MAS Monograms site"
-  title="Show the work before the price"
-  body="A gallery of sixty-plus real finished pieces, grouped by technique, so a customer can point at exactly the look they want instead of guessing from a stock product photo."
+  src={shopShot}
+  alt="The Shop by Item grid on the new MAS Monograms site, showing real embroidery photos per category"
+  title="Real work, not clip art"
+  body="The shop leads with photographs of Mary Ann's actual finished pieces, grouped by item, so a customer sees the real quality of the stitching before they ever open the quote form."
   side="left"
 />
 
 <FeatureHighlight
   src={quoteShot}
-  alt="The quote request form on the MAS Monograms site"
-  title="A quote-first flow, not a cart"
-  body="Custom embroidery has no fixed cart price, so the site educates first and ends at a detailed quote request, with a 'recommend for me' option, setting the expectation before any money changes hands."
+  alt="The custom quote request form on the new MAS Monograms site"
+  title="A quote form built for custom work"
+  body="Custom embroidery has no fixed cart price, so the site ends at a detailed request. The form asks for the font, placement, size, thread colors, and reference photos up front, more than the old Squarespace form could, so quotes arrive ready to price."
   side="right"
+/>
+
+<FeatureHighlight
+  src={galleryShot}
+  alt="The Style Gallery of finished work on the new MAS Monograms site"
+  title="A gallery that shows the range"
+  body="Dozens of real finished pieces, from monograms to appliqué to pet portraits, each one linking straight into a quote. It shows the range of what Mary Ann can do and turns browsing into a request."
+  side="left"
 />
 
 The full build, including the pieces above:
 
-- Shop section organized by ten item categories, from tote bags and towels to baby items and the "Bring Your Own Item" program for customers who ship in personal fabric
-- Style Gallery with 60+ real customer pieces organized by technique: monograms, logos, appliques, custom designs, pet items, seasonal work, and more
-- Font and Lettering Guide showing every available style with examples so customers can point at what they want
-- Thread Color Chart covering the full palette organized by color family
-- Pricing page with the four service tiers and a plain-English explanation of what drives cost
-- How It Works page that walks the four-step process (quote, invoice, approval, production)
-- Quote request form with fields for item type, text and letters, font, thread color, placement, quantity, timeline, and an option to upload reference photos
-- Clearance section with Squarespace cart and checkout for ready-to-ship items
-- About page with Mary Ann's story as a maker, positioning the studio as a personal craft operation rather than a fulfillment warehouse
-- Customer testimonial section
+- Astro front end hosted on Cloudflare, shipped as static pages Mary Ann owns
+- Sanity CMS for the gallery, categories, and pricing, set up for shared editing: I handle the structure, Mary Ann makes the light updates
+- Shop organized by seven item categories, from tote bags and towels to baby gifts, each with real photography and starting prices, plus a "Bring Your Own Item" path for customers shipping in their own fabric
+- Style Gallery of real finished work, browsable and linked straight into the quote flow
+- Custom quote form covering item, ownership, personalization, monogram style, placement, size, thread colors, font, timeline, and reference photo uploads
+- Font and Lettering Guide and a Thread Color Chart, so customers reach the form already fluent in the options
+- Pricing page and a four-step How It Works: browse, request, quote, stitch
+- About page telling Mary Ann's story as a maker, positioning the studio as a personal craft operation, not a fulfillment warehouse
+- Privacy, terms, and accessibility pages, matching the professional footing of the rest of the site
 
 <Lightbox />
