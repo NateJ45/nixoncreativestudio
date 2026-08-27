@@ -177,12 +177,18 @@ Standalone scripts:
 
 The repo carries a light quality-gate layer, matched to the rest of Nathan's Astro + Cloudflare sites.
 
-- `npm test` runs the `node --test` unit suites in `src/lib/*.test.ts` (currently `cn`, `readingTime`, and `coverPlaceholder`). They run under Node's native type stripping, so they import the `.ts` modules directly with no build step.
+- `npm test` runs the `node --test` unit suites in `src/lib/*.test.ts` (currently `cn`, `readingTime`, `coverPlaceholder`, and `theme-tokens`). They run under Node's native type stripping, so they import the `.ts` modules directly with no build step.
+- `src/lib/theme-tokens.test.ts` is the **theme-token contrast gate**, added 2026-08-27. It parses the real hex out of the `@theme`, `:root` and `.dark` blocks of `globals.css` and asserts every rendered token pair against WCAG AA (4.5:1 for text, 3:1 for focus rings and control edges), in **both** modes, plus that the `@theme` literals still mirror their `:root` twins. It exists because axe (and therefore the Lighthouse accessibility category) has no rule for focus-indicator or custom-border contrast and only ever sees one theme per run: the score can sit at 100 while a focus ring is invisible. The math lives in `src/lib/contrast.ts`. Its header comment lists every deliberate non-assertion; read that before adding or removing a pair.
 - `npm run lint` runs eslint (flat config in `eslint.config.js`) over `src` and `scripts`. It is advisory, not a hard gate: `eslint-plugin-astro` currently reports a false "JSX expressions must have one parent element" parse error on valid Astro where an HTML comment (`<!-- -->`) sits inside a `{ ... }` expression. The build is the source of truth; lint is a helper.
 - `npm run format` runs prettier across the repo (config in `.prettierrc`, ignore list in `.prettierignore`).
 - `npm run check` is the one-shot gate: `npm run build && npm test`.
 - `.github/workflows/ci.yml` runs on every push and pull request: install, build, test. It does not run lint, for the reason above.
 - `.github/workflows/lighthouse.yml` runs Lighthouse CI (`@lhci/cli`, config in `lighthouserc.json`) against the built static output on every push / PR. **Accessibility is a hard gate at minScore 1** (the 100-a11y bar the studio sells); performance / best-practices / SEO are warnings so normal CI variance doesn't block a PR. Run locally with `npm run build && npx lhci autorun`.
+- `.github/workflows/uptime.yml` curls the live site's key routes hourly and fails the run if any does not end at 200. Gated on the `SITE_URL` repo variable, which is not set yet (see `docs/PENDING.md`). Schedule is on because the repo is public and Actions minutes are free there.
+- `npm run parity capture` / `compare` is the **rendered-HTML parity harness** (`scripts/page-parity.mjs`, baselines committed in `scripts/.parity/`). It never builds; you build, it reads `dist/client`. Reach for it on any change that is supposed to be render-neutral. Deliberately not in CI, because its baselines are meant to be re-captured when markup legitimately changes and a gate that gets re-baselined is a gate that gets rubber-stamped.
+- `npm run sync-check` diffs this repo's copies of the shared "library of record" files against `ncs-astro-sanity-starter` (point at it with `NCS_STARTER_DIR`). Four files are marked canonical here: `scripts/free-dist.mjs`, `scripts/with-workerd.mjs`, `scripts/sync-check.mjs`, and `src/lib/contrast.ts`. Read that repo's `PORTS.md` before editing any of them, and port a fix back rather than patching locally.
+- `npm run free-dist` is the manual form of the `prebuild` hook. See Gotchas.
+- `docs/PENDING.md` is the authoritative open-patch and waiting-on-a-human queue; `docs/TESTING.md` maps which gate covers what. Both are registries: edit them in the same commit as the thing they track.
 
 One JSON-import note: `src/lib/coverPlaceholder.ts` imports its JSON with `with { type: 'json' }`. Node's native ESM loader (used by the test runner) requires that attribute, and Vite accepts it during the build, so the one import works in both places.
 
@@ -574,3 +580,83 @@ Things that still need configuration before / during the public launch. Everythi
 ### Brand drift to be aware of
 
 The brand `--accent` value shifted from `#3B82C4` to `#3478BD` in this codebase to clear WCAG AA contrast on light surfaces with white text. If you have brand assets elsewhere (Instagram, Canva, signage, photography watermarks) on the original `#3B82C4`, those will drift a hair from the site. Same for muted text (`#6B7280` → `#5F6573`).
+
+---
+
+## Gotchas
+
+Things that cost real time, with the reason attached. Add to the list when
+something bites; a gotcha written a week later is a gotcha written from memory.
+Seeded 2026-08-27 during the PORTS.md sync session, so every entry below is
+something measured that day.
+
+1. **A red `npm run lint` is the baseline, not your change.** It exits 1 with
+   7 errors and 5 warnings on a clean tree. All 7 are the known
+   `eslint-plugin-astro` false positive described under "Testing, linting, and
+   CI" above. Diff against that baseline before you go hunting. `src/lib` and
+   `scripts` do lint clean, so a new error *there* is real.
+
+2. **`variant="secondary"` on the shadcn Button or Badge fails contrast.** In
+   light mode that renders `--secondary-foreground` (white) on `--secondary`
+   (sky blue `#40AAED`): **2.56:1**, well under the 4.5:1 the rest of this site
+   holds. It is not a live defect only because the variant is unused across the
+   entire codebase. The day you reach for it, either fix the token pair or use
+   a different variant, and add the pair to `src/lib/theme-tokens.test.ts`.
+   Dark mode is fine (navy on lighter sky, 9.8:1).
+
+3. **The `--link` comment in `globals.css` overclaims.** It says AA on
+   `#FFFFFF`, `#F4F7FA` **and** `#0A1628`. The first two are true (5.25:1 and
+   4.88:1); navy is **3.45:1** and fails body text. Harmless today because the
+   pair is never rendered (the navy Footer is a dark-mode state, where the link
+   colour switches to `--secondary`), but do not trust the comment as a licence
+   to put `text-link` on a navy surface. Logged in `docs/PENDING.md`.
+
+4. **The live site does two redirect hops, so uptime checks need `-L`.**
+   `nixoncreativestudio.com` 301s to `www.`, and `www.…/about` 307s to
+   `/about/`. A curl check copied from a sibling repo that asserts a literal
+   `200` without following redirects fails **every** route and reads like an
+   outage. `.github/workflows/uptime.yml` uses `curl -sSL` and trailing slashes
+   for this reason.
+
+5. **The parity harness needs no site-specific normalizer rules here, and that
+   was measured.** Despite the three.js / r3f content and the pre-build asset
+   generation (`placeholders`, `og:pages`), three builds (a warm rebuild and a
+   fully cold one with `dist`, `.astro` and `node_modules/.astro` deleted) all
+   produced 23/23 PASS. The r3f content ships as an `<astro-island>` and
+   hydrates in the browser, so no canvas output ever reaches the compared HTML.
+   Do not add a speculative normalizer rule: a rule that strips more than the
+   varying value is a hole in the gate, not a fix.
+
+6. **`npm run build` now kills stale dev servers first.** The `prebuild` hook
+   runs `scripts/free-dist.mjs`, which stops any `node.exe` / `workerd.exe`
+   whose command line mentions **both** this project directory **and** a dev
+   server (wrangler / miniflare / http-server / astro preview). It exists
+   because a running `wrangler dev` holds a handle on `dist/` and the next
+   build dies with `EPERM, Permission denied: \\?\...\dist\client`, which reads
+   like a permissions problem and is not. Windows only; it no-ops on CI.
+
+7. **`dist/server/wrangler.json` carries `legacy_env: true`.** The adapter
+   writes it on every build, and wrangler 4.126+ rejects that field outright.
+   Latent rather than live, because `npm run deploy` runs a plain
+   `wrangler deploy` against the **root** `wrangler.jsonc`, which has no such
+   field. It becomes a real failure if anything ever points wrangler at the
+   generated config while `wrangler` (declared `^4.94.0`) has resolved past
+   4.126. See `docs/PENDING.md`.
+
+8. **Unit tests import `.ts` with the extension.** They run under Node's native
+   type stripping (`node --experimental-strip-types --test`), so
+   `import { contrastRatio } from './contrast.ts'` is correct and
+   `from './contrast'` will not resolve. Same reasoning as the
+   `with { type: 'json' }` note above: the test runner is Node, not Vite.
+
+9. **`npx lhci autorun` does not complete on this Windows machine.** It reaches
+   "Healthcheck passed", collects the Accessibility artifact, and then dies
+   during Chrome-profile cleanup:
+   `Runtime error encountered: EPERM, Permission denied:
+   \\?\C:\Users\...\AppData\Local\Temp\lighthouse.NNNNNNNN`, preceded by a
+   `taskkill ... process not found` from the Chrome launcher. Reproduced twice
+   on 2026-08-27, including after clearing every stale `lighthouse.*` temp
+   directory, so it is not a leftover-handle problem. It fails at **collect**
+   time, before a single assertion is evaluated, which means a local red here
+   says nothing about the accessibility gate. `lighthouse.yml` runs on
+   `ubuntu-latest` and is unaffected. Read the CI run, not the local one.

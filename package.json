@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/free-dist.mjs",
     "build": "npm run placeholders && npm run og:pages && astro build",
     "preview": "npm run build && wrangler dev",
     "astro": "astro",
@@ -16,6 +17,9 @@
     "og": "node scripts/generate-og-default.mjs",
     "og:pages": "node scripts/generate-og.mjs",
     "icons": "node scripts/generate-icons.mjs",
+    "free-dist": "node scripts/free-dist.mjs",
+    "parity": "node scripts/page-parity.mjs",
+    "sync-check": "node scripts/sync-check.mjs",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "lint": "eslint src/**/*.{ts,tsx,astro} scripts/**/*.mjs",
     "lint:fix": "eslint --fix src/**/*.{ts,tsx,astro} scripts/**/*.mjs",

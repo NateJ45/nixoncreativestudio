@@ -1,0 +1,88 @@
+name: Uptime check
+
+# PORTS.md Card 7, installed 2026-08-27. A lightweight safety net: hourly,
+# confirm the live site's key routes return 200. A failed run notifies through
+# GitHub. Activated by the SITE_URL repo VARIABLE (not a secret - the origin is
+# public information and a variable prints in the log, which is what you want
+# when debugging a failed run). With SITE_URL unset the job logs a warning and
+# exits 0, so this file is safe to commit before the variable exists.
+#
+# The schedule is ON. Card 7 disables it by default because a gate job that
+# skips still bills a minute an hour, but NateJ45/nixoncreativestudio is a
+# PUBLIC repository (verified 2026-08-27 via `gh repo view --json visibility`)
+# and Actions minutes are free on public repos, so the billing argument that
+# justifies commenting out `schedule:` does not apply here.
+#
+# GitHub's scheduler is best-effort and can be delayed under load, so this is a
+# safety net, not monitoring. For real monitoring point a dedicated service at
+# the homepage; UptimeRobot's free tier is enough.
+#
+# ---------------------------------------------------------------------------
+# WHY curl RUNS WITH -L HERE (the per-site adaptation, measured 2026-08-27)
+# ---------------------------------------------------------------------------
+# presacademy's copy of this workflow curls WITHOUT -L and asserts a literal
+# 200. Dropped onto this site unchanged it would fail every single route, and
+# the failure would read as an outage. This site's live origin does two hops
+# that the reference implementation never sees:
+#
+#   https://nixoncreativestudio.com/       -> 301 https://www.nixoncreativestudio.com/
+#   https://www.nixoncreativestudio.com/about -> 307 /about/
+#
+# The apex-to-www 301 is a Cloudflare redirect rule; the slashless-to-slash 307
+# is Astro's default trailing-slash behaviour ('ignore' resolving to the
+# directory index that `dist/client/about/index.html` actually is). Both are
+# correct and intentional. So the check follows redirects and asserts the
+# FINAL status, and every path below is written with its trailing slash so the
+# normal case is a single hop.
+#
+# `dist/client/_redirects` also declares /now -> /about/#now (301), which is why
+# a bare 200-only assertion is the wrong shape for this site in general.
+
+on:
+  schedule:
+    - cron: '17 * * * *' # hourly, offset off the top of the hour
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check key routes return 200
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::warning::SITE_URL variable not set; skipping uptime check."
+            echo "Set it to the live origin, no trailing slash:"
+            echo "  gh variable set SITE_URL --body https://www.nixoncreativestudio.com"
+            exit 0
+          fi
+          base="${SITE_URL%/}"
+          fail=0
+          # Routes chosen to exercise DIFFERENT data paths rather than three
+          # variations of the homepage:
+          #   /                  the hero, and the heaviest client islands
+          #   /work/             a content-collection index
+          #   /work/<slug>/      a collection entry rendered through its template
+          #   /journal/          the MDX collection index (a different loader)
+          #   /privacy/          a plain static page with no collection behind it
+          #   /rss.xml           an endpoint, not a page: proves SSR routes serve
+          #   /sitemap-index.xml the @astrojs/sitemap integration output
+          for path in "/" "/work/" "/work/second-presbyterian-chicago/" "/journal/" "/privacy/" "/rss.xml" "/sitemap-index.xml"; do
+            code=$(curl -sSL -o /dev/null -w "%{http_code}" --max-time 25 "${base}${path}")
+            echo "${code}  ${base}${path}"
+            if [ "$code" != "200" ]; then fail=1; fi
+          done
+
+          # The redirect shape is part of what "up" means for this site: the
+          # slashless form must still land on a page rather than a 404. Checked
+          # once, on one route, so a redirect-rule change surfaces here instead
+          # of in someone's inbox.
+          slashless=$(curl -sSL -o /dev/null -w "%{http_code}" --max-time 25 "${base}/about")
+          echo "${slashless}  ${base}/about (slashless, expect 200 after redirect)"
+          if [ "$slashless" != "200" ]; then fail=1; fi
+
+          if [ "$fail" = "1" ]; then
+            echo "::error::One or more key routes did not return HTTP 200."
+            exit 1
+          fi
