@@ -112,7 +112,8 @@ const { variant = 'full' } = Astro.props;
             widths={[600, 900, 1200, 1440]}
             sizes="(min-width: 64rem) 640px, 80vw"
             class="shot-img"
-            loading="lazy"
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchpriority={i === 0 ? 'high' : undefined}
           />
         </div>
       ))}
@@ -126,13 +127,18 @@ const { variant = 'full' } = Astro.props;
     <div class="dev-screen dev-screen-phone">
       {sites.map((s, i) => (
         <div class:list={['shot', i === 0 && 'is-active is-loaded']} data-shot={i}>
+          {/* Slide one is on screen at first paint and is the page's LCP element on
+              phones. A lazy LCP image is deprioritised by the browser: measured
+              2026-09-04, 86% of LCP time was "resource load delay" (6.3s on the
+              Lighthouse mobile run). Eager + high priority for slide one only. */}
           <Image
             src={s.mobile}
             alt=""
             widths={[280, 420, 545]}
             sizes="(min-width: 64rem) 270px, 40vw"
             class="shot-img"
-            loading="lazy"
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchpriority={i === 0 ? 'high' : undefined}
           />
         </div>
       ))}
