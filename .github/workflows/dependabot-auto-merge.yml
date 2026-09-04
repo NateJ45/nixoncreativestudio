@@ -1,0 +1,74 @@
+# =============================================================================
+# Dependabot auto-merge — merge on green, and only on green
+# =============================================================================
+# Runs when CI (and the Lighthouse workflow, where it is separate) finishes on a
+# dependabot/* branch, and squash-merges the PR if EVERY check run on that
+# commit is green. Deliberately not GitHub's built-in auto-merge: that only
+# waits for *required* checks, and requiring checks on main would also block
+# the direct pushes this repo relies on.
+#
+# Rules (2026-09-04, first Dependabot rollout across the studio's Astro repos):
+#   - Only PRs authored by dependabot[bot].
+#   - Majors ("Bump x from 1.2.3 to 2.0.0") are left for a deliberate review;
+#     the grouped weekly PR is minor+patch by config, so it qualifies.
+#   - Cloudflare's "Workers Builds" check is ignored: it fails on every PR
+#     while the integration is disconnected and says nothing about the change.
+#   - A skipped check counts as green (Lighthouse skips when there is nothing
+#     to audit); anything cancelled, failed, or still running blocks the merge.
+#
+# Token: merges made with GITHUB_TOKEN do not trigger other workflows, so a
+# repo that deploys from a push-to-main workflow (Deploy on wcp-website) needs
+# GH_ACTIONS_PAT so the deploy still fires. Repos that deploy through
+# Cloudflare Workers Builds are unaffected (the GitHub App sees every push).
+# =============================================================================
+name: Dependabot auto-merge
+
+on:
+  workflow_run:
+    workflows: [CI, Lighthouse, "Lighthouse CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot-auto-merge:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge when every real check on the commit is green
+        env:
+          GH_TOKEN: ${{ secrets.GH_ACTIONS_PAT || secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open \
+                 --json number,title,author --jq '.[0] // empty')
+          if [ -z "$pr" ]; then echo "No open PR for $BRANCH"; exit 0; fi
+          num=$(jq -r .number <<<"$pr"); title=$(jq -r .title <<<"$pr")
+          login=$(jq -r '.author.login' <<<"$pr")
+          case "$login" in dependabot|app/dependabot|dependabot[bot]) ;; *)
+            echo "PR #$num is by $login, not Dependabot; leaving it"; exit 0;; esac
+          if [[ "$title" =~ from\ ([0-9]+)\.[0-9.]+\ to\ ([0-9]+)\. ]] \
+             && [ "${BASH_REMATCH[1]}" != "${BASH_REMATCH[2]}" ]; then
+            echo "PR #$num is a major bump; leaving it for review"; exit 0
+          fi
+          checks=$(gh api "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
+            --jq '[.check_runs[]
+                   | select((.name | startswith("Workers Builds")) | not)
+                   | select(.name != "dependabot-auto-merge")]')
+          total=$(jq length <<<"$checks")
+          green=$(jq '[.[] | select(.status == "completed"
+                        and (.conclusion == "success" or .conclusion == "skipped"))]
+                     | length' <<<"$checks")
+          jq -r '.[] | "  \(.name): \(.status)/\(.conclusion)"' <<<"$checks"
+          if [ "$total" -eq 0 ] || [ "$green" -ne "$total" ]; then
+            echo "PR #$num: $green/$total green; not merging yet"; exit 0
+          fi
+          echo "PR #$num: all $total checks green; merging"
+          gh pr merge "$num" --repo "$REPO" --squash --delete-branch
