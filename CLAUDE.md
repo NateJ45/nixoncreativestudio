@@ -38,7 +38,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - opentype.js (dev-only) for the OG image generators: `scripts/generate-og-default.mjs` (the fallback card) and `scripts/generate-og.mjs` (per-page cards into `public/og/`, run in the build chain). Both render Bebas glyphs to SVG then rasterize with sharp, out-of-process (the CF prerender isolate has no node built-ins, so an `astro-og-canvas` route can't run here)
 - `@astrojs/rss` for `/rss.xml`, surfacing case study entries to feed readers (`<link rel="alternate">` auto-discovery wired in BaseLayout)
 - `astro-expressive-code` for themed code blocks in MDX (journal dev posts); its dark theme is tied to the site's `.dark` class. Must sit before `mdx()` in the integrations array
-- `@astrojs/partytown` runs the Cloudflare Web Analytics beacon in a web worker (the beacon script in `Analytics.astro` carries `type="text/partytown"`)
+- `Analytics.astro` loads the Cloudflare Web Analytics beacon as a plain `<script defer>` (Partytown was removed 2026-09-04: its sandbox cost more main-thread time than the 7KB beacon) and, when `PUBLIC_GA_ID` is set, the GA4 gtag after the `load` event
 - Astro `prefetch` enabled (`prefetchAll`, viewport strategy) so links preload as they enter the viewport, pairing with the View Transitions router
 - `three` + `@react-three/fiber` for the optional WebGL hero background (`HeroCanvas.tsx`), guarded behind WebGL support + reduced-motion with the CSS aurora as the fallback
 - `embla-carousel-react` + `embla-carousel-autoplay` for the client-testimonials carousel (`TestimonialCarousel.tsx`)
@@ -460,6 +460,7 @@ Set in Cloudflare Pages → **Settings → Variables and Secrets** (the Build se
 
 - `PUBLIC_WEB3FORMS_KEY` — contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action and shows an inline notice.
 - `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics token from dash.cloudflare.com → Analytics & Logs → Web Analytics. Without it the analytics beacon doesn't render.
+- `PUBLIC_GA_ID` — the GA4 web data stream Measurement ID (`G-...`) for property 532519109. Without it no GA4 script renders. The property went dark in 2026-06 because the Astro rebuild shipped without the tag; restored 2026-09-04.
 - `PUBLIC_COMING_SOON` — set to the literal string `true` to gate the entire site behind the coming-soon page (see below). Unset, or any other value, takes the site live.
 - `PUBLIC_PREVIEW_TOKEN` — random secret string used by the gate's inline script to recognize your bypass. Required for the bypass to work; pick something long and unguessable. The token is inlined into shipped HTML at build time, so anyone viewing source can see it — soft gate, not security.
 
@@ -546,6 +547,7 @@ Things that still need configuration before / during the public launch. Everythi
 
 - [ ] `PUBLIC_WEB3FORMS_KEY` — contact form delivery (web3forms.com).
 - [ ] `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics.
+- [ ] `PUBLIC_GA_ID` — GA4 Measurement ID.
 - [ ] `PUBLIC_COMING_SOON` — set to `true` while the site is WIP; unset to launch.
 - [ ] `PUBLIC_PREVIEW_TOKEN` — required only when the gate is on. Pick something long and random. Visit `?preview=<token>` once per browser to bypass. Token is inlined in shipped HTML, so it's a soft gate, not security.
 

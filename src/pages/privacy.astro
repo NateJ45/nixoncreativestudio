@@ -5,8 +5,10 @@
    /privacy | Privacy notice
    ============================================================================
    Short, honest accounting of what the site collects. Contact form,
-   analytics beacon, server logs. No marketing pixels, no advertising
-   trackers, no cookies that need a banner.
+   Cloudflare analytics beacon, Google Analytics 4 (added 2026-09-04; it
+   sets first-party cookies, so the Analytics and Cookies sections name it
+   and link the opt-out), server logs. No marketing pixels, no advertising
+   trackers.
 
    Layout: on wide screens the prose sits next to a sticky in-page table of
    contents. The TOC links jump to each section by id. A tiny scroll-spy
@@ -20,7 +22,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 
-const lastUpdated = 'May 25, 2026';
+const lastUpdated = 'September 4, 2026';
 
 // Anchors inside the prose share the same styling: --link (darker than
 // --accent so it clears WCAG AA on white prose), always underlined.
@@ -70,7 +72,7 @@ const sections = [
         <p class="font-mono text-sm text-text-muted">Privacy notice</p>
         <h1 id="privacy-heading" class="leading-[0.95]">What this site collects.</h1>
         <p class="text-lg leading-[1.6] text-text">
-          Short version: a contact form, a privacy-friendly analytics beacon, an embedded Google Map on the contact page, and the things any web server logs. No advertising trackers. If you have questions, email <a class={linkClass} href={site.emailHref}>{site.email}</a>.
+          Short version: a contact form, two analytics tools (a cookieless Cloudflare beacon and Google Analytics), an embedded Google Map on the contact page, and the things any web server logs. No advertising trackers. If you have questions, email <a class={linkClass} href={site.emailHref}>{site.email}</a>.
         </p>
 
         <!-- Last updated badge. A small pill so the freshness of the notice
@@ -149,7 +151,13 @@ const sections = [
           <div class="mt-xl" data-reveal>
             <h2 id="analytics" class={h2Class}>Analytics</h2>
             <p class={pClass}>
-              The site uses <a class={linkClass} href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a>, which counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network. I use the totals to see which pages are useful and which aren't.
+              The site uses two analytics tools, and I use both for the same thing: to see which pages are useful and which aren't.
+            </p>
+            <p class={pClass}>
+              <a class={linkClass} href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a> counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network.
+            </p>
+            <p class={pClass}>
+              <a class={linkClass} href="https://support.google.com/analytics/answer/6004245" target="_blank" rel="noopener noreferrer">Google Analytics 4</a> records page views, scrolls, and outbound clicks, and sends them to Google. It sets first-party cookies to tell returning visits apart, and it truncates IP addresses before storing anything. I do not use it for advertising, I have not linked it to any ad account, and I have not turned on Google Signals or any demographic reporting. To opt out everywhere, install Google's <a class={linkClass} href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">browser add-on</a>; most tracker-blocking extensions and browsers also stop it.
             </p>
           </div>
 
@@ -163,7 +171,7 @@ const sections = [
           <div class="mt-xl" data-reveal>
             <h2 id="cookies" class={h2Class}>Cookies</h2>
             <p class={pClass}>
-              The site itself does not set tracking cookies. The one exception is the contact page, which embeds a Google Map: when that map loads, Google may set its own cookies and receive your IP address, the same as if you visited Google Maps directly. If a future change adds more third-party content, this page will say so first.
+              Google Analytics sets a small number of first-party cookies (the <code class="font-mono text-[0.9em]">_ga</code> family) so it can tell a returning visit from a new one. They carry a random identifier, not your name or email, and the Analytics section above links the opt-out. The contact page also embeds a Google Map: when that map loads, Google may set its own cookies and receive your IP address, the same as if you visited Google Maps directly. Nothing else on the site sets cookies. If a future change adds more third-party content, this page will say so first.
             </p>
           </div>
 
