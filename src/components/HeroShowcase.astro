@@ -39,7 +39,7 @@
    redesigns.
    ============================================================================ */
 
-import { Image } from 'astro:assets';
+import { getImage } from 'astro:assets';
 
 // Desktop full-page captures (shared with the case-study SiteShowcase).
 import dSecondPres from '../assets/case-studies/shots/second-presbyterian-chicago-home.png';
@@ -79,6 +79,30 @@ interface Props {
   variant?: 'full' | 'phone';
 }
 const { variant = 'full' } = Astro.props;
+
+// Slides after the first are rendered WITHOUT src/srcset (data-src instead) and hydrated by the
+// script when they are promoted. `display:none` alone does not stop the browser fetching an
+// <img src>, and `loading="lazy"` does not defer images stacked inside the viewport: measured
+// 2026-09-04, all 18 screenshots downloaded in the first half second and starved the LCP image
+// (Lighthouse mobile 71-76, LCP 4.6-6.3s). Precomputing the optimized URLs here keeps the same
+// widths/sizes the <Image> component would emit.
+const DESKTOP_WIDTHS = [600, 900, 1200, 1440];
+const DESKTOP_SIZES = '(min-width: 64rem) 640px, 80vw';
+const PHONE_WIDTHS = [280, 420, 545];
+const PHONE_SIZES = '(min-width: 64rem) 270px, 40vw';
+// Hero.astro renders BOTH variants (the desktop cluster is hidden below lg, the phone backdrop
+// hidden at lg and up), and display:none does not stop an eager <img> from downloading. Slide
+// one is therefore a <picture> whose real source only matches on the breakpoint where this
+// variant is shown; the fallback <img src> is a 1x1 transparent GIF, so the hidden copy costs
+// nothing. The visible copy still gets loading=eager + fetchpriority=high (it is the LCP).
+const SHOWN_MEDIA = variant === 'phone' ? '(max-width: 63.99rem)' : '(min-width: 64rem)';
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const deferred = await Promise.all(
+  sites.map(async (s) => ({
+    desktop: await getImage({ src: s.desktop, widths: DESKTOP_WIDTHS, sizes: DESKTOP_SIZES, format: 'webp' }),
+    mobile: await getImage({ src: s.mobile, widths: PHONE_WIDTHS, sizes: PHONE_SIZES, format: 'webp' }),
+  })),
+);
 ---
 
 <div
@@ -106,15 +130,32 @@ const { variant = 'full' } = Astro.props;
     <div class="dev-screen dev-screen-desktop">
       {sites.map((s, i) => (
         <div class:list={['shot', i === 0 && 'is-active is-loaded']} data-shot={i} data-host={s.host}>
-          <Image
-            src={s.desktop}
-            alt=""
-            widths={[600, 900, 1200, 1440]}
-            sizes="(min-width: 64rem) 640px, 80vw"
-            class="shot-img"
-            loading={i === 0 ? 'eager' : 'lazy'}
-            fetchpriority={i === 0 ? 'high' : undefined}
-          />
+          {i === 0 ? (
+            <picture>
+              <source media={SHOWN_MEDIA} srcset={deferred[0].desktop.srcSet.attribute} sizes={DESKTOP_SIZES} type="image/webp" />
+              <img
+                class="shot-img"
+                alt=""
+                width={deferred[0].desktop.attributes.width}
+                height={deferred[0].desktop.attributes.height}
+                src={BLANK}
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+              />
+            </picture>
+          ) : (
+            <img
+              class="shot-img"
+              alt=""
+              width={deferred[i].desktop.attributes.width}
+              height={deferred[i].desktop.attributes.height}
+              data-src={deferred[i].desktop.src}
+              data-srcset={deferred[i].desktop.srcSet.attribute}
+              data-sizes={DESKTOP_SIZES}
+              decoding="async"
+            />
+          )}
         </div>
       ))}
     </div>
@@ -128,18 +169,34 @@ const { variant = 'full' } = Astro.props;
       {sites.map((s, i) => (
         <div class:list={['shot', i === 0 && 'is-active is-loaded']} data-shot={i}>
           {/* Slide one is on screen at first paint and is the page's LCP element on
-              phones. A lazy LCP image is deprioritised by the browser: measured
-              2026-09-04, 86% of LCP time was "resource load delay" (6.3s on the
-              Lighthouse mobile run). Eager + high priority for slide one only. */}
-          <Image
-            src={s.mobile}
-            alt=""
-            widths={[280, 420, 545]}
-            sizes="(min-width: 64rem) 270px, 40vw"
-            class="shot-img"
-            loading={i === 0 ? 'eager' : 'lazy'}
-            fetchpriority={i === 0 ? 'high' : undefined}
-          />
+              phones: eager + high priority. Every other slide is a data-src stub
+              until the script promotes it (see the note in the frontmatter). */}
+          {i === 0 ? (
+            <picture>
+              <source media={SHOWN_MEDIA} srcset={deferred[0].mobile.srcSet.attribute} sizes={PHONE_SIZES} type="image/webp" />
+              <img
+                class="shot-img"
+                alt=""
+                width={deferred[0].mobile.attributes.width}
+                height={deferred[0].mobile.attributes.height}
+                src={BLANK}
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+              />
+            </picture>
+          ) : (
+            <img
+              class="shot-img"
+              alt=""
+              width={deferred[i].mobile.attributes.width}
+              height={deferred[i].mobile.attributes.height}
+              data-src={deferred[i].mobile.src}
+              data-srcset={deferred[i].mobile.srcSet.attribute}
+              data-sizes={PHONE_SIZES}
+              decoding="async"
+            />
+          )}
         </div>
       ))}
     </div>
@@ -425,9 +482,29 @@ const { variant = 'full' } = Astro.props;
           root.querySelector<HTMLElement>(`[data-shot="${i}"][data-host]`)?.dataset.host ?? '';
 
         let cur = 0;
-        const load = (i: number) => shots(i).forEach((e) => e.classList.add('is-loaded'));
+        // Promote a site: hydrate its data-src stubs (this is the moment the browser
+        // first fetches that site's screenshots, at low priority so a preload never
+        // competes with what is on screen), then let it render beneath the active one.
+        const load = (i: number) =>
+          shots(i).forEach((e) => {
+            e.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => {
+              img.setAttribute('fetchpriority', 'low');
+              if (img.dataset.sizes) img.sizes = img.dataset.sizes;
+              if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+              img.src = img.dataset.src ?? '';
+              delete img.dataset.src;
+              delete img.dataset.srcset;
+              delete img.dataset.sizes;
+            });
+            e.classList.add('is-loaded');
+          });
 
-        load((cur + 1) % count); // preload the next site during the first dwell
+        // Preload the next site during the first dwell, but only once the page has
+        // finished loading (or after a short beat if it already has), so the preload
+        // never lands in the LCP window.
+        const preloadNext = () => load((cur + 1) % count);
+        if (document.readyState === 'complete') setTimeout(preloadNext, 800);
+        else window.addEventListener('load', () => setTimeout(preloadNext, 800), { once: true });
 
         let timer: ReturnType<typeof setInterval> | undefined;
         let cleanup: ReturnType<typeof setTimeout> | undefined;
