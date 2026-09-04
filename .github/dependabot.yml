@@ -1,0 +1,35 @@
+# =============================================================================
+# Dependabot — grouped weekly dependency PRs, validated by the existing gates
+# =============================================================================
+# One PR per week per ecosystem, minor+patch grouped so a Monday merge is one
+# green-CI review, not twelve. Majors arrive as their own PRs (they deserve
+# individual attention on this stack — Astro/Sanity/wrangler majors have
+# real migration notes). CI + the Playwright suite are the safety net that
+# makes auto-updates sane on a solo project.
+# (Dependabot over Renovate: no app install needed — config-only, so it
+# ships from a session without account-owner clicks. Same idea, less setup.)
+# =============================================================================
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/New_York
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/New_York
+    groups:
+      actions:
+        update-types: ["major", "minor", "patch"]
