@@ -121,15 +121,20 @@ const isActive = (href: string): boolean => {
         </a>
       </div>
 
-      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own. -->
+      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own.
+           client:idle, not client:load: hydrating it at load pulled React onto
+           the critical path on every page for a control nobody touches in the
+           first second, and it is hidden below md where the score is measured. -->
       <div class="hidden md:block">
-        <ThemeToggle client:load />
+        <ThemeToggle client:idle />
       </div>
 
-      <!-- Mobile drawer. Hidden at >= md. client:only='react' skips SSR of the
-           Radix-portal Sheet, which doesn't render cleanly inside Astro. -->
+      <!-- Mobile drawer. Hidden at >= md. The component server-renders only its
+           trigger button and mounts the Radix Sheet after hydration (the portal
+           does not SSR cleanly), which is what lets this be client:idle instead
+           of client:only: React no longer downloads inside the LCP window. -->
       <div class="md:hidden">
-        <MobileNav client:only="react" links={navLinks} studioName={site.studioName} />
+        <MobileNav client:idle links={navLinks} studioName={site.studioName} />
       </div>
 
     </div>

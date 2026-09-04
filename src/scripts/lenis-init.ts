@@ -29,7 +29,12 @@
    carries across client-side navigations without restart.
    ============================================================================ */
 
-import Lenis from 'lenis';
+// Type-only import: the library itself is loaded on demand (see startLenis), so
+// phones and touch devices, which never smooth-scroll, never download or parse
+// it. Measured 2026-09-04: this script was the single largest main-thread cost
+// on the Lighthouse mobile run (~830ms throttled) for an effect that only
+// applies to wheel input.
+import type Lenis from 'lenis';
 
 // Augment the window type so __lenis can be set without any.
 declare global {
@@ -52,8 +57,9 @@ declare global {
  *
  * Returns the new instance so the caller can attach the rAF loop.
  */
-function startLenis(): Lenis {
-  const lenis = new Lenis({
+async function startLenis(): Promise<Lenis> {
+  const { default: LenisCtor } = await import('lenis');
+  const lenis = new LenisCtor({
     lerp: 0.1,
     smoothWheel: true,
     duration: 1.2,
@@ -91,18 +97,35 @@ function stopLenis() {
  * Apply the right state based on the current prefers-reduced-motion
  * setting. Called on initial load AND when the preference changes.
  */
+let starting = false;
+
 function applyMotionPreference() {
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Smooth wheel scrolling only matters where there is a wheel: fine pointers at
+  // desktop widths. Touch scrolling is already inertial, and running Lenis there
+  // just spends CPU fighting the browser's own physics.
+  const wheelDevice =
+    window.matchMedia('(pointer: fine)').matches && window.matchMedia('(min-width: 1024px)').matches;
 
-  if (prefersReduced) {
-    // User wants less motion; if Lenis is running, stop it.
+  if (prefersReduced || !wheelDevice) {
+    // User wants less motion (or has no wheel); if Lenis is running, stop it.
     stopLenis();
     return;
   }
 
-  // User is fine with motion. Start Lenis if not already running.
-  if (!window.__lenis) {
-    window.__lenis = startLenis();
+  // User is fine with motion. Start Lenis if not already running (or starting).
+  if (!window.__lenis && !starting) {
+    starting = true;
+    startLenis()
+      .then((lenis) => {
+        window.__lenis = lenis;
+      })
+      .catch(() => {
+        /* the library failed to load: native scroll is a fine fallback */
+      })
+      .finally(() => {
+        starting = false;
+      });
   }
 }
 
@@ -168,5 +191,9 @@ initNavigationScroll();
 // but it's free coverage for anyone who does.
 const motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 motionMediaQuery.addEventListener('change', applyMotionPreference);
+// Same for the wheel-device test: a window resized past the desktop breakpoint
+// (or a tablet docked to a keyboard) starts Lenis then, not on the next page.
+window.matchMedia('(min-width: 1024px)').addEventListener('change', applyMotionPreference);
+window.matchMedia('(pointer: fine)').addEventListener('change', applyMotionPreference);
 
 export {};

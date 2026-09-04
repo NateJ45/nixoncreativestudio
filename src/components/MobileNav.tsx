@@ -124,6 +124,18 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
   // doesn't linger over the next page.
   const [open, setOpen] = useState<boolean>(false);
 
+  // Server-render only the trigger button; mount the Radix Sheet after hydration.
+  // The Sheet's portal does not render cleanly inside Astro's SSR, which used to
+  // force client:only on this island, and client:only fetched React at page load
+  // on every phone view (measured 2026-09-04: React + this bundle downloaded at
+  // high priority inside the LCP window). With the button as plain SSR markup the
+  // island can hydrate at idle instead; the button markup below is identical
+  // before and after, so nothing shifts.
+  const [mounted, setMounted] = useState<boolean>(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Current path, read when the panel opens so the active item is right even
   // after a View Transitions navigation (which doesn't remount this island).
   const [path, setPath] = useState<string>('');
@@ -140,18 +152,22 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
   // Stagger helper: each row animates in a beat after the previous one.
   const delay = (ms: number): CSSProperties => ({ '--mnav-delay': `${ms}ms` }) as CSSProperties;
 
+  const trigger = (
+    <Button
+      variant="ghost"
+      size="icon-lg"
+      aria-label="Open menu"
+      className="mobile-trigger size-11 text-heading"
+    >
+      <Menu className="size-6" />
+    </Button>
+  );
+
+  if (!mounted) return trigger;
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          aria-label="Open menu"
-          className="mobile-trigger size-11 text-heading"
-        >
-          <Menu className="size-6" />
-        </Button>
-      </SheetTrigger>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
 
       {/* Full-screen panel, theme-aware: a light surface with dark type in light
           mode, navy with white type in dark. showCloseButton off so we place our

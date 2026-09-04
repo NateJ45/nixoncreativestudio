@@ -5,7 +5,6 @@ import cloudflare from '@astrojs/cloudflare';
 import expressiveCode from 'astro-expressive-code';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import partytown from '@astrojs/partytown';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
@@ -25,9 +24,9 @@ import react from '@astrojs/react';
 //                      site theme.
 //   - mdx       : powers the case-studies + journal content collections
 //   - sitemap   : emits sitemap-index.xml and sitemap-0.xml at build time
-//   - partytown : runs the Cloudflare Web Analytics beacon in a web worker so
-//                 it stays off the main thread (the beacon script carries
-//                 type="text/partytown" in Analytics.astro)
+//   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
+//                 than the one small beacon it isolated; Analytics.astro now
+//                 loads the beacon with `defer`)
 //   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
 //                 the WebGL hero)
 //
@@ -68,9 +67,6 @@ export default defineConfig({
     }),
     mdx(),
     sitemap(),
-    // Run the Cloudflare analytics beacon in a worker. forward is empty: the
-    // beacon fires its own requests and exposes no global push API to proxy.
-    partytown({ config: { forward: [] } }),
     react(),
   ],
 

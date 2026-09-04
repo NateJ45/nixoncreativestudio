@@ -33,11 +33,14 @@ const beaconConfig = JSON.stringify({ token });
 ---
 
 {hasToken && (
-  <!-- type="text/partytown" hands this off to the Partytown web worker so the
-       beacon never touches the main thread. Partytown rewrites the script and
-       proxies its network calls; the analytics still report normally. -->
+  <!-- A plain deferred script, not Partytown. The beacon is ~7KB and cheap on
+       the main thread; Partytown's sandbox (an iframe plus a service worker)
+       cost ~540ms of throttled main-thread time on the Lighthouse mobile run,
+       more than the beacon it was isolating. `defer` keeps it off the parser
+       and after the LCP path; is:inline keeps Astro from bundling it. -->
   <script
-    type="text/partytown"
+    is:inline
+    defer
     src="https://static.cloudflareinsights.com/beacon.min.js"
     data-cf-beacon={beaconConfig}
   ></script>

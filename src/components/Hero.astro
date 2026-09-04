@@ -75,7 +75,11 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     <Image src={heroPhoto} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
     -->
     <div class="grain absolute inset-0"></div>
-    <HeroCanvas client:only="react" />
+    <!-- client:idle, not client:only: the wrapper renders null until its own
+         effect decides to load the shader, so it SSRs as nothing and can
+         hydrate at idle. client:only fetched React at page load on phones, where
+         the shader is never used. -->
+    <HeroCanvas client:idle />
   </div>
 
   <!-- ====================================================================
