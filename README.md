@@ -66,3 +66,4 @@ See [CLAUDE.md](./CLAUDE.md) for the full conventions, brand decisions, and arch
 ---
 
 Nixon Creative Studio · Cincinnati, Ohio · [nixoncreativestudio.com](https://nixoncreativestudio.com)
+
