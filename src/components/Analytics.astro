@@ -46,11 +46,11 @@ const beaconConfig = JSON.stringify({ token });
 ---
 
 {hasToken && (
-  <!-- A plain deferred script, not Partytown. The beacon is ~7KB and cheap on
+  /* A plain deferred script, not Partytown. The beacon is ~7KB and cheap on
        the main thread; Partytown's sandbox (an iframe plus a service worker)
        cost ~540ms of throttled main-thread time on the Lighthouse mobile run,
        more than the beacon it was isolating. `defer` keeps it off the parser
-       and after the LCP path; is:inline keeps Astro from bundling it. -->
+       and after the LCP path; is:inline keeps Astro from bundling it. */
   <script
     is:inline
     defer

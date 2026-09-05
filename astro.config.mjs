@@ -39,6 +39,8 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
+  // Astro 7's adapter no longer forces server mode; this site never used sessions.
+  session: false,
   // The standalone /now page was merged into the About page (its Currently
   // section). Keep old links and bookmarks working with a static redirect.
   redirects: {
