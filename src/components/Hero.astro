@@ -74,11 +74,17 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
     <Image src={heroPhoto} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
     -->
     <div class="grain absolute inset-0"></div>
-    <!-- client:idle, not client:only: the wrapper renders null until its own
-         effect decides to load the shader, so it SSRs as nothing and can
-         hydrate at idle. client:only fetched React at page load on phones, where
-         the shader is never used. -->
-    <HeroCanvas client:idle />
+    <!-- client:media, not client:idle or client:only. The wrapper renders null
+         until its own effect decides to load the shader, so it SSRs as nothing;
+         client:only fetched React at page load on phones, where the shader is
+         never used. client:idle still did: the island hydrated everywhere and
+         then decided to do nothing below 1024px, and that React work landed in
+         the homepage's LCP window (Lighthouse mobile read LCP at 4.6s on
+         staging, 2026-09-06, with the whole gap coming from script). The media
+         query is the same 1024px gate the component checks internally, so on a
+         phone the island never hydrates at all, and a desktop-width resize
+         still brings it in. -->
+    <HeroCanvas client:media="(min-width: 1024px)" />
   </div>
 
   <!-- ====================================================================
