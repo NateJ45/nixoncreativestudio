@@ -37,7 +37,7 @@ import { site } from '../data/site';
     <span class="ncs-cs__grain"></span>
   </div>
 
-  <!-- Content. Each block carries a small entrance-fade delay so the
+  <!-- Content. Each block carries a small entrance delay so the
        wordmark, pitch, and contact links arrive in sequence. -->
   <div class="ncs-cs__inner">
     <!-- Small accent rule above the wordmark. Decorative anchor for the
@@ -397,11 +397,18 @@ import { site } from '../data/site';
   }
 
   /* ==========================================================================
-     Entrance fade. Each .ncs-cs__rise element fades + lifts in once, with a
+     Entrance. Each .ncs-cs__rise element lifts into place once, with a
      per-element delay set inline via --cs-delay. One-shot, forwards-filled.
+
+     It deliberately does NOT fade up from opacity 0. Chrome does not count a
+     zero-opacity element as a contentful paint and does not re-count it once
+     it fades in, so the earlier fade version left this page with no Largest
+     Contentful Paint at all: Lighthouse reported "audit did not produce a
+     value" for LCP and scored no performance category (staging, 2026-09-06).
+     The lift alone reads as the same staggered arrival, and every line is
+     painted from the first frame.
      ========================================================================== */
   .ncs-cs__rise {
-    opacity: 0;
     transform: translateY(14px);
     animation: cs-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     animation-delay: var(--cs-delay, 0ms);
@@ -409,14 +416,13 @@ import { site } from '../data/site';
 
   @keyframes cs-rise {
     to {
-      opacity: 1;
       transform: translateY(0);
     }
   }
 
   /* ==========================================================================
      Reduced-motion: freeze every animation. The mesh holds a static
-     position and the entrance fade is skipped (content shown immediately).
+     position and the entrance lift is skipped (content sits where it lands).
      The wordmark is a static solid color now, so it needs no special
      handling here. Hover transitions on the links are short and
      intentional, so they stay.
@@ -428,7 +434,6 @@ import { site } from '../data/site';
     }
     .ncs-cs__rise {
       animation: none !important;
-      opacity: 1;
       transform: none;
     }
   }
