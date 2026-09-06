@@ -20,11 +20,17 @@
     "free-dist": "node scripts/free-dist.mjs",
     "parity": "node scripts/page-parity.mjs",
     "sync-check": "node scripts/sync-check.mjs",
-    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "check": "astro check && npm run lint",
+    "check:full": "npm run check && npm run test:unit && npm run build",
     "lint": "eslint src/**/*.{ts,tsx,astro} scripts/**/*.mjs",
     "lint:fix": "eslint --fix src/**/*.{ts,tsx,astro} scripts/**/*.mjs",
     "format": "prettier --write .",
-    "check": "npm run build && npm test"
+    "format:check": "prettier --check .",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "serve:dist": "http-server dist/client -p 4321 -s -c-1 --silent",
+    "check:links": "linkinator ./dist/client --recurse --skip \"^https?://(?!(localhost|127[.]0[.]0[.]1)[:/])\""
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.0",
@@ -69,14 +75,21 @@
     "yet-another-react-lightbox": "^3.32.2"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
     "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.63.0",
     "@types/three": "^0.185.4",
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
     "eslint": "^10.9.1",
     "eslint-plugin-astro": "^1.7.0",
+    "http-server": "^14.1.1",
+    "linkinator": "^8.1.0",
     "opentype.js": "^2.0.0",
     "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript-eslint": "^8.69.0",
     "wrangler": "^4.128.0"
   },
