@@ -1,9 +1,26 @@
 name: CI
 
+# 2026-09-06: brought up to the family test standard (WCP is the reference):
+# astro check, eslint, a prettier format check, the node --test unit suites,
+# the build, an internal link check over dist/client, and a separate `test`
+# job running the Playwright suites (smoke, axe light + dark, reflow) on
+# chromium and a WebKit iPhone profile. Before this the workflow was install,
+# build, unit tests, and lint was advisory only.
+#
+# No Sanity here (content lives in Astro content collections and MDX), so
+# there is no typegen step and no stale-types guard.
+
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch obsoletes the in-flight run; cancel it
+# instead of paying for both.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -20,8 +37,73 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Type check (astro check)
+        run: npx astro check
+
+      # A hard gate since 2026-09-06. The eslint-plugin-astro false positive
+      # that kept lint advisory (an HTML comment inside a template expression
+      # read as a JSX error) is gone: those comments are JSX comments now.
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Format check (prettier)
+        run: npm run format:check
+
+      # Node's built-in runner over src/lib/*.test.ts. Includes
+      # theme-tokens.test.ts, the contrast gate: it reads the real hex tokens
+      # out of globals.css and asserts the text and focus-ring pairs the
+      # design system renders in both themes. Nothing else in this pipeline
+      # can catch a palette edit that pushes body text or a focus outline
+      # under threshold.
+      - name: Unit tests (node --test)
+        run: npm run test:unit
+
+      # placeholders + OG cards + astro build (see CLAUDE.md, "Build
+      # pipeline"). No env needed: the analytics, GA and coming-soon
+      # variables are all optional and the site builds clean without them.
       - name: Build
         run: npm run build
 
-      - name: Run tests
-        run: npm test
+      # linkinator over dist/client. The site is fully static (output:
+      # 'static', no page opts out with prerender = false), so every route is
+      # in dist/client and nothing needs skipping beyond off-site URLs. The
+      # log must say "scanned N links" with N well above zero.
+      - name: Check internal links
+        run: npm run check:links
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Both projects in playwright.config.ts: chromium (desktop) AND
+      # webkit-iphone (iPhone 14). Installing only chromium makes every webkit
+      # test die with "Executable doesn't exist".
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      # smoke (every route 200s and carries the studio name in its title), axe
+      # in light, axe in dark as a separate sweep plus a focus-indicator check
+      # (a theme swap is a different resting DOM), and reflow at
+      # 320/768/1024/1440 (WCAG 1.4.10 starts at 320, not 375). The config's
+      # webServer runs `npm run build` itself and serves dist/client on 4321.
+      # The html reporter is added on the command line so local runs keep the
+      # quiet `list` output while CI still produces the report artifact below.
+      - name: Run tests (smoke, a11y light + dark, reflow)
+        run: npm test -- --reporter=github,html
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

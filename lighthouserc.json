@@ -1,5 +1,5 @@
 {
-  "//": "Lighthouse CI config. Runs against the built static output so dev-server SSR quirks never affect scores. The url list is EXPLICIT on purpose: with staticDistDir alone, lhci auto-discovers pages but caps at maxAutodiscoverUrls (default 5), so it was testing a near-random 5 of 22 pages, including the /404 page and the Google Search Console verification stub (googlebc11aa9bca0fae39.html), which dragged the accessibility gate below 100. Listing the urls disables auto-discovery (lhci still serves staticDistDir and swaps in its own port), so the run covers every distinct template and skips the non-page stub. One case study stands in for all ten since they share a layout. Accessibility is a hard gate (the site holds 100 and that bar must not regress); performance / best-practices / SEO are warnings so normal CI variance doesn't block a PR while still surfacing drops. Run locally with: npm run build && npx lhci autorun",
+  "//": "Lighthouse CI config. Runs against the built static output so dev-server SSR quirks never affect scores. The url list is EXPLICIT on purpose: with staticDistDir alone, lhci auto-discovers pages but caps at maxAutodiscoverUrls (default 5), so it was testing a near-random 5 of 22 pages, including the /404 page and the Google Search Console verification stub (googlebc11aa9bca0fae39.html), which dragged the accessibility gate below 100. Listing the urls disables auto-discovery (lhci still serves staticDistDir and swaps in its own port), so the run covers every distinct template and skips the non-page stub. One case study stands in for all ten since they share a layout; /coming-soon is its own standalone template. Accessibility is a hard gate (the site holds 100 and that bar must not regress), as are LCP under 4.5s and CLS under 0.1 (family standard, 2026-09-06); performance / best-practices / SEO scores and total byte weight are warnings so normal CI variance doesn't block a PR while still surfacing drops. Run locally with: npm run build && npx lhci autorun (see CLAUDE.md Gotcha 9: it does not complete on Nathan's Windows machine, trust the CI run)",
   "ci": {
     "collect": {
       "staticDistDir": "./dist/client",
@@ -15,6 +15,7 @@
         "http://localhost/colophon/index.html",
         "http://localhost/privacy/index.html",
         "http://localhost/accessibility/index.html",
+        "http://localhost/coming-soon/index.html",
         "http://localhost/404.html"
       ],
       "numberOfRuns": 1,
@@ -27,7 +28,10 @@
         "categories:accessibility": ["error", { "minScore": 1 }],
         "categories:best-practices": ["warn", { "minScore": 0.95 }],
         "categories:seo": ["warn", { "minScore": 0.95 }],
-        "categories:performance": ["warn", { "minScore": 0.85 }]
+        "categories:performance": ["warn", { "minScore": 0.85 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 4500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-byte-weight": ["warn", { "maxNumericValue": 3000000 }]
       }
     },
     "upload": {
