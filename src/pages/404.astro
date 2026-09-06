@@ -28,7 +28,15 @@ import { buttonVariants } from '../components/ui/button';
       {
         /* Oversized quiet centerpiece. A low-opacity navy numeral as a backdrop.
           Decorative: the real "404" meaning is announced in the line below, so
-          this is aria-hidden. */
+          this is aria-hidden.
+
+          The glyph itself is drawn by CSS (.notfound-glyph::before) rather than
+          being a text node. It is pure decoration under WCAG 1.4.3, which is
+          the only reason its 10-20% opacity is allowed to sit below the 3:1
+          text-contrast bar; as a real text node axe read it as body copy and
+          failed the page (Lighthouse accessibility 0.96 on staging,
+          2026-09-06). Generated content keeps the exact same rendering and puts
+          it where decoration belongs. */
       }
       <div
         class="notfound-figure pointer-events-none leading-none select-none"
@@ -36,9 +44,8 @@ import { buttonVariants } from '../components/ui/button';
         data-reveal="scale"
       >
         <span
-          class="block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"
-          >404</span
-        >
+          class="notfound-glyph block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"
+        ></span>
       </div>
 
       {
@@ -85,6 +92,14 @@ import { buttonVariants } from '../components/ui/button';
 </BaseLayout>
 
 <style>
+  /* The numeral, as generated content. See the note in the markup: it is
+     decoration, so it is drawn here instead of being a text node that
+     contrast tooling reads as copy. Font, size, tracking and color all come
+     from the utility classes on the host span. */
+  .notfound-glyph::before {
+    content: '404';
+  }
+
   /* Gentle drift for the oversized 404. The reveal vocabulary handles the
      entrance; this keeps it quietly alive afterward. Paused for visitors who
      prefer reduced motion. */
