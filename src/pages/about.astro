@@ -376,8 +376,14 @@ const schemas = [
                  gap below it. The grid is stretch (no items-start) so this cell
                  is as tall as the prose, giving the sticky element room to travel.
                  Both are decorative for assistive tech (each carries its own
-                 sr-only summary). -->
-            <div class="w-full">
+                 sr-only summary).
+                 min-w-0 matters: the terminal's window title is nowrap, so
+                 without it this grid item's min-content (~318px) sets the
+                 mobile column width and the page scrolls sideways at 320px
+                 (WCAG 1.4.10, caught by tests/reflow.spec.ts). With it the
+                 column stays at the container width and the title ellipsizes
+                 the way Terminal.astro's own CSS intends. -->
+            <div class="w-full min-w-0">
               <div
                 class="flex flex-col gap-m lg:sticky lg:top-24"
                 data-reveal="scale"
