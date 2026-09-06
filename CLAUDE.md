@@ -674,3 +674,28 @@ something measured that day.
    time, before a single assertion is evaluated, which means a local red here
    says nothing about the accessibility gate. `lighthouse.yml` runs on
    `ubuntu-latest` and is unaffected. Read the CI run, not the local one.
+
+10. **An entrance animation that starts at `opacity: 0` destroys Largest
+    Contentful Paint.** Chrome does not count a zero-opacity element as a
+    contentful paint, so whatever is on the first screen simply does not exist
+    for LCP until the fade has run. Two shapes of this cost a red Lighthouse
+    gate on 2026-09-06: the JS-gated `[data-reveal]` state pushed `/contact` to
+    LCP 5.8s (the h1 painted 1.65s after first paint) and `/404` to a similar
+    miss, and `/coming-soon`, whose whole entrance was a CSS fade, produced no
+    LCP value at all ("audit did not produce a value"), which also voids the
+    whole performance category. The rule is: nothing in the first viewport may
+    start at opacity 0. Below-the-fold reveals are fine, a translate-only lift
+    is fine, and `globals.css` now exempts the first block of `<main>` from the
+    reveal gate. Do not "fix" this by animating from `opacity: 0.01`; that
+    fakes the metric without the visitor seeing anything sooner.
+
+11. **WebKit drops `box-shadow` on natively rendered form controls, so a
+    Tailwind `focus:ring-*` is invisible on a `<select>` in Safari and on iOS.**
+    The four selects on `/contact` had no focus ring at all there while every
+    text field on the same classes did; the select does enter `:focus` (this is
+    not a harness artifact, confirmed by screenshot in a real WebKit), the
+    engine just never paints the shadow. `outline` paints on native controls in
+    every engine and follows the border radius, so selects carry their ring as
+    an outline. The webkit-iphone project of `tests/a11y-dark.spec.ts` is what
+    caught it; if a sibling repo "fixed" the same failure by skipping the check
+    on webkit, that repo probably still ships the bug.
