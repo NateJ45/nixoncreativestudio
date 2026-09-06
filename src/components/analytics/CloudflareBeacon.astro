@@ -1,0 +1,35 @@
+---
+/* ============================================================================
+   Cloudflare Web Analytics beacon
+   ============================================================================
+   Foundation, edit with care.
+
+   A plain deferred script, not Partytown. The beacon is ~7KB and cheap on
+   the main thread; Partytown's sandbox (an iframe plus a service worker)
+   cost ~540ms of throttled main-thread time on the Lighthouse mobile run,
+   more than the beacon it was isolating. `defer` keeps it off the parser
+   and after the LCP path; is:inline keeps Astro from bundling it.
+
+   Rendered by Analytics.astro only when PUBLIC_CF_ANALYTICS_TOKEN is set.
+   Its own component because prettier-plugin-astro cannot parse a <script>
+   nested inside a template expression; Analytics.astro keeps the condition
+   and this file keeps the tag at the top level.
+   ============================================================================ */
+
+interface Props {
+  /** The Web Analytics site token from dash.cloudflare.com. */
+  token: string;
+}
+const { token } = Astro.props;
+
+// JSON-encode the token into the data attribute exactly the way
+// Cloudflare's snippet does. JSON.stringify takes care of escaping in
+// case the token ever contains characters that would break the markup.
+const beaconConfig = JSON.stringify({ token });
+---
+
+<script
+  is:inline
+  defer
+  src="https://static.cloudflareinsights.com/beacon.min.js"
+  data-cf-beacon={beaconConfig}></script>

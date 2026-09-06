@@ -1,11 +1,13 @@
 ---
 /* ============================================================================
-   Cloudflare Web Analytics
+   Analytics
    ============================================================================
-   Privacy-friendly, cookie-free traffic measurement. Free at our volume.
-   The beacon script reports page views and Web Vitals to Cloudflare's
-   analytics endpoint; no cookie banner needed because nothing is stored
-   on the visitor's device.
+   Foundation, edit with care.
+
+   Cloudflare Web Analytics: privacy-friendly, cookie-free traffic
+   measurement. Free at our volume. The beacon script reports page views and
+   Web Vitals to Cloudflare's analytics endpoint; no cookie banner needed
+   because nothing is stored on the visitor's device.
 
    Setup:
      1. dash.cloudflare.com > Analytics & Logs > Web Analytics > Add a site
@@ -17,7 +19,15 @@
 
    This component renders nothing if the token is missing, so local dev
    and any preview deploy without the variable stays clean.
+
+   The two script tags live in ./analytics/ (CloudflareBeacon.astro and
+   GoogleAnalytics.astro) rather than inline here: prettier-plugin-astro
+   cannot parse a <script> nested inside a `{cond && (...)}` expression.
+   This file owns the env reading and the conditions; those own the tags.
    ============================================================================ */
+
+import CloudflareBeacon from './analytics/CloudflareBeacon.astro';
+import GoogleAnalytics from './analytics/GoogleAnalytics.astro';
 
 // PUBLIC_ prefix is required because the script tag runs in the browser.
 // The value is inlined at build time (this is a prerendered layout), so
@@ -31,58 +41,9 @@ const hasToken = token.length > 0;
 // gtag snippet the old site had. PUBLIC_GA_ID is the property's web data
 // stream Measurement ID (G-XXXXXXXXXX), not the numeric property id. Empty
 // means no GA4 at all, same as the beacon above.
-//
-// Loaded AFTER the load event and at idle: gtag.js is ~100KB of script and
-// the 2026-09-04 Lighthouse pass moved everything else off the mobile
-// critical path. Nothing about page views changes; GA4 records the view when
-// the script arrives, a second or so later.
 const gaId = (import.meta.env.PUBLIC_GA_ID ?? '').trim();
 const hasGa = /^G-[A-Z0-9]+$/.test(gaId);
-
-// JSON-encode the token into the data attribute exactly the way
-// Cloudflare's snippet does. JSON.stringify takes care of escaping in
-// case the token ever contains characters that would break the markup.
-const beaconConfig = JSON.stringify({ token });
 ---
 
-{hasToken && (
-  /* A plain deferred script, not Partytown. The beacon is ~7KB and cheap on
-       the main thread; Partytown's sandbox (an iframe plus a service worker)
-       cost ~540ms of throttled main-thread time on the Lighthouse mobile run,
-       more than the beacon it was isolating. `defer` keeps it off the parser
-       and after the LCP path; is:inline keeps Astro from bundling it. */
-  <script
-    is:inline
-    defer
-    src="https://static.cloudflareinsights.com/beacon.min.js"
-    data-cf-beacon={beaconConfig}
-  ></script>
-)}
-
-{hasGa && (
-  <script is:inline define:vars={{ gaId }}>
-    // The dataLayer + gtag() stub exist immediately, so anything that calls
-    // gtag() before the library arrives is queued rather than lost.
-    window.dataLayer = window.dataLayer || [];
-    // gtag.js requires a real `arguments` object here (it type-checks it), so
-    // rest parameters would silently break every queued call.
-    // eslint-disable-next-line prefer-rest-params
-    function gtag() { window.dataLayer.push(arguments); }
-    window.gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', gaId);
-
-    function loadGa() {
-      var s = document.createElement('script');
-      s.async = true;
-      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gaId);
-      document.head.appendChild(s);
-    }
-    function whenIdle() {
-      if ('requestIdleCallback' in window) requestIdleCallback(loadGa, { timeout: 4000 });
-      else setTimeout(loadGa, 500);
-    }
-    if (document.readyState === 'complete') whenIdle();
-    else window.addEventListener('load', whenIdle, { once: true });
-  </script>
-)}
+{hasToken && <CloudflareBeacon token={token} />}
+{hasGa && <GoogleAnalytics gaId={gaId} />}

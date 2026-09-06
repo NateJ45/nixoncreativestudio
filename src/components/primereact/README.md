@@ -31,7 +31,7 @@ import { DataTable } from 'primereact/datatable';
 export default function ComplexTable({ data }: Props) {
   return (
     <PrimeIsland>
-      <DataTable value={data} pt={pt.datatable} ... />
+      <DataTable value={data} pt={pt.datatable} />
     </PrimeIsland>
   );
 }

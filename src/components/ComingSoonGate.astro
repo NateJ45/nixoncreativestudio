@@ -1,0 +1,60 @@
+---
+/* ============================================================================
+   Coming-soon gate script
+   ============================================================================
+   Foundation, edit with care.
+
+   The blocking inline <script> that decides, before first paint, whether
+   this visitor sees the real site or the ComingSoon overlay. BaseLayout
+   renders it in <head> only when PUBLIC_COMING_SOON=true at build time; see
+   the "Coming-soon gate" comment block in BaseLayout.astro for the full
+   design and CLAUDE.md ("Coming Soon mode") for the operator's guide.
+
+   It lives in its own component (rather than inline in BaseLayout's
+   `{comingSoonEnabled && (...)}` expression) because prettier-plugin-astro
+   cannot parse a <script> nested inside a template expression: it reads the
+   script body's braces as expression delimiters. A component boundary keeps
+   the conditional in BaseLayout and the script at the top level here.
+
+   Runtime logic:
+     1. ?preview=<PUBLIC_PREVIEW_TOKEN> in the URL: save it to
+        localStorage["ncs-preview"], strip the param, reload. That browser
+        now bypasses the gate on every page.
+     2. A stored token that matches: bypass (do nothing).
+     3. Otherwise add class="ncs-gated" to <html>; CSS in globals.css then
+        hides everything but the .ncs-overlay.
+   localStorage being blocked falls through to gating, so a visitor who
+   cannot store the bypass simply sees the coming-soon view.
+   ============================================================================ */
+
+interface Props {
+  /** The bypass secret (PUBLIC_PREVIEW_TOKEN). Inlined into shipped HTML
+      by define:vars, so this is a soft gate, not security. */
+  previewToken: string;
+}
+const { previewToken } = Astro.props;
+---
+
+<script is:inline define:vars={{ previewToken }}>
+  (function () {
+    try {
+      var url = new URL(window.location.href);
+      var param = url.searchParams.get('preview');
+
+      if (param && previewToken && param === previewToken) {
+        localStorage.setItem('ncs-preview', param);
+        url.searchParams.delete('preview');
+        window.location.replace(url.toString());
+        return;
+      }
+
+      var stored = localStorage.getItem('ncs-preview');
+      if (stored && previewToken && stored === previewToken) {
+        return;
+      }
+    } catch (_e) {
+      /* localStorage blocked: fall through to gating */
+    }
+    document.documentElement.classList.add('ncs-gated');
+  })();
+</script>

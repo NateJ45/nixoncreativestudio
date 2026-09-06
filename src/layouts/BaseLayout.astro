@@ -22,6 +22,7 @@ import Analytics from '../components/Analytics.astro';
 import BackToTop from '../components/BackToTop';
 import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
+import ComingSoonGate from '../components/ComingSoonGate.astro';
 import { site } from '../data/site';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
@@ -47,8 +48,8 @@ import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-no
 
 // Coming-soon gate. Implemented client-side so the owner can bypass
 // per-device by visiting a magic URL, while everyone else lands on
-// the ComingSoon view. See the gate <script> further down in <head>
-// for the runtime logic.
+// the ComingSoon view. See ComingSoonGate.astro (rendered further down in
+// <head>) for the runtime logic.
 //
 // PUBLIC_COMING_SOON=true at build time:
 //   - Every page ships with BOTH the real content (Header / Main /
@@ -149,31 +150,10 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       <meta name="robots" content="noindex, follow" />
     )}
 
-    {comingSoonEnabled && (
-      <script is:inline define:vars={{ previewToken }}>
-        (function () {
-          try {
-            var url   = new URL(window.location.href);
-            var param = url.searchParams.get('preview');
-
-            if (param && previewToken && param === previewToken) {
-              localStorage.setItem('ncs-preview', param);
-              url.searchParams.delete('preview');
-              window.location.replace(url.toString());
-              return;
-            }
-
-            var stored = localStorage.getItem('ncs-preview');
-            if (stored && previewToken && stored === previewToken) {
-              return;
-            }
-          } catch (e) {
-            /* localStorage blocked: fall through to gating */
-          }
-          document.documentElement.classList.add('ncs-gated');
-        })();
-      </script>
-    )}
+    {/* The blocking gate script itself lives in ComingSoonGate.astro (a
+        <script> cannot sit inside this expression: prettier-plugin-astro
+        cannot parse it there). */}
+    {comingSoonEnabled && <ComingSoonGate previewToken={previewToken} />}
 
     <!-- RSS auto-discovery. Lets feed readers (and browser extensions
          that detect feeds) pick up /rss.xml without manual entry. -->

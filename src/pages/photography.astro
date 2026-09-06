@@ -138,13 +138,13 @@ const [leadCategory, ...restCategories] = categories;
 
   {hasPhotos && leadCategory ? (
     <>
-      <!-- ------------------------------------------------------------------
+      {/* ------------------------------------------------------------------
            Category overview. Asymmetric spotlight cards: the lead category
            fills a tall feature card, the rest stack beside it. Each shows its
            newest photo behind the label and a small count, then jumps to that
            category's gallery. The full blurb lives on the gallery section header
            below, so it isn't repeated here.
-           ------------------------------------------------------------------ -->
+           ------------------------------------------------------------------ */}
       <section class="bg-bg-soft py-2xl" aria-label="Browse photography by category">
         <div class="ncs-container">
           <ul class="grid gap-l lg:grid-cols-2 lg:grid-rows-2">
@@ -205,10 +205,10 @@ const [leadCategory, ...restCategories] = categories;
         </div>
       </section>
 
-      <!-- ------------------------------------------------------------------
+      {/* ------------------------------------------------------------------
            Gallery sections, one per non-empty category. PhotoGallery runs
            react-photo-album (justified grid) + yet-another-react-lightbox.
-           ------------------------------------------------------------------ -->
+           ------------------------------------------------------------------ */}
       {categories.map((category) => (
         <section class="scroll-mt-2xl py-2xl" id={category.id} aria-labelledby={`${category.id}-heading`}>
           <div class="ncs-container">
@@ -224,8 +224,8 @@ const [leadCategory, ...restCategories] = categories;
         </section>
       ))}
 
-      <!-- Where the photos come from. A branded region note rather than a raw
-           third-party map embed (which shipped as a blank tile box). -->
+      {/* Where the photos come from. A branded region note rather than a raw
+           third-party map embed (which shipped as a blank tile box). */}
       <section class="bg-mesh-soft py-2xl" aria-labelledby="photo-area-heading">
         <div class="ncs-container">
           <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">

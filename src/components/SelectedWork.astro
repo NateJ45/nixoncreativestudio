@@ -81,9 +81,9 @@ const [primary, ...secondaries] = featured;
 <section class="py-2xl" aria-labelledby="selected-work-heading">
   <div class="ncs-container">
 
-    <!-- Section header. No mono-uppercase eyebrow, no numbered scaffold:
+    {/* Section header. No mono-uppercase eyebrow, no numbered scaffold:
          the title carries its own weight, and the sub paragraph does the
-         explanatory work that an eyebrow would otherwise pretend to do. -->
+         explanatory work that an eyebrow would otherwise pretend to do. */}
     <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
       <h2 id="selected-work-heading">Selected work</h2>
       <p class="text-lg leading-[1.55] text-text-muted">
@@ -91,30 +91,30 @@ const [primary, ...secondaries] = featured;
       </p>
     </header>
 
-    <!-- Asymmetric card list. The grid is built with named template areas
+    {/* Asymmetric card list. The grid is built with named template areas
          so the visual layout reads cleanly in CSS even though the list is
          a flat <ol> of three items. Single-column on mobile; primary spans
-         the full width on desktop while secondaries split the row below. -->
+         the full width on desktop while secondaries split the row below. */}
     <ol
       class="grid list-none gap-l p-0 [grid-template-areas:'primary'_'secondary-a'_'secondary-b'] md:grid-cols-2 md:[grid-template-areas:'primary_primary'_'secondary-a_secondary-b']"
     >
 
-      <!-- Primary card. Hero-sized: 4:3 image at the desktop width of the
+      {/* Primary card. Hero-sized: 4:3 image at the desktop width of the
            image column, generous body column with a heading at h2 sizing
-           that's noticeably larger than the secondaries. -->
+           that's noticeably larger than the secondaries. */}
       <li class="[grid-area:primary]" data-reveal>
         <a
           class="work-card surface-card spotlight-card group grid grid-cols-1 items-center gap-l rounded-xl p-s text-inherit no-underline md:grid-cols-[1.15fr_1fr]"
           href={`/work/${primary.id}/`}
           data-spotlight
         >
-          <!-- Hover-scroll cover: the full-page capture sits top-aligned in a
+          {/* Hover-scroll cover: the full-page capture sits top-aligned in a
                4:3 frame and pans down the page on hover (CSS below), easing back
                on hover-off. The cover's blur preview is painted as the frame bg
                so there is no flash before the capture loads. alt="" because the
                heading names the project. transition:name morphs to the
                /work/[slug] hero on navigation. Falls back to the static cover if
-               a capture is ever missing. -->
+               a capture is ever missing. */}
           {shotFor(primary.id) ? (
             <div
               class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
@@ -247,8 +247,8 @@ const [primary, ...secondaries] = featured;
 
     </ol>
 
-    <!-- Tail link so the section opens onto the full catalogue instead of
-         dead-ending after three featured projects. -->
+    {/* Tail link so the section opens onto the full catalogue instead of
+         dead-ending after three featured projects. */}
     <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
       <a class="card-link text-lg" href="/work/">
         Explore more projects
