@@ -37,6 +37,44 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # PORTS.md card 36. Every file here marked "PORTABLE: canonical copy" is
+      # diffed against ncs-astro-sanity-starter, the library of record. Both
+      # repos are public, so the checkout needs no token. CRLF is normalized to
+      # LF and one trailing newline ignored before comparing, so a Windows
+      # working tree and a Linux runner agree; everything else is byte-exact,
+      # marker line included. On DRIFT: either port the improvement up into the
+      # starter with a PORTS.md card in the same commit, or pull the starter's
+      # copy forward here. A file that is forked on purpose drops its marker and
+      # says so in its header instead.
+      #
+      # A staging build checks against the starter's staging, a main build (and
+      # any PR) against its main. Without this the two-branch promotion model
+      # cannot stage a canonical change at all: the starter's fix would have to
+      # be promoted blind before any site could prove it. It also fixes the
+      # promotion ORDER, which is now load-bearing - promote the starter first,
+      # then the sites.
+      - name: Check out the library of record
+        uses: actions/checkout@v7
+        with:
+          repository: NateJ45/ncs-astro-sanity-starter
+          ref: ${{ github.ref_name == 'staging' && 'staging' || 'main' }}
+          path: .ncs-starter
+
+      # The checkout is deleted again as soon as the check passes. It has to
+      # live INSIDE the workspace (actions/checkout refuses a path outside it),
+      # and every whole-tree tool further down this job would otherwise sweep
+      # it: `prettier --check .` tries to format the library using THIS repo's
+      # node_modules and dies resolving the starter's own imports, and `eslint .`
+      # does the same. Deleting it here beats adding .ncs-starter to a
+      # .prettierignore, a .gitignore and an eslint config in six repos, because
+      # that list has to be remembered again for the next whole-tree tool.
+      - name: Canonical files have not drifted
+        env:
+          NCS_STARTER_DIR: ${{ github.workspace }}/.ncs-starter
+        run: |
+          node scripts/sync-check.mjs
+          rm -rf "$NCS_STARTER_DIR"
+
       - name: Type check (astro check)
         run: npx astro check
 
