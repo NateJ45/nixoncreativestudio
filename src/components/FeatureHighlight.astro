@@ -62,17 +62,29 @@ const { src, alt, title, body, side = 'left', eyebrow } = Astro.props;
         class="block w-full"
       />
       <span class="feature-zoom-hint" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /><path d="M11 8v6M8 11h6" />
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path><path
+            d="M11 8v6M8 11h6"></path>
         </svg>
       </span>
     </button>
   </figure>
 
   <div class:list={['feature-copy', side === 'right' && 'md:order-1']}>
-    {eyebrow && (
-      <p class="mb-xs font-mono text-xs uppercase tracking-[0.14em] text-link">{eyebrow}</p>
-    )}
+    {
+      eyebrow && (
+        <p class="mb-xs font-mono text-xs tracking-[0.14em] text-link uppercase">{eyebrow}</p>
+      )
+    }
     <h3 class="text-heading">{title}</h3>
     <p class="mt-s max-w-[44ch] leading-[1.6] text-text">{body}</p>
   </div>

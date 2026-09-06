@@ -37,18 +37,18 @@ import { cn } from '@/lib/utils';
 // visible in dev), so the link appears exactly when the page has real content.
 // While the collection is empty the link is omitted from both the desktop nav
 // and the mobile drawer (they share this array).
-const journalCount = (await getCollection('journal', ({ data }) =>
-  import.meta.env.PROD ? data.draft !== true : true,
-)).length;
+const journalCount = (
+  await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
+).length;
 
 // The nav model lives in the script so it's easy to reorder, rename, or extend
 // without hunting through markup. MobileNav consumes the same array. Contact is
 // NOT in this list: it is promoted to the "Start a project" CTA button (desktop
 // header below, and the drawer's own CTA on mobile), both pointing at /contact.
 const navLinks = [
-  { label: 'Work',     href: '/work/'    },
+  { label: 'Work', href: '/work/' },
   { label: 'Services', href: '/services' },
-  { label: 'About',    href: '/about'    },
+  { label: 'About', href: '/about' },
   ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
 ];
 
@@ -64,7 +64,6 @@ const isActive = (href: string): boolean => {
 
 <header data-header class="ncs-header sticky top-0 z-50">
   <div class="ncs-container flex items-center justify-between gap-m">
-
     <!-- Wordmark: the studio name, set in the display face. The text flips with
          theme and goes white over the dark hero. transition:name morphs it
          across View Transitions navigations. -->
@@ -73,32 +72,37 @@ const isActive = (href: string): boolean => {
       href="/"
       transition:name="site-wordmark"
     >
-      <span class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]">
+      <span
+        class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]"
+      >
         {site.studioName}
       </span>
     </a>
 
     <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer. -->
     <div class="flex items-center gap-s">
-
       <!-- Desktop nav at >= md (six items don't fit at sm next to the wordmark
            and toggle); the MobileNav drawer takes over below md. -->
       <nav aria-label="Primary" class="hidden md:block">
         <ul class="flex items-center gap-m">
-          {navLinks.map(({ label, href }) => (
-            <li>
-              <a
-                class:list={[
-                  'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
-                  isActive(href) ? 'is-active text-link' : 'text-text hover:text-link focus-visible:text-link',
-                ]}
-                href={href}
-                aria-current={isActive(href) ? 'page' : undefined}
-              >
-                {label}
-              </a>
-            </li>
-          ))}
+          {
+            navLinks.map(({ label, href }) => (
+              <li>
+                <a
+                  class:list={[
+                    'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
+                    isActive(href)
+                      ? 'is-active text-link'
+                      : 'text-text hover:text-link focus-visible:text-link',
+                  ]}
+                  href={href}
+                  aria-current={isActive(href) ? 'page' : undefined}
+                >
+                  {label}
+                </a>
+              </li>
+            ))
+          }
         </ul>
       </nav>
 
@@ -106,7 +110,8 @@ const isActive = (href: string): boolean => {
            CTA reads as distinct. Inherits the header's text colour (dark on the
            light bar, light over the navy hero) at low opacity, staying subtle in
            every state. Desktop only, alongside the nav + CTA it divides. -->
-      <div class="hidden h-6 w-px self-center bg-current opacity-20 md:block" aria-hidden="true"></div>
+      <div class="hidden h-6 w-px self-center bg-current opacity-20 md:block" aria-hidden="true">
+      </div>
 
       <!-- Primary CTA, promoted from the old Contact nav link: a prominent brand
            button straight to the inquiry form. Desktop only; the MobileNav drawer
@@ -136,9 +141,7 @@ const isActive = (href: string): boolean => {
       <div class="md:hidden">
         <MobileNav client:idle links={navLinks} studioName={site.studioName} />
       </div>
-
     </div>
-
   </div>
 </header>
 
@@ -217,6 +220,8 @@ const isActive = (href: string): boolean => {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .ncs-header { transition: none; }
+    .ncs-header {
+      transition: none;
+    }
   }
 </style>

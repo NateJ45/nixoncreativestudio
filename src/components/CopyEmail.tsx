@@ -33,7 +33,6 @@ export interface CopyEmailProps {
 }
 
 export default function CopyEmail({ email, className, tone = 'light' }: CopyEmailProps) {
-
   // Stores the "Copied" toast state. Cleared after 2 seconds so the
   // icon returns to the copy state.
   const [copied, setCopied] = useState<boolean>(false);
@@ -70,10 +69,7 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
 
   return (
     <span className={`inline-flex items-center gap-xs ${className ?? ''}`}>
-      <a
-        href={`mailto:${email}`}
-        className={linkClass}
-      >
+      <a href={`mailto:${email}`} className={linkClass}>
         {email}
       </a>
       <button
@@ -83,7 +79,11 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
         title={copied ? 'Copied' : 'Copy email address'}
         className={buttonClass}
       >
-        {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
+        {copied ? (
+          <Check className="size-4" aria-hidden="true" />
+        ) : (
+          <Copy className="size-4" aria-hidden="true" />
+        )}
       </button>
       {/* Visually-hidden status update for screen readers. role=status
           announces the change without stealing focus. */}

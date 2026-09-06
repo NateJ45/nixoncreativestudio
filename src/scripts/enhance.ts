@@ -25,8 +25,7 @@
    registered exactly once.
    ============================================================================ */
 
-const prefersReduced = (): boolean =>
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersReduced = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const finePointer = (): boolean => window.matchMedia('(pointer: fine)').matches;
 
@@ -66,7 +65,7 @@ function runCount(el: HTMLElement, to: number): void {
 
 function initCountUp(): void {
   const els = Array.from(
-    document.querySelectorAll<HTMLElement>('[data-countup]:not([data-countup-bound])')
+    document.querySelectorAll<HTMLElement>('[data-countup]:not([data-countup-bound])'),
   );
   if (!els.length) return;
 
@@ -90,7 +89,7 @@ function initCountUp(): void {
         if (Number.isFinite(to)) runCount(el, to);
       });
     },
-    { threshold: 0.6 }
+    { threshold: 0.6 },
   );
   els.forEach((el) => io.observe(el));
 }
@@ -117,8 +116,7 @@ function setHeaderState(): void {
   header.toggleAttribute('data-scrolled', window.scrollY > 8);
 
   const heroDark = document.querySelector('[data-hero-dark]');
-  const overHero =
-    !!heroDark && heroDark.getBoundingClientRect().bottom > HEADER_HEIGHT;
+  const overHero = !!heroDark && heroDark.getBoundingClientRect().bottom > HEADER_HEIGHT;
   header.toggleAttribute('data-over-hero', overHero);
 }
 

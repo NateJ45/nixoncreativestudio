@@ -28,18 +28,18 @@
 import { Image } from 'astro:assets';
 
 interface Props {
-  cover:        ImageMetadata;
+  cover: ImageMetadata;
   placeholder?: string;
-  alt:          string;
-  widths:       number[];
-  sizes:        string;
-  class?:       string;
-  rounded?:     'lg' | 'md' | 'none';
+  alt: string;
+  widths: number[];
+  sizes: string;
+  class?: string;
+  rounded?: 'lg' | 'md' | 'none';
   /** "natural" keeps the cover at its true aspect ratio (used by the
       case study detail page hero). "cover" crops the image to the
       wrapper's aspect ratio via object-fit (used by /work index cards
       where every card needs a uniform 4:3 box). */
-  fit?:         'natural' | 'cover';
+  fit?: 'natural' | 'cover';
 }
 
 const {
@@ -53,9 +53,7 @@ const {
   fit = 'natural',
 } = Astro.props;
 
-const radiusClass =
-  rounded === 'lg'  ? 'rounded-lg' :
-  rounded === 'md'  ? 'rounded-md' : '';
+const radiusClass = rounded === 'lg' ? 'rounded-lg' : rounded === 'md' ? 'rounded-md' : '';
 
 const imgFitClass = fit === 'cover' ? 'h-full w-full object-cover' : 'h-auto w-full';
 
@@ -70,21 +68,22 @@ const wrapperStyle = placeholder
   : undefined;
 ---
 
-<div
-  class={`relative overflow-hidden bg-bg-soft ${radiusClass} ${className}`}
-  style={wrapperStyle}
->
-  {/* The blur layer sits on top of the wrapper bg and is removed once
+<div class={`relative overflow-hidden bg-bg-soft ${radiusClass} ${className}`} style={wrapperStyle}>
+  {
+    /* The blur layer sits on top of the wrapper bg and is removed once
       the image loads. Avoids the brief moment where the bg-image source
-      is still visible underneath a partially-loaded WebP. */}
-  {placeholder && (
-    <div
-      aria-hidden="true"
-      data-blur-up-layer
-      class="pointer-events-none absolute inset-0 transition-opacity duration-500"
-      style={`background-image: url("${placeholder}"); background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1);`}
-    ></div>
-  )}
+      is still visible underneath a partially-loaded WebP. */
+  }
+  {
+    placeholder && (
+      <div
+        aria-hidden="true"
+        data-blur-up-layer
+        class="pointer-events-none absolute inset-0 transition-opacity duration-500"
+        style={`background-image: url("${placeholder}"); background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1);`}
+      />
+    )
+  }
 
   <Image
     src={cover}
@@ -112,7 +111,7 @@ const wrapperStyle = placeholder
       if (img.complete && img.naturalWidth > 0) {
         activate(img);
       } else {
-        img.addEventListener('load',  () => activate(img), { once: true });
+        img.addEventListener('load', () => activate(img), { once: true });
         // Even if load fails, lift the opacity so a broken image icon
         // shows instead of an indefinite blur preview.
         img.addEventListener('error', () => activate(img), { once: true });

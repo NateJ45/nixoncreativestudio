@@ -35,9 +35,18 @@ import PhotoGallery from '../components/PhotoGallery';
 // Stable category titles + intros. This is copy, not content, so it lives
 // here; the photos themselves come from the collection.
 const CATEGORY_META: Record<string, { title: string; body: string }> = {
-  events:       { title: 'Events',       body: 'Sunday mornings, school assemblies, fundraisers, ribbon cuttings. Coverage that tells the story without making the room perform for the camera.' },
-  portraits:    { title: 'Portraits',    body: 'Team headshots, staff portraits, leadership pages. Comfortable lighting, consistent treatment, edited for web so the file size stays sane.' },
-  environments: { title: 'Environments', body: 'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.' },
+  events: {
+    title: 'Events',
+    body: 'Sunday mornings, school assemblies, fundraisers, ribbon cuttings. Coverage that tells the story without making the room perform for the camera.',
+  },
+  portraits: {
+    title: 'Portraits',
+    body: 'Team headshots, staff portraits, leadership pages. Comfortable lighting, consistent treatment, edited for web so the file size stays sane.',
+  },
+  environments: {
+    title: 'Environments',
+    body: 'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.',
+  },
 };
 const CATEGORY_ORDER = ['events', 'portraits', 'environments'] as const;
 
@@ -76,7 +85,6 @@ const [leadCategory, ...restCategories] = categories;
   title="Photography | Nixon Creative Studio"
   description="Events, portraits, and environmental photography for organizations in the Cincinnati region."
 >
-
   <!-- ----------------------------------------------------------------------
        Hero. When a real photo exists it fills the surface behind a navy
        scrim; until then a navy aurora carries it (no placeholder image). The
@@ -89,33 +97,34 @@ const [leadCategory, ...restCategories] = categories;
     style="min-height: clamp(30rem, 78vh, 46rem);"
     data-hero-dark
   >
-
     <div class="absolute inset-0 -z-10" aria-hidden="true">
-      {heroImage ? (
-        <Image
-          src={heroImage}
-          alt=""
-          class="h-full w-full object-cover"
-          loading="eager"
-          decoding="async"
-          widths={[768, 1280, 1920]}
-          sizes="100vw"
-        />
-      ) : (
-        <div class="bg-aurora grain absolute inset-0"></div>
-      )}
+      {
+        heroImage ? (
+          <Image
+            src={heroImage}
+            alt=""
+            class="h-full w-full object-cover"
+            loading="eager"
+            decoding="async"
+            widths={[768, 1280, 1920]}
+            sizes="100vw"
+          />
+        ) : (
+          <div class="bg-aurora grain absolute inset-0" />
+        )
+      }
       <!-- Vertical scrim so the bottom-anchored copy always reads. -->
-      <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90">
+      </div>
     </div>
 
     <!-- Foreground copy cluster, anchored to the bottom of the frame. Opens
          straight on the headline (no tracked-uppercase eyebrow); the Cincinnati
          base reads in the lede below. -->
     <div class="ncs-container relative z-10 py-2xl">
-
       <h1
         id="photography-hero-heading"
-        class="mb-m max-w-[20ch] text-primary-foreground leading-[0.92]"
+        class="mb-m max-w-[20ch] leading-[0.92] text-primary-foreground"
         data-reveal
         style="text-wrap: balance;"
       >
@@ -128,136 +137,153 @@ const [leadCategory, ...restCategories] = categories;
         data-reveal
         style="--reveal-delay: 120ms;"
       >
-        Events, portraits, and environments for organizations across the Cincinnati region. Most of these photos came from the same projects as the web work. Same person designed the site and showed up with the camera, so the photos and the site look like one piece of work.
+        Events, portraits, and environments for organizations across the Cincinnati region. Most of
+        these photos came from the same projects as the web work. Same person designed the site and
+        showed up with the camera, so the photos and the site look like one piece of work.
       </p>
-
     </div>
-
   </section>
 
-
-  {hasPhotos && leadCategory ? (
-    <>
-      {/* ------------------------------------------------------------------
+  {
+    hasPhotos && leadCategory ? (
+      <>
+        {/* ------------------------------------------------------------------
            Category overview. Asymmetric spotlight cards: the lead category
            fills a tall feature card, the rest stack beside it. Each shows its
            newest photo behind the label and a small count, then jumps to that
            category's gallery. The full blurb lives on the gallery section header
            below, so it isn't repeated here.
            ------------------------------------------------------------------ */}
-      <section class="bg-bg-soft py-2xl" aria-label="Browse photography by category">
-        <div class="ncs-container">
-          <ul class="grid gap-l lg:grid-cols-2 lg:grid-rows-2">
-
-            <li class="lg:row-span-2" data-reveal>
-              <a
-                class="spotlight-card group relative block h-full min-h-[20rem] overflow-hidden rounded-lg text-inherit no-underline hover-lift focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-                href={`#${leadCategory.id}`}
-                data-spotlight
-              >
-                <Image
-                  src={leadCategory.cover}
-                  alt=""
-                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                  loading="lazy"
-                  decoding="async"
-                  widths={[480, 768, 1024]}
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                />
-                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10" aria-hidden="true"></div>
-                <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
-                  <h2 class="text-h3 text-primary-foreground">{leadCategory.title}</h2>
-                  <p class="font-mono text-sm text-primary-foreground/80">
-                    {leadCategory.photos.length} {leadCategory.photos.length === 1 ? 'photo' : 'photos'}
-                  </p>
-                </div>
-              </a>
-            </li>
-
-            {restCategories.map((category, i) => (
-              <li data-reveal style={`--reveal-delay: ${120 * (i + 1)}ms;`}>
+        <section class="bg-bg-soft py-2xl" aria-label="Browse photography by category">
+          <div class="ncs-container">
+            <ul class="grid gap-l lg:grid-cols-2 lg:grid-rows-2">
+              <li class="lg:row-span-2" data-reveal>
                 <a
-                  class="spotlight-card group relative block h-full min-h-[14rem] overflow-hidden rounded-lg text-inherit no-underline hover-lift focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-                  href={`#${category.id}`}
+                  class="spotlight-card group hover-lift relative block h-full min-h-[20rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                  href={`#${leadCategory.id}`}
                   data-spotlight
                 >
                   <Image
-                    src={category.cover}
+                    src={leadCategory.cover}
                     alt=""
                     class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                     loading="lazy"
                     decoding="async"
-                    widths={[480, 768]}
-                    sizes="(min-width: 1024px) 25vw, 100vw"
+                    widths={[480, 768, 1024]}
+                    sizes="(min-width: 1024px) 50vw, 100vw"
                   />
-                  <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10" aria-hidden="true"></div>
+                  <div
+                    class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10"
+                    aria-hidden="true"
+                  />
                   <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
-                    <h2 class="text-h3 text-primary-foreground">{category.title}</h2>
+                    <h2 class="text-h3 text-primary-foreground">{leadCategory.title}</h2>
                     <p class="font-mono text-sm text-primary-foreground/80">
-                      {category.photos.length} {category.photos.length === 1 ? 'photo' : 'photos'}
+                      {leadCategory.photos.length}{' '}
+                      {leadCategory.photos.length === 1 ? 'photo' : 'photos'}
                     </p>
                   </div>
                 </a>
               </li>
-            ))}
 
-          </ul>
-        </div>
-      </section>
+              {restCategories.map((category, i) => (
+                <li data-reveal style={`--reveal-delay: ${120 * (i + 1)}ms;`}>
+                  <a
+                    class="spotlight-card group hover-lift relative block h-full min-h-[14rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                    href={`#${category.id}`}
+                    data-spotlight
+                  >
+                    <Image
+                      src={category.cover}
+                      alt=""
+                      class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      loading="lazy"
+                      decoding="async"
+                      widths={[480, 768]}
+                      sizes="(min-width: 1024px) 25vw, 100vw"
+                    />
+                    <div
+                      class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10"
+                      aria-hidden="true"
+                    />
+                    <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
+                      <h2 class="text-h3 text-primary-foreground">{category.title}</h2>
+                      <p class="font-mono text-sm text-primary-foreground/80">
+                        {category.photos.length} {category.photos.length === 1 ? 'photo' : 'photos'}
+                      </p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
 
-      {/* ------------------------------------------------------------------
+        {/* ------------------------------------------------------------------
            Gallery sections, one per non-empty category. PhotoGallery runs
            react-photo-album (justified grid) + yet-another-react-lightbox.
            ------------------------------------------------------------------ */}
-      {categories.map((category) => (
-        <section class="scroll-mt-2xl py-2xl" id={category.id} aria-labelledby={`${category.id}-heading`}>
+        {categories.map((category) => (
+          <section
+            class="scroll-mt-2xl py-2xl"
+            id={category.id}
+            aria-labelledby={`${category.id}-heading`}
+          >
+            <div class="ncs-container">
+              <header class="mb-l flex flex-col gap-s" data-reveal>
+                <h2 id={`${category.id}-heading`} class="text-heading">
+                  {category.title}
+                </h2>
+                <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
+              </header>
+              <div data-reveal style="--reveal-delay: 120ms;">
+                {/* client:visible so each gallery hydrates only as it scrolls into view */}
+                <PhotoGallery client:visible photos={category.photos} />
+              </div>
+            </div>
+          </section>
+        ))}
+
+        {/* Where the photos come from. A branded region note rather than a raw
+           third-party map embed (which shipped as a blank tile box). */}
+        <section class="bg-mesh-soft py-2xl" aria-labelledby="photo-area-heading">
           <div class="ncs-container">
-            <header class="mb-l flex flex-col gap-s" data-reveal>
-              <h2 id={`${category.id}-heading`} class="text-heading">{category.title}</h2>
-              <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
-            </header>
-            <div data-reveal style="--reveal-delay: 120ms;">
-              {/* client:visible so each gallery hydrates only as it scrolls into view */}
-              <PhotoGallery client:visible photos={category.photos} />
+            <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">
+              <h2 id="photo-area-heading" class="text-heading">
+                Where these photos come from
+              </h2>
+              <p class="mt-s leading-[1.6] text-text-muted">
+                Almost everything here was shot within an hour of downtown Cincinnati: the city
+                itself, the northern suburbs, and the towns around them.
+              </p>
             </div>
           </div>
         </section>
-      ))}
-
-      {/* Where the photos come from. A branded region note rather than a raw
-           third-party map embed (which shipped as a blank tile box). */}
-      <section class="bg-mesh-soft py-2xl" aria-labelledby="photo-area-heading">
+      </>
+    ) : (
+      /* In-progress state. No placeholder galleries; an honest note plus a
+         route to the work pages where the photography already lives. */
+      <section class="py-2xl" aria-label="Photography portfolio status">
         <div class="ncs-container">
-          <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">
-            <h2 id="photo-area-heading" class="text-heading">Where these photos come from</h2>
+          <div class="band-themed mx-auto max-w-[60ch] rounded-2xl p-xl text-center" data-reveal>
+            <p class="text-sm font-semibold tracking-[0.12em] text-link uppercase">In progress</p>
+            <h2 class="mt-s text-heading">The photography portfolio is coming together.</h2>
             <p class="mt-s leading-[1.6] text-text-muted">
-              Almost everything here was shot within an hour of downtown Cincinnati: the city itself, the northern suburbs, and the towns around them.
+              I'm pulling the strongest frames from recent church, school, and small-business
+              projects. In the meantime, the work pages show the photography in context, paired with
+              the sites it was shot for.
             </p>
+            <a class="card-link mt-m inline-flex" href="/work/">
+              See the work
+            </a>
           </div>
         </div>
       </section>
-    </>
-  ) : (
-    /* In-progress state. No placeholder galleries; an honest note plus a
-         route to the work pages where the photography already lives. */
-    <section class="py-2xl" aria-label="Photography portfolio status">
-      <div class="ncs-container">
-        <div class="band-themed mx-auto max-w-[60ch] rounded-2xl p-xl text-center" data-reveal>
-          <p class="text-sm font-semibold uppercase tracking-[0.12em] text-link">In progress</p>
-          <h2 class="mt-s text-heading">The photography portfolio is coming together.</h2>
-          <p class="mt-s leading-[1.6] text-text-muted">
-            I'm pulling the strongest frames from recent church, school, and small-business projects. In the meantime, the work pages show the photography in context, paired with the sites it was shot for.
-          </p>
-          <a class="card-link mt-m inline-flex" href="/work/">See the work</a>
-        </div>
-      </div>
-    </section>
-  )}
-
+    )
+  }
 
   <CtaBanner
     title="Need photography for your project?"
     sub="Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own."
   />
-
 </BaseLayout>

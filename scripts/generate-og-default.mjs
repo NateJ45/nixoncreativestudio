@@ -33,21 +33,21 @@ const projectRoot = resolve(__dirname, '..');
 // Hard-coded here (rather than imported from site.ts) because Node can't
 // import .ts modules without extra tooling, and an OG image regenerated
 // rarely is fine to update by hand.
-const WORDMARK   = 'NIXON CREATIVE STUDIO';
-const TAGLINE    = 'PHOTOGRAPHY, WEB DESIGN, STRATEGY';
-const LOCALE     = 'CINCINNATI REGION';
+const WORDMARK = 'NIXON CREATIVE STUDIO';
+const TAGLINE = 'PHOTOGRAPHY, WEB DESIGN, STRATEGY';
+const LOCALE = 'CINCINNATI REGION';
 
 const COLORS = {
-  bg:       '#0A1628',  // brand navy
-  fg:       '#F4F7FA',  // off-white, matches dark-mode heading color
-  muted:    '#9CA3AF',  // dark-mode --muted-foreground
-  accent:   '#40AAED',  // bright accent for the rule (passes AA on navy)
-  amber:    '#FFA334',  // brand amber for the tagline
+  bg: '#0A1628', // brand navy
+  fg: '#F4F7FA', // off-white, matches dark-mode heading color
+  muted: '#9CA3AF', // dark-mode --muted-foreground
+  accent: '#40AAED', // bright accent for the rule (passes AA on navy)
+  amber: '#FFA334', // brand amber for the tagline
 };
 
 // OG image canonical dimensions. 1200x630 is the spec all major social
 // platforms (Open Graph, Twitter Cards, LinkedIn) crop against.
-const WIDTH  = 1200;
+const WIDTH = 1200;
 const HEIGHT = 630;
 
 // Output file.
@@ -67,10 +67,7 @@ function loadFont(path) {
   const buf = readFileSync(path);
   // opentype.parse expects an ArrayBuffer; Buffer.slice gives a view we
   // can pass directly.
-  const arrayBuffer = buf.buffer.slice(
-    buf.byteOffset,
-    buf.byteOffset + buf.byteLength,
-  );
+  const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   return opentype.parse(arrayBuffer);
 }
 
@@ -100,24 +97,24 @@ function fitSize(text, target, start, min) {
 // under it in amber, with the locale as a quiet stamp below. This matches the
 // brand-forward per-page navy cards (generate-og.mjs).
 const WORDMARK_SIZE = fitSize(WORDMARK, WIDTH - 128, 150, 90);
-const TAGLINE_SIZE  = fitSize(TAGLINE, WIDTH - 360, 56, 30);
-const LOCALE_SIZE   = 26;
+const TAGLINE_SIZE = fitSize(TAGLINE, WIDTH - 360, 56, 30);
+const LOCALE_SIZE = 26;
 
 // Generate path data + measured widths for each line. y-offsets are
 // applied via translate() in the SVG so we don't have to recompute
 // glyph positions per line.
 const wordmark = textToPathData(font, WORDMARK, WORDMARK_SIZE);
-const tagline  = textToPathData(font, TAGLINE,  TAGLINE_SIZE);
-const locale   = textToPathData(font, LOCALE,   LOCALE_SIZE);
+const tagline = textToPathData(font, TAGLINE, TAGLINE_SIZE);
+const locale = textToPathData(font, LOCALE, LOCALE_SIZE);
 
 // Vertically balance the lockup: accent rule, wordmark, tagline, locale. Walk
 // down the centered group computing each baseline from cap-height estimates
 // (opentype.js positions glyphs above the baseline by default).
 const cap = 0.8;
 const barH = 6;
-const gapBar = 36;  // accent rule -> wordmark
+const gapBar = 36; // accent rule -> wordmark
 const gapWord = 28; // wordmark -> tagline
-const gapTag = 46;  // tagline -> locale
+const gapTag = 46; // tagline -> locale
 
 const wH = WORDMARK_SIZE * cap;
 const tH = TAGLINE_SIZE * cap;
@@ -135,8 +132,8 @@ const localeY = top + lH;
 
 // Center horizontally by translating each path by (WIDTH - lineWidth) / 2.
 const wordmarkX = (WIDTH - wordmark.width) / 2;
-const taglineX  = (WIDTH - tagline.width)  / 2;
-const localeX   = (WIDTH - locale.width)   / 2;
+const taglineX = (WIDTH - tagline.width) / 2;
+const localeX = (WIDTH - locale.width) / 2;
 
 const svg = `
 <svg
@@ -179,9 +176,7 @@ const svg = `
 
 // --- Render -----------------------------------------------------------------
 
-const pngBuffer = await sharp(Buffer.from(svg))
-  .png()
-  .toBuffer();
+const pngBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
 
 writeFileSync(outPath, pngBuffer);
 

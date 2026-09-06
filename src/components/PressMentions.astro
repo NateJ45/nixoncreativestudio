@@ -19,10 +19,10 @@
 
 interface PressEntry {
   publication: string;
-  href:        string;
-  date:        string;
-  quote?:      string;
-  title?:      string;
+  href: string;
+  date: string;
+  quote?: string;
+  title?: string;
 }
 
 // Populate as press hits happen. Keeps the section out of the rendered
@@ -37,39 +37,50 @@ const sorted = press
 const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
 ---
 
-{sorted.length > 0 && (
-  <section class="py-xl" aria-labelledby="press-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex flex-col gap-xs">
-        <p class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">P1</p>
-        <h2 id="press-heading" class="text-heading">Featured in</h2>
-      </header>
+{
+  sorted.length > 0 && (
+    <section class="py-xl" aria-labelledby="press-heading">
+      <div class="ncs-container">
+        <header class="mb-l flex flex-col gap-xs">
+          <p class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">
+            P1
+          </p>
+          <h2 id="press-heading" class="text-heading">
+            Featured in
+          </h2>
+        </header>
 
-      <ul class="flex flex-col gap-m">
-        {sorted.map((entry) => (
-          <li class="flex flex-col gap-xs">
-            <p class="font-mono text-[0.8rem] uppercase tracking-[0.06em] text-text-muted">
-              {fmt.format(new Date(entry.date))}
-            </p>
-            <a
-              class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
-              href={entry.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={entry.title}
-            >
-              <span class="font-display text-h4">{entry.publication}</span>
-              {entry.title && <span class="text-text"> · {entry.title}</span>}
-            </a>
-            {entry.quote && (
-              <blockquote class="relative mt-s max-w-[60ch] pl-l text-text italic leading-[1.6]">
-                <span aria-hidden="true" class="absolute left-0 top-0 font-display text-4xl leading-none text-accent/30">“</span>
-                {entry.quote}
-              </blockquote>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  </section>
-)}
+        <ul class="flex flex-col gap-m">
+          {sorted.map((entry) => (
+            <li class="flex flex-col gap-xs">
+              <p class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
+                {fmt.format(new Date(entry.date))}
+              </p>
+              <a
+                class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+                href={entry.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={entry.title}
+              >
+                <span class="font-display text-h4">{entry.publication}</span>
+                {entry.title && <span class="text-text"> · {entry.title}</span>}
+              </a>
+              {entry.quote && (
+                <blockquote class="relative mt-s max-w-[60ch] pl-l leading-[1.6] text-text italic">
+                  <span
+                    aria-hidden="true"
+                    class="absolute top-0 left-0 font-display text-4xl leading-none text-accent/30"
+                  >
+                    “
+                  </span>
+                  {entry.quote}
+                </blockquote>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}

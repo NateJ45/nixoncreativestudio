@@ -20,7 +20,9 @@ import { buttonVariants } from '../components/ui/button';
 
 // Build-time stamp. This is about the SITE (when it was last deployed), not
 // about any project's timing, so it is fine to show.
-const lastBuilt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date());
+const lastBuilt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
+  new Date(),
+);
 
 // The honest account, as label + detail rows. Keep every claim verifiable.
 const rows = [
@@ -59,42 +61,45 @@ const rows = [
   title="Colophon | Nixon Creative Studio"
   description="How this site is built: the tools, the type, and the accessibility and privacy standards behind it."
 >
-
   <section class="py-2xl" aria-labelledby="colophon-heading">
     <div class="ncs-container flex flex-col gap-l">
-
       <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h1 id="colophon-heading">Colophon</h1>
         <p class="text-lg leading-[1.55] text-text-muted">
-          How this site is made, and the standards behind it. Custom-built, so the same
-          care that goes into client work goes into my own.
+          How this site is made, and the standards behind it. Custom-built, so the same care that
+          goes into client work goes into my own.
         </p>
       </header>
 
       <!-- Ruled label/detail list, matching the /about principles pattern so the
            page reads as authored rather than scaffolded. -->
       <dl class="mt-l flex flex-col">
-        {rows.map((row, index) => (
-          <div
-            class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-            data-reveal
-            style={`--reveal-delay: ${index * 80}ms;`}
-          >
-            <dt class="font-mono text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">{row.label}</dt>
-            <dd class="max-w-[60ch] leading-[1.7] text-text">{row.body}</dd>
-          </div>
-        ))}
+        {
+          rows.map((row, index) => (
+            <div
+              class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
+              data-reveal
+              style={`--reveal-delay: ${index * 80}ms;`}
+            >
+              <dt class="font-mono text-[0.8rem] tracking-[0.08em] text-text-muted uppercase">
+                {row.label}
+              </dt>
+              <dd class="max-w-[60ch] leading-[1.7] text-text">{row.body}</dd>
+            </div>
+          ))
+        }
       </dl>
 
       <!-- Quiet close, funnels onward like the rest of the site. -->
       <div class="mt-l flex flex-wrap items-center gap-m border-t border-border pt-2xl" data-reveal>
-        <a href="/contact" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
+        <a
+          href="/contact"
+          class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+        >
           Start a project
         </a>
         <a class="card-link text-lg" href="/work/">See the work</a>
       </div>
-
     </div>
   </section>
-
 </BaseLayout>

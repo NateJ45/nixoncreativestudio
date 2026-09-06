@@ -33,11 +33,11 @@ import { resolve, extname, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPlaiceholder } from 'plaiceholder';
 
-const __dirname    = dirname(fileURLToPath(import.meta.url));
-const projectRoot  = resolve(__dirname, '..');
-const coversDir    = resolve(projectRoot, 'src/assets/case-studies');
-const outFile      = resolve(projectRoot, 'src/lib/coverPlaceholders.json');
-const validExts    = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '..');
+const coversDir = resolve(projectRoot, 'src/assets/case-studies');
+const outFile = resolve(projectRoot, 'src/lib/coverPlaceholders.json');
+const validExts = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 
 // --- Discover --------------------------------------------------------------
 

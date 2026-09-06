@@ -27,7 +27,6 @@ import { Button } from './ui/button';
 const SHOW_AFTER_PX = 600;
 
 export default function BackToTop() {
-
   const [visible, setVisible] = useState<boolean>(false);
 
   useEffect(() => {
@@ -42,7 +41,7 @@ export default function BackToTop() {
   function scrollToTop(): void {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({
-      top:      0,
+      top: 0,
       behavior: prefersReducedMotion ? 'auto' : 'smooth',
     });
   }
@@ -60,7 +59,7 @@ export default function BackToTop() {
         // indicator / notch when the page runs under viewport-fit=cover. env() is
         // 0 on non-notched devices, so this reads as a flat 1.5rem there.
         'fixed z-40 size-11 rounded-full shadow-lg transition-opacity duration-200 ' +
-        'bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] ' +
+        'right-[max(1.5rem,env(safe-area-inset-right))] bottom-[max(1.5rem,env(safe-area-inset-bottom))] ' +
         (visible ? 'opacity-100' : 'pointer-events-none opacity-0')
       }
     >

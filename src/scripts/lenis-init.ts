@@ -44,7 +44,6 @@ declare global {
   }
 }
 
-
 /**
  * Initialize Lenis with brand-friendly defaults.
  *
@@ -77,7 +76,6 @@ async function startLenis(): Promise<Lenis> {
   return lenis;
 }
 
-
 /**
  * Tear down a running Lenis instance.
  *
@@ -92,7 +90,6 @@ function stopLenis() {
   }
 }
 
-
 /**
  * Apply the right state based on the current prefers-reduced-motion
  * setting. Called on initial load AND when the preference changes.
@@ -105,7 +102,8 @@ function applyMotionPreference() {
   // desktop widths. Touch scrolling is already inertial, and running Lenis there
   // just spends CPU fighting the browser's own physics.
   const wheelDevice =
-    window.matchMedia('(pointer: fine)').matches && window.matchMedia('(min-width: 1024px)').matches;
+    window.matchMedia('(pointer: fine)').matches &&
+    window.matchMedia('(min-width: 1024px)').matches;
 
   if (prefersReduced || !wheelDevice) {
     // User wants less motion (or has no wheel); if Lenis is running, stop it.
@@ -128,7 +126,6 @@ function applyMotionPreference() {
       });
   }
 }
-
 
 /* ----------------------------------------------------------------------------
    Navigation scroll behavior (Astro View Transitions + Lenis)

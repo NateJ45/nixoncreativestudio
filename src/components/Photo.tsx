@@ -32,12 +32,12 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react';
 
 export interface PhotoProps {
-  src:          string;
-  alt:          string;
-  width:        number;
-  height:       number;
-  className?:   string;
-  priority?:    boolean;
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  className?: string;
+  priority?: boolean;
   placeholder?: string;
 }
 
@@ -50,7 +50,6 @@ export default function Photo({
   priority,
   placeholder,
 }: PhotoProps) {
-
   const imgRef = useRef<HTMLImageElement>(null);
 
   // Track load state so the img fades in instead of popping. Priority
@@ -69,22 +68,22 @@ export default function Photo({
   // Wrapper styles. The aspect-ratio keeps the box at the right shape
   // before the image arrives, so there's no layout shift on load.
   const wrapperStyle: CSSProperties = {
-    position:        'relative',
-    aspectRatio:     `${width} / ${height}`,
-    overflow:        'hidden',
+    position: 'relative',
+    aspectRatio: `${width} / ${height}`,
+    overflow: 'hidden',
     backgroundColor: placeholder ? undefined : 'var(--color-bg-soft)',
     backgroundImage: placeholder ? `url(${placeholder})` : undefined,
-    backgroundSize:     'cover',
+    backgroundSize: 'cover',
     backgroundPosition: 'center',
   };
 
   // Img styles. Fade in on load.
   const imgStyle: CSSProperties = {
-    width:      '100%',
-    height:     '100%',
-    objectFit:  'cover',
-    display:    'block',
-    opacity:    loaded ? 1 : 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+    opacity: loaded ? 1 : 0,
     transition: 'opacity 300ms ease',
   };
 

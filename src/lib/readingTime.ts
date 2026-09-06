@@ -39,9 +39,7 @@ export function readingTime(body: string): number {
     // Strip non-word characters that wouldn't separate words on read.
     .replace(/[#*_>~|=-]/g, ' ');
 
-  const words = cleaned
-    .split(/\s+/)
-    .filter((w) => w.length > 0).length;
+  const words = cleaned.split(/\s+/).filter((w) => w.length > 0).length;
 
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }

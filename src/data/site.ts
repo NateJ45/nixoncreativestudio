@@ -18,7 +18,6 @@
      - Anything that only appears once on the site
    ============================================================================ */
 
-
 /* ----------------------------------------------------------------------------
    Type definition
    ----------------------------------------------------------------------------
@@ -31,17 +30,17 @@
 
 interface SiteData {
   // Identity
-  ownerName: string;       // Person who owns the studio.
-  studioName: string;      // Brand / business name.
+  ownerName: string; // Person who owns the studio.
+  studioName: string; // Brand / business name.
 
   // Reach
-  email: string;           // Primary inbox for inquiries.
-  phone: string;           // Display number (formatted for humans).
-  address: string;         // Public-facing locale, not a street address.
+  email: string; // Primary inbox for inquiries.
+  phone: string; // Display number (formatted for humans).
+  address: string; // Public-facing locale, not a street address.
 
   // Web
-  domain: string;          // Bare host, e.g. for the form subject line.
-  url: string;             // Full canonical URL, used in meta and structured data.
+  domain: string; // Bare host, e.g. for the form subject line.
+  url: string; // Full canonical URL, used in meta and structured data.
 
   // Social
   social: {
@@ -50,7 +49,7 @@ interface SiteData {
   };
 
   // Marketing
-  tagline: string;         // One-line studio positioning.
+  tagline: string; // One-line studio positioning.
 
   // External scheduling. Empty string disables the "Book a call" CTAs.
   // Plug in a Cal.com / Calendly URL when ready — every "Book a call"
@@ -63,10 +62,9 @@ interface SiteData {
   newsletterUrl: string;
 
   // Helpers
-  phoneHref: string;       // Pre-computed tel: target.
-  emailHref: string;       // Pre-computed mailto: target.
+  phoneHref: string; // Pre-computed tel: target.
+  emailHref: string; // Pre-computed mailto: target.
 }
-
 
 /* ----------------------------------------------------------------------------
    The values themselves
@@ -75,9 +73,9 @@ interface SiteData {
    the site. Editing any value here flows out everywhere on the next build.
    ---------------------------------------------------------------------------- */
 
-const _email   = 'nathan@nixoncreativestudio.com';
-const _phone   = '(256) 318-6627';
-const _domain  = 'nixoncreativestudio.com';
+const _email = 'nathan@nixoncreativestudio.com';
+const _phone = '(256) 318-6627';
+const _domain = 'nixoncreativestudio.com';
 
 // Tel hrefs strip everything that isn't a digit so the OS dialer can read
 // the number cleanly. For US numbers this is fine; for international numbers
@@ -85,23 +83,23 @@ const _domain  = 'nixoncreativestudio.com';
 const _phoneDigits = _phone.replace(/\D/g, '');
 
 export const site: SiteData = {
-
-  ownerName:  'Nathan Nixon',
+  ownerName: 'Nathan Nixon',
   studioName: 'Nixon Creative Studio',
 
-  email:   _email,
-  phone:   _phone,
+  email: _email,
+  phone: _phone,
   address: 'Cincinnati, OH',
 
   domain: _domain,
-  url:    `https://${_domain}`,
+  url: `https://${_domain}`,
 
   social: {
     instagram: 'https://www.instagram.com/thenate_n/',
-    linkedin:  'https://www.linkedin.com/in/nathannixon/',
+    linkedin: 'https://www.linkedin.com/in/nathannixon/',
   },
 
-  tagline: 'Modern websites for small businesses, nonprofits, churches, and schools. Based in Cincinnati, working with clients anywhere.',
+  tagline:
+    'Modern websites for small businesses, nonprofits, churches, and schools. Based in Cincinnati, working with clients anywhere.',
 
   // External scheduling URL. Leave empty to hide the "Book a call" CTAs
   // site-wide; paste a Cal.com or Calendly link to enable them. Cal.com
@@ -118,5 +116,4 @@ export const site: SiteData = {
   // string-stripping logic at every call site.
   phoneHref: `tel:${_phoneDigits}`,
   emailHref: `mailto:${_email}`,
-
 } as const;

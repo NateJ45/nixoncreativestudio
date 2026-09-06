@@ -61,20 +61,20 @@ Don't reorder. Don't drop. If a section's content isn't ready yet, build a place
 
 Declared in the `@theme` block inside `src/styles/globals.css`. Reference via utility classes (`bg-primary`, `text-accent`, `border-secondary`) rather than hardcoded hex anywhere in component code.
 
-| Role | Hex |
-|---|---|
-| Primary | `[#______]` |
-| Accent | `[#______]` |
-| Link (accent body text) | `[#______]` |
-| Secondary | `[#______]` |
-| Tertiary | `[#______]` |
-| Heading | `[#______]` |
-| Base text | `[#______]` |
+| Role                      | Hex         |
+| ------------------------- | ----------- |
+| Primary                   | `[#______]` |
+| Accent                    | `[#______]` |
+| Link (accent body text)   | `[#______]` |
+| Secondary                 | `[#______]` |
+| Tertiary                  | `[#______]` |
+| Heading                   | `[#______]` |
+| Base text                 | `[#______]` |
 | Section background (soft) | `[#______]` |
-| Muted text | `[#______]` |
-| White | `#FFFFFF` |
+| Muted text                | `[#______]` |
+| White                     | `#FFFFFF`   |
 
-Every token must clear WCAG AA against every surface it appears on. Body text needs 4.5:1, large text and UI components need 3:1. Run the math in both light and dark before introducing one. The `--link` token is intentionally a darker shade of `--accent` so accent-toned *body-size* text passes 4.5:1; `--accent` itself stays vibrant for buttons, focus rings, and large CTAs where white foreground carries the contrast.
+Every token must clear WCAG AA against every surface it appears on. Body text needs 4.5:1, large text and UI components need 3:1. Run the math in both light and dark before introducing one. The `--link` token is intentionally a darker shade of `--accent` so accent-toned _body-size_ text passes 4.5:1; `--accent` itself stays vibrant for buttons, focus rings, and large CTAs where white foreground carries the contrast.
 
 ### shadcn token mapping (foundation, do not change casually)
 
@@ -192,16 +192,19 @@ Target: WCAG 2.1 AA in both light and dark modes. Aim for 100 Lighthouse Accessi
 **Forms.** Every input gets an associated `<label for="...">`. Use native input types (`email`, `tel`, `url`) and `autocomplete` hints so browsers and password managers help. Required fields get `required`. Error containers get `role="alert"`.
 
 **Images.**
+
 - Content images: descriptive `alt`. "Hero image" or "Image of X" is filler; describe what the image shows.
 - Image immediately adjacent to a heading that names the same thing (card thumbnails, hero below an `h1`): `alt=""`. Empty alt explicitly marks the image decorative so screen readers skip it instead of announcing the title twice.
 - Decorative gradients, shapes, or pseudo-elements: `aria-hidden="true"` on the wrapper.
 
 **Interactive elements.**
+
 - Icon-only buttons and links require `aria-label`. SVG icons carry no accessible name on their own; the label lives on the wrapper.
 - Hover and focus states must not be color-only. Pair color changes with underline, motion, or icon swap.
 - Stick to native interactive elements (`<button>`, `<a>`, `<details>`, `<summary>`) whenever possible. Custom controls take real work to make accessible.
 
 **Color tokens by responsibility** (definitions and contrast math in `globals.css`):
+
 - `--accent`: buttons, focus rings, large CTAs. Paired with foreground text designed to clear AA at large size.
 - `--link`: accent-toned body-size text (card arrows, step numbers, prose anchors). A darker shade of accent so body text clears 4.5:1.
 - `--secondary`: decorative gradients and links sitting on darker surfaces.
@@ -258,12 +261,12 @@ To add a new entry: drop the file in the matching folder, fill in frontmatter, d
 
 [Fill this in once routes are defined.]
 
-| Path | Source |
-|---|---|
-| `/` | `src/pages/index.astro` |
-| ... | ... |
-| `/rss.xml` | `src/pages/rss.xml.js` |
-| `/404` | `src/pages/404.astro` |
+| Path       | Source                  |
+| ---------- | ----------------------- |
+| `/`        | `src/pages/index.astro` |
+| ...        | ...                     |
+| `/rss.xml` | `src/pages/rss.xml.js`  |
+| `/404`     | `src/pages/404.astro`   |
 
 ---
 

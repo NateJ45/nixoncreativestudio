@@ -282,13 +282,17 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                     <span
                       className={
                         'font-display text-4xl leading-[0.95] tracking-[0.01em] transition-colors duration-150 group-hover:text-link group-focus-visible:text-link dark:group-hover:text-secondary dark:group-focus-visible:text-secondary ' +
-                        (active ? 'text-link dark:text-tertiary' : 'text-heading dark:text-primary-foreground')
+                        (active
+                          ? 'text-link dark:text-tertiary'
+                          : 'text-heading dark:text-primary-foreground')
                       }
                     >
                       {label}
                     </span>
                     {desc && (
-                      <span className="font-body text-sm text-text-muted dark:text-primary-foreground/65">{desc}</span>
+                      <span className="font-body text-sm text-text-muted dark:text-primary-foreground/65">
+                        {desc}
+                      </span>
                     )}
                   </span>
 
@@ -326,19 +330,19 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             className="mnav-item relative z-10 mt-auto pt-l"
             style={delay(140 + links.length * 55 + 100)}
           >
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted dark:text-primary-foreground/60">
+            <p className="font-mono text-xs tracking-[0.18em] text-text-muted uppercase dark:text-primary-foreground/60">
               Get in touch
             </p>
             <div className="mt-s flex flex-col gap-1">
               <a
                 href={site.emailHref}
-                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link dark:text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 dark:text-secondary ${focusRing}`}
               >
                 {site.email}
               </a>
               <a
                 href={site.phoneHref}
-                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link dark:text-secondary no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 ${focusRing}`}
+                className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 dark:text-secondary ${focusRing}`}
               >
                 {site.phone}
               </a>
@@ -364,7 +368,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
                   fine on the light panel but would vanish on navy, so force the
                   icon white (and sky on hover) in dark mode only, via a descendant
                   override on its .theme-toggle hook. */}
-              <div className="dark:[&_.theme-toggle:hover]:text-secondary dark:[&_.theme-toggle]:text-primary-foreground">
+              <div className="dark:[&_.theme-toggle]:text-primary-foreground dark:[&_.theme-toggle:hover]:text-secondary">
                 <ThemeToggle className="size-11" />
               </div>
             </div>

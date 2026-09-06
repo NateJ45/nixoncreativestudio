@@ -63,18 +63,15 @@ const steps = [
 // Closing CTA copy. Title is specific to audience and intentionally human;
 // the old "Have a project in mind?" was sales-template cliché.
 const ctaTitle = 'Tell me what you are building.';
-const ctaSub  = 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.';
+const ctaSub =
+  'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.';
 ---
 
 <section
-  class:list={[
-    'process-band py-2xl',
-    isBand ? 'band-themed process-band--closing' : 'bg-bg-soft',
-  ]}
+  class:list={['process-band py-2xl', isBand ? 'band-themed process-band--closing' : 'bg-bg-soft']}
   aria-labelledby={headingId}
 >
   <div class="ncs-container relative z-10 flex flex-col gap-2xl">
-
     <!-- Header. Title carries the weight; no eyebrow, no number. -->
     <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
       <h2 id={headingId} class="text-heading">How we work</h2>
@@ -88,49 +85,54 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
          sequence" meaning. Grid: 1 col on mobile, 2 at sm, 4 across at lg
          where the connector lives. -->
     <ol class="process-steps relative grid list-none gap-l p-0 sm:grid-cols-2 lg:grid-cols-4">
-
       <!-- Single connector rail behind the number nodes (lg row only). Draws
            left-to-right on scroll where supported; otherwise fully drawn. -->
       <span class="process-connector hidden lg:block" aria-hidden="true"></span>
 
-      {steps.map((step, index) => (
-        <li
-          class="relative flex flex-col items-start gap-s"
-          data-reveal
-          style={`--reveal-delay: ${index * 110}ms;`}
-        >
-          {/* One numbered node. The badge IS the step number (no second
+      {
+        steps.map((step, index) => (
+          <li
+            class="relative flex flex-col items-start gap-s"
+            data-reveal
+            style={`--reveal-delay: ${index * 110}ms;`}
+          >
+            {/* One numbered node. The badge IS the step number (no second
                ghost numeral). accent-foreground keeps it readable on the
                accent fill in both themes. */}
-          <span class="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent font-mono text-sm text-accent-foreground">
-            {step.num}
-          </span>
-          <h3 class="text-h4 text-heading">{step.title}</h3>
-          <p class="leading-[1.55] text-text-muted">{step.body}</p>
-        </li>
-      ))}
+            <span class="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent font-mono text-sm text-accent-foreground">
+              {step.num}
+            </span>
+            <h3 class="text-h4 text-heading">{step.title}</h3>
+            <p class="leading-[1.55] text-text-muted">{step.body}</p>
+          </li>
+        ))
+      }
     </ol>
 
     <!-- Closing CTA (homepage). Title + sub on the left, button on the right.
          flex-wrap so the button drops below on narrow screens. -->
-    {showCta && (
-      <div
-        class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
-        data-reveal
-      >
-        <div class="flex max-w-[50ch] flex-col gap-s">
-          <p class="text-h3 leading-[1.1] text-heading font-display">{ctaTitle}</p>
-          <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
+    {
+      showCta && (
+        <div
+          class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
+          data-reveal
+        >
+          <div class="flex max-w-[50ch] flex-col gap-s">
+            <p class="font-display text-h3 leading-[1.1] text-heading">{ctaTitle}</p>
+            <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
+          </div>
+
+          <span class="inline-block">
+            <a
+              href="/contact"
+              class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+            >
+              Start a project
+            </a>
+          </span>
         </div>
-
-        <span class="inline-block">
-          <a href="/contact" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
-            Start a project
-          </a>
-        </span>
-      </div>
-    )}
-
+      )
+    }
   </div>
 </section>
 
@@ -164,8 +166,12 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
     }
   }
   @keyframes connector-draw {
-    from { transform: scaleX(0); }
-    to   { transform: scaleX(1); }
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
   }
 
   /* Closing band only (homepage): in dark mode fade the band's bottom to solid
@@ -174,7 +180,7 @@ const ctaSub  = 'I take a small number of projects each quarter. The earlier we 
      and below the content (z 10). The soft /services variant is mid-page, so it
      gets no fade. */
   :global(.dark) .process-band--closing::after {
-    content: "";
+    content: '';
     position: absolute;
     inset-inline: 0;
     bottom: 0;

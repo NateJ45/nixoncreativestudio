@@ -30,7 +30,7 @@
 import { getCollection } from 'astro:content';
 
 const studies = (await getCollection('case-studies')).sort(
-  (a, b) => b.data.published.valueOf() - a.data.published.valueOf()
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
 );
 
 // Distinct clients, newest-first, each linked to its newest case study.
@@ -49,15 +49,21 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
 <nav class="client-marquee" aria-label="Recent clients">
   <div class="client-track" data-unit={clients.length}>
     {/* Real, focusable links (the set assistive tech and the keyboard use). */}
-    {clients.map((c) => (
-      <a class={itemClass} href={`/work/${c.slug}/`}>{c.name}</a>
-    ))}
+    {
+      clients.map((c) => (
+        <a class={itemClass} href={`/work/${c.slug}/`}>
+          {c.name}
+        </a>
+      ))
+    }
     {/* Visual duplicate for the seamless loop: hidden from AT + the tab order. */}
-    {clients.map((c) => (
-      <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
-        {c.name}
-      </a>
-    ))}
+    {
+      clients.map((c) => (
+        <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
+          {c.name}
+        </a>
+      ))
+    }
   </div>
 </nav>
 
@@ -112,7 +118,7 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
 
   /* Sky-blue dot separator before each name. */
   .client-item::before {
-    content: "";
+    content: '';
     position: absolute;
     left: -1.55rem;
     height: 0.35rem;
@@ -135,8 +141,12 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
   }
 
   @keyframes client-marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
   }
 </style>
 

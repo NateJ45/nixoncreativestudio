@@ -40,12 +40,12 @@ const STUDIO = 'Nixon Creative Studio';
 // an all-caps display face, so this renders uppercased.
 const TAGLINE = 'photography, web design, strategy';
 const COLORS = {
-  bg0:    '#0A1628', // navy
-  bg1:    '#0F1E33', // lifted navy for the gradient
-  fg:     '#F4F7FA', // off-white studio name
-  amber:  '#FFA334', // brand amber for the tagline
+  bg0: '#0A1628', // navy
+  bg1: '#0F1E33', // lifted navy for the gradient
+  fg: '#F4F7FA', // off-white studio name
+  amber: '#FFA334', // brand amber for the tagline
   accent: '#3478BD', // NCS blue accent rule
-  muted:  '#9CA3AF', // muted off-white for the small page label
+  muted: '#9CA3AF', // muted off-white for the small page label
 };
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -245,7 +245,9 @@ async function writeCard(relPath, title, cover) {
       .png()
       .toBuffer();
   } else {
-    png = await sharp(Buffer.from(buildSvg(title))).png().toBuffer();
+    png = await sharp(Buffer.from(buildSvg(title)))
+      .png()
+      .toBuffer();
   }
   const outPath = resolve(projectRoot, 'public/og', `${relPath}.png`);
   mkdirSync(dirname(outPath), { recursive: true });
@@ -288,17 +290,17 @@ function collectionEntries(dir, prefix) {
 
 // --- Pages -----------------------------------------------------------------
 const STATIC_PAGES = [
-  { route: 'index',       title: 'Modern websites and photography' },
-  { route: 'work',        title: 'Selected work' },
-  { route: 'services',    title: 'Services' },
-  { route: 'about',       title: 'About the studio' },
+  { route: 'index', title: 'Modern websites and photography' },
+  { route: 'work', title: 'Selected work' },
+  { route: 'services', title: 'Services' },
+  { route: 'about', title: 'About the studio' },
   { route: 'photography', title: 'Photography' },
-  { route: 'journal',     title: 'Journal' },
-  { route: 'contact',     title: 'Start a project' },
-  { route: 'colophon',    title: 'Colophon' },
-  { route: 'privacy',     title: 'Privacy' },
+  { route: 'journal', title: 'Journal' },
+  { route: 'contact', title: 'Start a project' },
+  { route: 'colophon', title: 'Colophon' },
+  { route: 'privacy', title: 'Privacy' },
   { route: 'accessibility', title: 'Accessibility' },
-  { route: '404',         title: 'Page not found' },
+  { route: '404', title: 'Page not found' },
 ];
 
 const pages = [

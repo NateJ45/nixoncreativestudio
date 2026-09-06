@@ -38,11 +38,11 @@ import CtaBanner from '../components/CtaBanner.astro';
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
 const orgTypes = [
-  { value: 'church',         label: 'Church'         },
-  { value: 'school',         label: 'School'         },
-  { value: 'nonprofit',      label: 'Nonprofit'      },
+  { value: 'church', label: 'Church' },
+  { value: 'school', label: 'School' },
+  { value: 'nonprofit', label: 'Nonprofit' },
   { value: 'small-business', label: 'Small business' },
-  { value: 'other',          label: 'Something else' },
+  { value: 'other', label: 'Something else' },
 ];
 
 // Budget brackets, small enough that the picker isn't overwhelming.
@@ -50,33 +50,33 @@ const orgTypes = [
 // /services): Launch $4,000, Signature $7,000, Flagship $12,000. The lowest
 // bracket starts at the $4,000 floor so the form never implies work below it.
 const budgets = [
-  { value: 'under-4k',  label: 'Under $4,000'       },
-  { value: '4k-7k',     label: '$4,000 to $7,000'   },
-  { value: '7k-12k',    label: '$7,000 to $12,000'  },
-  { value: '12k-plus',  label: '$12,000 or more'    },
-  { value: 'not-sure',  label: 'Not sure yet'       },
+  { value: 'under-4k', label: 'Under $4,000' },
+  { value: '4k-7k', label: '$4,000 to $7,000' },
+  { value: '7k-12k', label: '$7,000 to $12,000' },
+  { value: '12k-plus', label: '$12,000 or more' },
+  { value: 'not-sure', label: 'Not sure yet' },
 ];
 
 // Project timeline brackets. Lets Nathan triage against the limited number
 // of projects he takes per quarter without asking for exact dates.
 const timelines = [
-  { value: 'asap',        label: 'Right away'                  },
-  { value: '1-3-months',  label: 'In the next 1 to 3 months'   },
-  { value: '3-6-months',  label: '3 to 6 months from now'      },
-  { value: '6-plus',      label: 'More than 6 months out'      },
-  { value: 'flexible',    label: 'Flexible, no fixed deadline' },
+  { value: 'asap', label: 'Right away' },
+  { value: '1-3-months', label: 'In the next 1 to 3 months' },
+  { value: '3-6-months', label: '3 to 6 months from now' },
+  { value: '6-plus', label: 'More than 6 months out' },
+  { value: 'flexible', label: 'Flexible, no fixed deadline' },
 ];
 
 // Attribution options. Cheap signal on what marketing channels are
 // working. "Referral" first because that's the most common path for
 // preschools, churches, and small businesses in the region.
 const heardFromOptions = [
-  { value: 'referral',    label: 'A referral from someone I know'           },
-  { value: 'search',      label: 'Google or another search engine'          },
-  { value: 'social',      label: 'Instagram, LinkedIn, or other social'     },
-  { value: 'past-client', label: "I've worked with Nathan before"           },
-  { value: 'event',       label: 'In person, at an event or through a church or school' },
-  { value: 'other',       label: 'Somewhere else'                            },
+  { value: 'referral', label: 'A referral from someone I know' },
+  { value: 'search', label: 'Google or another search engine' },
+  { value: 'social', label: 'Instagram, LinkedIn, or other social' },
+  { value: 'past-client', label: "I've worked with Nathan before" },
+  { value: 'event', label: 'In person, at an event or through a church or school' },
+  { value: 'other', label: 'Somewhere else' },
 ];
 
 // What-happens-next, derived from the existing "What to expect" copy so nothing
@@ -90,7 +90,7 @@ const nextSteps = [
 // Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
 // time, which is required because the form runs in the browser.
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
-const formActive  = web3formsKey.length > 0;
+const formActive = web3formsKey.length > 0;
 
 // Shared class strings for the form. Pulled into consts because each
 // input/select/textarea repeats the same base styling.
@@ -109,14 +109,14 @@ const inputClass =
 // fieldsets after the first open with a hairline. The legend is styled mono +
 // uppercase so the form reads as a short, sectioned document.
 const fieldsetClass = 'm-0 flex min-w-0 flex-col gap-m border-0 p-0';
-const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
+const legendClass =
+  'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 ---
 
 <BaseLayout
   title="Contact | Nixon Creative Studio"
   description="Get in touch about a web design, brand, or photography project."
 >
-
   <!-- ====================================================================
        Masthead. The only h1. Full content width, left-aligned.
        ==================================================================== -->
@@ -135,7 +135,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
     </div>
   </section>
 
-
   <!-- ====================================================================
        The inquiry. The form in a surface-card beside the ways-to-reach-me
        sidebar, spanning the full content width so the form is roomy and there
@@ -145,23 +144,20 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
   <section class="pb-2xl" aria-label="Inquiry form and ways to reach me">
     <div class="ncs-container">
       <div class="border-t border-border pt-2xl">
-
         <div class="min-w-0">
           <div class="grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
-
             <!-- Three-state container. Form is shown by default; the thanks and
                  error blocks below start with the .hidden Tailwind utility class
                  and the inline script toggles it via classList. -->
             <div data-reveal>
-
-            <form
-              class="flex flex-col gap-l rounded-xl surface-card p-l"
-              method="post"
-              action="https://api.web3forms.com/submit"
-              novalidate
-              data-contact-form
-            >
-              <!--
+              <form
+                class="surface-card flex flex-col gap-l rounded-xl p-l"
+                method="post"
+                action="https://api.web3forms.com/submit"
+                novalidate
+                data-contact-form
+              >
+                <!--
                 Web3Forms hidden fields:
                   - access_key: routes the submission to Nathan's inbox.
                   - subject: sets the email subject so inquiries are obvious.
@@ -169,210 +165,269 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                 The form posts natively to the same endpoint if JS is disabled,
                 so submissions always reach Web3Forms.
               -->
-              <input type="hidden" name="access_key" value={web3formsKey} />
-              <input type="hidden" name="subject"    value={`New project inquiry from ${site.domain}`} />
-              <input type="hidden" name="from_name"  value={`${site.studioName} website`} />
+                <input type="hidden" name="access_key" value={web3formsKey} />
+                <input
+                  type="hidden"
+                  name="subject"
+                  value={`New project inquiry from ${site.domain}`}
+                />
+                <input type="hidden" name="from_name" value={`${site.studioName} website`} />
 
-              <!-- Fieldset 1: about you. -->
-              <fieldset class={fieldsetClass}>
-                <legend class={legendClass}>About you</legend>
+                <!-- Fieldset 1: about you. -->
+                <fieldset class={fieldsetClass}>
+                  <legend class={legendClass}>About you</legend>
 
-                <!-- name + email side by side on wider screens. -->
-                <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="name">Your name</label>
-                    <input class={inputClass} type="text" id="name" name="name" required autocomplete="name" />
+                  <!-- name + email side by side on wider screens. -->
+                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
+                    <div class={fieldClass}>
+                      <label class={labelClass} for="name">Your name</label>
+                      <input
+                        class={inputClass}
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        autocomplete="name"
+                      />
+                    </div>
+
+                    <div class={fieldClass}>
+                      <label class={labelClass} for="email">Email</label>
+                      <input
+                        class={inputClass}
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        autocomplete="email"
+                      />
+                    </div>
                   </div>
 
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="email">Email</label>
-                    <input class={inputClass} type="email" id="email" name="email" required autocomplete="email" />
-                  </div>
-                </div>
-
-                <!-- Phone: optional. type="tel" lets mobile browsers pop the
+                  <!-- Phone: optional. type="tel" lets mobile browsers pop the
                      numeric keypad; autocomplete="tel" lets the OS / password
                      manager pre-fill. -->
-                <div class={fieldClass}>
-                  <label class={labelClass} for="phone">
-                    Phone <span class={optionalMark}>(optional)</span>
-                  </label>
-                  <input class={inputClass} type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" />
-                </div>
-
-                <!-- Organization name: optional. Lets Nathan look the org up
-                     before the first reply. -->
-                <div class={fieldClass}>
-                  <label class={labelClass} for="organization">
-                    Organization name <span class={optionalMark}>(optional)</span>
-                  </label>
-                  <input class={inputClass} type="text" id="organization" name="organization" autocomplete="organization" />
-                </div>
-              </fieldset>
-
-              <!-- Fieldset 2: about the project. Opens with a hairline. -->
-              <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
-                <legend class={legendClass}>About the project</legend>
-
-                <div class={fieldClass}>
-                  <label class={labelClass} for="org_type">Organization type</label>
-                  <select class={inputClass} id="org_type" name="org_type" required>
-                    <option value="" disabled selected>Pick the closest</option>
-                    {orgTypes.map((opt) => (
-                      <option value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <!-- Current website: optional. URL input gives mobile keyboard
-                     the dot/slash keys. Placeholder hints at expected format. -->
-                <div class={fieldClass}>
-                  <label class={labelClass} for="current_website">
-                    Current website <span class={optionalMark}>(optional)</span>
-                  </label>
-                  <input
-                    class={inputClass}
-                    type="url"
-                    id="current_website"
-                    name="current_website"
-                    autocomplete="url"
-                    inputmode="url"
-                    placeholder="https://"
-                  />
-                </div>
-
-                <!-- budget + timeline side by side on wider screens. -->
-                <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
                   <div class={fieldClass}>
-                    <label class={labelClass} for="budget">Budget range</label>
-                    <select class={inputClass} id="budget" name="budget" required>
-                      <option value="" disabled selected>Pick the closest</option>
-                      {budgets.map((opt) => (
-                        <option value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <!-- Timeline: optional. Helps triage against Nathan's
-                       per-quarter project cap without asking for exact dates. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="timeline">
-                      Project timeline <span class={optionalMark}>(optional)</span>
+                    <label class={labelClass} for="phone">
+                      Phone <span class={optionalMark}>(optional)</span>
                     </label>
-                    <select class={inputClass} id="timeline" name="timeline">
-                      <option value="" selected>No preference</option>
-                      {timelines.map((opt) => (
-                        <option value={opt.value}>{opt.label}</option>
-                      ))}
+                    <input
+                      class={inputClass}
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      autocomplete="tel"
+                      inputmode="tel"
+                    />
+                  </div>
+
+                  <!-- Organization name: optional. Lets Nathan look the org up
+                     before the first reply. -->
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="organization">
+                      Organization name <span class={optionalMark}>(optional)</span>
+                    </label>
+                    <input
+                      class={inputClass}
+                      type="text"
+                      id="organization"
+                      name="organization"
+                      autocomplete="organization"
+                    />
+                  </div>
+                </fieldset>
+
+                <!-- Fieldset 2: about the project. Opens with a hairline. -->
+                <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
+                  <legend class={legendClass}>About the project</legend>
+
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="org_type">Organization type</label>
+                    <select class={inputClass} id="org_type" name="org_type" required>
+                      <option value="" disabled selected>Pick the closest</option>
+                      {orgTypes.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                     </select>
                   </div>
-                </div>
 
-                <div class={fieldClass}>
-                  <label class={labelClass} for="message">Project description</label>
-                  <textarea
-                    class={`${inputClass} min-h-32 resize-y`}
-                    id="message"
-                    name="message"
-                    required
-                    minlength="30"
-                    rows="6"
-                    placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
-                  ></textarea>
-                  <p class="mt-xs text-[0.85rem] text-text-muted">
-                    At least a few sentences, please. The more you share, the better I can scope the first conversation.
-                  </p>
-                </div>
-              </fieldset>
+                  <!-- Current website: optional. URL input gives mobile keyboard
+                     the dot/slash keys. Placeholder hints at expected format. -->
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="current_website">
+                      Current website <span class={optionalMark}>(optional)</span>
+                    </label>
+                    <input
+                      class={inputClass}
+                      type="url"
+                      id="current_website"
+                      name="current_website"
+                      autocomplete="url"
+                      inputmode="url"
+                      placeholder="https://"
+                    />
+                  </div>
 
-              <!-- Fieldset 3: one more thing. Opens with a hairline. -->
-              <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
-                <legend class={legendClass}>One more thing</legend>
+                  <!-- budget + timeline side by side on wider screens. -->
+                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
+                    <div class={fieldClass}>
+                      <label class={labelClass} for="budget">Budget range</label>
+                      <select class={inputClass} id="budget" name="budget" required>
+                        <option value="" disabled selected>Pick the closest</option>
+                        {budgets.map((opt) => <option value={opt.value}>{opt.label}</option>)}
+                      </select>
+                    </div>
 
-                <!-- Attribution: optional. Cheap signal on what marketing
+                    <!-- Timeline: optional. Helps triage against Nathan's
+                       per-quarter project cap without asking for exact dates. -->
+                    <div class={fieldClass}>
+                      <label class={labelClass} for="timeline">
+                        Project timeline <span class={optionalMark}>(optional)</span>
+                      </label>
+                      <select class={inputClass} id="timeline" name="timeline">
+                        <option value="" selected>No preference</option>
+                        {timelines.map((opt) => <option value={opt.value}>{opt.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="message">Project description</label>
+                    <textarea
+                      class={`${inputClass} min-h-32 resize-y`}
+                      id="message"
+                      name="message"
+                      required
+                      minlength="30"
+                      rows="6"
+                      placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
+                    ></textarea>
+                    <p class="mt-xs text-[0.85rem] text-text-muted">
+                      At least a few sentences, please. The more you share, the better I can scope
+                      the first conversation.
+                    </p>
+                  </div>
+                </fieldset>
+
+                <!-- Fieldset 3: one more thing. Opens with a hairline. -->
+                <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
+                  <legend class={legendClass}>One more thing</legend>
+
+                  <!-- Attribution: optional. Cheap signal on what marketing
                      channels are bringing inquiries in. -->
-                <div class={fieldClass}>
-                  <label class={labelClass} for="heard_from">
-                    How did you hear about Nixon Creative Studio? <span class={optionalMark}>(optional)</span>
-                  </label>
-                  <select class={inputClass} id="heard_from" name="heard_from">
-                    <option value="" selected>Pick one if you'd like</option>
-                    {heardFromOptions.map((opt) => (
-                      <option value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </fieldset>
+                  <div class={fieldClass}>
+                    <label class={labelClass} for="heard_from">
+                      How did you hear about Nixon Creative Studio? <span class={optionalMark}
+                        >(optional)</span
+                      >
+                    </label>
+                    <select class={inputClass} id="heard_from" name="heard_from">
+                      <option value="" selected>Pick one if you'd like</option>
+                      {
+                        heardFromOptions.map((opt) => (
+                          <option value={opt.value}>{opt.label}</option>
+                        ))
+                      }
+                    </select>
+                  </div>
+                </fieldset>
 
-              <!-- Honeypot. sr-only is Tailwind's equivalent of the old
+                <!-- Honeypot. sr-only is Tailwind's equivalent of the old
                    .visually-hidden utility. Hidden from sighted users and
                    screen readers; bots tend to fill every field, so the
                    script discards submissions where this is non-empty. -->
-              <div class="sr-only" aria-hidden="true">
-                <label for="botcheck">Leave this field empty</label>
-                <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
-              </div>
+                <div class="sr-only" aria-hidden="true">
+                  <label for="botcheck">Leave this field empty</label>
+                  <input
+                    type="text"
+                    id="botcheck"
+                    name="botcheck"
+                    tabindex="-1"
+                    autocomplete="off"
+                  />
+                </div>
 
-              <!-- Submit. Shared shadcn Button (brand variant + cta size)
+                <!-- Submit. Shared shadcn Button (brand variant + cta size)
                    matches the Hero and CtaBanner CTAs. self-start keeps it
                    at content width inside the flex-column form layout. -->
-              <span class="inline-block self-start">
-                <Button
-                  type="submit"
-                  variant="brand"
-                  size="cta"
-                  className="shine"
-                  data-contact-submit
-                >
-                  <!-- Inline spinner. Hidden until the submit handler adds the
+                <span class="inline-block self-start">
+                  <Button
+                    type="submit"
+                    variant="brand"
+                    size="cta"
+                    className="shine"
+                    data-contact-submit
+                  >
+                    <!-- Inline spinner. Hidden until the submit handler adds the
                        .is-spinning class to the button; a CSS border-spinner
                        that's static under prefers-reduced-motion (see the style
                        block at the end of the page). aria-hidden because the
                        label text already announces the "Sending..." state. -->
-                  <span class="contact-spinner" aria-hidden="true"></span>
-                  <span data-contact-submit-label>Send</span>
-                </Button>
-              </span>
+                    <span class="contact-spinner" aria-hidden="true"></span>
+                    <span data-contact-submit-label>Send</span>
+                  </Button>
+                </span>
 
-              {!formActive && (
-                <p class="text-[0.85rem] italic text-text-muted">
-                  The Web3Forms access key is missing. Set <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">PUBLIC_WEB3FORMS_KEY</code> in <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">.env</code> locally and in Cloudflare Pages settings before launch.
-                </p>
-              )}
-            </form>
+                {
+                  !formActive && (
+                    <p class="text-[0.85rem] text-text-muted italic">
+                      The Web3Forms access key is missing. Set{' '}
+                      <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                        PUBLIC_WEB3FORMS_KEY
+                      </code>{' '}
+                      in{' '}
+                      <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                        .env
+                      </code>{' '}
+                      locally and in Cloudflare Pages settings before launch.
+                    </p>
+                  )
+                }
+              </form>
 
-            <!-- Thank-you panel. Starts hidden; the submit handler removes the
+              <!-- Thank-you panel. Starts hidden; the submit handler removes the
                  hidden class on success. Same outer card surface as the form so
                  the swap reads as a state change in the same container. -->
-            <div
-              class="hidden flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] animate-in fade-in zoom-in-95 duration-500"
-              data-contact-thanks
-            >
-              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><path d="M20 6 9 17l-5-5" /></svg>
-              </span>
-              <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
-              <p class="max-w-[56ch] leading-[1.6] text-text">
-                I'll be in touch within one or two business days. If you don't hear back, check your spam folder for a reply from {site.domain}, then try the email link on the right.
-              </p>
-            </div>
+              <div
+                class="hidden animate-in flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] duration-500 zoom-in-95 fade-in"
+                data-contact-thanks
+              >
+                <span
+                  class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent"
+                  aria-hidden="true"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="h-6 w-6"><path d="M20 6 9 17l-5-5"></path></svg
+                  >
+                </span>
+                <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
+                <p class="max-w-[56ch] leading-[1.6] text-text">
+                  I'll be in touch within one or two business days. If you don't hear back, check
+                  your spam folder for a reply from {site.domain}, then try the email link on the
+                  right.
+                </p>
+              </div>
 
-            <!-- Error panel. Same hidden-class pattern. Amber band signals
+              <!-- Error panel. Same hidden-class pattern. Amber band signals
                  something went wrong without screaming red. -->
-            <div
-              class="mt-m hidden rounded-lg border border-tertiary/45 p-m text-text [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] animate-in fade-in slide-in-from-top-1 duration-300"
-              data-contact-error
-              role="alert"
-            >
-              <p>
-                Something went wrong on our end. Please try again, or email
-                <a class="text-link underline underline-offset-2" href={site.emailHref}>{site.email}</a>
-                directly.
-              </p>
+              <div
+                class="mt-m hidden animate-in rounded-lg border border-tertiary/45 [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] p-m text-text duration-300 fade-in slide-in-from-top-1"
+                data-contact-error
+                role="alert"
+              >
+                <p>
+                  Something went wrong on our end. Please try again, or email
+                  <a class="text-link underline underline-offset-2" href={site.emailHref}
+                    >{site.email}</a
+                  >
+                  directly.
+                </p>
+              </div>
             </div>
-
-            </div>
-
 
             <!-- --------------------------------------------------------------
                  Sidebar. Direct contact details + what-happens-next + where.
@@ -380,7 +435,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                  screens). The email and phone are also in the footer.
                  -------------------------------------------------------------- -->
             <aside class="flex flex-col gap-l" data-reveal style="--reveal-delay: 120ms;">
-
               <div class="flex flex-col gap-s">
                 <h2 class="text-h4 text-heading">Direct</h2>
                 <ul class="flex flex-col gap-xs">
@@ -388,7 +442,10 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                     <CopyEmail client:load email={site.email} />
                   </li>
                   <li>
-                    <a class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2" href={site.phoneHref}>
+                    <a
+                      class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+                      href={site.phoneHref}
+                    >
                       {site.phone}
                     </a>
                   </li>
@@ -400,19 +457,26 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                 <!-- A quiet three-row ledger (the About "currently" tick motif),
                      not a numbered 01/02/03 scaffold. Ordered list, list-none. -->
                 <ol class="flex list-none flex-col border-b border-border p-0">
-                  {nextSteps.map((step) => (
-                    <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
-                      <span class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary" aria-hidden="true"></span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
+                  {
+                    nextSteps.map((step) => (
+                      <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
+                        <span
+                          class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
+                          aria-hidden="true"
+                        />
+                        <span>{step}</span>
+                      </li>
+                    ))
+                  }
                 </ol>
               </div>
 
               <div class="flex flex-col gap-s">
                 <h2 class="text-h4 text-heading">Where I am</h2>
                 <p class="leading-[1.6] text-text">
-                  {site.address}. In-person work and photography across the greater Cincinnati region; web design and strategy with clients anywhere, fully remote when that is easier.
+                  {site.address}. In-person work and photography across the greater Cincinnati
+                  region; web design and strategy with clients anywhere, fully remote when that is
+                  easier.
                 </p>
                 <!-- Service-area map: a keyless Google Maps embed centered on
                      the Cincinnati region (the ?output=embed form needs no API
@@ -429,41 +493,39 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
                     title="Map of the Greater Cincinnati service area"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
-                    class="block h-48 w-full"
-                  ></iframe>
+                    class="block h-48 w-full"></iframe>
                 </div>
               </div>
 
-              {site.bookingUrl && (
-                /* Book-a-call CTA. Renders only when site.bookingUrl is set
+              {
+                site.bookingUrl && (
+                  /* Book-a-call CTA. Renders only when site.bookingUrl is set
                      (e.g. a Cal.com link). Reads as a lighter-weight option
                      next to "use the form" for warm leads who'd rather skip
                      straight to scheduling. */
-                <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
-                  <h2 class="text-h4 text-heading">Rather book a call?</h2>
-                  <p class="leading-[1.6] text-text">
-                    Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a working conversation.
-                  </p>
-                  <a
-                    class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
-                    href={site.bookingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open my calendar →
-                  </a>
-                </div>
-              )}
-
+                  <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
+                    <h2 class="text-h4 text-heading">Rather book a call?</h2>
+                    <p class="leading-[1.6] text-text">
+                      Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
+                      working conversation.
+                    </p>
+                    <a
+                      class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+                      href={site.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open my calendar →
+                    </a>
+                  </div>
+                )
+              }
             </aside>
-
           </div>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <CtaBanner
     title="Rather skip the form?"
@@ -471,7 +533,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
     ctaLabel="Email me"
     ctaHref={site.emailHref}
   />
-
 
   <!-- ----------------------------------------------------------------------
        Submit-button spinner. Scoped Astro styles. The spinner is collapsed
@@ -515,7 +576,6 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
     }
   </style>
 
-
   <!-- ----------------------------------------------------------------------
        Submit handler. Posts via fetch, swaps form for thank-you panel on
        success, shows inline error on failure. Switched from the `hidden`
@@ -528,20 +588,19 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
     // View Transitions navigation, not just on a hard load. The dataset guard
     // keeps it from binding twice to the same form instance.
     function initContactForm() {
-    const form     = document.querySelector('[data-contact-form]')     as HTMLFormElement | null;
-    const thanks   = document.querySelector('[data-contact-thanks]')   as HTMLElement | null;
-    const errorEl  = document.querySelector('[data-contact-error]')    as HTMLElement | null;
-    const submit   = document.querySelector('[data-contact-submit]')   as HTMLButtonElement | null;
-    const label    = document.querySelector('[data-contact-submit-label]') as HTMLElement | null;
+      const form = document.querySelector('[data-contact-form]') as HTMLFormElement | null;
+      const thanks = document.querySelector('[data-contact-thanks]') as HTMLElement | null;
+      const errorEl = document.querySelector('[data-contact-error]') as HTMLElement | null;
+      const submit = document.querySelector('[data-contact-submit]') as HTMLButtonElement | null;
+      const label = document.querySelector('[data-contact-submit-label]') as HTMLElement | null;
 
-    if (form && form.dataset.enhanced) return;
-    if (form) form.dataset.enhanced = 'true';
+      if (form && form.dataset.enhanced) return;
+      if (form) form.dataset.enhanced = 'true';
 
-    if (form && thanks && errorEl && submit && label) {
+      if (form && thanks && errorEl && submit && label) {
+        const originalLabel = label.textContent ?? 'Send';
 
-      const originalLabel = label.textContent ?? 'Send';
-
-      /* ---- Draft auto-save ----------------------------------------------
+        /* ---- Draft auto-save ----------------------------------------------
          If a visitor types a long message then accidentally navigates away
          or refreshes, we want their draft to come back. localStorage save
          on every input (with a tiny debounce), restore on mount, clear
@@ -551,168 +610,180 @@ const legendClass = 'mb-xs block w-full font-mono text-sm uppercase tracking-[0.
          wrapped in try/catch so a SecurityError doesn't break the form.
       --------------------------------------------------------------------- */
 
-      const DRAFT_KEY = 'ncs-contact-draft';
+        const DRAFT_KEY = 'ncs-contact-draft';
 
-      // Fields we persist. The hidden Web3Forms admin fields and the
-      // honeypot are intentionally excluded.
-      const persistedNames = [
-        'name', 'email', 'phone',
-        'organization', 'org_type',
-        'current_website', 'budget', 'timeline',
-        'message', 'heard_from',
-      ];
+        // Fields we persist. The hidden Web3Forms admin fields and the
+        // honeypot are intentionally excluded.
+        const persistedNames = [
+          'name',
+          'email',
+          'phone',
+          'organization',
+          'org_type',
+          'current_website',
+          'budget',
+          'timeline',
+          'message',
+          'heard_from',
+        ];
 
-      function restoreDraft(): void {
-        try {
-          const raw = localStorage.getItem(DRAFT_KEY);
-          if (!raw) return;
-          const data = JSON.parse(raw) as Record<string, string>;
-          persistedNames.forEach((name) => {
-            const el = form!.elements.namedItem(name) as
-              | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-            if (el && typeof data[name] === 'string' && data[name].length > 0) {
-              el.value = data[name];
-            }
-          });
-        } catch {
-          /* swallow */
+        function restoreDraft(): void {
+          try {
+            const raw = localStorage.getItem(DRAFT_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw) as Record<string, string>;
+            persistedNames.forEach((name) => {
+              const el = form!.elements.namedItem(name) as
+                HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+              if (el && typeof data[name] === 'string' && data[name].length > 0) {
+                el.value = data[name];
+              }
+            });
+          } catch {
+            /* swallow */
+          }
         }
-      }
 
-      function saveDraft(): void {
-        try {
-          const out: Record<string, string> = {};
-          persistedNames.forEach((name) => {
-            const el = form!.elements.namedItem(name) as
-              | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-            if (el && el.value) out[name] = el.value;
-          });
-          if (Object.keys(out).length === 0) {
+        function saveDraft(): void {
+          try {
+            const out: Record<string, string> = {};
+            persistedNames.forEach((name) => {
+              const el = form!.elements.namedItem(name) as
+                HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+              if (el && el.value) out[name] = el.value;
+            });
+            if (Object.keys(out).length === 0) {
+              localStorage.removeItem(DRAFT_KEY);
+              return;
+            }
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
+          } catch {
+            /* swallow */
+          }
+        }
+
+        function clearDraft(): void {
+          try {
             localStorage.removeItem(DRAFT_KEY);
+          } catch {
+            /* swallow */
+          }
+        }
+
+        // Tiny debounce so typing in the textarea doesn't write to storage
+        // on every keystroke.
+        let saveTimer: number | undefined;
+        function scheduleSave(): void {
+          if (saveTimer) window.clearTimeout(saveTimer);
+          saveTimer = window.setTimeout(saveDraft, 250);
+        }
+
+        restoreDraft();
+
+        // Context-aware preselect. A case study's closing CTA links here as
+        // /contact?org_type=<sector>, so a visitor arriving from a church study
+        // lands with "Church" already chosen. Only applied when the field is still
+        // empty, so it never overrides a restored draft; the param is then stripped
+        // from the URL so a refresh doesn't re-apply it. Convenience only: the form
+        // works identically without it.
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const wanted = params.get('org_type');
+          if (wanted) {
+            const orgSelect = form.elements.namedItem('org_type') as HTMLSelectElement | null;
+            if (
+              orgSelect &&
+              !orgSelect.value &&
+              Array.from(orgSelect.options).some((o) => o.value === wanted)
+            ) {
+              orgSelect.value = wanted;
+              scheduleSave();
+            }
+            params.delete('org_type');
+            const qs = params.toString();
+            window.history.replaceState(
+              null,
+              '',
+              window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
+            );
+          }
+        } catch {
+          /* URL / select access guarded; the preselect is never required */
+        }
+
+        form.addEventListener('input', scheduleSave);
+        form.addEventListener('change', scheduleSave);
+
+        // Helpers that toggle visibility via the Tailwind .hidden class. The
+        // thanks panel needs `flex` when shown because it's a flex column.
+        const show = (el: HTMLElement, displayClass = 'flex') => {
+          el.classList.remove('hidden');
+          if (displayClass) el.classList.add(displayClass);
+        };
+        const hide = (el: HTMLElement, displayClass = 'flex') => {
+          if (displayClass) el.classList.remove(displayClass);
+          el.classList.add('hidden');
+        };
+
+        form.addEventListener('submit', async (event) => {
+          // Native validation first. The form carries `novalidate`, so the
+          // browser won't bubble its own messages on submit; we ask for them
+          // explicitly. checkValidity() returns false if any required/min-length
+          // field is invalid, and reportValidity() focuses the first offender and
+          // shows its native message. Bail before the honeypot/fetch flow so a
+          // blank or too-short field never silently submits and waits on a
+          // server reject.
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            form.reportValidity();
             return;
           }
-          localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
-        } catch {
-          /* swallow */
-        }
-      }
 
-      function clearDraft(): void {
-        try { localStorage.removeItem(DRAFT_KEY); } catch { /* swallow */ }
-      }
-
-      // Tiny debounce so typing in the textarea doesn't write to storage
-      // on every keystroke.
-      let saveTimer: number | undefined;
-      function scheduleSave(): void {
-        if (saveTimer) window.clearTimeout(saveTimer);
-        saveTimer = window.setTimeout(saveDraft, 250);
-      }
-
-      restoreDraft();
-
-      // Context-aware preselect. A case study's closing CTA links here as
-      // /contact?org_type=<sector>, so a visitor arriving from a church study
-      // lands with "Church" already chosen. Only applied when the field is still
-      // empty, so it never overrides a restored draft; the param is then stripped
-      // from the URL so a refresh doesn't re-apply it. Convenience only: the form
-      // works identically without it.
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const wanted = params.get('org_type');
-        if (wanted) {
-          const orgSelect = form.elements.namedItem('org_type') as HTMLSelectElement | null;
-          if (orgSelect && !orgSelect.value &&
-              Array.from(orgSelect.options).some((o) => o.value === wanted)) {
-            orgSelect.value = wanted;
-            scheduleSave();
-          }
-          params.delete('org_type');
-          const qs = params.toString();
-          window.history.replaceState(
-            null, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
-          );
-        }
-      } catch {
-        /* URL / select access guarded; the preselect is never required */
-      }
-
-      form.addEventListener('input',  scheduleSave);
-      form.addEventListener('change', scheduleSave);
-
-      // Helpers that toggle visibility via the Tailwind .hidden class. The
-      // thanks panel needs `flex` when shown because it's a flex column.
-      const show = (el: HTMLElement, displayClass = 'flex') => {
-        el.classList.remove('hidden');
-        if (displayClass) el.classList.add(displayClass);
-      };
-      const hide = (el: HTMLElement, displayClass = 'flex') => {
-        if (displayClass) el.classList.remove(displayClass);
-        el.classList.add('hidden');
-      };
-
-      form.addEventListener('submit', async (event) => {
-
-        // Native validation first. The form carries `novalidate`, so the
-        // browser won't bubble its own messages on submit; we ask for them
-        // explicitly. checkValidity() returns false if any required/min-length
-        // field is invalid, and reportValidity() focuses the first offender and
-        // shows its native message. Bail before the honeypot/fetch flow so a
-        // blank or too-short field never silently submits and waits on a
-        // server reject.
-        if (!form.checkValidity()) {
-          event.preventDefault();
-          form.reportValidity();
-          return;
-        }
-
-        // Honeypot. Real users never fill this; bots usually do. Pretend
-        // the submit worked but silently drop the request.
-        const honeypot = (form.elements.namedItem('botcheck') as HTMLInputElement | null)?.value;
-        if (honeypot) {
-          event.preventDefault();
-          hide(form);
-          show(thanks);
-          clearDraft();
-          return;
-        }
-
-        event.preventDefault();
-
-        hide(errorEl, 'block');
-        submit.disabled = true;
-        submit.classList.add('is-spinning');
-        label.textContent = 'Sending...';
-
-        try {
-          const data = new FormData(form);
-          const response = await fetch(form.action, {
-            method: 'POST',
-            body: data,
-            headers: { Accept: 'application/json' },
-          });
-
-          if (response.ok) {
+          // Honeypot. Real users never fill this; bots usually do. Pretend
+          // the submit worked but silently drop the request.
+          const honeypot = (form.elements.namedItem('botcheck') as HTMLInputElement | null)?.value;
+          if (honeypot) {
+            event.preventDefault();
             hide(form);
             show(thanks);
             clearDraft();
-            thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          } else {
-            show(errorEl, 'block');
+            return;
           }
-        } catch (_err) {
-          show(errorEl, 'block');
-        } finally {
-          submit.disabled = false;
-          submit.classList.remove('is-spinning');
-          label.textContent = originalLabel;
-        }
 
-      });
-    }
+          event.preventDefault();
+
+          hide(errorEl, 'block');
+          submit.disabled = true;
+          submit.classList.add('is-spinning');
+          label.textContent = 'Sending...';
+
+          try {
+            const data = new FormData(form);
+            const response = await fetch(form.action, {
+              method: 'POST',
+              body: data,
+              headers: { Accept: 'application/json' },
+            });
+
+            if (response.ok) {
+              hide(form);
+              show(thanks);
+              clearDraft();
+              thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              show(errorEl, 'block');
+            }
+          } catch (_err) {
+            show(errorEl, 'block');
+          } finally {
+            submit.disabled = false;
+            submit.classList.remove('is-spinning');
+            label.textContent = originalLabel;
+          }
+        });
+      }
     }
     document.addEventListener('astro:page-load', initContactForm);
     initContactForm();
   </script>
-
 </BaseLayout>

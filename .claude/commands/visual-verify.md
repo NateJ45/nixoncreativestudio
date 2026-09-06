@@ -1,6 +1,6 @@
 ---
 description: Screenshot-verify UI changes in both themes and all key routes
-argument-hint: "[route, e.g. / or /work]"
+argument-hint: '[route, e.g. / or /work]'
 ---
 
 Run this after any visual change before pushing. If a specific route is passed as an argument, verify that route. Otherwise, cover all key routes.
@@ -25,9 +25,11 @@ Run this after any visual change before pushing. If a specific route is passed a
 ## Steps
 
 1. **Make sure the dev server is running.**
+
    ```sh
    npm run dev
    ```
+
    Default: [http://localhost:4321](http://localhost:4321). If it's already running, skip this.
 
 2. **Using the Playwright MCP**, open each route and capture four states per route:
@@ -37,16 +39,20 @@ Run this after any visual change before pushing. If a specific route is passed a
    - Mobile 375px wide, dark mode
 
 3. **Switch themes** by setting the localStorage key and reloading:
+
    ```js
-   localStorage.setItem('ncs-theme', 'light')  // or 'dark'
-   location.reload()
+   localStorage.setItem('ncs-theme', 'light'); // or 'dark'
+   location.reload();
    ```
+
    The key is `ncs-theme` (defined in `ThemeToggle.tsx` and the anti-FOUC script in `BaseLayout.astro`). After reload, the page reflects the chosen mode without flash.
 
 4. **If the site is behind the coming-soon gate** (`PUBLIC_COMING_SOON=true` in `.env`), bypass it once per browser session:
+
    ```
    http://localhost:4321/?preview=<PUBLIC_PREVIEW_TOKEN>
    ```
+
    The gate script reads the token, saves it to `localStorage["ncs-preview"]`, and reloads without the query param. After that one visit, every route in that browser session loads the real site. You only need to do this once per session.
 
 5. **Actually look at every screenshot.** Use the Read tool on each PNG. Check:

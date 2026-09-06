@@ -64,9 +64,12 @@ const mobileShots = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true },
 );
 const src = Object.entries(homeShots).find(([p]) => p.endsWith(`/${slug}-home.png`))?.[1].default;
-const mobileSrc = Object.entries(mobileShots).find(([p]) => p.endsWith(`/${slug}-mobile.png`))?.[1].default;
+const mobileSrc = Object.entries(mobileShots).find(([p]) => p.endsWith(`/${slug}-mobile.png`))?.[1]
+  .default;
 if (!src) {
-  throw new Error(`SiteShowcase: no desktop capture for slug "${slug}" (expected ${slug}-home.png)`);
+  throw new Error(
+    `SiteShowcase: no desktop capture for slug "${slug}" (expected ${slug}-home.png)`,
+  );
 }
 
 const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -89,14 +92,26 @@ const hasPhone = !!mobileSrc;
           <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
           <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
         </span>
-        <span class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-bg px-3 py-1 font-mono text-[0.72rem] text-text-muted">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <rect x="5" y="11" width="14" height="9" rx="2" />
-            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        <span
+          class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-bg px-3 py-1 font-mono text-[0.72rem] text-text-muted"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="11"
+            height="11"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
           </svg>
           {shown}
         </span>
-        <span class="font-mono text-[0.7rem] uppercase tracking-[0.08em] text-link opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span
+          class="font-mono text-[0.7rem] tracking-[0.08em] text-link uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+        >
           Visit ↗
         </span>
       </div>
@@ -112,23 +127,25 @@ const hasPhone = !!mobileSrc;
       </div>
     </a>
 
-    {hasPhone && (
-      /* Phone overlapping the desktop's lower-right. Decorative (the desktop
+    {
+      hasPhone && (
+        /* Phone overlapping the desktop's lower-right. Decorative (the desktop
            shows the same site), so aria-hidden; pointer-events:none keeps the
            desktop link clickable beneath it. Hidden below md (see <style>). */
-      <div class="showcase-phone" aria-hidden="true">
-        <div class="showcase-phone-window">
-          <Image
-            src={mobileSrc!}
-            alt=""
-            widths={[220, 330, 440]}
-            sizes="(min-width: 48rem) 200px, 1px"
-            class="showcase-phone-img"
-            loading="lazy"
-          />
+        <div class="showcase-phone" aria-hidden="true">
+          <div class="showcase-phone-window">
+            <Image
+              src={mobileSrc!}
+              alt=""
+              widths={[220, 330, 440]}
+              sizes="(min-width: 48rem) 200px, 1px"
+              class="showcase-phone-img"
+              loading="lazy"
+            />
+          </div>
         </div>
-      </div>
-    )}
+      )
+    }
   </div>
 
   <figcaption class="mt-xs text-center font-mono text-[0.75rem] text-text-muted">
@@ -259,17 +276,29 @@ const hasPhone = !!mobileSrc;
   }
 
   @keyframes showcase-scroll {
-    from { transform: translateY(0); }
-    to   { transform: translateY(calc(-100% + var(--wh))); }
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% + var(--wh)));
+    }
   }
 
   @keyframes showcase-phone-scroll {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-58%); }
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-58%);
+    }
   }
 
   @keyframes showcase-zoom {
-    from { transform: scale(1); }
-    to   { transform: scale(1.16) translateY(-6%); }
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.16) translateY(-6%);
+    }
   }
 </style>

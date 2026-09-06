@@ -19,17 +19,15 @@
 import { useEffect, useState } from 'react';
 
 export default function ReadingProgress() {
-
   // 0..1 progress value. Drives the bar's transform: scaleX().
   const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
-
     function update(): void {
-      const doc      = document.documentElement;
-      const max      = doc.scrollHeight - doc.clientHeight;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
       // Guard divide-by-zero on short pages where there's nothing to scroll.
-      const value    = max > 0 ? window.scrollY / max : 0;
+      const value = max > 0 ? window.scrollY / max : 0;
       setProgress(Math.min(1, Math.max(0, value)));
     }
 

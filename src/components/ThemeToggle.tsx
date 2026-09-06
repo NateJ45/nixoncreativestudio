@@ -77,7 +77,6 @@ function readStored(): Theme {
 // per context: the desktop Header keeps the compact 32px icon (mouse target),
 // while the mobile nav panel passes size-11 for a 44px touch target.
 export default function ThemeToggle({ className = '' }: { className?: string }) {
-
   // Initial state matches the SSR placeholder. The useEffect below pulls
   // the real value from localStorage on the client. Until then we render
   // a neutral icon so hydration doesn't mismatch.
@@ -122,17 +121,23 @@ export default function ThemeToggle({ className = '' }: { className?: string }) 
   // Icon and aria-label reflect what the toggle is CURRENTLY set to,
   // not what the next click will switch it to. The aria-label includes
   // the next state so screen reader users know what the click will do.
-  const icon =
-    !mounted     ? <Sun     className="size-5" /> :
-    theme === 'light' ? <Sun     className="size-5" /> :
-    theme === 'dark'  ? <Moon    className="size-5" /> :
-                        <Monitor className="size-5" />;
+  const icon = !mounted ? (
+    <Sun className="size-5" />
+  ) : theme === 'light' ? (
+    <Sun className="size-5" />
+  ) : theme === 'dark' ? (
+    <Moon className="size-5" />
+  ) : (
+    <Monitor className="size-5" />
+  );
 
-  const label =
-    !mounted     ? 'Toggle theme' :
-    theme === 'light' ? 'Theme: light. Click to switch to dark.' :
-    theme === 'dark'  ? 'Theme: dark. Click to switch to system.' :
-                        'Theme: system. Click to switch to light.';
+  const label = !mounted
+    ? 'Toggle theme'
+    : theme === 'light'
+      ? 'Theme: light. Click to switch to dark.'
+      : theme === 'dark'
+        ? 'Theme: dark. Click to switch to system.'
+        : 'Theme: system. Click to switch to light.';
 
   return (
     <Button

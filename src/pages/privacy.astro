@@ -59,10 +59,8 @@ const sections = [
   title="Privacy | Nixon Creative Studio"
   description="What this site collects, and what it does with it."
 >
-
   <section class="py-2xl" aria-labelledby="privacy-heading">
     <div class="ncs-container">
-
       <!-- Intro block. Mirrors the hero treatment on the other inner
            pages but at a smaller scale, since this is a utility page. -->
       <header class="mb-xl flex max-w-[70ch] flex-col gap-m" data-reveal>
@@ -72,7 +70,12 @@ const sections = [
         <p class="font-mono text-sm text-text-muted">Privacy notice</p>
         <h1 id="privacy-heading" class="leading-[0.95]">What this site collects.</h1>
         <p class="text-lg leading-[1.6] text-text">
-          Short version: a contact form, two analytics tools (a cookieless Cloudflare beacon and Google Analytics), an embedded Google Map on the contact page, and the things any web server logs. No advertising trackers. If you have questions, email <a class={linkClass} href={site.emailHref}>{site.email}</a>.
+          Short version: a contact form, two analytics tools (a cookieless Cloudflare beacon and
+          Google Analytics), an embedded Google Map on the contact page, and the things any web
+          server logs. No advertising trackers. If you have questions, email <a
+            class={linkClass}
+            href={site.emailHref}>{site.email}</a
+          >.
         </p>
 
         <!-- Last updated badge. A small pill so the freshness of the notice
@@ -82,10 +85,7 @@ const sections = [
           <span
             class="inline-flex items-center gap-xs rounded-full border border-border bg-bg-soft px-s py-xs text-sm text-text-muted"
           >
-            <span
-              class="h-2 w-2 rounded-full bg-accent"
-              aria-hidden="true"
-            ></span>
+            <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
             Last updated {lastUpdated}
           </span>
         </p>
@@ -95,20 +95,17 @@ const sections = [
            lg the TOC drops out (the page is short enough that the headings
            themselves are the index) and the prose spans full width. -->
       <div class="flex flex-col gap-xl lg:flex-row lg:items-start lg:gap-2xl">
-
         <!-- In-page table of contents. Sticky on wide screens so it stays
              beside the prose as you scroll. Hidden below lg; the prose still
              carries every heading, so nothing is lost. -->
         <nav
-          class="hidden shrink-0 lg:block lg:sticky lg:top-[6rem] lg:w-56"
+          class="hidden shrink-0 lg:sticky lg:top-[6rem] lg:block lg:w-56"
           aria-label="On this page"
           data-privacy-toc
           data-reveal="left"
         >
-          <p class="mb-s text-sm uppercase tracking-[0.16em] text-text-muted">
-            On this page
-          </p>
-          <ul class="flex flex-col gap-2xs border-l border-border">
+          <p class="mb-s text-sm tracking-[0.16em] text-text-muted uppercase">On this page</p>
+          <ul class="gap-2xs flex flex-col border-l border-border">
             {
               sections.map((s) => (
                 <li>
@@ -116,7 +113,7 @@ const sections = [
                     href={`#${s.id}`}
                     data-toc-link={s.id}
                     class={
-                      'block border-l-2 border-transparent py-2xs pl-m text-[0.95rem] ' +
+                      'py-2xs block border-l-2 border-transparent pl-m text-[0.95rem] ' +
                       'text-text-muted transition-colors duration-200 ' +
                       'hover:text-link focus-visible:text-link ' +
                       'aria-[current=true]:border-accent aria-[current=true]:font-semibold ' +
@@ -135,68 +132,112 @@ const sections = [
         <!-- Body. Comfortable reading width, slightly larger than default
              body size for long-form prose, line-height bumped up. -->
         <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
-
           <!-- Each section is a block that reveals on scroll and carries the
                shared id so the TOC anchors land on the heading. -->
           <div class="mt-0" data-reveal>
             <h2 id="contact-form" class={h2Class}>Contact form</h2>
             <p class={pClass}>
-              When you submit the form on the Contact page, the fields you fill in (your name, email, organization type, budget range, and project description) are sent through <a class={linkClass} href="https://web3forms.com/" target="_blank" rel="noopener noreferrer">Web3Forms</a> and delivered to my inbox. Web3Forms acts as the delivery pipe and does not retain submissions beyond the brief window needed to deliver them. I keep the email in my inbox the same way I'd keep any project inquiry.
+              When you submit the form on the Contact page, the fields you fill in (your name,
+              email, organization type, budget range, and project description) are sent through <a
+                class={linkClass}
+                href="https://web3forms.com/"
+                target="_blank"
+                rel="noopener noreferrer">Web3Forms</a
+              > and delivered to my inbox. Web3Forms acts as the delivery pipe and does not retain submissions
+              beyond the brief window needed to deliver them. I keep the email in my inbox the same way
+              I'd keep any project inquiry.
             </p>
             <p class={pClass}>
-              The form also includes a hidden "honeypot" field that real visitors never fill in. If a bot submits the form and trips the honeypot, the message is quietly discarded.
+              The form also includes a hidden "honeypot" field that real visitors never fill in. If
+              a bot submits the form and trips the honeypot, the message is quietly discarded.
             </p>
           </div>
 
           <div class="mt-xl" data-reveal>
             <h2 id="analytics" class={h2Class}>Analytics</h2>
             <p class={pClass}>
-              The site uses two analytics tools, and I use both for the same thing: to see which pages are useful and which aren't.
+              The site uses two analytics tools, and I use both for the same thing: to see which
+              pages are useful and which aren't.
             </p>
             <p class={pClass}>
-              <a class={linkClass} href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer">Cloudflare Web Analytics</a> counts page views and basic performance metrics without cookies, without fingerprinting, and without sending data to any third-party advertising network.
+              <a
+                class={linkClass}
+                href="https://www.cloudflare.com/web-analytics/"
+                target="_blank"
+                rel="noopener noreferrer">Cloudflare Web Analytics</a
+              > counts page views and basic performance metrics without cookies, without fingerprinting,
+              and without sending data to any third-party advertising network.
             </p>
             <p class={pClass}>
-              <a class={linkClass} href="https://support.google.com/analytics/answer/6004245" target="_blank" rel="noopener noreferrer">Google Analytics 4</a> records page views, scrolls, and outbound clicks, and sends them to Google. It sets first-party cookies to tell returning visits apart, and it truncates IP addresses before storing anything. I do not use it for advertising, I have not linked it to any ad account, and I have not turned on Google Signals or any demographic reporting. To opt out everywhere, install Google's <a class={linkClass} href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">browser add-on</a>; most tracker-blocking extensions and browsers also stop it.
+              <a
+                class={linkClass}
+                href="https://support.google.com/analytics/answer/6004245"
+                target="_blank"
+                rel="noopener noreferrer">Google Analytics 4</a
+              > records page views, scrolls, and outbound clicks, and sends them to Google. It sets first-party
+              cookies to tell returning visits apart, and it truncates IP addresses before storing anything.
+              I do not use it for advertising, I have not linked it to any ad account, and I have not
+              turned on Google Signals or any demographic reporting. To opt out everywhere, install Google's{
+                ' '
+              }
+              <a
+                class={linkClass}
+                href="https://tools.google.com/dlpage/gaoptout"
+                target="_blank"
+                rel="noopener noreferrer">browser add-on</a
+              >; most tracker-blocking extensions and browsers also stop it.
             </p>
           </div>
 
           <div class="mt-xl" data-reveal>
             <h2 id="server-logs" class={h2Class}>Server logs</h2>
             <p class={pClass}>
-              The hosting platform (Cloudflare Pages) records standard request data: IP address, user agent, requested URL, response code, timestamp. These logs are retained for a short window and used for operational purposes like blocking abuse and diagnosing errors. They are not used to build profiles of visitors.
+              The hosting platform (Cloudflare Pages) records standard request data: IP address,
+              user agent, requested URL, response code, timestamp. These logs are retained for a
+              short window and used for operational purposes like blocking abuse and diagnosing
+              errors. They are not used to build profiles of visitors.
             </p>
           </div>
 
           <div class="mt-xl" data-reveal>
             <h2 id="cookies" class={h2Class}>Cookies</h2>
             <p class={pClass}>
-              Google Analytics sets a small number of first-party cookies (the <code class="font-mono text-[0.9em]">_ga</code> family) so it can tell a returning visit from a new one. They carry a random identifier, not your name or email, and the Analytics section above links the opt-out. The contact page also embeds a Google Map: when that map loads, Google may set its own cookies and receive your IP address, the same as if you visited Google Maps directly. Nothing else on the site sets cookies. If a future change adds more third-party content, this page will say so first.
+              Google Analytics sets a small number of first-party cookies (the <code
+                class="font-mono text-[0.9em]">_ga</code
+              > family) so it can tell a returning visit from a new one. They carry a random identifier,
+              not your name or email, and the Analytics section above links the opt-out. The contact page
+              also embeds a Google Map: when that map loads, Google may set its own cookies and receive
+              your IP address, the same as if you visited Google Maps directly. Nothing else on the site
+              sets cookies. If a future change adds more third-party content, this page will say so first.
             </p>
           </div>
 
           <div class="mt-xl" data-reveal>
             <h2 id="your-data" class={h2Class}>Your data</h2>
             <p class={pClass}>
-              If you've sent a project inquiry and want me to delete it from my inbox, email <a class={linkClass} href={site.emailHref}>{site.email}</a> with the email address you used to send it. I'll confirm when it's deleted.
+              If you've sent a project inquiry and want me to delete it from my inbox, email <a
+                class={linkClass}
+                href={site.emailHref}>{site.email}</a
+              > with the email address you used to send it. I'll confirm when it's deleted.
             </p>
           </div>
 
           <div class="mt-xl" data-reveal>
             <h2 id="changes" class={h2Class}>Changes</h2>
             <p class={pClass}>
-              If what the site collects changes, I'll update this page and bump the date at the bottom. There's no separate notification list for privacy updates.
+              If what the site collects changes, I'll update this page and bump the date at the
+              bottom. There's no separate notification list for privacy updates.
             </p>
           </div>
 
-          <p class="mt-xl border-t border-border pt-l text-[0.95rem] italic text-text-muted" data-reveal="fade">
+          <p
+            class="mt-xl border-t border-border pt-l text-[0.95rem] text-text-muted italic"
+            data-reveal="fade"
+          >
             Last updated: {lastUpdated}.
           </p>
-
         </div>
-
       </div>
-
     </div>
   </section>
 
@@ -261,5 +302,4 @@ const sections = [
     document.addEventListener('astro:page-load', initPrivacyToc);
     initPrivacyToc();
   </script>
-
 </BaseLayout>

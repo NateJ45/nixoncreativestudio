@@ -74,31 +74,31 @@ import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-no
 // visible in shipped HTML for anyone viewing source — soft gate, not
 // security. For real auth, use Cloudflare Access at the DNS layer.
 const comingSoonEnabled = import.meta.env.PUBLIC_COMING_SOON === 'true';
-const previewToken      = import.meta.env.PUBLIC_PREVIEW_TOKEN || '';
+const previewToken = import.meta.env.PUBLIC_PREVIEW_TOKEN || '';
 
 interface Props {
-  title:        string;
+  title: string;
   description?: string;
   /** Open Graph image URL. Defaults to the site-wide OG image in
       public/. Pages with a richer hero (case studies) pass their own
       cover so social shares render the project's actual artwork. */
-  ogImage?:     string;
+  ogImage?: string;
   /** Override the default og:type. Case study detail pages set this to
       "article" so platforms that treat articles specially (search,
       readers) render them correctly. */
-  ogType?:      'website' | 'article';
+  ogType?: 'website' | 'article';
   /** Page-specific schema.org JSON-LD blocks. Layered on top of the
       site-wide Organization schema by StructuredData. Used by About
       (Person), case study detail pages (Article + CreativeWork),
       /services (Service + FAQPage). */
-  schemas?:     Array<Record<string, unknown>>;
+  schemas?: Array<Record<string, unknown>>;
 }
 const {
   title,
   description = 'Nixon Creative Studio',
   ogImage,
-  ogType      = 'website',
-  schemas     = [],
+  ogType = 'website',
+  schemas = [],
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -116,6 +116,7 @@ const ogSlug = Astro.url.pathname.replace(/^\/+|\/+$/g, '') || 'index';
 const resolvedOgImage = ogImage ?? `/og/${ogSlug}.png`;
 const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
 ---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -134,46 +135,53 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
          strings or aliased paths. -->
     <link rel="canonical" href={canonical} />
 
-    {/* Favicon / app-icon set. The mark is a white Bebas "N" on a navy squircle
+    {
+      /* Favicon / app-icon set. The mark is a white Bebas "N" on a navy squircle
         with one amber spark, generated from the real wordmark glyph by
         scripts/generate-icons.mjs (run `npm run icons` after a brand change).
         Modern browsers take the SVG; the .ico is the legacy fallback; iOS uses
         the apple-touch PNG; the manifest carries the PWA / maskable icons.
-        theme-color is brand navy, matching the hero and the over-hero header. */}
+        theme-color is brand navy, matching the hero and the over-hero header. */
+    }
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0A1628" />
 
-    {comingSoonEnabled && (
-      <meta name="robots" content="noindex, follow" />
-    )}
+    {comingSoonEnabled && <meta name="robots" content="noindex, follow" />}
 
-    {/* The blocking gate script itself lives in ComingSoonGate.astro (a
+    {
+      /* The blocking gate script itself lives in ComingSoonGate.astro (a
         <script> cannot sit inside this expression: prettier-plugin-astro
-        cannot parse it there). */}
+        cannot parse it there). */
+    }
     {comingSoonEnabled && <ComingSoonGate previewToken={previewToken} />}
 
     <!-- RSS auto-discovery. Lets feed readers (and browser extensions
          that detect feeds) pick up /rss.xml without manual entry. -->
-    <link rel="alternate" type="application/rss+xml" title={`${site.studioName} — Case Studies`} href="/rss.xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${site.studioName} — Case Studies`}
+      href="/rss.xml"
+    />
 
     <!-- Open Graph + Twitter card meta. Drives the rich preview that
          appears when the URL is shared on Slack, iMessage, LinkedIn, etc.
          Pages that pass an `ogImage` prop (typically case studies, using
          their cover) get a project-specific preview; everything else
          falls back to the site-wide default in public/og-default.png. -->
-    <meta property="og:type"        content={ogType} />
-    <meta property="og:url"         content={canonical} />
-    <meta property="og:title"       content={title} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image"       content={ogImageUrl} />
-    <meta property="og:site_name"   content={site.studioName} />
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content={title} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:site_name" content={site.studioName} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image"       content={ogImageUrl} />
+    <meta name="twitter:image" content={ogImageUrl} />
 
     <!--
       Anti-FOUC theme bootstrap. Runs synchronously before <body> paints so
@@ -224,13 +232,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
          without it, the preload and the eventual CSS font fetch are
          considered different requests, and the browser would download the
          font twice. With it, the second fetch hits the preload cache. -->
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href={bebasNeueWoff2}
-      crossorigin
-    />
+    <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
 
     <!-- Cloudflare Web Analytics. Component renders the beacon script
          only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
@@ -248,7 +250,6 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <StructuredData extra={schemas} />
   </head>
   <body>
-
     <!--
       Hello, curious visitor. This site is custom-built by Nathan Nixon on Astro,
       Tailwind, and Cloudflare, no page builder and no template. How it is made:
@@ -272,17 +273,21 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <main id="main" tabindex="-1"><slot /></main>
     <Footer />
 
-    {/* Floating back-to-top affordance. client:idle defers hydration
+    {
+      /* Floating back-to-top affordance. client:idle defers hydration
         until after critical content; the button starts hidden and only
         fades in after the visitor scrolls past 600px, so the delay is
-        invisible. */}
+        invisible. */
+    }
     <BackToTop client:idle />
 
-    {comingSoonEnabled && (
-      <div class="ncs-overlay" aria-label="Launching soon">
-        <ComingSoon />
-      </div>
-    )}
+    {
+      comingSoonEnabled && (
+        <div class="ncs-overlay" aria-label="Launching soon">
+          <ComingSoon />
+        </div>
+      )
+    }
 
     <!--
       Lenis smooth scroll initializer. The script is a normal client-side
@@ -352,7 +357,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
               }
             });
           },
-          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
         );
 
         els.forEach((el) => io.observe(el));
@@ -364,8 +369,13 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <!-- A quiet hello in the console for anyone who opens dev tools. Honest:
          the real stack, with pointers to the colophon and contact. -->
     <script is:inline>
-      console.log('%cNixon Creative Studio', 'font: 600 16px ui-sans-serif, system-ui; color: #40AAED;');
-      console.log('Hand-built on Astro, Tailwind, and Cloudflare. How it is made: /colophon  ·  Want one like it: /contact');
+      console.log(
+        '%cNixon Creative Studio',
+        'font: 600 16px ui-sans-serif, system-ui; color: #40AAED;',
+      );
+      console.log(
+        'Hand-built on Astro, Tailwind, and Cloudflare. How it is made: /colophon  ·  Want one like it: /contact',
+      );
     </script>
   </body>
 </html>

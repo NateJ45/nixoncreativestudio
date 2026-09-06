@@ -78,18 +78,18 @@ Don't reorder these sections. The hero no longer depends on any single content g
 
 Declared in the `@theme` block inside `src/styles/globals.css`. Reference via utility classes (`bg-primary`, `text-accent`, `border-secondary`) rather than hardcoded hex anywhere in component code.
 
-| Role | Hex |
-|---|---|
-| Primary (dark navy) | `#0A1628` |
-| Accent (NCS blue) | `#3478BD` |
+| Role                                     | Hex       |
+| ---------------------------------------- | --------- |
+| Primary (dark navy)                      | `#0A1628` |
+| Accent (NCS blue)                        | `#3478BD` |
 | Link (deeper NCS blue, accent body text) | `#2A6FB0` |
-| Secondary (sky blue) | `#40AAED` |
-| Tertiary (amber) | `#FFA334` |
-| Heading | `#0A1628` |
-| Base text | `#1A1A1A` |
-| Section background (ultra light) | `#F4F7FA` |
-| Muted text | `#5F6573` |
-| White | `#FFFFFF` |
+| Secondary (sky blue)                     | `#40AAED` |
+| Tertiary (amber)                         | `#FFA334` |
+| Heading                                  | `#0A1628` |
+| Base text                                | `#1A1A1A` |
+| Section background (ultra light)         | `#F4F7FA` |
+| Muted text                               | `#5F6573` |
+| White                                    | `#FFFFFF` |
 
 The accent and muted-text values are shifted slightly darker from their
 original brand swatches (`#3B82C4` and `#6B7280`) so white-on-accent and
@@ -310,16 +310,19 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 **Forms.** Every input gets an associated `<label for="...">`. Use native input types (`email`, `tel`, `url`) and `autocomplete` hints so browsers and password managers help. Required fields get `required`. Error containers get `role="alert"`. The contact form is the working reference pattern.
 
 **Images.**
+
 - Content images: descriptive `alt`. "Hero image" / "Image of X" is filler; describe what the image shows.
 - Image immediately adjacent to a heading that names the same thing (card thumbnails, case-study hero below an `h1`): `alt=""`. Empty alt explicitly marks the image decorative so screen readers skip it instead of announcing the title twice.
 - Decorative gradients, shapes, or pseudo-elements: `aria-hidden="true"` on the wrapper.
 
 **Interactive elements.**
+
 - Icon-only buttons and links require `aria-label`. Lucide SVG icons carry no accessible name on their own; the label lives on the wrapper. See `MobileNav.tsx`, `ThemeToggle.tsx` for the pattern.
 - Hover and focus states must not be color-only. Pair color changes with underline, motion, or icon swap.
 - Stick to native interactive elements (`<button>`, `<a>`, `<details>`, `<summary>`) whenever possible. Custom controls take real work to make accessible.
 
 **Color tokens by responsibility** (definitions and contrast math in `globals.css`):
+
 - `--accent` (`#3478BD` light, `#40AAED` dark): buttons, focus rings, large CTAs. Paired with white text in light mode, navy in dark.
 - `--link` (`#2A6FB0` light, `#40AAED` dark): accent-toned body text (card-link arrows, Process / Services step numbers, prose anchors). Darker than `--accent` in light so body-size text clears AA.
 - `--secondary` (`#40AAED`): decorative gradients and Footer body links sitting on the navy footer.
@@ -336,6 +339,7 @@ New tokens or hex literals must clear WCAG AA against every surface they appear 
 ### Before merging
 
 Run Lighthouse against any page you changed. Accessibility should stay at 100. Common regressions and what they mean:
+
 - `color-contrast`: a token or literal used in a new context that doesn't pass. Check both modes.
 - `image-alt`: missing `alt` attribute (empty `alt=""` is fine; missing isn't).
 - `label`: input without an associated label.
@@ -379,23 +383,23 @@ To add a new case study: drop an `.mdx` file in `src/content/case-studies/`, fil
 
 Static routes generated at build time:
 
-| Path | Source |
-|---|---|
-| `/` | `src/pages/index.astro` (homepage: hero with client marquee, selected work, pricing teaser, process band) |
-| `/about/` | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section) |
-| `/services` | `src/pages/services.astro` |
-| `/work/` | `src/pages/work/index.astro` (with filter chips) |
-| `/work/{slug}/` | `src/pages/work/[slug].astro` (per case study) |
-| `/photography/` | `src/pages/photography.astro` |
-| `/journal/` | `src/pages/journal/index.astro` |
-| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry) |
-| `/contact/` | `src/pages/contact.astro` (Web3Forms inquiry) |
-| `/colophon/` | `src/pages/colophon.astro` (how the site is built) |
-| `/privacy/` | `src/pages/privacy.astro` |
-| `/now` | redirects to `/about/#now` (the page was merged into About) |
-| `/coming-soon/` | `src/pages/coming-soon.astro` (always live, standalone) |
-| `/404` | `src/pages/404.astro` (custom not-found) |
-| `/rss.xml` | `src/pages/rss.xml.js` (case studies feed) |
+| Path               | Source                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `/`                | `src/pages/index.astro` (homepage: hero with client marquee, selected work, pricing teaser, process band) |
+| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)                      |
+| `/services`        | `src/pages/services.astro`                                                                                |
+| `/work/`           | `src/pages/work/index.astro` (with filter chips)                                                          |
+| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                            |
+| `/photography/`    | `src/pages/photography.astro`                                                                             |
+| `/journal/`        | `src/pages/journal/index.astro`                                                                           |
+| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                              |
+| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                             |
+| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                        |
+| `/privacy/`        | `src/pages/privacy.astro`                                                                                 |
+| `/now`             | redirects to `/about/#now` (the page was merged into About)                                               |
+| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                   |
+| `/404`             | `src/pages/404.astro` (custom not-found)                                                                  |
+| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                |
 
 ---
 
@@ -596,7 +600,7 @@ something measured that day.
    7 errors and 5 warnings on a clean tree. All 7 are the known
    `eslint-plugin-astro` false positive described under "Testing, linting, and
    CI" above. Diff against that baseline before you go hunting. `src/lib` and
-   `scripts` do lint clean, so a new error *there* is real.
+   `scripts` do lint clean, so a new error _there_ is real.
 
 2. **`variant="secondary"` on the shadcn Button or Badge fails contrast.** In
    light mode that renders `--secondary-foreground` (white) on `--secondary`
@@ -655,7 +659,7 @@ something measured that day.
    "Healthcheck passed", collects the Accessibility artifact, and then dies
    during Chrome-profile cleanup:
    `Runtime error encountered: EPERM, Permission denied:
-   \\?\C:\Users\...\AppData\Local\Temp\lighthouse.NNNNNNNN`, preceded by a
+\\?\C:\Users\...\AppData\Local\Temp\lighthouse.NNNNNNNN`, preceded by a
    `taskkill ... process not found` from the Chrome launcher. Reproduced twice
    on 2026-08-27, including after clearing every stale `lighthouse.*` temp
    directory, so it is not a leftover-handle problem. It fails at **collect**

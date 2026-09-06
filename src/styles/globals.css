@@ -26,7 +26,7 @@
 /* ----------------------------------------------------------------------------
    1. Tailwind core. Brings in preflight (modern reset) + the utility engine.
    ---------------------------------------------------------------------------- */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ----------------------------------------------------------------------------
    2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
@@ -37,10 +37,10 @@
       is English, so the extra subsets were dead weight in a render-blocking
       stylesheet, and the latin woff2 is the exact file BaseLayout preloads.
    ---------------------------------------------------------------------------- */
-@import "@fontsource/bebas-neue/latin-400.css";
-@import "@fontsource-variable/source-sans-3";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import '@fontsource/bebas-neue/latin-400.css';
+@import '@fontsource-variable/source-sans-3';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -51,60 +51,59 @@
    reload.
    ---------------------------------------------------------------------------- */
 @theme {
-
   /* Brand palette. --color-* drives bg-*, text-*, border-*.
      NOTE: The surface and text tokens below (bg, bg-soft, text, text-muted,
      primary, heading) are re-aliased in the @theme inline block further
      down so they switch with light/dark mode. The literals here are the
      default light-mode values and the source-of-truth reference. */
-  --color-primary:   #0A1628;  /* Dark navy. Footer surface, headings (light mode). */
-  --color-accent:    #3478BD;  /* NCS blue. Buttons, links, primary CTAs.
+  --color-primary: #0a1628; /* Dark navy. Footer surface, headings (light mode). */
+  --color-accent: #3478bd; /* NCS blue. Buttons, links, primary CTAs.
                                   Slightly darker than the original #3B82C4 so
                                   white-on-accent text clears WCAG AA (4.67:1
                                   vs the old 4.05:1). Same brand family, dialed
                                   down a hair for the contrast budget. */
-  --color-secondary: #40AAED;  /* Sky blue. Decorative + Footer-link rest color. */
-  --color-tertiary:  #FFA334;  /* Amber. Accent badges, small flourishes. Stays in dark mode. */
+  --color-secondary: #40aaed; /* Sky blue. Decorative + Footer-link rest color. */
+  --color-tertiary: #ffa334; /* Amber. Accent badges, small flourishes. Stays in dark mode. */
 
   /* Heading color. New token so headings can flip independently in dark
      mode without dragging the rest of the palette with them. */
-  --color-heading:    #0A1628; /* Navy in light, near-white in dark. */
+  --color-heading: #0a1628; /* Navy in light, near-white in dark. */
 
   /* Text */
-  --color-text:       #1A1A1A; /* Near-black body. */
+  --color-text: #1a1a1a; /* Near-black body. */
   /* Real muted value. This literal is re-aliased to --muted-foreground in the
      @theme inline block below, which the :root / .dark switch sets to #5F6573
      (light) and #9CA3AF (dark). Kept in sync here so the source-of-truth
      reference is not misleading. */
-  --color-text-muted: #5F6573;
+  --color-text-muted: #5f6573;
 
   /* Surfaces */
-  --color-bg:      #FFFFFF;    /* Default page background. */
-  --color-bg-soft: #F4F7FA;    /* Light blue-gray for alternating sections. */
+  --color-bg: #ffffff; /* Default page background. */
+  --color-bg-soft: #f4f7fa; /* Light blue-gray for alternating sections. */
 
   /* Font families. --font-* drives font-display, font-body, font-mono. */
-  --font-display: "Bebas Neue", system-ui, sans-serif;
-  --font-body:    "Source Sans 3 Variable", system-ui, sans-serif;
-  --font-mono:    ui-monospace, "SF Mono", Consolas, monospace;
+  --font-display: 'Bebas Neue', system-ui, sans-serif;
+  --font-body: 'Source Sans 3 Variable', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
   /* Heading sizes (fluid clamp). --text-h1 etc. drive text-h1 utilities. */
   --text-h6: 1rem;
   --text-h5: clamp(1.125rem, 1.5vw, 1.25rem);
-  --text-h4: clamp(1.25rem,  2vw,   1.5rem);
-  --text-h3: clamp(1.5rem,   2.5vw, 2rem);
-  --text-h2: clamp(2rem,     4vw,   3rem);
-  --text-h1: clamp(2.5rem,   6vw,   5rem);
+  --text-h4: clamp(1.25rem, 2vw, 1.5rem);
+  --text-h3: clamp(1.5rem, 2.5vw, 2rem);
+  --text-h2: clamp(2rem, 4vw, 3rem);
+  --text-h1: clamp(2.5rem, 6vw, 5rem);
 
   /* Fluid spacing scale. --spacing-* drives p-xs, gap-m, m-l, etc. */
-  --spacing-xs:  clamp(0.25rem, 0.5vw, 0.5rem);
-  --spacing-s:   clamp(0.5rem,  1vw,   1rem);
-  --spacing-m:   clamp(1rem,    2vw,   1.5rem);
-  --spacing-l:   clamp(2rem,    4vw,   3rem);
-  --spacing-xl:  clamp(3rem,    6vw,   5rem);
-  --spacing-2xl: clamp(4rem,    8vw,   7rem);
+  --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+  --spacing-s: clamp(0.5rem, 1vw, 1rem);
+  --spacing-m: clamp(1rem, 2vw, 1.5rem);
+  --spacing-l: clamp(2rem, 4vw, 3rem);
+  --spacing-xl: clamp(3rem, 6vw, 5rem);
+  --spacing-2xl: clamp(4rem, 8vw, 7rem);
 
   /* Container width cap. --container-content drives a max-w-content utility. */
-  --container-content: 82.5rem;  /* 1320px outer cap on the main column. */
+  --container-content: 82.5rem; /* 1320px outer cap on the main column. */
 }
 
 /* ----------------------------------------------------------------------------
@@ -114,7 +113,6 @@
    back so even un-styled paragraphs and headings look right.
    ---------------------------------------------------------------------------- */
 @layer base {
-
   html {
     scroll-behavior: smooth;
     @apply font-sans;
@@ -151,8 +149,13 @@
   }
   /* WebKit / Blink. The thumb carries a bg-colored border so it reads as an
      inset pill with breathing room; the border flips with the theme. */
-  ::-webkit-scrollbar { width: 12px; height: 12px; }
-  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
   ::-webkit-scrollbar-thumb {
     border-radius: 9999px;
     background-color: color-mix(in oklab, var(--color-accent) 45%, transparent);
@@ -166,7 +169,7 @@
   /* Numbers that animate or change should not jiggle as digit widths vary. */
   [data-countup] {
     font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum";
+    font-feature-settings: 'tnum';
   }
 
   /* Copy-link controls that enhance.ts appends to long-form headings
@@ -188,7 +191,9 @@
     color: var(--color-muted-foreground);
     text-decoration: none;
     opacity: 0;
-    transition: opacity 0.15s ease, color 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      color 0.15s ease;
   }
   [data-prose] .heading-anchor svg {
     width: 1rem;
@@ -216,7 +221,7 @@
   /* "Copied" confirmation bubble above the control. Sizes are absolute so they
      stay constant regardless of the heading's font size. */
   [data-prose] .heading-anchor[data-copied]::after {
-    content: "Copied";
+    content: 'Copied';
     position: absolute;
     bottom: calc(100% + 6px);
     left: 50%;
@@ -236,7 +241,12 @@
      --color-heading is aliased to the shadcn --heading token (see @theme
      inline below), so this flips automatically between navy in light
      mode and near-white in dark mode. */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     font-weight: 400;
     color: var(--color-heading);
@@ -251,13 +261,22 @@
 
   h2 {
     font-size: var(--text-h2);
-    line-height: 1.0;
+    line-height: 1;
     letter-spacing: -0.005em;
   }
 
-  h3 { font-size: var(--text-h3); line-height: 1.05; }
-  h4 { font-size: var(--text-h4); line-height: 1.1;  }
-  h5 { font-size: var(--text-h5); line-height: 1.1;  }
+  h3 {
+    font-size: var(--text-h3);
+    line-height: 1.05;
+  }
+  h4 {
+    font-size: var(--text-h4);
+    line-height: 1.1;
+  }
+  h5 {
+    font-size: var(--text-h5);
+    line-height: 1.1;
+  }
   h6 {
     font-size: var(--text-h6);
     line-height: 1.1;
@@ -268,22 +287,30 @@
   /* Lists used as nav menus or layout groups shouldn't carry bullets by
      default. When you want bullets, add list-disc or restore via
      component-level utility classes. */
-  ul, ol {
+  ul,
+  ol {
     list-style: none;
     padding-left: 0;
   }
 
   /* Form elements inherit body font (preflight does this; explicit for
      discoverability). */
-  button, input, textarea, select {
+  button,
+  input,
+  textarea,
+  select {
     font: inherit;
     color: inherit;
   }
 
   /* Respect prefers-reduced-motion. */
   @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -309,9 +336,7 @@
      when the page runs edge-to-edge under viewport-fit=cover (landscape notch,
      rounded corners). env() resolves to 0 on every non-notched device, so this
      is identical to a flat 1.5rem everywhere except the phones that need it. */
-  padding-inline:
-    max(1.5rem, env(safe-area-inset-left))
-    max(1.5rem, env(safe-area-inset-right));
+  padding-inline: max(1.5rem, env(safe-area-inset-left)) max(1.5rem, env(safe-area-inset-right));
   width: 100%;
 }
 
@@ -330,7 +355,7 @@
 }
 
 .card-link::after {
-  content: "→";
+  content: '→';
   display: inline-block;
   transition: transform 150ms ease;
 }
@@ -386,11 +411,21 @@
       filter 0.7s ease;
     transition-delay: var(--reveal-delay, 0ms);
   }
-  .js [data-reveal="fade"]  { transform: none; }
-  .js [data-reveal="scale"] { transform: scale(0.93); }
-  .js [data-reveal="left"]  { transform: translateX(-2rem); }
-  .js [data-reveal="right"] { transform: translateX(2rem); }
-  .js [data-reveal="blur"]  { filter: blur(14px); }
+  .js [data-reveal='fade'] {
+    transform: none;
+  }
+  .js [data-reveal='scale'] {
+    transform: scale(0.93);
+  }
+  .js [data-reveal='left'] {
+    transform: translateX(-2rem);
+  }
+  .js [data-reveal='right'] {
+    transform: translateX(2rem);
+  }
+  .js [data-reveal='blur'] {
+    filter: blur(14px);
+  }
   .js [data-reveal].is-visible {
     opacity: 1;
     transform: none;
@@ -411,14 +446,26 @@
    host element needs position + isolate; the gradient paints in ::before at
    z-0, so foreground content should sit at z-10. Pair with .grain. */
 .bg-aurora::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: -25%;
   z-index: 0;
   background:
-    radial-gradient(38% 48% at 18% 22%, color-mix(in oklab, var(--color-accent) 60%, transparent), transparent 70%),
-    radial-gradient(36% 44% at 82% 26%, color-mix(in oklab, var(--color-secondary) 50%, transparent), transparent 70%),
-    radial-gradient(48% 52% at 62% 86%, color-mix(in oklab, var(--color-tertiary) 30%, transparent), transparent 70%);
+    radial-gradient(
+      38% 48% at 18% 22%,
+      color-mix(in oklab, var(--color-accent) 60%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      36% 44% at 82% 26%,
+      color-mix(in oklab, var(--color-secondary) 50%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 52% at 62% 86%,
+      color-mix(in oklab, var(--color-tertiary) 30%, transparent),
+      transparent 70%
+    );
   filter: blur(10px);
   pointer-events: none;
 }
@@ -432,7 +479,7 @@
    Subtle fractal-noise overlay via an inline SVG. Host needs position;
    sits above the aurora (z-1) but below content (z-10). */
 .grain::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -461,7 +508,7 @@
   background-color: var(--color-primary);
 }
 .band-themed::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: -25%;
   z-index: -1;
@@ -471,16 +518,40 @@
      surface in light mode instead of flat bg-soft (the third amber stop adds
      warmth without tipping past AA on the text that sits over it). */
   background:
-    radial-gradient(46% 56% at 18% 14%, color-mix(in oklab, var(--color-accent) 22%, transparent), transparent 72%),
-    radial-gradient(42% 50% at 84% 24%, color-mix(in oklab, var(--color-secondary) 16%, transparent), transparent 72%),
-    radial-gradient(50% 54% at 64% 92%, color-mix(in oklab, var(--color-tertiary) 10%, transparent), transparent 72%);
+    radial-gradient(
+      46% 56% at 18% 14%,
+      color-mix(in oklab, var(--color-accent) 22%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      42% 50% at 84% 24%,
+      color-mix(in oklab, var(--color-secondary) 16%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      50% 54% at 64% 92%,
+      color-mix(in oklab, var(--color-tertiary) 10%, transparent),
+      transparent 72%
+    );
 }
 .dark .band-themed::before {
   /* Dark mode: the full navy aurora. */
   background:
-    radial-gradient(38% 48% at 18% 22%, color-mix(in oklab, var(--color-accent) 55%, transparent), transparent 70%),
-    radial-gradient(36% 44% at 82% 26%, color-mix(in oklab, var(--color-secondary) 45%, transparent), transparent 70%),
-    radial-gradient(48% 52% at 62% 86%, color-mix(in oklab, var(--color-tertiary) 28%, transparent), transparent 70%);
+    radial-gradient(
+      38% 48% at 18% 22%,
+      color-mix(in oklab, var(--color-accent) 55%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      36% 44% at 82% 26%,
+      color-mix(in oklab, var(--color-secondary) 45%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 52% at 62% 86%,
+      color-mix(in oklab, var(--color-tertiary) 28%, transparent),
+      transparent 70%
+    );
   filter: blur(10px);
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -512,7 +583,9 @@
   background-color: var(--card);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card), var(--card-highlight);
-  transition: box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .surface-card:hover,
 .surface-card:focus-within {
@@ -532,7 +605,7 @@
   isolation: isolate;
 }
 .bg-dotgrid::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -543,7 +616,7 @@
   );
   background-size: 22px 22px;
   -webkit-mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-          mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
+  mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
   opacity: 0.55;
 }
 .bg-mesh-soft {
@@ -551,19 +624,35 @@
   isolation: isolate;
 }
 .bg-mesh-soft::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(42% 52% at 10% 0%, color-mix(in oklab, var(--color-accent) 7%, transparent), transparent 70%),
-    radial-gradient(40% 48% at 94% 6%, color-mix(in oklab, var(--color-secondary) 6%, transparent), transparent 70%);
+    radial-gradient(
+      42% 52% at 10% 0%,
+      color-mix(in oklab, var(--color-accent) 7%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 48% at 94% 6%,
+      color-mix(in oklab, var(--color-secondary) 6%, transparent),
+      transparent 70%
+    );
 }
 .dark .bg-mesh-soft::before {
   background:
-    radial-gradient(44% 54% at 10% 0%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 72%),
-    radial-gradient(42% 50% at 94% 6%, color-mix(in oklab, var(--color-secondary) 10%, transparent), transparent 72%);
+    radial-gradient(
+      44% 54% at 10% 0%,
+      color-mix(in oklab, var(--color-accent) 12%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      42% 50% at 94% 6%,
+      color-mix(in oklab, var(--color-secondary) 10%, transparent),
+      transparent 72%
+    );
 }
 
 /* Shine sweep: add .shine to a position:relative, overflow:hidden element
@@ -573,19 +662,14 @@
   overflow: hidden;
 }
 .shine::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 40%;
   height: 100%;
   transform: translateX(-150%) skewX(-18deg);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.35),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -607,7 +691,7 @@
   position: relative;
 }
 .spotlight-card::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -632,7 +716,7 @@
   text-decoration: none;
 }
 .link-underline::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   bottom: -2px;
@@ -650,28 +734,53 @@
 
 /* Soft float loop for decorative accents. */
 @media (prefers-reduced-motion: no-preference) {
-  .float-slow { animation: float-slow 7s ease-in-out infinite; }
+  .float-slow {
+    animation: float-slow 7s ease-in-out infinite;
+  }
 }
 
 /* ---- Shared keyframes ----------------------------------------------------- */
 @keyframes aurora-drift {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-  100% { transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14); }
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14);
+  }
 }
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 @keyframes shine-sweep {
-  to { transform: translateX(320%) skewX(-18deg); }
+  to {
+    transform: translateX(320%) skewX(-18deg);
+  }
 }
 @keyframes scroll-cue {
-  0%   { transform: translateY(0);    opacity: 1;   }
-  100% { transform: translateY(0.5rem); opacity: 0.15; }
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0.5rem);
+    opacity: 0.15;
+  }
 }
 @keyframes pop-in {
-  0%   { opacity: 0; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -737,8 +846,8 @@
 html.ncs-gated body > header,
 html.ncs-gated body > main,
 html.ncs-gated body > footer,
-html.ncs-gated body > a[href="#main"],
-html.ncs-gated body > button[aria-label="Back to top"] {
+html.ncs-gated body > a[href='#main'],
+html.ncs-gated body > button[aria-label='Back to top'] {
   display: none !important;
 }
 html.ncs-gated .ncs-overlay {
@@ -754,19 +863,18 @@ html.ncs-gated .ncs-overlay {
    intact and the body legible.
    ---------------------------------------------------------------------- */
 @media print {
-
   /* Hide chrome that doesn't help a printed page. */
   header nav,
   [data-work-card] + ul,
   .sm\:hidden,
-  [aria-label="Open menu"],
+  [aria-label='Open menu'],
   [data-astro-rerun],
-  [aria-hidden="true"]:not(svg) {
+  [aria-hidden='true']:not(svg) {
     display: none !important;
   }
 
   /* Always print the back-to-top hidden — never the right tool on paper. */
-  button[aria-label="Back to top"] {
+  button[aria-label='Back to top'] {
     display: none !important;
   }
 
@@ -775,15 +883,20 @@ html.ncs-gated .ncs-overlay {
   *,
   *::before,
   *::after {
-    background:    transparent !important;
-    color:         #000 !important;
-    box-shadow:    none !important;
-    text-shadow:   none !important;
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
   /* Headings stay serif-friendly. The display font has personality but
      limited print legibility. */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: Georgia, 'Times New Roman', serif !important;
     page-break-after: avoid;
   }
@@ -791,14 +904,14 @@ html.ncs-gated .ncs-overlay {
   /* Body type tightens to comfortable print measure. */
   body {
     font-family: Georgia, 'Times New Roman', serif !important;
-    font-size:   11pt;
+    font-size: 11pt;
     line-height: 1.5;
   }
 
   /* Show link URLs after the link text so printed pages preserve their
      references. Skip in-page anchors. */
-  a[href]:not([href^="#"])::after {
-    content: " (" attr(href) ")";
+  a[href]:not([href^='#'])::after {
+    content: ' (' attr(href) ')';
     font-size: 0.85em;
     word-break: break-all;
   }
@@ -813,89 +926,88 @@ html.ncs-gated .ncs-overlay {
 
   /* Force a page break before the next/prev case study nav so each
      case study reads as a standalone document. */
-  nav[aria-label="More case studies"] {
+  nav[aria-label='More case studies'] {
     page-break-before: always;
   }
 
   /* CTA banner and footer aren't useful in print. */
-  section[aria-labelledby="cta-banner-title"],
+  section[aria-labelledby='cta-banner-title'],
   footer {
     display: none !important;
   }
 }
 
 @theme inline {
-
   /* Brand surface and text tokens are aliased here (rather than defined
      as literals in the first @theme block above) so they pick up the
      :root / .dark switch below. Result: bg-bg, bg-bg-soft, text-text,
      text-text-muted, text-heading, and text-link all flip with the theme. */
-  --color-bg:         var(--background);
-  --color-bg-soft:    var(--muted);
-  --color-text:       var(--foreground);
+  --color-bg: var(--background);
+  --color-bg-soft: var(--muted);
+  --color-text: var(--foreground);
   --color-text-muted: var(--muted-foreground);
-  --color-heading:    var(--heading);
-  --color-link:       var(--link);
+  --color-heading: var(--heading);
+  --color-link: var(--link);
 
   /* font-heading utility points at the display face (Bebas Neue), the real
      heading font. font-sans tracks the body face so the utility and the
      base body style agree (the unused Geist webfont was removed). */
-  --font-heading:   var(--font-display);
-  --font-sans:   "Source Sans 3 Variable", system-ui, sans-serif;
-  --color-sidebar-ring:   var(--sidebar-ring);
-  --color-sidebar-border:   var(--sidebar-border);
-  --color-sidebar-accent-foreground:   var(--sidebar-accent-foreground);
-  --color-sidebar-accent:   var(--sidebar-accent);
-  --color-sidebar-primary-foreground:   var(--sidebar-primary-foreground);
-  --color-sidebar-primary:   var(--sidebar-primary);
-  --color-sidebar-foreground:   var(--sidebar-foreground);
-  --color-sidebar:   var(--sidebar);
-  --color-chart-5:   var(--chart-5);
-  --color-chart-4:   var(--chart-4);
-  --color-chart-3:   var(--chart-3);
-  --color-chart-2:   var(--chart-2);
-  --color-chart-1:   var(--chart-1);
-  --color-ring:   var(--ring);
-  --color-input:   var(--input);
-  --color-border:   var(--border);
-  --color-destructive:   var(--destructive);
-  --color-accent-foreground:   var(--accent-foreground);
-  --color-accent:   var(--accent);
-  --color-muted-foreground:   var(--muted-foreground);
-  --color-muted:   var(--muted);
-  --color-secondary-foreground:   var(--secondary-foreground);
-  --color-secondary:   var(--secondary);
-  --color-primary-foreground:   var(--primary-foreground);
-  --color-primary:   var(--primary);
-  --color-popover-foreground:   var(--popover-foreground);
-  --color-popover:   var(--popover);
-  --color-card-foreground:   var(--card-foreground);
-  --color-card:   var(--card);
-  --color-foreground:   var(--foreground);
-  --color-background:   var(--background);
-  --radius-sm:   calc(var(--radius) * 0.6);
-  --radius-md:   calc(var(--radius) * 0.8);
-  --radius-lg:   var(--radius);
-  --radius-xl:   calc(var(--radius) * 1.4);
-  --radius-2xl:   calc(var(--radius) * 1.8);
-  --radius-3xl:   calc(var(--radius) * 2.2);
-  --radius-4xl:   calc(var(--radius) * 2.6);
-  --animate-marquee:   marquee var(--duration) infinite linear;
-  --animate-marquee-vertical:   marquee-vertical var(--duration) linear infinite;
+  --font-heading: var(--font-display);
+  --font-sans: 'Source Sans 3 Variable', system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   @keyframes marquee {
-  from {
-    transform:   translateX(0);
+    from {
+      transform: translateX(0);
     }
-  to {
-    transform:   translateX(calc(-100% - var(--gap)));
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
     }
   }
   @keyframes marquee-vertical {
-  from {
-    transform:   translateY(0);
+    from {
+      transform: translateY(0);
     }
-  to {
-    transform:   translateY(calc(-100% - var(--gap)));
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
     }
   }
 }
@@ -918,47 +1030,47 @@ html.ncs-gated .ncs-overlay {
    ---------------------------------------------------------------------------- */
 :root {
   /* Surfaces */
-  --background:         #FFFFFF;        /* = brand --color-bg */
-  --foreground:         #1A1A1A;        /* = brand --color-text */
+  --background: #ffffff; /* = brand --color-bg */
+  --foreground: #1a1a1a; /* = brand --color-text */
   /* Card surface sits a hair off pure white so a soft shadow has something
      to separate from. Imperceptible as a color, but it lets light-mode cards
      read as elevated instead of dissolving into a white page. */
-  --card:               #FCFDFE;
-  --card-foreground:    #1A1A1A;
-  --popover:            #FFFFFF;
-  --popover-foreground: #1A1A1A;
+  --card: #fcfdfe;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
 
   /* Elevation + framing shadows. Light mode has no color-step to lean on the
      way dark mode does (deep-navy card on near-black bg), so depth has to come
      from real, soft shadows plus a 1px top highlight. --shadow-frame is the
      shared recipe for framed artifacts (SiteShowcase, BeforeAfter). */
-  --shadow-card:        0 1px 2px rgba(10, 22, 40, 0.06), 0 12px 28px -16px rgba(10, 22, 40, 0.14);
-  --shadow-card-hover:  0 2px 6px rgba(10, 22, 40, 0.08), 0 22px 48px -22px rgba(10, 22, 40, 0.20);
-  --shadow-frame:       0 30px 70px -42px rgba(10, 22, 40, 0.55);
-  --card-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --shadow-card: 0 1px 2px rgba(10, 22, 40, 0.06), 0 12px 28px -16px rgba(10, 22, 40, 0.14);
+  --shadow-card-hover: 0 2px 6px rgba(10, 22, 40, 0.08), 0 22px 48px -22px rgba(10, 22, 40, 0.2);
+  --shadow-frame: 0 30px 70px -42px rgba(10, 22, 40, 0.55);
+  --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 
   /* Primary action color. Navy is the dominant brand surface; primitives
      like Button (default variant) pick this up. Stays navy in dark mode
      so the Footer and CtaBanner read as a slightly elevated dark surface
      rather than inverting to light, and the default Button stays on-brand. */
-  --primary:            #0A1628;        /* = brand --color-primary */
-  --primary-foreground: #FFFFFF;
+  --primary: #0a1628; /* = brand --color-primary */
+  --primary-foreground: #ffffff;
 
   /* Heading color. Navy in light mode; flips to near-white in .dark. */
-  --heading:            #0A1628;
+  --heading: #0a1628;
 
   /* Secondary surface and accent. Both map to brand blues. */
-  --secondary:            #40AAED;      /* = brand --color-secondary (sky blue) */
-  --secondary-foreground: #FFFFFF;
-  --accent:               #3478BD;      /* = brand --color-accent (darker NCS blue for AA) */
-  --accent-foreground:    #FFFFFF;
+  --secondary: #40aaed; /* = brand --color-secondary (sky blue) */
+  --secondary-foreground: #ffffff;
+  --accent: #3478bd; /* = brand --color-accent (darker NCS blue for AA) */
+  --accent-foreground: #ffffff;
 
   /* Muted surface and supporting text.
      --muted-foreground was bumped from #6B7280 to #5F6573 so meta copy
      on bg-bg-soft (#F4F7FA) clears WCAG AA 4.5:1. The shift is small
      enough to be visually unchanged in normal use. */
-  --muted:              #F4F7FA;        /* = brand --color-bg-soft */
-  --muted-foreground:   #5F6573;        /* slightly darkened for AA on bg-bg-soft */
+  --muted: #f4f7fa; /* = brand --color-bg-soft */
+  --muted-foreground: #5f6573; /* slightly darkened for AA on bg-bg-soft */
 
   /* Link color for accent-toned body text (Footer links, .card-link
      arrows, Process / Services step number prefixes, MDX prose anchors).
@@ -970,40 +1082,40 @@ html.ncs-gated .ncs-overlay {
      --accent itself keeps its brand value and continues to drive buttons,
      focus rings, borders, and large CTAs where the higher-contrast
      foreground (white) carries the AA requirement. */
-  --link:               #2A6FB0;        /* AA on #FFFFFF, #F4F7FA, and #0A1628 */
+  --link: #2a6fb0; /* AA on #FFFFFF, #F4F7FA, and #0A1628 */
 
   /* Borders and inputs. Match the alpha-on-black tones used across forms
      and section dividers. */
-  --border:             rgba(0, 0, 0, 0.08);
-  --input:              rgba(0, 0, 0, 0.12);
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.12);
 
   /* Focus ring. Matches the brand --accent so every shadcn input + button
      gets a brand-coordinated ring. */
-  --ring:               #3478BD;
+  --ring: #3478bd;
 
   /* Destructive surfaces (form errors, delete buttons). Keep shadcn's
      default red since we don't have a brand-coordinated alarm color. */
-  --destructive:        oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.577 0.245 27.325);
 
   /* Chart palette — left at shadcn neutrals; we don't ship data viz today. */
-  --chart-1:            oklch(0.87 0 0);
-  --chart-2:            oklch(0.556 0 0);
-  --chart-3:            oklch(0.439 0 0);
-  --chart-4:            oklch(0.371 0 0);
-  --chart-5:            oklch(0.269 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
 
   /* Corner radius scale used by shadcn primitives. */
-  --radius:             0.5rem;
+  --radius: 0.5rem;
 
   /* Sidebar palette — left at shadcn neutrals; no sidebar in this site. */
-  --sidebar:                      #FFFFFF;
-  --sidebar-foreground:           #1A1A1A;
-  --sidebar-primary:              #0A1628;
-  --sidebar-primary-foreground:   #FFFFFF;
-  --sidebar-accent:               #F4F7FA;
-  --sidebar-accent-foreground:    #0A1628;
-  --sidebar-border:               rgba(0, 0, 0, 0.08);
-  --sidebar-ring:                 #3478BD;   /* matches the live --ring (AA accent) */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #0a1628;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f7fa;
+  --sidebar-accent-foreground: #0a1628;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: #3478bd; /* matches the live --ring (AA accent) */
 
   /* --------------------------------------------------------------------
      Starwind UI extra semantic tokens.
@@ -1013,17 +1125,17 @@ html.ncs-gated .ncs-overlay {
      palette: --outline tracks --ring (NCS blue); the status colors are the
      conventional soft-surface + deep-foreground pairs. starwind.css maps
      each of these onto a bg-* / text-* / border-* utility via @theme inline. */
-  --primary-accent:     #16243B;   /* lifted navy for primary hover states */
-  --secondary-accent:   #2A6FB0;   /* deeper NCS blue for active/pressed secondary */
-  --info:               #93C5FD;   /* soft blue */
-  --info-foreground:    #1E3A5F;   /* deep blue text on info surfaces */
-  --success:            #86EFAC;   /* soft green */
-  --success-foreground: #14532D;   /* deep green text on success surfaces */
-  --warning:            #FDE68A;   /* soft amber */
-  --warning-foreground: #713F12;   /* deep amber text on warning surfaces */
-  --error:              oklch(0.577 0.245 27.325); /* matches --destructive */
-  --error-foreground:   #FFFFFF;
-  --outline:            #3478BD;   /* matches --ring (NCS blue) */
+  --primary-accent: #16243b; /* lifted navy for primary hover states */
+  --secondary-accent: #2a6fb0; /* deeper NCS blue for active/pressed secondary */
+  --info: #93c5fd; /* soft blue */
+  --info-foreground: #1e3a5f; /* deep blue text on info surfaces */
+  --success: #86efac; /* soft green */
+  --success-foreground: #14532d; /* deep green text on success surfaces */
+  --warning: #fde68a; /* soft amber */
+  --warning-foreground: #713f12; /* deep amber text on warning surfaces */
+  --error: oklch(0.577 0.245 27.325); /* matches --destructive */
+  --error-foreground: #ffffff;
+  --outline: #3478bd; /* matches --ring (NCS blue) */
 }
 
 /* ----------------------------------------------------------------------------
@@ -1051,28 +1163,28 @@ html.ncs-gated .ncs-overlay {
    ---------------------------------------------------------------------------- */
 .dark {
   /* Surfaces */
-  --background:         #050B16;
-  --foreground:         #E5E7EB;
-  --card:               #0A1628;
-  --card-foreground:    #E5E7EB;
-  --popover:            #0A1628;
-  --popover-foreground: #E5E7EB;
+  --background: #050b16;
+  --foreground: #e5e7eb;
+  --card: #0a1628;
+  --card-foreground: #e5e7eb;
+  --popover: #0a1628;
+  --popover-foreground: #e5e7eb;
 
   /* Dark mode already has a real color-step for elevation (navy card on
      near-black bg), so shadows go deeper-and-softer and the top highlight
      drops to a faint sheen rather than a white line. */
-  --shadow-card:        0 1px 2px rgba(0, 0, 0, 0.40), 0 14px 32px -18px rgba(0, 0, 0, 0.60);
-  --shadow-card-hover:  0 2px 8px rgba(0, 0, 0, 0.45), 0 26px 54px -24px rgba(0, 0, 0, 0.70);
-  --shadow-frame:       0 30px 70px -40px rgba(0, 0, 0, 0.70);
-  --card-highlight:     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.45), 0 26px 54px -24px rgba(0, 0, 0, 0.7);
+  --shadow-frame: 0 30px 70px -40px rgba(0, 0, 0, 0.7);
+  --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
   /* Primary stays navy in dark mode (see :root comment for why). */
-  --primary:            #0A1628;
-  --primary-foreground: #FFFFFF;
+  --primary: #0a1628;
+  --primary-foreground: #ffffff;
 
   /* Headings flip to a near-white that still reads as "brand light"
      rather than pure white; subtle warmth keeps them on-brand. */
-  --heading:            #F4F7FA;
+  --heading: #f4f7fa;
 
   /* Accent and secondary are brightened in dark mode for WCAG AA contrast.
      On the dark surfaces below, the light-mode accent (#3B82C4) only hits
@@ -1086,51 +1198,51 @@ html.ncs-gated .ncs-overlay {
      the same surface is ~8.2:1. This affects the brand Button variant,
      shadcn primitives that pair bg-accent with text-accent-foreground
      on hover/focus, and anything else that follows the same pattern. */
-  --accent:               #40AAED;    /* was #3B82C4 in light; lifted to sky blue for AA */
-  --accent-foreground:    #0A1628;    /* navy on sky blue, 8.2:1 */
-  --secondary:            #7AC8F0;    /* was #40AAED in light; lighter sky for the hover step up */
-  --secondary-foreground: #0A1628;    /* navy on lighter sky, ~10:1 */
+  --accent: #40aaed; /* was #3B82C4 in light; lifted to sky blue for AA */
+  --accent-foreground: #0a1628; /* navy on sky blue, 8.2:1 */
+  --secondary: #7ac8f0; /* was #40AAED in light; lighter sky for the hover step up */
+  --secondary-foreground: #0a1628; /* navy on lighter sky, ~10:1 */
 
   /* Muted surface: navy-tinted elevated dark.
      Muted-foreground: lighter gray so secondary copy still has contrast. */
-  --muted:              #0F1E33;
-  --muted-foreground:   #9CA3AF;
+  --muted: #0f1e33;
+  --muted-foreground: #9ca3af;
 
   /* Link color matches the brightened dark-mode --accent so accent text
      and surface accents read identically on dark. See :root for why
      --link exists as a separate token. */
-  --link:               #40AAED;
+  --link: #40aaed;
 
   /* Borders and inputs invert to white at low alpha. */
-  --border:             rgba(255, 255, 255, 0.08);
-  --input:              rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
 
   /* Focus ring lifted to match the brighter dark-mode accent. */
-  --ring:               #40AAED;
+  --ring: #40aaed;
 
   /* Destructive: shadcn red lifted slightly for dark mode contrast. */
-  --destructive:        oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.704 0.191 22.216);
 
   /* Sidebar palette (not used today, but kept coherent for future). */
-  --sidebar:                      #0A1628;
-  --sidebar-foreground:           #E5E7EB;
-  --sidebar-primary:              #FFFFFF;
-  --sidebar-primary-foreground:   #0A1628;
-  --sidebar-accent:               #0F1E33;
-  --sidebar-accent-foreground:    #E5E7EB;
-  --sidebar-border:               rgba(255, 255, 255, 0.08);
-  --sidebar-ring:                 #40AAED;   /* matches the live dark --ring */
+  --sidebar: #0a1628;
+  --sidebar-foreground: #e5e7eb;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #0a1628;
+  --sidebar-accent: #0f1e33;
+  --sidebar-accent-foreground: #e5e7eb;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #40aaed; /* matches the live dark --ring */
 
   /* Starwind UI extra semantic tokens — dark mode variants. */
-  --primary-accent:     #1E3A5F;   /* lifted navy for dark primary hover */
-  --secondary-accent:   #7AC8F0;   /* lighter sky for dark active secondary */
-  --info:               #93C5FD;
-  --info-foreground:    #1E3A5F;
-  --success:            #86EFAC;
-  --success-foreground: #14532D;
-  --warning:            #FDE68A;
-  --warning-foreground: #713F12;
-  --error:              oklch(0.704 0.191 22.216); /* matches dark --destructive */
-  --error-foreground:   #FFFFFF;
-  --outline:            #40AAED;   /* matches dark --ring */
+  --primary-accent: #1e3a5f; /* lifted navy for dark primary hover */
+  --secondary-accent: #7ac8f0; /* lighter sky for dark active secondary */
+  --info: #93c5fd;
+  --info-foreground: #1e3a5f;
+  --success: #86efac;
+  --success-foreground: #14532d;
+  --warning: #fde68a;
+  --warning-foreground: #713f12;
+  --error: oklch(0.704 0.191 22.216); /* matches dark --destructive */
+  --error-foreground: #ffffff;
+  --outline: #40aaed; /* matches dark --ring */
 }

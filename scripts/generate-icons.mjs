@@ -97,7 +97,9 @@ function markSvg({ letter = N_MAIN, dot = true, squircle = true, dotPos = DOT, p
     ? `<rect width="${GRID}" height="${GRID}" rx="${RADIUS}" fill="${NAVY}"/>`
     : `<rect width="${GRID}" height="${GRID}" fill="${NAVY}"/>`;
   const glyph = `<g transform="translate(${letter.tx} ${letter.ty})" fill="${WHITE}"><path d="${letter.d}"/></g>`;
-  const spark = dot ? `<circle cx="${dotPos.cx}" cy="${dotPos.cy}" r="${dotPos.r}" fill="${AMBER}"/>` : '';
+  const spark = dot
+    ? `<circle cx="${dotPos.cx}" cy="${dotPos.cy}" r="${dotPos.r}" fill="${AMBER}"/>`
+    : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 ${GRID} ${GRID}" role="img" aria-label="Nixon Creative Studio">${bg}${glyph}${spark}</svg>`;
 }
 

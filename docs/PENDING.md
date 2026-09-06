@@ -43,11 +43,11 @@ and is unrelated.
 The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
 2026-08-27:
 
-| pair | ratio | AA body text (4.5:1) |
-|---|---|---|
-| `#2A6FB0` on `#FFFFFF` | 5.25:1 | pass |
-| `#2A6FB0` on `#F4F7FA` | 4.88:1 | pass |
-| `#2A6FB0` on `#0A1628` | **3.45:1** | **fail** |
+| pair                   | ratio      | AA body text (4.5:1) |
+| ---------------------- | ---------- | -------------------- |
+| `#2A6FB0` on `#FFFFFF` | 5.25:1     | pass                 |
+| `#2A6FB0` on `#F4F7FA` | 4.88:1     | pass                 |
+| `#2A6FB0` on `#0A1628` | **3.45:1** | **fail**             |
 
 The third claim is wrong. It is **not** a live accessibility defect: the pair
 is not rendered anywhere. In light mode the Footer is a light `.band-themed`
@@ -86,6 +86,7 @@ lockfile-affecting change and this sync session deliberately made none. Do it
 in its own commit, ideally alongside the next dependency bump.
 
 ### 4. `wrangler` is on a caret, and the generated config still carries
+
 `legacy_env`
 
 PORTS.md Card 14. `wrangler` is declared `^4.94.0` and resolves to 4.94.0.

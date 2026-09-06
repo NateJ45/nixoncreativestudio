@@ -18,42 +18,40 @@
 import { buttonVariants } from './ui/button';
 
 interface Props {
-  title?:    string;
-  sub?:      string;
+  title?: string;
+  sub?: string;
   ctaLabel?: string;
-  ctaHref?:  string;
+  ctaHref?: string;
 }
 
 const {
-  title    = "Let's build a site you won't have to redo.",
-  sub      = 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.',
+  title = "Let's build a site you won't have to redo.",
+  sub = 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.',
   ctaLabel = 'Start a project',
-  ctaHref  = '/contact',
+  ctaHref = '/contact',
 } = Astro.props;
 ---
 
-<section
-  class="band-themed cta-band py-2xl"
-  aria-labelledby="cta-banner-title"
->
+<section class="band-themed cta-band py-2xl" aria-labelledby="cta-banner-title">
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
        below the copy on narrow screens. -->
   <div
     class="ncs-container relative z-10 flex flex-wrap items-center justify-between gap-l"
     data-reveal
   >
-
     <div class="flex max-w-[50ch] flex-col gap-s">
       <h2 id="cta-banner-title" class="text-heading">{title}</h2>
       <p class="text-lg leading-[1.5] text-text-muted">{sub}</p>
     </div>
 
     <span class="inline-block">
-      <a href={ctaHref} class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
+      <a
+        href={ctaHref}
+        class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+      >
         {ctaLabel}
       </a>
     </span>
-
   </div>
 </section>
 
@@ -68,7 +66,7 @@ const {
      below the copy (z-10). Light mode keeps its deliberate light-band-to-navy-
      footer change, so no fade there. */
   :global(.dark) .cta-band::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     z-index: 0;

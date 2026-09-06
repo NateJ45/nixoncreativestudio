@@ -43,7 +43,12 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
     typeof window !== 'undefined' &&
       !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
       !single
-      ? Autoplay({ delay: 6500, stopOnMouseEnter: true, stopOnInteraction: false, stopOnFocusIn: true })
+      ? Autoplay({
+          delay: 6500,
+          stopOnMouseEnter: true,
+          stopOnInteraction: false,
+          stopOnFocusIn: true,
+        })
       : null,
   );
 
@@ -117,10 +122,14 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
               aria-label={`${i + 1} of ${items.length}`}
               inert={i !== selected ? true : undefined}
             >
-              <blockquote className="max-w-[50ch] text-h4 font-medium leading-[1.4] text-heading">
-                <span aria-hidden="true" className="text-link">“</span>
+              <blockquote className="max-w-[50ch] text-h4 leading-[1.4] font-medium text-heading">
+                <span aria-hidden="true" className="text-link">
+                  “
+                </span>
                 {t.quote}
-                <span aria-hidden="true" className="text-link">”</span>
+                <span aria-hidden="true" className="text-link">
+                  ”
+                </span>
               </blockquote>
               <figcaption className="flex flex-col items-center gap-xs">
                 <span className="font-display text-xl text-heading">{t.name}</span>
@@ -142,7 +151,7 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
             type="button"
             onClick={scrollPrev}
             aria-label="Previous testimonial"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <ChevronLeft className="size-5" aria-hidden="true" />
           </button>
@@ -161,7 +170,7 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
                 className="group/dot flex h-11 items-center justify-center px-2 focus-visible:outline-none"
               >
                 <span
-                  className={`block h-2.5 rounded-full transition-all duration-200 group-focus-visible/dot:outline-2 group-focus-visible/dot:outline-accent group-focus-visible/dot:outline-offset-2 ${
+                  className={`block h-2.5 rounded-full transition-all duration-200 group-focus-visible/dot:outline-2 group-focus-visible/dot:outline-offset-2 group-focus-visible/dot:outline-accent ${
                     i === selected ? 'w-6 bg-link' : 'w-2.5 bg-border group-hover/dot:bg-text-muted'
                   }`}
                 />
@@ -173,7 +182,7 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
             type="button"
             onClick={scrollNext}
             aria-label="Next testimonial"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <ChevronRight className="size-5" aria-hidden="true" />
           </button>
@@ -183,9 +192,13 @@ export default function TestimonialCarousel({ items }: { items: TestimonialItem[
               type="button"
               onClick={togglePlay}
               aria-label={playing ? 'Pause testimonials' : 'Play testimonials'}
-              className="ml-xs inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="ml-xs inline-flex h-11 w-11 items-center justify-center rounded-full border border-border text-text transition-colors duration-150 hover:border-link hover:text-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              {playing ? <Pause className="size-4" aria-hidden="true" /> : <Play className="size-4" aria-hidden="true" />}
+              {playing ? (
+                <Pause className="size-4" aria-hidden="true" />
+              ) : (
+                <Play className="size-4" aria-hidden="true" />
+              )}
             </button>
           )}
         </div>

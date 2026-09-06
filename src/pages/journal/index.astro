@@ -29,11 +29,13 @@ import CtaBanner from '../../components/CtaBanner.astro';
 import { buttonVariants } from '../../components/ui/button';
 import { readingTime } from '../../lib/readingTime';
 
-const all = (await getCollection('journal', ({ data }) =>
-  // Drop drafts in production. import.meta.env.PROD is true on `astro build`,
-  // false on `astro dev`, so drafts stay visible locally.
-  import.meta.env.PROD ? data.draft !== true : true,
-)).sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+const all = (
+  await getCollection('journal', ({ data }) =>
+    // Drop drafts in production. import.meta.env.PROD is true on `astro build`,
+    // false on `astro dev`, so drafts stay visible locally.
+    import.meta.env.PROD ? data.draft !== true : true,
+  )
+).sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
 
 // Split the newest entry off the front: it becomes the featured lead card,
 // the rest fill the grid below. Slicing an array of length 0 or 1 is safe,
@@ -54,195 +56,189 @@ for (const entry of all) {
   title="Journal | Nixon Creative Studio"
   description="Short essays, process notes, and field reports from the studio."
 >
-
   <section class="py-2xl" aria-labelledby="journal-heading">
     <div class="ncs-container">
-
       <header class="mb-xl flex flex-col gap-xs" data-reveal>
         <h1 id="journal-heading">Journal</h1>
         <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">
-          Short notes from the studio: process, opinions, the occasional field report. Updated whenever there's something worth writing down.
+          Short notes from the studio: process, opinions, the occasional field report. Updated
+          whenever there's something worth writing down.
         </p>
       </header>
 
-      {all.length === 0 ? (
-        /* Empty-state. The live state until the first entry publishes.
+      {
+        all.length === 0 ? (
+          /* Empty-state. The live state until the first entry publishes.
              A designed "first dispatch is coming" card on the theme-aware band
              surface (light in light mode, navy in dark), not a bare line, so
              the page reads as intentional. */
-        <div
-          class="band-themed hover-lift rounded-2xl border border-border p-xl sm:p-2xl"
-          data-reveal="scale"
-        >
-          <div class="relative z-10 flex max-w-[58ch] flex-col gap-m">
-            {/* Studio mark. The wordmark initials set in the display face,
+          <div
+            class="band-themed hover-lift rounded-2xl border border-border p-xl sm:p-2xl"
+            data-reveal="scale"
+          >
+            <div class="relative z-10 flex max-w-[58ch] flex-col gap-m">
+              {/* Studio mark. The wordmark initials set in the display face,
                  echoing the header lockup. Decorative here, so aria-hidden. */}
-            <span
-              class="font-display text-h3 leading-none tracking-wide text-link"
-              aria-hidden="true"
-            >NCS</span>
+              <span
+                class="font-display text-h3 leading-none tracking-wide text-link"
+                aria-hidden="true"
+              >
+                NCS
+              </span>
 
-            {/* Lead-in line, deliberately NOT a tracked-uppercase eyebrow:
+              {/* Lead-in line, deliberately NOT a tracked-uppercase eyebrow:
                  a classic mono eyebrow stacked right over the heading is the
                  loudest section-scaffold tell. Sentence-case, in the link tone,
                  reads as a warm intro instead. */}
-            <p class="text-base font-semibold text-link">
-              First dispatch is coming.
-            </p>
+              <p class="text-base font-semibold text-link">First dispatch is coming.</p>
 
-            <h2 class="text-h2 text-heading">
-              The first entry is being drafted.
-            </h2>
+              <h2 class="text-h2 text-heading">The first entry is being drafted.</h2>
 
-            <p class="text-lg leading-[1.6] text-text-muted">
-              This is where I'll write down how the studio works: the thinking behind a build, notes from a shoot, the small decisions that add up. Nothing's published yet. While you wait, two good places to land.
-            </p>
+              <p class="text-lg leading-[1.6] text-text-muted">
+                This is where I'll write down how the studio works: the thinking behind a build,
+                notes from a shoot, the small decisions that add up. Nothing's published yet. While
+                you wait, two good places to land.
+              </p>
 
-            <div class="mt-xs flex flex-wrap items-center gap-s">
-              {/* Primary CTA routed through the shared button recipe (brand /
+              <div class="mt-xs flex flex-wrap items-center gap-s">
+                {/* Primary CTA routed through the shared button recipe (brand /
                    cta / shine) so it matches the real site button instead of a
                    hand-rolled lookalike that can drift. */}
-              <span class="inline-block">
+                <span class="inline-block">
+                  <a
+                    class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+                    href="/work/"
+                  >
+                    See selected work
+                  </a>
+                </span>
                 <a
-                  class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-                  href="/work/"
+                  class="link-underline inline-flex items-center px-1 py-2.5 font-semibold text-link no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                  href="/contact"
                 >
-                  See selected work
+                  Say hello
                 </a>
-              </span>
-              <a
-                class="link-underline inline-flex items-center px-1 py-2.5 font-semibold text-link no-underline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-                href="/contact"
-              >
-                Say hello
-              </a>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div class="flex flex-col gap-2xl">
-
-          {/* Featured lead card. The newest entry, given full width and the
+        ) : (
+          <div class="flex flex-col gap-2xl">
+            {/* Featured lead card. The newest entry, given full width and the
                most visual weight: cover on one side at desktop, copy on the
                other. The whole card is a single <a> so the click target
                covers art and body together. */}
-          <a
-            class="group spotlight-card hover-lift relative isolate grid overflow-hidden rounded-2xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 md:grid-cols-2"
-            href={`/journal/${lead.id}/`}
-            data-spotlight
-            data-reveal
-          >
-            {lead.data.cover && (
-              <div class="relative z-10 overflow-hidden bg-bg max-md:aspect-[16/9] md:order-2">
-                <Image
-                  src={lead.data.cover}
-                  alt=""
-                  widths={[600, 900, 1200]}
-                  sizes="(min-width: 48rem) 50vw, 100vw"
-                  class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                  transition:name={`journal-cover-${lead.id}`}
-                />
-              </div>
-            )}
+            <a
+              class="group spotlight-card hover-lift relative isolate grid overflow-hidden rounded-2xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent md:grid-cols-2"
+              href={`/journal/${lead.id}/`}
+              data-spotlight
+              data-reveal
+            >
+              {lead.data.cover && (
+                <div class="relative z-10 overflow-hidden bg-bg max-md:aspect-[16/9] md:order-2">
+                  <Image
+                    src={lead.data.cover}
+                    alt=""
+                    widths={[600, 900, 1200]}
+                    sizes="(min-width: 48rem) 50vw, 100vw"
+                    class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
+                    transition:name={`journal-cover-${lead.id}`}
+                  />
+                </div>
+              )}
 
-            <div class="relative z-10 flex flex-col gap-s p-l sm:p-xl md:order-1 md:justify-center">
-              {/* Meta row. The "Latest" status reads as a filled badge sitting
+              <div class="relative z-10 flex flex-col gap-s p-l sm:p-xl md:order-1 md:justify-center">
+                {/* Meta row. The "Latest" status reads as a filled badge sitting
                    inline with the date / reading-time, not as a tracked-uppercase
                    eyebrow stacked over the title (that doubled the eyebrow count
                    on the card). The date + reading time stay a genuine mono meta
                    line. */}
-              <p class="flex flex-wrap items-center gap-s font-mono text-[0.8rem] uppercase tracking-[0.05em] text-text-muted">
-                <span class="rounded-full bg-accent px-2.5 py-0.5 font-semibold tracking-[0.08em] text-accent-foreground">
-                  Latest
-                </span>
-                <span>{fmt.format(lead.data.published)}</span>
-                <span aria-hidden="true">·</span>
-                <span>{minutesById.get(lead.id)} min read</span>
-              </p>
-              {/* Lead title at display scale (text-h1), a clear step above the
+                <p class="flex flex-wrap items-center gap-s font-mono text-[0.8rem] tracking-[0.05em] text-text-muted uppercase">
+                  <span class="rounded-full bg-accent px-2.5 py-0.5 font-semibold tracking-[0.08em] text-accent-foreground">
+                    Latest
+                  </span>
+                  <span>{fmt.format(lead.data.published)}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{minutesById.get(lead.id)} min read</span>
+                </p>
+                {/* Lead title at display scale (text-h1), a clear step above the
                    grid cards (text-h3), so the newest entry carries real weight
                    beyond the badge alone. Tighter leading suits the larger size. */}
-              <h2 class="text-h1 leading-[0.95] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {lead.data.title}
-              </h2>
-              <p class="max-w-[60ch] text-lg leading-[1.55] text-text">{lead.data.summary}</p>
+                <h2 class="text-h1 leading-[0.95] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                  {lead.data.title}
+                </h2>
+                <p class="max-w-[60ch] text-lg leading-[1.55] text-text">{lead.data.summary}</p>
 
-              {lead.data.tags && lead.data.tags.length > 0 && (
-                <ul class="mt-xs flex flex-wrap gap-2" aria-label="Topics">
-                  {lead.data.tags.map((tag) => (
-                    <li class="rounded-full border border-border bg-bg px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.06em] text-text-muted">
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                {lead.data.tags && lead.data.tags.length > 0 && (
+                  <ul class="mt-xs flex flex-wrap gap-2" aria-label="Topics">
+                    {lead.data.tags.map((tag) => (
+                      <li class="rounded-full border border-border bg-bg px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
+                        {tag}
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
-              <span class="card-link mt-xs">Read on</span>
-            </div>
-          </a>
+                <span class="card-link mt-xs">Read on</span>
+              </div>
+            </a>
 
-          {/* The rest of the entries, reveal-staggered in a grid. Hidden
+            {/* The rest of the entries, reveal-staggered in a grid. Hidden
               entirely when there's only the lead entry. */}
-          {rest.length > 0 && (
-            <ul class="grid gap-l [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))]">
-              {rest.map((entry, i) => (
-                <li
-                  data-reveal
-                  style={`--reveal-delay: ${i * 90}ms`}
-                >
-                  <a
-                    class="group spotlight-card hover-lift relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-                    href={`/journal/${entry.id}/`}
-                    data-spotlight
-                  >
-                    {entry.data.cover && (
-                      <div class="relative z-10 aspect-[16/9] overflow-hidden bg-bg">
-                        <Image
-                          src={entry.data.cover}
-                          alt=""
-                          widths={[400, 600, 900]}
-                          sizes="(min-width: 60rem) 33vw, (min-width: 40rem) 50vw, 100vw"
-                          class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                          transition:name={`journal-cover-${entry.id}`}
-                        />
-                      </div>
-                    )}
-
-                    <div class="relative z-10 flex flex-1 flex-col gap-s p-l">
-                      <p class="flex flex-wrap items-center gap-s font-mono text-[0.78rem] uppercase tracking-[0.05em] text-text-muted">
-                        <span>{fmt.format(entry.data.published)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{minutesById.get(entry.id)} min read</span>
-                      </p>
-                      <h2 class="text-h3 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                        {entry.data.title}
-                      </h2>
-                      <p class="leading-[1.5] text-text">{entry.data.summary}</p>
-
-                      {entry.data.tags && entry.data.tags.length > 0 && (
-                        <ul class="flex flex-wrap gap-2" aria-label="Topics">
-                          {entry.data.tags.map((tag) => (
-                            <li class="rounded-full border border-border bg-bg px-2.5 py-0.5 font-mono text-[0.68rem] uppercase tracking-[0.06em] text-text-muted">
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
+            {rest.length > 0 && (
+              <ul class="grid [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-l">
+                {rest.map((entry, i) => (
+                  <li data-reveal style={`--reveal-delay: ${i * 90}ms`}>
+                    <a
+                      class="group spotlight-card hover-lift relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                      href={`/journal/${entry.id}/`}
+                      data-spotlight
+                    >
+                      {entry.data.cover && (
+                        <div class="relative z-10 aspect-[16/9] overflow-hidden bg-bg">
+                          <Image
+                            src={entry.data.cover}
+                            alt=""
+                            widths={[400, 600, 900]}
+                            sizes="(min-width: 60rem) 33vw, (min-width: 40rem) 50vw, 100vw"
+                            class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
+                            transition:name={`journal-cover-${entry.id}`}
+                          />
+                        </div>
                       )}
 
-                      <span class="card-link mt-auto pt-xs">Read on</span>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
+                      <div class="relative z-10 flex flex-1 flex-col gap-s p-l">
+                        <p class="flex flex-wrap items-center gap-s font-mono text-[0.78rem] tracking-[0.05em] text-text-muted uppercase">
+                          <span>{fmt.format(entry.data.published)}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{minutesById.get(entry.id)} min read</span>
+                        </p>
+                        <h2 class="text-h3 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                          {entry.data.title}
+                        </h2>
+                        <p class="leading-[1.5] text-text">{entry.data.summary}</p>
 
-        </div>
-      )}
+                        {entry.data.tags && entry.data.tags.length > 0 && (
+                          <ul class="flex flex-wrap gap-2" aria-label="Topics">
+                            {entry.data.tags.map((tag) => (
+                              <li class="rounded-full border border-border bg-bg px-2.5 py-0.5 font-mono text-[0.68rem] tracking-[0.06em] text-text-muted uppercase">
+                                {tag}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
 
+                        <span class="card-link mt-auto pt-xs">Read on</span>
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )
+      }
     </div>
   </section>
 
   <CtaBanner />
-
 </BaseLayout>

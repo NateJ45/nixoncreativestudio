@@ -48,14 +48,8 @@ Open `tsconfig.json` and replace it with:
 ```json
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [
-    ".astro/types.d.ts",
-    "**/*",
-    "./worker-configuration.d.ts"
-  ],
-  "exclude": [
-    "dist"
-  ],
+  "include": [".astro/types.d.ts", "**/*", "./worker-configuration.d.ts"],
+  "exclude": ["dist"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
@@ -92,7 +86,7 @@ npm install @astrojs/rss
 
 ## Step 4 — wire Tailwind 4 via the Vite plugin
 
-Tailwind 4 is *not* installed as an Astro integration; the official path is the Vite plugin.
+Tailwind 4 is _not_ installed as an Astro integration; the official path is the Vite plugin.
 
 ```powershell
 npm install -D @tailwindcss/vite tailwindcss
@@ -262,18 +256,30 @@ Create `src/styles/starwind.css`. This file holds the accordion open/close keyfr
   --outline: 2px solid var(--color-accent);
   --color-success: #22c55e;
   --color-warning: #f59e0b;
-  --color-error:   #ef4444;
-  --color-info:    #3b82f6;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
 }
 
 @keyframes starwind-accordion-down {
-  from { height: 0; opacity: 0; }
-  to   { height: var(--starwind-accordion-content-height); opacity: 1; }
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--starwind-accordion-content-height);
+    opacity: 1;
+  }
 }
 
 @keyframes starwind-accordion-up {
-  from { height: var(--starwind-accordion-content-height); opacity: 1; }
-  to   { height: 0; opacity: 0; }
+  from {
+    height: var(--starwind-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
 }
 ```
 
@@ -284,7 +290,7 @@ Tabler icons work as Astro SVG components in Astro 6. Import them directly:
 ```astro
 import IconArrowRight from '@tabler/icons/icons/arrow-right.svg';
 
-<IconArrowRight class="w-5 h-5" />
+<IconArrowRight class="h-5 w-5" />
 ```
 
 No React island needed for SVG-only icons in static Astro templates.
@@ -308,48 +314,48 @@ Copy all three from the NCS reference (`src/components/primereact/`). Adapt the 
 Open `src/styles/globals.css` (shadcn already created it). Replace its contents with the template below. The brand hex values are placeholders; swap them for the project's palette. Run contrast math for every token against every surface it appears on.
 
 ```css
-@import "tailwindcss";
-@import "@fontsource/bebas-neue/400.css";
-@import "@fontsource-variable/source-sans-3";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import '@fontsource/bebas-neue/400.css';
+@import '@fontsource-variable/source-sans-3';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
   /* Brand palette */
-  --color-primary:   #0A1628;
-  --color-accent:    #3478BD;
-  --color-secondary: #40AAED;
-  --color-tertiary:  #FFA334;
+  --color-primary: #0a1628;
+  --color-accent: #3478bd;
+  --color-secondary: #40aaed;
+  --color-tertiary: #ffa334;
 
-  --color-heading:    #0A1628;
-  --color-text:       #1A1A1A;
-  --color-text-muted: #6B7280;
+  --color-heading: #0a1628;
+  --color-text: #1a1a1a;
+  --color-text-muted: #6b7280;
 
-  --color-bg:      #FFFFFF;
-  --color-bg-soft: #F4F7FA;
+  --color-bg: #ffffff;
+  --color-bg-soft: #f4f7fa;
 
   /* Fonts */
-  --font-display: "Bebas Neue", system-ui, sans-serif;
-  --font-body:    "Source Sans 3 Variable", system-ui, sans-serif;
-  --font-mono:    ui-monospace, "SF Mono", Consolas, monospace;
+  --font-display: 'Bebas Neue', system-ui, sans-serif;
+  --font-body: 'Source Sans 3 Variable', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
   /* Fluid heading sizes */
   --text-h6: 1rem;
   --text-h5: clamp(1.125rem, 1.5vw, 1.25rem);
-  --text-h4: clamp(1.25rem,  2vw,   1.5rem);
-  --text-h3: clamp(1.5rem,   2.5vw, 2rem);
-  --text-h2: clamp(2rem,     4vw,   3rem);
-  --text-h1: clamp(2.5rem,   6vw,   5rem);
+  --text-h4: clamp(1.25rem, 2vw, 1.5rem);
+  --text-h3: clamp(1.5rem, 2.5vw, 2rem);
+  --text-h2: clamp(2rem, 4vw, 3rem);
+  --text-h1: clamp(2.5rem, 6vw, 5rem);
 
   /* Fluid spacing */
-  --spacing-xs:  clamp(0.25rem, 0.5vw, 0.5rem);
-  --spacing-s:   clamp(0.5rem,  1vw,   1rem);
-  --spacing-m:   clamp(1rem,    2vw,   1.5rem);
-  --spacing-l:   clamp(2rem,    4vw,   3rem);
-  --spacing-xl:  clamp(3rem,    6vw,   5rem);
-  --spacing-2xl: clamp(4rem,    8vw,   7rem);
+  --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+  --spacing-s: clamp(0.5rem, 1vw, 1rem);
+  --spacing-m: clamp(1rem, 2vw, 1.5rem);
+  --spacing-l: clamp(2rem, 4vw, 3rem);
+  --spacing-xl: clamp(3rem, 6vw, 5rem);
+  --spacing-2xl: clamp(4rem, 8vw, 7rem);
 
   --container-content: 82.5rem;
 }
@@ -371,25 +377,25 @@ Create `src/data/site.ts`:
 
 ```ts
 export const site = {
-  name: "[Business Name]",
-  studio: "[Studio Name]",
-  tagline: "[One-line tagline]",
-  domain: "example.com",
-  email: "hello@example.com",
-  phone: "+1 (555) 555-5555",
+  name: '[Business Name]',
+  studio: '[Studio Name]',
+  tagline: '[One-line tagline]',
+  domain: 'example.com',
+  email: 'hello@example.com',
+  phone: '+1 (555) 555-5555',
   address: {
-    city: "[City]",
-    region: "[State]",
-    country: "US",
+    city: '[City]',
+    region: '[State]',
+    country: 'US',
   },
   social: {
-    instagram: "",
-    linkedin: "",
-    github: "",
+    instagram: '',
+    linkedin: '',
+    github: '',
   },
   // Optional: set these to enable the matching scaffold
-  bookingUrl: "",       // Cal.com or Calendly URL
-  newsletterUrl: "",    // Buttondown publish URL
+  bookingUrl: '', // Cal.com or Calendly URL
+  newsletterUrl: '', // Buttondown publish URL
 } as const;
 ```
 
@@ -404,7 +410,7 @@ Create `scripts/generate-placeholders.mjs`. Open the NCS version at `scripts/gen
 Then create `src/lib/coverPlaceholder.ts` as the typed lookup module:
 
 ```ts
-import placeholders from "./coverPlaceholders.json";
+import placeholders from './coverPlaceholders.json';
 
 const map = placeholders as Record<string, string>;
 
@@ -519,8 +525,8 @@ Create `wrangler.jsonc` at the root. It tells the Cloudflare CLI how to build an
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "not_found_handling": "404-page"
-  }
+    "not_found_handling": "404-page",
+  },
 }
 ```
 

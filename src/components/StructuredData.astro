@@ -41,32 +41,29 @@ interface Props {
 const { extra = [] } = Astro.props;
 
 const organization = {
-  '@context':     'https://schema.org',
-  '@type':        ['Organization', 'LocalBusiness'],
-  '@id':          `${site.url}#organization`,
-  name:           site.studioName,
-  url:            site.url,
-  email:          site.email,
-  telephone:      site.phone,
-  founder:        { '@type': 'Person', name: site.ownerName },
-  description:    site.tagline,
+  '@context': 'https://schema.org',
+  '@type': ['Organization', 'LocalBusiness'],
+  '@id': `${site.url}#organization`,
+  name: site.studioName,
+  url: site.url,
+  email: site.email,
+  telephone: site.phone,
+  founder: { '@type': 'Person', name: site.ownerName },
+  description: site.tagline,
   address: {
-    '@type':          'PostalAddress',
-    addressLocality:  'Cincinnati',
-    addressRegion:    'OH',
-    addressCountry:   'US',
+    '@type': 'PostalAddress',
+    addressLocality: 'Cincinnati',
+    addressRegion: 'OH',
+    addressCountry: 'US',
   },
   // Based locally, but web/strategy/brand work serves clients nationally; the
   // region Place plus the country signals both (photography stays regional, see
   // the per-Service areaServed on /services).
   areaServed: [
-    { '@type': 'Place',   name: 'Greater Cincinnati region' },
+    { '@type': 'Place', name: 'Greater Cincinnati region' },
     { '@type': 'Country', name: 'United States' },
   ],
-  sameAs: [
-    site.social.instagram,
-    site.social.linkedin,
-  ],
+  sameAs: [site.social.instagram, site.social.linkedin],
 };
 
 // Build the final array of schemas. Organization always first; extras

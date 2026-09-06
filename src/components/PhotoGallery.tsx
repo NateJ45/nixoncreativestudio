@@ -42,13 +42,13 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 // (the photo's name) and `caption`; the lightbox below falls back to
 // `alt` for its title so a real label always shows.
 export interface GalleryPhoto extends Photo {
-  alt?:     string;
-  title?:   string;
+  alt?: string;
+  title?: string;
   caption?: string;
 }
 
 export interface PhotoGalleryProps {
-  photos:           GalleryPhoto[];
+  photos: GalleryPhoto[];
   /** Target row height in pixels for react-photo-album's rows layout.
       Lower = denser grid, higher = bigger photos. Defaults to 300. */
   targetRowHeight?: number;
@@ -91,11 +91,7 @@ function renderFadeImage(
   );
 }
 
-export default function PhotoGallery({
-  photos,
-  targetRowHeight = 300,
-}: PhotoGalleryProps) {
-
+export default function PhotoGallery({ photos, targetRowHeight = 300 }: PhotoGalleryProps) {
   // Lightbox index. -1 means closed. Setting >= 0 opens at that slide.
   const [index, setIndex] = useState<number>(-1);
 
@@ -111,13 +107,13 @@ export default function PhotoGallery({
 
       <Lightbox
         slides={photos.map((p) => ({
-          src:         p.src,
-          width:       p.width,
-          height:      p.height,
-          alt:         p.alt,
+          src: p.src,
+          width: p.width,
+          height: p.height,
+          alt: p.alt,
           // Fall back to the photo's alt (its name) when no explicit title is
           // set, so the lightbox always shows a real label above the caption.
-          title:       p.title ?? p.alt,
+          title: p.title ?? p.alt,
           description: p.caption,
         }))}
         open={index >= 0}

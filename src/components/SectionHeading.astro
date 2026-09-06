@@ -22,13 +22,13 @@
    ============================================================================ */
 
 interface Props {
-  num?: string;         // Optional two-digit number, e.g. "02". Quoted so the leading zero stays.
-  title: string;        // The section's display title.
-  sub?: string;         // Optional supporting sentence beneath the title.
-  headingId?: string;   // Optional id rendered on the <h2>. Pair with the parent
-                        // section's aria-labelledby so the heading actually labels
-                        // the landmark. Without this, aria-labelledby references on
-                        // the parent point at nothing.
+  num?: string; // Optional two-digit number, e.g. "02". Quoted so the leading zero stays.
+  title: string; // The section's display title.
+  sub?: string; // Optional supporting sentence beneath the title.
+  headingId?: string; // Optional id rendered on the <h2>. Pair with the parent
+  // section's aria-labelledby so the heading actually labels
+  // the landmark. Without this, aria-labelledby references on
+  // the parent point at nothing.
 }
 
 const { num, title, sub, headingId } = Astro.props;
@@ -38,16 +38,17 @@ const { num, title, sub, headingId } = Astro.props;
   Using <header> as the wrapper so screen readers and search engines see a
   clear section landmark, not just a styled row.
 -->
-<header class="flex flex-col gap-xs mb-l">
-
+<header class="mb-l flex flex-col gap-xs">
   <!-- Mono section number. Rendered only when num is provided. aria-hidden
        so screen readers don't announce the digits separately from the
        heading they label. -->
-  {num && (
-    <span class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">
-      {num}
-    </span>
-  )}
+  {
+    num && (
+      <span class="font-mono text-sm tracking-[0.05em] text-text-muted" aria-hidden="true">
+        {num}
+      </span>
+    )
+  }
 
   <!-- Section title. Inherits size from the global h2 rule, no overrides.
        The id (when provided) is the anchor for the parent section's
@@ -56,8 +57,5 @@ const { num, title, sub, headingId } = Astro.props;
 
   <!-- Optional supporting line. Rendered only when provided so empty space
        doesn't pile up under sections that don't need a sub. -->
-  {sub && (
-    <p class="max-w-[48ch] text-lg leading-[1.5] text-text-muted">{sub}</p>
-  )}
-
+  {sub && <p class="max-w-[48ch] text-lg leading-[1.5] text-text-muted">{sub}</p>}
 </header>

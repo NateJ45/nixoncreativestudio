@@ -35,33 +35,35 @@ import { Marquee } from './ui/marquee';
 const logos: Array<{ name: string; logo?: ImageMetadata; href?: string }> = [];
 ---
 
-{logos.length > 0 && (
-  <section class="py-xl" aria-label="A few of the organizations I've worked with">
-    <div class="ncs-container">
-      <p class="mb-m text-center font-mono text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">
-        Trusted by
-      </p>
-      <Marquee client:visible pauseOnHover repeat={2} className="[--duration:60s] [--gap:3rem]">
-        {logos.map((entry) => (
-          entry.href ? (
-            <a
-              href={entry.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="opacity-60 transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4"
-              title={entry.name}
-            >
-              {/* When logo files are added, render an <img> here with
+{
+  logos.length > 0 && (
+    <section class="py-xl" aria-label="A few of the organizations I've worked with">
+      <div class="ncs-container">
+        <p class="mb-m text-center font-mono text-[0.8rem] tracking-[0.08em] text-text-muted uppercase">
+          Trusted by
+        </p>
+        <Marquee client:visible pauseOnHover repeat={2} className="[--duration:60s] [--gap:3rem]">
+          {logos.map((entry) =>
+            entry.href ? (
+              <a
+                href={entry.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="opacity-60 transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                title={entry.name}
+              >
+                {/* When logo files are added, render an <img> here with
                   alt={entry.name} at a reasonable display height. */}
-              <span class="text-text">{entry.name}</span>
-            </a>
-          ) : (
-            <span class="opacity-60" title={entry.name}>
-              <span class="text-text">{entry.name}</span>
-            </span>
-          )
-        ))}
-      </Marquee>
-    </div>
-  </section>
-)}
+                <span class="text-text">{entry.name}</span>
+              </a>
+            ) : (
+              <span class="opacity-60" title={entry.name}>
+                <span class="text-text">{entry.name}</span>
+              </span>
+            ),
+          )}
+        </Marquee>
+      </div>
+    </section>
+  )
+}

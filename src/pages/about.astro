@@ -61,12 +61,36 @@ import portraitBwPhoto from '../assets/about/portrait-bw.jpg';
 // (no names), so nothing presumes more than the photo shows. Each photo is a
 // click / keyboard zoom trigger for the shared Lightbox at the foot of the page.
 const photos = [
-  { src: familyPhoto,     caption: 'A park afternoon',               alt: 'Nathan with his family on a picnic blanket in a park, a young child eating watermelon.' },
-  { src: runningPhoto,    caption: 'Race day',                       alt: 'Nathan and a friend at the end of a charity 5K, race bibs on, in a sunny parking lot.' },
-  { src: exploringPhoto,  caption: 'Out exploring',                  alt: 'Nathan carrying a small child on a sunny day in front of old railroad cars.' },
-  { src: weddingPhoto,    caption: 'Wedding day',                    alt: 'Nathan and his wife laughing together on their wedding day, beside a lake.' },
-  { src: preschoolPhoto,  caption: 'West Chester Preschool',         alt: 'Nathan with three others in West Chester Preschool t-shirts, outdoors under a tree.' },
-  { src: portraitBwPhoto, caption: 'From the other side of the lens', alt: 'A black-and-white studio portrait of Nathan looking off to the side.' },
+  {
+    src: familyPhoto,
+    caption: 'A park afternoon',
+    alt: 'Nathan with his family on a picnic blanket in a park, a young child eating watermelon.',
+  },
+  {
+    src: runningPhoto,
+    caption: 'Race day',
+    alt: 'Nathan and a friend at the end of a charity 5K, race bibs on, in a sunny parking lot.',
+  },
+  {
+    src: exploringPhoto,
+    caption: 'Out exploring',
+    alt: 'Nathan carrying a small child on a sunny day in front of old railroad cars.',
+  },
+  {
+    src: weddingPhoto,
+    caption: 'Wedding day',
+    alt: 'Nathan and his wife laughing together on their wedding day, beside a lake.',
+  },
+  {
+    src: preschoolPhoto,
+    caption: 'West Chester Preschool',
+    alt: 'Nathan with three others in West Chester Preschool t-shirts, outdoors under a tree.',
+  },
+  {
+    src: portraitBwPhoto,
+    caption: 'From the other side of the lens',
+    alt: 'A black-and-white studio portrait of Nathan looking off to the side.',
+  },
 ];
 
 // Three working principles. Keep these honest; they should describe how
@@ -96,13 +120,18 @@ const lastUpdated = '2026-06-27'; // bump whenever the arrays below change
 // (e.g. "yesterday" / the prior date). The T00:00:00 suffix forces local time.
 const lastUpdatedDate = new Date(`${lastUpdated}T00:00:00`);
 const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
-  month: 'long', day: 'numeric', year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
 }).format(lastUpdatedDate);
 
 // Relative freshness for the status pill: today / N days / N weeks / N months.
 // If it ever reads "8 months ago," that is the nudge to rewrite the arrays.
 function freshnessLabel(iso: string): string {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(`${iso}T00:00:00`).getTime()) / 86_400_000));
+  const days = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(`${iso}T00:00:00`).getTime()) / 86_400_000),
+  );
   if (days <= 0) return 'Updated today';
   if (days === 1) return 'Updated yesterday';
   if (days < 14) return `Updated ${days} days ago`;
@@ -117,7 +146,7 @@ const freshness = freshnessLabel(lastUpdated);
 // West Chester Preschool is where I'm the volunteer Publicity Chair); keep any
 // private client generic rather than named.
 const workingOn = [
-  'Finishing the Presbyterian Academy website ahead of the school\'s first term.',
+  "Finishing the Presbyterian Academy website ahead of the school's first term.",
   'Back as Publicity Chair at West Chester Preschool for another year, this round gathering photo and video of the students and families for 2027-2028 enrollment.',
   'Buying our first house, here in Cincinnati.',
 ];
@@ -125,8 +154,18 @@ const workingOn = [
 // Capacity signals. status drives the chip color and the readable label, so
 // availability never reads on color alone. open -> green, limited -> amber.
 const booking = [
-  { status: 'open' as const,    label: 'Web design',  detail: 'Open to new web design projects of every kind this quarter, from a single landing page to a full rebuild.' },
-  { status: 'limited' as const, label: 'Photography', detail: 'A few shoot days each month, fit around the web work, for portraits, families, events, and the brand photography that pairs with a new site.' },
+  {
+    status: 'open' as const,
+    label: 'Web design',
+    detail:
+      'Open to new web design projects of every kind this quarter, from a single landing page to a full rebuild.',
+  },
+  {
+    status: 'limited' as const,
+    label: 'Photography',
+    detail:
+      'A few shoot days each month, fit around the web work, for portraits, families, events, and the brand photography that pairs with a new site.',
+  },
 ];
 const statusMeta = {
   // Status text must clear AA (4.5:1, it is text-xs small text) on the now-sheet
@@ -136,8 +175,8 @@ const statusMeta = {
   // lighter shades on the dark navy card give more headroom over the 4.5:1 line
   // than the -400s, so the small chip text stays comfortably legible. The dot color
   // stays brand and is decorative; the readable word carries the meaning, never color.
-  open:    { word: 'Open',    dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
-  limited: { word: 'Limited', dot: 'bg-tertiary',    text: 'text-amber-700 dark:text-amber-300' },
+  open: { word: 'Open', dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
+  limited: { word: 'Limited', dot: 'bg-tertiary', text: 'text-amber-700 dark:text-amber-300' },
 };
 
 // Books / longer-form pieces, and skills I'm sharpening.
@@ -162,17 +201,14 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
 // linked back to the Organization defined site-wide.
 const schemas = [
   {
-    '@context':     'https://schema.org',
-    '@type':        'Person',
-    '@id':          `${site.url}/about/#person`,
-    name:           site.ownerName,
-    jobTitle:       'Founder, Designer, Developer, Photographer',
-    worksFor:       { '@id': `${site.url}#organization` },
-    url:            `${site.url}/about/`,
-    sameAs: [
-      site.social.instagram,
-      site.social.linkedin,
-    ],
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${site.url}/about/#person`,
+    name: site.ownerName,
+    jobTitle: 'Founder, Designer, Developer, Photographer',
+    worksFor: { '@id': `${site.url}#organization` },
+    url: `${site.url}/about/`,
+    sameAs: [site.social.instagram, site.social.linkedin],
   },
 ];
 ---
@@ -182,7 +218,6 @@ const schemas = [
   description="About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio."
   schemas={schemas}
 >
-
   <!-- ====================================================================
        Masthead (ABOUT). The page head: who Nathan is, paired with the
        portrait placeholder. Establishes the rail + track spine on the first
@@ -191,7 +226,6 @@ const schemas = [
   <section class="pt-2xl pb-2xl" aria-labelledby="about-hero-heading">
     <div class="ncs-container">
       <div class={railGrid}>
-
         <!-- Rail: decorative word-label + a quiet location stamp. -->
         <div class="flex flex-col gap-2" aria-hidden="true">
           <p class={railLabel}>About</p>
@@ -201,7 +235,9 @@ const schemas = [
         <!-- Track: oversized h1 breakout, then intro | portrait split. -->
         <div class="min-w-0">
           <h1 id="about-hero-heading" class="max-w-[20ch] leading-[0.95]" data-reveal>
-            A one-person studio for <span class="text-link">organizations that take their work seriously.</span>
+            A one-person studio for <span class="text-link"
+              >organizations that take their work seriously.</span
+            >
           </h1>
 
           <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
@@ -213,14 +249,25 @@ const schemas = [
               data-reveal="right"
               style="--reveal-delay: 120ms;"
             >
-              I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with small businesses, nonprofits, churches, and schools, in person around the region and anywhere for web work. I do the strategy, the design, the photography, and the code, so the person you meet on day one is the same person who hands you the finished site.
+              I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with
+              small businesses, nonprofits, churches, and schools, in person around the region and
+              anywhere for web work. I do the strategy, the design, the photography, and the code,
+              so the person you meet on day one is the same person who hands you the finished site.
             </p>
 
             <!-- Portrait. The headshot fills the original 4:5 frame (the square
                  source is center-cropped via object-cover); the amber glow behind
                  and the ring/shadow are kept from the placeholder treatment. -->
-            <div class="relative isolate w-full max-w-[18rem]" data-reveal="scale" style="--reveal-delay: 120ms;">
-              <div class="absolute -bottom-4 -right-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl" aria-hidden="true"></div>
+            <div
+              class="relative isolate w-full max-w-[18rem]"
+              data-reveal="scale"
+              style="--reveal-delay: 120ms;"
+            >
+              <div
+                class="absolute -right-4 -bottom-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
+                aria-hidden="true"
+              >
+              </div>
               <Image
                 src={headshot}
                 alt="Nathan Nixon, smiling outdoors"
@@ -232,11 +279,9 @@ const schemas = [
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <!-- ====================================================================
        Thesis (IN SHORT). The studio's one-line thesis, promoted from a stray
@@ -246,25 +291,21 @@ const schemas = [
   <section class="pb-2xl" aria-label="In short">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-
         <div class="flex flex-col gap-3" aria-hidden="true">
           <p class={railLabel}>In short</p>
           <span class="h-px w-12 bg-tertiary"></span>
         </div>
 
-        <p
-          class="max-w-[52ch] text-h4 leading-[1.3] text-heading"
-          data-reveal="blur"
-        >
-          One person on every project, start to finish: strategy, design, photography, and code.
-          I work with <span class="text-link">churches, schools, nonprofits, and small businesses</span>
+        <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal="blur">
+          One person on every project, start to finish: strategy, design, photography, and code. I
+          work with <span class="text-link"
+            >churches, schools, nonprofits, and small businesses</span
+          >
           around Cincinnati in person, and anywhere for web work.
         </p>
-
       </div>
     </div>
   </section>
-
 
   <!-- ====================================================================
        Story + Terminal (STORY). The why behind a one-person studio, with
@@ -274,7 +315,6 @@ const schemas = [
   <section class="pb-2xl" aria-labelledby="about-story-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-
         <p class={railLabel} aria-hidden="true">Story</p>
 
         <div class="min-w-0">
@@ -286,21 +326,47 @@ const schemas = [
           </header>
 
           <div class="mt-l grid gap-xl lg:grid-cols-2">
-            <div class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text" data-reveal style="--reveal-delay: 120ms;">
+            <div
+              class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text"
+              data-reveal
+              style="--reveal-delay: 120ms;"
+            >
               <p>
-                I came to this work through a camera. For years I photographed portraits, families, weddings, the events people most want to remember, and the part I loved was helping someone show up at their best. When the shoots dried up in 2020, I started building websites for a few of those same clients, and it turned out to be the same job in a new medium: work out what someone is really trying to say, then make it clear. Web design is the studio's main work now, but the photographer's eye stayed, and most projects still end up with real photography in them.
+                I came to this work through a camera. For years I photographed portraits, families,
+                weddings, the events people most want to remember, and the part I loved was helping
+                someone show up at their best. When the shoots dried up in 2020, I started building
+                websites for a few of those same clients, and it turned out to be the same job in a
+                new medium: work out what someone is really trying to say, then make it clear. Web
+                design is the studio's main work now, but the photographer's eye stayed, and most
+                projects still end up with real photography in them.
               </p>
               <p>
-                Before any of that I studied mechanical engineering at the University of Edinburgh, back home in Scotland. The degree did not make me a designer, but it taught me to take a thing apart, understand why each piece is there, and put it back together so it holds. That is how I approach a website too: structure first, surface second, and built so the person who inherits it can actually keep it running.
+                Before any of that I studied mechanical engineering at the University of Edinburgh,
+                back home in Scotland. The degree did not make me a designer, but it taught me to
+                take a thing apart, understand why each piece is there, and put it back together so
+                it holds. That is how I approach a website too: structure first, surface second, and
+                built so the person who inherits it can actually keep it running.
               </p>
               <p>
-                I also do plenty of this work as a volunteer. I'm on the media team at Crestview Presbyterian Church, where I run the weekly livestream, plan and buy the equipment upgrades, and shoot the photo and video the church uses for its website and its socials.
+                I also do plenty of this work as a volunteer. I'm on the media team at Crestview
+                Presbyterian Church, where I run the weekly livestream, plan and buy the equipment
+                upgrades, and shoot the photo and video the church uses for its website and its
+                socials.
               </p>
               <p>
-                The preschool my kids attend meets in that same building, a co-op where every parent takes a job, and mine is Publicity Chair. That role is my whole business in miniature: the branding, the website, the social media, the enrollment photography, the outreach to new families. Doing all of it keeps me honest about what a small, volunteer-run team can really maintain, since the person minding the site one year might hand it to a different one the next, and the build has to survive that.
+                The preschool my kids attend meets in that same building, a co-op where every parent
+                takes a job, and mine is Publicity Chair. That role is my whole business in
+                miniature: the branding, the website, the social media, the enrollment photography,
+                the outreach to new families. Doing all of it keeps me honest about what a small,
+                volunteer-run team can really maintain, since the person minding the site one year
+                might hand it to a different one the next, and the build has to survive that.
               </p>
               <p>
-                Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a US citizen in 2022, and these days we're raising two kids and buying our first house here. When I'm away from a screen I'm usually out on a long run, chasing landscapes with a camera, deep in an ambitious Lego build with the kids, or a few episodes into a history drama.
+                Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a
+                US citizen in 2022, and these days we're raising two kids and buying our first house
+                here. When I'm away from a screen I'm usually out on a long run, chasing landscapes
+                with a camera, deep in an ambitious Lego build with the kids, or a few episodes into
+                a history drama.
               </p>
             </div>
 
@@ -312,18 +378,20 @@ const schemas = [
                  Both are decorative for assistive tech (each carries its own
                  sr-only summary). -->
             <div class="w-full">
-              <div class="flex flex-col gap-m lg:sticky lg:top-24" data-reveal="scale" style="--reveal-delay: 200ms;">
+              <div
+                class="flex flex-col gap-m lg:sticky lg:top-24"
+                data-reveal="scale"
+                style="--reveal-delay: 200ms;"
+              >
                 <Terminal />
                 <LighthouseScore />
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <!-- ====================================================================
        Outside the studio (OUTSIDE). Real snapshots of the life behind the
@@ -336,48 +404,48 @@ const schemas = [
   <section class="pb-2xl" aria-labelledby="about-outside-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-
         <p class={railLabel} aria-hidden="true">Outside</p>
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
             <h2 id="about-outside-heading">Outside the studio</h2>
             <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A few snapshots from the rest of life around Cincinnati: family, the trails, and the occasional turn in front of the camera.
+              A few snapshots from the rest of life around Cincinnati: family, the trails, and the
+              occasional turn in front of the camera.
             </p>
           </header>
 
           <ul class="mt-l columns-2 gap-m lg:columns-3 [&>li]:mb-m [&>li]:break-inside-avoid">
-            {photos.map((photo, index) => (
-              <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
-                <figure>
-                  <button
-                    type="button"
-                    data-zoom
-                    title="View larger"
-                    class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
-                  >
-                    <Image
-                      src={photo.src}
-                      alt={photo.alt}
-                      widths={[320, 560, 840, 1200, 1600]}
-                      sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
-                      class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                  </button>
-                  <figcaption class="mt-xs font-mono text-xs uppercase tracking-[0.06em] text-text-muted">
-                    {photo.caption}
-                  </figcaption>
-                </figure>
-              </li>
-            ))}
+            {
+              photos.map((photo, index) => (
+                <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
+                  <figure>
+                    <button
+                      type="button"
+                      data-zoom
+                      title="View larger"
+                      class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    >
+                      <Image
+                        src={photo.src}
+                        alt={photo.alt}
+                        widths={[320, 560, 840, 1200, 1600]}
+                        sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
+                        class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    </button>
+                    <figcaption class="mt-xs font-mono text-xs tracking-[0.06em] text-text-muted uppercase">
+                      {photo.caption}
+                    </figcaption>
+                  </figure>
+                </li>
+              ))
+            }
           </ul>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <!-- ====================================================================
        How I work (PRACTICE). Three principles as an authored manifesto: a
@@ -387,7 +455,6 @@ const schemas = [
   <section class="pb-2xl" aria-labelledby="about-how-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-
         <p class={railLabel} aria-hidden="true">Practice</p>
 
         <div class="min-w-0">
@@ -399,23 +466,23 @@ const schemas = [
           </header>
 
           <ul class="mt-l flex flex-col">
-            {principles.map((principle, index) => (
-              <li
-                class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-                data-reveal
-                style={`--reveal-delay: ${index * 100}ms;`}
-              >
-                <h3 class="text-h4 text-heading">{principle.title}</h3>
-                <p class="leading-[1.7] text-text">{principle.body}</p>
-              </li>
-            ))}
+            {
+              principles.map((principle, index) => (
+                <li
+                  class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
+                  data-reveal
+                  style={`--reveal-delay: ${index * 100}ms;`}
+                >
+                  <h3 class="text-h4 text-heading">{principle.title}</h3>
+                  <p class="leading-[1.7] text-text">{principle.body}</p>
+                </li>
+              ))
+            }
           </ul>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <!-- ====================================================================
        Currently (NOW). The present-tense snapshot, calmed from four loose
@@ -427,63 +494,97 @@ const schemas = [
   <section id="now" class="scroll-mt-2xl pb-2xl" aria-labelledby="about-currently-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-
         <!-- Rail: word-label (decorative) + the real freshness meta. -->
         <div class="flex flex-col gap-s">
           <p class={railLabel} aria-hidden="true">Now</p>
-          <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text">
+          <p
+            class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text"
+          >
             <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
-              <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
+              <span
+                class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"
+              ></span>
               <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
             </span>
             <span>{freshness}</span>
           </p>
-          <p class="font-mono text-[0.8rem] italic text-text-muted">Last updated {lastUpdatedLabel}.</p>
+          <p class="font-mono text-[0.8rem] text-text-muted italic">
+            Last updated {lastUpdatedLabel}.
+          </p>
         </div>
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
             <h2 id="about-currently-heading">Currently</h2>
             <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A present-tense snapshot of the studio: current work, what I'm reading, and what I'm trying to get sharper on. Rewritten every couple of months.
+              A present-tense snapshot of the studio: current work, what I'm reading, and what I'm
+              trying to get sharper on. Rewritten every couple of months.
             </p>
           </header>
 
           <!-- One now-sheet: the page's single inset card. Two-column ledger at
                md; stacks to one column below. -->
-          <div class="surface-card mt-l rounded-xl p-l md:p-xl" data-reveal style="--reveal-delay: 120ms;">
+          <div
+            class="surface-card mt-l rounded-xl p-l md:p-xl"
+            data-reveal
+            style="--reveal-delay: 120ms;"
+          >
             <div class="grid gap-xl md:grid-cols-2 md:gap-2xl">
-
               <!-- Left: Working on, then Booking. -->
               <div class="flex flex-col gap-l">
                 <section aria-labelledby="now-working">
                   <h3 id="now-working" class="text-h5 text-heading">Working on</h3>
                   <ul class="mt-s flex flex-col">
-                    {workingOn.map((item, index) => (
-                      <li class="flex items-start gap-s border-t border-border py-s" data-reveal="left" style={`--reveal-delay: ${index * 90}ms;`}>
-                        <span class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary" aria-hidden="true"></span>
-                        <span class="leading-[1.55] text-text">{item}</span>
-                      </li>
-                    ))}
+                    {
+                      workingOn.map((item, index) => (
+                        <li
+                          class="flex items-start gap-s border-t border-border py-s"
+                          data-reveal="left"
+                          style={`--reveal-delay: ${index * 90}ms;`}
+                        >
+                          <span
+                            class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary"
+                            aria-hidden="true"
+                          />
+                          <span class="leading-[1.55] text-text">{item}</span>
+                        </li>
+                      ))
+                    }
                   </ul>
                 </section>
 
                 <section aria-labelledby="now-booking">
                   <h3 id="now-booking" class="text-h5 text-heading">Booking</h3>
                   <ul class="mt-s flex flex-col">
-                    {booking.map((slot, index) => {
-                      const meta = statusMeta[slot.status];
-                      return (
-                        <li class="border-t border-border py-s" data-reveal style={`--reveal-delay: ${index * 90}ms;`}>
-                          <span class:list={['inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.06em]', meta.text]}>
-                            <span class:list={['h-2 w-2 rounded-full', meta.dot]} aria-hidden="true"></span>
-                            {meta.word}
-                          </span>
-                          <span class="ml-2 align-middle font-display text-h5 text-heading">{slot.label}</span>
-                          <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
-                        </li>
-                      );
-                    })}
+                    {
+                      booking.map((slot, index) => {
+                        const meta = statusMeta[slot.status];
+                        return (
+                          <li
+                            class="border-t border-border py-s"
+                            data-reveal
+                            style={`--reveal-delay: ${index * 90}ms;`}
+                          >
+                            <span
+                              class:list={[
+                                'inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.06em] uppercase',
+                                meta.text,
+                              ]}
+                            >
+                              <span
+                                class:list={['h-2 w-2 rounded-full', meta.dot]}
+                                aria-hidden="true"
+                              />
+                              {meta.word}
+                            </span>
+                            <span class="ml-2 align-middle font-display text-h5 text-heading">
+                              {slot.label}
+                            </span>
+                            <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
+                          </li>
+                        );
+                      })
+                    }
                   </ul>
                 </section>
               </div>
@@ -493,38 +594,51 @@ const schemas = [
                 <section aria-labelledby="now-reading">
                   <h3 id="now-reading" class="text-h5 text-heading">Reading</h3>
                   <ul class="mt-s flex flex-col">
-                    {reading.map((book, index) => (
-                      <li class="border-t border-border py-s" data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
-                        <span class="font-display text-h5 leading-tight text-heading">
-                          {book.title}
-                          {book.note && (<span class="ml-2 align-middle text-xs font-medium uppercase tracking-[0.06em] text-link">({book.note})</span>)}
-                        </span>
-                        <span class="block text-sm text-text-muted">{book.author}</span>
-                      </li>
-                    ))}
+                    {
+                      reading.map((book, index) => (
+                        <li
+                          class="border-t border-border py-s"
+                          data-reveal="right"
+                          style={`--reveal-delay: ${index * 90}ms;`}
+                        >
+                          <span class="font-display text-h5 leading-tight text-heading">
+                            {book.title}
+                            {book.note && (
+                              <span class="ml-2 align-middle text-xs font-medium tracking-[0.06em] text-link uppercase">
+                                ({book.note})
+                              </span>
+                            )}
+                          </span>
+                          <span class="block text-sm text-text-muted">{book.author}</span>
+                        </li>
+                      ))
+                    }
                   </ul>
                 </section>
 
                 <section aria-labelledby="now-learning">
                   <h3 id="now-learning" class="text-h5 text-heading">Learning</h3>
                   <ul class="mt-s flex flex-col">
-                    {learning.map((item, index) => (
-                      <li class="border-t border-border py-s leading-[1.55] text-text" data-reveal="right" style={`--reveal-delay: ${index * 90}ms;`}>
-                        {item}
-                      </li>
-                    ))}
+                    {
+                      learning.map((item, index) => (
+                        <li
+                          class="border-t border-border py-s leading-[1.55] text-text"
+                          data-reveal="right"
+                          style={`--reveal-delay: ${index * 90}ms;`}
+                        >
+                          {item}
+                        </li>
+                      ))
+                    }
                   </ul>
                 </section>
               </div>
-
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <!-- Client testimonials. Renders only when a case study carries a real
        `testimonial` in its frontmatter; otherwise this is silent (no empty
@@ -541,7 +655,6 @@ const schemas = [
 
   <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
   <Lightbox />
-
 </BaseLayout>
 
 <style>
@@ -552,10 +665,19 @@ const schemas = [
     animation: now-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
   @keyframes now-ping {
-    0%        { transform: scale(1);   opacity: 0.7; }
-    75%, 100% { transform: scale(2.4); opacity: 0; }
+    0% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    75%,
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
-    .now-pulse-ring { animation: none; }
+    .now-pulse-ring {
+      animation: none;
+    }
   }
 </style>

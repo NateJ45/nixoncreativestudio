@@ -62,9 +62,11 @@ export default function HeroCanvas() {
       scheduled = true;
       const start = () => setShow(true);
       if ('requestIdleCallback' in window) {
-        idleId = (window as Window & {
-          requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number;
-        }).requestIdleCallback(start, { timeout: 2500 });
+        idleId = (
+          window as Window & {
+            requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number;
+          }
+        ).requestIdleCallback(start, { timeout: 2500 });
       } else {
         timeoutId = setTimeout(start, 1200);
       }
@@ -87,7 +89,9 @@ export default function HeroCanvas() {
     return () => {
       desktop.removeEventListener('change', onChange);
       if (idleId !== undefined && 'cancelIdleCallback' in window) {
-        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(
+          idleId,
+        );
       }
       if (timeoutId !== undefined) clearTimeout(timeoutId);
     };

@@ -31,53 +31,52 @@ interface Props {
   /** Heading override. Defaults to a short studio-voice line. */
   heading?: string;
   /** Sub copy override. Defaults to a low-pressure pitch. */
-  sub?:     string;
+  sub?: string;
 }
 
 const {
   heading = 'Once a quarter, in your inbox.',
-  sub     = "Short field notes on the studio: what shipped, what I'm working on, one thing I learned. No deals, no calendar push.",
+  sub = "Short field notes on the studio: what shipped, what I'm working on, one thing I learned. No deals, no calendar push.",
 } = Astro.props;
 ---
 
-{site.newsletterUrl && (
-  <section
-    class="bg-bg-soft py-xl"
-    aria-labelledby="newsletter-heading"
-  >
-    <div class="ncs-container">
-      <div class="mx-auto flex max-w-[42rem] flex-col gap-m text-center">
+{
+  site.newsletterUrl && (
+    <section class="bg-bg-soft py-xl" aria-labelledby="newsletter-heading">
+      <div class="ncs-container">
+        <div class="mx-auto flex max-w-[42rem] flex-col gap-m text-center">
+          <h2 id="newsletter-heading" class="text-h3 text-heading">
+            {heading}
+          </h2>
+          <p class="text-text">{sub}</p>
 
-        <h2 id="newsletter-heading" class="text-h3 text-heading">
-          {heading}
-        </h2>
-        <p class="text-text">{sub}</p>
-
-        <form
-          class="mx-auto flex w-full max-w-[28rem] flex-col gap-s sm:flex-row"
-          action={site.newsletterUrl}
-          method="post"
-          target="_blank"
-        >
-          <label class="sr-only" for="newsletter-email">Email address</label>
-          <input
-            class="flex-1 rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text transition-[border-color,box-shadow] duration-150 focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25"
-            type="email"
-            id="newsletter-email"
-            name="email"
-            placeholder="you@example.com"
-            required
-            autocomplete="email"
-          />
-          <button
-            type="submit"
-            class="rounded-md bg-accent px-4 py-2.5 font-body text-base font-semibold text-accent-foreground transition-colors duration-150 hover:bg-link focus-visible:bg-link focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+          <form
+            class="mx-auto flex w-full max-w-[28rem] flex-col gap-s sm:flex-row"
+            action={site.newsletterUrl}
+            method="post"
+            target="_blank"
           >
-            Subscribe
-          </button>
-        </form>
-
+            <label class="sr-only" for="newsletter-email">
+              Email address
+            </label>
+            <input
+              class="flex-1 rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text transition-[border-color,box-shadow] duration-150 focus:border-accent focus:ring-3 focus:ring-accent/25 focus:outline-none"
+              type="email"
+              id="newsletter-email"
+              name="email"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            />
+            <button
+              type="submit"
+              class="rounded-md bg-accent px-4 py-2.5 font-body text-base font-semibold text-accent-foreground transition-colors duration-150 hover:bg-link focus-visible:bg-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  </section>
-)}
+    </section>
+  )
+}

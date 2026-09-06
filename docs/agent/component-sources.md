@@ -19,12 +19,12 @@ When you need a new UI element, work down this list and stop at the first option
 
 ## Wired-in sources with add commands
 
-| Source | What it is | Add command | Lands in |
-|---|---|---|---|
-| shadcn/ui official | 400+ React primitives built on Radix | `npx shadcn add <name>` | `src/components/ui/` |
-| Fulldev UI blocks | Astro section blocks (hero, features, FAQ, CTA) | `npx shadcn add @fulldev/<name>` | `src/components/` |
-| Magic UI | Animated React components (marquee, beam, bento, shimmer) | `npx shadcn add @magicui/<name>` | `src/components/ui/` |
-| Starwind UI | Astro-native primitives, zero React | `npx starwind@latest add <name> --yes` | `src/components/starwind/` |
+| Source             | What it is                                                | Add command                            | Lands in                   |
+| ------------------ | --------------------------------------------------------- | -------------------------------------- | -------------------------- |
+| shadcn/ui official | 400+ React primitives built on Radix                      | `npx shadcn add <name>`                | `src/components/ui/`       |
+| Fulldev UI blocks  | Astro section blocks (hero, features, FAQ, CTA)           | `npx shadcn add @fulldev/<name>`       | `src/components/`          |
+| Magic UI           | Animated React components (marquee, beam, bento, shimmer) | `npx shadcn add @magicui/<name>`       | `src/components/ui/`       |
+| Starwind UI        | Astro-native primitives, zero React                       | `npx starwind@latest add <name> --yes` | `src/components/starwind/` |
 
 ### Adding a shadcn component
 
@@ -60,13 +60,13 @@ Browse [starwind-ui.com](https://starwind-ui.com) for the full list. Starwind co
 
 Browse, copy, token-remap, and drop into `src/components/`. Good for marketing-section layouts where you want full control of the markup.
 
-| Source | Best for | License |
-|---|---|---|
-| HyperUI (hyperui.dev/components/marketing) | Static sections, zero JS. Pure Tailwind HTML. Requires token remap at paste-in. | MIT, no attribution required |
-| Shadcnblocks free tier (shadcnblocks.com) | 55 marketing blocks that use shadcn semantic tokens natively. Minimal remap. | MIT free tier |
-| motion-primitives (motion-primitives.com) | Scroll reveals, text/image transitions. Uses `motion` (already installed). | MIT |
-| react-bits (react-bits.dev) | CSS-first effects: aurora, text-scramble, blur-in. Pick the Tailwind variant. | MIT + Commons Clause (client work OK, cannot resell) |
-| Animate UI | Animated shadcn primitives using `motion` + Radix. Zero new deps. | MIT |
+| Source                                     | Best for                                                                        | License                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| HyperUI (hyperui.dev/components/marketing) | Static sections, zero JS. Pure Tailwind HTML. Requires token remap at paste-in. | MIT, no attribution required                         |
+| Shadcnblocks free tier (shadcnblocks.com)  | 55 marketing blocks that use shadcn semantic tokens natively. Minimal remap.    | MIT free tier                                        |
+| motion-primitives (motion-primitives.com)  | Scroll reveals, text/image transitions. Uses `motion` (already installed).      | MIT                                                  |
+| react-bits (react-bits.dev)                | CSS-first effects: aurora, text-scramble, blur-in. Pick the Tailwind variant.   | MIT + Commons Clause (client work OK, cannot resell) |
+| Animate UI                                 | Animated shadcn primitives using `motion` + Radix. Zero new deps.               | MIT                                                  |
 
 ---
 
@@ -74,18 +74,18 @@ Browse, copy, token-remap, and drop into `src/components/`. Good for marketing-s
 
 When pasting from HyperUI, Tailark, or any palette-first source, swap hardcoded color utilities for semantic tokens so the brand system propagates correctly.
 
-| Hardcoded class | Semantic replacement | When |
-|---|---|---|
-| `bg-white` | `bg-card` or `bg-background` | card for elevated surface, background for page |
-| `bg-gray-50`, `bg-gray-100` | `bg-muted` | quiet alternating surface |
-| `text-gray-900`, `text-black` | `text-foreground` | primary body/heading text |
-| `text-gray-600`, `text-gray-500` | `text-muted-foreground` | secondary / caption text |
-| `text-blue-600`, `text-indigo-600` | `text-primary` | brand action color |
-| `bg-blue-600`, `bg-indigo-600` | `bg-primary` | brand action background |
-| `text-white` (on primary bg) | `text-primary-foreground` | text on brand-colored surface |
-| `border-gray-200`, `border-gray-300` | `border-border` | dividers, input borders |
-| `ring-blue-500`, `ring-indigo-500` | `ring-ring` | focus rings |
-| Hex or oklch literals | `var(--primary)`, `var(--foreground)`, etc. | SVG fill/stroke |
+| Hardcoded class                      | Semantic replacement                        | When                                           |
+| ------------------------------------ | ------------------------------------------- | ---------------------------------------------- |
+| `bg-white`                           | `bg-card` or `bg-background`                | card for elevated surface, background for page |
+| `bg-gray-50`, `bg-gray-100`          | `bg-muted`                                  | quiet alternating surface                      |
+| `text-gray-900`, `text-black`        | `text-foreground`                           | primary body/heading text                      |
+| `text-gray-600`, `text-gray-500`     | `text-muted-foreground`                     | secondary / caption text                       |
+| `text-blue-600`, `text-indigo-600`   | `text-primary`                              | brand action color                             |
+| `bg-blue-600`, `bg-indigo-600`       | `bg-primary`                                | brand action background                        |
+| `text-white` (on primary bg)         | `text-primary-foreground`                   | text on brand-colored surface                  |
+| `border-gray-200`, `border-gray-300` | `border-border`                             | dividers, input borders                        |
+| `ring-blue-500`, `ring-indigo-500`   | `ring-ring`                                 | focus rings                                    |
+| Hex or oklch literals                | `var(--primary)`, `var(--foreground)`, etc. | SVG fill/stroke                                |
 
 ---
 
@@ -138,7 +138,7 @@ Installed version: `primereact` v10.9.8 (React 19 compatible).
 
 ## Paid options (not yet purchased, for reference)
 
-| Option | Price | What it unlocks |
-|---|---|---|
+| Option                              | Price                  | What it unlocks                                                                                                                                                   |
+| ----------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shadcnblocks Pro (shadcnblocks.com) | $149 one-time lifetime | 1500+ marketing blocks, Figma kit, CLI registry via `npx shadcn add @shadcnblocks/<name>`. No token remap needed. Good ROI for a studio doing 3+ builds per year. |
-| Tailark Essentials (tailark.com) | $249 one-time | Full 200+ block catalog via CLI, all marketing section types. Free open-source tier covers a subset. |
+| Tailark Essentials (tailark.com)    | $249 one-time          | Full 200+ block catalog via CLI, all marketing section types. Free open-source tier covers a subset.                                                              |

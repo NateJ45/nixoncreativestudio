@@ -45,7 +45,10 @@ const lines: Line[] = [
 
   // Background: ties to the About story (engineering, then photography, then the web).
   { type: 'cmd', text: 'cat background.txt' },
-  { type: 'out', text: 'Engineering, then a camera, now the web. Same job each time: make the thing clear.' },
+  {
+    type: 'out',
+    text: 'Engineering, then a camera, now the web. Same job each time: make the thing clear.',
+  },
 
   // The range: a custom-coded build is one option among several. Keep this in sync with
   // the "right platform for the job" principle on the About page.
@@ -59,9 +62,9 @@ const lines: Line[] = [
 
   // This site as the proof that the custom-coded option is done well.
   { type: 'cmd', text: 'npm run build' },
-  { type: 'ok',  text: 'This site is custom-coded on Astro + Tailwind, typed in TypeScript' },
-  { type: 'ok',  text: 'A real 100 on accessibility, fast on any connection' },
-  { type: 'ok',  text: 'Shipped to Cloudflare, then handed to you to own outright' },
+  { type: 'ok', text: 'This site is custom-coded on Astro + Tailwind, typed in TypeScript' },
+  { type: 'ok', text: 'A real 100 on accessibility, fast on any connection' },
+  { type: 'ok', text: 'Shipped to Cloudflare, then handed to you to own outright' },
 ];
 
 // Plain-language equivalent for screen readers (the window itself is aria-hidden).
@@ -89,20 +92,32 @@ const baseDelay = 120;
   </div>
 
   <div class="terminal-body">
-    {lines.map((line, i) => (
-      <p class:list={['terminal-line', `is-${line.type}`]} data-reveal style={`--reveal-delay: ${baseDelay + i * step}ms;`}>
-        {line.type === 'cmd' && <span class="terminal-prompt">$ </span>}
-        {line.type === 'ok' && <span class="terminal-check">✓ </span>}
-        {line.type === 'list' ? (
-          <span class="terminal-list">
-            {line.items?.map((item) => <span class="terminal-plat">{item}</span>)}
-          </span>
-        ) : (
-          <span>{line.text}</span>
-        )}
-      </p>
-    ))}
-    <p class="terminal-line is-cmd" data-reveal style={`--reveal-delay: ${baseDelay + lines.length * step}ms;`}>
+    {
+      lines.map((line, i) => (
+        <p
+          class:list={['terminal-line', `is-${line.type}`]}
+          data-reveal
+          style={`--reveal-delay: ${baseDelay + i * step}ms;`}
+        >
+          {line.type === 'cmd' && <span class="terminal-prompt">$ </span>}
+          {line.type === 'ok' && <span class="terminal-check">✓ </span>}
+          {line.type === 'list' ? (
+            <span class="terminal-list">
+              {line.items?.map((item) => (
+                <span class="terminal-plat">{item}</span>
+              ))}
+            </span>
+          ) : (
+            <span>{line.text}</span>
+          )}
+        </p>
+      ))
+    }
+    <p
+      class="terminal-line is-cmd"
+      data-reveal
+      style={`--reveal-delay: ${baseDelay + lines.length * step}ms;`}
+    >
       <span class="terminal-prompt">$ </span><span class="terminal-cursor"></span>
     </p>
   </div>
@@ -139,9 +154,15 @@ const baseDelay = 120;
     height: 0.6rem;
     border-radius: 9999px;
   }
-  .terminal-dots span:nth-child(1) { background: #ff5f57; }
-  .terminal-dots span:nth-child(2) { background: #febc2e; }
-  .terminal-dots span:nth-child(3) { background: #28c840; }
+  .terminal-dots span:nth-child(1) {
+    background: #ff5f57;
+  }
+  .terminal-dots span:nth-child(2) {
+    background: #febc2e;
+  }
+  .terminal-dots span:nth-child(3) {
+    background: #28c840;
+  }
   .terminal-title {
     min-width: 0;
     overflow: hidden;
@@ -171,8 +192,12 @@ const baseDelay = 120;
   .terminal-line.is-cmd:first-child {
     margin-top: 0;
   }
-  .terminal-line.is-out { color: rgba(255, 255, 255, 0.7); }
-  .terminal-line.is-ok  { color: rgba(255, 255, 255, 0.82); }
+  .terminal-line.is-out {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .terminal-line.is-ok {
+    color: rgba(255, 255, 255, 0.82);
+  }
   /* A shell comment: quiet and italic so it reads as an aside, not a result.
      Alpha holds at 0.52 (not lower) so the small italic text clears WCAG AA
      contrast on the terminal's dark surface while staying quieter than the
@@ -216,7 +241,13 @@ const baseDelay = 120;
     }
   }
   @keyframes terminal-blink {
-    0%, 50%      { opacity: 1; }
-    50.01%, 100% { opacity: 0; }
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
   }
 </style>

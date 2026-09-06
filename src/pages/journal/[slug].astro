@@ -29,7 +29,7 @@ export async function getStaticPaths() {
   const all = await getCollection('journal');
   return all.map((entry) => ({
     params: { slug: entry.id },
-    props:  { entry },
+    props: { entry },
   }));
 }
 
@@ -48,15 +48,15 @@ const ogImage = ogCover ? ogCover.src : undefined;
 
 const schemas = [
   {
-    '@context':     'https://schema.org',
-    '@type':        'Article',
-    headline:       title,
-    description:    summary,
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description: summary,
     ...(ogCover ? { image: new URL(ogCover.src, site.url).toString() } : {}),
-    datePublished:  published.toISOString(),
+    datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
-    author:         { '@id': `${site.url}#organization` },
-    publisher:      { '@id': `${site.url}#organization` },
+    author: { '@id': `${site.url}#organization` },
+    publisher: { '@id': `${site.url}#organization` },
     ...(tags ? { keywords: tags.join(', ') } : {}),
   },
 ];
@@ -69,58 +69,64 @@ const schemas = [
   ogType="article"
   schemas={schemas}
 >
-
   <ReadingProgress client:idle />
 
   <article>
-
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
       <div class="ncs-container max-w-[64rem]" data-reveal>
-        <a class="link-underline mb-l inline-flex items-center gap-1 font-mono text-[0.8rem] uppercase tracking-[0.1em] text-link no-underline" href="/journal/">
+        <a
+          class="link-underline mb-l inline-flex items-center gap-1 font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline"
+          href="/journal/"
+        >
           <span aria-hidden="true">&larr;</span>
           <span>Journal</span>
         </a>
 
-        <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] uppercase tracking-[0.06em] text-text-muted">
+        <p
+          class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase"
+        >
           <span>{publishedLabel}</span>
           <span aria-hidden="true">·</span>
           <span>{minutes} min read</span>
-          {updatedLabel && updatedLabel !== publishedLabel && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>Updated {updatedLabel}</span>
-            </>
-          )}
+          {
+            updatedLabel && updatedLabel !== publishedLabel && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>Updated {updatedLabel}</span>
+              </>
+            )
+          }
         </p>
 
         <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">{title}</h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
 
-        {tags && tags.length > 0 && (
-          <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
-            {tags.map((tag) => (
-              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.06em] text-text-muted">
-                {tag}
-              </li>
-            ))}
-          </ul>
-        )}
+        {
+          tags && tags.length > 0 && (
+            <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
+              {tags.map((tag) => (
+                <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )
+        }
 
-        {cover && (
-          <div
-            class="mt-l overflow-hidden rounded-2xl bg-bg-soft"
-            data-reveal="scale"
-          >
-            <Image
-              src={cover}
-              alt=""
-              widths={[600, 900, 1200]}
-              sizes="(min-width: 56rem) 64rem, 100vw"
-              class="block h-auto w-full"
-              transition:name={`journal-cover-${entry.id}`}
-            />
-          </div>
-        )}
+        {
+          cover && (
+            <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal="scale">
+              <Image
+                src={cover}
+                alt=""
+                widths={[600, 900, 1200]}
+                sizes="(min-width: 56rem) 64rem, 100vw"
+                class="block h-auto w-full"
+                transition:name={`journal-cover-${entry.id}`}
+              />
+            </div>
+          )
+        }
       </div>
     </header>
 
@@ -134,32 +140,35 @@ const schemas = [
            below, which tags each one with data-reveal after mount. -->
       <div
         data-prose
-        class="journal-prose mx-auto max-w-[72ch] pb-2xl pt-l text-[1.0625rem] leading-[1.8] text-text"
+        class="journal-prose mx-auto max-w-[72ch] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
       >
         <Content />
       </div>
 
-      {/* End-of-article tag list. Mirrors the chips in the header but reads
-          as a footer to the piece, a natural stopping point before the CTA. */}
-      {tags && tags.length > 0 && (
-        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
-          <p class="mb-s font-mono text-[0.75rem] uppercase tracking-[0.12em] text-text-muted">Filed under</p>
-          <ul class="flex flex-wrap gap-2" aria-label="Topics">
-            {tags.map((tag) => (
-              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] uppercase tracking-[0.06em] text-text">
-                {tag}
-              </li>
-            ))}
-          </ul>
-        </footer>
-      )}
-
+      {
+        /* End-of-article tag list. Mirrors the chips in the header but reads
+          as a footer to the piece, a natural stopping point before the CTA. */
+      }
+      {
+        tags && tags.length > 0 && (
+          <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+            <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
+              Filed under
+            </p>
+            <ul class="flex flex-wrap gap-2" aria-label="Topics">
+              {tags.map((tag) => (
+                <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] tracking-[0.06em] text-text uppercase">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </footer>
+        )
+      }
     </div>
-
   </article>
 
   <CtaBanner />
-
 </BaseLayout>
 
 <style>

@@ -7,21 +7,27 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
 1. **Check for uncommitted work first.** Run `git status -sb`. If the tree is dirty and you're about to push, pause and confirm whether those changes should go out with this build.
 
 2. **Run the full build chain:**
+
    ```sh
    npm run build
    ```
+
    This runs two steps in sequence: `npm run placeholders` (generates `src/lib/coverPlaceholders.json` from case study cover images), then `astro build` (compiles every page to static HTML in `dist/`). Both must succeed.
 
 3. **Run tests:**
+
    ```sh
    npm test
    ```
+
    Tests live in `src/lib/*.test.ts` and run directly with Node's built-in test runner. No test framework to install.
 
 4. **Run the linter:**
+
    ```sh
    npm run lint
    ```
+
    Covers `src/**/*.{ts,tsx,astro}` and `scripts/**/*.mjs`. Fix any errors before shipping. To auto-fix what ESLint can fix on its own: `npm run lint:fix`.
 
 5. Or run all three in one command:

@@ -42,21 +42,25 @@ const items = studies
   }));
 ---
 
-{items.length > 0 && (
-  <section class="band-themed py-2xl" aria-labelledby="testimonials-heading">
-    <div class="ncs-container">
-      <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="testimonials-heading" class="text-heading">What clients say</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          Real words from the churches, schools, and businesses I've built for.
-        </p>
-      </header>
+{
+  items.length > 0 && (
+    <section class="band-themed py-2xl" aria-labelledby="testimonials-heading">
+      <div class="ncs-container">
+        <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+          <h2 id="testimonials-heading" class="text-heading">
+            What clients say
+          </h2>
+          <p class="text-lg leading-[1.55] text-text-muted">
+            Real words from the churches, schools, and businesses I've built for.
+          </p>
+        </header>
 
-      {/* client:visible: the carousel hydrates when scrolled near, so the
+        {/* client:visible: the carousel hydrates when scrolled near, so the
            Embla + autoplay JS never blocks initial load. */}
-      <div data-reveal style="--reveal-delay: 100ms;">
-        <TestimonialCarousel client:visible items={items} />
+        <div data-reveal style="--reveal-delay: 100ms;">
+          <TestimonialCarousel client:visible items={items} />
+        </div>
       </div>
-    </div>
-  </section>
-)}
+    </section>
+  )
+}

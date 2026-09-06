@@ -176,38 +176,41 @@ const faq = [
 // answers directly in search results for matching queries.
 const schemas = [
   ...services.map((service) => ({
-    '@context':     'https://schema.org',
-    '@type':        'Service',
-    name:           service.title,
-    description:    service.body,
-    provider:       { '@id': `${site.url}#organization` },
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: service.title,
+    description: service.body,
+    provider: { '@id': `${site.url}#organization` },
     // Photography needs me on site, so it stays regional; strategy, web design,
     // and brand work serve clients anywhere (region + country).
-    areaServed:     service.title === 'Photography'
-      ? 'Greater Cincinnati region'
-      : ['Greater Cincinnati region', 'United States'],
+    areaServed:
+      service.title === 'Photography'
+        ? 'Greater Cincinnati region'
+        : ['Greater Cincinnati region', 'United States'],
     // Publish the "from" floor as an Offer so the price shows in structured
     // data alongside the visible page. Spread in only when the service has one.
-    ...(service.priceFrom ? {
-      offers: {
-        '@type': 'Offer',
-        priceSpecification: {
-          '@type':       'PriceSpecification',
-          minPrice:      service.priceFrom,
-          priceCurrency: 'USD',
-        },
-      },
-    } : {}),
+    ...(service.priceFrom
+      ? {
+          offers: {
+            '@type': 'Offer',
+            priceSpecification: {
+              '@type': 'PriceSpecification',
+              minPrice: service.priceFrom,
+              priceCurrency: 'USD',
+            },
+          },
+        }
+      : {}),
   })),
   {
     '@context': 'https://schema.org',
-    '@type':    'FAQPage',
+    '@type': 'FAQPage',
     mainEntity: faq.map(({ q, a }) => ({
       '@type': 'Question',
-      name:    q,
+      name: q,
       acceptedAnswer: {
         '@type': 'Answer',
-        text:    a,
+        text: a,
       },
     })),
   },
@@ -219,7 +222,6 @@ const schemas = [
   description="Strategy, web design, and brand work for clients anywhere, plus photography across the greater Cincinnati region. Based in Cincinnati."
   schemas={schemas}
 >
-
   <!-- ----------------------------------------------------------------------
        Hero. Two columns at lg+: the positioning headline + sub on the left, an
        animated "three-service flow" on the right (Strategy -> Web design ->
@@ -235,7 +237,6 @@ const schemas = [
   <section class="py-xl lg:py-2xl" aria-labelledby="services-hero-heading">
     <div class="ncs-container">
       <div class="grid items-center gap-xl lg:grid-cols-[1.05fr_0.95fr]">
-
         <div class="flex flex-col gap-m">
           <h1
             id="services-hero-heading"
@@ -250,7 +251,8 @@ const schemas = [
             data-reveal
             style="--reveal-delay: 180ms;"
           >
-            Most projects use all three services, in that order. Some use one or two. The first conversation always ends with an honest scope, not a sales pitch.
+            Most projects use all three services, in that order. Some use one or two. The first
+            conversation always ends with an honest scope, not a sales pitch.
           </p>
         </div>
 
@@ -259,58 +261,85 @@ const schemas = [
              earns its place beside the copy at lg+, so it is hidden below lg
              rather than stacked under the copy on mobile (where it just repeated
              the headline and pushed the page down). -->
-        <div class="services-flow hidden lg:block" aria-hidden="true" data-reveal="fade" style="--reveal-delay: 300ms;">
+        <div
+          class="services-flow hidden lg:block"
+          aria-hidden="true"
+          data-reveal="fade"
+          style="--reveal-delay: 300ms;"
+        >
           <div class="flow-card surface-card spotlight-card hover-lift rounded-2xl" data-spotlight>
             <ol class="flow-track relative z-10">
+              <li class="flow-step" style="--i: 0;">
+                <span class="flow-marker">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5"></polygon>
+                  </svg>
+                </span>
+                <span class="flow-text">
+                  <span class="flow-name">Strategy</span>
+                  <span class="flow-desc">Goals, audience, scope</span>
+                </span>
+              </li>
 
-            <li class="flow-step" style="--i: 0;">
-              <span class="flow-marker">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                  <polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5" />
-                </svg>
-              </span>
-              <span class="flow-text">
-                <span class="flow-name">Strategy</span>
-                <span class="flow-desc">Goals, audience, scope</span>
-              </span>
-            </li>
+              <li class="flow-step" style="--i: 1;">
+                <span class="flow-marker">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                    <path d="M3 9h18"></path>
+                    <path d="M6 6.5h.01"></path>
+                  </svg>
+                </span>
+                <span class="flow-text">
+                  <span class="flow-name">Web design</span>
+                  <span class="flow-desc">Designed, built, yours</span>
+                </span>
+              </li>
 
-            <li class="flow-step" style="--i: 1;">
-              <span class="flow-marker">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="16" rx="2" />
-                  <path d="M3 9h18" />
-                  <path d="M6 6.5h.01" />
-                </svg>
-              </span>
-              <span class="flow-text">
-                <span class="flow-name">Web design</span>
-                <span class="flow-desc">Designed, built, yours</span>
-              </span>
-            </li>
-
-            <li class="flow-step" style="--i: 2;">
-              <span class="flow-marker">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
-                  <circle cx="12" cy="13" r="3.2" />
-                </svg>
-              </span>
-              <span class="flow-text">
-                <span class="flow-name">Photography</span>
-                <span class="flow-desc">Shot for the site</span>
-              </span>
-            </li>
-
+              <li class="flow-step" style="--i: 2;">
+                <span class="flow-marker">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"
+                    ></path>
+                    <circle cx="12" cy="13" r="3.2"></circle>
+                  </svg>
+                </span>
+                <span class="flow-text">
+                  <span class="flow-name">Photography</span>
+                  <span class="flow-desc">Shot for the site</span>
+                </span>
+              </li>
             </ol>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-
 
   <!-- ----------------------------------------------------------------------
        Service offerings. Each is its own elevated spotlight-card with a
@@ -322,99 +351,99 @@ const schemas = [
   <section class="bg-dotgrid py-2xl" aria-label="Service details">
     <div class="ncs-container">
       <ul class="flex list-none flex-col gap-l p-0">
-        {services.map((service, index) => {
-          // The proof visual sits left for even services, right for odd, so the
-          // run reads as a guided tour rather than a stack. On mobile the copy
-          // leads and the visual follows (DOM order: copy first, visual second).
-          const visualLeft = index % 2 === 0;
-          return (
-          <li
-            class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
-            data-spotlight
-            data-reveal={visualLeft ? 'left' : 'right'}
-            style={`--reveal-delay: ${index * 90}ms;`}
-          >
-            <div class="relative z-10 grid grid-cols-1 items-center gap-l md:grid-cols-2 md:gap-xl">
-
-              {/* Copy: title, lede, body, and the what's-included list. No
+        {
+          services.map((service, index) => {
+            // The proof visual sits left for even services, right for odd, so the
+            // run reads as a guided tour rather than a stack. On mobile the copy
+            // leads and the visual follows (DOM order: copy first, visual second).
+            const visualLeft = index % 2 === 0;
+            return (
+              <li
+                class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
+                data-spotlight
+                data-reveal={visualLeft ? 'left' : 'right'}
+                style={`--reveal-delay: ${index * 90}ms;`}
+              >
+                <div class="relative z-10 grid grid-cols-1 items-center gap-l md:grid-cols-2 md:gap-xl">
+                  {/* Copy: title, lede, body, and the what's-included list. No
                    sequence numeral: these are parallel offerings, not steps. */}
-              <div class:list={['flex flex-col gap-m', visualLeft ? 'md:order-2' : 'md:order-1']}>
-                <div class="flex flex-col gap-s">
-                  <h2 class="text-heading">{service.title}</h2>
-                  <p class="max-w-[48ch] text-[1.0625rem] font-medium leading-[1.55] text-text">
-                    {service.lede}
-                  </p>
-                  <p class="max-w-[52ch] leading-[1.7] text-text-muted">
-                    {service.body}
-                  </p>
-                </div>
+                  <div
+                    class:list={['flex flex-col gap-m', visualLeft ? 'md:order-2' : 'md:order-1']}
+                  >
+                    <div class="flex flex-col gap-s">
+                      <h2 class="text-heading">{service.title}</h2>
+                      <p class="max-w-[48ch] text-[1.0625rem] leading-[1.55] font-medium text-text">
+                        {service.lede}
+                      </p>
+                      <p class="max-w-[52ch] leading-[1.7] text-text-muted">{service.body}</p>
+                    </div>
 
-                {/* What's included, as a checked list. The dot glyph is
+                    {/* What's included, as a checked list. The dot glyph is
                      decorative; the text carries the meaning. */}
-                <div class="flex flex-col gap-s">
-                  <p class="text-sm font-semibold uppercase tracking-[0.12em] text-text-muted">
-                    What's included
-                  </p>
-                  <ul class="flex flex-col gap-2 leading-[1.5] text-text">
-                    {service.points.map((point) => (
-                      <li class="flex items-start gap-s">
-                        <span
-                          class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                          aria-hidden="true"
-                        ></span>
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+                    <div class="flex flex-col gap-s">
+                      <p class="text-sm font-semibold tracking-[0.12em] text-text-muted uppercase">
+                        What's included
+                      </p>
+                      <ul class="flex flex-col gap-2 leading-[1.5] text-text">
+                        {service.points.map((point) => (
+                          <li class="flex items-start gap-s">
+                            <span
+                              class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                              aria-hidden="true"
+                            />
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
 
-              {/* Proof visual: a real shipped site for Web design; a labelled
+                  {/* Proof visual: a real shipped site for Web design; a labelled
                    placeholder panel for the services without an image yet. Drop
                    a real <Image> in (set `image` on the service) and it inherits
                    the same frame. */}
-              <div class:list={[visualLeft ? 'md:order-1' : 'md:order-2']}>
-                {service.image ? (
-                  <div class="services-shot-frame">
-                    <Image
-                      src={service.image}
-                      alt={service.imageAlt}
-                      widths={[400, 640, 900]}
-                      sizes="(min-width: 768px) 42vw, 90vw"
-                      class="services-shot-img"
-                    />
+                  <div class:list={[visualLeft ? 'md:order-1' : 'md:order-2']}>
+                    {service.image ? (
+                      <div class="services-shot-frame">
+                        <Image
+                          src={service.image}
+                          alt={service.imageAlt}
+                          widths={[400, 640, 900]}
+                          sizes="(min-width: 768px) 42vw, 90vw"
+                          class="services-shot-img"
+                        />
+                      </div>
+                    ) : (
+                      <div class="services-shot-frame services-shot-placeholder" aria-hidden="true">
+                        <svg
+                          class="services-shot-ph-icon"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.4"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          set:html={
+                            service.placeholderIcon ? placeholderIcons[service.placeholderIcon] : ''
+                          }
+                        />
+                        <span class="services-shot-ph-label">{service.title}</span>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div class="services-shot-frame services-shot-placeholder" aria-hidden="true">
-                    <svg
-                      class="services-shot-ph-icon"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.4"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      set:html={service.placeholderIcon ? placeholderIcons[service.placeholderIcon] : ''}
-                    />
-                    <span class="services-shot-ph-label">{service.title}</span>
-                  </div>
-                )}
-              </div>
-
-            </div>
-          </li>
-          );
-        })}
+                </div>
+              </li>
+            );
+          })
+        }
       </ul>
     </div>
   </section>
-
 
   <!-- Process recap. The same ProcessBand the homepage closes with, in its
        soft mid-page variant with no CTA, so the four steps read identically
        across the site. -->
   <ProcessBand variant="soft" showCta={false} headingId="process-heading" />
-
 
   <!-- ----------------------------------------------------------------------
        What a website costs. Three web tiers (Launch / Signature / Flagship),
@@ -426,94 +455,107 @@ const schemas = [
        ---------------------------------------------------------------------- -->
   <section class="bg-bg-soft py-2xl" aria-labelledby="services-pricing-heading">
     <div class="ncs-container">
-
       <header class="mb-l flex max-w-[62ch] flex-col gap-xs" data-reveal>
         <h2 id="services-pricing-heading" class="text-heading">What a website costs</h2>
         <p class="text-lg leading-[1.55] text-text-muted">
-          A starting point, not a fixed menu. Every build is custom and comes with a content system you can run yourself, so the tiers differ in scope and how much functionality you need, not whether the work is custom. The free first conversation ends with an honest ballpark, and larger projects can be split into monthly payments.
+          A starting point, not a fixed menu. Every build is custom and comes with a content system
+          you can run yourself, so the tiers differ in scope and how much functionality you need,
+          not whether the work is custom. The free first conversation ends with an honest ballpark,
+          and larger projects can be split into monthly payments.
         </p>
       </header>
 
-      <ul class="grid list-none gap-l p-0 [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))]">
-        {tiers.map((tier, index) => (
-          <li
-            class:list={[
-              'tier-card spotlight-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
-              tier.highlighted && 'tier-card--featured',
-            ]}
-            data-spotlight
-            data-reveal
-            style={`--reveal-delay: ${index * 110}ms;`}
-          >
-            {tier.badge && (
-              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold uppercase tracking-[0.1em] text-primary-foreground">
-                {tier.badge}
-              </span>
-            )}
+      <ul
+        class="grid list-none [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))] gap-l p-0"
+      >
+        {
+          tiers.map((tier, index) => (
+            <li
+              class:list={[
+                'tier-card spotlight-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
+                tier.highlighted && 'tier-card--featured',
+              ]}
+              data-spotlight
+              data-reveal
+              style={`--reveal-delay: ${index * 110}ms;`}
+            >
+              {tier.badge && (
+                <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold tracking-[0.1em] text-primary-foreground uppercase">
+                  {tier.badge}
+                </span>
+              )}
 
-            <div class="relative z-10 flex flex-col gap-m">
-              <h3 class="text-h4 text-heading">{tier.name}</h3>
+              <div class="relative z-10 flex flex-col gap-m">
+                <h3 class="text-h4 text-heading">{tier.name}</h3>
 
-              {/* Price line: the floor counts up to its real value, with the
+                {/* Price line: the floor counts up to its real value, with the
                    typical range stated underneath so the "from" is honest. */}
-              <div class="flex flex-col gap-1">
-                <p class="flex items-baseline gap-xs">
-                  <span class="text-sm font-medium text-text-muted">from</span>
-                  <span class="font-display text-h2 leading-none text-heading">
-                    $<span
-                      data-countup
-                      data-countup-to={tier.priceFrom}
-                      data-countup-duration="1200"
-                    >{tier.priceFrom.toLocaleString()}</span>{tier.priceSuffix}
-                  </span>
-                </p>
-                <p class="text-sm text-text-muted">{tier.range}</p>
+                <div class="flex flex-col gap-1">
+                  <p class="flex items-baseline gap-xs">
+                    <span class="text-sm font-medium text-text-muted">from</span>
+                    <span class="font-display text-h2 leading-none text-heading">
+                      $
+                      <span
+                        data-countup
+                        data-countup-to={tier.priceFrom}
+                        data-countup-duration="1200"
+                      >
+                        {tier.priceFrom.toLocaleString()}
+                      </span>
+                      {tier.priceSuffix}
+                    </span>
+                  </p>
+                  <p class="text-sm text-text-muted">{tier.range}</p>
+                </div>
+
+                <p class="leading-[1.6] text-text-muted">{tier.note}</p>
+
+                <ul class="mt-xs flex flex-col gap-2 leading-[1.5] text-text">
+                  {tier.features.map((feature) => (
+                    <li class="flex items-start gap-s">
+                      <span
+                        class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+                        aria-hidden="true"
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              <p class="leading-[1.6] text-text-muted">{tier.note}</p>
-
-              <ul class="mt-xs flex flex-col gap-2 leading-[1.5] text-text">
-                {tier.features.map((feature) => (
-                  <li class="flex items-start gap-s">
-                    <span
-                      class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                      aria-hidden="true"
-                    ></span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        ))}
+            </li>
+          ))
+        }
       </ul>
 
       <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
-        Strategy is the front of every project, not a line item. The price above already includes the session and the brief.
+        Strategy is the front of every project, not a line item. The price above already includes
+        the session and the brief.
       </p>
 
       <!-- Add to any project: photography, standalone brand, optional care.
            Lighter cards than the tiers above; these attach to a build. -->
       <div class="mt-2xl" data-reveal>
         <h3 class="text-h5 text-heading">Add to any project</h3>
-        <ul class="mt-m grid list-none gap-m p-0 [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))]">
-          {addOns.map((addOn, index) => (
-            <li
-              class="surface-card flex flex-col gap-xs rounded-xl p-m"
-              data-reveal
-              style={`--reveal-delay: ${index * 90}ms;`}
-            >
-              <h4 class="text-h5 text-heading">{addOn.name}</h4>
-              <p class="font-display text-xl leading-none text-link">{addOn.price}</p>
-              <p class="text-sm leading-[1.6] text-text-muted">{addOn.note}</p>
-            </li>
-          ))}
+        <ul
+          class="mt-m grid list-none [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))] gap-m p-0"
+        >
+          {
+            addOns.map((addOn, index) => (
+              <li
+                class="surface-card flex flex-col gap-xs rounded-xl p-m"
+                data-reveal
+                style={`--reveal-delay: ${index * 90}ms;`}
+              >
+                <h4 class="text-h5 text-heading">{addOn.name}</h4>
+                <p class="font-display text-xl leading-none text-link">{addOn.price}</p>
+                <p class="text-sm leading-[1.6] text-text-muted">{addOn.note}</p>
+              </li>
+            ))
+          }
         </ul>
       </div>
-
     </div>
   </section>
-
 
   <!-- ----------------------------------------------------------------------
        Why it costs what it costs. The honest justification block that follows
@@ -522,37 +564,39 @@ const schemas = [
        ---------------------------------------------------------------------- -->
   <section class="bg-dotgrid py-2xl" aria-labelledby="services-why-heading">
     <div class="ncs-container">
-
       <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="services-why-heading" class="text-heading">Why it costs what it costs</h2>
         <p class="text-lg leading-[1.55] text-text-muted">
-          Plenty of people will quote you less. Here is what the price actually buys, and what a cheaper one usually leaves out.
+          Plenty of people will quote you less. Here is what the price actually buys, and what a
+          cheaper one usually leaves out.
         </p>
       </header>
 
       <ul class="grid list-none gap-l p-0 md:grid-cols-2">
-        {whyItCosts.map((point, index) => (
-          <li
-            class="flex flex-col gap-xs border-t border-border pt-m"
-            data-reveal
-            style={`--reveal-delay: ${index * 90}ms;`}
-          >
-            <h3 class="text-h5 text-heading">{point.title}</h3>
-            <p class="max-w-[52ch] leading-[1.7] text-text-muted">{point.body}</p>
-          </li>
-        ))}
+        {
+          whyItCosts.map((point, index) => (
+            <li
+              class="flex flex-col gap-xs border-t border-border pt-m"
+              data-reveal
+              style={`--reveal-delay: ${index * 90}ms;`}
+            >
+              <h3 class="text-h5 text-heading">{point.title}</h3>
+              <p class="max-w-[52ch] leading-[1.7] text-text-muted">{point.body}</p>
+            </li>
+          ))
+        }
       </ul>
 
       <!-- Quiet, honest note on tooling. Addresses the modern-tools / AI
            question head-on and reframes it to judgment + accountability, so it
            reads as a trust signal rather than a confession. -->
       <p class="mt-l max-w-[60ch] leading-[1.7] text-text-muted" data-reveal>
-        I build with modern tools, including AI-assisted workflows, the same way I use frameworks and a camera. They help one person do the work of a team. The strategy, the design, and the accountability stay mine, start to finish.
+        I build with modern tools, including AI-assisted workflows, the same way I use frameworks
+        and a camera. They help one person do the work of a team. The strategy, the design, and the
+        accountability stay mine, start to finish.
       </p>
-
     </div>
   </section>
-
 
   <!-- ----------------------------------------------------------------------
        FAQ. Native <details>/<summary> for accessible, JS-free disclosure.
@@ -565,7 +609,6 @@ const schemas = [
        ---------------------------------------------------------------------- -->
   <section class="py-2xl" aria-labelledby="services-faq-heading">
     <div class="ncs-container">
-
       <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="services-faq-heading" class="text-heading">Common questions</h2>
         <p class="text-lg leading-[1.55] text-text-muted">
@@ -574,36 +617,36 @@ const schemas = [
       </header>
 
       <div class="flex flex-col border-t border-border">
-        {faq.map((item, index) => (
-          /* `group` lets the summary's open-state pseudo and the answer
+        {
+          faq.map((item, index) => (
+            /* `group` lets the summary's open-state pseudo and the answer
                wrapper both react via group-open:. */
-          <details
-            class="faq-item group border-b border-border"
-            data-reveal="fade"
-            style={`--reveal-delay: ${index * 70}ms;`}
-          >
-            {/* list-none drops the default disclosure triangle. The webkit
+            <details
+              class="faq-item group border-b border-border"
+              data-reveal="fade"
+              style={`--reveal-delay: ${index * 70}ms;`}
+            >
+              {/* list-none drops the default disclosure triangle. The webkit
                  marker pseudo hides the Safari version. The "+" rotates to an
                  "x" when open; the rotation plus the smooth panel are two
                  non-color cues, so state is never signalled by color alone. */}
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 hover:text-link [&::-webkit-details-marker]:hidden after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg]">
-              {item.q}
-            </summary>
-            {/* Animated reveal: the grid row scales from 0fr to 1fr. The
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg] hover:text-link [&::-webkit-details-marker]:hidden">
+                {item.q}
+              </summary>
+              {/* Animated reveal: the grid row scales from 0fr to 1fr. The
                  inner div needs overflow-hidden so the clipped content does
                  not spill while the row is collapsing. */}
-            <div class="faq-answer grid">
-              <div class="overflow-hidden">
-                <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.a}</p>
+              <div class="faq-answer grid">
+                <div class="overflow-hidden">
+                  <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.a}</p>
+                </div>
               </div>
-            </div>
-          </details>
-        ))}
+            </details>
+          ))
+        }
       </div>
-
     </div>
   </section>
-
 
   <!-- Recent work proof strip. Reuses the homepage Selected Work block
        (collection-driven, featured===true), so the services page proves the
@@ -614,7 +657,6 @@ const schemas = [
     title="Ready to scope a project?"
     sub="The first conversation is free and lands at an honest ballpark by the end. Email is fastest, but a phone call works too."
   />
-
 </BaseLayout>
 
 <style>
@@ -651,7 +693,7 @@ const schemas = [
      quiet "designed" cue (the same motif as the pricing tier cards). ::after is
      free here: .spotlight-card's glow uses ::before. */
   .flow-card::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0 0 auto 0;
     height: 3px;
@@ -692,7 +734,7 @@ const schemas = [
   /* The connecting rail: a static line from each marker's centre down to the
      next, so the three read as one ordered sequence. */
   .flow-step:not(:last-child)::before {
-    content: "";
+    content: '';
     position: absolute;
     left: calc(var(--marker) / 2);
     transform: translateX(-50%);
@@ -715,7 +757,9 @@ const schemas = [
     border: 1.5px solid var(--rail);
     background: var(--card);
     color: var(--color-link);
-    transition: color 0.3s ease, border-color 0.3s ease;
+    transition:
+      color 0.3s ease,
+      border-color 0.3s ease;
   }
   .flow-marker svg {
     width: 1.35rem;
@@ -818,7 +862,7 @@ const schemas = [
      card's own overflow-hidden. Faint and slightly short at rest, drawing to
      full width + full opacity on hover/focus. */
   .tier-card::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0 0 auto 0;
     height: 3px;

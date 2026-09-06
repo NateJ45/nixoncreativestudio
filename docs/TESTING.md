@@ -9,14 +9,14 @@ Registry, not a changelog: when a suite changes, edit the row.
 
 ## What runs, and where
 
-| Gate | Command | Runs in CI | Covers |
-|---|---|---|---|
-| Build | `npm run build` | `ci.yml` | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed |
-| Unit tests | `npm test` | `ci.yml` | `src/lib/*.test.ts` (see below) |
-| Lighthouse | `npx lhci autorun` | `lighthouse.yml` | Accessibility (hard gate at 100), plus performance / best-practices / SEO as warnings, over 12 explicitly listed URLs |
-| Lint | `npm run lint` | **no** | ESLint over `src` and `scripts` |
-| Parity | `npm run parity compare` | **no** (by design) | Rendered-HTML drift against a committed baseline |
-| Uptime | - | `uptime.yml`, hourly | The live site's key routes still return 200 |
+| Gate       | Command                  | Runs in CI           | Covers                                                                                                                |
+| ---------- | ------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Build      | `npm run build`          | `ci.yml`             | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed      |
+| Unit tests | `npm test`               | `ci.yml`             | `src/lib/*.test.ts` (see below)                                                                                       |
+| Lighthouse | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), plus performance / best-practices / SEO as warnings, over 12 explicitly listed URLs |
+| Lint       | `npm run lint`           | **no**               | ESLint over `src` and `scripts`                                                                                       |
+| Parity     | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                      |
+| Uptime     | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                           |
 
 `npm run check` is the local shorthand for what `ci.yml` does: build, then test.
 
@@ -25,12 +25,12 @@ Registry, not a changelog: when a suite changes, edit the row.
 Node's built-in runner, no framework. TypeScript runs through Node's type
 stripping, so there is nothing to configure and nothing to install.
 
-| File | Covers |
-|---|---|
-| `utils.test.ts` | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling |
-| `readingTime.test.ts` | Journal reading-time estimation |
-| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup |
-| `theme-tokens.test.ts` | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark |
+| File                       | Covers                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling       |
+| `readingTime.test.ts`      | Journal reading-time estimation                                                                   |
+| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                             |
+| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
 Card 9). It parses the real hex out of the `@theme`, `:root` and `.dark` blocks,
@@ -109,7 +109,7 @@ monitoring, point UptimeRobot's free tier at the homepage.
   - a **dark-mode** axe pass. This site has a full three-state theme toggle, and
     axe audits one resting DOM per run. Lighthouse runs light only, so dark mode
     has no automated accessibility coverage at all today. `theme-tokens.test.ts`
-    covers dark-mode *contrast*, which is the largest slice of that risk, but
+    covers dark-mode _contrast_, which is the largest slice of that risk, but
     not landmarks, names, or roles.
   - a **console-error smoke** pass. There is significant client JS here
     (three.js / r3f, Lenis, Embla, motion) and nothing asserts that a page
