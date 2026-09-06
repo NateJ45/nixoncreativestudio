@@ -88,8 +88,19 @@ const { variant = 'full' } = Astro.props;
 // widths/sizes the <Image> component would emit.
 const DESKTOP_WIDTHS = [600, 900, 1200, 1440];
 const DESKTOP_SIZES = '(min-width: 64rem) 640px, 80vw';
-const PHONE_WIDTHS = [280, 420, 545];
-const PHONE_SIZES = '(min-width: 64rem) 270px, 40vw';
+// The phone shot is served at two different jobs. In the desktop cluster it is a
+// crisp device beside the browser, so it keeps the 545w capture for retina. As
+// the mobile backdrop (variant="phone") it is a faded, masked decoration behind
+// the hero copy and it is also the homepage's LCP element there, so it stops at
+// 420w: a third fewer pixels to fetch and decode before that paint, on the one
+// render where the softness cannot be seen. `sizes` states what each job really
+// occupies (the backdrop is scaled up to min(74vw, 22rem) by Hero.astro, not the
+// 40vw the frame defaults to), so the browser picks from the right end.
+const PHONE_WIDTHS = variant === 'phone' ? [280, 420] : [280, 420, 545];
+const PHONE_SIZES =
+  variant === 'phone'
+    ? '(min-width: 64rem) 270px, min(74vw, 22rem)'
+    : '(min-width: 64rem) 270px, 40vw';
 // Hero.astro renders BOTH variants (the desktop cluster is hidden below lg, the phone backdrop
 // hidden at lg and up), and display:none does not stop an eager <img> from downloading. Slide
 // one is therefore a <picture> whose real source only matches on the breakpoint where this
