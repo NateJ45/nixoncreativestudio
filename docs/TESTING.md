@@ -9,16 +9,51 @@ Registry, not a changelog: when a suite changes, edit the row.
 
 ## What runs, and where
 
-| Gate       | Command                  | Runs in CI           | Covers                                                                                                                |
-| ---------- | ------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Build      | `npm run build`          | `ci.yml`             | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed      |
-| Unit tests | `npm test`               | `ci.yml`             | `src/lib/*.test.ts` (see below)                                                                                       |
-| Lighthouse | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), plus performance / best-practices / SEO as warnings, over 12 explicitly listed URLs |
-| Lint       | `npm run lint`           | **no**               | ESLint over `src` and `scripts`                                                                                       |
-| Parity     | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                      |
-| Uptime     | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                           |
+Brought up to the family test standard on 2026-09-06 (WCP is the reference
+implementation; reid-design-site and mas-monograms carry the same shape).
 
-`npm run check` is the local shorthand for what `ci.yml` does: build, then test.
+| Gate       | Command                  | Runs in CI           | Covers                                                                                                                                                      |
+| ---------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type check | `npx astro check`        | `ci.yml` (build job) | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                   |
+| Lint       | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                   |
+| Format     | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                               |
+| Unit tests | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` (see below)                                                                                                                             |
+| Build      | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
+| Link check | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
+| Playwright | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)                                     |
+| Lighthouse | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs |
+| Parity     | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
+| Uptime     | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
+
+`npm run check` is the quick local gate: `astro check && npm run lint`.
+`npm run check:full` adds the unit tests and the build. `npm test` runs the
+Playwright suites (it builds and serves `dist/client` itself); `npm run test:ui`
+opens the Playwright UI.
+
+### Playwright (`playwright.config.ts`, `tests/`)
+
+Runs against the real production build served statically (`npm run serve:dist`
+= `http-server dist/client -p 4321`), never `astro dev`. Locally an existing
+server on 4321 is reused, so `npm run build && npm run serve:dist` in one
+terminal and `npx playwright test --project=chromium` in another is the fast
+loop. CI installs chromium and webkit and runs both projects.
+
+| File                | Covers                                                                                                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`         | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                         |
+| `helpers.ts`        | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                             |
+| `smoke.spec.ts`     | Every route returns 200 and its title carries the studio name                                                                                                                      |
+| `a11y.spec.ts`      | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                         |
+| `a11y-dark.spec.ts` | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode |
+| `reflow.spec.ts`    | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                 |
+
+The webkit-iphone project runs smoke and both axe sweeps; reflow drives its
+own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
+document without the theme bootstrap, so the dark sweep skips it.
+
+First run (2026-09-06) found one real bug: `/about` was 342px wide at 320px
+because the Terminal's nowrap window title set the min-content of its grid
+item. Fixed with `min-w-0` on the item.
 
 ### Unit tests (`node --experimental-strip-types --test src/lib/*.test.ts`)
 
@@ -81,7 +116,11 @@ including the `/404` page and the Search Console verification stub, which
 dragged accessibility below 100. The reasoning is written out at the top of
 `lighthouserc.json`; read it before touching that list.
 
-One case study stands in for all ten, since they share a layout.
+One case study stands in for all ten, since they share a layout; `/coming-soon`
+is its own standalone template and is listed too.
+
+The workflow runs on pushes to `main` and `staging` and on pull requests, so a
+staging push proves the gate green before anything reaches main.
 
 **This gate cannot be run locally on Nathan's Windows machine.** `npx lhci
 autorun` dies during Chrome-profile cleanup with an `EPERM` on its own temp
@@ -101,32 +140,28 @@ monitoring, point UptimeRobot's free tier at the homepage.
 
 ## Deliberate absences
 
-- **No Playwright / axe / reflow suite** (PORTS.md Card 8). This is the real
-  gap. What is missing specifically:
-  - a **320px** reflow sweep. WCAG 1.4.10 starts at 320 and Lighthouse does not
-    test reflow at all. WCP's 2026-07-14 audit swept 752 route-by-width
-    combinations and every finding was somewhere nobody had screenshotted.
-  - a **dark-mode** axe pass. This site has a full three-state theme toggle, and
-    axe audits one resting DOM per run. Lighthouse runs light only, so dark mode
-    has no automated accessibility coverage at all today. `theme-tokens.test.ts`
-    covers dark-mode _contrast_, which is the largest slice of that risk, but
-    not landmarks, names, or roles.
-  - a **console-error smoke** pass. There is significant client JS here
-    (three.js / r3f, Lenis, Embla, motion) and nothing asserts that a page
-    hydrates without throwing.
-- **No visual-regression / screenshot suite.** The parity harness covers markup
-  drift; nothing covers rendered pixels. Deliberate - a canvas-heavy site is a
-  bad candidate for screenshot diffing.
+- **No console-error smoke pass.** There is significant client JS here
+  (three.js / r3f, Lenis, Embla, motion) and nothing asserts that a page
+  hydrates without throwing. The family standard does not include one either;
+  add it here first if it ever becomes a family suite.
+- **No visual-regression / screenshot suite.** The family standard runs one
+  only where a site has a fixture-driven `/styleguide` route (WCP does; this
+  site does not). CMS- or content-driven pages change with content and flake,
+  and a canvas-heavy site is a bad candidate for screenshot diffing anyway.
+  The parity harness covers markup drift.
 - **No Sanity anything.** No dataset, no Studio, no generated types, so no
   typegen step, no stale-types CI guard, and no backup workflow. Content lives
   in Astro content collections and MDX. See `docs/PENDING.md`.
-- **Lint is not in CI, and exits 1 today.** `npm run lint` reports 7 errors and
-  5 warnings (measured 2026-08-27). All 7 errors are the same known
-  `eslint-plugin-astro` false positive that `CLAUDE.md` documents: the plugin
-  misreads an HTML comment inside a `{ ... }` expression as a JSX fragment
-  error. They sit in `contact.astro`, `journal/index.astro`,
-  `photography.astro`, `services.astro` and `work/index.astro`. Nothing in
-  `src/lib` or `scripts` lints dirty. Lint stays advisory and out of `ci.yml`
-  for exactly this reason - the build is the source of truth. Do not read a red
-  `npm run lint` as evidence your change broke something; diff it against this
-  baseline first.
+- **Lint is a hard gate now (2026-09-06), and must stay at 0 errors.** The
+  `eslint-plugin-astro` false positive that kept it advisory (an HTML comment
+  inside a `{ ... }` expression read as a JSX fragment error) is gone: those
+  comments are JSX comments (`{/* */}`) now, which the plugin, prettier, and
+  the Astro compiler all agree on. Keep it that way: inside a template
+  expression, comment with `{/* */}`, not `<!-- -->`. The remaining output is
+  a handful of unused-variable warnings, which do not fail the run.
+- **`prettier-plugin-astro` cannot parse a `<script>` inside a template
+  expression** (`{cond && (<script>...</script>)}`), so none of the templates
+  use that pattern any more: a conditional script goes in its own component
+  and the condition wraps the component (see `ComingSoonGate.astro` and
+  `src/components/analytics/`). Reintroducing the pattern breaks
+  `npm run format:check`.

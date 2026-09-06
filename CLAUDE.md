@@ -38,7 +38,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - opentype.js (dev-only) for the OG image generators: `scripts/generate-og-default.mjs` (the fallback card) and `scripts/generate-og.mjs` (per-page cards into `public/og/`, run in the build chain). Both render Bebas glyphs to SVG then rasterize with sharp, out-of-process (the CF prerender isolate has no node built-ins, so an `astro-og-canvas` route can't run here)
 - `@astrojs/rss` for `/rss.xml`, surfacing case study entries to feed readers (`<link rel="alternate">` auto-discovery wired in BaseLayout)
 - `astro-expressive-code` for themed code blocks in MDX (journal dev posts); its dark theme is tied to the site's `.dark` class. Must sit before `mdx()` in the integrations array
-- `Analytics.astro` loads the Cloudflare Web Analytics beacon as a plain `<script defer>` (Partytown was removed 2026-09-04: its sandbox cost more main-thread time than the 7KB beacon) and, when `PUBLIC_GA_ID` is set, the GA4 gtag after the `load` event
+- `Analytics.astro` loads the Cloudflare Web Analytics beacon as a plain `<script defer>` (Partytown was removed 2026-09-04: its sandbox cost more main-thread time than the 7KB beacon) and, when `PUBLIC_GA_ID` is set, the GA4 gtag after the `load` event. The two script tags live in `src/components/analytics/` (`CloudflareBeacon.astro`, `GoogleAnalytics.astro`); `Analytics.astro` reads the env and wraps each in its condition
 - Astro `prefetch` enabled (`prefetchAll`, viewport strategy) so links preload as they enter the viewport, pairing with the View Transitions router
 - `three` + `@react-three/fiber` for the optional WebGL hero background (`HeroCanvas.tsx`), guarded behind WebGL support + reduced-motion with the CSS aurora as the fallback
 - `embla-carousel-react` + `embla-carousel-autoplay` for the client-testimonials carousel (`TestimonialCarousel.tsx`)
@@ -46,7 +46,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - Dark / light / system theme system: `ThemeToggle.tsx` React island + anti-FOUC bootstrap script in BaseLayout, persisted to `localStorage["ncs-theme"]`
 - `src/data/site.ts` as the single source of truth for contact info (name, email, phone, address, studio name, social URLs, tagline, domain) plus the optional `bookingUrl` and `newsletterUrl` that gate the Cal.com and Newsletter scaffolds
 - Web3Forms for the contact form. Spam protection is the form's hidden honeypot field (`botcheck`) alone; the hCaptcha widget was removed. To re-add it, restore the `.h-captcha` div, the `js.hcaptcha.com/1/api.js` script tag, and the captcha gate in the contact form's submit handler, then turn hCaptcha back on in the Web3Forms dashboard (Web3Forms supports hCaptcha only, not Cloudflare Turnstile or Google reCAPTCHA). Cloudflare Web Analytics for privacy-friendly traffic
-- eslint (flat config) + prettier for linting and formatting, `node --test` unit suites in `src/lib/*.test.ts`, and a GitHub Actions CI run (install, build, test) on every push and PR. See "Testing, linting, and CI" below
+- eslint (flat config) + prettier for linting and formatting, `node --test` unit suites in `src/lib/*.test.ts`, Playwright + axe-core suites in `tests/` (smoke, accessibility in both themes, reflow), linkinator for the internal link check, and a GitHub Actions CI run on every push and PR. See "Testing, linting, and CI" below
 - Cloudflare Pages for hosting (build command `npm run build`, output `dist/`)
 - GitHub for version control
 
@@ -177,13 +177,18 @@ Standalone scripts:
 
 The repo carries a light quality-gate layer, matched to the rest of Nathan's Astro + Cloudflare sites.
 
-- `npm test` runs the `node --test` unit suites in `src/lib/*.test.ts` (currently `cn`, `readingTime`, `coverPlaceholder`, and `theme-tokens`). They run under Node's native type stripping, so they import the `.ts` modules directly with no build step.
+Brought up to the family test standard on 2026-09-06 (WCP is the reference; reid-design-site and mas-monograms carry the same shape). `docs/TESTING.md` is the map of what covers what.
+
+- `npm test` runs the Playwright suites in `tests/` (`playwright.config.ts`): `smoke` (every route 200s with the studio name in its title), `a11y` (axe-core default rules on every route, zero violations), `a11y-dark` (the same sweep with `localStorage["ncs-theme"]` seeded to `dark` before the anti-FOUC bootstrap runs, plus a focus-indicator check on the contact form), and `reflow` (no horizontal overflow at 320px, WCAG 1.4.10, and at 1440/1024/768). Chromium runs everything; a WebKit iPhone 14 profile runs smoke and both axe sweeps. The config's webServer builds and serves `dist/client` on 4321 (`npm run serve:dist`), and locally an already-running server there is reused. `tests/routes.ts` is the route list: add a line when a prerendered page ships. `npm run test:ui` opens the Playwright UI.
+- `npm run test:unit` runs the `node --test` unit suites in `src/lib/*.test.ts` (currently `cn`, `readingTime`, `coverPlaceholder`, and `theme-tokens`). They run under Node's native type stripping, so they import the `.ts` modules directly with no build step.
 - `src/lib/theme-tokens.test.ts` is the **theme-token contrast gate**, added 2026-08-27. It parses the real hex out of the `@theme`, `:root` and `.dark` blocks of `globals.css` and asserts every rendered token pair against WCAG AA (4.5:1 for text, 3:1 for focus rings and control edges), in **both** modes, plus that the `@theme` literals still mirror their `:root` twins. It exists because axe (and therefore the Lighthouse accessibility category) has no rule for focus-indicator or custom-border contrast and only ever sees one theme per run: the score can sit at 100 while a focus ring is invisible. The math lives in `src/lib/contrast.ts`. Its header comment lists every deliberate non-assertion; read that before adding or removing a pair.
-- `npm run lint` runs eslint (flat config in `eslint.config.js`) over `src` and `scripts`. It is advisory, not a hard gate: `eslint-plugin-astro` currently reports a false "JSX expressions must have one parent element" parse error on valid Astro where an HTML comment (`<!-- -->`) sits inside a `{ ... }` expression. The build is the source of truth; lint is a helper.
-- `npm run format` runs prettier across the repo (config in `.prettierrc`, ignore list in `.prettierignore`).
-- `npm run check` is the one-shot gate: `npm run build && npm test`.
-- `.github/workflows/ci.yml` runs on every push and pull request: install, build, test. It does not run lint, for the reason above.
-- `.github/workflows/lighthouse.yml` runs Lighthouse CI (`@lhci/cli`, config in `lighthouserc.json`) against the built static output on every push / PR. **Accessibility is a hard gate at minScore 1** (the 100-a11y bar the studio sells); performance / best-practices / SEO are warnings so normal CI variance doesn't block a PR. Run locally with `npm run build && npx lhci autorun`.
+- `npm run lint` runs eslint (flat config in `eslint.config.js`) over `src` and `scripts`. A hard gate in CI since 2026-09-06 (0 errors; a few unused-variable warnings remain and do not fail it). The old `eslint-plugin-astro` false positive (an HTML comment inside a `{ ... }` expression read as a JSX error) is gone because every such comment is a JSX comment now. Inside a template expression, comment with `{/* */}`, never `<!-- -->`.
+- `npm run format` runs prettier across the repo (family config in `.prettierrc`: single quotes, semis, trailing commas, printWidth 100, `prettier-plugin-astro` + `prettier-plugin-tailwindcss`; ignore list in `.prettierignore`). `npm run format:check` is the CI form. `prettier-plugin-astro` cannot parse a `<script>` nested inside a template expression, so a conditional script goes in its own component and the condition wraps the component (`ComingSoonGate.astro`, `src/components/analytics/`).
+- `npm run check` is the quick gate: `astro check && npm run lint`. `npm run check:full` adds the unit tests and the build.
+- `npm run check:links` runs linkinator over `dist/client` after a build; every internal link must resolve (off-site URLs are skipped). The log must say "scanned N links" with N in the hundreds.
+- `.github/workflows/ci.yml` runs on pushes to `main` and `staging`, on pull requests, and by hand. Job `build`: `npm ci`, `astro check`, lint, format check, unit tests, build, link check. Job `test` (parallel): Playwright browsers, `npm test`, and the `playwright-report/` artifact (14 days).
+- `.github/workflows/lighthouse.yml` runs Lighthouse CI (`@lhci/cli`, config in `lighthouserc.json`) against the built static output on pushes to `main` and `staging` and on PRs. **Accessibility is a hard gate at minScore 1** (the 100-a11y bar the studio sells), and so are LCP under 4.5s and CLS under 0.1; performance / best-practices / SEO scores and total byte weight are warnings so normal CI variance doesn't block a PR. It runs on `ubuntu-latest`; see Gotcha 9 for why the local run is not trustworthy on Windows.
+- `.github/workflows/deploy-staging.yml` deploys the `staging` branch to a separate Worker once the Cloudflare secrets exist (dormant until then). The family flow is: push to `staging`, wait for CI and Lighthouse to go green there, then fast-forward `main`.
 - `.github/workflows/uptime.yml` curls the live site's key routes hourly and fails the run if any does not end at 200. Gated on the `SITE_URL` repo variable, which is not set yet (see `docs/PENDING.md`). Schedule is on because the repo is public and Actions minutes are free there.
 - `npm run parity capture` / `compare` is the **rendered-HTML parity harness** (`scripts/page-parity.mjs`, baselines committed in `scripts/.parity/`). It never builds; you build, it reads `dist/client`. Reach for it on any change that is supposed to be render-neutral. Deliberately not in CI, because its baselines are meant to be re-captured when markup legitimately changes and a gate that gets re-baselined is a gate that gets rubber-stamped.
 - `npm run sync-check` diffs this repo's copies of the shared "library of record" files against `ncs-astro-sanity-starter` (point at it with `NCS_STARTER_DIR`). Four files are marked canonical here: `scripts/free-dist.mjs`, `scripts/with-workerd.mjs`, `scripts/sync-check.mjs`, and `src/lib/contrast.ts`. Read that repo's `PORTS.md` before editing any of them, and port a fix back rather than patching locally.
@@ -434,7 +439,8 @@ Static routes generated at build time:
 - `src/lib/readingTime.ts`
 - `src/scripts/lenis-init.ts` (smooth scroll setup)
 - `scripts/generate-placeholders.mjs`, `scripts/generate-og-default.mjs`, `scripts/generate-icons.mjs`
-- `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`, `eslint.config.js`, `.prettierrc`, `.github/workflows/ci.yml`
+- `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`, `eslint.config.js`, `.prettierrc`, `.prettierignore`, `playwright.config.ts`, `lighthouserc.json`, `.github/workflows/ci.yml`, `.github/workflows/lighthouse.yml`
+- `ComingSoonGate.astro` and `src/components/analytics/` (the inline script tags BaseLayout and Analytics render conditionally)
 - `public/_headers` (security response headers shipped with the deploy)
 - `public/og-default.png` (regenerate via `npm run og`)
 - `public/favicon.svg`, `public/favicon.ico`, `public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, `public/icon-512-maskable.png`, `public/site.webmanifest` (regenerate the icon set via `npm run icons`)
@@ -596,11 +602,13 @@ something bites; a gotcha written a week later is a gotcha written from memory.
 Seeded 2026-08-27 during the PORTS.md sync session, so every entry below is
 something measured that day.
 
-1. **A red `npm run lint` is the baseline, not your change.** It exits 1 with
-   7 errors and 5 warnings on a clean tree. All 7 are the known
-   `eslint-plugin-astro` false positive described under "Testing, linting, and
-   CI" above. Diff against that baseline before you go hunting. `src/lib` and
-   `scripts` do lint clean, so a new error _there_ is real.
+1. **`npm run lint` is green and gated (since 2026-09-06), so a red run is
+   your change.** The 7 false-positive errors that used to sit on a clean tree
+   (an `eslint-plugin-astro` misread of `<!-- -->` inside a `{ ... }`
+   expression) are gone because those comments became `{/* */}`. Writing an
+   HTML comment inside a template expression brings the error back, and it
+   breaks `npm run format:check` too. The only expected output is a handful
+   of unused-variable warnings.
 
 2. **`variant="secondary"` on the shadcn Button or Badge fails contrast.** In
    light mode that renders `--secondary-foreground` (white) on `--secondary`

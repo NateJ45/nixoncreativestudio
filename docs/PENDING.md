@@ -130,6 +130,7 @@ These are recorded so a future session stops re-deriving them.
   to go stale.
 - **No page-builder.** Card 12 is a method for converting bespoke pages into
   CMS-driven sections. There is no CMS.
-- **No Playwright / axe / reflow suite.** Card 8 is genuinely missing and is the
-  largest real gap in this repo's gate chain. See `docs/TESTING.md` for what
-  covers the ground today and what does not.
+- **No visual-regression suite.** The family standard runs one only where a
+  site has a fixture-driven `/styleguide` route; this site does not. The
+  Playwright / axe / reflow suite (Card 8) landed 2026-09-06; see
+  `docs/TESTING.md`.
