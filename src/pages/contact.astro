@@ -105,6 +105,17 @@ const inputClass =
   'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
   'transition-[border-color,box-shadow] duration-150 ' +
   'focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25';
+// A <select> keeps the same box, but draws its focus ring as an OUTLINE rather
+// than the box-shadow ring above. WebKit paints natively-rendered form controls
+// itself and drops box-shadow on them, so on Safari and iOS the ring simply did
+// not exist on the four selects while every text field had one, on the same
+// classes (caught by the webkit-iphone run of tests/a11y-dark.spec.ts,
+// 2026-09-06). An outline paints on native controls in every engine and follows
+// the border radius, so the indicator looks the same and is actually there.
+const selectClass =
+  'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
+  'transition-[border-color,outline-color] duration-150 ' +
+  'focus:border-accent focus:outline-3 focus:outline-offset-0 focus:outline-accent/25';
 // Borderless fieldset reset so the groups don't break the grid or add chrome;
 // fieldsets after the first open with a hairline. The legend is styled mono +
 // uppercase so the form reads as a short, sectioned document.
@@ -243,7 +254,7 @@ const legendClass =
 
                   <div class={fieldClass}>
                     <label class={labelClass} for="org_type">Organization type</label>
-                    <select class={inputClass} id="org_type" name="org_type" required>
+                    <select class={selectClass} id="org_type" name="org_type" required>
                       <option value="" disabled selected>Pick the closest</option>
                       {orgTypes.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                     </select>
@@ -270,7 +281,7 @@ const legendClass =
                   <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
                     <div class={fieldClass}>
                       <label class={labelClass} for="budget">Budget range</label>
-                      <select class={inputClass} id="budget" name="budget" required>
+                      <select class={selectClass} id="budget" name="budget" required>
                         <option value="" disabled selected>Pick the closest</option>
                         {budgets.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                       </select>
@@ -282,7 +293,7 @@ const legendClass =
                       <label class={labelClass} for="timeline">
                         Project timeline <span class={optionalMark}>(optional)</span>
                       </label>
-                      <select class={inputClass} id="timeline" name="timeline">
+                      <select class={selectClass} id="timeline" name="timeline">
                         <option value="" selected>No preference</option>
                         {timelines.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                       </select>
@@ -319,7 +330,7 @@ const legendClass =
                         >(optional)</span
                       >
                     </label>
-                    <select class={inputClass} id="heard_from" name="heard_from">
+                    <select class={selectClass} id="heard_from" name="heard_from">
                       <option value="" selected>Pick one if you'd like</option>
                       {
                         heardFromOptions.map((opt) => (
