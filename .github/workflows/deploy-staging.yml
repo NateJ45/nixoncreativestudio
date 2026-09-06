@@ -56,9 +56,28 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Rewrite the generated config's own `name` instead of passing --name.
+      # `--name` redirects the DEPLOYMENT but not the version upload, so every
+      # staging deploy was creating an undeployed version on the PRODUCTION
+      # Worker, and overwriting staging's own secrets with production's binding
+      # set. Confirmed 2026-09-06 across five repos: production had versions
+      # stamped at staging build times that were never deployed, which is also
+      # what makes `wrangler secret put` refuse with "the latest version of your
+      # Worker isn't currently deployed". With the name rewritten in the config
+      # itself, wrangler never has the production Worker in view at all.
+      #
+      # The config path is read from .wrangler/deploy/config.json rather than
+      # hardcoded: a static build emits dist/client/wrangler.json and a hybrid
+      # one dist/server/wrangler.json, and this repo may change shape.
+      - name: Point the generated config at the staging Worker
+        run: |
+          CFG=$(node -e "const fs=require('fs'),p=require('path');const r=JSON.parse(fs.readFileSync('.wrangler/deploy/config.json','utf8'));console.log(p.resolve('.wrangler/deploy',r.configPath))")
+          node -e "const fs=require('fs');const f=process.argv[1];const c=JSON.parse(fs.readFileSync(f,'utf8'));c.name='nixoncreativestudio-staging';fs.writeFileSync(f,JSON.stringify(c));console.log('deploy config',f,'name ->',c.name)" "$CFG"
+          echo "WRANGLER_CONFIG=$CFG" >> "$GITHUB_ENV"
+
       - name: Deploy to the staging Worker
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --name nixoncreativestudio-staging
+          command: deploy -c ${{ env.WRANGLER_CONFIG }}
