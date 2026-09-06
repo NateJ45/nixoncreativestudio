@@ -69,11 +69,33 @@ jobs:
       # .prettierignore, a .gitignore and an eslint config in six repos, because
       # that list has to be remembered again for the next whole-tree tool.
       - name: Canonical files have not drifted
+        id: sync_check
+        continue-on-error: true
+        env:
+          NCS_STARTER_DIR: ${{ github.workspace }}/.ncs-starter
+        run: node scripts/sync-check.mjs
+
+      # Drift is a judgement, not a diff: an improvement made here either
+      # belongs in the library or is site-specific. What was missing is that
+      # porting it up was an errand you had to remember to start, in another
+      # repo, after the build that blocked you. This opens the PR instead. It
+      # never merges, and it never turns a clear "drift" failure into a
+      # confusing "could not authenticate" one: it exits 0 whatever happens.
+      - name: Propose the drift to the library of record
+        if: steps.sync_check.outcome == 'failure'
+        env:
+          NCS_STARTER_DIR: ${{ github.workspace }}/.ncs-starter
+          GH_TOKEN: ${{ secrets.GH_ACTIONS_PAT }}
+        run: node scripts/propose-drift.mjs
+
+      # The checkout has to go before any whole-tree tool further down this
+      # job sweeps it, and the gate has to fail for real once it has.
+      - name: Enforce the drift check
         env:
           NCS_STARTER_DIR: ${{ github.workspace }}/.ncs-starter
         run: |
-          node scripts/sync-check.mjs
           rm -rf "$NCS_STARTER_DIR"
+          [ "${{ steps.sync_check.outcome }}" = "success" ] || exit 1
 
       - name: Type check (astro check)
         run: npx astro check
