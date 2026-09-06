@@ -6,11 +6,12 @@
 // WHY THIS EXISTS
 //
 // The site family (wcp, presacademy, reid-design-site, mas-monograms,
-// 2ndpreschicago, ncs-church-starter, nixoncreativestudio) shares a growing
-// set of build/QA plumbing: the parity harness, the Sanity seed library, the
-// contrast math, the workerd wrapper. Copies drift silently. A bug fixed in
-// one repo stays broken in five, and nobody finds out until the same evening
-// is lost twice.
+// 2ndpreschicago, nixoncreativestudio) shares a growing set of build/QA
+// plumbing: the parity harness, the Sanity seed library, the contrast math,
+// the workerd wrapper. Copies drift silently. A bug fixed in one repo stays
+// broken in five, and nobody finds out until the same evening is lost twice.
+// (ncs-church-starter was a seventh member until it was archived on
+// 2026-09-06; it is no longer synced.)
 //
 // This starter is the LIBRARY OF RECORD. Every canonical file carries a
 // first-line marker:
@@ -77,6 +78,13 @@ const SKIP_DIRS = new Set([
   'coverage',
   'build',
   'worktrees', // .claude/worktrees, and any other worktrees/ pile
+  // The CI gate (PORTS.md card 36) checks the library of record out INTO the
+  // site repo, at .ncs-starter, because actions/checkout refuses a path
+  // outside the workspace. Without this the walker finds the library's own
+  // marked files and reports the starter against itself: at best 57 phantom
+  // rows, at worst a MISSING-IN-STARTER for any marked file whose path does
+  // not survive the one-segment strip below.
+  '.ncs-starter',
 ]);
 
 /** Extensions worth opening. A marker only ever lives in a text source file. */
@@ -226,20 +234,36 @@ const results = { SAME: [], DRIFT: [], 'MISSING-IN-STARTER': [] };
 const drifts = [];
 
 for (const rel of marked) {
-  const starterPath = join(starterDir, ...rel.split('/'));
+  // NESTED-APP RULE (2026-08-28): wcp keeps its whole app under site/, so its
+  // copy of scripts/foo.mjs lives at site/scripts/foo.mjs while the starter's
+  // is at scripts/foo.mjs. When the exact relative path is missing in the
+  // starter, retry once with the FIRST path segment stripped. One segment
+  // only, and only on a miss - a repo whose paths match the starter's never
+  // takes this branch, so it cannot mask a genuinely missing file there.
+  let starterRel = rel;
+  let starterPath = join(starterDir, ...rel.split('/'));
+  if (!existsSync(starterPath) && rel.includes('/')) {
+    const stripped = rel.split('/').slice(1).join('/');
+    const candidate = join(starterDir, ...stripped.split('/'));
+    if (existsSync(candidate)) {
+      starterRel = stripped;
+      starterPath = candidate;
+    }
+  }
   if (!existsSync(starterPath)) {
     results['MISSING-IN-STARTER'].push(rel);
     console.log(`  MISSING-IN-STARTER  ${rel}`);
     continue;
   }
+  const nestNote = starterRel === rel ? '' : `  (starter: ${starterRel})`;
   const siteText = normalize(readFileSync(join(siteDir, ...rel.split('/')), 'utf8'));
   const starterText = normalize(readFileSync(starterPath, 'utf8'));
   if (siteText === starterText) {
     results.SAME.push(rel);
-    console.log(`  SAME                ${rel}`);
+    console.log(`  SAME                ${rel}${nestNote}`);
   } else {
     results.DRIFT.push(rel);
-    console.log(`  DRIFT               ${rel}`);
+    console.log(`  DRIFT               ${rel}${nestNote}`);
     drifts.push([rel, firstDiffLine(siteText, starterText)]);
   }
 }
@@ -264,9 +288,9 @@ console.log(
 
 if (failed) {
   console.log('');
-  console.log('DRIFT: reconcile before shipping. Either port the site\'s improvement');
+  console.log("DRIFT: reconcile before shipping. Either port the site's improvement");
   console.log('back into the starter (and add a PORTS.md card in the same commit), or');
-  console.log('pull the starter\'s copy forward into the site.');
+  console.log("pull the starter's copy forward into the site.");
   console.log('MISSING-IN-STARTER: the file is marked canonical but the starter has no');
   console.log('copy at that path. Install it in the starter, or fix the path.');
   process.exit(1);
