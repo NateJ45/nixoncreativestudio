@@ -41,10 +41,20 @@ import { ClientRouter } from 'astro:transitions';
 // almost always the LCP (Largest Contentful Paint) element, so getting
 // the font loaded as early as possible shortens LCP measurably.
 //
-// Source Sans 3 (body) is not preloaded on purpose. It's a variable font
-// with multiple weights baked in; preloading it would cost more bandwidth
-// than the LCP gain is worth.
+// Source Sans 3 (body) is preloaded too, since 2026-09-06. It used to be
+// left out on the grounds that a variable font costs more bandwidth than
+// the LCP gain is worth, and that held while the scroll-reveal kept the
+// top of every page invisible until after the fonts had settled: the swap
+// happened behind a curtain. Now that first-screen content paints
+// immediately (see the reveal note in globals.css), the swap from the
+// system fallback to Source Sans 3 relaid out real text and Lighthouse
+// measured it: cumulative layout shift 0.17 on /work and 0.11 on /journal
+// against a 0.1 budget, attributed by name to this file. Fetching it in
+// parallel with the stylesheet rather than after it is what keeps the
+// first paint and the final paint the same shape. Latin subset only, the
+// same file the unicode-range in the stylesheet resolves to for English.
 import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
+import sourceSans3Woff2 from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
 
 // Coming-soon gate. Implemented client-side so the owner can bypass
 // per-device by visiting a magic URL, while everyone else lands on
@@ -228,11 +238,16 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       })();
     </script>
 
-    <!-- Bebas Neue preload. `crossorigin` is required for font preloads:
-         without it, the preload and the eventual CSS font fetch are
-         considered different requests, and the browser would download the
-         font twice. With it, the second fetch hits the preload cache. -->
+    <!-- Font preloads: Bebas Neue for every heading, Source Sans 3 for
+         every other word on the page. `crossorigin` is required for font
+         preloads: without it, the preload and the eventual CSS font fetch
+         are considered different requests, and the browser would download
+         the font twice. With it, the second fetch hits the preload cache.
+         Both start with the HTML rather than waiting on the stylesheet, so
+         text is laid out in its real metrics from the first paint instead
+         of reflowing when the swap lands. -->
     <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={sourceSans3Woff2} crossorigin />
 
     <!-- Cloudflare Web Analytics. Component renders the beacon script
          only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
