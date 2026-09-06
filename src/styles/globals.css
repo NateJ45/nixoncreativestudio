@@ -431,6 +431,23 @@
     transform: none;
     filter: none;
   }
+
+  /* First screen: no reveal gate.
+     A [data-reveal] element starts at opacity 0 under .js and only clears once
+     the observer above has run and its 0.7s transition has played. Chrome does
+     not count a zero-opacity element as a contentful paint, so gating the top
+     of the page on that script is what pushed Largest Contentful Paint out past
+     the 4.5s budget: on /contact the h1 painted 1.65s after first paint and
+     Lighthouse read LCP at 5.8s, and /404 failed the same way (staging,
+     2026-09-06). Everything in the first block of <main> therefore renders
+     immediately; only content further down still reveals on scroll. The
+     observer still tags them .is-visible, which changes nothing. */
+  .js main > :first-child [data-reveal],
+  .js main > [data-reveal]:first-child {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
 }
 
 /* ---- Heading emphasis -----------------------------------------------------
