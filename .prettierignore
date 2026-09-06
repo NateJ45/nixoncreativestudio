@@ -2,6 +2,25 @@ dist
 node_modules
 .astro
 .wrangler
-src/lib/coverPlaceholders.json
+.lighthouseci
 package-lock.json
 public
+playwright-report
+test-results
+tests/**/__screenshots__
+
+# Generated at build time by scripts/generate-placeholders.mjs. Machine-written
+# JSON, one long line of base64 blurs; prettier must never rewrite it.
+src/lib/coverPlaceholders.json
+
+# Rendered-HTML parity baselines (scripts/page-parity.mjs). They are byte
+# snapshots of built pages; prettier must never rewrite them.
+scripts/.parity
+
+# PORTABLE file (see docs/TESTING.md): byte-exact with ncs-astro-sanity-starter,
+# the library of record. `npm run sync-check` would report DRIFT if prettier
+# touched it here. Reformat it in the starter first.
+scripts/sync-check.mjs
+
+# Wrangler's generated runtime types.
+worker-configuration.d.ts
