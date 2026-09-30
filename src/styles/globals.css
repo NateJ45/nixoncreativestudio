@@ -303,7 +303,16 @@
     color: inherit;
   }
 
-  /* Respect prefers-reduced-motion. */
+  /* Respect prefers-reduced-motion.
+     Transitions are ZERO, duration AND delay, never 0.01ms (starter PORTS.md
+     card 61, 2026-09-30). transition-property defaults to `all`, so 0.01ms
+     hands EVERY element a transition, and WebKit never finishes a
+     10-microsecond one: they pile up at progress 0 holding the OLD values.
+     0s creates no transition at all; the delay matters because a staggered
+     delay alone creates one. `transitionend` no longer fires under reduce
+     (nothing in src/ listens for it). Animations keep 0.01ms so
+     `animationend` still fires (Radix/Starwind wait on it).
+     tests/reduced-motion.spec.ts holds this on the webkit-iphone project. */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -313,7 +322,8 @@
     *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
     }
   }
   * {

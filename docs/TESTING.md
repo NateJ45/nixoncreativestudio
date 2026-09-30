@@ -20,7 +20,7 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 | Unit tests | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` (see below)                                                                                                                             |
 | Build      | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
 | Link check | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
-| Playwright | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)                                     |
+| Playwright | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)              |
 | Lighthouse | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs |
 | Parity     | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
 | Uptime     | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
@@ -38,16 +38,17 @@ server on 4321 is reused, so `npm run build && npm run serve:dist` in one
 terminal and `npx playwright test --project=chromium` in another is the fast
 loop. CI installs chromium and webkit and runs both projects.
 
-| File                | Covers                                                                                                                                                                             |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `routes.ts`         | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                         |
-| `helpers.ts`        | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                             |
-| `smoke.spec.ts`     | Every route returns 200 and its title carries the studio name                                                                                                                      |
-| `a11y.spec.ts`      | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                         |
-| `a11y-dark.spec.ts` | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode |
-| `reflow.spec.ts`    | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                 |
+| File                     | Covers                                                                                                                                                                                                                             |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`              | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                                                                         |
+| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                             |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name                                                                                                                                                                      |
+| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                         |
+| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                 |
+| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions) |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                 |
 
-The webkit-iphone project runs smoke and both axe sweeps; reflow drives its
+The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
 document without the theme bootstrap, so the dark sweep skips it.
 
