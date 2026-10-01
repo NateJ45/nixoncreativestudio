@@ -20,11 +20,10 @@ Three things, usually in this order:
 
 ## Selected work
 
-Each of these is a full case study in its own repository. Together they are a fair picture of the range: a co-op preschool, an interior designer, a custom-embroidery studio, a historic city church, and a new theological school.
+Each of these is a full case study in its own repository. Together they are a fair picture of the range: an interior designer, a custom-embroidery studio, a historic city church, and a new theological school.
 
 | Project                                   | What it is                                                                                                                                  | Case study                                                      |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **West Chester Preschool**                | A volunteer-run co-op preschool. A public site plus a private, password-gated Family Hub, all editable by a board with no technical staff.  | [wcp-website](https://github.com/NateJ45/wcp-website)           |
 | **Reid Design LLC**                       | Marketing site for an Indiana interior design studio: portfolio with before/after sliders, a style-archetype quiz, and a budget calculator. | [reid-design-site](https://github.com/NateJ45/reid-design-site) |
 | **MAS Monograms**                         | A home-based custom embroidery studio. A quote-request pipeline instead of a cart, since every piece is priced by hand.                     | [mas-monograms](https://github.com/NateJ45/mas-monograms)       |
 | **Second Presbyterian Church of Chicago** | The website for a historic South Loop congregation, migrated off Squarespace onto a stack the office can run.                               | [2ndpreschicago](https://github.com/NateJ45/2ndpreschicago)     |
