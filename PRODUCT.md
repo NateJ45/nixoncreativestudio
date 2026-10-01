@@ -6,7 +6,7 @@ brand
 
 ## Users
 
-Decision-makers at small businesses, churches, preschools, schools, and nonprofits in the Cincinnati region, plus web clients further afield who find the studio online. They're often on a board, a staff team, or running the business themselves, evaluating Nathan as a potential vendor with a real budget and a real timeline. Their context when landing on the site is "I heard about Nathan / saw his work / met him in person, is this the right fit?" — they want to understand the services on offer, see proof, and decide whether to start a conversation.
+Decision-makers at small businesses, churches, schools, and nonprofits in the Cincinnati region, plus web clients further afield who find the studio online. They're often on a board, a staff team, or running the business themselves, evaluating Nathan as a potential vendor with a real budget and a real timeline. Their context when landing on the site is "I heard about Nathan / saw his work / met him in person, is this the right fit?" — they want to understand the services on offer, see proof, and decide whether to start a conversation.
 
 A secondary audience is other designers and creative peers who read the site as portfolio, not as sales material. They're useful for referrals and credibility but they're not the primary buyer.
 
@@ -20,7 +20,7 @@ The site is doing three jobs in equal measure:
 
 1. **Drive qualified inquiries** — a steady flow of well-fit project requests from small businesses, churches, schools, and nonprofits.
 2. **Build local credibility** — the trustworthy anchor people land on after meeting Nathan in person, at the chamber of commerce, or through a referral.
-3. **Surface in regional search** — discoverable for queries like "Cincinnati web design," "Cincinnati church website," and "preschool photographer Cincinnati."
+3. **Surface in regional search** — discoverable for queries like "Cincinnati web design," "Cincinnati church website," and "Cincinnati event photographer."
 
 Success looks like steady inbound flow from the region, a portfolio that grows visibly over time, and a site that consistently reads as the same studio across the homepage, the case studies, and the photography gallery.
 
@@ -28,7 +28,7 @@ Success looks like steady inbound flow from the region, a portfolio that grows v
 
 Warm, confident, grounded. The site should feel like someone steady and skilled who'd happily share a coffee — not a corporate agency, not a hobbyist, not a personality brand. Three-word personality: warm, confident, grounded.
 
-Voice is conversational without being casual, professional without being stiff. Step-by-step explanations for non-technical readers (preschool families, church volunteers, board members). No AI-tell phrases (delve, leverage, robust, seamless, "bespoke digital experiences"), no em-dashes, no filler openings or closings. Real specificity beats adjective stacks every time.
+Voice is conversational without being casual, professional without being stiff. Step-by-step explanations for non-technical readers (church volunteers, nonprofit staff, board members). No AI-tell phrases (delve, leverage, robust, seamless, "bespoke digital experiences"), no em-dashes, no filler openings or closings. Real specificity beats adjective stacks every time.
 
 Emotional goal: visitors should leave feeling they've found a real person doing real craft for real local clients, and that working with him would be calm, clear, and on time.
 
@@ -58,5 +58,5 @@ Specific commitments:
 - Color contrast cleared in both themes (brand `--accent` and `--muted-foreground` shifted slightly darker from their original swatches to clear AA on white text and bg-soft body text).
 - Three-state theme (light / dark / system), system as the default for first-time visitors.
 - Reduced motion respected globally via `prefers-reduced-motion: reduce` — animations, transitions, and Lenis smooth scroll all become no-ops.
-- Audience includes preschool families, church volunteers, and board members; copy defaults to non-technical readers unless context makes peer-readability obvious.
+- Audience includes church volunteers, nonprofit staff, and board members; copy defaults to non-technical readers unless context makes peer-readability obvious.
 - Skip link as the first focusable element, semantic landmarks (`<header>`, `<main>`, `<footer>`), proper heading hierarchy (one h1, no level skips).

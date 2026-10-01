@@ -1,6 +1,6 @@
 # Nixon Creative Studio Portfolio
 
-Astro portfolio for Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, OH. Web design, photography, and brand strategy for preschools, churches, nonprofits, and small businesses: web design and strategy for clients anywhere, photography across the Cincinnati region. Lives at nixoncreativestudio.com.
+Astro portfolio for Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, OH. Web design, photography, and brand strategy for churches, schools, nonprofits, and small businesses: web design and strategy for clients anywhere, photography across the Cincinnati region. Lives at nixoncreativestudio.com.
 
 This is a one-person project. Nathan is the owner, the designer, the photographer, and the only person editing the repo. Build for a future Nathan who hasn't touched the code in three months.
 
@@ -452,7 +452,7 @@ If a change requires editing the foundation set, do it in a Claude session, writ
 
 ## Audience
 
-Site visitors include potential clients (small businesses, churches, schools, preschools) and other designers. Copy is confident but warm. Default explanations to non-technical readers (preschool families, church volunteers, board members) unless context makes it clear the reader is a peer.
+Site visitors include potential clients (small businesses, churches, schools) and other designers. Copy is confident but warm. Default explanations to non-technical readers (church volunteers, nonprofit staff, board members) unless context makes it clear the reader is a peer.
 
 ---
 
@@ -573,7 +573,7 @@ Things that still need configuration before / during the public launch. Everythi
 
 ### Real content to ship
 
-- [ ] **Optional hero photograph** at `src/assets/brand/hero.jpg`. No longer a content gate: the hero ships complete today with the domain-warp WebGL flow plus the device-pairing portfolio showcase. To use a real photo instead, drop it at that path and uncomment the `<Image />` import + tag in `Hero.astro`; it layers over the WebGL / `.band-themed` glow (there is no `.hero-placeholder` div anymore). Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a preschool classroom, a Cincinnati storefront.
+- [ ] **Optional hero photograph** at `src/assets/brand/hero.jpg`. No longer a content gate: the hero ships complete today with the domain-warp WebGL flow plus the device-pairing portfolio showcase. To use a real photo instead, drop it at that path and uncomment the `<Image />` import + tag in `Hero.astro`; it layers over the WebGL / `.band-themed` glow (there is no `.hero-placeholder` div anymore). Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a nonprofit at work, a Cincinnati storefront.
 - [ ] **Real attributed testimonials** filled into a case study's `testimonial:` frontmatter. That renders a pull-quote on the case study page and populates the /about carousel (`Testimonials.astro` + `TestimonialCarousel.tsx`), which shows nothing until at least one real quote exists. The homepage carries no standalone testimonials band; quotes live where the context lives. Never fabricate one.
 - [ ] Drop a **real headshot** in `src/assets/brand/` for the `/about` page and swap the gradient placeholder div in `about.astro` for an Astro `<Image />`.
 - [x] **Real cover images** for the case studies in `src/assets/case-studies/{slug}.png`. Done: each is a real hero screenshot of the live site (captured with Playwright). Full-page screenshots also live in `src/assets/case-studies/shots/{slug}-home.png` and drive the animated `SiteShowcase` inside each study. Re-capture if a client redesigns their site.

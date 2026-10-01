@@ -1,6 +1,6 @@
 # Nixon Creative Studio
 
-**Web design, photography, and brand strategy for organizations that do real work in the world.** Preschools, churches, nonprofits, and small businesses. Based in Cincinnati, Ohio; design and strategy for clients anywhere, photography across the region.
+**Web design, photography, and brand strategy for organizations that do real work in the world.** Churches, schools, nonprofits, and small businesses. Based in Cincinnati, Ohio; design and strategy for clients anywhere, photography across the region.
 
 **Live:** [nixoncreativestudio.com](https://nixoncreativestudio.com)
 
@@ -10,7 +10,7 @@ This repository is the studio's own site. It is also, on purpose, a portfolio pi
 
 ## How the studio works
 
-Most of my clients are running something that matters to a community and cannot afford for the website to be a second job. A church office. A one-woman embroidery studio. A volunteer preschool board that turns over every year. So the work is built around a simple promise: **you get a site that looks like it was made for you, and you can keep it current without touching code.**
+Most of my clients are running something that matters to a community and cannot afford for the website to be a second job. A church office. A one-woman embroidery studio. A volunteer nonprofit board that turns over every year. So the work is built around a simple promise: **you get a site that looks like it was made for you, and you can keep it current without touching code.**
 
 Three things, usually in this order:
 

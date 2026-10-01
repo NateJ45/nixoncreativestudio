@@ -45,8 +45,8 @@ export default defineConfig({
   // section). Keep old links and bookmarks working with a static redirect.
   redirects: {
     '/now': '/about/#now',
-    // The West Chester Preschool case study was retired (2026-10-01). Send any
-    // old links or search results to the work index instead of a 404.
+    // A retired case study (2026-10-01). Send any old links or search results
+    // to the work index instead of a 404.
     '/work/west-chester-preschool': '/work/',
   },
   prefetch: {
