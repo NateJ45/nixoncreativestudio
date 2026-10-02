@@ -30,7 +30,8 @@ are created in the admin and pages are changed to call `getEmDashCollection()`.
    WebGL hero) default-imports it, so the build failed with `MISSING_EXPORT`.
    A small Vite plugin in `astro.config.mjs` (`ncs-zustand-sync-store-shim`)
    rewrites zustand's import. Re-check after upgrading emdash or zustand.
-2. The Cloudflare API MCP connector in Claude Code has an invalid token; all
+2. **Sessions.** The live site had `session: false`; EmDash sign-in then fails with "needs an Astro session driver". Removed it; the adapter now uses KV binding `SESSION` (namespace `ncs-emdash-sessions`).
+3. The Cloudflare API MCP connector in Claude Code has an invalid token; all
    provisioning was done with the wrangler OAuth login instead.
 
 ## Deploy / redeploy

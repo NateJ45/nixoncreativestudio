@@ -42,8 +42,9 @@ import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
-  // Astro 7's adapter no longer forces server mode; this site never used sessions.
-  session: false,
+  // Sessions are ON for the EmDash trial: admin sign-in needs a session driver.
+  // The Cloudflare adapter supplies one (KV binding "SESSION") when `session`
+  // is left unset. The live static site had `session: false`.
   // The standalone /now page was merged into the About page (its Currently
   // section). Keep old links and bookmarks working with a static redirect.
   redirects: {
