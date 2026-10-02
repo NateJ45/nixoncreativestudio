@@ -294,3 +294,7 @@ use the CLI's stored login and never handle a token.
   treats parsed JSON as success.
 - The probe collection used while building this was deleted; one soft-deleted
   entry (`probe`) may still sit in the collection trash.
+
+## Update 2026-10-02
+
+The `highlights` repeater now has sub-fields defined in the admin (image: image, alt: string, title: string, caption: text, side: string). Stored data is unchanged: 3 highlights still read back intact on second-presbyterian-chicago. `side` is a plain string (the sub-field UI has no options list for select), so keep the template tolerant of any value and default to alternating.
