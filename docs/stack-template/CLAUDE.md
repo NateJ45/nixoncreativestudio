@@ -18,14 +18,14 @@ Build for a future you who hasn't touched the code in three months.
 
 Pinned versions reflect what's known to work together. Bump deliberately, not casually.
 
-- Astro 6.3.x with TypeScript in strict mode and `output: 'static'`
+- Astro 7.x with TypeScript in strict mode and `output: 'static'`
 - MDX content collections for long-form content (case studies, journal, posts). JSON-backed collections for catalogue data (photos, products, listings)
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
 - React 19 islands for anything interactive (mobile nav drawer, contact form handler, lightbox, theme toggle, back-to-top, copy-email, filter chips). Astro components for everything static
 - shadcn/ui primitives in `src/components/ui/` (Nova preset, Radix base, `@fulldev` registry added to `components.json`). Extend Button with project-specific marketing variants only when the standard variants don't carry the brand
 - Starwind UI in `src/components/starwind/` (accordion, dialog, dropdown, tabs). Astro-native, zero client-side JS, token-native via semantic CSS variables. Config in `starwind.config.json`. Icons via `@tabler/icons` imported as Astro SVG components. Supplementary styles in `src/styles/starwind.css` (accordion keyframes, `@theme` mappings for Starwind-only tokens like `--outline` and the status colors), imported in BaseLayout after `globals.css`
 - PrimeReact (unstyled) in `src/components/primereact/` as an escape hatch for behavior-heavy widgets only: data tables, file upload, complex date/range pickers, multi-step steppers. Not a replacement for accordions, dialogs, dropdowns, tabs, or any marketing layout. See `src/components/primereact/README.md` before reaching for it
-- DX and CI: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc`, `.prettierignore`). npm scripts: `test` (node `--experimental-strip-types --test src/lib/*.test.ts`), `lint`, `lint:fix`, `format`, `check` (build + test). Unit suites live in `src/lib/*.test.ts`. GitHub Actions CI at `.github/workflows/ci.yml` runs install, build, and test. Lint is advisory and not gated in CI because `eslint-plugin-astro` currently throws a false parse error on valid Astro files that put an HTML comment inside a `{...}` expression
+- DX and CI: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc`, `.prettierignore`). npm scripts: `test` (node `--experimental-strip-types --test src/lib/*.test.ts`), `lint`, `lint:fix`, `format`, `check` (`astro check` + lint). Unit suites live in `src/lib/*.test.ts`. GitHub Actions CI at `.github/workflows/ci.yml` runs install, `astro check`, lint, build, and test. Lint is a hard CI gate; write comments inside a `{...}` template expression as `{/* */}`, never `<!-- -->`, because `eslint-plugin-astro` misreads the HTML form as a parse error
 - Motion (formerly Framer Motion), Astro View Transitions, Lenis smooth scroll (respecting `prefers-reduced-motion`)
 - react-photo-album for justified gallery layouts when galleries are needed
 - yet-another-react-lightbox for fullscreen photo viewing (with Zoom and Thumbnails plugins)

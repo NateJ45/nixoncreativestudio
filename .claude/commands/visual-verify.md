@@ -18,6 +18,9 @@ Run this after any visual change before pushing. If a specific route is passed a
 /photography
 /journal
 /contact
+/colophon
+/privacy
+/accessibility
 ```
 
 ---
@@ -77,10 +80,10 @@ Run this after any visual change before pushing. If a specific route is passed a
 
 ## Accessibility check (for structural changes)
 
-If the change touches layout, heading hierarchy, or interactive elements, also run Lighthouse via the Playwright MCP after the screenshot pass. The targets are 100 Lighthouse Accessibility and 100 Best Practices. Common regressions:
+If the change touches layout, heading hierarchy, or interactive elements, also run `npm test` (axe sweeps in both themes) after the screenshot pass, and a Lighthouse audit through the Chrome DevTools MCP if you need the full report. Accessibility must stay at 100; CI enforces it. Local `lhci` does not complete on this Windows machine (CLAUDE.md Gotcha 9), so read the CI run for the authoritative score. Common regressions:
 
 - `color-contrast`: a new color literal used in a context that doesn't pass. Check both themes.
 - `image-alt`: a missing `alt` attribute on a new `<img>`.
 - `link-name` / `button-name`: an icon-only element without `aria-label`.
 
-A screenshot pass that looks fine visually is not a substitute for the Lighthouse check when the change is structural.
+A screenshot pass that looks fine visually is not a substitute for the axe and Lighthouse checks when the change is structural.
