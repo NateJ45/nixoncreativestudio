@@ -298,3 +298,17 @@ use the CLI's stored login and never handle a token.
 ## Update 2026-10-02
 
 The `highlights` repeater now has sub-fields defined in the admin (image: image, alt: string, title: string, caption: text, side: string). Stored data is unchanged: 3 highlights still read back intact on second-presbyterian-chicago. `side` is a plain string (the sub-field UI has no options list for select), so keep the template tolerant of any value and default to alternating.
+
+## Editor setup plan (from EmDash's own docs and `building-emdash-site` skill, 2026-10-02)
+
+Applied in the taxonomy pass, after the template agent finishes:
+
+1. **services, stack, tags become flat taxonomies** (`hierarchical: false`) attached to `case_studies`. Editors get chip pickers instead of raw JSON, and `getEmDashCollection('case_studies', { where: { services: 'strategy' } })` filters natively (the /work chips). Gotchas: the taxonomy name must match exactly (singular vs plural returns empty results silently), and per-entry terms are read with `entry.data.id` (the ULID), not the slug.
+2. **results becomes a repeater** with one `text` sub-field (the docs' own portfolio example does the same for galleries).
+3. **sector and showcase_variant get option lists** (church, school, nonprofit, small-business; scroll, zoom). Selects, because the set is small and fixed.
+4. **Index only what queries sort or filter on:** `published`, `featured`, `year`, `sector`. Mark `title`, `summary`, `body` as `searchable`.
+5. **Enable only the features the site uses:** keep drafts and revisions, add `seo` (per-entry SEO panel, sitemap entry, OG image, noindex toggle; render with `<EmDashHead>`), add `search` only if we build site search. Leave comments off.
+6. **Use the Group setting** to put case studies in a collapsible sidebar folder; delete the unused template `posts` test entry (`hello-emdash`) and `emdash-test.astro` when the trial ends.
+7. **Type changes are not safe in place** (only string/text/slug can swap). json to taxonomy or repeater means removing the field and re-running `scripts/migrate-case-studies.mjs`, which is idempotent.
+8. **Schema is applied once from a seed.** After the trial schema is final, run `npx emdash export-seed` into `seed/seed.json` so the production database is created from the same schema at setup instead of being rebuilt by hand.
+9. **Site Settings** (title, tagline, social, default OG image) and **Menus** are admin-managed; consider driving the header nav from a `primary` menu later. Slug renames create 301 redirects automatically.
