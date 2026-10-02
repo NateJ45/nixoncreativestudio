@@ -1,10 +1,11 @@
 ---
-// Safe to edit.
+// Safe to edit. Reads client names from the EmDash CMS, so any page that
+// renders it (via the Hero) must be server-rendered (prerender = false).
 /* ============================================================================
    ClientMarquee
    ============================================================================
    The client-name ticker that rides the base of the hero. Names are pulled live
-   from the case-studies collection (newest-first, de-duped), so the marquee
+   from the EmDash case_studies collection (newest-first, de-duped), so the marquee
    stays in sync as the portfolio grows. Each name is now a LINK to that client's
    case study, so the ticker doubles as a fast path into the work.
 
@@ -27,19 +28,18 @@
    Used at the bottom of Hero.astro.
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
+import { getCaseStudies } from '../lib/caseStudies';
 
-const studies = (await getCollection('case-studies')).sort(
-  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
-);
+// Already sorted newest first by project date.
+const studies = await getCaseStudies();
 
 // Distinct clients, newest-first, each linked to its newest case study.
 const seen = new Set<string>();
 const clients: { name: string; slug: string }[] = [];
 for (const s of studies) {
-  if (!seen.has(s.data.client)) {
-    seen.add(s.data.client);
-    clients.push({ name: s.data.client, slug: s.id });
+  if (!seen.has(s.client)) {
+    seen.add(s.client);
+    clients.push({ name: s.client, slug: s.id });
   }
 }
 

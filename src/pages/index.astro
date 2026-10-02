@@ -1,4 +1,7 @@
 ---
+// Foundation, edit with care. Server-rendered because the hero client marquee
+// and Selected Work read case studies from the EmDash CMS (see the note above
+// the template).
 /* ============================================================================
    Homepage
    ============================================================================
@@ -45,6 +48,13 @@ import Hero from '../components/Hero.astro';
 import SelectedWork from '../components/SelectedWork.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
+import { CACHE_CONTROL } from '../lib/caseStudies';
+
+// Server-rendered, not prerendered: the hero client marquee and Selected Work read case studies from the EmDash
+// CMS (D1) at request time. Short CDN cache; see CACHE_CONTROL in
+// src/lib/caseStudies.ts.
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
 ---
 
 <BaseLayout title="Nixon Creative Studio | Strategy-led design and photography">

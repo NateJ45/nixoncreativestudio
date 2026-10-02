@@ -1,0 +1,34 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   CaseHeading
+   ============================================================================
+   Block renderer for the Portable Text body of a case study. It renders every
+   block the way EmDash's default does (h2 / h3 / blockquote / paragraph), and
+   additionally gives h2 and h3 an id derived from their text, so the sticky
+   "In this case study" table of contents (and its scroll-spy) can link to them.
+   Astro's MDX pipeline used to add these ids; Portable Text does not, and the
+   ids use the same slug rule (see slugify in src/lib/caseStudies.ts).
+
+   Wire it up with: <PortableText value={blocks} components={{ block: { h2: CaseHeading, h3: CaseHeading } }} />
+   ============================================================================ */
+
+import { slugify } from '../../lib/caseStudies';
+
+const { node, index: _index, isInline: _isInline, ...attrs } = Astro.props;
+const text = ((node.children ?? []) as { text?: string }[]).map((c) => c.text ?? '').join('');
+const id = slugify(text);
+const isH3 = node.style === 'h3';
+---
+
+{
+  isH3 ? (
+    <h3 id={id} {...attrs}>
+      <slot />
+    </h3>
+  ) : (
+    <h2 id={id} {...attrs}>
+      <slot />
+    </h2>
+  )
+}
