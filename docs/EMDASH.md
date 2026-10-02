@@ -98,3 +98,22 @@ Known gaps found while converting:
    in `astro.config.mjs`.
 3. OG image: the page no longer passes `ogImage`, so BaseLayout derives
    `/og/work/<slug>.png` (the live site currently points at the cover JPG).
+
+## Image resizing (solved 2026-10-02)
+
+EmDash's `Image` builds its `srcset` through Astro's image service. With the
+old `imageService: 'compile'` alone, every srcset entry pointed at the
+full-size original (covers 0.7 to 1.9 MB). Two settings fix it, both in
+`astro.config.mjs`:
+
+1. `cloudflare({ imageService: { build: 'compile', runtime: 'cloudflare-binding' } })`
+   keeps build-time optimization for the site's own images and adds the
+   Cloudflare Images binding (`IMAGES`, auto-created) for CMS media at runtime.
+2. `image.remotePatterns` must list every origin that serves media (production
+   domain, www, and the trial workers.dev host). Without it Astro silently
+   passes the URL through and the srcset repeats the original.
+
+Measured on the trial: a 666 KB PNG cover serves as 31 KB WebP at 640w and
+63 KB at 1080w. Cost note: Cloudflare Images transformations are free up to
+5,000 unique transformations a month (each image-at-a-width counts once), far
+above this site's roughly 50 images x 8 widths.

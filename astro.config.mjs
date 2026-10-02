@@ -65,7 +65,21 @@ export default defineConfig({
   // site that runtime dependency left every case-study cover stuck on its
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
-  adapter: cloudflare({ imageService: 'compile' }),
+  // Astro's image service only resizes images from hosts it has been told to
+  // trust. CMS media is served from the site's own origin (/_emdash/api/media/...),
+  // so list the origins that serve it (the production domain and the trial Worker).
+  image: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'nixoncreativestudio.com' },
+      { protocol: 'https', hostname: 'www.nixoncreativestudio.com' },
+      { protocol: 'https', hostname: 'ncs-emdash-trial.nathanjnixon86.workers.dev' },
+    ],
+  },
+  // EmDash trial: keep build-time optimization for the site's own images, and
+  // add the Cloudflare Images binding at runtime so CMS images stored in R2 get
+  // real resized WebP srcsets (EmDash passes them through Astro's image service;
+  // with 'compile' alone every srcset entry pointed at the full-size original).
+  adapter: cloudflare({ imageService: { build: 'compile', runtime: 'cloudflare-binding' } }),
   integrations: [
     // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
     // so a code sample flips with the theme toggle instead of prefers-color-scheme.
