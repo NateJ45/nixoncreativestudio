@@ -49,6 +49,12 @@ import { site } from '../../data/site';
 // EmDash content is read per request, so this page is not prerendered.
 export const prerender = false;
 
+// The static pages 301 /about to /about/ (Cloudflare's asset handler). This server
+// route does the same, so /work/reid-design is not a second live copy of the page.
+if (!Astro.url.pathname.endsWith('/')) {
+  return Astro.redirect(`${Astro.url.pathname}/${Astro.url.search}`, 301);
+}
+
 const slug = Astro.params.slug ?? '';
 // One list read gives us the entry plus its neighbours for the next/prev nav.
 const all = await getCaseStudies();
