@@ -70,6 +70,15 @@ then on.
 
 ---
 
+### Retire the `staging` branch (after the EmDash migration)
+
+Decided 2026-10-02. Use short-lived branches, PRs and Cloudflare branch previews
+instead. Touches `.github/workflows/ci.yml`, `lighthouse.yml`,
+`deploy-staging.yml` (delete), the deployment notes in CLAUDE.md, then delete the
+branch locally and on origin. Do it as its own change, after cutover.
+
+---
+
 ## Open technical exposure (no human decision needed, just not done yet)
 
 ### 3. `react` / `react-dom` are on carets
