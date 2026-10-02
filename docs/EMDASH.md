@@ -184,10 +184,10 @@ GET requests to `/_image` and `/_emdash/api/media/file/`: it sets a 30-day
 cache header and stores the response in Cloudflare's edge cache. Measured on
 the trial: a never-seen width took 1.36s once, then 0.12s afterwards.
 
-Why it lives in the Worker entry and not in `src/middleware.ts`: EmDash's own
-"pre" middleware handles those routes first. (A first middleware attempt looked
-broken only because the check used `curl -I`; HEAD requests are skipped on
-purpose. Test with GET: `curl -s -D - -o /dev/null <url>`.)
+Why it lives in the Worker entry: it is outermost, so it does not depend on
+middleware order. A first attempt as `src/middleware.ts` was judged broken only
+because the check used `curl -I`; HEAD requests are skipped on purpose, so the
+attempt was never proven to fail. Test with GET: `curl -s -D - -o /dev/null <url>`.
 
 Throttled-mobile trace (Fast 4G, 4x CPU) of a case study, trial vs live:
 LCP 1.41s vs 1.43s once warm. The first load after a deploy measured 3.68s
