@@ -19,6 +19,15 @@
    filename without extension). e.g. theology-matters.mdx pairs
    with theology-matters.png in src/assets/case-studies/.
 
+   EMDASH MIGRATION NOTE: case study covers now live in EmDash (R2), which
+   renders its own blurhash, so this script only serves the static pages that
+   still use CaseStudyCover until cutover. It is safe when
+   src/assets/case-studies/ is empty or missing (it writes an empty {} map and
+   exits 0, verified), so the build keeps working after the MDX case studies and
+   their covers are deleted. CUTOVER: remove this script, coverPlaceholders.json,
+   src/lib/coverPlaceholder*.ts and the "placeholders" step of the build script
+   (docs/PENDING.md).
+
    Run with:
      node scripts/generate-placeholders.mjs
 

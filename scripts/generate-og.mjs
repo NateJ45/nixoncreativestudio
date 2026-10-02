@@ -18,6 +18,23 @@
      public/og/work/<slug>.png       one per case study
      public/og/journal/<slug>.png    one per journal entry
 
+   WHERE THE CASE STUDIES COME FROM (changed with the EmDash migration)
+   Case studies no longer live in git, so the case-study cards are built from
+   the PUBLISHED entries of the EmDash instance named by the EMDASH_URL env var.
+   The EmDash REST content API (/_emdash/api/content/...) needs a login, so this
+   script reads only what an anonymous visitor can read:
+     - /rss.xml                          the slug and title of every published
+                                         case study (server-rendered from EmDash)
+     - /work/<slug>/                     the first <img> is the cover; its href
+                                         carries the public media URL
+                                         (/_emdash/api/media/file/<id>.png)
+     - /_emdash/api/media/file/<id>.png  the original cover bytes
+   If the instance is unreachable, or returns no case studies, the script keeps
+   every already-committed public/og/work/*.png, prints a warning and carries on
+   (exit 0): a CMS outage must never fail the build or delete a card.
+   EMDASH_URL defaults to the trial Worker. CUTOVER: flip the default to
+   https://nixoncreativestudio.com (tracked in docs/PENDING.md).
+
    BaseLayout.astro maps the current pathname to /og/<slug>.png ('' -> index).
    Output is deterministic, so re-running with unchanged content produces
    identical bytes (no git churn).
@@ -232,9 +249,9 @@ function buildCoverOverlay(title) {
 }
 
 async function writeCard(relPath, title, cover) {
-  const hasCover = cover && existsSync(cover);
+  // `cover` is the original cover image as a Buffer (or undefined: plain card).
   let png;
-  if (hasCover) {
+  if (cover) {
     // Hero screenshot fills the card (top-anchored so the site header/hero
     // shows), then the scrim + title overlay paints on top.
     const coverBuf = await sharp(cover)
@@ -255,7 +272,7 @@ async function writeCard(relPath, title, cover) {
   return outPath;
 }
 
-// --- Frontmatter title reader ----------------------------------------------
+// --- Frontmatter title reader (journal only) ---------------------------------
 // Minimal: pull the `title:` line out of an MDX file's frontmatter block.
 function readTitle(file) {
   const text = readFileSync(file, 'utf8');
@@ -265,27 +282,75 @@ function readTitle(file) {
   if (!m) return null;
   return m[1].trim().replace(/^['"]|['"]$/g, '');
 }
-function collectionEntries(dir, prefix) {
-  const base = resolve(projectRoot, dir);
+function journalEntries() {
+  const base = resolve(projectRoot, 'src/content/journal');
   if (!existsSync(base)) return [];
   return readdirSync(base)
     .filter((f) => f.endsWith('.mdx'))
     .map((f) => {
       const slug = f.replace(/\.mdx$/, '');
-      const title = readTitle(join(base, f)) ?? slug;
-      const entry = { route: `${prefix}/${slug}`, title };
-      // Case study covers (real hero screenshots) drive the cover OG card.
-      if (prefix === 'work') {
-        for (const ext of ['png', 'jpg', 'jpeg', 'webp']) {
-          const c = resolve(projectRoot, 'src/assets/case-studies', `${slug}.${ext}`);
-          if (existsSync(c)) {
-            entry.cover = c;
-            break;
-          }
-        }
-      }
-      return entry;
+      return { route: `journal/${slug}`, title: readTitle(join(base, f)) ?? slug };
     });
+}
+
+// --- Case studies from EmDash ------------------------------------------------
+// See the header for why this reads public pages instead of the REST API.
+// CUTOVER: flip this default to https://nixoncreativestudio.com.
+const EMDASH_URL = (
+  process.env.EMDASH_URL || 'https://ncs-emdash-trial.nathanjnixon86.workers.dev'
+).replace(/\/+$/, '');
+const FETCH_TIMEOUT_MS = 20_000;
+
+async function getText(url) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
+  return res.text();
+}
+
+const decodeXml = (t) =>
+  t
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+
+// Returns [{ route, title, coverBuf }] or [] (never throws): the caller treats
+// an empty result as "keep the committed cards".
+async function emdashCaseStudies() {
+  try {
+    const rss = await getText(`${EMDASH_URL}/rss.xml`);
+    const items = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
+    const out = [];
+    for (const item of items) {
+      const link = item.match(/<link>([^<]+)<\/link>/)?.[1] ?? '';
+      const slug = link.match(/\/work\/([^/]+)\/?$/)?.[1];
+      const title = decodeXml(item.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').trim();
+      if (!slug || !title) continue;
+      const entry = { route: `work/${slug}`, title, coverBuf: undefined };
+      try {
+        const html = await getText(`${EMDASH_URL}/work/${slug}/`);
+        // The first <img> on the page is the cover; its href is the media file.
+        const img = html.match(/<img[^>]*\ssrc="([^"]+)"/)?.[1] ?? '';
+        const decoded = decodeURIComponent(img.replace(/&amp;/g, '&'));
+        const media = decoded.match(/\/_emdash\/api\/media\/file\/[A-Za-z0-9._-]+/)?.[0];
+        if (media) {
+          const res = await fetch(`${EMDASH_URL}${media}`, {
+            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+          });
+          if (res.ok) entry.coverBuf = Buffer.from(await res.arrayBuffer());
+        }
+      } catch (err) {
+        console.warn(`[og] ${slug}: cover not fetched (${err.message})`);
+      }
+      out.push(entry);
+    }
+    return out;
+  } catch (err) {
+    console.warn(`[og] could not read case studies from ${EMDASH_URL} (${err.message})`);
+    return [];
+  }
 }
 
 // --- Pages -----------------------------------------------------------------
@@ -303,15 +368,27 @@ const STATIC_PAGES = [
   { route: '404', title: 'Page not found' },
 ];
 
-const pages = [
-  ...STATIC_PAGES,
-  ...collectionEntries('src/content/case-studies', 'work'),
-  ...collectionEntries('src/content/journal', 'journal'),
-];
+const caseStudies = await emdashCaseStudies();
+if (caseStudies.length === 0) {
+  console.warn(
+    `[og] WARNING: no published case studies from ${EMDASH_URL}. Keeping the committed ` +
+      'public/og/work/*.png cards as they are (nothing deleted, build not failed).',
+  );
+} else {
+  console.log(`[og] ${caseStudies.length} case studies read from ${EMDASH_URL}`);
+}
+
+const pages = [...STATIC_PAGES, ...caseStudies, ...journalEntries()];
 
 let count = 0;
 for (const page of pages) {
-  await writeCard(page.route, page.title, page.cover);
+  // A case study whose cover could not be fetched keeps its committed card
+  // rather than being overwritten by the plain navy fallback.
+  if (page.route.startsWith('work/') && !page.coverBuf) {
+    console.warn(`[og] ${page.route}: no cover, keeping the committed card`);
+    continue;
+  }
+  await writeCard(page.route, page.title, page.coverBuf);
   count += 1;
 }
 console.log(`Generated ${count} OG cards into public/og/`);

@@ -7,8 +7,22 @@ name: CI
 # chromium and a WebKit iPhone profile. Before this the workflow was install,
 # build, unit tests, and lint was advisory only.
 #
-# No Sanity here (content lives in Astro content collections and MDX), so
-# there is no typegen step and no stale-types guard.
+# No Sanity here, so there is no typegen step and no stale-types guard.
+#
+# HYBRID SITE (EmDash migration): / , /work/ , /work/<slug>/ , /about/ ,
+# /services/ and /rss.xml are server-rendered from EmDash (D1 + R2), so
+# dist/client is no longer the whole site and cannot be served statically. The
+# build job therefore builds, then uploads the Worker as a VERSION (not
+# promoted: production is untouched) with `wrangler versions upload
+# --preview-alias`, and the link check, the Playwright suites (test job) and
+# Lighthouse (lighthouse.yml) run against that preview URL. The upload lives in
+# .github/actions/preview-version so both workflows share it.
+#
+# Needs two repo secrets, CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (see
+# docs/PENDING.md). Without them (fork PRs, or before Nathan adds them) the
+# preview-dependent steps are SKIPPED with a warning annotation, not failed;
+# every static gate (types, lint, format, unit tests, drift check, build) still
+# runs.
 
 on:
   push:
@@ -25,6 +39,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The preview URL the test job (and the link check below) run against.
+    outputs:
+      preview_enabled: ${{ steps.preview.outputs.enabled }}
+      preview_url: ${{ steps.preview.outputs.url }}
 
     steps:
       - uses: actions/checkout@v7
@@ -124,15 +142,34 @@ jobs:
       - name: Build
         run: npm run build
 
-      # linkinator over dist/client. The site is fully static (output:
-      # 'static', no page opts out with prerender = false), so every route is
-      # in dist/client and nothing needs skipping beyond off-site URLs. The
-      # log must say "scanned N links" with N well above zero.
+      # Upload the built Worker as a non-promoted version and get its aliased
+      # preview URL (skips with a warning when the Cloudflare secrets are
+      # absent). See .github/actions/preview-version/action.yml.
+      - name: Upload Worker preview version
+        id: preview
+        uses: ./.github/actions/preview-version
+        with:
+          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          alias-prefix: ci
+
+      # linkinator crawls the PREVIEW URL (scripts/check-links.mjs), because
+      # the server-rendered pages are not in dist/client. Off-site URLs are
+      # skipped. The log must say "scanned N links" with N in the hundreds.
+      # Without a preview this step is skipped, not run against dist/client: a
+      # partial tree reports the server-rendered pages as broken links.
       - name: Check internal links
+        if: steps.preview.outputs.enabled == 'true'
+        env:
+          LINKCHECK_URL: ${{ steps.preview.outputs.url }}
         run: npm run check:links
 
   test:
     runs-on: ubuntu-latest
+    # Needs the preview URL, so it waits for the build job and is skipped
+    # (not failed) when the build job found no Cloudflare secrets.
+    needs: build
+    if: needs.build.outputs.preview_enabled == 'true'
 
     steps:
       - uses: actions/checkout@v7
@@ -159,14 +196,17 @@ jobs:
           npx playwright install --with-deps chromium webkit ||
             npx playwright install --with-deps chromium webkit
 
-      # smoke (every route 200s and carries the studio name in its title), axe
-      # in light, axe in dark as a separate sweep plus a focus-indicator check
-      # (a theme swap is a different resting DOM), and reflow at
-      # 320/768/1024/1440 (WCAG 1.4.10 starts at 320, not 375). The config's
-      # webServer runs `npm run build` itself and serves dist/client on 4321.
-      # The html reporter is added on the command line so local runs keep the
-      # quiet `list` output while CI still produces the report artifact below.
+      # smoke (every route 200s and carries the studio name in its title, plus
+      # an unknown case study answers 404), axe in light, axe in dark as a
+      # separate sweep plus a focus-indicator check (a theme swap is a
+      # different resting DOM), and reflow at 320/768/1024/1440 (WCAG 1.4.10
+      # starts at 320, not 375). No webServer: playwright.config.ts reads the
+      # URL from PLAYWRIGHT_BASE_URL, here the Worker preview from the build
+      # job. The html reporter is added on the command line so local runs keep
+      # the quiet `list` output while CI still produces the report artifact.
       - name: Run tests (smoke, a11y light + dark, reflow)
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ needs.build.outputs.preview_url }}
         run: npm test -- --reporter=github,html
 
       - uses: actions/upload-artifact@v7

@@ -89,7 +89,22 @@ export default defineConfig({
       styleOverrides: { borderRadius: '0.5rem' },
     }),
     mdx(),
-    sitemap(),
+    // @astrojs/sitemap only lists PRERENDERED routes. Pages that read the CMS
+    // (home, /work/, /about/, /services/) are server-rendered now, so they are
+    // listed by hand via customPages. The case studies themselves come from
+    // EmDash's own per-collection sitemap (needs the `seo` support and a
+    // `/work/{slug}/` URL pattern on the case_studies collection), added to the
+    // same sitemap-index.xml via customSitemaps so robots.txt and Search
+    // Console keep pointing at the one URL they already know.
+    sitemap({
+      customPages: [
+        'https://nixoncreativestudio.com/',
+        'https://nixoncreativestudio.com/work/',
+        'https://nixoncreativestudio.com/about/',
+        'https://nixoncreativestudio.com/services/',
+      ],
+      customSitemaps: ['https://nixoncreativestudio.com/sitemap-case_studies.xml'],
+    }),
     react(),
     // EmDash CMS trial: D1 for content, R2 for media, admin at /_emdash/admin.
     emdash({
