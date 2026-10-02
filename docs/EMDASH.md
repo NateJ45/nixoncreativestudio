@@ -174,3 +174,22 @@ without a login), so it reads `/rss.xml` (slug, title), `/work/<slug>/` (first
 2026-10-02 against the trial: nine case studies read, and the regenerated cards
 are byte-identical to the committed ones. An unreachable instance keeps every
 committed `public/og/work/*.png` and exits 0.
+
+## Image caching and measured performance (2026-10-02)
+
+EmDash serves media, and Astro's `/_image` resizer serves the resized WebP, both
+with `Cache-Control: max-age=0, must-revalidate`, so every view re-ran the
+transform (about 0.22s each). `src/worker.ts` now wraps the EmDash handler for
+GET requests to `/_image` and `/_emdash/api/media/file/`: it sets a 30-day
+cache header and stores the response in Cloudflare's edge cache. Measured on
+the trial: a never-seen width took 1.36s once, then 0.12s afterwards.
+
+Why it lives in the Worker entry and not in `src/middleware.ts`: EmDash's own
+"pre" middleware handles those routes first. (A first middleware attempt looked
+broken only because the check used `curl -I`; HEAD requests are skipped on
+purpose. Test with GET: `curl -s -D - -o /dev/null <url>`.)
+
+Throttled-mobile trace (Fast 4G, 4x CPU) of a case study, trial vs live:
+LCP 1.41s vs 1.43s once warm. The first load after a deploy measured 3.68s
+because the resized images did not exist yet; the cache above is what keeps
+real visitors off that path. The gate is LCP under 4.5s.
