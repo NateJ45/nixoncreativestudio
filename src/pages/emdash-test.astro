@@ -1,0 +1,27 @@
+---
+// EmDash trial page: proves the CMS -> Astro round trip. Delete when the trial ends.
+// Server-rendered on purpose: EmDash content is read from D1 at request time.
+export const prerender = false;
+import { getEmDashCollection } from 'emdash';
+const { entries: posts, error } = await getEmDashCollection('posts');
+if (error) throw error;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>EmDash test | Nixon Creative Studio</title>
+  </head>
+  <body style="font-family: system-ui; max-width: 40rem; margin: 3rem auto; padding: 0 1rem">
+    <h1>EmDash posts</h1>
+    <ul>
+      {posts.map((post) => (
+        <li>
+          <strong>{post.data.title}</strong>
+          <p>{post.data.excerpt}</p>
+        </li>
+      ))}
+    </ul>
+  </body>
+</html>

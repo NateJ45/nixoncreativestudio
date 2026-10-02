@@ -40,9 +40,18 @@ are created in the admin and pages are changed to call `getEmDashCollection()`.
 npm run build && npx wrangler deploy
 ```
 
-## Not done yet (needs a human)
+## Status (2026-10-02)
 
-- Run the setup wizard and register the first admin passkey (WebAuthn needs
-  Nathan's device). Do it on the workers.dev URL first; if the trial moves to a
-  custom domain, set `EMDASH_SITE_URL` first or passkeys break.
-- Decide whether any content (journal first) should move into EmDash.
+- Setup wizard done, admin passkey registered, CLI logged in
+  (`npx emdash login --url <trial url>`, device-code flow approved in the browser).
+- The empty-site template shipped `pages` and `posts` collections. One test post
+  (`hello-emdash`) was created from the CLI; `src/pages/emdash-test.astro`
+  renders it server-side via `getEmDashCollection('posts')`. Delete both when
+  the trial ends. Pages that read EmDash need `export const prerender = false`
+  (the rest of the site stays prerendered).
+
+## Open
+
+- Decide whether the journal (or case studies) should move into EmDash. They
+  are still MDX in git; EmDash does not import them.
+- Custom domain: set `EMDASH_SITE_URL` first, or passkeys break.
