@@ -2,7 +2,7 @@
 /* ============================================================================
    migrate-case-studies.mjs
    ============================================================================
-   Migrates the 10 MDX case studies in src/content/case-studies/ into the EmDash
+   Migrates the 9 MDX case studies in src/content/case-studies/ into the EmDash
    `case_studies` collection. Idempotent: images are de-duplicated by content
    hash, and an entry whose slug already exists is updated, not duplicated.
 
@@ -10,8 +10,18 @@
      node scripts/migrate-case-studies.mjs       --url https://<instance>
      node scripts/migrate-case-studies.mjs       --url ... --only second-presbyterian-chicago
      node scripts/migrate-case-studies.mjs       --url ... --dry-run
+     node scripts/migrate-case-studies.mjs       --url ... --terms-out terms-plan.json
+
+   Terms (services, tags, stack): these are taxonomies, not fields. They are
+   assigned through the REST API, which needs EMDASH_TOKEN. With no token, pass
+   --terms-out <file> to write the plan ({ slug: { service: [...], topic: [...],
+   stack: [...] } }) instead, then apply it with applyTerms() from the
+   admin console (docs/EMDASH-SCHEMA.md, "Re-creating the schema").
 
    Mapping (full detail in docs/EMDASH-SCHEMA.md):
+     services / tags / stack -> terms in the `service`, `topic` and `stack`
+                              taxonomies (labels are the MDX strings, verbatim)
+     results               -> repeater rows [{ text }]
      frontmatter           -> same-named fields (liveUrl -> live_url,
                               designerNote -> designer_note, testimonial.* ->
                               testimonial_quote/name/title)
@@ -30,13 +40,15 @@
 
    Needs the `emdash` CLI login for the instance (see scripts/lib/emdash-cli.mjs).
    ============================================================================ */
-import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { basename, dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { markdownToPortableText } from 'emdash/client';
 import { emdash, withJsonFile } from './lib/emdash-cli.mjs';
+import { applyTerms } from './lib/case-studies-schema.mjs';
+import { restRequest } from './lib/emdash-rest.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CS_DIR = join(ROOT, 'src/content/case-studies');
@@ -51,6 +63,7 @@ const flag = (name) => process.argv.includes(`--${name}`);
 const url = (arg('url') || process.env.EMDASH_URL || '').replace(/\/$/, '');
 const only = arg('only');
 const dryRun = flag('dry-run');
+const termsOut = arg('terms-out');
 if (!url) {
   console.error(
     'Usage: node scripts/migrate-case-studies.mjs --url <instance> [--only <slug>] [--dry-run]',
@@ -195,7 +208,6 @@ function buildEntry(file) {
     title: fm.title,
     client: fm.client,
     sector: fm.sector,
-    services: fm.services,
     summary: fm.summary,
     cover: imageValue(coverFile, `The ${fm.client} homepage`),
     year: fm.year,
@@ -205,16 +217,15 @@ function buildEntry(file) {
   };
   for (const [from, to] of [
     ['role', 'role'],
-    ['tags', 'tags'],
-    ['stack', 'stack'],
     ['description', 'description'],
     ['liveUrl', 'live_url'],
     ['outcome', 'outcome'],
-    ['results', 'results'],
     ['designerNote', 'designer_note'],
   ]) {
     if (fm[from] !== undefined) data[to] = fm[from];
   }
+  // results: array of strings in the MDX, repeater rows { text } in EmDash.
+  if (fm.results) data.results = fm.results.map((text) => ({ text }));
   if (fm.updated) data.updated = new Date(fm.updated).toISOString();
   if (fm.testimonial) {
     data.testimonial_quote = fm.testimonial.quote;
@@ -255,7 +266,13 @@ function buildEntry(file) {
     data.after_label = b.afterLabel;
   }
   data.body = markdownToPortableText(proseOf(rest));
-  return { slug, data };
+  // Taxonomy terms: label = the MDX string, verbatim.
+  const terms = {
+    service: fm.services ?? [],
+    topic: fm.tags ?? [],
+    stack: fm.stack ?? [],
+  };
+  return { slug, data, terms };
 }
 
 /* ----------------------------------------------------------------------------
@@ -284,7 +301,14 @@ function upsert({ slug, data }) {
   });
 }
 
-function main() {
+async function main() {
+  const request = restRequest(url, arg('token'));
+  if (!request && !termsOut && !dryRun) {
+    throw new Error(
+      'Set EMDASH_TOKEN to assign terms, or pass --terms-out <file> to write a plan.',
+    );
+  }
+  const termPlan = {};
   const files = readdirSync(CS_DIR)
     .filter((f) => f.endsWith('.mdx'))
     .filter((f) => !only || basename(f, '.mdx') === only)
@@ -302,8 +326,11 @@ function main() {
     }
     const r = upsert(entry);
     console.log(`    ${r.action} ${r.id}`);
+    termPlan[slug] = entry.terms;
   }
+  if (request && !dryRun) await applyTerms(request, termPlan);
+  if (termsOut) writeFileSync(termsOut, JSON.stringify(termPlan, null, 2));
   console.log('done');
 }
 
-main();
+await main();

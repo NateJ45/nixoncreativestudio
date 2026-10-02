@@ -2,17 +2,19 @@
 
 Reference for the case study collection on the EmDash trial instance
 (`https://ncs-emdash-trial.nathanjnixon86.workers.dev`), and for the script that
-filled it from the 10 MDX files. Written so page templates can be built from this
-doc alone. Last verified against the live instance on 2026-10-02.
+filled it from the 9 MDX files (West Chester Preschool was deliberately dropped from the portfolio and must not be re-added). Written so page templates can be built from this
+doc alone. Last verified against the trial instance on 2026-10-02, after the taxonomy pass.
 
 - Collection slug: `case_studies` (label "Case Studies", singular "Case Study")
-- Supports: `drafts`, `revisions`. Routable, no SEO fields.
+- Supports: `drafts`, `revisions`, `seo` (per-entry SEO panel, sitemap entry), `search`. Sidebar group "Portfolio" (Case Studies, Services, Stack, Topics). Routable. Comments off.
 - Entry `slug` = the old MDX filename without `.mdx` (for example
   `second-presbyterian-chicago`), so `/work/<slug>/` URLs are unchanged.
-- All 10 entries are `published`. Entry count verified: 10.
-- Define it again on a fresh instance with
-  `node scripts/emdash-schema-case-studies.mjs --url <instance>`, then fill it
-  with `node scripts/migrate-case-studies.mjs --url <instance>`.
+- All 9 entries are `published`. Entry count verified: 9.
+- Define it again on a fresh instance with `EMDASH_TOKEN=<token> node
+scripts/emdash-schema-case-studies.mjs --url <instance>`, then fill it with
+  `EMDASH_TOKEN=<token> node scripts/migrate-case-studies.mjs --url <instance>`
+  (see "Re-creating the schema" below). Or let `seed/seed.json` create the schema
+  on a fresh production instance.
 
 ## Field definitions
 
@@ -20,54 +22,80 @@ Field slugs are snake_case and are the keys of `entry.data`. System fields (`id`
 `slug`, `status`, `published_at`, `updated_at`, ...) are reserved by EmDash and are
 separate from the `published` and `updated` content fields below.
 
-| Field               | Type         | Req | Stored shape                                                  | MDX source                                 |
-| ------------------- | ------------ | --- | ------------------------------------------------------------- | ------------------------------------------ |
-| `title`             | string       | yes | string                                                        | `title`                                    |
-| `client`            | string       | yes | string                                                        | `client`                                   |
-| `sector`            | select       | yes | `"church"`, `"school"`, `"nonprofit"` or `"small-business"`   | `sector`                                   |
-| `services`          | json         | no  | `string[]`                                                    | `services`                                 |
-| `role`              | string       | no  | string                                                        | `role`                                     |
-| `tags`              | json         | no  | `string[]`                                                    | `tags`                                     |
-| `stack`             | json         | no  | `string[]`                                                    | `stack`                                    |
-| `summary`           | text         | yes | string, max 200 chars                                         | `summary`                                  |
-| `description`       | text         | no  | string, max 500 chars (no case study uses it yet)             | `description`                              |
-| `cover`             | image        | yes | image value (below)                                           | `cover`                                    |
-| `year`              | integer      | yes | number                                                        | `year`                                     |
-| `featured`          | boolean      | no  | stored as `0` or `1`                                          | `featured`                                 |
-| `published`         | datetime     | yes | ISO string with `Z`, for example `"2026-05-01T00:00:00.000Z"` | `published`                                |
-| `updated`           | datetime     | no  | ISO string (no entry has one yet)                             | `updated`                                  |
-| `live_url`          | url          | no  | string                                                        | `liveUrl`                                  |
-| `outcome`           | text         | no  | string, max 160 chars                                         | `outcome`                                  |
-| `testimonial_quote` | text         | no  | string (no entry has one yet)                                 | `testimonial.quote`                        |
-| `testimonial_name`  | string       | no  | string                                                        | `testimonial.name`                         |
-| `testimonial_title` | string       | no  | string                                                        | `testimonial.title`                        |
-| `results`           | json         | no  | `string[]`                                                    | `results`                                  |
-| `designer_note`     | text         | no  | string                                                        | `designerNote`                             |
-| `body`              | portableText | no  | Portable Text block array                                     | the MDX prose                              |
-| `showcase_desktop`  | image        | no  | image value                                                   | `shots/<slug>-home.png`                    |
-| `showcase_mobile`   | image        | no  | image value; absent on first-baptist-muncie and first-presbyterian-orangeburg                              | `shots/<slug>-mobile.png`                  |
-| `showcase_alt`      | string       | no  | string                                                        | `<SiteShowcase alt>`                       |
-| `showcase_href`     | url          | no  | string                                                        | `<SiteShowcase href>`                      |
-| `showcase_label`    | string       | no  | string                                                        | `<SiteShowcase label>`                     |
-| `showcase_variant`  | select       | no  | `"scroll"` or `"zoom"`                                        | `<SiteShowcase variant>`, default `scroll` |
-| `highlights`        | repeater     | no  | array of highlight rows (below); absent when none             | `<FeatureHighlight>`                       |
-| `before_image`      | image        | no  | image value                                                   | `<BeforeAfter before>`                     |
-| `before_alt`        | string       | no  | string                                                        | `<BeforeAfter beforeAlt>`                  |
-| `before_label`      | string       | no  | string, default `"Before"`                                    | `<BeforeAfter beforeLabel>`                |
-| `after_image`       | image        | no  | image value (the same media item as `cover`)                  | `<BeforeAfter after>`                      |
-| `after_alt`         | string       | no  | string                                                        | `<BeforeAfter afterAlt>`                   |
-| `after_label`       | string       | no  | string, default `"After"`                                     | `<BeforeAfter afterLabel>`                 |
+| Field               | Type         | Req | Stored shape                                                                            | MDX source                                 |
+| ------------------- | ------------ | --- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `title`             | string       | yes | string                                                                                  | `title`                                    |
+| `client`            | string       | yes | string                                                                                  | `client`                                   |
+| `sector`            | select       | yes | `"church"`, `"school"`, `"nonprofit"` or `"small-business"` (real option list, indexed) | `sector`                                   |
+| `role`              | string       | no  | string                                                                                  | `role`                                     |
+| `summary`           | text         | yes | string, max 200 chars                                                                   | `summary`                                  |
+| `description`       | text         | no  | string, max 500 chars (no case study uses it yet)                                       | `description`                              |
+| `cover`             | image        | yes | image value (below)                                                                     | `cover`                                    |
+| `year`              | integer      | yes | number                                                                                  | `year`                                     |
+| `featured`          | boolean      | no  | stored as `0` or `1`                                                                    | `featured`                                 |
+| `published`         | datetime     | yes | ISO string with `Z`, for example `"2026-05-01T00:00:00.000Z"`                           | `published`                                |
+| `updated`           | datetime     | no  | ISO string (no entry has one yet)                                                       | `updated`                                  |
+| `live_url`          | url          | no  | string                                                                                  | `liveUrl`                                  |
+| `outcome`           | text         | no  | string, max 160 chars                                                                   | `outcome`                                  |
+| `testimonial_quote` | text         | no  | string (no entry has one yet)                                                           | `testimonial.quote`                        |
+| `testimonial_name`  | string       | no  | string                                                                                  | `testimonial.name`                         |
+| `testimonial_title` | string       | no  | string                                                                                  | `testimonial.title`                        |
+| `results`           | repeater     | no  | rows `{ text: string }`, one sub-field `text` (label "Result")                          | `results`                                  |
+| `designer_note`     | text         | no  | string                                                                                  | `designerNote`                             |
+| `body`              | portableText | no  | Portable Text block array                                                               | the MDX prose                              |
+| `showcase_desktop`  | image        | no  | image value                                                                             | `shots/<slug>-home.png`                    |
+| `showcase_mobile`   | image        | no  | image value; absent on first-baptist-muncie and first-presbyterian-orangeburg           | `shots/<slug>-mobile.png`                  |
+| `showcase_alt`      | string       | no  | string                                                                                  | `<SiteShowcase alt>`                       |
+| `showcase_href`     | url          | no  | string                                                                                  | `<SiteShowcase href>`                      |
+| `showcase_label`    | string       | no  | string                                                                                  | `<SiteShowcase label>`                     |
+| `showcase_variant`  | select       | no  | `"scroll"` or `"zoom"`                                                                  | `<SiteShowcase variant>`, default `scroll` |
+| `highlights`        | repeater     | no  | array of highlight rows (below); absent when none                                       | `<FeatureHighlight>`                       |
+| `before_image`      | image        | no  | image value                                                                             | `<BeforeAfter before>`                     |
+| `before_alt`        | string       | no  | string                                                                                  | `<BeforeAfter beforeAlt>`                  |
+| `before_label`      | string       | no  | string, default `"Before"`                                                              | `<BeforeAfter beforeLabel>`                |
+| `after_image`       | image        | no  | image value (the same media item as `cover`)                                            | `<BeforeAfter after>`                      |
+| `after_alt`         | string       | no  | string                                                                                  | `<BeforeAfter afterAlt>`                   |
+| `after_label`       | string       | no  | string, default `"After"`                                                               | `<BeforeAfter afterLabel>`                 |
 
 Empty optional fields are omitted from `entry.data` (no `null` padding) unless the
 CMS returns the column as `null`; test for presence with a plain truthiness check.
+
+### Taxonomies (replace the old services / tags / stack fields)
+
+Flat (non-hierarchical) taxonomies attached to `case_studies`. They are not fields,
+so they are absent from `entry.data`'s own keys and arrive hydrated on
+`entry.data.terms`, keyed by taxonomy name.
+
+| Taxonomy  | Label    | MDX source | Terms (current)                                             |
+| --------- | -------- | ---------- | ----------------------------------------------------------- |
+| `service` | Services | `services` | Strategy, Web Design                                        |
+| `topic`   | Topics   | `tags`     | 29 terms (Church, Wix, Trail Running, ...)                  |
+| `stack`   | Stack    | `stack`    | 15 terms (Astro, Sanity, Tailwind, Cloudflare Workers, ...) |
+
+- **Why `topic`, not `tag`:** the template already ships a built-in `tag` taxonomy
+  (label "Tags", attached to `posts`), and `category` too. Reusing the name would
+  have mixed case study tags into the posts' Tags screen. The names must match
+  exactly in queries: `where: { service: 'strategy' }`, never `services`.
+- Term labels are the MDX strings verbatim; the slug is derived (`Web Design` is
+  `web-design`).
+- **Order.** Hydrated `entry.data.terms` come back alphabetical, but the MDX lists
+  were written in a deliberate order ("Astro, Sanity, Cloudflare Workers, ...").
+  Terms are therefore created in a merged order that satisfies every study (the
+  migration's `mergeOrders`), and `src/lib/caseStudies.ts` sorts each entry's
+  labels by the taxonomy's term order (`getTaxonomyTerms`). Adding a term in the
+  admin appends it to the end of that order. All 9 studies render their lists in
+  exactly the MDX order.
+- Per-entry terms via the API use `entry.data.id` (the ULID) with
+  `getEntryTerms()`; hydration makes that unnecessary on the site.
 
 ### Treat these with care
 
 - `featured` comes back as `0` or `1`. Use `Boolean(entry.data.featured)`.
 - To list the homepage Selected Work: filter on `featured`, sort by `published`
-  descending, take 3. The fields are not marked `indexed`, so do the filter and sort
-  in the page, which is fine at 10 entries. Do not use the system `published_at` column for the case study
+  descending, take 3. `published`, `featured`, `year` and `sector` are marked
+  `indexed`; the page still filters and sorts in code, which is fine at 9 entries. Do not use the system `published_at` column for the case study
   date: it is the moment of the migration, not the project date.
+- `results` is `[{ text }]`; `getCaseStudies()` flattens it to `string[]`.
 - Entry link: `/work/${entry.id}/` (`entry.id` is the slug, per the EmDash docs).
 
 ## Shared shapes
@@ -153,8 +181,8 @@ Row keys: `image` (image value), `alt`, `title`, `caption`, `side` (`"left"` or
 if an MDX ever sets one; none do today. `caption` is the MDX `body` prop renamed.
 Highlights per study: first-baptist-muncie 2, first-presbyterian-orangeburg 2,
 foundation-for-reformed-theology 2, mas-monograms 3, presbyterian-academy 2,
-reid-design 0 (field absent), second-presbyterian-chicago 3, stone-steps-50k 2,
-theology-matters 2, west-chester-preschool 2.
+reid-design 0 (field absent), second-presbyterian-chicago 3, stone-steps-50k 3,
+theology-matters 2.
 
 ### Body (`body`, Portable Text)
 
@@ -177,7 +205,7 @@ A bullet is a `normal` block with `"listItem": "bullet", "level": 1`. Render wit
 first-presbyterian-orangeburg 16, foundation-for-reformed-theology 17,
 mas-monograms 20, presbyterian-academy 20, reid-design 19,
 second-presbyterian-chicago 18, stone-steps-50k 18, theology-matters 23,
-west-chester-preschool 16.
+(west-chester-preschool is gone).
 
 ## Rendering in Astro
 
@@ -224,7 +252,7 @@ Template rules that replace the MDX component imports:
 
 Placement inside the page. MDX embedded components in the prose, and the
 collection stores them separately, so the page order is a template rule. It matched
-all 10 MDX files exactly:
+all 9 MDX files exactly:
 
 1. `showcase_*` block at the very top, above the body.
 2. Body, with these insertions: `before_image`/`after_image` (when present) go
@@ -234,7 +262,7 @@ all 10 MDX files exactly:
 3. Lightbox at the end.
 
 Split the body array on the first block whose `style` is `h2` with text
-`The approach` and the one with text `What we built`. Both headings exist in all 10
+`The approach` and the one with text `What we built`. Both headings exist in all 9
 bodies.
 
 ## How the migration maps MDX to fields
@@ -259,28 +287,51 @@ supported):
    with `markdownToPortableText`.
 7. `published` is `new Date(frontmatter.published).toISOString()`; js-yaml reads
    `2026-05-01` as UTC midnight, so the stored value is exactly
-   `2026-05-01T00:00:00.000Z`. Verified for all 10.
-8. Looks the entry up by slug (`content get`); `content create --slug` if missing,
+   `2026-05-01T00:00:00.000Z`. Verified for all 9.
+8. `results` becomes repeater rows `[{ text }]`. `services`, `tags` and `stack` become
+   term labels for the `service`, `topic` and `stack` taxonomies; after the last
+   entry the script calls `applyTerms()`, which wipes and recreates the three
+   taxonomies' terms in a merged order and assigns them (needs `EMDASH_TOKEN`; with
+   no token pass `--terms-out plan.json` and apply the plan from the admin console).
+9. Looks the entry up by slug (`content get`); `content create --slug` if missing,
    `content update --rev` if present. Entries are published (the CLI default).
 
-Both scripts drive the `emdash` CLI through `scripts/lib/emdash-cli.mjs`, so they
-use the CLI's stored login and never handle a token.
+Content and media go through the `emdash` CLI (`scripts/lib/emdash-cli.mjs`), which
+uses its stored login. The schema and the terms need the REST API, because the CLI
+cannot create taxonomies, set select options, set indexed or searchable flags,
+turn on `seo`, set the sidebar group, or assign terms.
+
+## Re-creating the schema
+
+The single definition is `scripts/lib/case-studies-schema.mjs` (collection
+settings, every field, the three taxonomies, plus `applySchema()` and
+`applyTerms()`). Idempotent. Three ways to run it:
+
+1. **Node with a token:** create an API token in the admin (Settings, API tokens),
+   then `EMDASH_TOKEN=... node scripts/emdash-schema-case-studies.mjs --url <instance>`
+   and `EMDASH_TOKEN=... node scripts/migrate-case-studies.mjs --url <instance>`.
+2. **Admin console (no token):** open the admin, paste the two functions into the
+   browser console with a tiny `request(method, path, body)` that does
+   `fetch('/_emdash/api' + path, { method, headers: { 'X-EmDash-Request': '1',
+'Content-Type': 'application/json' }, body })` and returns `json.data`. The
+   signed-in session is the credential. This is how the trial was done on
+   2026-10-02. Large `applyTerms()` runs can exceed the console's 45 s tool
+   timeout in this environment, so assign terms per taxonomy.
+3. **`seed/seed.json` on a fresh production instance:** created by
+   `node scripts/export-seed-from-instance.mjs --url <trial>` (schema, taxonomies and
+   their terms, no content). EmDash picks up `seed/seed.json` with no `package.json`
+   change and applies it once, before the setup wizard is completed. Then run the
+   migration to load entries. `npx emdash export-seed` was not used because it reads a
+   local SQLite file, not a deployed D1 database.
+
+Changing a field's type (json to repeater) means dropping and re-adding it, so rerun
+the migration afterwards. The migration also uploaded 7 stone-steps images a second
+time on 2026-10-02 (its media de-dup could not find the earlier uploads), so the media
+library holds duplicates of those; delete the older copies in the admin if it matters.
 
 ## Known limits and how to fix them
 
-- **Repeater has no sub-fields yet.** `emdash schema add-field` cannot set
-  `validation`, so `highlights` is a `repeater` with no `subFields`. The data is
-  stored and returned intact (verified by read-back), but the admin editor has no
-  row form for it. Add the sub-fields in the admin Content Types screen: `image`
-  (image), `alt` (string), `title` (string), `caption` (text), `side` (select,
-  `left`/`right`). The stored shape does not change.
-- **`sector` and `showcase_variant` are `select` without an options list**, so the
-  CMS accepts any string. The migration only writes valid values. Add the options in
-  the same admin screen (`church, school, nonprofit, small-business` and
-  `scroll, zoom`).
-- **String lists are `json`**, because the CLI refused `multiSelect`. The editor is
-  raw JSON; the stored shape (`string[]`) is identical to what `multiSelect` would
-  hold.
+- **`highlights.side` and `results.text`** are repeater sub-fields. `side` is a select with options `left` and `right`; stored shape unchanged.
 - **Showcase, before/after and testimonial are flat fields**, not nested objects,
   because EmDash has no object field type and the CLI cannot define a repeater
   with sub-fields. This keeps every image a real, typed `image` field.
@@ -299,9 +350,20 @@ use the CLI's stored login and never handle a token.
 
 The `highlights` repeater now has sub-fields defined in the admin (image: image, alt: string, title: string, caption: text, side: string). Stored data is unchanged: 3 highlights still read back intact on second-presbyterian-chicago. `side` is a plain string (the sub-field UI has no options list for select), so keep the template tolerant of any value and default to alternating.
 
-## Editor setup plan (from EmDash's own docs and `building-emdash-site` skill, 2026-10-02)
+## Editor setup, done 2026-10-02
 
-Applied in the taxonomy pass, after the template agent finishes:
+The plan below was applied. What differs from the plan:
+
+- Taxonomy for tags is `topic`, not `tag` (built-in `tag` belongs to posts).
+- `search` support was enabled too, because the `searchable` flags only take effect with it.
+- The Group setting exists: the sidebar shows a "Portfolio" folder with Case Studies,
+  Services, Stack and Topics.
+- `posts` test entry `hello-emdash` and `src/pages/emdash-test.astro` are deleted; the
+  `posts` and `pages` collections remain.
+- Entry term order is not stored per entry (see Taxonomies above).
+- `seed/seed.json` exported (about 10 KB, schema and taxonomies only).
+
+### Original plan
 
 1. **services, stack, tags become flat taxonomies** (`hierarchical: false`) attached to `case_studies`. Editors get chip pickers instead of raw JSON, and `getEmDashCollection('case_studies', { where: { services: 'strategy' } })` filters natively (the /work chips). Gotchas: the taxonomy name must match exactly (singular vs plural returns empty results silently), and per-entry terms are read with `entry.data.id` (the ULID), not the slug.
 2. **results becomes a repeater** with one `text` sub-field (the docs' own portfolio example does the same for galleries).

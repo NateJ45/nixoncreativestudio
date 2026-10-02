@@ -16,11 +16,19 @@
    - `published` is the project date field (an ISO string), NOT the system
      `published_at` column (which is the migration moment). It is turned into a
      Date, and every list is sorted newest first on it.
+   - services, tags and stack are flat TAXONOMIES (`service`, `topic`, `stack`;
+     the built-in `tag` taxonomy belongs to posts, so case study tags are
+     `topic`), not fields. EmDash hydrates them onto `data.terms`, keyed by
+     taxonomy name: `data.terms.service` is an array of { slug, label, ... } in
+     the taxonomy's term order. We read the labels, which are the original
+     strings. (The per-entry call getEntryTerms() needs entry.data.id, the ULID,
+     not the slug; hydration makes that unnecessary here.)
+   - `results` is a repeater: rows of { text }. Flattened to string[] here.
    - Empty optional fields may come back as null; the helpers return undefined
      for those so a plain truthiness check works in templates.
    ============================================================================ */
 
-import { getEmDashCollection, getEmDashEntry } from 'emdash';
+import { getEmDashCollection, getEmDashEntry, getTaxonomyTerms } from 'emdash';
 import type { ImageValue } from 'emdash';
 
 /** A Portable Text block. Kept loose on purpose; the renderer does the work. */
@@ -83,7 +91,38 @@ export interface CaseStudy {
 type Raw = Record<string, unknown>;
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
-const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+/**
+ * Term order per taxonomy: label -> position in the taxonomy's own term list.
+ * An entry's hydrated `data.terms` come back alphabetical, but the original
+ * stack and tag lists were written in a deliberate order ("Astro, Sanity, ..."),
+ * and the migration creates the terms in an order that preserves it. Sorting by
+ * the taxonomy order restores it.
+ */
+type TermOrder = Record<string, Map<string, number>>;
+async function loadTermOrder(): Promise<TermOrder> {
+  const order: TermOrder = {};
+  for (const name of ['service', 'topic', 'stack']) {
+    const terms = await getTaxonomyTerms(name);
+    order[name] = new Map(terms.map((t, i) => [t.label, i]));
+  }
+  return order;
+}
+
+/** Labels of the terms hydrated for one taxonomy (data.terms[taxonomy]), in taxonomy order. */
+const termLabels = (d: Raw, taxonomy: string, order: TermOrder): string[] => {
+  const terms = (d.terms as Record<string, { label?: string }[]> | undefined)?.[taxonomy];
+  if (!Array.isArray(terms)) return [];
+  const pos = (label: string) => order[taxonomy]?.get(label) ?? Number.MAX_SAFE_INTEGER;
+  return terms
+    .map((t) => String(t.label ?? ''))
+    .filter(Boolean)
+    .sort((a, b) => pos(a) - pos(b));
+};
+/** Repeater rows { text } to string[]. */
+const rowTexts = (v: unknown): string[] =>
+  Array.isArray(v)
+    ? v.map((r) => String((r as { text?: unknown })?.text ?? '')).filter(Boolean)
+    : [];
 const date = (v: unknown): Date | undefined => {
   if (typeof v !== 'string' || !v) return undefined;
   const d = new Date(v);
@@ -92,17 +131,17 @@ const date = (v: unknown): Date | undefined => {
 const img = (v: unknown): ImageValue | undefined =>
   v && typeof v === 'object' ? (v as ImageValue) : undefined;
 
-function normalize(id: string, d: Raw): CaseStudy {
+function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
   const quote = str(d.testimonial_quote);
   return {
     id,
     title: String(d.title ?? ''),
     client: String(d.client ?? ''),
     sector: d.sector as CaseStudy['sector'],
-    services: list(d.services),
+    services: termLabels(d, 'service', order),
     role: str(d.role),
-    tags: list(d.tags),
-    stack: list(d.stack),
+    tags: termLabels(d, 'topic', order),
+    stack: termLabels(d, 'stack', order),
     summary: String(d.summary ?? ''),
     description: str(d.description),
     cover: img(d.cover),
@@ -114,7 +153,7 @@ function normalize(id: string, d: Raw): CaseStudy {
     testimonial: quote
       ? { quote, name: String(d.testimonial_name ?? ''), title: str(d.testimonial_title) }
       : undefined,
-    results: list(d.results),
+    results: rowTexts(d.results),
     designerNote: str(d.designer_note),
     body: Array.isArray(d.body) ? (d.body as PTBlock[]) : [],
     showcaseDesktop: img(d.showcase_desktop),
@@ -137,8 +176,9 @@ function normalize(id: string, d: Raw): CaseStudy {
 export async function getCaseStudies(): Promise<CaseStudy[]> {
   const { entries, error } = await getEmDashCollection('case_studies');
   if (error) throw error;
+  const order = await loadTermOrder();
   return entries
-    .map((e) => normalize(e.id, e.data as Raw))
+    .map((e) => normalize(e.id, e.data as Raw, order))
     .sort((a, b) => b.published.valueOf() - a.published.valueOf());
 }
 
@@ -146,7 +186,7 @@ export async function getCaseStudies(): Promise<CaseStudy[]> {
 export async function getCaseStudy(slug: string): Promise<CaseStudy | undefined> {
   const { entry, error } = await getEmDashEntry('case_studies', slug);
   if (error) throw error;
-  return entry ? normalize(entry.id, entry.data as Raw) : undefined;
+  return entry ? normalize(entry.id, entry.data as Raw, await loadTermOrder()) : undefined;
 }
 
 /**

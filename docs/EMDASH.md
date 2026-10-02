@@ -44,11 +44,8 @@ npm run build && npx wrangler deploy
 
 - Setup wizard done, admin passkey registered, CLI logged in
   (`npx emdash login --url <trial url>`, device-code flow approved in the browser).
-- The empty-site template shipped `pages` and `posts` collections. One test post
-  (`hello-emdash`) was created from the CLI; `src/pages/emdash-test.astro`
-  renders it server-side via `getEmDashCollection('posts')`. Delete both when
-  the trial ends. Pages that read EmDash need `export const prerender = false`
-  (the rest of the site stays prerendered).
+- The empty-site template shipped `pages` and `posts` collections (kept; the journal may use them). The test post and `src/pages/emdash-test.astro` were deleted in the taxonomy pass.
+  Pages that read EmDash need `export const prerender = false` (the rest of the site stays prerendered).
 
 ## Open
 
@@ -117,3 +114,23 @@ Measured on the trial: a 666 KB PNG cover serves as 31 KB WebP at 640w and
 63 KB at 1080w. Cost note: Cloudflare Images transformations are free up to
 5,000 unique transformations a month (each image-at-a-width counts once), far
 above this site's roughly 50 images x 8 widths.
+
+## Editor-friendly schema pass (2026-10-02)
+
+Services, tags and stack were raw JSON textareas in the editor. Now:
+
+- `services`, `tags`, `stack` are flat taxonomies `service`, `topic`, `stack` (chip pickers
+  in the sidebar). `topic` rather than `tag` because the template's built-in `tag`
+  taxonomy belongs to posts. `results` is a repeater of `{ text }`; `sector` and
+  `showcase_variant` are selects with real options.
+- Indexed: published, featured, year, sector. Searchable: title, summary, body.
+  Collection supports drafts, revisions, seo, search; sidebar group "Portfolio".
+- `src/lib/caseStudies.ts` reads terms from `entry.data.terms` and sorts them by the
+  taxonomy's term order (hydrated terms are alphabetical, the MDX lists were not).
+  Markup is unchanged: server pages match the live site's page heights at 1440 and
+  390, filter chips give the same counts, axe is clean in both themes.
+- Schema definition: `scripts/lib/case-studies-schema.mjs`; run via
+  `scripts/emdash-schema-case-studies.mjs` and `scripts/migrate-case-studies.mjs`
+  (need `EMDASH_TOKEN` for the REST steps). `seed/seed.json` (from
+  `scripts/export-seed-from-instance.mjs`) will create the production schema.
+  Full detail in docs/EMDASH-SCHEMA.md.

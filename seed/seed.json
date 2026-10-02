@@ -1,0 +1,525 @@
+{
+  "$schema": "https://emdashcms.com/seed.schema.json",
+  "version": "1",
+  "meta": {
+    "name": "Nixon Creative Studio",
+    "description": "Schema and taxonomies, no content."
+  },
+  "collections": [
+    {
+      "slug": "case_studies",
+      "label": "Case Studies",
+      "labelSingular": "Case Study",
+      "description": "Portfolio case studies.",
+      "supports": ["drafts", "revisions", "seo", "search"],
+      "group": "Portfolio",
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title",
+          "type": "string",
+          "required": true,
+          "searchable": true
+        },
+        {
+          "slug": "client",
+          "label": "Client",
+          "type": "string",
+          "required": true
+        },
+        {
+          "slug": "sector",
+          "label": "Sector",
+          "type": "select",
+          "required": true,
+          "indexed": true,
+          "validation": {
+            "options": ["church", "school", "nonprofit", "small-business"]
+          }
+        },
+        {
+          "slug": "role",
+          "label": "Role",
+          "type": "string"
+        },
+        {
+          "slug": "summary",
+          "label": "Summary (max 200 chars)",
+          "type": "text",
+          "required": true,
+          "searchable": true
+        },
+        {
+          "slug": "description",
+          "label": "Description (max 500 chars)",
+          "type": "text"
+        },
+        {
+          "slug": "cover",
+          "label": "Cover image",
+          "type": "image",
+          "required": true
+        },
+        {
+          "slug": "year",
+          "label": "Year",
+          "type": "integer",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "slug": "featured",
+          "label": "Featured on the homepage",
+          "type": "boolean",
+          "indexed": true
+        },
+        {
+          "slug": "published",
+          "label": "Published (case study date)",
+          "type": "datetime",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "slug": "updated",
+          "label": "Updated",
+          "type": "datetime"
+        },
+        {
+          "slug": "live_url",
+          "label": "Live site URL",
+          "type": "url"
+        },
+        {
+          "slug": "outcome",
+          "label": "Outcome (one honest line, max 160)",
+          "type": "text"
+        },
+        {
+          "slug": "testimonial_quote",
+          "label": "Testimonial quote",
+          "type": "text"
+        },
+        {
+          "slug": "results",
+          "label": "Results",
+          "type": "repeater",
+          "validation": {
+            "subFields": [
+              {
+                "slug": "text",
+                "type": "string",
+                "label": "Result",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "testimonial_name",
+          "label": "Testimonial name",
+          "type": "string"
+        },
+        {
+          "slug": "testimonial_title",
+          "label": "Testimonial title",
+          "type": "string"
+        },
+        {
+          "slug": "designer_note",
+          "label": "Designer note",
+          "type": "text"
+        },
+        {
+          "slug": "body",
+          "label": "Body",
+          "type": "portableText",
+          "searchable": true
+        },
+        {
+          "slug": "showcase_desktop",
+          "label": "Showcase: desktop full-page capture",
+          "type": "image"
+        },
+        {
+          "slug": "showcase_mobile",
+          "label": "Showcase: mobile full-page capture (optional)",
+          "type": "image"
+        },
+        {
+          "slug": "showcase_alt",
+          "label": "Showcase: alt text",
+          "type": "string"
+        },
+        {
+          "slug": "showcase_href",
+          "label": "Showcase: live site link",
+          "type": "url"
+        },
+        {
+          "slug": "showcase_label",
+          "label": "Showcase: address-bar label",
+          "type": "string"
+        },
+        {
+          "slug": "showcase_variant",
+          "label": "Showcase: variant",
+          "type": "select",
+          "validation": {
+            "options": ["scroll", "zoom"]
+          }
+        },
+        {
+          "slug": "highlights",
+          "label": "Feature highlights",
+          "type": "repeater",
+          "validation": {
+            "subFields": [
+              {
+                "slug": "image",
+                "type": "image",
+                "label": "Screenshot",
+                "required": true
+              },
+              {
+                "slug": "alt",
+                "type": "string",
+                "label": "Alt text",
+                "required": true
+              },
+              {
+                "slug": "title",
+                "type": "string",
+                "label": "Title",
+                "required": true
+              },
+              {
+                "slug": "caption",
+                "type": "text",
+                "label": "Caption",
+                "required": true
+              },
+              {
+                "slug": "side",
+                "type": "select",
+                "label": "Image side",
+                "options": ["left", "right"]
+              }
+            ]
+          }
+        },
+        {
+          "slug": "before_image",
+          "label": "Before/after: before image",
+          "type": "image"
+        },
+        {
+          "slug": "before_alt",
+          "label": "Before/after: before alt",
+          "type": "string"
+        },
+        {
+          "slug": "before_label",
+          "label": "Before/after: before label",
+          "type": "string"
+        },
+        {
+          "slug": "after_image",
+          "label": "Before/after: after image",
+          "type": "image"
+        },
+        {
+          "slug": "after_alt",
+          "label": "Before/after: after alt",
+          "type": "string"
+        },
+        {
+          "slug": "after_label",
+          "label": "Before/after: after label",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "slug": "pages",
+      "label": "Pages",
+      "labelSingular": "Page",
+      "supports": ["drafts", "revisions", "search"],
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title",
+          "type": "string",
+          "required": true,
+          "searchable": true
+        },
+        {
+          "slug": "content",
+          "label": "Content",
+          "type": "portableText",
+          "searchable": true
+        }
+      ]
+    },
+    {
+      "slug": "posts",
+      "label": "Posts",
+      "labelSingular": "Post",
+      "supports": ["drafts", "revisions", "search"],
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title",
+          "type": "string",
+          "required": true,
+          "searchable": true
+        },
+        {
+          "slug": "featured_image",
+          "label": "Featured Image",
+          "type": "image"
+        },
+        {
+          "slug": "content",
+          "label": "Content",
+          "type": "portableText",
+          "searchable": true
+        },
+        {
+          "slug": "excerpt",
+          "label": "Excerpt",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "taxonomies": [
+    {
+      "name": "category",
+      "label": "Categories",
+      "labelSingular": "Category",
+      "hierarchical": true,
+      "collections": ["posts"],
+      "terms": []
+    },
+    {
+      "name": "tag",
+      "label": "Tags",
+      "labelSingular": "Tag",
+      "hierarchical": false,
+      "collections": ["posts"],
+      "terms": []
+    },
+    {
+      "name": "service",
+      "label": "Services",
+      "labelSingular": "Service",
+      "hierarchical": false,
+      "collections": ["case_studies"],
+      "terms": [
+        {
+          "slug": "strategy",
+          "label": "Strategy"
+        },
+        {
+          "slug": "web-design",
+          "label": "Web Design"
+        }
+      ]
+    },
+    {
+      "name": "topic",
+      "label": "Topics",
+      "labelSingular": "Topic",
+      "hierarchical": false,
+      "collections": ["case_studies"],
+      "terms": [
+        {
+          "slug": "church",
+          "label": "Church"
+        },
+        {
+          "slug": "wix",
+          "label": "Wix"
+        },
+        {
+          "slug": "churchcenter",
+          "label": "ChurchCenter"
+        },
+        {
+          "slug": "multi-ministry",
+          "label": "Multi-ministry"
+        },
+        {
+          "slug": "building-reservation",
+          "label": "Building Reservation"
+        },
+        {
+          "slug": "giving",
+          "label": "Giving"
+        },
+        {
+          "slug": "nonprofit",
+          "label": "Nonprofit"
+        },
+        {
+          "slug": "theological-resource",
+          "label": "Theological Resource"
+        },
+        {
+          "slug": "small-business",
+          "label": "Small Business"
+        },
+        {
+          "slug": "custom-orders",
+          "label": "Custom Orders"
+        },
+        {
+          "slug": "education",
+          "label": "Education"
+        },
+        {
+          "slug": "course-catalog",
+          "label": "Course Catalog"
+        },
+        {
+          "slug": "enrollment",
+          "label": "Enrollment"
+        },
+        {
+          "slug": "launch",
+          "label": "Launch"
+        },
+        {
+          "slug": "interior-design",
+          "label": "Interior Design"
+        },
+        {
+          "slug": "portfolio",
+          "label": "Portfolio"
+        },
+        {
+          "slug": "before-and-after",
+          "label": "Before and After"
+        },
+        {
+          "slug": "lead-generation",
+          "label": "Lead Generation"
+        },
+        {
+          "slug": "sermon-archive",
+          "label": "Sermon Archive"
+        },
+        {
+          "slug": "headless-cms",
+          "label": "Headless CMS"
+        },
+        {
+          "slug": "site-rebuild",
+          "label": "Site Rebuild"
+        },
+        {
+          "slug": "trail-running",
+          "label": "Trail Running"
+        },
+        {
+          "slug": "events",
+          "label": "Events"
+        },
+        {
+          "slug": "records-database",
+          "label": "Records Database"
+        },
+        {
+          "slug": "interactive-map",
+          "label": "Interactive Map"
+        },
+        {
+          "slug": "journal",
+          "label": "Journal"
+        },
+        {
+          "slug": "wordpress",
+          "label": "WordPress"
+        },
+        {
+          "slug": "editorial-design",
+          "label": "Editorial Design"
+        },
+        {
+          "slug": "audio",
+          "label": "Audio"
+        }
+      ]
+    },
+    {
+      "name": "stack",
+      "label": "Stack",
+      "labelSingular": "Stack item",
+      "hierarchical": false,
+      "collections": ["case_studies"],
+      "terms": [
+        {
+          "slug": "wix",
+          "label": "Wix"
+        },
+        {
+          "slug": "churchcenter",
+          "label": "ChurchCenter"
+        },
+        {
+          "slug": "onrealm",
+          "label": "OnRealm"
+        },
+        {
+          "slug": "wordpress",
+          "label": "WordPress"
+        },
+        {
+          "slug": "bricks-builder",
+          "label": "Bricks Builder"
+        },
+        {
+          "slug": "acf",
+          "label": "ACF"
+        },
+        {
+          "slug": "astro",
+          "label": "Astro"
+        },
+        {
+          "slug": "sanity",
+          "label": "Sanity"
+        },
+        {
+          "slug": "tailwind",
+          "label": "Tailwind"
+        },
+        {
+          "slug": "cloudflare",
+          "label": "Cloudflare"
+        },
+        {
+          "slug": "cloudflare-workers",
+          "label": "Cloudflare Workers"
+        },
+        {
+          "slug": "maplibre-gl",
+          "label": "MapLibre GL"
+        },
+        {
+          "slug": "runsignup-api",
+          "label": "RunSignUp API"
+        },
+        {
+          "slug": "elevenlabs",
+          "label": "ElevenLabs"
+        },
+        {
+          "slug": "rankmath",
+          "label": "RankMath"
+        }
+      ]
+    }
+  ]
+}
