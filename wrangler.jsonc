@@ -1,13 +1,20 @@
 {
+  // EMDASH TRIAL: separate Worker name so it never touches the live
+  // nixoncreativestudio Worker. Lives on branch `emdash-trial`.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ncs-emdash-trial",
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-05-25",
-  "compatibility_flags": ["global_fetch_strictly_public"],
-  "name": "nixoncreativestudio",
-  "main": "@astrojs/cloudflare/entrypoints/server",
-  "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-  },
-  "observability": {
-    "enabled": true,
-  },
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ncs-emdash",
+      "database_id": "e644f610-ae29-457c-ac97-14242b2d145b",
+    },
+  ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ncs-emdash-media" }],
+  "worker_loaders": [{ "binding": "LOADER" }],
+  "triggers": { "crons": ["* * * * *"] },
+  "observability": { "enabled": true },
 }

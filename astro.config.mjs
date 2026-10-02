@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { fileURLToPath } from 'node:url';
 
 import cloudflare from '@astrojs/cloudflare';
 import expressiveCode from 'astro-expressive-code';
@@ -7,6 +8,8 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import emdash from 'emdash/astro';
+import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 
 // =============================================================================
 // Astro config
@@ -70,9 +73,40 @@ export default defineConfig({
     mdx(),
     sitemap(),
     react(),
+    // EmDash CMS trial: D1 for content, R2 for media, admin at /_emdash/admin.
+    emdash({
+      database: d1({ binding: 'DB' }),
+      storage: r2({ binding: 'MEDIA' }),
+      sandboxRunner: sandbox(),
+    }),
   ],
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).
+      // EmDash aliases `use-sync-external-store/shim/with-selector.js` to its
+      // own ESM shim, which only has a NAMED export. zustand (pulled in by
+      // @react-three/fiber for the WebGL hero) does a DEFAULT import of that
+      // file, so the build dies with MISSING_EXPORT. Rewriting zustand's import
+      // to a namespace import of the same shim keeps both sides happy.
+      {
+        name: 'ncs-zustand-sync-store-shim',
+        enforce: 'pre',
+        transform(code, id) {
+          if (!/zustand[\\/]esm[\\/]traditional\.mjs/.test(id)) return null;
+          const shim = fileURLToPath(
+            new URL(
+              './node_modules/emdash/src/astro/integration/shims/use-sync-external-store-with-selector.js',
+              import.meta.url,
+            ),
+          ).replace(/\\/g, '/');
+          return code.replace(
+            /import useSyncExternalStoreExports from 'use-sync-external-store\/shim\/with-selector\.js';/,
+            `import * as useSyncExternalStoreExports from '${shim}';`,
+          );
+        },
+      },
+    ],
   },
 });
