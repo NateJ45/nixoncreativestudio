@@ -4,10 +4,16 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/stone-steps-50k.png
-# with a real photo when one is available. Current file is a placeholder.
+# This study covers the 2026 rebuild (Astro + Sanity + Cloudflare, live on
+# stonesteps50k.com since 2026-09-18). The first version was a WordPress
+# (Bricks) site built in 2024. Its screenshots are kept as the "before"
+# images: shots/stone-steps-50k-before*.png, captured June 2026 while the
+# WordPress site was still live. They cannot be re-captured, so never delete
+# them. The "after" images were captured from the live site on 2026-09-23.
 #
-# NOTE: Verify the year — this project may be from 2023 or earlier.
+# Every number in the prose is sourced in the client note
+# (_vault/clients/stone-steps-50k.md) or the stonesteps-50k repo. Check
+# there before changing one.
 title: Stone Steps 50K
 client: Stone Steps 50K
 sector: nonprofit
@@ -19,87 +25,139 @@ tags:
   - Trail Running
   - Events
   - Records Database
-  - WordPress
+  - Interactive Map
 stack:
-  - WordPress
-  - RunSignUp
-  - OpenWeatherMap
-summary: "A central home for Cincinnati's longest-running ultramarathon, pulling twenty years of results, records, and race history into one place."
+  - Astro
+  - Sanity
+  - Cloudflare Workers
+  - MapLibre GL
+  - RunSignUp API
+summary: "A rebuild for Cincinnati's longest-running ultramarathon: every result since 2003, records calculated from them, and a 3D map of the course measured from a real run."
 cover: ../../assets/case-studies/stone-steps-50k.png
-year: 2024
-featured: false
-published: 2024-08-01
+year: 2026
+featured: true
+published: 2026-09-18
 liveUrl: https://stonesteps50k.com
-outcome: 'A 20-year race finally given a home that honors its history and helps new runners commit.'
+outcome: 'Twenty-three years of results in one place, with records the site calculates itself, so a record can never disagree with the finish behind it.'
 # Add a real client quote here when you have one, then uncomment. Never invent it.
 # testimonial:
 #   quote: ""
 #   name: ""
 #   title: ""
 results:
-  - 'Runners who had raced for fifteen years saw their names in a real records table for the first time, giving a twenty-year community its history in one place.'
-  - 'There is now one place that answers every pre-race and post-race question, from course elevation to race-morning conditions.'
-  - 'The all-time records page gives the community a reason to come back after results post each year, so a once-a-year event keeps a presence beyond its single October weekend.'
-  - 'New runners can see how hard the course is up front, with elevation, loop structure, and aid stations sitting right next to the registration link.'
-designerNote: 'The records database took more planning than anything else on this site. Getting the data structure right for age-group records across two distances meant thinking through the whole display before I wrote a line of code. It was worth it: runners who had been showing up to that forest every October for two decades finally saw their names in a real records table, and that is the part the community noticed most.'
+  - 'Every edition since 2003 has its own results page, 2,188 finishes in all, recovered from RunSignUp and the race’s archived results pages and checked year by year against their sources.'
+  - 'Records are calculated from those results instead of typed into tables, so a record and the finish behind it are the same entry. The old site had drifted: it listed one 1:58:36 under two different years, and spelled one runner two ways.'
+  - 'The climbing figure now has a measurement behind it: about 5,200 feet, taken from USGS LiDAR along the race director’s own recorded run of the course.'
+  - 'After each race the site updates itself. Results, records, and runner pages are live the next morning, and nobody has to touch anything.'
+designerNote: 'I built the first Stone Steps site in 2024, so this was a rebuild of my own work, and the old records tables are what convinced me it was worth doing. They had been kept by hand, and over the years they had quietly started to disagree with each other. The map is the part people notice first, but the part I spent the most care on is the results archive: recovering the early years from archived pages, fixing what the recovery got wrong, and checking every year against its source before a single record was calculated from it.'
 ---
 
 import SiteShowcase from '../../components/SiteShowcase.astro';
+import BeforeAfter from '../../components/BeforeAfter.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
-import recordsShot from '../../assets/case-studies/shots/stone-steps-50k-feature-records.png';
-import courseShot from '../../assets/case-studies/shots/stone-steps-50k-feature-course.png';
+import beforeHero from '../../assets/case-studies/shots/stone-steps-50k-before.png';
+import afterHero from '../../assets/case-studies/stone-steps-50k.png';
+import beforeRecords from '../../assets/case-studies/shots/stone-steps-50k-before-records.png';
+import afterRecords from '../../assets/case-studies/shots/stone-steps-50k-after-records.png';
+import beforeCourse from '../../assets/case-studies/shots/stone-steps-50k-before-course.png';
+import afterCourse from '../../assets/case-studies/shots/stone-steps-50k-after-course.png';
+import boardShot from '../../assets/case-studies/shots/stone-steps-50k-feature-board.png';
+import elevationShot from '../../assets/case-studies/shots/stone-steps-50k-feature-elevation.png';
+import weatherShot from '../../assets/case-studies/shots/stone-steps-50k-feature-weather.png';
 
 <SiteShowcase
   slug="stone-steps-50k"
-  alt="The Stone Steps 50K homepage, scrolling top to bottom"
+  alt="The rebuilt Stone Steps 50K homepage, scrolling top to bottom"
   href="https://stonesteps50k.com"
   label="stonesteps50k.com"
 />
 
 ## The brief
 
-The Stone Steps 50K is an ultramarathon trail race through Mt. Airy Forest in Cincinnati, with over twenty years of history and a loyal running community behind it. Race director David Corfman has been running the event since the early years. The race had the community, the history, and a genuinely difficult course. What it did not have was a website that treated any of those things seriously.
+The Stone Steps 50K is a trail ultramarathon through Mt. Airy Forest in Cincinnati: seven loops out of The Oval, a 27K for runners who want four, and a loyal community that has come back every October since 2003. Race director David Corfman has run it for most of that time.
 
-The brief was to build a site that served three distinct needs: give new runners enough information to decide whether to register, give returning runners a way to check results and records, and give everyone the logistical information they need to show up on race day prepared.
+I built the race's first real website in 2024, on WordPress. It gave the race a home, but two years on its weak spots were clear. The records lived in hand-typed tables that had started to contradict each other. The course was summed up by a single elevation figure with no measurement behind it written down anywhere.
 
-## The approach
+So the brief for version two was about trust as much as looks. Every number on the site should come from a source you can point to, the history should be complete, and the site should keep itself current after each race without anyone typing anything in.
 
-A trail race website has a different content hierarchy than most event sites. The question a new visitor asks is not "what is this?" but "how hard is this and can I finish it?" The answer lives in the course details: total elevation, loop structure, aid station locations, cutoff times. We put that information front and center alongside the registration link so the path from "I've heard of this race" to "I'm registered" is as short as possible.
+<BeforeAfter
+  before={beforeHero}
+  after={afterHero}
+  beforeAlt="The first Stone Steps 50K site, built on WordPress in 2024: a race photo behind a centered title and a countdown"
+  afterAlt="The rebuilt Stone Steps 50K homepage: a stamped wordmark and race facts on the left, the trail photograph bleeding off the right edge"
+/>
 
-For the records section, we took it seriously. Ultramarathon runners care about records in a way that road runners often do not, and a twenty-year race has genuine history worth preserving. We built a proper all-time records database with age-group breakdowns for both the 50K and 27K distances, plus top-ten leaderboards by gender. The records page is not decorative; it is something runners actually check before the race and after results post.
+## What changed, and why
 
-The weather widget was a practical addition that earns its place. Mt. Airy Forest conditions on race morning are relevant information. A runner who can check current conditions at 5 AM from the race website rather than searching for a general Cincinnati forecast has one fewer thing to think about.
+### The records come from the results
 
-Registration and results both run through RunSignUp, which is the right tool for the actual race management. The site links out cleanly rather than trying to replicate that functionality.
+On the old site, records were tables someone typed in and kept up by hand, which is how the same 1:58:36 ended up listed under both 2010 and 2011. The rebuild starts from the results instead. Every finish since 2003 is its own entry, with the time stored as a number and the finish linked to a runner profile. Course records, age-group records, and the top-ten lists are all calculated from those entries.
+
+That meant finding the results first. The recent years came straight from RunSignUp's public API. The early ones came from the race's archived results pages, and every year was re-checked against its source. That check caught real mistakes: an importer that misread one year's column for sex and left 2004 without its three women, and twelve old 27K "records" that matched no finish in any year. Those came off the board, and the question of where they came from went back to Dave.
+
+<BeforeAfter
+  before={beforeRecords}
+  after={afterRecords}
+  beforeAlt="The old records page: two brown-headed tables of age groups, names, years and times"
+  afterAlt="The rebuilt records page: men's and women's 50K records side by side, with the course record called out above each table and a fastest-ten list below"
+/>
+
+### The course, measured instead of described
+
+The old course section was a race photo, a scan of the park's trail map, and a paragraph of loop directions, with "10,726 feet" as the total elevation change. Nobody had written down where that number came from.
+
+The new course map is drawn from Dave's own recorded run of the course, on real 3D terrain with aerial imagery. Visitors can drag it, tilt it, switch between satellite and topo, color the route by steepness, and fly the whole course. The elevation profile below the map doubles as a scrubber, so hovering over a climb shows exactly where it is on the course. The climbing figure is measured too: about 5,200 feet of climbing, from USGS 1-meter LiDAR along that same track, with the method stated right next to the chart.
+
+<BeforeAfter
+  before={beforeCourse}
+  after={afterCourse}
+  beforeAlt="The old course section: a tilted race photo, a scanned park map, and a paragraph describing the loops"
+  afterAlt="The rebuilt course map: the seven loops drawn in orange over 3D satellite terrain of Mt. Airy Forest, with fly, flatten, topo and gradient controls and an elevation profile below"
+/>
+
+### A look taken from the race's own sign
+
+The race logo is a hand-painted trail sign in cream and gold, so that is where the new identity starts. The palette is sampled from the logo file. Buttons are sign plates. Course records are names stamped onto a bark board, and each year's results page is laid out like a timing sheet on a clipboard. The first draft of the design used a near-black and blaze orange scheme that looked like a trail race. It got thrown out because it didn't look like this one.
+
+### A site that keeps itself current
+
+Race details live in a Sanity Studio that Dave can edit himself, with a checklist for rolling the site over to a new year. After each race, a nightly job pulls the new results from RunSignUp, and by the next morning the results page, the records, the runner pages, and the edition count are all up to date. The contact form delivers straight to the race director's inbox, and the whole site moved onto Cloudflare along with its domain. Every change is checked against a perfect Lighthouse accessibility score, and the check fails if it drops.
 
 ## What we built
 
 <FeatureHighlight
-  src={recordsShot}
-  alt="The all-time records database on the Stone Steps 50K site"
-  title="A records database runners actually check"
-  body="All-time records broken out by age group across both distances, plus top-ten leaderboards by gender, sortable and kept current, so a twenty-year community can finally see its history in one place."
+  src={boardShot}
+  alt="The course-records board: four record holders stamped onto a bark board with their times and years"
+  title="The names on the board"
+  body="The four course records, men's and women's for both distances, stamped onto a bark board. It is calculated from the results like everything else, so it changes on its own the morning after someone breaks a record."
   side="left"
 />
 
 <FeatureHighlight
-  src={courseShot}
-  alt="The course and trails detail on the Stone Steps 50K homepage"
-  title="How hard is it, answered up front"
-  body="The course detail leads with what a trail runner needs before committing: loop structure, total elevation, and aid stations, sitting right next to the registration link."
+  src={elevationShot}
+  alt="The elevation chart: seven loops of steep saw-tooth climbs, with a note that it was measured from USGS LiDAR"
+  title="A stack of saw teeth"
+  body="The elevation profile of all seven loops, with each return to the aid station marked. The source is written right under the chart: USGS 1-meter LiDAR along a recorded run of the course."
   side="right"
 />
 
-The full build, including the pieces above:
+<FeatureHighlight
+  src={weatherShot}
+  alt="The race-day weather chart: a temperature bar for every race morning from 2003 to 2025, with rainy years marked"
+  title="What the weather has done"
+  body="Every race morning since 2003 as a temperature range, with rain on the day and rain the night before marked. It replaces the live forecast widget from the first version with something only this race has, and it adds each new year on its own."
+  side="left"
+/>
 
-- Event homepage with the essential information: date, location, race distances, and prominent registration link
-- Course detail pages for the 50K and 27K with elevation data, loop structure, and aid station information
-- All-time records database with age-group breakdowns (seven age groups for 50K, six for 27K) and top-ten leaderboards by gender for each distance
-- OpenWeatherMap weather widget showing live conditions at Mt. Airy Forest
-- RunSignUp integration for registration and results, linked cleanly from the site navigation
-- Google Maps embed for downtown Cincinnati and airport-area hotel options for out-of-town runners
-- Contact form directed to the race director
-- Sponsor section featuring Fleet Feet, Cincinnati Parks, and USATF
+The full build:
+
+- Homepage with the race date, a countdown to the gun, both distances with their fees and start times, and registration through RunSignUp
+- Interactive 3D course map with a flyover, satellite and topo views, a steepness view, and an elevation scrubber
+- A results page for every year from 2003 to 2025, plus a page for each runner showing every finish on file
+- All-time records and top-ten lists for both distances, calculated from the results
+- Historical race-day weather for every edition
+- Parking and directions to the start, and a contact form that goes straight to the race director
+- A Sanity Studio for the race director, with automatic results imports after each race
 
 <Lightbox />

@@ -72,3 +72,18 @@ jobs:
           fi
           echo "PR #$num: all $total checks green; merging"
           gh pr merge "$num" --repo "$REPO" --squash --delete-branch
+
+          # Keep staging level with main. Dependabot merges to main ONLY, so
+          # without this the branches drift apart on every auto-merge and
+          # "main and staging are identical" quietly stops being true. Found
+          # 2026-09-06: presacademy diverged within minutes of being verified.
+          #
+          # Fast-forward only. If staging carries commits main does not, this
+          # fails loudly instead of discarding them, which is the right
+          # outcome: that is a real divergence someone needs to look at.
+          main_sha=$(gh api "repos/$REPO/git/ref/heads/main" --jq .object.sha)
+          if gh api -X PATCH "repos/$REPO/git/refs/heads/staging"                -f sha="$main_sha" -F force=false >/dev/null 2>&1; then
+            echo "staging fast-forwarded to ${main_sha:0:7}"
+          else
+            echo "::warning::staging could not be fast-forwarded to main. It has its own commits; reconcile by hand."
+          fi

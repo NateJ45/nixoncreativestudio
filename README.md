@@ -1,6 +1,6 @@
 # Nixon Creative Studio
 
-**Web design, photography, and brand strategy for organizations that do real work in the world.** Preschools, churches, nonprofits, and small businesses. Based in Cincinnati, Ohio; design and strategy for clients anywhere, photography across the region.
+**Web design, photography, and brand strategy for organizations that do real work in the world.** Churches, schools, nonprofits, and small businesses. Based in Cincinnati, Ohio; design and strategy for clients anywhere, photography across the region.
 
 **Live:** [nixoncreativestudio.com](https://nixoncreativestudio.com)
 
@@ -10,7 +10,7 @@ This repository is the studio's own site. It is also, on purpose, a portfolio pi
 
 ## How the studio works
 
-Most of my clients are running something that matters to a community and cannot afford for the website to be a second job. A church office. A one-woman embroidery studio. A volunteer preschool board that turns over every year. So the work is built around a simple promise: **you get a site that looks like it was made for you, and you can keep it current without touching code.**
+Most of my clients are running something that matters to a community and cannot afford for the website to be a second job. A church office. A one-woman embroidery studio. A volunteer nonprofit board that turns over every year. So the work is built around a simple promise: **you get a site that looks like it was made for you, and you can keep it current without touching code.**
 
 Three things, usually in this order:
 
@@ -20,11 +20,10 @@ Three things, usually in this order:
 
 ## Selected work
 
-Each of these is a full case study in its own repository. Together they are a fair picture of the range: a co-op preschool, an interior designer, a custom-embroidery studio, a historic city church, and a new theological school.
+Each of these is a full case study in its own repository. Together they are a fair picture of the range: an interior designer, a custom-embroidery studio, a historic city church, and a new theological school.
 
 | Project                                   | What it is                                                                                                                                  | Case study                                                      |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **West Chester Preschool**                | A volunteer-run co-op preschool. A public site plus a private, password-gated Family Hub, all editable by a board with no technical staff.  | [wcp-website](https://github.com/NateJ45/wcp-website)           |
 | **Reid Design LLC**                       | Marketing site for an Indiana interior design studio: portfolio with before/after sliders, a style-archetype quiz, and a budget calculator. | [reid-design-site](https://github.com/NateJ45/reid-design-site) |
 | **MAS Monograms**                         | A home-based custom embroidery studio. A quote-request pipeline instead of a cart, since every piece is priced by hand.                     | [mas-monograms](https://github.com/NateJ45/mas-monograms)       |
 | **Second Presbyterian Church of Chicago** | The website for a historic South Loop congregation, migrated off Squarespace onto a stack the office can run.                               | [2ndpreschicago](https://github.com/NateJ45/2ndpreschicago)     |

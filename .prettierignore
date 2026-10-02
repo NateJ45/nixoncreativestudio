@@ -17,10 +17,12 @@ src/lib/coverPlaceholders.json
 # snapshots of built pages; prettier must never rewrite them.
 scripts/.parity
 
-# PORTABLE file (see docs/TESTING.md): byte-exact with ncs-astro-sanity-starter,
-# the library of record. `npm run sync-check` would report DRIFT if prettier
-# touched it here. Reformat it in the starter first.
-scripts/sync-check.mjs
+# NOTE (2026-09-06): scripts/sync-check.mjs used to be listed here, because
+# prettier would rewrite its quoting and `npm run sync-check` would then report
+# DRIFT. It was formatted in the starter instead, in one family-wide pass, and
+# this repo took the formatted bytes (PORTS.md card 36). Prettier is now a fixed
+# point on it, so format:check is a second guard on the canonical text rather
+# than a threat to it. Do not re-add it.
 
 # Wrangler's generated runtime types.
 worker-configuration.d.ts

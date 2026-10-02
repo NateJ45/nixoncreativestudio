@@ -27,7 +27,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   // Chromium runs everything. A real WebKit iPhone profile runs the
-  // viewport-agnostic suites (smoke + both axe sweeps): Safari's engine finds
+  // viewport-agnostic suites (smoke, both axe sweeps, reduced-motion): Safari's engine finds
   // layout and JS issues Chromium never will, and the WebGL hero, Lenis and
   // Embla islands are exactly the kind of client code that behaves differently
   // there. reflow.spec.ts drives its own explicit viewport widths
@@ -37,7 +37,9 @@ export default defineConfig({
     {
       name: 'webkit-iphone',
       use: { ...devices['iPhone 14'] },
-      testMatch: /(smoke|a11y|a11y-dark)\.spec\.ts$/,
+      // reduced-motion added 2026-09-30 (starter PORTS.md card 61): WebKit is the
+      // engine that strands a 0.01ms transition, so that is where it must run.
+      testMatch: /(smoke|a11y|a11y-dark|reduced-motion)\.spec\.ts$/,
     },
   ],
   webServer: {
