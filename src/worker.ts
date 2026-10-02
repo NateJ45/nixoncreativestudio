@@ -3,9 +3,10 @@
 // scheduled handler (publishing scheduled posts, plugin cron), and adds long-lived
 // caching for CMS images in front of everything else.
 //
-// Why the cache lives here and not in Astro middleware (tried first, 2026-10-02):
-// EmDash's own "pre" middleware answers /_image and the media-file route itself,
-// so a middleware in src/ never sees those responses. This wrapper is outermost.
+// Why it lives here: this wrapper is outermost, so it does not depend on the
+// order of Astro/EmDash middleware. (A first attempt as src/middleware.ts was
+// judged broken only because the check used HEAD requests; it was never proven
+// to fail, so do not read this as a verified limitation of middleware.)
 //
 // The problem it fixes: EmDash serves media files, and Astro's /_image resizer
 // serves the resized WebP copies, both with `Cache-Control: max-age=0,
