@@ -12,41 +12,58 @@ Registry, not a changelog: when a suite changes, edit the row.
 Brought up to the family test standard on 2026-09-06 (WCP is the reference
 implementation; reid-design-site and mas-monograms carry the same shape).
 
-| Gate       | Command                  | Runs in CI           | Covers                                                                                                                                                      |
-| ---------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type check | `npx astro check`        | `ci.yml` (build job) | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                   |
-| Lint       | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                   |
-| Format     | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                               |
-| Unit tests | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` (see below)                                                                                                                             |
-| Build      | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
-| Link check | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
-| Playwright | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)              |
-| Lighthouse | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs |
-| Parity     | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
-| Uptime     | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
+**The site is a hybrid now (EmDash migration).** `/`, `/work/`, `/work/<slug>/`,
+`/about/`, `/services/` and `/rss.xml` are server-rendered from D1 + R2, so
+`dist/client` is not the whole site and nothing here can serve it statically.
+Playwright, the link check and Lighthouse run against a **URL**: in CI, the Worker
+version preview that `ci.yml` uploads (not promoted); by hand, the trial Worker.
+See CLAUDE.md Gotcha 12.
+
+| Gate       | Command                                                 | Runs in CI                 | Covers                                                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type check | `npx astro check`                                       | `ci.yml` (build job)       | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                                                                   |
+| Lint       | `npm run lint`                                          | `ci.yml` (build job)       | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                                                                   |
+| Format     | `npm run format:check`                                  | `ci.yml` (build job)       | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                                                                               |
+| Unit tests | `npm run test:unit`                                     | `ci.yml` (build job)       | `src/lib/*.test.ts` (see below)                                                                                                                                                                             |
+| Build      | `npm run build`                                         | `ci.yml` (build job)       | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                                                                            |
+| Preview    | (CI only)                                               | `ci.yml`, `lighthouse.yml` | Uploads the built Worker as a non-promoted version with a preview alias; the three gates below test that URL. Skipped with a warning without the Cloudflare secrets                                         |
+| Link check | `LINKCHECK_URL=<url> npm run check:links`               | `ci.yml` (build job)       | linkinator over the preview URL: every internal link resolves (300+ links; off-site URLs are skipped). Falls back to `dist/client` (prerendered pages only) when unset                                      |
+| Playwright | `PLAYWRIGHT_BASE_URL=<url> npm test`                    | `ci.yml` (test job)        | smoke (incl. a real 404 for an unknown case study), axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone, over 20 routes (see below) |
+| Lighthouse | `npx lhci autorun --config=lighthouserc.generated.json` | `lighthouse.yml`           | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs on the preview                                  |
+| Parity     | `npm run parity compare`                                | **no** (by design)         | Rendered-HTML drift against a committed baseline                                                                                                                                                            |
+| Uptime     | -                                                       | `uptime.yml`, hourly       | The live site's key routes still return 200                                                                                                                                                                 |
 
 `npm run check` is the quick local gate: `astro check && npm run lint`.
 `npm run check:full` adds the unit tests and the build. `npm test` runs the
-Playwright suites (it builds and serves `dist/client` itself); `npm run test:ui`
-opens the Playwright UI.
+Playwright suites against `PLAYWRIGHT_BASE_URL` (it throws a clear message when
+unset); `npm run test:ui` opens the Playwright UI.
 
 ### Playwright (`playwright.config.ts`, `tests/`)
 
-Runs against the real production build served statically (`npm run serve:dist`
-= `http-server dist/client -p 4321`), never `astro dev`. Locally an existing
-server on 4321 is reused, so `npm run build && npm run serve:dist` in one
-terminal and `npx playwright test --project=chromium` in another is the fast
-loop. CI installs chromium and webkit and runs both projects.
+Runs against a deployed build at `PLAYWRIGHT_BASE_URL`, never `astro dev` and
+no longer a static `dist/client` server (`playwright.config.ts` has no
+webServer). CI sets the variable to the Worker version preview; the fast local
+loop is:
 
-| File                     | Covers                                                                                                                                                                                                                             |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `routes.ts`              | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                                                                         |
-| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                             |
-| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name                                                                                                                                                                      |
-| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                         |
-| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                 |
-| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions) |
-| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                 |
+```
+PLAYWRIGHT_BASE_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev npx playwright test --project=chromium
+```
+
+Tests only GET pages, but they hit the live D1/R2 bindings, so avoid running the
+full sweeps against a Worker whose data is mid-edit. A local `wrangler dev` was
+tried as a stand-in and rejected: it starts with an empty local D1/R2, so every
+server page renders without content (and `--remote` would read production
+bindings). CI installs chromium and webkit and runs both projects.
+
+| File                     | Covers                                                                                                                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`              | The route list every sweep iterates: every page, prerendered or server-rendered, with all nine case studies listed individually (CMS content can break one page and not its siblings). Add a route when a page ships or a case study is published |
+| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                            |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; an unknown `/work/<slug>/` returns a real 404 with the not-found title                                                                                                             |
+| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                        |
+| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                |
+| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                |
 
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
@@ -87,7 +104,11 @@ That is not hypothetical - it shipped that way in the WCP repo.
 
 PORTS.md Card 3, installed 2026-08-27. `capture` snapshots every built page's
 normalized HTML into `scripts/.parity/`; `compare` diffs a later build against
-it. Neither mode builds - you build, it reads `dist/client`.
+it. Neither mode builds - you build, it reads `dist/client`. With `--url <base>`
+it fetches rendered HTML over HTTP instead, which is the only way to compare the
+server-rendered pages (page list = the committed snapshot names plus
+`--routes /a/,/b/`). The baselines predate the hybrid site and have not been
+re-captured, so a URL compare of a migrated page is expected to DIFF.
 
 Use it for any change that is **supposed** to be render-neutral: extracting a
 component, reordering imports, swapping a wrapper, bumping a dependency. It is
@@ -111,14 +132,23 @@ recorded in the script's header so nobody adds a speculative rule later.
 
 ### Lighthouse (`lighthouserc.json`)
 
-The URL list is explicit on purpose. With `staticDistDir` alone, lhci
-auto-discovers pages but caps at 5, so it was testing a near-random 5 of 22
-including the `/404` page and the Search Console verification stub, which
-dragged accessibility below 100. The reasoning is written out at the top of
-`lighthouserc.json`; read it before touching that list.
+The URL list is explicit on purpose. With auto-discovery lhci caps at 5, so it
+was testing a near-random 5 of 22 including the `/404` page and the Search
+Console verification stub, which dragged accessibility below 100. The reasoning
+is written out at the top of `lighthouserc.json`; read it before touching that
+list.
 
-One case study stands in for all ten, since they share a layout; `/coming-soon`
-is its own standalone template and is listed too.
+`lighthouserc.json` is now a template: its URLs start with `${LHCI_BASE_URL}`
+(lhci does not expand environment variables), and `scripts/lhci-config.mjs`
+writes the git-ignored `lighthouserc.generated.json` with the preview URL filled
+in. The thresholds, the 3-run median and the gates are unchanged. `/404.html`
+became `/404`: the Worker serves the prerendered not-found page there with
+status 200, while a real unknown URL answers 404, which Lighthouse refuses to
+audit.
+
+One case study stands in for all nine, since they share a layout (the
+Playwright sweeps list all nine; Lighthouse does not, because each audit costs
+three runs); `/coming-soon` is its own standalone template and is listed too.
 
 The workflow runs on pushes to `main` and `staging` and on pull requests, so a
 staging push proves the gate green before anything reaches main.

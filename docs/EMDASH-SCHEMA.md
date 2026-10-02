@@ -20,43 +20,43 @@ Field slugs are snake_case and are the keys of `entry.data`. System fields (`id`
 `slug`, `status`, `published_at`, `updated_at`, ...) are reserved by EmDash and are
 separate from the `published` and `updated` content fields below.
 
-| Field               | Type         | Req | Stored shape                                                  | MDX source                                 |
-| ------------------- | ------------ | --- | ------------------------------------------------------------- | ------------------------------------------ |
-| `title`             | string       | yes | string                                                        | `title`                                    |
-| `client`            | string       | yes | string                                                        | `client`                                   |
-| `sector`            | select       | yes | `"church"`, `"school"`, `"nonprofit"` or `"small-business"`   | `sector`                                   |
-| `services`          | json         | no  | `string[]`                                                    | `services`                                 |
-| `role`              | string       | no  | string                                                        | `role`                                     |
-| `tags`              | json         | no  | `string[]`                                                    | `tags`                                     |
-| `stack`             | json         | no  | `string[]`                                                    | `stack`                                    |
-| `summary`           | text         | yes | string, max 200 chars                                         | `summary`                                  |
-| `description`       | text         | no  | string, max 500 chars (no case study uses it yet)             | `description`                              |
-| `cover`             | image        | yes | image value (below)                                           | `cover`                                    |
-| `year`              | integer      | yes | number                                                        | `year`                                     |
-| `featured`          | boolean      | no  | stored as `0` or `1`                                          | `featured`                                 |
-| `published`         | datetime     | yes | ISO string with `Z`, for example `"2026-05-01T00:00:00.000Z"` | `published`                                |
-| `updated`           | datetime     | no  | ISO string (no entry has one yet)                             | `updated`                                  |
-| `live_url`          | url          | no  | string                                                        | `liveUrl`                                  |
-| `outcome`           | text         | no  | string, max 160 chars                                         | `outcome`                                  |
-| `testimonial_quote` | text         | no  | string (no entry has one yet)                                 | `testimonial.quote`                        |
-| `testimonial_name`  | string       | no  | string                                                        | `testimonial.name`                         |
-| `testimonial_title` | string       | no  | string                                                        | `testimonial.title`                        |
-| `results`           | json         | no  | `string[]`                                                    | `results`                                  |
-| `designer_note`     | text         | no  | string                                                        | `designerNote`                             |
-| `body`              | portableText | no  | Portable Text block array                                     | the MDX prose                              |
-| `showcase_desktop`  | image        | no  | image value                                                   | `shots/<slug>-home.png`                    |
-| `showcase_mobile`   | image        | no  | image value; absent on first-baptist-muncie and first-presbyterian-orangeburg                              | `shots/<slug>-mobile.png`                  |
-| `showcase_alt`      | string       | no  | string                                                        | `<SiteShowcase alt>`                       |
-| `showcase_href`     | url          | no  | string                                                        | `<SiteShowcase href>`                      |
-| `showcase_label`    | string       | no  | string                                                        | `<SiteShowcase label>`                     |
-| `showcase_variant`  | select       | no  | `"scroll"` or `"zoom"`                                        | `<SiteShowcase variant>`, default `scroll` |
-| `highlights`        | repeater     | no  | array of highlight rows (below); absent when none             | `<FeatureHighlight>`                       |
-| `before_image`      | image        | no  | image value                                                   | `<BeforeAfter before>`                     |
-| `before_alt`        | string       | no  | string                                                        | `<BeforeAfter beforeAlt>`                  |
-| `before_label`      | string       | no  | string, default `"Before"`                                    | `<BeforeAfter beforeLabel>`                |
-| `after_image`       | image        | no  | image value (the same media item as `cover`)                  | `<BeforeAfter after>`                      |
-| `after_alt`         | string       | no  | string                                                        | `<BeforeAfter afterAlt>`                   |
-| `after_label`       | string       | no  | string, default `"After"`                                     | `<BeforeAfter afterLabel>`                 |
+| Field               | Type         | Req | Stored shape                                                                  | MDX source                                 |
+| ------------------- | ------------ | --- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| `title`             | string       | yes | string                                                                        | `title`                                    |
+| `client`            | string       | yes | string                                                                        | `client`                                   |
+| `sector`            | select       | yes | `"church"`, `"school"`, `"nonprofit"` or `"small-business"`                   | `sector`                                   |
+| `services`          | json         | no  | `string[]`                                                                    | `services`                                 |
+| `role`              | string       | no  | string                                                                        | `role`                                     |
+| `tags`              | json         | no  | `string[]`                                                                    | `tags`                                     |
+| `stack`             | json         | no  | `string[]`                                                                    | `stack`                                    |
+| `summary`           | text         | yes | string, max 200 chars                                                         | `summary`                                  |
+| `description`       | text         | no  | string, max 500 chars (no case study uses it yet)                             | `description`                              |
+| `cover`             | image        | yes | image value (below)                                                           | `cover`                                    |
+| `year`              | integer      | yes | number                                                                        | `year`                                     |
+| `featured`          | boolean      | no  | stored as `0` or `1`                                                          | `featured`                                 |
+| `published`         | datetime     | yes | ISO string with `Z`, for example `"2026-05-01T00:00:00.000Z"`                 | `published`                                |
+| `updated`           | datetime     | no  | ISO string (no entry has one yet)                                             | `updated`                                  |
+| `live_url`          | url          | no  | string                                                                        | `liveUrl`                                  |
+| `outcome`           | text         | no  | string, max 160 chars                                                         | `outcome`                                  |
+| `testimonial_quote` | text         | no  | string (no entry has one yet)                                                 | `testimonial.quote`                        |
+| `testimonial_name`  | string       | no  | string                                                                        | `testimonial.name`                         |
+| `testimonial_title` | string       | no  | string                                                                        | `testimonial.title`                        |
+| `results`           | json         | no  | `string[]`                                                                    | `results`                                  |
+| `designer_note`     | text         | no  | string                                                                        | `designerNote`                             |
+| `body`              | portableText | no  | Portable Text block array                                                     | the MDX prose                              |
+| `showcase_desktop`  | image        | no  | image value                                                                   | `shots/<slug>-home.png`                    |
+| `showcase_mobile`   | image        | no  | image value; absent on first-baptist-muncie and first-presbyterian-orangeburg | `shots/<slug>-mobile.png`                  |
+| `showcase_alt`      | string       | no  | string                                                                        | `<SiteShowcase alt>`                       |
+| `showcase_href`     | url          | no  | string                                                                        | `<SiteShowcase href>`                      |
+| `showcase_label`    | string       | no  | string                                                                        | `<SiteShowcase label>`                     |
+| `showcase_variant`  | select       | no  | `"scroll"` or `"zoom"`                                                        | `<SiteShowcase variant>`, default `scroll` |
+| `highlights`        | repeater     | no  | array of highlight rows (below); absent when none                             | `<FeatureHighlight>`                       |
+| `before_image`      | image        | no  | image value                                                                   | `<BeforeAfter before>`                     |
+| `before_alt`        | string       | no  | string                                                                        | `<BeforeAfter beforeAlt>`                  |
+| `before_label`      | string       | no  | string, default `"Before"`                                                    | `<BeforeAfter beforeLabel>`                |
+| `after_image`       | image        | no  | image value (the same media item as `cover`)                                  | `<BeforeAfter after>`                      |
+| `after_alt`         | string       | no  | string                                                                        | `<BeforeAfter afterAlt>`                   |
+| `after_label`       | string       | no  | string, default `"After"`                                                     | `<BeforeAfter afterLabel>`                 |
 
 Empty optional fields are omitted from `entry.data` (no `null` padding) unless the
 CMS returns the column as `null`; test for presence with a plain truthiness check.

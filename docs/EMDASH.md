@@ -117,3 +117,43 @@ Measured on the trial: a 666 KB PNG cover serves as 31 KB WebP at 640w and
 63 KB at 1080w. Cost note: Cloudflare Images transformations are free up to
 5,000 unique transformations a month (each image-at-a-width counts once), far
 above this site's roughly 50 images x 8 widths.
+
+## Tooling for the hybrid site (CI, tests, OG cards)
+
+The repo used to assume `dist/client` was the whole site. It is not any more:
+the pages that read EmDash are server-rendered, so every gate that served or
+crawled a static tree now takes a URL. The map:
+
+| Tool              | Takes                                         | In CI                                                |
+| ----------------- | --------------------------------------------- | ---------------------------------------------------- |
+| Playwright suites | `PLAYWRIGHT_BASE_URL`                         | Worker version preview from `ci.yml`                 |
+| Link check        | `LINKCHECK_URL` (else `dist/client`)          | the same preview                                     |
+| Lighthouse CI     | `LHCI_BASE_URL` via `scripts/lhci-config.mjs` | its own preview from `lighthouse.yml` (alias `lh-*`) |
+| Parity harness    | `--url <base>` (else `dist/client`)           | not in CI, by design                                 |
+| OG cards          | `EMDASH_URL` (default: the trial Worker)      | read at build time, fail-soft                        |
+
+**Preview versions.** `.github/actions/preview-version` runs
+`npx wrangler versions upload --preview-alias <ci|lh>-<branch or pr-N>` after
+`npm run build` (wrangler follows `.wrangler/deploy/config.json` to
+`dist/server/wrangler.json`). The version is not promoted, so production
+traffic is untouched. It runs on the **production bindings** (D1, R2, KV), which
+is the point: an isolated `wrangler preview` would start with empty storage and
+render every server page with no content. Read-only for the suites. The URL is
+parsed from the `version-upload` line of the `WRANGLER_OUTPUT_FILE_PATH` ndjson
+(`preview_alias_url`; field names read from the wrangler 4.146 source), falling
+back to the log line `Version Preview Alias URL: https://...`. Aliases need
+lowercase letters, digits and dashes, a leading letter, and
+`<alias>-<worker-name>` within 63 characters, so the action truncates the branch
+slug to 28 characters. Preview URLs exist only if the Worker's workers.dev
+previews are on (the default) and the Worker implements no Durable Object; if the
+upload returns no URL the action fails with that explanation. Needs the repo
+secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (docs/PENDING.md);
+without them the preview-dependent steps skip with a warning.
+
+**OG cards.** `scripts/generate-og.mjs` cannot use the REST content API (401
+without a login), so it reads `/rss.xml` (slug, title), `/work/<slug>/` (first
+`<img>` = cover, whose URL carries the media id) and
+`/_emdash/api/media/file/<id>` (original bytes) from `EMDASH_URL`. Verified
+2026-10-02 against the trial: nine case studies read, and the regenerated cards
+are byte-identical to the committed ones. An unreachable instance keeps every
+committed `public/og/work/*.png` and exits 0.
