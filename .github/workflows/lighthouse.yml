@@ -14,12 +14,12 @@ name: Lighthouse
 # secrets (docs/PENDING.md); without them the audit is SKIPPED with a warning
 # annotation, not failed.
 #
-# Runs on staging pushes too, so a change can be proven green here before it
-# reaches main (the family's deploy-staging.yml rehearsal path).
+# Runs on pull requests and on pushes to main. (The staging-branch rehearsal
+# path was retired 2026-10-03: a PR gets the same gates plus a Worker preview.)
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 

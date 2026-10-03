@@ -150,8 +150,8 @@ One case study stands in for all nine, since they share a layout (the
 Playwright sweeps list all nine; Lighthouse does not, because each audit costs
 three runs); `/coming-soon` is its own standalone template and is listed too.
 
-The workflow runs on pushes to `main` and `staging` and on pull requests, so a
-staging push proves the gate green before anything reaches main.
+The workflow runs on pushes to `main` and on pull requests, so a PR proves the
+gate green before anything reaches main.
 
 **This gate cannot be run locally on Nathan's Windows machine.** `npx lhci
 autorun` dies during Chrome-profile cleanup with an `EPERM` on its own temp

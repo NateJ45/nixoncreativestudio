@@ -96,15 +96,6 @@ from a shell where `gh` is logged in. After adding, push a branch and confirm th
 log of the "Upload Worker preview version" step ends with a `Preview: https://ci-...`
 line.
 
-### Retire the `staging` branch (after the EmDash migration)
-
-Decided 2026-10-02. Use short-lived branches, PRs and Cloudflare branch previews
-instead. Touches `.github/workflows/ci.yml`, `lighthouse.yml`,
-`deploy-staging.yml` (delete), the deployment notes in CLAUDE.md, then delete the
-branch locally and on origin. Do it as its own change, after cutover.
-
----
-
 ## Cutover tasks (EmDash migration)
 
 The step-by-step launch plan, with the rollback, is in `docs/LAUNCH-RUNBOOK.md`.
