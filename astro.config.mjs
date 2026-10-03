@@ -72,7 +72,13 @@ export default defineConfig({
     remotePatterns: [
       { protocol: 'https', hostname: 'nixoncreativestudio.com' },
       { protocol: 'https', hostname: 'www.nixoncreativestudio.com' },
-      { protocol: 'https', hostname: 'ncs-emdash-trial.nathanjnixon86.workers.dev' },
+      // Every Worker address on this account: the trial, the production
+      // workers.dev URL, and the CI preview aliases (ci-pr-N-..., lh-pr-N-...).
+      // Found 2026-10-02: a host missing from this list is not an error. Astro
+      // silently serves the full-size original instead of a resized WebP, which
+      // made Lighthouse CI measure LCP at 8 to 11 s on pages that are fine when
+      // the host is listed.
+      { protocol: 'https', hostname: '**.nathanjnixon86.workers.dev' },
     ],
   },
   // EmDash trial: keep build-time optimization for the site's own images, and

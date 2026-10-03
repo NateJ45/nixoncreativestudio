@@ -193,3 +193,15 @@ Throttled-mobile trace (Fast 4G, 4x CPU) of a case study, trial vs live:
 LCP 1.41s vs 1.43s once warm. The first load after a deploy measured 3.68s
 because the resized images did not exist yet; the cache above is what keeps
 real visitors off that path. The gate is LCP under 4.5s.
+
+## Trusted image hosts are a silent failure (found by Lighthouse CI, 2026-10-02)
+
+Lighthouse CI hard-failed LCP at 8.0 s on `/work/` and 11.5 s on a case study
+(gate: 4.5 s). The report showed 700 KB to 1.1 MB raw PNGs: the CI preview lives
+at `lh-pr-47-ncs-emdash-trial.nathanjnixon86.workers.dev`, which was not in
+`image.remotePatterns`, so Astro served the originals instead of `/_image`
+WebP. No error, no warning. `image.remotePatterns` now trusts
+`**.nathanjnixon86.workers.dev` (trial, CI aliases, version URLs, the production
+workers.dev URL) plus the apex and `www`. Verified on a preview alias: 9 resized
+images, 0 raw. Rule: any new host that serves the site (a custom domain, a
+staging alias) must be added to that list, or its CMS images go out full size.
