@@ -2,27 +2,47 @@ name: CI
 
 # 2026-09-06: brought up to the family test standard (WCP is the reference):
 # astro check, eslint, a prettier format check, the node --test unit suites,
-# the build, an internal link check over dist/client, and a separate `test`
-# job running the Playwright suites (smoke, axe light + dark, reflow) on
-# chromium and a WebKit iPhone profile. Before this the workflow was install,
-# build, unit tests, and lint was advisory only.
+# the build, an internal link check, and the Playwright suites (smoke, axe
+# light + dark, reflow) on chromium and a WebKit iPhone profile. Before this
+# the workflow was install, build, unit tests, and lint was advisory only.
+#
+# 2026-10-03 (starter PORTS.md card 62): restructured for speed. Two serial
+# jobs (build, then test) became parallel jobs plus two aggregators:
+#
+#   static ─┐                        (drift, types, lint, format, unit)
+#   site ───┼─> build (aggregator)   (build, Worker preview upload, link check)
+#           └─> e2e x3 shards ─> test (aggregator)  (Playwright vs the preview)
+#
+# `build` and `test` are REQUIRED status checks in the "main: PR + green CI"
+# ruleset, so those two names must keep existing and must fail when anything
+# behind them fails. They are aggregators now; the work runs in `static`,
+# `site` and `e2e`. Do not rename them, and do not put a path filter on this
+# workflow: a required check that never reports blocks the merge forever.
+#
+# DIFFERENCE FROM THE STARTER'S SHAPE: the starter builds once and hands
+# `dist/client` to the Playwright shards as an artifact (PLAYWRIGHT_SKIP_BUILD).
+# That cannot work here. This is a HYBRID site: nothing is served from
+# dist/client, every page is rendered by the Worker from EmDash (D1 + R2). So
+# the thing built ONCE (job `site`) is the Worker, and the thing shared with the
+# shards is the preview URL it uploads it to, passed as a job output.
+# playwright.config.ts here has no webServer and is not a PORTABLE file.
 #
 # No Sanity here, so there is no typegen step and no stale-types guard.
 #
 # HYBRID SITE (EmDash migration): / , /work/ , /work/<slug>/ , /about/ ,
-# /services/ and /rss.xml are server-rendered from EmDash (D1 + R2), so
-# dist/client is no longer the whole site and cannot be served statically. The
-# build job therefore builds, then uploads the Worker as a VERSION (not
-# promoted: production is untouched) with `wrangler versions upload
-# --preview-alias`, and the link check, the Playwright suites (test job) and
-# Lighthouse (lighthouse.yml) run against that preview URL. The upload lives in
+# /services/ and /rss.xml are server-rendered from EmDash (D1 + R2). The `site`
+# job therefore builds, then uploads the Worker as a VERSION (not promoted:
+# production is untouched) with `wrangler versions upload --preview-alias`, and
+# the link check, the Playwright suites (e2e job) and Lighthouse
+# (lighthouse.yml) run against that preview URL. The upload lives in
 # .github/actions/preview-version so both workflows share it.
 #
 # Needs two repo secrets, CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (see
 # docs/PENDING.md). Without them (fork PRs, or before Nathan adds them) the
 # preview-dependent steps are SKIPPED with a warning annotation, not failed;
 # every static gate (types, lint, format, unit tests, drift check, build) still
-# runs.
+# runs. `e2e` is skipped in that case and the `test` aggregator treats that
+# skip as green, exactly as the old `test` job's skip was.
 
 on:
   push:
@@ -37,12 +57,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # Everything that does not need the built site. Runs in parallel with `site`.
+  static:
+    name: Static checks
     runs-on: ubuntu-latest
-    # The preview URL the test job (and the link check below) run against.
-    outputs:
-      preview_enabled: ${{ steps.preview.outputs.enabled }}
-      preview_url: ${{ steps.preview.outputs.url }}
 
     steps:
       - uses: actions/checkout@v7
@@ -53,7 +71,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       # PORTS.md card 36. Every file here marked "PORTABLE: canonical copy" is
       # diffed against ncs-astro-sanity-starter, the library of record. Both
@@ -132,6 +150,26 @@ jobs:
       - name: Unit tests (node --test)
         run: npm run test:unit
 
+  # Builds the Worker ONCE and uploads it as the preview every later gate hits.
+  site:
+    name: Build and preview
+    runs-on: ubuntu-latest
+    # The preview URL the e2e shards (and the link check below) run against.
+    outputs:
+      preview_enabled: ${{ steps.preview.outputs.enabled }}
+      preview_url: ${{ steps.preview.outputs.url }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
       # placeholders + OG cards + astro build (see .claude/rules/build-pipeline.md, "Build
       # pipeline"). No env needed: the analytics, GA and coming-soon
       # variables are all optional and the site builds clean without them.
@@ -165,12 +203,30 @@ jobs:
           LINKCHECK_URL: ${{ steps.preview.outputs.url }}
         run: npm run check:links
 
-  test:
+  # REQUIRED CHECK. Green only when both halves are green.
+  build:
+    name: build
+    if: ${{ always() }}
+    needs: [static, site]
     runs-on: ubuntu-latest
-    # Needs the preview URL, so it waits for the build job and is skipped
-    # (not failed) when the build job found no Cloudflare secrets.
-    needs: build
-    if: needs.build.outputs.preview_enabled == 'true'
+    steps:
+      - run: |
+          echo "static=${{ needs.static.result }} site=${{ needs.site.result }}"
+          [ "${{ needs.static.result }}" = "success" ] && [ "${{ needs.site.result }}" = "success" ]
+
+  # The Playwright suite, sharded against the preview the `site` job uploaded.
+  # fullyParallel is on in playwright.config.ts, so --shard splits at TEST
+  # granularity and the shards come out even. Skipped (not failed) when the
+  # Cloudflare secrets are absent, as the old `test` job was.
+  e2e:
+    name: e2e (shard ${{ matrix.shard }}/3)
+    needs: [site]
+    if: needs.site.outputs.preview_enabled == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
 
     steps:
       - uses: actions/checkout@v7
@@ -181,38 +237,74 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
-      # Both projects in playwright.config.ts: chromium (desktop) AND
-      # webkit-iphone (iPhone 14). Installing only chromium makes every webkit
-      # test die with "Executable doesn't exist".
+      # The browser download is the slow part, the apt libraries are not. Cache
+      # the browsers by Playwright version; on a hit install only the system
+      # libraries. Both projects in playwright.config.ts need a browser:
+      # chromium (desktop) AND webkit-iphone (iPhone 14). Installing only
+      # chromium makes every webkit test die with "Executable doesn't exist".
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      # `--with-deps` runs `apt-get update`, which fails outright when the
+      # runner's third-party Chrome/Microsoft apt sources are mid-sync and
+      # report a "Hash Sum mismatch" (that killed a WCP deploy 2026-09-09).
+      # Playwright's system libraries come from Ubuntu's own archive, so drop
+      # those sources first, then retry once for transient network failures.
       - name: Install Playwright browsers
-        # `--with-deps` runs `apt-get update`, which fails outright when the
-        # runner's third-party Chrome/Microsoft apt sources are mid-sync and
-        # report a "Hash Sum mismatch" (that killed a WCP deploy 2026-09-09).
-        # Playwright's system libraries come from Ubuntu's own archive, so drop
-        # those sources first, then retry once for transient network failures.
+        if: steps.pw-cache.outputs.cache-hit != 'true'
         run: |
           sudo rm -f /etc/apt/sources.list.d/google-chrome* /etc/apt/sources.list.d/microsoft*
           npx playwright install --with-deps chromium webkit ||
             npx playwright install --with-deps chromium webkit
+
+      - name: Install Playwright system libraries (browsers cached)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome* /etc/apt/sources.list.d/microsoft*
+          npx playwright install-deps chromium webkit ||
+            npx playwright install-deps chromium webkit
 
       # smoke (every route 200s and carries the studio name in its title, plus
       # an unknown case study answers 404), axe in light, axe in dark as a
       # separate sweep plus a focus-indicator check (a theme swap is a
       # different resting DOM), and reflow at 320/768/1024/1440 (WCAG 1.4.10
       # starts at 320, not 375). No webServer: playwright.config.ts reads the
-      # URL from PLAYWRIGHT_BASE_URL, here the Worker preview from the build
+      # URL from PLAYWRIGHT_BASE_URL, here the Worker preview from the site
       # job. The html reporter is added on the command line so local runs keep
       # the quiet `list` output while CI still produces the report artifact.
       - name: Run tests (smoke, a11y light + dark, reflow)
         env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.build.outputs.preview_url }}
-        run: npm test -- --reporter=github,html
+          PLAYWRIGHT_BASE_URL: ${{ needs.site.outputs.preview_url }}
+        run: npm test -- --shard=${{ matrix.shard }}/3 --reporter=github,html
 
+      # Only on failure: a green run has nothing worth the upload time.
       - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
+        if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
+
+  # REQUIRED CHECK. Green only when every shard is green. The one allowed skip
+  # is "no Cloudflare secrets, so no preview, so no e2e" (fork PRs): `site` must
+  # still have succeeded and reported that preview_enabled is not 'true', which
+  # is the old `test` job's skipped state, and a skipped required check passes.
+  test:
+    name: test
+    if: ${{ always() }}
+    needs: [site, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "site=${{ needs.site.result }} preview_enabled=${{ needs.site.outputs.preview_enabled }} e2e=${{ needs.e2e.result }}"
+          [ "${{ needs.e2e.result }}" = "success" ] && exit 0
+          [ "${{ needs.site.result }}" = "success" ] && [ "${{ needs.site.outputs.preview_enabled }}" != "true" ] && [ "${{ needs.e2e.result }}" = "skipped" ]
