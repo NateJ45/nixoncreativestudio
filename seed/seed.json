@@ -561,6 +561,205 @@
       ]
     },
     {
+      "slug": "page_services",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Services page",
+      "labelSingular": "Services page",
+      "description": "The words on the Services page: headline, cost and FAQ sections.",
+      "sortOrder": 2,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "cta_title",
+          "label": "Closing banner title (max 60; empty uses the site default)",
+          "type": "string",
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "cta_sub",
+          "label": "Closing banner text (max 200; empty uses the site default)",
+          "type": "text",
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "heading",
+          "label": "Page headline (max 110)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 110
+          }
+        },
+        {
+          "slug": "intro",
+          "label": "Paragraph under the headline (max 260)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 260
+          }
+        },
+        {
+          "slug": "pricing_heading",
+          "label": "Cost section heading (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "pricing_sub",
+          "label": "Cost section paragraph, above the tier cards (max 400). The prices themselves are under Pricing tiers",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 400
+          }
+        },
+        {
+          "slug": "pricing_footnote",
+          "label": "Note under the tier cards (max 200)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "addons_heading",
+          "label": "Heading over the add-on cards (max 32). The cards are under Add-ons",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "why_heading",
+          "label": "Why-it-costs heading (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "why_sub",
+          "label": "Why-it-costs paragraph (max 200)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "why_items",
+          "label": "The reasons (exactly 4, in two columns). Title under 40 characters, text under 360",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 4,
+            "maxItems": 4,
+            "subFields": [
+              {
+                "slug": "title",
+                "label": "Reason title",
+                "type": "string",
+                "required": true
+              },
+              {
+                "slug": "body",
+                "label": "Reason text",
+                "type": "text",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "why_closing",
+          "label": "Closing paragraph under the reasons, about the tools you use (max 420)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 420
+          }
+        },
+        {
+          "slug": "faq_heading",
+          "label": "FAQ heading (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "faq_sub",
+          "label": "FAQ paragraph (max 200)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "faq",
+          "label": "Questions and answers (3 to 10; question under 140 characters, answer under 900). Google shows these in search, so keep them true. If an answer quotes a price, check it against Pricing tiers",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 3,
+            "maxItems": 10,
+            "subFields": [
+              {
+                "slug": "question",
+                "label": "Question",
+                "type": "string",
+                "required": true
+              },
+              {
+                "slug": "answer",
+                "label": "Answer",
+                "type": "text",
+                "required": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "slug": "pricing_addons",
       "supports": ["drafts", "revisions"],
       "routable": false,
@@ -720,6 +919,115 @@
         {
           "slug": "sort_order",
           "label": "Order on the page, 1 is first (only the first 3 tiers show)",
+          "type": "integer",
+          "required": true,
+          "indexed": true,
+          "validation": {
+            "min": 1,
+            "max": 99
+          }
+        }
+      ]
+    },
+    {
+      "slug": "service_offerings",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false,
+        "listColumns": ["price_from", "sort_order"]
+      },
+      "group": "Pricing & services",
+      "titleField": "title",
+      "commentsEnabled": false,
+      "label": "Service offerings",
+      "labelSingular": "Service offering",
+      "description": "The Strategy, Web design and Photography chapters on the Services page.",
+      "sortOrder": 12,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Service name (max 32)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "lede",
+          "label": "One-sentence summary in bold (max 180)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 180
+          }
+        },
+        {
+          "slug": "body",
+          "label": "Paragraph under the summary (max 500). Also the description Google reads",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 500
+          }
+        },
+        {
+          "slug": "price_from",
+          "label": "Standalone starting price in whole dollars, for example 1500 (read by Google, not shown on the page). Leave empty for Web design: it follows the first Pricing tier",
+          "type": "integer",
+          "validation": {
+            "min": 0,
+            "max": 100000
+          }
+        },
+        {
+          "slug": "image_alt",
+          "label": "Describe the picture (max 160). Only Web design has a picture; empty shows the placeholder panel instead",
+          "type": "string",
+          "validation": {
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "placeholder_icon",
+          "label": "Icon on the placeholder panel (used when there is no picture)",
+          "type": "select",
+          "required": true,
+          "validation": {
+            "options": ["strategy", "photography", "none"]
+          }
+        },
+        {
+          "slug": "points",
+          "label": "What is included (3 to 5 lines, keep each under 90 characters)",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 3,
+            "maxItems": 5,
+            "subFields": [
+              {
+                "slug": "text",
+                "label": "Line",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "area_served",
+          "label": "Where you offer it, for Google: \"regional\" is the greater Cincinnati region only, \"anywhere\" adds the whole United States",
+          "type": "select",
+          "required": true,
+          "validation": {
+            "options": ["regional", "anywhere"]
+          }
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order on the page, 1 is first (only the first 3 show)",
           "type": "integer",
           "required": true,
           "indexed": true,

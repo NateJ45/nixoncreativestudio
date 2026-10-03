@@ -61,6 +61,10 @@ test.describe('Homepage copy without JavaScript', () => {
     await expect(proof.locator('a')).toHaveText(home.hero_proof_link_text);
     await expect(proof.locator('a')).toHaveAttribute('href', '/about');
     await expect(proof).toContainText(home.hero_proof_after);
+    // The space before the link is part of the sentence (it was missing: "byone person").
+    expect(await proof.innerText()).toContain(
+      `${home.hero_proof_before} ${home.hero_proof_link_text}`,
+    );
     await expect(
       page.locator('.hero').getByRole('link', { name: home.hero_primary_label }),
     ).toHaveAttribute('href', '/contact');
