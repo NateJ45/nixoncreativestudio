@@ -81,12 +81,16 @@ item. Fixed with `min-w-0` on the item.
 Node's built-in runner, no framework. TypeScript runs through Node's type
 stripping, so there is nothing to configure and nothing to install.
 
-| File                       | Covers                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling       |
-| `readingTime.test.ts`      | Journal reading-time estimation                                                                   |
-| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                             |
-| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark |
+| File                       | Covers                                                                                                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling                                                                                                       |
+| `readingTime.test.ts`      | Journal reading-time estimation                                                                                                                                                                   |
+| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                                                                                                                             |
+| `cms.test.ts`              | **CMS-DESIGN PR 3.** `src/lib/cms.ts` and `cmsFallback.ts`: 0/1 booleans, empty repeaters, a missing entry or a D1 error falling back to the committed JSON, cache tagging, list ordering, menus  |
+| `cmsSchema.test.ts`        | The generic schema applier against an in-memory fake of the EmDash REST API (idempotent rerun makes no writes, create-then-update order, dry run), `validateDef`, and every file in `cms/schema/` |
+| `cmsLoad.test.ts`          | The content loader (`$file` images, create/update/unchanged/publish, menus, redirects), the production guard, and every file in `cms/content/`                                                    |
+| `portableText.test.ts`     | The restricted Portable Text pass (headings, marks, links, lists) and heading ids                                                                                                                 |
+| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark                                                                                                 |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
 Card 9). It parses the real hex out of the `@theme`, `:root` and `.dark` blocks,
@@ -112,6 +116,8 @@ it fetches rendered HTML over HTTP instead, which is the only way to compare the
 server-rendered pages (page list = the committed snapshot names plus
 `--routes /a/,/b/`). The baselines predate the hybrid site and have not been
 re-captured, so a URL compare of a migrated page is expected to DIFF.
+
+**For CMS PRs** (docs/CMS-DESIGN.md 2.1): capture and compare into a throwaway directory with `--snap-dir .parity-cms` (or `PARITY_SNAP_DIR`), so the pair never overwrites the committed baselines. Capture `main` on `ncs-ci`, compare the PR preview the same day: `npm run parity capture -- --snap-dir .parity-cms --url https://ncs-ci.nathanjnixon86.workers.dev --routes /,/services/` then `npm run parity compare -- --snap-dir .parity-cms --url <PR preview URL> --routes /,/services/`. The directory is git-ignored.
 
 Use it for any change that is **supposed** to be render-neutral: extracting a
 component, reordering imports, swapping a wrapper, bumping a dependency. It is

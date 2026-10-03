@@ -300,3 +300,22 @@ purges the page's tags. See docs/PENDING.md for the proof step.
 `astro.config.mjs` (pages then carry `no-store`, and Workers Cache is off in the
 next version), or set `PAGE_MAX_AGE` to `0`. The documented fallback (a short
 `s-maxage` edge cache in `src/worker.ts`) was NOT needed: the route cache works.
+
+## CMS foundation (CMS-DESIGN PR 3, 2026-10-03)
+
+The shared tooling every content PR builds on. It changes no page and creates no collection; `cms/schema/` and `cms/content/` are empty until PR 4. Design and builder notes: docs/CMS-DESIGN.md ("PR 3 notes" and 2.6); the editable-content model is there too.
+
+| Piece                                                                                                  | Where                                                                                          |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Generic schema applier (create, fields, order, then update-only settings; idempotent; dry run)         | `scripts/lib/emdash-schema.mjs`, command `npm run cms:schema` (`scripts/cms/apply-schema.mjs`) |
+| Content loader (CLI for entries and media, REST for menus and redirects; `$file` images, SHA-1 de-dup) | `scripts/lib/cms-load.mjs`, `scripts/lib/emdash-media.mjs`, command `npm run cms:load`         |
+| Reader with the committed-JSON fallback and cache tagging                                              | `src/lib/cms.ts`, `src/lib/cmsFallback.ts`                                                     |
+| Restricted Portable Text pass and component                                                            | `src/lib/portableText.ts`, `src/components/emdash/RestrictedPortableText.astro`                |
+| Markdown to Portable Text JSON for content files                                                       | `npm run cms:pt -- file.md`                                                                    |
+
+Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules/emdash/src`):
+
+- A repeater sub-field keeps only `slug`, `type`, `label`, `required` and `options`; a sub-field `maxLength` is stripped by the server. Repeater-level `minItems` and `maxItems` are enforced.
+- The create-collection endpoint rejects `titleField` and `commentsEnabled`; they are update-only, and `titleField` must name an existing field. The applier therefore creates, adds fields, then PUTs the full settings.
+- `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
+- The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).

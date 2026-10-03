@@ -72,3 +72,18 @@ data step.
 - Rewrite the homepage, stack and content-collection sections of CLAUDE.md for the hybrid
   architecture, and update the vault note.
 - (Done 2026-10-03) The `staging` branch was retired.
+
+## CMS content PRs: production data steps (CMS-DESIGN 2.1 and 2.6)
+
+Run by the main session, with Nathan's go-ahead, after a content PR (4 to 13) merges. The tooling PR (3) itself needs none of this: it creates no collection and moves no content. Nothing below runs from a builder agent, and none of it touches the live pages until the code that reads the data has deployed.
+
+Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (device code, Nathan approves in his browser) and `export EMDASH_TOKEN=<API token from Settings, API tokens>`.
+
+1. Record a rollback point: note the time, so `wrangler d1 time-travel restore ncs-emdash-prod --timestamp <iso>` is ready if a bulk step goes wrong.
+2. Check the definitions offline: `npm run cms:schema -- --all --check`.
+3. Look before writing: `npm run cms:schema -- --collection <collection> --url https://www.nixoncreativestudio.com --dry-run`. Every line should read `would added field ...` on a first run.
+4. Apply the schema: the same command with `--yes` instead of `--dry-run`. Run it a second time; every line must read `unchanged`.
+5. Look at the content: `npm run cms:load -- --collection <collection> --url https://www.nixoncreativestudio.com --dry-run`.
+6. Load it: the same command with `--yes`. A second run must report `unchanged` for every entry. Menus and redirects: `npm run cms:load -- --collection menus --url ... --yes` and `--collection redirects`.
+7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
+8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).

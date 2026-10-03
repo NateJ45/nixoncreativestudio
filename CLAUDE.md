@@ -203,6 +203,8 @@ WCP is the reference for this standard; reid-design-site and mas-monograms carry
 - **There is no `staging` branch** (retired 2026-10-03). Work on a short-lived branch and open a PR: CI and Lighthouse run on the PR against a Worker preview, Cloudflare also gives every branch its own preview URL, and a bad change is undone with `git revert` or the Deployments tab rollback. The old `deploy-staging.yml` and the Dependabot staging fast-forward were removed.
 - `.github/workflows/uptime.yml` curls the live site's key routes hourly and fails the run if any does not end at 200. Gated on the `SITE_URL` repo variable, which is not set yet (see `docs/PENDING.md`). Schedule is on because the repo is public and Actions minutes are free there.
 - `npm run parity capture` / `compare` is the **rendered-HTML parity harness** (`scripts/page-parity.mjs`, baselines committed in `scripts/.parity/`). It never builds; you build, it reads `dist/client`, or with `--url <base>` it fetches the rendered HTML over HTTP so the server-rendered pages (which are not in `dist/client`) can be compared too (page list = the committed snapshot names, plus `--routes /a/,/b/`). Baselines were captured from the static build and have NOT been re-captured for the hybrid site, so expect DIFFs on migrated pages. Reach for it on any change that is supposed to be render-neutral. Deliberately not in CI, because its baselines are meant to be re-captured when markup legitimately changes and a gate that gets re-baselined is a gate that gets rubber-stamped.
+- For CMS PRs the parity pair (main on `ncs-ci`, then the PR preview) goes into a throwaway directory so it cannot overwrite those baselines: add `--snap-dir .parity-cms` (or set `PARITY_SNAP_DIR`) to both `capture` and `compare`. `.parity-cms/` is git-ignored. Recipe in docs/CMS-DESIGN.md 2.1 and docs/TESTING.md.
+- **CMS tooling (CMS-DESIGN PR 3).** `npm run cms:schema` (`scripts/cms/apply-schema.mjs`, generic applier `scripts/lib/emdash-schema.mjs`) makes an instance match `cms/schema/<collection>.mjs`; `npm run cms:load` (`scripts/cms/load-content.mjs`, logic in `scripts/lib/cms-load.mjs`) loads `cms/content/*.json` (entries and images through the `emdash` CLI login, menus and redirects through REST with `EMDASH_TOKEN`); `npm run cms:pt -- file.md` turns Markdown into Portable Text JSON for a content file. Both write scripts are idempotent, take `--dry-run`, and refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed. The pages read the content through `src/lib/cms.ts` (`getSingleton`, `getOrdered`, `getMenuItems`), which falls back to the committed JSON, logs `[cms] ...` and tags the route cache; `src/lib/portableText.ts` and `RestrictedPortableText.astro` are the restricted renderer for the About story and prose pages. Nothing reads any of it yet; PRs 4 to 13 move pages onto it. Production steps: docs/LAUNCH-RUNBOOK.md, details and builder notes: docs/CMS-DESIGN.md ("PR 3 notes", 2.6).
 - `npm run sync-check` diffs this repo's copies of the shared "library of record" files against `ncs-astro-sanity-starter` (point at it with `NCS_STARTER_DIR`). Four files are marked canonical here: `scripts/free-dist.mjs`, `scripts/with-workerd.mjs`, `scripts/sync-check.mjs`, and `src/lib/contrast.ts`. Read that repo's `PORTS.md` before editing any of them, and port a fix back rather than patching locally. **This is a CI gate since 2026-09-06** (PORTS.md card 36): the build job checks the starter out at `.ncs-starter` and runs the script against it on every push and PR, so drift fails the build instead of waiting for someone to run it by hand.
 - `npm run free-dist` is the manual form of the `prebuild` hook. See Gotchas.
 - `docs/PENDING.md` is the authoritative open-patch and waiting-on-a-human queue; `docs/TESTING.md` maps which gate covers what. Both are registries: edit them in the same commit as the thing they track.
@@ -445,6 +447,7 @@ Routes (all server-rendered per request, route-cached):
 - React islands: `Photo.tsx`, `PhotoGallery.tsx`, `MobileNav.tsx`, `ThemeToggle.tsx`, `HeroCanvas.tsx`, `TestimonialCarousel.tsx`, `BackToTop.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`, `WorkFilter.tsx`
 - Astro wrappers: `HeroShowcase.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
 - `src/lib/readingTime.ts`
+- `src/lib/cms.ts`, `src/lib/cmsFallback.ts`, `src/lib/portableText.ts`, `src/components/emdash/RestrictedPortableText.astro`, `scripts/lib/emdash-schema.mjs`, `scripts/lib/cms-load.mjs`, `scripts/cms/` (the CMS foundation; a bug here reaches every editable page)
 - `src/scripts/lenis-init.ts` (smooth scroll setup)
 - `scripts/generate-og-default.mjs`, `scripts/generate-icons.mjs`
 - `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`, `eslint.config.js`, `.prettierrc`, `.prettierignore`, `playwright.config.ts`, `lighthouserc.json`, `.github/workflows/ci.yml`, `.github/workflows/lighthouse.yml`
@@ -788,3 +791,14 @@ Every entry below was measured, not assumed.
       the cache itself was measured on ncs-ci, but the edit proof needs an admin
       login, so it is a first-deploy check (docs/PENDING.md). Until it passes,
       the lifetime stays at 5 minutes so a missed purge costs minutes, not a day.
+
+16. **EmDash does not enforce a limit on a repeater sub-field.** Verified in
+    `node_modules/emdash/src/api/schemas/schema.ts` (1.1.0): a sub-field keeps
+    only `slug`, `type`, `label`, `required` and `options`, so a `maxLength` on
+    one is stripped silently. The per-row limits in docs/CMS-DESIGN.md (FAQ
+    answers, process-step bodies) are labels and editing-guide text, not server
+    rules; the component must tolerate a longer value. Repeater-level
+    `minItems` / `maxItems` are enforced. `validateDef()` warns about each
+    sub-field limit. Related: `titleField` and `commentsEnabled` cannot be sent
+    when a collection is created, which is why `applyCollectionSchema` applies
+    the settings in a second PUT after the fields.

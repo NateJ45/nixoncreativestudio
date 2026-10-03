@@ -1,0 +1,39 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   RestrictedPortableText
+   ============================================================================
+   Renders a Portable Text field through the stock EmDash renderer, after
+   src/lib/portableText.ts has reduced it to what a designed page allows
+   (docs/CMS-DESIGN.md 1.7 and 1.10): paragraphs, strong, em and safe links;
+   headings and lists only when the caller asks for them; every other node type
+   renders nothing.
+
+     About story:   <RestrictedPortableText value={story} />
+     Prose pages:   <RestrictedPortableText value={content} headings={['h2', 'h3']} lists headingIds />
+
+   `headingIds` gives h2 and h3 the ids the table of contents links to (the same
+   slug rule as the case studies, via CaseHeading). Unused until the About and
+   prose-page PRs; it ships with the foundation so those PRs only wire it in.
+   ============================================================================ */
+import { PortableText } from 'emdash/ui';
+import CaseHeading from './CaseHeading.astro';
+import { restrictPortableText } from '../../lib/portableText';
+
+interface Props {
+  /** The raw Portable Text field value (null and non-arrays render nothing). */
+  value: unknown;
+  /** Heading styles to keep. Default none: any heading renders as a paragraph. */
+  headings?: ('h2' | 'h3')[];
+  /** Keep bulleted and numbered lists. */
+  lists?: boolean;
+  /** Give kept headings the ids the table of contents links to. */
+  headingIds?: boolean;
+}
+
+const { value, headings = [], lists = false, headingIds = false } = Astro.props;
+const blocks = restrictPortableText(value, { headings, lists });
+const components = headingIds ? { block: { h2: CaseHeading, h3: CaseHeading } } : undefined;
+---
+
+{blocks.length > 0 && <PortableText value={blocks} components={components} />}
