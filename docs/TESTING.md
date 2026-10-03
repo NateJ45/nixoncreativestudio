@@ -38,6 +38,8 @@ See CLAUDE.md Gotcha 12.
 
 CI shape (starter PORTS.md card 70): `ci.yml` runs `static` and `site` in parallel, then `e2e` in 3 Playwright shards against the preview `site` uploaded. The required checks `build` and `test` are aggregators over those jobs.
 
+Shard weights: Playwright's `--shard` gives each shard a contiguous block of an equal NUMBER of tests, in project order, so the 77 webkit-iphone tests (half the suite's time) all landed in shard 3 (about 98s against 50s for the others). `ci.yml` sets `PWTEST_SHARD_WEIGHTS: '93:100:62'` on the test step (an internal Playwright variable: colon-separated, one weight per shard) so the blocks hold 93, 100 and 62 tests and each sums to about 125s. No test is removed or skipped; the blocks always partition the whole list. To re-cut after adding tests in bulk: add `PLAYWRIGHT_JSON_OUTPUT_NAME: pw-${{ matrix.shard }}.json` and `json` to `--reporter` on a throwaway branch, upload the files, run the workflow by hand (`gh workflow run ci.yml --ref <branch>`), sum each test's duration in `npx playwright test --list` order (key: project, file, line, title), and pick the two cut points that give three blocks of equal summed time. Check the cut with `PWTEST_SHARD_WEIGHTS=a:b:c npx playwright test --list --shard=N/3` for N=1..3: the three lists must add up to the unweighted `--list` total with no duplicates. The link check stays the last step of `site` (about 4s, so moving it to its own job would cost more in runner start-up than it saves).
+
 `npm run check` is the quick local gate: `astro check && npm run lint`.
 `npm run check:full` adds the unit tests and the build. `npm test` runs the
 Playwright suites against `PLAYWRIGHT_BASE_URL` (it throws a clear message when
