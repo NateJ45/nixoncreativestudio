@@ -1,6 +1,6 @@
 ---
-// Safe to edit. The numbers come from src/data/pricing.ts (the single source
-// of truth shared with /services); the copy below (the value floor + the
+// Safe to edit. The numbers come from the CMS pricing tiers via src/lib/pricing.ts
+// (the single source shared with /services, with a committed fallback); the copy below (the value floor + the
 // reassurance line) is the only content authored here.
 /* ============================================================================
    Pricing Teaser ("What it costs" band on the homepage)
@@ -28,7 +28,11 @@
    Process Band below already owns that), so the page rhythm holds.
    ============================================================================ */
 
-import { webTiers } from '../data/pricing';
+import { getPricingTiers } from '../lib/pricing';
+
+// The three tiers from the CMS (Pricing tiers in the admin), or the committed
+// fallback copy. Server-rendered like every page, so this is a request-time read.
+const webTiers = await getPricingTiers(Astro);
 
 // The value floor: what every build includes regardless of tier. Stated once,
 // above the prices, so the cost is always read against the value. Every claim is

@@ -404,14 +404,15 @@ Today `ncs-ci` was built once by hand-copied SQL (docs/TESTING.md on the `ci-ded
 
 ### 2.5 Status
 
-| PR      | State                                                                                                                                                                                                |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0       | merged (#51)                                                                                                                                                                                         |
-| 1       | merged (#53): `scripts/ci-dataset/` (snapshot, rebuild, fixtures), `npm run ci-dataset`, seed export extended                                                                                        |
-| 2       | merged (#55): `output: 'server'`, route cache, `toolbar: 'client'`, measurements below                                                                                                               |
-| 3       | merged (#56): the shared tooling and reader (`scripts/cms/`, `src/lib/cms.ts`, notes below), no page changes                                                                                         |
-| 4       | built, in review: `site_settings` and the `primary` and `footer` menus, read with the committed-JSON fallback; production data NOT loaded yet (needs `EMDASH_TOKEN`, 2.6 and docs/LAUNCH-RUNBOOK.md) |
-| 5 to 14 | not started                                                                                                                                                                                          |
+| PR      | State                                                                                                                                                                                                                                                    |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0       | merged (#51)                                                                                                                                                                                                                                             |
+| 1       | merged (#53): `scripts/ci-dataset/` (snapshot, rebuild, fixtures), `npm run ci-dataset`, seed export extended                                                                                                                                            |
+| 2       | merged (#55): `output: 'server'`, route cache, `toolbar: 'client'`, measurements below                                                                                                                                                                   |
+| 3       | merged (#56): the shared tooling and reader (`scripts/cms/`, `src/lib/cms.ts`, notes below), no page changes                                                                                                                                             |
+| 4       | built, in review: `site_settings` and the `primary` and `footer` menus, read with the committed-JSON fallback; production data NOT loaded yet (needs `EMDASH_TOKEN`, 2.6 and docs/LAUNCH-RUNBOOK.md)                                                     |
+| 5       | built, in review: `pricing_tiers` and `pricing_addons`, read by the homepage teaser and /services with the committed-JSON fallback, `src/data/pricing.ts` deleted; production data NOT loaded yet (needs `EMDASH_TOKEN`, 2.6 and docs/LAUNCH-RUNBOOK.md) |
+| 6 to 14 | not started                                                                                                                                                                                                                                              |
 
 **PR 1 notes (2026-10-03).** Two deviations from section 2.3, both forced by the rule that production is read only through the `emdash` CLI login and public URLs: (1) `snapshot.mjs` builds rows from `content get --raw --published`, `media list` and `taxonomy terms`, not from `wrangler d1 execute` on production, so it maps fields to `ec_<slug>` columns itself (images and repeaters as JSON text, system and author ids nulled) and was checked against the previously hand-built `ncs-ci` rows: body and highlights JSON semantically equal, only media storage keys differ (CI now uses production's keys); (2) per-entry taxonomy links are not readable through the CLI, so `terms.json` pins them. R2 files are copied from the live site's public media URLs with a size and SHA-1 check, not from the production bucket. `--from-scratch` drops tables children-first: dropping `users` before `_emdash_comments` fails with `no such table: main.users`, which is the real error D1 returns (as `D1_RESET_DO`) for an import that hits it. `export-seed-from-instance.mjs` gained `--check` and now writes the seed through prettier; its menu, redirect and `titleField`/`sortOrder`/`admin` paths need an API token or a non-empty menu to prove (docs/PENDING.md item 6). A re-export against production changed one thing in `seed/seed.json`: `urlPattern: "/work/{slug}/"` on `case_studies`.
 
@@ -440,6 +441,16 @@ Today `ncs-ci` was built once by hand-copied SQL (docs/TESTING.md on the `ci-ded
 - **CI exercises the CMS path.** `ncs-ci` has no admin user, so its CMS data comes from `scripts/ci-dataset/cms-fixtures.mjs`, which builds the collection and menus into `seed/seed.json` and the entries into `scripts/ci-dataset/cms-rows.sql` straight from `cms/`. A unit test (`ciFixtures.test.ts`) fails if those generated files are stale. The fallback path is covered by `site.test.ts` (and was exercised live, above). When production holds the data, add the collection to `PRODUCTION_HAS` in `cms-fixtures.mjs` so `snapshot.mjs` becomes the source.
 - **The acceptance gate** is `tests/smoke.spec.ts`: on every route except the standalone `/coming-soon`, the header has Work, Services and About with the right hrefs (Journal is hidden until an entry exists), the "Start a project" button, and the footer email link.
 
+**PR 5 notes (2026-10-03).** Pricing is built and safe to merge with production still empty: `getPricingTiers()` and `getAddOns()` (`src/lib/pricing.ts`) read the two collections through `getOrdered()`, and an empty, unpublished or unreadable collection serves the committed `cms/content/pricing_tiers.json` and `pricing_addons.json` whole. What a builder of PRs 6 to 13 needs to know:
+
+- **Values were lifted from the code on main, not from older docs.** The care plan add-on reads "from $100/mo" (PR #41), Launch $4,000, Signature $7,000, Flagship $12,000. The extraction is a one-off script over `src/data/pricing.ts` (deleted in the same PR), so the JSON is byte-for-byte what the old module held.
+- **Nothing was written to production.** Schemas and content are committed; the main session loads them with the commands in 2.6 ("PR 5 data"). Until then each page logs `[cms] pricing_tiers has no published entries; serving the committed fallback` once per cache window.
+- **Render rules live in `src/lib/pricing.ts`, not the template:** first 3 tiers by `sort_order`, only the first recommended tier keeps the accent treatment and its badge (a second ticked box renders plain), first 3 add-ons. A tier with a blank name, price, who, range, note or no included lines makes the whole list fall back, so a half-saved edit cannot blank the table.
+- **The count-up needs no special handling.** `price_from` is an integer; both templates print it as the static text of the count-up span and as `data-countup-to`. `tests/pricing.spec.ts` loads `/` and `/services/` with JavaScript off and asserts each static number equals its target and the committed price.
+- **JSON-LD.** The Web design `Service` offer takes its `minPrice` from the first tier, so it follows the CMS. The Strategy ($1,500) and Photography ($900) floors stay literals in `services.astro` until PR 7 moves the services copy (the photography add-on's price is display text, with no number to read).
+- **Prose that quotes prices stays in code:** the /services FAQ answers and the /contact budget brackets (PRs 7 and 9). The field labels and the editing guide say to check them after a price change.
+- **CI exercises the CMS path** through `cms-fixtures.mjs` exactly as for PR 4 (a new collection needs `npm run ci-dataset -- --from-scratch`). **Render parity, measured.** `ncs-ci` was captured running `main` (routes `/`, `/services/`, `/contact/`, `/about/`, `/work/`), then the PR build was deployed to it twice: first with no pricing tables (production's state today: the fallback path), then after `npm run ci-dataset -- --from-scratch` and a refresh with both collections loaded (the CMS path). Both runs: 5/5 PASS, zero DIFF, no expected exceptions. The CMS path was proved live by editing Launch's `price_from` to 4100 in D1: `/services/` printed `4,100` with `data-countup-to="4100"` and the Web design JSON-LD `minPrice` became 4100; it was restored to 4000. One operational snag: right after `--from-scratch` the first request to `/` returned 500 while EmDash finished migrating and seeding, and `rebuild.mjs` stopped with "ncs-ci has no table ..."; a plain `npm run ci-dataset` a minute later completed it.
+
 ### 2.6 Running the tooling (the recipe's production steps, in order)
 
 Steps 2 to 4 of section 2.1 write to a live instance, so the main session runs them with Nathan's go-ahead. Replace `<collection>` and `<instance>`; `--yes` is required for anything that is not the `ncs-ci` Worker or a local address, and `--dry-run` reads without writing.
@@ -467,6 +478,28 @@ npm run cms:load -- --collection site_settings --url <prod> --yes         # seco
 ```
 
 Then switch CI to read the real rows: add `'site_settings'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, run `node scripts/export-seed-from-instance.mjs --url <prod>` (needs the token; it now emits the collection and both menus), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, and commit `seed/seed.json`, `rows.sql`, `cms-rows.sql`, `media.json`. Finally the edit proof: in `/_emdash/admin`, change the footer "Currently" line in Site settings, publish, reload any page within five minutes, then restore it from History.
+
+**PR 5 data (pricing tiers and add-ons). Needs `EMDASH_TOKEN` from Nathan; nothing below has been run.** Same safety as PR 4: the live site reads the data only after this PR deploys, and until the data is loaded it renders from the committed fallback, so the order does not matter and a failed step changes nothing visible. `<prod>` is `https://www.nixoncreativestudio.com`. Both collections are created in the admin group "Pricing & services".
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection pricing_tiers --url <prod> --dry-run   # expect: would created collection, would added field x10
+npm run cms:schema -- --collection pricing_tiers --url <prod> --yes
+npm run cms:schema -- --collection pricing_tiers --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:schema -- --collection pricing_addons --url <prod> --dry-run  # expect: would created collection, would added field x4
+npm run cms:schema -- --collection pricing_addons --url <prod> --yes
+npm run cms:schema -- --collection pricing_addons --url <prod> --yes      # second run: every line "unchanged"
+npm run cms:load -- --collection pricing_tiers --url <prod> --dry-run     # expect: would create launch, signature, flagship
+npm run cms:load -- --collection pricing_tiers --url <prod> --yes
+npm run cms:load -- --collection pricing_addons --url <prod> --dry-run    # expect: would create photography, brand-strategy, care-plan
+npm run cms:load -- --collection pricing_addons --url <prod> --yes
+npm run cms:load -- --collection pricing_tiers --url <prod> --yes         # second run: "unchanged"
+npm run cms:load -- --collection pricing_addons --url <prod> --yes        # second run: "unchanged"
+```
+
+Then switch CI to read the real rows: add `'pricing_tiers'` and `'pricing_addons'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs` (and `'site_settings'` if PR 4's data is already loaded), run `node scripts/export-seed-from-instance.mjs --url <prod>` (needs the token), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, and commit `seed/seed.json`, `rows.sql`, `cms-rows.sql`, `media.json`. Finally the edit proof: in `/_emdash/admin`, open Pricing tiers, change Launch's starting price (4000 to 4100), publish, reload `/services/` and `/` within five minutes and see $4,100 (and the Web design JSON-LD floor), then restore it from History. The prices here also appear in prose that stays in code until PRs 7 and 9 (the /services FAQ answer "What does it cost?" and the /contact budget brackets), so a real price change is three edits, not one.
 
 ---
 

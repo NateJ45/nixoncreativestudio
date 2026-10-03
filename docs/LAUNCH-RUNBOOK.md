@@ -88,6 +88,30 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 5: Pricing tiers and add-ons (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 5 shipped before any production write was possible. The live site works without these steps (the homepage teaser and /services render from the committed `cms/content/pricing_*.json`, the same numbers as before), so they can run any time after the PR deploys, independent of PR 4's data. Stop on any surprise in a dry run. `<prod>` is `https://www.nixoncreativestudio.com`.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection pricing_tiers --url <prod> --dry-run   # expect: would created collection, would added field x10
+npm run cms:schema -- --collection pricing_tiers --url <prod> --yes
+npm run cms:schema -- --collection pricing_tiers --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:schema -- --collection pricing_addons --url <prod> --dry-run  # expect: would created collection, would added field x4
+npm run cms:schema -- --collection pricing_addons --url <prod> --yes
+npm run cms:schema -- --collection pricing_addons --url <prod> --yes      # second run: every line "unchanged"
+npm run cms:load -- --collection pricing_tiers --url <prod> --dry-run     # expect: would create launch, signature, flagship
+npm run cms:load -- --collection pricing_tiers --url <prod> --yes
+npm run cms:load -- --collection pricing_addons --url <prod> --dry-run    # expect: would create photography, brand-strategy, care-plan
+npm run cms:load -- --collection pricing_addons --url <prod> --yes
+npm run cms:load -- --collection pricing_tiers --url <prod> --yes         # second run: "unchanged"
+npm run cms:load -- --collection pricing_addons --url <prod> --yes        # second run: "unchanged"
+```
+
+Then switch CI to read the real rows: add `'pricing_tiers'` and `'pricing_addons'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs` (and `'site_settings'` if PR 4's data is already loaded), run `node scripts/export-seed-from-instance.mjs --url <prod>` (needs the token), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, and commit `seed/seed.json`, `rows.sql`, `cms-rows.sql`, `media.json`. Finally the edit proof: in `/_emdash/admin`, open Pricing tiers, change Launch's starting price (4000 to 4100), publish, reload `/services/` and `/` within five minutes and see $4,100 (and the Web design JSON-LD floor), then restore it from History. The prices here also appear in prose that stays in code until PRs 7 and 9 (the /services FAQ answer "What does it cost?" and the /contact budget brackets), so a real price change is three edits, not one.
+
 ### PR 4: Site settings and menus (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 4 shipped before any production write was possible. The live site works without these steps (it renders from the committed fallback in `cms/content/`), so they can run any time after the PR deploys, in this order. They are the first real run of the schema applier and loader (docs/PENDING.md row 7), so start with the dry runs and stop on any surprise. Menus and the schema go through REST and need the token; the entry goes through the CLI login. `<prod>` is `https://www.nixoncreativestudio.com`.

@@ -320,6 +320,22 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## Pricing (CMS-DESIGN PR 5, 2026-10-03)
+
+The homepage "What it costs" band and the /services tier cards and add-on cards read from two list collections. Design: docs/CMS-DESIGN.md section 1.5 and "PR 5 notes".
+
+| What                                                                                                                             | Where it is edited                                                                                                               | How the site reads it                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| The three web tiers (name, starting price, who it is for, range line, paragraph, included lines, recommended flag, badge, order) | Admin, **Pricing tiers** (collection `pricing_tiers`, entries `launch`, `signature`, `flagship`; `cms/schema/pricing_tiers.mjs`) | `getPricingTiers(Astro)` in `src/lib/pricing.ts`: first 3 by `sort_order`, only the first recommended tier keeps the accent and badge |
+| The "Add to any project" cards (name, price as text, note, order)                                                                | Admin, **Add-ons** (collection `pricing_addons`, entries `photography`, `brand-strategy`, `care-plan`)                           | `getAddOns(Astro)`: first 3 by `sort_order`                                                                                           |
+
+Behaviour worth knowing:
+
+- **Fallback.** An empty, unpublished or unreadable collection (or a tier with a blank required field) serves the committed `cms/content/pricing_tiers.json` and `pricing_addons.json` as one whole list and logs `[cms] ... serving the committed fallback`. Production has no data loaded when this ships, so it renders from the fallback and looks exactly as before. `src/data/pricing.ts` is deleted; nothing imports it.
+- **Count-up.** The price is an integer field; the template prints it as the static text of the count-up span and as `data-countup-to`, so a visitor with no JavaScript sees the real number. `tests/pricing.spec.ts` proves it with scripts off.
+- **Prices elsewhere stay prose.** The /services FAQ ("What does it cost?", "Do you offer maintenance?") and the /contact budget brackets are code until PRs 7 and 9. The Web design JSON-LD offer takes its floor from the first tier; the Strategy ($1,500) and Photography ($900) floors in the JSON-LD stay literals in `services.astro` until PR 7.
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 5 data") and docs/LAUNCH-RUNBOOK.md.
+
 ## Site settings and menus (CMS-DESIGN PR 4, 2026-10-03)
 
 The first content PR: the shared chrome reads from the CMS. Design: docs/CMS-DESIGN.md sections 1.2 and 1.3 and "PR 4 notes".

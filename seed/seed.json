@@ -294,6 +294,176 @@
       ]
     },
     {
+      "slug": "pricing_addons",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false,
+        "listColumns": ["price", "sort_order"]
+      },
+      "group": "Pricing & services",
+      "titleField": "name",
+      "commentsEnabled": false,
+      "label": "Add-ons",
+      "labelSingular": "Add-on",
+      "description": "The \"Add to any project\" cards on the Services page.",
+      "sortOrder": 11,
+      "fields": [
+        {
+          "slug": "name",
+          "label": "Add-on name (max 32)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "price",
+          "label": "Price as it should read, for example \"from $900\" or \"$500 to $2,000\" (max 24)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "note",
+          "label": "What it covers (max 400)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 400
+          }
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order on the page, 1 is first (only the first 3 show)",
+          "type": "integer",
+          "required": true,
+          "indexed": true,
+          "validation": {
+            "min": 1,
+            "max": 99
+          }
+        }
+      ]
+    },
+    {
+      "slug": "pricing_tiers",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false,
+        "listColumns": ["price_from", "sort_order"]
+      },
+      "group": "Pricing & services",
+      "titleField": "name",
+      "commentsEnabled": false,
+      "label": "Pricing tiers",
+      "labelSingular": "Pricing tier",
+      "description": "The three website tiers on the homepage and the Services page.",
+      "sortOrder": 10,
+      "fields": [
+        {
+          "slug": "name",
+          "label": "Tier name (max 20)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 20
+          }
+        },
+        {
+          "slug": "price_from",
+          "label": "Starting price in whole dollars, for example 4000 (counts up on the page)",
+          "type": "integer",
+          "required": true,
+          "validation": {
+            "min": 0,
+            "max": 100000
+          }
+        },
+        {
+          "slug": "price_suffix",
+          "label": "Mark after the price, for example + (max 2)",
+          "type": "string",
+          "validation": {
+            "maxLength": 2
+          }
+        },
+        {
+          "slug": "who",
+          "label": "Who it is for, a few words (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "range",
+          "label": "Typical range line (check it against the Services FAQ \"What does it cost?\"; max 60)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "note",
+          "label": "Paragraph describing the tier, shown on Services (max 320)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 320
+          }
+        },
+        {
+          "slug": "features",
+          "label": "What is included (2 to 5 lines, keep each under 80 characters)",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 2,
+            "maxItems": 5,
+            "subFields": [
+              {
+                "slug": "text",
+                "label": "Line",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "highlighted",
+          "label": "Recommended tier (tick on one tier only: it gets the accent treatment and the badge)",
+          "type": "boolean"
+        },
+        {
+          "slug": "badge",
+          "label": "Badge on the recommended tier, for example \"Where most projects land\" (max 32)",
+          "type": "string",
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order on the page, 1 is first (only the first 3 tiers show)",
+          "type": "integer",
+          "required": true,
+          "indexed": true,
+          "validation": {
+            "min": 1,
+            "max": 99
+          }
+        }
+      ]
+    },
+    {
       "slug": "site_settings",
       "supports": ["drafts", "revisions"],
       "routable": false,
