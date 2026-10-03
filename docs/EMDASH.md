@@ -320,6 +320,18 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## Prose pages (CMS-DESIGN PR 10, 2026-10-03)
+
+/privacy, /accessibility and /colophon read one entry each of the `pages` collection (slugs `privacy`, `accessibility`, `colophon`). Design: docs/CMS-DESIGN.md section 1.10 and "PR 10 notes".
+
+- **Reader and template.** `getProsePage(slug)` in `src/lib/prosePage.ts`; `src/components/ProsePage.astro` draws it (document layout when `show_toc` is on, ledger layout when off); schema `cms/schema/pages.mjs` (9 fields, label "Other pages", group "Pages", sort 9); fallback `cms/content/pages.json`.
+- **`pages` is not new.** It is the EmDash template's collection (Title and Content), already in production and in `seed/seed.json`; the schema file extends it (so `cms:schema` reports updated and added fields, not a created collection) and `cms-fixtures.mjs` replaces its seed entry by slug.
+- **Body rendering.** `restrictPortableText()` (headings 2 and 3, lists, strong, em, code and safe links) then `blockHtml()` build HTML strings printed with `set:html`. `RestrictedPortableText.astro` is deliberately not used: the PR 8 run measured its `emdash/ui` stylesheet as an extra render-blocking link.
+- **Anchors.** A section id is `slugify(heading text)`; `LEGACY_ANCHORS` keeps the three Accessibility ids that differ (`how-its-checked`, `where-it-stops`, `report`) while the heading text is unchanged.
+- **Fallback rules.** A missing, unpublished or unreadable entry, a blank title, headline or description, a document with no body or a ledger with no rows serves the committed JSON whole (this also protects against an old template stub with the same slug).
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 10 data") and docs/LAUNCH-RUNBOOK.md. No files upload.
+- **Parity, measured on `ncs-ci`.** `/`, `/about/`, `/services/`, `/contact/` PASS; the three prose pages differ only by the removed developer comments, the shared scroll-spy script and the `data-prose-toc` marker (details in the PR 10 notes).
+
 ## Contact page (CMS-DESIGN PR 9, 2026-10-03)
 
 The /contact words and the three form choice lists read from the `page_contact` singleton (entry `contact`). Design: docs/CMS-DESIGN.md section 1.8 and "PR 9 notes".

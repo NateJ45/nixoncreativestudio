@@ -148,6 +148,14 @@ On the live site (the Web3Forms key is live there), send one inquiry that picks 
 
 For Nathan on the way: renaming a choice in the Contact page screen changes what arrives in your inbox from then on, so a rename mid-quarter makes old and new emails read differently. The first Budget choice should always start at your lowest tier price; after a price change, update both.
 
+### Load the PR 10 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 10 (Privacy, Accessibility, Colophon) ships safe with production empty: the three pages render from `cms/content/pages.json`, the same words and markup as before apart from three explained non-visual differences (developer comments dropped, one shared scroll-spy script, a renamed marker attribute). Until the data is loaded the admin's "Other pages" entry has only Title and Content and no Privacy, Accessibility or Colophon entries.
+
+Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 10 data") and `docs/LAUNCH-RUNBOOK.md`; run them in the same session as the PR 4 to 9 loads. Unlike the earlier loads this one extends a collection production already has, so look at `npx emdash content list pages` first. No files upload. After it, add `pages` to `PRODUCTION_HAS` in `cms-fixtures.mjs`, re-export the seed and rebuild `ncs-ci`.
+
+For Nathan on the way: the Colophon's stack and hosting rows and the Privacy analytics text are now editable in the admin but must stay true; they are tied to the code and the hosting, so ask for a check before changing them. The email in the links is typed text, so change it in these entries too if you change it in Site settings.
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.

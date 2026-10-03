@@ -164,7 +164,7 @@ test('the fallback keeps pointing at the bundled pictures, with their alt text',
 test('the story renders as four bare paragraphs carrying the original text', async () => {
   const { d } = deps(reader({}));
   const about = await getAboutPage({}, { deps: d });
-  const html = restrictPortableText(about.story.body).map(blockHtml);
+  const html = restrictPortableText(about.story.body).map((b) => blockHtml(b));
   assert.equal(html.length, 4);
   assert.match(html[0], /^I came to this work through a camera\. For years I photographed/);
   assert.ok(html[0].includes("the studio's main work now"), 'apostrophes stay literal');

@@ -242,27 +242,6 @@
       ]
     },
     {
-      "slug": "pages",
-      "label": "Pages",
-      "labelSingular": "Page",
-      "supports": ["drafts", "revisions", "search"],
-      "fields": [
-        {
-          "slug": "title",
-          "label": "Title",
-          "type": "string",
-          "required": true,
-          "searchable": true
-        },
-        {
-          "slug": "content",
-          "label": "Content",
-          "type": "portableText",
-          "searchable": true
-        }
-      ]
-    },
-    {
       "slug": "posts",
       "label": "Posts",
       "labelSingular": "Post",
@@ -1347,6 +1326,100 @@
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "slug": "pages",
+      "label": "Other pages",
+      "labelSingular": "Page",
+      "description": "Privacy, Accessibility and Colophon: the long text pages.",
+      "supports": ["drafts", "revisions", "search"],
+      "urlPattern": "/{slug}/",
+      "group": "Pages",
+      "sortOrder": 9,
+      "titleField": "title",
+      "commentsEnabled": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Page name (max 60). The tab reads \"<name> | your studio name\"",
+          "type": "string",
+          "required": true,
+          "searchable": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "content",
+          "label": "Body. Each \"Heading 2\" starts a section and appears in the \"On this page\" list. Paragraphs, bold, italic, links, code and bullet lists only (Privacy and Accessibility)",
+          "type": "portableText",
+          "searchable": true
+        },
+        {
+          "slug": "heading",
+          "label": "Headline at the top of the page (max 80)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 80
+          }
+        },
+        {
+          "slug": "eyebrow",
+          "label": "Small label above the headline (max 40; leave empty on the Colophon)",
+          "type": "string",
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "summary",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "intro",
+          "label": "Lead paragraph under the headline (paragraphs, bold, italic and links)",
+          "type": "portableText"
+        },
+        {
+          "slug": "rows",
+          "label": "Label and detail rows (Colophon only, up to 12; label under 32 characters, detail under 400). These are facts about how the site is built: they must stay true, so ask a developer before changing the tools, type or hosting",
+          "type": "repeater",
+          "validation": {
+            "maxItems": 12,
+            "subFields": [
+              {
+                "slug": "label",
+                "label": "Label",
+                "type": "string",
+                "required": true
+              },
+              {
+                "slug": "detail",
+                "label": "Detail",
+                "type": "text",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "show_toc",
+          "label": "Document layout with an \"On this page\" list (on for Privacy and Accessibility, off for the Colophon, which shows the rows instead)",
+          "type": "boolean"
+        },
+        {
+          "slug": "last_updated",
+          "label": "Last updated (document layout only; set this to today when the text changes)",
+          "type": "datetime"
         }
       ]
     },

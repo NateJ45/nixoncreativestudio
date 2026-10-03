@@ -21,6 +21,9 @@
  * so the skip regex needs no platform-specific quoting (Windows cmd mangles
  * the lookahead).
  *
+ * Fragments are checked too (--check-fragments, added with CMS-DESIGN PR 10): a link
+ * to /accessibility/#report is broken if the page has no element with id="report".
+ *
  * The log must say "scanned N links" with N in the hundreds.
  */
 
@@ -55,7 +58,10 @@ if (raw) {
 }
 
 try {
-  execFileSync(process.execPath, [cli, target, '--recurse', '--skip', skip], {
+  // --check-fragments: a link such as /accessibility/#report must also find an element
+  // with that id on the target page (CMS-DESIGN PR 10 acceptance: every old in-page
+  // anchor still resolves). It reads the server-rendered HTML, which is all of ours.
+  execFileSync(process.execPath, [cli, target, '--recurse', '--check-fragments', '--skip', skip], {
     stdio: 'inherit',
   });
 } catch (err) {
