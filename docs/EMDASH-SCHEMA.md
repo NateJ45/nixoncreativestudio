@@ -1,9 +1,10 @@
 # EmDash `case_studies` collection
 
-Reference for the case study collection on the EmDash trial instance
-(`https://ncs-emdash-trial.nathanjnixon86.workers.dev`), and for the script that
+Reference for the case study collection on the EmDash instance (built on the
+trial Worker, which has since been deleted; production and the `ncs-ci` sample
+now carry the same schema from `seed/seed.json`), and for the script that
 filled it from the 9 MDX files (West Chester Preschool was deliberately dropped from the portfolio and must not be re-added). Written so page templates can be built from this
-doc alone. Last verified against the trial instance on 2026-10-02, after the taxonomy pass.
+doc alone. Last verified against the trial instance (since deleted) on 2026-10-02, after the taxonomy pass.
 
 - Collection slug: `case_studies` (label "Case Studies", singular "Case Study")
 - Supports: `drafts`, `revisions`, `seo` (per-entry SEO panel, sitemap entry), `search`. Sidebar group "Portfolio" (Case Studies, Services, Stack, Topics). Routable. Comments off.

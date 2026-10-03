@@ -96,15 +96,6 @@ from a shell where `gh` is logged in. After adding, push a branch and confirm th
 log of the "Upload Worker preview version" step ends with a `Preview: https://ci-...`
 line.
 
-### Retire the `staging` branch (after the EmDash migration)
-
-Decided 2026-10-02. Use short-lived branches, PRs and Cloudflare branch previews
-instead. Touches `.github/workflows/ci.yml`, `lighthouse.yml`,
-`deploy-staging.yml` (delete), the deployment notes in CLAUDE.md, then delete the
-branch locally and on origin. Do it as its own change, after cutover.
-
----
-
 ## Cutover tasks (EmDash migration)
 
 The step-by-step launch plan, with the rollback, is in `docs/LAUNCH-RUNBOOK.md`.
@@ -113,9 +104,8 @@ The list below is the repo clean-up that plan depends on.
 Things the hybrid-site tooling deliberately leaves in place until the main
 session cuts over. Each is a deletion or a flip; do them in the cutover commit.
 
-- **Flip the OG default.** `EMDASH_URL` in `scripts/generate-og.mjs` defaults to
-  the trial Worker. Change it to `https://nixoncreativestudio.com` (and update the
-  comment and CLAUDE.md "Build pipeline" step 2 and Gotcha 13).
+- **OG default (done).** `EMDASH_URL` in `scripts/generate-og.mjs` now defaults to
+  the production site (`https://www.nixoncreativestudio.com`); the trial is gone.
 - **Remove the MDX case studies and the Astro `case-studies` collection**:
   `src/content/case-studies/*.mdx`, the collection in `src/content.config.ts`,
   and `src/assets/case-studies/` (covers and `shots/`) once nothing imports them.
@@ -125,8 +115,8 @@ session cuts over. Each is a deletion or a flip; do them in the cutover commit.
   `CaseStudyCover.astro` if nothing else uses it, and the `placeholders` step of
   `npm run build`. Until then the script is verified to exit 0 on an empty or
   missing `src/assets/case-studies/`.
-- **Point the tooling at the real domain.** Worker name in `wrangler.jsonc`
-  (`ncs-emdash-trial`) changes at cutover; alias length is budgeted for a name up
+- **Point the tooling at the real domain.** CI Worker name in `wrangler.jsonc`
+  (`ncs-ci`, since 2026-10-03); alias length is budgeted for a name up
   to about 27 characters. Re-check the `image.remotePatterns` hosts, the
   `SITE_URL` variable (item 1) and the default `PLAYWRIGHT_BASE_URL` examples in
   the docs.

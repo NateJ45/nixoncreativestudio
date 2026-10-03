@@ -10,8 +10,8 @@ import { defineConfig, devices } from '@playwright/test';
 // of:
 //   - CI: the Worker VERSION preview URL that ci.yml uploads (without promoting
 //     it) with `wrangler versions upload --preview-alias`.
-//   - Local: the trial Worker or any other deployed URL, for example
-//       PLAYWRIGHT_BASE_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev
+//   - Local: the ncs-ci Worker or any other deployed URL, for example
+//       PLAYWRIGHT_BASE_URL=https://ncs-ci.nathanjnixon86.workers.dev
 // No webServer is started. With the variable unset this config throws a clear
 // message instead of silently testing a half-site. (A local `wrangler dev`
 // cannot stand in: it starts with an EMPTY local D1/R2, so every server page
@@ -26,7 +26,7 @@ if (!baseURL) {
   throw new Error(
     'PLAYWRIGHT_BASE_URL is not set. The site is hybrid (server-rendered pages read EmDash), ' +
       'so the tests need a deployed URL, not dist/client. Set it, for example:\n' +
-      '  PLAYWRIGHT_BASE_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev npx playwright test\n' +
+      '  PLAYWRIGHT_BASE_URL=https://ncs-ci.nathanjnixon86.workers.dev npx playwright test\n' +
       'CI sets it from the Worker version preview URL (see .github/workflows/ci.yml).',
   );
 }

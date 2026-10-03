@@ -33,7 +33,9 @@ from the trial.
    `docs/EMDASH.md`, "Trusted image hosts are a silent failure").
 6. Export a fresh package from the trial right before launch:
    `npx emdash site export --url https://ncs-emdash-trial.nathanjnixon86.workers.dev --output site.emdash`
-   (last test: 70 files, 85 MB).
+   (last test: 70 files, 85 MB). The trial database is the only copy of the nine case
+   studies until production holds them, so it must stay until the import in Launch
+   step 3 is verified. CI no longer uses it (CI runs on the `ncs-ci` sample).
 7. In Cloudflare, add build variables `PUBLIC_COMING_SOON=true` and a long random
    `PUBLIC_PREVIEW_TOKEN` (see CLAUDE.md, "Coming Soon mode").
 
@@ -63,8 +65,10 @@ data step.
 - Resubmit `sitemap-index.xml` in Search Console.
 - Decide the apex versus `www` canonical mismatch (it exists on `main` today and is not
   part of this work).
-- After a week of stable running, delete the trial Worker, the `ncs-emdash` database, the
-  `ncs-emdash-media` bucket and the trial KV namespace.
+- Delete the trial Worker (`ncs-emdash-trial`), the `ncs-emdash` database, the
+  `ncs-emdash-media` bucket and the trial KV namespace once production holds the
+  imported content (CI was repointed at `ncs-ci` on 2026-10-03, so nothing else
+  reads them).
 - Rewrite the homepage, stack and content-collection sections of CLAUDE.md for the hybrid
   architecture, and update the vault note.
-- Retire the `staging` branch (see `docs/PENDING.md`).
+- (Done 2026-10-03) The `staging` branch was retired.

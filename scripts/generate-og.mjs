@@ -35,7 +35,7 @@
    EMDASH_URL defaults to the production site (flipped at the 2026-10 EmDash
    cutover). On the very first production build the live site is still the old
    static one, which has no CMS media, so the script keeps the committed cards.
-   Point it at the trial with EMDASH_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev.
+   Point it at the CI sample with EMDASH_URL=https://ncs-ci.nathanjnixon86.workers.dev.
 
    BaseLayout.astro maps the current pathname to /og/<slug>.png ('' -> index).
    Output is deterministic, so re-running with unchanged content produces

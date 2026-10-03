@@ -16,7 +16,7 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 `/about/`, `/services/` and `/rss.xml` are server-rendered from D1 + R2, so
 `dist/client` is not the whole site and nothing here can serve it statically.
 Playwright, the link check and Lighthouse run against a **URL**: in CI, the Worker
-version preview that `ci.yml` uploads (not promoted); by hand, the trial Worker.
+version preview that `ci.yml` uploads (not promoted); by hand, the `ncs-ci` Worker (`https://ncs-ci.nathanjnixon86.workers.dev`).
 See CLAUDE.md Gotcha 12.
 
 | Gate       | Command                                                 | Runs in CI                 | Covers                                                                                                                                                                                                      |
@@ -46,24 +46,24 @@ webServer). CI sets the variable to the Worker version preview; the fast local
 loop is:
 
 ```
-PLAYWRIGHT_BASE_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev npx playwright test --project=chromium
+PLAYWRIGHT_BASE_URL=https://ncs-ci.nathanjnixon86.workers.dev npx playwright test --project=chromium
 ```
 
-Tests only GET pages, but they hit the live D1/R2 bindings, so avoid running the
+Tests only GET pages, but they hit the Worker's real D1/R2 bindings (the small `ncs-ci` dataset in CI), so avoid running the
 full sweeps against a Worker whose data is mid-edit. A local `wrangler dev` was
 tried as a stand-in and rejected: it starts with an empty local D1/R2, so every
 server page renders without content (and `--remote` would read production
-bindings). CI installs chromium and webkit and runs both projects.
+bindings, which a test run should not). CI installs chromium and webkit and runs both projects.
 
-| File                     | Covers                                                                                                                                                                                                                                            |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `routes.ts`              | The route list every sweep iterates: every page, prerendered or server-rendered, with all nine case studies listed individually (CMS content can break one page and not its siblings). Add a route when a page ships or a case study is published |
-| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                            |
-| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; an unknown `/work/<slug>/` returns a real 404 with the not-found title                                                                                                             |
-| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                        |
-| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                |
-| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                |
-| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                |
+| File                     | Covers                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`              | The route list every sweep iterates: every page, prerendered or server-rendered, with the three case studies of the reduced `ncs-ci` CI sample listed individually (CMS content can break one page and not its siblings; production has nine). Add a route when a page ships or a case study is added to the CI dataset |
+| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                                                                                                  |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; an unknown `/work/<slug>/` returns a real 404 with the not-found title                                                                                                                                                                                   |
+| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                                                                                              |
+| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                                                                                      |
+| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                                                                                      |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                                                                                      |
 
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
@@ -146,12 +146,12 @@ became `/404`: the Worker serves the prerendered not-found page there with
 status 200, while a real unknown URL answers 404, which Lighthouse refuses to
 audit.
 
-One case study stands in for all nine, since they share a layout (the
-Playwright sweeps list all nine; Lighthouse does not, because each audit costs
+One case study stands in for the rest, since they share a layout (the
+Playwright sweeps list every case study in the CI sample; Lighthouse does not, because each audit costs
 three runs); `/coming-soon` is its own standalone template and is listed too.
 
-The workflow runs on pushes to `main` and `staging` and on pull requests, so a
-staging push proves the gate green before anything reaches main.
+The workflow runs on pushes to `main` and on pull requests, so a PR proves the
+gate green before anything reaches main.
 
 **This gate cannot be run locally on Nathan's Windows machine.** `npx lhci
 autorun` dies during Chrome-profile cleanup with an `EPERM` on its own temp
@@ -196,3 +196,39 @@ monitoring, point UptimeRobot's free tier at the homepage.
   and the condition wraps the component (see `ComingSoonGate.astro` and
   `src/components/analytics/`). Reintroducing the pattern breaks
   `npm run format:check`.
+
+## The `ncs-ci` dataset (CI previews)
+
+CI previews do not read production and no longer read the old trial instance. The
+`ci` environment in `wrangler.jsonc` binds a small dedicated set of Cloudflare
+resources, created 2026-10-03:
+
+| Thing  | Name / id                                                                |
+| ------ | ------------------------------------------------------------------------ |
+| Worker | `ncs-ci` (`https://ncs-ci.nathanjnixon86.workers.dev`)                   |
+| D1     | `ncs-ci`, `ab647734-85f6-495c-87f5-e959d8ff1fd4`, binding `DB`           |
+| R2     | `ncs-ci-media`, binding `MEDIA` (15 objects, about 16 MB)                |
+| KV     | `ncs-ci-sessions`, `39bc831dbb7142d3891b9afeda2de2a2`, binding `SESSION` |
+
+It holds three case studies, copied from the original nine so each shape of entry
+is exercised: `reid-design` (no highlights, no before/after),
+`presbyterian-academy` (highlights) and `second-presbyterian-chicago` (highlights
+plus before/after). All three are marked featured so the homepage Selected Work
+strip fills. `tests/routes.ts` lists exactly these slugs. The site title, tagline
+and setup flags are set; there is no admin user, so `/_emdash/admin` is not usable
+on this instance, by design (nothing needs to be edited there).
+
+**How it was built.** Deploy the `ci` Worker once with empty bindings so EmDash
+runs its migrations and applies `seed/seed.json` (the schema and the three
+collections), then insert rows into `ec_case_studies`, `media`, `taxonomies`,
+`content_taxonomies` and `options` with `wrangler d1 execute ncs-ci --remote --file`,
+and `wrangler r2 object put` each referenced file into `ncs-ci-media` under its
+`storage_key`. Author and revision ids are nulled (there are no users or revisions).
+The one-off generator was a script that selected those rows from the old trial
+database; to add a case study later, copy its `ec_case_studies` row, the `media`
+rows for every image id inside its JSON fields, its `content_taxonomies` links and
+the taxonomy terms, and upload the image files, then add the slug to
+`tests/routes.ts`.
+
+**Redeploying by hand:** `CLOUDFLARE_ENV=ci npm run build && CLOUDFLARE_ENV=ci npx wrangler deploy`.
+Never run `wrangler deploy` without `CLOUDFLARE_ENV=ci`: the default config is production.
