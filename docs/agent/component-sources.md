@@ -121,7 +121,7 @@ Files in `src/components/primereact/`:
 - `passthrough.ts` -- baseline Tailwind passthrough for Button, InputText, Dialog.
 - `README.md` -- integration guide, usage example, and link to the community passthrough baseline covering 80+ components.
 
-Installed version: `primereact` v10.9.8 (React 19 compatible).
+Installed version: `primereact` v11.2.0 (React 19; v11 is a rewrite, see `src/components/primereact/README.md`).
 
 ---
 
