@@ -9,7 +9,7 @@
  * start with the token ${LHCI_BASE_URL}; this script substitutes the real base
  * URL and writes the file lhci actually reads.
  *
- *   LHCI_BASE_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev \
+ *   LHCI_BASE_URL=https://ncs-ci.nathanjnixon86.workers.dev \
  *     node scripts/lhci-config.mjs
  *   npx lhci autorun --config=lighthouserc.generated.json
  *

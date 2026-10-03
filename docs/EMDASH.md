@@ -1,4 +1,9 @@
-# EmDash CMS trial (branch `emdash-trial`)
+# EmDash CMS trial (branch `emdash-trial`, history)
+
+> **The trial instance has been replaced.** CI previews now run on the small `ncs-ci`
+> Worker, D1 and R2 (docs/TESTING.md, "The `ncs-ci` dataset"), and the trial Worker,
+> database, bucket and KV namespace described below were deleted after that change
+> merged. Everything below is the record of the trial as it was on 2026-10-02.
 
 Started 2026-10-02. Trying Cloudflare's EmDash 1.1.0 on this portfolio. Nothing
 here touches the live site: it deploys as its own Worker.
@@ -38,7 +43,7 @@ are created in the admin and pages are changed to call `getEmDashCollection()`.
 
 **Production** deploys only from Workers Builds on a push to `main` (build `npm run build`, deploy `npx wrangler deploy`, both using the top level of `wrangler.jsonc`). Do not run `wrangler deploy` locally without `CLOUDFLARE_ENV`: since the 2026-10 cutover config, the default is the live Worker.
 
-**Trial / CI previews** use the `ci` environment in `wrangler.jsonc` (Worker `ncs-emdash-trial`, the trial database and bucket). GitHub Actions builds with `CLOUDFLARE_ENV=ci`, so the required checks never read production data. To redeploy the trial by hand:
+**CI previews** use the `ci` environment in `wrangler.jsonc` (Worker `ncs-ci`, D1 `ncs-ci`, R2 `ncs-ci-media`, KV `ncs-ci-sessions`: a three-case-study sample, see docs/TESTING.md). GitHub Actions builds with `CLOUDFLARE_ENV=ci`, so the required checks never read production data. To redeploy it by hand:
 
 ```
 CLOUDFLARE_ENV=ci npm run build && CLOUDFLARE_ENV=ci npx wrangler deploy
@@ -151,15 +156,16 @@ crawled a static tree now takes a URL. The map:
 | Link check        | `LINKCHECK_URL` (else `dist/client`)          | the same preview                                     |
 | Lighthouse CI     | `LHCI_BASE_URL` via `scripts/lhci-config.mjs` | its own preview from `lighthouse.yml` (alias `lh-*`) |
 | Parity harness    | `--url <base>` (else `dist/client`)           | not in CI, by design                                 |
-| OG cards          | `EMDASH_URL` (default: the trial Worker)      | read at build time, fail-soft                        |
+| OG cards          | `EMDASH_URL` (default: production)            | read at build time, fail-soft                        |
 
 **Preview versions.** `.github/actions/preview-version` runs
 `npx wrangler versions upload --preview-alias <ci|lh>-<branch or pr-N>` after
 `npm run build` (wrangler follows `.wrangler/deploy/config.json` to
 `dist/server/wrangler.json`). The version is not promoted, so production
-traffic is untouched. It runs on the **production bindings** (D1, R2, KV), which
+traffic is untouched. In CI it runs on the **`ncs-ci` bindings** (D1, R2, KV), which
 is the point: an isolated `wrangler preview` would start with empty storage and
-render every server page with no content. Read-only for the suites. The URL is
+render every server page with no content, and production data is never read.
+Read-only for the suites. The URL is
 parsed from the `version-upload` line of the `WRANGLER_OUTPUT_FILE_PATH` ndjson
 (`preview_alias_url`; field names read from the wrangler 4.146 source), falling
 back to the log line `Version Preview Alias URL: https://...`. Aliases need

@@ -67,12 +67,12 @@ export default defineConfig({
   // work on any host.
   // Astro's image service only resizes images from hosts it has been told to
   // trust. CMS media is served from the site's own origin (/_emdash/api/media/...),
-  // so list the origins that serve it (the production domain and the trial Worker).
+  // so list the origins that serve it (the production domain and the ncs-ci Worker).
   image: {
     remotePatterns: [
       { protocol: 'https', hostname: 'nixoncreativestudio.com' },
       { protocol: 'https', hostname: 'www.nixoncreativestudio.com' },
-      // Every Worker address on this account: the trial, the production
+      // Every Worker address on this account: ncs-ci, the production
       // workers.dev URL, and the CI preview aliases (ci-pr-N-..., lh-pr-N-...).
       // Found 2026-10-02: a host missing from this list is not an error. Astro
       // silently serves the full-size original instead of a resized WebP, which

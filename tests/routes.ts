@@ -7,13 +7,15 @@
 //     '/work/<slug>' (plus /rss.xml, which is XML and so is not swept here).
 //   - PRERENDERED: everything else.
 //
-// All nine published case studies are listed, not one standing in for the
-// template: with the content in a CMS, a single entry's malformed field (a
-// missing cover, an empty highlight row) breaks one page and not the others, and
-// the sweeps are the only thing that would catch it. The slugs are the entries
-// in the EmDash `case_studies` collection (docs/EMDASH-SCHEMA.md). Add a line
-// when a case study is published; the nine pages cost about a second each per
-// sweep.
+// REDUCED CI SAMPLE. CI runs against the small `ncs-ci` dataset (the `ci`
+// environment in wrangler.jsonc), which holds only the three case studies below,
+// copied from the original nine so each shape of entry is covered: Reid Design
+// (no highlights, no before/after), Presbyterian Academy (highlights, no
+// before/after) and Second Presbyterian (highlights plus before/after). The
+// production site carries all nine (docs/EMDASH-SCHEMA.md), so a sweep pointed at
+// production by hand will 404 on nothing but will not exercise the other six.
+// When you add a case study to the CI dataset (docs/TESTING.md), add its slug
+// here; when you publish one in production only, no change is needed.
 //
 // `/journal/[slug]` builds no pages until the first entry lands in
 // src/content/journal; add one here when it does. `/coming-soon` is the
@@ -22,15 +24,9 @@
 //
 // Add a route here when a new page ships, prerendered or not.
 export const caseStudySlugs = [
-  'first-baptist-muncie',
-  'first-presbyterian-orangeburg',
-  'foundation-for-reformed-theology',
-  'mas-monograms',
   'presbyterian-academy',
   'reid-design',
   'second-presbyterian-chicago',
-  'stone-steps-50k',
-  'theology-matters',
 ];
 
 export const routes = [
