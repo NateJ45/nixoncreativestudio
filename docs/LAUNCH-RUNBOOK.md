@@ -77,7 +77,7 @@ data step.
 
 Run by the main session, with Nathan's go-ahead, after a content PR (4 to 13) merges. The tooling PR (3) itself needs none of this: it creates no collection and moves no content. Nothing below runs from a builder agent, and none of it touches the live pages until the code that reads the data has deployed.
 
-Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (device code, Nathan approves in his browser) and `export EMDASH_TOKEN=<API token from Settings, API tokens>`.
+Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (device code, Nathan approves in his browser). That login alone is enough since 2026-10-03: the schema, content, menu and redirect scripts fall back to the token it stored (`storedLoginToken()` in `scripts/lib/emdash-rest.mjs`, read at run time, never printed or logged). Setting `EMDASH_TOKEN=<API token from Settings, API tokens>` still works and takes priority. If the stored login has expired, log in again.
 
 1. Record a rollback point: note the time, so `wrangler d1 time-travel restore ncs-emdash-prod --timestamp <iso>` is ready if a bulk step goes wrong.
 2. Check the definitions offline: `npm run cms:schema -- --all --check`.

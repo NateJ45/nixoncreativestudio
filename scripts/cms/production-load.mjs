@@ -32,7 +32,7 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
-import { restRequest } from '../lib/emdash-rest.mjs';
+import { restRequest, storedLoginToken } from '../lib/emdash-rest.mjs';
 import { emdash } from '../lib/emdash-cli.mjs';
 import {
   buildPlan,
@@ -53,7 +53,9 @@ const value = (n) => {
   return i > -1 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : undefined;
 };
 const url = (value('url') || PROD).replace(/\/$/, '');
-const token = process.env.EMDASH_TOKEN || '';
+// EMDASH_TOKEN if set, otherwise the login `npx emdash login` stored (Nathan chose
+// this on 2026-10-03). Either way the value is scrubbed from every line printed or logged.
+const token = process.env.EMDASH_TOKEN || storedLoginToken(url) || '';
 const scrub = makeScrubber([token]);
 
 // ---- log file (scrubbed; one file per run) ----------------------------------
@@ -103,9 +105,11 @@ if (flag('plan')) {
 // ---- preconditions ----------------------------------------------------------
 if (!token) {
   die(
-    'EMDASH_TOKEN is not set. Create an API token in /_emdash/admin, Settings, API tokens, then in PowerShell:\n' +
+    'No credential found. Either log in once (it prints a code, approve it in your browser):\n' +
+      `  npx emdash login --url ${url}\n` +
+      'or create an API token in /_emdash/admin, Settings, API tokens, then in PowerShell:\n' +
       "  $env:EMDASH_TOKEN = '<the token>'\n" +
-      'and run this again. The token is never printed or logged.',
+      'and run this again. The credential is never printed or logged.',
   );
 }
 
