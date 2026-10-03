@@ -109,7 +109,7 @@ test.describe('/colophon/ rows', () => {
     // The header and footer carry the same CTA, so look inside <main> only.
     await expect(
       page.locator('main').getByRole('link', { name: 'Start a project' }),
-    ).toHaveAttribute('href', '/contact');
+    ).toHaveAttribute('href', '/contact/');
   });
 
   test('the colophon no longer says the pages are static HTML', async ({ page }) => {
@@ -158,7 +158,7 @@ test.describe('scroll-spy script', () => {
     // Land on the colophon (no list), then use the footer to reach Privacy through
     // the View Transitions router: the script must bind on astro:page-load.
     await page.goto('/colophon/');
-    await page.locator('footer a[href="/privacy"]').first().click();
+    await page.locator('footer a[href="/privacy/"]').first().click();
     await page.waitForURL(/\/privacy\/?$/);
     const toc = page.locator('nav[aria-label="On this page"]');
     await expect(toc).toHaveAttribute('data-spy-bound', 'true');
