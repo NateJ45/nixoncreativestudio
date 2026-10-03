@@ -50,7 +50,24 @@ import sharp from 'sharp';
 import { DIR, ROOT, insertRow } from './lib.mjs';
 
 /** Collections already loaded into production: snapshot.mjs carries them, so skip them here. */
-export const PRODUCTION_HAS = [];
+export const PRODUCTION_HAS = [
+  // case_studies is production's own (its rows come from snapshot.mjs); cms/schema/case_studies.mjs
+  // exists only so the production loader can add the PR 13 hero fields to it.
+  'case_studies',
+  'site_settings',
+  'page_about',
+  'page_contact',
+  'page_home',
+  'page_journal',
+  'page_not_found',
+  'page_photography',
+  'page_services',
+  'page_work',
+  'pages',
+  'pricing_addons',
+  'pricing_tiers',
+  'service_offerings',
+];
 
 /** Fixed timestamp for generated rows, so the file is byte-stable between runs. */
 const STAMP = '2026-10-03T00:00:00.000Z';
@@ -163,9 +180,18 @@ export function mediaSql(m) {
 /** The seed.json collection entry for a cms/schema definition. */
 export function seedCollection(def) {
   const { COLLECTION, FIELDS, SLUG } = def;
+  // A collection with the SEO panel (`hasSeo`, case_studies) lists "seo" in the SEED's `supports`
+  // but not in the schema definition, because EmDash returns it as the hasSeo flag instead and the
+  // applier compares against that. Put it back here, in its usual place, and drop the flag.
+  const { hasSeo, ...settings } = COLLECTION;
+  if (hasSeo && Array.isArray(settings.supports) && !settings.supports.includes('seo')) {
+    const at = settings.supports.indexOf('search');
+    settings.supports = [...settings.supports];
+    settings.supports.splice(at === -1 ? settings.supports.length : at, 0, 'seo');
+  }
   return {
     slug: SLUG,
-    ...COLLECTION,
+    ...settings,
     fields: FIELDS.map((f) => {
       const field = { slug: f.slug, label: f.label, type: f.type };
       if (f.required) field.required = true;
@@ -189,6 +215,20 @@ export function seedMenus(menus) {
       ...(i.target ? { target: i.target } : {}),
       ...(i.titleAttr ? { titleAttr: i.titleAttr } : {}),
     })),
+  }));
+}
+
+/**
+ * The seed.json redirects array for cms/content/redirects.json. EmDash applies the seed on the first
+ * request, so the rows exist after a --from-scratch rebuild. NCS_CI_NO_REDIRECTS=1 leaves them out
+ * (how the code fallback in src/lib/redirectFallback.ts is exercised on the same data); the committed
+ * seed is always built WITHOUT the variable.
+ */
+export function seedRedirects(list) {
+  return list.map((r) => ({
+    source: r.source,
+    destination: r.destination,
+    type: r.type ?? 301,
   }));
 }
 
@@ -349,6 +389,12 @@ export async function build({ testContent = !NO_TEST_CONTENT_ENV } = {}) {
     const wanted = seedMenus(JSON.parse(readFileSync(menusFile, 'utf8')));
     const names = new Set(wanted.map((m) => m.name));
     seed.menus = [...(seed.menus ?? []).filter((m) => !names.has(m.name)), ...wanted];
+  }
+  const redirectsFile = join(CONTENT_DIR, 'redirects.json');
+  if (existsSync(redirectsFile) && process.env.NCS_CI_NO_REDIRECTS !== '1') {
+    const wanted = seedRedirects(JSON.parse(readFileSync(redirectsFile, 'utf8')));
+    const sources = new Set(wanted.map((r) => r.source));
+    seed.redirects = [...(seed.redirects ?? []).filter((r) => !sources.has(r.source)), ...wanted];
   }
   const options = (await resolveConfig(SEED_PATH)) ?? {};
   const seedText = await format(JSON.stringify(seed, null, 2), { ...options, filepath: SEED_PATH });

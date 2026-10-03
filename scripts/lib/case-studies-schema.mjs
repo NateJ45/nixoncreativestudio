@@ -71,6 +71,18 @@ export const FIELDS = [
   { slug: 'cover', type: 'image', label: 'Cover image', required: true },
   { slug: 'year', type: 'integer', label: 'Year', required: true, indexed: true },
   { slug: 'featured', type: 'boolean', label: 'Featured on the homepage', indexed: true },
+  // CMS-DESIGN PR 13: the homepage hero's device scene is built from the case studies that
+  // have in_hero on AND both showcase captures below. Both fields stay OPTIONAL on purpose
+  // (EmDash cannot make an existing optional field required, FIELD_UPDATE_REQUIRES_MIGRATION,
+  // and an old entry has neither). Without any qualifying entry the hero keeps the scene
+  // that is hardcoded in HeroShowcase.astro (src/lib/heroSites.ts).
+  { slug: 'in_hero', type: 'boolean', label: 'Show in the homepage device scene' },
+  {
+    slug: 'hero_order',
+    type: 'integer',
+    label: 'Homepage scene order (1 to 99, lowest first; needs both showcase captures)',
+    validation: { min: 1, max: 99 },
+  },
   {
     slug: 'published',
     type: 'datetime',

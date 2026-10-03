@@ -33,13 +33,25 @@
    (a plain <div>, not a link, with no hover state). The real navigation is the
    "See the work" CTA beside it and the Selected Work section below.
 
-   To curate: edit the `sites` array. Each needs a `-home.png` (desktop, captured
-   at 1440 wide, full page) and a `-mobile.png` (phone, captured ~390 wide, full
-   page) in src/assets/case-studies/shots/. Recapture with Playwright if a client
-   redesigns.
+   WHICH SITES (CMS-DESIGN PR 13). The scene is built from the case studies: each
+   published entry with "Show in the homepage device scene" (`in_hero`) ticked and
+   both showcase captures set joins it, ordered by `hero_order`, the address bar
+   showing its live URL's host. Hero.astro reads them (src/lib/heroSites.ts) and
+   passes them in as `sites`; the images are width-only resized /_image URLs of the
+   CMS media, because these captures are 4000 to 10000 px tall (docs/EMDASH.md, "The
+   4096px resizer limit").
+
+   FALLBACK. With no `sites` (production until the PR 13 data is loaded, or every
+   site un-ticked, or a failed read) the scene is the `bundledSites` array below:
+   the five bundled captures it showed before PR 13, the same markup as before.
+   To change that safety net, edit `bundledSites`: each needs a `-home.png`
+   (desktop, captured at 1440 wide, full page) and a `-mobile.png` (phone,
+   captured ~390 wide, full page) in src/assets/case-studies/shots/. Recapture with
+   Playwright if a client redesigns.
    ============================================================================ */
 
 import { getImage } from 'astro:assets';
+import { resizedImage, type HeroStudy } from '../lib/heroSites';
 
 // Desktop full-page captures (shared with the case-study SiteShowcase).
 import dSecondPres from '../assets/case-studies/shots/second-presbyterian-chicago-home.png';
@@ -55,10 +67,10 @@ import mStoneSteps from '../assets/case-studies/shots/stone-steps-50k-mobile.png
 import mMas from '../assets/case-studies/shots/mas-monograms-mobile.png';
 import mAcademy from '../assets/case-studies/shots/presbyterian-academy-mobile.png';
 
-// Curated set, ordered for variety. `host` is what the desktop address bar
-// shows. Second Pres uses its real domain in the bar even though the screenshot
-// was taken from the staging worker (the domain switch is pending).
-const sites = [
+// The FALLBACK set (see the header), ordered for variety. `host` is what the desktop
+// address bar shows. Second Pres uses its real domain in the bar even though the
+// screenshot was taken from the staging worker (the domain switch is pending).
+const bundledSites = [
   { host: 'secondpreschicago.org', desktop: dSecondPres, mobile: mSecondPres },
   { host: 'theologymatters.com', desktop: dTheology, mobile: mTheology },
   { host: 'stonesteps50k.com', desktop: dStoneSteps, mobile: mStoneSteps },
@@ -74,8 +86,11 @@ interface Props {
       scene is hidden. Both reuse the same cycling script (keyed off
       [data-hero-showcase]) and the same captures. */
   variant?: 'full' | 'phone';
+  /** The case studies in the scene (Hero.astro, from src/lib/heroSites.ts). Empty or
+      absent means "use the bundled fallback set". */
+  sites?: HeroStudy[];
 }
-const { variant = 'full' } = Astro.props;
+const { variant = 'full', sites: cmsSites = [] } = Astro.props;
 
 // Slides after the first are rendered WITHOUT src/srcset (data-src instead) and hydrated by the
 // script when they are promoted. `display:none` alone does not stop the browser fetching an
@@ -105,22 +120,56 @@ const PHONE_SIZES =
 // nothing. The visible copy still gets loading=eager + fetchpriority=high (it is the LCP).
 const SHOWN_MEDIA = variant === 'phone' ? '(max-width: 63.99rem)' : '(min-width: 64rem)';
 const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const deferred = await Promise.all(
-  sites.map(async (s) => ({
-    desktop: await getImage({
-      src: s.desktop,
-      widths: DESKTOP_WIDTHS,
-      sizes: DESKTOP_SIZES,
-      format: 'webp',
+/** One capture, as the markup needs it. */
+interface Shot {
+  src: string;
+  srcset: string;
+  width?: number;
+  height?: number;
+}
+interface Slide {
+  host: string;
+  desktop: Shot;
+  mobile: Shot;
+}
+
+// CMS path: width-only resizer URLs of the stored captures (never a height, see the header).
+// A study whose capture has no usable file is dropped; if that leaves nothing, the bundled
+// set is used.
+const cmsSlides: Slide[] = cmsSites.flatMap((s) => {
+  const desktop = resizedImage(s.desktop, Astro.url.origin, DESKTOP_WIDTHS);
+  const mobile = resizedImage(s.mobile, Astro.url.origin, PHONE_WIDTHS);
+  return desktop && mobile ? [{ host: s.host, desktop, mobile }] : [];
+});
+
+// Fallback path: the bundled captures through getImage, as before PR 13. Only computed when it
+// is needed.
+const fromBundled = async (): Promise<Slide[]> =>
+  Promise.all(
+    bundledSites.map(async (s) => {
+      const desktop = await getImage({
+        src: s.desktop,
+        widths: DESKTOP_WIDTHS,
+        sizes: DESKTOP_SIZES,
+        format: 'webp',
+      });
+      const mobile = await getImage({
+        src: s.mobile,
+        widths: PHONE_WIDTHS,
+        sizes: PHONE_SIZES,
+        format: 'webp',
+      });
+      const shot = (i: typeof desktop): Shot => ({
+        src: i.src,
+        srcset: i.srcSet.attribute,
+        width: Number(i.attributes.width) || undefined,
+        height: Number(i.attributes.height) || undefined,
+      });
+      return { host: s.host, desktop: shot(desktop), mobile: shot(mobile) };
     }),
-    mobile: await getImage({
-      src: s.mobile,
-      widths: PHONE_WIDTHS,
-      sizes: PHONE_SIZES,
-      format: 'webp',
-    }),
-  })),
-);
+  );
+
+const sites: Slide[] = cmsSlides.length > 0 ? cmsSlides : await fromBundled();
 ---
 
 <div
@@ -168,15 +217,15 @@ const deferred = await Promise.all(
               <picture>
                 <source
                   media={SHOWN_MEDIA}
-                  srcset={deferred[0].desktop.srcSet.attribute}
+                  srcset={sites[0].desktop.srcset}
                   sizes={DESKTOP_SIZES}
                   type="image/webp"
                 />
                 <img
                   class="shot-img"
                   alt=""
-                  width={deferred[0].desktop.attributes.width}
-                  height={deferred[0].desktop.attributes.height}
+                  width={sites[0].desktop.width}
+                  height={sites[0].desktop.height}
                   src={BLANK}
                   loading="eager"
                   fetchpriority="high"
@@ -187,10 +236,10 @@ const deferred = await Promise.all(
               <img
                 class="shot-img"
                 alt=""
-                width={deferred[i].desktop.attributes.width}
-                height={deferred[i].desktop.attributes.height}
-                data-src={deferred[i].desktop.src}
-                data-srcset={deferred[i].desktop.srcSet.attribute}
+                width={s.desktop.width}
+                height={s.desktop.height}
+                data-src={s.desktop.src}
+                data-srcset={s.desktop.srcset}
                 data-sizes={DESKTOP_SIZES}
                 decoding="async"
               />
@@ -214,15 +263,15 @@ const deferred = await Promise.all(
             <picture>
               <source
                 media={SHOWN_MEDIA}
-                srcset={deferred[0].mobile.srcSet.attribute}
+                srcset={sites[0].mobile.srcset}
                 sizes={PHONE_SIZES}
                 type="image/webp"
               />
               <img
                 class="shot-img"
                 alt=""
-                width={deferred[0].mobile.attributes.width}
-                height={deferred[0].mobile.attributes.height}
+                width={sites[0].mobile.width}
+                height={sites[0].mobile.height}
                 src={BLANK}
                 loading="eager"
                 fetchpriority="high"
@@ -233,10 +282,10 @@ const deferred = await Promise.all(
             <img
               class="shot-img"
               alt=""
-              width={deferred[i].mobile.attributes.width}
-              height={deferred[i].mobile.attributes.height}
-              data-src={deferred[i].mobile.src}
-              data-srcset={deferred[i].mobile.srcSet.attribute}
+              width={s.mobile.width}
+              height={s.mobile.height}
+              data-src={s.mobile.src}
+              data-srcset={s.mobile.srcset}
               data-sizes={PHONE_SIZES}
               decoding="async"
             />

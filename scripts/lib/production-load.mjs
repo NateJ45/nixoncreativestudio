@@ -43,6 +43,15 @@ export const REST_ONLY = ['menus', 'redirects'];
  */
 export const ALLOWS_FIELD_UPDATES = ['pages', 'posts'];
 
+/**
+ * Collections that ALREADY exist in production and get new fields from a later PR, with a content
+ * file made of "patch" entries (cms-load.mjs, planPatch). `case_studies` is the one so far: PR 13
+ * adds `in_hero` and `hero_order` to it and sets them once on the five hero sites. Its schema step
+ * must read "unchanged field x" for every existing field and "added field" for the new ones; the
+ * collection is not part of the CI follow-up list (its rows already come from the snapshot).
+ */
+export const EXISTING_COLLECTIONS = ['case_studies'];
+
 /** Order rank: the runbook order, with anything unknown before redirects. */
 export function rank(name) {
   if (name === 'site_settings') return 0;
@@ -53,6 +62,7 @@ export function rank(name) {
   if (name === 'pages') return 5;
   if (name === 'photos') return 6;
   if (name === 'posts') return 7;
+  if (name === 'case_studies') return 8;
   if (name === 'redirects') return 99;
   return 8;
 }
@@ -96,6 +106,9 @@ export function formatPlan(plan, url) {
         ? 'collection already exists from the template: expect updated fields'
         : '',
       u.schema && !u.content ? 'schema only, no content file' : '',
+      EXISTING_COLLECTIONS.includes(u.name)
+        ? 'collection already exists: adds the new fields, then sets them once on existing entries'
+        : '',
     ].filter(Boolean);
     lines.push(
       `  ${String(i + 1).padStart(2)}. ${u.name}: ${steps.join(' + ')}${note.length ? `  (${note.join('; ')})` : ''}`,
@@ -296,7 +309,9 @@ export async function runLoad(plan, deps, opts) {
 /** Printed after a clean run. Describes the follow-ups; automates none of them. */
 export function followUps(plan, url) {
   const forCi = plan
-    .filter((u) => u.content && !REST_ONLY.includes(u.name))
+    .filter(
+      (u) => u.content && !REST_ONLY.includes(u.name) && !EXISTING_COLLECTIONS.includes(u.name),
+    )
     .map((u) => `'${u.name}'`);
   return [
     'Done. Nothing below is automated; do each by hand:',

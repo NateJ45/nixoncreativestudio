@@ -68,7 +68,9 @@ test('every CMS image the CI dataset needs is listed in cms-media.json with a ma
     size: number;
     storageKey: string;
   }[];
-  assert.ok(list.length >= 6, 'the headshot and five About photos');
+  // Production holds page_about now, so its headshot and photos come from the snapshot (media.json);
+  // what is left here is the CI-only test photo.
+  assert.ok(list.length >= 1, 'the CI test photo');
   for (const f of list) {
     assert.equal(readFileSync(join(process.cwd(), f.source)).length, f.size, f.source);
     assert.ok(read('scripts/ci-dataset/cms-rows.sql').includes(f.storageKey), f.source);
@@ -137,8 +139,10 @@ test('without the test content the photos table is emptied and the picture is no
   assert.match(sql, /^DELETE FROM ec_photos;$/m);
   assert.ok(!/ci-test-photo/.test(sql));
   assert.ok(!/events-01\.jpg/.test(mediaText));
-  // Everything else is unchanged by leaving it out.
-  assert.ok(sql.includes('INSERT OR REPLACE INTO ec_page_work'));
+  // The collections production now holds (PRODUCTION_HAS) are NOT generated here: their rows come
+  // from the production snapshot (rows.sql), so a second copy would fight it.
+  assert.ok(!sql.includes('ec_page_work'));
+  assert.ok(!sql.includes('ec_site_settings'));
 });
 
 test('rowsSql with no entries clears the table instead of writing invalid SQL', () => {
