@@ -320,6 +320,17 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## Contact page (CMS-DESIGN PR 9, 2026-10-03)
+
+The /contact words and the three form choice lists read from the `page_contact` singleton (entry `contact`). Design: docs/CMS-DESIGN.md section 1.8 and "PR 9 notes".
+
+- **Reader.** `getContactPage()` in `src/lib/contactPage.ts`; schema `cms/schema/page_contact.mjs` (13 fields, admin group "Pages", sort 4); fallback `cms/content/page_contact.json`.
+- **Labels are the submitted values.** The Budget, Timeline and Heard-from selects render `<option value={label}>{label}</option>`, so Web3Forms emails the words. Organization type keeps its codes. Rows are trimmed and de-duplicated by the reader, because the label is the value.
+- **Fallback rules.** Missing, unpublished or unreadable entry, a blank required field or a list with fewer than two usable rows serves the committed JSON whole.
+- **Form handler unchanged** except the draft restore only restores a select when an option with that value exists (old drafts hold codes). Honeypot, hidden fields, the `astro:page-load` re-bind guard and the Web3Forms key handling are as before.
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 9 data") and docs/LAUNCH-RUNBOOK.md. No files upload.
+- **Parity, measured on `ncs-ci`.** `/`, `/services/`, `/about/` PASS; `/contact/` differs only by the 16 option values (codes to labels), the draft-restore guard in the page script, and the intro apostrophe printed as `&#39;` (a literal one before; same rendering). Details in the PR 9 notes.
+
 ## About page (CMS-DESIGN PR 8, 2026-10-03)
 
 The /about words, photos, Currently block, Lighthouse numbers and the Person JSON-LD read from the `page_about` singleton (entry `about`). Design: docs/CMS-DESIGN.md section 1.7 and "PR 8 notes".

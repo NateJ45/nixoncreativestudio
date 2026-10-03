@@ -88,6 +88,24 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 9: Contact page (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 9 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/contact` renders from the committed `cms/content/page_contact.json`, and the form already submits labels (that part is code). These steps create the Contact page screen in the admin. No files upload.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # needs EMDASH_TOKEN from Nathan: Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection page_contact --url <prod> --dry-run   # expect: would created collection, would added field x13
+npm run cms:schema -- --collection page_contact --url <prod> --yes
+npm run cms:schema -- --collection page_contact --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:load -- --collection page_contact --url <prod> --dry-run     # expect: would create contact
+npm run cms:load -- --collection page_contact --url <prod> --yes
+npm run cms:load -- --collection page_contact --url <prod> --yes         # second run: "unchanged"
+```
+
+Before the first load save the live page: `curl -sL <prod>/contact/ > contact-before.html`. After the load and a five-minute wait, the page should match it exactly. The edit proof: in `/_emdash/admin`, Contact page, rename one Budget choice, publish, reload /contact within five minutes (the select shows the new text and its option value is the same text), restore from History. The one step only Nathan can do, a real inquiry showing the three labels in the email, is in docs/PENDING.md. Then add `page_contact` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs` and re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4.
+
 ### PR 8: About page (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 8 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/about` renders from the committed `cms/content/page_about.json` and the bundled pictures. These steps create the About page screen in the admin and upload the six pictures to R2.

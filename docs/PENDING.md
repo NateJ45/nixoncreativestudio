@@ -134,6 +134,20 @@ Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 8 data") and `docs/LAUNCH-RUNBOOK.md`; r
 
 For Nathan on the way: the live thesis line read "small businessesaround Cincinnati" (a missing space); PR 8 fixes it. The offering picture on /services is still an image file in code: the CMS image path now exists (`EmDashPhoto`), but adding an `image` field to `service_offerings` is a separate small change (say if you want it).
 
+### Load the PR 9 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 9 (Contact) ships safe with production empty: /contact renders from `cms/content/page_contact.json`, byte-for-byte what it showed before except that the Budget, Timeline and How-did-you-hear options now submit their visible labels (that change ships with the code, not with the data). Until the data is loaded the admin has no Contact page screen.
+
+Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 9 data") and `docs/LAUNCH-RUNBOOK.md`; run them in the same session as the PR 4 to 8 loads. No files upload. After it, add `page_contact` to `PRODUCTION_HAS` in `cms-fixtures.mjs`, re-export the seed and rebuild `ncs-ci`.
+
+### One real Web3Forms submission per option list (Nathan, after PR 9 deploys)
+
+**Blocks:** nothing; it is the last acceptance step of CMS-DESIGN PR 9, which only a person with the real inbox can do. The tests intercept the POST and prove the payload carries labels, but no agent sends a real message.
+
+On the live site (the Web3Forms key is live there), send one inquiry that picks a Budget, a Timeline and a "How did you hear" choice, then open the email Web3Forms delivers and confirm those three lines show the visible text ("Under $4,000", not `under-4k`). If a line shows a code or is blank, tell Claude. Inquiries already in your inbox show the old codes; new ones show words.
+
+For Nathan on the way: renaming a choice in the Contact page screen changes what arrives in your inbox from then on, so a rename mid-quarter makes old and new emails read differently. The first Budget choice should always start at your lowest tier price; after a price change, update both.
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
