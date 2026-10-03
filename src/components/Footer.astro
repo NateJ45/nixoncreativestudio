@@ -21,9 +21,9 @@
 // accurate without manual edits each January.
 const year = new Date().getFullYear();
 
-import { getCollection } from 'astro:content';
 import { getSite } from '../data/site';
 import { getMenuItems } from '../lib/cms';
+import { hasJournalEntries } from '../lib/journal';
 import CopyEmail from './CopyEmail';
 import { buttonVariants } from './ui/button';
 
@@ -35,14 +35,12 @@ const menu = await getMenuItems('footer', { cache: Astro.cache });
 
 // Footer site nav, a quiet repeat of the menu for visitors who reach the bottom
 // of a page and want to know where to go next. Journal appears only once the
-// journal has a published entry, exactly as in Header.astro (same visibility
-// filter: drafts hidden in production); any menu item pointing at /journal is
-// dropped while it is empty.
-const journalCount = (
-  await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
-).length;
+// journal has a published entry, exactly as in Header.astro (the same
+// hasJournalEntries() answer, memoised per request; a draft does not count); any
+// menu item pointing at /journal is dropped while there is none.
+const showJournal = await hasJournalEntries(Astro);
 const navLinks = menu
-  .filter((item) => journalCount > 0 || !item.url.startsWith('/journal'))
+  .filter((item) => showJournal || !item.url.startsWith('/journal'))
   .map((item) => ({ label: item.label, href: item.url, target: item.target }));
 
 // Social links rendered as a list. Driving this from site.social keeps

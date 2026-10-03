@@ -4,8 +4,8 @@
 /* ============================================================================
    /journal | Journal Index
    ============================================================================
-   Listing for the journal collection. Sorts newest first, filters out
-   drafts in production builds, and renders a card per entry.
+   Listing for the journal (the CMS `posts` collection). Newest first, published
+   entries only (a draft is never listed), and a card per entry.
 
    Two paths share this page:
      1. Empty state. The live state today, because the collection has no
@@ -22,43 +22,28 @@
    safe via the shared design system in globals.css.
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
+import EmDashPhoto from '../../components/emdash/EmDashPhoto.astro';
 import { buttonVariants } from '../../components/ui/button';
-import { readingTime } from '../../lib/readingTime';
 import { getSite } from '../../data/site';
 import { getJournalPage, indexTitle } from '../../lib/indexPages';
+import { formatJournalDate, getJournalEntries } from '../../lib/journal';
 
 // The page's words (headline, intro, the empty-state card text) are the Journal page
 // entry in the CMS, with the committed fallback in cms/content/page_journal.json.
-// The entries themselves still come from the journal content collection until the
-// journal moves into EmDash (CMS-DESIGN PR 12).
+// The entries are the published rows of the CMS `posts` collection (Journal in the
+// admin), newest first, read through src/lib/journal.ts (CMS-DESIGN PR 12). A draft
+// is never in this list, and a failed read gives an empty list, not an error page.
 const site = await getSite(Astro);
 const page = await getJournalPage(Astro);
 
-const all = (
-  await getCollection('journal', ({ data }) =>
-    // Drop drafts in production. import.meta.env.PROD is true on `astro build`,
-    // false on `astro dev`, so drafts stay visible locally.
-    import.meta.env.PROD ? data.draft !== true : true,
-  )
-).sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+const all = await getJournalEntries({ cache: Astro.cache });
 
 // Split the newest entry off the front: it becomes the featured lead card,
 // the rest fill the grid below. Slicing an array of length 0 or 1 is safe,
 // so this works for the empty and single-entry cases too.
 const [lead, ...rest] = all;
-
-const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-// Reading-time stamp per entry, computed once here so both the lead card and
-// the grid cards can read it without recomputing.
-const minutesById = new Map<string, number>();
-for (const entry of all) {
-  minutesById.set(entry.id, readingTime(entry.body ?? ''));
-}
 ---
 
 <BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
@@ -131,15 +116,17 @@ for (const entry of all) {
             data-spotlight
             data-reveal
           >
-            {lead.data.cover && (
-              <div class="relative z-10 overflow-hidden bg-bg max-md:aspect-[16/9] md:order-2">
-                <Image
-                  src={lead.data.cover}
+            {lead.cover && (
+              <div
+                class="relative z-10 overflow-hidden bg-bg max-md:aspect-[16/9] md:order-2"
+                transition:name={`journal-cover-${lead.id}`}
+              >
+                <EmDashPhoto
+                  image={lead.cover}
                   alt=""
                   widths={[600, 900, 1200]}
                   sizes="(min-width: 48rem) 50vw, 100vw"
                   class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                  transition:name={`journal-cover-${lead.id}`}
                 />
               </div>
             )}
@@ -154,21 +141,21 @@ for (const entry of all) {
                 <span class="rounded-full bg-accent px-2.5 py-0.5 font-semibold tracking-[0.08em] text-accent-foreground">
                   Latest
                 </span>
-                <span>{fmt.format(lead.data.published)}</span>
+                <span>{formatJournalDate(lead.publishedAt)}</span>
                 <span aria-hidden="true">·</span>
-                <span>{minutesById.get(lead.id)} min read</span>
+                <span>{lead.minutes} min read</span>
               </p>
               {/* Lead title at display scale (text-h1), a clear step above the
                    grid cards (text-h3), so the newest entry carries real weight
                    beyond the badge alone. Tighter leading suits the larger size. */}
               <h2 class="text-h1 leading-[0.95] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {lead.data.title}
+                {lead.title}
               </h2>
-              <p class="max-w-[60ch] text-lg leading-[1.55] text-text">{lead.data.summary}</p>
+              <p class="max-w-[60ch] text-lg leading-[1.55] text-text">{lead.summary}</p>
 
-              {lead.data.tags && lead.data.tags.length > 0 && (
+              {lead.tags && lead.tags.length > 0 && (
                 <ul class="mt-xs flex flex-wrap gap-2" aria-label="Topics">
-                  {lead.data.tags.map((tag) => (
+                  {lead.tags.map((tag) => (
                     <li class="rounded-full border border-border bg-bg px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
                       {tag}
                     </li>
@@ -191,33 +178,35 @@ for (const entry of all) {
                     href={`/journal/${entry.id}/`}
                     data-spotlight
                   >
-                    {entry.data.cover && (
-                      <div class="relative z-10 aspect-[16/9] overflow-hidden bg-bg">
-                        <Image
-                          src={entry.data.cover}
+                    {entry.cover && (
+                      <div
+                        class="relative z-10 aspect-[16/9] overflow-hidden bg-bg"
+                        transition:name={`journal-cover-${entry.id}`}
+                      >
+                        <EmDashPhoto
+                          image={entry.cover}
                           alt=""
                           widths={[400, 600, 900]}
                           sizes="(min-width: 60rem) 33vw, (min-width: 40rem) 50vw, 100vw"
                           class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                          transition:name={`journal-cover-${entry.id}`}
                         />
                       </div>
                     )}
 
                     <div class="relative z-10 flex flex-1 flex-col gap-s p-l">
                       <p class="flex flex-wrap items-center gap-s font-mono text-[0.78rem] tracking-[0.05em] text-text-muted uppercase">
-                        <span>{fmt.format(entry.data.published)}</span>
+                        <span>{formatJournalDate(entry.publishedAt)}</span>
                         <span aria-hidden="true">·</span>
-                        <span>{minutesById.get(entry.id)} min read</span>
+                        <span>{entry.minutes} min read</span>
                       </p>
                       <h2 class="text-h3 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                        {entry.data.title}
+                        {entry.title}
                       </h2>
-                      <p class="leading-[1.5] text-text">{entry.data.summary}</p>
+                      <p class="leading-[1.5] text-text">{entry.summary}</p>
 
-                      {entry.data.tags && entry.data.tags.length > 0 && (
+                      {entry.tags && entry.tags.length > 0 && (
                         <ul class="flex flex-wrap gap-2" aria-label="Topics">
-                          {entry.data.tags.map((tag) => (
+                          {entry.tags.map((tag) => (
                             <li class="rounded-full border border-border bg-bg px-2.5 py-0.5 font-mono text-[0.68rem] tracking-[0.06em] text-text-muted uppercase">
                               {tag}
                             </li>

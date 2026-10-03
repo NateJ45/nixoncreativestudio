@@ -235,3 +235,17 @@ test('blockHtml options: link class, external links open a new tab, code class, 
       '<a href="/about/">in</a><code>_ga</code>',
   );
 });
+
+test('restrictPortableText keeps the blockquote style only when asked (the journal body)', () => {
+  const quote: PTNode = {
+    _type: 'block',
+    style: 'blockquote',
+    markDefs: [],
+    children: [{ _type: 'span', text: 'A quote', marks: [] }],
+  };
+  assert.equal(restrictPortableText([quote])[0].style, 'normal');
+  assert.equal(restrictPortableText([quote], { blockquote: true })[0].style, 'blockquote');
+  // Asking for quotes does not let other styles through.
+  const h4: PTNode = { ...quote, style: 'h4' };
+  assert.equal(restrictPortableText([h4], { blockquote: true })[0].style, 'normal');
+});

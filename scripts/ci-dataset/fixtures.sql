@@ -16,5 +16,6 @@ INSERT OR REPLACE INTO options (name, value) VALUES ('site:tagline', '"Modern we
 --   - PR 11 (done, but NOT here): the one `photos` entry needs a media row and an R2
 --     file, so it is scripts/ci-dataset/ci-content/photos.json, merged into
 --     cms-rows.sql and cms-media.json by cms-fixtures.mjs.
---   - PR 12: one published and one draft `posts` entry (journal list, a journal
---     detail route, and proof that a draft is not visible).
+--   - PR 12 (done, but NOT here either): the published `ci-test-entry` and the DRAFT
+--     `ci-draft-entry` are scripts/ci-dataset/ci-content/posts.json, merged into
+--     cms-rows.sql by cms-fixtures.mjs (the entry needs a cover media row and a tag term).

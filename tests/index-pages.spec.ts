@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { settle } from './helpers';
+import { journalEmpty, journalDraftSlug } from './routes';
 
 // =============================================================================
 // /work, /photography, /journal and the 404 page: the words ARE the CMS words,
@@ -230,16 +231,33 @@ test.describe('/photography gallery: no axe violations once rendered', () => {
 // /journal
 // -----------------------------------------------------------------------------
 test.describe('/journal', () => {
-  test('shows the CMS words and the empty-state card while nothing is published', async ({
-    page,
-  }) => {
-    await page.goto('/journal/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('h1')).toHaveText(journal.heading);
-    await expect(page.getByText(journal.intro)).toBeVisible();
-    await expect(page.getByText(journal.empty_kicker, { exact: true })).toBeVisible();
-    await expect(page.locator('h2', { hasText: journal.empty_heading })).toBeVisible();
-    await expect(page.getByText(journal.empty_body)).toBeVisible();
-  });
+  // The CI journal holds one published test entry and one draft (posts.json). With
+  // JOURNAL_EMPTY=1 it was rebuilt with neither, which is production's state.
+  test(
+    journalEmpty
+      ? 'shows the CMS words and the empty-state card while nothing is published'
+      : 'shows the CMS words and lists the published entry, never the draft',
+    async ({ page }) => {
+      await page.goto('/journal/', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('h1')).toHaveText(journal.heading);
+      await expect(page.getByText(journal.intro)).toBeVisible();
+      if (journalEmpty) {
+        await expect(page.getByText(journal.empty_kicker, { exact: true })).toBeVisible();
+        await expect(page.locator('h2', { hasText: journal.empty_heading })).toBeVisible();
+        await expect(page.getByText(journal.empty_body)).toBeVisible();
+      } else {
+        await expect(page.getByText(journal.empty_kicker, { exact: true })).toHaveCount(0);
+        const card = page.locator('main a[href="/journal/ci-test-entry/"]');
+        await expect(card).toHaveCount(1);
+        await expect(card.locator('h2')).toHaveText('A CI test journal entry');
+        await expect(card).toContainText('min read');
+        await expect(card).toContainText('CI notes');
+      }
+      // A draft is never listed, on either path.
+      await expect(page.locator(`a[href*="${journalDraftSlug}"]`)).toHaveCount(0);
+      await expect(page.getByText('must never be visible')).toHaveCount(0);
+    },
+  );
 });
 
 // -----------------------------------------------------------------------------

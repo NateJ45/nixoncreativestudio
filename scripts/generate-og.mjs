@@ -16,7 +16,8 @@
    Output (committed, like og-default.png and the placeholder JSON):
      public/og/<page>.png            e.g. public/og/index.png, /og/work.png
      public/og/work/<slug>.png       one per case study
-     public/og/journal/<slug>.png    one per journal entry
+     public/og/journal/<slug>.png    one per PUBLISHED journal entry (generated at
+                                     build time from the feed, not committed)
 
    WHERE THE CASE STUDIES COME FROM (changed with the EmDash migration)
    Case studies no longer live in git, so the case-study cards are built from
@@ -32,6 +33,16 @@
    If the instance is unreachable, or returns no case studies, the script keeps
    every already-committed public/og/work/*.png, prints a warning and carries on
    (exit 0): a CMS outage must never fail the build or delete a card.
+
+   JOURNAL ENTRIES come from the same feed (CMS-DESIGN PR 12). /rss.xml lists the
+   published journal entries next to the case studies; a /journal/<slug>/ link is a
+   journal entry, so its slug and title give a plain navy card at
+   public/og/journal/<slug>.png (no cover fetch). Drafts are not in the feed, so they
+   never get a card. An empty journal (the normal state until the first entry is
+   published) builds no journal cards and is not a warning; a feed that cannot be
+   read warns once and builds none. Nothing is ever deleted. A card exists only for
+   entries published before the build, so a new entry shows no card until the next
+   deploy (the same as a new case study).
    EMDASH_URL defaults to the production site (flipped at the 2026-10 EmDash
    cutover). On the very first production build the live site is still the old
    static one, which has no CMS media, so the script keeps the committed cards.
@@ -44,9 +55,9 @@
    Run: node scripts/generate-og.mjs   (chained into `npm run build`)
    ============================================================================ */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve, join } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import opentype from 'opentype.js';
 import sharp from 'sharp';
 
@@ -274,27 +285,6 @@ async function writeCard(relPath, title, cover) {
   return outPath;
 }
 
-// --- Frontmatter title reader (journal only) ---------------------------------
-// Minimal: pull the `title:` line out of an MDX file's frontmatter block.
-function readTitle(file) {
-  const text = readFileSync(file, 'utf8');
-  const fm = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!fm) return null;
-  const m = fm[1].match(/^title:\s*(.+)$/m);
-  if (!m) return null;
-  return m[1].trim().replace(/^['"]|['"]$/g, '');
-}
-function journalEntries() {
-  const base = resolve(projectRoot, 'src/content/journal');
-  if (!existsSync(base)) return [];
-  return readdirSync(base)
-    .filter((f) => f.endsWith('.mdx'))
-    .map((f) => {
-      const slug = f.replace(/\.mdx$/, '');
-      return { route: `journal/${slug}`, title: readTitle(join(base, f)) ?? slug };
-    });
-}
-
 // --- Case studies from EmDash ------------------------------------------------
 // See the header for why this reads public pages instead of the REST API.
 // CUTOVER: flip this default to https://nixoncreativestudio.com.
@@ -319,41 +309,60 @@ const decodeXml = (t) =>
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
 
-// Returns [{ route, title, coverBuf }] or [] (never throws): the caller treats
-// an empty result as "keep the committed cards".
-async function emdashCaseStudies() {
+// The published items of /rss.xml as [{ link, title }], or [] (never throws): one
+// read feeds both the case-study and the journal cards. /work/<slug>/ links are case
+// studies, /journal/<slug>/ links are journal entries (src/pages/rss.xml.js keeps
+// those two shapes). A failed read warns once; the caller then keeps the committed
+// cards and builds no journal cards.
+async function readFeedItems() {
   try {
     const rss = await getText(`${EMDASH_URL}/rss.xml`);
-    const items = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
-    const out = [];
-    for (const item of items) {
-      const link = item.match(/<link>([^<]+)<\/link>/)?.[1] ?? '';
-      const slug = link.match(/\/work\/([^/]+)\/?$/)?.[1];
-      const title = decodeXml(item.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').trim();
-      if (!slug || !title) continue;
-      const entry = { route: `work/${slug}`, title, coverBuf: undefined };
-      try {
-        const html = await getText(`${EMDASH_URL}/work/${slug}/`);
-        // The first <img> on the page is the cover; its href is the media file.
-        const img = html.match(/<img[^>]*\ssrc="([^"]+)"/)?.[1] ?? '';
-        const decoded = decodeURIComponent(img.replace(/&amp;/g, '&'));
-        const media = decoded.match(/\/_emdash\/api\/media\/file\/[A-Za-z0-9._-]+/)?.[0];
-        if (media) {
-          const res = await fetch(`${EMDASH_URL}${media}`, {
-            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-          });
-          if (res.ok) entry.coverBuf = Buffer.from(await res.arrayBuffer());
-        }
-      } catch (err) {
-        console.warn(`[og] ${slug}: cover not fetched (${err.message})`);
-      }
-      out.push(entry);
-    }
-    return out;
+    return [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => ({
+      link: m[1].match(/<link>([^<]+)<\/link>/)?.[1] ?? '',
+      title: decodeXml(m[1].match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').trim(),
+    }));
   } catch (err) {
-    console.warn(`[og] could not read case studies from ${EMDASH_URL} (${err.message})`);
+    console.warn(`[og] could not read the feed from ${EMDASH_URL} (${err.message})`);
     return [];
   }
+}
+
+// Returns [{ route, title, coverBuf }] (never throws): the caller treats an empty
+// result as "keep the committed cards".
+async function emdashCaseStudies(feed) {
+  const out = [];
+  for (const { link, title } of feed) {
+    const slug = link.match(/\/work\/([^/]+)\/?$/)?.[1];
+    if (!slug || !title) continue;
+    const entry = { route: `work/${slug}`, title, coverBuf: undefined };
+    try {
+      const html = await getText(`${EMDASH_URL}/work/${slug}/`);
+      // The first <img> on the page is the cover; its href is the media file.
+      const img = html.match(/<img[^>]*\ssrc="([^"]+)"/)?.[1] ?? '';
+      const decoded = decodeURIComponent(img.replace(/&amp;/g, '&'));
+      const media = decoded.match(/\/_emdash\/api\/media\/file\/[A-Za-z0-9._-]+/)?.[0];
+      if (media) {
+        const res = await fetch(`${EMDASH_URL}${media}`, {
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+        if (res.ok) entry.coverBuf = Buffer.from(await res.arrayBuffer());
+      }
+    } catch (err) {
+      console.warn(`[og] ${slug}: cover not fetched (${err.message})`);
+    }
+    out.push(entry);
+  }
+  return out;
+}
+
+// Journal entries from the same feed: [{ route, title }] with no cover, so each gets
+// the plain navy card (the page's own og:image is /og/journal/<slug>.png). An empty
+// journal is the normal state, not a warning.
+function emdashJournal(feed) {
+  return feed.flatMap(({ link, title }) => {
+    const slug = link.match(/\/journal\/([^/]+)\/?$/)?.[1];
+    return slug && title ? [{ route: `journal/${slug}`, title }] : [];
+  });
 }
 
 // --- Pages -----------------------------------------------------------------
@@ -371,7 +380,8 @@ const STATIC_PAGES = [
   { route: '404', title: 'Page not found' },
 ];
 
-const caseStudies = await emdashCaseStudies();
+const feed = await readFeedItems();
+const caseStudies = await emdashCaseStudies(feed);
 if (caseStudies.length === 0) {
   console.warn(
     `[og] WARNING: no published case studies from ${EMDASH_URL}. Keeping the committed ` +
@@ -381,7 +391,10 @@ if (caseStudies.length === 0) {
   console.log(`[og] ${caseStudies.length} case studies read from ${EMDASH_URL}`);
 }
 
-const pages = [...STATIC_PAGES, ...caseStudies, ...journalEntries()];
+const journal = emdashJournal(feed);
+console.log(`[og] ${journal.length} journal entries read from ${EMDASH_URL}`);
+
+const pages = [...STATIC_PAGES, ...caseStudies, ...journal];
 
 let count = 0;
 for (const page of pages) {

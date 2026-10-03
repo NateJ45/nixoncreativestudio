@@ -36,9 +36,12 @@ export const REST_ONLY = ['menus', 'redirects'];
 /**
  * Collections whose schema step is EXPECTED to update existing fields: `pages`
  * already exists in production from the EmDash template (Title and Content),
- * so PR 10's block expects "updated field title, updated field content".
+ * so PR 10's block expects "updated field title, updated field content". `posts`
+ * (the Journal, PR 12) is the template's other collection: it holds no entries, and
+ * its schema step relabels Title, Content and Excerpt (Excerpt becomes required)
+ * and adds `updated`.
  */
-export const ALLOWS_FIELD_UPDATES = ['pages'];
+export const ALLOWS_FIELD_UPDATES = ['pages', 'posts'];
 
 /** Order rank: the runbook order, with anything unknown before redirects. */
 export function rank(name) {

@@ -168,6 +168,22 @@ Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 11 data") and `docs/LAUNCH-RUNBOOK.md`; 
 
 For Nathan on the way: every photo needs a description for screen readers ("what the photo shows", not a title); a photo without one is left out of the page on purpose. Tick "Use as the opening picture" on the one photo you want behind the headline; if none is ticked the first photo is used. The viewer does not show captions yet (it needs one extra plugin, a visual change that was not part of this PR).
 
+### Apply the PR 12 schema (the Journal) to production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 12 (the journal moves into EmDash, the Astro `journal` and `photos` collections are deleted) ships safe with production empty: the code reads the template `posts` collection, which production already has with no entries, so `/journal/` shows its "first entry is coming" card, the Journal link stays out of the menus, `/journal/<anything>/` answers 404 and `/rss.xml` is unchanged. What is missing is only the admin side: the collection still carries the template labels (Posts) until the schema is applied, so Nathan cannot yet write a journal entry with the required Summary and `updated` fields, and `/sitemap-posts.xml` lists nothing until an entry is published.
+
+Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 12 data") and `docs/LAUNCH-RUNBOOK.md` ("PR 12"), which also holds the before-and-after checks and the edit proof (draft is invisible, publish shows the entry, the Journal link and the feed item, unpublish takes them away). There is no content to load.
+
+For Nathan on the way: (1) After the schema is applied, resubmit `sitemap-index.xml` in Search Console once (it lists `sitemap-posts.xml` now). (2) A journal entry's share card is built at deploy time, so re-run the latest Workers Build after publishing a new entry if you want its social preview image to appear at once. (3) Pictures inside an entry's body are not drawn yet (the cover image is); tell me if you want them and I will add them (it means resolving EmDash media references in `src/lib/journalBody.ts`).
+
+### Drop `@astrojs/mdx` and `astro-expressive-code` (decision for Nathan, PR 14)
+
+**Blocks:** nothing. Since PR 12 no `.mdx` file exists and journal code blocks are drawn by `src/lib/journalBody.ts`, so both integrations in `astro.config.mjs` are unused. They are left installed because removing them edits `package.json` and the lockfile (the repo rule is to confirm dependency changes first). Removing them is a two-line config change plus `npm uninstall`; the build and parity were clean with them in place, so there is no hurry.
+
+### Delete the unused case-study capture files? (already done in PR 12; confirm you are happy)
+
+**Blocks:** nothing. PR 12 deleted 35 images under `src/assets/case-studies/` that nothing imports (the eight covers other than `second-presbyterian-chicago.png`, and every feature, before and after capture; 25 MB). Their pictures live in EmDash media (R2) and the files are in git history (`git log --diff-filter=D -- src/assets/case-studies`). The home and mobile captures stay because `HeroShowcase` imports ten of them and `SiteShowcase`'s dead slug mode still globs them. If you wanted the originals kept in the working tree as a local backup, restore them from history.
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
@@ -200,15 +216,15 @@ session cuts over. Each is a deletion or a flip; do them in the cutover commit.
 
 - **OG default (done).** `EMDASH_URL` in `scripts/generate-og.mjs` now defaults to
   the production site (`https://www.nixoncreativestudio.com`); the trial is gone.
-- **Remove the MDX case studies and the Astro `case-studies` collection**:
-  `src/content/case-studies/*.mdx`, the collection in `src/content.config.ts`,
-  and `src/assets/case-studies/` (covers and `shots/`) once nothing imports them.
-  The OG script and the build are already safe with that directory gone.
-- **Remove the placeholder pipeline**: `scripts/generate-placeholders.mjs`,
-  `src/lib/coverPlaceholders.json`, `src/lib/coverPlaceholder.ts` and its test,
-  `CaseStudyCover.astro` if nothing else uses it, and the `placeholders` step of
-  `npm run build`. Until then the script is verified to exit 0 on an empty or
-  missing `src/assets/case-studies/`.
+- **Case-study leftovers (mostly done in PR 12).** The MDX case studies and the Astro
+  collections are gone, and so are 35 unreferenced images under
+  `src/assets/case-studies/`. What remains there is deliberate: the home and mobile
+  captures `HeroShowcase` imports (CMS-DESIGN PR 13 moves the hero scene to the CMS,
+  after which the folder can go) and the `/services` cover. `scripts/migrate-case-studies.mjs`
+  and `scripts/emdash-schema-case-studies.mjs` are the one-time import scripts; the MDX
+  they read is in git history only, so they cannot run again and can be deleted.
+- **The placeholder pipeline is already removed** (no `generate-placeholders.mjs`,
+  `coverPlaceholders.json`, `coverPlaceholder.ts` or build step remain).
 - **Point the tooling at the real domain.** CI Worker name in `wrangler.jsonc`
   (`ncs-ci`, since 2026-10-03); alias length is budgeted for a name up
   to about 27 characters. Re-check the `image.remotePatterns` hosts, the

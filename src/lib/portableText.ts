@@ -47,6 +47,8 @@ export interface RestrictOptions {
   lists?: boolean;
   /** Keep the inline `code` mark (the prose pages use it for `_ga`). Default false. */
   code?: boolean;
+  /** Keep the `blockquote` style (the journal body uses it). Default false: it becomes `normal`. */
+  blockquote?: boolean;
 }
 
 /** Heading slug, matching what Astro's MDX pipeline produced (the old TOC ids). */
@@ -90,7 +92,11 @@ export function isSafeLink(href: unknown): href is string {
  */
 export function restrictPortableText(value: unknown, opts: RestrictOptions = {}): PTNode[] {
   if (!Array.isArray(value)) return [];
-  const headings = new Set<string>(opts.headings ?? []);
+  // Block styles that survive besides `normal`: the listed headings, and blockquote on request.
+  const headings = new Set<string>([
+    ...(opts.headings ?? []),
+    ...(opts.blockquote ? ['blockquote'] : []),
+  ]);
   const out: PTNode[] = [];
   for (const node of value as PTNode[]) {
     if (!node || node._type !== 'block') continue;

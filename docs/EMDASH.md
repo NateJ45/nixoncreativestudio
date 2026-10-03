@@ -24,7 +24,7 @@ here touches the live site: it deploys as its own Worker.
 
 The site stays `output: 'static'`; EmDash built fine that way and every existing
 page still prerenders. Case studies, journal and photos remain Astro content
-collections in git. EmDash does NOT import them (docs: "EmDash does not copy
+collections in git (history: all three have since moved into EmDash). EmDash does NOT import them (docs: "EmDash does not copy
 file-based entries into its database"), so the CMS is empty until collections
 are created in the admin and pages are changed to call `getEmDashCollection()`.
 
@@ -58,8 +58,8 @@ CLOUDFLARE_ENV=ci npm run build && CLOUDFLARE_ENV=ci npx wrangler deploy
 
 ## Open
 
-- Decide whether the journal (or case studies) should move into EmDash. They
-  are still MDX in git; EmDash does not import them.
+- (Done) The journal moved into EmDash in CMS-DESIGN PR 12; case studies moved
+  earlier. Nothing is MDX in git any more.
 - Custom domain: set `EMDASH_SITE_URL` first, or passkeys break.
 
 ## Case studies now read from EmDash (2026-10-02)
@@ -290,7 +290,7 @@ before, 3.8 s after; `/privacy/` 2.0 s before, 1.5 to 2.0 s after.
 - `/about` redirects to `/about/` (301) from `src/worker.ts`; `/404/` answers 200
   when requested by name so Lighthouse CI can audit it; real unknown URLs 404.
 - The sitemap lists every page by hand in `astro.config.mjs` `customPages`.
-- `/journal/<slug>/` is a server route (`getEntry`); there are no entries yet.
+- `/journal/<slug>/` is a server route that reads the EmDash `posts` collection since PR 12 (section "Journal"); the sitemap lists entries through `sitemap-posts.xml`.
 
 **Editing guide wording, until the first production proof:** "allow up to 5
 minutes" is the honest promise; a publish normally shows at once because it
@@ -319,6 +319,19 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - The create-collection endpoint rejects `titleField` and `commentsEnabled`; they are update-only, and `titleField` must name an existing field. The applier therefore creates, adds fields, then PUTs the full settings.
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
+
+## Journal (CMS-DESIGN PR 12, 2026-10-03)
+
+The journal is the EmDash template's own `posts` collection, relabelled "Journal" (schema `cms/schema/posts.mjs`: `title`, `featured_image` as Cover image, `content` as Body, `excerpt` as the required 200-character Summary, `updated`; supports drafts, revisions, search and seo; `/journal/{slug}/`). It replaces the Astro `journal` content collection, which is deleted along with `photos` and `src/content.config.ts`: the site has no Astro content collections left, only the EmDash live collection in `src/live.config.ts`.
+
+- **Reader.** `src/lib/journal.ts`: `getJournalEntries()`, `getJournalEntry()`, `hasJournalEntries()`, `normalizeJournalEntry()`, `formatJournalDate()`. All three readers take `Astro.cache` so a publish purges the page. No committed fallback: zero entries, a read error and a missing table all read as an empty journal (`[journal] ...` is logged on an error), `/journal/` shows its "first entry is coming" card, an entry slug answers 404 and the menu item stays hidden. An entry with no title or no summary is dropped.
+- **Drafts are never visible.** EmDash returns published rows only to an anonymous request (a draft goes only to a signed-in editor on `?_edit` or `?_preview`, which BaseLayout never caches). Proved on `ncs-ci`, whose database carries one draft entry with the text "must never be visible": its address is a 404 and its text is absent from `/journal/`, `/rss.xml`, `/sitemap-posts.xml` and the page HTML (`tests/smoke.spec.ts`, `tests/journal.spec.ts`).
+- **The Journal menu item** is dropped in code from both menus while `hasJournalEntries()` is false. The answer is memoised per request, and the read adds the `posts` tag to every page, so the first publish purges the nav everywhere. Any journal publish therefore purges every cached page once.
+- **The body is drawn by `renderJournalBody()`** (`src/lib/journalBody.ts`), not by `emdash/ui`'s `PortableText`. Importing that component from a page made its 9.5 KB stylesheet the shared `ui.*.css` chunk and linked it from the homepage, `/services`, `/work` and every case study (the same trap as PR 8; parity went 8/14 PASS, and the CSS chunk was the only difference). The vocabulary is paragraphs, h2 and h3 with ids (the case-study slug rule), blockquotes, nested lists, bold, italic, inline code, safe links and code blocks. **Code blocks are plain monospace boxes with no syntax colouring** (expressive-code only worked on MDX; `@astrojs/mdx` and `astro-expressive-code` are still in `astro.config.mjs` but unused, dropping them is for PR 14). **Pictures, tables and embeds in the body render nothing.** Supporting body pictures means resolving EmDash media references (`asset._ref`) in `journalBody.ts` or accepting the stylesheet cost.
+- **Cover images** render through `EmDashPhoto` (width-only resizer URLs) with `alt=""`.
+- **Feed, sitemap, share cards.** `/rss.xml` lists published entries beside the case studies (merged by date only when there is at least one entry). `src/pages/sitemap-posts.xml.ts` wraps EmDash's per-collection sitemap: trailing slashes, and a valid EMPTY `<urlset>` while nothing is published (the stock handler answers 404 and `sitemap-index.xml` always lists this file through `customSitemaps`). `scripts/generate-og.mjs` takes `/journal/<slug>/` items from `/rss.xml` and writes a navy card per entry at build time (not committed); an entry published after the last deploy has no card until the next one.
+- **CI.** The CI dataset carries one published entry (`ci-test-entry`, with a tag, a cover and every body block type) and one draft (`ci-draft-entry`), both in `scripts/ci-dataset/ci-content/posts.json`. The schema reaches `ncs-ci` through the seed, so adding it needed `npm run ci-dataset -- --from-scratch`. With the published entry the Journal link is in every page's menus; `JOURNAL_EMPTY=1` flips the Playwright suites for a rebuild without test content (docs/TESTING.md).
+- **Not done here:** the unused template `category` taxonomy is still there (PR 14 deletes it); the admin sidebar group and order (PR 14); the production schema and any entries (needs `EMDASH_TOKEN`, docs/LAUNCH-RUNBOOK.md "PR 12").
 
 ## Index pages and photos (CMS-DESIGN PR 11, 2026-10-03)
 
@@ -435,6 +448,6 @@ Behaviour worth knowing:
 - **Fallback.** A missing, unpublished or unreadable entry or menu serves the committed `cms/content/site_settings.json` and `menus.json`, and logs `[cms] ... serving the committed fallback`. A blank required field in the admin counts as unreadable (the whole entry falls back rather than a half-empty footer). An absent collection (production today, before the data is loaded) is handled the same way, so no page errors.
 - **Production is still empty.** The schema and content were committed but not loaded (no admin token). Load them with the commands in docs/CMS-DESIGN.md 2.6 ("PR 4 data") and docs/LAUNCH-RUNBOOK.md. Nothing visible changes when they land, because the fallback holds the same values.
 - **The phone menu** (`MobileNav.tsx`, a React island) gets every value as a prop from `Header.astro`; a menu item's "Title attribute" is its visible descriptor. Do not import `src/data/site.ts` in an island.
-- **Journal** items in either menu are hidden in code while no journal entry is published.
+- **Journal** items in either menu are hidden in code while no journal entry is published (`hasJournalEntries()` in `src/lib/journal.ts` since PR 12; a draft does not count).
 - **Parity.** The PR was proved byte-identical to `main` on all 14 pages and `/rss.xml` on `ncs-ci`, on both the fallback path and the CMS path, apart from the `MobileNav` island's `uid` and serialised props.
 - **A stale cache looks like a failed rebuild.** `npm run ci-dataset -- --from-scratch` requests `/` once before it loads the rows, and the route cache keeps that empty homepage for 5 minutes (the Selected Work strip missing, about 24 KB lighter). A parity capture taken straight after a rebuild reads it; wait out the cache window and capture again.

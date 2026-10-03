@@ -215,13 +215,16 @@ export function rowsSql(def, entries) {
   lines.push(`DELETE FROM ${table} WHERE slug NOT IN (${keep});`);
   for (const e of entries) {
     const id = stableId(def.SLUG, e.slug);
+    // An entry is published unless it says `"status": "draft"` (CI-only entries use
+    // that to prove a draft is never visible; a draft has no publish date).
+    const status = e.status ?? 'published';
     const row = {
       id,
       slug: e.slug,
-      status: 'published',
+      status,
       created_at: STAMP,
       updated_at: STAMP,
-      published_at: STAMP,
+      ...(status === 'published' ? { published_at: STAMP } : {}),
       version: 1,
       locale: 'en',
       translation_group: id,
@@ -233,6 +236,56 @@ export function rowsSql(def, entries) {
     }
     lines.push(insertRow(table, row));
   }
+  return lines;
+}
+
+/** Collections whose entries can carry taxonomy terms (a CI-only entry's `terms`). */
+const TAXONOMY_COLLECTIONS = ['posts'];
+
+/**
+ * The taxonomy term and term-link statements for a collection's entries. An entry
+ * lists them as `"terms": { "tag": [{ "slug", "label" }] }` (CI-only entries; the
+ * committed `cms/content` JSON never carries terms). Every statement is idempotent
+ * and the stale CI rows are cleared first, so a refresh with no test content (or
+ * with a term removed) returns the collection to what the files say. Only terms
+ * whose id starts with `01CI` are ever deleted: the seeded terms are untouched.
+ */
+export function termsSql(def, entries) {
+  if (!TAXONOMY_COLLECTIONS.includes(def.SLUG)) return [];
+  const lines = [
+    `DELETE FROM content_taxonomies WHERE collection = '${def.SLUG}';`,
+    "DELETE FROM taxonomies WHERE id LIKE '01CI%';",
+  ];
+  const terms = new Map(); // `${taxonomy}/${slug}` -> row
+  const links = [];
+  for (const e of entries) {
+    for (const [taxonomy, list] of Object.entries(e.terms ?? {})) {
+      list.forEach((term, index) => {
+        const key = `${taxonomy}/${term.slug}`;
+        if (!terms.has(key)) {
+          const id = stableId('taxonomy', key);
+          terms.set(key, {
+            id,
+            name: taxonomy,
+            slug: term.slug,
+            label: term.label,
+            locale: 'en',
+            translation_group: id,
+            sort_order: index,
+          });
+        }
+        links.push({
+          collection: def.SLUG,
+          entry_id: stableId(def.SLUG, e.slug),
+          taxonomy_id: terms.get(key).id,
+        });
+      });
+    }
+  }
+  for (const t of [...terms.values()].sort((a, b) => a.id.localeCompare(b.id))) {
+    lines.push(insertRow('taxonomies', t));
+  }
+  for (const l of links) lines.push(insertRow('content_taxonomies', l));
   return lines;
 }
 
@@ -318,7 +371,7 @@ export async function build({ testContent = !NO_TEST_CONTENT_ENV } = {}) {
     [
       ...header,
       ...mediaList.map(mediaSql),
-      ...resolvedRows.flatMap((c) => rowsSql(c.def, c.entries)),
+      ...resolvedRows.flatMap((c) => [...rowsSql(c.def, c.entries), ...termsSql(c.def, c.entries)]),
     ].join('\n') + '\n';
   const mediaText = await format(JSON.stringify(mediaList, null, 2), {
     ...options,

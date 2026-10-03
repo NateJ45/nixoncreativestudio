@@ -269,6 +269,21 @@ test('only the pages collection may update fields', () => {
   assert.equal(schemaSurprises(['removed obsolete field a'], 'pages').length, 1);
 });
 
+test('posts (the Journal, an existing template collection) may update fields too, nothing else may', () => {
+  // The PR 12 dry run: Title, Content and Excerpt are relabelled, `updated` is new.
+  const lines = [
+    'would updated field title',
+    'would updated field content',
+    'would updated field excerpt',
+    'would added field updated (datetime)',
+    'would reorder fields',
+    'would applied collection settings',
+  ];
+  assert.deepEqual(schemaSurprises(lines, 'posts'), []);
+  assert.equal(schemaSurprises(lines, 'photos').length, 3);
+  assert.equal(schemaSurprises(['removed obsolete field a'], 'posts').length, 1);
+});
+
 test('menus: a rebuild of an existing menu is a surprise, a new menu is not', () => {
   assert.equal(contentSurprises(['menu primary: would rebuild 4 items']).length, 1);
   assert.deepEqual(
