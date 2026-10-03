@@ -107,6 +107,9 @@ branch locally and on origin. Do it as its own change, after cutover.
 
 ## Cutover tasks (EmDash migration)
 
+The step-by-step launch plan, with the rollback, is in `docs/LAUNCH-RUNBOOK.md`.
+The list below is the repo clean-up that plan depends on.
+
 Things the hybrid-site tooling deliberately leaves in place until the main
 session cuts over. Each is a deletion or a flip; do them in the cutover commit.
 
