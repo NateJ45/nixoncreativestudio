@@ -83,9 +83,25 @@ export const dataOf = (existing) => existing?.data ?? existing?.item?.data ?? {}
 /** The revision token a `content update --rev` needs. */
 export const revOf = (existing) => existing?._rev ?? existing?.item?._rev;
 
+/**
+ * EmDash stores a boolean field as 0 or 1, so a stored `false` reads back as `0`.
+ * Fold booleans to 0/1 (deeply, so repeater rows are covered too) on both sides
+ * before comparing, otherwise every entry with a boolean looks changed forever.
+ */
+function foldBooleans(value) {
+  if (typeof value === 'boolean') return value ? 1 : 0;
+  if (Array.isArray(value)) return value.map(foldBooleans);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, foldBooleans(v)]));
+  }
+  return value;
+}
+
 /** True when every key in `desired` already holds the same value in `current`. */
 export function sameData(current, desired) {
-  return Object.keys(desired).every((k) => stable(current?.[k]) === stable(desired[k]));
+  return Object.keys(desired).every(
+    (k) => stable(foldBooleans(current?.[k])) === stable(foldBooleans(desired[k])),
+  );
 }
 
 /** What to do for one entry, given what the instance holds (or null). */
