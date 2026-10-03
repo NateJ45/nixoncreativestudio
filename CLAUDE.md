@@ -923,7 +923,7 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     photography were cold (about 1s each) and all 15 pages were hits after one
     pass.
 
-24. **The `www` to apex redirect rule must leave `/_emdash/` AND `/_astro/`
+23. **The `www` to apex redirect rule must leave `/_emdash/` AND `/_astro/`
     alone, or the admin breaks.** The zone Redirect Rule (Cloudflare dashboard,
     Rules, not in the repo) sends `www` to the apex with a 301 except for paths
     under `/_emdash/`, because the admin passkey is bound to `www`. The admin
@@ -934,6 +934,6 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     in the console (2026-10-03, the day the studio-help plugin shipped). Fixed
     through the API (expression below); both prefixes are now exempt. If the rule
     is ever recreated or edited, keep both. Check: `curl -s -o /dev/null -w "%{http_code}"
-    https://www.nixoncreativestudio.com/_astro/<any chunk>.js` must be 200, while
+https://www.nixoncreativestudio.com/_astro/<any chunk>.js` must be 200, while
     `https://www.nixoncreativestudio.com/about/` must still 301 to the apex.
     `(http.host eq "www.nixoncreativestudio.com" and not starts_with(http.request.uri.path, "/_emdash/") and not starts_with(http.request.uri.path, "/_astro/"))`
