@@ -36,7 +36,7 @@ See CLAUDE.md Gotcha 12.
 | Parity     | `npm run parity compare`                                | **no** (by design)         | Rendered-HTML drift against a committed baseline                                                                                                                                                                                                                                                                      |
 | Uptime     | -                                                       | `uptime.yml`, hourly       | The live site's key routes still return 200                                                                                                                                                                                                                                                                           |
 
-CI shape (starter PORTS.md card 62): `ci.yml` runs `static` and `site` in parallel, then `e2e` in 3 Playwright shards against the preview `site` uploaded. The required checks `build` and `test` are aggregators over those jobs.
+CI shape (starter PORTS.md card 70): `ci.yml` runs `static` and `site` in parallel, then `e2e` in 3 Playwright shards against the preview `site` uploaded. The required checks `build` and `test` are aggregators over those jobs.
 
 `npm run check` is the quick local gate: `astro check && npm run lint`.
 `npm run check:full` adds the unit tests and the build. `npm test` runs the
