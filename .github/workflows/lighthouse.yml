@@ -14,13 +14,48 @@ name: Lighthouse
 # secrets (docs/PENDING.md); without them the audit is SKIPPED with a warning
 # annotation, not failed.
 #
-# Runs on pull requests and on pushes to main. (The staging-branch rehearsal
-# path was retired 2026-10-03: a PR gets the same gates plus a Worker preview.)
+# ── WHEN IT RUNS (starter PORTS.md card 70) ─────────────────────────────────
+# Lighthouse is the slowest gate (3 passes over every listed URL) and it ran on
+# every PR, including ones that cannot move a score. It is NOT a required status
+# check (only `build` and `test` are), so it is free to be scheduled rather than
+# blocking:
+#
+#   - pull_request, path-filtered to what can move a score (markup, styles,
+#     assets, content fallbacks, CI dataset, config), and audited on a SAMPLE of
+#     URLs, one per distinct template, via --collect.url flags below. The full
+#     list in lighthouserc.json is untouched.
+#   - push to main, same path filter, FULL url list: the post-merge record.
+#   - weekly schedule, FULL url list: catches drift nobody pushed (a font host
+#     change, a dependency bump that landed on a different path).
+#   - workflow_dispatch: a branch tip on demand, full list.
+#
+# A docs-only or workflow-only PR therefore runs no Lighthouse and reports no
+# check, which the dependabot auto-merge workflow treats as green. The workflow
+# `name:` stays `Lighthouse`: dependabot-auto-merge.yml listens for it by name.
 
 on:
   push:
     branches: [main]
+    paths: &score-paths
+      - 'src/**'
+      - 'public/**'
+      - 'cms/**'
+      - 'seed/**'
+      - 'scripts/ci-dataset/**'
+      - 'scripts/lhci-config.mjs'
+      - 'lighthouserc.json'
+      - 'astro.config.mjs'
+      - 'wrangler.jsonc'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/lighthouse.yml'
+      - '.github/actions/preview-version/**'
   pull_request:
+    paths: *score-paths
+  schedule:
+    - cron: '17 5 * * 1'
+  # Dispatchable so a branch tip can be re-audited on demand, without pushing
+  # an empty commit.
   workflow_dispatch:
 
 # A newer push to the same branch obsoletes the in-flight run; cancel it
@@ -42,7 +77,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       # Same build ci.yml runs. No env needed; every PUBLIC_* variable is
       # optional and the site builds clean without them.
@@ -65,8 +100,35 @@ jobs:
       # Accessibility is a hard gate (minScore 1) in lighthouserc.json;
       # performance / best-practices / SEO are warnings. Reports upload to
       # Google's temporary public LHCI storage (shareable URL in the log).
-      - name: Lighthouse CI
-        if: steps.preview.outputs.enabled == 'true'
+      #
+      # On a PR the URL list is overridden with ONE PAGE PER TEMPLATE. Passing
+      # --collect.url replaces the config's list, so the assertions and the
+      # median-of-3 stay exactly as the standard defines them; only the page set
+      # shrinks. The sample: home, about, services, the /work/ listing, one case
+      # study (they share a layout), the journal index, photography, contact,
+      # ONE prose page (privacy stands in for colophon and accessibility, which
+      # all render ProsePage), the standalone coming-soon page, and the 404.
+      - name: Lighthouse CI (sample, pull request)
+        if: steps.preview.outputs.enabled == 'true' && github.event_name == 'pull_request'
+        env:
+          LHCI_BASE_URL: ${{ steps.preview.outputs.url }}
+        run: |
+          node scripts/lhci-config.mjs
+          npx lhci autorun --config=lighthouserc.generated.json \
+            --collect.url="$LHCI_BASE_URL/" \
+            --collect.url="$LHCI_BASE_URL/about/" \
+            --collect.url="$LHCI_BASE_URL/services/" \
+            --collect.url="$LHCI_BASE_URL/work/" \
+            --collect.url="$LHCI_BASE_URL/work/second-presbyterian-chicago/" \
+            --collect.url="$LHCI_BASE_URL/journal/" \
+            --collect.url="$LHCI_BASE_URL/photography/" \
+            --collect.url="$LHCI_BASE_URL/contact/" \
+            --collect.url="$LHCI_BASE_URL/privacy/" \
+            --collect.url="$LHCI_BASE_URL/coming-soon/" \
+            --collect.url="$LHCI_BASE_URL/404/"
+
+      - name: Lighthouse CI (full)
+        if: steps.preview.outputs.enabled == 'true' && github.event_name != 'pull_request'
         env:
           LHCI_BASE_URL: ${{ steps.preview.outputs.url }}
         run: |

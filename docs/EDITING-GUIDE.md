@@ -163,7 +163,7 @@ If Claude is not around and one of these needs changing:
 2. Find the file (press `.` on the repo page, or use the search box), then press the pencil icon to edit it in the browser.
 3. Change only the words between quotes or tags. Leave the surrounding code alone.
 4. Press **Commit changes**, choose **Create a new branch and start a pull request**, and open the pull request.
-5. Wait for the three checks (CI build, CI tests and Lighthouse) to turn green. That takes a few minutes. If one is red, do not merge; open it and read the message, or ask Claude.
+5. Wait for the checks (CI build and CI tests, plus Lighthouse when the change touches the site's look or code; a words-only or docs-only change skips it) to turn green. That takes a few minutes. If one is red, do not merge; open it and read the message, or ask Claude.
 6. Press **Merge**. The live site updates a minute or two later.
 
 **Never edit production directly.** Everything reaches the live site by merging a pull request, so a mistake is one click to undo (see section 6) and a bad change never skips the checks.

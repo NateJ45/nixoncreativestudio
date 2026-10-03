@@ -73,7 +73,7 @@ then on.
 ### Add the Cloudflare secrets CI needs for the Worker preview
 
 **Blocks:** the Worker preview upload in `.github/actions/preview-version`, and
-with it the `test` job in `ci.yml`, the link check, and `lighthouse.yml`. Until
+with it the `e2e` shards (and so the `test` check) in `ci.yml`, the link check, and `lighthouse.yml`. Until
 both secrets exist those steps are skipped with a warning annotation ("Preview
 skipped"), so the pipeline is green but the Playwright, link-check and Lighthouse
 gates are NOT running. Added 2026-10-02 with the hybrid-site tooling.
