@@ -65,6 +65,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 15. **Do not run `cms:load`, edit menus or site settings right before showing the site**: any admin write purges pages and the next view is a cold render (Gotcha 21).
 16. **Every `mailto:` keeps its fallback** (`src/scripts/mailto-fallback.ts`); a click that does nothing on a machine with no mail client is expected.
 17. **Keep the docs TRUE**: a change to what the admin offers updates `docs/EDITING-GUIDE.md`; a new route updates `tests/routes.ts`; Colophon and Privacy text are tied to the code and hosting.
+18. **Writes to a live, shared system (Cloudways, the Cloudflare dashboard or API, production D1/R2, live Sheets) are refused by the auto-mode classifier even when Nathan says yes in chat.** Never route around a refusal through another tool. Build a paste-ready artifact plus a numbered run list, then verify afterwards with read-only calls. Full rule and pattern: `.claude/rules/live-writes.md`.
 
 ## Working with Nathan (short form; full text in `docs/claude/working-style.md`)
 
@@ -83,12 +84,13 @@ Path-scoped rules (load automatically when you touch matching files):
 - `.claude/rules/accessibility.md`: AA target, required patterns, token contrast, before-merging checks.
 - `.claude/rules/build-pipeline.md`: `npm run build` chain, OG cards, icons.
 - `.claude/rules/testing-ci.md`: every test suite, lint and format, CI and Lighthouse workflows, parity harness, CMS tooling, sync-check.
+- `.claude/rules/live-writes.md`: the auto-mode classifier blocks live-system writes; the paste-ready handoff pattern.
 - `.claude/rules/foundation-files.md`: what is safe to edit by hand and what needs a planned session.
 
 Reference docs, read when needed (`docs/claude/`):
 
 - `emdash-architecture.md`: read before changing rendering, caching, images, wrangler config or the CI dataset.
-- `gotchas.md`: full text of Gotchas 1 to 24 (index below). Read the entry before touching what its line mentions.
+- `gotchas.md`: full text of Gotchas 1 to 25 (index below). Read the entry before touching what its line mentions.
 - `deployment.md`: read when changing deploys, env vars (`PUBLIC_*`), the Coming Soon gate or security headers.
 - `stack.md`: read when choosing or wiring a library.
 - `setup-checklist.md`: read when asked what is unconfigured or what content is outstanding.
@@ -123,3 +125,4 @@ Existing docs: `docs/EMDASH.md` (what exists, gotchas), `docs/EMDASH-SCHEMA.md`,
 22. There is no cache warm-up; a GitHub Action cannot be one (Bot Fight Mode).
 23. Mobile speed: how to measure, what moved it, dead ends.
 24. The `www` redirect rule must exempt `/_emdash/` and `/_astro/`.
+25. Committed parity baselines and Markdown docs feed Tailwind's scan; `globals.css` excludes them with `@source not`.
