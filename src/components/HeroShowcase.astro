@@ -118,6 +118,12 @@ const PHONE_SIZES =
 // one is therefore a <picture> whose real source only matches on the breakpoint where this
 // variant is shown; the fallback <img src> is a 1x1 transparent GIF, so the hidden copy costs
 // nothing. The visible copy still gets loading=eager + fetchpriority=high (it is the LCP).
+// The phone BACKDROP is decoration behind the hero copy (faded to 0.5 to 0.85 opacity by
+// Hero.astro) and its first slide is the mobile LCP element, so it is served at quality 55
+// (about 60 KB at 420 px instead of about 117 KB at the resizer's default; measured
+// 2026-10-03, Lighthouse mobile LCP was gated on bytes). The crisp desktop-cluster phone keeps
+// the default.
+const PHONE_QUALITY = variant === 'phone' ? 55 : undefined;
 const SHOWN_MEDIA = variant === 'phone' ? '(max-width: 63.99rem)' : '(min-width: 64rem)';
 const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 /** One capture, as the markup needs it. */
@@ -138,7 +144,7 @@ interface Slide {
 // set is used.
 const cmsSlides: Slide[] = cmsSites.flatMap((s) => {
   const desktop = resizedImage(s.desktop, Astro.url.origin, DESKTOP_WIDTHS);
-  const mobile = resizedImage(s.mobile, Astro.url.origin, PHONE_WIDTHS);
+  const mobile = resizedImage(s.mobile, Astro.url.origin, PHONE_WIDTHS, PHONE_QUALITY);
   return desktop && mobile ? [{ host: s.host, desktop, mobile }] : [];
 });
 
@@ -158,6 +164,7 @@ const fromBundled = async (): Promise<Slide[]> =>
         widths: PHONE_WIDTHS,
         sizes: PHONE_SIZES,
         format: 'webp',
+        quality: PHONE_QUALITY,
       });
       const shot = (i: typeof desktop): Shot => ({
         src: i.src,

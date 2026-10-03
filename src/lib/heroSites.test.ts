@@ -121,3 +121,15 @@ test('resizedImage builds a sorted srcset, the widest as src, and keeps the intr
   assert.equal(resizedImage({} as never, 'https://x.test', [600]), undefined);
   assert.equal(resizedImage(img('D'), 'https://x.test', []), undefined);
 });
+
+test('resizedUrl adds a quality only when asked, and resizedImage passes it to every width', () => {
+  const plain = resizedUrl('https://x.test/_emdash/api/media/file/K.png', 420);
+  assert.ok(!plain.includes('q='), 'no quality unless asked');
+  const q = resizedUrl('https://x.test/_emdash/api/media/file/K.png', 420, 55);
+  assert.match(q, /&w=420&q=55&f=webp$/);
+  const out = resizedImage(img('D', 545, 4000, 'D.png'), 'https://x.test', [280, 420], 55);
+  assert.ok(out);
+  assert.ok(out.src.includes('&q=55&'));
+  assert.equal(out.srcset.split(',').filter((p) => p.includes('&q=55&')).length, 2);
+  assert.ok(!/[?&]h=/.test(out.src), 'still never a height');
+});
