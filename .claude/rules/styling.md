@@ -67,7 +67,7 @@ The site runs a deliberately animation-rich, polished design. The homepage and i
 The motion layer is two files plus a vocabulary of declarative classes and `data-*` attributes, all defined once in `src/styles/globals.css` (section 6) and wired in `src/layouts/BaseLayout.astro`:
 
 - **`src/scripts/enhance.ts`** (imported in BaseLayout, runs on every `astro:page-load`) powers `[data-spotlight]` (sets `--mx`/`--my` for a cursor-tracking glow), `[data-countup]` (animates a number up to `data-countup-to` when scrolled into view; optional `-suffix`/`-prefix`/`-duration`), and `[data-header]` (toggles `data-scrolled` for the sticky frosted header). (The old `[data-magnetic]` cursor-follow button pull was removed.)
-- **The reveal observer** (inline `<script>` at the end of BaseLayout, also on `astro:page-load`) adds `.is-visible` to `[data-reveal]` elements as they enter the viewport.
+- **The reveal observer** (inline `<script>` at the end of BaseLayout, also on `astro:page-load`) adds `.is-visible` to `[data-reveal]` elements as they enter the viewport. **Screenshot trap:** a Playwright `fullPage` capture does not scroll, so the observer never fires below the first viewport and every revealed band is captured at opacity 0 (a blank grey band, not a bug in the page). Scroll through the page in viewport-sized steps to the bottom, wait a beat, then capture (`.claude/commands/visual-verify.md` step 5). Re-take any screenshot with a large uniform band.
 
 Vocabulary (use these; don't reinvent):
 

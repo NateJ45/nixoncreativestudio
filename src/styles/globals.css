@@ -28,6 +28,18 @@
    ---------------------------------------------------------------------------- */
 @import 'tailwindcss';
 
+/* Keep committed non-source files out of Tailwind's automatic scan. The scanner
+   skips only gitignored paths, and scripts/.parity/*.html (the committed parity
+   baselines) plus the Markdown docs name utility classes that no longer exist
+   under src/. Each stray class keeps a rule alive in the shipped sheet, and a
+   parity compare can pass because the baselines themselves fed the build.
+   Vault note: gotchas/committed-parity-baselines-feed-tailwind. */
+@source not '../../scripts/.parity';
+@source not '../../docs';
+@source not '../../CLAUDE.md';
+@source not '../../README.md';
+@source not '../../PRODUCT.md';
+
 /* ----------------------------------------------------------------------------
    2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
       Both default to font-display: swap from @fontsource.

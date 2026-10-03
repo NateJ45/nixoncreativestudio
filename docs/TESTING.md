@@ -141,8 +141,10 @@ normalized HTML into `scripts/.parity/`; `compare` diffs a later build against
 it. Neither mode builds - you build, it reads `dist/client`. With `--url <base>`
 it fetches rendered HTML over HTTP instead, which is the only way to compare the
 server-rendered pages (page list = the committed snapshot names plus
-`--routes /a/,/b/`). The baselines predate the hybrid site and have not been
-re-captured, so a URL compare of a migrated page is expected to DIFF.
+`--routes /a/,/b/`). The baselines were recaptured on 2026-10-03 from the production render
+(`capture --url https://nixoncreativestudio.com`); before that they predated
+the hybrid site. Tailwind would scan them as sources, so `globals.css` excludes
+`scripts/.parity`, `docs` and the root Markdown with `@source not` (Gotcha 25).
 
 **For CMS PRs** (docs/CMS-DESIGN.md 2.1): capture and compare into a throwaway directory with `--snap-dir .parity-cms` (or `PARITY_SNAP_DIR`), so the pair never overwrites the committed baselines. Capture `main` on `ncs-ci`, compare the PR preview the same day: `npm run parity capture -- --snap-dir .parity-cms --url https://ncs-ci.nathanjnixon86.workers.dev --routes /,/services/` then `npm run parity compare -- --snap-dir .parity-cms --url <PR preview URL> --routes /,/services/`. The directory is git-ignored.
 
