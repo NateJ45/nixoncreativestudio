@@ -89,9 +89,14 @@ export function mediaUrl(image: ImageValue, origin: string): string {
   return file ? new URL(`/_emdash/api/media/file/${file}`, origin).href : '';
 }
 
-/** A width-only resizer URL (never a height: see the 4096 px note above). */
-export function resizedUrl(absoluteMediaUrl: string, width: number): string {
-  return `/_image?href=${encodeURIComponent(absoluteMediaUrl)}&w=${width}&f=webp`;
+/**
+ * A width-only resizer URL (never a height: see the 4096 px note above). `quality` (1 to 100)
+ * is optional; without it the resizer's own default applies (high: a 420 px phone capture
+ * is about 117 KB, against about 69 KB at 60). Only pass it for a picture that is decoration.
+ */
+export function resizedUrl(absoluteMediaUrl: string, width: number, quality?: number): string {
+  const q = quality === undefined ? '' : `&q=${Math.round(quality)}`;
+  return `/_image?href=${encodeURIComponent(absoluteMediaUrl)}&w=${width}${q}&f=webp`;
 }
 
 /** What an image element needs for one capture: srcset, a fallback src and the intrinsic size. */
@@ -111,14 +116,15 @@ export function resizedImage(
   image: ImageValue,
   origin: string,
   widths: number[],
+  quality?: number,
 ): ResizedImage | undefined {
   const url = mediaUrl(image, origin);
   if (!url || widths.length === 0) return undefined;
   const sorted = [...widths].sort((a, b) => a - b);
   const m = image as unknown as Media;
   return {
-    src: resizedUrl(url, sorted[sorted.length - 1]),
-    srcset: sorted.map((w) => `${resizedUrl(url, w)} ${w}w`).join(', '),
+    src: resizedUrl(url, sorted[sorted.length - 1], quality),
+    srcset: sorted.map((w) => `${resizedUrl(url, w, quality)} ${w}w`).join(', '),
     width: m.width,
     height: m.height,
   };
