@@ -61,6 +61,8 @@ export { PluginBridge };
 const CACHEABLE_PREFIXES = ['/_image', '/_emdash/api/media/file/'];
 const CACHE_CONTROL = 'public, max-age=2592000, stale-while-revalidate=86400';
 const CDN_CACHE_CONTROL = 'Cloudflare-CDN-Cache-Control';
+// What the browser may do with a cached public page (see finalize).
+const BROWSER_CACHE_CONTROL = 'public, max-age=120, stale-while-revalidate=3600';
 
 // The five site-wide headers from public/_headers. Keep the two lists in step.
 const SECURITY_HEADERS: Record<string, string> = {
@@ -98,6 +100,20 @@ function finalize(res: Response, pathname: string): Response {
   }
   if (addSecurity) {
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) headers.set(name, value);
+  }
+  // Let the BROWSER reuse a public page for a short while. The route cache sends
+  // the browser `Cache-Control: no-cache`, which forbids reuse, so Astro's
+  // viewport prefetch was downloaded and then thrown away: every click fetched
+  // the page again (measured 2026-10-03: a prefetch followed by a second GET on
+  // click, 80 to 400ms per navigation). With a lifetime the click is served from
+  // the prefetched copy. Only for a clean 200 HTML page the route cache is
+  // already storing (it carries a CDN lifetime that is not no-store); the
+  // editor view, previews, cookies and the admin never qualify. The browser copy
+  // is also served stale while it refreshes (Age from the edge counts against
+  // max-age, so without the stale window an older edge copy would never reuse).
+  const cdn = res.headers.get(CDN_CACHE_CONTROL);
+  if (!storeNever && addSecurity && cdn && !/no-store/i.test(cdn)) {
+    headers.set('Cache-Control', BROWSER_CACHE_CONTROL);
   }
   return new Response(res.body as unknown as BodyInit, {
     status: res.status,

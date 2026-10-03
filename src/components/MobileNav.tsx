@@ -336,7 +336,7 @@ export default function MobileNav({
           {/* Primary conversion action, matching the hero's amber CTA. */}
           <div className="mnav-item relative z-10 mt-l" style={delay(140 + links.length * 55 + 40)}>
             <Button asChild variant="brand" size="cta" className="shine w-full">
-              <a href="/contact" onClick={() => setOpen(false)}>
+              <a href="/contact/" onClick={() => setOpen(false)}>
                 {ctaLabel}
               </a>
             </Button>

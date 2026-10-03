@@ -59,7 +59,7 @@ test.describe('Homepage copy without JavaScript', () => {
     const proof = page.locator('.hero-proof');
     await expect(proof).toContainText(home.hero_proof_before);
     await expect(proof.locator('a')).toHaveText(home.hero_proof_link_text);
-    await expect(proof.locator('a')).toHaveAttribute('href', '/about');
+    await expect(proof.locator('a')).toHaveAttribute('href', '/about/');
     await expect(proof).toContainText(home.hero_proof_after);
     // The space before the link is part of the sentence (it was missing: "byone person").
     expect(await proof.innerText()).toContain(
@@ -67,7 +67,7 @@ test.describe('Homepage copy without JavaScript', () => {
     );
     await expect(
       page.locator('.hero').getByRole('link', { name: home.hero_primary_label }),
-    ).toHaveAttribute('href', '/contact');
+    ).toHaveAttribute('href', '/contact/');
     await expect(
       page.locator('.hero').getByRole('link', { name: home.hero_secondary_label }),
     ).toHaveAttribute('href', '/work/');
@@ -92,7 +92,7 @@ test.describe('Homepage copy without JavaScript', () => {
     await expect(page.getByText(home.process_cta_title, { exact: true })).toBeVisible();
     await expect(
       page.locator('.process-band').getByRole('link', { name: home.process_cta_label }),
-    ).toHaveAttribute('href', '/contact');
+    ).toHaveAttribute('href', '/contact/');
   });
 
   test('/services/: the process recap shows the same CMS steps', async ({ page }) => {

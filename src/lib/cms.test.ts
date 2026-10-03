@@ -388,7 +388,7 @@ test('getMenuItems returns top-level items, drops blanks, ignores children', asy
   const items = await getMenuItems('primary', { deps, cache: cacheFor(calls) });
   assert.deepEqual(items, [
     { label: 'Work', url: '/work/', target: undefined, titleAttr: 'Case studies' },
-    { label: 'About', url: '/about', target: '_blank', titleAttr: undefined },
+    { label: 'About', url: '/about/', target: '_blank', titleAttr: undefined },
   ]);
   assert.deepEqual(calls.tags, [hint]);
 });
@@ -450,4 +450,18 @@ test('fallbackFromFiles serves entries, lists and menus from parsed JSON', () =>
     { label: 'Work', url: '/work/', target: undefined, titleAttr: 'Case studies' },
   ]);
   assert.equal(fb.menu('footer'), undefined);
+});
+
+// ── withTrailingSlash ────────────────────────────────────────────────────────
+test('withTrailingSlash slashes page paths and leaves everything else alone', async () => {
+  const { withTrailingSlash } = await import('./cms.ts');
+  assert.equal(withTrailingSlash('/about'), '/about/');
+  assert.equal(withTrailingSlash('/about?x=1#y'), '/about/?x=1#y');
+  assert.equal(withTrailingSlash('/work/'), '/work/');
+  assert.equal(withTrailingSlash('/'), '/');
+  assert.equal(withTrailingSlash('/rss.xml'), '/rss.xml');
+  assert.equal(withTrailingSlash('https://example.com/a'), 'https://example.com/a');
+  assert.equal(withTrailingSlash('//cdn.example.com/a'), '//cdn.example.com/a');
+  assert.equal(withTrailingSlash('mailto:a@b.co'), 'mailto:a@b.co');
+  assert.equal(withTrailingSlash('#top'), '#top');
 });

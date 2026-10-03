@@ -345,6 +345,22 @@ export async function getOrdered<T>(
   return finish(list, 'fallback');
 }
 
+/**
+ * Give an internal page path its trailing slash. The Worker answers `/about`
+ * with a 301 to `/about/`, so a menu link without the slash costs every click
+ * (and every prefetch) an extra round trip. Leaves external URLs, hashes,
+ * mailto/tel, file paths (`/rss.xml`) and anything already slashed alone.
+ */
+export function withTrailingSlash(url: string): string {
+  if (!url.startsWith('/') || url.startsWith('//')) return url;
+  const m = /^([^?#]*)(.*)$/.exec(url);
+  const path = m?.[1] ?? url;
+  const rest = m?.[2] ?? '';
+  if (path === '' || path.endsWith('/')) return url;
+  const last = path.slice(path.lastIndexOf('/') + 1);
+  return last.includes('.') ? url : `${path}/${rest}`;
+}
+
 /** True for a label and url worth rendering. */
 const isItem = (i: Raw): boolean => !!text(i.label) && !!text(i.url);
 
@@ -361,7 +377,7 @@ export async function getMenuItems(name: string, opts: CmsOptions = {}): Promise
     tag(opts.cache, res.cacheHint);
     const items = (res.items ?? []).filter(isItem).map((i): CmsMenuItem => ({
       label: String(i.label),
-      url: String(i.url),
+      url: withTrailingSlash(String(i.url)),
       target: text(i.target),
       titleAttr: text(i.titleAttr),
     }));

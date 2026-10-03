@@ -44,12 +44,12 @@ test.describe('Smoke: header links and footer email on every route', () => {
         );
       expect(nav, `${route} header menu links`).toEqual([
         ['Work', '/work/'],
-        ['Services', '/services'],
-        ['About', '/about'],
+        ['Services', '/services/'],
+        ['About', '/about/'],
         ...(journalEmpty ? [] : [['Journal', '/journal/']]),
       ]);
 
-      const cta = page.locator('header a[href="/contact"]').first();
+      const cta = page.locator('header a[href="/contact/"]').first();
       await expect(cta, `${route} header CTA`).toHaveText('Start a project');
 
       await expect(
