@@ -37,7 +37,7 @@ from the trial.
    studies until production holds them, so it must stay until the import in Launch
    step 3 is verified. CI no longer uses it (CI runs on the `ncs-ci` sample).
 7. In Cloudflare, add build variables `PUBLIC_COMING_SOON=true` and a long random
-   `PUBLIC_PREVIEW_TOKEN` (see CLAUDE.md, "Coming Soon mode").
+   `PUBLIC_PREVIEW_TOKEN` (see docs/claude/deployment.md, "Coming Soon mode").
 
 ## Launch
 
@@ -71,7 +71,7 @@ data step.
   reads them).
 - Rewrite the homepage, stack and content-collection sections of CLAUDE.md for the hybrid
   architecture, and update the vault note.
-- (Done 2026-10-03) The `staging` branch was retired.
+- (Done 2026-10-03) The `staging` branch was retired. 2026-10-03: staging abandoned; main is the only branch.
 
 ## CMS content PRs: production data steps (CMS-DESIGN 2.1 and 2.6)
 

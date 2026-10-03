@@ -38,7 +38,7 @@ and is unrelated.
 ### 2. Decide what to do about the `--link` comment in `globals.css`
 
 **File:** `src/styles/globals.css`, the `--link` declaration in `:root`
-(and the matching paragraph under "Brand colors" in `CLAUDE.md`).
+(and the matching paragraph under "Brand colors" in `.claude/rules/styling.md`).
 
 The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
 2026-08-27:
