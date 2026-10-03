@@ -110,6 +110,14 @@ Decision for Nathan on the way: the design (CMS-DESIGN 1.2) listed a `footer_blu
 
 The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 5 data") and `docs/LAUNCH-RUNBOOK.md`; run it in the same session as the PR 4 load (one `npx emdash login`, one token). Then the CI follow-up (add both collections to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed, rebuild `ncs-ci`) and the edit proof (Launch's starting price 4000 to 4100, publish, see $4,100 on /services and /, restore from History). Delete this row after that. A price change also needs two prose edits that are still code: the /services FAQ answer "What does it cost?" and the /contact budget brackets.
 
+### Load the PR 6 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 6 (Homepage copy) ships safe with production empty, because the hero, Selected Work, "What it costs" and "How we work" copy (and the homepage title and description) fall back to the committed `cms/content/page_home.json`, which holds the current words. Until the data is loaded, the admin has no Home page screen, so the homepage words cannot be edited there.
+
+The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 6 data") and `docs/LAUNCH-RUNBOOK.md`; run it in the same session as the PR 4 and PR 5 loads (one `npx emdash login`, one token). Then the CI follow-up (add `page_home` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed, rebuild `ncs-ci`) and the edit proof (the hero's coloured headline words, publish, see them on /, restore from History). Delete this row after that.
+
+Two things for Nathan on the way. (1) The homepage had no meta description of its own (Google saw the bare studio name); the design seeds one from the tagline, so merging this PR changes it, which is the only rendered difference. Say if you would rather write a different one. (2) A pre-existing typo in the live hero: the proof line reads "photographed byone person" because there is no space before the link (the old template collapsed it the same way). PR 6 kept the output identical on purpose; the fix is a one-line space before the link in `Hero.astro` (or a trailing space in the `hero_proof_before` value), as a separate change.
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
