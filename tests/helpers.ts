@@ -14,7 +14,7 @@ import type { Page } from '@playwright/test';
 // So: wait for fonts, kill all transitions/animations, then force every
 // [data-reveal] element to its visible end-state. The reveal observer in
 // BaseLayout.astro adds `.is-visible` as elements scroll in; this adds it to
-// all of them at once (see CLAUDE.md, "Motion and effects system").
+// all of them at once (see .claude/rules/styling.md, "Motion and effects system").
 // =============================================================================
 export async function settle(page: Page): Promise<void> {
   // Race the font wait: WebKit can leave fonts.ready pending while heavy

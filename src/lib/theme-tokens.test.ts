@@ -32,7 +32,7 @@
 //     that is white on sky blue #40AAED = 2.56:1, which would fail. It is not
 //     asserted because it is not rendered: `variant="secondary"` on the shadcn
 //     Button and Badge is unused across the whole site (verified 2026-08-27).
-//     See the gotcha in CLAUDE.md - the day someone reaches for that variant,
+//     See the gotcha in docs/claude/gotchas.md - the day someone reaches for that variant,
 //     the pair becomes real and this list has to grow a row with it.
 //     --secondary IS asserted in dark mode, where it is the rendered Footer /
 //     MobileNav link colour on the navy field.
