@@ -88,6 +88,28 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### One command for every block below: `npm run cms:production-load`
+
+Added 2026-10-03. Instead of typing the per-PR blocks that follow, Nathan runs ONE command in his own PowerShell window. It does the same schema and content steps for every migrated area, in the order below, and stops at the first error or surprise. The per-PR blocks stay as the reference for what each step should print and for the proofs that come after.
+
+```powershell
+npx emdash login --url https://www.nixoncreativestudio.com     # once, device code
+$env:EMDASH_TOKEN = '<API token from Settings, API tokens>'    # keep it in 1Password; never paste it into chat
+npx wrangler d1 time-travel info ncs-emdash-prod               # read-only: note the timestamp (the restore point)
+npm run cms:production-load -- --plan                          # prints the ordered plan, no network
+npm run cms:production-load                                    # the real run: shows the plan, asks you to type yes
+```
+
+What it does, per collection: schema dry run, schema apply, a read-only re-check that must say `unchanged` on every line, then the same three for the content. A step already reading `unchanged` is skipped, so rerunning is safe.
+
+- **Order.** `site_settings` and `menus` first, alone: the run pauses for Enter after them (the first real run of the loaders against a live site), then `pricing_*`, `page_*`, `service_offerings`, `pages`, `photos` (schema only), `posts` if it exists, `redirects` last. The list is read from `cms/schema/*.mjs` and `cms/content/*.json`, so PRs 12 to 14 are picked up with no edit.
+- **`pages`** already exists in production from the template, so its schema step should print `updated field title`, `updated field content`, `added field` x7, `reorder fields`, `applied collection settings` (the PR 10 block). Every other collection must print only `added` or `created` lines the first time; an `updated field`, a `removed` or `dropped` field, a content `update`, or a menu `rebuild` of an existing menu stops the run before anything is written, because it would overwrite something an editor changed.
+- **Stopping and resuming.** On a stop it prints the offending lines and the exact next command. Fix the cause, then `npm run cms:production-load -- --from <collection>`. `--only <collection>` runs one. The log is in `.cms-load-log/` (git-ignored, no secrets); paste it or let the main session read it.
+- **Not automated, by design.** After a clean run it prints the follow-ups and does none of them: add the collections to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed with `scripts/export-seed-from-instance.mjs`, rebuild `ncs-ci`, then do each PR's before/after page comparison and edit proof below. Finally revoke the API token.
+- It refuses to start without `EMDASH_TOKEN` and a stored `emdash login`, never prints the token, and spawns `apply-schema.mjs` and `load-content.mjs`, so their own production guard still applies. `--yes` skips the typed confirmation and is for tests only. It has not been run against production (no token in the build session); the first real run is Nathan's.
+
+Take the "before" snapshots of the live pages (the `curl` lines in each block below) BEFORE running it, not after.
+
 ### PR 11: Work, Photography, Journal, Not-found pages and Photos (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 11 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: /work, /photography, /journal and the 404 page render from the committed `cms/content/page_work.json`, `page_photography.json`, `page_journal.json` and `page_not_found.json`, and /photography shows its "In progress" state because production has zero photos (the page treats an empty collection, a read error and a missing `photos` table alike). These steps create the four page screens and the Photos list in the admin. No files upload and `photos` has no content to load: Nathan adds photos by hand afterwards.
