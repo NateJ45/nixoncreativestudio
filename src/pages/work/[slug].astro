@@ -168,11 +168,9 @@ const schemas = [
   ogType="article"
   schemas={schemas}
 >
-  {
-    /* Reading progress bar pinned to the top of the viewport. Only
+  {/* Reading progress bar pinned to the top of the viewport. Only
       rendered here, not in BaseLayout, because the rest of the site has
-      mostly short pages where a progress bar would be visual noise. */
-  }
+      mostly short pages where a progress bar would be visual noise. */}
   <ReadingProgress client:idle />
 
   <article>
@@ -183,9 +181,7 @@ const schemas = [
       <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-2">
         <div class="flex flex-col gap-m" data-reveal>
           <!-- Meta stamp: sector + read time. Mono and muted. No year. -->
-          <p
-            class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase"
-          >
+          <p class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
             <span>{sectorLabel}</span>
             <span aria-hidden="true">·</span>
             <span>{minutes} min read</span>
@@ -199,96 +195,74 @@ const schemas = [
 
           <p class="max-w-[56ch] text-lg leading-[1.6] text-text">{summary}</p>
 
-          {
-            /* Outcome callout (optional). The honest, one-line result of the
+          {/* Outcome callout (optional). The honest, one-line result of the
               project, lifted out of the body so the proof reads at first scan.
               Marked as the takeaway by a small label + larger --link type and
-              whitespace, not a side-stripe border (an absolute-ban tell). */
-          }
-          {
-            outcome && (
-              <div class="mt-s max-w-[56ch]">
-                <p class="text-xs font-semibold tracking-[0.12em] text-text-muted uppercase">
-                  Outcome
-                </p>
-                <p class="mt-1 text-xl leading-[1.4] font-semibold text-link">{outcome}</p>
-              </div>
-            )
-          }
+              whitespace, not a side-stripe border (an absolute-ban tell). */}
+          {outcome && (
+            <div class="mt-s max-w-[56ch]">
+              <p class="text-xs font-semibold tracking-[0.12em] text-text-muted uppercase">
+                Outcome
+              </p>
+              <p class="mt-1 text-xl leading-[1.4] font-semibold text-link">{outcome}</p>
+            </div>
+          )}
 
-          {
-            /* Live site link (optional). For a web design portfolio this is
+          {/* Live site link (optional). For a web design portfolio this is
               the strongest single trust signal: a click straight to real,
               working proof. Rendered as a brand-weight link with an external
-              cue; opens in a new tab with rel noopener for safety. */
-          }
-          {
-            liveUrl && (
-              <a
-                href={liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex w-fit items-center gap-2 font-body text-base font-semibold text-link underline underline-offset-4 transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-              >
-                Visit the live site
-                <span aria-hidden="true">↗</span>
-              </a>
-            )
-          }
+              cue; opens in a new tab with rel noopener for safety. */}
+          {liveUrl && (
+            <a
+              href={liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex w-fit items-center gap-2 font-body text-base font-semibold text-link underline underline-offset-4 transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              Visit the live site
+              <span aria-hidden="true">↗</span>
+            </a>
+          )}
 
-          {
-            /* Role line (optional). Tiny mono uppercase, sits below the
+          {/* Role line (optional). Tiny mono uppercase, sits below the
               summary as a credit. Useful when the case study wants to
               clarify whether Nathan led design, code, photography, or
-              some combination. */
-          }
-          {
-            role && (
-              <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-                <span class="text-text">Role:</span> {role}
-              </p>
-            )
-          }
+              some combination. */}
+          {role && (
+            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+              <span class="text-text">Role:</span> {role}
+            </p>
+          )}
 
-          {
-            /* Stack list (optional). When present, render a tiny tools
+          {/* Stack list (optional). When present, render a tiny tools
               line so designers and devs evaluating the work can scan
-              what was used. Plain text, no styling flourish. */
-          }
-          {
-            stack && stack.length > 0 && (
-              <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-                <span class="text-text">Built with:</span> {stack.join(', ')}
-              </p>
-            )
-          }
+              what was used. Plain text, no styling flourish. */}
+          {stack && stack.length > 0 && (
+            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+              <span class="text-text">Built with:</span> {stack.join(', ')}
+            </p>
+          )}
 
           <!-- Service badges. Each rendered as an outlined accent-color
                pill. flex-wrap so they wrap on narrow screens. -->
           <ul class="mt-s flex flex-wrap gap-xs" aria-label="Services delivered">
-            {
-              services.map((service) => (
-                <li class="inline-flex items-center rounded-full border border-link px-2.5 py-1 font-body text-[0.8rem] text-link">
-                  {service}
-                </li>
-              ))
-            }
+            {services.map((service) => (
+              <li class="inline-flex items-center rounded-full border border-link px-2.5 py-1 font-body text-[0.8rem] text-link">
+                {service}
+              </li>
+            ))}
           </ul>
 
-          {
-            /* Tags (optional). The service pills above are the primary scope,
+          {/* Tags (optional). The service pills above are the primary scope,
               so the tags read as quiet supporting metadata: plain muted text,
               comma-separated, NOT a second row of pills (two near-identical
               pill rows read as two filter-chip rows). A "Tags:" lead-in mirrors
-              the Role / Built with credit lines above. */
-          }
-          {
-            tags && tags.length > 0 && (
-              <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-                <span class="text-text">Tags:</span> {tags.join(', ')}
-              </p>
-            )
-          }
+              the Role / Built with credit lines above. */}
+          {tags && tags.length > 0 && (
+            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+              <span class="text-text">Tags:</span> {tags.join(', ')}
+            </p>
+          )}
         </div>
 
         <!-- Hero image. EmDashCover wraps the EmDash Image, which paints the media
@@ -326,53 +300,45 @@ const schemas = [
           hasToc ? 'xl:grid-cols-[14rem_minmax(0,1fr)]' : 'xl:grid-cols-1',
         ]}
       >
-        {
-          /* Sticky TOC. Lists every h2 in the MDX body as a jump link. Hidden
+        {/* Sticky TOC. Lists every h2 in the MDX body as a jump link. Hidden
             below xl. top-[6.5rem] clears the sticky header. Native <nav
             aria-label> so screen readers identify it.
 
             data-case-toc + per-link data-toc-link="<slug>" wire the scroll-spy
             at the end of <article>: an IntersectionObserver marks the link for
             the section in view as active. With JS off (or no IntersectionObserver)
-            this stays a plain list of working jump links. */
-        }
-        {
-          hasToc && (
-            <nav aria-label="In this case study" class="hidden xl:block" data-case-toc>
-              <div class="sticky top-[6.5rem] flex flex-col gap-xs">
-                <p class="font-mono text-[0.75rem] tracking-[0.08em] text-text-muted uppercase">
-                  In this case study
-                </p>
-                <ul class="flex flex-col gap-xs">
-                  {tocHeadings.map((h) => (
-                    <li>
-                      <a
-                        href={`#${h.slug}`}
-                        data-toc-link={h.slug}
-                        class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link aria-[current=true]:font-medium aria-[current=true]:text-link"
-                      >
-                        {h.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </nav>
-          )
-        }
+            this stays a plain list of working jump links. */}
+        {hasToc && (
+          <nav aria-label="In this case study" class="hidden xl:block" data-case-toc>
+            <div class="sticky top-[6.5rem] flex flex-col gap-xs">
+              <p class="font-mono text-[0.75rem] tracking-[0.08em] text-text-muted uppercase">
+                In this case study
+              </p>
+              <ul class="flex flex-col gap-xs">
+                {tocHeadings.map((h) => (
+                  <li>
+                    <a
+                      href={`#${h.slug}`}
+                      data-toc-link={h.slug}
+                      class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link aria-[current=true]:font-medium aria-[current=true]:text-link"
+                    >
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+        )}
 
-        {
-          /* Content column: prose, then results, then the designer's note, all on
-            one alignment. */
-        }
+        {/* Content column: prose, then results, then the designer's note, all on
+            one alignment. */}
         <div class="min-w-0">
-          {
-            /* MDX prose. Text blocks centered at one consistent rem measure so
+          {/* MDX prose. Text blocks centered at one consistent rem measure so
               their edges line up; media (FeatureHighlight, SiteShowcase) spans
               the column. The arbitrary descendant selectors style the MDX output
               without the typography plugin and without leaking site-wide; the
-              scroll-mt clears the sticky header on a jump-link click. */
-          }
+              scroll-mt clears the sticky header on a jump-link click. */}
           <div
             data-prose
             class:list={[
@@ -395,67 +361,56 @@ const schemas = [
               '[&_h2]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem]',
             ]}
           >
-            {
-              entry.showcaseDesktop && entry.showcaseHref && (
-                <SiteShowcase
-                  desktop={entry.showcaseDesktop}
-                  mobile={entry.showcaseMobile}
-                  alt={entry.showcaseAlt ?? `The ${client} homepage`}
-                  href={entry.showcaseHref}
-                  label={entry.showcaseLabel}
-                  variant={entry.showcaseVariant}
-                />
-              )
-            }
+            {entry.showcaseDesktop && entry.showcaseHref && (
+              <SiteShowcase
+                desktop={entry.showcaseDesktop}
+                mobile={entry.showcaseMobile}
+                alt={entry.showcaseAlt ?? `The ${client} homepage`}
+                href={entry.showcaseHref}
+                label={entry.showcaseLabel}
+                variant={entry.showcaseVariant}
+              />
+            )}
             <PortableText value={parts.brief} components={ptComponents} />
-            {
-              hasBeforeAfter && (
-                <BeforeAfter
-                  beforeImage={entry.beforeImage}
-                  afterImage={entry.afterImage}
-                  beforeAlt={entry.beforeAlt ?? 'The previous site'}
-                  afterAlt={entry.afterAlt ?? 'The redesigned site'}
-                  beforeLabel={entry.beforeLabel}
-                  afterLabel={entry.afterLabel}
-                />
-              )
-            }
+            {hasBeforeAfter && (
+              <BeforeAfter
+                beforeImage={entry.beforeImage}
+                afterImage={entry.afterImage}
+                beforeAlt={entry.beforeAlt ?? 'The previous site'}
+                afterAlt={entry.afterAlt ?? 'The redesigned site'}
+                beforeLabel={entry.beforeLabel}
+                afterLabel={entry.afterLabel}
+              />
+            )}
             <PortableText value={parts.approach} components={ptComponents} />
-            {
-              entry.highlights.map((h) => (
-                <FeatureHighlight
-                  image={h.image}
-                  alt={h.alt}
-                  title={h.title}
-                  body={h.caption}
-                  side={h.side}
-                  eyebrow={h.eyebrow}
-                />
-              ))
-            }
+            {entry.highlights.map((h) => (
+              <FeatureHighlight
+                image={h.image}
+                alt={h.alt}
+                title={h.title}
+                body={h.caption}
+                side={h.side}
+                eyebrow={h.eyebrow}
+              />
+            ))}
             <PortableText value={parts.rest} components={ptComponents} />
             {entry.highlights.length > 0 && <Lightbox />}
           </div>
 
-          {
-            /* "What changed" + the signed designer's note, in the SAME column and
+          {/* "What changed" + the signed designer's note, in the SAME column and
               at the same measure as the prose, so the body closes in alignment
-              instead of jumping to a different center. */
-          }
-          {
-            (results?.length || designerNote) && (
-              <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
-                {results && results.length > 0 && <ResultsBlock changes={results} />}
-                {designerNote && <DesignerNote note={designerNote} />}
-              </div>
-            )
-          }
+              instead of jumping to a different center. */}
+          {(results?.length || designerNote) && (
+            <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
+              {results && results.length > 0 && <ResultsBlock changes={results} />}
+              {designerNote && <DesignerNote note={designerNote} />}
+            </div>
+          )}
         </div>
       </div>
     </div>
 
-    {
-      /* Testimonial pull-quote (optional). Real client social proof, set
+    {/* Testimonial pull-quote (optional). Real client social proof, set
         apart from the body as an editorial quote. Renders nothing when the
         frontmatter has no testimonial, so it is safe to leave off until a
         real quote is collected. Never fabricated.
@@ -463,81 +418,72 @@ const schemas = [
         Left-aligned at the same measure (max-w-[40rem]) as the body prose,
         results, and designer note above, so the page closes in alignment
         instead of jumping to a centered block. It still reads as a pull-quote
-        through the larger display type, not through centering. */
-    }
-    {
-      testimonial && (
-        <aside class="border-t border-border py-2xl" aria-label="Client testimonial" data-reveal>
-          <figure class="ncs-container max-w-[40rem]">
-            <blockquote class="font-display text-h3 leading-[1.2] text-heading">
-              <p>“{testimonial.quote}”</p>
-            </blockquote>
-            <figcaption class="mt-m font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">{testimonial.name}</span>
-              {testimonial.title ? ` · ${testimonial.title}` : ''}
-            </figcaption>
-          </figure>
-        </aside>
-      )
-    }
+        through the larger display type, not through centering. */}
+    {testimonial && (
+      <aside class="border-t border-border py-2xl" aria-label="Client testimonial" data-reveal>
+        <figure class="ncs-container max-w-[40rem]">
+          <blockquote class="font-display text-h3 leading-[1.2] text-heading">
+            <p>“{testimonial.quote}”</p>
+          </blockquote>
+          <figcaption class="mt-m font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+            <span class="text-text">{testimonial.name}</span>
+            {testimonial.title ? ` · ${testimonial.title}` : ''}
+          </figcaption>
+        </figure>
+      </aside>
+    )}
 
-    {
-      /* Next / previous case study nav. Sits between the body and the
+    {/* Next / previous case study nav. Sits between the body and the
         CtaBanner so visitors who finished reading have a forward path
         before hitting the "Start a project" CTA. Hidden entirely when
-        there's only one case study in the catalogue. */
-    }
-    {
-      (previous || next) && (
-        <nav class="border-t border-border py-xl" aria-label="More case studies">
-          <div class="ncs-container grid grid-cols-1 gap-l sm:grid-cols-2">
-            {previous ? (
-              <a
-                href={`/work/${previous.id}/`}
-                class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
-                  ← Previous case study
-                </span>
-                <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {previous.title}
-                </span>
-                <span class="text-[0.95rem] leading-[1.5] text-text-muted">{previous.summary}</span>
-              </a>
-            ) : (
-              <span />
-            )}
+        there's only one case study in the catalogue. */}
+    {(previous || next) && (
+      <nav class="border-t border-border py-xl" aria-label="More case studies">
+        <div class="ncs-container grid grid-cols-1 gap-l sm:grid-cols-2">
+          {previous ? (
+            <a
+              href={`/work/${previous.id}/`}
+              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
+                ← Previous case study
+              </span>
+              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                {previous.title}
+              </span>
+              <span class="text-[0.95rem] leading-[1.5] text-text-muted">{previous.summary}</span>
+            </a>
+          ) : (
+            <span />
+          )}
 
-            {next ? (
-              <a
-                href={`/work/${next.id}/`}
-                class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-right"
-              >
-                <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
-                  Next case study →
-                </span>
-                <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {next.title}
-                </span>
-                <span class="text-[0.95rem] leading-[1.5] text-text-muted">{next.summary}</span>
-              </a>
-            ) : (
-              <span />
-            )}
-          </div>
-        </nav>
-      )
-    }
+          {next ? (
+            <a
+              href={`/work/${next.id}/`}
+              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-right"
+            >
+              <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
+                Next case study →
+              </span>
+              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                {next.title}
+              </span>
+              <span class="text-[0.95rem] leading-[1.5] text-text-muted">{next.summary}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </div>
+      </nav>
+    )}
   </article>
 
-  {
-    /* Sticky-TOC scroll-spy. Marks the TOC link for the section currently in
+  {/* Sticky-TOC scroll-spy. Marks the TOC link for the section currently in
       view with aria-current (which the link's aria-[current=true] classes paint
       as text-link + font-medium). Purely additive: with JS off, no
       IntersectionObserver, or fewer than two h2s (no TOC rendered), the TOC
       stays a plain list of working jump links and the prose is unaffected.
-      No motion of its own, so nothing to gate for reduced-motion. */
-  }
+      No motion of its own, so nothing to gate for reduced-motion. */}
   <script>
     // Wrapped in astro:page-load so the scroll-spy re-binds after View
     // Transitions navigations. The dataset flag keeps it from observing twice.
@@ -595,6 +541,5 @@ const schemas = [
     document.addEventListener('astro:page-load', initCaseToc);
     initCaseToc();
   </script>
-
   <CtaBanner title={ctaTitle} sub={ctaSub} ctaHref={ctaHref} />
 </BaseLayout>
