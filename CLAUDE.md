@@ -922,3 +922,26 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     and feed pick it up. Measured when first run: colophon, privacy and
     photography were cold (about 1s each) and all 15 pages were hits after one
     pass.
+23. **Mobile speed: how to measure it, what moved it, what did not (2026-10-03).**
+    Measure with the Lighthouse CLI, not the DevTools tool (that one has no
+    performance category): `npx lighthouse <url> --only-categories=performance
+--form-factor=mobile --output=json --output-path=x.json --chrome-flags="--headless=new --no-sandbox"`
+    (Slow 4G, 4x CPU: what PageSpeed Insights runs). It prints an EPERM temp
+    cleanup error on Windows after writing the report (Gotcha 9); the JSON is
+    fine. **One run proves nothing: the same page scores 88 to 98 run to run.**
+    Take 3 to 6 and compare medians. Live homepage: before 84/86/90 (median 86,
+    LCP 4.1s), after the phone-backdrop quality change 93/91/85/86/92/92 (median
+    91.5, LCP 3.4s, page weight 720 to 584 KB). Still above Google's 2.5s "good"
+    LCP, so do not sell it as top-tier on slow phones. What caused it: the LCP
+    element is the first slide of the phone backdrop in the mobile hero
+    (`HeroShowcase.astro`, `variant="phone"`), a tall capture; `PHONE_QUALITY`
+    serves it at q=55 (117 KB to 65 KB, visually identical behind the faded
+    copy). **Dead ends, so nobody retries them:** (a) the `/_image` resizer
+    ignores `fit`, so `h=1700&fit=cover` scales the whole page down to 231x1700
+    instead of cropping the top; (b) a small preview image swapped for the full
+    one later would make the swap a new, later LCP candidate; (c) `ncs-ci` is a
+    poor lab for this (median 95, no bot-detection script, fewer studies) and a
+    branch of the production Worker gets no preview URL here, so confirm on
+    production after merge; (d) the server is not the cause on mobile (TTFB 30 to
+    40ms). Not yet tried: fewer React islands loaded on every page, the unused
+    JavaScript (about 170ms), a lighter mobile hero design (Nathan's call).
