@@ -25,6 +25,13 @@
   "kv_namespaces": [{ "binding": "SESSION", "id": "c0ae336adced4b73a503159ca5e932f2" }],
   "worker_loaders": [{ "binding": "LOADER" }],
   "triggers": { "crons": ["* * * * *"] },
+  // Smart Placement: run the Worker near the D1 database (ENAM) instead of near the visitor.
+  // A page render makes 11 to 26 sequential D1 reads, and each one paid the edge-to-database
+  // distance. Only cache MISSES run the Worker (the route cache answers hits in front of it),
+  // so hits are unaffected. Measured 2026-10-03 on ncs-ci with cache-busted GETs, 18 requests
+  // each: average cold render 1114ms to 464ms, slowest 2356ms to 765ms. Check the header
+  // `Cf-Placement` on a response; it reads `remote-<colo>` once the placement has taken effect.
+  "placement": { "mode": "smart" },
   "observability": { "enabled": true },
 
   // CI previews. GitHub Actions builds with CLOUDFLARE_ENV=ci and uploads a
@@ -36,6 +43,7 @@
   "env": {
     "ci": {
       "name": "ncs-ci",
+      "placement": { "mode": "smart" }, // same as production, see the top-level note
       "vars": { "EMDASH_SITE_URL": "https://ncs-ci.nathanjnixon86.workers.dev" },
       "d1_databases": [
         {

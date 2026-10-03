@@ -874,3 +874,16 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     visitors only wait for a render on the first request per Cloudflare location
     after a deploy (about 0.4 to 1.3s, 22 D1 reads). A test of "cold" needs a
     cache-busting query string, not a repeat request.
+20. **Cold renders are D1 round-trips, so the Worker is placed next to the
+    database (Smart Placement, 2026-10-03).** A page render makes 11 to 26
+    sequential D1 reads; with the Worker at the visitor's edge and D1 in ENAM
+    each one paid the distance. `"placement": { "mode": "smart" }` in
+    `wrangler.jsonc` (production and the `ci` environment) runs it near D1.
+    Measured on ncs-ci with cache-busted GETs (18 requests each, script idea:
+    `?cold=<random>` so the route cache cannot answer): average cold render
+    1114ms to 464ms, slowest 2356ms to 765ms. Cache hits never run the Worker,
+    so they are unchanged. Check the `Cf-Placement` response header (`remote-DFW`
+    when active); it needs some traffic after a deploy before it takes effect.
+    Ruled out in the same pass: bundle size (19 MB, 4.9 MB gzip, but Worker
+    startup is 21 ms, shown in the CI "Worker Startup Time" line), and the cache
+    lifetime (stale pages are served instantly while they refresh).

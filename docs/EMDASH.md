@@ -237,6 +237,13 @@ equals the original file size, with `content-type: image/png` from `/_image`.
 The site is `output: 'server'`: every page renders on the Worker, nothing is
 prerendered, and `dist/client` holds only assets. A route cache keeps that fast.
 
+**Speed levers added 2026-10-03** (details and numbers: CLAUDE.md Gotchas 17 and
+20). The browser may reuse a public page for 2 minutes (`finalize()` in
+`src/worker.ts`) so Astro's prefetch is not wasted; internal links end in `/` so a
+click is never a 301; and `"placement": { "mode": "smart" }` in `wrangler.jsonc`
+runs the Worker next to D1 so a cold render is about half as slow. Measure a cold
+render with a cache-busting query string (`?cold=<random>`), never a repeat request.
+
 **How it is wired**
 
 - `astro.config.mjs`: `cache: { provider: cacheCloudflare() }` (from
