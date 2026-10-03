@@ -242,37 +242,6 @@
       ]
     },
     {
-      "slug": "posts",
-      "label": "Posts",
-      "labelSingular": "Post",
-      "supports": ["drafts", "revisions", "search"],
-      "fields": [
-        {
-          "slug": "title",
-          "label": "Title",
-          "type": "string",
-          "required": true,
-          "searchable": true
-        },
-        {
-          "slug": "featured_image",
-          "label": "Featured Image",
-          "type": "image"
-        },
-        {
-          "slug": "content",
-          "label": "Content",
-          "type": "portableText",
-          "searchable": true
-        },
-        {
-          "slug": "excerpt",
-          "label": "Excerpt",
-          "type": "text"
-        }
-      ]
-    },
-    {
       "slug": "page_about",
       "supports": ["drafts", "revisions"],
       "routable": false,
@@ -1952,6 +1921,55 @@
             "min": 1,
             "max": 999
           }
+        }
+      ]
+    },
+    {
+      "slug": "posts",
+      "label": "Journal",
+      "labelSingular": "Journal entry",
+      "description": "Essays, process notes and field reports at /journal/.",
+      "supports": ["drafts", "revisions", "search", "seo"],
+      "urlPattern": "/journal/{slug}/",
+      "hidden": false,
+      "sortOrder": 14,
+      "titleField": "title",
+      "commentsEnabled": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title (max 100)",
+          "type": "string",
+          "required": true,
+          "searchable": true,
+          "validation": {
+            "maxLength": 100
+          }
+        },
+        {
+          "slug": "featured_image",
+          "label": "Cover image (optional; shown on the Journal page and above the entry)",
+          "type": "image"
+        },
+        {
+          "slug": "content",
+          "label": "Body. \"Heading 2\" starts a section and \"Heading 3\" a subsection. Paragraphs, bold, italic, links, lists, quotes and code blocks are supported",
+          "type": "portableText",
+          "searchable": true
+        },
+        {
+          "slug": "excerpt",
+          "label": "Summary (max 200). One sentence: the card text on the Journal page, the search description and the share text",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "updated",
+          "label": "Last updated (optional; shows \"Updated <date>\" when it differs from the publish date)",
+          "type": "datetime"
         }
       ]
     },

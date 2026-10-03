@@ -189,15 +189,18 @@ function runStep({ tool, collection, mode }) {
   return { code: res.status ?? 1, output };
 }
 
-/** `pages` already exists from the template: list its entries first, as the runbook says. */
+/**
+ * `pages` and `posts` (the Journal) already exist from the template: list their
+ * entries first, as the runbook says. `posts` should hold none.
+ */
 function preflight(collection) {
-  if (collection !== 'pages') return undefined;
+  if (collection !== 'pages' && collection !== 'posts') return undefined;
   try {
-    const list = emdash(url, ['content', 'list', 'pages']);
+    const list = emdash(url, ['content', 'list', collection]);
     const items = list?.items ?? (Array.isArray(list) ? list : []);
-    return `existing pages entries: ${items.map((i) => i.slug ?? i.id).join(', ') || '(none)'}`;
+    return `existing ${collection} entries: ${items.map((i) => i.slug ?? i.id).join(', ') || '(none)'}`;
   } catch (e) {
-    return `could not list existing pages entries: ${scrub(e.message)}`;
+    return `could not list existing ${collection} entries: ${scrub(e.message)}`;
   }
 }
 

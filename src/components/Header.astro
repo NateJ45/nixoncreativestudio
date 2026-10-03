@@ -25,22 +25,21 @@
    ordered Process band) would be decorative scaffolding here.
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
 import { getSite, emailHref, phoneHref } from '../data/site';
 import { getMenuItems } from '../lib/cms';
+import { hasJournalEntries } from '../lib/journal';
 import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
 import { buttonVariants } from './ui/button';
 import { cn } from '@/lib/utils';
 
-// Hide the Journal nav link until the journal has something to show. Uses the
-// SAME visibility filter as the journal index (drafts hidden in production,
-// visible in dev), so the link appears exactly when the page has real content.
-// While the collection is empty the link is omitted from both the desktop nav
-// and the mobile drawer (they share this array).
-const journalCount = (
-  await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
-).length;
+// Hide the Journal nav link until the journal has something to show: true only
+// when at least one PUBLISHED journal entry exists in the CMS (a draft does not
+// count), so the link appears exactly when /journal has real content. While there
+// is none the link is omitted from both the desktop nav and the mobile drawer
+// (they share this array). The read is memoised per request (the Footer asks too)
+// and tagged for the route cache, so publishing the first entry purges every page.
+const showJournal = await hasJournalEntries(Astro);
 
 // Site settings (studio name, contact details, CTA label) and the "primary" menu
 // both come from the EmDash admin (Site settings, Menus). Each falls back to the
@@ -56,7 +55,7 @@ const menu = await getMenuItems('primary', { cache: Astro.cache });
 // the "Start a project" CTA button (desktop header below, and the drawer's own
 // CTA on mobile), both pointing at /contact.
 const navLinks = menu
-  .filter((item) => journalCount > 0 || !item.url.startsWith('/journal'))
+  .filter((item) => showJournal || !item.url.startsWith('/journal'))
   .map((item) => ({
     label: item.label,
     href: item.url,

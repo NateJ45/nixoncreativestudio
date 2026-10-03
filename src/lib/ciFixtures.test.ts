@@ -145,3 +145,43 @@ test('rowsSql with no entries clears the table instead of writing invalid SQL', 
   const lines = rowsSql(siteSettings, []);
   assert.deepEqual(lines, ['DELETE FROM ec_site_settings;']);
 });
+
+// ── CI-only journal entries (CMS-DESIGN PR 12) ───────────────────────────────
+// One published entry (so the list, the entry page and the nav link render and are
+// axe-checked) and one DRAFT (so a leak is caught). Production carries neither.
+
+test('the CI rows carry one published and one draft journal entry, and the draft has no publish date', () => {
+  const sql = read('scripts/ci-dataset/cms-rows.sql');
+  const rows = sql.split('\n').filter((l) => l.startsWith('INSERT OR REPLACE INTO ec_posts '));
+  assert.equal(rows.length, 2);
+  const published = rows.find((l) => l.includes("'ci-test-entry'"));
+  const draft = rows.find((l) => l.includes("'ci-draft-entry'"));
+  assert.ok(published && draft);
+  assert.match(published, /'published'/);
+  assert.match(draft, /'draft'/);
+  assert.ok(!/"published_at"/.test(draft), 'a draft carries no published_at');
+  assert.match(published, /"published_at"/);
+  assert.match(
+    sql,
+    /DELETE FROM ec_posts WHERE slug NOT IN \('ci-test-entry', 'ci-draft-entry'\);/,
+  );
+  // The published entry carries one tag: a term plus a link, cleared and rewritten each refresh.
+  assert.match(sql, /DELETE FROM content_taxonomies WHERE collection = 'posts';/);
+  assert.match(sql, /INSERT OR REPLACE INTO taxonomies .*'ci-notes'/);
+  assert.match(sql, /INSERT OR REPLACE INTO content_taxonomies .*'posts'/);
+  // The seed relabels the template collection and gives it the journal's address.
+  const seed = JSON.parse(read('seed/seed.json'));
+  const posts = seed.collections.find((c: { slug: string }) => c.slug === 'posts');
+  assert.equal(posts.label, 'Journal');
+  assert.equal(posts.urlPattern, '/journal/{slug}/');
+  assert.ok(posts.supports.includes('seo'));
+  // No committed fallback: production starts with zero journal entries.
+  assert.throws(() => read('cms/content/posts.json'), /ENOENT/);
+});
+
+test('without the test content the journal is emptied: no entries, no links, no CI term', async () => {
+  const { sql } = await build({ testContent: false });
+  assert.match(sql, /^DELETE FROM ec_posts;$/m);
+  assert.match(sql, /^DELETE FROM content_taxonomies WHERE collection = 'posts';$/m);
+  assert.ok(!/ci-test-entry|ci-draft-entry|ci-notes/.test(sql));
+});

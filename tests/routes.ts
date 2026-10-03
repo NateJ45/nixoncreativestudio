@@ -17,10 +17,17 @@
 // When you add a case study to the CI dataset (docs/TESTING.md), add its slug
 // here; when you publish one in production only, no change is needed.
 //
-// `/journal/[slug]` builds no pages until the first entry lands in
-// src/content/journal; add one here when it does. `/coming-soon` is the
-// standalone gate page (its own HTML document, not BaseLayout) and is always
-// live, so it is swept too.
+// `/journal/[slug]` is server-rendered from the CMS `posts` collection. The CI
+// dataset carries one PUBLISHED test entry (`ci-test-entry`, so the list, the
+// entry page and the Journal nav link render and are axe-checked) and one DRAFT
+// (`ci-draft-entry`, which must never be visible). Both are written by hand in
+// scripts/ci-dataset/ci-content/posts.json; production carries neither. To test
+// the zero-entry state against the same code, rebuild the CI journal without them
+// (NCS_CI_NO_TEST_CONTENT=1, docs/TESTING.md) and run the suites with
+// JOURNAL_EMPTY=1: the entry route is then left out of the sweeps and the specs
+// that care expect the empty state and no Journal link.
+// `/coming-soon` is the standalone gate page (its own HTML document, not
+// BaseLayout) and is always live, so it is swept too.
 //
 // Add a route here when a new page ships, prerendered or not.
 export const caseStudySlugs = [
@@ -29,6 +36,12 @@ export const caseStudySlugs = [
   'second-presbyterian-chicago',
 ];
 
+export const journalSlugs = ['ci-test-entry'];
+/** The CI draft entry: it exists in the CI database and must answer 404 everywhere. */
+export const journalDraftSlug = 'ci-draft-entry';
+/** True when the CI data was rebuilt without test content (see the header comment). */
+export const journalEmpty = process.env.JOURNAL_EMPTY === '1';
+
 export const routes = [
   '/',
   '/about',
@@ -36,6 +49,7 @@ export const routes = [
   '/work',
   ...caseStudySlugs.map((slug) => `/work/${slug}`),
   '/journal',
+  ...(journalEmpty ? [] : journalSlugs.map((slug) => `/journal/${slug}`)),
   '/photography',
   '/contact',
   '/colophon',

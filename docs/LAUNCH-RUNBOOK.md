@@ -22,8 +22,8 @@ from the trial.
    Also set `EMDASH_SITE_URL=https://www.nixoncreativestudio.com` as a Worker variable.
    Visitors land on `www` (the apex 301s to it), and the passkey binds to the host you
    register on.
-4. Remove what the CMS replaces: `src/content/case-studies/*.mdx`, the `case-studies`
-   collection in `src/content.config.ts`, the placeholder pipeline
+4. Remove what the CMS replaces (done by the cutover and CMS-DESIGN PR 12: the MDX case
+   studies, `src/content.config.ts` and its collections): the placeholder pipeline
    (`scripts/generate-placeholders.mjs`, `src/lib/coverPlaceholder*.ts`,
    `coverPlaceholders.json`, and `placeholders` in the build chain), and flip the
    `EMDASH_URL` default in `scripts/generate-og.mjs` to the production domain.
@@ -109,6 +109,33 @@ What it does, per collection: schema dry run, schema apply, a read-only re-check
 - It refuses to start without `EMDASH_TOKEN` and a stored `emdash login`, never prints the token, and spawns `apply-schema.mjs` and `load-content.mjs`, so their own production guard still applies. `--yes` skips the typed confirmation and is for tests only. It has not been run against production (no token in the build session); the first real run is Nathan's.
 
 Take the "before" snapshots of the live pages (the `curl` lines in each block below) BEFORE running it, not after.
+
+### PR 12: Journal into EmDash and the cleanup (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 12 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/journal/` shows its "first entry is coming" card, the Journal link stays out of the header and footer menus, `/journal/<anything>/` answers 404, and `/rss.xml` is byte-identical to before (the code reads the template `posts` collection, which production already has and which holds no entries). What these steps do is turn the collection into the Journal in the admin (label "Journal", the `/journal/{slug}/` address, an `updated` field, a required 200-character summary, the `seo` support the sitemap needs) and un-hide it. There is no content to load: Nathan writes entries by hand in the admin, so there is no `cms:load` step and `posts` is not in the CI snapshot.
+
+`npm run cms:production-load` (above) already includes this step: it plans `posts` after `photos`, lists `posts` first (expect no entries), and treats `updated field title`, `content` and `excerpt` as expected (as it does for `pages`), because `posts` exists from the template. It has no content step. The commands below are the same step typed by hand, with the before-and-after checks and the edit proof.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # needs EMDASH_TOKEN from Nathan: Settings, API tokens (keep in 1Password)
+npx emdash content list posts --url <prod>          # expect: no entries. If the template left a post, delete it in the admin first
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection posts --url <prod> --dry-run   # expect: updated field title, content and excerpt (labels, excerpt now required with a 200 limit), added field updated, reorder fields, applied collection settings (label, supports, urlPattern, hidden, sortOrder, titleField)
+npm run cms:schema -- --collection posts --url <prod> --yes
+npm run cms:schema -- --collection posts --url <prod> --yes       # second run: every line "unchanged"
+```
+
+Before the schema run save the live pages and feed: `for p in journal about; do curl -sL <prod>/$p/ > $p-before.html; done`, `curl -s <prod>/rss.xml > rss-before.xml`, `curl -s <prod>/sitemap-index.xml > sitemap-index-before.xml`. After the run and a five-minute wait: `/journal/` and `/about/` must match their "before" files (the Journal card still shows, the Journal link is still absent from the menus), `rss.xml` must be byte-identical, `curl -s <prod>/sitemap-posts.xml` must print a valid empty `<urlset>` (HTTP 200), and `curl -s -o /dev/null -w '%{http_code}\n' <prod>/journal/no-such-entry/` must print 404. The new deploy changes the sitemap index in one way only: it now also lists `sitemap-posts.xml` (valid and empty until an entry is published), so resubmit `sitemap-index.xml` in Search Console once.
+
+**The edit proof (do it once, in the production admin).** Nothing below is automated and none of it should be run until the code is on production.
+
+1. In `/_emdash/admin`, open Journal and add an entry with a title, a summary, a cover image (optional) and a short body with one Heading 2, one list and one code block. Save it as a DRAFT. Request `<prod>/journal/<its-slug>/` (it must answer 404), then check the draft is absent from `<prod>/journal/`, `<prod>/rss.xml`, `<prod>/sitemap-posts.xml` and the menus. This is the live proof that a draft is never visible.
+2. Publish it. Within five minutes (the route cache is purged by tag, so usually at once): `/journal/` lists it with its date and reading time, `/journal/<slug>/` renders, the Journal link appears in the header and footer on any page (for example `/about/`), `/rss.xml` carries it and `/sitemap-posts.xml` lists `/journal/<slug>/` with a trailing slash. Run the entry page through axe or Lighthouse accessibility in both themes.
+3. Unpublish it (or delete it) and confirm the Journal link, the list entry, the feed item and the sitemap row all go away within five minutes and `/journal/` is back to its card.
+4. Its share card (`/og/journal/<slug>.png`) only exists for entries published before the last deploy, because `scripts/generate-og.mjs` runs at build time. To make a new entry's card appear, re-run the latest Workers Build (or push any commit to `main`); until then the entry's share preview shows no image.
+
+Not done in this PR, on purpose: deleting the unused template `category` taxonomy (the design puts it in PR 14; it is empty and attached to `posts` only), and the admin sidebar ordering. If a real entry needs a picture inside the body, say so: pictures, tables and embeds in a journal body are not drawn yet (docs/EMDASH.md, "Journal").
 
 ### PR 11: Work, Photography, Journal, Not-found pages and Photos (needs `EMDASH_TOKEN` from Nathan; not run)
 
