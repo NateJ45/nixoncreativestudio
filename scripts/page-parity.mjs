@@ -151,7 +151,7 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SNAP_DIR = join(ROOT, 'scripts', '.parity');
+const DEFAULT_SNAP_DIR = join(ROOT, 'scripts', '.parity');
 const STALE_MS = 60 * 60 * 1000; // 1 hour
 
 /**
@@ -205,6 +205,18 @@ function takeFlag(name) {
 }
 const BASE_URL = takeFlag('--url')?.replace(/\/+$/, '');
 const EXTRA_ROUTES = (takeFlag('--routes') ?? '').split(',').filter(Boolean);
+
+// --snap-dir <dir> (or PARITY_SNAP_DIR) keeps a capture somewhere other than the
+// committed baselines in scripts/.parity. The CMS PRs (docs/CMS-DESIGN.md, 2.1)
+// capture "main on ncs-ci" and compare "the PR preview on ncs-ci" within the same
+// day; that throwaway pair must never overwrite the committed static-build
+// baselines, so it lives in a git-ignored directory such as .parity-cms:
+//   npm run parity capture -- --snap-dir .parity-cms --url <ncs-ci> --routes /,/services/
+//   npm run parity compare -- --snap-dir .parity-cms --url <preview> --routes /,/services/
+const SNAP_DIR = resolve(
+  ROOT,
+  takeFlag('--snap-dir') ?? process.env.PARITY_SNAP_DIR ?? DEFAULT_SNAP_DIR,
+);
 
 const { dir: DIST, label: DIST_LABEL } = BASE_URL
   ? { dir: '', label: BASE_URL }

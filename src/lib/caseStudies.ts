@@ -33,6 +33,7 @@
 import { getEmDashCollection, getEmDashEntry, getTaxonomyTermsWithCacheHint } from 'emdash';
 import type { ImageValue } from 'emdash';
 import type { RouteCache } from './routeCache';
+import { slugify } from './portableText';
 
 /** A Portable Text block. Kept loose on purpose; the renderer does the work. */
 export type PTBlock = {
@@ -207,14 +208,12 @@ export function bodyText(body: PTBlock[]): string {
   return body.map((b) => (b.children ?? []).map((c) => c.text ?? '').join('')).join('\n');
 }
 
-/** Heading slug, matching what Astro's MDX pipeline produced (the old TOC ids). */
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .replace(/\s/g, '-');
-}
+/**
+ * Heading slug, matching what Astro's MDX pipeline produced (the old TOC ids).
+ * The one definition lives in portableText.ts (a dependency-free module the
+ * unit tests can import); it is re-exported here so existing imports keep working.
+ */
+export { slugify };
 
 /** The h2 headings of a body, for the sticky table of contents. */
 export function bodyHeadings(body: PTBlock[]): { text: string; slug: string }[] {

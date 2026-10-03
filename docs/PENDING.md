@@ -199,6 +199,10 @@ Wire it as part of the Astro 7 upgrade, not before:
 
 Also open from the same PR: `scripts/ci-dataset/terms.json` pins each CI case study's taxonomy terms by hand because the CLI cannot read per-entry terms; with a token the script could read them over REST instead.
 
+### 7. The CMS tooling has not run against a live authenticated instance
+
+`scripts/cms/apply-schema.mjs` and `scripts/cms/load-content.mjs` (CMS-DESIGN PR 3) were tested against in-memory fakes of the EmDash REST API and the `emdash` CLI, because `ncs-ci` has no admin user and so no API token. Three response shapes are read defensively because they were never observed: a field row's sort key (`sortOrder` or `sort_order`), a menu item's URL key (`customUrl`, `custom_url` or `url`), and the `content get --raw` result (`data` and `_rev` at the top level). The first content PR (4) must start with `npm run cms:schema -- --collection <slug> --url <instance> --dry-run` (docs/CMS-DESIGN.md 2.6), then a second real run that prints only `unchanged`. If a shape differs, fix the one helper (`scripts/lib/emdash-schema.mjs` or `scripts/lib/cms-load.mjs`) and add the observed shape to its unit test. Delete this row once a real schema apply and a real content load both rerun as no-ops.
+
 ---
 
 ## Deliberate absences (do not "fix" these)
