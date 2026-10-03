@@ -191,7 +191,9 @@ const legendClass =
                   <!-- name + email side by side on wider screens. -->
                   <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
                     <div class={fieldClass}>
-                      <label class={labelClass} for="name">Your name</label>
+                      <label class={labelClass} for="name">
+                        Your name
+                      </label>
                       <input
                         class={inputClass}
                         type="text"
@@ -203,7 +205,9 @@ const legendClass =
                     </div>
 
                     <div class={fieldClass}>
-                      <label class={labelClass} for="email">Email</label>
+                      <label class={labelClass} for="email">
+                        Email
+                      </label>
                       <input
                         class={inputClass}
                         type="email"
@@ -253,10 +257,16 @@ const legendClass =
                   <legend class={legendClass}>About the project</legend>
 
                   <div class={fieldClass}>
-                    <label class={labelClass} for="org_type">Organization type</label>
+                    <label class={labelClass} for="org_type">
+                      Organization type
+                    </label>
                     <select class={selectClass} id="org_type" name="org_type" required>
-                      <option value="" disabled selected>Pick the closest</option>
-                      {orgTypes.map((opt) => <option value={opt.value}>{opt.label}</option>)}
+                      <option value="" disabled selected>
+                        Pick the closest
+                      </option>
+                      {orgTypes.map((opt) => (
+                        <option value={opt.value}>{opt.label}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -280,10 +290,16 @@ const legendClass =
                   <!-- budget + timeline side by side on wider screens. -->
                   <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
                     <div class={fieldClass}>
-                      <label class={labelClass} for="budget">Budget range</label>
+                      <label class={labelClass} for="budget">
+                        Budget range
+                      </label>
                       <select class={selectClass} id="budget" name="budget" required>
-                        <option value="" disabled selected>Pick the closest</option>
-                        {budgets.map((opt) => <option value={opt.value}>{opt.label}</option>)}
+                        <option value="" disabled selected>
+                          Pick the closest
+                        </option>
+                        {budgets.map((opt) => (
+                          <option value={opt.value}>{opt.label}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -294,14 +310,20 @@ const legendClass =
                         Project timeline <span class={optionalMark}>(optional)</span>
                       </label>
                       <select class={selectClass} id="timeline" name="timeline">
-                        <option value="" selected>No preference</option>
-                        {timelines.map((opt) => <option value={opt.value}>{opt.label}</option>)}
+                        <option value="" selected>
+                          No preference
+                        </option>
+                        {timelines.map((opt) => (
+                          <option value={opt.value}>{opt.label}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
 
                   <div class={fieldClass}>
-                    <label class={labelClass} for="message">Project description</label>
+                    <label class={labelClass} for="message">
+                      Project description
+                    </label>
                     <textarea
                       class={`${inputClass} min-h-32 resize-y`}
                       id="message"
@@ -326,17 +348,16 @@ const legendClass =
                      channels are bringing inquiries in. -->
                   <div class={fieldClass}>
                     <label class={labelClass} for="heard_from">
-                      How did you hear about Nixon Creative Studio? <span class={optionalMark}
-                        >(optional)</span
-                      >
+                      How did you hear about Nixon Creative Studio?{' '}
+                      <span class={optionalMark}>(optional)</span>
                     </label>
                     <select class={selectClass} id="heard_from" name="heard_from">
-                      <option value="" selected>Pick one if you'd like</option>
-                      {
-                        heardFromOptions.map((opt) => (
-                          <option value={opt.value}>{opt.label}</option>
-                        ))
-                      }
+                      <option value="" selected>
+                        Pick one if you'd like
+                      </option>
+                      {heardFromOptions.map((opt) => (
+                        <option value={opt.value}>{opt.label}</option>
+                      ))}
                     </select>
                   </div>
                 </fieldset>
@@ -377,21 +398,19 @@ const legendClass =
                   </Button>
                 </span>
 
-                {
-                  !formActive && (
-                    <p class="text-[0.85rem] text-text-muted italic">
-                      The Web3Forms access key is missing. Set{' '}
-                      <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                        PUBLIC_WEB3FORMS_KEY
-                      </code>{' '}
-                      in{' '}
-                      <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                        .env
-                      </code>{' '}
-                      locally and in Cloudflare Pages settings before launch.
-                    </p>
-                  )
-                }
+                {!formActive && (
+                  <p class="text-[0.85rem] text-text-muted italic">
+                    The Web3Forms access key is missing. Set{' '}
+                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                      PUBLIC_WEB3FORMS_KEY
+                    </code>{' '}
+                    in{' '}
+                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                      .env
+                    </code>{' '}
+                    locally and in Cloudflare Pages settings before launch.
+                  </p>
+                )}
               </form>
 
               <!-- Thank-you panel. Starts hidden; the submit handler removes the
@@ -412,8 +431,10 @@ const legendClass =
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    class="h-6 w-6"><path d="M20 6 9 17l-5-5"></path></svg
+                    class="h-6 w-6"
                   >
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </svg>
                 </span>
                 <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
                 <p class="max-w-[56ch] leading-[1.6] text-text">
@@ -432,9 +453,9 @@ const legendClass =
               >
                 <p>
                   Something went wrong on our end. Please try again, or email
-                  <a class="text-link underline underline-offset-2" href={site.emailHref}
-                    >{site.email}</a
-                  >
+                  <a class="text-link underline underline-offset-2" href={site.emailHref}>
+                    {site.email}
+                  </a>
                   directly.
                 </p>
               </div>
@@ -468,17 +489,15 @@ const legendClass =
                 <!-- A quiet three-row ledger (the About "currently" tick motif),
                      not a numbered 01/02/03 scaffold. Ordered list, list-none. -->
                 <ol class="flex list-none flex-col border-b border-border p-0">
-                  {
-                    nextSteps.map((step) => (
-                      <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
-                        <span
-                          class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
-                          aria-hidden="true"
-                        />
-                        <span>{step}</span>
-                      </li>
-                    ))
-                  }
+                  {nextSteps.map((step) => (
+                    <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
+                      <span
+                        class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
+                        aria-hidden="true"
+                      />
+                      <span>{step}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
 
@@ -504,33 +523,32 @@ const legendClass =
                     title="Map of the Greater Cincinnati service area"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
-                    class="block h-48 w-full"></iframe>
+                    class="block h-48 w-full"
+                  ></iframe>
                 </div>
               </div>
 
-              {
-                site.bookingUrl && (
-                  /* Book-a-call CTA. Renders only when site.bookingUrl is set
+              {site.bookingUrl && (
+                /* Book-a-call CTA. Renders only when site.bookingUrl is set
                      (e.g. a Cal.com link). Reads as a lighter-weight option
                      next to "use the form" for warm leads who'd rather skip
                      straight to scheduling. */
-                  <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
-                    <h2 class="text-h4 text-heading">Rather book a call?</h2>
-                    <p class="leading-[1.6] text-text">
-                      Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
-                      working conversation.
-                    </p>
-                    <a
-                      class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
-                      href={site.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Open my calendar →
-                    </a>
-                  </div>
-                )
-              }
+                <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
+                  <h2 class="text-h4 text-heading">Rather book a call?</h2>
+                  <p class="leading-[1.6] text-text">
+                    Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
+                    working conversation.
+                  </p>
+                  <a
+                    class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+                    href={site.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open my calendar →
+                  </a>
+                </div>
+              )}
             </aside>
           </div>
         </div>

@@ -74,20 +74,18 @@ const rows = [
       <!-- Ruled label/detail list, matching the /about principles pattern so the
            page reads as authored rather than scaffolded. -->
       <dl class="mt-l flex flex-col">
-        {
-          rows.map((row, index) => (
-            <div
-              class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-              data-reveal
-              style={`--reveal-delay: ${index * 80}ms;`}
-            >
-              <dt class="font-mono text-[0.8rem] tracking-[0.08em] text-text-muted uppercase">
-                {row.label}
-              </dt>
-              <dd class="max-w-[60ch] leading-[1.7] text-text">{row.body}</dd>
-            </div>
-          ))
-        }
+        {rows.map((row, index) => (
+          <div
+            class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
+            data-reveal
+            style={`--reveal-delay: ${index * 80}ms;`}
+          >
+            <dt class="font-mono text-[0.8rem] tracking-[0.08em] text-text-muted uppercase">
+              {row.label}
+            </dt>
+            <dd class="max-w-[60ch] leading-[1.7] text-text">{row.body}</dd>
+          </div>
+        ))}
       </dl>
 
       <!-- Quiet close, funnels onward like the rest of the site. -->
@@ -98,7 +96,9 @@ const rows = [
         >
           Start a project
         </a>
-        <a class="card-link text-lg" href="/work/">See the work</a>
+        <a class="card-link text-lg" href="/work/">
+          See the work
+        </a>
       </div>
     </div>
   </section>

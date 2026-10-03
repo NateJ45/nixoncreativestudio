@@ -114,9 +114,7 @@ const hasPhone = emdashMode ? !!mobile : !!mobileSrc;
           <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
           <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
         </span>
-        <span
-          class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-bg px-3 py-1 font-mono text-[0.72rem] text-text-muted"
-        >
+        <span class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-bg px-3 py-1 font-mono text-[0.72rem] text-text-muted">
           <svg
             viewBox="0 0 24 24"
             width="11"
@@ -131,58 +129,52 @@ const hasPhone = emdashMode ? !!mobile : !!mobileSrc;
           </svg>
           {shown}
         </span>
-        <span
-          class="font-mono text-[0.7rem] tracking-[0.08em] text-link uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
-        >
+        <span class="font-mono text-[0.7rem] tracking-[0.08em] text-link uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
           Visit ↗
         </span>
       </div>
 
       <!-- Scrolling / zooming desktop viewport. -->
       <div class={`showcase-window ${variant === 'zoom' ? 'showcase-zoom' : 'showcase-scroll'}`}>
-        {
-          emdashMode ? (
-            <ScrollShot image={desktop} alt={alt} sizes="(min-width: 56rem) 70vw, 100vw" />
-          ) : (
-            <Image
-              src={src!}
-              alt={alt}
-              widths={[768, 1024, 1425]}
-              sizes="(min-width: 56rem) 70vw, 100vw"
-            />
-          )
-        }
+        {emdashMode ? (
+          <ScrollShot image={desktop} alt={alt} sizes="(min-width: 56rem) 70vw, 100vw" />
+        ) : (
+          <Image
+            src={src!}
+            alt={alt}
+            widths={[768, 1024, 1425]}
+            sizes="(min-width: 56rem) 70vw, 100vw"
+          />
+        )}
       </div>
     </a>
 
-    {
-      hasPhone && (
-        /* Phone overlapping the desktop's lower-right. Decorative (the desktop
+    {hasPhone && (
+      /* Phone overlapping the desktop's lower-right. Decorative (the desktop
            shows the same site), so aria-hidden; pointer-events:none keeps the
            desktop link clickable beneath it. Hidden below md (see <style>). */
-        <div class="showcase-phone" aria-hidden="true">
-          <div class="showcase-phone-window">
-            {emdashMode ? (
-              <ScrollShot
-                image={mobile as ImageValue}
-                alt=""
-                sizes="(min-width: 48rem) 200px, 1px"
-                class="showcase-phone-img"
-              />
-            ) : (
-              <Image
-                src={mobileSrc!}
-                alt=""
-                widths={[220, 330, 440]}
-                sizes="(min-width: 48rem) 200px, 1px"
-                class="showcase-phone-img"
-                loading="lazy"
-              />
-            )}
-          </div>
+      <div class="showcase-phone" aria-hidden="true">
+        <div class="showcase-phone-window">
+          {emdashMode ? (
+            <ScrollShot
+              image={mobile as ImageValue}
+              alt=""
+              sizes="(min-width: 48rem) 200px, 1px"
+              class="showcase-phone-img"
+            />
+          ) : (
+            <Image
+              src={mobileSrc!}
+              alt=""
+              widths={[220, 330, 440]}
+              sizes="(min-width: 48rem) 200px, 1px"
+              class="showcase-phone-img"
+              loading="lazy"
+            />
+          )}
         </div>
-      )
-    }
+      </div>
+    )}
   </div>
 
   <figcaption class="mt-xs text-center font-mono text-[0.75rem] text-text-muted">

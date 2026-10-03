@@ -230,11 +230,9 @@ placeholder. Override alt or size with props.
 {d.cover && <Image image={d.cover} alt="" priority />}
 {/* hero, alt="" next to the h1 */}
 {d.showcase_desktop && <Image image={d.showcase_desktop} alt={d.showcase_alt} />}
-{
-  d.highlights?.map((h) => (
-    <Image image={h.image} alt={h.alt} sizes="(min-width: 48rem) 46vw, 92vw" />
-  ))
-}
+{d.highlights?.map((h) => (
+  <Image image={h.image} alt={h.alt} sizes="(min-width: 48rem) 46vw, 92vw" />
+))}
 <PortableText value={d.body} />
 ```
 

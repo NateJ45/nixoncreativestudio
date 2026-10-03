@@ -236,9 +236,8 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
         <!-- Track: oversized h1 breakout, then intro | portrait split. -->
         <div class="min-w-0">
           <h1 id="about-hero-heading" class="max-w-[20ch] leading-[0.95]" data-reveal>
-            A one-person studio for <span class="text-link"
-              >organizations that take their work seriously.</span
-            >
+            A one-person studio for{' '}
+            <span class="text-link">organizations that take their work seriously.</span>
           </h1>
 
           <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
@@ -267,8 +266,7 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
               <div
                 class="absolute -right-4 -bottom-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
                 aria-hidden="true"
-              >
-              </div>
+              ></div>
               <Image
                 src={headshot}
                 alt="Nathan Nixon, smiling outdoors"
@@ -299,9 +297,8 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
 
         <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal="blur">
           One person on every project, start to finish: strategy, design, photography, and code. I
-          work with <span class="text-link"
-            >churches, schools, nonprofits, and small businesses</span
-          >
+          work with{' '}
+          <span class="text-link">churches, schools, nonprofits, and small businesses</span>
           around Cincinnati in person, and anywhere for web work.
         </p>
       </div>
@@ -316,7 +313,9 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
   <section class="pb-2xl" aria-labelledby="about-story-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">Story</p>
+        <p class={railLabel} aria-hidden="true">
+          Story
+        </p>
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
@@ -403,7 +402,9 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
   <section class="pb-2xl" aria-labelledby="about-outside-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">Outside</p>
+        <p class={railLabel} aria-hidden="true">
+          Outside
+        </p>
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
@@ -415,31 +416,29 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
           </header>
 
           <ul class="mt-l columns-2 gap-m lg:columns-3 [&>li]:mb-m [&>li]:break-inside-avoid">
-            {
-              photos.map((photo, index) => (
-                <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
-                  <figure>
-                    <button
-                      type="button"
-                      data-zoom
-                      title="View larger"
-                      class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                    >
-                      <Image
-                        src={photo.src}
-                        alt={photo.alt}
-                        widths={[320, 560, 840, 1200, 1600]}
-                        sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
-                        class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                    </button>
-                    <figcaption class="mt-xs font-mono text-xs tracking-[0.06em] text-text-muted uppercase">
-                      {photo.caption}
-                    </figcaption>
-                  </figure>
-                </li>
-              ))
-            }
+            {photos.map((photo, index) => (
+              <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
+                <figure>
+                  <button
+                    type="button"
+                    data-zoom
+                    title="View larger"
+                    class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt}
+                      widths={[320, 560, 840, 1200, 1600]}
+                      sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
+                      class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </button>
+                  <figcaption class="mt-xs font-mono text-xs tracking-[0.06em] text-text-muted uppercase">
+                    {photo.caption}
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -454,7 +453,9 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
   <section class="pb-2xl" aria-labelledby="about-how-heading">
     <div class="ncs-container">
       <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">Practice</p>
+        <p class={railLabel} aria-hidden="true">
+          Practice
+        </p>
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
@@ -465,18 +466,16 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
           </header>
 
           <ul class="mt-l flex flex-col">
-            {
-              principles.map((principle, index) => (
-                <li
-                  class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-                  data-reveal
-                  style={`--reveal-delay: ${index * 100}ms;`}
-                >
-                  <h3 class="text-h4 text-heading">{principle.title}</h3>
-                  <p class="leading-[1.7] text-text">{principle.body}</p>
-                </li>
-              ))
-            }
+            {principles.map((principle, index) => (
+              <li
+                class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
+                data-reveal
+                style={`--reveal-delay: ${index * 100}ms;`}
+              >
+                <h3 class="text-h4 text-heading">{principle.title}</h3>
+                <p class="leading-[1.7] text-text">{principle.body}</p>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -495,14 +494,12 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
       <div class={`${railGrid} border-t border-border pt-2xl`}>
         <!-- Rail: word-label (decorative) + the real freshness meta. -->
         <div class="flex flex-col gap-s">
-          <p class={railLabel} aria-hidden="true">Now</p>
-          <p
-            class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text"
-          >
+          <p class={railLabel} aria-hidden="true">
+            Now
+          </p>
+          <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text">
             <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
-              <span
-                class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"
-              ></span>
+              <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
               <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
             </span>
             <span>{freshness}</span>
@@ -532,58 +529,58 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
               <!-- Left: Working on, then Booking. -->
               <div class="flex flex-col gap-l">
                 <section aria-labelledby="now-working">
-                  <h3 id="now-working" class="text-h5 text-heading">Working on</h3>
+                  <h3 id="now-working" class="text-h5 text-heading">
+                    Working on
+                  </h3>
                   <ul class="mt-s flex flex-col">
-                    {
-                      workingOn.map((item, index) => (
-                        <li
-                          class="flex items-start gap-s border-t border-border py-s"
-                          data-reveal="left"
-                          style={`--reveal-delay: ${index * 90}ms;`}
-                        >
-                          <span
-                            class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary"
-                            aria-hidden="true"
-                          />
-                          <span class="leading-[1.55] text-text">{item}</span>
-                        </li>
-                      ))
-                    }
+                    {workingOn.map((item, index) => (
+                      <li
+                        class="flex items-start gap-s border-t border-border py-s"
+                        data-reveal="left"
+                        style={`--reveal-delay: ${index * 90}ms;`}
+                      >
+                        <span
+                          class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary"
+                          aria-hidden="true"
+                        />
+                        <span class="leading-[1.55] text-text">{item}</span>
+                      </li>
+                    ))}
                   </ul>
                 </section>
 
                 <section aria-labelledby="now-booking">
-                  <h3 id="now-booking" class="text-h5 text-heading">Booking</h3>
+                  <h3 id="now-booking" class="text-h5 text-heading">
+                    Booking
+                  </h3>
                   <ul class="mt-s flex flex-col">
-                    {
-                      booking.map((slot, index) => {
-                        const meta = statusMeta[slot.status];
-                        return (
-                          <li
-                            class="border-t border-border py-s"
-                            data-reveal
-                            style={`--reveal-delay: ${index * 90}ms;`}
+                    {booking.map((slot, index) => {
+                      const meta = statusMeta[slot.status];
+                      return (
+                        <li
+                          class="border-t border-border py-s"
+                          data-reveal
+                          style={`--reveal-delay: ${index * 90}ms;`}
+                        >
+                          <span
+                            class:list={[
+                              'inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.06em] uppercase',
+                              meta.text,
+                            ]}
                           >
                             <span
-                              class:list={[
-                                'inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.06em] uppercase',
-                                meta.text,
-                              ]}
-                            >
-                              <span
-                                class:list={['h-2 w-2 rounded-full', meta.dot]}
-                                aria-hidden="true"
-                              />
-                              {meta.word}
-                            </span>
-                            <span class="ml-2 align-middle font-display text-h5 text-heading">
-                              {slot.label}
-                            </span>
-                            <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
-                          </li>
-                        );
-                      })
-                    }
+                              class:list={['h-2 w-2 rounded-full', meta.dot]}
+                              aria-hidden="true"
+                            />
+                            {meta.word}
+                          </span>
+                          <span class="ml-2 align-middle font-display text-h5 text-heading">
+                            {slot.label}
+                          </span>
+                          <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </section>
               </div>
@@ -591,44 +588,44 @@ Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
               <!-- Right: Reading, then Learning. -->
               <div class="flex flex-col gap-l">
                 <section aria-labelledby="now-reading">
-                  <h3 id="now-reading" class="text-h5 text-heading">Reading</h3>
+                  <h3 id="now-reading" class="text-h5 text-heading">
+                    Reading
+                  </h3>
                   <ul class="mt-s flex flex-col">
-                    {
-                      reading.map((book, index) => (
-                        <li
-                          class="border-t border-border py-s"
-                          data-reveal="right"
-                          style={`--reveal-delay: ${index * 90}ms;`}
-                        >
-                          <span class="font-display text-h5 leading-tight text-heading">
-                            {book.title}
-                            {book.note && (
-                              <span class="ml-2 align-middle text-xs font-medium tracking-[0.06em] text-link uppercase">
-                                ({book.note})
-                              </span>
-                            )}
-                          </span>
-                          <span class="block text-sm text-text-muted">{book.author}</span>
-                        </li>
-                      ))
-                    }
+                    {reading.map((book, index) => (
+                      <li
+                        class="border-t border-border py-s"
+                        data-reveal="right"
+                        style={`--reveal-delay: ${index * 90}ms;`}
+                      >
+                        <span class="font-display text-h5 leading-tight text-heading">
+                          {book.title}
+                          {book.note && (
+                            <span class="ml-2 align-middle text-xs font-medium tracking-[0.06em] text-link uppercase">
+                              ({book.note})
+                            </span>
+                          )}
+                        </span>
+                        <span class="block text-sm text-text-muted">{book.author}</span>
+                      </li>
+                    ))}
                   </ul>
                 </section>
 
                 <section aria-labelledby="now-learning">
-                  <h3 id="now-learning" class="text-h5 text-heading">Learning</h3>
+                  <h3 id="now-learning" class="text-h5 text-heading">
+                    Learning
+                  </h3>
                   <ul class="mt-s flex flex-col">
-                    {
-                      learning.map((item, index) => (
-                        <li
-                          class="border-t border-border py-s leading-[1.55] text-text"
-                          data-reveal="right"
-                          style={`--reveal-delay: ${index * 90}ms;`}
-                        >
-                          {item}
-                        </li>
-                      ))
-                    }
+                    {learning.map((item, index) => (
+                      <li
+                        class="border-t border-border py-s leading-[1.55] text-text"
+                        data-reveal="right"
+                        style={`--reveal-delay: ${index * 90}ms;`}
+                      >
+                        {item}
+                      </li>
+                    ))}
                   </ul>
                 </section>
               </div>

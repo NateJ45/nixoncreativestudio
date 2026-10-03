@@ -70,22 +70,23 @@ const practices = [
              small page tag, not a tracked section eyebrow; the Bebas h1
              carries the page. Matches /privacy. -->
         <p class="font-mono text-sm text-text-muted">Accessibility</p>
-        <h1 id="accessibility-heading" class="leading-[0.95]">Built to be used by everyone.</h1>
+        <h1 id="accessibility-heading" class="leading-[0.95]">
+          Built to be used by everyone.
+        </h1>
         <p class="text-lg leading-[1.6] text-text">
           I build this site toward WCAG 2.1 AA, in both the light and the dark theme, and I check it
           on every change. No website is ever perfectly accessible, so if anything is hard to use
-          with a keyboard or a screen reader, tell me and I'll fix it: <a
-            class={linkClass}
-            href={site.emailHref}>{site.email}</a
-          >.
+          with a keyboard or a screen reader, tell me and I'll fix it:{' '}
+          <a class={linkClass} href={site.emailHref}>
+            {site.email}
+          </a>
+          .
         </p>
 
         <!-- Last-updated pill. Freshness at a glance, with a text label so
              color isn't the only cue. The dot is decorative. -->
         <p>
-          <span
-            class="inline-flex items-center gap-xs rounded-full border border-border bg-bg-soft px-s py-xs text-sm text-text-muted"
-          >
+          <span class="inline-flex items-center gap-xs rounded-full border border-border bg-bg-soft px-s py-xs text-sm text-text-muted">
             <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
             Last updated {lastUpdated}
           </span>
@@ -104,26 +105,24 @@ const practices = [
         >
           <p class="mb-s text-sm tracking-[0.16em] text-text-muted uppercase">On this page</p>
           <ul class="gap-2xs flex flex-col border-l border-border">
-            {
-              sections.map((s) => (
-                <li>
-                  <a
-                    href={`#${s.id}`}
-                    data-toc-link={s.id}
-                    class={
-                      'py-2xs block border-l-2 border-transparent pl-m text-[0.95rem] ' +
-                      'text-text-muted transition-colors duration-200 ' +
-                      'hover:text-link focus-visible:text-link ' +
-                      'aria-[current=true]:border-accent aria-[current=true]:font-semibold ' +
-                      'aria-[current=true]:text-link'
-                    }
-                    style="margin-left: -1px;"
-                  >
-                    {s.label}
-                  </a>
-                </li>
-              ))
-            }
+            {sections.map((s) => (
+              <li>
+                <a
+                  href={`#${s.id}`}
+                  data-toc-link={s.id}
+                  class={
+                    'py-2xs block border-l-2 border-transparent pl-m text-[0.95rem] ' +
+                    'text-text-muted transition-colors duration-200 ' +
+                    'hover:text-link focus-visible:text-link ' +
+                    'aria-[current=true]:border-accent aria-[current=true]:font-semibold ' +
+                    'aria-[current=true]:text-link'
+                  }
+                  style="margin-left: -1px;"
+                >
+                  {s.label}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
 
@@ -131,7 +130,9 @@ const practices = [
              looser line-height for long-form prose. -->
         <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
           <div class="mt-0" data-reveal>
-            <h2 id="the-standard" class={h2Class}>The standard</h2>
+            <h2 id="the-standard" class={h2Class}>
+              The standard
+            </h2>
             <p class={pClass}>
               The goal is WCAG 2.1 AA, the same standard most public bodies and larger organizations
               are held to, and it applies in both the light and the dark theme. Each page is built
@@ -143,39 +144,47 @@ const practices = [
           </div>
 
           <div class="mt-xl" data-reveal>
-            <h2 id="in-practice" class={h2Class}>In practice</h2>
+            <h2 id="in-practice" class={h2Class}>
+              In practice
+            </h2>
             <p class={pClass}>A few of the things that means on this site:</p>
             <ul class="mb-m flex flex-col gap-s">
-              {
-                practices.map((item) => (
-                  <li class="flex items-start gap-s">
-                    <span class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary" aria-hidden="true" />
-                    <span>{item}</span>
-                  </li>
-                ))
-              }
+              {practices.map((item) => (
+                <li class="flex items-start gap-s">
+                  <span class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary" aria-hidden="true" />
+                  <span>{item}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div class="mt-xl" data-reveal>
-            <h2 id="how-its-checked" class={h2Class}>How it is checked</h2>
+            <h2 id="how-its-checked" class={h2Class}>
+              How it is checked
+            </h2>
             <p class={pClass}>
               The accessibility score is a hard gate: a change cannot ship if it drops a page below
-              100. On top of that, the pages are run through <a
+              100. On top of that, the pages are run through{' '}
+              <a
                 class={linkClass}
                 href="https://github.com/dequelabs/axe-core"
                 target="_blank"
-                rel="noopener noreferrer">axe-core</a
-              > (a widely used accessibility testing engine) in both themes, and structural changes get
-              a manual keyboard pass from the address bar through every control. Automated tools like
-              these only cover part of WCAG; the rest is judgment, whether the alt text is actually useful,
-              whether the reading order makes sense, so I treat the tooling as a safety net under the
-              hands-on work, not a stand-in for it.
+                rel="noopener noreferrer"
+              >
+                axe-core
+              </a>{' '}
+              (a widely used accessibility testing engine) in both themes, and structural changes
+              get a manual keyboard pass from the address bar through every control. Automated tools
+              like these only cover part of WCAG; the rest is judgment, whether the alt text is
+              actually useful, whether the reading order makes sense, so I treat the tooling as a
+              safety net under the hands-on work, not a stand-in for it.
             </p>
           </div>
 
           <div class="mt-xl" data-reveal>
-            <h2 id="where-it-stops" class={h2Class}>Where it stops short</h2>
+            <h2 id="where-it-stops" class={h2Class}>
+              Where it stops short
+            </h2>
             <p class={pClass}>
               I aim for AA, not the stricter AAA, on purpose, in line with the W3C's own guidance
               that AAA is not meant as a blanket requirement for a whole site. A couple of AAA rules
@@ -190,12 +199,16 @@ const practices = [
           </div>
 
           <div class="mt-xl" data-reveal>
-            <h2 id="report" class={h2Class}>Found a problem?</h2>
+            <h2 id="report" class={h2Class}>
+              Found a problem?
+            </h2>
             <p class={pClass}>
               If a page is hard to read, hard to get through, or breaks with the assistive
-              technology you rely on, email <a class={linkClass} href={site.emailHref}
-                >{site.email}</a
-              > and tell me what happened and what you were using. It reaches a real person, me, and I
+              technology you rely on, email{' '}
+              <a class={linkClass} href={site.emailHref}>
+                {site.email}
+              </a>{' '}
+              and tell me what happened and what you were using. It reaches a real person, me, and I
               treat accessibility problems as real problems to fix, not as nice-to-haves.
             </p>
           </div>
