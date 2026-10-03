@@ -30,10 +30,14 @@
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { site } from '../data/site';
+import { getSite } from '../data/site';
 import { Button } from '../components/ui/button';
 import CopyEmail from '../components/CopyEmail';
 import CtaBanner from '../components/CtaBanner.astro';
+
+// Email, phone, location, the booking link and the form subject all come from
+// Site settings in the CMS (with the committed fallback).
+const site = await getSite(Astro);
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.

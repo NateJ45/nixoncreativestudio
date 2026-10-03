@@ -292,6 +292,172 @@
           "type": "text"
         }
       ]
+    },
+    {
+      "slug": "site_settings",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Site",
+      "titleField": "studio_name",
+      "commentsEnabled": false,
+      "label": "Site settings",
+      "labelSingular": "Site settings",
+      "description": "Contact details, social links and the shared copy that appears on every page.",
+      "sortOrder": 0,
+      "fields": [
+        {
+          "slug": "studio_name",
+          "label": "Studio name (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "owner_name",
+          "label": "Owner name (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "email",
+          "label": "Email address (shown in the footer, contact page and menu; max 80)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 80,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+          }
+        },
+        {
+          "slug": "phone",
+          "label": "Phone number, as people should read it (max 24)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "location",
+          "label": "Location line, for example \"Cincinnati, OH\" (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "tagline",
+          "label": "Tagline (footer, search results and the feed; max 160)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "instagram_url",
+          "label": "Instagram link",
+          "type": "url",
+          "required": true
+        },
+        {
+          "slug": "linkedin_url",
+          "label": "LinkedIn link",
+          "type": "url",
+          "required": true
+        },
+        {
+          "slug": "booking_url",
+          "label": "Booking link, for example a Cal.com page (empty hides \"Book a call\")",
+          "type": "url"
+        },
+        {
+          "slug": "newsletter_url",
+          "label": "Newsletter sign-up link (empty hides the newsletter block)",
+          "type": "url"
+        },
+        {
+          "slug": "header_cta_label",
+          "label": "Header button text, also used in the phone menu (max 20)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 20
+          }
+        },
+        {
+          "slug": "footer_currently",
+          "label": "Footer \"Currently\" line (change with the season; max 180)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 180
+          }
+        },
+        {
+          "slug": "cta_default_title",
+          "label": "Closing banner title on pages that do not set their own (max 60)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "cta_default_sub",
+          "label": "Closing banner text on pages that do not set their own (max 200)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "cta_default_label",
+          "label": "Closing banner button text (max 24)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "default_description",
+          "label": "Search description for a page that has none (max 160)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "rss_title",
+          "label": "Feed title (max 70)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 70
+          }
+        },
+        {
+          "slug": "rss_description",
+          "label": "Feed description (max 200)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        }
+      ]
     }
   ],
   "taxonomies": [
@@ -519,6 +685,69 @@
         {
           "slug": "rankmath",
           "label": "RankMath"
+        }
+      ]
+    }
+  ],
+  "menus": [
+    {
+      "name": "primary",
+      "label": "Header navigation",
+      "items": [
+        {
+          "type": "custom",
+          "label": "Work",
+          "url": "/work/",
+          "titleAttr": "Selected client projects"
+        },
+        {
+          "type": "custom",
+          "label": "Services",
+          "url": "/services",
+          "titleAttr": "What I build, and how"
+        },
+        {
+          "type": "custom",
+          "label": "About",
+          "url": "/about",
+          "titleAttr": "The studio, and me"
+        },
+        {
+          "type": "custom",
+          "label": "Journal",
+          "url": "/journal/",
+          "titleAttr": "Notes on the work"
+        }
+      ]
+    },
+    {
+      "name": "footer",
+      "label": "Footer navigation",
+      "items": [
+        {
+          "type": "custom",
+          "label": "Work",
+          "url": "/work/"
+        },
+        {
+          "type": "custom",
+          "label": "Services",
+          "url": "/services"
+        },
+        {
+          "type": "custom",
+          "label": "About",
+          "url": "/about"
+        },
+        {
+          "type": "custom",
+          "label": "Journal",
+          "url": "/journal/"
+        },
+        {
+          "type": "custom",
+          "label": "Contact",
+          "url": "/contact"
         }
       ]
     }

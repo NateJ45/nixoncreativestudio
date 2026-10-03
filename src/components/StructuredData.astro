@@ -31,7 +31,7 @@
    https://schema.org/FAQPage
    ============================================================================ */
 
-import { site } from '../data/site';
+import { getSite } from '../data/site';
 
 interface Props {
   /** Extra schema objects appended to the Organization root schema. */
@@ -39,6 +39,10 @@ interface Props {
 }
 
 const { extra = [] } = Astro.props;
+
+// Name, email, phone, tagline and socials come from Site settings in the CMS;
+// the canonical URL stays in code (SITE_URL, via site.url).
+const site = await getSite(Astro);
 
 const organization = {
   '@context': 'https://schema.org',

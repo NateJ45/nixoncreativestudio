@@ -1,6 +1,6 @@
 # cms/
 
-The committed side of the editable-content build (design: `docs/CMS-DESIGN.md`). Nothing here is read by a page until a content PR (4 to 13) moves a page onto it.
+The committed side of the editable-content build (design: `docs/CMS-DESIGN.md`). A page reads from here only once a content PR (4 to 13) has moved it onto the CMS. So far that is PR 4: `schema/site_settings.mjs`, `content/site_settings.json` and `content/menus.json` (Site settings and the two menus, read by `getSite()` and `getMenuItems()`). The JSON is both what the loader pushes into EmDash and what the site serves when the CMS has nothing, so it must always equal what the page should show. After editing anything here run `node scripts/ci-dataset/cms-fixtures.mjs` so the CI dataset follows (a unit test fails if you forget).
 
 | Folder         | What lives here                                                                                                                                                                                                                                                                                             |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

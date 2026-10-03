@@ -4,14 +4,14 @@
    ============================================================================
    Safe to edit. Renders nothing when site.newsletterUrl is empty, so the
    block stays out of the way until Nathan picks an email provider and
-   sets the URL in src/data/site.ts.
+   sets the URL in Site settings (EmDash admin).
 
    Setup:
      1. Pick a provider. Buttondown ($9/mo, no third-party tracking,
         ActivityPub support) is the recommended pick for a small studio
         list. Other options: ConvertKit, Mailchimp, EmailOctopus.
      2. Create a list/newsletter, get the embed/publish URL.
-     3. Set site.newsletterUrl in src/data/site.ts to that URL.
+     3. Paste that URL into "Newsletter sign-up link" in Site settings.
         - Buttondown publish URL works as the form action directly:
           https://buttondown.email/api/emails/embed-subscribe/<username>
         - ConvertKit / Mailchimp use different actions; check provider docs.
@@ -25,7 +25,11 @@
    pattern.
    ============================================================================ */
 
-import { site } from '../data/site';
+import { getSite } from '../data/site';
+
+// The sign-up link is the "Newsletter sign-up link" field in Site settings; empty
+// hides the whole block.
+const site = await getSite(Astro);
 
 interface Props {
   /** Heading override. Defaults to a short studio-voice line. */

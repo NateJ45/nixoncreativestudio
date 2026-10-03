@@ -404,13 +404,14 @@ Today `ncs-ci` was built once by hand-copied SQL (docs/TESTING.md on the `ci-ded
 
 ### 2.5 Status
 
-| PR      | State                                                                                                             |
-| ------- | ----------------------------------------------------------------------------------------------------------------- |
-| 0       | merged (#51)                                                                                                      |
-| 1       | built, in review: `scripts/ci-dataset/` (snapshot, rebuild, fixtures), `npm run ci-dataset`, seed export extended |
-| 2       | merged (#55): `output: 'server'`, route cache, `toolbar: 'client'`, measurements below                            |
-| 3       | built, in review: the shared tooling and reader (`scripts/cms/`, `src/lib/cms.ts`, notes below), no page changes  |
-| 4 to 14 | not started                                                                                                       |
+| PR      | State                                                                                                                                                                                                |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0       | merged (#51)                                                                                                                                                                                         |
+| 1       | merged (#53): `scripts/ci-dataset/` (snapshot, rebuild, fixtures), `npm run ci-dataset`, seed export extended                                                                                        |
+| 2       | merged (#55): `output: 'server'`, route cache, `toolbar: 'client'`, measurements below                                                                                                               |
+| 3       | merged (#56): the shared tooling and reader (`scripts/cms/`, `src/lib/cms.ts`, notes below), no page changes                                                                                         |
+| 4       | built, in review: `site_settings` and the `primary` and `footer` menus, read with the committed-JSON fallback; production data NOT loaded yet (needs `EMDASH_TOKEN`, 2.6 and docs/LAUNCH-RUNBOOK.md) |
+| 5 to 14 | not started                                                                                                                                                                                          |
 
 **PR 1 notes (2026-10-03).** Two deviations from section 2.3, both forced by the rule that production is read only through the `emdash` CLI login and public URLs: (1) `snapshot.mjs` builds rows from `content get --raw --published`, `media list` and `taxonomy terms`, not from `wrangler d1 execute` on production, so it maps fields to `ec_<slug>` columns itself (images and repeaters as JSON text, system and author ids nulled) and was checked against the previously hand-built `ncs-ci` rows: body and highlights JSON semantically equal, only media storage keys differ (CI now uses production's keys); (2) per-entry taxonomy links are not readable through the CLI, so `terms.json` pins them. R2 files are copied from the live site's public media URLs with a size and SHA-1 check, not from the production bucket. `--from-scratch` drops tables children-first: dropping `users` before `_emdash_comments` fails with `no such table: main.users`, which is the real error D1 returns (as `D1_RESET_DO`) for an import that hits it. `export-seed-from-instance.mjs` gained `--check` and now writes the seed through prettier; its menu, redirect and `titleField`/`sortOrder`/`admin` paths need an API token or a non-empty menu to prove (docs/PENDING.md item 6). A re-export against production changed one thing in `seed/seed.json`: `urlPattern: "/work/{slug}/"` on `case_studies`.
 
@@ -427,6 +428,18 @@ Today `ncs-ci` was built once by hand-copied SQL (docs/TESTING.md on the `ci-ded
 - **Parity for CMS PRs** (the recipe's "capture on main, compare on the PR" step) uses a throwaway snapshot directory so it cannot overwrite the committed static-build baselines: `npm run parity capture -- --snap-dir .parity-cms --url <ncs-ci URL> --routes /,/services/`, then `npm run parity compare -- --snap-dir .parity-cms --url <PR preview URL> --routes /,/services/`. `.parity-cms/` is git-ignored. (`PARITY_SNAP_DIR` does the same.)
 - **Not proven against a live authenticated instance.** `ncs-ci` has no admin user by design, so there was no token to run `apply-schema.mjs` or `load-content.mjs` against a real EmDash. They were tested against in-memory fakes modelled on the server's own zod schemas (create-only and update-only settings, the field and reorder endpoints) and against the CLI's documented command surface. Two shapes are read defensively because they could not be observed: the field rows' sort key (`sortOrder` or `sort_order`) and a menu item's URL key (`customUrl`, `custom_url` or `url`). The first real run is therefore a `--dry-run` (section 2.6, step 1); a surprise there is a one-line fix in the helper, not a data problem, because a dry run writes nothing.
 
+**PR 4 notes (2026-10-03).** Site settings and menus are built, and the PR is safe to merge with production still empty: every read goes through `getSite()` (`src/data/site.ts`) and `getMenuItems()` (`src/lib/cms.ts`), and when the entry or menu is missing they serve the committed `cms/content/site_settings.json` and `menus.json`, which hold the literal values lifted from the old code. What a builder of PRs 5 to 13 needs to know:
+
+- **Nothing was written to production.** There is no admin token, so the schema and content are committed (`cms/schema/site_settings.mjs`, `cms/content/site_settings.json`, `cms/content/menus.json`) and the main session loads them later with the commands in 2.6 ("PR 4 data"). Until then the live site renders from the fallback, and each page logs `[cms] site_settings/site is missing or unpublished; serving the committed fallback` once per cache window.
+- **Render parity, measured.** `ncs-ci` was captured running `main`, then the PR build was deployed to it twice: first with no `site_settings` table (the same state as production today: fallback path), then after `npm run ci-dataset -- --from-scratch` with the collection and menus loaded (CMS path, proved live by editing a field in D1 and seeing the page change). All 14 pages and `/rss.xml` are byte-identical to `main` once one element is excluded: the `<astro-island ... MobileNav>` opening tag, whose `uid` and serialised `props` now carry the CMS values (`ctaLabel`, `email`, `phone`, social URLs, per-link `descriptor`). That is the only expected DIFF; the island hydrates to the same menu.
+- **The reader pattern for shared values** is `const site = await getSite(Astro)` (or `getSite(context)` in an endpoint). One D1 read per request (a `WeakMap` keyed on `Astro.request`) and one cache tag no matter how many components ask. `SITE_URL` and `SITE_DOMAIN` are code constants for the callers that only need the origin. React islands must NOT import `src/data/site.ts` (it would put the reader in the browser bundle): `Header.astro` passes values as props, as it does for `MobileNav`.
+- **`MobileNav` descriptors** come from each menu item's "Title attribute" (`titleAttr`), as designed. The old `DESCRIPTIONS` map is gone, including its `/contact` entry, which was dead (Contact is not a drawer link).
+- **No `footer_blurb` field.** Section 1.2 lists one, but the footer has no brand paragraph today (its bottom row shows the tagline), so a field would edit nothing and a new paragraph would change the footer. Left out; add it with a design for the paragraph.
+- **`CtaBanner` defaults** (`cta_default_*`) and `header_cta_label` are wired, because a field that edits nothing is worse than none. The footer's own "Start a project" button and the hero buttons stay in code (page copy, PR 6).
+- **Journal auto-hide** stays in code for both menus: any item whose URL starts with `/journal` is dropped while the journal collection has no published entry.
+- **CI exercises the CMS path.** `ncs-ci` has no admin user, so its CMS data comes from `scripts/ci-dataset/cms-fixtures.mjs`, which builds the collection and menus into `seed/seed.json` and the entries into `scripts/ci-dataset/cms-rows.sql` straight from `cms/`. A unit test (`ciFixtures.test.ts`) fails if those generated files are stale. The fallback path is covered by `site.test.ts` (and was exercised live, above). When production holds the data, add the collection to `PRODUCTION_HAS` in `cms-fixtures.mjs` so `snapshot.mjs` becomes the source.
+- **The acceptance gate** is `tests/smoke.spec.ts`: on every route except the standalone `/coming-soon`, the header has Work, Services and About with the right hrefs (Journal is hidden until an entry exists), the "Start a project" button, and the footer email link.
+
 ### 2.6 Running the tooling (the recipe's production steps, in order)
 
 Steps 2 to 4 of section 2.1 write to a live instance, so the main session runs them with Nathan's go-ahead. Replace `<collection>` and `<instance>`; `--yes` is required for anything that is not the `ncs-ci` Worker or a local address, and `--dry-run` reads without writing.
@@ -437,6 +450,23 @@ Steps 2 to 4 of section 2.1 write to a live instance, so the main session runs t
 4. **Seed and CI dataset**, then the PR's parity check, as in section 2.1 steps 4 to 6.
 
 To test a definition or a content file before it goes near production, run steps 1 to 3 against `https://ncs-ci.nathanjnixon86.workers.dev` once an admin user and token exist there (it has none today); no `--yes` is needed for that host.
+
+**PR 4 data (site settings and menus). Needs `EMDASH_TOKEN` from Nathan; nothing below has been run.** Safe at any time: the live site reads the data only after this PR deploys, and until the data is loaded it renders from the committed fallback, so the order does not matter and a failed step changes nothing visible. `<prod>` is `https://www.nixoncreativestudio.com`.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --collection site_settings --url <prod> --dry-run   # expect: would created collection, would added field x18
+npm run cms:schema -- --collection site_settings --url <prod> --yes
+npm run cms:schema -- --collection site_settings --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:load -- --collection site_settings --url <prod> --dry-run
+npm run cms:load -- --collection site_settings --url <prod> --yes
+npm run cms:load -- --collection menus --url <prod> --dry-run
+npm run cms:load -- --collection menus --url <prod> --yes
+npm run cms:load -- --collection site_settings --url <prod> --yes         # second run: "unchanged"
+```
+
+Then switch CI to read the real rows: add `'site_settings'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, run `node scripts/export-seed-from-instance.mjs --url <prod>` (needs the token; it now emits the collection and both menus), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, and commit `seed/seed.json`, `rows.sql`, `cms-rows.sql`, `media.json`. Finally the edit proof: in `/_emdash/admin`, change the footer "Currently" line in Site settings, publish, reload any page within five minutes, then restore it from History.
 
 ---
 

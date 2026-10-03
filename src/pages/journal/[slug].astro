@@ -24,7 +24,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { readingTime } from '../../lib/readingTime';
-import { site } from '../../data/site';
+import { SITE_URL } from '../../data/site';
 
 // Drafts render in dev only, matching the /journal index.
 const entry = await getEntry('journal', Astro.params.slug ?? '');
@@ -51,11 +51,11 @@ const schemas = [
     '@type': 'Article',
     headline: title,
     description: summary,
-    ...(ogCover ? { image: new URL(ogCover.src, site.url).toString() } : {}),
+    ...(ogCover ? { image: new URL(ogCover.src, SITE_URL).toString() } : {}),
     datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
-    author: { '@id': `${site.url}#organization` },
-    publisher: { '@id': `${site.url}#organization` },
+    author: { '@id': `${SITE_URL}#organization` },
+    publisher: { '@id': `${SITE_URL}#organization` },
     ...(tags ? { keywords: tags.join(', ') } : {}),
   },
 ];

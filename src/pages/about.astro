@@ -45,7 +45,11 @@ import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { Image } from 'astro:assets';
-import { site } from '../data/site';
+import { getSite } from '../data/site';
+
+// Contact details, socials and the owner name come from Site settings in the CMS
+// (with the committed fallback), shared with the header and footer.
+const site = await getSite(Astro);
 
 // Headshot for the masthead portrait frame, and the personal snapshots for the
 // "Outside the studio" gallery. All resized into src/assets at build-friendly
