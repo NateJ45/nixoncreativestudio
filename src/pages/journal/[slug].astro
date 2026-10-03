@@ -4,7 +4,8 @@
 /* ============================================================================
    /journal/[slug] | Journal Entry Detail
    ============================================================================
-   One static page per journal entry, generated at build time. Lighter-
+   One server-rendered page per journal entry (looked up from the content
+   collection per request; an unknown slug gets the site 404). Lighter-
    weight than the case study detail layout: single column, no service
    badges, no sidebar TOC. The reading progress bar and reading time
    stamp from the case study toolkit still apply because long journal
@@ -17,7 +18,7 @@
    Transition. All motion is reduced-motion safe via globals.css.
    ============================================================================ */
 
-import { getCollection, render } from 'astro:content';
+import { getEntry, render } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
@@ -25,15 +26,13 @@ import ReadingProgress from '../../components/ReadingProgress';
 import { readingTime } from '../../lib/readingTime';
 import { site } from '../../data/site';
 
-export async function getStaticPaths() {
-  const all = await getCollection('journal');
-  return all.map((entry) => ({
-    params: { slug: entry.id },
-    props: { entry },
-  }));
+// Drafts render in dev only, matching the /journal index.
+const entry = await getEntry('journal', Astro.params.slug ?? '');
+if (!entry || (import.meta.env.PROD && entry.data.draft === true)) {
+  // Real 404 status, rendered with the site's 404 page, never cached.
+  Astro.cache.set(false);
+  return new Response(null, { status: 404 });
 }
-
-const { entry } = Astro.props;
 const { Content } = await render(entry);
 const { title, summary, published, updated, cover, tags } = entry.data;
 

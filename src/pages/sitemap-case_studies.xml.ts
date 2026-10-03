@@ -15,8 +15,6 @@
 import type { APIRoute } from 'astro';
 import { GET as emdashCollectionSitemap } from 'emdash/internal/routes/sitemap-_collection_.xml';
 
-export const prerender = false;
-
 // Matches the end of a /work/<slug> URL that has no trailing slash.
 const WORK_URL_NO_SLASH = /(\/work\/[^/<]+)(<\/loc>)/g;
 

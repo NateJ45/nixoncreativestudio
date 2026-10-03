@@ -37,14 +37,14 @@ A few standards show up in every project, and they are the reason the sites hold
 
 - **Editor-first.** The client owns their content. On a launched site, the CMS mirrors the live pages exactly, so a volunteer can change a headline, swap a photo, or add a page without me.
 - **Accessible by default, not as a cleanup pass.** Real heading order, keyboard support, and color contrast that passes. Several of these sites hold a perfect Lighthouse accessibility score as a build gate.
-- **Fast because it is static where it can be.** Pages are prerendered to HTML and served from the edge; interactivity is added in small, deliberate pieces.
+- **Fast because it is cached at the edge.** Every page is rendered on Cloudflare and then served from a cache close to the visitor, and a publish in the editor clears the right pages at once; interactivity is added in small, deliberate pieces.
 - **Made, not assembled.** Hand-set type and color, real photography, and copy that sounds like a person. The goal is a site that could not be mistaken for anyone else's.
 
 ---
 
 ## How this site is built
 
-- **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'static'`
+- **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'server'` with Cloudflare's route cache
 - **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
 - **React 19** islands for the interactive pieces: full-screen mobile nav, contact form, photo gallery + lightbox, WebGL hero, theme toggle
 - **MDX content collections** for case studies; a JSON-backed collection for the photography set

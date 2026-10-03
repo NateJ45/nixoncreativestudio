@@ -12,9 +12,12 @@ Registry, not a changelog: when a suite changes, edit the row.
 Brought up to the family test standard on 2026-09-06 (WCP is the reference
 implementation; reid-design-site and mas-monograms carry the same shape).
 
-**The site is a hybrid now (EmDash migration).** `/`, `/work/`, `/work/<slug>/`,
-`/about/`, `/services/` and `/rss.xml` are server-rendered from D1 + R2, so
-`dist/client` is not the whole site and nothing here can serve it statically.
+**Every page is server-rendered (EmDash migration, fully since CMS-DESIGN PR 2).**
+Pages are rendered from D1 + R2 by the Worker, so `dist/client` holds only assets
+and nothing here can serve the site statically. A route cache (Cloudflare Workers
+Cache) sits in front of the Worker; on a fresh preview the first request per URL is
+a `Cf-Cache-Status: MISS` (a render) and later ones are `HIT`s, so a test or audit
+that needs the uncached worst case adds a fresh query string each time (the key includes it, so `?x=<random>` is always a MISS).
 Playwright, the link check and Lighthouse run against a **URL**: in CI, the Worker
 version preview that `ci.yml` uploads (not promoted); by hand, the `ncs-ci` Worker (`https://ncs-ci.nathanjnixon86.workers.dev`).
 See CLAUDE.md Gotcha 12.
@@ -25,9 +28,9 @@ See CLAUDE.md Gotcha 12.
 | Lint       | `npm run lint`                                          | `ci.yml` (build job)       | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                                                                   |
 | Format     | `npm run format:check`                                  | `ci.yml` (build job)       | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                                                                               |
 | Unit tests | `npm run test:unit`                                     | `ci.yml` (build job)       | `src/lib/*.test.ts` (see below)                                                                                                                                                                             |
-| Build      | `npm run build`                                         | `ci.yml` (build job)       | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                                                                            |
+| Build      | `npm run build`                                         | `ci.yml` (build job)       | The whole site compiles (nothing is prerendered; pages render per request); every content-collection entry resolves; image and OG generation succeed                                                        |
 | Preview    | (CI only)                                               | `ci.yml`, `lighthouse.yml` | Uploads the built Worker as a non-promoted version with a preview alias; the three gates below test that URL. Skipped with a warning without the Cloudflare secrets                                         |
-| Link check | `LINKCHECK_URL=<url> npm run check:links`               | `ci.yml` (build job)       | linkinator over the preview URL: every internal link resolves (300+ links; off-site URLs are skipped). Falls back to `dist/client` (prerendered pages only) when unset                                      |
+| Link check | `LINKCHECK_URL=<url> npm run check:links`               | `ci.yml` (build job)       | linkinator over the preview URL: every internal link resolves (300+ links; off-site URLs are skipped). Falls back to `dist/client` (no HTML now, so it finds almost nothing) when unset                     |
 | Playwright | `PLAYWRIGHT_BASE_URL=<url> npm test`                    | `ci.yml` (test job)        | smoke (incl. a real 404 for an unknown case study), axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone, over 20 routes (see below) |
 | Lighthouse | `npx lhci autorun --config=lighthouserc.generated.json` | `lighthouse.yml`           | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs on the preview                                  |
 | Parity     | `npm run parity compare`                                | **no** (by design)         | Rendered-HTML drift against a committed baseline                                                                                                                                                            |
@@ -55,15 +58,15 @@ tried as a stand-in and rejected: it starts with an empty local D1/R2, so every
 server page renders without content (and `--remote` would read production
 bindings, which a test run should not). CI installs chromium and webkit and runs both projects.
 
-| File                     | Covers                                                                                                                                                                                                                                                                                                                  |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `routes.ts`              | The route list every sweep iterates: every page, prerendered or server-rendered, with the three case studies of the reduced `ncs-ci` CI sample listed individually (CMS content can break one page and not its siblings; production has nine). Add a route when a page ships or a case study is added to the CI dataset |
-| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                                                                                                  |
-| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; an unknown `/work/<slug>/` returns a real 404 with the not-found title                                                                                                                                                                                   |
-| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                                                                                              |
-| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                                                                                      |
-| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                                                                                      |
-| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                                                                                      |
+| File                     | Covers                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`              | The route list every sweep iterates: every page (all server-rendered), with the three case studies of the reduced `ncs-ci` CI sample listed individually (CMS content can break one page and not its siblings; production has nine). Add a route when a page ships or a case study is added to the CI dataset |
+| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                                                                                        |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; an unknown `/work/<slug>/` returns a real 404 with the not-found title                                                                                                                                                                         |
+| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                                                                                    |
+| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                                                                            |
+| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                                                                            |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                                                                            |
 
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
@@ -142,9 +145,17 @@ list.
 (lhci does not expand environment variables), and `scripts/lhci-config.mjs`
 writes the git-ignored `lighthouserc.generated.json` with the preview URL filled
 in. The thresholds, the 3-run median and the gates are unchanged. `/404.html`
-became `/404`: the Worker serves the prerendered not-found page there with
-status 200, while a real unknown URL answers 404, which Lighthouse refuses to
-audit.
+became `/404/`: `src/worker.ts` answers the not-found page with status 200 when
+it is requested by that exact path, while a real unknown URL answers 404, which
+Lighthouse refuses to audit.
+
+The route cache changes what the 3-run median means: the first run against a
+fresh preview is a MISS (cold isolate plus D1 reads) and the next two are HITs, so
+the median is the cached page, which is what visitors get. Measured on ncs-ci
+(2026-10-03, Lighthouse CLI mobile, same machine before and after): homepage LCP
+median 3.5s before and 3.2s after (6 runs each), case study 3.9s before and 3.8s
+after, `/privacy/` 2.0s before and 1.5 to 2.0s after, `/about/` 3.3s before and
+2.1 to 2.3s after.
 
 One case study stands in for the rest, since they share a layout (the
 Playwright sweeps list every case study in the CI sample; Lighthouse does not, because each audit costs

@@ -20,13 +20,13 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 
 ---
 
-## Hybrid site on EmDash (live since 2026-10-03)
+## Server-rendered site on EmDash (live since 2026-10-03; fully server-rendered since CMS-DESIGN PR 2)
 
-Read this first. Sections below that still describe a fully static site, MDX case studies, blur placeholders or `dist/client` as the whole site are superseded by it.
+Read this first. Sections below that still describe a fully static site, MDX case studies, blur placeholders or `dist/client` as the site are superseded by it.
 
 - **Case studies live in EmDash** (Cloudflare's CMS: D1 database, R2 media, KV sessions), not in git. The collection is `case_studies`; the admin is at `/_emdash/admin/` (passkey login). Taxonomies: `service`, `topic`, `stack`. The schema is reproducible from `seed/seed.json` and `scripts/lib/case-studies-schema.mjs`; the shape of every field is in `docs/EMDASH-SCHEMA.md`. The reader is `src/lib/caseStudies.ts`.
-- **Hybrid rendering:** pages that read the CMS (`/`, `/work/`, `/work/[slug]/`, `/about/`, `/services/`, `/rss.xml`, `/sitemap-case_studies.xml`) are server-rendered (`prerender = false`); everything else is prerendered. `dist/client` is no longer the whole site.
-- **Images from the CMS** are resized at request time by the Cloudflare Images binding (`imageService: { build: 'compile', runtime: 'cloudflare-binding' }`). Two silent failures to know: a host missing from `image.remotePatterns` serves full-size originals, and any resize request 4096 px tall or more returns the untouched original (tall screenshots use `src/components/emdash/ScrollShot.astro`, width only). `src/worker.ts` adds a 30-day cache header and the edge cache for `/_image` and media files.
+- **Everything is server-rendered** (`output: 'server'`, CMS-DESIGN PR 2, 2026-10-03). No page is prerendered, so `dist/client` holds only assets (`/_astro`, `/og`, icons, `robots.txt`, `sitemap-*.xml`), never HTML. Speed comes from the **route cache** (Astro route caching on Cloudflare's Workers Cache, `cache: { provider: cacheCloudflare() }` in `astro.config.mjs`): `BaseLayout` gives every public page a lifetime (`cachePublicPage()` in `src/lib/routeCache.ts`, 5 minutes plus a week of stale-while-revalidate), the CMS readers add the cache tags of the rows each page rendered (`getCaseStudies(Astro.cache)`), and a publish in the admin purges those tags. A new page needs nothing: use `BaseLayout` and it is cached; a new CMS reader must take `Astro.cache` and call `cache.set(cacheHint)` or the page is not purged on publish. See Gotcha 15 for the traps. The editor toolbar is `toolbar: 'client'` so cached HTML is identical for everyone.
+- **Images from the CMS** are resized at request time by the Cloudflare Images binding (`imageService: { build: 'compile', runtime: 'cloudflare-binding' }`). Two silent failures to know: a host missing from `image.remotePatterns` serves full-size originals, and any resize request 4096 px tall or more returns the untouched original (tall screenshots use `src/components/emdash/ScrollShot.astro`, width only). `src/worker.ts` adds a 30-day cache header and the edge cache for `/_image` and media files, plus the trailing-slash redirect, the route-cache safety net and the security headers on HTML (Gotcha 15). Local images on formerly static pages (`/about`, `/services`, `/photography`) now go through the same runtime resizer instead of build-time files.
 - **Config:** the top level of `wrangler.jsonc` is PRODUCTION (Worker `nixoncreativestudio`, D1 `ncs-emdash-prod`, R2 `ncs-emdash-media-prod`). The `ci` environment is the small dedicated CI Worker `ncs-ci` (D1 `ncs-ci`, R2 `ncs-ci-media`, KV `ncs-ci-sessions`, a three-case-study sample, see docs/TESTING.md); GitHub Actions builds with `CLOUDFLARE_ENV=ci`, so the required checks never read production data. Never run `wrangler deploy` locally without `CLOUDFLARE_ENV=ci`: production deploys only from Workers Builds on a push to `main`.
 - **The CI dataset is rebuilt from scripts, never hand-copied.** `npm run ci-dataset` refreshes `ncs-ci` from the committed snapshot (`scripts/ci-dataset/rows.sql`, `media.json`, `terms.json`, `fixtures.sql`); `-- --from-scratch` drops and rebuilds it after a seed change; `npm run ci-dataset:snapshot` re-reads production (CLI login, read-only) to rewrite the snapshot. These scripts cannot write to production. See `scripts/ci-dataset/README.md` and docs/TESTING.md.
 - **Tests, Lighthouse and the link check run against a Worker preview URL** (`PLAYWRIGHT_BASE_URL`, `LINKCHECK_URL`), not a static folder. See Testing below and `docs/TESTING.md`.
@@ -37,7 +37,7 @@ Read this first. Sections below that still describe a fully static site, MDX cas
 
 ## Stack
 
-- Astro 7 with TypeScript in strict mode and `output: 'static'` plus `prerender = false` on the pages that read EmDash (see the hybrid section above)
+- Astro 7 with TypeScript in strict mode and `output: 'server'` with the Cloudflare route cache (see the section above)
 - MDX content collections for case studies and journal entries; JSON-backed collection for the photography catalogue
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
 - React 19 islands for anything interactive: full-screen mobile nav panel, contact form handler, photo lightbox, theme toggle, WebGL hero canvas, testimonials carousel, back-to-top, copy-email, /work filter chips. Astro components for everything static
@@ -61,7 +61,7 @@ Read this first. Sections below that still describe a fully static site, MDX cas
 - `src/data/site.ts` as the single source of truth for contact info (name, email, phone, address, studio name, social URLs, tagline, domain) plus the optional `bookingUrl` and `newsletterUrl` that gate the Cal.com and Newsletter scaffolds
 - Web3Forms for the contact form. Spam protection is the form's hidden honeypot field (`botcheck`) alone; the hCaptcha widget was removed. To re-add it, restore the `.h-captcha` div, the `js.hcaptcha.com/1/api.js` script tag, and the captcha gate in the contact form's submit handler, then turn hCaptcha back on in the Web3Forms dashboard (Web3Forms supports hCaptcha only, not Cloudflare Turnstile or Google reCAPTCHA). Cloudflare Web Analytics for privacy-friendly traffic
 - eslint (flat config) + prettier for linting and formatting, `node --test` unit suites in `src/lib/*.test.ts`, Playwright + axe-core suites in `tests/` (smoke, accessibility in both themes, reflow), linkinator for the internal link check, and a GitHub Actions CI run on every push and PR. See "Testing, linting, and CI" below
-- Cloudflare for hosting: a Worker serving the static build as assets (see `wrangler.jsonc`; build command `npm run build`, output `dist/`)
+- Cloudflare for hosting: a Worker that renders every page and serves `dist/client` as assets (see `wrangler.jsonc`; build command `npm run build`, output `dist/`), with Workers Cache in front of it
 - GitHub for version control
 
 ---
@@ -197,9 +197,9 @@ WCP is the reference for this standard; reid-design-site and mas-monograms carry
 - `npm run lint` runs eslint (flat config in `eslint.config.js`) over `src` and `scripts`. A hard gate in CI since 2026-09-06 (0 errors; a few unused-variable warnings remain and do not fail it). The old `eslint-plugin-astro` false positive (an HTML comment inside a `{ ... }` expression read as a JSX error) is gone because every such comment is a JSX comment now. Inside a template expression, comment with `{/* */}`, never `<!-- -->`.
 - `npm run format` runs prettier across the repo (family config in `.prettierrc`: single quotes, semis, trailing commas, printWidth 100, `prettier-plugin-astro` + `prettier-plugin-tailwindcss`; ignore list in `.prettierignore`). `npm run format:check` is the CI form. `prettier-plugin-astro` cannot parse a `<script>` nested inside a template expression, so a conditional script goes in its own component and the condition wraps the component (`ComingSoonGate.astro`, `src/components/analytics/`).
 - `npm run check` is the quick gate: `astro check && npm run lint`. `npm run check:full` adds the unit tests and the build.
-- `npm run check:links` (`scripts/check-links.mjs`) runs linkinator over the URL in `LINKCHECK_URL` (CI: the Worker preview); every internal link must resolve (off-site URLs are skipped). With `LINKCHECK_URL` unset it falls back to `dist/client`, which holds only the prerendered pages, so server-rendered links will report broken there; treat that mode as a partial sanity pass. The log must say "scanned N links" with N in the hundreds.
+- `npm run check:links` (`scripts/check-links.mjs`) runs linkinator over the URL in `LINKCHECK_URL` (CI: the Worker preview); every internal link must resolve (off-site URLs are skipped). With `LINKCHECK_URL` unset it falls back to `dist/client`, which holds no HTML now that every page is server-rendered, so that mode finds almost nothing; always set `LINKCHECK_URL`. The log must say "scanned N links" with N in the hundreds.
 - `.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and by hand. Job `build`: `npm ci`, drift check, `astro check`, lint, format check, unit tests, build, then **upload the Worker as a non-promoted version** (`.github/actions/preview-version`: `npx wrangler versions upload --preview-alias ci-<branch or pr-N>`, URL parsed from the `WRANGLER_OUTPUT_FILE_PATH` ndjson `version-upload` entry, falling back to the "Version Preview Alias URL:" log line) and run the link check against that URL. Job `test` (needs `build`): Playwright browsers, `npm test` with `PLAYWRIGHT_BASE_URL` set to the preview URL, and the `playwright-report/` artifact (14 days). Needs repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (docs/PENDING.md); without them (fork PRs) the upload, link check and `test` job are skipped with a warning annotation, not failed.
-- `.github/workflows/lighthouse.yml` runs Lighthouse CI (`@lhci/cli`, config in `lighthouserc.json`) against a Worker version preview (same `preview-version` action, alias prefix `lh`) on pushes to `main` and on PRs; `lighthouserc.json` is a template whose URLs start with `${LHCI_BASE_URL}`, and `scripts/lhci-config.mjs` writes the git-ignored `lighthouserc.generated.json` that lhci reads. The audit list is unchanged except `/404.html` became `/404` (the Worker serves the prerendered not-found page there with status 200; a real unknown URL answers 404 and Lighthouse refuses 4xx pages). **Accessibility is a hard gate at minScore 1** (the 100-a11y bar the studio sells), and so are LCP under 4.5s and CLS under 0.1; performance / best-practices / SEO scores and total byte weight are warnings so normal CI variance doesn't block a PR. It runs on `ubuntu-latest`; see Gotcha 9 for why the local run is not trustworthy on Windows.
+- `.github/workflows/lighthouse.yml` runs Lighthouse CI (`@lhci/cli`, config in `lighthouserc.json`) against a Worker version preview (same `preview-version` action, alias prefix `lh`) on pushes to `main` and on PRs; `lighthouserc.json` is a template whose URLs start with `${LHCI_BASE_URL}`, and `scripts/lhci-config.mjs` writes the git-ignored `lighthouserc.generated.json` that lhci reads. The audit list is unchanged except `/404.html` became `/404/` (`src/worker.ts` answers the not-found page with status 200 when it is requested by that exact path; a real unknown URL answers 404 and Lighthouse refuses 4xx pages). The first run per URL on a fresh preview is a route-cache MISS and the next two are HITs, so the median of three measures the cached page. **Accessibility is a hard gate at minScore 1** (the 100-a11y bar the studio sells), and so are LCP under 4.5s and CLS under 0.1; performance / best-practices / SEO scores and total byte weight are warnings so normal CI variance doesn't block a PR. It runs on `ubuntu-latest`; see Gotcha 9 for why the local run is not trustworthy on Windows.
 - **There is no `staging` branch** (retired 2026-10-03). Work on a short-lived branch and open a PR: CI and Lighthouse run on the PR against a Worker preview, Cloudflare also gives every branch its own preview URL, and a bad change is undone with `git revert` or the Deployments tab rollback. The old `deploy-staging.yml` and the Dependabot staging fast-forward were removed.
 - `.github/workflows/uptime.yml` curls the live site's key routes hourly and fails the run if any does not end at 200. Gated on the `SITE_URL` repo variable, which is not set yet (see `docs/PENDING.md`). Schedule is on because the repo is public and Actions minutes are free there.
 - `npm run parity capture` / `compare` is the **rendered-HTML parity harness** (`scripts/page-parity.mjs`, baselines committed in `scripts/.parity/`). It never builds; you build, it reads `dist/client`, or with `--url <base>` it fetches the rendered HTML over HTTP so the server-rendered pages (which are not in `dist/client`) can be compared too (page list = the committed snapshot names, plus `--routes /a/,/b/`). Baselines were captured from the static build and have NOT been re-captured for the hybrid site, so expect DIFFs on migrated pages. Reach for it on any change that is supposed to be render-neutral. Deliberately not in CI, because its baselines are meant to be re-captured when markup legitimately changes and a gate that gets re-baselined is a gate that gets rubber-stamped.
@@ -394,7 +394,7 @@ To add a new case study: drop an `.mdx` file in `src/content/case-studies/`, fil
 
 ### Routes summary
 
-Static routes generated at build time:
+Routes (all server-rendered per request, route-cached):
 
 | Path               | Source                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------- |
@@ -469,12 +469,12 @@ Site visitors include potential clients (small businesses, churches, schools) an
 - Production: pushes to `main` trigger a Cloudflare build and deploy that serves `nixoncreativestudio.com`.
 - Previews: any other branch gets its own `*-nixoncreativestudio.nathanjnixon86.workers.dev` URL.
 - Build command: `npm run build`. Output directory: `dist`.
-- `output: 'static'` in `astro.config.mjs` prerenders every page to HTML at build time. The `@astrojs/cloudflare` adapter is installed but inert for static pages. To opt a single page into server rendering, add `export const prerender = false` in that page's frontmatter.
-- The adapter is configured with `imageService: { build: 'compile', runtime: 'cloudflare-binding' }`: `<Image />` on prerendered pages is optimized at build time into static `dist/_astro/*.webp` files. Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
+- `output: 'server'` in `astro.config.mjs`: every page renders on the Worker per request and is cached by the route cache (the Workers Cache needs `cache.enabled`, which the adapter writes into the generated `dist/server/wrangler.json` because the cache provider is set; wrangler 4.69 or newer). Do not add `export const prerender = true` to a page without reading Gotcha 15: a prerendered page would show a stale copy of anything the CMS owns.
+- The adapter is configured with `imageService: { build: 'compile', runtime: 'cloudflare-binding' }`: with nothing prerendered, `<Image />` resizes at request time through the Images binding (`/_image`, cached 30 days by `src/worker.ts`). Do not remove the binding: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
 
 ### Environment variables
 
-Set in the Cloudflare dashboard → **Settings → Variables and Secrets** (the Build section, not the Runtime section, because pages are prerendered):
+Set in the Cloudflare dashboard → **Settings → Variables and Secrets** (the Build section, not the Runtime section: `PUBLIC_*` values are inlined into the bundle at build time, even though pages render per request):
 
 - `PUBLIC_WEB3FORMS_KEY` — contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action and shows an inline notice.
 - `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics token from dash.cloudflare.com → Analytics & Logs → Web Analytics. Without it the analytics beacon doesn't render.
@@ -705,10 +705,9 @@ Every entry below was measured, not assumed.
     caught it; if a sibling repo "fixed" the same failure by skipping the check
     on webkit, that repo probably still ships the bug.
 
-12. **`dist/client` is no longer the whole site.** Since the EmDash migration
-    the site is a hybrid: `/`, `/work/`, `/work/<slug>/`, `/about/`,
-    `/services/` and `/rss.xml` are server-rendered from D1 + R2 and exist only
-    on the running Worker. Anything that assumed a static tree is wrong for them:
+12. **`dist/client` is not the site, it is only the assets.** Since the EmDash
+    migration pages are rendered from D1 + R2 by the Worker (hybrid until
+    CMS-DESIGN PR 2, now every page: nothing is prerendered). Anything that assumed a static tree is wrong for them:
     `http-server dist/client` (404s on `/`), a linkinator crawl of `dist/client`
     (reports the server pages as broken), lhci `staticDistDir`, and the parity
     harness's default mode. Playwright, the link check and Lighthouse therefore
@@ -749,3 +748,43 @@ Every entry below was measured, not assumed.
     machine reads higher than CI in absolute terms (GPU start-up delays first
     paint by about a second), so compare before and after on the same machine,
     never against the CI number.
+
+15. **The route cache is a second layer in front of the Worker, and it stores
+    whatever a response asks for.** Added 2026-10-03 (CMS-DESIGN PR 2). The
+    Cloudflare adapter's cache provider turns on Workers Cache
+    (`cache.enabled` in the generated wrangler config); it works on workers.dev
+    previews too, so `Cf-Cache-Status: MISS` then `HIT` on two GETs proves it.
+    The cache is partitioned by Worker version, so every deploy starts cold, and
+    the first visitor to a URL pays a render (about 1 to 1.6s on ncs-ci: cold
+    isolate plus D1 reads) instead of the 90ms a static file took. Warm TTFB is
+    about 80ms, below the static numbers. Traps, each one measured or read from
+    source rather than assumed:
+    - **No global `routeRules`.** The design sketch had `'/[...path]'`; it also
+      matches `/_emdash/**`, and the adapter only stamps `no-store` on a response
+      that has no cache lifetime, so admin and API responses would become
+      cacheable. Pages opt in through `cachePublicPage()` in BaseLayout instead.
+    - **A page is purged only by the tags it carries.** A new CMS reader that does
+      not call `cache.set(cacheHint)` leaves its page uncached-by-tag: it expires
+      on the lifetime (5 minutes), not on publish. `getCaseStudies(Astro.cache)`
+      is the pattern. EmDash's publish route calls `cache.invalidate({ tags:
+[collection, id] })`.
+    - **Never cache a non-200.** The cache stores a 404 as happily as a 200, so a
+      slug published after someone requested it would keep returning 404. Unknown
+      slugs call `Astro.cache.set(false)`, and `src/worker.ts` forces
+      `Cloudflare-CDN-Cache-Control: no-store` on anything that is not a clean 200
+      or that sets a cookie. `?_edit` and `?_preview` URLs are never cached.
+    - **`public/_headers` no longer reaches HTML.** It only applies to files the
+      assets binding serves, and no HTML is a file now, so `src/worker.ts` adds
+      the same five security headers to every HTML response outside `/_emdash`.
+      Keep the two lists in step.
+    - **Trailing slashes.** The static asset handler used to redirect `/about` to
+      `/about/`; `src/worker.ts` does it now (301, skipping `/_*` and
+      extension paths). `trailingSlash: 'always'` in astro.config was rejected
+      because it would also redirect EmDash's `/_emdash/api/*` routes.
+    - **`/404/` answers 200, an unknown URL answers 404**, both from the same
+      page, because Lighthouse refuses 4xx pages and the gate audits that template.
+    - **Not proven on the live zone yet:** that a real publish in the admin
+      purges the cached page. The tag wiring was read from EmDash's source and
+      the cache itself was measured on ncs-ci, but the edit proof needs an admin
+      login, so it is a first-deploy check (docs/PENDING.md). Until it passes,
+      the lifetime stays at 5 minutes so a missed purge costs minutes, not a day.

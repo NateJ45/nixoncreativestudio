@@ -48,13 +48,10 @@ import Hero from '../components/Hero.astro';
 import SelectedWork from '../components/SelectedWork.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
-import { CACHE_CONTROL } from '../lib/caseStudies';
 
-// Server-rendered, not prerendered: the hero client marquee and Selected Work read case studies from the EmDash
-// CMS (D1) at request time. Short CDN cache; see CACHE_CONTROL in
-// src/lib/caseStudies.ts.
-export const prerender = false;
-Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
+// Server-rendered like every page (CMS-DESIGN PR 2). The hero client marquee and Selected Work read case studies from EmDash (D1) at request time.
+// The route cache is tagged with the case studies this page read (BaseLayout sets
+// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
 ---
 
 <BaseLayout title="Nixon Creative Studio | Strategy-led design and photography">

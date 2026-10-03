@@ -9,6 +9,7 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 import emdash from 'emdash/astro';
+import { cacheCloudflare } from '@astrojs/cloudflare/cache';
 import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 
 // =============================================================================
@@ -16,10 +17,10 @@ import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 // =============================================================================
 // `site` is the canonical production URL. Sitemap and OG tags read from it.
 //
-// `output: 'static'` prerenders every page to plain HTML at build time. The
-// Cloudflare adapter stays installed so individual pages can opt into server
-// rendering later via `export const prerender = false`, but in the static
-// default it's effectively inert for this site.
+// `output: 'server'`: every page renders on the Worker per request (CMS-DESIGN
+// PR 2). Nothing is prerendered, so no page can show a stale copy of content
+// that lives in EmDash (contact email, legal pages, case studies). Speed comes
+// from the route cache (`cache` below), not from static files.
 //
 // Integrations (order matters: expressiveCode must precede mdx):
 //   - expressiveCode : themed code blocks in MDX (journal dev posts). Maps its
@@ -41,7 +42,17 @@ import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 // =============================================================================
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
-  output: 'static',
+  output: 'server',
+  // Route cache on Cloudflare's Workers Cache. A page opts in by calling
+  // Astro.cache.set(): BaseLayout sets the lifetime for every page that uses
+  // it, and the CMS readers (src/lib/caseStudies.ts) add the tags of the rows
+  // each page rendered. A publish in the EmDash admin purges those tags, so an
+  // edit is live on the next request. The cache is partitioned by Worker
+  // version, so every deploy starts cold. Deliberately NO global `routeRules`
+  // entry (the design sketch had '/[...path]'): that rule also matches
+  // /_emdash/** and would make signed-in admin responses cacheable. See
+  // docs/EMDASH.md, "Route cache".
+  cache: { provider: cacheCloudflare() },
   // Sessions are ON for the EmDash trial: admin sign-in needs a session driver.
   // The Cloudflare adapter supplies one (KV binding "SESSION") when `session`
   // is left unset. The live static site had `session: false`.
@@ -95,9 +106,12 @@ export default defineConfig({
       styleOverrides: { borderRadius: '0.5rem' },
     }),
     mdx(),
-    // @astrojs/sitemap only lists PRERENDERED routes. Pages that read the CMS
-    // (home, /work/, /about/, /services/) are server-rendered now, so they are
-    // listed by hand via customPages. The case studies themselves come from
+    // @astrojs/sitemap only lists PRERENDERED routes, and since CMS-DESIGN PR 2
+    // nothing is prerendered, so EVERY public page is listed by hand via
+    // customPages. Add a line here when a page ships (and journal entries, once
+    // they exist, via a sitemap-posts.xml route like the case-studies one,
+    // CMS-DESIGN PR 12). Same set the prerendered sitemap listed before PR 2. The
+    // case studies themselves come from
     // EmDash's own per-collection sitemap (needs the `seo` support and a
     // `/work/{slug}/` URL pattern on the case_studies collection), added to the
     // same sitemap-index.xml via customSitemaps so robots.txt and Search
@@ -108,6 +122,13 @@ export default defineConfig({
         'https://nixoncreativestudio.com/work/',
         'https://nixoncreativestudio.com/about/',
         'https://nixoncreativestudio.com/services/',
+        'https://nixoncreativestudio.com/photography/',
+        'https://nixoncreativestudio.com/journal/',
+        'https://nixoncreativestudio.com/contact/',
+        'https://nixoncreativestudio.com/colophon/',
+        'https://nixoncreativestudio.com/privacy/',
+        'https://nixoncreativestudio.com/accessibility/',
+        'https://nixoncreativestudio.com/coming-soon/',
       ],
       customSitemaps: ['https://nixoncreativestudio.com/sitemap-case_studies.xml'],
     }),
@@ -117,6 +138,10 @@ export default defineConfig({
       database: d1({ binding: 'DB' }),
       storage: r2({ binding: 'MEDIA' }),
       sandboxRunner: sandbox(),
+      // Public HTML is identical for everyone, so the route cache can serve it
+      // to editors too. Editors get an Edit pill that reloads the page with
+      // ?_edit, which is always rendered fresh and never cached.
+      toolbar: 'client',
     }),
   ],
 

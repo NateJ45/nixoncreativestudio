@@ -1,8 +1,8 @@
 ---
 // Safe to edit. Page content is read from the EmDash CMS (collection
 // `case_studies`); add or edit entries in the EmDash admin to grow the list.
-// Server-rendered on purpose (EmDash content lives in D1), with a short CDN
-// cache; see CACHE_CONTROL in src/lib/caseStudies.ts.
+// Server-rendered like every page. The route cache is tagged with the case studies
+// this page read (src/lib/routeCache.ts), so a publish purges it.
 /* ============================================================================
    /work | Selected Work Index
    ============================================================================
@@ -18,14 +18,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import EmDashCover from '../../components/emdash/EmDashCover.astro';
 import WorkFilter from '../../components/WorkFilter';
-import { getCaseStudies, CACHE_CONTROL } from '../../lib/caseStudies';
-
-// EmDash content is read per request, so this page is not prerendered.
-export const prerender = false;
-Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
+import { getCaseStudies } from '../../lib/caseStudies';
 
 // Already sorted newest first by project date.
-const entries = await getCaseStudies();
+const entries = await getCaseStudies(Astro.cache);
 
 // Entries that ship a real, public live URL, for the "open any of them" proof
 // wall below the cards. The strongest trust signal a web vendor has is work a
