@@ -40,7 +40,6 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import ThemeToggle from './ThemeToggle';
-import { site } from '../data/site';
 
 // Social glyphs as inline SVG. lucide-react dropped its brand/logo icons in
 // recent versions (trademark reasons), so these are the classic Feather
@@ -86,30 +85,32 @@ function LinkedinIcon({ className }: { className?: string }) {
 export interface MobileNavLink {
   label: string;
   href: string;
+  /**
+   * Short line shown under the big label: the menu item's "Title attribute" in
+   * the EmDash menu editor. Honest and tight, it names what the page actually
+   * is. Missing means the label renders alone.
+   */
+  descriptor?: string;
+  /** "_blank" opens the item in a new tab. */
+  target?: string;
 }
 
+// Every value below is passed in by Header.astro from the Site settings entry in
+// the CMS. This file is a React island, so it must not import the site module
+// (that would pull the CMS reader into the browser bundle); props are the pattern.
 export interface MobileNavProps {
   links: MobileNavLink[];
   /** Accessible label announced to assistive tech when the panel opens. */
   studioName: string;
+  /** Text of the "Start a project" button. */
+  ctaLabel: string;
+  email: string;
+  emailHref: string;
+  phone: string;
+  phoneHref: string;
+  instagramUrl: string;
+  linkedinUrl: string;
 }
-
-// Short descriptor shown under each big nav label, keyed by the exact href
-// from Header. Honest and tight: it names what the page actually is, never a
-// page we don't have. A missing key just renders the label with no descriptor.
-const DESCRIPTIONS: Record<string, string> = {
-  '/work/': 'Selected client projects',
-  '/services': 'What I build, and how',
-  '/about': 'The studio, and me',
-  '/journal/': 'Notes on the work',
-  '/contact': 'Email, phone, or the form',
-};
-
-// Social destinations, driven from site.ts so a network change flows here.
-const socials = [
-  { label: 'Instagram', href: site.social.instagram, Icon: InstagramIcon },
-  { label: 'LinkedIn', href: site.social.linkedin, Icon: LinkedinIcon },
-];
 
 // Shared focus ring for the custom links inside the panel. Theme-aware so the
 // ring + offset stay visible on either surface: an accent (NCS blue) ring on a
@@ -119,7 +120,23 @@ const focusRing =
   'focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-soft ' +
   'dark:focus-visible:ring-secondary dark:focus-visible:ring-offset-primary';
 
-export default function MobileNav({ links, studioName }: MobileNavProps) {
+export default function MobileNav({
+  links,
+  studioName,
+  ctaLabel,
+  email,
+  emailHref,
+  phone,
+  phoneHref,
+  instagramUrl,
+  linkedinUrl,
+}: MobileNavProps) {
+  // Social destinations. A network change is an edit in Site settings.
+  const socials = [
+    { label: 'Instagram', href: instagramUrl, Icon: InstagramIcon },
+    { label: 'LinkedIn', href: linkedinUrl, Icon: LinkedinIcon },
+  ];
+
   // Sheet owns its open state; link clicks set it back to false so the panel
   // doesn't linger over the next page.
   const [open, setOpen] = useState<boolean>(false);
@@ -266,13 +283,15 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             aria-label="Mobile primary"
             className="relative z-10 mt-l flex flex-col divide-y divide-border border-y border-border dark:divide-white/10 dark:border-white/10"
           >
-            {links.map(({ label, href }, i) => {
+            {links.map(({ label, href, descriptor, target }, i) => {
               const active = isActive(href);
-              const desc = DESCRIPTIONS[href];
+              const desc = descriptor;
               return (
                 <a
                   key={href}
                   href={href}
+                  target={target}
+                  rel={target === '_blank' ? 'noopener noreferrer' : undefined}
                   onClick={() => setOpen(false)}
                   aria-current={active ? 'page' : undefined}
                   className={`mnav-item group flex items-center justify-between gap-m rounded-md py-4 no-underline ${focusRing}`}
@@ -318,7 +337,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
           <div className="mnav-item relative z-10 mt-l" style={delay(140 + links.length * 55 + 40)}>
             <Button asChild variant="brand" size="cta" className="shine w-full">
               <a href="/contact" onClick={() => setOpen(false)}>
-                Start a project
+                {ctaLabel}
               </a>
             </Button>
           </div>
@@ -335,16 +354,16 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
             </p>
             <div className="mt-s flex flex-col gap-1">
               <a
-                href={site.emailHref}
+                href={emailHref}
                 className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 dark:text-secondary ${focusRing}`}
               >
-                {site.email}
+                {email}
               </a>
               <a
-                href={site.phoneHref}
+                href={phoneHref}
                 className={`inline-flex min-h-11 w-fit items-center rounded-sm text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 dark:text-secondary ${focusRing}`}
               >
-                {site.phone}
+                {phone}
               </a>
             </div>
 

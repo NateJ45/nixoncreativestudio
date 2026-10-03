@@ -96,6 +96,14 @@ from a shell where `gh` is logged in. After adding, push a branch and confirm th
 log of the "Upload Worker preview version" step ends with a `Preview: https://ci-...`
 line.
 
+### Load the PR 4 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 4 (Site settings and menus) ships safe with production empty, because every read falls back to the committed JSON. Until the data is loaded, the footer, header, phone menu, JSON-LD and feed read from `cms/content/` and the admin's Site settings screen and Menus do not exist yet or are empty, so an edit there changes nothing.
+
+The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 4 data") and `docs/LAUNCH-RUNBOOK.md`. It also needs `npx emdash login`, then the CI follow-up (add `site_settings` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed, rebuild `ncs-ci`). Delete this row after the edit proof (change the footer "Currently" line, publish, see it live, restore from History). This is also the first real run of the schema applier and content loader, so it closes row 7 below if both reruns print only `unchanged`. Also confirm there that the log line `[cms] site_settings/site is missing or unpublished` stops appearing in Workers observability.
+
+Decision for Nathan on the way: the design (CMS-DESIGN 1.2) listed a `footer_blurb` field, but the footer has no brand paragraph today (its bottom row is the tagline), so it was left out rather than add a field that edits nothing. Say if you want a footer paragraph; it is a small follow-up.
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.

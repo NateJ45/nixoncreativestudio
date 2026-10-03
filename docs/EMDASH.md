@@ -319,3 +319,22 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - The create-collection endpoint rejects `titleField` and `commentsEnabled`; they are update-only, and `titleField` must name an existing field. The applier therefore creates, adds fields, then PUTs the full settings.
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
+
+## Site settings and menus (CMS-DESIGN PR 4, 2026-10-03)
+
+The first content PR: the shared chrome reads from the CMS. Design: docs/CMS-DESIGN.md sections 1.2 and 1.3 and "PR 4 notes".
+
+| What                                                                                                                                              | Where it is edited                                                                                      | How the site reads it                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Contact details, socials, tagline, footer "Currently" line, default closing-banner copy, header button text, default meta description, feed title | Admin, **Site settings** (collection `site_settings`, one entry `site`; `cms/schema/site_settings.mjs`) | `getSite(Astro)` in `src/data/site.ts`, one read per request |
+| Header and footer navigation                                                                                                                      | Admin, **Menus**, `primary` and `footer`                                                                | `getMenuItems('primary' or 'footer')` in `src/lib/cms.ts`    |
+| Domain and canonical URL                                                                                                                          | Code: `SITE_DOMAIN`, `SITE_URL` in `src/data/site.ts`                                                   | Imported where only the origin is needed                     |
+
+Behaviour worth knowing:
+
+- **Fallback.** A missing, unpublished or unreadable entry or menu serves the committed `cms/content/site_settings.json` and `menus.json`, and logs `[cms] ... serving the committed fallback`. A blank required field in the admin counts as unreadable (the whole entry falls back rather than a half-empty footer). An absent collection (production today, before the data is loaded) is handled the same way, so no page errors.
+- **Production is still empty.** The schema and content were committed but not loaded (no admin token). Load them with the commands in docs/CMS-DESIGN.md 2.6 ("PR 4 data") and docs/LAUNCH-RUNBOOK.md. Nothing visible changes when they land, because the fallback holds the same values.
+- **The phone menu** (`MobileNav.tsx`, a React island) gets every value as a prop from `Header.astro`; a menu item's "Title attribute" is its visible descriptor. Do not import `src/data/site.ts` in an island.
+- **Journal** items in either menu are hidden in code while no journal entry is published.
+- **Parity.** The PR was proved byte-identical to `main` on all 14 pages and `/rss.xml` on `ncs-ci`, on both the fallback path and the CMS path, apart from the `MobileNav` island's `uid` and serialised props.
+- **A stale cache looks like a failed rebuild.** `npm run ci-dataset -- --from-scratch` requests `/` once before it loads the rows, and the route cache keeps that empty homepage for 5 minutes (the Selected Work strip missing, about 24 KB lighter). A parity capture taken straight after a rebuild reads it; wait out the cache window and capture again.

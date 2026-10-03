@@ -87,3 +87,28 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 6. Load it: the same command with `--yes`. A second run must report `unchanged` for every entry. Menus and redirects: `npm run cms:load -- --collection menus --url ... --yes` and `--collection redirects`.
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
+
+### PR 4: Site settings and menus (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 4 shipped before any production write was possible. The live site works without these steps (it renders from the committed fallback in `cms/content/`), so they can run any time after the PR deploys, in this order. They are the first real run of the schema applier and loader (docs/PENDING.md row 7), so start with the dry runs and stop on any surprise. Menus and the schema go through REST and need the token; the entry goes through the CLI login. `<prod>` is `https://www.nixoncreativestudio.com`.
+
+```bash
+npx emdash login --url <prod>
+export EMDASH_TOKEN=...        # Nathan: Settings, API tokens
+
+# 1. note the time for a rollback point: npx wrangler d1 time-travel info ncs-emdash-prod
+# 2. schema
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection site_settings --url <prod> --dry-run   # all "would ..."
+npm run cms:schema -- --collection site_settings --url <prod> --yes
+npm run cms:schema -- --collection site_settings --url <prod> --yes       # all "unchanged"
+# 3. content: the entry, then the two menus
+npm run cms:load -- --collection site_settings --url <prod> --dry-run
+npm run cms:load -- --collection site_settings --url <prod> --yes
+npm run cms:load -- --collection menus --url <prod> --dry-run
+npm run cms:load -- --collection menus --url <prod> --yes
+npm run cms:load -- --collection site_settings --url <prod> --yes         # "unchanged"
+npm run cms:load -- --collection menus --url <prod> --yes                 # "unchanged"
+```
+
+Then CI: add `'site_settings'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, `node scripts/export-seed-from-instance.mjs --url <prod>` (token; it now emits the collection and both menus, so check the `git diff seed/seed.json` is only formatting), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, commit. Finally the edit proof: change "Footer Currently line" in Site settings, publish, reload a page within 5 minutes, restore from History. If the live site shows no change at all after the load, the first suspect is the entry's `status` (it must be published) and then the `[cms]` lines in Workers observability.

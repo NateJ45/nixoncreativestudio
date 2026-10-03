@@ -58,15 +58,15 @@ tried as a stand-in and rejected: it starts with an empty local D1/R2, so every
 server page renders without content (and `--remote` would read production
 bindings, which a test run should not). CI installs chromium and webkit and runs both projects.
 
-| File                     | Covers                                                                                                                                                                                                                                                                                                        |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `routes.ts`              | The route list every sweep iterates: every page (all server-rendered), with the three case studies of the reduced `ncs-ci` CI sample listed individually (CMS content can break one page and not its siblings; production has nine). Add a route when a page ships or a case study is added to the CI dataset |
-| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                                                                                        |
-| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; an unknown `/work/<slug>/` returns a real 404 with the not-found title                                                                                                                                                                         |
-| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                                                                                    |
-| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                                                                            |
-| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                                                                            |
-| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                                                                            |
+| File                     | Covers                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`              | The route list every sweep iterates: every page (all server-rendered), with the three case studies of the reduced `ncs-ci` CI sample listed individually (CMS content can break one page and not its siblings; production has nine). Add a route when a page ships or a case study is added to the CI dataset                                                                |
+| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                                                                                                                                                       |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; **CMS-DESIGN PR 4:** every route except `/coming-soon` has the header menu links (Work, Services, About), the "Start a project" button and the footer email link (read from attributes, so the mobile profile checks the same markup); an unknown `/work/<slug>/` returns a real 404 with the not-found title |
+| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                                                                                                                                                   |
+| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                                                                                                                                           |
+| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                                                                                                                                           |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                                                                                                                                           |
 
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
@@ -81,16 +81,19 @@ item. Fixed with `min-w-0` on the item.
 Node's built-in runner, no framework. TypeScript runs through Node's type
 stripping, so there is nothing to configure and nothing to install.
 
-| File                       | Covers                                                                                                                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling                                                                                                       |
-| `readingTime.test.ts`      | Journal reading-time estimation                                                                                                                                                                   |
-| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                                                                                                                             |
-| `cms.test.ts`              | **CMS-DESIGN PR 3.** `src/lib/cms.ts` and `cmsFallback.ts`: 0/1 booleans, empty repeaters, a missing entry or a D1 error falling back to the committed JSON, cache tagging, list ordering, menus  |
-| `cmsSchema.test.ts`        | The generic schema applier against an in-memory fake of the EmDash REST API (idempotent rerun makes no writes, create-then-update order, dry run), `validateDef`, and every file in `cms/schema/` |
-| `cmsLoad.test.ts`          | The content loader (`$file` images, create/update/unchanged/publish, menus, redirects), the production guard, and every file in `cms/content/`                                                    |
-| `portableText.test.ts`     | The restricted Portable Text pass (headings, marks, links, lists) and heading ids                                                                                                                 |
-| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark                                                                                                 |
+| File                       | Covers                                                                                                                                                                                                                                                      |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling                                                                                                                                                                 |
+| `readingTime.test.ts`      | Journal reading-time estimation                                                                                                                                                                                                                             |
+| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                                                                                                                                                                                       |
+| `cms.test.ts`              | **CMS-DESIGN PR 3.** `src/lib/cms.ts` and `cmsFallback.ts`: 0/1 booleans, empty repeaters, a missing entry or a D1 error falling back to the committed JSON, cache tagging, list ordering, menus                                                            |
+| `cmsSchema.test.ts`        | The generic schema applier against an in-memory fake of the EmDash REST API (idempotent rerun makes no writes, create-then-update order, dry run), `validateDef`, and every file in `cms/schema/`                                                           |
+| `cmsLoad.test.ts`          | The content loader (`$file` images, create/update/unchanged/publish, menus, redirects), the production guard, and every file in `cms/content/`                                                                                                              |
+| `site.test.ts`             | **CMS-DESIGN PR 4.** `getSite()` and the menus: the committed fallback equals the values the old `site.ts` held, CMS and fallback read paths (missing entry, D1 error, thrown read, blank required field), one read per request, menu fallback and override |
+| `cmsContent.test.ts`       | Every `cms/content/<collection>.json` satisfies its `cms/schema/<collection>.mjs` (required, maxLength, pattern, select options, repeater item counts), and `menus.json` is well formed                                                                     |
+| `ciFixtures.test.ts`       | The generated CMS part of `seed/seed.json` and `scripts/ci-dataset/cms-rows.sql` are current (re-run `node scripts/ci-dataset/cms-fixtures.mjs` after editing `cms/`)                                                                                       |
+| `portableText.test.ts`     | The restricted Portable Text pass (headings, marks, links, lists) and heading ids                                                                                                                                                                           |
+| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark                                                                                                                                                           |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
 Card 9). It parses the real hex out of the `@theme`, `:root` and `.dark` blocks,
@@ -249,6 +252,19 @@ reloads the snapshot; use it after a seed change (a new collection or field). Wh
 it runs the CI previews have no data, so do not start it mid-PR. Nothing in these
 scripts can write to production, and the snapshot is committed, so CI renders
 pinned content: Nathan's edits in the production admin never reach it.
+
+**CMS collections and menus in CI (PR 4 onwards).** `ncs-ci` has no admin user, so
+the data the site now reads from the CMS (`site_settings`, the `primary` and
+`footer` menus, and the collections later PRs add) is built from the committed
+sources, not from production: `node scripts/ci-dataset/cms-fixtures.mjs` writes the
+collection and menu definitions into `seed/seed.json` (applied by `--from-scratch`)
+and the entries into `scripts/ci-dataset/cms-rows.sql` (applied by every refresh,
+after `rows.sql` and `fixtures.sql`). CI therefore exercises the "read from the CMS"
+path, while production, which starts empty, exercises the fallback path; the unit
+tests cover both. Once a collection is loaded into production, add it to
+`PRODUCTION_HAS` in `cms-fixtures.mjs` and let `snapshot.mjs` carry it. A schema or
+menu change needs `--from-scratch` (a refresh cannot create a table); a content-only
+change needs a plain refresh.
 
 To add a case study to CI: add its slug to `CASE_STUDY_SLUGS` in
 `scripts/ci-dataset/snapshot.mjs` and its term slugs to `terms.json`, add it to

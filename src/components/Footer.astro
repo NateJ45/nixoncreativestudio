@@ -1,6 +1,6 @@
 ---
-// Foundation, edit with care. The "Currently" blurb in the script section
-// is content that's safe to edit by hand whenever the season changes.
+// Foundation, edit with care. The "Currently" line is a field in Site settings
+// (EmDash admin), so it changes whenever the season does with no code edit.
 /* ============================================================================
    Site Footer
    ============================================================================
@@ -11,8 +11,9 @@
    Bottom row: copyright on the left, privacy link in the middle, tagline
    on the right, separated from the top row by a hairline divider.
 
-   Contact details, social URLs, studio name, and tagline come from
-   src/data/site.ts so a rebrand or contact change flows here without
+   Contact details, social URLs, studio name, and tagline come from Site
+   settings in the EmDash admin (read through src/data/site.ts), and the nav
+   is the "footer" menu, so a rebrand or contact change flows here without
    editing this file.
    ============================================================================ */
 
@@ -21,25 +22,28 @@
 const year = new Date().getFullYear();
 
 import { getCollection } from 'astro:content';
-import { site } from '../data/site';
+import { getSite } from '../data/site';
+import { getMenuItems } from '../lib/cms';
 import CopyEmail from './CopyEmail';
 import { buttonVariants } from './ui/button';
 
-// Footer site nav, mirroring the header's primary nav so the two never drift.
-// Journal appears only once the journal has a published entry, exactly as in
-// Header.astro (same visibility filter: drafts hidden in production). This is a
-// quiet repeat of the menu for visitors who reach the bottom of a page and want
-// to know where to go next, rather than scrolling back up to the header.
+// Contact details, socials, the tagline and the "Currently" line come from Site
+// settings in the EmDash admin; the footer nav is the "footer" menu. Both fall
+// back to the committed copy in cms/content/ if missing or unreadable.
+const site = await getSite(Astro);
+const menu = await getMenuItems('footer', { cache: Astro.cache });
+
+// Footer site nav, a quiet repeat of the menu for visitors who reach the bottom
+// of a page and want to know where to go next. Journal appears only once the
+// journal has a published entry, exactly as in Header.astro (same visibility
+// filter: drafts hidden in production); any menu item pointing at /journal is
+// dropped while it is empty.
 const journalCount = (
   await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
 ).length;
-const navLinks = [
-  { label: 'Work', href: '/work/' },
-  { label: 'Services', href: '/services' },
-  { label: 'About', href: '/about' },
-  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
-  { label: 'Contact', href: '/contact' },
-];
+const navLinks = menu
+  .filter((item) => journalCount > 0 || !item.url.startsWith('/journal'))
+  .map((item) => ({ label: item.label, href: item.url, target: item.target }));
 
 // Social links rendered as a list. Driving this from site.social keeps
 // labels in one place; add a network there and add a row here.
@@ -48,11 +52,10 @@ const social = [
   { label: 'LinkedIn', href: site.social.linkedin },
 ];
 
-// "Currently" blurb. Short, present-tense, swappable per season. Lives
-// here rather than in site.ts because it's marketing copy, not contact
-// info, and Nathan updates it often.
-const currently =
-  'Booking small business and nonprofit web projects for the season ahead, with a few photography days mixed in.';
+// "Currently" blurb. Short, present-tense, swappable per season. It is the
+// "Footer Currently line" field in Site settings, so Nathan can change it from
+// the admin whenever the season does.
+const currently = site.footerCurrently;
 
 // All anchor tags inside the footer share the same styling: an accent blue at
 // rest, underline appearing on hover/focus as the cue. The token is theme-aware
@@ -103,9 +106,14 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
         <nav aria-label="Site pages" data-reveal style="--reveal-delay: 0ms;">
           <h2 class={headingClass}>Explore</h2>
           <ul class="flex flex-col gap-xs">
-            {navLinks.map(({ label, href }) => (
+            {navLinks.map(({ label, href, target }) => (
               <li>
-                <a class={linkClass} href={href}>
+                <a
+                  class={linkClass}
+                  href={href}
+                  target={target}
+                  rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+                >
                   {label}
                 </a>
               </li>

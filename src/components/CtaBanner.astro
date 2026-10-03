@@ -16,6 +16,7 @@
    ============================================================================ */
 
 import { buttonVariants } from './ui/button';
+import { getSite } from '../data/site';
 
 interface Props {
   title?: string;
@@ -24,10 +25,14 @@ interface Props {
   ctaHref?: string;
 }
 
+// The defaults (title, sub, button text) are the "closing banner" fields in Site
+// settings in the CMS, with the committed fallback. The button's link stays in code.
+const site = await getSite(Astro);
+
 const {
-  title = "Let's build a site you won't have to redo.",
-  sub = 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.',
-  ctaLabel = 'Start a project',
+  title = site.ctaDefault.title,
+  sub = site.ctaDefault.sub,
+  ctaLabel = site.ctaDefault.label,
   ctaHref = '/contact',
 } = Astro.props;
 ---

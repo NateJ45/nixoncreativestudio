@@ -26,7 +26,8 @@
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
-import { site } from '../data/site';
+import { getSite, emailHref, phoneHref } from '../data/site';
+import { getMenuItems } from '../lib/cms';
 import MobileNav from './MobileNav';
 import ThemeToggle from './ThemeToggle';
 import { buttonVariants } from './ui/button';
@@ -41,16 +42,27 @@ const journalCount = (
   await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
 ).length;
 
-// The nav model lives in the script so it's easy to reorder, rename, or extend
-// without hunting through markup. MobileNav consumes the same array. Contact is
-// NOT in this list: it is promoted to the "Start a project" CTA button (desktop
-// header below, and the drawer's own CTA on mobile), both pointing at /contact.
-const navLinks = [
-  { label: 'Work', href: '/work/' },
-  { label: 'Services', href: '/services' },
-  { label: 'About', href: '/about' },
-  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
-];
+// Site settings (studio name, contact details, CTA label) and the "primary" menu
+// both come from the EmDash admin (Site settings, Menus). Each falls back to the
+// committed copy in cms/content/ if it is missing or unreadable, so the header
+// never renders empty. The Journal item is the one code rule: any menu item that
+// points at /journal is dropped while the journal has nothing to show.
+const site = await getSite(Astro);
+const menu = await getMenuItems('primary', { cache: Astro.cache });
+
+// The nav model. MobileNav consumes the same array; `descriptor` is the item's
+// "Title attribute" box in the menu editor, shown as visible text under the label
+// in the phone menu (never as an HTML title). Contact is NOT in this menu: it is
+// the "Start a project" CTA button (desktop header below, and the drawer's own
+// CTA on mobile), both pointing at /contact.
+const navLinks = menu
+  .filter((item) => journalCount > 0 || !item.url.startsWith('/journal'))
+  .map((item) => ({
+    label: item.label,
+    href: item.url,
+    descriptor: item.titleAttr,
+    target: item.target,
+  }));
 
 // Active-route detection so the current section is marked in the nav. Treats a
 // link as active when the path matches it or sits beneath it (e.g. /work/foo).
@@ -83,9 +95,11 @@ const isActive = (href: string): boolean => {
            and toggle); the MobileNav drawer takes over below md. -->
       <nav aria-label="Primary" class="hidden md:block">
         <ul class="flex items-center gap-m">
-          {navLinks.map(({ label, href }) => (
+          {navLinks.map(({ label, href, target }) => (
             <li>
               <a
+                target={target}
+                rel={target === '_blank' ? 'noopener noreferrer' : undefined}
                 class:list={[
                   'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
                   isActive(href)
@@ -120,7 +134,7 @@ const isActive = (href: string): boolean => {
           href="/contact"
           class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'shine px-5 py-2.5')}
         >
-          Start a project
+          {site.headerCtaLabel}
         </a>
       </div>
 
@@ -137,7 +151,18 @@ const isActive = (href: string): boolean => {
            does not SSR cleanly), which is what lets this be client:idle instead
            of client:only: React no longer downloads inside the LCP window. -->
       <div class="md:hidden">
-        <MobileNav client:idle links={navLinks} studioName={site.studioName} />
+        <MobileNav
+          client:idle
+          links={navLinks}
+          studioName={site.studioName}
+          ctaLabel={site.headerCtaLabel}
+          email={site.email}
+          emailHref={emailHref(site.email)}
+          phone={site.phone}
+          phoneHref={phoneHref(site.phone)}
+          instagramUrl={site.social.instagram}
+          linkedinUrl={site.social.linkedin}
+        />
       </div>
     </div>
   </div>

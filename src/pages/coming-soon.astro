@@ -18,13 +18,16 @@
    ============================================================================ */
 
 import '../styles/globals.css';
-import { site } from '../data/site';
+import { getSite, SITE_URL } from '../data/site';
 import ComingSoon from '../components/ComingSoon.astro';
 import { cachePublicPage } from '../lib/routeCache';
 import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
 
 // Standalone document (no BaseLayout), so it opts into the route cache itself.
 cachePublicPage(Astro.cache, Astro.url);
+
+// Studio name and location come from Site settings in the CMS (with the fallback).
+const site = await getSite(Astro);
 
 const title = `${site.studioName} | Launching soon`;
 const description = `${site.studioName} is a small studio in ${site.address}: strategy-led web design and brand work for clients anywhere, plus photography across the Cincinnati region. The new site launches soon.`;
@@ -60,8 +63,8 @@ const description = `${site.studioName} is a small studio in ${site.address}: st
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={`${site.url}/coming-soon/`} />
-    <meta property="og:image" content={`${site.url}/og-default.png`} />
+    <meta property="og:url" content={`${SITE_URL}/coming-soon/`} />
+    <meta property="og:image" content={`${SITE_URL}/og-default.png`} />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>

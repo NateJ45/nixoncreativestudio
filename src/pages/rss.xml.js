@@ -17,20 +17,22 @@
    ============================================================================ */
 
 import rss from '@astrojs/rss';
-import { site } from '../data/site';
+import { getSite, SITE_URL } from '../data/site';
 import { getCaseStudies } from '../lib/caseStudies';
 import { PAGE_MAX_AGE, PAGE_SWR } from '../lib/routeCache';
 
 export async function GET(context) {
   // Already sorted newest first by project date.
   const entries = await getCaseStudies(context.cache);
+  // Feed title and description are fields in Site settings (CMS, with the fallback).
+  const site = await getSite(context);
   // Same lifetime as the pages; the case-study tags set above purge it on publish.
   context.cache?.set?.({ maxAge: PAGE_MAX_AGE, swr: PAGE_SWR });
 
   const response = await rss({
-    title: `${site.studioName} — Case Studies`,
-    description: site.tagline,
-    site: context.site ?? site.url,
+    title: site.rssTitle,
+    description: site.rssDescription,
+    site: context.site ?? SITE_URL,
 
     items: entries.map((entry) => ({
       title: entry.title,

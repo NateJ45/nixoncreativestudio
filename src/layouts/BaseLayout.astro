@@ -23,7 +23,7 @@ import BackToTop from '../components/BackToTop';
 import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
 import ComingSoonGate from '../components/ComingSoonGate.astro';
-import { site } from '../data/site';
+import { getSite } from '../data/site';
 import { cachePublicPage } from '../lib/routeCache';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
@@ -104,9 +104,14 @@ interface Props {
       /services (Service + FAQPage). */
   schemas?: Array<Record<string, unknown>>;
 }
+// Site settings (studio name, default description, feed title) come from the
+// CMS, with the committed fallback; the Header, Footer and StructuredData share
+// this one read through getSite()'s per-request memo.
+const site = await getSite(Astro);
+
 const {
   title,
-  description = 'Nixon Creative Studio',
+  description = site.defaultDescription,
   ogImage,
   ogType = 'website',
   schemas = [],
@@ -174,12 +179,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
 
     <!-- RSS auto-discovery. Lets feed readers (and browser extensions
          that detect feeds) pick up /rss.xml without manual entry. -->
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title={`${site.studioName} — Case Studies`}
-      href="/rss.xml"
-    />
+    <link rel="alternate" type="application/rss+xml" title={site.rssTitle} href="/rss.xml" />
 
     <!-- Open Graph + Twitter card meta. Drives the rich preview that
          appears when the URL is shared on Slack, iMessage, LinkedIn, etc.
