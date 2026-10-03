@@ -333,3 +333,21 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
 https://www.nixoncreativestudio.com/_astro/<any chunk>.js` must be 200, while
     `https://www.nixoncreativestudio.com/about/` must still 301 to the apex.
     `(http.host eq "www.nixoncreativestudio.com" and not starts_with(http.request.uri.path, "/_emdash/") and not starts_with(http.request.uri.path, "/_astro/"))`
+
+25. **Committed parity baselines and Markdown docs feed Tailwind's class scan.**
+    Tailwind 4's automatic source detection skips only gitignored paths.
+    `scripts/.parity/*.html` is committed HTML, and Markdown is scanned too, so
+    every utility class named in an old baseline, `CLAUDE.md` or `docs/` kept
+    its rule alive in the shipped stylesheet, and a rendered-HTML parity compare
+    could pass because the baselines themselves fed the build. Found on FBCM
+    2026-09-20; ported here 2026-10-03 (vault gotcha
+    `committed-parity-baselines-feed-tailwind`). Fix in `src/styles/globals.css`,
+    right after the Tailwind import: `@source not` for `../../scripts/.parity`,
+    `../../docs`, `../../CLAUDE.md`, `../../README.md`, `../../PRODUCT.md`.
+    Measured here: the main stylesheet dropped from 134,724 to 132,872 bytes
+    (19 utility rules such as `.text-white`, `.bg-slate-900`, `.text-gray-600`,
+    plus the unused color variables they pulled into `@layer theme`), and none of
+    those classes appear in the rendered HTML of any public page. After a
+    baseline recapture, rebuild and check the byte count does not move (it did
+    not). Keep utility class names out of prose the scanner can see, or leave
+    `docs/` excluded.
