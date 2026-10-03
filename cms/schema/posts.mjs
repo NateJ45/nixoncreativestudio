@@ -86,10 +86,12 @@ export const FIELDS = [
   {
     slug: 'excerpt',
     type: 'text',
+    // Not `required` and no maxLength on purpose: EmDash will not turn an existing
+    // optional column into a required or length-limited one without a migration
+    // (FIELD_UPDATE_REQUIRES_MIGRATION, hit on the first production load). The page
+    // enforces it instead: an entry with no summary is left out of /journal/.
     label:
-      'Summary (max 200). One sentence: the card text on the Journal page, the search description and the share text',
-    required: true,
-    validation: { maxLength: 200 },
+      'Summary (REQUIRED, about 200 characters at most; an entry without one is not shown). One sentence: the card text on the Journal page, the search description and the share text',
   },
   {
     slug: 'updated',
