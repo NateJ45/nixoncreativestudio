@@ -825,3 +825,23 @@ Every entry below was measured, not assumed.
     sub-field limit. Related: `titleField` and `commentsEnabled` cannot be sent
     when a collection is created, which is why `applyCollectionSchema` applies
     the settings in a second PUT after the fields.
+
+17. **A prefetch is only worth anything if the browser may reuse it, and every
+    internal link must already carry its trailing slash.** Measured 2026-10-03 on
+    the live site with a real foreground browser: Astro's viewport prefetch fired
+    for every link, then the click fetched the page AGAIN (80 to 400ms per
+    navigation, against about 5ms when pages were static files). Two causes.
+    (a) The route cache sends the browser `Cache-Control: no-cache` and no ETag,
+    so the prefetched copy can never be reused. `finalize()` in `src/worker.ts`
+    now gives a clean cached 200 HTML page `public, max-age=120,
+    stale-while-revalidate=3600` for the browser only (the edge lifetime is
+    untouched; the editor view, previews, cookies and `/_emdash` never qualify).
+    A publish therefore reaches a returning browser within about 2 minutes, not
+    instantly. (b) Menu and button links without a slash (`/about`) were
+    prefetched, then 301-redirected by the Worker, then fetched again. Menu items
+    go through `withTrailingSlash()` in `src/lib/cms.ts`; hardcoded links need the
+    slash by hand. Also measured: after the 5-minute edge lifetime a page is still
+    served instantly (`CF-Cache-Status: UPDATING`, 85ms) while it refreshes, so
+    visitors only wait for a render on the first request per Cloudflare location
+    after a deploy (about 0.4 to 1.3s, 22 D1 reads). A test of "cold" needs a
+    cache-busting query string, not a repeat request.

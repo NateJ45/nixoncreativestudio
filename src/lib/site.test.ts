@@ -169,8 +169,8 @@ test("with no menu in the CMS the header and footer menus are today's hardcoded 
     primary.map((i) => [i.label, i.url, i.titleAttr]),
     [
       ['Work', '/work/', 'Selected client projects'],
-      ['Services', '/services', 'What I build, and how'],
-      ['About', '/about', 'The studio, and me'],
+      ['Services', '/services/', 'What I build, and how'],
+      ['About', '/about/', 'The studio, and me'],
       ['Journal', '/journal/', 'Notes on the work'],
     ],
   );
@@ -179,10 +179,10 @@ test("with no menu in the CMS the header and footer menus are today's hardcoded 
     footer.map((i) => [i.label, i.url]),
     [
       ['Work', '/work/'],
-      ['Services', '/services'],
-      ['About', '/about'],
+      ['Services', '/services/'],
+      ['About', '/about/'],
       ['Journal', '/journal/'],
-      ['Contact', '/contact'],
+      ['Contact', '/contact/'],
     ],
   );
 });
