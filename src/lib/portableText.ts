@@ -19,7 +19,8 @@
        pages allow h2 and h3 so the table of contents works; the About story
        allows none, so any heading renders as a paragraph).
      - marks: `strong`, `em`, and `link` (http, https, mailto, tel, site-relative
-       or fragment hrefs only). Anything else is dropped, text kept.
+       or fragment hrefs only), plus inline `code` when the caller opts in
+       (prose pages). Anything else is dropped, text kept.
      - lists only when the caller opts in.
 
    Pure and dependency-free so `node --test` can run it (src/lib/portableText.test.ts).
@@ -44,6 +45,8 @@ export interface RestrictOptions {
   headings?: ('h2' | 'h3')[];
   /** Keep bulleted and numbered lists. Default false (list items become paragraphs). */
   lists?: boolean;
+  /** Keep the inline `code` mark (the prose pages use it for `_ga`). Default false. */
+  code?: boolean;
 }
 
 /** Heading slug, matching what Astro's MDX pipeline produced (the old TOC ids). */
@@ -102,7 +105,9 @@ export function restrictPortableText(value: unknown, opts: RestrictOptions = {})
       .filter((c) => c && typeof c.text === 'string')
       .map((c) => ({
         ...c,
-        marks: (c.marks ?? []).filter((m) => m === 'strong' || m === 'em' || linkKeys.has(m)),
+        marks: (c.marks ?? []).filter(
+          (m) => m === 'strong' || m === 'em' || (opts.code && m === 'code') || linkKeys.has(m),
+        ),
       }));
     if (!children.some((c) => (c.text ?? '').trim() !== '')) continue;
 
@@ -145,27 +150,51 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/** How blockHtml dresses its output. Every option is off by default (the About story needs none). */
+export interface HtmlOptions {
+  /** Class attribute for every <a> (the prose pages' underlined link style). */
+  linkClass?: string;
+  /** Open every http(s) link in a new tab with rel noopener, whatever the link's own flag says. */
+  externalBlank?: boolean;
+  /** Class attribute for the <code> a `code` mark renders. */
+  codeClass?: string;
+  /** Leave double quotes literal in text (valid HTML; matches hand-written prose markup). */
+  literalQuotes?: boolean;
+}
+
 /**
- * The inner HTML of one restricted block: its spans with strong, em and link
- * marks applied (nesting link > strong > em), text escaped. Expects a block that
- * already went through restrictPortableText, so every mark is one of those three
- * and every link href is safe. Used by about.astro, which renders the story as
- * plain paragraphs without pulling in emdash/ui's PortableText (and its stylesheet).
+ * The inner HTML of one restricted block: its spans with code, strong, em and
+ * link marks applied (nesting link > strong > em > code), text escaped. Expects a
+ * block that already went through restrictPortableText, so every mark is one it
+ * allows and every link href is safe. Used by about.astro and ProsePage.astro,
+ * which render plain paragraphs without pulling in emdash/ui's PortableText (and
+ * its stylesheet).
  */
-export function blockHtml(block: PTNode): string {
+export function blockHtml(block: PTNode, opts: HtmlOptions = {}): string {
   const defs = new Map((block.markDefs ?? []).map((d) => [d._key, d]));
+  const text = (s: string) => {
+    const e = escapeHtml(s);
+    return opts.literalQuotes ? e.replace(/&quot;/g, '"') : e;
+  };
   return (block.children ?? [])
     .map((span) => {
-      let html = escapeHtml(span.text ?? '');
+      let html = text(span.text ?? '');
       const marks = span.marks ?? [];
+      if (marks.includes('code')) {
+        const cls = opts.codeClass ? ` class="${escapeHtml(opts.codeClass)}"` : '';
+        html = `<code${cls}>${html}</code>`;
+      }
       if (marks.includes('em')) html = `<em>${html}</em>`;
       if (marks.includes('strong')) html = `<strong>${html}</strong>`;
       for (const m of marks) {
         const def = defs.get(m);
         if (def && def._type === 'link' && isSafeLink(def.href)) {
           const href = def.href.trim();
-          const blank = def.blank === true && !href.startsWith('#');
-          html = `<a href="${escapeHtml(href)}"${
+          const blank =
+            !href.startsWith('#') &&
+            (def.blank === true || (opts.externalBlank === true && /^https?:/i.test(href)));
+          const cls = opts.linkClass ? ` class="${escapeHtml(opts.linkClass)}"` : '';
+          html = `<a${cls} href="${escapeHtml(href)}"${
             blank ? ' target="_blank" rel="noopener noreferrer"' : ''
           }>${html}</a>`;
         }

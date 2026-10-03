@@ -88,6 +88,25 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 10: Privacy, Accessibility and Colophon (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 10 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: /privacy, /accessibility and /colophon render from the committed `cms/content/pages.json`. These steps extend the EmDash template's existing `pages` collection (it already holds Title and Content) and create the three entries. No files upload.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # needs EMDASH_TOKEN from Nathan: Settings, API tokens (keep in 1Password)
+npx emdash content list pages --url <prod>          # note any existing entries first
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection pages --url <prod> --dry-run   # expect: updated field title, updated field content, added field x7, reorder fields, applied collection settings
+npm run cms:schema -- --collection pages --url <prod> --yes
+npm run cms:schema -- --collection pages --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:load -- --collection pages --url <prod> --dry-run     # expect: would create privacy, accessibility, colophon
+npm run cms:load -- --collection pages --url <prod> --yes
+npm run cms:load -- --collection pages --url <prod> --yes         # second run: "unchanged"
+```
+
+Before the first load save the live pages: `for p in privacy accessibility colophon; do curl -sL <prod>/$p/ > $p-before.html; done`. After the load and a five-minute wait each page should match its "before" file except for the three explained differences in docs/CMS-DESIGN.md "PR 10 notes" (developer comments, the shared script, `data-prose-toc`) and the colophon's "Last built" month. The edit proof: in `/_emdash/admin`, Other pages, Privacy, change one sentence in "Cookies" and set "Last updated" to today, publish, reload /privacy within five minutes, restore from History. Then add `pages` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs` and re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4.
+
 ### PR 9: Contact page (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 9 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/contact` renders from the committed `cms/content/page_contact.json`, and the form already submits labels (that part is code). These steps create the Contact page screen in the admin. No files upload.

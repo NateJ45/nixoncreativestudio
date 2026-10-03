@@ -187,3 +187,51 @@ test('blockHtml: a link that opens in a new tab gets rel noopener, a fragment ne
   );
   assert.equal(blockHtml(mk('#now')), '<a href="#now">go</a>');
 });
+
+test('restrictPortableText keeps the code mark only when the caller opts in', () => {
+  const block: PTNode = {
+    _type: 'block',
+    style: 'normal',
+    markDefs: [],
+    children: [{ _type: 'span', text: '_ga', marks: ['code'] }],
+  };
+  assert.deepEqual(restrictPortableText([block])[0].children?.[0].marks, []);
+  assert.deepEqual(restrictPortableText([block], { code: true })[0].children?.[0].marks, ['code']);
+});
+
+test('blockHtml options: link class, external links open a new tab, code class, literal quotes', () => {
+  const block: PTNode = {
+    _type: 'block',
+    style: 'normal',
+    markDefs: [
+      { _key: 'a', _type: 'link', href: 'https://a.example/x' },
+      { _key: 'b', _type: 'link', href: 'mailto:me@a.example' },
+      { _key: 'c', _type: 'link', href: '/about/' },
+    ],
+    children: [
+      { _type: 'span', text: 'say "hi" ', marks: [] },
+      { _type: 'span', text: 'ext', marks: ['a'] },
+      { _type: 'span', text: 'mail', marks: ['b'] },
+      { _type: 'span', text: 'in', marks: ['c'] },
+      { _type: 'span', text: '_ga', marks: ['code'] },
+    ],
+  };
+  const html = blockHtml(block, {
+    linkClass: 'lk',
+    externalBlank: true,
+    codeClass: 'cd',
+    literalQuotes: true,
+  });
+  assert.equal(
+    html,
+    'say "hi" <a class="lk" href="https://a.example/x" target="_blank" rel="noopener noreferrer">ext</a>' +
+      '<a class="lk" href="mailto:me@a.example">mail</a><a class="lk" href="/about/">in</a>' +
+      '<code class="cd">_ga</code>',
+  );
+  // Without options nothing changes: no class, no new tab, quotes escaped.
+  assert.equal(
+    blockHtml(block),
+    'say &quot;hi&quot; <a href="https://a.example/x">ext</a><a href="mailto:me@a.example">mail</a>' +
+      '<a href="/about/">in</a><code>_ga</code>',
+  );
+});

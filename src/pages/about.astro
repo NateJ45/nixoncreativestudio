@@ -104,7 +104,7 @@ const headshotSrc = about.headshot.file ? bundled[about.headshot.file] : undefin
 // use RestrictedPortableText: that hands the blocks to emdash/ui's PortableText,
 // whose 9.5 KB stylesheet would add a render-blocking <link> to this page, and a
 // story of paragraphs needs none of it (measured in the PR 8 parity run).
-const storyParagraphs = restrictPortableText(about.story.body).map(blockHtml);
+const storyParagraphs = restrictPortableText(about.story.body).map((b) => blockHtml(b));
 
 // The Currently block (merged in from the old standalone /now page, a Derek
 // Sivers-style snapshot) is rewritten about once a quarter in the admin (Pages,
