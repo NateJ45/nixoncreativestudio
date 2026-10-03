@@ -50,7 +50,21 @@ import sharp from 'sharp';
 import { DIR, ROOT, insertRow } from './lib.mjs';
 
 /** Collections already loaded into production: snapshot.mjs carries them, so skip them here. */
-export const PRODUCTION_HAS = [];
+export const PRODUCTION_HAS = [
+  'site_settings',
+  'page_about',
+  'page_contact',
+  'page_home',
+  'page_journal',
+  'page_not_found',
+  'page_photography',
+  'page_services',
+  'page_work',
+  'pages',
+  'pricing_addons',
+  'pricing_tiers',
+  'service_offerings',
+];
 
 /** Fixed timestamp for generated rows, so the file is byte-stable between runs. */
 const STAMP = '2026-10-03T00:00:00.000Z';

@@ -62,6 +62,8 @@ const SNAPSHOT_ALL = [
   'pricing_tiers',
   'pricing_addons',
   'service_offerings',
+  // The EmDash template's prose collection (privacy, accessibility, colophon).
+  'pages',
 ];
 
 /** Column values forced for the CI copy (all three CI studies fill the Selected Work strip). */
