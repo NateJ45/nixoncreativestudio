@@ -171,6 +171,12 @@ Wire it as part of the Astro 7 upgrade, not before:
 
 (the exact shape needs thought, because `build` here is a three-command chain).
 
+### 6. Seed export: the token-only and menu paths are unproven
+
+`scripts/export-seed-from-instance.mjs` (CMS-DESIGN PR 1) now exports collection `titleField` / `sortOrder` / `admin` and the redirect list over REST when `EMDASH_TOKEN` is set, and menus through `emdash menu get`. Production has no menus or redirects today and no token was available when it was written, so those three paths ran only as far as "nothing to export". The first CMS PR that adds a menu, a redirect or a `titleField` must create an API token (Settings, API tokens), run `node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com --check`, and fix the field-name mapping in the script if the output is wrong. Delete this row once a seed with a real menu round-trips.
+
+Also open from the same PR: `scripts/ci-dataset/terms.json` pins each CI case study's taxonomy terms by hand because the CLI cannot read per-entry terms; with a token the script could read them over REST instead.
+
 ---
 
 ## Deliberate absences (do not "fix" these)

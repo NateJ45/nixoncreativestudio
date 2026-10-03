@@ -1,0 +1,208 @@
+// Safe to edit.
+/* ============================================================================
+   rebuild.mjs  (scripts/ci-dataset)
+   ============================================================================
+   Brings the CI dataset (D1 ncs-ci, R2 ncs-ci-media, Worker ncs-ci) in line
+   with the committed snapshot. Run by hand; CI never runs it.
+
+     node scripts/ci-dataset/rebuild.mjs                 # refresh (safe, idempotent)
+     node scripts/ci-dataset/rebuild.mjs --from-scratch  # drop everything, redeploy, reload
+     node scripts/ci-dataset/rebuild.mjs --dry-run       # print the plan, change nothing
+
+   REFRESH (the default) applies rows.sql, then fixtures.sql, to ncs-ci and
+   copies every file in media.json into ncs-ci-media. Nothing is dropped, so it
+   is safe to re-run at any time and a failed run can simply be run again.
+
+   --from-scratch first drops every table in ncs-ci, then builds and deploys the
+   ci Worker (CLOUDFLARE_ENV=ci), requests the site once so EmDash runs its
+   migrations and applies seed/seed.json, and only then does the refresh. Use it
+   after a seed change (a new collection or field), which a refresh cannot
+   apply. While it runs the CI previews have no data: do not start it while a PR
+   is mid-CI.
+
+   WRITES go only to the ncs-ci resources (see lib.mjs, which has no function
+   that can reach production). Media bytes are fetched from the live site's
+   public media URLs and checked against the SHA-1 and size recorded in
+   media.json before they are uploaded.
+
+   Needs: `wrangler login` (an account that owns the ncs-ci resources).
+   ============================================================================ */
+import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import {
+  CI,
+  DIR,
+  PROD_URL,
+  assertCiConfig,
+  buildAndDeployCi,
+  d1File,
+  d1Query,
+  r2GetCi,
+  r2PutCi,
+} from './lib.mjs';
+
+const args = new Set(process.argv.slice(2));
+const FROM_SCRATCH = args.has('--from-scratch');
+const DRY = args.has('--dry-run');
+const SKIP_R2 = args.has('--skip-r2');
+
+const say = (m) => console.log(m);
+const step = (m) => say(`\n== ${m}`);
+
+assertCiConfig();
+const media = JSON.parse(readFileSync(resolve(DIR, 'media.json'), 'utf8'));
+const rowsSql = readFileSync(resolve(DIR, 'rows.sql'), 'utf8');
+const caseStudySlugs = Object.keys(JSON.parse(readFileSync(resolve(DIR, 'terms.json'), 'utf8')));
+
+say(`target: Worker ${CI.worker}, D1 ${CI.d1}, R2 ${CI.r2} (${CI.url})`);
+say(
+  `plan: ${FROM_SCRATCH ? 'drop all tables, build + deploy ci, load seed, then ' : ''}apply rows.sql + fixtures.sql, copy ${SKIP_R2 ? '0 (skipped)' : media.length} media file(s), verify`,
+);
+if (DRY) {
+  say('dry run: nothing changed');
+  process.exit(0);
+}
+
+/** GET with a few retries; resolves to the Response. */
+async function get(url, tries = 4) {
+  let last;
+  for (let i = 0; i < tries; i += 1) {
+    try {
+      const res = await fetch(url, { redirect: 'follow' });
+      if (res.status < 500) return res;
+      last = new Error(`${url} answered ${res.status}`);
+    } catch (e) {
+      last = e;
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  throw last;
+}
+
+// ---- 1. from scratch: drop everything, redeploy, let EmDash migrate ----------
+if (FROM_SCRATCH) {
+  step('Dropping every table in ncs-ci');
+  const objects = d1Query(
+    "SELECT name, type, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'",
+  );
+  const virtual = objects.filter((o) => o.type === 'table' && /^CREATE VIRTUAL/i.test(o.sql ?? ''));
+  const isShadow = (name) => virtual.some((v) => name.startsWith(`${v.name}_`));
+  const lines = ['PRAGMA defer_foreign_keys = on;'];
+  for (const o of objects.filter((x) => x.type === 'view'))
+    lines.push(`DROP VIEW IF EXISTS "${o.name}";`);
+  for (const o of virtual) lines.push(`DROP TABLE IF EXISTS "${o.name}";`);
+  // Drop children before the tables they reference. SQLite checks a DROP against
+  // foreign keys, so dropping a parent first fails with "no such table: main.users"
+  // (the first, naive version of this step did exactly that).
+  const plain = objects.filter(
+    (x) => x.type === 'table' && !virtual.includes(x) && !isShadow(x.name),
+  );
+  const referencedBy = new Map(plain.map((t) => [t.name, new Set()]));
+  for (const t of plain) {
+    for (const m of (t.sql ?? '').matchAll(/references\s+["'`]?(\w+)["'`]?/gi)) {
+      if (m[1] !== t.name) referencedBy.get(m[1])?.add(t.name);
+    }
+  }
+  const remaining = new Set(plain.map((t) => t.name));
+  while (remaining.size) {
+    const ready = [...remaining].filter(
+      (n) => ![...referencedBy.get(n)].some((c) => remaining.has(c)),
+    );
+    // A cycle would leave nothing ready: drop the rest in listed order rather than loop forever.
+    for (const n of ready.length ? ready : [...remaining]) {
+      lines.push(`DROP TABLE IF EXISTS "${n}";`);
+      remaining.delete(n);
+    }
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'ncs-ci-'));
+  const dropFile = join(dir, 'drop.sql');
+  writeFileSync(dropFile, lines.join('\n') + '\n');
+  d1File(dropFile);
+  rmSync(dir, { recursive: true, force: true });
+  say(`dropped ${lines.length - 1} object(s)`);
+
+  step('Building and deploying the ci Worker (CLOUDFLARE_ENV=ci)');
+  buildAndDeployCi();
+
+  step('Requesting the site once so EmDash migrates and applies the seed');
+  const res = await get(`${CI.url}/`);
+  say(`GET / answered ${res.status}`);
+}
+
+// ---- 2. rows and fixtures ----------------------------------------------------
+step('Checking the target tables exist');
+const wanted = [
+  ...new Set([...rowsSql.matchAll(/INSERT OR REPLACE INTO (\w+)/g)].map((m) => m[1])),
+];
+const have = new Set(
+  d1Query("SELECT name FROM sqlite_master WHERE type = 'table'").map((r) => r.name),
+);
+const missing = wanted.filter((t) => !have.has(t));
+if (missing.length) {
+  throw new Error(
+    `ncs-ci has no table ${missing.join(', ')}: the seed has changed since it was built. Re-run with --from-scratch.`,
+  );
+}
+say(`ok: ${wanted.join(', ')}`);
+
+step('Applying rows.sql and fixtures.sql');
+d1File(resolve(DIR, 'rows.sql'));
+d1File(resolve(DIR, 'fixtures.sql'));
+say('applied');
+
+// ---- 3. R2 -------------------------------------------------------------------
+if (!SKIP_R2) {
+  step(`Copying ${media.length} media file(s) into ${CI.r2}`);
+  const dir = mkdtempSync(join(tmpdir(), 'ncs-ci-r2-'));
+  let copied = 0;
+  let skipped = 0;
+  for (const f of media) {
+    const local = join(dir, f.storageKey);
+    if (r2GetCi(f.storageKey, local) && statSync(local).size === f.size) {
+      skipped += 1;
+      continue;
+    }
+    const res = await get(`${PROD_URL}/_emdash/api/media/file/${f.storageKey}`);
+    if (res.status !== 200) throw new Error(`${f.storageKey}: production answered ${res.status}`);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    if (bytes.length !== f.size)
+      throw new Error(`${f.storageKey}: got ${bytes.length} bytes, expected ${f.size}`);
+    const sha = `sha1:${createHash('sha1').update(bytes).digest('hex')}`;
+    if (f.contentHash && sha !== f.contentHash)
+      throw new Error(`${f.storageKey}: hash ${sha} != ${f.contentHash}`);
+    writeFileSync(local, bytes);
+    r2PutCi(f.storageKey, local, f.mimeType);
+    copied += 1;
+    say(`  copied ${f.storageKey} (${f.filename}, ${bytes.length} bytes)`);
+  }
+  rmSync(dir, { recursive: true, force: true });
+  say(`R2: ${copied} copied, ${skipped} already present`);
+}
+
+// ---- 4. verify through the running Worker ------------------------------------
+step('Verifying through the ci Worker');
+const failures = [];
+const routes = ['/', '/work/', ...caseStudySlugs.map((s) => `/work/${s}/`)];
+for (const path of routes) {
+  const res = await get(`${CI.url}${path}`);
+  say(`  ${res.status} ${path}`);
+  if (res.status !== 200) failures.push(`${path} answered ${res.status}`);
+}
+if (!SKIP_R2) {
+  let ok = 0;
+  for (const f of media) {
+    const res = await get(`${CI.url}/_emdash/api/media/file/${f.storageKey}`);
+    const len =
+      Number(res.headers.get('content-length') ?? 0) || (await res.arrayBuffer()).byteLength;
+    if (res.status === 200 && len === f.size) ok += 1;
+    else failures.push(`media ${f.storageKey}: ${res.status}, ${len} bytes (want ${f.size})`);
+  }
+  say(`  media: ${ok}/${media.length} served at the expected size`);
+}
+if (failures.length) {
+  console.error(`\nFAILED:\n- ${failures.join('\n- ')}`);
+  process.exit(1);
+}
+say('\nncs-ci is in line with the snapshot.');
