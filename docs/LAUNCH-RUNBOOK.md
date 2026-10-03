@@ -88,6 +88,42 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 11: Work, Photography, Journal, Not-found pages and Photos (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 11 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: /work, /photography, /journal and the 404 page render from the committed `cms/content/page_work.json`, `page_photography.json`, `page_journal.json` and `page_not_found.json`, and /photography shows its "In progress" state because production has zero photos (the page treats an empty collection, a read error and a missing `photos` table alike). These steps create the four page screens and the Photos list in the admin. No files upload and `photos` has no content to load: Nathan adds photos by hand afterwards.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # needs EMDASH_TOKEN from Nathan: Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection page_work --url <prod> --dry-run          # expect: would created collection, would added field x10
+npm run cms:schema -- --collection page_work --url <prod> --yes
+npm run cms:schema -- --collection page_work --url <prod> --yes              # second run: every line "unchanged"
+npm run cms:schema -- --collection page_photography --url <prod> --dry-run   # expect: would created collection, would added field x15
+npm run cms:schema -- --collection page_photography --url <prod> --yes
+npm run cms:schema -- --collection page_photography --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:schema -- --collection page_journal --url <prod> --dry-run       # expect: would created collection, would added field x9
+npm run cms:schema -- --collection page_journal --url <prod> --yes
+npm run cms:schema -- --collection page_journal --url <prod> --yes           # second run: every line "unchanged"
+npm run cms:schema -- --collection page_not_found --url <prod> --dry-run     # expect: would created collection, would added field x6
+npm run cms:schema -- --collection page_not_found --url <prod> --yes
+npm run cms:schema -- --collection page_not_found --url <prod> --yes         # second run: every line "unchanged"
+npm run cms:schema -- --collection photos --url <prod> --dry-run             # expect: would created collection, would added field x9
+npm run cms:schema -- --collection photos --url <prod> --yes
+npm run cms:schema -- --collection photos --url <prod> --yes                 # second run: every line "unchanged"
+npm run cms:load -- --collection page_work --url <prod> --dry-run            # expect: would create work
+npm run cms:load -- --collection page_work --url <prod> --yes
+npm run cms:load -- --collection page_photography --url <prod> --dry-run     # expect: would create photography
+npm run cms:load -- --collection page_photography --url <prod> --yes
+npm run cms:load -- --collection page_journal --url <prod> --dry-run         # expect: would create journal
+npm run cms:load -- --collection page_journal --url <prod> --yes
+npm run cms:load -- --collection page_not_found --url <prod> --dry-run       # expect: would create not-found
+npm run cms:load -- --collection page_not_found --url <prod> --yes
+# second run of each load: "unchanged"
+```
+
+Before the first load save the live pages: `for p in work photography journal; do curl -sL <prod>/$p/ > $p-before.html; done`, and `curl -s -o 404-before.html -w '%{http_code}\n' <prod>/no-such-page-check/` (it must print 404). After the load and a five-minute wait each page must match its "before" file except for the `&#39;` apostrophe entity in the sentences that now print from the CMS (and the `/work/` count and cards, which follow the case studies); the unknown URL must still answer 404. The edit proofs: in `/_emdash/admin`, Photography page, change the headline's accent phrase, publish, reload /photography within five minutes, restore from History; then add the first real photo under Photography, Photos (upload, description for screen readers, group, year), publish, and see /photography switch from "In progress" to the gallery within five minutes, then run the page through axe or Lighthouse accessibility once with the gallery scrolled into view. Not-found page: change the first link's words, publish, request an unknown URL and see the new words with status 404, restore from History. Then add `page_work`, `page_photography`, `page_journal` and `page_not_found` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs` (keep `photos` out: CI's test photo is hand-written in `scripts/ci-dataset/ci-content/photos.json`) and re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4.
+
 ### PR 10: Privacy, Accessibility and Colophon (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 10 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: /privacy, /accessibility and /colophon render from the committed `cms/content/pages.json`. These steps extend the EmDash template's existing `pages` collection (it already holds Title and Content) and create the three entries. No files upload.

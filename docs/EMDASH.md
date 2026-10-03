@@ -320,6 +320,18 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## Index pages and photos (CMS-DESIGN PR 11, 2026-10-03)
+
+/work, /photography, /journal and the 404 page read one singleton each (`page_work` entry `work`, `page_photography` entry `photography`, `page_journal` entry `journal`, `page_not_found` entry `not-found`), and /photography reads its pictures from the new `photos` collection. Design: docs/CMS-DESIGN.md sections 1.9 and 1.11 and "PR 11 notes".
+
+- **Readers.** `src/lib/indexPages.ts` (the four singletons, committed fallback `cms/content/page_*.json`) and `src/lib/photos.ts` (`getPhotos()`, grouping, the hero pick, the gallery URLs). Schemas `cms/schema/page_work.mjs`, `page_photography.mjs`, `page_journal.mjs`, `page_not_found.mjs` (admin group "Pages", sort 5 to 8) and `photos.mjs` (group "Photography", sort 13).
+- **`photos` has no fallback JSON.** Zero photos, a read error and a missing table all read as "no photos", and the page shows its "In progress" state. Production starts there.
+- **Pictures are width-only `/_image` URLs.** `resizedUrl()` builds `/_image?href=<absolute media URL>&w=N&f=webp` and never a height, so a tall photo cannot hit the 4096 px resizer limit (section "The 4096px resizer limit"). The hero and the category cards render through `EmDashPhoto.astro`; the gallery passes `srcSet` and a larger `lightboxSrc` to `PhotoGallery.tsx`. The host must stay in `image.remotePatterns`.
+- **The gallery is empty in the server HTML** until the `client:visible` island hydrates (react-photo-album measures its container first), so an axe run must scroll it into view: `tests/index-pages.spec.ts` does, in both themes and with the viewer open.
+- **The 404 page** still answers a real 404 for an unknown URL; `/404/` by name still answers 200 for the Lighthouse audit (both measured on `ncs-ci`). The page reads its entry with the route cache only when its status is below 400.
+- **CI test photo.** One hand-written photo in `scripts/ci-dataset/ci-content/photos.json`, merged into the CI rows and R2 by `cms-fixtures.mjs`. `NCS_CI_NO_TEST_CONTENT=1` leaves it out (and the refresh deletes it) to measure the zero-photo render.
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 11 data") and docs/LAUNCH-RUNBOOK.md. No files upload.
+
 ## Prose pages (CMS-DESIGN PR 10, 2026-10-03)
 
 /privacy, /accessibility and /colophon read one entry each of the `pages` collection (slugs `privacy`, `accessibility`, `colophon`). Design: docs/CMS-DESIGN.md section 1.10 and "PR 10 notes".

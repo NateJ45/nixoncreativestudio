@@ -13,6 +13,8 @@ INSERT OR REPLACE INTO options (name, value) VALUES ('site:tagline', '"Modern we
 -- Test content that exists only in CI is added below by the CMS PR that needs it
 -- (docs/CMS-DESIGN.md, section 2.3), together with a line in tests/routes.ts
 -- when it adds a route:
---   - PR 11: one `photos` entry (so the photography gallery renders and is axe-checked).
+--   - PR 11 (done, but NOT here): the one `photos` entry needs a media row and an R2
+--     file, so it is scripts/ci-dataset/ci-content/photos.json, merged into
+--     cms-rows.sql and cms-media.json by cms-fixtures.mjs.
 --   - PR 12: one published and one draft `posts` entry (journal list, a journal
 --     detail route, and proof that a draft is not visible).

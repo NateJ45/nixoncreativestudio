@@ -156,6 +156,14 @@ Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 10 data") and `docs/LAUNCH-RUNBOOK.md`; 
 
 For Nathan on the way: the Colophon's stack and hosting rows and the Privacy analytics text are now editable in the admin but must stay true; they are tied to the code and the hosting, so ask for a check before changing them. The email in the links is typed text, so change it in these entries too if you change it in Site settings.
 
+### Load the PR 11 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 11 (Work, Photography, Journal, Not-found, Photos) ships safe with production empty: the four pages render from `cms/content/page_work.json`, `page_photography.json`, `page_journal.json` and `page_not_found.json`, the same words and markup as before apart from one explained difference (an apostrophe in a few sentences prints as `&#39;`, which renders the same), and `/photography/` keeps its "In progress" state because production has zero photos. Until the data is loaded the admin has no Work page, Photography page, Journal page, Not-found page or Photos screens.
+
+Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 11 data") and `docs/LAUNCH-RUNBOOK.md`; run them in the same session as the PR 4 to 10 loads. `photos` is schema only (no content file): after it, Nathan adds photos in the admin and the gallery appears on its own. After the load, add the four page collections (not `photos`) to `PRODUCTION_HAS` in `cms-fixtures.mjs`, re-export the seed and rebuild `ncs-ci`.
+
+For Nathan on the way: every photo needs a description for screen readers ("what the photo shows", not a title); a photo without one is left out of the page on purpose. Tick "Use as the opening picture" on the one photo you want behind the headline; if none is ticked the first photo is used. The viewer does not show captions yet (it needs one extra plugin, a visual change that was not part of this PR).
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
