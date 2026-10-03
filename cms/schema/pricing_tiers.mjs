@@ -33,6 +33,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Pricing tier',
   description: 'The three website tiers on the homepage and the Services page.',
   group: 'Pricing & services',
+  // The admin's "live view" button opens this address (the tiers show on Services). A fixed address is allowed.
+  urlPattern: '/services/',
   sortOrder: 10,
   titleField: 'name',
   admin: { quickCreate: false, listColumns: ['price_from', 'sort_order'] },

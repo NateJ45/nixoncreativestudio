@@ -44,6 +44,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Contact page',
   description: 'The words on the Contact page: headline, the form choices and the sidebar.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/contact/',
   sortOrder: 4,
   titleField: 'seo_title',
 });

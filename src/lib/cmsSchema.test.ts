@@ -361,3 +361,92 @@ test('case_studies settings match what EmDash returns: no "seo" in supports, has
   assert.ok(!('hasSeo' in seeded));
   assert.equal(seeded.urlPattern, '/work/{slug}/');
 });
+
+// ── PR 14: the admin's "live view" button and the sidebar order ─────────────
+
+/** What the admin's live-view link should open for each collection (CMS-DESIGN 4.3, PR 14). */
+const LIVE_VIEW: Record<string, string> = {
+  site_settings: '/',
+  page_home: '/',
+  page_about: '/about/',
+  page_services: '/services/',
+  page_contact: '/contact/',
+  page_work: '/work/',
+  page_photography: '/photography/',
+  page_journal: '/journal/',
+  page_not_found: '/404/',
+  pricing_tiers: '/services/',
+  pricing_addons: '/services/',
+  service_offerings: '/services/',
+  photos: '/photography/',
+  pages: '/{slug}/',
+  posts: '/journal/{slug}/',
+  case_studies: '/work/{slug}/',
+};
+
+async function loadAllSchemas() {
+  const dir = join(process.cwd(), 'cms/schema');
+  const out = [];
+  for (const f of readdirSync(dir).filter((x) => x.endsWith('.mjs'))) {
+    out.push(await import(pathToFileURL(join(dir, f)).href));
+  }
+  return out;
+}
+
+test('every collection has the urlPattern its public page needs, and EmDash accepts the pattern', async () => {
+  const defs = await loadAllSchemas();
+  assert.deepEqual(defs.map((d) => d.SLUG).sort(), Object.keys(LIVE_VIEW).sort());
+  for (const d of defs) {
+    const want = LIVE_VIEW[d.SLUG];
+    assert.equal(d.COLLECTION.urlPattern, want, `${d.SLUG} urlPattern`);
+    // The server's own rule (emdash compileUrlPattern): braces only as {name}, one placeholder
+    // per path segment. A fixed address with no placeholder is valid.
+    const placeholders = want.match(/\{\w+\}/g) ?? [];
+    assert.ok(want.startsWith('/'), `${d.SLUG}: starts with a slash`);
+    assert.ok(
+      placeholders.every((p) => p === '{slug}'),
+      `${d.SLUG}: only {slug}`,
+    );
+    assert.ok(placeholders.length <= 1, `${d.SLUG}: at most one placeholder`);
+    assert.equal(want.replace(/\{\w+\}/g, '').includes('{'), false);
+  }
+});
+
+test('sidebar order follows the design: Site, Pages, Pricing, Portfolio, Journal, Photography', async () => {
+  const defs = await loadAllSchemas();
+  const order = (slug: string) => defs.find((d) => d.SLUG === slug)!.COLLECTION.sortOrder as number;
+  const inGroup = (g: string) =>
+    defs.filter((d) => d.COLLECTION.group === g).map((d) => d.COLLECTION.sortOrder as number);
+  assert.ok(order('site_settings') < Math.min(...inGroup('Pages')));
+  assert.ok(Math.max(...inGroup('Pages')) < Math.min(...inGroup('Pricing & services')));
+  assert.ok(Math.max(...inGroup('Pricing & services')) < order('case_studies'));
+  assert.ok(order('case_studies') < order('posts'));
+  assert.ok(order('posts') < order('photos'));
+  const all = defs.map((d) => d.COLLECTION.sortOrder as number);
+  assert.equal(new Set(all).size, all.length, 'no two collections share a sortOrder');
+});
+
+test('adding urlPattern and sortOrder to an existing collection applies once, then reads unchanged', async () => {
+  for (const d of await loadAllSchemas()) {
+    if (d.SLUG === 'case_studies') continue; // its extra fields are covered by the PR 13 test
+    const s = fakeServer();
+    // Production as it stands before PR 14: the same collection without the two settings.
+    const { urlPattern: _u, sortOrder: _o, ...old } = d.COLLECTION;
+    await applyCollectionSchema(s.request, { ...d, COLLECTION: old });
+    s.writes.length = 0;
+    const first = await applyCollectionSchema(s.request, d, { dryRun: true });
+    assert.deepEqual(
+      first.filter((l: string) => !l.startsWith('unchanged')),
+      [`would applied collection settings (group ${d.COLLECTION.group ?? 'none'})`],
+      d.SLUG,
+    );
+    await applyCollectionSchema(s.request, d);
+    s.writes.length = 0;
+    const again = await applyCollectionSchema(s.request, d, { dryRun: true });
+    assert.ok(
+      again.every((l: string) => l.startsWith('unchanged')),
+      `${d.SLUG} re-check: ${again.join(' | ')}`,
+    );
+    assert.deepEqual(s.writes, [], `${d.SLUG}: a dry run writes nothing`);
+  }
+});

@@ -40,6 +40,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Services page',
   description: 'The words on the Services page: headline, cost and FAQ sections.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/services/',
   sortOrder: 2,
   titleField: 'seo_title',
 });

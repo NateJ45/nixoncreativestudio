@@ -30,7 +30,10 @@ export const COLLECTION = {
   supports: ['drafts'],
   routable: false,
   group: 'Photography',
-  sortOrder: 13,
+  // The admin's "live view" button opens this address (the photos show on Photography). A fixed address is allowed.
+  urlPattern: '/photography/',
+  // After Journal (14), as the sidebar plan in docs/CMS-DESIGN.md 4.3 has it.
+  sortOrder: 15,
   titleField: 'title',
   commentsEnabled: false,
   admin: { listColumns: ['category', 'year'] },

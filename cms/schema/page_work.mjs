@@ -28,6 +28,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Work page',
   description: 'The words on the Work page: headline, the filter message and the live-sites list.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/work/',
   sortOrder: 5,
   titleField: 'seo_title',
 });

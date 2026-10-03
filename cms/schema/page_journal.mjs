@@ -28,6 +28,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Journal page',
   description: 'The words on the Journal page: headline and the "first entry is coming" card.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/journal/',
   sortOrder: 7,
   titleField: 'seo_title',
 });

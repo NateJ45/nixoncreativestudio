@@ -3,8 +3,6 @@ import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
 
 import cloudflare from '@astrojs/cloudflare';
-import expressiveCode from 'astro-expressive-code';
-import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
@@ -22,13 +20,9 @@ import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 // that lives in EmDash (contact email, legal pages, case studies). Speed comes
 // from the route cache (`cache` below), not from static files.
 //
-// Integrations (order matters: expressiveCode must precede mdx):
-//   - expressiveCode : themed code blocks in MDX. UNUSED since CMS-DESIGN PR 12: the
-//                      journal moved into EmDash (Portable Text, code blocks via
-//                      JournalCode.astro) and no .mdx file is left. Kept installed
-//                      until PR 14 decides whether to drop the dependency.
-//   - mdx       : UNUSED since PR 12 (the MDX content collections are gone); kept
-//                      with expressiveCode for the same reason
+// Integrations:
+//   - (expressive-code and mdx removed in CMS-DESIGN PR 14: both were unused after the journal
+//                 moved into EmDash in PR 12; the journal renders code blocks with JournalCode.astro)
 //   - sitemap   : emits sitemap-index.xml and sitemap-0.xml at build time
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
@@ -98,14 +92,6 @@ export default defineConfig({
   // with 'compile' alone every srcset entry pointed at the full-size original).
   adapter: cloudflare({ imageService: { build: 'compile', runtime: 'cloudflare-binding' } }),
   integrations: [
-    // Themed code blocks for MDX (unused since PR 12, see the header). Dark theme is
-    // tied to the site's .dark class so a code sample would flip with the theme toggle.
-    expressiveCode({
-      themes: ['github-dark', 'github-light'],
-      themeCssSelector: (theme) => (theme.name === 'github-dark' ? '.dark' : ':root'),
-      styleOverrides: { borderRadius: '0.5rem' },
-    }),
-    mdx(),
     // @astrojs/sitemap only lists PRERENDERED routes, and since CMS-DESIGN PR 2
     // nothing is prerendered, so EVERY public page is listed by hand via
     // customPages. Add a line here when a page ships. Journal entries come from

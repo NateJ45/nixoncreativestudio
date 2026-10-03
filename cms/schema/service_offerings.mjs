@@ -37,6 +37,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Service offering',
   description: 'The Strategy, Web design and Photography chapters on the Services page.',
   group: 'Pricing & services',
+  // The admin's "live view" button opens this address (the offerings show on Services). A fixed address is allowed.
+  urlPattern: '/services/',
   sortOrder: 12,
   titleField: 'title',
   admin: { quickCreate: false, listColumns: ['price_from', 'sort_order'] },
