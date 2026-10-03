@@ -205,3 +205,17 @@ WebP. No error, no warning. `image.remotePatterns` now trusts
 workers.dev URL) plus the apex and `www`. Verified on a preview alias: 9 resized
 images, 0 raw. Rule: any new host that serves the site (a custom domain, a
 staging alias) must be added to that list, or its CMS images go out full size.
+
+## The 4096px resizer limit (found by Lighthouse CI, 2026-10-02)
+
+Cloudflare's image resizer silently returns the **untouched original** for any
+request whose height is 4096 px or more (every fit mode; width-only requests
+for the same file work). EmDash's `Image` always sends width AND height, so the
+tall full-page showcase screenshots came back as 6.9 MB and 2.6 MB PNGs, which
+made the homepage 10.9 MB in Lighthouse (the branch's biggest regression against
+`main`'s 1.7 MB). `src/components/emdash/ScrollShot.astro` renders those
+screenshots with width-only `/_image` URLs instead (160 to 380 KB each) and is
+used by `SelectedWork` and the EmDash mode of `SiteShowcase`. Use it for any
+CMS image taller than about 4000 px; ordinary images keep using `Image` from
+`emdash/ui`. Symptom of hitting the limit again: an image whose transfer size
+equals the original file size, with `content-type: image/png` from `/_image`.

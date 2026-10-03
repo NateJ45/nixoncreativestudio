@@ -27,13 +27,14 @@
    Data source: getCaseStudies() (EmDash), filtered to featured, sorted
    newest-first by project date, capped at three. The hover-scroll images are the
    entry's own `showcase_desktop` / `showcase_mobile` fields (the same full-page
-   captures that used to be globbed from src/assets), rendered with the Image
-   component from emdash/ui. A missing capture falls back to the static cover
+   captures that used to be globbed from src/assets), rendered with
+   ./emdash/ScrollShot.astro (width-only resizing; the emdash/ui Image asks for a
+   tall height that the resizer refuses). A missing capture falls back to the static cover
    (EmDashCover). The highlighted line under each title is the case study's
    `outcome` field when present.
    ============================================================================ */
 
-import { Image } from 'emdash/ui';
+import ScrollShot from './emdash/ScrollShot.astro';
 import EmDashCover from './emdash/EmDashCover.astro';
 import { getCaseStudies } from '../lib/caseStudies';
 
@@ -101,7 +102,7 @@ const [primary, ...secondaries] = featured;
                   transition:name={`cover-${primary.id}`}
                   style={bgFor(primary)}
                 >
-                  <Image
+                  <ScrollShot
                     image={primary.showcaseDesktop}
                     alt=""
                     sizes="(min-width: 48rem) 60vw, 100vw"
@@ -110,7 +111,7 @@ const [primary, ...secondaries] = featured;
                   {primary.showcaseMobile && (
                     <div class="work-phone" aria-hidden="true">
                       <div class="work-phone-screen">
-                        <Image
+                        <ScrollShot
                           image={primary.showcaseMobile}
                           alt=""
                           sizes="200px"
@@ -161,7 +162,7 @@ const [primary, ...secondaries] = featured;
                     transition:name={`cover-${entry.id}`}
                     style={bgFor(entry)}
                   >
-                    <Image
+                    <ScrollShot
                       image={entry.showcaseDesktop}
                       alt=""
                       sizes="(min-width: 48rem) 30vw, 100vw"
@@ -170,7 +171,7 @@ const [primary, ...secondaries] = featured;
                     {entry.showcaseMobile && (
                       <div class="work-phone" aria-hidden="true">
                         <div class="work-phone-screen">
-                          <Image
+                          <ScrollShot
                             image={entry.showcaseMobile}
                             alt=""
                             sizes="170px"
