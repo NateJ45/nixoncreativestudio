@@ -102,6 +102,10 @@ line.
 
 Added 2026-10-03. The per-PR rows below (PR 4 to 11) can all be done by one command Nathan runs in his own PowerShell: `npx emdash login --url https://www.nixoncreativestudio.com`, set `EMDASH_TOKEN`, note a D1 Time Travel restore point (`npx wrangler d1 time-travel info ncs-emdash-prod`), then `npm run cms:production-load -- --plan` and `npm run cms:production-load`. Steps and stop rules are in `docs/LAUNCH-RUNBOOK.md` ("One command for every block below"). It has not been run against production. After a clean run: the follow-ups it prints (`PRODUCTION_HAS`, seed re-export, `ncs-ci` rebuild), each row's edit proof, then revoke the token and delete the rows below.
 
+### Click through the admin help tour once on the live site (Nathan, after the studio-help PR deploys)
+
+The plugin needs no schema, setting or data load: it keeps its per-user state in its own KV table, created on first use. What no automated run can prove is the deployed admin. Sign in at `/_emdash/admin` and check: the dashboard shows "Start here" and the tour opens on its own once; it does not reopen on reload; the sidebar has Help; an entry editor shows "About this screen"; the spotlight rings land on the sidebar groups. To see the tour again as a new user: Help, "Take the tour again", or reset your record with `POST /_emdash/api/plugins/studio-help/state {"action":"reset"}`. To show a revised tour to everyone, change `tour.id` in `cms/help/tour.json`. Delete this row when checked.
+
 ### Load the PR 13 data into production, with PR 14's (needs `EMDASH_TOKEN` from Nathan)
 
 **Blocks:** nothing visible. PR 13 (redirects and the hero scene) ships safe with production lacking the two new `case_studies` fields and the two redirect rows: the hero scene falls back to the five bundled sites it always showed, and `/now` and `/work/west-chester-preschool` answer 301 from `src/lib/redirectFallback.ts`. Until the load, ticking a case study into the hero is not possible (the fields do not exist) and the Redirects screen in the admin is empty.
