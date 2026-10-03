@@ -320,6 +320,18 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## About page (CMS-DESIGN PR 8, 2026-10-03)
+
+The /about words, photos, Currently block, Lighthouse numbers and the Person JSON-LD read from the `page_about` singleton (entry `about`). Design: docs/CMS-DESIGN.md section 1.7 and "PR 8 notes".
+
+- **Reader.** `getAboutPage()` in `src/lib/aboutPage.ts`; schema `cms/schema/page_about.mjs` (35 fields, admin group "Pages", sort 3); fallback `cms/content/page_about.json`.
+- **Images.** CMS media renders through `src/components/emdash/EmDashPhoto.astro` (width-only `/_image` URLs, so the 4096 px trap cannot bite, and no stylesheet or script is added to the page, unlike `Image` from `emdash/ui`). The fallback's bundled files render with Astro `<Image>` as before. Measured on `ncs-ci` (CMS path): the 125 KB headshot JPEG is served as a 22 KB `image/webp` at 432 w, all six pictures answer `content-type: image/webp`, checked with `curl -s -D - -o /dev/null` (GET). `tests/about-copy.spec.ts` asserts this for every picture on both paths.
+- **Fallback rules.** Missing, unpublished or unreadable entry, a blank required field, no story, fewer than three usable photos, fewer than three principles, an empty Currently list or an invalid date serves the committed JSON. A photo without a description or a picture is dropped. A headshot with no picture or no description uses the bundled headshot.
+- **Story.** Paragraphs only, rendered by `blockHtml()`. Do not switch it to `RestrictedPortableText` without accepting an extra render-blocking stylesheet on /about (and the chunk rename it causes on other pages).
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 8 data") and docs/LAUNCH-RUNBOOK.md. The loader uploads the six images with `emdash media upload`.
+- **Parity, measured on `ncs-ci`.** Captured on `main`, then the PR deployed twice. Fallback path (no `ec_page_about` rows): 5/5 PASS on `/about/`, `/`, `/services/`, `/work/`, `/contact/`, images included. CMS path: 5/5 PASS with the six `<img>` elements (and the headshot's wrapper div) normalised out, which are the only intended difference (CMS media URLs instead of bundled assets). Normalisations needed, none of them rendered change: the `<astro-island uid>` hash differs because the build ran from a different checkout path; Astro prints an apostrophe from an expression as `&#39;`, where the old static text had a literal one. One deliberate change: the thesis sentence rendered "small businessesaround Cincinnati" on the live page (no space after the blue span, the same bug as the hero's "byone person"); it now has `{' '}`. With that space applied to the baseline both paths pass.
+- **CI exercises the CMS path.** `cms-fixtures.mjs` now turns `$file` images into media rows (`cms-rows.sql`) and an upload list (`scripts/ci-dataset/cms-media.json`); `rebuild.mjs` uploads those six files to `ncs-ci-media` from the checkout. Production media files stay copied from the live site.
+
 ## Services page (CMS-DESIGN PR 7, 2026-10-03)
 
 The /services words, the three service chapters and the FAQ read from a singleton and a list. Design: docs/CMS-DESIGN.md section 1.6 and "PR 7 notes".

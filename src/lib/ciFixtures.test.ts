@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   build,
+  mediaSql,
+  resolveImages,
   rowsSql,
   seedCollection,
   seedMenus,
@@ -19,10 +21,58 @@ import * as siteSettings from '../../cms/schema/site_settings.mjs';
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
 
-test('seed/seed.json and cms-rows.sql are current (run node scripts/ci-dataset/cms-fixtures.mjs)', async () => {
-  const { seedText, sql } = await build();
+test('seed/seed.json, cms-rows.sql and cms-media.json are current (run node scripts/ci-dataset/cms-fixtures.mjs)', async () => {
+  const { seedText, sql, mediaText } = await build();
   assert.equal(read('seed/seed.json'), seedText, 'seed/seed.json is out of date');
   assert.equal(read('scripts/ci-dataset/cms-rows.sql'), sql, 'cms-rows.sql is out of date');
+  assert.equal(
+    read('scripts/ci-dataset/cms-media.json'),
+    mediaText,
+    'cms-media.json is out of date',
+  );
+});
+
+test('repo images in an entry become media rows and EmDash image values', async () => {
+  const entries = [
+    {
+      slug: 'about',
+      data: {
+        headshot: { $file: 'src/assets/brand/headshot.jpg', alt: 'Me' },
+        photos: [{ image: { $file: 'src/assets/brand/headshot.jpg', alt: 'Again' }, caption: 'c' }],
+      },
+    },
+  ];
+  const { entries: out, media } = await resolveImages(entries);
+  assert.equal(media.length, 1, 'a file used twice is one media row');
+  const m = media[0];
+  assert.match(m.storageKey, /^[0-9A-F]{26}\.jpg$/);
+  assert.equal(m.mimeType, 'image/jpeg');
+  assert.equal(m.width, 1200);
+  assert.equal(m.height, 1200);
+  const head = out[0].data.headshot;
+  assert.equal(head.id, m.id);
+  assert.equal(head.alt, 'Me');
+  assert.equal(head.meta.storageKey, m.storageKey);
+  assert.equal(out[0].data.photos[0].image.alt, 'Again', 'alt travels with each use');
+  assert.equal(out[0].data.photos[0].image.id, m.id);
+  assert.match(mediaSql(m), /^INSERT OR REPLACE INTO media .*'image\/jpeg'/);
+  await assert.rejects(
+    () => resolveImages([{ slug: 'x', data: { i: { $file: 'src/assets/nope.jpg' } } }]),
+    /image not found/,
+  );
+});
+
+test('every CMS image the CI dataset needs is listed in cms-media.json with a matching file', () => {
+  const list = JSON.parse(read('scripts/ci-dataset/cms-media.json')) as {
+    source: string;
+    size: number;
+    storageKey: string;
+  }[];
+  assert.ok(list.length >= 6, 'the headshot and five About photos');
+  for (const f of list) {
+    assert.equal(readFileSync(join(process.cwd(), f.source)).length, f.size, f.source);
+    assert.ok(read('scripts/ci-dataset/cms-rows.sql').includes(f.storageKey), f.source);
+  }
 });
 
 test('the generated seed carries the site_settings collection and both menus', () => {

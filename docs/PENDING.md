@@ -126,6 +126,14 @@ The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 7 data") and `docs/LA
 
 For Nathan on the way: the Web design screenshot on /services is still an image file in the code, not a CMS upload (the picture's description is editable; the image swap comes with the About headshot work in PR 8). The FAQ answers that quote prices ("What does it cost?", "Do you offer maintenance?") are now editable in the admin but remain plain text: after a price change, update them there.
 
+### Load the PR 8 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 8 (About) ships safe with production empty: /about renders from `cms/content/page_about.json` and the bundled pictures, byte-for-byte what it showed before (apart from one fixed missing space, below). Until the data is loaded the admin has no About page screen.
+
+Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 8 data") and `docs/LAUNCH-RUNBOOK.md`; run them in the same session as the PR 4 to 7 loads. This is the first load that uploads files: `cms:load` runs `emdash media upload` for the headshot and five photos (about 1.2 MB), de-duplicated by SHA-1. After it, add `page_about` to `PRODUCTION_HAS` in `cms-fixtures.mjs`, re-export the seed, rebuild `ncs-ci`, and check the pictures still come back as `image/webp` from `/_image` on the live domain (a GET, not HEAD).
+
+For Nathan on the way: the live thesis line read "small businessesaround Cincinnati" (a missing space); PR 8 fixes it. The offering picture on /services is still an image file in code: the CMS image path now exists (`EmDashPhoto`), but adding an `image` field to `service_offerings` is a separate small change (say if you want it).
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
