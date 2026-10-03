@@ -14,7 +14,8 @@
    page when Nathan publishes an edit (src/lib/routeCache.ts).
 
    Gotchas handled here so pages do not have to remember them:
-   - `featured` comes back from D1 as 0 or 1, so it is turned into a boolean.
+   - `featured` and `in_hero` come back from D1 as 0 or 1 (or null), so they are turned
+     into booleans; `hero_order` is a whole number or undefined.
    - `published` is the project date field (an ISO string), NOT the system
      `published_at` column (which is the migration moment). It is turned into a
      Date, and every list is sorted newest first on it.
@@ -68,6 +69,10 @@ export interface CaseStudy {
   description?: string;
   cover?: ImageValue;
   featured: boolean;
+  /** Shown in the homepage hero's device scene (CMS-DESIGN PR 13; needs both showcase captures). */
+  inHero: boolean;
+  /** Position in the hero scene, lowest first. Undefined when unset or the field does not exist yet. */
+  heroOrder?: number;
   published: Date;
   updated?: Date;
   liveUrl?: string;
@@ -129,6 +134,11 @@ const rowTexts = (v: unknown): string[] =>
   Array.isArray(v)
     ? v.map((r) => String((r as { text?: unknown })?.text ?? '')).filter(Boolean)
     : [];
+/** A whole number from an integer column (D1 may hand back a number or a numeric string). */
+const whole = (v: unknown): number | undefined => {
+  const n = typeof v === 'string' && v.trim() ? Number(v) : v;
+  return typeof n === 'number' && Number.isInteger(n) ? n : undefined;
+};
 const date = (v: unknown): Date | undefined => {
   if (typeof v !== 'string' || !v) return undefined;
   const d = new Date(v);
@@ -152,6 +162,9 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
     description: str(d.description),
     cover: img(d.cover),
     featured: Boolean(d.featured),
+    // in_hero and hero_order exist from PR 13; before the data load they read as undefined.
+    inHero: Boolean(d.in_hero),
+    heroOrder: whole(d.hero_order),
     published: date(d.published) ?? new Date(0),
     updated: date(d.updated),
     liveUrl: str(d.live_url),

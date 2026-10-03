@@ -53,6 +53,8 @@ import HeroCanvas from './HeroCanvas';
 import HeroShowcase from './HeroShowcase.astro';
 import ClientMarquee from './ClientMarquee.astro';
 import { getHomePage } from '../lib/homePage';
+import { getCaseStudies } from '../lib/caseStudies';
+import { selectHeroStudies, type HeroStudy } from '../lib/heroSites';
 // import { Image } from 'astro:assets';
 // import heroPhoto from '../assets/brand/hero.jpg';
 
@@ -62,6 +64,21 @@ import { getHomePage } from '../lib/homePage';
 // limited to the region; the Cincinnati base is stated in the proof line.
 const { hero } = await getHomePage(Astro);
 const { heading: statementLead, headingAccent: statementAccent, positioning, proof } = hero;
+
+// The device scene's sites (CMS-DESIGN PR 13): the case studies with "Show in the homepage
+// device scene" ticked and both showcase captures set, in hero_order. Read once here and handed
+// to both HeroShowcase renders. An empty list (the fields do not exist in production yet, nothing
+// is ticked, or the read failed) makes HeroShowcase use its bundled fallback set, so the hero can
+// never come up empty.
+let heroSites: HeroStudy[] = [];
+try {
+  heroSites = selectHeroStudies(await getCaseStudies(Astro.cache));
+} catch (e) {
+  console.error(
+    '[hero] could not read the case studies for the device scene; using the fallback',
+    e,
+  );
+}
 ---
 
 <section
@@ -108,7 +125,7 @@ const { heading: statementLead, headingAccent: statementAccent, positioning, pro
   >
     <div class="ncs-container relative h-full">
       <div class="hero-scene-inner pointer-events-auto absolute inset-y-0 right-0 flex items-center">
-        <HeroShowcase />
+        <HeroShowcase sites={heroSites} />
       </div>
     </div>
   </div>
@@ -123,7 +140,7 @@ const { heading: statementLead, headingAccent: statementAccent, positioning, pro
        marquee so the device never crosses the client names.
        ==================================================================== -->
   <div class="hero-mobile-scene pointer-events-none absolute z-[1] lg:hidden" aria-hidden="true">
-    <HeroShowcase variant="phone" />
+    <HeroShowcase variant="phone" sites={heroSites} />
   </div>
 
   <!-- ====================================================================

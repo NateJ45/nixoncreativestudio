@@ -12,8 +12,8 @@
       "labelSingular": "Case Study",
       "description": "Portfolio case studies.",
       "supports": ["drafts", "revisions", "seo", "search"],
-      "urlPattern": "/work/{slug}/",
       "group": "Portfolio",
+      "urlPattern": "/work/{slug}/",
       "fields": [
         {
           "slug": "title",
@@ -75,6 +75,20 @@
           "indexed": true
         },
         {
+          "slug": "in_hero",
+          "label": "Show in the homepage device scene",
+          "type": "boolean"
+        },
+        {
+          "slug": "hero_order",
+          "label": "Homepage scene order (1 to 99, lowest first; needs both showcase captures)",
+          "type": "integer",
+          "validation": {
+            "min": 1,
+            "max": 99
+          }
+        },
+        {
           "slug": "published",
           "label": "Published (case study date)",
           "type": "datetime",
@@ -102,21 +116,6 @@
           "type": "text"
         },
         {
-          "slug": "results",
-          "label": "Results",
-          "type": "repeater",
-          "validation": {
-            "subFields": [
-              {
-                "slug": "text",
-                "type": "string",
-                "label": "Result",
-                "required": true
-              }
-            ]
-          }
-        },
-        {
           "slug": "testimonial_name",
           "label": "Testimonial name",
           "type": "string"
@@ -125,6 +124,21 @@
           "slug": "testimonial_title",
           "label": "Testimonial title",
           "type": "string"
+        },
+        {
+          "slug": "results",
+          "label": "Results",
+          "type": "repeater",
+          "validation": {
+            "subFields": [
+              {
+                "slug": "text",
+                "label": "Result",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
         },
         {
           "slug": "designer_note",
@@ -178,32 +192,32 @@
             "subFields": [
               {
                 "slug": "image",
-                "type": "image",
                 "label": "Screenshot",
+                "type": "image",
                 "required": true
               },
               {
                 "slug": "alt",
-                "type": "string",
                 "label": "Alt text",
+                "type": "string",
                 "required": true
               },
               {
                 "slug": "title",
-                "type": "string",
                 "label": "Title",
+                "type": "string",
                 "required": true
               },
               {
                 "slug": "caption",
-                "type": "text",
                 "label": "Caption",
+                "type": "text",
                 "required": true
               },
               {
                 "slug": "side",
-                "type": "select",
                 "label": "Image side",
+                "type": "select",
                 "options": ["left", "right"]
               }
             ]
@@ -2705,6 +2719,18 @@
           "url": "/contact/"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/now",
+      "destination": "/about/#now",
+      "type": 301
+    },
+    {
+      "source": "/work/west-chester-preschool",
+      "destination": "/work/",
+      "type": 301
     }
   ]
 }

@@ -299,3 +299,65 @@ test('every cms/schema/*.mjs is a valid definition whose SLUG matches its file n
     assert.deepEqual(errors, [], `${file}: ${errors.join('; ')}`);
   }
 });
+
+// ── case_studies (CMS-DESIGN PR 13): an existing collection gains two optional fields ──
+
+test('case_studies: in_hero and hero_order are added optional, and nothing existing changes', async () => {
+  const cs = await import('../../cms/schema/case_studies.mjs');
+  const { FIELDS: raw } = await import('../../scripts/lib/case-studies-schema.mjs');
+  // One definition: the cms/schema module re-exports the migration script's fields.
+  assert.equal(cs.FIELDS, raw);
+  const inHero = cs.FIELDS.find((f: { slug: string }) => f.slug === 'in_hero');
+  const order = cs.FIELDS.find((f: { slug: string }) => f.slug === 'hero_order');
+  assert.equal(inHero?.type, 'boolean');
+  assert.equal(order?.type, 'integer');
+  assert.deepEqual(order?.validation, { min: 1, max: 99 });
+  // EmDash cannot make an existing optional field required (FIELD_UPDATE_REQUIRES_MIGRATION),
+  // and every existing entry has neither field, so both must stay optional.
+  assert.ok(!inHero?.required && !order?.required);
+  assert.deepEqual(validateDef(cs).errors, []);
+
+  // Production holds the 32 fields it had before; applying the new definition adds exactly two.
+  const s = fakeServer();
+  const before = {
+    ...cs,
+    FIELDS: cs.FIELDS.filter(
+      (f: { slug: string }) => f.slug !== 'in_hero' && f.slug !== 'hero_order',
+    ),
+  };
+  await applyCollectionSchema(s.request, before);
+  s.writes.length = 0;
+  const log = await applyCollectionSchema(s.request, cs, { dryRun: true });
+  assert.deepEqual(s.writes, [], 'a dry run writes nothing');
+  assert.deepEqual(
+    log.filter((l: string) => !l.startsWith('unchanged')),
+    [
+      'would added field in_hero (boolean)',
+      'would added field hero_order (integer)',
+      'would reorder fields',
+    ],
+  );
+  await applyCollectionSchema(s.request, cs);
+  s.writes.length = 0;
+  const again = await applyCollectionSchema(s.request, cs);
+  assert.deepEqual(s.writes, [], `a rerun writes nothing: ${s.writes.join(', ')}`);
+  assert.ok(
+    again.every((l: string) => l.startsWith('unchanged')),
+    again.join('\n'),
+  );
+});
+
+test('case_studies settings match what EmDash returns: no "seo" in supports, hasSeo instead', async () => {
+  const cs = await import('../../cms/schema/case_studies.mjs');
+  // EmDash stores the SEO panel as the hasSeo flag and returns supports without "seo". Listing it
+  // here made the comparison never read "unchanged", so the loader's re-check would stop.
+  assert.deepEqual([...cs.COLLECTION.supports].sort(), ['drafts', 'revisions', 'search']);
+  assert.equal(cs.COLLECTION.hasSeo, true);
+  assert.equal(cs.COLLECTION.urlPattern, '/work/{slug}/');
+  // The CI seed puts "seo" back, so ncs-ci keeps the SEO panel and the sitemap entry.
+  const { seedCollection } = await import('../../scripts/ci-dataset/cms-fixtures.mjs');
+  const seeded = seedCollection(cs);
+  assert.deepEqual(seeded.supports, ['drafts', 'revisions', 'seo', 'search']);
+  assert.ok(!('hasSeo' in seeded));
+  assert.equal(seeded.urlPattern, '/work/{slug}/');
+});
