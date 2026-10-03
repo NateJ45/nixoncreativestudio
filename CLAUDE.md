@@ -18,7 +18,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 - Case studies are collection `case_studies` in EmDash (D1, R2, KV), read by `src/lib/caseStudies.ts`. There are no Astro content collections and no `src/content/`; `src/live.config.ts` is the only content config.
 - Cache and headers: `src/worker.ts`, `src/lib/routeCache.ts`, `cachePublicPage()` in `BaseLayout`. `public/_headers` no longer reaches HTML (Gotcha 15).
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.
-- Read the strategy doc (`docs/claude/strategy-and-audience.md`) before any design call.
+- Read `docs/claude/strategy-and-audience.md` before any design call (the original strategy docx was deleted; use `PRODUCT.md` and `docs/`).
 
 ## Vault
 
@@ -93,7 +93,7 @@ Reference docs, read when needed (`docs/claude/`):
 - `stack.md`: read when choosing or wiring a library.
 - `setup-checklist.md`: read when asked what is unconfigured or what content is outstanding.
 - `working-style.md`: full communication-style text.
-- `strategy-and-audience.md`: read before any design or copy call (points at `NCS-Website-Strategy.docx` in the sibling `Nixon Creative Studio Website` folder).
+- `strategy-and-audience.md`: read before any design or copy call (the original strategy docx was deleted 2026-10-03).
 
 Existing docs: `docs/EMDASH.md` (what exists, gotchas), `docs/EMDASH-SCHEMA.md`, `docs/CMS-DESIGN.md`, `docs/CMS-INVENTORY.md`, `docs/EDITING-GUIDE.md` (Nathan's plain-language walkthrough), `docs/LAUNCH-RUNBOOK.md` (launch and rollback), `docs/PENDING.md`, `docs/TESTING.md`, `docs/agent/component-sources.md` (where to pull components from), `docs/stack-template/` (new-site runbook), `PRODUCT.md`. The official EmDash agent guidance is vendored in `.claude/skills/building-emdash-site/`.
 
