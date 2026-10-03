@@ -109,7 +109,7 @@ export const addOns: AddOn[] = [
   },
   {
     name: 'Care plan',
-    price: 'from $75/mo',
+    price: 'from $100/mo',
     note: 'Optional. Updates, backups, security, and, on the higher tiers, a monthly bucket of small content edits. It does not cover major revisions or new features, which are quoted separately. Skip it and the site is still yours to leave alone for years, with no lock-in.',
   },
 ];
