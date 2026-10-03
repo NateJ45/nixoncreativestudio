@@ -910,3 +910,15 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     expect the first visitor to each page after a deploy or edit to pay the cold
     render. A "pages are slow" check must first confirm `CF-Cache-Status: HIT`
     on the page (poll it a few times, no cache-busting) before blaming code.
+22. **`.github/workflows/warm-cache.yml` re-warms the pages every 5 minutes.**
+    It reads the page list from the live `/sitemap-0.xml` plus the case studies
+    in `/rss.xml` and GETs each, printing status, `CF-Cache-Status` and time per
+    page (open a run to see which pages were cold). It exists for Gotcha 21: a
+    deploy or an admin write leaves pages cold, and this brings them back within
+    minutes. It warms the Cloudflare location nearest GitHub's servers and the
+    shared upper tier, not every location, and GitHub's scheduler can run late,
+    so treat it as a mitigation, not a guarantee. It never fails the run
+    (`uptime.yml` is the alarm). A new public page needs nothing: the sitemap
+    and feed pick it up. Measured when first run: colophon, privacy and
+    photography were cold (about 1s each) and all 15 pages were hits after one
+    pass.
