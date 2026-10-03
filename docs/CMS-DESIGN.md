@@ -404,9 +404,13 @@ Today `ncs-ci` was built once by hand-copied SQL (docs/TESTING.md on the `ci-ded
 
 ### 2.5 Status
 
-| PR      | State       |
-| ------- | ----------- |
-| 0 to 14 | not started |
+| PR      | State                                                                                                             |
+| ------- | ----------------------------------------------------------------------------------------------------------------- |
+| 0       | merged (#51)                                                                                                      |
+| 1       | built, in review: `scripts/ci-dataset/` (snapshot, rebuild, fixtures), `npm run ci-dataset`, seed export extended |
+| 2 to 14 | not started                                                                                                       |
+
+**PR 1 notes (2026-10-03).** Two deviations from section 2.3, both forced by the rule that production is read only through the `emdash` CLI login and public URLs: (1) `snapshot.mjs` builds rows from `content get --raw --published`, `media list` and `taxonomy terms`, not from `wrangler d1 execute` on production, so it maps fields to `ec_<slug>` columns itself (images and repeaters as JSON text, system and author ids nulled) and was checked against the previously hand-built `ncs-ci` rows: body and highlights JSON semantically equal, only media storage keys differ (CI now uses production's keys); (2) per-entry taxonomy links are not readable through the CLI, so `terms.json` pins them. R2 files are copied from the live site's public media URLs with a size and SHA-1 check, not from the production bucket. `--from-scratch` drops tables children-first: dropping `users` before `_emdash_comments` fails with `no such table: main.users`, which is the real error D1 returns (as `D1_RESET_DO`) for an import that hits it. `export-seed-from-instance.mjs` gained `--check` and now writes the seed through prettier; its menu, redirect and `titleField`/`sortOrder`/`admin` paths need an API token or a non-empty menu to prove (docs/PENDING.md item 6). A re-export against production changed one thing in `seed/seed.json`: `urlPattern: "/work/{slug}/"` on `case_studies`.
 
 ---
 

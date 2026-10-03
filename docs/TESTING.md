@@ -218,17 +218,26 @@ strip fills. `tests/routes.ts` lists exactly these slugs. The site title, taglin
 and setup flags are set; there is no admin user, so `/_emdash/admin` is not usable
 on this instance, by design (nothing needs to be edited there).
 
-**How it was built.** Deploy the `ci` Worker once with empty bindings so EmDash
-runs its migrations and applies `seed/seed.json` (the schema and the three
-collections), then insert rows into `ec_case_studies`, `media`, `taxonomies`,
-`content_taxonomies` and `options` with `wrangler d1 execute ncs-ci --remote --file`,
-and `wrangler r2 object put` each referenced file into `ncs-ci-media` under its
-`storage_key`. Author and revision ids are nulled (there are no users or revisions).
-The one-off generator was a script that selected those rows from the old trial
-database; to add a case study later, copy its `ec_case_studies` row, the `media`
-rows for every image id inside its JSON fields, its `content_taxonomies` links and
-the taxonomy terms, and upload the image files, then add the slug to
-`tests/routes.ts`.
+**How it is built, and how to refresh it.** The dataset is reproducible from
+scripts, not hand-copied SQL (`scripts/ci-dataset/`, see its README). A committed
+snapshot of production content (`rows.sql`, `media.json`, written by
+`npm run ci-dataset:snapshot` from the `emdash` CLI login, read-only) is applied
+to the CI resources by `npm run ci-dataset`: `rows.sql` and `fixtures.sql` into D1,
+then every file in `media.json` copied into `ncs-ci-media` from the live site's
+public media URLs (size and SHA-1 checked), then a verify pass through the CI
+Worker. It is idempotent, so a refresh can be repeated at any time and leaves the
+suites green. `npm run ci-dataset -- --from-scratch` drops every table, builds and
+deploys the `ci` Worker, lets EmDash migrate and apply `seed/seed.json`, and
+reloads the snapshot; use it after a seed change (a new collection or field). While
+it runs the CI previews have no data, so do not start it mid-PR. Nothing in these
+scripts can write to production, and the snapshot is committed, so CI renders
+pinned content: Nathan's edits in the production admin never reach it.
+
+To add a case study to CI: add its slug to `CASE_STUDY_SLUGS` in
+`scripts/ci-dataset/snapshot.mjs` and its term slugs to `terms.json`, add it to
+`tests/routes.ts`, then run the snapshot and a refresh. Test-only rows production
+should not carry (a photo, a draft journal entry) go in `fixtures.sql`. Taxonomy
+links are pinned in `terms.json` because the CLI cannot read per-entry terms.
 
 **Redeploying by hand:** `CLOUDFLARE_ENV=ci npm run build && CLOUDFLARE_ENV=ci npx wrangler deploy`.
 Never run `wrangler deploy` without `CLOUDFLARE_ENV=ci`: the default config is production.
