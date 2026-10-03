@@ -59,6 +59,19 @@ test('resolveFiles swaps every $file (nested, in repeaters) and copies the rest'
   assert.equal(hasFileRefs(out), false);
 });
 
+test('planEntry: a stored 0/1 equals a file boolean (EmDash stores booleans as 0 or 1)', () => {
+  const desired = { highlighted: false, show_toc: true, rows: [{ on: false }] };
+  const stored = {
+    status: 'published',
+    data: { highlighted: 0, show_toc: 1, rows: [{ on: 0 }] },
+  };
+  assert.equal(planEntry(stored, desired), 'unchanged');
+  assert.equal(
+    planEntry({ ...stored, data: { ...stored.data, highlighted: 1 } }, desired),
+    'update',
+  );
+});
+
 test('planEntry: create, unchanged, publish and update', () => {
   const desired = { title: 'T', n: 2, rows: [{ text: 'a' }] };
   assert.equal(planEntry(null, desired), 'create');
