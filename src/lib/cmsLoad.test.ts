@@ -72,6 +72,36 @@ test('planEntry: a stored 0/1 equals a file boolean (EmDash stores booleans as 0
   );
 });
 
+test('planEntry: a stored image (extra meta, no src) equals the loader-built one', () => {
+  const built = {
+    id: 'M1',
+    src: '/_emdash/api/media/file/K.jpg',
+    alt: 'A',
+    width: 10,
+    height: 20,
+    provider: 'local',
+    meta: { storageKey: 'K.jpg' },
+  };
+  const stored = {
+    id: 'M1',
+    provider: 'local',
+    width: 10,
+    height: 20,
+    alt: 'A',
+    meta: { storageKey: 'K.jpg', caption: null, blurhash: 'L9', dominantColor: 'rgb(1,2,3)' },
+  };
+  const desired = { headshot: built, photos: [{ image: built, caption: 'c' }] };
+  const existing = {
+    status: 'published',
+    data: { headshot: stored, photos: [{ image: stored, caption: 'c' }] },
+  };
+  assert.equal(planEntry(existing, desired), 'unchanged');
+  const other = { ...existing, data: { ...existing.data, headshot: { ...stored, id: 'M2' } } };
+  assert.equal(planEntry(other, desired), 'update');
+  const alt = { ...existing, data: { ...existing.data, headshot: { ...stored, alt: 'B' } } };
+  assert.equal(planEntry(alt, desired), 'update');
+});
+
 test('planEntry: create, unchanged, publish and update', () => {
   const desired = { title: 'T', n: 2, rows: [{ text: 'a' }] };
   assert.equal(planEntry(null, desired), 'create');
