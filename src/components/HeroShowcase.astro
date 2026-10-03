@@ -525,6 +525,16 @@ const deferred = await Promise.all(
         const count = Number(root.dataset.count || '0');
         if (count < 2) return;
 
+        // Hero.astro renders BOTH stages (the desktop cluster is display:none below lg, the
+        // phone backdrop is display:none from lg up). Only the one that is actually shown may
+        // download slides or run the cycle: before this gate the hidden stage promoted its
+        // own next-site screenshots too, so a phone fetched the desktop captures nobody could
+        // see (measured 2026-10-03: ~340 KB extra inside the LCP window). The visible stage is
+        // the one whose media query matches; a resize across lg wakes the other one up.
+        const shownMq = window.matchMedia(
+          root.classList.contains('is-phone') ? '(max-width: 63.99rem)' : '(min-width: 64rem)',
+        );
+
         const addr = root.querySelector<HTMLElement>('[data-address-text]');
         const shots = (i: number) =>
           Array.from(root.querySelectorAll<HTMLElement>(`[data-shot="${i}"]`));
@@ -552,9 +562,22 @@ const deferred = await Promise.all(
         // Preload the next site during the first dwell, but only once the page has
         // finished loading (or after a short beat if it already has), so the preload
         // never lands in the LCP window.
-        const preloadNext = () => load((cur + 1) % count);
-        if (document.readyState === 'complete') setTimeout(preloadNext, 800);
-        else window.addEventListener('load', () => setTimeout(preloadNext, 800), { once: true });
+        // 2500ms after load (was 800): the first swap is at 5000ms, so the next site still
+        // lands in time, but the request now starts after the homepage LCP rather than inside
+        // it (Lighthouse counts every request that starts before the observed LCP).
+        const PRELOAD_MS = 2500;
+        const preloadNext = () => {
+          if (shownMq.matches) load((cur + 1) % count);
+        };
+        if (document.readyState === 'complete') setTimeout(preloadNext, PRELOAD_MS);
+        else
+          window.addEventListener('load', () => setTimeout(preloadNext, PRELOAD_MS), {
+            once: true,
+          });
+        // Crossing into this stage's breakpoint after load: warm the next site then.
+        shownMq.addEventListener('change', () => {
+          if (shownMq.matches) preloadNext();
+        });
 
         let timer: ReturnType<typeof setInterval> | undefined;
         let cleanup: ReturnType<typeof setTimeout> | undefined;
@@ -567,6 +590,8 @@ const deferred = await Promise.all(
         const RESUME_MS = 1200;
 
         const tick = () => {
+          // The hidden stage stays on its first slide until its breakpoint is shown.
+          if (!shownMq.matches) return;
           const next = (cur + 1) % count;
           const leaving = cur;
 

@@ -225,7 +225,8 @@ tall full-page showcase screenshots came back as 6.9 MB and 2.6 MB PNGs, which
 made the homepage 10.9 MB in Lighthouse (the branch's biggest regression against
 `main`'s 1.7 MB). `src/components/emdash/ScrollShot.astro` renders those
 screenshots with width-only `/_image` URLs instead (160 to 380 KB each) and is
-used by `SelectedWork` and the EmDash mode of `SiteShowcase`. Use it for any
+used by `SelectedWork` (with `defer`, so the six cards stop competing with the
+hero image; see CLAUDE.md Gotcha 14) and the EmDash mode of `SiteShowcase`. Use it for any
 CMS image taller than about 4000 px; ordinary images keep using `Image` from
 `emdash/ui`. Symptom of hitting the limit again: an image whose transfer size
 equals the original file size, with `content-type: image/png` from `/_image`.

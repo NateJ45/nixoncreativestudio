@@ -28,6 +28,11 @@ interface Props {
   /** Widths to offer in the srcset. The browser picks by `sizes`. */
   widths?: number[];
   loading?: 'lazy' | 'eager';
+  /** Hold the download until the visitor scrolls the image into view, or until
+      the page has been idle for a few seconds (script below). See the note on
+      the defer branch. Off by default so the /work and case-study uses keep
+      the plain native lazy behaviour. */
+  defer?: boolean;
 }
 
 const {
@@ -37,7 +42,20 @@ const {
   class: className,
   widths = [420, 750, 1080],
   loading = 'lazy',
+  defer = false,
 } = Astro.props;
+
+// Defer mode (added 2026-10-03, homepage LCP). A native loading="lazy" image is
+// NOT held back when it sits within Chrome's lazy-load distance of the viewport
+// (1250px+, and a phone's first screen plus the hero reaches that), so the six
+// Selected Work screenshots (~850 KB) all started right after first paint and
+// competed with the hero image. Lighthouse's simulated throttling counts every
+// request that starts before the observed LCP, so they inflated LCP from ~3.5s
+// to 4.3-6.3s (blocking just those requests: median 6297 -> 3586ms, same method).
+// Deferred images ship a 1x1 placeholder src plus data-* attributes, and the
+// script at the foot of this file promotes them when scrolled into view or
+// after the page has settled. No-JS visitors get the real image in <noscript>.
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 // ImageValue fields can be absent on an image-field value, so read defensively.
 const media = image as unknown as {
@@ -64,7 +82,35 @@ const attrWidth = fallbackWidth;
 const attrHeight = ratio ? Math.round(fallbackWidth * ratio) : undefined;
 ---
 
-{mediaUrl && (
+{mediaUrl && defer && (
+  <>
+    <img
+      src={BLANK}
+      data-defer-src={resized(fallbackWidth)}
+      data-defer-srcset={srcset}
+      sizes={sizes}
+      alt={alt}
+      width={attrWidth}
+      height={attrHeight}
+      decoding="async"
+      class={className}
+    />
+    <noscript>
+      <img
+        src={resized(fallbackWidth)}
+        srcset={srcset}
+        sizes={sizes}
+        alt={alt}
+        width={attrWidth}
+        height={attrHeight}
+        loading="lazy"
+        decoding="async"
+        class={className}
+      />
+    </noscript>
+  </>
+)}
+{mediaUrl && !defer && (
   <img
     src={resized(fallbackWidth)}
     srcset={srcset}
@@ -77,3 +123,42 @@ const attrHeight = ratio ? Math.round(fallbackWidth * ratio) : undefined;
     class={className}
   />
 )}
+
+<script>
+  // Promote deferred screenshots (see the defer note in the frontmatter). Runs on
+  // astro:page-load so it survives View Transitions; each image is promoted once
+  // (the data attributes are removed), so re-running is harmless.
+  function initDeferredShots() {
+    const pending = () =>
+      Array.from(document.querySelectorAll<HTMLImageElement>('img[data-defer-src]'));
+    if (!pending().length) return;
+
+    const promote = (img: HTMLImageElement) => {
+      if (!img.dataset.deferSrc) return;
+      if (img.dataset.deferSrcset) img.srcset = img.dataset.deferSrcset;
+      img.src = img.dataset.deferSrc;
+      delete img.dataset.deferSrc;
+      delete img.dataset.deferSrcset;
+    };
+
+    // 1. Scrolled to (or already on screen): load now. No rootMargin on purpose, a
+    //    margin would pull the first card's images back into the LCP window.
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          promote(e.target as HTMLImageElement);
+          io.unobserve(e.target);
+        });
+      });
+      pending().forEach((img) => io.observe(img));
+    }
+
+    // 2. Everyone else: once the page has loaded and had a few quiet seconds, warm
+    //    the rest so a visitor who scrolls later finds them ready.
+    const warm = () => setTimeout(() => pending().forEach(promote), 3500);
+    if (document.readyState === 'complete') warm();
+    else window.addEventListener('load', warm, { once: true });
+  }
+  document.addEventListener('astro:page-load', initDeferredShots);
+</script>
