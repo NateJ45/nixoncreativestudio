@@ -44,6 +44,8 @@ export const COLLECTION = singletonSettings({
   description:
     'The words and photos on the About page, including the Currently list you refresh each quarter.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/about/',
   sortOrder: 3,
   titleField: 'seo_title',
 });

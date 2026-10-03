@@ -41,6 +41,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Home page',
   description: 'The words on the homepage: headline, section headings, the process steps.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/',
   sortOrder: 1,
   titleField: 'seo_title',
 });

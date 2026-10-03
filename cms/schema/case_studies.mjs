@@ -21,6 +21,8 @@
      the comparison never read "unchanged" and the loader's re-check would stop. The
      CI seed adds "seo" back from `hasSeo` (cms-fixtures.mjs, seedCollection).
    - `urlPattern` is written out so the seed keeps `/work/{slug}/`.
+   - `sortOrder` puts the collection in the sidebar order the design plans (PR 14); without it
+     EmDash lists it last.
    ============================================================================ */
 import {
   COLLECTION as BASE_COLLECTION,
@@ -34,6 +36,8 @@ export const COLLECTION = {
   ...BASE_COLLECTION,
   supports: BASE_COLLECTION.supports.filter((s) => s !== 'seo'),
   urlPattern: '/work/{slug}/',
+  // Sidebar position (docs/CMS-DESIGN.md 4.3): after Pricing & services (10 to 12), before Journal (14).
+  sortOrder: 13,
 };
 
 export const FIELDS = BASE_FIELDS;

@@ -32,6 +32,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Photography page',
   description: 'The words on the Photography page: headline and the text above each group.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. A fixed address is allowed (no {slug}).
+  urlPattern: '/photography/',
   sortOrder: 6,
   titleField: 'seo_title',
 });

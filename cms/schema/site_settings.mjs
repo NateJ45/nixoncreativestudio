@@ -30,6 +30,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Site settings',
   description: 'Contact details, social links and the shared copy that appears on every page.',
   group: 'Site',
+  // The admin's "live view" button opens this address (the shared copy shows on every page, so the homepage). A fixed address is allowed.
+  urlPattern: '/',
   sortOrder: 0,
   titleField: 'studio_name',
 });

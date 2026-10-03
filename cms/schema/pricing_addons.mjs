@@ -28,6 +28,8 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Add-on',
   description: 'The "Add to any project" cards on the Services page.',
   group: 'Pricing & services',
+  // The admin's "live view" button opens this address (the add-ons show on Services). A fixed address is allowed.
+  urlPattern: '/services/',
   sortOrder: 11,
   titleField: 'name',
   admin: { quickCreate: false, listColumns: ['price', 'sort_order'] },

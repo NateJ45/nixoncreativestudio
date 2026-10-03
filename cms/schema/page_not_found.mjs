@@ -31,6 +31,9 @@ export const COLLECTION = singletonSettings({
   labelSingular: 'Not-found page',
   description: 'The words on the page shown at a broken or old address.',
   group: 'Pages',
+  // Where the admin's "live view" button goes. The Worker answers /404/ by name with the
+  // not-found page (status 200), so the button shows the page instead of a real 404.
+  urlPattern: '/404/',
   sortOrder: 8,
   titleField: 'seo_title',
 });
