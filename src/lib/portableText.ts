@@ -135,3 +135,42 @@ export function headingsOf(
       return { text, slug: slugify(text) };
     });
 }
+
+/** Escape text for an HTML text node or a double-quoted attribute. Apostrophes stay literal. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * The inner HTML of one restricted block: its spans with strong, em and link
+ * marks applied (nesting link > strong > em), text escaped. Expects a block that
+ * already went through restrictPortableText, so every mark is one of those three
+ * and every link href is safe. Used by about.astro, which renders the story as
+ * plain paragraphs without pulling in emdash/ui's PortableText (and its stylesheet).
+ */
+export function blockHtml(block: PTNode): string {
+  const defs = new Map((block.markDefs ?? []).map((d) => [d._key, d]));
+  return (block.children ?? [])
+    .map((span) => {
+      let html = escapeHtml(span.text ?? '');
+      const marks = span.marks ?? [];
+      if (marks.includes('em')) html = `<em>${html}</em>`;
+      if (marks.includes('strong')) html = `<strong>${html}</strong>`;
+      for (const m of marks) {
+        const def = defs.get(m);
+        if (def && def._type === 'link' && isSafeLink(def.href)) {
+          const href = def.href.trim();
+          const blank = def.blank === true && !href.startsWith('#');
+          html = `<a href="${escapeHtml(href)}"${
+            blank ? ' target="_blank" rel="noopener noreferrer"' : ''
+          }>${html}</a>`;
+        }
+      }
+      return html;
+    })
+    .join('');
+}

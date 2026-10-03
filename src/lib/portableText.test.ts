@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  blockHtml,
   headingsOf,
   isSafeLink,
   plainText,
@@ -137,4 +138,52 @@ test('headingsOf lists h2 text and ids for a table of contents', () => {
   ]);
   assert.deepEqual(headingsOf(blocks, 'h3'), [{ text: 'Sub', slug: 'sub' }]);
   assert.deepEqual(headingsOf(null), []);
+});
+
+test('blockHtml: plain text keeps apostrophes literal and escapes markup characters', () => {
+  assert.equal(blockHtml(para("It's a studio's work")), "It's a studio's work");
+  assert.equal(blockHtml(para('a < b & "c" > d')), 'a &lt; b &amp; &quot;c&quot; &gt; d');
+});
+
+test('blockHtml: strong, em and a safe link nest as link > strong > em', () => {
+  const block: PTNode = {
+    _type: 'block',
+    style: 'normal',
+    markDefs: [{ _key: 'l1', _type: 'link', href: 'https://a.example/x?a=1&b=2' }],
+    children: [
+      { _type: 'span', text: 'Plain, ', marks: [] },
+      { _type: 'span', text: 'bold', marks: ['strong'] },
+      { _type: 'span', text: ' ', marks: [] },
+      { _type: 'span', text: 'both', marks: ['em', 'strong', 'l1'] },
+    ],
+  };
+  assert.equal(
+    blockHtml(block),
+    'Plain, <strong>bold</strong> <a href="https://a.example/x?a=1&amp;b=2"><strong><em>both</em></strong></a>',
+  );
+});
+
+test('blockHtml after restrictPortableText drops unsafe links but keeps their text', () => {
+  const block: PTNode = {
+    _type: 'block',
+    style: 'normal',
+    markDefs: [{ _key: 'bad', _type: 'link', href: 'javascript:alert(1)' }],
+    children: [{ _type: 'span', text: 'click me', marks: ['bad'] }],
+  };
+  const [restricted] = restrictPortableText([block]);
+  assert.equal(blockHtml(restricted), 'click me');
+});
+
+test('blockHtml: a link that opens in a new tab gets rel noopener, a fragment never does', () => {
+  const mk = (href: string): PTNode => ({
+    _type: 'block',
+    style: 'normal',
+    markDefs: [{ _key: 'l', _type: 'link', href, blank: true }],
+    children: [{ _type: 'span', text: 'go', marks: ['l'] }],
+  });
+  assert.equal(
+    blockHtml(mk('https://a.example')),
+    '<a href="https://a.example" target="_blank" rel="noopener noreferrer">go</a>',
+  );
+  assert.equal(blockHtml(mk('#now')), '<a href="#now">go</a>');
 });

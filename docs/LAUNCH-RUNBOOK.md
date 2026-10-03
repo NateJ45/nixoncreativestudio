@@ -88,6 +88,24 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 8: About page (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 8 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/about` renders from the committed `cms/content/page_about.json` and the bundled pictures. These steps create the About page screen in the admin and upload the six pictures to R2.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # needs EMDASH_TOKEN from Nathan: Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection page_about --url <prod> --dry-run   # expect: would created collection, would added field x35
+npm run cms:schema -- --collection page_about --url <prod> --yes
+npm run cms:schema -- --collection page_about --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:load -- --collection page_about --url <prod> --dry-run     # expect: would upload 6 images, would create about
+npm run cms:load -- --collection page_about --url <prod> --yes         # uploads headshot.jpg and five photos, then creates and publishes
+npm run cms:load -- --collection page_about --url <prod> --yes         # second run: "unchanged", nothing uploaded
+```
+
+Before the first load save the live structured data and page: `curl -sL <prod>/about/ > about-before.html`. After the load and a five-minute wait, check: the six `<img>` now start with `/_image?href=https%3A%2F%2F...%2F_emdash%2Fapi%2Fmedia%2Ffile%2F` and each answers `content-type: image/webp` to `curl -s -D - -o /dev/null <url>`; the Person JSON-LD block is unchanged; everything else in the HTML matches the before file apart from the `<img>` tags. The edit proof: in `/_emdash/admin`, About page, change a Working on line, set "Currently last updated" to today, publish, reload /about within five minutes, restore from History.
+
 ### PR 7: Services page and service offerings (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 7 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/services` renders from the committed `cms/content/page_services.json` and `service_offerings.json`, byte-for-byte what it showed before (its structured data included), so they can run any time after the PR deploys, independent of PRs 4 to 6. Stop on any surprise in a dry run. `<prod>` is `https://www.nixoncreativestudio.com`.

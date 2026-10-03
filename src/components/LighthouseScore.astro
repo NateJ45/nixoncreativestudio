@@ -25,13 +25,22 @@ interface Score {
   value: number;
 }
 
-// Real mobile Lighthouse scores for this site's /about page. Re-measure and
-// update if the site changes; never invent these.
+// The four numbers are the About page entry's (CMS-DESIGN PR 8; admin: Pages,
+// About page, Lighthouse fields) and about.astro passes them in. The defaults
+// are the last real mobile measurement of this site's /about page. Re-measure
+// and update if the site changes; never invent these.
+interface Props {
+  performance?: number;
+  accessibility?: number;
+  bestPractices?: number;
+  seo?: number;
+}
+const { performance = 92, accessibility = 100, bestPractices = 100, seo = 100 } = Astro.props;
 const scores: Score[] = [
-  { label: 'Performance', value: 92 },
-  { label: 'Accessibility', value: 100 },
-  { label: 'Best Practices', value: 100 },
-  { label: 'SEO', value: 100 },
+  { label: 'Performance', value: performance },
+  { label: 'Accessibility', value: accessibility },
+  { label: 'Best Practices', value: bestPractices },
+  { label: 'SEO', value: seo },
 ];
 
 // Plain-language equivalent for screen readers (the panel itself is aria-hidden).

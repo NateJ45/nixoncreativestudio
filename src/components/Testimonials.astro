@@ -29,6 +29,18 @@
 import TestimonialCarousel from './TestimonialCarousel';
 import { getCaseStudies } from '../lib/caseStudies';
 
+// The heading and sub come from the About page entry (CMS-DESIGN PR 8) and are
+// passed in by about.astro; these defaults are the same words, so the component
+// still renders correctly anywhere it is used without props.
+interface Props {
+  heading?: string;
+  sub?: string;
+}
+const {
+  heading = 'What clients say',
+  sub = "Real words from the churches, schools, and businesses I've built for.",
+} = Astro.props;
+
 // Already sorted newest first by project date.
 const studies = await getCaseStudies(Astro.cache);
 
@@ -48,11 +60,9 @@ const items = studies
     <div class="ncs-container">
       <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="testimonials-heading" class="text-heading">
-          What clients say
+          {heading}
         </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          Real words from the churches, schools, and businesses I've built for.
-        </p>
+        <p class="text-lg leading-[1.55] text-text-muted">{sub}</p>
       </header>
 
       {/* client:visible: the carousel hydrates when scrolled near, so the

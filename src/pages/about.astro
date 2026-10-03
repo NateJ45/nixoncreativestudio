@@ -1,7 +1,9 @@
 ---
-// Safe to edit. The story prose, the principles array, and the Currently arrays
-// hold all of the user-facing copy on this page. The Testimonials band reads
-// the EmDash CMS, so this page is server-rendered (see the note above the
+// Safe to edit. The page words, photos, principles, Currently lists and
+// Lighthouse numbers live in the EmDash admin (Pages, "About page"; read through
+// getAboutPage in src/lib/aboutPage.ts, with cms/content/page_about.json as the
+// committed fallback). This file holds the layout. The Testimonials band reads
+// the EmDash CMS too, so this page is server-rendered (see the note above the
 // template).
 /* ============================================================================
    /about | About Nathan Nixon  [editorial-grid revamp]
@@ -45,126 +47,74 @@ import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { Image } from 'astro:assets';
+import { blockHtml, restrictPortableText } from '../lib/portableText';
+import EmDashPhoto from '../components/emdash/EmDashPhoto.astro';
 import { getSite } from '../data/site';
+import {
+  aboutTitle,
+  buildPersonSchema,
+  freshnessLabel,
+  getAboutPage,
+  updatedLabel,
+} from '../lib/aboutPage';
 
 // Contact details, socials and the owner name come from Site settings in the CMS
-// (with the committed fallback), shared with the header and footer.
+// (with the committed fallback), shared with the header and footer. The words,
+// photos, Currently lists and scores come from the About page entry (also with the
+// committed fallback, which is what production serves until its data is loaded).
 const site = await getSite(Astro);
+const about = await getAboutPage(Astro);
 
-// Headshot for the masthead portrait frame, and the personal snapshots for the
-// "Outside the studio" gallery. All resized into src/assets at build-friendly
-// sizes from the originals.
+// Pictures bundled with the site, resized at request time by the same /_image
+// resizer as the CMS media. They are what the committed fallback points at
+// (cms/content/page_about.json names each by its repo path), so the page still
+// shows its pictures while the CMS is empty. A CMS entry carries real EmDash
+// media instead and renders through EmDashPhoto (a resized WebP from /_image).
 import headshot from '../assets/brand/headshot.jpg';
 import familyPhoto from '../assets/about/family.jpg';
 import runningPhoto from '../assets/about/running.jpg';
 import exploringPhoto from '../assets/about/exploring.jpg';
 import weddingPhoto from '../assets/about/wedding.jpg';
 import portraitBwPhoto from '../assets/about/portrait-bw.jpg';
+const bundled: Record<string, ImageMetadata> = {
+  'src/assets/brand/headshot.jpg': headshot,
+  'src/assets/about/family.jpg': familyPhoto,
+  'src/assets/about/running.jpg': runningPhoto,
+  'src/assets/about/exploring.jpg': exploringPhoto,
+  'src/assets/about/wedding.jpg': weddingPhoto,
+  'src/assets/about/portrait-bw.jpg': portraitBwPhoto,
+};
 
 // "Outside the studio" gallery. Real, lightly captioned snapshots of the life
 // behind the one-person studio. Captions are honest and deliberately generic
 // (no names), so nothing presumes more than the photo shows. Each photo is a
 // click / keyboard zoom trigger for the shared Lightbox at the foot of the page.
-const photos = [
-  {
-    src: familyPhoto,
-    caption: 'A park afternoon',
-    alt: 'Nathan with his family on a picnic blanket in a park, a young child eating watermelon.',
-  },
-  {
-    src: runningPhoto,
-    caption: 'Race day',
-    alt: 'Nathan and a friend at the end of a charity 5K, race bibs on, in a sunny parking lot.',
-  },
-  {
-    src: exploringPhoto,
-    caption: 'Out exploring',
-    alt: 'Nathan carrying a small child on a sunny day in front of old railroad cars.',
-  },
-  {
-    src: weddingPhoto,
-    caption: 'Wedding day',
-    alt: 'Nathan and his wife laughing together on their wedding day, beside a lake.',
-  },
-  {
-    src: portraitBwPhoto,
-    caption: 'From the other side of the lens',
-    alt: 'A black-and-white studio portrait of Nathan looking off to the side.',
-  },
-];
+// A photo is either CMS media (`image`) or a bundled asset (`file`); one with
+// neither bundled asset nor media is dropped, never rendered half-built.
+const photos = about.outside.photos.flatMap((photo) =>
+  photo.image || (photo.file && bundled[photo.file])
+    ? [{ ...photo, src: photo.file ? bundled[photo.file] : undefined }]
+    : [],
+);
+const headshotSrc = about.headshot.file ? bundled[about.headshot.file] : undefined;
 
-// Three working principles. Keep these honest; they should describe how
-// I actually work, not how I wish I worked.
-const principles = [
-  {
-    title: 'Strategy before pixels',
-    body: 'Every project starts with a working session and a one-page brief we both agree on. Design choices follow from there, not from whichever template looks freshest.',
-  },
-  {
-    title: 'The right platform for the job',
-    body: 'Some clients are best served by a custom-coded site, others by Squarespace or WordPress. I pick what fits your budget and the people who will maintain it, then set it up so the next volunteer or staff member can keep it running after I hand it over.',
-  },
-  {
-    title: 'Cincinnati base, clients anywhere',
-    body: 'Based in Cincinnati, so local clients meet in person and get on-site photography. Web design and strategy go wherever the client is, fully remote when that is easier. Short distance when it helps, no distance when it does not.',
-  },
-];
+// The story: a Portable Text field reduced to paragraphs (headings become
+// paragraphs, pictures and other blocks are ignored; bold, italic and safe links
+// are the only marks) and rendered as bare <p> elements. It deliberately does NOT
+// use RestrictedPortableText: that hands the blocks to emdash/ui's PortableText,
+// whose 9.5 KB stylesheet would add a render-blocking <link> to this page, and a
+// story of paragraphs needs none of it (measured in the PR 8 parity run).
+const storyParagraphs = restrictPortableText(about.story.body).map(blockHtml);
 
-// "Currently" content, merged in from the old standalone /now page (a Derek
-// Sivers-style snapshot). Rewrite these arrays about once a quarter; the
-// freshness pill and the "last updated" stamp keep the section honest.
-const lastUpdated = '2026-10-01'; // bump whenever the arrays below change
-
-// Parse the ISO day as LOCAL midnight. A bare 'YYYY-MM-DD' parses as UTC, so in
-// a timezone behind UTC both the label and the freshness would read a day early
-// (e.g. "yesterday" / the prior date). The T00:00:00 suffix forces local time.
-const lastUpdatedDate = new Date(`${lastUpdated}T00:00:00`);
-const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-}).format(lastUpdatedDate);
-
-// Relative freshness for the status pill: today / N days / N weeks / N months.
-// If it ever reads "8 months ago," that is the nudge to rewrite the arrays.
-function freshnessLabel(iso: string): string {
-  const days = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(`${iso}T00:00:00`).getTime()) / 86_400_000),
-  );
-  if (days <= 0) return 'Updated today';
-  if (days === 1) return 'Updated yesterday';
-  if (days < 14) return `Updated ${days} days ago`;
-  if (days < 60) return `Updated ${Math.round(days / 7)} weeks ago`;
-  const months = Math.round(days / 30);
-  return `Updated ${months} ${months === 1 ? 'month' : 'months'} ago`;
-}
-const freshness = freshnessLabel(lastUpdated);
-
-// Active client + studio work, most front-of-mind first. Named orgs here are
-// ones I'm public with (the Presbyterian Academy is a case study on this site);
-// keep any private client generic rather than named.
-const workingOn = [
-  "Finishing the Presbyterian Academy website ahead of the school's first term.",
-  'Buying our first house, here in Cincinnati.',
-];
+// The Currently block (merged in from the old standalone /now page, a Derek
+// Sivers-style snapshot) is rewritten about once a quarter in the admin (Pages,
+// About page). The freshness pill and the "last updated" stamp read the
+// "Currently last updated" date, so the section stays honest.
+const lastUpdatedLabel = updatedLabel(about.currently.updated);
+const freshness = freshnessLabel(about.currently.updated);
 
 // Capacity signals. status drives the chip color and the readable label, so
 // availability never reads on color alone. open -> green, limited -> amber.
-const booking = [
-  {
-    status: 'open' as const,
-    label: 'Web design',
-    detail:
-      'Open to new web design projects of every kind this quarter, from a single landing page to a full rebuild.',
-  },
-  {
-    status: 'limited' as const,
-    label: 'Photography',
-    detail:
-      'A few shoot days each month, fit around the web work, for portraits, families, events, and the brand photography that pairs with a new site.',
-  },
-];
 const statusMeta = {
   // Status text must clear AA (4.5:1, it is text-xs small text) on the now-sheet
   // .surface-card in BOTH themes. The brand amber (--tertiary) only passes on the
@@ -177,18 +127,6 @@ const statusMeta = {
   limited: { word: 'Limited', dot: 'bg-tertiary', text: 'text-amber-700 dark:text-amber-300' },
 };
 
-// Books / longer-form pieces, and skills I'm sharpening.
-const reading = [
-  { title: 'John Adams', author: 'David McCullough' },
-  { title: 'The New Father', author: 'Armin A. Brott' },
-  { title: 'The Lord of the Rings', author: 'J.R.R. Tolkien', note: 're-reading' },
-];
-const learning = [
-  'Smoother, steadier video out of my gimbal',
-  'Coaxing a genuinely lush green lawn out of the backyard',
-  'Going deeper on Astro, the framework this very site runs on',
-];
-
 // Reused layout tokens. railGrid is the page's one asymmetric grid; railLabel is
 // the quiet mono word-label in the left rail.
 const railGrid =
@@ -196,19 +134,9 @@ const railGrid =
 const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 
 // JSON-LD schemas specific to the About page: Person for the studio owner,
-// linked back to the Organization defined site-wide.
-const schemas = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    '@id': `${site.url}/about/#person`,
-    name: site.ownerName,
-    jobTitle: 'Founder, Designer, Developer, Photographer',
-    worksFor: { '@id': `${site.url}#organization` },
-    url: `${site.url}/about/`,
-    sameAs: [site.social.instagram, site.social.linkedin],
-  },
-];
+// linked back to the Organization defined site-wide. Built from the page entry's
+// job title and the site settings, so it can never disagree with the page.
+const schemas = [buildPersonSchema(about, site)];
 
 // Server-rendered like every page (CMS-DESIGN PR 2). The Testimonials band reads case studies from EmDash (D1) at request time.
 // The route cache is tagged with the case studies this page read (BaseLayout sets
@@ -216,8 +144,8 @@ const schemas = [
 ---
 
 <BaseLayout
-  title="About | Nixon Creative Studio"
-  description="About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio."
+  title={aboutTitle(about.seoTitle, site.studioName)}
+  description={about.seoDescription}
   schemas={schemas}
 >
   <!-- ====================================================================
@@ -231,14 +159,13 @@ const schemas = [
         <!-- Rail: decorative word-label + a quiet location stamp. -->
         <div class="flex flex-col gap-2" aria-hidden="true">
           <p class={railLabel}>About</p>
-          <p class="font-mono text-[0.8rem] text-text-muted">Cincinnati, OH</p>
+          <p class="font-mono text-[0.8rem] text-text-muted">{site.address}</p>
         </div>
 
         <!-- Track: oversized h1 breakout, then intro | portrait split. -->
         <div class="min-w-0">
           <h1 id="about-hero-heading" class="max-w-[20ch] leading-[0.95]" data-reveal>
-            A one-person studio for{' '}
-            <span class="text-link">organizations that take their work seriously.</span>
+            {about.heading} <span class="text-link">{about.headingAccent}</span>
           </h1>
 
           <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
@@ -250,10 +177,7 @@ const schemas = [
               data-reveal="right"
               style="--reveal-delay: 120ms;"
             >
-              I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with
-              small businesses, nonprofits, churches, and schools, in person around the region and
-              anywhere for web work. I do the strategy, the design, the photography, and the code,
-              so the person you meet on day one is the same person who hands you the finished site.
+              {about.intro}
             </p>
 
             <!-- Portrait. The headshot fills the original 4:5 frame (the square
@@ -268,14 +192,27 @@ const schemas = [
                 class="absolute -right-4 -bottom-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
                 aria-hidden="true"
               ></div>
-              <Image
-                src={headshot}
-                alt="Nathan Nixon, smiling outdoors"
-                widths={[288, 432, 576, 864]}
-                sizes="(min-width: 64rem) 18rem, 60vw"
-                loading="eager"
-                class="aspect-[4/5] w-full rounded-xl border border-border object-cover shadow-lg ring-1 ring-black/5"
-              />
+              {headshotSrc ? (
+                <Image
+                  src={headshotSrc}
+                  alt={about.headshot.alt}
+                  widths={[288, 432, 576, 864]}
+                  sizes="(min-width: 64rem) 18rem, 60vw"
+                  loading="eager"
+                  class="aspect-[4/5] w-full rounded-xl border border-border object-cover shadow-lg ring-1 ring-black/5"
+                />
+              ) : (
+                <div class="aspect-[4/5] w-full overflow-hidden rounded-xl border border-border shadow-lg ring-1 ring-black/5">
+                  <EmDashPhoto
+                    image={about.headshot.image!}
+                    alt={about.headshot.alt}
+                    widths={[288, 432, 576, 864]}
+                    sizes="(min-width: 64rem) 18rem, 60vw"
+                    priority
+                    class="block h-full w-full object-cover"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -297,10 +234,8 @@ const schemas = [
         </div>
 
         <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal="blur">
-          One person on every project, start to finish: strategy, design, photography, and code. I
-          work with{' '}
-          <span class="text-link">churches, schools, nonprofits, and small businesses</span>
-          around Cincinnati in person, and anywhere for web work.
+          {about.thesis.before} <span class="text-link">{about.thesis.accent}</span>{' '}
+          {about.thesis.after}
         </p>
       </div>
     </div>
@@ -320,10 +255,8 @@ const schemas = [
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-story-heading">The longer story</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              From behind the camera to the web, and why one person handles all of it.
-            </p>
+            <h2 id="about-story-heading">{about.story.heading}</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.story.sub}</p>
           </header>
 
           <div class="mt-l grid gap-xl lg:grid-cols-2">
@@ -332,35 +265,9 @@ const schemas = [
               data-reveal
               style="--reveal-delay: 120ms;"
             >
-              <p>
-                I came to this work through a camera. For years I photographed portraits, families,
-                weddings, the events people most want to remember, and the part I loved was helping
-                someone show up at their best. When the shoots dried up in 2020, I started building
-                websites for a few of those same clients, and it turned out to be the same job in a
-                new medium: work out what someone is really trying to say, then make it clear. Web
-                design is the studio's main work now, but the photographer's eye stayed, and most
-                projects still end up with real photography in them.
-              </p>
-              <p>
-                Before any of that I studied mechanical engineering at the University of Edinburgh,
-                back home in Scotland. The degree did not make me a designer, but it taught me to
-                take a thing apart, understand why each piece is there, and put it back together so
-                it holds. That is how I approach a website too: structure first, surface second, and
-                built so the person who inherits it can actually keep it running.
-              </p>
-              <p>
-                I also do plenty of this work as a volunteer. I'm on the media team at Crestview
-                Presbyterian Church, where I run the weekly livestream, plan and buy the equipment
-                upgrades, and shoot the photo and video the church uses for its website and its
-                socials.
-              </p>
-              <p>
-                Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a
-                US citizen in 2022, and these days we're raising two kids and buying our first house
-                here. When I'm away from a screen I'm usually out on a long run, chasing landscapes
-                with a camera, deep in an ambitious Lego build with the kids, or a few episodes into
-                a history drama.
-              </p>
+              {storyParagraphs.map((html) => (
+                <p set:html={html} />
+              ))}
             </div>
 
             <!-- "Plain code under the hood," shown rather than told. The terminal
@@ -383,7 +290,12 @@ const schemas = [
                 style="--reveal-delay: 200ms;"
               >
                 <Terminal />
-                <LighthouseScore />
+                <LighthouseScore
+                  performance={about.lighthouse.performance}
+                  accessibility={about.lighthouse.accessibility}
+                  bestPractices={about.lighthouse.bestPractices}
+                  seo={about.lighthouse.seo}
+                />
               </div>
             </div>
           </div>
@@ -409,11 +321,8 @@ const schemas = [
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-outside-heading">Outside the studio</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A few snapshots from the rest of life around Cincinnati: family, the trails, and the
-              occasional turn in front of the camera.
-            </p>
+            <h2 id="about-outside-heading">{about.outside.heading}</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.outside.sub}</p>
           </header>
 
           <ul class="mt-l columns-2 gap-m lg:columns-3 [&>li]:mb-m [&>li]:break-inside-avoid">
@@ -426,13 +335,23 @@ const schemas = [
                     title="View larger"
                     class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
-                    <Image
-                      src={photo.src}
-                      alt={photo.alt}
-                      widths={[320, 560, 840, 1200, 1600]}
-                      sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
-                      class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
+                    {photo.src ? (
+                      <Image
+                        src={photo.src}
+                        alt={photo.alt}
+                        widths={[320, 560, 840, 1200, 1600]}
+                        sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
+                        class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <EmDashPhoto
+                        image={photo.image!}
+                        alt={photo.alt}
+                        widths={[320, 560, 840, 1200, 1600]}
+                        sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
+                        class="block h-auto w-full transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    )}
                   </button>
                   <figcaption class="mt-xs font-mono text-xs tracking-[0.06em] text-text-muted uppercase">
                     {photo.caption}
@@ -460,14 +379,12 @@ const schemas = [
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-how-heading">How I work</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              Three principles that hold across every project, big or small.
-            </p>
+            <h2 id="about-how-heading">{about.principles.heading}</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.principles.sub}</p>
           </header>
 
           <ul class="mt-l flex flex-col">
-            {principles.map((principle, index) => (
+            {about.principles.items.map((principle, index) => (
               <li
                 class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
                 data-reveal
@@ -512,11 +429,8 @@ const schemas = [
 
         <div class="min-w-0">
           <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-currently-heading">Currently</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A present-tense snapshot of the studio: current work, what I'm reading, and what I'm
-              trying to get sharper on. Rewritten every couple of months.
-            </p>
+            <h2 id="about-currently-heading">{about.currently.heading}</h2>
+            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.currently.sub}</p>
           </header>
 
           <!-- One now-sheet: the page's single inset card. Two-column ledger at
@@ -534,7 +448,7 @@ const schemas = [
                     Working on
                   </h3>
                   <ul class="mt-s flex flex-col">
-                    {workingOn.map((item, index) => (
+                    {about.currently.workingOn.map((item, index) => (
                       <li
                         class="flex items-start gap-s border-t border-border py-s"
                         data-reveal="left"
@@ -555,7 +469,7 @@ const schemas = [
                     Booking
                   </h3>
                   <ul class="mt-s flex flex-col">
-                    {booking.map((slot, index) => {
+                    {about.currently.booking.map((slot, index) => {
                       const meta = statusMeta[slot.status];
                       return (
                         <li
@@ -593,7 +507,7 @@ const schemas = [
                     Reading
                   </h3>
                   <ul class="mt-s flex flex-col">
-                    {reading.map((book, index) => (
+                    {about.currently.reading.map((book, index) => (
                       <li
                         class="border-t border-border py-s"
                         data-reveal="right"
@@ -618,7 +532,7 @@ const schemas = [
                     Learning
                   </h3>
                   <ul class="mt-s flex flex-col">
-                    {learning.map((item, index) => (
+                    {about.currently.learning.map((item, index) => (
                       <li
                         class="border-t border-border py-s leading-[1.55] text-text"
                         data-reveal="right"
@@ -642,13 +556,10 @@ const schemas = [
        block, no fabricated quote). This is the first of the two deliberate
        full-bleed beats at the tail of the page (after the ruled column ends):
        its .band-themed surface is set inside Testimonials.astro, not here. -->
-  <Testimonials />
+  <Testimonials heading={about.testimonials.heading} sub={about.testimonials.sub} />
 
   <!-- Closing CTA: the second deliberate full-bleed break, outside the grid. -->
-  <CtaBanner
-    title="Want to talk about a project?"
-    sub="I take on a small number of projects each quarter. The earlier we talk, the easier it is to schedule the work."
-  />
+  <CtaBanner title={about.ctaTitle} sub={about.ctaSub} />
 
   <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
   <Lightbox />
