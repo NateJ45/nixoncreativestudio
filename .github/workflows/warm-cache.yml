@@ -32,6 +32,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Probe what the runner receives (temporary)
+        run: |
+          for u in https://nixoncreativestudio.com/sitemap-0.xml https://nixoncreativestudio.com/rss.xml https://nixoncreativestudio.com/about/; do
+            echo "=== $u"
+            curl -sS -L -D /tmp/h.txt -o /tmp/b.txt --max-time 25 -w 'code=%{http_code} size=%{size_download} url_effective=%{url_effective}\n' "$u" || echo "curl failed: $?"
+            grep -a -i -E '^(HTTP|server|cf-cache-status|cf-mitigated|content-type|location)' /tmp/h.txt | head -8
+            head -c 250 /tmp/b.txt; echo
+          done
       - name: Request every public page
         env:
           SITE_URL: ${{ vars.SITE_URL }}
