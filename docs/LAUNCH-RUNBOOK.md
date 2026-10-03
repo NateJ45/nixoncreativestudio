@@ -88,6 +88,24 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 6: Home page copy (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 6 shipped before any production write was possible. The live site works without these steps: the hero, the Selected Work, pricing and process copy, and the title and meta description render from the committed `cms/content/page_home.json`, the same words as before (the one visible difference is the homepage meta description, which was the bare studio name and is now the tagline; CMS-DESIGN 2.5, PR 6 notes). So the steps can run any time after the PR deploys, independent of PRs 4 and 5. Stop on any surprise in a dry run. `<prod>` is `https://www.nixoncreativestudio.com`.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection page_home --url <prod> --dry-run   # expect: would created collection, would added field x25
+npm run cms:schema -- --collection page_home --url <prod> --yes
+npm run cms:schema -- --collection page_home --url <prod> --yes       # second run: every line "unchanged"
+npm run cms:load -- --collection page_home --url <prod> --dry-run     # expect: would create home
+npm run cms:load -- --collection page_home --url <prod> --yes
+npm run cms:load -- --collection page_home --url <prod> --yes         # second run: "unchanged"
+```
+
+Then switch CI to read the real row: add `'page_home'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs` (and the PR 4 and PR 5 collections if their data is already loaded), run `node scripts/export-seed-from-instance.mjs --url <prod>` (needs the token), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, and commit `seed/seed.json`, `rows.sql`, `cms-rows.sql`, `media.json`. Finally the edit proof: in `/_emdash/admin`, open Home page, change the headline's coloured part (Headline, the coloured last part) from "pull their weight." to anything, publish, reload `/` within five minutes and see it in the hero, then restore it from History. Check the Services page too: its "How we work" steps are the same fields.
+
 ### PR 5: Pricing tiers and add-ons (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 5 shipped before any production write was possible. The live site works without these steps (the homepage teaser and /services render from the committed `cms/content/pricing_*.json`, the same numbers as before), so they can run any time after the PR deploys, independent of PR 4's data. Stop on any surprise in a dry run. `<prod>` is `https://www.nixoncreativestudio.com`.

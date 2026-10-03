@@ -36,6 +36,12 @@
 import ScrollShot from './emdash/ScrollShot.astro';
 import EmDashCover from './emdash/EmDashCover.astro';
 import { getCaseStudies } from '../lib/caseStudies';
+import { getHomePage } from '../lib/homePage';
+
+// The section heading, sub paragraph and tail link are the CMS "Home page" copy
+// (committed fallback in cms/content/page_home.json). The cards below stay
+// derived from the case studies.
+const { work } = await getHomePage(Astro);
 
 // Pull the featured case studies, newest first, and take the top three to
 // fill the one-primary + two-secondary layout. If fewer than three are
@@ -65,11 +71,8 @@ const [primary, ...secondaries] = featured;
          the title carries its own weight, and the sub paragraph does the
          explanatory work that an eyebrow would otherwise pretend to do. */}
       <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="selected-work-heading">Selected work</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          A few recent projects. Each one started with a conversation about what the organization
-          actually needed, not which template to pick.
-        </p>
+        <h2 id="selected-work-heading">{work.heading}</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">{work.sub}</p>
       </header>
 
       {/* Asymmetric card list. The grid is built with named template areas
@@ -213,7 +216,7 @@ const [primary, ...secondaries] = featured;
          dead-ending after three featured projects. */}
       <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
         <a class="card-link text-lg" href="/work/">
-          Explore more projects
+          {work.linkLabel}
         </a>
       </div>
     </div>

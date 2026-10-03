@@ -320,6 +320,25 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## Home page copy (CMS-DESIGN PR 6, 2026-10-03)
+
+The words on the homepage read from one singleton. Design: docs/CMS-DESIGN.md section 1.4 and "PR 6 notes".
+
+| What                                                                                                                                                               | Where it is edited                                                                      | How the site reads it                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Hero headline (lead and coloured accent as two fields), positioning, proof line and its link text, both button labels                                              | Admin, **Home page** (collection `page_home`, entry `home`; `cms/schema/page_home.mjs`) | `getHomePage(Astro)` in `src/lib/homePage.ts`, used by `Hero.astro`                                                          |
+| Selected Work heading, sub and tail link; "What it costs" heading, sub, includes list, reassurance and link; "How we work" heading, sub, four steps; closing block | Same entry                                                                              | `SelectedWork.astro`, `PricingTeaser.astro`, `ProcessBand.astro` (which `/services` also renders), all through `getHomePage` |
+| Page title and meta description                                                                                                                                    | Same entry (`seo_title`, `seo_description`)                                             | `index.astro` passes them to `BaseLayout`                                                                                    |
+
+Behaviour worth knowing:
+
+- **Fallback.** A missing, unpublished or unreadable entry, a blank required field, or a process or includes list shorter than four, serves the committed `cms/content/page_home.json` and logs `[cms] ... serving the committed fallback`. Production has no data loaded when this ships, so it renders from the fallback.
+- **One read per request.** The hero, three sections and `/services`' process band share one memoised read (a `WeakMap` on `Astro.request`) and one cache tag, so a publish purges `/` and `/services/`.
+- **The hero stays the LCP element it was.** Still server-rendered, still the CSS-only first-frame entrance, no `data-reveal` anywhere in it (CLAUDE.md Gotchas 10 and 14). Measured on `ncs-ci`, Lighthouse CLI mobile, same machine, route cache warm: median LCP 3614 ms on `main` (12 runs) against 3615 ms on the CMS path (12 runs) and 3624 ms on the fallback path (16 runs); the LCP element is the hero phone screenshot in all of them. The distribution is bimodal (a 2.7 to 2.9 s cluster and a 3.6 s cluster), so a 6-run median can swing by 400 ms by luck; use at least 12 runs when comparing.
+- **Not in the entry on purpose:** section order, every link target, the step numbers (counted from order), the hero device scene and the client marquee.
+- **Rendered difference.** The only DIFF against `main` on all five compared routes is the homepage meta, og and twitter description: it was the bare studio name and is now the tagline (the design seeds it that way, 1.1). The hero proof line still renders "photographed byone person" (no space before the link) exactly as before; fixing it is a separate change (docs/PENDING.md).
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 6 data") and docs/LAUNCH-RUNBOOK.md.
+
 ## Pricing (CMS-DESIGN PR 5, 2026-10-03)
 
 The homepage "What it costs" band and the /services tier cards and add-on cards read from two list collections. Design: docs/CMS-DESIGN.md section 1.5 and "PR 5 notes".
