@@ -910,18 +910,22 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     expect the first visitor to each page after a deploy or edit to pay the cold
     render. A "pages are slow" check must first confirm `CF-Cache-Status: HIT`
     on the page (poll it a few times, no cache-busting) before blaming code.
-22. **`.github/workflows/warm-cache.yml` re-warms the pages every 5 minutes.**
-    It reads the page list from the live `/sitemap-0.xml` plus the case studies
-    in `/rss.xml` and GETs each, printing status, `CF-Cache-Status` and time per
-    page (open a run to see which pages were cold). It exists for Gotcha 21: a
-    deploy or an admin write leaves pages cold, and this brings them back within
-    minutes. It warms the Cloudflare location nearest GitHub's servers and the
-    shared upper tier, not every location, and GitHub's scheduler can run late,
-    so treat it as a mitigation, not a guarantee. It never fails the run
-    (`uptime.yml` is the alarm). A new public page needs nothing: the sitemap
-    and feed pick it up. Measured when first run: colophon, privacy and
-    photography were cold (about 1s each) and all 15 pages were hits after one
-    pass.
+22. **There is no cache warm-up, and a GitHub Action cannot be one (tried and removed 2026-10-03).**
+    A scheduled workflow that GETs every page every 5 minutes was built and
+    merged (PR 78) to hide the cold first view after a deploy or an admin write
+    (Gotcha 21). It never worked: Cloudflare Bot Fight Mode (zone setting
+    `fight_mode: true`) answers GitHub's runners with a 403 "Just a moment..."
+    managed challenge (header `cf-mitigated: challenge`) for every URL, so it could
+    not even read the sitemap, and on the Free plan Bot Fight Mode cannot be
+    exempted with a WAF skip rule. Nathan chose to remove it rather than turn bot
+    protection off or add a second Worker. The same wall would stop `uptime.yml`
+    if its `SITE_URL` variable were ever set (it asserts 200 and would get 403).
+    If a warm-up is wanted later, the untested options are a small separate
+    Worker with a cron trigger (requests from inside Cloudflare, not data-center
+    traffic) or turning Bot Fight Mode off (a security decision for Nathan).
+    Until then the rule in Gotcha 21 stands: do not edit or load content right
+    before showing the site, and expect the first visit per page after a deploy
+    to be cold.
 23. **Mobile speed: how to measure it, what moved it, what did not (2026-10-03).**
     Measure with the Lighthouse CLI, not the DevTools tool (that one has no
     performance category): `npx lighthouse <url> --only-categories=performance

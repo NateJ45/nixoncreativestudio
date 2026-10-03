@@ -204,7 +204,7 @@ For Nathan on the way: (1) After the schema is applied, resubmit `sitemap-index.
 
 **Blocks:** nothing. Nathan confirmed on 2026-10-03 that an admin edit shows on the live site within seconds, so purge-by-tag works on this zone. `PAGE_MAX_AGE` in `src/lib/routeCache.ts` is still 5 minutes (it is now only the fallback for a missed purge). Raising it to a day (the design used 86400) would make more visits a cache HIT; the cost is that a purge that fails for any reason leaves a page stale for a day instead of five minutes. Say which you want. The editing guide and CLAUDE.md say "within seconds, five minutes at worst", which stays true at 5 minutes and would need the last half changed if the lifetime goes up.
 
-Also open: the first request per URL after each deploy is a cache MISS (about 0.5 to 1.6 s on ncs-ci). A post-deploy warm-up (a GET of each route from the deploy workflow) would hide that from visitors; not built.
+Also open: the first request per URL after each deploy is a cache MISS (about 0.5 to 1.6 s on ncs-ci). A post-deploy warm-up would hide that from visitors. A GitHub Action was tried and removed on 2026-10-03: Cloudflare Bot Fight Mode challenges GitHub's runners (CLAUDE.md Gotcha 22), so it warmed nothing; not built.
 
 ---
 
