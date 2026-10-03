@@ -241,7 +241,7 @@ prerendered, and `dist/client` holds only assets. A route cache keeps that fast.
 20). The browser may reuse a public page for 2 minutes (`finalize()` in
 `src/worker.ts`) so Astro's prefetch is not wasted; internal links end in `/` so a
 click is never a 301; and `"placement": { "mode": "smart" }` in `wrangler.jsonc`
-runs the Worker next to D1 so a cold render is about half as slow. Measure a cold
+runs the Worker next to D1 so a cold render is about 30% faster. Measure a cold
 render with a cache-busting query string (`?cold=<random>`), never a repeat request.
 
 **How it is wired**

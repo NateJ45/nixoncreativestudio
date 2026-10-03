@@ -879,11 +879,15 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     sequential D1 reads; with the Worker at the visitor's edge and D1 in ENAM
     each one paid the distance. `"placement": { "mode": "smart" }` in
     `wrangler.jsonc` (production and the `ci` environment) runs it near D1.
-    Measured on ncs-ci with cache-busted GETs (18 requests each, script idea:
+    Measured on ncs-ci with cache-busted GETs (18 requests per run, 3 to 4 runs per setting; script idea:
     `?cold=<random>` so the route cache cannot answer): average cold render
-    1114ms to 464ms, slowest 2356ms to 765ms. Cache hits never run the Worker,
+    about 815ms without placement, about 570ms with it (about 30% faster; run-to-run noise is about 100ms, so never trust one pair of runs). Cache hits never run the Worker,
     so they are unchanged. Check the `Cf-Placement` response header (`remote-DFW`
     when active); it needs some traffic after a deploy before it takes effect.
     Ruled out in the same pass: bundle size (19 MB, 4.9 MB gzip, but Worker
     startup is 21 ms, shown in the CI "Worker Startup Time" line), and the cache
-    lifetime (stale pages are served instantly while they refresh).
+    lifetime (stale pages are served instantly while they refresh). Also tried and
+    dropped: starting the layout, header, footer and homepage reads together with
+    `Promise.all` (3 runs: about 572ms against about 570ms, no gain, so the
+    sequencing is inside EmDash, not in our components). The zone already has
+    Tiered Cache, Smart Tiered Cache, HTTP/3, Early Hints, Brotli and 0-RTT on.
