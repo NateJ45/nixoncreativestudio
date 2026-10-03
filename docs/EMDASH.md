@@ -215,7 +215,7 @@ WebP. No error, no warning. `image.remotePatterns` now trusts
 `**.nathanjnixon86.workers.dev` (trial, CI aliases, version URLs, the production
 workers.dev URL) plus the apex and `www`. Verified on a preview alias: 9 resized
 images, 0 raw. Rule: any new host that serves the site (a custom domain, a
-staging alias) must be added to that list, or its CMS images go out full size.
+preview alias) must be added to that list, or its CMS images go out full size.
 
 ## The 4096px resizer limit (found by Lighthouse CI, 2026-10-02)
 

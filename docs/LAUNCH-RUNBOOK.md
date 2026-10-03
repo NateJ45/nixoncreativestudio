@@ -71,7 +71,7 @@ data step.
   reads them).
 - Rewrite the homepage, stack and content-collection sections of CLAUDE.md for the hybrid
   architecture, and update the vault note.
-- (Done 2026-10-03) The `staging` branch was retired.
+- (Done 2026-10-03) The `staging` branch was retired. 2026-10-03: staging abandoned; main is the only branch.
 
 ## CMS content PRs: production data steps (CMS-DESIGN 2.1 and 2.6)
 
