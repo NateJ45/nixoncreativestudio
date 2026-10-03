@@ -96,6 +96,10 @@ from a shell where `gh` is logged in. After adding, push a branch and confirm th
 log of the "Upload Worker preview version" step ends with a `Preview: https://ci-...`
 line.
 
+### Load the PR 4 to 11 data into production in one command (`npm run cms:production-load`)
+
+Added 2026-10-03. The per-PR rows below (PR 4 to 11) can all be done by one command Nathan runs in his own PowerShell: `npx emdash login --url https://www.nixoncreativestudio.com`, set `EMDASH_TOKEN`, note a D1 Time Travel restore point (`npx wrangler d1 time-travel info ncs-emdash-prod`), then `npm run cms:production-load -- --plan` and `npm run cms:production-load`. Steps and stop rules are in `docs/LAUNCH-RUNBOOK.md` ("One command for every block below"). It has not been run against production. After a clean run: the follow-ups it prints (`PRODUCTION_HAS`, seed re-export, `ncs-ci` rebuild), each row's edit proof, then revoke the token and delete the rows below.
+
 ### Load the PR 4 data into production (needs `EMDASH_TOKEN` from Nathan)
 
 **Blocks:** nothing visible. PR 4 (Site settings and menus) ships safe with production empty, because every read falls back to the committed JSON. Until the data is loaded, the footer, header, phone menu, JSON-LD and feed read from `cms/content/` and the admin's Site settings screen and Menus do not exist yet or are empty, so an edit there changes nothing.

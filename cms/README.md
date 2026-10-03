@@ -9,4 +9,6 @@ The committed side of the editable-content build (design: `docs/CMS-DESIGN.md`).
 
 Images in a content file are `{ "$file": "src/assets/...", "alt": "..." }`; the loader uploads them. Portable Text fields hold literal blocks: write the text as Markdown and run `npm run cms:pt -- file.md` to get the JSON.
 
+**Loading every area into production in one go:** `npm run cms:production-load` (`scripts/cms/production-load.mjs`, logic in `scripts/lib/production-load.mjs`). Nathan runs it in his own PowerShell window with `EMDASH_TOKEN` set and `npx emdash login` done. It reads the two folders above (so a new collection is picked up with no edit), runs `site_settings` and `menus` first and alone (it waits for Enter), then the rest in a fixed order, and for each collection does schema dry run, apply and a read-only re-check, then content dry run, apply and re-check. A re-check that is not all `unchanged`, or a dry run that would overwrite or remove something, stops the run with the next command to type. Flags: `--plan` (print only, no network), `--only <name>`, `--from <name>` (resume). Logs go to `.cms-load-log/`. It automates none of the follow-ups (CI seed, `PRODUCTION_HAS`).
+
 Commands and the full recipe: `docs/CMS-DESIGN.md` section 2.1, and `docs/LAUNCH-RUNBOOK.md` for the production steps.

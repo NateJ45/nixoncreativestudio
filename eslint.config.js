@@ -16,6 +16,7 @@ export default [
       '.astro/**',
       '.wrangler/**',
       'node_modules/**',
+      '.cms-load-log/**',
       // Generated at build time by scripts/generate-placeholders.mjs.
       'src/lib/coverPlaceholders.json',
     ],
