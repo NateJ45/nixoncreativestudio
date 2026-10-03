@@ -305,3 +305,9 @@ links are pinned in `terms.json` because the CLI cannot read per-entry terms.
 
 **Redeploying by hand:** `CLOUDFLARE_ENV=ci npm run build && CLOUDFLARE_ENV=ci npx wrangler deploy`.
 Never run `wrangler deploy` without `CLOUDFLARE_ENV=ci`: the default config is production.
+
+## The `studio-help` admin plugin (2026-10-03)
+
+- `plugins/studio-help/src/*.test.ts` (in `npm run test:unit`): step navigation, once-per-user decision, seen-record parsing, card placement and the visible-target maths (`engine.test.ts`); the content-file validator and its error messages, plus the real `cms/help/tour.json` against the writing rules and `cms/schema` slugs (`validate.test.ts`).
+- `tests/studio-help.spec.ts`, chromium only. Group 1 (isolation) runs against any URL, including CI: the plugin's routes answer 401/403 signed out and the public homepage has no trace of it. Group 2 drives the REAL admin and runs only with `STUDIO_HELP_ADMIN=1` against `astro dev` (it signs in through EmDash's dev-only bypass into the local emulated database; the endpoint 404s on any deployed build, so CI skips it): auto-open once, modal semantics, Tab trap, Escape, focus return, arrows, all ten steps with spotlight and viewport containment, axe on the card in both admin themes, reduced motion, the Help page, the editor panel. Recipe is in the file header.
+- **Not exercised in the deployed admin:** CI and ncs-ci have no admin user, so no automated run signs in to a deployed instance. After the first deploy with the plugin, click through the list in `docs/stack-template/ADMIN-HELP.md`.

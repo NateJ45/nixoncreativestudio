@@ -481,3 +481,17 @@ Behaviour worth knowing:
 - **`npm run cms:tidy`** deletes the empty template `category` taxonomy and reports leftovers (`scripts/cms/tidy-admin.mjs`).
 - **`@astrojs/mdx` and `astro-expressive-code` are removed** (nothing imported them since PR 12).
 - **Editing guide:** `docs/EDITING-GUIDE.md`. The Editor-role second login is recommended there and needs a second email from Nathan.
+
+## Admin help plugin: `studio-help` (2026-10-03)
+
+A first-run pop-up tour, a Help page, a "Start here" dashboard widget and an "About this screen" note in every entry editor, all from one file, `cms/help/tour.json`. The code is a reusable plugin in `plugins/studio-help/` with no NCS text in it (README there; reuse recipe in `docs/stack-template/ADMIN-HELP.md`).
+
+- **How it plugs in.** A trusted (native) plugin registered in `astro.config.mjs` (`plugins: [studioHelp({ content })]`). EmDash 1.1.0 lets a trusted plugin export `pages`, `widgets`, `fields` and `contentEditorPanels` from an `adminEntry` React module, and add private routes with `ctx.kv` and `ctx.user`. It cannot be sandboxed (React), so the `LOADER` worker-loader binding is not involved; that binding serves `sandbox()` plugins.
+- **No global slot.** The plugin API has no hook that runs on every admin screen, so "first sign-in" is "first time this user's dashboard shows this tour id": the widget opens the tour. Everyone lands on the dashboard after sign-in. It waits for EmDash's own "Welcome" dialog (new accounts) to be dismissed first.
+- **Once per user.** Stored server-side in plugin KV (`seen:<userId>`) via `GET/POST /_emdash/api/plugins/studio-help/state`; browser `localStorage` is only a fallback if the server cannot be reached. Change `tour.id` in the file to show a revised tour to everyone once. Both routes need sign-in plus `content:read`, and answer `private, no-store`.
+- **Content file** validated at config load (`astro dev` and `astro build` fail with every problem and its JSON path) and again when the Worker starts. `src/lib`-style unit tests also gate the real file for em-dashes and banned words.
+- **Public site unaffected.** The admin half is bundled only into the admin chunk (`dist/client/_astro/PluginRegistry.*.js`); no public page imports it. `tests/studio-help.spec.ts` asserts the homepage HTML has no trace and the routes answer 401/403 signed out.
+- **Spotlight targets** are `a[href$="/content/<slug>"]` selectors. Sidebar groups start collapsed (links clipped to zero height), so the finder skips clipped matches and spotlights the group heading instead; a miss shows a centred card.
+- **`astro dev` works again on a clean checkout:** `vite.optimizeDeps.exclude: ['zustand', 'zustand/traditional']` stops the dependency pre-bundler hitting the zustand `MISSING_EXPORT` before the shim plugin can rewrite it. Dev only (build never pre-bundles). With dev running, `/_emdash/api/setup/dev-bypass` signs in a throwaway admin in the LOCAL emulated database; that is how the plugin UI was tested.
+- **The "About this screen" panel renders last in the editor sidebar** (above Outline and Revisions), not first, and on every collection (the panel list is not per-collection at build time); a collection with no note shows nothing inside it.
+- **`astro dev` writes `emdash-env.d.ts`** (typed collections), which makes `npm run check` report four `Raw` conversion errors in `src/lib/caseStudies.ts` and `journal.ts`. It is a generated, untracked file: delete it after a dev session (the committed tree has none).

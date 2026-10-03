@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 import cloudflare from '@astrojs/cloudflare';
 import sitemap from '@astrojs/sitemap';
@@ -9,6 +10,15 @@ import react from '@astrojs/react';
 import emdash from 'emdash/astro';
 import { cacheCloudflare } from '@astrojs/cloudflare/cache';
 import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
+// The reusable admin help plugin (first-run tour, Help page, dashboard widget, per-screen
+// notes). Its words all come from cms/help/tour.json. See plugins/studio-help/README.md.
+import { studioHelp } from './plugins/studio-help/src/descriptor.ts';
+
+// Read as text and parsed here (not a JSON import) so a JSON typo is reported by
+// studioHelp() with the file name and every problem, not by the bundler.
+const helpContent = JSON.parse(
+  readFileSync(fileURLToPath(new URL('./cms/help/tour.json', import.meta.url)), 'utf8'),
+);
 
 // =============================================================================
 // Astro config
@@ -130,10 +140,19 @@ export default defineConfig({
       // to editors too. Editors get an Edit pill that reloads the page with
       // ?_edit, which is always rendered fresh and never cached.
       toolbar: 'client',
+      // Admin-only help layer (a trusted plugin: it ships React for the admin screens, so it
+      // cannot be sandboxed; the LOADER binding in wrangler.jsonc is for sandboxed plugins
+      // and is not used by this one). Adds no byte to any public page.
+      plugins: [studioHelp({ content: helpContent })],
     }),
   ],
 
   vite: {
+    // `astro dev` only (build does not pre-bundle): the dependency optimizer pre-bundles zustand
+    // BEFORE the shim plugin below can rewrite its import, so a clean checkout died with the same
+    // MISSING_EXPORT in dev. Excluding zustand leaves it to the normal transform pipeline, where
+    // the plugin applies. Found 2026-10-03 while testing the admin help plugin locally.
+    optimizeDeps: { exclude: ['zustand', 'zustand/traditional'] },
     plugins: [
       tailwindcss(),
       // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).

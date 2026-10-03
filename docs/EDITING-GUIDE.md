@@ -6,6 +6,10 @@ The admin is at **https://www.nixoncreativestudio.com/\_emdash/admin**. You sign
 
 ---
 
+The admin also explains itself: a short tour opens the first time you open the dashboard, the **Help** item in the sidebar keeps the same guide (with an "I want to change X, go to Y" table), and every entry editor has an **About this screen** note. The words for all three live in `cms/help/tour.json` in the repo.
+
+---
+
 ## 1. The two rules
 
 1. **Save keeps a draft. Publish makes it live.** Nearly every mistake comes from saving and forgetting to publish. After you change something, press **Publish** (or **Publish changes** on an entry that is already live), and wait for the confirmation.
