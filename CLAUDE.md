@@ -895,3 +895,18 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     `Promise.all` (3 runs: about 572ms against about 570ms, no gain, so the
     sequencing is inside EmDash, not in our components). The zone already has
     Tiered Cache, Smart Tiered Cache, HTTP/3, Early Hints, Brotli and 0-RTT on.
+21. **Any admin write purges pages, and the next view of each purged page is a
+    cold render (about 0.4 to 1.4s instead of about 35ms).** Found 2026-10-03:
+    a Lighthouse trace on the live homepage showed LCP 960ms with 853ms of it
+    waiting for the first byte, and a poll of `/`, `/about/` and `/work/` every
+    15s showed all three flip from HIT to MISS at the same instant, twice. The
+    Worker log (`observability` query grouped by `$metadata.trigger`) showed a
+    content loader writing `POST /_emdash/api/menus/{primary,footer}/items` at
+    that moment. Every page carries the menu tag, so one menu write clears the
+    whole site; a case study edit clears `/`, `/work/` and its own page. Purges
+    remove the entry, so stale-while-revalidate does not cover them. Practical
+    rules: do not run `cms:load` or `cms:production-load` (or edit menus, site
+    settings or case studies) right before showing the site to someone, and
+    expect the first visitor to each page after a deploy or edit to pay the cold
+    render. A "pages are slow" check must first confirm `CF-Cache-Status: HIT`
+    on the page (poll it a few times, no cache-busting) before blaming code.
