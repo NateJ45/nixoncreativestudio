@@ -92,6 +92,12 @@ function foldBooleans(value) {
   if (typeof value === 'boolean') return value ? 1 : 0;
   if (Array.isArray(value)) return value.map(foldBooleans);
   if (value && typeof value === 'object') {
+    // An image value: EmDash stores it without `src` and adds blurhash, dominant
+    // colour and the like to `meta`, so the value the loader builds never matches
+    // the stored one key for key. Which file and its alt text are what matter.
+    if (typeof value.provider === 'string' && typeof value.id === 'string') {
+      return { id: value.id, alt: value.alt ?? '' };
+    }
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, foldBooleans(v)]));
   }
   return value;
