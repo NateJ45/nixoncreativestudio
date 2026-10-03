@@ -104,6 +104,12 @@ The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 4 data") and `docs/LA
 
 Decision for Nathan on the way: the design (CMS-DESIGN 1.2) listed a `footer_blurb` field, but the footer has no brand paragraph today (its bottom row is the tagline), so it was left out rather than add a field that edits nothing. Say if you want a footer paragraph; it is a small follow-up.
 
+### Load the PR 5 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 5 (Pricing) ships safe with production empty, because the homepage "What it costs" band and the /services tier and add-on cards fall back to the committed `cms/content/pricing_tiers.json` and `pricing_addons.json`, which hold the current numbers (Launch $4,000, Signature $7,000, Flagship $12,000, care plan from $100/mo). Until the data is loaded, the admin has no Pricing tiers or Add-ons screens, so a price cannot be edited there.
+
+The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 5 data") and `docs/LAUNCH-RUNBOOK.md`; run it in the same session as the PR 4 load (one `npx emdash login`, one token). Then the CI follow-up (add both collections to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed, rebuild `ncs-ci`) and the edit proof (Launch's starting price 4000 to 4100, publish, see $4,100 on /services and /, restore from History). Delete this row after that. A price change also needs two prose edits that are still code: the /services FAQ answer "What does it cost?" and the /contact budget brackets.
+
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
 **Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
