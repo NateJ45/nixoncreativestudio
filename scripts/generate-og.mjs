@@ -32,8 +32,10 @@
    If the instance is unreachable, or returns no case studies, the script keeps
    every already-committed public/og/work/*.png, prints a warning and carries on
    (exit 0): a CMS outage must never fail the build or delete a card.
-   EMDASH_URL defaults to the trial Worker. CUTOVER: flip the default to
-   https://nixoncreativestudio.com (tracked in docs/PENDING.md).
+   EMDASH_URL defaults to the production site (flipped at the 2026-10 EmDash
+   cutover). On the very first production build the live site is still the old
+   static one, which has no CMS media, so the script keeps the committed cards.
+   Point it at the trial with EMDASH_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev.
 
    BaseLayout.astro maps the current pathname to /og/<slug>.png ('' -> index).
    Output is deterministic, so re-running with unchanged content produces
@@ -296,9 +298,10 @@ function journalEntries() {
 // --- Case studies from EmDash ------------------------------------------------
 // See the header for why this reads public pages instead of the REST API.
 // CUTOVER: flip this default to https://nixoncreativestudio.com.
-const EMDASH_URL = (
-  process.env.EMDASH_URL || 'https://ncs-emdash-trial.nathanjnixon86.workers.dev'
-).replace(/\/+$/, '');
+const EMDASH_URL = (process.env.EMDASH_URL || 'https://www.nixoncreativestudio.com').replace(
+  /\/+$/,
+  '',
+);
 const FETCH_TIMEOUT_MS = 20_000;
 
 async function getText(url) {

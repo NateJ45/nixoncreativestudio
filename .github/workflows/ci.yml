@@ -140,6 +140,11 @@ jobs:
       # pipeline"). No env needed: the analytics, GA and coming-soon
       # variables are all optional and the site builds clean without them.
       - name: Build
+        # CLOUDFLARE_ENV=ci selects the 'ci' environment in wrangler.jsonc: the preview
+        # Worker uses the TRIAL database and bucket, never production data, so the
+        # required checks do not depend on what production holds.
+        env:
+          CLOUDFLARE_ENV: ci
         run: npm run build
 
       # Upload the built Worker as a non-promoted version and get its aliased

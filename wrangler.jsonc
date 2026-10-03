@@ -1,23 +1,53 @@
 {
-  // EMDASH TRIAL: separate Worker name so it never touches the live
-  // nixoncreativestudio Worker. Lives on branch `emdash-trial`.
+  // PRODUCTION. This is the config for the live nixoncreativestudio Worker
+  // (EmDash cutover, 2026-10). Deploying this file replaces the live site, so only
+  // Workers Builds (on a push to main) should run `wrangler deploy` from it. The
+  // trial Worker (ncs-emdash-trial) used the previous version of this file; see git
+  // history and docs/LAUNCH-RUNBOOK.md.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ncs-emdash-trial",
+  "name": "nixoncreativestudio",
   "main": "./src/worker.ts",
   "compatibility_date": "2026-05-25",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // The origin the admin passkey is bound to. Visitors land on www (the apex 301s
+  // to it). Changing this after the first sign-in invalidates existing passkeys.
+  "vars": { "EMDASH_SITE_URL": "https://www.nixoncreativestudio.com" },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "ncs-emdash",
-      "database_id": "e644f610-ae29-457c-ac97-14242b2d145b",
+      "database_name": "ncs-emdash-prod",
+      "database_id": "8eb219bc-082e-44cb-b228-135d5fd7861d",
     },
   ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ncs-emdash-media" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ncs-emdash-media-prod" }],
   // Astro sessions (EmDash sign-in needs them). The Cloudflare adapter's default
   // session driver reads a KV binding named SESSION.
-  "kv_namespaces": [{ "binding": "SESSION", "id": "73be142f7c43431ea65bd7f4211543b8" }],
+  "kv_namespaces": [{ "binding": "SESSION", "id": "c0ae336adced4b73a503159ca5e932f2" }],
   "worker_loaders": [{ "binding": "LOADER" }],
   "triggers": { "crons": ["* * * * *"] },
   "observability": { "enabled": true },
+
+  // CI previews. GitHub Actions builds with CLOUDFLARE_ENV=ci and uploads a
+  // non-promoted version of the trial Worker, so the Playwright, link-check and
+  // Lighthouse runs read the TRIAL database and bucket, never production data. It
+  // also lets the required checks pass while production is still empty (launch day).
+  // Bindings and vars are not inherited by an environment, so they are repeated.
+  // Workers Builds (production) does not set CLOUDFLARE_ENV and uses the top level.
+  "env": {
+    "ci": {
+      "name": "ncs-emdash-trial",
+      "vars": { "EMDASH_SITE_URL": "https://ncs-emdash-trial.nathanjnixon86.workers.dev" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ncs-emdash",
+          "database_id": "e644f610-ae29-457c-ac97-14242b2d145b",
+        },
+      ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ncs-emdash-media" }],
+      "kv_namespaces": [{ "binding": "SESSION", "id": "73be142f7c43431ea65bd7f4211543b8" }],
+      "worker_loaders": [{ "binding": "LOADER" }],
+      "observability": { "enabled": true },
+    },
+  },
 }

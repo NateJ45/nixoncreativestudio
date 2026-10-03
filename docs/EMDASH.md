@@ -36,8 +36,12 @@ are created in the admin and pages are changed to call `getEmDashCollection()`.
 
 ## Deploy / redeploy
 
+**Production** deploys only from Workers Builds on a push to `main` (build `npm run build`, deploy `npx wrangler deploy`, both using the top level of `wrangler.jsonc`). Do not run `wrangler deploy` locally without `CLOUDFLARE_ENV`: since the 2026-10 cutover config, the default is the live Worker.
+
+**Trial / CI previews** use the `ci` environment in `wrangler.jsonc` (Worker `ncs-emdash-trial`, the trial database and bucket). GitHub Actions builds with `CLOUDFLARE_ENV=ci`, so the required checks never read production data. To redeploy the trial by hand:
+
 ```
-npm run build && npx wrangler deploy
+CLOUDFLARE_ENV=ci npm run build && CLOUDFLARE_ENV=ci npx wrangler deploy
 ```
 
 ## Status (2026-10-02)
