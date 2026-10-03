@@ -21,14 +21,12 @@ const id = slugify(text);
 const isH3 = node.style === 'h3';
 ---
 
-{
-  isH3 ? (
-    <h3 id={id} {...attrs}>
-      <slot />
-    </h3>
-  ) : (
-    <h2 id={id} {...attrs}>
-      <slot />
-    </h2>
-  )
-}
+{isH3 ? (
+  <h3 id={id} {...attrs}>
+    <slot />
+  </h3>
+) : (
+  <h2 id={id} {...attrs}>
+    <slot />
+  </h2>
+)}

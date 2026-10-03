@@ -59,36 +59,35 @@ const sectorLabel = (sector: string) =>
 const [primary, ...secondaries] = featured;
 ---
 
-{
-  primary && (
-    <section class="py-2xl" aria-labelledby="selected-work-heading">
-      <div class="ncs-container">
-        {/* Section header. No mono-uppercase eyebrow, no numbered scaffold:
+{primary && (
+  <section class="py-2xl" aria-labelledby="selected-work-heading">
+    <div class="ncs-container">
+      {/* Section header. No mono-uppercase eyebrow, no numbered scaffold:
          the title carries its own weight, and the sub paragraph does the
          explanatory work that an eyebrow would otherwise pretend to do. */}
-        <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
-          <h2 id="selected-work-heading">Selected work</h2>
-          <p class="text-lg leading-[1.55] text-text-muted">
-            A few recent projects. Each one started with a conversation about what the organization
-            actually needed, not which template to pick.
-          </p>
-        </header>
+      <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+        <h2 id="selected-work-heading">Selected work</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">
+          A few recent projects. Each one started with a conversation about what the organization
+          actually needed, not which template to pick.
+        </p>
+      </header>
 
-        {/* Asymmetric card list. The grid is built with named template areas
+      {/* Asymmetric card list. The grid is built with named template areas
          so the visual layout reads cleanly in CSS even though the list is
          a flat <ol> of three items. Single-column on mobile; primary spans
          the full width on desktop while secondaries split the row below. */}
-        <ol class="grid list-none gap-l p-0 [grid-template-areas:'primary'_'secondary-a'_'secondary-b'] md:grid-cols-2 md:[grid-template-areas:'primary_primary'_'secondary-a_secondary-b']">
-          {/* Primary card. Hero-sized: 4:3 image at the desktop width of the
+      <ol class="grid list-none gap-l p-0 [grid-template-areas:'primary'_'secondary-a'_'secondary-b'] md:grid-cols-2 md:[grid-template-areas:'primary_primary'_'secondary-a_secondary-b']">
+        {/* Primary card. Hero-sized: 4:3 image at the desktop width of the
            image column, generous body column with a heading at h2 sizing
            that's noticeably larger than the secondaries. */}
-          <li class="[grid-area:primary]" data-reveal>
-            <a
-              class="work-card surface-card spotlight-card group grid grid-cols-1 items-center gap-l rounded-xl p-s text-inherit no-underline md:grid-cols-[1.15fr_1fr]"
-              href={`/work/${primary.id}/`}
-              data-spotlight
-            >
-              {/* Hover-scroll cover: the full-page capture sits top-aligned in a
+        <li class="[grid-area:primary]" data-reveal>
+          <a
+            class="work-card surface-card spotlight-card group grid grid-cols-1 items-center gap-l rounded-xl p-s text-inherit no-underline md:grid-cols-[1.15fr_1fr]"
+            href={`/work/${primary.id}/`}
+            data-spotlight
+          >
+            {/* Hover-scroll cover: the full-page capture sits top-aligned in a
                4:3 frame and pans down the page on hover (CSS below), easing back
                on hover-off. The cover's dominant colour is painted as the frame bg
                (and EmDash paints the capture's blurhash on the image itself)
@@ -96,25 +95,85 @@ const [primary, ...secondaries] = featured;
                heading names the project. transition:name morphs to the
                /work/[slug] hero on navigation. Falls back to the static cover if
                a capture is ever missing. */}
-              {primary.showcaseDesktop ? (
+            {primary.showcaseDesktop ? (
+              <div
+                class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
+                transition:name={`cover-${primary.id}`}
+                style={bgFor(primary)}
+              >
+                <ScrollShot
+                  image={primary.showcaseDesktop}
+                  alt=""
+                  sizes="(min-width: 48rem) 60vw, 100vw"
+                  class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
+                />
+                {primary.showcaseMobile && (
+                  <div class="work-phone" aria-hidden="true">
+                    <div class="work-phone-screen">
+                      <ScrollShot
+                        image={primary.showcaseMobile}
+                        alt=""
+                        sizes="200px"
+                        class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div class="relative z-10" transition:name={`cover-${primary.id}`}>
+                <EmDashCover
+                  cover={primary.cover}
+                  alt=""
+                  sizes="(min-width: 48rem) 60vw, 100vw"
+                  fit="cover"
+                  class="work-cover aspect-[4/3] w-full rounded-lg"
+                />
+              </div>
+            )}
+
+            <div class="relative z-10 flex flex-col gap-s">
+              <p class="text-sm font-semibold text-text-muted">{sectorLabel(primary.sector)}</p>
+              <h3 class="text-h2 leading-[1.05] text-heading">{primary.title}</h3>
+              {primary.outcome && (
+                <p class="text-lg leading-[1.35] font-semibold text-link">{primary.outcome}</p>
+              )}
+              <p class="leading-[1.55] text-text">{primary.summary}</p>
+              <span class="card-link mt-xs">Read the case study</span>
+            </div>
+          </a>
+        </li>
+
+        {secondaries.map((entry, index) => (
+          <li
+            class={index === 0 ? '[grid-area:secondary-a]' : '[grid-area:secondary-b]'}
+            data-reveal
+            style={`--reveal-delay: ${120 + index * 120}ms;`}
+          >
+            <a
+              class="work-card surface-card spotlight-card group flex flex-col gap-m rounded-xl p-s text-inherit no-underline"
+              href={`/work/${entry.id}/`}
+              data-spotlight
+            >
+              {entry.showcaseDesktop ? (
                 <div
                   class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
-                  transition:name={`cover-${primary.id}`}
-                  style={bgFor(primary)}
+                  transition:name={`cover-${entry.id}`}
+                  style={bgFor(entry)}
                 >
                   <ScrollShot
-                    image={primary.showcaseDesktop}
+                    image={entry.showcaseDesktop}
                     alt=""
-                    sizes="(min-width: 48rem) 60vw, 100vw"
+                    sizes="(min-width: 48rem) 30vw, 100vw"
                     class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
                   />
-                  {primary.showcaseMobile && (
+                  {entry.showcaseMobile && (
                     <div class="work-phone" aria-hidden="true">
                       <div class="work-phone-screen">
                         <ScrollShot
-                          image={primary.showcaseMobile}
+                          image={entry.showcaseMobile}
                           alt=""
-                          sizes="200px"
+                          sizes="170px"
                           class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
                         />
                       </div>
@@ -122,102 +181,41 @@ const [primary, ...secondaries] = featured;
                   )}
                 </div>
               ) : (
-                <div class="relative z-10" transition:name={`cover-${primary.id}`}>
+                <div class="relative z-10" transition:name={`cover-${entry.id}`}>
                   <EmDashCover
-                    cover={primary.cover}
+                    cover={entry.cover}
                     alt=""
-                    sizes="(min-width: 48rem) 60vw, 100vw"
+                    sizes="(min-width: 48rem) 30vw, 100vw"
                     fit="cover"
                     class="work-cover aspect-[4/3] w-full rounded-lg"
                   />
                 </div>
               )}
 
-              <div class="relative z-10 flex flex-col gap-s">
-                <p class="text-sm font-semibold text-text-muted">{sectorLabel(primary.sector)}</p>
-                <h3 class="text-h2 leading-[1.05] text-heading">{primary.title}</h3>
-                {primary.outcome && (
-                  <p class="text-lg leading-[1.35] font-semibold text-link">{primary.outcome}</p>
+              <div class="relative z-10 flex flex-col gap-xs">
+                <p class="text-sm font-semibold text-text-muted">{sectorLabel(entry.sector)}</p>
+                <h3 class="text-heading">{entry.title}</h3>
+                {entry.outcome && (
+                  <p class="leading-[1.4] font-semibold text-link">{entry.outcome}</p>
                 )}
-                <p class="leading-[1.55] text-text">{primary.summary}</p>
+                <p class="leading-[1.55] text-text">{entry.summary}</p>
                 <span class="card-link mt-xs">Read the case study</span>
               </div>
             </a>
           </li>
+        ))}
+      </ol>
 
-          {secondaries.map((entry, index) => (
-            <li
-              class={index === 0 ? '[grid-area:secondary-a]' : '[grid-area:secondary-b]'}
-              data-reveal
-              style={`--reveal-delay: ${120 + index * 120}ms;`}
-            >
-              <a
-                class="work-card surface-card spotlight-card group flex flex-col gap-m rounded-xl p-s text-inherit no-underline"
-                href={`/work/${entry.id}/`}
-                data-spotlight
-              >
-                {entry.showcaseDesktop ? (
-                  <div
-                    class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
-                    transition:name={`cover-${entry.id}`}
-                    style={bgFor(entry)}
-                  >
-                    <ScrollShot
-                      image={entry.showcaseDesktop}
-                      alt=""
-                      sizes="(min-width: 48rem) 30vw, 100vw"
-                      class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
-                    />
-                    {entry.showcaseMobile && (
-                      <div class="work-phone" aria-hidden="true">
-                        <div class="work-phone-screen">
-                          <ScrollShot
-                            image={entry.showcaseMobile}
-                            alt=""
-                            sizes="170px"
-                            class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div class="relative z-10" transition:name={`cover-${entry.id}`}>
-                    <EmDashCover
-                      cover={entry.cover}
-                      alt=""
-                      sizes="(min-width: 48rem) 30vw, 100vw"
-                      fit="cover"
-                      class="work-cover aspect-[4/3] w-full rounded-lg"
-                    />
-                  </div>
-                )}
-
-                <div class="relative z-10 flex flex-col gap-xs">
-                  <p class="text-sm font-semibold text-text-muted">{sectorLabel(entry.sector)}</p>
-                  <h3 class="text-heading">{entry.title}</h3>
-                  {entry.outcome && (
-                    <p class="leading-[1.4] font-semibold text-link">{entry.outcome}</p>
-                  )}
-                  <p class="leading-[1.55] text-text">{entry.summary}</p>
-                  <span class="card-link mt-xs">Read the case study</span>
-                </div>
-              </a>
-            </li>
-          ))}
-        </ol>
-
-        {/* Tail link so the section opens onto the full catalogue instead of
+      {/* Tail link so the section opens onto the full catalogue instead of
          dead-ending after three featured projects. */}
-        <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
-          <a class="card-link text-lg" href="/work/">
-            Explore more projects
-          </a>
-        </div>
+      <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
+        <a class="card-link text-lg" href="/work/">
+          Explore more projects
+        </a>
       </div>
-    </section>
-  )
-}
+    </div>
+  </section>
+)}
 
 <style>
   /* ----------------------------------------------------------------------

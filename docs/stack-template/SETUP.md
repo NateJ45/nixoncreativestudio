@@ -289,7 +289,6 @@ Tabler icons work as Astro SVG components in Astro 6. Import them directly:
 
 ```astro
 import IconArrowRight from '@tabler/icons/icons/arrow-right.svg';
-
 <IconArrowRight class="h-5 w-5" />
 ```
 

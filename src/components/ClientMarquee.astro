@@ -49,21 +49,17 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
 <nav class="client-marquee" aria-label="Recent clients">
   <div class="client-track" data-unit={clients.length}>
     {/* Real, focusable links (the set assistive tech and the keyboard use). */}
-    {
-      clients.map((c) => (
-        <a class={itemClass} href={`/work/${c.slug}/`}>
-          {c.name}
-        </a>
-      ))
-    }
+    {clients.map((c) => (
+      <a class={itemClass} href={`/work/${c.slug}/`}>
+        {c.name}
+      </a>
+    ))}
     {/* Visual duplicate for the seamless loop: hidden from AT + the tab order. */}
-    {
-      clients.map((c) => (
-        <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
-          {c.name}
-        </a>
-      ))
-    }
+    {clients.map((c) => (
+      <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
+        {c.name}
+      </a>
+    ))}
   </div>
 </nav>
 
