@@ -834,7 +834,7 @@ Every entry below was measured, not assumed.
     (a) The route cache sends the browser `Cache-Control: no-cache` and no ETag,
     so the prefetched copy can never be reused. `finalize()` in `src/worker.ts`
     now gives a clean cached 200 HTML page `public, max-age=120,
-    stale-while-revalidate=3600` for the browser only (the edge lifetime is
+stale-while-revalidate=3600` for the browser only (the edge lifetime is
     untouched; the editor view, previews, cookies and `/_emdash` never qualify).
     A publish therefore reaches a returning browser within about 2 minutes, not
     instantly. (b) Menu and button links without a slash (`/about`) were
