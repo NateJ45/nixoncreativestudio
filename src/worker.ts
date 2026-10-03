@@ -42,19 +42,16 @@
 //    five headers are added to every HTML response here. Not applied under
 //    /_emdash (the admin), where framing and window rules are EmDash's call.
 //
-// 5. Fallback redirects (CMS-DESIGN PR 13). The site's redirects live in EmDash
-//    Redirects (applied by EmDash's own middleware before a page renders). Until
-//    production holds them, a request that would answer 404 for /now or the
-//    retired case study is answered 301 from src/lib/redirectFallback.ts instead
-//    (the astro.config.mjs `redirects` they came from are gone). Only a real 404
-//    is looked at, so an EmDash redirect always wins. Temporary: see that file.
+// Redirects are NOT handled here: they are EmDash Redirects rows (applied by
+// EmDash's own middleware before a page renders, edited in the admin under
+// Redirects). A temporary code fallback for /now and the retired case study was
+// removed once production held the rows.
 //
 // Testing note: use GET, not `curl -I`. A HEAD request skips the image-cache
 // branch on purpose (method check), which sent the first debugging pass the
 // wrong way.
 import type { ExportedHandler } from '@cloudflare/workers-types';
 import handler, { createScheduledHandler, PluginBridge } from '@emdash-cms/cloudflare/worker';
-import { fallbackRedirect } from './lib/redirectFallback';
 
 export { PluginBridge };
 
@@ -139,19 +136,6 @@ export default {
     const cacheable = isGet && CACHEABLE_PREFIXES.some((p) => pathname.startsWith(p));
     if (!cacheable) {
       const res = await handler.fetch(request, env, ctx);
-      // Fallback redirects (item 5 in the header comment): only when the site is about to say 404.
-      if (res.status === 404 && (isGet || request.method === 'HEAD')) {
-        const fallback = fallbackRedirect(pathname);
-        if (fallback) {
-          return finalize(
-            new Response(null, {
-              status: fallback.type,
-              headers: { Location: fallback.destination },
-            }),
-            pathname,
-          ) as unknown as typeof res;
-        }
-      }
       const out = finalize(res as unknown as Response, pathname);
       // The not-found page itself, requested by name, answers 200 (as the
       // prerendered /404 did) so Lighthouse CI, which refuses any 4xx page, can

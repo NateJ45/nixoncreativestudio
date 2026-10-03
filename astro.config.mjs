@@ -65,9 +65,8 @@ export default defineConfig({
   // NO `redirects` here since CMS-DESIGN PR 13: they live in EmDash Redirects
   // (cms/content/redirects.json, loaded by `npm run cms:production-load`), so Nathan
   // can add one in the admin when he renames or retires a page. The two that used to be
-  // here (/now to /about/#now, the retired /work/west-chester-preschool) have a code
-  // fallback in src/lib/redirectFallback.ts, applied by src/worker.ts only when the
-  // site would answer 404, until production holds the rows.
+  // here (/now to /about/#now, the retired /work/west-chester-preschool) are rows in
+  // production now; a config redirect would shadow them.
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport',

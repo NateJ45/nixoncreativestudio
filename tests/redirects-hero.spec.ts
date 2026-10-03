@@ -3,12 +3,10 @@ import { test, expect } from '@playwright/test';
 // =============================================================================
 // Redirects and the hero scene (CMS-DESIGN PR 13)
 // =============================================================================
-// REDIRECTS. The two retired URLs live in EmDash Redirects (cms/content/redirects.json),
-// with a code fallback (src/lib/redirectFallback.ts, applied by src/worker.ts on a 404) for
-// the time before production holds the rows. This spec cannot tell which one answered, and
-// it should not: either way a visitor must be sent to the right place with a permanent
-// redirect. (The `ncs-ci` data holds the rows, so CI exercises EmDash's own path; the unit
-// tests and the staged deploy in docs/CMS-DESIGN.md cover the fallback.)
+// REDIRECTS. The two retired URLs are EmDash Redirects rows (cms/content/redirects.json is
+// the committed record); there is no code fallback. The `ncs-ci` data holds the rows, so this
+// spec exercises EmDash's own path: a visitor must be sent to the right place with a
+// permanent redirect.
 //
 // HERO. HeroShowcase is built from the case studies with "Show in the homepage device scene"
 // ticked (CMS path) or, when none are, from its five bundled captures (fallback path). The

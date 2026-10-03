@@ -233,8 +233,8 @@ WCP is the reference for this standard; reid-design-site and mas-monograms carry
 - `.github/workflows/uptime.yml` curls the live site's key routes hourly and fails the run if any does not end at 200. Gated on the `SITE_URL` repo variable, which is not set yet (see `docs/PENDING.md`). Schedule is on because the repo is public and Actions minutes are free there.
 - `npm run parity capture` / `compare` is the **rendered-HTML parity harness** (`scripts/page-parity.mjs`, baselines committed in `scripts/.parity/`). It never builds; you build, it reads `dist/client`, or with `--url <base>` it fetches the rendered HTML over HTTP so the server-rendered pages (which are not in `dist/client`) can be compared too (page list = the committed snapshot names, plus `--routes /a/,/b/`). Baselines were captured from the static build and have NOT been re-captured for the hybrid site, so expect DIFFs on migrated pages. Reach for it on any change that is supposed to be render-neutral. Deliberately not in CI, because its baselines are meant to be re-captured when markup legitimately changes and a gate that gets re-baselined is a gate that gets rubber-stamped.
 - For CMS PRs the parity pair (main on `ncs-ci`, then the PR preview) goes into a throwaway directory so it cannot overwrite those baselines: add `--snap-dir .parity-cms` (or set `PARITY_SNAP_DIR`) to both `capture` and `compare`. `.parity-cms/` is git-ignored. Recipe in docs/CMS-DESIGN.md 2.1 and docs/TESTING.md.
-- **CMS tooling (CMS-DESIGN PR 3).** `npm run cms:schema` (`scripts/cms/apply-schema.mjs`, generic applier `scripts/lib/emdash-schema.mjs`) makes an instance match `cms/schema/<collection>.mjs`; `npm run cms:load` (`scripts/cms/load-content.mjs`, logic in `scripts/lib/cms-load.mjs`) loads `cms/content/*.json` (entries and images through the `emdash` CLI login, menus and redirects through REST with `EMDASH_TOKEN`); `npm run cms:pt -- file.md` turns Markdown into Portable Text JSON for a content file. Both write scripts are idempotent, take `--dry-run`, and refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed. `npm run cms:production-load` (`scripts/cms/production-load.mjs`, logic in `scripts/lib/production-load.mjs`) is Nathan's one-command production load: it runs both scripts for every collection found in `cms/schema/` and `cms/content/` in a safe order, re-checks each step read-only, stops on the first non-`unchanged` or overwrite, and logs to the git-ignored `.cms-load-log/`; flags `--plan`, `--only`, `--from`. Builder sessions never run it against production (no token); see `docs/LAUNCH-RUNBOOK.md`. The pages read the content through `src/lib/cms.ts` (`getSingleton`, `getOrdered`, `getMenuItems`), which falls back to the committed JSON, logs `[cms] ...` and tags the route cache; `src/lib/portableText.ts` and `RestrictedPortableText.astro` are the restricted renderer for the About story and prose pages. PR 4 moved the shared chrome onto it (Site settings and the two menus); PRs 5 to 13 move the pages. The CI dataset gets the CMS collections and menus from `scripts/ci-dataset/cms-fixtures.mjs` (generated `seed/seed.json` entries plus `cms-rows.sql`) until production holds the data; **production has held PRs 4 to 12 since 2026-10-03** (`PRODUCTION_HAS` lists them, `snapshot.mjs` carries their rows; `photos` and `posts` are schema-only there and CI keeps its hand-written test photo and journal entries). **PR 13** adds the one existing collection to the loader (`cms/schema/case_studies.mjs`, plus `cms/content/case_studies.json`, whose `"patch": true` entries set a field only when the entry holds nothing for it) and `cms/content/redirects.json`; production does not hold either until Nathan runs the load, and both have code fallbacks (the hero's bundled five, `src/lib/redirectFallback.ts`). Production steps: docs/LAUNCH-RUNBOOK.md, details and builder notes: docs/CMS-DESIGN.md ("PR 3 notes", 2.6).
 - **`plugins/studio-help/`** is a reusable EmDash admin plugin (first-run tour, Help page, dashboard widget, per-screen notes) driven by `cms/help/tour.json`. Registered in `astro.config.mjs`; touches no public page byte. Details in `docs/EMDASH.md` ("Admin help plugin"), tests in `docs/TESTING.md`, reuse recipe in `docs/stack-template/ADMIN-HELP.md`. Edit the JSON, not the code, to change the words; bump `tour.id` to re-show it. `astro dev` now works on a clean checkout (zustand `optimizeDeps.exclude`) and `tests/studio-help.spec.ts` drives a local dev admin with `STUDIO_HELP_ADMIN=1`.
+- **CMS tooling (CMS-DESIGN PR 3).** `npm run cms:schema` (`scripts/cms/apply-schema.mjs`, generic applier `scripts/lib/emdash-schema.mjs`) makes an instance match `cms/schema/<collection>.mjs`; `npm run cms:load` (`scripts/cms/load-content.mjs`, logic in `scripts/lib/cms-load.mjs`) loads `cms/content/*.json` (entries and images through the `emdash` CLI login, menus and redirects through REST with `EMDASH_TOKEN`); `npm run cms:pt -- file.md` turns Markdown into Portable Text JSON for a content file. Both write scripts are idempotent, take `--dry-run`, and refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed. `npm run cms:production-load` (`scripts/cms/production-load.mjs`, logic in `scripts/lib/production-load.mjs`) is Nathan's one-command production load: it runs both scripts for every collection found in `cms/schema/` and `cms/content/` in a safe order, re-checks each step read-only, stops on the first non-`unchanged` or overwrite, and logs to the git-ignored `.cms-load-log/`; flags `--plan`, `--only`, `--from`. Builder sessions never run it against production (no token); see `docs/LAUNCH-RUNBOOK.md`. The pages read the content through `src/lib/cms.ts` (`getSingleton`, `getOrdered`, `getMenuItems`), which falls back to the committed JSON, logs `[cms] ...` and tags the route cache; `src/lib/portableText.ts` and `RestrictedPortableText.astro` are the restricted renderer for the About story and prose pages. PR 4 moved the shared chrome onto it (Site settings and the two menus); PRs 5 to 13 move the pages. The CI dataset gets the CMS collections and menus from `scripts/ci-dataset/cms-fixtures.mjs` (generated `seed/seed.json` entries plus `cms-rows.sql`) until production holds the data; **production has held PRs 4 to 12 since 2026-10-03** (`PRODUCTION_HAS` lists them, `snapshot.mjs` carries their rows; `photos` and `posts` are schema-only there and CI keeps its hand-written test photo and journal entries). **PR 13** adds the one existing collection to the loader (`cms/schema/case_studies.mjs`, plus `cms/content/case_studies.json`, whose `"patch": true` entries set a field only when the entry holds nothing for it) and `cms/content/redirects.json`; the redirect rows are live in production (no code fallback; Gotcha 18), and the hero scene keeps its bundled five as a fallback until its fields are loaded. Production steps: docs/LAUNCH-RUNBOOK.md, details and builder notes: docs/CMS-DESIGN.md ("PR 3 notes", 2.6).
 - `npm run sync-check` diffs this repo's copies of the shared "library of record" files against `ncs-astro-sanity-starter` (point at it with `NCS_STARTER_DIR`). Four files are marked canonical here: `scripts/free-dist.mjs`, `scripts/with-workerd.mjs`, `scripts/sync-check.mjs`, and `src/lib/contrast.ts`. Read that repo's `PORTS.md` before editing any of them, and port a fix back rather than patching locally. **This is a CI gate since 2026-09-06** (PORTS.md card 36): the build job checks the starter out at `.ncs-starter` and runs the script against it on every push and PR, so drift fails the build instead of waiting for someone to run it by hand.
 - `npm run free-dist` is the manual form of the `prebuild` hook. See Gotchas.
 - `docs/PENDING.md` is the authoritative open-patch and waiting-on-a-human queue; `docs/TESTING.md` maps which gate covers what. Both are registries: edit them in the same commit as the thing they track.
@@ -444,7 +444,7 @@ Routes (all server-rendered per request, route-cached):
 | `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                        |
 | `/privacy/`        | `src/pages/privacy.astro`                                                                                 |
 | `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                                 |
-| `/now`             | 301 to `/about/#now` (EmDash Redirects, with a code fallback in `src/lib/redirectFallback.ts`)            |
+| `/now`             | 301 to `/about/#now` (an EmDash Redirects row)                                                            |
 | `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                   |
 | `/404`             | `src/pages/404.astro` (custom not-found)                                                                  |
 | `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                |
@@ -850,16 +850,15 @@ Every entry below was measured, not assumed.
     the `hasSeo` flag, so `cms/schema/case_studies.mjs` omits it from `supports`
     (listing it made the applier's comparison never read "unchanged") and the CI
     seed adds it back (`seedCollection`).
-18. **Redirects are EmDash rows, with a temporary code fallback.** The two
-    retired URLs (`/now`, `/work/west-chester-preschool`) are rows in
-    `cms/content/redirects.json`, applied by EmDash's middleware before a page
-    renders (it matches with or without a trailing slash, and a destination with
-    a `#fragment` is accepted). `astro.config.mjs` has NO `redirects` any more:
-    a config redirect would shadow the row and an admin edit would never show.
-    Until production holds the rows, `src/worker.ts` answers a GET or HEAD that
-    would be a 404 with a 301 from `src/lib/redirectFallback.ts`. Delete that
-    file and its use in the worker once the rows are live (docs/PENDING.md);
-    otherwise a redirect deleted in the admin would keep working invisibly.
+18. **Redirects are EmDash rows, edited in the admin.** The two retired URLs
+    (`/now`, `/work/west-chester-preschool`) are rows in production EmDash
+    (loaded 2026-10-03; `cms/content/redirects.json` is the committed record the
+    loader and the CI seed use). Add, change or delete one in the admin under
+    Redirects. EmDash's middleware applies them before a page renders (it matches
+    with or without a trailing slash, and a destination with a `#fragment` is
+    accepted). `astro.config.mjs` has NO `redirects` and `src/worker.ts` has no
+    redirect code: a config redirect would shadow the row, and the temporary code
+    fallback was deleted so a row removed in the admin really stops working.
 19. **A prefetch is only worth anything if the browser may reuse it, and every
     internal link must already carry its trailing slash.** Measured 2026-10-03 on
     the live site with a real foreground browser: Astro's viewport prefetch fired
@@ -896,3 +895,30 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     `Promise.all` (3 runs: about 572ms against about 570ms, no gain, so the
     sequencing is inside EmDash, not in our components). The zone already has
     Tiered Cache, Smart Tiered Cache, HTTP/3, Early Hints, Brotli and 0-RTT on.
+21. **Any admin write purges pages, and the next view of each purged page is a
+    cold render (about 0.4 to 1.4s instead of about 35ms).** Found 2026-10-03:
+    a Lighthouse trace on the live homepage showed LCP 960ms with 853ms of it
+    waiting for the first byte, and a poll of `/`, `/about/` and `/work/` every
+    15s showed all three flip from HIT to MISS at the same instant, twice. The
+    Worker log (`observability` query grouped by `$metadata.trigger`) showed a
+    content loader writing `POST /_emdash/api/menus/{primary,footer}/items` at
+    that moment. Every page carries the menu tag, so one menu write clears the
+    whole site; a case study edit clears `/`, `/work/` and its own page. Purges
+    remove the entry, so stale-while-revalidate does not cover them. Practical
+    rules: do not run `cms:load` or `cms:production-load` (or edit menus, site
+    settings or case studies) right before showing the site to someone, and
+    expect the first visitor to each page after a deploy or edit to pay the cold
+    render. A "pages are slow" check must first confirm `CF-Cache-Status: HIT`
+    on the page (poll it a few times, no cache-busting) before blaming code.
+22. **`.github/workflows/warm-cache.yml` re-warms the pages every 5 minutes.**
+    It reads the page list from the live `/sitemap-0.xml` plus the case studies
+    in `/rss.xml` and GETs each, printing status, `CF-Cache-Status` and time per
+    page (open a run to see which pages were cold). It exists for Gotcha 21: a
+    deploy or an admin write leaves pages cold, and this brings them back within
+    minutes. It warms the Cloudflare location nearest GitHub's servers and the
+    shared upper tier, not every location, and GitHub's scheduler can run late,
+    so treat it as a mitigation, not a guarantee. It never fails the run
+    (`uptime.yml` is the alarm). A new public page needs nothing: the sitemap
+    and feed pick it up. Measured when first run: colophon, privacy and
+    photography were cold (about 1s each) and all 15 pages were hits after one
+    pass.

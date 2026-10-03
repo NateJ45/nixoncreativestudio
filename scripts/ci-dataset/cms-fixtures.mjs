@@ -221,8 +221,8 @@ export function seedMenus(menus) {
 /**
  * The seed.json redirects array for cms/content/redirects.json. EmDash applies the seed on the first
  * request, so the rows exist after a --from-scratch rebuild. NCS_CI_NO_REDIRECTS=1 leaves them out
- * (how the code fallback in src/lib/redirectFallback.ts is exercised on the same data); the committed
- * seed is always built WITHOUT the variable.
+ * (measures the state with no redirect rows: both URLs answer 404); the committed seed is always
+ * built WITHOUT the variable.
  */
 export function seedRedirects(list) {
   return list.map((r) => ({
