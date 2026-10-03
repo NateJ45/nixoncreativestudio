@@ -1131,6 +1131,341 @@
       ]
     },
     {
+      "slug": "page_journal",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Journal page",
+      "labelSingular": "Journal page",
+      "description": "The words on the Journal page: headline and the \"first entry is coming\" card.",
+      "sortOrder": 7,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "cta_title",
+          "label": "Closing banner title (max 60; empty uses the site default)",
+          "type": "string",
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "cta_sub",
+          "label": "Closing banner text (max 200; empty uses the site default)",
+          "type": "text",
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "heading",
+          "label": "Headline (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "intro",
+          "label": "Paragraph under the headline (max 260)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 260
+          }
+        },
+        {
+          "slug": "empty_kicker",
+          "label": "Small line on the \"first entry is coming\" card, shown only while nothing is published (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "empty_heading",
+          "label": "Heading on that card (max 60)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "empty_body",
+          "label": "Paragraph on that card (max 300)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 300
+          }
+        }
+      ]
+    },
+    {
+      "slug": "page_not_found",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Not-found page",
+      "labelSingular": "Not-found page",
+      "description": "The words on the page shown at a broken or old address.",
+      "sortOrder": 8,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "label",
+          "label": "Small status line above the headline (max 32)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "heading",
+          "label": "Headline (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "body",
+          "label": "Paragraph under the headline (max 220)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 220
+          }
+        },
+        {
+          "slug": "links",
+          "label": "Ways back into the site (1 to 3; the first is the blue button, the others plain links). Button words under 24 characters; the address must start with a slash, under 80 characters, for example /work/",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 1,
+            "maxItems": 3,
+            "subFields": [
+              {
+                "slug": "label",
+                "label": "Button or link words",
+                "type": "string",
+                "required": true
+              },
+              {
+                "slug": "href",
+                "label": "Address (starts with /)",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "slug": "page_photography",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Photography page",
+      "labelSingular": "Photography page",
+      "description": "The words on the Photography page: headline and the text above each group.",
+      "sortOrder": 6,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "cta_title",
+          "label": "Closing banner title (max 60; empty uses the site default)",
+          "type": "string",
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "cta_sub",
+          "label": "Closing banner text (max 200; empty uses the site default)",
+          "type": "text",
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "heading",
+          "label": "Headline, plain part (max 40). The accent phrase below follows it",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "heading_accent",
+          "label": "Headline, accent phrase shown in amber (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "intro",
+          "label": "Paragraph under the headline (max 300)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 300
+          }
+        },
+        {
+          "slug": "events_title",
+          "label": "Events group title (max 32)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "events_intro",
+          "label": "Events group paragraph (max 400)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 400
+          }
+        },
+        {
+          "slug": "portraits_title",
+          "label": "Portraits group title (max 32)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "portraits_intro",
+          "label": "Portraits group paragraph (max 400)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 400
+          }
+        },
+        {
+          "slug": "environments_title",
+          "label": "Environments group title (max 32)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "environments_intro",
+          "label": "Environments group paragraph (max 400)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 400
+          }
+        },
+        {
+          "slug": "empty_heading",
+          "label": "\"In progress\" heading, shown only while there are no photos (max 60)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "empty_body",
+          "label": "\"In progress\" paragraph, shown only while there are no photos (max 300)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 300
+          }
+        }
+      ]
+    },
+    {
       "slug": "page_services",
       "supports": ["drafts", "revisions"],
       "routable": false,
@@ -1330,6 +1665,111 @@
       ]
     },
     {
+      "slug": "page_work",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Work page",
+      "labelSingular": "Work page",
+      "description": "The words on the Work page: headline, the filter message and the live-sites list.",
+      "sortOrder": 5,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "cta_title",
+          "label": "Closing banner title (max 60; empty uses the site default)",
+          "type": "string",
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "cta_sub",
+          "label": "Closing banner text (max 200; empty uses the site default)",
+          "type": "text",
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "eyebrow",
+          "label": "Small label above the headline (max 40)",
+          "type": "string",
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "heading",
+          "label": "Headline (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "intro",
+          "label": "Paragraph under the headline (max 260). The number of projects, for example \"6 projects\", is added in front of it automatically, so start with \"for churches...\" and not with a number",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 260
+          }
+        },
+        {
+          "slug": "empty_filter_message",
+          "label": "Message when a filter chip matches no project (max 120)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 120
+          }
+        },
+        {
+          "slug": "live_heading",
+          "label": "Live sites heading (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "live_body",
+          "label": "Live sites paragraph (max 300)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 300
+          }
+        }
+      ]
+    },
+    {
       "slug": "pages",
       "label": "Other pages",
       "labelSingular": "Page",
@@ -1420,6 +1860,98 @@
           "slug": "last_updated",
           "label": "Last updated (document layout only; set this to today when the text changes)",
           "type": "datetime"
+        }
+      ]
+    },
+    {
+      "slug": "photos",
+      "label": "Photos",
+      "labelSingular": "Photo",
+      "description": "The pictures on the Photography page.",
+      "supports": ["drafts"],
+      "routable": false,
+      "group": "Photography",
+      "sortOrder": 13,
+      "titleField": "title",
+      "commentsEnabled": false,
+      "admin": {
+        "listColumns": ["category", "year"]
+      },
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title (max 80). Often the moment, not the subject, for example \"Sunday morning\"",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 80
+          }
+        },
+        {
+          "slug": "image",
+          "label": "Photo (at least 1600 px on the long side)",
+          "type": "image",
+          "required": true
+        },
+        {
+          "slug": "alt",
+          "label": "Description for screen readers (max 160). Say what the photo shows. The photo is left out of the page without it",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "category",
+          "label": "Group on the Photography page",
+          "type": "select",
+          "required": true,
+          "indexed": true,
+          "validation": {
+            "options": ["events", "portraits", "environments"]
+          }
+        },
+        {
+          "slug": "caption",
+          "label": "Caption in the full-screen viewer (max 140). Empty shows the title",
+          "type": "string",
+          "validation": {
+            "maxLength": 140
+          }
+        },
+        {
+          "slug": "location",
+          "label": "Where it was taken (max 60). Not shown yet",
+          "type": "string",
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "year",
+          "label": "Year it was taken",
+          "type": "integer",
+          "required": true,
+          "validation": {
+            "min": 2000,
+            "max": 2100
+          }
+        },
+        {
+          "slug": "featured",
+          "label": "Use as the opening picture at the top of the page (the first one ticked wins)",
+          "type": "boolean",
+          "indexed": true
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order number inside its group, 1 is first (empty goes after the numbered ones)",
+          "type": "integer",
+          "validation": {
+            "min": 1,
+            "max": 999
+          }
         }
       ]
     },

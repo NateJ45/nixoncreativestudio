@@ -22,7 +22,7 @@ import * as siteSettings from '../../cms/schema/site_settings.mjs';
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
 
 test('seed/seed.json, cms-rows.sql and cms-media.json are current (run node scripts/ci-dataset/cms-fixtures.mjs)', async () => {
-  const { seedText, sql, mediaText } = await build();
+  const { seedText, sql, mediaText } = await build({ testContent: true });
   assert.equal(read('seed/seed.json'), seedText, 'seed/seed.json is out of date');
   assert.equal(read('scripts/ci-dataset/cms-rows.sql'), sql, 'cms-rows.sql is out of date');
   assert.equal(
@@ -111,4 +111,37 @@ test('rowsSql writes a published row with a stable id and refuses an unknown fie
   assert.equal(stableId('site_settings', 'site'), stableId('site_settings', 'site'));
   assert.match(stableId('site_settings', 'site'), /^01CI[0-9A-F]{22}$/);
   assert.throws(() => rowsSql(def, [{ slug: 'site', data: { nope: 'x' } }]), /not a field/);
+});
+
+// ── CI-only test content (CMS-DESIGN PR 11) ──────────────────────────────────
+// The photography gallery needs one photo to render and be axe-checked, but
+// production must not carry a test photo. It lives in scripts/ci-dataset/ci-content/
+// and is merged into the generated CI rows only.
+
+test('the CI rows carry one test photo, with its picture, and the seed has the photos collection', () => {
+  const sql = read('scripts/ci-dataset/cms-rows.sql');
+  assert.match(sql, /INSERT OR REPLACE INTO ec_photos .*'ci-test-photo'/);
+  assert.match(sql, /DELETE FROM ec_photos WHERE slug NOT IN \('ci-test-photo'\);/);
+  const seed = JSON.parse(read('seed/seed.json'));
+  const photos = seed.collections.find((c: { slug: string }) => c.slug === 'photos');
+  assert.ok(photos, 'photos is in the seed so the table exists on a from-scratch rebuild');
+  assert.equal(photos.titleField, 'title');
+  const media = JSON.parse(read('scripts/ci-dataset/cms-media.json')) as { source: string }[];
+  assert.ok(media.some((m) => m.source === 'src/assets/photography/events-01.jpg'));
+  // The committed fallback folder has NO photos file: production starts with zero photos.
+  assert.throws(() => read('cms/content/photos.json'), /ENOENT/);
+});
+
+test('without the test content the photos table is emptied and the picture is not listed', async () => {
+  const { sql, mediaText } = await build({ testContent: false });
+  assert.match(sql, /^DELETE FROM ec_photos;$/m);
+  assert.ok(!/ci-test-photo/.test(sql));
+  assert.ok(!/events-01\.jpg/.test(mediaText));
+  // Everything else is unchanged by leaving it out.
+  assert.ok(sql.includes('INSERT OR REPLACE INTO ec_page_work'));
+});
+
+test('rowsSql with no entries clears the table instead of writing invalid SQL', () => {
+  const lines = rowsSql(siteSettings, []);
+  assert.deepEqual(lines, ['DELETE FROM ec_site_settings;']);
 });

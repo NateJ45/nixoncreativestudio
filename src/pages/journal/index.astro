@@ -28,6 +28,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import { buttonVariants } from '../../components/ui/button';
 import { readingTime } from '../../lib/readingTime';
+import { getSite } from '../../data/site';
+import { getJournalPage, indexTitle } from '../../lib/indexPages';
+
+// The page's words (headline, intro, the empty-state card text) are the Journal page
+// entry in the CMS, with the committed fallback in cms/content/page_journal.json.
+// The entries themselves still come from the journal content collection until the
+// journal moves into EmDash (CMS-DESIGN PR 12).
+const site = await getSite(Astro);
+const page = await getJournalPage(Astro);
 
 const all = (
   await getCollection('journal', ({ data }) =>
@@ -52,18 +61,12 @@ for (const entry of all) {
 }
 ---
 
-<BaseLayout
-  title="Journal | Nixon Creative Studio"
-  description="Short essays, process notes, and field reports from the studio."
->
+<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
   <section class="py-2xl" aria-labelledby="journal-heading">
     <div class="ncs-container">
       <header class="mb-xl flex flex-col gap-xs" data-reveal>
-        <h1 id="journal-heading">Journal</h1>
-        <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">
-          Short notes from the studio: process, opinions, the occasional field report. Updated
-          whenever there's something worth writing down.
-        </p>
+        <h1 id="journal-heading">{page.heading}</h1>
+        <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{page.intro}</p>
       </header>
 
       {all.length === 0 ? (
@@ -89,15 +92,11 @@ for (const entry of all) {
                  a classic mono eyebrow stacked right over the heading is the
                  loudest section-scaffold tell. Sentence-case, in the link tone,
                  reads as a warm intro instead. */}
-            <p class="text-base font-semibold text-link">First dispatch is coming.</p>
+            <p class="text-base font-semibold text-link">{page.emptyKicker}</p>
 
-            <h2 class="text-h2 text-heading">The first entry is being drafted.</h2>
+            <h2 class="text-h2 text-heading">{page.emptyHeading}</h2>
 
-            <p class="text-lg leading-[1.6] text-text-muted">
-              This is where I'll write down how the studio works: the thinking behind a build, notes
-              from a shoot, the small decisions that add up. Nothing's published yet. While you
-              wait, two good places to land.
-            </p>
+            <p class="text-lg leading-[1.6] text-text-muted">{page.emptyBody}</p>
 
             <div class="mt-xs flex flex-wrap items-center gap-s">
               {/* Primary CTA routed through the shared button recipe (brand /
@@ -238,5 +237,5 @@ for (const entry of all) {
     </div>
   </section>
 
-  <CtaBanner />
+  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
 </BaseLayout>

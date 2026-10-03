@@ -18,7 +18,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import EmDashCover from '../../components/emdash/EmDashCover.astro';
 import WorkFilter from '../../components/WorkFilter';
+import { getSite } from '../../data/site';
 import { getCaseStudies } from '../../lib/caseStudies';
+import { getWorkPage, indexTitle } from '../../lib/indexPages';
+
+// The page's words (label, headline, intro, filter message, live-sites heading and
+// text) are the Work page entry in the CMS, with the committed fallback in
+// cms/content/page_work.json. The cards themselves are the case studies.
+const site = await getSite(Astro);
+const page = await getWorkPage(Astro);
 
 // Already sorted newest first by project date.
 const entries = await getCaseStudies(Astro.cache);
@@ -49,10 +57,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
   .map((value) => ({ value, label: sectorLabels[value] }));
 ---
 
-<BaseLayout
-  title="Selected work | Nixon Creative Studio"
-  description="A list of recent web design, brand, and photography projects from Nixon Creative Studio."
->
+<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
   <section class="py-2xl" aria-labelledby="work-index-heading">
     <div class="ncs-container">
       <!-- Intro block. Rendered as an h1 since this is the work landing.
@@ -60,11 +65,13 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
            plain text kicker plus an honest count of projects, both derived
            from the real entries array so they never drift from the list. -->
       <header class="mb-xl flex flex-col gap-xs">
-        <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
-          Portfolio
-        </p>
+        {page.eyebrow && (
+          <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
+            {page.eyebrow}
+          </p>
+        )}
         <h1 id="work-index-heading" data-reveal>
-          Selected work
+          {page.heading}
         </h1>
         <p
           data-reveal
@@ -72,9 +79,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
           class="max-w-[58ch] text-lg leading-[1.5] text-text-muted"
         >
           {entries.length}
-          {entries.length === 1 ? ' project' : ' projects'} for churches, schools, nonprofits, and
-          small businesses around Cincinnati. Each one started with a conversation about what the
-          organization actually needed.
+          {entries.length === 1 ? ' project' : ' projects'} {page.intro}
         </p>
       </header>
 
@@ -191,7 +196,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
           notice announced when the filter empties the grid (without it the
           change is silent to assistive tech). */}
       <p data-work-empty data-hidden aria-live="polite" class="mt-l text-text-muted">
-        Nothing matches that filter yet. Try clearing one of the chips above.
+        {page.emptyFilterMessage}
       </p>
     </div>
   </section>
@@ -204,11 +209,8 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
     <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
       <div class="ncs-container">
         <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-          <h2 id="live-sites-heading">Open any of them</h2>
-          <p class="text-lg leading-[1.55] text-text-muted">
-            Every project here is a real, shipped site. Do not take my word for it, click through
-            and look around.
-          </p>
+          <h2 id="live-sites-heading">{page.liveHeading}</h2>
+          <p class="text-lg leading-[1.55] text-text-muted">{page.liveBody}</p>
         </header>
 
         <ul class="grid gap-x-l sm:grid-cols-2 lg:grid-cols-3">
@@ -235,5 +237,5 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
     </section>
   )}
 
-  <CtaBanner />
+  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
 </BaseLayout>

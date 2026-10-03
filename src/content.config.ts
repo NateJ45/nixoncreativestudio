@@ -36,6 +36,10 @@ import { glob } from 'astro/loaders';
    the temptation to write long descriptions next to a single image.
    The image file itself lives in src/assets/photography/, referenced
    by relative path from the JSON entry.
+
+   NO LONGER READ (CMS-DESIGN PR 11): /photography reads the `photos` collection
+   in EmDash (src/lib/photos.ts). This empty Astro collection stays only until
+   PR 12 deletes it; do not add entries here.
    ---------------------------------------------------------------------- */
 
 const photos = defineCollection({

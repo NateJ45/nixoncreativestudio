@@ -1,7 +1,9 @@
 ---
 // Safe to edit. Friendly 404. Astro picks this up automatically for any
-// route that doesn't match a real page; Cloudflare Pages serves it as
-// the static fallback for unknown paths in production.
+// route that doesn't match a real page and answers it with a REAL 404 status
+// (src/worker.ts only rewrites the status to 200 for the literal path /404/, so
+// Lighthouse CI can audit the template). The words are the Not-found page entry
+// in the CMS, with the committed fallback in cms/content/page_not_found.json.
 /* ============================================================================
    /404 | Page not found
    ============================================================================
@@ -14,12 +16,21 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { buttonVariants } from '../components/ui/button';
+import { getSite } from '../data/site';
+import { getNotFoundPage, indexTitle } from '../lib/indexPages';
+
+const site = await getSite(Astro);
+// A real unknown URL answers 404 and must never reach the route cache (the layout
+// already skips cachePublicPage for it, and src/worker.ts forces no-store on any non-200),
+// so the read only tags the page when it is rendered as a 200, i.e. for /404/ itself.
+const page = await getNotFoundPage({
+  cache: (Astro.response.status ?? 200) < 400 ? Astro.cache : undefined,
+});
+// The first link is the blue button, the rest are plain links.
+const [primaryLink, ...otherLinks] = page.links;
 ---
 
-<BaseLayout
-  title="Page not found | Nixon Creative Studio"
-  description="That page wandered off. Here's how to get back on track."
->
+<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
   <section
     class="relative isolate flex min-h-[70vh] items-center overflow-hidden py-2xl"
     aria-labelledby="notfound-heading"
@@ -47,7 +58,7 @@ import { buttonVariants } from '../components/ui/button';
       {/* Quiet mono label above the heading. Lowercase and lightly tracked so
           it reads as a small status line, not a shouted section eyebrow. */}
       <p class="font-mono text-sm text-text-muted" data-reveal style="--reveal-delay: 80ms">
-        Page not found
+        {page.label}
       </p>
 
       <h1
@@ -56,7 +67,7 @@ import { buttonVariants } from '../components/ui/button';
         data-reveal
         style="--reveal-delay: 160ms"
       >
-        That page wandered off.
+        {page.heading}
       </h1>
 
       <p
@@ -64,8 +75,7 @@ import { buttonVariants } from '../components/ui/button';
         data-reveal
         style="--reveal-delay: 240ms"
       >
-        The link you followed might be old, or the address might be a typo. Nothing's broken on this
-        end. Here are a few places to try instead.
+        {page.body}
       </p>
 
       <div
@@ -74,16 +84,18 @@ import { buttonVariants } from '../components/ui/button';
         style="--reveal-delay: 320ms"
       >
         <span class="inline-block">
-          <a href="/" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
-            Back to home
+          <a
+            href={primaryLink.href}
+            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+          >
+            {primaryLink.label}
           </a>
         </span>
-        <a class="card-link" href="/work/">
-          See selected work
-        </a>
-        <a class="card-link" href="/contact">
-          Get in touch
-        </a>
+        {otherLinks.map((link) => (
+          <a class="card-link" href={link.href}>
+            {link.label}
+          </a>
+        ))}
       </div>
     </div>
   </section>

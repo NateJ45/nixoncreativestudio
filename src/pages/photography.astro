@@ -1,90 +1,62 @@
 ---
 // Foundation, edit with care.
 /* ============================================================================
-   /photography | Photography  [collection-driven]
+   /photography | Photography  [CMS-driven]
    ============================================================================
-   Image-heavy showcase, driven entirely by the `photos` content collection
-   (src/content/photos/*.json). To add work: drop a JSON entry plus its image
-   (see src/content.config.ts for the fields) and it appears here automatically,
-   grouped into its category (events / portraits / environments).
+   Image-heavy showcase. The words come from the `page_photography` entry and the
+   pictures from the `photos` collection, both edited in the EmDash admin
+   (Pages, Photography page; Photography, Photos). Server-rendered like every page;
+   the route cache is tagged with what this page read (src/lib/routeCache.ts), so a
+   publish purges it. Readers: src/lib/indexPages.ts and src/lib/photos.ts.
 
    Until real photos exist, the page does NOT ship placeholder rectangles (a
    photographer's page full of blank gradients is the worst possible tell).
    Instead it shows an honest "in progress" state and points visitors to the
-   work pages, where the photography already appears in context.
+   work pages, where the photography already appears in context. Production is in
+   that state today: zero photos, and the committed text in
+   cms/content/page_photography.json renders until its CMS entry is loaded.
 
-   Drop-in checklist for a real shoot:
-     1. Put the optimized image in src/assets/photography/<name>.jpg
-     2. Add src/content/photos/<name>.json:
-        { "title": "...", "image": "../../assets/photography/<name>.jpg",
-          "category": "events", "year": 2026, "caption": "...",
-          "location": "...", "featured": true }
-     3. Rebuild. The hero uses a featured photo; categories with photos render
-        their own gallery section.
+   To add work: Photography, Photos, "Add new": upload the picture, write what it
+   shows (the description is required, a photo without one is left out), pick its
+   group and year. The hero uses the first Featured photo; a group with photos gets
+   its own gallery section. Pictures are served as resized WebP through the
+   width-only /_image resizer (src/lib/photos.ts explains the 4096 px rule).
 
    All motion below is reduced-motion safe (handled globally in globals.css).
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
-
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
+import EmDashPhoto from '../components/emdash/EmDashPhoto.astro';
 import PhotoGallery from '../components/PhotoGallery';
+import { getSite } from '../data/site';
+import { getPhotographyPage, indexTitle } from '../lib/indexPages';
+import { galleryItems, getPhotos, groupPhotos, heroPhoto } from '../lib/photos';
 
-// Stable category titles + intros. This is copy, not content, so it lives
-// here; the photos themselves come from the collection.
-const CATEGORY_META: Record<string, { title: string; body: string }> = {
-  events: {
-    title: 'Events',
-    body: 'Sunday mornings, school assemblies, fundraisers, ribbon cuttings. Coverage that tells the story without making the room perform for the camera.',
-  },
-  portraits: {
-    title: 'Portraits',
-    body: 'Team headshots, staff portraits, leadership pages. Comfortable lighting, consistent treatment, edited for web so the file size stays sane.',
-  },
-  environments: {
-    title: 'Environments',
-    body: 'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.',
-  },
-};
-const CATEGORY_ORDER = ['events', 'portraits', 'environments'] as const;
-
-const allPhotos = await getCollection('photos');
+const site = await getSite(Astro);
+const page = await getPhotographyPage(Astro);
+const allPhotos = await getPhotos(Astro);
 const hasPhotos = allPhotos.length > 0;
 
-// Group into non-empty categories, newest year first. cover drives the bento
-// card thumbnail; photos drives the gallery for that category.
-const categories = CATEGORY_ORDER.map((id) => {
-  const entries = allPhotos
-    .filter((p) => p.data.category === id)
-    .sort((a, b) => b.data.year - a.data.year);
-  return {
-    id,
-    title: CATEGORY_META[id].title,
-    body: CATEGORY_META[id].body,
-    cover: entries[0]?.data.image,
-    photos: entries.map((p) => ({
-      src: p.data.image.src,
-      width: p.data.image.width,
-      height: p.data.image.height,
-      alt: p.data.title,
-      caption: p.data.caption ?? p.data.title,
-    })),
-  };
-}).filter((c) => c.photos.length > 0);
+// Group into non-empty categories. cover drives the bento card thumbnail; items
+// drives the gallery for that category (width-only /_image URLs, see photos.ts).
+const categories = groupPhotos(allPhotos).map((group) => ({
+  id: group.id,
+  title: page.categories[group.id].title,
+  body: page.categories[group.id].body,
+  cover: group.cover.image,
+  count: group.photos.length,
+  photos: galleryItems(group, Astro.url.origin),
+}));
 
-// Hero background: a featured photo if one is flagged, else the newest photo,
+// Hero background: a featured photo if one is flagged, else the first photo,
 // else nothing (the aurora carries the hero in the in-progress state).
-const heroImage = (allPhotos.find((p) => p.data.featured) ?? allPhotos[0])?.data.image;
+const heroImage = heroPhoto(allPhotos)?.image;
 
 const [leadCategory, ...restCategories] = categories;
 ---
 
-<BaseLayout
-  title="Photography | Nixon Creative Studio"
-  description="Events, portraits, and environmental photography for organizations in the Cincinnati region."
->
+<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
   <!-- ----------------------------------------------------------------------
        Hero. When a real photo exists it fills the surface behind a navy
        scrim; until then a navy aurora carries it (no placeholder image). The
@@ -99,12 +71,11 @@ const [leadCategory, ...restCategories] = categories;
   >
     <div class="absolute inset-0 -z-10" aria-hidden="true">
       {heroImage ? (
-        <Image
-          src={heroImage}
+        <EmDashPhoto
+          image={heroImage}
           alt=""
           class="h-full w-full object-cover"
-          loading="eager"
-          decoding="async"
+          priority
           widths={[768, 1280, 1920]}
           sizes="100vw"
         />
@@ -125,7 +96,7 @@ const [leadCategory, ...restCategories] = categories;
         data-reveal
         style="text-wrap: balance;"
       >
-        Photography that matches the <span class="text-tertiary">website it lives on.</span>
+        {page.heading} <span class="text-tertiary">{page.headingAccent}</span>
       </h1>
 
       <p
@@ -133,9 +104,7 @@ const [leadCategory, ...restCategories] = categories;
         data-reveal
         style="--reveal-delay: 120ms;"
       >
-        Events, portraits, and environments for organizations across the Cincinnati region. Most of
-        these photos came from the same projects as the web work. Same person designed the site and
-        showed up with the camera, so the photos and the site look like one piece of work.
+        {page.intro}
       </p>
     </div>
   </section>
@@ -158,12 +127,10 @@ const [leadCategory, ...restCategories] = categories;
                 href={`#${leadCategory.id}`}
                 data-spotlight
               >
-                <Image
-                  src={leadCategory.cover}
+                <EmDashPhoto
+                  image={leadCategory.cover}
                   alt=""
                   class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                  loading="lazy"
-                  decoding="async"
                   widths={[480, 768, 1024]}
                   sizes="(min-width: 1024px) 50vw, 100vw"
                 />
@@ -174,8 +141,7 @@ const [leadCategory, ...restCategories] = categories;
                 <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
                   <h2 class="text-h3 text-primary-foreground">{leadCategory.title}</h2>
                   <p class="font-mono text-sm text-primary-foreground/80">
-                    {leadCategory.photos.length}{' '}
-                    {leadCategory.photos.length === 1 ? 'photo' : 'photos'}
+                    {leadCategory.count} {leadCategory.count === 1 ? 'photo' : 'photos'}
                   </p>
                 </div>
               </a>
@@ -188,12 +154,10 @@ const [leadCategory, ...restCategories] = categories;
                   href={`#${category.id}`}
                   data-spotlight
                 >
-                  <Image
-                    src={category.cover}
+                  <EmDashPhoto
+                    image={category.cover}
                     alt=""
                     class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    loading="lazy"
-                    decoding="async"
                     widths={[480, 768]}
                     sizes="(min-width: 1024px) 25vw, 100vw"
                   />
@@ -204,7 +168,7 @@ const [leadCategory, ...restCategories] = categories;
                   <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
                     <h2 class="text-h3 text-primary-foreground">{category.title}</h2>
                     <p class="font-mono text-sm text-primary-foreground/80">
-                      {category.photos.length} {category.photos.length === 1 ? 'photo' : 'photos'}
+                      {category.count} {category.count === 1 ? 'photo' : 'photos'}
                     </p>
                   </div>
                 </a>
@@ -262,12 +226,8 @@ const [leadCategory, ...restCategories] = categories;
       <div class="ncs-container">
         <div class="band-themed mx-auto max-w-[60ch] rounded-2xl p-xl text-center" data-reveal>
           <p class="text-sm font-semibold tracking-[0.12em] text-link uppercase">In progress</p>
-          <h2 class="mt-s text-heading">The photography portfolio is coming together.</h2>
-          <p class="mt-s leading-[1.6] text-text-muted">
-            I'm pulling the strongest frames from recent church, school, and small-business
-            projects. In the meantime, the work pages show the photography in context, paired with
-            the sites it was shot for.
-          </p>
+          <h2 class="mt-s text-heading">{page.emptyHeading}</h2>
+          <p class="mt-s leading-[1.6] text-text-muted">{page.emptyBody}</p>
           <a class="card-link mt-m inline-flex" href="/work/">
             See the work
           </a>
@@ -276,8 +236,5 @@ const [leadCategory, ...restCategories] = categories;
     </section>
   )}
 
-  <CtaBanner
-    title="Need photography for your project?"
-    sub="Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own."
-  />
+  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
 </BaseLayout>

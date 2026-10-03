@@ -205,6 +205,12 @@ export function rowsSql(def, entries) {
   const table = `ec_${def.SLUG}`;
   const types = new Map(def.FIELDS.map((f) => [f.slug, f.type]));
   const lines = [];
+  if (entries.length === 0) {
+    // No entries at all (a collection production starts empty): clear whatever a
+    // previous run left, so the refresh can return the table to "zero rows".
+    lines.push(`DELETE FROM ${table};`);
+    return lines;
+  }
   const keep = entries.map((e) => `'${e.slug.replace(/'/g, "''")}'`).join(', ');
   lines.push(`DELETE FROM ${table} WHERE slug NOT IN (${keep});`);
   for (const e of entries) {
@@ -230,8 +236,34 @@ export function rowsSql(def, entries) {
   return lines;
 }
 
-/** Every collection that has both a schema file and a content file, minus PRODUCTION_HAS. */
-async function loadCollections() {
+/**
+ * CI-only entries: rows production must NOT carry, but tests need (CMS-DESIGN PR 11's
+ * test photo, so the photography gallery renders and is axe-checked). One JSON list per
+ * collection in scripts/ci-dataset/ci-content/<collection>.json, same `{ slug, data }`
+ * shape as cms/content, appended to that collection's entries. They never reach the
+ * fallback JSON or production.
+ *
+ * Set NCS_CI_NO_TEST_CONTENT=1 to leave them out (and have the refresh delete them):
+ * that is how the "zero photos" render is measured against the same CI data. The
+ * committed generated files are always built WITHOUT the variable.
+ */
+const CI_ONLY_DIR = join(DIR, 'ci-content');
+const NO_TEST_CONTENT_ENV = process.env.NCS_CI_NO_TEST_CONTENT === '1';
+
+function ciOnlyEntries(name, testContent) {
+  const file = join(CI_ONLY_DIR, `${name}.json`);
+  if (!testContent || !existsSync(file)) return [];
+  const json = JSON.parse(readFileSync(file, 'utf8'));
+  return (Array.isArray(json) ? json : [json]).map((e) => ({ ...e }));
+}
+
+/**
+ * Every collection that has a schema file, minus PRODUCTION_HAS (applied later). Its
+ * entries are cms/content/<collection>.json plus any CI-only entries. A collection with
+ * no content file (`photos`, which production starts empty) still lands in the seed so
+ * the table exists; it simply has only its CI-only entries, if any.
+ */
+async function loadCollections(testContent) {
   const out = [];
   if (!existsSync(SCHEMA_DIR)) return out;
   for (const file of readdirSync(SCHEMA_DIR)
@@ -239,17 +271,17 @@ async function loadCollections() {
     .sort()) {
     const name = file.replace(/\.mjs$/, '');
     const contentFile = join(CONTENT_DIR, `${name}.json`);
-    if (!existsSync(contentFile)) continue;
     const def = await import(pathToFileURL(join(SCHEMA_DIR, file)).href);
-    const json = JSON.parse(readFileSync(contentFile, 'utf8'));
-    out.push({ def, entries: (Array.isArray(json) ? json : [json]).map((e) => ({ ...e })) });
+    const json = existsSync(contentFile) ? JSON.parse(readFileSync(contentFile, 'utf8')) : [];
+    const committed = (Array.isArray(json) ? json : [json]).map((e) => ({ ...e }));
+    out.push({ def, entries: [...committed, ...ciOnlyEntries(name, testContent)] });
   }
   return out;
 }
 
 /** Build all three outputs as strings. Exported so a unit test can prove the committed files are current. */
-export async function build() {
-  const all = await loadCollections();
+export async function build({ testContent = !NO_TEST_CONTENT_ENV } = {}) {
+  const all = await loadCollections(testContent);
   const inSeed = all; // the schema always goes in the seed, even once production has it
   const inRows = all.filter((c) => !PRODUCTION_HAS.includes(c.def.SLUG));
 
