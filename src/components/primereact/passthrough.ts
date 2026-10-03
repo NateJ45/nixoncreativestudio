@@ -14,7 +14,7 @@
 //   // Pass individual component passthrough directly:
 //   <InputText pt={pt.inputtext} ... />
 //   // Or spread the whole object via PrimeReactProvider:
-//   <PrimeReactProvider value={{ unstyled: true, pt }}>
+//   <PrimeReactProvider unstyled pt={pt}>
 //
 // TOKEN reference — all classes use the repo's :root semantic tokens so
 // apply-brand.mjs rewrites propagate automatically:

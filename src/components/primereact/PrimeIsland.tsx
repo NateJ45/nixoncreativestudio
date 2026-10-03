@@ -19,7 +19,7 @@
 // behavior-heavy widget (rich table, tree select, file upload) that has no
 // Radix/shadcn equivalent. See src/components/primereact/README.md.
 
-import { PrimeReactProvider } from 'primereact/api';
+import { PrimeReactProvider } from '@primereact/core/config';
 import type { ReactNode } from 'react';
 
 interface PrimeIslandProps {
@@ -32,5 +32,5 @@ interface PrimeIslandProps {
  * All styling is applied via the passthrough config.
  */
 export default function PrimeIsland({ children }: PrimeIslandProps) {
-  return <PrimeReactProvider value={{ unstyled: true }}>{children}</PrimeReactProvider>;
+  return <PrimeReactProvider unstyled>{children}</PrimeReactProvider>;
 }

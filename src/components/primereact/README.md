@@ -54,4 +54,4 @@ Copy individual component passthrough objects from that repo, then replace any h
 
 ## Installed version
 
-`primereact` v10.9.8 -- stable, React 19 compatible peer dep. PrimeReact v11 is in alpha as of June 2026; upgrade when it reaches stable. The install is `primereact` on npm; the provider is imported from `primereact/api`.
+`primereact` v11.2.0 (stable, React 19 peer dep). v11 is a rewrite: components are unstyled composable parts (`import { Select } from 'primereact/select'`, then `<Select.Root>`, `<Select.Trigger>`, and so on), not the v10 single-component API. The provider moved out of `primereact/api`; `PrimeIsland` imports `PrimeReactProvider` from `@primereact/core/config`, which `primereact` pulls in as its own dependency. The v10-shaped `pt` objects in `passthrough.ts` are a starting point only and have not been re-checked against the v11 part names, so verify them when you first use a widget.
