@@ -1,6 +1,8 @@
 ---
 // Safe to edit. The story prose, the principles array, and the Currently arrays
-// hold all of the user-facing copy on this page.
+// hold all of the user-facing copy on this page. The Testimonials band reads
+// the EmDash CMS, so this page is server-rendered (see the note above the
+// template).
 /* ============================================================================
    /about | About Nathan Nixon  [editorial-grid revamp]
    ============================================================================
@@ -42,6 +44,7 @@ import Testimonials from '../components/Testimonials.astro';
 import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
+import { CACHE_CONTROL } from '../lib/caseStudies';
 import { Image } from 'astro:assets';
 import { site } from '../data/site';
 
@@ -203,6 +206,12 @@ const schemas = [
     sameAs: [site.social.instagram, site.social.linkedin],
   },
 ];
+
+// Server-rendered, not prerendered: the Testimonials band reads case studies from the EmDash
+// CMS (D1) at request time. Short CDN cache; see CACHE_CONTROL in
+// src/lib/caseStudies.ts.
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
 ---
 
 <BaseLayout

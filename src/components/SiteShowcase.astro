@@ -28,6 +28,17 @@
        label="example.com"
      />
 
+   EmDash mode (case studies read from the CMS): instead of `slug`, pass the
+   stored image values as `desktop` (required) and `mobile` (optional), e.g.
+
+     <SiteShowcase desktop={d.showcase_desktop} mobile={d.showcase_mobile}
+       alt={d.showcase_alt} href={d.showcase_href} label={d.showcase_label}
+       variant={d.showcase_variant} />
+
+   They render through ./emdash/ScrollShot.astro (width-only resizing; see that file
+   for why emdash/ui Image is not used for tall captures). The markup and CSS are
+   identical to the slug mode; only the image source differs.
+
    Accessibility: the scroll is gated behind prefers-reduced-motion, so a
    reduced-motion visitor sees static frames (the top of each page) and the link
    still works. The phone is decorative (aria-hidden, pointer-events:none, so the
@@ -37,11 +48,18 @@
    ============================================================================ */
 
 import { Image } from 'astro:assets';
+import ScrollShot from './emdash/ScrollShot.astro';
+import type { ImageValue } from 'emdash';
 import type { ImageMetadata } from 'astro';
 
 interface Props {
-  /** Case study slug. Resolves <slug>-home.png (required) and <slug>-mobile.png (optional). */
-  slug: string;
+  /** Case study slug. Resolves <slug>-home.png (required) and <slug>-mobile.png (optional).
+      Not needed in EmDash mode (pass `desktop` instead). */
+  slug?: string;
+  /** EmDash mode: the stored desktop screenshot (image field value). */
+  desktop?: ImageValue;
+  /** EmDash mode: the stored phone screenshot (optional). */
+  mobile?: ImageValue;
   /** Descriptive alt for the desktop screenshot. */
   alt: string;
   /** Live site URL the frame links to. */
@@ -52,7 +70,8 @@ interface Props {
   variant?: 'scroll' | 'zoom';
 }
 
-const { slug, alt, href, label, variant = 'scroll' } = Astro.props;
+const { slug, desktop, mobile, alt, href, label, variant = 'scroll' } = Astro.props;
+const emdashMode = !!desktop;
 
 // Resolve the captures by slug (eager glob, same pattern as SelectedWork).
 const homeShots = import.meta.glob<{ default: ImageMetadata }>(
@@ -63,17 +82,20 @@ const mobileShots = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/case-studies/shots/*-mobile.png',
   { eager: true },
 );
-const src = Object.entries(homeShots).find(([p]) => p.endsWith(`/${slug}-home.png`))?.[1].default;
-const mobileSrc = Object.entries(mobileShots).find(([p]) => p.endsWith(`/${slug}-mobile.png`))?.[1]
-  .default;
-if (!src) {
+const src = emdashMode
+  ? undefined
+  : Object.entries(homeShots).find(([p]) => p.endsWith(`/${slug}-home.png`))?.[1].default;
+const mobileSrc = emdashMode
+  ? undefined
+  : Object.entries(mobileShots).find(([p]) => p.endsWith(`/${slug}-mobile.png`))?.[1].default;
+if (!emdashMode && !src) {
   throw new Error(
     `SiteShowcase: no desktop capture for slug "${slug}" (expected ${slug}-home.png)`,
   );
 }
 
 const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
-const hasPhone = !!mobileSrc;
+const hasPhone = emdashMode ? !!mobile : !!mobileSrc;
 ---
 
 <figure class="site-showcase my-l">
@@ -118,12 +140,18 @@ const hasPhone = !!mobileSrc;
 
       <!-- Scrolling / zooming desktop viewport. -->
       <div class={`showcase-window ${variant === 'zoom' ? 'showcase-zoom' : 'showcase-scroll'}`}>
-        <Image
-          src={src}
-          alt={alt}
-          widths={[768, 1024, 1425]}
-          sizes="(min-width: 56rem) 70vw, 100vw"
-        />
+        {
+          emdashMode ? (
+            <ScrollShot image={desktop} alt={alt} sizes="(min-width: 56rem) 70vw, 100vw" />
+          ) : (
+            <Image
+              src={src!}
+              alt={alt}
+              widths={[768, 1024, 1425]}
+              sizes="(min-width: 56rem) 70vw, 100vw"
+            />
+          )
+        }
       </div>
     </a>
 
@@ -134,14 +162,23 @@ const hasPhone = !!mobileSrc;
            desktop link clickable beneath it. Hidden below md (see <style>). */
         <div class="showcase-phone" aria-hidden="true">
           <div class="showcase-phone-window">
-            <Image
-              src={mobileSrc!}
-              alt=""
-              widths={[220, 330, 440]}
-              sizes="(min-width: 48rem) 200px, 1px"
-              class="showcase-phone-img"
-              loading="lazy"
-            />
+            {emdashMode ? (
+              <ScrollShot
+                image={mobile as ImageValue}
+                alt=""
+                sizes="(min-width: 48rem) 200px, 1px"
+                class="showcase-phone-img"
+              />
+            ) : (
+              <Image
+                src={mobileSrc!}
+                alt=""
+                widths={[220, 330, 440]}
+                sizes="(min-width: 48rem) 200px, 1px"
+                class="showcase-phone-img"
+                loading="lazy"
+              />
+            )}
           </div>
         </div>
       )

@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { fileURLToPath } from 'node:url';
 
 import cloudflare from '@astrojs/cloudflare';
 import expressiveCode from 'astro-expressive-code';
@@ -7,6 +8,8 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import emdash from 'emdash/astro';
+import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
 
 // =============================================================================
 // Astro config
@@ -39,8 +42,9 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
-  // Astro 7's adapter no longer forces server mode; this site never used sessions.
-  session: false,
+  // Sessions are ON for the EmDash trial: admin sign-in needs a session driver.
+  // The Cloudflare adapter supplies one (KV binding "SESSION") when `session`
+  // is left unset. The live static site had `session: false`.
   // The standalone /now page was merged into the About page (its Currently
   // section). Keep old links and bookmarks working with a static redirect.
   redirects: {
@@ -61,7 +65,27 @@ export default defineConfig({
   // site that runtime dependency left every case-study cover stuck on its
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
-  adapter: cloudflare({ imageService: 'compile' }),
+  // Astro's image service only resizes images from hosts it has been told to
+  // trust. CMS media is served from the site's own origin (/_emdash/api/media/...),
+  // so list the origins that serve it (the production domain and the trial Worker).
+  image: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'nixoncreativestudio.com' },
+      { protocol: 'https', hostname: 'www.nixoncreativestudio.com' },
+      // Every Worker address on this account: the trial, the production
+      // workers.dev URL, and the CI preview aliases (ci-pr-N-..., lh-pr-N-...).
+      // Found 2026-10-02: a host missing from this list is not an error. Astro
+      // silently serves the full-size original instead of a resized WebP, which
+      // made Lighthouse CI measure LCP at 8 to 11 s on pages that are fine when
+      // the host is listed.
+      { protocol: 'https', hostname: '**.nathanjnixon86.workers.dev' },
+    ],
+  },
+  // EmDash trial: keep build-time optimization for the site's own images, and
+  // add the Cloudflare Images binding at runtime so CMS images stored in R2 get
+  // real resized WebP srcsets (EmDash passes them through Astro's image service;
+  // with 'compile' alone every srcset entry pointed at the full-size original).
+  adapter: cloudflare({ imageService: { build: 'compile', runtime: 'cloudflare-binding' } }),
   integrations: [
     // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
     // so a code sample flips with the theme toggle instead of prefers-color-scheme.
@@ -71,11 +95,57 @@ export default defineConfig({
       styleOverrides: { borderRadius: '0.5rem' },
     }),
     mdx(),
-    sitemap(),
+    // @astrojs/sitemap only lists PRERENDERED routes. Pages that read the CMS
+    // (home, /work/, /about/, /services/) are server-rendered now, so they are
+    // listed by hand via customPages. The case studies themselves come from
+    // EmDash's own per-collection sitemap (needs the `seo` support and a
+    // `/work/{slug}/` URL pattern on the case_studies collection), added to the
+    // same sitemap-index.xml via customSitemaps so robots.txt and Search
+    // Console keep pointing at the one URL they already know.
+    sitemap({
+      customPages: [
+        'https://nixoncreativestudio.com/',
+        'https://nixoncreativestudio.com/work/',
+        'https://nixoncreativestudio.com/about/',
+        'https://nixoncreativestudio.com/services/',
+      ],
+      customSitemaps: ['https://nixoncreativestudio.com/sitemap-case_studies.xml'],
+    }),
     react(),
+    // EmDash CMS trial: D1 for content, R2 for media, admin at /_emdash/admin.
+    emdash({
+      database: d1({ binding: 'DB' }),
+      storage: r2({ binding: 'MEDIA' }),
+      sandboxRunner: sandbox(),
+    }),
   ],
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).
+      // EmDash aliases `use-sync-external-store/shim/with-selector.js` to its
+      // own ESM shim, which only has a NAMED export. zustand (pulled in by
+      // @react-three/fiber for the WebGL hero) does a DEFAULT import of that
+      // file, so the build dies with MISSING_EXPORT. Rewriting zustand's import
+      // to a namespace import of the same shim keeps both sides happy.
+      {
+        name: 'ncs-zustand-sync-store-shim',
+        enforce: 'pre',
+        transform(code, id) {
+          if (!/zustand[\\/]esm[\\/]traditional\.mjs/.test(id)) return null;
+          const shim = fileURLToPath(
+            new URL(
+              './node_modules/emdash/src/astro/integration/shims/use-sync-external-store-with-selector.js',
+              import.meta.url,
+            ),
+          ).replace(/\\/g, '/');
+          return code.replace(
+            /import useSyncExternalStoreExports from 'use-sync-external-store\/shim\/with-selector\.js';/,
+            `import * as useSyncExternalStoreExports from '${shim}';`,
+          );
+        },
+      },
+    ],
   },
 });

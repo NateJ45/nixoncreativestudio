@@ -34,6 +34,25 @@
  *   node scripts/page-parity.mjs compare about   # limit to one page
  *   node scripts/page-parity.mjs list         # show the routes it would snapshot
  *
+ * URL MODE (added with the EmDash migration)
+ * The site is hybrid: the home page, /work/, /work/<slug>/, /about/ and
+ * /services/ are SERVER-rendered from EmDash, so they are not in dist/client at
+ * all and a build-output comparison cannot see them. Pass `--url <base>` to
+ * fetch each page's rendered HTML over HTTP instead of reading dist/client:
+ *
+ *   node scripts/page-parity.mjs compare --url https://example.workers.dev
+ *   node scripts/page-parity.mjs compare work/stone-steps-50k --url <base>
+ *   node scripts/page-parity.mjs capture --url <base> --routes /new-page/,/other/
+ *
+ * The page list in URL mode comes from the committed snapshot names (home ->
+ * /, about -> /about/, work/x -> /work/x/, 404 -> /404); --routes adds more
+ * (comma-separated paths, used by capture for pages with no snapshot yet). The
+ * same normalizer runs on the fetched HTML. Read-only GETs; it never writes to
+ * the site. Expect the first URL compare of a migrated page to DIFF, because
+ * the baselines were captured from the static build: CMS-rendered markup is
+ * not byte-identical (EmDash images, the 404 path), and each DIFF is a thing to
+ * look at, not to rubber-stamp. Do not re-capture baselines casually.
+ *
  * WHERE IT READS THE BUILT HTML (the 2026-08-27 parameterization)
  * Astro's Cloudflare output shape moved between adapter majors:
  *   - @astrojs/cloudflare 14 (Astro 7) writes static HTML to dist/client/
@@ -172,7 +191,24 @@ function resolveHtmlRoot() {
   return { dir: candidates[0][0], label: 'dist/client' };
 }
 
-const { dir: DIST, label: DIST_LABEL } = resolveHtmlRoot();
+// --- URL mode flags -------------------------------------------------------
+// Pulled out of argv first so the positional mode/page arguments below keep
+// their old positions: `compare about --url X` and `compare --url X about` both
+// work.
+const ARGS = process.argv.slice(2);
+function takeFlag(name) {
+  const i = ARGS.indexOf(name);
+  if (i === -1) return undefined;
+  const value = ARGS[i + 1];
+  ARGS.splice(i, value === undefined ? 1 : 2);
+  return value;
+}
+const BASE_URL = takeFlag('--url')?.replace(/\/+$/, '');
+const EXTRA_ROUTES = (takeFlag('--routes') ?? '').split(',').filter(Boolean);
+
+const { dir: DIST, label: DIST_LABEL } = BASE_URL
+  ? { dir: '', label: BASE_URL }
+  : resolveHtmlRoot();
 
 // --------------------------------------------------------------------------
 // Route discovery
@@ -212,7 +248,29 @@ function discoverPages() {
 /** Snapshot filename for a route name (nested routes keep their shape). */
 const snapFile = (name) => `${name.replace(/\//g, '__')}.html`;
 
+/** URL path for a snapshot name: home -> /, 404 -> /404, anything else -> /name/. */
+const routeFor = (name) => (name === 'home' ? '/' : name === '404' ? '/404' : `/${name}/`);
+
+/** Name for a URL path (the inverse of routeFor). */
+const nameFor = (route) => {
+  const p = route.replace(/^\/+|\/+$/g, '');
+  return p === '' ? 'home' : p;
+};
+
+/** URL mode: the pages are the committed snapshot names plus any --routes. */
+function discoverUrlPages() {
+  const names = new Set();
+  if (existsSync(SNAP_DIR)) {
+    for (const file of readdirSync(SNAP_DIR)) {
+      if (file.endsWith('.html')) names.add(file.replace(/\.html$/, '').replace(/__/g, '/'));
+    }
+  }
+  for (const route of EXTRA_ROUTES) names.add(nameFor(route));
+  return [...names].sort().map((name) => [name, routeFor(name)]);
+}
+
 function getPages() {
+  if (BASE_URL) return discoverUrlPages();
   if (PAGES.length > 0) return PAGES;
   requireDist();
   return discoverPages();
@@ -275,7 +333,7 @@ function requireDist() {
         'This script never builds. Run the build first, then re-run:\n' +
         '  npm run build\n' +
         '  node scripts/page-parity.mjs ' +
-        (process.argv[2] ?? 'capture') +
+        (ARGS[0] ?? 'capture') +
         '\nIf this project builds somewhere else, set PARITY_DIST to that path.',
     );
   }
@@ -294,7 +352,14 @@ function requireDist() {
   }
 }
 
-function readPage(file) {
+async function readPage(file) {
+  if (BASE_URL) {
+    // URL mode: `file` is a route path. A 404 means the page is gone (null),
+    // so the comparison reports it as DIFF the same way a missing file does.
+    const res = await fetch(BASE_URL + file, { redirect: 'follow' });
+    if (res.status === 404 && file !== '/404') return null;
+    return normalize(await res.text());
+  }
   const path = join(DIST, ...file.split('/'));
   if (!existsSync(path)) return null;
   return normalize(readFileSync(path, 'utf8'));
@@ -388,14 +453,14 @@ function clip(line, width = 200) {
 // Modes
 // --------------------------------------------------------------------------
 
-function capture(only) {
+async function capture(only) {
   const pages = getPages();
   mkdirSync(SNAP_DIR, { recursive: true });
   let written = 0;
   let missing = 0;
   for (const [name, file] of pages) {
     if (only && only !== name) continue;
-    const html = readPage(file);
+    const html = await readPage(file);
     if (html === null) {
       console.log(`  MISS  ${name.padEnd(20)} ${DIST_LABEL}/${file} not found`);
       missing++;
@@ -416,7 +481,7 @@ function capture(only) {
   if (missing) process.exit(1);
 }
 
-function compare(only) {
+async function compare(only) {
   const pages = getPages();
   if (!existsSync(SNAP_DIR) || readdirSync(SNAP_DIR).length === 0) {
     fail('No snapshots in scripts/.parity/. Run: node scripts/page-parity.mjs capture');
@@ -432,9 +497,11 @@ function compare(only) {
       continue;
     }
     const baseline = readFileSync(snapPath, 'utf8').replace(/\r\n/g, '\n').replace(/\n$/, '');
-    const current = readPage(file);
+    const current = await readPage(file);
     if (current === null) {
-      console.log(`  DIFF  ${name.padEnd(20)} ${DIST_LABEL}/${file} not found (page gone?)`);
+      console.log(
+        `  DIFF  ${name.padEnd(20)} ${DIST_LABEL}${BASE_URL ? '' : '/'}${file} not found (page gone?)`,
+      );
       diff++;
       continue;
     }
@@ -475,8 +542,8 @@ function fail(msg) {
   process.exit(1);
 }
 
-const mode = process.argv[2];
-const only = process.argv[3];
+const mode = ARGS[0];
+const only = ARGS[1];
 
 if (mode === 'capture' || mode === 'compare') {
   console.log(`[page-parity] html root: ${DIST_LABEL}`);
@@ -486,8 +553,8 @@ if (mode === 'capture' || mode === 'compare') {
   }
 }
 
-if (mode === 'capture') capture(only);
-else if (mode === 'compare') compare(only);
+if (mode === 'capture') await capture(only);
+else if (mode === 'compare') await compare(only);
 else if (mode === 'list') list();
 else {
   console.log('Usage (build first, this script never builds):');
@@ -495,6 +562,9 @@ else {
   console.log('  node scripts/page-parity.mjs capture [page]');
   console.log('  node scripts/page-parity.mjs compare [page]');
   console.log('  node scripts/page-parity.mjs list');
+  console.log(
+    '\nAdd --url <base> to fetch server-rendered pages over HTTP instead of dist/client.',
+  );
   console.log('\nHtml root is auto-detected (dist/client, else dist); override with PARITY_DIST.');
   process.exit(mode ? 1 : 0);
 }

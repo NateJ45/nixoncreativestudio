@@ -13,6 +13,9 @@
    safe: the entrance uses the site reveal system, and the hover lift / zoom
    hint are gated to fine pointers + motion-OK.
 
+   EmDash mode: pass the stored image value as `image` instead of `src`
+   (the rows of a case study's `highlights` field). Same markup either way.
+
    Honesty rule: only ever screenshot a feature that is actually live on the
    site. A captioned screenshot of a feature that does not exist is a
    fabrication and a client-facing liability.
@@ -35,10 +38,14 @@
    ============================================================================ */
 
 import { Image } from 'astro:assets';
+import { Image as EmDashImage } from 'emdash/ui';
+import type { ImageValue } from 'emdash';
 
 interface Props {
   /** Real feature screenshot, imported so Astro optimizes it. */
-  src: ImageMetadata;
+  src?: ImageMetadata;
+  /** EmDash mode: the stored image value (use instead of `src`). */
+  image?: ImageValue;
   alt: string;
   title: string;
   body: string;
@@ -48,19 +55,30 @@ interface Props {
   eyebrow?: string;
 }
 
-const { src, alt, title, body, side = 'left', eyebrow } = Astro.props;
+const { src, image, alt, title, body, side = 'left', eyebrow } = Astro.props;
 ---
 
 <div class="feature-highlight grid items-center gap-l md:grid-cols-2 md:gap-xl" data-reveal>
   <figure class:list={['feature-figure', side === 'right' && 'md:order-2']}>
     <button type="button" class="feature-zoom" data-zoom aria-label={`View ${title} full size`}>
-      <Image
-        src={src}
-        alt={alt}
-        widths={[480, 800, 1200, 1440]}
-        sizes="(min-width: 48rem) 46vw, 92vw"
-        class="block w-full"
-      />
+      {
+        image ? (
+          <EmDashImage
+            image={image}
+            alt={alt}
+            sizes="(min-width: 48rem) 46vw, 92vw"
+            class="block w-full"
+          />
+        ) : (
+          <Image
+            src={src!}
+            alt={alt}
+            widths={[480, 800, 1200, 1440]}
+            sizes="(min-width: 48rem) 46vw, 92vw"
+            class="block w-full"
+          />
+        )
+      }
       <span class="feature-zoom-hint" aria-hidden="true">
         <svg
           viewBox="0 0 24 24"

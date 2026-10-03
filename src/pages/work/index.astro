@@ -1,46 +1,42 @@
 ---
-// Safe to edit. Page content is driven from the case-studies content
-// collection; add new MDX files in src/content/case-studies/ to grow the list.
+// Safe to edit. Page content is read from the EmDash CMS (collection
+// `case_studies`); add or edit entries in the EmDash admin to grow the list.
+// Server-rendered on purpose (EmDash content lives in D1), with a short CDN
+// cache; see CACHE_CONTROL in src/lib/caseStudies.ts.
 /* ============================================================================
    /work | Selected Work Index
    ============================================================================
-   Landing for the full case study list. Loads every entry from the
-   case-studies collection, sorts newest first by published date, and
+   Landing for the full case study list. Loads every entry from the EmDash
+   case_studies collection, sorts newest first by project date, and
    renders each as a card linking to /work/{slug}.
 
    This is the only place the full catalogue lives. The homepage Selected
    Work section is a curated subset (featured===true).
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
-import CaseStudyCover from '../../components/CaseStudyCover.astro';
+import EmDashCover from '../../components/emdash/EmDashCover.astro';
 import WorkFilter from '../../components/WorkFilter';
-import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
+import { getCaseStudies, CACHE_CONTROL } from '../../lib/caseStudies';
 
-const entries = (await getCollection('case-studies')).sort(
-  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
-);
+// EmDash content is read per request, so this page is not prerendered.
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
+
+// Already sorted newest first by project date.
+const entries = await getCaseStudies();
 
 // Entries that ship a real, public live URL, for the "open any of them" proof
 // wall below the cards. The strongest trust signal a web vendor has is work a
 // visitor can click and inspect in five seconds, so these link straight to the
 // live site (not the case study). Domains are shown as plain text.
-const entriesLive = entries.filter((e) => e.data.liveUrl);
+const entriesLive = entries.filter((e) => e.liveUrl);
 const prettyDomain = (url: string) =>
   url
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/\/+$/, '');
-
-// Pre-baked blur placeholders for every cover. The data was generated
-// by scripts/generate-placeholders.mjs at build time; the lookup here
-// is a synchronous map read.
-const placeholders = new Map<string, string | undefined>();
-for (const entry of entries) {
-  placeholders.set(entry.id, getCoverPlaceholder(entry.id));
-}
 
 // Distinct sectors for the filter chips, in a fixed display order. Year is
 // intentionally not surfaced anywhere on the portfolio (no year filter, no
@@ -51,7 +47,7 @@ const sectorLabels: Record<string, string> = {
   nonprofit: 'Nonprofit',
   'small-business': 'Small Business',
 };
-const presentSectors = Array.from(new Set(entries.map((e) => e.data.sector)));
+const presentSectors = Array.from(new Set(entries.map((e) => e.sector)));
 const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
   .filter((s) => presentSectors.includes(s))
   .map((value) => ({ value, label: sectorLabels[value] }));
@@ -110,7 +106,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
         {
           entries.map((entry, i) => {
             // Pretty sector label for the meta row: kebab-case → Title Case.
-            const sectorLabel = entry.data.sector
+            const sectorLabel = entry.sector
               .replace(/-/g, ' ')
               .replace(/\b\w/g, (c) => c.toUpperCase());
             // The first (newest) entry is the feature card: full-width, horizontal.
@@ -118,7 +114,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
             return (
               <li
                 data-work-card
-                data-sector={entry.data.sector}
+                data-sector={entry.sector}
                 class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
               >
                 {/* Whole card is the link (standard card a11y pattern). Stagger
@@ -143,11 +139,10 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
                     transition:name={`cover-${entry.id}`}
                     class="relative z-10 overflow-hidden rounded-lg"
                   >
-                    <CaseStudyCover
-                      cover={entry.data.cover}
-                      placeholder={placeholders.get(entry.id)}
+                    <EmDashCover
+                      cover={entry.cover}
                       alt=""
-                      widths={isFeature ? [600, 900, 1280] : [400, 600, 900]}
+                      priority={i === 0}
                       sizes={
                         isFeature
                           ? '(min-width: 64rem) 60vw, 100vw'
@@ -168,15 +163,15 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
                         isFeature ? 'text-h2' : 'text-h3',
                       ]}
                     >
-                      {entry.data.title}
+                      {entry.title}
                     </h2>
-                    {entry.data.outcome && (
+                    {entry.outcome && (
                       /* Outcome line: the honest one-line result, in --link so
                          the proof-point reads at first scan. */
-                      <p class="leading-[1.4] font-semibold text-link">{entry.data.outcome}</p>
+                      <p class="leading-[1.4] font-semibold text-link">{entry.outcome}</p>
                     )}
-                    <p class="leading-[1.5] text-text">{entry.data.summary}</p>
-                    {entry.data.stack && entry.data.stack.length > 0 && (
+                    <p class="leading-[1.5] text-text">{entry.summary}</p>
+                    {entry.stack.length > 0 && (
                       /* Stack reveal (mono is the right register here: it is a
                          genuine technical "inside the build" label). Collapsed
                          until hover/focus; aria-hidden since the detail page
@@ -185,7 +180,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
                         aria-hidden="true"
                         class="max-h-0 overflow-hidden font-mono text-[0.75rem] tracking-[0.06em] text-text-muted uppercase opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
                       >
-                        Built with {entry.data.stack.join(', ')}
+                        Built with {entry.stack.join(', ')}
                       </p>
                     )}
                     <span class="card-link mt-auto pt-xs">Read the case study</span>
@@ -233,16 +228,16 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
             {entriesLive.map((e, i) => (
               <li data-reveal style={`--reveal-delay: ${Math.min(i, 5) * 60}ms`}>
                 <a
-                  href={e.data.liveUrl}
+                  href={e.liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   class="group flex items-baseline justify-between gap-s border-b border-border py-s text-inherit no-underline transition-colors duration-150 hover:border-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
                   <span class="font-display text-h4 leading-[1.1] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                    {e.data.client}
+                    {e.client}
                   </span>
                   <span class="inline-flex shrink-0 items-center gap-1 font-mono text-[0.8rem] text-text-muted transition-colors group-hover:text-link group-focus-visible:text-link">
-                    {prettyDomain(e.data.liveUrl ?? '')}
+                    {prettyDomain(e.liveUrl ?? '')}
                     <span aria-hidden="true">↗</span>
                   </span>
                 </a>

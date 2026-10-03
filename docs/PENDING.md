@@ -70,6 +70,71 @@ then on.
 
 ---
 
+### Add the Cloudflare secrets CI needs for the Worker preview
+
+**Blocks:** the Worker preview upload in `.github/actions/preview-version`, and
+with it the `test` job in `ci.yml`, the link check, and `lighthouse.yml`. Until
+both secrets exist those steps are skipped with a warning annotation ("Preview
+skipped"), so the pipeline is green but the Playwright, link-check and Lighthouse
+gates are NOT running. Added 2026-10-02 with the hybrid-site tooling.
+
+Add as repository secrets (Settings > Secrets and variables > Actions):
+
+- `CLOUDFLARE_ACCOUNT_ID`: the account id (dash.cloudflare.com, any Worker's
+  overview page, or `npx wrangler whoami`).
+- `CLOUDFLARE_API_TOKEN`: an API token with **Account > Workers Scripts > Edit**
+  (uploading a version), plus **Read** on the resources the bindings in
+  `wrangler.jsonc` name: **Account > D1 > Read** (`DB`), **Account > Workers R2
+  Storage > Read** (`MEDIA`) and **Account > Workers KV Storage > Read**
+  (`SESSION`). Scope it to this account only. Wrangler may also want
+  **User > User Details > Read** and **Account > Account Settings > Read** for
+  `whoami`-style lookups; add them if the first run asks. It does not need Pages,
+  zone or DNS permissions: nothing in CI deploys.
+
+`gh secret set CLOUDFLARE_ACCOUNT_ID` and `gh secret set CLOUDFLARE_API_TOKEN`
+from a shell where `gh` is logged in. After adding, push a branch and confirm the
+log of the "Upload Worker preview version" step ends with a `Preview: https://ci-...`
+line.
+
+### Retire the `staging` branch (after the EmDash migration)
+
+Decided 2026-10-02. Use short-lived branches, PRs and Cloudflare branch previews
+instead. Touches `.github/workflows/ci.yml`, `lighthouse.yml`,
+`deploy-staging.yml` (delete), the deployment notes in CLAUDE.md, then delete the
+branch locally and on origin. Do it as its own change, after cutover.
+
+---
+
+## Cutover tasks (EmDash migration)
+
+The step-by-step launch plan, with the rollback, is in `docs/LAUNCH-RUNBOOK.md`.
+The list below is the repo clean-up that plan depends on.
+
+Things the hybrid-site tooling deliberately leaves in place until the main
+session cuts over. Each is a deletion or a flip; do them in the cutover commit.
+
+- **Flip the OG default.** `EMDASH_URL` in `scripts/generate-og.mjs` defaults to
+  the trial Worker. Change it to `https://nixoncreativestudio.com` (and update the
+  comment and CLAUDE.md "Build pipeline" step 2 and Gotcha 13).
+- **Remove the MDX case studies and the Astro `case-studies` collection**:
+  `src/content/case-studies/*.mdx`, the collection in `src/content.config.ts`,
+  and `src/assets/case-studies/` (covers and `shots/`) once nothing imports them.
+  The OG script and the build are already safe with that directory gone.
+- **Remove the placeholder pipeline**: `scripts/generate-placeholders.mjs`,
+  `src/lib/coverPlaceholders.json`, `src/lib/coverPlaceholder.ts` and its test,
+  `CaseStudyCover.astro` if nothing else uses it, and the `placeholders` step of
+  `npm run build`. Until then the script is verified to exit 0 on an empty or
+  missing `src/assets/case-studies/`.
+- **Point the tooling at the real domain.** Worker name in `wrangler.jsonc`
+  (`ncs-emdash-trial`) changes at cutover; alias length is budgeted for a name up
+  to about 27 characters. Re-check the `image.remotePatterns` hosts, the
+  `SITE_URL` variable (item 1) and the default `PLAYWRIGHT_BASE_URL` examples in
+  the docs.
+- **Re-capture the parity baselines** from the hybrid site
+  (`node scripts/page-parity.mjs capture --url <base>`), once, deliberately, and
+  say so in the commit message. Today they are the static-build baselines.
+- **Secrets**: see "Add the Cloudflare secrets CI needs" above.
+
 ## Open technical exposure (no human decision needed, just not done yet)
 
 ### 3. `react` / `react-dom` are on carets

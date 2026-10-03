@@ -1,0 +1,81 @@
+---
+// Safe to edit.
+// ScrollShot: a tall full-page screenshot from the CMS, resized by WIDTH ONLY.
+//
+// Why this exists (found 2026-10-02 with Lighthouse CI): EmDash's own <Image>
+// asks the resizer for a width AND a height (the image's natural proportions).
+// For a full-page capture that height is thousands of pixels, and Cloudflare's
+// image resizer refuses any request 4096px or taller: it silently returns the
+// untouched original instead (a 6.9 MB PNG for the Stone Steps capture, which
+// made the homepage 10.9 MB and pushed its Lighthouse performance score down).
+// Width-only requests for the same file work and come back as 240 to 380 KB
+// WebP. These screenshots are scrolled inside a fixed frame, never shown at
+// their true height, so a width-only request is exactly what is needed.
+//
+// It builds the same /_image URL Astro's image service builds for EmDash
+// media (observed shape: /_image?href=<absolute media URL>&w=<px>&f=webp), so the
+// host must be listed in `image.remotePatterns` (astro.config.mjs).
+//
+// Use this only for the tall captures (showcase desktop / phone). Ordinary
+// images keep using `Image` from emdash/ui.
+import type { ImageValue } from 'emdash';
+
+interface Props {
+  image: ImageValue;
+  alt?: string;
+  sizes?: string;
+  class?: string;
+  /** Widths to offer in the srcset. The browser picks by `sizes`. */
+  widths?: number[];
+  loading?: 'lazy' | 'eager';
+}
+
+const {
+  image,
+  alt = '',
+  sizes = '100vw',
+  class: className,
+  widths = [420, 750, 1080],
+  loading = 'lazy',
+} = Astro.props;
+
+// ImageValue fields can be absent on an image-field value, so read defensively.
+const media = image as unknown as {
+  id?: string;
+  width?: number;
+  height?: number;
+  meta?: { storageKey?: string };
+};
+const file = media.meta?.storageKey ?? media.id;
+
+// Absolute URL of the original, on this site's own origin (the resizer only
+// fetches absolute URLs from hosts that image.remotePatterns trusts).
+const mediaUrl = file ? new URL(`/_emdash/api/media/file/${file}`, Astro.url.origin).href : '';
+const resized = (w: number) => `/_image?href=${encodeURIComponent(mediaUrl)}&w=${w}&f=webp`;
+
+const sorted = [...widths].sort((a, b) => a - b);
+const srcset = sorted.map((w) => `${resized(w)} ${w}w`).join(', ');
+const fallbackWidth = sorted[Math.min(1, sorted.length - 1)] ?? 750;
+
+// Intrinsic size attributes keep the layout stable (no shift). Scale the real
+// proportions to the fallback width.
+const ratio = media.width && media.height ? media.height / media.width : undefined;
+const attrWidth = fallbackWidth;
+const attrHeight = ratio ? Math.round(fallbackWidth * ratio) : undefined;
+---
+
+{
+  mediaUrl && (
+    <img
+      src={resized(fallbackWidth)}
+      srcset={srcset}
+      sizes={sizes}
+      alt={alt}
+      width={attrWidth}
+      height={attrHeight}
+      loading={loading}
+      decoding="async"
+      class={className}
+    />
+  )
+}

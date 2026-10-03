@@ -1,59 +1,87 @@
 ---
 // Foundation, edit with care. This page renders every case study from the
-// content collection; layout changes here apply to every entry.
+// EmDash CMS; layout changes here apply to every entry.
 /* ============================================================================
    /work/[slug] | Case Study Detail Page
    ============================================================================
-   One static page per case study, generated at build time from the
-   case-studies content collection.
+   One server-rendered page per case study, read per request from the EmDash
+   `case_studies` collection (D1). There is no getStaticPaths: an unknown slug
+   renders the site's 404 page with a real 404 status. The response carries a
+   short CDN cache (CACHE_CONTROL in src/lib/caseStudies.ts) so a published edit
+   shows within minutes.
 
    Same shape for every entry: reading progress bar, hero block (meta +
-   title + client + summary + service badges + image), MDX body, then
-   next/previous navigation + CtaBanner. Adding a new MDX file in
-   src/content/case-studies/ auto-creates its page on the next build.
+   title + client + summary + service badges + image), the body, then
+   next/previous navigation + CtaBanner. The body is rebuilt from the stored
+   fields per the placement rule in docs/EMDASH-SCHEMA.md:
+
+     SiteShowcase (desktop + phone captures)
+     Portable Text up to "The approach"
+     BeforeAfter slider (only when both images exist)
+     Portable Text "The approach" .. "What we built"
+     FeatureHighlight rows (one per `highlights` row)
+     rest of the Portable Text
+     Lightbox (once, when there are highlights)
    ============================================================================ */
 
-import { getCollection, render } from 'astro:content';
-import { getImage } from 'astro:assets';
+import { PortableText } from 'emdash/ui';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
-import CaseStudyCover from '../../components/CaseStudyCover.astro';
+import EmDashCover from '../../components/emdash/EmDashCover.astro';
+import CaseHeading from '../../components/emdash/CaseHeading.astro';
+import SiteShowcase from '../../components/SiteShowcase.astro';
+import FeatureHighlight from '../../components/FeatureHighlight.astro';
+import BeforeAfter from '../../components/BeforeAfter.astro';
+import Lightbox from '../../components/Lightbox.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { readingTime } from '../../lib/readingTime';
-import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
+import {
+  getCaseStudies,
+  CACHE_CONTROL,
+  bodyText,
+  bodyHeadings,
+  splitBody,
+} from '../../lib/caseStudies';
 import { site } from '../../data/site';
 
-// getStaticPaths now passes neighbors as props (for the next/prev nav at
-// the bottom of each case study). The full sorted list is computed once
-// here; each route gets only its own entry plus the neighbor stubs it
-// needs to render the nav, so we don't ship the whole catalogue per page.
-export async function getStaticPaths() {
-  const all = (await getCollection('case-studies')).sort(
-    (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
-  );
-  return all.map((entry, i) => {
-    const previous = i < all.length - 1 ? all[i + 1] : undefined;
-    const next = i > 0 ? all[i - 1] : undefined;
-    // Strip neighbors down to just the fields the nav block uses; keeps
-    // props payload small and the page free of incidental data.
-    const trim = (e: typeof entry | undefined) =>
-      e ? { id: e.id, title: e.data.title, summary: e.data.summary } : undefined;
-    return {
-      params: { slug: entry.id },
-      props: { entry, previous: trim(previous), next: trim(next) },
-    };
-  });
+// EmDash content is read per request, so this page is not prerendered.
+export const prerender = false;
+
+// The static pages 301 /about to /about/ (Cloudflare's asset handler). This server
+// route does the same, so /work/reid-design is not a second live copy of the page.
+if (!Astro.url.pathname.endsWith('/')) {
+  return Astro.redirect(`${Astro.url.pathname}/${Astro.url.search}`, 301);
 }
 
-const { entry, previous, next } = Astro.props;
-const { Content, headings } = await render(entry);
+const slug = Astro.params.slug ?? '';
+// One list read gives us the entry plus its neighbours for the next/prev nav.
+const all = await getCaseStudies();
+const index = all.findIndex((e) => e.id === slug);
+
+if (index === -1) {
+  // Unknown slug: an empty-body 404 response. Astro sees the 404 status with no
+  // body and serves the site's own prerendered 404 page in its place, keeping
+  // the real 404 status. (Astro.rewrite('/404') was tried first and 500s here,
+  // because /404 is a prerendered file.)
+  return new Response(null, { status: 404 });
+}
+
+Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
+
+const entry = all[index];
+// Newest first: the next index is the OLDER project (the old "previous"), the
+// previous index is the newer one (the old "next"). Trimmed to what the nav uses.
+const trim = (e: (typeof all)[number] | undefined) =>
+  e ? { id: e.id, title: e.title, summary: e.summary } : undefined;
+const previous = trim(all[index + 1]);
+const next = trim(index > 0 ? all[index - 1] : undefined);
 
 // Table-of-contents headings (the body h2s). Both the sticky sidebar TOC and the
 // wide two-column body layout only kick in when there are at least two, so short
 // studies stay single-column and centered.
-const tocHeadings = (headings ?? []).filter((h) => h.depth === 2);
+const tocHeadings = bodyHeadings(entry.body);
 const hasToc = tocHeadings.length >= 2;
 const {
   title,
@@ -61,7 +89,6 @@ const {
   sector,
   services,
   summary,
-  cover,
   role,
   tags,
   published,
@@ -72,7 +99,13 @@ const {
   testimonial,
   results,
   designerNote,
-} = entry.data;
+} = entry;
+
+// The three runs of body prose the showcase / slider / highlights slot between.
+const parts = splitBody(entry.body);
+const hasBeforeAfter = !!(entry.beforeImage && entry.afterImage);
+// Heading renderer that adds the ids the TOC links to.
+const ptComponents = { block: { h2: CaseHeading, h3: CaseHeading } };
 
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -94,27 +127,19 @@ const ctaSub = sc
   : undefined;
 const ctaHref = sc ? `/contact?org_type=${sector}` : undefined;
 
-// Reading time from the raw MDX body. ~200 wpm rounded up. Renders next
+// Reading time from the plain text of the body. ~200 wpm rounded up. Renders next
 // to the meta row so visitors know how long the case study is before
 // committing to scroll.
-const minutes = readingTime(entry.body ?? '');
+const minutes = readingTime(bodyText(entry.body));
 
 // Note: published / updated dates are intentionally NOT displayed in the UI
-// (the client doesn't want project timing showcased). They stay in the
-// frontmatter and feed sort order, the RSS feed, and the JSON-LD below.
+// (the client doesn't want project timing showcased). They feed sort order, the
+// RSS feed, and the JSON-LD below.
 
-// Resolve the cover through Astro's image pipeline so we can use the
-// optimized URL for both the OG image meta tag and the CreativeWork
-// schema. Width caps the file size; social platforms cap previews at
-// 1200px anyway.
-const ogCover = await getImage({ src: cover, width: 1200, format: 'jpg' });
-const ogCoverUrl = new URL(ogCover.src, site.url).toString();
-
-// Build-time plaiceholder blur preview. Returns undefined when the
-// source file doesn't follow the src/assets/case-studies/{slug}.{ext}
-// convention, in which case CaseStudyCover falls back to its bg-soft
-// solid placeholder.
-const coverBlur = getCoverPlaceholder(entry.id);
+// Social card. BaseLayout derives /og/work/<slug>.png from the pathname (the
+// per-case-study card generated by scripts/generate-og.mjs), so no ogImage prop
+// is passed; the JSON-LD image points at the same card.
+const ogCardUrl = new URL(`/og/work/${entry.id}.png`, site.url).toString();
 
 // Article + CreativeWork JSON-LD for this case study. CreativeWork is
 // the more general type that fits portfolio entries; Article gives
@@ -126,7 +151,7 @@ const schemas = [
     '@type': ['Article', 'CreativeWork'],
     headline: title,
     description: summary,
-    image: ogCoverUrl,
+    image: ogCardUrl,
     datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
     author: { '@id': `${site.url}#organization` },
@@ -140,7 +165,6 @@ const schemas = [
 <BaseLayout
   title={`${title} | Nixon Creative Studio`}
   description={summary}
-  ogImage={ogCover.src}
   ogType="article"
   schemas={schemas}
 >
@@ -267,24 +291,15 @@ const schemas = [
           }
         </div>
 
-        <!-- Hero image. CaseStudyCover wraps Astro <Image /> with a
-             plaiceholder blur preview painted as the wrapper's bg, then
-             fades the full image in once it loads.
+        <!-- Hero image. EmDashCover wraps the EmDash Image, which paints the media
+             item's blurhash as a placeholder until the real image lands. It is
+             the LCP image, so it is marked priority (eager + high fetch priority).
 
              alt="" because the case study's h1 sits just above the image
              inside the same <header>, so a descriptive alt would make
-             screen readers announce the title twice. For a richer
-             description (e.g. "Photo of the Crestview team in the
-             sanctuary"), add a coverAlt field to the case-studies
-             schema in content.config.ts and thread it through here. -->
+             screen readers announce the title twice. -->
         <div transition:name={`cover-${entry.id}`}>
-          <CaseStudyCover
-            cover={cover}
-            placeholder={coverBlur}
-            alt=""
-            widths={[640, 960, 1440]}
-            sizes="(min-width: 56rem) 50vw, 100vw"
-          />
+          <EmDashCover cover={entry.cover} alt="" priority sizes="(min-width: 56rem) 50vw, 100vw" />
         </div>
       </div>
     </header>
@@ -380,7 +395,46 @@ const schemas = [
               '[&_h2]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem]',
             ]}
           >
-            <Content />
+            {
+              entry.showcaseDesktop && entry.showcaseHref && (
+                <SiteShowcase
+                  desktop={entry.showcaseDesktop}
+                  mobile={entry.showcaseMobile}
+                  alt={entry.showcaseAlt ?? `The ${client} homepage`}
+                  href={entry.showcaseHref}
+                  label={entry.showcaseLabel}
+                  variant={entry.showcaseVariant}
+                />
+              )
+            }
+            <PortableText value={parts.brief} components={ptComponents} />
+            {
+              hasBeforeAfter && (
+                <BeforeAfter
+                  beforeImage={entry.beforeImage}
+                  afterImage={entry.afterImage}
+                  beforeAlt={entry.beforeAlt ?? 'The previous site'}
+                  afterAlt={entry.afterAlt ?? 'The redesigned site'}
+                  beforeLabel={entry.beforeLabel}
+                  afterLabel={entry.afterLabel}
+                />
+              )
+            }
+            <PortableText value={parts.approach} components={ptComponents} />
+            {
+              entry.highlights.map((h) => (
+                <FeatureHighlight
+                  image={h.image}
+                  alt={h.alt}
+                  title={h.title}
+                  body={h.caption}
+                  side={h.side}
+                  eyebrow={h.eyebrow}
+                />
+              ))
+            }
+            <PortableText value={parts.rest} components={ptComponents} />
+            {entry.highlights.length > 0 && <Lightbox />}
           </div>
 
           {

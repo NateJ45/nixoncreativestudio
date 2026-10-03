@@ -1,6 +1,7 @@
 ---
 // Safe to edit. The services, tiers, and faq arrays below hold every word
-// of user-facing copy on this page.
+// of user-facing copy on this page. The Selected Work band reads the EmDash CMS,
+// so this page is server-rendered (see the note above the template).
 /* ============================================================================
    /services | Services
    ============================================================================
@@ -36,6 +37,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ProcessBand from '../components/ProcessBand.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import SelectedWork from '../components/SelectedWork.astro';
+import { CACHE_CONTROL } from '../lib/caseStudies';
 import { Image } from 'astro:assets';
 // Real proof for the Web design service: a shipped client site, shown at full
 // strength. Swap this import for any other case-study cover to feature a
@@ -215,6 +217,12 @@ const schemas = [
     })),
   },
 ];
+
+// Server-rendered, not prerendered: the Selected Work band reads case studies from the EmDash
+// CMS (D1) at request time. Short CDN cache; see CACHE_CONTROL in
+// src/lib/caseStudies.ts.
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
 ---
 
 <BaseLayout
