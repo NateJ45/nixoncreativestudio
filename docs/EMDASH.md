@@ -85,7 +85,8 @@ Converted:
   (`desktop`/`mobile`, `image`, `beforeImage`/`afterImage`) as well as the old
   imports, so the static MDX pages keep working.
 
-Caching: server pages send `Cache-Control: public, max-age=0, s-maxage=300,
+(SUPERSEDED by "Route cache" at the end of this file: the `CACHE_CONTROL` header
+was removed in CMS-DESIGN PR 2.) Caching: server pages send `Cache-Control: public, max-age=0, s-maxage=300,
 stale-while-revalidate=86400`. Astro route caching (`Astro.cache`) is not
 configured in `astro.config.mjs` (EmDash logs "cache.set() was called but
 caching is not enabled"), so a header is used. Note a Worker response is not
@@ -144,7 +145,7 @@ Services, tags and stack were raw JSON textareas in the editor. Now:
   `scripts/export-seed-from-instance.mjs`) will create the production schema.
   Full detail in docs/EMDASH-SCHEMA.md.
 
-## Tooling for the hybrid site (CI, tests, OG cards)
+## Tooling for the server-rendered site (CI, tests, OG cards)
 
 The repo used to assume `dist/client` was the whole site. It is not any more:
 the pages that read EmDash are server-rendered, so every gate that served or
@@ -230,3 +231,72 @@ hero image; see CLAUDE.md Gotcha 14) and the EmDash mode of `SiteShowcase`. Use 
 CMS image taller than about 4000 px; ordinary images keep using `Image` from
 `emdash/ui`. Symptom of hitting the limit again: an image whose transfer size
 equals the original file size, with `content-type: image/png` from `/_image`.
+
+## Route cache (CMS-DESIGN PR 2, 2026-10-03)
+
+The site is `output: 'server'`: every page renders on the Worker, nothing is
+prerendered, and `dist/client` holds only assets. A route cache keeps that fast.
+
+**How it is wired**
+
+- `astro.config.mjs`: `cache: { provider: cacheCloudflare() }` (from
+  `@astrojs/cloudflare/cache`) and EmDash `toolbar: 'client'`. The adapter then
+  writes `cache: { enabled: true }` into the generated wrangler config, which
+  turns on Cloudflare **Workers Cache**: a cache in front of the Worker, owned by
+  the Worker, partitioned by Worker version (every deploy starts cold). It works
+  on workers.dev previews as well as on the production zone, and zone Cache Rules
+  have no effect on it.
+- `src/lib/routeCache.ts`: `cachePublicPage()`, called from `BaseLayout` (and
+  `coming-soon.astro`, which has no layout), sets the lifetime (`PAGE_MAX_AGE`,
+  5 minutes, plus `PAGE_SWR`, a week of stale-while-revalidate). It skips `?_edit`
+  and `?_preview`.
+- `src/lib/caseStudies.ts`: `getCaseStudies(Astro.cache)` and
+  `getCaseStudy(slug, Astro.cache)` call `cache.set(cacheHint)` for the rows and
+  the three taxonomies they read, so each page carries those cache tags.
+- The adapter turns the hints into `Cloudflare-CDN-Cache-Control` and `Cache-Tag`
+  headers. EmDash's publish, unpublish and term routes call
+  `cache.invalidate({ tags })`, which is `cache.purge({ tags })` on the platform.
+- `src/worker.ts` is the safety net: anything that is not a clean 200, or that
+  sets a cookie, is forced to `no-store`; unknown slugs also call
+  `Astro.cache.set(false)`.
+- No global `routeRules` (the design sketch had `'/[...path]'`): it would also
+  match `/_emdash/**` and make signed-in admin responses cacheable.
+
+**Measured on ncs-ci, 2026-10-03** (curl TTFB, 10 GETs each, before = `main`,
+after = this PR; first request after a deploy is a cold MISS):
+
+| Page                                 | Before (median / max) | After warm (median / max) | After first request (MISS) |
+| ------------------------------------ | --------------------- | ------------------------- | -------------------------- |
+| `/`                                  | 200 ms / 1203 ms      | 86 ms / 98 ms             | 554 ms                     |
+| `/about/`                            | 186 ms / 203 ms       | 84 ms / 101 ms            | about 1.3 s                |
+| `/privacy/`                          | 90 ms / 147 ms        | 82 ms / 90 ms             | about 1.6 s                |
+| `/contact/`                          | 90 ms / 136 ms        | 81 ms / 85 ms             | 1257 ms                    |
+| `/work/second-presbyterian-chicago/` | 186 ms / 209 ms       | 83 ms / 88 ms             | 1611 ms                    |
+
+The cache works here (`Cf-Cache-Status: MISS` then `HIT`, `Age` header present).
+The trade is that the first visitor to a URL after a deploy or a purge pays a
+render of about 0.5 to 1.6 s (a static file took 90 ms); stale-while-revalidate
+keeps every later visitor on a fast copy. Lighthouse LCP (mobile, simulated, same
+machine, median of 6 where noted): `/` 3.5 s before, 3.2 s after; case study 3.9 s
+before, 3.8 s after; `/privacy/` 2.0 s before, 1.5 to 2.0 s after.
+
+**Other things that changed with it**
+
+- Images on formerly static pages (`/about`, `/services`, `/photography`) are
+  resized at request time through the Images binding like the CMS images, and
+  cached 30 days by `src/worker.ts`, instead of being build-time files.
+- `public/_headers` no longer reaches HTML; `src/worker.ts` adds the five
+  security headers to HTML outside `/_emdash`.
+- `/about` redirects to `/about/` (301) from `src/worker.ts`; `/404/` answers 200
+  when requested by name so Lighthouse CI can audit it; real unknown URLs 404.
+- The sitemap lists every page by hand in `astro.config.mjs` `customPages`.
+- `/journal/<slug>/` is a server route (`getEntry`); there are no entries yet.
+
+**Editing guide wording, until the first production proof:** "allow up to 5
+minutes" is the honest promise; a publish normally shows at once because it
+purges the page's tags. See docs/PENDING.md for the proof step.
+
+**If the cache ever has to be turned off:** remove `cache:` from
+`astro.config.mjs` (pages then carry `no-store`, and Workers Cache is off in the
+next version), or set `PAGE_MAX_AGE` to `0`. The documented fallback (a short
+`s-maxage` edge cache in `src/worker.ts`) was NOT needed: the route cache works.

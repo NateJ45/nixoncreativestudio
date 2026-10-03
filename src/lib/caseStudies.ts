@@ -8,8 +8,10 @@
    getCaseStudies() / getCaseStudy() instead, so the stored shape (documented in
    docs/EMDASH-SCHEMA.md) is only interpreted here.
 
-   Everything here runs at request time (D1 read), so the pages that use it must
-   set `export const prerender = false`.
+   Everything here runs at request time (D1 read; the whole site is server-rendered
+   since CMS-DESIGN PR 2). Pass `Astro.cache` to getCaseStudies() / getCaseStudy():
+   they add the cache tags of every row they read, so the route cache can purge the
+   page when Nathan publishes an edit (src/lib/routeCache.ts).
 
    Gotchas handled here so pages do not have to remember them:
    - `featured` comes back from D1 as 0 or 1, so it is turned into a boolean.
@@ -28,8 +30,9 @@
      for those so a plain truthiness check works in templates.
    ============================================================================ */
 
-import { getEmDashCollection, getEmDashEntry, getTaxonomyTerms } from 'emdash';
+import { getEmDashCollection, getEmDashEntry, getTaxonomyTermsWithCacheHint } from 'emdash';
 import type { ImageValue } from 'emdash';
+import type { RouteCache } from './routeCache';
 
 /** A Portable Text block. Kept loose on purpose; the renderer does the work. */
 export type PTBlock = {
@@ -99,10 +102,12 @@ const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v 
  * the taxonomy order restores it.
  */
 type TermOrder = Record<string, Map<string, number>>;
-async function loadTermOrder(): Promise<TermOrder> {
+async function loadTermOrder(cache?: RouteCache): Promise<TermOrder> {
   const order: TermOrder = {};
   for (const name of ['service', 'topic', 'stack']) {
-    const terms = await getTaxonomyTerms(name);
+    const { data: terms, cacheHint } = await getTaxonomyTermsWithCacheHint(name);
+    // Reordering or renaming a term must rebuild the pages that show it.
+    if (cache?.enabled) cache.set(cacheHint);
     order[name] = new Map(terms.map((t, i) => [t.label, i]));
   }
   return order;
@@ -172,31 +177,30 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
   };
 }
 
-/** Every published case study, newest project first. Throws if the CMS read fails. */
-export async function getCaseStudies(): Promise<CaseStudy[]> {
-  const { entries, error } = await getEmDashCollection('case_studies');
+/**
+ * Every published case study, newest project first. Throws if the CMS read fails.
+ * Pass `Astro.cache` so the page is tagged with the rows it rendered.
+ */
+export async function getCaseStudies(cache?: RouteCache): Promise<CaseStudy[]> {
+  const { entries, error, cacheHint } = await getEmDashCollection('case_studies');
   if (error) throw error;
-  const order = await loadTermOrder();
+  if (cache?.enabled) cache.set(cacheHint);
+  const order = await loadTermOrder(cache);
   return entries
     .map((e) => normalize(e.id, e.data as Raw, order))
     .sort((a, b) => b.published.valueOf() - a.published.valueOf());
 }
 
 /** One case study by slug, or undefined when it does not exist (caller 404s). */
-export async function getCaseStudy(slug: string): Promise<CaseStudy | undefined> {
-  const { entry, error } = await getEmDashEntry('case_studies', slug);
+export async function getCaseStudy(
+  slug: string,
+  cache?: RouteCache,
+): Promise<CaseStudy | undefined> {
+  const { entry, error, cacheHint } = await getEmDashEntry('case_studies', slug);
   if (error) throw error;
-  return entry ? normalize(entry.id, entry.data as Raw, await loadTermOrder()) : undefined;
+  if (cache?.enabled) cache.set(cacheHint);
+  return entry ? normalize(entry.id, entry.data as Raw, await loadTermOrder(cache)) : undefined;
 }
-
-/**
- * Cache-Control for server-rendered pages that read case studies. Edge caches
- * may hold a page for 5 minutes and serve a stale copy for up to a day while
- * refreshing in the background, so an edit shows up within minutes and a slow
- * D1 read never blocks a visitor. Browsers always revalidate (max-age=0).
- * Pages apply it with `Astro.response.headers.set('Cache-Control', CACHE_CONTROL)`.
- */
-export const CACHE_CONTROL = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400';
 
 /** Plain text of a Portable Text body, for reading-time estimates. */
 export function bodyText(body: PTBlock[]): string {

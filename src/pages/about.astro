@@ -44,7 +44,6 @@ import Testimonials from '../components/Testimonials.astro';
 import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
-import { CACHE_CONTROL } from '../lib/caseStudies';
 import { Image } from 'astro:assets';
 import { site } from '../data/site';
 
@@ -207,11 +206,9 @@ const schemas = [
   },
 ];
 
-// Server-rendered, not prerendered: the Testimonials band reads case studies from the EmDash
-// CMS (D1) at request time. Short CDN cache; see CACHE_CONTROL in
-// src/lib/caseStudies.ts.
-export const prerender = false;
-Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
+// Server-rendered like every page (CMS-DESIGN PR 2). The Testimonials band reads case studies from EmDash (D1) at request time.
+// The route cache is tagged with the case studies this page read (BaseLayout sets
+// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
 ---
 
 <BaseLayout

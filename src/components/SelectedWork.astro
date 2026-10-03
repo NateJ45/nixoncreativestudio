@@ -2,10 +2,9 @@
 // Safe to edit. Collection-driven: this component reads real case studies
 // from the EmDash CMS (collection `case_studies`). To control what shows here,
 // tick "featured" on a case study in the EmDash admin. The three entries with
-// the newest project date appear, newest as the large primary card. Because the
-// data comes from D1 at request time, any page that renders this component must
-// be server-rendered (`export const prerender = false`); the homepage and
-// /about are.
+// the newest project date appear, newest as the large primary card. The data
+// comes from D1 at request time (the whole site is server-rendered) and the
+// component tags the page's route cache via getCaseStudies(Astro.cache).
 /* ============================================================================
    Selected Work (Act 2 of the three-act homepage)
    ============================================================================
@@ -41,7 +40,7 @@ import { getCaseStudies } from '../lib/caseStudies';
 // Pull the featured case studies, newest first, and take the top three to
 // fill the one-primary + two-secondary layout. If fewer than three are
 // flagged featured, the layout still renders with whatever exists.
-const allStudies = await getCaseStudies();
+const allStudies = await getCaseStudies(Astro.cache);
 const featured = allStudies.filter((entry) => entry.featured).slice(0, 3);
 
 // Soft flat colour painted under a hover-scroll capture while it loads (the

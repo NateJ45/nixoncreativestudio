@@ -6,9 +6,9 @@
    ============================================================================
    One server-rendered page per case study, read per request from the EmDash
    `case_studies` collection (D1). There is no getStaticPaths: an unknown slug
-   renders the site's 404 page with a real 404 status. The response carries a
-   short CDN cache (CACHE_CONTROL in src/lib/caseStudies.ts) so a published edit
-   shows within minutes.
+   renders the site's 404 page with a real 404 status. The route cache is tagged
+   with the rows this page read (src/lib/routeCache.ts), so a published edit
+   purges it.
 
    Same shape for every entry: reading progress bar, hero block (meta +
    title + client + summary + service badges + image), the body, then
@@ -37,17 +37,8 @@ import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { readingTime } from '../../lib/readingTime';
-import {
-  getCaseStudies,
-  CACHE_CONTROL,
-  bodyText,
-  bodyHeadings,
-  splitBody,
-} from '../../lib/caseStudies';
+import { getCaseStudies, bodyText, bodyHeadings, splitBody } from '../../lib/caseStudies';
 import { site } from '../../data/site';
-
-// EmDash content is read per request, so this page is not prerendered.
-export const prerender = false;
 
 // The static pages 301 /about to /about/ (Cloudflare's asset handler). This server
 // route does the same, so /work/reid-design is not a second live copy of the page.
@@ -57,18 +48,16 @@ if (!Astro.url.pathname.endsWith('/')) {
 
 const slug = Astro.params.slug ?? '';
 // One list read gives us the entry plus its neighbours for the next/prev nav.
-const all = await getCaseStudies();
+const all = await getCaseStudies(Astro.cache);
 const index = all.findIndex((e) => e.id === slug);
 
 if (index === -1) {
   // Unknown slug: an empty-body 404 response. Astro sees the 404 status with no
-  // body and serves the site's own prerendered 404 page in its place, keeping
-  // the real 404 status. (Astro.rewrite('/404') was tried first and 500s here,
-  // because /404 is a prerendered file.)
+  // body and renders the site's own 404 page in its place, keeping the real 404
+  // status. Never cached: a slug published later must not hit a stored 404.
+  Astro.cache.set(false);
   return new Response(null, { status: 404 });
 }
-
-Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
 
 const entry = all[index];
 // Newest first: the next index is the OLDER project (the old "previous"), the

@@ -1,6 +1,6 @@
 ---
-// Safe to edit. Reads client names from the EmDash CMS, so any page that
-// renders it (via the Hero) must be server-rendered (prerender = false).
+// Safe to edit. Reads client names from the EmDash CMS at request time and
+// tags the page's route cache with them (getCaseStudies(Astro.cache)).
 /* ============================================================================
    ClientMarquee
    ============================================================================
@@ -31,7 +31,7 @@
 import { getCaseStudies } from '../lib/caseStudies';
 
 // Already sorted newest first by project date.
-const studies = await getCaseStudies();
+const studies = await getCaseStudies(Astro.cache);
 
 // Distinct clients, newest-first, each linked to its newest case study.
 const seen = new Set<string>();

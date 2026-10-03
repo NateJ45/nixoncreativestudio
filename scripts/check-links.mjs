@@ -8,15 +8,14 @@
  *
  *   LINKCHECK_URL=<https://...> npm run check:links
  *     Crawls a DEPLOYED URL (CI passes the Worker version preview URL). This is
- *     the mode that matters: the site is hybrid, so the server-rendered pages
- *     (/, /work/, /work/<slug>/, /about/, /services/) do not exist in
- *     dist/client and are only reachable over HTTP.
+ *     the mode that matters: every page is server-rendered (CMS-DESIGN PR 2),
+ *     so no page exists in dist/client and all are only reachable over HTTP.
  *
  *   npm run check:links            (LINKCHECK_URL unset)
- *     Falls back to crawling dist/client. That tree holds only the PRERENDERED
- *     pages, so a link into a server-rendered page will report broken here even
- *     though it works live. Useful for a static-only sanity pass; do not read a
- *     red result as a real broken link without checking the URL mode.
+ *     Falls back to crawling dist/client. That tree holds no HTML now (nothing
+ *     is prerendered), so this mode finds almost nothing and any link into a
+ *     page reports broken here even though it works live. Always set
+ *     LINKCHECK_URL; do not read a red result here as a real broken link.
  *
  * linkinator is run through its CLI file with execFileSync, not a shell string,
  * so the skip regex needs no platform-specific quoting (Windows cmd mangles

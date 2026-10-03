@@ -18,14 +18,14 @@
 
 import rss from '@astrojs/rss';
 import { site } from '../data/site';
-import { getCaseStudies, CACHE_CONTROL } from '../lib/caseStudies';
-
-// Server-rendered: the case studies live in EmDash (D1), read per request.
-export const prerender = false;
+import { getCaseStudies } from '../lib/caseStudies';
+import { PAGE_MAX_AGE, PAGE_SWR } from '../lib/routeCache';
 
 export async function GET(context) {
   // Already sorted newest first by project date.
-  const entries = await getCaseStudies();
+  const entries = await getCaseStudies(context.cache);
+  // Same lifetime as the pages; the case-study tags set above purge it on publish.
+  context.cache?.set?.({ maxAge: PAGE_MAX_AGE, swr: PAGE_SWR });
 
   const response = await rss({
     title: `${site.studioName} — Case Studies`,
@@ -43,6 +43,5 @@ export async function GET(context) {
 
     customData: '<language>en-us</language>',
   });
-  response.headers.set('Cache-Control', CACHE_CONTROL);
   return response;
 }

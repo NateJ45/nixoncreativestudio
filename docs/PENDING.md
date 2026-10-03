@@ -96,6 +96,28 @@ from a shell where `gh` is logged in. After adding, push a branch and confirm th
 log of the "Upload Worker preview version" step ends with a `Preview: https://ci-...`
 line.
 
+### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
+
+**Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
+
+The cache was measured on ncs-ci (MISS then HIT, warm TTFB about 80 ms) and the
+purge path was read from EmDash's source (the publish route calls
+`cache.invalidate({ tags: [collection, id] })`, which is `cache.purge({ tags })`),
+but a real publish was not run because it needs an admin login. After the PR
+merges: open a case study on the live site twice (second load shows
+`Cf-Cache-Status: HIT`), change one word in the admin and publish, reload. If the
+new word shows at once, the purge works: set `PAGE_MAX_AGE` to a day (the design
+used 86400), update the "allow up to 5 minutes" line in the editing guide, and
+delete this row. If it shows only after about 5 minutes, purge-by-tag is not
+firing on this zone: leave the 5-minute lifetime (it is the fallback) and look at
+`Cache-Tag` handling before trusting longer lifetimes.
+
+Also open from the same PR: the first request per URL after each deploy is a
+cache MISS (about 0.5 to 1.6 s on ncs-ci). A post-deploy warm-up (a GET of each
+route from the deploy workflow) would hide that from visitors; not built.
+
+---
+
 ## Cutover tasks (EmDash migration)
 
 The step-by-step launch plan, with the rollback, is in `docs/LAUNCH-RUNBOOK.md`.

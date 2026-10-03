@@ -122,7 +122,7 @@ Both collections are empty, so migrating them costs only their schema. The `post
 ## 8. Things that will bite a migration
 
 - **Prerendered vs server-rendered.** `/colophon`, `/privacy`, `/accessibility`, `/contact`, `/photography`, `/journal/*`, `/404`, `/coming-soon` are still static. Reading EmDash needs `export const prerender = false`, a Cache-Control header (`CACHE_CONTROL` in `caseStudies.ts`), and Playwright, link check and Lighthouse already run against a URL, so tests do not change.
-- **Hardcoded facts in prose that must stay in sync with code.** Services FAQ prices versus `pricing.ts` (pricing header says so), contact budget brackets versus pricing floors, privacy and accessibility text versus the real analytics stack, colophon "static HTML" claim, LighthouseScore numbers.
+- **Hardcoded facts in prose that must stay in sync with code.** Services FAQ prices versus `pricing.ts` (pricing header says so), contact budget brackets versus pricing floors, privacy and accessibility text versus the real analytics stack, colophon performance claim (rewritten in PR 2, since pages are no longer static HTML), LighthouseScore numbers.
 - **JSON-LD derived from content.** FAQPage and Service schemas on /services are built from the `faq` and `services` arrays; a CMS move must keep emitting them from the same data.
 - **React islands (`MobileNav`, `WorkFilter`) cannot call EmDash.** Pass data as props from the Astro parent.
 - **Reveal stagger and `ch` widths.** Designed headings rely on `max-w-[Nch]` and `data-reveal` delays; fields with variable length change the layout, so set max lengths in the schema.

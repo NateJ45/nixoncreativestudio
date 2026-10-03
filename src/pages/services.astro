@@ -37,7 +37,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ProcessBand from '../components/ProcessBand.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import SelectedWork from '../components/SelectedWork.astro';
-import { CACHE_CONTROL } from '../lib/caseStudies';
 import { Image } from 'astro:assets';
 // Real proof for the Web design service: a shipped client site, shown at full
 // strength. Swap this import for any other case-study cover to feature a
@@ -218,11 +217,9 @@ const schemas = [
   },
 ];
 
-// Server-rendered, not prerendered: the Selected Work band reads case studies from the EmDash
-// CMS (D1) at request time. Short CDN cache; see CACHE_CONTROL in
-// src/lib/caseStudies.ts.
-export const prerender = false;
-Astro.response.headers.set('Cache-Control', CACHE_CONTROL);
+// Server-rendered like every page (CMS-DESIGN PR 2). The Selected Work band reads case studies from EmDash (D1) at request time.
+// The route cache is tagged with the case studies this page read (BaseLayout sets
+// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
 ---
 
 <BaseLayout
