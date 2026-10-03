@@ -58,14 +58,12 @@ export default defineConfig({
   // Sessions are ON for the EmDash trial: admin sign-in needs a session driver.
   // The Cloudflare adapter supplies one (KV binding "SESSION") when `session`
   // is left unset. The live static site had `session: false`.
-  // The standalone /now page was merged into the About page (its Currently
-  // section). Keep old links and bookmarks working with a static redirect.
-  redirects: {
-    '/now': '/about/#now',
-    // A retired case study (2026-10-01). Send any old links or search results
-    // to the work index instead of a 404.
-    '/work/west-chester-preschool': '/work/',
-  },
+  // NO `redirects` here since CMS-DESIGN PR 13: they live in EmDash Redirects
+  // (cms/content/redirects.json, loaded by `npm run cms:production-load`), so Nathan
+  // can add one in the admin when he renames or retires a page. The two that used to be
+  // here (/now to /about/#now, the retired /work/west-chester-preschool) have a code
+  // fallback in src/lib/redirectFallback.ts, applied by src/worker.ts only when the
+  // site would answer 404, until production holds the rows.
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport',

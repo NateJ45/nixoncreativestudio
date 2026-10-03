@@ -11,6 +11,9 @@
 
      <collection>.json   a singleton:  { "slug": "home", "data": { ... } }
                          or a list:    [ { "slug": "launch", "data": { ... } }, ... ]
+     (A list entry may carry "patch": true. It names an entry that ALREADY exists in the
+      instance and gives only some of its fields, set once: see planPatch. case_studies.json
+      uses it for the PR 13 hero membership.)
      menus.json          { "primary": { "label": "Header navigation",
                                         "items": [ { "label", "url", "titleAttr?", "target?" } ] }, ... }
      redirects.json      [ { "source": "/now", "destination": "/about/#now", "type": 301 } ]
@@ -49,7 +52,7 @@ export function toEntries(json, label = 'content') {
     }
     if (seen.has(e.slug)) throw new Error(`${label}: duplicate slug "${e.slug}"`);
     seen.add(e.slug);
-    return { slug: e.slug, data: e.data };
+    return { slug: e.slug, data: e.data, ...(e.patch === true ? { patch: true } : {}) };
   });
 }
 
@@ -121,6 +124,24 @@ export function planEntry(existing, desired, { force = false } = {}) {
 }
 
 /**
+ * What to do for a PATCH entry (an existing entry that gets a few fields once).
+ * Only the fields the instance holds NOTHING for (null or absent) are set. A field that already
+ * holds a value, even 0 or false, is left alone, so a rerun never reverts an edit Nathan made in
+ * the admin (he may switch an entry out of the hero scene). Returns
+ *   { action: 'unchanged', note? }   nothing to set, or the entry is not in this instance
+ *   { action: 'seed', data }         data = just the fields to set
+ */
+export function planPatch(existing, desired) {
+  if (!existing) return { action: 'unchanged', note: 'not in this instance, skipped' };
+  const current = dataOf(existing);
+  const data = {};
+  for (const [k, v] of Object.entries(desired)) {
+    if (current[k] === undefined || current[k] === null) data[k] = v;
+  }
+  return Object.keys(data).length ? { action: 'seed', data } : { action: 'unchanged' };
+}
+
+/**
  * Load a list of entries into one collection.
  *
  *   emdashFn(args)        the `emdash` CLI with the url bound, returns parsed JSON
@@ -141,13 +162,26 @@ export function loadEntries({
   log = console.log,
 }) {
   const results = [];
-  for (const { slug, data: raw } of entries) {
+  for (const { slug, data: raw, patch } of entries) {
     const data = resolveFiles(raw, imageValue);
     let existing = null;
     try {
       existing = emdashFn(['content', 'get', collection, slug, '--raw']);
     } catch (e) {
       if (!/not found/i.test(e.message)) throw e;
+    }
+    if (patch) {
+      const plan = planPatch(existing, data);
+      log(`  ${slug}: ${dryRun && plan.action !== 'unchanged' ? 'would ' : ''}${plan.action}`);
+      if (plan.note) log(`    (${plan.note})`);
+      results.push({ slug, action: plan.action });
+      if (dryRun || plan.action === 'unchanged') continue;
+      const rev = revOf(existing);
+      if (!rev) throw new Error(`no _rev on existing ${collection}/${slug}; cannot update safely`);
+      withFile(plan.data, (f) =>
+        emdashFn(['content', 'update', collection, existing.id || slug, '--rev', rev, '--file', f]),
+      );
+      continue;
     }
     const action = planEntry(existing, data, { force });
     log(`  ${slug}: ${dryRun ? 'would ' : ''}${action}`);

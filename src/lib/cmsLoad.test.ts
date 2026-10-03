@@ -8,6 +8,7 @@ import {
   loadMenus,
   loadRedirects,
   planEntry,
+  planPatch,
   resolveFiles,
   sameMenuItems,
   toEntries,
@@ -365,6 +366,115 @@ test('only ncs-ci and local addresses are safe without --yes', () => {
   assert.equal(isSafeTarget('https://nixoncreativestudio.nathanjnixon86.workers.dev'), false);
   assert.equal(isSafeTarget('https://ncs-ci.nathanjnixon86.workers.dev.evil.example'), false);
   assert.equal(isSafeTarget('not a url'), false);
+});
+
+// ── patch entries (case_studies.json, CMS-DESIGN PR 13) ─────────────────────
+// An entry that exists already gets a few fields, once. A value the instance already holds (even
+// 0 or false) is never overwritten, so a rerun cannot undo an edit made in the admin.
+
+test('toEntries keeps the patch flag and nothing else extra', () => {
+  assert.deepEqual(toEntries([{ slug: 'a', patch: true, data: { in_hero: true } }]), [
+    { slug: 'a', data: { in_hero: true }, patch: true },
+  ]);
+  assert.deepEqual(toEntries([{ slug: 'a', patch: 'yes', data: {} }]), [{ slug: 'a', data: {} }]);
+});
+
+test('planPatch sets only the fields the instance holds nothing for', () => {
+  const want = { in_hero: true, hero_order: 2 };
+  // Production before the load: the columns exist (or not) and are empty.
+  assert.deepEqual(planPatch({ data: { title: 'T' } }, want), { action: 'seed', data: want });
+  assert.deepEqual(planPatch({ data: { in_hero: null, hero_order: null } }, want), {
+    action: 'seed',
+    data: want,
+  });
+  // One field already set: only the other is written.
+  assert.deepEqual(planPatch({ data: { in_hero: 1 } }, want), {
+    action: 'seed',
+    data: { hero_order: 2 },
+  });
+  // Both set, even to "off" values an editor chose: nothing to do.
+  assert.deepEqual(planPatch({ data: { in_hero: 0, hero_order: 9 } }, want), {
+    action: 'unchanged',
+  });
+  assert.equal(
+    planPatch({ item: { data: { in_hero: 1, hero_order: 1 } } }, want).action,
+    'unchanged',
+  );
+  // An entry that is not in this instance is skipped, never created.
+  assert.equal(planPatch(null, want).action, 'unchanged');
+});
+
+test('loadEntries patches an existing entry with only the missing fields, via content update', () => {
+  const stub = stubCli({
+    'case_studies/a': {
+      id: 'A1',
+      _rev: 'r1',
+      status: 'published',
+      data: { title: 'Kept', in_hero: null, hero_order: null },
+    },
+    'case_studies/b': {
+      id: 'B1',
+      _rev: 'r2',
+      status: 'published',
+      data: { title: 'Edited', in_hero: 0, hero_order: 7 },
+    },
+  });
+  const lines: string[] = [];
+  const results = loadEntries({
+    collection: 'case_studies',
+    entries: [
+      { slug: 'a', patch: true, data: { in_hero: true, hero_order: 1 } },
+      { slug: 'b', patch: true, data: { in_hero: true, hero_order: 2 } },
+      { slug: 'gone', patch: true, data: { in_hero: true, hero_order: 3 } },
+    ],
+    emdashFn: stub.emdashFn,
+    withFile: stub.withFile,
+    imageValue: () => ({}),
+    log: (l: string) => void lines.push(l),
+  });
+  assert.deepEqual(results, [
+    { slug: 'a', action: 'seed' },
+    { slug: 'b', action: 'unchanged' },
+    { slug: 'gone', action: 'unchanged' },
+  ]);
+  const updates = stub.calls.filter((c) => c[1] === 'update');
+  assert.equal(updates.length, 1, 'only entry a is written');
+  assert.deepEqual(updates[0].slice(0, 6), [
+    'content',
+    'update',
+    'case_studies',
+    'A1',
+    '--rev',
+    'r1',
+  ]);
+  assert.ok(!stub.calls.some((c) => c[1] === 'create'), 'a patch never creates an entry');
+  assert.ok(lines.includes('  a: seed'));
+  assert.ok(lines.includes('  gone: unchanged'));
+});
+
+test('a patch dry run writes nothing and reads "would seed"; the rerun reads unchanged', () => {
+  const entries = [{ slug: 'a', patch: true, data: { in_hero: true, hero_order: 1 } }];
+  const run = (data: object, dryRun: boolean) => {
+    const stub = stubCli({
+      'case_studies/a': { id: 'A1', _rev: 'r1', status: 'published', data },
+    });
+    const lines: string[] = [];
+    loadEntries({
+      collection: 'case_studies',
+      entries,
+      emdashFn: stub.emdashFn,
+      withFile: stub.withFile,
+      imageValue: () => ({}),
+      dryRun,
+      log: (l: string) => void lines.push(l),
+    });
+    return { lines, calls: stub.calls };
+  };
+  const before = run({}, true);
+  assert.deepEqual(before.lines, ['  a: would seed']);
+  assert.ok(!before.calls.some((c) => c[1] === 'update'));
+  const after = run({ in_hero: 1, hero_order: 1 }, true);
+  assert.deepEqual(after.lines, ['  a: unchanged']);
 });
 
 // ── every committed content file has a valid shape ──────────────────────────

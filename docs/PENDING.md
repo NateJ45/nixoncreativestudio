@@ -98,7 +98,19 @@ line.
 
 ### Load the PR 4 to 11 data into production in one command (`npm run cms:production-load`)
 
+**Done 2026-10-03:** production now holds the schema and content for site_settings, menus, pricing_addons, pricing_tiers, page_about, page_contact, page_home, page_journal, page_not_found, page_photography, page_services, page_work, service_offerings and pages, and the schema (no content) for photos and posts. `PRODUCTION_HAS` and `SNAPSHOT_ALL` were updated and `ncs-ci` rebuilt from them in PR 13. What is still open from the per-PR rows below is each page's **edit proof** (change a field in the admin, publish, see it live, restore from History) and the explanatory notes for Nathan; the "needs `EMDASH_TOKEN`" load steps in them are finished (the load for PR 13 is its own row below).
+
 Added 2026-10-03. The per-PR rows below (PR 4 to 11) can all be done by one command Nathan runs in his own PowerShell: `npx emdash login --url https://www.nixoncreativestudio.com`, set `EMDASH_TOKEN`, note a D1 Time Travel restore point (`npx wrangler d1 time-travel info ncs-emdash-prod`), then `npm run cms:production-load -- --plan` and `npm run cms:production-load`. Steps and stop rules are in `docs/LAUNCH-RUNBOOK.md` ("One command for every block below"). It has not been run against production. After a clean run: the follow-ups it prints (`PRODUCTION_HAS`, seed re-export, `ncs-ci` rebuild), each row's edit proof, then revoke the token and delete the rows below.
+
+### Load the PR 13 data into production, with PR 14's (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 13 (redirects and the hero scene) ships safe with production lacking the two new `case_studies` fields and the two redirect rows: the hero scene falls back to the five bundled sites it always showed, and `/now` and `/work/west-chester-preschool` answer 301 from `src/lib/redirectFallback.ts`. Until the load, ticking a case study into the hero is not possible (the fields do not exist) and the Redirects screen in the admin is empty.
+
+Commands and the exact lines to expect: `docs/LAUNCH-RUNBOOK.md` ("PR 13") and `docs/CMS-DESIGN.md` 2.6 ("PR 13 data"). Nathan creates a new API token, runs `npm run cms:production-load` (everything already loaded reads "already in place"; new are `case_studies`, schema then five `would seed` patches, and `redirects`), then does the edit proof (un-tick a hero site, add and delete a redirect).
+
+**After the rows are live, delete the temporary code fallback:** `src/lib/redirectFallback.ts` (+ `redirectFallback.test.ts`), its use in `src/worker.ts` (item 5 of the header comment) and the matching lines in CLAUDE.md Gotcha 18. Until then a redirect deleted in the admin keeps working invisibly. Also then: re-export the seed with the token (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`) so `seed/seed.json` carries the live redirect rows, and run `node scripts/ci-dataset/cms-fixtures.mjs`.
+
+For Nathan on the way: the hero scene shows five sites in `hero_order` 1 to 5 (Second Presbyterian, Theology Matters, Stone Steps 50K, MAS Monograms, Presbyterian Academy). A site joins it only with BOTH its desktop and mobile capture set and a live URL; to add one, open its case study, tick "Show in the homepage device scene" and give it the next number. The two bundled-image fallbacks in `HeroShowcase.astro` (`bundledSites`) and the ten `*-home.png` / `*-mobile.png` files they import stay until you are sure you no longer want a no-database fallback; the files and the array can then be deleted together (CMS-DESIGN PR 14).
 
 ### Load the PR 4 data into production (needs `EMDASH_TOKEN` from Nathan)
 
@@ -182,7 +194,7 @@ For Nathan on the way: (1) After the schema is applied, resubmit `sitemap-index.
 
 ### Delete the unused case-study capture files? (already done in PR 12; confirm you are happy)
 
-**Blocks:** nothing. PR 12 deleted 35 images under `src/assets/case-studies/` that nothing imports (the eight covers other than `second-presbyterian-chicago.png`, and every feature, before and after capture; 25 MB). Their pictures live in EmDash media (R2) and the files are in git history (`git log --diff-filter=D -- src/assets/case-studies`). The home and mobile captures stay because `HeroShowcase` imports ten of them and `SiteShowcase`'s dead slug mode still globs them. If you wanted the originals kept in the working tree as a local backup, restore them from history.
+**Blocks:** nothing. PR 12 deleted 35 images under `src/assets/case-studies/` that nothing imports (the eight covers other than `second-presbyterian-chicago.png`, and every feature, before and after capture; 25 MB). Their pictures live in EmDash media (R2) and the files are in git history (`git log --diff-filter=D -- src/assets/case-studies`). The home and mobile captures stay because `HeroShowcase` imports ten of them (as its fallback `bundledSites` since PR 13) and `SiteShowcase`'s dead slug mode still globs them. If you wanted the originals kept in the working tree as a local backup, restore them from history.
 
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 
@@ -219,8 +231,9 @@ session cuts over. Each is a deletion or a flip; do them in the cutover commit.
 - **Case-study leftovers (mostly done in PR 12).** The MDX case studies and the Astro
   collections are gone, and so are 35 unreferenced images under
   `src/assets/case-studies/`. What remains there is deliberate: the home and mobile
-  captures `HeroShowcase` imports (CMS-DESIGN PR 13 moves the hero scene to the CMS,
-  after which the folder can go) and the `/services` cover. `scripts/migrate-case-studies.mjs`
+  captures `HeroShowcase` imports (CMS-DESIGN PR 13 moved the hero scene to the CMS;
+  they stay as its no-database fallback until you decide otherwise, see the PR 13
+  row above) and the `/services` cover. `scripts/migrate-case-studies.mjs`
   and `scripts/emdash-schema-case-studies.mjs` are the one-time import scripts; the MDX
   they read is in git history only, so they cannot run again and can be deleted.
 - **The placeholder pipeline is already removed** (no `generate-placeholders.mjs`,

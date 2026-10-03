@@ -135,9 +135,50 @@ if (FROM_SCRATCH) {
   step('Building and deploying the ci Worker (CLOUDFLARE_ENV=ci)');
   buildAndDeployCi();
 
+  // The deploy returns before every edge has switched to the new Worker version. A first request that
+  // lands on the PREVIOUS version applies THAT version's seed (found 2026-10-03: a from-scratch rebuilt
+  // ncs-ci with the old case_studies fields, so a new field had no column). Give the rollout a moment,
+  // then verify below that the seed which was applied is this checkout's.
+  say('waiting 30s for the new Worker version to take over');
+  await new Promise((r) => setTimeout(r, 30000));
+
   step('Requesting the site once so EmDash migrates and applies the seed');
   const res = await get(`${CI.url}/`);
   say(`GET / answered ${res.status}`);
+
+  // EmDash applies the seed in the background after that first request (about 2 s per collection),
+  // so poll until it is all there. If a PREVIOUS Worker version applied its own seed, the missing
+  // fields never appear and this gives up with a clear message instead of a half-built dataset.
+  step("Waiting for EmDash to apply THIS checkout's seed (not a previous Worker version's)");
+  const seed = JSON.parse(readFileSync(resolve(ROOT, 'seed/seed.json'), 'utf8'));
+  const missingNow = () => {
+    const haveFields = new Set(
+      d1Query(
+        'SELECT c.slug AS collection, f.slug AS field FROM _emdash_fields f JOIN _emdash_collections c ON c.id = f.collection_id',
+      ).map((r) => `${r.collection}.${r.field}`),
+    );
+    const haveRedirects = new Set(
+      d1Query('SELECT source FROM _emdash_redirects').map((r) => r.source),
+    );
+    return {
+      fields: seed.collections.flatMap((c) =>
+        c.fields.map((f) => `${c.slug}.${f.slug}`).filter((k) => !haveFields.has(k)),
+      ),
+      redirects: (seed.redirects ?? []).map((r) => r.source).filter((x) => !haveRedirects.has(x)),
+    };
+  };
+  let left = missingNow();
+  for (let i = 0; i < 30 && (left.fields.length || left.redirects.length); i += 1) {
+    await new Promise((r) => setTimeout(r, 5000));
+    await get(`${CI.url}/`).catch(() => undefined); // keep nudging the Worker so it keeps seeding
+    left = missingNow();
+  }
+  if (left.fields.length || left.redirects.length) {
+    throw new Error(
+      `ncs-ci was not seeded from this checkout after 150 s (a previous Worker version may have seeded it): missing fields [${left.fields.join(', ')}], redirects [${left.redirects.join(', ')}]. Run --from-scratch again.`,
+    );
+  }
+  say('ok: every field and redirect in seed/seed.json is in ncs-ci');
 }
 
 // ---- 2. rows and fixtures ----------------------------------------------------

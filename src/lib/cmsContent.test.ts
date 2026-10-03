@@ -84,7 +84,13 @@ test('every cms/content/<collection>.json satisfies its cms/schema definition', 
     const entries = entriesOfJson(json);
     assert.ok(entries.length > 0, `${file}: no entries (each needs "slug" and "data")`);
     for (const e of entries) {
-      const found = problems(mod.FIELDS as Field[], e.data, `${name}/${e.slug}`);
+      // A "patch" entry (case_studies.json, CMS-DESIGN PR 13) sets a few fields on an entry that
+      // already exists in production, so it carries only those fields: the required-field rule
+      // applies to what the entry holds once the loader has merged it, not to the patch.
+      const isPatch = (e as { patch?: unknown }).patch === true;
+      const found = problems(mod.FIELDS as Field[], e.data, `${name}/${e.slug}`).filter(
+        (line) => !(isPatch && /required but empty$/.test(line)),
+      );
       assert.deepEqual(found, [], found.join('\n'));
     }
     checked += 1;

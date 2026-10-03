@@ -102,13 +102,52 @@ npm run cms:production-load                                    # the real run: s
 
 What it does, per collection: schema dry run, schema apply, a read-only re-check that must say `unchanged` on every line, then the same three for the content. A step already reading `unchanged` is skipped, so rerunning is safe.
 
-- **Order.** `site_settings` and `menus` first, alone: the run pauses for Enter after them (the first real run of the loaders against a live site), then `pricing_*`, `page_*`, `service_offerings`, `pages`, `photos` (schema only), `posts` if it exists, `redirects` last. The list is read from `cms/schema/*.mjs` and `cms/content/*.json`, so PRs 12 to 14 are picked up with no edit.
+- **Order.** `site_settings` and `menus` first, alone: the run pauses for Enter after them (the first real run of the loaders against a live site), then `pricing_*`, `page_*`, `service_offerings`, `pages`, `photos` (schema only), `posts`, `case_studies` (the one EXISTING collection in the plan: PR 13 adds the hero fields to it, see "PR 13" below), `redirects` last. The list is read from `cms/schema/*.mjs` and `cms/content/*.json`, so PRs 12 to 14 are picked up with no edit.
 - **`pages`** already exists in production from the template, so its schema step should print `updated field title`, `updated field content`, `added field` x7, `reorder fields`, `applied collection settings` (the PR 10 block). Every other collection must print only `added` or `created` lines the first time; an `updated field`, a `removed` or `dropped` field, a content `update`, or a menu `rebuild` of an existing menu stops the run before anything is written, because it would overwrite something an editor changed.
 - **Stopping and resuming.** On a stop it prints the offending lines and the exact next command. Fix the cause, then `npm run cms:production-load -- --from <collection>`. `--only <collection>` runs one. The log is in `.cms-load-log/` (git-ignored, no secrets); paste it or let the main session read it.
 - **Not automated, by design.** After a clean run it prints the follow-ups and does none of them: add the collections to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed with `scripts/export-seed-from-instance.mjs`, rebuild `ncs-ci`, then do each PR's before/after page comparison and edit proof below. Finally revoke the API token.
 - It refuses to start without `EMDASH_TOKEN` and a stored `emdash login`, never prints the token, and spawns `apply-schema.mjs` and `load-content.mjs`, so their own production guard still applies. `--yes` skips the typed confirmation and is for tests only. It has not been run against production (no token in the build session); the first real run is Nathan's.
 
 Take the "before" snapshots of the live pages (the `curl` lines in each block below) BEFORE running it, not after.
+
+### PR 13: Redirects and the hero scene (needs `EMDASH_TOKEN` from Nathan; not run)
+
+Production already holds every collection from PRs 4 to 12 (loaded with `npm run cms:production-load` on 2026-10-03; `photos` and `posts` are schema only). PR 13 shipped before a token was available for it, so production has neither the two new `case_studies` fields nor the two redirect rows. **The live site works without these steps and renders exactly as before:** the hero scene falls back to its five bundled sites (`bundledSites` in `src/components/HeroShowcase.astro`), and `/now` and `/work/west-chester-preschool` answer 301 from the code fallback (`src/lib/redirectFallback.ts`, applied by `src/worker.ts` when the site would answer 404; the old `astro.config.mjs` redirects are gone). So the steps can run any time after the PR deploys, together with PR 14's.
+
+What the loader will do (nothing here is run yet):
+
+- `case_studies` **schema**: `unchanged field x` for the 32 existing fields (checked field by field against the live schema on 2026-10-03), `added field in_hero (boolean)`, `added field hero_order (integer)`, and `reorder fields` (production lists `results` before `testimonial_name` and `testimonial_title`; the definition has it after them, which only changes the order of the edit form). Any `updated field`, `removed`, or `dropped` line stops the run before anything is written.
+- `case_studies` **content**: five `patch` entries (`cms/content/case_studies.json`): `second-presbyterian-chicago` 1, `theology-matters` 2, `stone-steps-50k` 3, `mas-monograms` 4, `presbyterian-academy` 5. The dry run prints `<slug>: would seed`; it sets ONLY a field the entry holds nothing for, so a rerun never undoes a hero choice Nathan makes in the admin (`<slug>: unchanged`). It never creates an entry.
+- `redirects`: `redirect /now: would created`, `redirect /work/west-chester-preschool: would created`. Needs `EMDASH_TOKEN` (REST), like `menus`.
+
+```powershell
+npx emdash login --url https://www.nixoncreativestudio.com     # once, device code
+$env:EMDASH_TOKEN = '<API token from Settings, API tokens>'    # needs EMDASH_TOKEN from Nathan; keep it in 1Password, never paste it into chat
+npx wrangler d1 time-travel info ncs-emdash-prod               # read-only: note the timestamp (the restore point)
+npm run cms:production-load -- --plan                          # everything else reads "already in place"; new: case_studies, redirects
+npm run cms:production-load -- --only case_studies            # the new schema and the five hero patches
+```
+
+Only the new work, by hand (same checks, one collection at a time; all needs `EMDASH_TOKEN` from Nathan):
+
+```bash
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection case_studies --url https://www.nixoncreativestudio.com --dry-run   # expect: unchanged x32, would added field in_hero, would added field hero_order, would reorder fields
+npm run cms:schema -- --collection case_studies --url https://www.nixoncreativestudio.com --yes
+npm run cms:schema -- --collection case_studies --url https://www.nixoncreativestudio.com --yes       # second run: every line "unchanged"
+npm run cms:load -- --collection case_studies --url https://www.nixoncreativestudio.com --dry-run     # expect: five "would seed"
+npm run cms:load -- --collection case_studies --url https://www.nixoncreativestudio.com --yes
+npm run cms:load -- --collection case_studies --url https://www.nixoncreativestudio.com --yes         # second run: "unchanged"
+npm run cms:load -- --collection redirects --url https://www.nixoncreativestudio.com --dry-run        # expect: two "would created"
+npm run cms:load -- --collection redirects --url https://www.nixoncreativestudio.com --yes
+npm run cms:load -- --collection redirects --url https://www.nixoncreativestudio.com --yes            # second run: two "unchanged"
+```
+
+Before the load save the live homepage and the two redirects: `curl -sL https://www.nixoncreativestudio.com/ > home-before.html`, `curl -s -D - -o /dev/null https://www.nixoncreativestudio.com/now/` and the same for `/work/west-chester-preschool/` (both `301`). After the load and a five-minute wait: both still answer `301` (now from EmDash: its Redirects screen shows hit counts), and `home-after.html` differs from `home-before.html` only in the hero scene's images (see docs/CMS-DESIGN.md, "PR 13 notes"). The five sites show in the same order with the same address-bar hosts.
+
+**The edit proof (once, in the production admin).** Open a case study, untick "Show in the homepage device scene", publish, reload `/` within five minutes and see the scene without that site; tick it again and restore the order from History. Then add a redirect (Redirects, add `/ci-check` to `/work/`), request `/ci-check/` (301), and delete the redirect. This is the live proof that an admin redirect works.
+
+**After the rows are live: delete the code fallback.** Remove `src/lib/redirectFallback.ts` (+ its test), its use in `src/worker.ts` (item 5 of the header comment), and keep `cms/content/redirects.json` as the record. Until then a redirect deleted in the admin would keep working invisibly. Also then the CI follow-ups: nothing to add to `PRODUCTION_HAS` (`case_studies` is already snapshotted, redirects come from the seed), but re-export the seed with the token so the seed carries the redirect rows: `node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, `node scripts/ci-dataset/cms-fixtures.mjs`, and review `git diff seed/seed.json`.
 
 ### PR 12: Journal into EmDash and the cleanup (needs `EMDASH_TOKEN` from Nathan; not run)
 

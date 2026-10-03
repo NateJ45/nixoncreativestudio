@@ -69,6 +69,24 @@ const SNAPSHOT_ALL = [
 /** Column values forced for the CI copy (all three CI studies fill the Selected Work strip). */
 const OVERRIDES = { case_studies: { featured: 1 } };
 
+/**
+ * The homepage hero scene (CMS-DESIGN PR 13) reads in_hero / hero_order, which production does not
+ * hold until Nathan runs the PR 13 load. CI takes the values from the same file that load uses
+ * (cms/content/case_studies.json), for the CI case studies that are in it, so CI exercises the
+ * "scene built from the case studies" path. NCS_CI_NO_HERO=1 leaves them out (production's state
+ * today: the hero falls back to its bundled five); the committed rows.sql is always built WITHOUT it.
+ */
+function heroOverrides(slug) {
+  if (process.env.NCS_CI_NO_HERO === '1') return {};
+  const file = resolve(DIR, '../../cms/content/case_studies.json');
+  const patch = JSON.parse(readFileSync(file, 'utf8')).find((e) => e.slug === slug);
+  if (!patch) return {};
+  return {
+    in_hero: patch.data.in_hero ? 1 : 0,
+    ...(patch.data.hero_order !== undefined ? { hero_order: patch.data.hero_order } : {}),
+  };
+}
+
 const check = process.argv.includes('--check');
 const ULID_FIELDS_TO_NULL = new Set(['author_id', 'primary_byline_id']);
 
@@ -150,6 +168,17 @@ for (const [collection, slugs] of plan) {
       mediaIds(value, neededMedia);
     }
     Object.assign(row, OVERRIDES[collection] ?? {});
+    if (collection === 'case_studies') {
+      const hero = heroOverrides(e.slug);
+      for (const col of Object.keys(hero)) {
+        if (!ciCols.has(col)) {
+          throw new Error(
+            `${table} in ncs-ci has no column "${col}"; rebuild from the current seed (--from-scratch)`,
+          );
+        }
+      }
+      Object.assign(row, hero);
+    }
     for (const c of ULID_FIELDS_TO_NULL) delete row[c];
     statements.rows.push(insertRow(table, row));
     rowCount += 1;

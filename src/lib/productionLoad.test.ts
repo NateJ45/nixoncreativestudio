@@ -388,3 +388,85 @@ test('the classifiers read the loaders real output, not just the fakes', async (
   );
   assert.equal(contentSurprises(resultLines(menuLines.join('\n'))).length, 1);
 });
+
+// ── CMS-DESIGN PR 13: case_studies (an existing collection) and redirects ────
+
+test('the real plan adds case_studies (schema + content) before redirects, after posts', () => {
+  const schema = readdirSync('cms/schema').map((f) => f.replace(/\.mjs$/, ''));
+  const content = readdirSync('cms/content').map((f) => f.replace(/\.json$/, ''));
+  const real = buildPlan(schema, content);
+  const order = real.map((u) => u.name);
+  const cs = real.find((u) => u.name === 'case_studies');
+  assert.deepEqual([cs?.schema, cs?.content], [true, true]);
+  assert.ok(order.indexOf('case_studies') > order.indexOf('posts'));
+  assert.equal(order.at(-1), 'redirects', 'redirects stay last (REST, needs the token)');
+  const redirects = real.find((u) => u.name === 'redirects');
+  assert.deepEqual([redirects?.schema, redirects?.content], [false, true]);
+});
+
+test('plan text explains that case_studies exists already; follow-ups leave it out of the CI list', () => {
+  const p = buildPlan(['case_studies', 'page_home'], ['case_studies', 'page_home', 'redirects']);
+  const text = formatPlan(p, 'https://prod.test').join('\n');
+  assert.match(text, /case_studies: schema \+ content.*collection already exists/);
+  assert.match(text, /redirects: content \(REST\)/);
+  const addLine =
+    followUps(p, 'https://prod.test')
+      .join('\n')
+      .split('\n')
+      .find((l) => l.includes('Add these to PRODUCTION_HAS')) ?? '';
+  assert.match(addLine, /'page_home'/);
+  assert.ok(!/case_studies/.test(addLine), 'its rows already come from the snapshot');
+});
+
+test('a patch dry run ("would seed") is not a surprise, "would update" still is', () => {
+  assert.deepEqual(contentSurprises(['second-presbyterian-chicago: would seed']), []);
+  assert.equal(contentSurprises(['second-presbyterian-chicago: would update']).length, 1);
+  // The schema step for case_studies: new fields are additions, never "updated field".
+  assert.deepEqual(
+    schemaSurprises(
+      ['would added field in_hero (boolean)', 'unchanged field title'],
+      'case_studies',
+    ),
+    [],
+  );
+  assert.equal(schemaSurprises(['would updated field title'], 'case_studies').length, 1);
+});
+
+test('the full run for case_studies: seed once, then the re-check reads unchanged', async () => {
+  const p = buildPlan(['case_studies'], ['case_studies']);
+  const state = { schema: false, content: false };
+  const result = await runLoad(
+    p,
+    {
+      runStep: async ({ tool, mode }: { tool: 'schema' | 'content'; mode: string }) => {
+        if (mode === 'apply') {
+          state[tool] = true;
+          return { code: 0, output: '' };
+        }
+        if (tool === 'schema') {
+          return {
+            code: 0,
+            output: state.schema
+              ? '  unchanged field in_hero\n  unchanged collection settings'
+              : '  unchanged field title\n  would added field in_hero (boolean)\n  would added field hero_order (integer)',
+          };
+        }
+        return {
+          code: 0,
+          output: state.content
+            ? '  second-presbyterian-chicago: unchanged\n  theology-matters: unchanged'
+            : '  second-presbyterian-chicago: would seed\n  theology-matters: would seed',
+        };
+      },
+      preflight: undefined,
+      pause: async () => {},
+      log: () => {},
+    },
+    { url: 'u', yes: true },
+  );
+  assert.equal(result.ok, true);
+  assert.deepEqual(
+    result.results[0].steps.map((s: { action: string }) => s.action),
+    ['applied', 'applied'],
+  );
+});
