@@ -716,6 +716,175 @@
       ]
     },
     {
+      "slug": "page_contact",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Contact page",
+      "labelSingular": "Contact page",
+      "description": "The words on the Contact page: headline, the form choices and the sidebar.",
+      "sortOrder": 4,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "cta_title",
+          "label": "Closing banner title (max 60; empty uses the site default)",
+          "type": "string",
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "cta_sub",
+          "label": "Closing banner text (max 200; empty uses the site default)",
+          "type": "text",
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "cta_label",
+          "label": "Closing banner button text (max 24). The button emails you",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "heading",
+          "label": "Headline, plain part (max 40). The accent phrase below follows it",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "heading_accent",
+          "label": "Headline, accent phrase shown in blue (max 24)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "intro",
+          "label": "Paragraph under the headline (max 400)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 400
+          }
+        },
+        {
+          "slug": "budgets",
+          "label": "Budget range choices (2 to 6, in order; each under 40 characters). What the visitor picks is what arrives in your email. Keep these in line with the Pricing tiers: the first choice should start at the lowest tier price",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 2,
+            "maxItems": 6,
+            "subFields": [
+              {
+                "slug": "label",
+                "label": "Choice",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "timelines",
+          "label": "Project timeline choices (2 to 6, in order; each under 48 characters). What the visitor picks is what arrives in your email. The field itself is optional on the form",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 2,
+            "maxItems": 6,
+            "subFields": [
+              {
+                "slug": "label",
+                "label": "Choice",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "heard_from",
+          "label": "\"How did you hear about us\" choices (2 to 8, in order; each under 64 characters). What the visitor picks is what arrives in your email. The field itself is optional on the form",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 2,
+            "maxItems": 8,
+            "subFields": [
+              {
+                "slug": "label",
+                "label": "Choice",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "next_steps",
+          "label": "What happens next (2 to 4 short lines, in order; each under 120 characters). Keep the response time honest: this is a promise",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 2,
+            "maxItems": 4,
+            "subFields": [
+              {
+                "slug": "text",
+                "label": "Line",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "where_text",
+          "label": "Where I am: text after your address (max 300). The address itself comes from Site settings and is shown first",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 300
+          }
+        }
+      ]
+    },
+    {
       "slug": "page_home",
       "supports": ["drafts", "revisions"],
       "routable": false,

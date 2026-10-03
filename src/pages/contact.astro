@@ -34,6 +34,7 @@ import { getSite } from '../data/site';
 import { Button } from '../components/ui/button';
 import CopyEmail from '../components/CopyEmail';
 import CtaBanner from '../components/CtaBanner.astro';
+import { contactTitle, getContactPage } from '../lib/contactPage';
 
 // Email, phone, location, the booking link and the form subject all come from
 // Site settings in the CMS (with the committed fallback).
@@ -49,47 +50,16 @@ const orgTypes = [
   { value: 'other', label: 'Something else' },
 ];
 
-// Budget brackets, small enough that the picker isn't overwhelming.
-// These track the published pricing floors (the Pricing tiers in the CMS,
-// shown on /services): Launch $4,000, Signature $7,000, Flagship $12,000. The lowest
-// bracket starts at the $4,000 floor so the form never implies work below it.
-const budgets = [
-  { value: 'under-4k', label: 'Under $4,000' },
-  { value: '4k-7k', label: '$4,000 to $7,000' },
-  { value: '7k-12k', label: '$7,000 to $12,000' },
-  { value: '12k-plus', label: '$12,000 or more' },
-  { value: 'not-sure', label: 'Not sure yet' },
-];
-
-// Project timeline brackets. Lets Nathan triage against the limited number
-// of projects he takes per quarter without asking for exact dates.
-const timelines = [
-  { value: 'asap', label: 'Right away' },
-  { value: '1-3-months', label: 'In the next 1 to 3 months' },
-  { value: '3-6-months', label: '3 to 6 months from now' },
-  { value: '6-plus', label: 'More than 6 months out' },
-  { value: 'flexible', label: 'Flexible, no fixed deadline' },
-];
-
-// Attribution options. Cheap signal on what marketing channels are
-// working. "Referral" first because that's the most common path for
-// churches, schools, and small businesses in the region.
-const heardFromOptions = [
-  { value: 'referral', label: 'A referral from someone I know' },
-  { value: 'search', label: 'Google or another search engine' },
-  { value: 'social', label: 'Instagram, LinkedIn, or other social' },
-  { value: 'past-client', label: "I've worked with Nathan before" },
-  { value: 'event', label: 'In person, at an event or through a church or school' },
-  { value: 'other', label: 'Somewhere else' },
-];
-
-// What-happens-next, derived from the existing "What to expect" copy so nothing
-// is fabricated. A quiet three-row ledger, not a numbered scaffold.
-const nextSteps = [
-  'You send the form.',
-  'I read it myself and reply within one or two business days.',
-  "If we're a fit, a half-hour call to talk it through.",
-];
+// The page words and the three choice lists (Budget range, Project timeline, How
+// did you hear about us) come from the Contact page entry in the CMS (committed
+// fallback: cms/content/page_contact.json). Each choice's LABEL is also the value
+// the form submits, so the inquiry email reads "Budget: Under $4,000" and not a
+// code. Keep the budget brackets in line with the Pricing tiers (the lowest bracket
+// starts at the lowest tier's price so the form never implies work below it); the
+// timeline list helps triage against the per-quarter project cap, and "heard from"
+// is a cheap signal on which channels bring inquiries in.
+const page = await getContactPage(Astro);
+const { budgets, timelines, heardFrom: heardFromOptions, nextSteps } = page;
 
 // Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
 // time, which is required because the form runs in the browser.
@@ -128,24 +98,21 @@ const legendClass =
   'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 ---
 
-<BaseLayout
-  title="Contact | Nixon Creative Studio"
-  description="Get in touch about a web design, brand, or photography project."
->
+<BaseLayout title={contactTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
   <!-- ====================================================================
        Masthead. The only h1. Full content width, left-aligned.
        ==================================================================== -->
   <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
     <div class="ncs-container">
       <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
-        Start a project, or just <span class="text-link">say hello.</span>
+        {page.heading} <span class="text-link">{page.headingAccent}</span>
       </h1>
       <p
         class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
         data-reveal
         style="--reveal-delay: 120ms;"
       >
-        The form sends straight to my inbox. If you'd rather email or call, those work just as well.
+        {page.intro}
       </p>
     </div>
   </section>
@@ -301,8 +268,9 @@ const legendClass =
                         <option value="" disabled selected>
                           Pick the closest
                         </option>
-                        {budgets.map((opt) => (
-                          <option value={opt.value}>{opt.label}</option>
+                        {/* The label is the submitted value (see the top of the file). */}
+                        {budgets.map((label) => (
+                          <option value={label}>{label}</option>
                         ))}
                       </select>
                     </div>
@@ -317,8 +285,8 @@ const legendClass =
                         <option value="" selected>
                           No preference
                         </option>
-                        {timelines.map((opt) => (
-                          <option value={opt.value}>{opt.label}</option>
+                        {timelines.map((label) => (
+                          <option value={label}>{label}</option>
                         ))}
                       </select>
                     </div>
@@ -359,8 +327,8 @@ const legendClass =
                       <option value="" selected>
                         Pick one if you'd like
                       </option>
-                      {heardFromOptions.map((opt) => (
-                        <option value={opt.value}>{opt.label}</option>
+                      {heardFromOptions.map((label) => (
+                        <option value={label}>{label}</option>
                       ))}
                     </select>
                   </div>
@@ -508,9 +476,7 @@ const legendClass =
               <div class="flex flex-col gap-s">
                 <h2 class="text-h4 text-heading">Where I am</h2>
                 <p class="leading-[1.6] text-text">
-                  {site.address}. In-person work and photography across the greater Cincinnati
-                  region; web design and strategy with clients anywhere, fully remote when that is
-                  easier.
+                  {site.address}. {page.whereText}
                 </p>
                 <!-- Service-area map: a keyless Google Maps embed centered on
                      the Cincinnati region (the ?output=embed form needs no API
@@ -561,9 +527,9 @@ const legendClass =
   </section>
 
   <CtaBanner
-    title="Rather skip the form?"
-    sub="Email or call me directly. A sentence about your project is enough to get started."
-    ctaLabel="Email me"
+    title={page.ctaTitle}
+    sub={page.ctaSub}
+    ctaLabel={page.ctaLabel}
     ctaHref={site.emailHref}
   />
 
@@ -669,6 +635,16 @@ const legendClass =
               const el = form!.elements.namedItem(name) as
                 HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
               if (el && typeof data[name] === 'string' && data[name].length > 0) {
+                // A select's options are CMS-editable, and before CMS-DESIGN PR 9 they
+                // held codes ("under-4k"). Restore a saved choice only if an option
+                // with that exact value still exists, so an old draft or a renamed
+                // choice leaves the select on its placeholder instead of blank.
+                if (
+                  el instanceof HTMLSelectElement &&
+                  !Array.from(el.options).some((o) => o.value === data[name])
+                ) {
+                  return;
+                }
                 el.value = data[name];
               }
             });
