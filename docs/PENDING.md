@@ -108,6 +108,10 @@ Added 2026-10-03. The per-PR rows below (PR 4 to 11) can all be done by one comm
 
 Commands and the exact lines to expect: `docs/LAUNCH-RUNBOOK.md` ("PR 13") and `docs/CMS-DESIGN.md` 2.6 ("PR 13 data"). Nathan creates a new API token, runs `npm run cms:production-load` (everything already loaded reads "already in place"; new are `case_studies`, schema then five `would seed` patches, and `redirects`), then does the edit proof (un-tick a hero site, add and delete a redirect).
 
+**PR 14 rides on the same command (verified read-only on 2026-10-03, nothing written).** `npm run cms:production-load` now also applies collection settings to 14 collections that already exist: a `urlPattern` on every page-mapped collection (this is the fix for the admin "live view" button that went to a 404), `sortOrder` 13 on `case_studies` and 15 on `photos` (Journal stays 14). Each shows as `would applied collection settings (group ...)` in the dry run and must read `unchanged collection settings` in the re-check; `pages` and `posts` already read unchanged. Then one extra command, `npm run cms:tidy -- --url https://www.nixoncreativestudio.com --dry-run`, then the same with `--yes` (not `--dry-run`): it deletes the empty template `category` taxonomy (a dry run on production printed `would deleted taxonomy category`, widget areas and sections empty, menus primary and footer only). After the load: open Home page in the admin and press "live view" (it must open `/`), then check the sidebar order (Site settings, Pages, Pricing & services, Case Studies, Journal, Photography). Then re-export the seed (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`) and run `node scripts/ci-dataset/cms-fixtures.mjs`.
+
+**Nathan, for the editing guide (PR 14):** do the three practice edits in `docs/EDITING-GUIDE.md` (a price, a FAQ answer, the Currently block) from the guide alone, and say what was unclear. Two decisions are still open there: the optional second Editor-role login (needs a second email address) and the optional catch-all page route (not built; see docs/CMS-DESIGN.md questions 1 and 8).
+
 **After the rows are live, delete the temporary code fallback:** `src/lib/redirectFallback.ts` (+ `redirectFallback.test.ts`), its use in `src/worker.ts` (item 5 of the header comment) and the matching lines in CLAUDE.md Gotcha 18. Until then a redirect deleted in the admin keeps working invisibly. Also then: re-export the seed with the token (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`) so `seed/seed.json` carries the live redirect rows, and run `node scripts/ci-dataset/cms-fixtures.mjs`.
 
 For Nathan on the way: the hero scene shows five sites in `hero_order` 1 to 5 (Second Presbyterian, Theology Matters, Stone Steps 50K, MAS Monograms, Presbyterian Academy). A site joins it only with BOTH its desktop and mobile capture set and a live URL; to add one, open its case study, tick "Show in the homepage device scene" and give it the next number. The two bundled-image fallbacks in `HeroShowcase.astro` (`bundledSites`) and the ten `*-home.png` / `*-mobile.png` files they import stay until you are sure you no longer want a no-database fallback; the files and the array can then be deleted together (CMS-DESIGN PR 14).
@@ -188,33 +192,15 @@ Commands: `docs/CMS-DESIGN.md` 2.6 ("PR 12 data") and `docs/LAUNCH-RUNBOOK.md` (
 
 For Nathan on the way: (1) After the schema is applied, resubmit `sitemap-index.xml` in Search Console once (it lists `sitemap-posts.xml` now). (2) A journal entry's share card is built at deploy time, so re-run the latest Workers Build after publishing a new entry if you want its social preview image to appear at once. (3) Pictures inside an entry's body are not drawn yet (the cover image is); tell me if you want them and I will add them (it means resolving EmDash media references in `src/lib/journalBody.ts`).
 
-### Drop `@astrojs/mdx` and `astro-expressive-code` (decision for Nathan, PR 14)
-
-**Blocks:** nothing. Since PR 12 no `.mdx` file exists and journal code blocks are drawn by `src/lib/journalBody.ts`, so both integrations in `astro.config.mjs` are unused. They are left installed because removing them edits `package.json` and the lockfile (the repo rule is to confirm dependency changes first). Removing them is a two-line config change plus `npm uninstall`; the build and parity were clean with them in place, so there is no hurry.
-
 ### Delete the unused case-study capture files? (already done in PR 12; confirm you are happy)
 
 **Blocks:** nothing. PR 12 deleted 35 images under `src/assets/case-studies/` that nothing imports (the eight covers other than `second-presbyterian-chicago.png`, and every feature, before and after capture; 25 MB). Their pictures live in EmDash media (R2) and the files are in git history (`git log --diff-filter=D -- src/assets/case-studies`). The home and mobile captures stay because `HeroShowcase` imports ten of them (as its fallback `bundledSites` since PR 13) and `SiteShowcase`'s dead slug mode still globs them. If you wanted the originals kept in the working tree as a local backup, restore them from history.
 
-### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
+### Decide whether to raise the route cache lifetime (purge on publish is proven)
 
-**Blocks:** raising `PAGE_MAX_AGE` in `src/lib/routeCache.ts` from 5 minutes.
+**Blocks:** nothing. Nathan confirmed on 2026-10-03 that an admin edit shows on the live site within seconds, so purge-by-tag works on this zone. `PAGE_MAX_AGE` in `src/lib/routeCache.ts` is still 5 minutes (it is now only the fallback for a missed purge). Raising it to a day (the design used 86400) would make more visits a cache HIT; the cost is that a purge that fails for any reason leaves a page stale for a day instead of five minutes. Say which you want. The editing guide and CLAUDE.md say "within seconds, five minutes at worst", which stays true at 5 minutes and would need the last half changed if the lifetime goes up.
 
-The cache was measured on ncs-ci (MISS then HIT, warm TTFB about 80 ms) and the
-purge path was read from EmDash's source (the publish route calls
-`cache.invalidate({ tags: [collection, id] })`, which is `cache.purge({ tags })`),
-but a real publish was not run because it needs an admin login. After the PR
-merges: open a case study on the live site twice (second load shows
-`Cf-Cache-Status: HIT`), change one word in the admin and publish, reload. If the
-new word shows at once, the purge works: set `PAGE_MAX_AGE` to a day (the design
-used 86400), update the "allow up to 5 minutes" line in the editing guide, and
-delete this row. If it shows only after about 5 minutes, purge-by-tag is not
-firing on this zone: leave the 5-minute lifetime (it is the fallback) and look at
-`Cache-Tag` handling before trusting longer lifetimes.
-
-Also open from the same PR: the first request per URL after each deploy is a
-cache MISS (about 0.5 to 1.6 s on ncs-ci). A post-deploy warm-up (a GET of each
-route from the deploy workflow) would hide that from visitors; not built.
+Also open: the first request per URL after each deploy is a cache MISS (about 0.5 to 1.6 s on ncs-ci). A post-deploy warm-up (a GET of each route from the deploy workflow) would hide that from visitors; not built.
 
 ---
 

@@ -345,7 +345,7 @@ The journal is the EmDash template's own `posts` collection, relabelled "Journal
 - **Cover images** render through `EmDashPhoto` (width-only resizer URLs) with `alt=""`.
 - **Feed, sitemap, share cards.** `/rss.xml` lists published entries beside the case studies (merged by date only when there is at least one entry). `src/pages/sitemap-posts.xml.ts` wraps EmDash's per-collection sitemap: trailing slashes, and a valid EMPTY `<urlset>` while nothing is published (the stock handler answers 404 and `sitemap-index.xml` always lists this file through `customSitemaps`). `scripts/generate-og.mjs` takes `/journal/<slug>/` items from `/rss.xml` and writes a navy card per entry at build time (not committed); an entry published after the last deploy has no card until the next one.
 - **CI.** The CI dataset carries one published entry (`ci-test-entry`, with a tag, a cover and every body block type) and one draft (`ci-draft-entry`), both in `scripts/ci-dataset/ci-content/posts.json`. The schema reaches `ncs-ci` through the seed, so adding it needed `npm run ci-dataset -- --from-scratch`. With the published entry the Journal link is in every page's menus; `JOURNAL_EMPTY=1` flips the Playwright suites for a rebuild without test content (docs/TESTING.md).
-- **Not done here:** the unused template `category` taxonomy is still there (PR 14 deletes it); the admin sidebar group and order (PR 14); the production schema and any entries (needs `EMDASH_TOKEN`, docs/LAUNCH-RUNBOOK.md "PR 12").
+- **Done later in PR 14:** the unused template `category` taxonomy is deleted by `npm run cms:tidy`, and the admin sidebar group and order are collection settings (`sortOrder`, `group`) in `cms/schema/*.mjs`. Production already holds the Journal schema (applied 2026-10-03, no entries yet).
 
 ## Index pages and photos (CMS-DESIGN PR 11, 2026-10-03)
 
@@ -465,3 +465,12 @@ Behaviour worth knowing:
 - **Journal** items in either menu are hidden in code while no journal entry is published (`hasJournalEntries()` in `src/lib/journal.ts` since PR 12; a draft does not count).
 - **Parity.** The PR was proved byte-identical to `main` on all 14 pages and `/rss.xml` on `ncs-ci`, on both the fallback path and the CMS path, apart from the `MobileNav` island's `uid` and serialised props.
 - **A stale cache looks like a failed rebuild.** `npm run ci-dataset -- --from-scratch` requests `/` once before it loads the rows, and the route cache keeps that empty homepage for 5 minutes (the Selected Work strip missing, about 24 KB lighter). A parity capture taken straight after a rebuild reads it; wait out the cache window and capture again.
+
+## Admin tidy and the editing guide (CMS-DESIGN PR 14, 2026-10-03)
+
+- **The admin "live view" button builds its address from the collection's `urlPattern`.** Without one it guesses `/<collection>/<slug>/`, a 404 for a singleton. A fixed pattern with no `{slug}` is valid in EmDash 1.1.0 (`compileUrlPattern` allows zero placeholders; `resolveEmDashPath` skips a match without a `slug` param; the per-collection sitemap needs `seo`; the admin returns the pattern as is). Every collection in `cms/schema/` now carries one; `src/lib/cmsSchema.test.ts` holds the expected list.
+- **Collections without a `sortOrder` sort last**; folders appear where their first collection falls. The order is set in the schema files (Site 0, Pages 1 to 9, Pricing & services 10 to 12, Case Studies 13, Journal 14, Photography 15).
+- **Cannot be hidden by config:** Comments, Widgets, Sections, Bylines (unconditional sidebar items for Editor and Admin). Production has no widget areas or sections, so they are empty.
+- **`npm run cms:tidy`** deletes the empty template `category` taxonomy and reports leftovers (`scripts/cms/tidy-admin.mjs`).
+- **`@astrojs/mdx` and `astro-expressive-code` are removed** (nothing imported them since PR 12).
+- **Editing guide:** `docs/EDITING-GUIDE.md`. The Editor-role second login is recommended there and needs a second email from Nathan.
