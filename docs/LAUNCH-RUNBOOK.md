@@ -88,6 +88,30 @@ Once per session: `npx emdash login --url https://www.nixoncreativestudio.com` (
 7. Re-export the seed and rebuild `ncs-ci` as in docs/CMS-DESIGN.md 2.1 step 4 (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`, then `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`).
 8. After the PR deploys: the edit proof from CMS-DESIGN 2.1 (change a field, publish, see it live, restore from History).
 
+### PR 7: Services page and service offerings (needs `EMDASH_TOKEN` from Nathan; not run)
+
+PR 7 shipped before any production write was possible, and production's CMS is still empty. The live site works without these steps: `/services` renders from the committed `cms/content/page_services.json` and `service_offerings.json`, byte-for-byte what it showed before (its structured data included), so they can run any time after the PR deploys, independent of PRs 4 to 6. Stop on any surprise in a dry run. `<prod>` is `https://www.nixoncreativestudio.com`.
+
+```bash
+npx emdash login --url <prod>                       # once, device code
+export EMDASH_TOKEN=...                             # needs EMDASH_TOKEN from Nathan: Settings, API tokens (keep in 1Password)
+npm run cms:schema -- --all --check
+npm run cms:schema -- --collection page_services --url <prod> --dry-run      # expect: would created collection, would added field x17
+npm run cms:schema -- --collection page_services --url <prod> --yes
+npm run cms:schema -- --collection page_services --url <prod> --yes          # second run: every line "unchanged"
+npm run cms:schema -- --collection service_offerings --url <prod> --dry-run  # expect: would created collection, would added field x9
+npm run cms:schema -- --collection service_offerings --url <prod> --yes
+npm run cms:schema -- --collection service_offerings --url <prod> --yes      # second run: every line "unchanged"
+npm run cms:load -- --collection page_services --url <prod> --dry-run        # expect: would create services
+npm run cms:load -- --collection page_services --url <prod> --yes
+npm run cms:load -- --collection service_offerings --url <prod> --dry-run    # expect: would create strategy, web-design, photography
+npm run cms:load -- --collection service_offerings --url <prod> --yes
+npm run cms:load -- --collection page_services --url <prod> --yes            # second run: "unchanged"
+npm run cms:load -- --collection service_offerings --url <prod> --yes        # second run: "unchanged"
+```
+
+Before the first load, save the live structured data: `curl -s <prod>/services/ | grep -o '<script type="application/ld+json">[^<]*</script>' > jsonld-before.txt`. After the load and a five-minute wait, save it again and `cmp` the two files: they must be identical (the Strategy $1,500 and Photography $900 floors are now `service_offerings.price_from`, so a typo there would show up here). Then CI: add `'page_services'` and `'service_offerings'` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, `node scripts/export-seed-from-instance.mjs --url <prod>` (token), `node scripts/ci-dataset/cms-fixtures.mjs`, `npm run ci-dataset -- --from-scratch`, `npm run ci-dataset:snapshot`, `npm run ci-dataset`, commit. Finally the edit proof: change the first FAQ answer in Services page, publish, reload `/services/` within five minutes, restore from History; and run the live URL through Google's Rich Results test (screenshot).
+
 ### PR 6: Home page copy (needs `EMDASH_TOKEN` from Nathan; not run)
 
 PR 6 shipped before any production write was possible. The live site works without these steps: the hero, the Selected Work, pricing and process copy, and the title and meta description render from the committed `cms/content/page_home.json`, the same words as before (the one visible difference is the homepage meta description, which was the bare studio name and is now the tagline; CMS-DESIGN 2.5, PR 6 notes). So the steps can run any time after the PR deploys, independent of PRs 4 and 5. Stop on any surprise in a dry run. `<prod>` is `https://www.nixoncreativestudio.com`.

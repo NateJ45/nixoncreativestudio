@@ -116,7 +116,15 @@ The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 5 data") and `docs/LA
 
 The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 6 data") and `docs/LAUNCH-RUNBOOK.md`; run it in the same session as the PR 4 and PR 5 loads (one `npx emdash login`, one token). Then the CI follow-up (add `page_home` to `PRODUCTION_HAS` in `scripts/ci-dataset/cms-fixtures.mjs`, re-export the seed, rebuild `ncs-ci`) and the edit proof (the hero's coloured headline words, publish, see them on /, restore from History). Delete this row after that.
 
-Two things for Nathan on the way. (1) The homepage had no meta description of its own (Google saw the bare studio name); the design seeds one from the tagline, so merging this PR changes it, which is the only rendered difference. Say if you would rather write a different one. (2) A pre-existing typo in the live hero: the proof line reads "photographed byone person" because there is no space before the link (the old template collapsed it the same way). PR 6 kept the output identical on purpose; the fix is a one-line space before the link in `Hero.astro` (or a trailing space in the `hero_proof_before` value), as a separate change.
+Two things for Nathan on the way. (1) The homepage had no meta description of its own (Google saw the bare studio name); the design seeds one from the tagline, so merging this PR changes it, which is the only rendered difference. Say if you would rather write a different one. (2) A pre-existing typo in the live hero ("photographed byone person", no space before the link) was fixed in PR 7 with `{proof.before}{' '}` in `Hero.astro`, the only rendered change on the homepage.
+
+### Load the PR 7 data into production (needs `EMDASH_TOKEN` from Nathan)
+
+**Blocks:** nothing visible. PR 7 (Services) ships safe with production empty, because /services falls back to the committed `cms/content/page_services.json` and `service_offerings.json`, which hold the current words and produce byte-identical structured data (the JSON-LD golden file is a unit test). Until the data is loaded, the admin's Services page and Service offerings screens do not exist and an edit there is impossible.
+
+The exact command list is in `docs/CMS-DESIGN.md` 2.6 ("PR 7 data") and `docs/LAUNCH-RUNBOOK.md`; run it in the same session as the PR 4 to 6 loads (one `npx emdash login`, one token). Save the live JSON-LD before and after and `cmp` them (they must match), then the CI follow-up (add both collections to `PRODUCTION_HAS`, re-export the seed, rebuild `ncs-ci`) and the edit proof (the first FAQ answer, publish, see it in the page and the JSON-LD, restore from History). Also run the live /services URL through Google's Rich Results test and screenshot it. Delete this row after that.
+
+For Nathan on the way: the Web design screenshot on /services is still an image file in the code, not a CMS upload (the picture's description is editable; the image swap comes with the About headshot work in PR 8). The FAQ answers that quote prices ("What does it cost?", "Do you offer maintenance?") are now editable in the admin but remain plain text: after a price change, update them there.
 
 ### Prove that a publish purges the route cache (first deploy after CMS-DESIGN PR 2)
 

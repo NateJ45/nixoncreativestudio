@@ -320,6 +320,24 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 - `getMenuWithCacheHint`, `getEmDashEntry` and `getEmDashCollection` all return a `cacheHint`; the reader passes each to `Astro.cache.set()` so the route cache is tagged (section "Route cache" above).
 - The write scripts refuse any target that is not the `ncs-ci` Worker or a local address unless `--yes` is passed (`scripts/cms/args.mjs`).
 
+## Services page (CMS-DESIGN PR 7, 2026-10-03)
+
+The /services words, the three service chapters and the FAQ read from a singleton and a list. Design: docs/CMS-DESIGN.md section 1.6 and "PR 7 notes".
+
+| What                                                                                                                                                                                                                                      | Where it is edited                                                                                             | How the site reads it                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Page headline and intro, the cost section heading, paragraph and note, the add-ons heading, "Why it costs" heading, sub, four reasons and closing paragraph, FAQ heading, sub and rows, title, description, closing banner title and text | Admin, **Services page** (collection `page_services`, entry `services`; `cms/schema/page_services.mjs`)        | `getServicesPage(Astro)` in `src/lib/servicesPage.ts`, used by `src/pages/services.astro`   |
+| The three chapters: name, summary, paragraph, included lines, standalone starting price, picture description, placeholder icon, area served, order                                                                                        | Admin, **Service offerings** (collection `service_offerings`, entries `strategy`, `web-design`, `photography`) | `getServiceOfferings(Astro)`: first 3 by `sort_order`                                       |
+| The Service (one per offering) and FAQPage structured data                                                                                                                                                                                | Derived from the two sources above, never edited by hand                                                       | `buildServiceSchemas()` in `servicesPage.ts`, emitted through `BaseLayout`'s `schemas` prop |
+
+Behaviour worth knowing:
+
+- **Fallback.** A missing, unpublished or unreadable entry, a blank required field, fewer than four reasons, fewer than three complete FAQ rows, or an offering with no included lines serves the committed `cms/content/page_services.json` and `service_offerings.json` (the whole list for offerings) and logs `[cms] ... serving the committed fallback`. Production has no data loaded when this ships, so it renders from the fallback and looks exactly as before.
+- **Structured data cannot drift from the page.** The Service and FAQPage JSON-LD is built from the same rows the page renders. `src/lib/servicesPage.jsonld.golden.json` pins it to what the live page emitted before the move (a unit test, byte-equal via `JSON.stringify`, on both the fallback and CMS paths). Strategy and Photography carry their own floors in `price_from`; Web design's follows the first Pricing tier, so leave its `price_from` empty.
+- **The Web design picture is still code.** An `offeringImages` map in `services.astro` (keyed by the offering slug) holds the screenshot; the entry's "Describe the picture" box must be filled in for it to show, otherwise the placeholder panel renders. A CMS image upload comes with PR 8's image path.
+- **Rendered difference.** None on /services, on the fallback path or the CMS path (parity PASS, and the JSON-LD block is byte-identical by `cmp`). The only DIFF in the whole compared set is the homepage hero proof line, which gained the space it was missing ("photographed by one person", fixed in `Hero.astro` with `{proof.before}{' '}`).
+- **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 7 data") and docs/LAUNCH-RUNBOOK.md.
+
 ## Home page copy (CMS-DESIGN PR 6, 2026-10-03)
 
 The words on the homepage read from one singleton. Design: docs/CMS-DESIGN.md section 1.4 and "PR 6 notes".
@@ -336,7 +354,7 @@ Behaviour worth knowing:
 - **One read per request.** The hero, three sections and `/services`' process band share one memoised read (a `WeakMap` on `Astro.request`) and one cache tag, so a publish purges `/` and `/services/`.
 - **The hero stays the LCP element it was.** Still server-rendered, still the CSS-only first-frame entrance, no `data-reveal` anywhere in it (CLAUDE.md Gotchas 10 and 14). Measured on `ncs-ci`, Lighthouse CLI mobile, same machine, route cache warm: median LCP 3614 ms on `main` (12 runs) against 3615 ms on the CMS path (12 runs) and 3624 ms on the fallback path (16 runs); the LCP element is the hero phone screenshot in all of them. The distribution is bimodal (a 2.7 to 2.9 s cluster and a 3.6 s cluster), so a 6-run median can swing by 400 ms by luck; use at least 12 runs when comparing.
 - **Not in the entry on purpose:** section order, every link target, the step numbers (counted from order), the hero device scene and the client marquee.
-- **Rendered difference.** The only DIFF against `main` on all five compared routes is the homepage meta, og and twitter description: it was the bare studio name and is now the tagline (the design seeds it that way, 1.1). The hero proof line still renders "photographed byone person" (no space before the link) exactly as before; fixing it is a separate change (docs/PENDING.md).
+- **Rendered difference.** The only DIFF against `main` on all five compared routes is the homepage meta, og and twitter description: it was the bare studio name and is now the tagline (the design seeds it that way, 1.1). The hero proof line rendered "photographed byone person" (no space before the link) in this PR; PR 7 fixed it.
 - **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 6 data") and docs/LAUNCH-RUNBOOK.md.
 
 ## Pricing (CMS-DESIGN PR 5, 2026-10-03)
@@ -352,7 +370,7 @@ Behaviour worth knowing:
 
 - **Fallback.** An empty, unpublished or unreadable collection (or a tier with a blank required field) serves the committed `cms/content/pricing_tiers.json` and `pricing_addons.json` as one whole list and logs `[cms] ... serving the committed fallback`. Production has no data loaded when this ships, so it renders from the fallback and looks exactly as before. `src/data/pricing.ts` is deleted; nothing imports it.
 - **Count-up.** The price is an integer field; the template prints it as the static text of the count-up span and as `data-countup-to`, so a visitor with no JavaScript sees the real number. `tests/pricing.spec.ts` proves it with scripts off.
-- **Prices elsewhere stay prose.** The /services FAQ ("What does it cost?", "Do you offer maintenance?") and the /contact budget brackets are code until PRs 7 and 9. The Web design JSON-LD offer takes its floor from the first tier; the Strategy ($1,500) and Photography ($900) floors in the JSON-LD stay literals in `services.astro` until PR 7.
+- **Prices elsewhere stay prose.** The /services FAQ ("What does it cost?", "Do you offer maintenance?") and the /contact budget brackets are text until PR 9 (the FAQ moved to the Services page entry in PR 7, as editable text). The Web design JSON-LD offer takes its floor from the first tier; the Strategy ($1,500) and Photography ($900) floors moved into `service_offerings.price_from` in PR 7.
 - **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 5 data") and docs/LAUNCH-RUNBOOK.md.
 
 ## Site settings and menus (CMS-DESIGN PR 4, 2026-10-03)
