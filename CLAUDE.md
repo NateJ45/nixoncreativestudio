@@ -945,3 +945,18 @@ stale-while-revalidate=3600` for the browser only (the edge lifetime is
     production after merge; (d) the server is not the cause on mobile (TTFB 30 to
     40ms). Not yet tried: fewer React islands loaded on every page, the unused
     JavaScript (about 170ms), a lighter mobile hero design (Nathan's call).
+
+24. **The `www` to apex redirect rule must leave `/_emdash/` AND `/_astro/`
+    alone, or the admin breaks.** The zone Redirect Rule (Cloudflare dashboard,
+    Rules, not in the repo) sends `www` to the apex with a 301 except for paths
+    under `/_emdash/`, because the admin passkey is bound to `www`. The admin
+    page itself is on `www`, but a plugin's admin script is an Astro island served
+    from `/_astro/`, and a browser will not follow a cross-origin redirect for a
+    module script. With only `/_emdash/` exempt the admin sat on "Loading
+    EmDash..." with `Failed to fetch dynamically imported module .../PluginRegistry.*.js`
+    in the console (2026-10-03, the day the studio-help plugin shipped). Fixed
+    through the API (expression below); both prefixes are now exempt. If the rule
+    is ever recreated or edited, keep both. Check: `curl -s -o /dev/null -w "%{http_code}"
+https://www.nixoncreativestudio.com/_astro/<any chunk>.js` must be 200, while
+    `https://www.nixoncreativestudio.com/about/` must still 301 to the apex.
+    `(http.host eq "www.nixoncreativestudio.com" and not starts_with(http.request.uri.path, "/_emdash/") and not starts_with(http.request.uri.path, "/_astro/"))`
