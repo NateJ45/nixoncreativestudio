@@ -22,7 +22,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 
 ## Stack
 
-- Astro 6.3.7 with TypeScript in strict mode and `output: 'static'`
+- Astro 7 with TypeScript in strict mode and `output: 'static'`
 - MDX content collections for case studies and journal entries; JSON-backed collection for the photography catalogue
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
 - React 19 islands for anything interactive: full-screen mobile nav panel, contact form handler, photo lightbox, theme toggle, WebGL hero canvas, testimonials carousel, back-to-top, copy-email, /work filter chips. Astro components for everything static
@@ -47,7 +47,7 @@ Related context lives in the sibling folder `C:\Users\natha\Documents\Claude\Pro
 - `src/data/site.ts` as the single source of truth for contact info (name, email, phone, address, studio name, social URLs, tagline, domain) plus the optional `bookingUrl` and `newsletterUrl` that gate the Cal.com and Newsletter scaffolds
 - Web3Forms for the contact form. Spam protection is the form's hidden honeypot field (`botcheck`) alone; the hCaptcha widget was removed. To re-add it, restore the `.h-captcha` div, the `js.hcaptcha.com/1/api.js` script tag, and the captcha gate in the contact form's submit handler, then turn hCaptcha back on in the Web3Forms dashboard (Web3Forms supports hCaptcha only, not Cloudflare Turnstile or Google reCAPTCHA). Cloudflare Web Analytics for privacy-friendly traffic
 - eslint (flat config) + prettier for linting and formatting, `node --test` unit suites in `src/lib/*.test.ts`, Playwright + axe-core suites in `tests/` (smoke, accessibility in both themes, reflow), linkinator for the internal link check, and a GitHub Actions CI run on every push and PR. See "Testing, linting, and CI" below
-- Cloudflare Pages for hosting (build command `npm run build`, output `dist/`)
+- Cloudflare for hosting: a Worker serving the static build as assets (see `wrangler.jsonc`; build command `npm run build`, output `dist/`)
 - GitHub for version control
 
 ---
@@ -62,7 +62,7 @@ The homepage renders in this order: Hero, Selected Work, What it costs (the pric
 4. **Process Band** (`src/components/ProcessBand.astro`). A band that combines the four-step process and the inquiry CTA. It uses the theme-aware `.band-themed` surface: light (with a soft accent glow) in light mode, navy aurora in dark mode. Step numbers (01–04) are the ONLY deliberately numbered sequence on the homepage; they earn their place because the process is genuinely ordered. The CTA title is specific to audience ("Tell me what you are building.") and the button leads to `/contact`. Closes the page on one strong block instead of three stacked sections.
 5. **Footer**, rendered by `BaseLayout`, is theme-aware via `.band-themed` (the same surface as the Process Band and CtaBanner): a bright light surface with a soft brand glow in light mode, the navy aurora in dark. In dark mode it continues the navy from the Process Band as one continuous dark block; in light mode it reads bright, continuing the light Process Band, so the page stays light and airy from the hero through the footer. Dark mode stays immersive navy. The accent seam line at its top edge (`.footer-seam`, now an `::after` since `.band-themed` owns `::before` for the glow) is dark-mode only; in light mode the footer and the band above it are already the same light surface, so no seam is needed.
 
-The Services, PhotoStrip, and Testimonials components were deleted during the rewrite. Each had its real home elsewhere:
+Services, photography, and testimonials each live elsewhere, not on the homepage:
 
 - **Services** copy lives on `/services` and `/about`.
 - **Photography** has its own `/photography` page; on the homepage the work itself is carried above the fold by the device-pairing `HeroShowcase`, not by a four-up photo tile strip.
@@ -129,7 +129,7 @@ The wiring, in order of execution:
 
 ## Motion and effects system
 
-The site runs a deliberately animation-rich, polished design. This supersedes any older "quiet / calm / restraint" framing in this doc or in component comments: the homepage and inner pages lean into scroll motion, animated backgrounds, and hover micro-interactions on purpose. The one hard constraint that still holds: every effect must stay WCAG AA and reduced-motion safe, which the system below handles automatically.
+The site runs a deliberately animation-rich, polished design. The homepage and inner pages lean into scroll motion, animated backgrounds, and hover micro-interactions on purpose. The one hard constraint: every effect must stay WCAG AA and reduced-motion safe, which the system below handles automatically.
 
 The motion layer is two files plus a vocabulary of declarative classes and `data-*` attributes, all defined once in `src/styles/globals.css` (section 6) and wired in `src/layouts/BaseLayout.astro`:
 
@@ -158,7 +158,7 @@ Vocabulary (use these; don't reinvent):
 
 Stop the dev server before running `npm run build`. The `@astrojs/cloudflare` adapter's prerenderer opens a tunnel during the build; with `npm run dev` still running it collides on the port and the build dies with an undici `fetch failed` / `bad port` error in `prerenderer.js`. That is a port conflict, not a code error, kill the dev server and rebuild.
 
-1. `npm run placeholders` runs `scripts/generate-placeholders.mjs`. Scans `src/assets/case-studies/` for cover images, generates a tiny base64 PNG blur preview per cover via plaiceholder, writes the lot to `src/lib/coverPlaceholders.json`. Runs out-of-process because the Cloudflare Pages prerender worker is a V8 isolate without `node:fs`.
+1. `npm run placeholders` runs `scripts/generate-placeholders.mjs`. Scans `src/assets/case-studies/` for cover images, generates a tiny base64 PNG blur preview per cover via plaiceholder, writes the lot to `src/lib/coverPlaceholders.json`. Runs out-of-process because the Cloudflare prerender worker is a V8 isolate without `node:fs`.
 2. `npm run og:pages` runs `scripts/generate-og.mjs`. Generates one per-page Open Graph card into `public/og/`: one per main route plus one per case study (`og/work/<slug>.png`) and journal entry. Main routes and journal entries get the navy card (Bebas title + amber studio name); case studies get a cover card, the real hero screenshot filling the frame behind a navy scrim, with the title anchored bottom-left, so a shared case study previews the actual shipped work. **The case-study cards are built from EmDash, not from git:** the script reads the published entries of the instance named by the `EMDASH_URL` env var (default: the trial Worker; the default flips to `https://nixoncreativestudio.com` at cutover) through what an anonymous visitor can read (`/rss.xml` for slug and title, `/work/<slug>/` for the cover media URL, `/_emdash/api/media/file/<id>` for the original bytes), because the REST content API needs a login. If the instance is unreachable or returns nothing, the committed `public/og/work/*.png` cards are kept, a warning is printed and the build carries on (a CMS outage never fails or empties a build). Unchanged covers re-render byte-identical. Runs out-of-process for the same V8-isolate reason (an Astro route can't: it would need `node:crypto` in the CF prerender worker, which is why `astro-og-canvas` as a route fails here). `BaseLayout.astro` maps the current pathname to `/og/<slug>.png`. Output is deterministic, so re-running with unchanged content produces identical bytes.
 3. `astro build` runs as normal. Pages import `coverPlaceholders.json` via the typed lookup in `src/lib/coverPlaceholder.ts` and pass blurs to `CaseStudyCover`.
 
@@ -177,7 +177,7 @@ Standalone scripts:
 
 The repo carries a light quality-gate layer, matched to the rest of Nathan's Astro + Cloudflare sites.
 
-Brought up to the family test standard on 2026-09-06 (WCP is the reference; reid-design-site and mas-monograms carry the same shape). `docs/TESTING.md` is the map of what covers what.
+WCP is the reference for this standard; reid-design-site and mas-monograms carry the same shape. `docs/TESTING.md` is the map of what covers what.
 
 - `npm test` runs the Playwright suites in `tests/` (`playwright.config.ts`): `smoke` (every route 200s with the studio name in its title), `a11y` (axe-core default rules on every route, zero violations), `a11y-dark` (the same sweep with `localStorage["ncs-theme"]` seeded to `dark` before the anti-FOUC bootstrap runs, plus a focus-indicator check on the contact form), `reduced-motion` (PORTABLE, starter PORTS.md card 61: nothing still running 2.5s after load under `reducedMotion: 'reduce'`), and `reflow` (no horizontal overflow at 320px, WCAG 1.4.10, and at 1440/1024/768). Chromium runs everything; a WebKit iPhone 14 profile runs smoke, both axe sweeps and reduced-motion. **The suites run against a URL, `PLAYWRIGHT_BASE_URL`, with no webServer** (the site is hybrid, so `dist/client` is not the whole site; see Gotcha 12). Unset, the config throws a message saying so. Locally: `PLAYWRIGHT_BASE_URL=https://ncs-emdash-trial.nathanjnixon86.workers.dev npx playwright test --project=chromium`. CI points it at the Worker version preview. `tests/routes.ts` is the route list (prerendered and server-rendered alike, all nine case studies listed): add a line when a page ships or a case study is published. `smoke` also asserts an unknown `/work/<slug>/` answers a real 404 with the not-found page. `npm run test:ui` opens the Playwright UI.
 - `npm run test:unit` runs the `node --test` unit suites in `src/lib/*.test.ts` (currently `cn`, `readingTime`, `coverPlaceholder`, and `theme-tokens`). They run under Node's native type stripping, so they import the `.ts` modules directly with no build step.
@@ -401,6 +401,7 @@ Static routes generated at build time:
 | `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                             |
 | `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                        |
 | `/privacy/`        | `src/pages/privacy.astro`                                                                                 |
+| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                                 |
 | `/now`             | redirects to `/about/#now` (the page was merged into About)                                               |
 | `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                   |
 | `/404`             | `src/pages/404.astro` (custom not-found)                                                                  |
@@ -416,7 +417,7 @@ Static routes generated at build time:
 - `src/data/site.ts` (contact info, social URLs, tagline, bookingUrl, newsletterUrl)
 - Copy strings and `href` values in component files
 - Tailwind utility classes on existing components, when content needs different visual weight
-- The "Currently" blurb in `Footer.astro` and the principles / currently arrays in `About.astro` (seasonal copy)
+- The "Currently" blurb in `Footer.astro` (seasonal copy)
 - The four arrays in the Currently section of `src/pages/about.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date — rewrite quarterly (this is the old /now snapshot, merged into About)
 - The `press` array in `PressMentions.astro` (populate when press happens)
 - The `logos` array in `ClientLogos.astro` (populate once you have client permissions)
@@ -458,7 +459,7 @@ Site visitors include potential clients (small businesses, churches, schools) an
 
 ## Deployment
 
-- Production: pushes to `main` trigger a Cloudflare Pages build that serves `nixoncreativestudio.com`.
+- Production: pushes to `main` trigger a Cloudflare build and deploy that serves `nixoncreativestudio.com`.
 - Previews: any other branch gets its own `*-nixoncreativestudio.nathanjnixon86.workers.dev` URL.
 - Build command: `npm run build`. Output directory: `dist`.
 - `output: 'static'` in `astro.config.mjs` prerenders every page to HTML at build time. The `@astrojs/cloudflare` adapter is installed but inert for static pages. To opt a single page into server rendering, add `export const prerender = false` in that page's frontmatter.
@@ -466,7 +467,7 @@ Site visitors include potential clients (small businesses, churches, schools) an
 
 ### Environment variables
 
-Set in Cloudflare Pages → **Settings → Variables and Secrets** (the Build section, not the Runtime section, because pages are prerendered):
+Set in the Cloudflare dashboard → **Settings → Variables and Secrets** (the Build section, not the Runtime section, because pages are prerendered):
 
 - `PUBLIC_WEB3FORMS_KEY` — contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action and shows an inline notice.
 - `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics token from dash.cloudflare.com → Analytics & Logs → Web Analytics. Without it the analytics beacon doesn't render.
@@ -484,7 +485,7 @@ Site-wide WIP gate controlled by `PUBLIC_COMING_SOON`, enforced client-side via 
 
 The implementation history is worth knowing about: an earlier attempt put the gate in `functions/_middleware.js` (Cloudflare Pages Function), but the project deploys via the `@astrojs/cloudflare` adapter as a Worker with the assets binding, not as a plain Pages project, so `functions/` never fired. Client-side gating works regardless of the deploy mechanism.
 
-**To enable the gate**: set `PUBLIC_COMING_SOON=true` and `PUBLIC_PREVIEW_TOKEN=<your-secret>` in Cloudflare Pages → Variables and Secrets. Trigger a redeploy. About a minute later every visitor to the site (except you, see below) sees the coming-soon view.
+**To enable the gate**: set `PUBLIC_COMING_SOON=true` and `PUBLIC_PREVIEW_TOKEN=<your-secret>` in the Cloudflare dashboard → Variables and Secrets. Trigger a redeploy. About a minute later every visitor to the site (except you, see below) sees the coming-soon view.
 
 **To bypass on a device you own**: visit any URL with `?preview=<your-secret>` appended, e.g.
 
@@ -538,8 +539,7 @@ These apply to everything written here, in code comments, in PR descriptions, in
 - No em-dashes. Use commas, periods, colons, or restructure the sentence.
 - No AI-tell phrases: delve, navigate (as a verb), leverage, robust, seamless, meticulous, tapestry, realm, landscape, testament to, ever-evolving, crucial, pivotal.
 - No AI-tell sentence patterns: "It's not just X, it's Y," "Not only... but also," "It's important to note that," "When it comes to," "In the realm of," "That said" or "With that being said" as transitions.
-- Don't open replies with filler like "Certainly!", "Absolutely!", "Great question!", or "I'd be happy to help."
-- Don't close replies with "I hope this helps!" or "Let me know if you have any questions." End on the actual content.
+- Start with the content and end on it: no greeting filler, no closing offer to help.
 - Avoid three-item lists where the third item is filler. Two items is fine if two is the truth.
 - Use bold for genuine emphasis or list labels only, never random nouns mid-sentence.
 - Default to prose, not headers and bullets, unless content is genuinely a list or step-by-step.
@@ -553,7 +553,7 @@ For copy on the actual site: "Modern websites for small businesses, nonprofits, 
 
 Things that still need configuration before / during the public launch. Everything below ships gracefully today — components render nothing or fall back when not configured — so the site stays clean while these wait.
 
-### Cloudflare Pages env vars (Settings → Variables and Secrets)
+### Cloudflare env vars (Settings → Variables and Secrets)
 
 - [ ] `PUBLIC_WEB3FORMS_KEY` — contact form delivery (web3forms.com).
 - [ ] `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics.
@@ -599,8 +599,7 @@ The brand `--accent` value shifted from `#3B82C4` to `#3478BD` in this codebase 
 
 Things that cost real time, with the reason attached. Add to the list when
 something bites; a gotcha written a week later is a gotcha written from memory.
-Seeded 2026-08-27 during the PORTS.md sync session, so every entry below is
-something measured that day.
+Every entry below was measured, not assumed.
 
 1. **`npm run lint` is green and gated (since 2026-09-06), so a red run is
    your change.** The 7 false-positive errors that used to sit on a clean tree
