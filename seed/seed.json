@@ -294,6 +294,273 @@
       ]
     },
     {
+      "slug": "page_home",
+      "supports": ["drafts", "revisions"],
+      "routable": false,
+      "admin": {
+        "quickCreate": false
+      },
+      "group": "Pages",
+      "titleField": "seo_title",
+      "commentsEnabled": false,
+      "label": "Home page",
+      "labelSingular": "Home page",
+      "description": "The words on the homepage: headline, section headings, the process steps.",
+      "sortOrder": 1,
+      "fields": [
+        {
+          "slug": "seo_title",
+          "label": "Search and tab title (max 60 characters)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 60
+          }
+        },
+        {
+          "slug": "seo_description",
+          "label": "Search description (50 to 160 characters)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "minLength": 50,
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "hero_heading",
+          "label": "Headline, the plain first part (max 32). It reads as one sentence with the coloured part next",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 32
+          }
+        },
+        {
+          "slug": "hero_heading_accent",
+          "label": "Headline, the coloured last part (max 28). Shows in amber on dark and blue on light",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 28
+          }
+        },
+        {
+          "slug": "hero_positioning",
+          "label": "Positioning line under the headline (max 110)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 110
+          }
+        },
+        {
+          "slug": "hero_proof_before",
+          "label": "Proof line, words before the link (max 100)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 100
+          }
+        },
+        {
+          "slug": "hero_proof_link_text",
+          "label": "Proof line, the linked words (max 24). They link to the About page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "hero_proof_after",
+          "label": "Proof line, words after the link (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "hero_primary_label",
+          "label": "Main button label (max 24). It always goes to the Contact page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "hero_secondary_label",
+          "label": "Second link label (max 24). It always goes to the Work page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        },
+        {
+          "slug": "work_heading",
+          "label": "Selected work heading (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "work_sub",
+          "label": "Selected work text under the heading (max 200)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "work_link_label",
+          "label": "Selected work link label under the cards (max 40). It goes to the Work page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "pricing_heading",
+          "label": "Pricing heading (max 40)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "pricing_sub",
+          "label": "Pricing text under the heading (max 220)",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 220
+          }
+        },
+        {
+          "slug": "pricing_includes_lead",
+          "label": "Lead-in to the list of what every build includes (max 80)",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 80
+          }
+        },
+        {
+          "slug": "pricing_includes",
+          "label": "What every build includes (exactly 4 lines, keep each under 48 characters)",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 4,
+            "maxItems": 4,
+            "subFields": [
+              {
+                "slug": "text",
+                "label": "Line",
+                "type": "string",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "pricing_reassurance",
+          "label": "Reassurance line under the tiers (max 260). Check it if your payment terms change",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 260
+          }
+        },
+        {
+          "slug": "pricing_link_label",
+          "label": "Pricing link label (max 48). It goes to the Services page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 48
+          }
+        },
+        {
+          "slug": "process_heading",
+          "label": "Process heading (max 40). Also shown on the Services page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 40
+          }
+        },
+        {
+          "slug": "process_sub",
+          "label": "Process text under the heading (max 160). Also shown on the Services page",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 160
+          }
+        },
+        {
+          "slug": "process_steps",
+          "label": "The process steps (exactly 4; numbers 01 to 04 are added for you). Title under 32 characters, body under 300. Also shown on the Services page",
+          "type": "repeater",
+          "required": true,
+          "validation": {
+            "minItems": 4,
+            "maxItems": 4,
+            "subFields": [
+              {
+                "slug": "title",
+                "label": "Step title",
+                "type": "string",
+                "required": true
+              },
+              {
+                "slug": "body",
+                "label": "Step text",
+                "type": "text",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "slug": "process_cta_title",
+          "label": "Closing block title (max 48). Homepage only",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 48
+          }
+        },
+        {
+          "slug": "process_cta_sub",
+          "label": "Closing block text (max 200). Homepage only",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 200
+          }
+        },
+        {
+          "slug": "process_cta_label",
+          "label": "Closing block button label (max 24). It always goes to the Contact page",
+          "type": "string",
+          "required": true,
+          "validation": {
+            "maxLength": 24
+          }
+        }
+      ]
+    },
+    {
       "slug": "pricing_addons",
       "supports": ["drafts", "revisions"],
       "routable": false,

@@ -29,21 +29,20 @@
    ============================================================================ */
 
 import { getPricingTiers } from '../lib/pricing';
+import { getHomePage } from '../lib/homePage';
 
 // The three tiers from the CMS (Pricing tiers in the admin), or the committed
 // fallback copy. Server-rendered like every page, so this is a request-time read.
 const webTiers = await getPricingTiers(Astro);
 
-// The value floor: what every build includes regardless of tier. Stated once,
-// above the prices, so the cost is always read against the value. Every claim is
-// true and matches the /services justification copy; these are cross-cutting
-// guarantees, deliberately distinct from the per-tier scope points below.
-const includes = [
-  'A custom design, yours to keep',
-  '100 / 100 accessibility',
-  'Strategy and a content system, included',
-  'One person, start to finish',
-];
+// The section copy, including the value floor: what every build includes
+// regardless of tier. Stated once, above the prices, so the cost is always read
+// against the value. These are the CMS "Home page" fields (committed fallback in
+// cms/content/page_home.json). Every claim must stay true and match the /services
+// justification copy; they are cross-cutting guarantees, deliberately distinct
+// from the per-tier scope points below.
+const { pricing } = await getHomePage(Astro);
+const includes = pricing.includes;
 ---
 
 <section class="pricing-teaser bg-mesh-soft py-2xl" aria-labelledby="home-pricing-heading">
@@ -51,17 +50,15 @@ const includes = [
     <!-- Header. Title carries it; the sub does the explaining an eyebrow would
          otherwise fake. Matches the Selected Work / Process Band header grammar. -->
     <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-      <h2 id="home-pricing-heading">What it costs</h2>
-      <p class="text-lg leading-[1.55] text-text-muted">
-        Honest from the first conversation, so you can size up the fit before we ever talk.
-      </p>
+      <h2 id="home-pricing-heading">{pricing.heading}</h2>
+      <p class="text-lg leading-[1.55] text-text-muted">{pricing.sub}</p>
     </header>
 
     <!-- Value floor: what every build includes, whatever the tier. Read first so
          the prices below land against the value, not in a vacuum. An inline
          editorial row with accent markers, not cards. -->
     <div class="mb-2xl" data-reveal style="--reveal-delay: 80ms;">
-      <p class="mb-s font-semibold text-text">Every build includes, whatever the tier:</p>
+      <p class="mb-s font-semibold text-text">{pricing.includesLead}</p>
       <ul class="flex flex-wrap gap-x-l gap-y-2 p-0 leading-[1.4] text-text-muted">
         {includes.map((item) => (
           <li class="flex items-center gap-s">
@@ -143,12 +140,9 @@ const includes = [
          on /services. The "starting point / free / monthly payments" line takes
          the one-big-wall feeling out before the CTA. -->
     <div class="mt-2xl flex flex-col gap-s" data-reveal style="--reveal-delay: 220ms;">
-      <p class="max-w-[62ch] leading-[1.6] text-text-muted">
-        Every number is a starting point. The first conversation is free and ends with an honest
-        ballpark, and larger projects can split into monthly payments.
-      </p>
+      <p class="max-w-[62ch] leading-[1.6] text-text-muted">{pricing.reassurance}</p>
       <a class="card-link text-lg" href="/services/">
-        See full pricing and services
+        {pricing.linkLabel}
       </a>
     </div>
   </div>

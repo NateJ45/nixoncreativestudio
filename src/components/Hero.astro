@@ -38,24 +38,30 @@
    src/assets/brand/hero.jpg and uncomment the <Image /> import + tag below; it
    layers over the aurora/WebGL.
 
-   Content is hardcoded here on purpose. The hero is bespoke.
+   The WORDS come from the CMS (Pages, "Home page" in the EmDash admin, with a
+   committed fallback in cms/content/page_home.json) through getHomePage(); the
+   design is bespoke and stays here. The headline is two fields on purpose (the
+   plain lead and the coloured accent phrase), so an edit cannot break the
+   two-colour headline. Link targets (/contact, /work/, /about) are code, not
+   content. The copy is server-rendered and none of it starts at opacity 0, so the
+   LCP element is unchanged by moving the text to the CMS (CLAUDE.md Gotchas 10
+   and 14).
    ============================================================================ */
 
 import { buttonVariants } from './ui/button';
 import HeroCanvas from './HeroCanvas';
 import HeroShowcase from './HeroShowcase.astro';
 import ClientMarquee from './ClientMarquee.astro';
+import { getHomePage } from '../lib/homePage';
 // import { Image } from 'astro:assets';
 // import heroPhoto from '../assets/brand/hero.jpg';
 
-// Headline statement. The trailing phrase is lifted into a solid amber span.
-const statementLead = 'I make websites that';
-const statementAccent = 'pull their weight.';
-
-// One short positioning line that names audience and reach. "wherever you are"
-// signals that web clients are not limited to the region; the Cincinnati base is
-// stated in the differentiator line below.
-const positioning = 'For churches, schools, nonprofits, and small businesses, wherever you are.';
+// Headline statement (the trailing phrase is lifted into a solid amber span),
+// the positioning line, the one-person proof line and both button labels.
+// "wherever you are" in the positioning line signals that web clients are not
+// limited to the region; the Cincinnati base is stated in the proof line.
+const { hero } = await getHomePage(Astro);
+const { heading: statementLead, headingAccent: statementAccent, positioning, proof } = hero;
 ---
 
 <section
@@ -155,11 +161,11 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
         class="hero-proof hero-anim max-w-[42ch] text-base leading-[1.5] font-medium text-text-muted sm:text-lg"
         style="--enter-delay: 220ms;"
       >
-        Based in Cincinnati. Every site designed, built, and photographed by
+        {proof.before}
         <a href="/about" class="hero-person font-semibold text-link">
-          one person
+          {proof.linkText}
         </a>
-        , start to finish.
+        {proof.after}
       </p>
 
       <div class="hero-anim flex flex-wrap items-center gap-m" style="--enter-delay: 320ms;">
@@ -171,14 +177,14 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
           href="/contact"
           class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
         >
-          Start a project
+          {hero.primaryLabel}
         </a>
 
         <a
           class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-text no-underline"
           href="/work/"
         >
-          <span>See the work</span>
+          <span>{hero.secondaryLabel}</span>
           <span aria-hidden="true" class="hero-secondary-arrow">
             →
           </span>
