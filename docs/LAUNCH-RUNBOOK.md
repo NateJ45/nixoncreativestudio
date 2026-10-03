@@ -67,4 +67,4 @@ data step.
   `ncs-emdash-media` bucket and the trial KV namespace.
 - Rewrite the homepage, stack and content-collection sections of CLAUDE.md for the hybrid
   architecture, and update the vault note.
-- Retire the `staging` branch (see `docs/PENDING.md`).
+- (Done 2026-10-03) The `staging` branch was retired.
