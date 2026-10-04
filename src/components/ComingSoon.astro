@@ -8,18 +8,18 @@
      - every other route when PUBLIC_COMING_SOON=true (via BaseLayout)
 
    Standalone visual: large wordmark, short pitch, contact options. No
-   nav, no footer, no theme toggle.
+   nav, no footer.
 
    IMPORTANT: this component can render OUTSIDE BaseLayout, so it must NOT
    depend on globals.css being present. Every color, font, and animation
    below is declared in the self-contained <style> block at the bottom,
    scoped under the .ncs-cs root. Brand tokens are duplicated here on
    purpose so the page looks right even when the design system stylesheet
-   is not loaded. Light is the default; the .dark class (set by the theme
-   bootstrap in the page <head>) flips the surface and text tokens.
+   is not loaded. There is one theme (dark mode was retired in the 2026
+   redesign).
 
-   The standalone <head> still does the work it always did: theme
-   bootstrap script, Bebas Neue preload, meta tags. This file only owns
+   The standalone <head> still does the work it always did: Bebas Neue
+   preload and meta tags. This file only owns
    the body markup and its own styling.
    ============================================================================ */
 
@@ -127,17 +127,6 @@ const site = await getSite(Astro);
     font-family: var(--cs-font-body);
     text-align: center;
     -webkit-font-smoothing: antialiased;
-  }
-
-  /* Dark mode: flip surface + text, keep the brand hues vivid. The .dark
-     class is applied to <html> by the theme bootstrap before first paint. */
-  :global(.dark) .ncs-cs {
-    --cs-bg: #0a1628;
-    --cs-heading: #f4f7fa;
-    --cs-text: #e8edf3;
-    --cs-muted: #9ca3af;
-    --cs-link: #40aaed;
-    --cs-on-mesh: #f4f7fa;
   }
 
   /* ==========================================================================
@@ -262,16 +251,6 @@ const site = await getSite(Astro);
       0 24px 60px -28px rgba(10, 22, 40, 0.55);
   }
 
-  :global(.dark) .ncs-cs__inner {
-    /* Dark: a solid navy a touch lighter than the field so the panel still
-       reads as a raised surface, with a subtle sky-toned edge. */
-    background: #0d1c33;
-    border-color: rgba(64, 170, 237, 0.22);
-    box-shadow:
-      0 1px 0 0 rgba(64, 170, 237, 0.12) inset,
-      0 24px 70px -30px rgba(0, 0, 0, 0.7);
-  }
-
   /* Accent rule above the wordmark. */
   .ncs-cs__rule {
     display: block;
@@ -298,12 +277,6 @@ const site = await getSite(Astro);
     font-size: clamp(2.75rem, 11vw, 6rem);
     color: var(--cs-heading);
     text-shadow: 0 2px 18px rgba(10, 22, 40, 0.12);
-  }
-
-  /* Dark: a subtle sky-blue halo gives the navy field some lift behind the
-     light wordmark. Still a glow, not text-clip. */
-  :global(.dark) .ncs-cs__wordmark {
-    text-shadow: 0 2px 28px rgba(64, 170, 237, 0.22);
   }
 
   .ncs-cs__eyebrow {

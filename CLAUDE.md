@@ -54,7 +54,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 4. **Never import `emdash/ui`'s `PortableText`** on a public page: its 9.5 KB stylesheet becomes a render-blocking link everywhere. Use `blockHtml()` / `renderJournalBody()`.
 5. **Production data steps** (`cms:production-load`, `cms:tidy`) run from the main session in Nathan's presence, `--dry-run` first, never from a delegated agent.
 6. **Contact and identity strings come from `getSite()`**, never hardcoded in `.astro` files; React islands get them as props and must not import `src/data/site.ts`.
-7. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA in both themes. Heading emphasis is a solid token span, never gradient text. Accessibility stays at Lighthouse 100.
+7. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA (one theme; dark mode was retired in the 2026 redesign). Heading emphasis is a solid token span, never gradient text. Accessibility stays at Lighthouse 100.
 8. **Internal links carry their trailing slash** (menu items go through `withTrailingSlash()`), or prefetch is wasted on a 301 (Gotcha 19).
 9. **The `www` to apex redirect rule must exempt `/_emdash/` and `/_astro/`**, or the admin breaks (Gotcha 24).
 10. **Template-expression comments are `{/* */}`**, never `<!-- -->` (breaks lint and format, Gotcha 1). A conditional `<script>` goes in its own component.

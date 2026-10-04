@@ -41,23 +41,6 @@ const description = `${site.studioName} is a small studio in ${site.address}: st
     <meta name="description" content={description} />
     <title>{title}</title>
 
-    <!-- Theme bootstrap. Same logic as BaseLayout so dark / light is
-         consistent if a visitor has a theme preference. -->
-    <script is:inline>
-      (function () {
-        try {
-          var stored = localStorage.getItem('ncs-theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
-          document.documentElement.classList.toggle('dark', isDark);
-          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-        } catch (e) {
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.classList.toggle('dark', prefersDark);
-          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
-        }
-      })();
-    </script>
     <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
 
     <meta property="og:type" content="website" />

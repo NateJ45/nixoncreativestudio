@@ -50,15 +50,7 @@ If a new shadcn primitive ever looks "off-brand," the fix is almost always in th
 
 ## Theme system
 
-Three-state toggle (light / dark / system), persisted to `localStorage["ncs-theme"]`. System is the default for first-time visitors; while set to System, the page listens to `matchMedia('(prefers-color-scheme: dark)')` and flips live when the OS changes.
-
-The wiring, in order of execution:
-
-1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint. Reads `localStorage["ncs-theme"]` and `prefers-color-scheme`, applies the `.dark` class on `<html>` plus an inline `color-scheme` style so native widgets (scrollbars, form controls) follow. No flash of the wrong theme on initial paint or after View Transitions.
-2. **`ThemeToggle.tsx`** (React island in the Header and the mobile nav panel) cycles light → dark → system on click, writes to the same localStorage key, and re-binds the matchMedia listener whenever the chosen theme changes.
-3. **`globals.css`** defines color tokens for both modes. `:root` carries light; `.dark` carries the overrides. Brand `--accent` and `--secondary` keep their visual identity in both modes; only the surface and text tokens flip. See Brand colors above for the exact token responsibilities.
-
-`--primary` (navy) deliberately stays navy in dark mode so the default Button and the navy aurora bands stay on-brand. The Hero, Footer, Process Band, and CtaBanner are all theme-aware via `.band-themed` (light surface + soft brand glow in light mode, navy aurora in dark), so light mode reads bright and airy from top to bottom while dark mode stays one immersive navy field. `--accent-foreground` flips to navy in dark mode so white text on the brightened sky-blue accent doesn't fail contrast.
+One art-directed theme since the 2026 redesign (FBCM and Reid Design made the same call). There is no dark mode, no theme toggle, no `.dark` token block and no stored theme preference. `globals.css` keeps `@custom-variant dark (&:is(.dark *))` only so the `dark:` utilities inside vendored shadcn primitives stay inert (without it Tailwind 4 would switch them on from `prefers-color-scheme`); nothing ever adds `.dark`, and site code never writes `dark:`. The inline script in `BaseLayout.astro` now only adds `.js` to `<html>`.
 
 ## Motion and effects system
 
@@ -81,7 +73,7 @@ Vocabulary (use these; don't reinvent):
 - `.bg-aurora` (+ `.grain`) on a `position:relative isolate` dark band for a drifting brand mesh (content at `relative z-10`); `.hover-lift`, `.link-underline` for smaller touches.
 - `.band-themed` for a closing/process band that should read **light in light mode** (soft accent glow on `bg-bg-soft`) and **navy aurora in dark mode**. It sets the surface + decorative glow per theme via `::before`; put theme-aware text tokens on top (`text-heading`, `text-text-muted`, `text-link`), never `text-primary-foreground`. Used by CtaBanner, ProcessBand, the Journal empty-state card, the About portrait frame, and now the Hero (under its light-tuned WebGL flow) and the Footer, so light mode reads bright and airy end to end while dark mode stays immersive navy. The Footer keeps its own top accent line via `.footer-seam::after` (dark mode only), since `.band-themed` owns `::before`.
 
-**No-JS robustness:** the reveal hidden state is scoped to `.js` (added to `<html>` by the anti-FOUC script before first paint), so without JS every `[data-reveal]` element stays fully visible. Any new always-hidden-until-JS pattern must follow the same `.js` gating. Page-level enhancement scripts (contact form, the prose-page scroll-spy in `ProsePage.astro`, journal heading tagger) must register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions navigations.
+**No-JS robustness:** the reveal hidden state is scoped to `.js` (added to `<html>` by the inline `.js` marker script before first paint), so without JS every `[data-reveal]` element stays fully visible. Any new always-hidden-until-JS pattern must follow the same `.js` gating. Page-level enhancement scripts (contact form, the prose-page scroll-spy in `ProsePage.astro`, journal heading tagger) must register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions navigations.
 
 ## Typography
 

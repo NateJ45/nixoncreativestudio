@@ -22,7 +22,6 @@ Every entry below was measured, not assumed.
    holds. It is not a live defect only because the variant is unused across the
    entire codebase. The day you reach for it, either fix the token pair or use
    a different variant, and add the pair to `src/lib/theme-tokens.test.ts`.
-   Dark mode is fine (navy on lighter sky, 9.8:1).
 
 3. **The `--link` comment in `globals.css` overclaims.** It says AA on
    `#FFFFFF`, `#F4F7FA` **and** `#0A1628`. The first two are true (5.25:1 and
@@ -102,7 +101,8 @@ Every entry below was measured, not assumed.
     not a harness artifact, confirmed by screenshot in a real WebKit), the
     engine just never paints the shadow. `outline` paints on native controls in
     every engine and follows the border radius, so selects carry their ring as
-    an outline. The webkit-iphone project of `tests/a11y-dark.spec.ts` is what
+    an outline. The webkit-iphone project of the dark-mode axe spec (since folded
+    into `tests/a11y.spec.ts`, dark mode was retired in 2026) is what
     caught it; if a sibling repo "fixed" the same failure by skipping the check
     on webkit, that repo probably still ships the bug.
 

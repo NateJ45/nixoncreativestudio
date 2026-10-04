@@ -29,7 +29,6 @@ import { getSite, emailHref, phoneHref } from '../data/site';
 import { getMenuItems } from '../lib/cms';
 import { hasJournalEntries } from '../lib/journal';
 import MobileNav from './MobileNav';
-import ThemeToggle from './ThemeToggle';
 import { buttonVariants } from './ui/button';
 import { cn } from '@/lib/utils';
 
@@ -88,7 +87,7 @@ const isActive = (href: string): boolean => {
       </span>
     </a>
 
-    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer. -->
+    <!-- Right-side cluster: desktop nav, CTA, mobile drawer. -->
     <div class="flex items-center gap-s">
       <!-- Desktop nav at >= md (six items don't fit at sm next to the wordmark
            and toggle); the MobileNav drawer takes over below md. -->
@@ -135,14 +134,6 @@ const isActive = (href: string): boolean => {
         >
           {site.headerCtaLabel}
         </a>
-      </div>
-
-      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own.
-           client:idle, not client:load: hydrating it at load pulled React onto
-           the critical path on every page for a control nobody touches in the
-           first second, and it is hidden below md where the score is measured. -->
-      <div class="hidden md:block">
-        <ThemeToggle client:idle />
       </div>
 
       <!-- Mobile drawer. Hidden at >= md. The component server-renders only its
@@ -212,22 +203,11 @@ const isActive = (href: string): boolean => {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  :global(.dark) .ncs-header[data-over-hero] {
-    background-color: var(--primary);
-  }
   /* Over the navy hero (dark mode) the wordmark + nav flip to white. In light
      mode the default dark heading / nav-link colours already read cleanly on the
      light hero surface, so no override is needed. The theme toggle + mobile
      hamburger are React islands that set their own icon colour via a text-*
      class; reach them with :global + a hook class so they flip white too. */
-  :global(.dark) .ncs-header[data-over-hero] .wordmark-text,
-  :global(.dark) .ncs-header[data-over-hero] .nav-link {
-    color: #ffffff;
-  }
-  :global(.dark) .ncs-header[data-over-hero] :global(.theme-toggle),
-  :global(.dark) .ncs-header[data-over-hero] :global(.mobile-trigger) {
-    color: #ffffff;
-  }
 
   /* ---- Wordmark ----------------------------------------------------------- */
   .wordmark-text {

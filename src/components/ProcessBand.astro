@@ -152,20 +152,4 @@ const ctaSub = processCopy.ctaSub;
       transform: scaleX(1);
     }
   }
-
-  /* Closing band only (homepage): in dark mode fade the band's bottom to solid
-     navy so it merges into the navy footer below instead of ending on the
-     aurora's amber glow. Sits above the aurora (z 0 vs the ::before at z -1)
-     and below the content (z 10). The soft /services variant is mid-page, so it
-     gets no fade. */
-  :global(.dark) .process-band--closing::after {
-    content: '';
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    height: 45%;
-    z-index: 0;
-    pointer-events: none;
-    background: linear-gradient(to bottom, transparent, var(--color-primary));
-  }
 </style>

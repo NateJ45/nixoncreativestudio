@@ -50,13 +50,12 @@ Reference sites pulled in early research (kept as positive anchors, not slavish 
 
 ## Accessibility & Inclusion
 
-Target: WCAG 2.1 AA in both light and dark modes. Every page currently sits at 100 Lighthouse Accessibility and that bar holds for every future change.
+Target: WCAG 2.1 AA on the site's one art-directed theme (dark mode and the theme toggle were retired in the 2026 redesign, following FBCM and Reid Design). Every page currently sits at 100 Lighthouse Accessibility and that bar holds for every future change.
 
 Specific commitments:
 
 - All interactive elements reachable by keyboard with visible focus indicators.
-- Color contrast cleared in both themes (brand `--accent` and `--muted-foreground` shifted slightly darker from their original swatches to clear AA on white text and bg-soft body text).
-- Three-state theme (light / dark / system), system as the default for first-time visitors.
+- Color contrast cleared for every token pair, asserted in `src/lib/theme-tokens.test.ts` (the table and ratios are in `DESIGN.md`).
 - Reduced motion respected globally via `prefers-reduced-motion: reduce` — animations, transitions, and Lenis smooth scroll all become no-ops.
 - Audience includes church volunteers, nonprofit staff, and board members; copy defaults to non-technical readers unless context makes peer-readability obvious.
 - Skip link as the first focusable element, semantic landmarks (`<header>`, `<main>`, `<footer>`), proper heading hierarchy (one h1, no level skips).

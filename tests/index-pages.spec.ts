@@ -17,7 +17,7 @@ import { journalEmpty, journalDraftSlug } from './routes';
 // THE PHOTO. The CI dataset carries exactly one `photos` entry, written by hand in
 // scripts/ci-dataset/ci-content/photos.json (production carries none). With it the
 // gallery renders and is axe-checked by the normal sweeps (a11y.spec.ts and
-// a11y-dark.spec.ts cover /photography). The "zero photos" page is the SAME render
+// the axe sweep covers /photography). The "zero photos" page is the SAME render
 // the page gave before this PR; it cannot be asserted here while the test photo
 // exists, so it is proved by the parity run and by src/lib/photos.test.ts (an empty
 // collection groups to nothing and has no hero).
@@ -182,20 +182,16 @@ test.describe('/photography', () => {
 // -----------------------------------------------------------------------------
 // The photo gallery under axe, AFTER it has hydrated
 // -----------------------------------------------------------------------------
-// The shared sweeps (a11y.spec.ts, a11y-dark.spec.ts) audit /photography as it
-// loads, but react-photo-album only lays its rows out once the island hydrates
+// The shared sweep (a11y.spec.ts) audits /photography as it loads, but
+// react-photo-album only lays its rows out once the island hydrates
 // (client:visible, on scroll). Without this test the photo would never be in front
-// of axe. It scrolls the gallery in, waits for the picture, and audits the page in
-// both themes, then again with the full-screen viewer open.
+// of axe. It scrolls the gallery in, waits for the picture, and audits the page,
+// then again with the full-screen viewer open. (One theme since the 2026
+// redesign; this used to run twice, light and dark.)
 test.describe('/photography gallery: no axe violations once rendered', () => {
-  for (const theme of ['light', 'dark'] as const) {
-    test(`the hydrated gallery and the open viewer pass axe (${theme})`, async ({ page }) => {
-      await page.addInitScript(
-        ([key, value]) => window.localStorage.setItem(key, value),
-        ['ncs-theme', theme],
-      );
+  {
+    test('the hydrated gallery and the open viewer pass axe', async ({ page }) => {
       await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
-      await expect(page.locator('html')).toHaveClass(theme === 'dark' ? /dark/ : /^(?!.*dark)/);
       await page.locator('#events .react-photo-album').scrollIntoViewIfNeeded();
       await expect(page.locator('#events .react-photo-album img')).toHaveCount(1);
       await settle(page);

@@ -68,7 +68,7 @@ const currently = site.footerCurrently;
 // phones AND touch tablets (iPads) both get the larger target, while a
 // mouse-driven desktop keeps the footer's tuned compact density.
 const linkClass =
-  'text-link dark:text-secondary no-underline transition-colors duration-150 ' +
+  'text-link no-underline transition-colors duration-150 ' +
   'hover:underline hover:underline-offset-2 ' +
   'focus-visible:underline focus-visible:underline-offset-2 ' +
   'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center';
@@ -90,7 +90,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
   wordmark sits behind the bottom row as a brand graphic. The glow is the
   band-themed ::before; no separate aurora child is needed.
 -->
-<footer class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground">
+<footer class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text">
   <div class="ncs-container relative z-10">
     <!-- Top section: three columns side by side on desktop, stacked on mobile.
          auto-fit + minmax(16rem,1fr) means columns collapse to one as soon as
@@ -162,7 +162,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
           <h2 class={headingClass}>Currently</h2>
           <a
             href="/about/#now"
-            class="group mb-s inline-flex items-center gap-s rounded-full border border-border px-3 py-1.5 text-sm text-text-muted no-underline transition-colors duration-150 hover:border-heading/40 dark:border-white/15 dark:text-primary-foreground/90 dark:hover:border-white/30"
+            class="group mb-s inline-flex items-center gap-s rounded-full border border-border px-3 py-1.5 text-sm text-text-muted no-underline transition-colors duration-150 hover:border-heading/40"
           >
             <span class="relative flex h-2 w-2" aria-hidden="true">
               <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
@@ -176,7 +176,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
               →
             </span>
           </a>
-          <p class="leading-[1.5] text-text-muted dark:text-primary-foreground/75">{currently}</p>
+          <p class="leading-[1.5] text-text-muted">{currently}</p>
 
           <!-- Booking CTA. The status pill above links to the availability
                snapshot on /about; this is the action: a clear brand button
@@ -195,7 +195,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
          hairline middots so the links read as one continuous group instead of
          floating in the middle of the bar) sits on the left, the studio
          tagline on the right. Stacks on narrow screens. -->
-    <div class="flex flex-col gap-s border-t border-border pt-m text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-m dark:border-white/10 dark:text-primary-foreground/60">
+    <div class="flex flex-col gap-s border-t border-border pt-m text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-m">
       <div class="flex flex-wrap items-center gap-x-m gap-y-1">
         <small>
           © {year} {site.studioName}
@@ -207,13 +207,13 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
           <a class={linkClass} href="/colophon/">
             Colophon
           </a>
-          <span aria-hidden="true" class="text-text-muted/50 dark:text-primary-foreground/30">
+          <span aria-hidden="true" class="text-text-muted/50">
             ·
           </span>
           <a class={linkClass} href="/privacy/">
             Privacy
           </a>
-          <span aria-hidden="true" class="text-text-muted/50 dark:text-primary-foreground/30">
+          <span aria-hidden="true" class="text-text-muted/50">
             ·
           </span>
           <a class={linkClass} href="/accessibility/">
@@ -221,9 +221,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
           </a>
         </nav>
       </div>
-      <small class="text-text-muted sm:text-right dark:text-primary-foreground/55">
-        {site.tagline}
-      </small>
+      <small class="text-text-muted sm:text-right">{site.tagline}</small>
     </div>
   </div>
 
@@ -236,34 +234,13 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
     class="pointer-events-none absolute inset-x-0 bottom-0 z-0 overflow-hidden select-none"
     aria-hidden="true"
   >
-    <span class="footer-watermark block translate-y-[20%] text-center font-display [font-size:12.5vw] leading-none tracking-[0.02em] whitespace-nowrap text-heading/[0.06] uppercase dark:text-primary-foreground/5">
+    <span class="footer-watermark block translate-y-[20%] text-center font-display [font-size:12.5vw] leading-none tracking-[0.02em] whitespace-nowrap text-heading/[0.06] uppercase">
       {site.studioName}
     </span>
   </div>
 </footer>
 
 <style>
-  /* Accent seam: a soft glow line at the very top of the footer so it joins a
-     dark band above into one continuous field. Uses ::after because .band-themed
-     owns ::before (the glow). Dark mode only: in light mode the footer and the
-     band above are both the light surface, already continuous, so an accent line
-     would read as a stray rule. */
-  :global(.dark) .footer-seam::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in oklab, var(--color-secondary) 55%, transparent),
-      transparent
-    );
-    z-index: 1;
-  }
-
   /* Availability status dot pulse. Honors reduced motion. */
   @media (prefers-reduced-motion: no-preference) {
     .status-ping {

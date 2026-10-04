@@ -98,7 +98,7 @@ For every new component pasted or CLI-installed:
 3. Decide: static `.astro` vs. React island. Static unless the component has state, event handlers, or needs `useEffect`. When in doubt: static.
 4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). Exception: components above the fold that must be interactive on first paint (MobileNav, ThemeToggle).
 5. For Radix-based dialogs, sheets, or dropdown portals: use `client:only="react"` not `client:load`. See the note in .claude/rules/components.md under "Radix-based primitives need `client:only='react'`".
-6. Verify in both light and dark mode before committing.
+6. Verify on the site's one theme (there is no dark mode since the 2026 redesign) before committing.
 
 Example header comment:
 

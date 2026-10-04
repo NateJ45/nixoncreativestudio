@@ -16,8 +16,8 @@ import { journalDraftSlug, journalEmpty, journalSlugs } from './routes';
 //     production is in) the sitemap is a valid empty one and the feed has no journal
 //     item.
 //
-// The axe sweeps (a11y.spec.ts, a11y-dark.spec.ts) cover /journal and the entry page
-// in both themes through tests/routes.ts.
+// The axe sweep (a11y.spec.ts) covers /journal and the entry page through
+// tests/routes.ts.
 
 const entry = journalSlugs[0];
 const DRAFT_TEXT = 'must never be visible';

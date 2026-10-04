@@ -131,27 +131,13 @@ function ShaderPlane() {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-      // Initial theme read; the anti-FOUC script has already set .dark before
-      // React hydrates, so this is accurate on first paint.
-      uDark: { value: document.documentElement.classList.contains('dark') ? 1 : 0 },
+      // The site has one (light) theme since the 2026 redesign, so the shader's
+      // dark palette is never used: uDark stays 0. This whole WebGL hero is due
+      // to be replaced by the redesigned home hero (docs/redesign-2026).
+      uDark: { value: 0 },
     }),
     [],
   );
-
-  // Keep the shader palette in sync with the live theme: the ThemeToggle flips
-  // the .dark class on <html>, so watch that and update uDark.
-  useEffect(() => {
-    const root = document.documentElement;
-    const apply = () => {
-      if (material.current) {
-        material.current.uniforms.uDark.value = root.classList.contains('dark') ? 1 : 0;
-      }
-    };
-    apply();
-    const obs = new MutationObserver(apply);
-    obs.observe(root, { attributes: true, attributeFilter: ['class'] });
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return;

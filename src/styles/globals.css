@@ -54,6 +54,11 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+/* One art-directed theme since the 2026 redesign: there is no dark mode and
+   nothing ever adds .dark to <html>. The variant is kept ONLY so the dark:
+   utilities that vendored shadcn primitives carry (src/components/ui/) stay
+   inert; without it Tailwind 4 would fall back to prefers-color-scheme and
+   switch them on for visitors whose OS is dark. Never write dark: in site code. */
 @custom-variant dark (&:is(.dark *));
 
 /* ----------------------------------------------------------------------------
@@ -148,10 +153,6 @@
   ::selection {
     background-color: color-mix(in oklab, var(--color-accent) 28%, transparent);
     color: var(--color-heading);
-  }
-  .dark ::selection {
-    background-color: color-mix(in oklab, var(--color-secondary) 32%, transparent);
-    color: #ffffff;
   }
 
   /* Firefox */
@@ -543,9 +544,6 @@
   overflow: hidden;
   background-color: var(--color-bg-soft);
 }
-.dark .band-themed {
-  background-color: var(--color-primary);
-}
 .band-themed::before {
   content: '';
   position: absolute;
@@ -572,26 +570,6 @@
       color-mix(in oklab, var(--color-tertiary) 10%, transparent),
       transparent 72%
     );
-}
-.dark .band-themed::before {
-  /* Dark mode: the full navy aurora. */
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 55%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 45%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 28%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
 }
 @media (prefers-reduced-motion: no-preference) {
   .band-themed::before {
@@ -678,19 +656,6 @@
       40% 48% at 94% 6%,
       color-mix(in oklab, var(--color-secondary) 6%, transparent),
       transparent 70%
-    );
-}
-.dark .bg-mesh-soft::before {
-  background:
-    radial-gradient(
-      44% 54% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 12%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 10%, transparent),
-      transparent 72%
     );
 }
 
@@ -1175,113 +1140,4 @@ html.ncs-gated .ncs-overlay {
   --error: oklch(0.577 0.245 27.325); /* matches --destructive */
   --error-foreground: #ffffff;
   --outline: #3478bd; /* matches --ring (NCS blue) */
-}
-
-/* ----------------------------------------------------------------------------
-   Dark mode overrides.
-   ----------------------------------------------------------------------------
-   Applied when <html> carries the .dark class. The anti-FOUC script in
-   BaseLayout.astro decides whether to add that class on initial paint,
-   reading from localStorage["ncs-theme"] and prefers-color-scheme.
-
-   Design notes:
-     - --background is a deeper near-black (#050B16) so the navy --primary
-       still has a visible step against the page surface (used by Footer
-       and CtaBanner).
-     - --foreground is off-white rather than pure white; easier on the
-       eyes for long reading.
-     - --muted is a navy-tinted elevated dark, so bg-bg-soft sections
-       (Process, Services, Testimonials) get subtle hierarchy against
-       the page background without going gray.
-     - Brand colors (accent NCS blue, secondary sky blue, tertiary amber)
-       stay constant in both modes; they read fine on either surface.
-     - --primary stays navy so the Footer and CtaBanner read as the
-       darkest section, and the default Button stays on-brand.
-     - --border becomes white at low alpha so hairlines flip from
-       dark-on-light to light-on-dark.
-   ---------------------------------------------------------------------------- */
-.dark {
-  /* Surfaces */
-  --background: #050b16;
-  --foreground: #e5e7eb;
-  --card: #0a1628;
-  --card-foreground: #e5e7eb;
-  --popover: #0a1628;
-  --popover-foreground: #e5e7eb;
-
-  /* Dark mode already has a real color-step for elevation (navy card on
-     near-black bg), so shadows go deeper-and-softer and the top highlight
-     drops to a faint sheen rather than a white line. */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.6);
-  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.45), 0 26px 54px -24px rgba(0, 0, 0, 0.7);
-  --shadow-frame: 0 30px 70px -40px rgba(0, 0, 0, 0.7);
-  --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  /* Primary stays navy in dark mode (see :root comment for why). */
-  --primary: #0a1628;
-  --primary-foreground: #ffffff;
-
-  /* Headings flip to a near-white that still reads as "brand light"
-     rather than pure white; subtle warmth keeps them on-brand. */
-  --heading: #f4f7fa;
-
-  /* Accent and secondary are brightened in dark mode for WCAG AA contrast.
-     On the dark surfaces below, the light-mode accent (#3B82C4) only hits
-     ~4.1:1, just under the 4.5:1 threshold for body-size accent text
-     (Process / Services step numbers, Footer accent links). The shifts
-     below clear AA on both #0F1E33 (bg-bg-soft) and #0A1628 (bg-primary)
-     while preserving the accent -> secondary lift on hover.
-
-     accent-foreground flips to navy because white text on the brightened
-     sky-blue accent surface (#40AAED) only hits 2.56:1; navy text on
-     the same surface is ~8.2:1. This affects the brand Button variant,
-     shadcn primitives that pair bg-accent with text-accent-foreground
-     on hover/focus, and anything else that follows the same pattern. */
-  --accent: #40aaed; /* was #3B82C4 in light; lifted to sky blue for AA */
-  --accent-foreground: #0a1628; /* navy on sky blue, 8.2:1 */
-  --secondary: #7ac8f0; /* was #40AAED in light; lighter sky for the hover step up */
-  --secondary-foreground: #0a1628; /* navy on lighter sky, ~10:1 */
-
-  /* Muted surface: navy-tinted elevated dark.
-     Muted-foreground: lighter gray so secondary copy still has contrast. */
-  --muted: #0f1e33;
-  --muted-foreground: #9ca3af;
-
-  /* Link color matches the brightened dark-mode --accent so accent text
-     and surface accents read identically on dark. See :root for why
-     --link exists as a separate token. */
-  --link: #40aaed;
-
-  /* Borders and inputs invert to white at low alpha. */
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.12);
-
-  /* Focus ring lifted to match the brighter dark-mode accent. */
-  --ring: #40aaed;
-
-  /* Destructive: shadcn red lifted slightly for dark mode contrast. */
-  --destructive: oklch(0.704 0.191 22.216);
-
-  /* Sidebar palette (not used today, but kept coherent for future). */
-  --sidebar: #0a1628;
-  --sidebar-foreground: #e5e7eb;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #0a1628;
-  --sidebar-accent: #0f1e33;
-  --sidebar-accent-foreground: #e5e7eb;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #40aaed; /* matches the live dark --ring */
-
-  /* Starwind UI extra semantic tokens — dark mode variants. */
-  --primary-accent: #1e3a5f; /* lifted navy for dark primary hover */
-  --secondary-accent: #7ac8f0; /* lighter sky for dark active secondary */
-  --info: #93c5fd;
-  --info-foreground: #1e3a5f;
-  --success: #86efac;
-  --success-foreground: #14532d;
-  --warning: #fde68a;
-  --warning-foreground: #713f12;
-  --error: oklch(0.704 0.191 22.216); /* matches dark --destructive */
-  --error-foreground: #ffffff;
-  --outline: #40aaed; /* matches dark --ring */
 }

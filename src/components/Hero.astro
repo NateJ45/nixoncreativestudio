@@ -161,7 +161,7 @@ try {
   <div class="ncs-container pointer-events-none relative z-10 flex flex-1 flex-col justify-center gap-l py-l">
     <div class="hero-copy pointer-events-auto flex max-w-[46rem] flex-col gap-m">
       <h1 id="hero-statement" class="hero-headline hero-anim text-heading">
-        {statementLead} <span class="text-link dark:text-tertiary">{statementAccent}</span>
+        {statementLead} <span class="text-link">{statementAccent}</span>
       </h1>
 
       <p
@@ -235,31 +235,6 @@ try {
     font-size: clamp(3.25rem, min(9.5vw, 15vh), 9.5rem);
     line-height: 0.86;
     text-wrap: balance;
-  }
-  /* Soft navy glow under the headline so it stays crisp over the dark hero.
-     Dark mode only: in light mode the dark headline on the light surface reads
-     cleanly and a navy shadow would only muddy it. */
-  :global(.dark) .hero-headline {
-    text-shadow:
-      0 1px 2px rgba(10, 22, 40, 0.6),
-      0 3px 12px rgba(10, 22, 40, 0.6),
-      0 8px 40px rgba(10, 22, 40, 0.5);
-  }
-
-  /* Positioning line: a soft halo in dark mode for the same reason. */
-  :global(.dark) .hero-sub {
-    text-shadow: 0 1px 14px rgba(10, 22, 40, 0.6);
-  }
-
-  /* Light mode: the WebGL flow is more active/colourful now, so give the muted
-     proof line a soft LIGHT halo to keep it legible over it. The headline and
-     sub are near-black and clear the flow on their own; only this muted-grey
-     line needs the lift. Dark mode handles legibility with its scrim, so this is
-     scoped light-only. */
-  :global(html:not(.dark)) .hero-proof {
-    text-shadow:
-      0 1px 2px rgba(244, 247, 250, 0.92),
-      0 0 12px rgba(244, 247, 250, 0.75);
   }
 
   /* "one person" links to the About page. It keeps its sky-blue emphasis at rest
@@ -347,14 +322,6 @@ try {
     -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
     mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
   }
-  /* Dark mode: the navy scrim (z-2) sits OVER this backdrop and veils it for
-     legibility, so dark mode can carry a much higher raw opacity than light
-     before the copy is at risk. At the light-mode 0.5 the device stayed a faint
-     ghost under that veil; pushing it up lets the screenshot actually read
-     through, while the scrim still keeps the headline + CTAs AA. */
-  :global(.dark) .hero-mobile-scene {
-    opacity: 0.85;
-  }
   /* The phone variant defaults to a small centered frame; for the backdrop it is
      enlarged and pushed to the lower-right so it bleeds off both edges. */
   .hero-mobile-scene :global(.hero-stage.is-phone) {
@@ -409,16 +376,6 @@ try {
       transparent 30%
     );
   }
-  :global(.dark) .hero-floor {
-    background: linear-gradient(
-      to top,
-      var(--color-primary) 0%,
-      var(--color-primary) 5%,
-      color-mix(in oklab, var(--color-primary) 60%, transparent) 12%,
-      color-mix(in oklab, var(--color-primary) 25%, transparent) 20%,
-      transparent 30%
-    );
-  }
 
   /* ----------------------------------------------------------------------
      Scrim. Solid navy on the left (headline core), fading to transparent on
@@ -444,40 +401,12 @@ try {
       transparent 96%
     );
   }
-  :global(.dark) .hero-scrim {
-    /* Mobile: a cohesive navy veil so the hero reads as one dark field rather
-       than a bright aurora band across the empty right half (the device scene
-       that the right side was clearing for is desktop-only). Darkest behind the
-       copy at the top and the marquee at the bottom; a touch lighter through the
-       middle so the brand glow behind the phone showcase still reads. */
-    background: linear-gradient(
-      to bottom,
-      var(--color-primary) 0%,
-      color-mix(in oklab, var(--color-primary) 86%, transparent) 30%,
-      color-mix(in oklab, var(--color-primary) 72%, transparent) 58%,
-      var(--color-primary) 100%
-    );
-  }
   @media (min-width: 64rem) {
     /* Desktop light: no veil. The device scene sits to the RIGHT (not under the
        copy) and the WebGL fades to the light base under the headline, so the
        mobile light veil above is reset away here. */
     .hero-scrim {
       background: transparent;
-    }
-    /* Desktop: a softened left scrim so the WebGL flow can fill basically the
-       whole hero in dark mode while the headline stays legible. Semi-opaque navy
-       under the headline (not the old solid column), fading to clear before the
-       device scene. The headline's text-shadow carries the rest of the
-       legibility where the flow shows through. */
-    :global(.dark) .hero-scrim {
-      background: linear-gradient(
-        to right,
-        color-mix(in oklab, var(--color-primary) 72%, transparent) 0%,
-        color-mix(in oklab, var(--color-primary) 52%, transparent) 30%,
-        color-mix(in oklab, var(--color-primary) 26%, transparent) 50%,
-        transparent 66%
-      );
     }
   }
 

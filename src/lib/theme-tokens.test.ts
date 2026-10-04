@@ -97,7 +97,6 @@ function readBlock(selector: string): Record<string, string> {
 }
 
 const LIGHT = readBlock(':root');
-const DARK = readBlock('.dark');
 const THEME = readBlock('@theme');
 
 /** Read a token, failing loudly rather than silently skipping a pair. */
@@ -177,26 +176,6 @@ const LIGHT_TEXT: Pair[] = [
   ['accent-foreground', 'accent', 'white on the NCS-blue button'],
 ];
 
-const DARK_TEXT: Pair[] = [
-  ['foreground', 'background', 'body copy on the deep navy field'],
-  ['foreground', 'card', 'body copy inside a dark card'],
-  ['foreground', 'muted', 'body copy on the elevated dark surface'],
-  ['heading', 'background', 'headings on the deep navy field'],
-  ['heading', 'card', 'headings inside a dark card'],
-  ['muted-foreground', 'background', 'meta copy on the deep navy field'],
-  ['muted-foreground', 'card', 'meta copy inside a dark card'],
-  ['muted-foreground', 'muted', 'meta copy on the elevated dark surface'],
-  ['link', 'background', 'accent-toned body links on dark'],
-  ['link', 'card', 'accent-toned body links inside a dark card'],
-  ['secondary', 'background', 'Footer / MobileNav links on dark'],
-  ['secondary', 'card', 'Footer / MobileNav links inside a dark card'],
-  ['secondary', 'muted', 'Footer / MobileNav links on the elevated surface'],
-  ['tertiary', 'background', 'Hero statement accent and the active nav item'],
-  ['tertiary', 'card', 'the same accent inside a dark card'],
-  ['primary-foreground', 'primary', 'white reversed out of brand navy'],
-  ['accent-foreground', 'accent', 'navy on the brightened dark-mode accent'],
-];
-
 // --tertiary lives only in @theme (it never switches), so dark-mode lookups
 // fall back to that literal. Same for anything else a mode does not override.
 const tokenOf = (block: Record<string, string>, name: string): string | undefined =>
@@ -219,7 +198,6 @@ function runTextPairs(mode: string, block: Record<string, string>, pairs: Pair[]
 }
 
 runTextPairs('light', LIGHT, LIGHT_TEXT);
-runTextPairs('dark', DARK, DARK_TEXT);
 
 // ---------------------------------------------------------------------------
 // Non-text pairs: SC 1.4.11, 3:1. The focus ring is the one that matters most,
@@ -234,13 +212,6 @@ const LIGHT_NON_TEXT: Pair[] = [
   ['outline', 'background', 'Starwind outline token, tracks --ring'],
   ['accent', 'background', 'button edge on paper'],
   ['accent', 'muted', 'button edge on the soft surface'],
-];
-
-const DARK_NON_TEXT: Pair[] = [
-  ['ring', 'background', 'focus ring on the deep navy field'],
-  ['ring', 'card', 'focus ring inside a dark card'],
-  ['outline', 'background', 'Starwind outline token, tracks --ring'],
-  ['accent', 'background', 'button edge on dark'],
 ];
 
 function runNonTextPairs(mode: string, block: Record<string, string>, pairs: Pair[]): void {
@@ -260,4 +231,3 @@ function runNonTextPairs(mode: string, block: Record<string, string>, pairs: Pai
 }
 
 runNonTextPairs('light', LIGHT, LIGHT_NON_TEXT);
-runNonTextPairs('dark', DARK, DARK_NON_TEXT);
