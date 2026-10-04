@@ -2,6 +2,15 @@
 
 Written 2026-10-04 by the content agent on branch `redesign-content`. **Every command below is for Nathan to run himself, in his own PowerShell. No agent runs any of them, dry runs included.** One `pages` load already ran by accident (see "Incident" at the end); nothing else has. Production data steps are Nathan's, dry run first (CLAUDE.md rule 5). Since commit c631a66 a production write needs `--yes` AND `$env:NCS_PRODUCTION_WRITE = 'yes'`; `npm run cms:production-load` sets that variable itself after its typed "yes", and the by-hand `cms:load` steps below set it for one command and clear it straight after. The commands below are the only writes this branch needs; each step says what its dry run should print, so anything else is a reason to stop.
 
+## STATUS: DONE on 2026-10-04
+
+Run by the lead session with Nathan present and instructing it, after the redesign deployed (squash commit 795f672). Restore point recorded first: D1 bookmark 00000036-0000001c-000050fa-18258faede5d8fce088567d652a8bf6b. The CLI login was refreshed (device code approved by Nathan), every collection was dry-run first, applied with NCS_PRODUCTION_WRITE=yes, and re-checked with a dry run that read "unchanged".
+
+- Schema added: `site_settings.price_range`, `case_studies.launch_status`, `case_studies.preview_url` (plus a field reorder).
+- Content updated: site_settings, pricing_addons (brand-strategy), pricing_tiers (3), page_about, page_contact, page_home, page_journal, page_not_found, page_photography, page_services, page_work, service_offerings (strategy, web-design), pages (the three landing entries), case_studies (all nine: status, first person, honest outcomes, FBCM as launching soon).
+- Afterwards: Reid Design designer note replaced (it praised a before/after slider that no longer exists on the live site); live pages verified read-only (home title, status labels, JSON-LD priceRange, feed title, no "every project is a real, shipped site" line).
+- Not done (admin only, left for Nathan, low urgency): the FBCM media library still holds the Wix-era cover (the page itself shows the new-build captures bundled in code); the Wix stack terms on FBCM; Reid body text beyond the designer note; a read of the Academy and Second Pres bodies; the redirects and `cms:tidy` steps of the older PR 13 and 14 loads were not part of this run.
+
 ## What this branch changes in the CMS
 
 Schema (three optional fields, rule 13, so existing entries keep working):
