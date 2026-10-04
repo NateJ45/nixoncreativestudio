@@ -84,7 +84,7 @@ test('the committed fallback reproduces the words /about used to hold', async ()
   );
   assert.equal(about.ctaTitle, 'Want to talk about a project?');
   assert.equal(about.heading, 'A one-person studio for');
-  assert.equal(about.headingAccent, 'organizations that take their work seriously.');
+  assert.equal(about.headingAccent, 'sites your own people can run.');
   assert.match(about.intro, /^I'm Nathan Nixon\. I run Nixon Creative Studio out of Cincinnati/);
   assert.match(about.intro, /hands you the finished site\.$/);
   assert.deepEqual(about.thesis, {

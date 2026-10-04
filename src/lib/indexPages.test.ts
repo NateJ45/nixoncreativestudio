@@ -69,16 +69,16 @@ test('the Work fallback reproduces the words /work used to hold', async () => {
   // The count ("3 projects") is printed in front of this by the page.
   assert.equal(
     page.intro,
-    'for churches, schools, nonprofits, and small businesses around Cincinnati. Each one started with a conversation about what the organization actually needed.',
+    'for churches, schools, nonprofits, and small businesses, in Cincinnati and well beyond it. Each one started with a conversation about what the organization needed.',
   );
   assert.equal(
     page.emptyFilterMessage,
     'Nothing matches that filter yet. Try clearing one of the chips above.',
   );
-  assert.equal(page.liveHeading, 'Open any of them');
+  assert.equal(page.liveHeading, 'Open the live ones');
   assert.equal(
     page.liveBody,
-    'Every project here is a real, shipped site. Do not take my word for it, click through and look around.',
+    'Every live project links to the real site, so do not take my word for it: click through and look around. Work that has not launched yet is marked that way.',
   );
   // The page used the site default for its closing banner.
   assert.equal(page.ctaTitle, undefined);
@@ -99,7 +99,7 @@ test('the Photography fallback reproduces the words /photography used to hold', 
   assert.equal(page.headingAccent, 'website it lives on.');
   assert.equal(
     page.intro,
-    'Events, portraits, and environments for organizations across the Cincinnati region. Most of these photos came from the same projects as the web work. Same person designed the site and showed up with the camera, so the photos and the site look like one piece of work.',
+    'Events, portraits, and spaces for organizations around Cincinnati, often shot for the website I am building at the same time, so the photos and the site look like one piece of work.',
   );
   assert.equal(page.categories.events.title, 'Events');
   assert.equal(
@@ -145,7 +145,7 @@ test('the Journal fallback reproduces the words /journal used to hold', async ()
   assert.equal(page.emptyHeading, 'The first entry is being drafted.');
   assert.equal(
     page.emptyBody,
-    "This is where I'll write down how the studio works: the thinking behind a build, notes from a shoot, the small decisions that add up. Nothing's published yet. While you wait, two good places to land.",
+    "This is where I'll write down how the studio works: the thinking behind a build and notes from a shoot. While you wait, two good places to land.",
   );
   assert.equal(page.ctaTitle, undefined);
 });
@@ -164,7 +164,7 @@ test('the Not-found fallback reproduces the words the 404 page used to hold', as
   assert.deepEqual(page.links, [
     { label: 'Back to home', href: '/' },
     { label: 'See selected work', href: '/work/' },
-    { label: 'Get in touch', href: '/contact' },
+    { label: 'Get in touch', href: '/contact/' },
   ]);
 });
 
@@ -289,7 +289,7 @@ test('the not-found reader drops bad links, keeps order and caps at three', () =
   });
   assert.deepEqual(
     page.links.map((l) => l.href),
-    ['/', '/work/', '/contact'],
+    ['/', '/work/', '/contact/'],
   );
 });
 

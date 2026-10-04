@@ -69,8 +69,8 @@ test('the committed fallback reproduces the tiers src/data/pricing.ts used to ho
     ],
   );
   assert.equal(tiers[0].who, 'Smaller organizations');
-  assert.equal(tiers[0].range, 'Most land between $4,000 and $6,500');
-  assert.equal(tiers[1].badge, 'Where most projects land');
+  assert.equal(tiers[0].range, 'Typically $4,000 to $6,500');
+  assert.equal(tiers[1].badge, 'Typical for a church or school');
   assert.equal(tiers[2].range, 'Typically $12,000 and up');
   assert.deepEqual(tiers[1].features, [
     'A larger site with deeper content sections',

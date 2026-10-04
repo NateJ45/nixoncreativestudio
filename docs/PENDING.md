@@ -120,6 +120,10 @@ Commands and the exact lines to expect: `docs/LAUNCH-RUNBOOK.md` ("PR 13") and `
 
 For Nathan on the way: the hero scene shows five sites in `hero_order` 1 to 5 (Second Presbyterian, Theology Matters, Stone Steps 50K, MAS Monograms, Presbyterian Academy). A site joins it only with BOTH its desktop and mobile capture set and a live URL; to add one, open its case study, tick "Show in the homepage device scene" and give it the next number. The two bundled-image fallbacks in `HeroShowcase.astro` (`bundledSites`) and the ten `*-home.png` / `*-mobile.png` files they import stay until you are sure you no longer want a no-database fallback; the files and the array can then be deleted together (CMS-DESIGN PR 14).
 
+### Load the redesign 2026 copy and case-study status into production (needs `EMDASH_TOKEN`, Nathan present)
+
+**Blocks:** the honest copy reaching the live site. Until the load, production keeps the old words (Second Presbyterian Chicago "live", the Academy's placeholder claims, "Every project here is a real, shipped site", Strategy JSON-LD wording) and the two new optional fields (`case_studies.launch_status`, `site_settings.price_range`) do not exist, so the reader treats every study as live. It rides on the same `npm run cms:production-load` as PR 13 and 14 above, but the copy steps stop by design and run by hand. Exact commands, the line each dry run must print, the admin-only edits (FBCM images and tags, Reid's body and highlights) and the CI follow-up: `docs/redesign-2026/content-production-plan.md`.
+
 ### Load the PR 4 data into production (needs `EMDASH_TOKEN` from Nathan)
 
 **Blocks:** nothing visible. PR 4 (Site settings and menus) ships safe with production empty, because every read falls back to the committed JSON. Until the data is loaded, the footer, header, phone menu, JSON-LD and feed read from `cms/content/` and the admin's Site settings screen and Menus do not exist yet or are empty, so an edit there changes nothing.
@@ -306,7 +310,7 @@ These are recorded so a future session stops re-deriving them.
   (embedded-studio live preview) and 11 (preview click interceptor) have nothing
   to attach to here. There is no dataset to back up and no generated types file
   to go stale.
-- **No page-builder.** Card 12 is a method for converting bespoke pages into
+- **No page-builder.** Card 12 is a method for converting hand-built pages into
   CMS-driven sections. There is no CMS.
 - **No visual-regression suite.** The family standard runs one only where a
   site has a fixture-driven `/styleguide` route; this site does not. The
