@@ -180,6 +180,7 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 - **Buttons** (`buttonVariants({ variant: 'brand', size: 'cta' })`): ink with a paper label, marker red on hover and focus, a solid ring, an optional arrow nudge. On ink: paper with an ink label, vermilion on hover. 44px minimum in the header, 48px at `cta` size. `variant="secondary"` is a quiet paper-deep button (now AA). No lift, no glow, no shine.
 - **Links**: text inherits its colour with a marker underline; `text-link` (brick, or vermilion on ink) for accent links; `.card-link` for "Read more" with an arrow.
 - **Frame** (`Frame.astro`): a real screenshot as a print. `variant="browser"` (ink chrome bar, live address, optional "Launching soon" tag) or `variant="film"` (ink rebate, sprocket rows, edge print of facts, optional china-marker `pick` loop). Only live work is shown as live.
+- **Photo print** (/about, scoped `.print`): a personal photograph with a trimmed `--paper-raised` border (0.4 to 0.75rem), 2px radius and `--shadow-frame`, captioned below in `.type-caption` with a checkable fact. Small prints sit in one justified row (flex-grow = width/height, every other print a little lower), never as heroes; at most a 1.25deg tilt, and only at desktop.
 - **Band** (`Band.astro`): one ground, one job (section 4).
 - **Back to top**: a small ink square, bottom right, after 600px of scroll. No React.
 - **Focus**: one ring everywhere, 3px marker (vermilion on ink), 3px offset.

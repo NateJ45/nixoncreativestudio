@@ -88,10 +88,10 @@ This is the quarterly job. It lives on the About page.
 
 1. Open **Pages**, then **About page**. Scroll to the "Currently" boxes.
 2. Rewrite **Working on** (one to three lines), **Booking** (one to three rows; status Open or Limited), **Reading** (one to four books) and **Learning** (one to four lines).
-3. Set **Currently last updated** to today. It drives the "Updated N days ago" pill on the page.
+3. Set **Currently last updated** to today. The page prints it as "Last updated October 4, 2026."
 4. Publish, then check https://www.nixoncreativestudio.com/about/#now.
 
-The four Lighthouse numbers on the same page are measured facts. Change them only after a real re-measure.
+**About page photos:** the LAST photo in the list is shown large beside the story (make it a good portrait); the others are small captioned prints in one row. Keep captions to facts you can check. The four Lighthouse numbers on the About page entry are no longer shown on the site (since the 2026 redesign), so they need no upkeep. The "What I check on the sites I look after" list is in the code, not the admin.
 
 ---
 

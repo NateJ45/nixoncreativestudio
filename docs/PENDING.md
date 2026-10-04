@@ -52,6 +52,12 @@ load would revert it and fail the Colophon rows test.
 then the real load, then `npm run ci-dataset:snapshot` and confirm `rows.sql`
 is byte-identical to the hand edit. Never from a delegated agent (never-break rule 5).
 
+### 2a. Load the redesigned About page words into production (redesign 2026, main session with Nathan)
+
+**Why:** the /about rebuild (branch `page-about`) rewrote `cms/content/page_about.json`: the kept line as the headline, a shorter intro, the story in seven short paragraphs (the house is now bought), fact captions on the photos, the three principles as commitments, a new Currently date and the "two to three months" booking line. Production still holds the older words (including "organizations that take their work seriously."), so until the load the live page shows the new layout with the old words. Nothing breaks: production's photo list also ends with the black-and-white portrait, which the page now sets beside the story. `scripts/ci-dataset/rows.sql` carries the same words by hand (production's media objects kept) so `tests/about-copy.spec.ts` agrees in CI.
+
+**Do, when the redesign merges:** `npm run cms:production-load -- --only page_about --dry-run` (expect only the `about` entry, text fields; the pictures are unchanged), then the real load, then `npm run ci-dataset:snapshot` and confirm the `ec_page_about` row matches the hand edit. Never from a delegated agent (never-break rule 5). Before the load, Nathan confirms the photo captions and credits (the page agent's report lists them).
+
 ### 2b. Regenerate the OG cards and icons in the new palette (redesign 2026)
 
 `scripts/generate-og.mjs`, `generate-og-default.mjs` and `generate-icons.mjs`
