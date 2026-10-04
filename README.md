@@ -1,5 +1,50 @@
 # Nixon Creative Studio
 
+**The studio's own website: a CMS-driven portfolio on Astro and Cloudflare, where every word, price and case study is editable without touching code.**
+
+[![CI](https://github.com/NateJ45/nixoncreativestudio/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/NateJ45/nixoncreativestudio/actions/workflows/ci.yml)
+[![Live site](https://img.shields.io/website?url=https%3A%2F%2Fnixoncreativestudio.com&label=nixoncreativestudio.com&up_message=live)](https://nixoncreativestudio.com)
+![Astro](https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers%20%C2%B7%20D1%20%C2%B7%20R2-F38020?logo=cloudflare&logoColor=white)
+
+<p align="center">
+  <img src="docs/screenshots/home-desktop.webp" alt="Nixon Creative Studio home page on desktop" width="720">
+  &nbsp;
+  <img src="docs/screenshots/home-mobile.webp" alt="Nixon Creative Studio home page on a phone" width="160">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/case-study-desktop.webp" alt="A case study page on desktop" width="720">
+  &nbsp;
+  <img src="docs/screenshots/case-study-mobile.webp" alt="A case study page on a phone" width="160">
+</p>
+
+## What it is
+
+This is the live site for [Nixon Creative Studio](https://nixoncreativestudio.com), a one-person web design, photography and brand strategy studio in Cincinnati, Ohio. It is also a working portfolio piece: the same stack and standards that go into client sites went into this one.
+
+The point is that the owner can run it alone. Case studies, pricing, services, About, contact, journal, menus and site settings all live in the EmDash CMS admin at `/_emdash/admin/` (passkey login), so a change is a publish, not a deploy.
+
+## Highlights
+
+- **Editable end to end.** Case studies, pricing, services, About, contact, journal, menus and site settings are CMS content. Committed JSON under `cms/content/` is the seed and fallback.
+- **Live on Cloudflare EmDash CMS since 2026-10-03.** Content in D1, media in R2, served by a single Worker.
+- **Fast and fresh.** Pages that read the CMS render per request behind a 5-minute route cache that is purged when an editor publishes, so edits show up within seconds.
+- **One canonical host.** The apex domain is canonical and `www` returns a 301 to it.
+- **Accessibility as a gate.** CI runs axe in light and dark themes and Lighthouse requires an accessibility score of 1.
+- **Safe change flow.** Work lands on `main` only through a pull request with green `build` and `test` checks, tested against a preview Worker on a small CI dataset, never production data.
+
+**Stack:** Astro 7 (TypeScript strict, `output: 'server'`), React 19 islands, Tailwind 4, shadcn/ui, EmDash CMS, Cloudflare Workers with D1 and R2, Playwright, GitHub Actions.
+
+---
+
+## Developing
+
+Everything below is the original deep documentation for the studio and the codebase.
+
 **Web design, photography, and brand strategy for organizations that do real work in the world.** Churches, schools, nonprofits, and small businesses. Based in Cincinnati, Ohio; design and strategy for clients anywhere, photography across the region.
 
 **Live:** [nixoncreativestudio.com](https://nixoncreativestudio.com)
@@ -14,9 +59,9 @@ Most of my clients are running something that matters to a community and cannot 
 
 Three things, usually in this order:
 
-- **Brand strategy** — the name, voice, palette, and typography that make an organization look like itself and not like a template.
-- **Web design and build** — fast, accessible, editor-friendly sites on a modern stack (Astro + Sanity + Cloudflare). Every word and image is editable in a friendly CMS; nothing important is trapped in the code.
-- **Photography** — real photographs of real places and people, because the fastest way to look generic is to fill a site with stock.
+- **Brand strategy**: the name, voice, palette, and typography that make an organization look like itself and not like a template.
+- **Web design and build**: fast, accessible, editor-friendly sites on a modern stack (Astro + Sanity + Cloudflare). Every word and image is editable in a friendly CMS; nothing important is trapped in the code.
+- **Photography**: real photographs of real places and people, because the fastest way to look generic is to fill a site with stock.
 
 ## Selected work
 
@@ -44,13 +89,13 @@ A few standards show up in every project, and they are the reason the sites hold
 
 ## How this site is built
 
-- **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'server'` with Cloudflare's route cache
+- **[Astro 7](https://astro.build)** with TypeScript in strict mode, `output: 'server'` with Cloudflare's route cache
 - **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
 - **React 19** islands for the interactive pieces: full-screen mobile nav, contact form, photo gallery + lightbox, WebGL hero, theme toggle
 - **EmDash CMS** (D1 and R2 on Cloudflare) for case studies, the journal and the photography set; no Astro content collections
 - **[Motion](https://motion.dev)** + **[Lenis](https://lenis.darkroom.engineering)** smooth scroll + Astro View Transitions for soft page-to-page navigation
 - Component primitives from **Starwind** (zero-JS, Astro-native), **shadcn/ui**, with **Aceternity** and **Magic UI** for motion flourishes
-- **[Cloudflare Pages](https://pages.cloudflare.com)** hosting + Cloudflare Web Analytics (privacy-friendly, no cookies)
+- **[Cloudflare Workers](https://workers.cloudflare.com)** hosting + Cloudflare Web Analytics (privacy-friendly, no cookies)
 - **ESLint** + **Prettier** + `node --test` unit suites, run in **GitHub Actions** on every push and PR
 
 ## Running it locally
