@@ -45,6 +45,8 @@ Everything is in the left sidebar. The groups are Site, Pages, Pricing & service
 | The header or footer links                                          | **Menus** (under Manage in the sidebar)   | See 4.5.                                                               |
 | A redirect for an old or renamed address                            | **Redirects** (Admin login only)          | See 4.4.                                                               |
 | Which sites rotate in the homepage hero                             | **Case Studies**, the case study          | Tick "Show in the homepage device scene" and give it a number.         |
+| A case study whose site is not live (yet)                           | **Case Studies**, the case study          | Box "Launch status". See 4.1, step 3.                                  |
+| The price range search engines read                                 | **Site settings**                         | Box "Price range for search engines" (not shown on the page).          |
 | A picture's file (swap the headshot, replace a cover)               | The entry that holds it                   | Upload a new one in the picture field and rewrite its description.     |
 | Page search titles and descriptions                                 | The same page entry                       | "Search and tab title" and "Search description" at the top.            |
 
@@ -99,13 +101,13 @@ The four Lighthouse numbers on the same page are measured facts. Change them onl
 
 1. Open **Case Studies** and press **Add new**.
 2. Fill the required boxes: Title, Client, Sector, Summary (200 characters at most), Cover image, Year and Published (the case study date). Cover images work best as a real screenshot of the finished site, at least 1600 px wide.
-3. Add the Outcome line (one honest sentence, 160 characters at most), the live URL, the services, topics and stack tags, and the body text.
+3. Add the Outcome line (one honest sentence, 160 characters at most), the live URL, the services, topics and stack tags, and the body text. If the site is not live, pick its **Launch status**: Launching soon, In progress, or Built, not launched. Leave the box empty when the site is live. For a finished site waiting on its domain, pick Launching soon and put its preview address in **Preview address**: the page links there, labelled Launching soon. Anything else that is not live hides the visit link, and every status but live keeps the study out of the hero, so the page never sends a visitor to a site that is not yours or not finished.
 4. For the animated "live site" frame, upload the full-page desktop capture under "Showcase: desktop" and write its description.
 5. To feature it on the homepage Selected Work strip, tick **Featured on the homepage**. The three newest featured studies show, so untick an older one if you want room.
 6. To put the site in the rotating homepage hero scene, tick **Show in the homepage device scene** and give it the next order number. It only joins if it also has both a desktop and a mobile capture and a live URL.
 7. Press **Publish**. The page appears at /work/ and /work/your-slug/. The share image for social previews is built at the next deploy, so it may not appear straight away.
 
-Never invent a testimonial. The quote boxes stay empty until a client has actually said it.
+Never invent a testimonial. The quote boxes stay empty until a client has actually said it. The same goes for outcomes: write what you can show (a fact, a date, a number you measured), never what you hope happened.
 
 ### 4.2 Write a Journal entry
 

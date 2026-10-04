@@ -75,11 +75,11 @@ test('the fallback also carries the copy that used to live in components', () =>
   );
   assert.deepEqual(s.ctaDefault, {
     title: "Let's build a site you won't have to redo.",
-    sub: 'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.',
+    sub: 'Tell me what you are working on. I reply myself within one or two business days.',
     label: 'Start a project',
   });
   assert.equal(s.defaultDescription, 'Nixon Creative Studio');
-  assert.equal(s.rssTitle, 'Nixon Creative Studio — Case Studies');
+  assert.equal(s.rssTitle, 'Nixon Creative Studio: case studies');
   assert.equal(s.rssDescription, s.tagline);
 });
 

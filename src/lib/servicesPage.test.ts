@@ -65,6 +65,10 @@ const asRows = (list: { slug: string; data: Raw }[]) =>
 // from the live page on `main` (the ncs-ci Worker) before the move. It is the
 // acceptance gate for CMS-DESIGN PR 7: the structured data Google reads must not
 // change when the words move into the CMS.
+//
+// Regenerated DELIBERATELY on 2026-10-04 (redesign 2026 copy pass, D-copy-positioning.md): the
+// Strategy description now states its standalone price ($1,500, matching its minPrice), the cost
+// FAQ no longer claims where most projects land, and the brand answer is first person.
 
 const golden = JSON.parse(
   readFileSync(join(process.cwd(), 'src/lib/servicesPage.jsonld.golden.json'), 'utf8'),
@@ -159,7 +163,7 @@ test('the committed fallback reproduces the words /services used to hold', async
   );
   assert.equal(
     page.heading,
-    'Strategy, web design, and photography for organizations that care about the long run.',
+    'Strategy, web design and photography, built so your team can run the site for years.',
   );
   assert.equal(page.pricing.heading, 'What a website costs');
   assert.equal(page.addonsHeading, 'Add to any project');
@@ -170,7 +174,7 @@ test('the committed fallback reproduces the words /services used to hold', async
       'One person, no handoffs',
       'Built to be handed off',
       'Accessible by default',
-      'Cheap is expensive later',
+      'What a cheaper quote leaves out',
     ],
   );
   assert.equal(page.faq.heading, 'Common questions');

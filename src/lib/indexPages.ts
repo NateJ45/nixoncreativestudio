@@ -22,7 +22,7 @@
    Photography "In progress" label and link, and every layout.
    ============================================================================ */
 
-import { getSingleton, rows, text, type Raw } from './cms.ts';
+import { getSingleton, rows, text, withTrailingSlash, type Raw } from './cms.ts';
 import type { RouteCache } from './routeCache.ts';
 
 /** A required string; a blank one makes the entry unusable (the reader then falls back). */
@@ -227,7 +227,10 @@ export function normalizeNotFoundPage(raw: Raw): NotFoundPage {
   const links = rows(raw.links, (r): NotFoundLink | undefined => {
     const label = text(r.label)?.trim();
     const href = text(r.href)?.trim();
-    return label && href && isInternalPath(href) ? { label, href } : undefined;
+    // Slashed here so an editor typing "/contact" never costs the visitor a 301 hop (rule 8).
+    return label && href && isInternalPath(href)
+      ? { label, href: withTrailingSlash(href) }
+      : undefined;
   }).slice(0, NOT_FOUND_LINK_SLOTS);
   // A page with nowhere to send the visitor is a dead end: fall back instead.
   if (links.length === 0) throw new Error('page_not_found.links has no usable link');

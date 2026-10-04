@@ -50,12 +50,12 @@ test('the committed fallback reproduces the words the hero and sections used to 
   assert.equal(home.hero.headingAccent, 'pull their weight.');
   assert.equal(
     home.hero.positioning,
-    'For churches, schools, nonprofits, and small businesses, wherever you are.',
+    'A website your next volunteer can run. I plan, design and build it, then hand it over for you to own.',
   );
   assert.deepEqual(home.hero.proof, {
-    before: 'Based in Cincinnati. Every site designed, built, and photographed by',
+    before: 'Cincinnati web design. Every site is planned, designed and built by',
     linkText: 'one person',
-    after: ', start to finish.',
+    after: ', who can take the photos too.',
   });
   assert.equal(home.hero.primaryLabel, 'Start a project');
   assert.equal(home.hero.secondaryLabel, 'See the work');
@@ -70,11 +70,11 @@ test('the committed fallback reproduces the words the hero and sections used to 
     'A custom design, yours to keep',
     '100 / 100 accessibility',
     'Strategy and a content system, included',
-    'One person, start to finish',
+    'One person from the first call to launch',
   ]);
   assert.equal(home.pricing.linkLabel, 'See full pricing and services');
 
-  assert.equal(home.process.heading, 'How we work');
+  assert.equal(home.process.heading, 'How a project runs');
   assert.equal(home.process.sub, 'Four steps, from the first conversation to launch day.');
   assert.deepEqual(
     home.process.steps.map((s) => [s.num, s.title]),
@@ -88,7 +88,7 @@ test('the committed fallback reproduces the words the hero and sections used to 
   assert.equal(home.process.ctaTitle, 'Tell me what you are building.');
   assert.equal(home.process.ctaLabel, 'Start a project');
 
-  assert.equal(home.seoTitle, 'Nixon Creative Studio | Strategy-led design and photography');
+  assert.equal(home.seoTitle, 'Cincinnati Web Design for Churches and Nonprofits');
 });
 
 // ── Fallback path (production before its data is loaded) ─────────────────────

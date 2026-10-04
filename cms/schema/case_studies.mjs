@@ -15,6 +15,10 @@
    field in_hero / hero_order" for the new two (checked field by field against the live
    schema on 2026-10-03).
 
+   Redesign 2026 adds one more optional field, `launch_status` (live, launching-soon, in-progress,
+   built-not-launched; empty reads as live). Its dry run reads "added field launch_status" and the
+   patches in cms/content/case_studies.json set it once; see docs/redesign-2026/content-production-plan.md.
+
    Two deliberate differences from the raw COLLECTION in case-studies-schema.mjs:
    - `supports` omits "seo". EmDash stores the SEO panel as the `hasSeo` flag and
      returns `supports: ["drafts","revisions","search"]`, so listing "seo" there made

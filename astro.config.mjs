@@ -118,7 +118,8 @@ export default defineConfig({
     // EmDash's own per-collection sitemap (needs the `seo` support and a
     // `/work/{slug}/` URL pattern on the case_studies collection), added to the
     // same sitemap-index.xml via customSitemaps so robots.txt and Search
-    // Console keep pointing at the one URL they already know.
+    // Console keep pointing at the one URL they already know. /coming-soon/ is
+    // NOT listed: it is the pre-launch gate page, not content (redesign 2026, E #12).
     sitemap({
       customPages: [
         'https://nixoncreativestudio.com/',
@@ -131,7 +132,6 @@ export default defineConfig({
         'https://nixoncreativestudio.com/colophon/',
         'https://nixoncreativestudio.com/privacy/',
         'https://nixoncreativestudio.com/accessibility/',
-        'https://nixoncreativestudio.com/coming-soon/',
       ],
       customSitemaps: [
         'https://nixoncreativestudio.com/sitemap-case_studies.xml',
