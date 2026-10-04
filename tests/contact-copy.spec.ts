@@ -91,7 +91,8 @@ test.describe('Contact copy without JavaScript', () => {
     }
 
     const steps = page.locator('aside ol li');
-    await expect(steps).toHaveText(contact.next_steps.map((s) => s.text));
+    // Each row also carries a short timing label (Today, Day 1 to 2, After that).
+    await expect(steps).toContainText(contact.next_steps.map((s) => s.text));
   });
 
   test('/contact/: the title and meta description come from the contact entry', async ({

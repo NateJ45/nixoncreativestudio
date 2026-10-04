@@ -37,7 +37,9 @@
    removed; Turnstile was never on this page).
    ============================================================================ */
 
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import headshot from '../assets/brand/headshot.jpg';
 import Band from '../components/Band.astro';
 import { getSite } from '../data/site';
 import { buttonVariants } from '../components/ui/button';
@@ -78,6 +80,10 @@ const formActive = web3formsKey.length > 0;
 // text and the textarea's minlength.
 const MIN_MESSAGE = 20;
 
+// Timing labels for the ledger rows, in the order of the CMS steps. Only used
+// when the CMS still has three steps, so an edited list never gets a wrong label.
+const stepWhen = nextSteps.length === 3 ? ['Today', 'Day 1 to 2', 'After that'] : [];
+
 const optionalMark = 'optional';
 ---
 
@@ -89,21 +95,32 @@ const optionalMark = 'optional';
        ==================================================================== */}
   <Band ground="window-light" underHeader tight labelledby="contact-hero-heading">
     <div class="contact-hero">
-      <h1 id="contact-hero-heading" class="type-headline contact-title">
-        {page.heading} <span class="voice">{page.headingAccent}</span>
-      </h1>
-      <p class="type-lede contact-lede">{page.intro}</p>
-      <ul class="contact-promises type-caption">
-        <li>The first conversation is free.</li>
-        <li>I read every message myself.</li>
-        <li>You will hear back from a person within one or two business days.</li>
-      </ul>
-      <p class="contact-direct type-ui">
-        Rather not use a form?
-        <a href={site.emailHref}>{site.email}</a>
-        or
-        <a href={site.phoneHref}>{site.phone}</a>
-      </p>
+      <div class="contact-hero-text">
+        <h1 id="contact-hero-heading" class="type-headline contact-title">
+          {page.heading} <span class="voice">{page.headingAccent}</span>
+        </h1>
+        <p class="type-lede contact-lede">{page.intro}</p>
+        <p class="contact-free">The first conversation is free.</p>
+        <p class="contact-direct">
+          <a href={site.emailHref}>{site.email}</a>
+          <span aria-hidden="true">/</span>
+          <a href={site.phoneHref}>{site.phone}</a>
+        </p>
+      </div>
+      {/* A real photograph and a true line: one person reads what you send. */}
+      <figure class="contact-person">
+        <Image
+          src={headshot}
+          alt={`${site.ownerName}, who runs ${site.studioName} and reads every message`}
+          widths={[176, 264, 352]}
+          sizes="(min-width: 48rem) 11rem, 8rem"
+          loading="eager"
+          class="contact-person-img"
+        />
+        <figcaption class="type-caption">
+          {site.ownerName}, {site.address}
+        </figcaption>
+      </figure>
     </div>
   </Band>
 
@@ -117,6 +134,7 @@ const optionalMark = 'optional';
         <h2 id="contact-form-heading" class="contact-form-title type-headline">
           Send me <span class="voice">a few lines.</span>
         </h2>
+        <p class="contact-voice">I read every message myself.</p>
         <p class="type-caption contact-need">
           Your name, your email and what you are working on are all I need. Everything else is
           optional.
@@ -179,7 +197,7 @@ const optionalMark = 'optional';
                 name="message"
                 required
                 minlength={MIN_MESSAGE}
-                rows="6"
+                rows="9"
                 aria-describedby="message-hint message-error"
               ></textarea>
               <p class="field-hint" id="message-hint">
@@ -214,7 +232,7 @@ const optionalMark = 'optional';
                     <label for="org_type">Type of organization</label>
                     <select class="control" id="org_type" name="org_type">
                       <option value="" selected>
-                        Pick the closest
+                        Choose one
                       </option>
                       {orgTypes.map((opt) => (
                         <option value={opt.value}>{opt.label}</option>
@@ -228,13 +246,16 @@ const optionalMark = 'optional';
                     <label for="budget">Budget range</label>
                     <select class="control" id="budget" name="budget">
                       <option value="" selected>
-                        Pick the closest
+                        Pick a range
                       </option>
                       {/* The label is the submitted value (see the top of the file). */}
                       {budgets.map((label) => (
                         <option value={label}>{label}</option>
                       ))}
                     </select>
+                    <p class="field-hint">
+                      Not sure? <a href="/services/">See what each tier covers</a>.
+                    </p>
                   </div>
                   <div class="field">
                     <label for="timeline">Timeline</label>
@@ -300,15 +321,17 @@ const optionalMark = 'optional';
               <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
             </div>
 
+            <p class="form-summary" data-form-summary role="alert" hidden></p>
+
             <div class="submit-row">
               <button
                 type="submit"
-                class={buttonVariants({ variant: 'brand', size: 'cta' })}
+                class={`${buttonVariants({ variant: 'brand', size: 'cta' })} send`}
                 data-contact-submit
               >
                 {/* Spinner: hidden until the submit handler adds .is-spinning. */}
                 <span class="contact-spinner" aria-hidden="true"></span>
-                <span data-contact-submit-label>Send message</span>
+                <span data-contact-submit-label>Send me your project</span>
               </button>
               <p class="type-caption">It goes straight to my inbox.</p>
             </div>
@@ -328,10 +351,9 @@ const optionalMark = 'optional';
               Thanks, <span class="voice">your message is in.</span>
             </h2>
             <p class="type-body">
-              I will reply to <strong data-sent-email>your email address</strong> within one or two
-              business days, and a person (me) will be the one writing. If you do not hear back,
-              check your spam folder for a message from {site.domain}, or email me at
-              <a href={site.emailHref}>{site.email}</a>.
+              I will reply to <strong data-sent-email>your email address</strong>, and a person (me)
+              will be the one writing. If you do not hear back, check your spam folder for a message
+              from {site.domain}, or email me at <a href={site.emailHref}>{site.email}</a>.
             </p>
             <p class="type-body">
               The steps beside this note show what comes next. In the meantime,
@@ -340,7 +362,7 @@ const optionalMark = 'optional';
           </div>
 
           {/* Error panel. role=alert so a failure is announced. */}
-          <div class="contact-error" data-contact-error role="alert" hidden>
+          <div class="contact-error" data-contact-error role="alert" tabindex="-1" hidden>
             <p>
               The message did not go through. Please try once more, or email me at
               <a href={site.emailHref}>{site.email}</a>
@@ -357,10 +379,13 @@ const optionalMark = 'optional';
         {/* A quiet ledger of the real sequence. The script ticks the first row when
           the message is sent. The CMS controls the wording (Contact page). */}
         <ol class="steps" data-contact-steps>
-          {nextSteps.map((step) => (
+          {nextSteps.map((step, i) => (
             <li>
               <span class="step-tick" aria-hidden="true" />
-              <span>{step}</span>
+              <span class="step-text">
+                {stepWhen[i] && <span class="step-when">{stepWhen[i]}</span>}
+                {step}
+              </span>
             </li>
           ))}
         </ol>
@@ -392,18 +417,24 @@ const optionalMark = 'optional';
         </h2>
         <p class="type-body">{page.whereText}</p>
       </div>
-      <div class="contact-close">
-        <p class="contact-close-title">{page.ctaTitle ?? site.ctaDefault.title}</p>
-        <p class="type-body">{page.ctaSub ?? site.ctaDefault.sub}</p>
-        <p class="contact-close-links">
-          <a class={buttonVariants({ variant: 'brand', size: 'cta' })} href={site.emailHref}>
-            {page.ctaLabel}
-          </a>
-          <a class="contact-phone" href={site.phoneHref}>
-            {site.phone}
-          </a>
-        </p>
-      </div>
+      {site.bookingUrl && (
+        <div class="contact-close">
+          <p class="contact-close-title">Would a call suit you better?</p>
+          <p class="type-body">
+            A half-hour on my calendar. No pitch, just a working conversation.
+          </p>
+          <p class="contact-close-links">
+            <a
+              class={buttonVariants({ variant: 'brand', size: 'cta' })}
+              href={site.bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Pick a time
+            </a>
+          </p>
+        </div>
+      )}
     </div>
   </Band>
 
@@ -411,7 +442,18 @@ const optionalMark = 'optional';
     /* ---- Band 1: the calm top ---------------------------------------------- */
     .contact-hero {
       display: grid;
-      gap: var(--spacing-m);
+      gap: var(--spacing-l);
+      align-items: end;
+    }
+    @media (min-width: 48rem) {
+      .contact-hero {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--spacing-2xl);
+      }
+    }
+    .contact-hero-text {
+      display: grid;
+      gap: var(--spacing-s);
       max-width: 46rem;
     }
     .contact-title {
@@ -422,36 +464,48 @@ const optionalMark = 'optional';
       margin: 0;
       max-width: 40ch;
     }
-    .contact-promises {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--spacing-xs) var(--spacing-m);
+    .contact-free {
       margin: 0;
-      padding: 0;
-      list-style: none;
+      font-family: var(--font-serif);
+      font-size: var(--text-body);
       color: var(--foreground);
-    }
-    .contact-promises li::before {
-      content: '';
-      display: inline-block;
-      width: 0.9rem;
-      height: 2px;
-      margin-right: 0.5rem;
-      vertical-align: 0.3em;
-      background: var(--marker);
     }
     .contact-direct {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 var(--spacing-s);
       margin: 0;
-      color: var(--foreground);
+      font-family: var(--font-serif);
+      font-size: var(--text-body);
+      color: var(--muted-foreground);
     }
     .contact-direct a {
-      /* Links keep a 44px touch height without changing the line. */
+      /* Body size, with a 44px touch height that does not change the line. */
       display: inline-block;
       padding-block: 0.85rem;
-      margin-inline: 0.15rem;
       color: var(--link);
       text-decoration: underline;
       text-underline-offset: 3px;
+    }
+    .contact-person {
+      display: grid;
+      gap: var(--spacing-xs);
+      margin: 0;
+      justify-items: start;
+    }
+    .contact-person-img {
+      width: 8rem;
+      height: 8rem;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: var(--shadow-frame);
+    }
+    @media (min-width: 48rem) {
+      .contact-person-img {
+        width: 11rem;
+        height: 11rem;
+      }
     }
 
     /* ---- Band 2: form + ledger ---------------------------------------------- */
@@ -479,11 +533,21 @@ const optionalMark = 'optional';
       margin: 0 0 var(--spacing-m);
       max-width: 52ch;
     }
+    /* The form is a tray: a step deeper than the page, with a hairline and a hard
+       offset shadow, so the fields (a step LIGHTER than both) are the thing you see. */
     .contact-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-card);
+      background: var(--muted);
+      border: 1px solid var(--input);
+      box-shadow: 6px 6px 0 color-mix(in srgb, var(--heading) 16%, transparent);
       padding: clamp(1.1rem, 1rem + 2.2vw, 2.25rem);
+    }
+    .contact-voice {
+      margin: 0 0 var(--spacing-xs);
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: var(--text-lede);
+      line-height: 1.2;
+      color: var(--marker);
     }
     .contact-form {
       display: grid;
@@ -496,6 +560,7 @@ const optionalMark = 'optional';
     }
     .field-pair {
       display: grid;
+      align-items: start;
       gap: var(--spacing-m);
     }
     @media (min-width: 40rem) {
@@ -505,7 +570,7 @@ const optionalMark = 'optional';
     }
     .field label {
       font-family: var(--font-ui);
-      font-size: 0.9375rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--heading);
     }
@@ -518,17 +583,45 @@ const optionalMark = 'optional';
       font-size: 1rem;
       line-height: 1.4;
       color: var(--foreground);
-      background: var(--background);
+      background: var(--card);
       border: 1px solid var(--input);
+      scroll-margin-top: calc(var(--header-h) + 1rem);
       border-radius: 2px;
     }
     textarea.control {
-      min-height: 9rem;
+      min-height: 12rem;
       resize: vertical;
     }
+    /* Invalid is a tinted field with a heavy brick edge; the focus ring (marker,
+       outside the box) stays a separate cue. */
     .control[aria-invalid='true'] {
-      border-color: var(--link);
-      border-width: 2px;
+      border: 2px solid var(--link);
+      background: color-mix(in srgb, var(--link) 7%, var(--card));
+    }
+    .field-hint a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .form-summary {
+      margin: 0;
+      padding: var(--spacing-xs) var(--spacing-s);
+      border: 2px solid var(--link);
+      background: color-mix(in srgb, var(--link) 7%, var(--card));
+      font-family: var(--font-ui);
+      font-weight: 600;
+      color: var(--foreground);
+    }
+    .form-summary[hidden] {
+      display: none;
+    }
+    @media (min-width: 40rem) {
+      .form-summary {
+        display: none;
+      }
     }
     .field-hint {
       margin: 0;
@@ -596,6 +689,10 @@ const optionalMark = 'optional';
       align-items: center;
       gap: var(--spacing-s) var(--spacing-m);
     }
+    .send {
+      min-height: 3.25rem;
+      padding-inline: 2rem;
+    }
     .submit-row p {
       margin: 0;
     }
@@ -626,10 +723,11 @@ const optionalMark = 'optional';
       text-underline-offset: 3px;
     }
     .contact-error {
+      scroll-margin-top: calc(var(--header-h) + 1rem);
       margin-top: var(--spacing-m);
       padding: var(--spacing-s) var(--spacing-m);
       border: 2px solid var(--link);
-      background: var(--background);
+      background: var(--card);
       color: var(--foreground);
     }
     .contact-error p {
@@ -653,6 +751,19 @@ const optionalMark = 'optional';
       font-size: var(--text-body);
       line-height: 1.5;
       color: var(--foreground);
+    }
+    .step-text {
+      display: grid;
+      gap: 0.1rem;
+    }
+    .step-when {
+      font-family: var(--font-ui);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--link);
+    }
+    .steps li[data-done] .step-when {
+      color: var(--muted-foreground);
     }
     .step-tick {
       flex: none;
@@ -712,7 +823,9 @@ const optionalMark = 'optional';
       flex-wrap: wrap;
       align-items: center;
       gap: var(--spacing-s) var(--spacing-m);
-      margin-top: var(--spacing-xs) !important;
+    }
+    .contact-where .contact-close-links {
+      margin: var(--spacing-xs) 0 0;
     }
     .contact-phone {
       display: inline-block;
@@ -770,6 +883,7 @@ const optionalMark = 'optional';
       const label = document.querySelector<HTMLElement>('[data-contact-submit-label]');
       const more = document.querySelector<HTMLDetailsElement>('[data-contact-more]');
       const steps = document.querySelector<HTMLElement>('[data-contact-steps]');
+      const summary = document.querySelector<HTMLElement>('[data-form-summary]');
 
       if (!form || !thanks || !errorEl || !submit || !label) return;
       if (form.dataset.enhanced) return;
@@ -779,7 +893,7 @@ const optionalMark = 'optional';
       // here (not in the markup) so a no-JS visitor still gets native validation.
       form.noValidate = true;
 
-      const originalLabel = label.textContent ?? 'Send message';
+      const originalLabel = label.textContent ?? 'Send me your project';
       const field = (name: string): Field | null => form.elements.namedItem(name) as Field | null;
       const minMessage = Number(field('message')?.getAttribute('minlength') ?? '20');
 
@@ -1000,12 +1114,29 @@ const optionalMark = 'optional';
         );
       }
 
+      // A failed send: show the panel, move focus to it and scroll it clear of the
+      // sticky header, so nobody is left looking at a form that seems to do nothing.
+      function failSend(): void {
+        errorEl!.hidden = false;
+        errorEl!.focus({ preventScroll: true });
+        errorEl!.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         // Validate first and stop before any request, so a blank or too-short field
         // never silently submits and waits on a server reject.
         const firstBad = validate();
+        if (summary) {
+          const bad = Object.keys(rules).filter(
+            (n) => field(n)?.getAttribute('aria-invalid') === 'true',
+          );
+          summary.hidden = bad.length === 0;
+          summary.textContent = bad.length
+            ? `Please fix ${bad.length === 1 ? 'one thing' : bad.length + ' things'} above: ${bad.join(', ')}.`
+            : '';
+        }
         if (firstBad) {
           firstBad.focus();
           return;
@@ -1020,6 +1151,7 @@ const optionalMark = 'optional';
         }
 
         errorEl.hidden = true;
+        if (summary) summary.hidden = true;
         submit.disabled = true;
         submit.classList.add('is-spinning');
         label.textContent = 'Sending...';
@@ -1035,10 +1167,10 @@ const optionalMark = 'optional';
             clearDraft();
             announceSent();
           } else {
-            errorEl.hidden = false;
+            failSend();
           }
         } catch (_err) {
-          errorEl.hidden = false;
+          failSend();
         } finally {
           submit.disabled = false;
           submit.classList.remove('is-spinning');
