@@ -1,0 +1,304 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   MobileMenu
+   ============================================================================
+   The phone and small-tablet navigation (below 48rem). A menu button in the
+   header opens a full-screen native <dialog>: showModal() gives the focus
+   trap, Escape-to-close, the inert page behind and focus return to the button
+   for free, with no framework. It replaced the React MobileNav island in the
+   2026 redesign, so no page pulls React onto the critical path for the menu
+   (C-performance-forensics measured React island JS as the largest mobile
+   LCP cost).
+
+   Rows: each menu item in Bebas, with its "Title attribute" from the menu
+   editor as a one-line descriptor under it, hairline-divided like the index
+   of a contact sheet. Then the Start a project button and the direct contact
+   lines. The active page shows in china-marker red with a persistent arrow.
+
+   Props come from Header.astro (one nav model for both menus) and getSite()
+   for every identity string. The header keeps its own visible "Start a
+   project" button at every width, so the menu is never the only way in.
+   ============================================================================ */
+import Logo from './Logo.astro';
+import { getSite } from '../data/site';
+import { buttonVariants } from './ui/button';
+import { cn } from '@/lib/utils';
+
+export interface MenuLink {
+  label: string;
+  href: string;
+  descriptor?: string;
+  target?: string;
+  active?: boolean;
+}
+
+interface Props {
+  links: MenuLink[];
+}
+
+const { links } = Astro.props;
+const site = await getSite(Astro);
+const socials = [
+  { label: 'Instagram', href: site.social.instagram },
+  { label: 'LinkedIn', href: site.social.linkedin },
+];
+---
+
+<button
+  type="button"
+  class="menu-trigger"
+  aria-label="Open menu"
+  aria-haspopup="dialog"
+  aria-controls="site-menu"
+  data-menu-open
+>
+  <svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24">
+    <path d="M3 7h18M3 12h18M3 17h18"></path>
+  </svg>
+</button>
+
+<dialog id="site-menu" class="site-menu" aria-label="Menu">
+  <div class="site-menu-shell">
+    <div class="site-menu-top">
+      <a href="/" class="site-menu-logo" data-menu-close-on-click>
+        <Logo lockup="top" topWidth={150} />
+      </a>
+      <button type="button" class="menu-trigger" aria-label="Close menu" data-menu-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24">
+          <path d="M5 5l14 14M19 5L5 19"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav aria-label="Menu" class="site-menu-nav">
+      <ul>
+        {links.map(({ label, href, descriptor, target, active }, i) => (
+          <li class="menu-row" style={`--i: ${i}`}>
+            <a
+              href={href}
+              target={target}
+              rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+              aria-current={active ? 'page' : undefined}
+              class:list={['menu-link', { 'is-active': active }]}
+              data-menu-close-on-click
+            >
+              <span class="menu-label">{label}</span>
+              {descriptor && <span class="menu-desc">{descriptor}</span>}
+              <span class="menu-arrow" aria-hidden="true">
+                &rarr;
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="menu-row site-menu-cta" style={`--i: ${links.length}`}>
+      <a
+        href="/contact/"
+        class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'w-full')}
+        data-menu-close-on-click
+      >
+        {site.headerCtaLabel}
+        <span data-nudge aria-hidden="true">
+          &rarr;
+        </span>
+      </a>
+    </div>
+
+    <div class="menu-row site-menu-contact" style={`--i: ${links.length + 1}`}>
+      <a href={site.emailHref}>{site.email}</a>
+      <a href={site.phoneHref}>{site.phone}</a>
+      <p>
+        {socials.map(({ label, href }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer">
+            {label}
+          </a>
+        ))}
+      </p>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  // Bind on every astro:page-load (the header is swapped on each View
+  // Transitions navigation), guarded so a node is never bound twice.
+  function bindMenu(): void {
+    const dialog = document.querySelector<HTMLDialogElement>('#site-menu');
+    if (!dialog || dialog.dataset.bound) return;
+    dialog.dataset.bound = 'true';
+    document.querySelectorAll<HTMLButtonElement>('[data-menu-open]').forEach((btn) => {
+      btn.addEventListener('click', () => dialog.showModal());
+    });
+    dialog.querySelectorAll('[data-menu-close]').forEach((btn) => {
+      btn.addEventListener('click', () => dialog.close());
+    });
+    // A link inside closes the menu so it does not linger over the next page.
+    dialog.querySelectorAll('[data-menu-close-on-click]').forEach((a) => {
+      a.addEventListener('click', () => dialog.close());
+    });
+    // Leaving the small-screen layout (rotating a tablet) closes it too.
+    const wide = window.matchMedia('(min-width: 48rem)');
+    wide.addEventListener('change', (e) => {
+      if (e.matches && dialog.open) dialog.close();
+    });
+  }
+  document.addEventListener('astro:page-load', bindMenu);
+</script>
+
+<style>
+  .menu-trigger {
+    display: inline-grid;
+    place-items: center;
+    width: var(--tap);
+    height: var(--tap);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--heading);
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .menu-trigger svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .menu-trigger:hover {
+    color: var(--marker);
+  }
+
+  /* The dialog fills the window. The page behind is inert (showModal) and
+     does not scroll while it is open. */
+  .site-menu {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--paper);
+    color: var(--foreground);
+    overflow-y: auto;
+  }
+  .site-menu::backdrop {
+    background: transparent;
+  }
+  :global(html:has(dialog.site-menu[open])) {
+    overflow: hidden;
+  }
+  .site-menu-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: calc(0.75rem + env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right))
+      calc(var(--spacing-l) + env(safe-area-inset-bottom))
+      max(var(--gutter), env(safe-area-inset-left));
+  }
+  .site-menu-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: calc(var(--header-h) - 0.75rem);
+  }
+  .site-menu-logo {
+    display: inline-flex;
+    min-height: var(--tap);
+    align-items: center;
+  }
+
+  .site-menu-nav {
+    margin-top: var(--spacing-m);
+    border-top: 1px solid var(--border);
+  }
+  .menu-link {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--heading);
+    text-decoration: none;
+  }
+  .menu-label {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+  }
+  .menu-desc {
+    grid-column: 1;
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--muted-foreground);
+  }
+  .menu-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    font-size: 1.5rem;
+    color: var(--marker);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.3s var(--ease-settle);
+  }
+  .menu-link:hover .menu-arrow,
+  .menu-link:focus-visible .menu-arrow,
+  .menu-link.is-active .menu-arrow {
+    opacity: 1;
+    transform: none;
+  }
+  .menu-link.is-active .menu-label {
+    color: var(--marker);
+  }
+
+  .site-menu-cta {
+    margin-top: var(--spacing-l);
+  }
+  .site-menu-contact {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding-top: var(--spacing-l);
+    font-family: var(--font-ui);
+  }
+  .site-menu-contact a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    width: fit-content;
+    color: var(--link);
+  }
+  .site-menu-contact p {
+    display: flex;
+    gap: 1.5rem;
+    margin: 0;
+  }
+
+  /* The rows cascade in when the menu opens. Inside the no-preference query,
+     so with reduced motion every row is simply there. */
+  @media (prefers-reduced-motion: no-preference) {
+    .site-menu[open] .menu-row {
+      animation: menu-in 0.5s var(--ease-settle) both;
+      animation-delay: calc(var(--i, 0) * 45ms + 60ms);
+    }
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

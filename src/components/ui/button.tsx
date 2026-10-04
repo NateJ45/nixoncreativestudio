@@ -5,12 +5,12 @@ import { Slot } from 'radix-ui';
 import { cn } from '@/lib/utils';
 
 // shadcn Button. The `brand` variant and `cta` size below are Nathan-added
-// extensions that match the existing marketing CTAs on the site (Hero
-// "Start a project", CtaBanner action, contact form submit). All other
+// extensions for the marketing CTAs (header and footer "Start a project",
+// the closing bands, the contact form submit). All other
 // variants and sizes are the unmodified shadcn primitives, useful for
 // any UI controls Nathan adds later via shadcn add.
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap no-underline transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -24,14 +24,14 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
-        // brand: filled NCS-blue button. On hover/focus it lifts and casts a
-        // brand-colored glow so the hover reads clearly in BOTH themes (in dark
-        // mode --accent and --link are the same value, so the old darken was a
-        // no-op and the hover looked dead; the lift + glow are the real cue). It
-        // still darkens to bg-link in light mode. The glow is a shadow, so it
-        // never touches text contrast (stays WCAG AA).
+        // brand: the site's call to action (DESIGN.md "Buttons"). Ink at rest,
+        // china-marker red on hover and focus; quiet on purpose: no lift, no
+        // glow, the colour change plus an arrow nudge (.nudge + data-nudge) is
+        // the cue. Inside a deep band (.on-ink) the same tokens make it a paper
+        // button with an ink label that turns vermilion. Every pair is AA and
+        // asserted in src/lib/theme-tokens.test.ts.
         brand:
-          'bg-accent text-accent-foreground hover:-translate-y-0.5 hover:bg-link hover:shadow-lg hover:shadow-accent/45 focus-visible:-translate-y-0.5 focus-visible:bg-link focus-visible:shadow-lg focus-visible:shadow-accent/45 disabled:hover:translate-y-0 disabled:hover:bg-accent disabled:hover:shadow-none',
+          'nudge bg-primary font-sans text-primary-foreground hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
       },
       size: {
         default:
@@ -45,11 +45,9 @@ const buttonVariants = cva(
         'icon-sm':
           'size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg',
         'icon-lg': 'size-9',
-        // cta: the bigger marketing-button size used in Hero and
-        // CtaBanner. h-auto + py-3.5 lets the height grow with line
-        // wrapping; the text-base font-semibold matches the original
-        // inline classes Phase 1b carried.
-        cta: 'h-auto gap-2 px-6 py-3.5 text-base font-semibold',
+        // cta: the marketing-button size. At least 48px tall (a comfortable
+        // touch target), grows with wrapping, UI sans at 600.
+        cta: 'h-auto min-h-12 gap-2 px-6 py-3 text-base font-semibold',
       },
     },
     defaultVariants: {
