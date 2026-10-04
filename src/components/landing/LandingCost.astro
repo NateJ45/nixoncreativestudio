@@ -17,13 +17,13 @@
      layout="below"  paragraph across the top, slips in a row under it (nonprofit)
    ============================================================================ */
 import { buttonVariants } from '../ui/button';
-import type { PricingTier } from '../../lib/pricing';
+import type { WebTier } from '../../lib/pricing';
 import { fillPrices, money } from '../../lib/landingPage';
 import { voiceSplit } from '../../lib/voiceSplit';
 
 interface Props {
   cost: { heading: string; note: string; tiers: string[] };
-  tiers: PricingTier[];
+  tiers: WebTier[];
   href: string;
   ctaLabel: string;
   layout?: 'side' | 'below';
@@ -33,7 +33,7 @@ const h = voiceSplit(cost.heading);
 const note = fillPrices(cost.note, tiers);
 const shown = cost.tiers
   .map((name) => tiers.find((t) => t.name.toLowerCase() === name.toLowerCase()))
-  .filter((t): t is PricingTier => !!t);
+  .filter((t): t is WebTier => !!t);
 ---
 
 <div class:list={['cost', `cost--${layout}`]}>
