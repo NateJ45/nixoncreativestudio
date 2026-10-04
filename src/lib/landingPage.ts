@@ -94,18 +94,29 @@ export interface LandingSegment {
   area: 'regional' | 'anywhere';
   /** The hero and closing button. */
   ctaLabel: string;
-  /** The mid-page button, under the price sheet. */
+  /** The mid-page button (photography: under the photographs). */
   midCtaLabel: string;
-  /** The price band's heading (web pages). */
-  pricingHeading: string;
   /**
-   * One or two sentences under the price sheet saying which tier fits this
-   * kind of organization. `{Launch}`, `{Signature}`, `{Flagship}` are replaced
-   * with that tier's "from $N" (fillPrices), so no price is typed here.
+   * What it costs, for this kind of organization (web pages). NOT the whole
+   * price sheet: that lives on /services/ and the band links to it.
+   *   heading  the band's headline (its last phrase turns italic)
+   *   note     a short paragraph. `{Launch}`, `{Signature}`, `{Flagship}` are
+   *            replaced with that tier's "from $N" (fillPrices), so no price
+   *            is typed here.
+   *   tiers    the one or two tiers (by name) drawn as slips beside it
    */
-  tierNote: string;
-  /** The closing headline; the site default ("Let's build a site you won't have to redo.") when unset. */
-  closeTitle?: string;
+  cost?: { heading: string; note: string; tiers: string[] };
+  /**
+   * How it goes, told from this organization's side (web pages): one line per
+   * process step (the Home page entry's four steps, in order) saying what the
+   * board, the director or the office does in it. Durations are
+   * ProjectTimeline's, so they agree with /services.
+   */
+  steps?: { heading: string; yours: [string, string, string, string] };
+  /** The closing headline and the line under it. */
+  closeTitle: string;
+  /** Falls back to the site default (Site settings) when unset. */
+  closeSub?: string;
 }
 
 export const LANDING_SEGMENTS: Record<LandingSlug, LandingSegment> = {
@@ -121,9 +132,23 @@ export const LANDING_SEGMENTS: Record<LandingSlug, LandingSegment> = {
     area: 'anywhere',
     ctaLabel: 'Plan your church website',
     midCtaLabel: 'Ask what yours would cost',
-    pricingHeading: 'What a church website costs',
-    tierNote:
-      'Launch, {Launch}, suits most churches: a clear site with the service times, the visit page and the staff, kept current by a volunteer. Signature, {Signature}, is for a church with ministries, events and a sermon library to keep up.',
+    cost: {
+      heading: 'What a church website costs',
+      note: 'Launch, {Launch}, suits most churches: the service times, the visit page, the staff and the sermons, kept current by a volunteer. A church with ministries, events and a sermon library to keep up is a Signature site, {Signature}. Larger projects can be split into monthly payments, and the first conversation ends with a ballpark you can take to the session or the board.',
+      tiers: ['Launch', 'Signature'],
+    },
+    steps: {
+      heading: 'Who does what, week to week',
+      yours: [
+        'Whoever is leading the change, a pastor, an elder or the office, brings the current site and the jobs it does on a Sunday morning.',
+        'Your staff read the page plan and push back: which ministries get a page, and what a first-time visitor needs to find before they come.',
+        'The volunteer who will keep the site current gets the preview links too, so they learn the editor on the real site before it launches.',
+        'We go live together. In the first month the volunteer makes the real edits, a new event or a staff change, while I am still watching.',
+      ],
+    },
+    closeTitle: 'Send me the old site, and who keeps it up today.',
+    closeSub:
+      'The address of the site you have now and a line about who updates it is enough to start. I reply myself within one or two business days.',
   },
   'nonprofit-websites': {
     slug: 'nonprofit-websites',
@@ -137,9 +162,23 @@ export const LANDING_SEGMENTS: Record<LandingSlug, LandingSegment> = {
     area: 'anywhere',
     ctaLabel: 'Ask about a nonprofit site',
     midCtaLabel: 'Ask what yours would cost',
-    pricingHeading: 'What a nonprofit website costs',
-    tierNote:
-      'Launch, {Launch}, fits a nonprofit with one main program. Signature, {Signature}, is for programs, events and news to keep up. Flagship, {Flagship}, is for tools of your own, like a results database or a members area.',
+    cost: {
+      heading: 'What it costs a small nonprofit',
+      note: 'A nonprofit with one main program fits Launch, {Launch}. Programs, events and news to keep up make it a Signature site, {Signature}. Tools of your own, like a results database or a members area, are Flagship work, {Flagship}. Larger projects can be split into monthly payments that follow your cash flow.',
+      tiers: ['Launch', 'Signature'],
+    },
+    steps: {
+      heading: 'What the director does, and when',
+      yours: [
+        'You and whoever answers the phone list what the site states as fact, where each fact comes from and who changes it.',
+        'You check the page plan against your programs and the next event on the calendar, and take it to the board if the board signs off on spending.',
+        'The person who will run the site tries the editor on the preview, with your real programs in it, not sample text.',
+        'After launch the list of who changes what is the site itself. For a month I fix anything that surfaces; then it is yours outright.',
+      ],
+    },
+    closeTitle: 'Tell me the facts your site keeps getting wrong.',
+    closeSub:
+      'A results table, a program schedule, a board list: name the one that drifts, and I will tell you how it would be entered once. I reply myself within one or two business days.',
   },
   'school-websites': {
     slug: 'school-websites',
@@ -153,9 +192,23 @@ export const LANDING_SEGMENTS: Record<LandingSlug, LandingSegment> = {
     area: 'anywhere',
     ctaLabel: 'Plan your school website',
     midCtaLabel: 'Ask what yours would cost',
-    pricingHeading: 'What a school website costs',
-    tierNote:
-      'Launch, {Launch}, suits a small school or preschool with a few pages the office keeps current. Signature, {Signature}, is for a school with admissions, a calendar and news.',
+    cost: {
+      heading: 'What a school website costs',
+      note: 'A small school or preschool with a few pages the office keeps current is a Launch site, {Launch}. A school with admissions, a calendar and news is a Signature site, {Signature}. Larger projects can be split into monthly payments, which helps when the budget is set a year ahead.',
+      tiers: ['Launch', 'Signature'],
+    },
+    steps: {
+      heading: 'What the office does at each step',
+      yours: [
+        'The head of school or the office manager, and admissions if you have it. We start with who will run the site after the person launching it.',
+        'You check the page plan against the school year: admissions season, term dates and the open-house days.',
+        'Office staff get the preview links and try the edits they will really make: a term date, a new member of staff, a snow-day notice.',
+        'We choose a launch date that suits the school calendar, then I stay close for the first month while the office settles in.',
+      ],
+    },
+    closeTitle: 'Ask me the question your board will ask.',
+    closeSub:
+      'Who runs the site next year, what it costs, how the office keeps it current: put it to me before the meeting. I reply myself within one or two business days.',
   },
   'cincinnati-event-photography': {
     slug: 'cincinnati-event-photography',
@@ -167,8 +220,6 @@ export const LANDING_SEGMENTS: Record<LandingSlug, LandingSegment> = {
     area: 'regional',
     ctaLabel: 'Book a photo day',
     midCtaLabel: 'Ask about a date',
-    pricingHeading: 'What a photo day costs',
-    tierNote: '',
     closeTitle: 'Tell me about the day, and what the pictures are for.',
   },
 };
@@ -180,13 +231,6 @@ export const LANDING_LINKS: { slug: LandingSlug; label: string; href: string }[]
     label: LANDING_SEGMENTS[slug].linkLabel,
     href: LANDING_SEGMENTS[slug].path,
   }));
-
-/**
- * How long most sites take, for the hero's at-a-glance slip. Restates the
- * Services FAQ answer ("between six and ten weeks") and ProjectTimeline's first
- * track; change all three together.
- */
-export const TYPICAL_TIMELINE = '6 to 10 weeks';
 
 /** The contact link, with the organization type preset when there is one (trailing slash kept). */
 export function contactHref(sector?: Sector): string {

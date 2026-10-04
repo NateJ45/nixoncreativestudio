@@ -197,7 +197,27 @@ test("fillPrices puts each tier's published floor in, and drops a sentence whose
     'Launch, from $4,000, fits.',
   );
   for (const slug of LANDING_SLUGS) {
-    assert.doesNotMatch(fillPrices(LANDING_SEGMENTS[slug].tierNote, tiers), /\{/, slug);
+    const cost = LANDING_SEGMENTS[slug].cost;
+    if (cost) assert.doesNotMatch(fillPrices(cost.note, tiers), /\{/, slug);
+  }
+});
+
+test('each web landing page has its own cost note, steps and close, and shows one or two tiers', () => {
+  const web = LANDING_SLUGS.filter((s) => LANDING_SEGMENTS[s].kind === 'web');
+  const seen = { note: new Set<string>(), step: new Set<string>(), close: new Set<string>() };
+  for (const slug of web) {
+    const s = LANDING_SEGMENTS[slug];
+    assert.ok(s.cost && s.steps, slug);
+    assert.ok(s.cost.tiers.length >= 1 && s.cost.tiers.length <= 2, slug);
+    assert.equal(s.steps.yours.length, 4, slug);
+    for (const line of s.steps.yours) {
+      assert.ok(!seen.step.has(line), `${slug} repeats a step line`);
+      seen.step.add(line);
+    }
+    assert.ok(!seen.note.has(s.cost.note), slug);
+    seen.note.add(s.cost.note);
+    assert.ok(!seen.close.has(s.closeTitle), slug);
+    seen.close.add(s.closeTitle);
   }
 });
 

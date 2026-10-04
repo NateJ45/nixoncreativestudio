@@ -4,81 +4,88 @@
 // Pricing tiers, Add-ons and the Photography offering. What stays in code is
 // listed in src/lib/landingPage.ts and docs/EDITING-GUIDE.md.
 /* ============================================================================
-   LandingPage | the template behind the four search landing pages
+   LandingPage | the four search landing pages
    ============================================================================
    /church-websites/, /nonprofit-websites/, /school-websites/ and
    /cincinnati-event-photography/ are one-line routes that render this with
-   their slug. Each answers, in order, what a stranger who searched for that
-   phrase asks: who is this, has he done it, what does it cost, how does it
-   go, what if, and how do I start. The contact form is one click away from
-   the first screen and from every price, with the organization type preset.
+   their slug. The contact form is one click away from the first screen, with
+   the organization type preset.
 
-   Bands (DESIGN.md "Grounds": one moving ground, at the top; the ground
-   changes between bands; one deep band at most):
+   Each web page has its OWN composition (polish 2026-10-04: the three had
+   read as one template with the words swapped, and repeated /services' price
+   sheet, process, handoff list and close word for word). What differs:
 
-   Web pages (church, nonprofit, school):
-     1. Hero (window-light, moving, under the header): the h1 with its italic
-        turn, the intro, the call to action, and an at-a-glance slip (price
-        floor, typical timeline, who builds it, where). The h1 is the LCP.
-     2. The CMS sections that are not the FAQ (paper).
-        School: the FIRST section (the continuity answer) is drawn on the deep
-        band straight after the hero instead, because a school board asks it
-        first (D-copy-positioning.md, "Schools").
-     3. Proof (sunk paper): LandingProof.astro, keyed by slug.
-     4. Prices (paper): PriceTiers with the contact preset on every tier, the
-        which-tier note, and the mid-page call to action.
-     5. How it goes (sunk paper): ProjectTimeline, the four steps with their
-        real durations.
-     6. At handoff (deep): the handoff list shared with /services, and the Care
-        plan (church and nonprofit; the school page has its deep band at 2).
-     7. Questions (paper): the CMS FAQ, native <details>, works without JS.
-     8. Close (paper-contours, still): the closing call, the email and phone,
-        and links to the other landing pages, /services/ and /work/.
+   Church (the build and the people who run it)
+     1. Hero, quiet paper (no moving ground): the h1 and intro beside a large
+        print of the FBCM home page ("Launching soon").
+     2. The first CMS section, what a church site has to get right (sunk).
+     3. Proof (paper): the visit page and the phone view, the facts as prose,
+        the two other live sites as a list.
+     4. Who does what, week to week (deep): LandingSteps "ledger".
+     5. The second CMS section, giving and livestreams (paper).
+     6. What it costs (sunk): LandingCost, Launch and Signature.
+     7. Questions (paper). 8. Close on the contours (still).
 
-   Photography page:
-     1. Hero, as above, with the photo-day rate in the slip.
-     2. The first CMS section beside the call sheet (paper).
-     3. Event photographs from the `photos` collection when there are any,
-        otherwise the Photography page's honest "gallery on its way" note
-        (sunk paper), with the mid-page call to action.
-     4. The other CMS sections (paper), 5. Questions, 6. Close.
-     While no event photograph is published the page asks to stay out of
-     search results, exactly like /photography/ (photographyRobots()); the
-     first published event photo makes it indexable with no deploy.
+   Nonprofit (the Stone Steps facts)
+     1. Hero on the contours of the Ohio's bend (the moving ground): a wide
+        headline, the intro in two columns. No print: the proof is next.
+     2. Proof first (paper): Stone Steps, its records and its climbing chart,
+        each fact a sentence.
+     3. The CMS sections, one fact entered once and leaving WordPress (sunk).
+     4. What the director does, and when (paper): LandingSteps "pairs".
+     5. What it costs (sunk): LandingCost "below". 6. Questions (paper).
+     7. Close (sunk paper, still).
+
+   School (the continuity answer first)
+     1. Hero, window light (the moving ground): the h1 beside the board's
+        question, set as a quotation, linking to its answer.
+     2. The answer (deep): the first CMS section with the Care plan.
+     3. The second CMS section, what the site does for the office (paper).
+     4. What the office does at each step (sunk): LandingSteps "rail".
+     5. What it costs (paper). 6. Where my school work stands (sunk).
+     7. Questions (paper). 8. Close on the contours (still).
+
+   Photography (unchanged): window-light hero with the at-a-glance slip, the
+   first CMS section beside the call sheet, event photographs or the honest
+   "gallery on its way" note, the other sections, questions, close. While no
+   event photograph is published the page asks to stay out of search results
+   (photographyRobots()).
+
+   Never on these pages: the full price sheet (it lives on /services/ and the
+   cost band links to it), the handoff list, a film-sprocket frame or the
+   china-marker loop (kept for the one circled price on /services).
 
    JSON-LD: Service, FAQPage and BreadcrumbList (buildLandingSchemas()), on top
    of the site-wide Organization + LocalBusiness block.
    ============================================================================ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Band from '../Band.astro';
-import PriceTiers from '../PriceTiers.astro';
-import ProjectTimeline from '../services/ProjectTimeline.astro';
+import Frame from '../Frame.astro';
 import CallSheet from '../services/CallSheet.astro';
 import LandingProof from './LandingProof.astro';
 import LandingProse from './LandingProse.astro';
 import LandingCare from './LandingCare.astro';
+import LandingCost from './LandingCost.astro';
+import LandingSteps from './LandingSteps.astro';
 import { buttonVariants } from '../ui/button';
 import headshot from '../../assets/brand/headshot.jpg';
 import fbcmHome from '../../assets/home/reel/fbcm-home-d.webp';
-import ssHome from '../../assets/home/reel/ss-home-d.webp';
+import ssPhone from '../../assets/home/reel/ss-home-m.webp';
 import { Image } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
 import { SITE_URL, getSite } from '../../data/site';
 import { getAddOns, getPricingTiers } from '../../lib/pricing';
 import { getServiceOfferings } from '../../lib/servicesPage';
 import { getHomePage } from '../../lib/homePage';
 import { getPhotographyPage } from '../../lib/indexPages';
 import { galleryItem, getPhotos, photographyRobots } from '../../lib/photos';
-import { HANDOFF } from '../../lib/handoff';
+import { launchStatusLabel } from '../../lib/launchStatus';
 import { proseTitle } from '../../lib/prosePage';
 import { voiceSplit } from '../../lib/voiceSplit';
 import {
   LANDING_LINKS,
   LANDING_SEGMENTS,
-  TYPICAL_TIMELINE,
   buildLandingSchemas,
   contactHref,
-  fillPrices,
   getLandingPage,
   money,
   type LandingSlug,
@@ -90,6 +97,8 @@ interface Props {
 const { slug } = Astro.props;
 const segment = LANDING_SEGMENTS[slug];
 const isPhoto = segment.kind === 'photo';
+const isChurch = slug === 'church-websites';
+const isNonprofit = slug === 'nonprofit-websites';
 const isSchool = slug === 'school-websites';
 
 const page = await getLandingPage(slug, Astro);
@@ -116,38 +125,24 @@ const robots = isPhoto ? photographyRobots(shown.length) : undefined;
 // The lowest published floor for this service: the first tier for web work, the
 // Photography offering for a photo day. Never typed here.
 const minPrice = isPhoto ? photoOffering?.priceFrom : tiers[0]?.priceFrom;
-const tierNote = fillPrices(segment.tierNote, tiers);
 const cta = contactHref(segment.sector);
 
-// ---- Sections --------------------------------------------------------------------
-// The school page draws its first section (the continuity answer) on the deep band.
-const inkSection = isSchool ? page.sections[0] : undefined;
-const proseSections = isSchool ? page.sections.slice(1) : page.sections;
-// The photography page sets its first section beside the call sheet.
-const firstPhotoSection = isPhoto ? proseSections[0] : undefined;
-const restSections = isPhoto ? proseSections.slice(1) : proseSections;
+// ---- Sections, by position (the CMS body's Heading 2 sections, FAQ excluded) -----
+const [first, ...rest] = page.sections;
 
 // ---- Headings ----------------------------------------------------------------------
 const hero = voiceSplit(page.heading);
-const priceH = voiceSplit(segment.pricingHeading);
-const processH = home ? voiceSplit(home.process.heading) : undefined;
 const faqH = voiceSplit(page.faq.heading);
-const closeH = voiceSplit(segment.closeTitle ?? site.ctaDefault.title);
+const closeH = voiceSplit(segment.closeTitle);
+const closeSub = segment.closeSub ?? site.ctaDefault.sub;
 
-// The at-a-glance slip: facts that are true elsewhere on the site.
-const glance: { label: string; value: string }[] = isPhoto
-  ? [
-      ...(minPrice ? [{ label: 'Half day', value: `from ${money(minPrice)}` }] : []),
-      { label: 'Where', value: 'Greater Cincinnati region' },
-      { label: 'Photographer', value: site.ownerName },
-      { label: 'Booked', value: 'With a website, or on its own' },
-    ]
-  : [
-      ...(minPrice ? [{ label: 'Websites', value: `from ${money(minPrice)}` }] : []),
-      { label: 'Most sites take', value: TYPICAL_TIMELINE },
-      { label: 'Built by', value: `${site.ownerName}, start to launch` },
-      { label: 'Based in', value: `${site.address}, working anywhere` },
-    ];
+// Photography's at-a-glance slip: facts that are true elsewhere on the site.
+const glance: { label: string; value: string }[] = [
+  ...(minPrice ? [{ label: 'Half day', value: `from ${money(minPrice)}` }] : []),
+  { label: 'Where', value: 'Greater Cincinnati region' },
+  { label: 'Photographer', value: site.ownerName },
+  { label: 'Booked', value: 'With a website, or on its own' },
+];
 
 // Other pages worth reading next: the other three landing pages, services, the work.
 const more = [
@@ -158,22 +153,11 @@ const more = [
 
 const schemas = buildLandingSchemas({ segment, page, siteUrl: SITE_URL, minPrice });
 
-// The small hero print: the same lead site the proof band shows (LandingProof.astro).
-const HERO_PRINTS: Partial<
-  Record<LandingSlug, { src: ImageMetadata; alt: string; caption: string }>
-> = {
-  'church-websites': {
-    src: fbcmHome,
-    alt: 'The new First Baptist Church Muncie home page, with the Sunday service time and the address.',
-    caption: 'First Baptist Church, Muncie. Launching soon.',
-  },
-  'nonprofit-websites': {
-    src: ssHome,
-    alt: 'The Stone Steps 50K home page, a runner climbing a wooded trail in Mt. Airy Forest.',
-    caption: 'Stone Steps 50K, Cincinnati. Live.',
-  },
-};
-const heroPrint = HERO_PRINTS[slug];
+// The church hero's large print: FBCM's home page, with its true status.
+const fbcmTag = launchStatusLabel('launching-soon');
+
+// The hero ground and composition per page (see the header).
+const heroGround = isChurch ? 'paper' : isNonprofit ? 'paper-contours' : 'window-light';
 ---
 
 <BaseLayout
@@ -183,9 +167,14 @@ const heroPrint = HERO_PRINTS[slug];
   robots={robots}
   preloadFonts={['italic']}
 >
-  {/* 1. Hero. The one moving ground. The h1 is the LCP element; nothing here
-       waits on a reveal. */}
-  <Band ground="window-light" underHeader labelledby="landing-heading" class="lp-hero">
+  {/* 1. Hero. Nothing here waits on a reveal. */}
+  <Band
+    ground={heroGround}
+    still={isChurch}
+    underHeader
+    labelledby="landing-heading"
+    class={`lp-hero lp-hero--${segment.slug}`}
+  >
     <div class="lp-hero-grid">
       <div class="lp-hero-copy">
         <h1 id="landing-heading" class="lp-hero-title">
@@ -203,34 +192,72 @@ const heroPrint = HERO_PRINTS[slug];
               →
             </span>
           </a>
-          <a href={isPhoto ? '#photo-day' : '#prices'} class="lp-textlink">
-            {isPhoto ? 'See the call sheet' : 'See what it costs'}
+          <a href={isPhoto ? '#photo-day' : isNonprofit ? '#work' : '#prices'} class="lp-textlink">
+            {isPhoto
+              ? 'See the call sheet'
+              : isNonprofit
+                ? 'See the race site'
+                : 'See what it costs'}
           </a>
         </div>
-        {/* Any further intro paragraphs sit under the buttons, so the call to
-             action stays in the first screen. */}
+        {/* Further intro paragraphs sit under the buttons, so the call to action
+             stays in the first screen. */}
         {page.intro.slice(1).map((html) => (
           <p class="lp-hero-note" set:html={html} />
         ))}
       </div>
 
-      <div class="lp-hero-side">
-        {/* Desktop only: a small print of the lead proof on the sill, so real work
-           is in the first screen (PRODUCT.md "Show, don't tell"). Lazy, so a
-           phone (where it is hidden) never downloads it; it is too small to be
-           the LCP element. */}
-        {heroPrint && (
-          <a href="#work" class="lp-hero-print">
-            <Image
-              src={heroPrint.src}
-              alt={heroPrint.alt}
-              widths={[400, 640]}
-              sizes="20rem"
-              loading="lazy"
-            />
-            <span class="type-caption">{heroPrint.caption}</span>
-          </a>
-        )}
+      {/* Church: the build itself, printed large. On a desktop it is the
+           largest thing in the first screen, so it loads eagerly. */}
+      {isChurch && (
+        <div class="lp-hero-print">
+          <Frame
+            src={fbcmHome}
+            alt="The new First Baptist Church Muncie home page, with the Sunday service time and the address under the headline."
+            url="fbcm-site.nathanjnixon86.workers.dev"
+            tag={fbcmTag}
+            eager
+            widths={[480, 800, 1200, 1600]}
+            sizes="(min-width: 82.5rem) 42rem, (min-width: 64rem) 52vw, 92vw"
+            caption="First Baptist Church, Muncie, Indiana. Finished, and waiting on the church's move off Wix."
+          />
+        </div>
+      )}
+
+      {/* Nonprofit: the race site on a phone, laid on the map at a tilt (desktop
+           only, lazy: a phone never downloads it). The large prints are the
+           next band. */}
+      {isNonprofit && (
+        <a href="#work" class="lp-hero-phone">
+          <Image
+            src={ssPhone}
+            alt="The Stone Steps 50K home page on a phone: the race name and the date, Sunday, October 25, 2026."
+            widths={[280, 480]}
+            sizes="16rem"
+            loading="lazy"
+          />
+          <span class="type-caption">Stone Steps 50K, Cincinnati. Live.</span>
+        </a>
+      )}
+
+      {/* School: the question a board asks first, linking to its answer. */}
+      {isSchool && first && (
+        <figure class="lp-question">
+          <blockquote>
+            <p>What happens if you're not around next year?</p>
+          </blockquote>
+          <figcaption class="type-caption">
+            The first thing a school board asked me.{' '}
+            <a href={`#${first.id}`} class="lp-inline">
+              The answer comes first
+            </a>
+            .
+          </figcaption>
+        </figure>
+      )}
+
+      {/* Photography: the at-a-glance slip. */}
+      {isPhoto && (
         <aside class="lp-glance" aria-labelledby="glance-title">
           <p class="lp-glance-head">
             <span id="glance-title" class="lp-glance-title">
@@ -248,200 +275,232 @@ const heroPrint = HERO_PRINTS[slug];
           </dl>
           <p class="lp-glance-foot">The first conversation is free.</p>
         </aside>
-      </div>
+      )}
     </div>
   </Band>
 
-  {/* 2 (school). The continuity answer, on the one deep band, straight after
-       the hero, with the Care plan beside it. */}
-  {inkSection && (
-    <Band ground="deep" still labelledby={`${inkSection.id}-heading`} class="lp-ink">
-      <div class="lp-ink-grid">
-        <LandingProse section={inkSection} wide />
-        {careAddOn && <LandingCare care={careAddOn} href={cta} />}
-      </div>
-    </Band>
-  )}
-
-  {/* 2. The CMS sections (web pages), or the first one beside the call sheet
-       (photography). */}
-  {!isPhoto && proseSections.length > 0 && (
-    <Band ground="paper" still labelledby={`${proseSections[0].id}-heading`} class="lp-sections">
-      <div class="lp-stack">
-        {proseSections.map((s) => (
-          <LandingProse section={s} />
-        ))}
-      </div>
-    </Band>
-  )}
-  {firstPhotoSection && (
-    <Band ground="paper" still labelledby={`${firstPhotoSection.id}-heading`} id="photo-day">
-      <div class="lp-photo-grid">
-        <LandingProse section={firstPhotoSection} wide />
-        <div class="lp-photo-sheet">
-          <CallSheet
-            priceFrom={photoOffering?.priceFrom}
-            rateNote={photoAddOn?.note}
-            shots={photoOffering?.points ?? []}
-            headshot={headshot}
-            headshotAlt="Nathan Nixon, smiling outdoors"
+  {
+    /* ============================== CHURCH ============================== */
+    isChurch && home && segment.steps && segment.cost && (
+      <>
+        {first && (
+          <Band ground="paper" still labelledby={`${first.id}-heading`} class="bg-muted">
+            <LandingProse section={first} />
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="proof-heading" id="work">
+          <LandingProof slug={slug} />
+        </Band>
+        <Band ground="deep" still labelledby="steps-heading">
+          <LandingSteps
+            heading={segment.steps.heading}
+            steps={home.process.steps}
+            yours={segment.steps.yours}
+            variant="ledger"
           />
-        </div>
-      </div>
-    </Band>
-  )}
+        </Band>
+        {rest.length > 0 && (
+          <Band ground="paper" still labelledby={`${rest[0].id}-heading`}>
+            <div class="lp-stack">
+              {rest.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="prices-heading" id="prices" class="bg-muted">
+          <LandingCost
+            cost={segment.cost}
+            tiers={tiers}
+            href={cta}
+            ctaLabel={segment.midCtaLabel}
+          />
+        </Band>
+      </>
+    )
+  }
 
-  {/* 3. Proof (web pages): real sites, with their true status. */}
-  {!isPhoto && (
-    <Band ground="paper" still labelledby="proof-heading" class="bg-muted" id="work">
-      <LandingProof slug={slug} />
-    </Band>
-  )}
+  {
+    /* ============================ NONPROFIT ============================= */
+    isNonprofit && home && segment.steps && segment.cost && (
+      <>
+        <Band ground="paper" still labelledby="proof-heading" id="work">
+          <LandingProof slug={slug} />
+        </Band>
+        {first && (
+          <Band ground="paper" still labelledby={`${first.id}-heading`} class="bg-muted">
+            <div class="lp-stack">
+              {page.sections.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="steps-heading">
+          <LandingSteps
+            heading={segment.steps.heading}
+            steps={home.process.steps}
+            yours={segment.steps.yours}
+            variant="pairs"
+          />
+        </Band>
+        <Band ground="paper" still labelledby="prices-heading" id="prices" class="bg-muted">
+          <LandingCost
+            cost={segment.cost}
+            tiers={tiers}
+            href={cta}
+            ctaLabel={segment.midCtaLabel}
+            layout="below"
+          />
+        </Band>
+      </>
+    )
+  }
 
-  {/* 3 (photography). Event photographs, or the honest note while there are none. */}
-  {isPhoto && (
-    <Band ground="paper" still labelledby="photos-heading" class="bg-muted" id="photos">
-      {shown.length > 0 ? (
-        <div>
-          <h2 id="photos-heading" class="type-headline">
-            Recent <span class="voice">event work</span>
-          </h2>
-          <ul class="lp-prints" role="list">
-            {shown.map(({ photo, item }) => (
-              <li data-reveal>
-                <figure class="lp-print">
-                  <img
-                    src={item.src}
-                    srcset={item.srcSet.map((s) => `${s.src} ${s.width}w`).join(', ')}
-                    sizes="(min-width: 64rem) 30vw, (min-width: 40rem) 46vw, 92vw"
-                    width={item.width}
-                    height={item.height}
-                    alt={item.alt}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <figcaption class="type-caption">
-                    {[photo.caption ?? photo.title, photo.location, photo.year || undefined]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </figcaption>
-                </figure>
-              </li>
-            ))}
-          </ul>
-          <a href="/photography/" class="lp-textlink nudge">
-            See the full gallery{' '}
-            <span data-nudge aria-hidden="true">
-              →
-            </span>
-          </a>
-        </div>
-      ) : (
-        <div class="lp-empty">
-          <h2 id="photos-heading" class="type-headline">
-            {voiceSplit(photoPage?.emptyHeading ?? '').head}{' '}
-            <span class="voice">{voiceSplit(photoPage?.emptyHeading ?? '').tail}</span>
-          </h2>
-          <p class="type-lede">{photoPage?.emptyBody}</p>
-          <a href="/photography/" class="lp-textlink nudge">
-            The photography page{' '}
-            <span data-nudge aria-hidden="true">
-              →
-            </span>
-          </a>
-        </div>
-      )}
-      <div class="lp-midcta">
-        <p class="lp-midcta-text">
-          Tell me the date, the place and what the pictures are for, and I will tell you whether a
-          half day or a full day fits.
-        </p>
-        <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-          {segment.midCtaLabel}
-          <span data-nudge aria-hidden="true">
-            →
-          </span>
-        </a>
-      </div>
-    </Band>
-  )}
+  {
+    /* ============================== SCHOOL ============================== */
+    isSchool && home && segment.steps && segment.cost && (
+      <>
+        {first && (
+          <Band ground="deep" still labelledby={`${first.id}-heading`} class="lp-ink">
+            <div class="lp-ink-grid">
+              <LandingProse section={first} wide />
+              {careAddOn && <LandingCare care={careAddOn} href={cta} />}
+            </div>
+          </Band>
+        )}
+        {rest.length > 0 && (
+          <Band ground="paper" still labelledby={`${rest[0].id}-heading`}>
+            <div class="lp-stack">
+              {rest.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="steps-heading" class="bg-muted">
+          <LandingSteps
+            heading={segment.steps.heading}
+            steps={home.process.steps}
+            yours={segment.steps.yours}
+            variant="rail"
+          />
+        </Band>
+        <Band ground="paper" still labelledby="prices-heading" id="prices">
+          <LandingCost
+            cost={segment.cost}
+            tiers={tiers}
+            href={cta}
+            ctaLabel={segment.midCtaLabel}
+          />
+        </Band>
+        <Band ground="paper" still labelledby="proof-heading" class="bg-muted" id="work">
+          <LandingProof slug={slug} />
+        </Band>
+      </>
+    )
+  }
 
-  {/* 3b (photography). The remaining CMS sections. */}
-  {restSections.length > 0 && isPhoto && (
-    <Band ground="paper" still labelledby={`${restSections[0].id}-heading`}>
-      <div class="lp-stack">
-        {restSections.map((s) => (
-          <LandingProse section={s} />
-        ))}
-      </div>
-    </Band>
-  )}
+  {
+    /* =========================== PHOTOGRAPHY ============================ */
+    isPhoto && (
+      <>
+        {first && (
+          <Band ground="paper" still labelledby={`${first.id}-heading`} id="photo-day">
+            <div class="lp-photo-grid">
+              <LandingProse section={first} wide />
+              <div class="lp-photo-sheet">
+                <CallSheet
+                  priceFrom={photoOffering?.priceFrom}
+                  rateNote={photoAddOn?.note}
+                  shots={photoOffering?.points ?? []}
+                  headshot={headshot}
+                  headshotAlt="Nathan Nixon, smiling outdoors"
+                />
+              </div>
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="photos-heading" class="bg-muted" id="photos">
+          {shown.length > 0 ? (
+            <div>
+              <h2 id="photos-heading" class="type-headline">
+                Recent <span class="voice">event work</span>
+              </h2>
+              <ul class="lp-prints" role="list">
+                {shown.map(({ photo, item }) => (
+                  <li data-reveal>
+                    <figure class="lp-print">
+                      <img
+                        src={item.src}
+                        srcset={item.srcSet.map((s) => `${s.src} ${s.width}w`).join(', ')}
+                        sizes="(min-width: 64rem) 30vw, (min-width: 40rem) 46vw, 92vw"
+                        width={item.width}
+                        height={item.height}
+                        alt={item.alt}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <figcaption class="type-caption">
+                        {[photo.caption ?? photo.title, photo.location, photo.year || undefined]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </figcaption>
+                    </figure>
+                  </li>
+                ))}
+              </ul>
+              <a href="/photography/" class="lp-textlink nudge">
+                See the full gallery{' '}
+                <span data-nudge aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </div>
+          ) : (
+            <div class="lp-empty">
+              <h2 id="photos-heading" class="type-headline">
+                {voiceSplit(photoPage?.emptyHeading ?? '').head}{' '}
+                <span class="voice">{voiceSplit(photoPage?.emptyHeading ?? '').tail}</span>
+              </h2>
+              <p class="type-lede">{photoPage?.emptyBody}</p>
+              <a href="/photography/" class="lp-textlink nudge">
+                The photography page{' '}
+                <span data-nudge aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </div>
+          )}
+          <div class="lp-midcta">
+            <p class="lp-midcta-text">
+              Tell me the date, the place and what the pictures are for, and I will tell you whether
+              a half day or a full day fits.
+            </p>
+            <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+              {segment.midCtaLabel}
+              <span data-nudge aria-hidden="true">
+                →
+              </span>
+            </a>
+          </div>
+        </Band>
+        {rest.length > 0 && (
+          <Band ground="paper" still labelledby={`${rest[0].id}-heading`}>
+            <div class="lp-stack">
+              {rest.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+      </>
+    )
+  }
 
-  {/* 4. Prices (web pages). */}
-  {!isPhoto && (
-    <Band ground="paper" still labelledby="prices-heading" id="prices">
-      <div class="lp-band-head">
-        <h2 id="prices-heading" class="type-headline">
-          {priceH.head}
-          {priceH.tail && ' '}
-          {priceH.tail && <span class="voice">{priceH.tail}</span>}
-        </h2>
-        {tierNote && <p class="type-lede lp-band-sub">{tierNote}</p>}
-      </div>
-      <PriceTiers tiers={tiers} ctaHref={cta} />
-      <div class="lp-midcta">
-        <p class="lp-midcta-text">
-          Not sure which one you are? Tell me what the site needs to do and I will say which, and
-          roughly what it costs. Larger projects can be paid monthly.
-        </p>
-        <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-          {segment.midCtaLabel}
-          <span data-nudge aria-hidden="true">
-            →
-          </span>
-        </a>
-      </div>
-    </Band>
-  )}
-
-  {/* 5. How it goes, drawn to scale (web pages). */}
-  {home && processH && (
-    <Band ground="paper" still labelledby="process-heading" class="bg-muted">
-      <div class="lp-band-head">
-        <h2 id="process-heading" class="type-headline">
-          {processH.head}
-          {processH.tail && ' '}
-          {processH.tail && <span class="voice">{processH.tail}</span>}
-        </h2>
-      </div>
-      <ProjectTimeline steps={home.process.steps} />
-    </Band>
-  )}
-
-  {/* 6. At handoff (church and nonprofit): the one deep band. */}
-  {!isPhoto && !isSchool && (
-    <Band ground="deep" still labelledby="handoff-heading" class="lp-ink">
-      <div class="lp-ink-grid">
-        <div>
-          <h2 id="handoff-heading" class="type-headline">
-            What you get <span class="voice">at handoff</span>
-          </h2>
-          <ul class="lp-handoff" role="list">
-            {HANDOFF.map((h) => (
-              <li>
-                <h3>{h.title}</h3>
-                <p>{h.body}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {careAddOn && <LandingCare care={careAddOn} href={cta} />}
-      </div>
-    </Band>
-  )}
-
-  {/* 7. Questions. Native <details>: every answer is in the HTML and opens
-       without JavaScript. The same words are the FAQPage JSON-LD. */}
+  {/* Questions. Native <details>: every answer is in the HTML and opens
+       without JavaScript. The same words are the FAQPage JSON-LD. Each page
+       asks its own questions (the CMS entry). */}
   <Band
     ground="paper"
     still
@@ -480,8 +539,14 @@ const heroPrint = HERO_PRINTS[slug];
     </div>
   </Band>
 
-  {/* 8. Close: the survey sheet of the Ohio's bend, where Cincinnati belongs. */}
-  <Band ground="paper-contours" still labelledby="close-heading">
+  {/* Close. Church and school: the survey sheet of the Ohio's bend. The
+       nonprofit page already opened on it, so it closes on sunk paper. */}
+  <Band
+    ground={isNonprofit ? 'paper' : 'paper-contours'}
+    still
+    labelledby="close-heading"
+    class={isNonprofit ? 'bg-muted' : undefined}
+  >
     <div class="lp-close">
       <h2 id="close-heading" class="type-display lp-close-title">
         {closeH.head}
@@ -489,7 +554,7 @@ const heroPrint = HERO_PRINTS[slug];
         {closeH.tail && <span class="voice">{closeH.tail}</span>}
       </h2>
       <div class="lp-close-side">
-        <p class="type-body">{site.ctaDefault.sub}</p>
+        <p class="type-body">{closeSub}</p>
         <div class="lp-actions">
           <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
             {segment.ctaLabel}
@@ -525,12 +590,18 @@ const heroPrint = HERO_PRINTS[slug];
   /* ---- 1. Hero ---------------------------------------------------------------- */
   .lp-hero-grid {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2.5rem, 5vw, 4rem);
     align-items: center;
   }
   @media (min-width: 64rem) {
     .lp-hero-grid {
       grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.85fr);
+    }
+    /* Church: the print is the bigger half. */
+    :global(.lp-hero--church-websites) .lp-hero-grid {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+      column-gap: clamp(3rem, 5vw, 5rem);
     }
   }
   .lp-hero-title {
@@ -550,6 +621,13 @@ const heroPrint = HERO_PRINTS[slug];
     .lp-hero-title {
       font-size: clamp(3rem, 1.2rem + 3.6vw, 4.75rem);
     }
+    :global(.lp-hero--church-websites) .lp-hero-title {
+      font-size: clamp(2.75rem, 1rem + 3vw, 4.25rem);
+    }
+  }
+  .lp-hero-title .voice {
+    font-size: 0.7em;
+    line-height: 1;
   }
   .lp-hero-note {
     margin: 1.75rem 0 0;
@@ -557,10 +635,6 @@ const heroPrint = HERO_PRINTS[slug];
     font-size: var(--text-body);
     line-height: 1.55;
     color: var(--muted-foreground);
-  }
-  .lp-hero-title .voice {
-    font-size: 0.7em;
-    line-height: 1;
   }
   .lp-hero-intro {
     display: grid;
@@ -602,54 +676,65 @@ const heroPrint = HERO_PRINTS[slug];
     text-decoration-color: currentColor;
   }
 
-  /* The hero's right column: the small print above the slip (desktop only). */
-  .lp-hero-side {
-    display: grid;
-    justify-items: end;
-    gap: 0;
-  }
-  .lp-hero-print {
+  /* Nonprofit: the phone print on the map. */
+  .lp-hero-phone {
     display: none;
   }
   @media (min-width: 64rem) {
-    .lp-hero-print {
+    .lp-hero-phone {
       display: grid;
       gap: 0.5rem;
-      width: min(20rem, 100%);
-      margin: 0 1.5rem 0.4rem 0;
+      justify-self: center;
+      width: min(16rem, 100%);
       padding: 0.45rem 0.45rem 0.6rem;
       background: var(--paper-raised);
       border-radius: 2px;
       box-shadow: var(--shadow-frame);
-      transform: rotate(2deg);
+      transform: rotate(-2.5deg);
       color: var(--muted-foreground);
       text-decoration: none;
-      position: relative;
-      z-index: 0;
     }
-    .lp-hero-print img {
+    .lp-hero-phone :global(img) {
       display: block;
       width: 100%;
       height: auto;
       background: var(--paper-deep);
     }
-    .lp-hero-print:hover .type-caption,
-    .lp-hero-print:focus-visible .type-caption {
+    .lp-hero-phone:hover .type-caption,
+    .lp-hero-phone:focus-visible .type-caption {
       color: var(--link);
       text-decoration: underline;
     }
-    .lp-hero-side .lp-glance {
-      position: relative;
-      z-index: 1;
-    }
-  }
-  @media (max-width: 63.99rem) {
-    .lp-hero-side {
-      justify-items: start;
-    }
   }
 
-  /* The at-a-glance slip: a printed slip laid on the sill, like /services' price list. */
+  /* Church: the large print. */
+  .lp-hero-print {
+    min-width: 0;
+  }
+
+  /* School: the board's question as a quotation, in the red-pen italic. */
+  .lp-question {
+    margin: 0;
+    padding-left: clamp(1.25rem, 3vw, 2rem);
+    border-left: 3px double var(--heading);
+  }
+  .lp-question blockquote {
+    margin: 0;
+  }
+  .lp-question blockquote p {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+    line-height: 1.15;
+    color: var(--marker);
+    text-wrap: balance;
+  }
+  .lp-question figcaption {
+    margin-top: 1rem;
+  }
+
+  /* Photography: the at-a-glance slip, a printed slip laid on the sill. */
   .lp-glance {
     background: var(--paper-raised);
     color: var(--foreground);
@@ -716,6 +801,7 @@ const heroPrint = HERO_PRINTS[slug];
   /* ---- Section stacks ------------------------------------------------------------ */
   .lp-stack {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(3.5rem, 7vw, 6rem);
   }
   .lp-photo-grid {
@@ -734,21 +820,7 @@ const heroPrint = HERO_PRINTS[slug];
     justify-content: center;
   }
 
-  /* ---- Band heads ------------------------------------------------------------------ */
-  .lp-band-head {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: clamp(2rem, 4vw, 3rem);
-    max-width: 52rem;
-  }
-  .lp-band-head > * {
-    margin: 0;
-  }
-  .lp-band-sub {
-    max-width: 52ch;
-  }
-
-  /* ---- Mid-page call ------------------------------------------------------------- */
+  /* ---- Mid-page call (photography) ------------------------------------------------ */
   .lp-midcta {
     display: flex;
     flex-wrap: wrap;
@@ -768,50 +840,16 @@ const heroPrint = HERO_PRINTS[slug];
     color: var(--heading);
   }
 
-  /* ---- Deep band: handoff and Care ----------------------------------------------- */
+  /* ---- Deep band (school: the continuity answer and Care) ------------------------- */
   .lp-ink-grid {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2.5rem, 5vw, 4rem);
   }
   @media (min-width: 64rem) {
     .lp-ink-grid {
       grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
       align-items: start;
-    }
-  }
-  .lp-handoff {
-    list-style: none;
-    margin: 2rem 0 0;
-    padding: 0;
-  }
-  .lp-handoff li {
-    padding-block: 1.1rem;
-    border-top: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent);
-  }
-  @media (min-width: 40rem) {
-    .lp-handoff li {
-      display: grid;
-      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-      column-gap: 2rem;
-      align-items: baseline;
-    }
-  }
-  .lp-handoff h3 {
-    margin: 0;
-    font-family: var(--font-ui);
-    font-size: var(--text-ui);
-    font-weight: 600;
-    color: var(--heading);
-  }
-  .lp-handoff p {
-    margin: 0.35rem 0 0;
-    font-size: var(--text-body);
-    line-height: 1.5;
-    color: var(--muted-foreground);
-  }
-  @media (min-width: 40rem) {
-    .lp-handoff p {
-      margin-top: 0;
     }
   }
 
@@ -861,6 +899,7 @@ const heroPrint = HERO_PRINTS[slug];
   /* ---- Questions ------------------------------------------------------------------- */
   .lp-faq {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2rem, 4vw, 3rem);
   }
   @media (min-width: 64rem) {
@@ -945,6 +984,7 @@ const heroPrint = HERO_PRINTS[slug];
   /* ---- Close ------------------------------------------------------------------------ */
   .lp-close {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2rem;
     align-items: end;
   }
@@ -962,6 +1002,7 @@ const heroPrint = HERO_PRINTS[slug];
   }
   .lp-close-side > p {
     margin: 0;
+    max-width: 46ch;
   }
   .lp-more {
     margin-top: clamp(3rem, 6vw, 4.5rem);

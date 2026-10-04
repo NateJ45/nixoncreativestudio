@@ -139,3 +139,19 @@ test('the web landing pages are in the sitemap, the noindex photo page is not', 
     else expect(xml).toContain(url);
   }
 });
+
+// Polish 2026-10-04: the web landing pages are not clones of /services. No
+// full price sheet (they link to it), no handoff list, no film frames and no
+// china-marker loop; each page's process and cost are its own.
+for (const { path } of PAGES.filter((p) => p.slug !== 'cincinnati-event-photography')) {
+  test(`${path} does not repeat the /services price sheet, handoff list or film frames`, async ({
+    page,
+  }) => {
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+    const main = page.locator('main');
+    await expect(main.locator('.tier-loop, .frame--film, .frame-pick, .sheet')).toHaveCount(0);
+    await expect(main).not.toContainText('What you get at handoff');
+    await expect(main.locator('a[href="/services/#prices"]')).toHaveCount(1);
+    await expect(main.locator('#steps-heading')).toBeVisible();
+  });
+}

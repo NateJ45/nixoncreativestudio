@@ -15,14 +15,32 @@
                                    2003 to 2025, nightly import, LiDAR ~5,200 ft
                                    against the old 10,726 ft claim), D's proof table
      Foundation for Reformed       vault foundation-reformed-theology (Lighthouse
-     Theology                      100/100/100/100 mobile, 2026-09-17; fonts
-                                   282 KB to 186 KB). NOT its traffic: on record
-                                   but not attributable to the build
+     Theology                      100/100/100/100 mobile, 2026-09-17). NOT its
+                                   traffic: on record but not attributable to
+                                   the build
      Theology Matters              vault theology-matters (AI-narrated audio,
                                    ElevenLabs, on every article)
      Presbyterian Academy          launch_status "in-progress"; placeholder
                                    content, so it is named with its status and
                                    never shown or cited as proof
+
+   Each page gets its own SHAPE of proof (polish 2026-10-04: the three pages
+   had read as one template with the words swapped):
+
+     church      the build and the people who run it. The hero already prints
+                 the FBCM home page large, so this band shows the page a
+                 first-time visitor reads (What to expect) with the phone view
+                 laid over it, and the facts as sentences beside them; then the
+                 two other live sites as a plain list, no frames.
+     nonprofit   the Stone Steps facts. The home page large, then the two pages
+                 that prove the facts (the climbing chart, the records), each
+                 captioned with its fact in one sentence.
+     school      the honest status first (no finished school site yet), then
+                 three live sites handed over the same way, small.
+
+   Facts are sentences, never a stat row of figures. Every frame is a plain
+   browser print (no film, no china-marker loop: the loop is kept for the one
+   circled price on /services).
 
    Rules (docs/redesign-2026/00-synthesis.md): only live work is shown as live;
    a study that is not live carries launchStatusLabel() and no outcome; no
@@ -32,14 +50,16 @@
    dataset carries three of the nine), so a link here can never 404. The
    frames are local captures, so they show either way.
    ============================================================================ */
+import { Image } from 'astro:assets';
 import Frame from '../Frame.astro';
 import { getCaseStudies, type CaseStudy } from '../../lib/caseStudies';
 import { launchStatusLabel, type LaunchStatus } from '../../lib/launchStatus';
-import { voiceSplit } from '../../lib/voiceSplit';
 import type { LandingSlug } from '../../lib/landingPage';
-import fbcmHome from '../../assets/home/reel/fbcm-home-d.webp';
+import fbcmExpect from '../../assets/home/reel/fbcm-expect-d.webp';
+import fbcmPhone from '../../assets/home/reel/fbcm-home-m.webp';
 import ssHome from '../../assets/home/reel/ss-home-d.webp';
 import ssRecords from '../../assets/home/reel/ss-records-d.webp';
+import ssElev from '../../assets/home/sheet/ss-elev.webp';
 import frtLibrary from '../../assets/home/reel/frt-res-d.webp';
 import tmArticle from '../../assets/home/reel/tm-article-d.webp';
 
@@ -67,164 +87,89 @@ const fbcmPreview =
   study('first-baptist-muncie')?.previewUrl ?? 'https://fbcm-site.nathanjnixon86.workers.dev/';
 const academyStatus = launchStatusLabel(statusOf('presbyterian-academy', 'in-progress'));
 
-/** A fact printed beside the lead frame: a figure in Bebas, then what it means. */
-interface Fact {
-  figure: string;
-  text: string;
-}
-/** A smaller print of another live site. */
-interface Also {
-  id: string;
-  src: ImageMetadata;
-  alt: string;
-  url: string;
-  edge: string[];
-  caption: string;
-}
-
-const FRT: Also = {
+const FRT = {
   id: 'foundation-for-reformed-theology',
+  name: 'Foundation for Reformed Theology',
+  href: 'https://foundationrt.org/',
   src: frtLibrary,
   alt: 'The Foundation for Reformed Theology library page: Bibliographies, 48 entries, and John Calvin Studies, 95 entries.',
   url: 'foundationrt.org',
-  edge: ['Foundation for Reformed Theology', 'Richmond, VA', 'Live'],
-  caption:
-    'Foundation for Reformed Theology: a library of sermons, lectures and bibliographies its own staff publish to. Lighthouse 100 in all four categories on mobile (September 2026).',
+  fact: 'A library of sermons, lectures and bibliographies its own staff publish to. Lighthouse 100 in all four categories on mobile in September 2026.',
 };
-const TM: Also = {
+const TM = {
   id: 'theology-matters',
+  name: 'Theology Matters',
+  href: 'https://theologymatters.com/',
   src: tmArticle,
   alt: 'A Theology Matters article page: "The Nicene Creed in Historical Context", from the Fall 2025 issue.',
   url: 'theologymatters.com',
-  edge: ['Theology Matters', 'Journal', 'Live'],
-  caption:
-    'Theology Matters: every article carries an AI-narrated audio version (ElevenLabs), added without anyone recording it.',
+  fact: 'A journal whose every article carries an AI-narrated audio version (ElevenLabs), added without anyone recording it.',
 };
-const SS_SMALL: Also = {
+const SS = {
   id: 'stone-steps-50k',
+  name: 'Stone Steps 50K',
+  href: 'https://stonesteps50k.com/',
   src: ssRecords,
   alt: 'The Stone Steps 50K all-time records page.',
   url: 'stonesteps50k.com',
-  edge: ['Stone Steps 50K', 'Cincinnati', 'Live'],
-  caption:
-    'Stone Steps 50K: records calculated from 2,188 checked finishes, so a record can never disagree with the result behind it.',
+  fact: 'A trail race whose records are calculated from 2,188 checked finishes, so a record can never disagree with the result behind it.',
 };
-
-type Lead = {
-  heading: string;
-  src: ImageMetadata;
-  alt: string;
-  url: string;
-  tag?: string;
-  caption: string;
-  facts: Fact[];
-  visit?: { href: string; label: string };
-  studyId: string;
-};
-
-// ---- Per page ----------------------------------------------------------------
-let lead: Lead | undefined;
-let also: Also[] = [];
-let alsoHeading = '';
-let note: string | undefined;
-
-if (slug === 'church-websites') {
-  lead = {
-    heading: 'The newest church build, launching soon',
-    src: fbcmHome,
-    alt: 'The new First Baptist Church Muncie home page: the service time, 10:45 am on Sundays, and the address, 309 East Adams Street, under the headline.',
-    url: 'fbcm-site.nathanjnixon86.workers.dev',
-    tag: fbcmStatus,
-    caption: `First Baptist Church, Muncie, Indiana. ${fbcmStatus ?? ''}: the site is finished and waits on the church's move off Wix, so it is shown at its preview address.`,
-    facts: [
-      { figure: '142', text: 'posts carried across from Wix, at their original addresses.' },
-      {
-        figure: 'Once',
-        text: 'is how often the service time, the address and the main links are entered. Every page reads them from there.',
-      },
-      {
-        figure: 'In place',
-        text: 'is where staff edit a page, with a live preview before it is published.',
-      },
-    ],
-    visit: { href: fbcmPreview, label: 'Open the preview' },
-    studyId: 'first-baptist-muncie',
-  };
-  alsoHeading = 'Live now, for a theological foundation and a journal';
-  also = [FRT, TM];
-} else if (slug === 'nonprofit-websites') {
-  lead = {
-    heading: 'Stone Steps 50K, a race that keeps its own records',
-    src: ssHome,
-    alt: 'The Stone Steps 50K home page: the race name over a photograph of a runner climbing a wooded trail in Mt. Airy Forest.',
-    url: 'stonesteps50k.com',
-    caption:
-      'Stone Steps 50K, a trail race in Mt. Airy Forest, Cincinnati. A paid rebuild from WordPress, live since September 2026.',
-    facts: [
-      {
-        figure: '2,188',
-        text: 'checked finishes, from 2003 to 2025, with the records calculated from them.',
-      },
-      {
-        figure: 'Nightly',
-        text: 'the results import runs, so a race is on the site the morning after, with nobody typing it in.',
-      },
-      {
-        figure: '5,200 ft',
-        text: 'of climb, about, measured from LiDAR. The old site said 10,726.',
-      },
-    ],
-    visit: { href: 'https://stonesteps50k.com/', label: 'Visit stonesteps50k.com' },
-    studyId: 'stone-steps-50k',
-  };
-  alsoHeading = 'Two more, live now';
-  also = [FRT, TM];
-} else if (slug === 'school-websites') {
-  note = `My school work is in progress. Presbyterian Academy in Cincinnati is being built now (${academyStatus ?? 'In progress'}), and it will not appear here as finished work, or with results, until it is. These live sites were handed over the same way a school site will be.`;
-  alsoHeading = 'Where my school work stands';
-  also = [SS_SMALL, FRT, TM];
-}
-
-const leadH = lead ? voiceSplit(lead.heading) : undefined;
-const alsoH = voiceSplit(alsoHeading);
 ---
 
-{lead && leadH && (
-  <div class="lp-lead">
-    <h2 id="proof-heading" class="type-headline lp-lead-title">
-      {leadH.head}
-      {leadH.tail && ' '}
-      {leadH.tail && <span class="voice">{leadH.tail}</span>}
+{slug === 'church-websites' && (
+  <div class="pf-church">
+    <h2 id="proof-heading" class="type-headline pf-title">
+      The newest church build, <span class="voice">and who will run it</span>
     </h2>
-    <div class="lp-lead-grid">
-      <div class="lp-lead-frame" data-reveal>
-        <Frame
-          src={lead.src}
-          alt={lead.alt}
-          url={lead.url}
-          tag={lead.tag}
-          widths={[480, 800, 1200, 1600]}
-          sizes="(min-width: 64rem) 60vw, 92vw"
-          caption={lead.caption}
-        />
+    <div class="pf-church-grid">
+      <div class="pf-church-prints">
+        <div class="pf-church-main" data-reveal>
+          <Frame
+            src={fbcmExpect}
+            alt="The First Baptist Church Muncie What to expect page: Sunday School at 9:30 am, Donut Hour at 10:15 am and Worship at 10:45 am, beside a photograph of children at a fellowship table."
+            url="fbcm-site.nathanjnixon86.workers.dev"
+            tag={fbcmStatus}
+            widths={[480, 800, 1200]}
+            sizes="(min-width: 64rem) 46vw, 92vw"
+            caption="What to expect: the page a first-time visitor reads before Sunday."
+          />
+        </div>
+        <figure class="pf-phone" data-reveal="right">
+          <Image
+            src={fbcmPhone}
+            alt="The First Baptist Church Muncie home page on a phone."
+            widths={[240, 400]}
+            sizes="11rem"
+            loading="lazy"
+          />
+          <figcaption class="type-caption">The same site on a phone.</figcaption>
+        </figure>
       </div>
-      <div class="lp-lead-facts">
-        <dl class="lp-facts">
-          {lead.facts.map((f) => (
-            <div>
-              <dt class="type-numeral">{f.figure}</dt>
-              <dd>{f.text}</dd>
-            </div>
-          ))}
-        </dl>
-        <p class="lp-links">
-          {lead.visit && (
-            <a href={lead.visit.href} class="lp-textlink" rel="noopener">
-              {lead.visit.label}
-            </a>
-          )}
-          {studyHref(lead.studyId) && (
-            <a href={studyHref(lead.studyId)} class="lp-textlink nudge">
+      <div class="pf-church-copy">
+        <p class="type-lede">
+          First Baptist Church in Muncie, Indiana, is finished. It waits on the church's move off
+          Wix, so it is shown here at its preview address
+          {fbcmStatus ? `, ${fbcmStatus.toLowerCase()}` : ''}.
+        </p>
+        <p>
+          Its 142 posts came across from Wix at their original addresses, so links in old
+          newsletters still land on the right page.
+        </p>
+        <p>
+          The service time, the address and the main links are typed in once, and every page reads
+          them from there, so the footer can never disagree with the visit page.
+        </p>
+        <p>
+          The people who will run it are church staff, not me. They edit a page where it sits and
+          see a live preview before it is published, and the written guide covers the jobs that come
+          up every week.
+        </p>
+        <p class="pf-links">
+          <a href={fbcmPreview} class="pf-link" rel="noopener">
+            Open the preview
+          </a>
+          {studyHref('first-baptist-muncie') && (
+            <a href={studyHref('first-baptist-muncie')} class="pf-link nudge">
               Read the case study{' '}
               <span data-nudge aria-hidden="true">
                 →
@@ -234,37 +179,122 @@ const alsoH = voiceSplit(alsoHeading);
         </p>
       </div>
     </div>
+
+    <div class="pf-list">
+      <h3 class="pf-list-title">Live now, for a theological foundation and a journal</h3>
+      <ul role="list">
+        {[FRT, TM].map((a) => (
+          <li>
+            <a
+              href={studyHref(a.id) ?? a.href}
+              class="pf-list-name"
+              rel={studyHref(a.id) ? undefined : 'noopener'}
+            >
+              {a.name}
+            </a>
+            <p>{a.fact}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
   </div>
 )}
 
-{also.length > 0 && (
-  <div class:list={['lp-also', { 'lp-also--solo': !lead }]}>
-    {lead ? (
-      <h3 class="lp-also-title">{alsoHeading}</h3>
-    ) : (
-      <h2 id="proof-heading" class="type-headline">
-        {alsoH.head}
-        {alsoH.tail && ' '}
-        {alsoH.tail && <span class="voice">{alsoH.tail}</span>}
+{slug === 'nonprofit-websites' && (
+  <div class="pf-np">
+    <div class="pf-np-head">
+      <h2 id="proof-heading" class="type-headline pf-title">
+        Stone Steps 50K, <span class="voice">a race that keeps its own records</span>
       </h2>
-    )}
-    {note && <p class="type-lede lp-note">{note}</p>}
-    <ul class:list={['lp-also-list', `lp-also-list--${also.length}`]} role="list">
-      {also.map((a) => (
+      <p class="type-lede">
+        A trail race in Mt. Airy Forest, Cincinnati. I rebuilt its site from WordPress, and it has
+        been live since September 2026.
+      </p>
+    </div>
+    <div class="pf-np-lead" data-reveal>
+      <Frame
+        src={ssHome}
+        alt="The Stone Steps 50K home page: the race name over a photograph of a runner climbing a wooded trail in Mt. Airy Forest."
+        url="stonesteps50k.com"
+        widths={[640, 960, 1280, 1600]}
+        sizes="(min-width: 82.5rem) 76rem, 92vw"
+      />
+    </div>
+    <div class="pf-np-facts">
+      <figure class="pf-np-fact">
+        <div data-reveal>
+          <Frame
+            src={ssRecords}
+            alt="The Stone Steps 50K all-time records page."
+            url="stonesteps50k.com"
+            widths={[480, 800, 1200]}
+            sizes="(min-width: 64rem) 40vw, 92vw"
+          />
+        </div>
+        <figcaption>
+          The results go back to 2003: 2,188 finishes, each one checked, and the records are
+          calculated from them, so a record can never disagree with the result behind it. A results
+          import runs every night, so a race is on the site the morning after and nobody types it
+          in.
+        </figcaption>
+      </figure>
+      <figure class="pf-np-fact">
+        <div data-reveal>
+          <Frame
+            src={ssElev}
+            alt="The Stone Steps 50K course profile: about 5,200 feet of climbing, measured from USGS LiDAR along a recorded run of the course."
+            url="stonesteps50k.com"
+            widths={[480, 800, 1200]}
+            sizes="(min-width: 64rem) 40vw, 92vw"
+          />
+        </div>
+        <figcaption>
+          The old site said the course climbed 10,726 feet. Measured from LiDAR along a recorded
+          run, it is about 5,200, and the course page now says so.
+        </figcaption>
+      </figure>
+    </div>
+    <p class="pf-links">
+      <a href="https://stonesteps50k.com/" class="pf-link" rel="noopener">
+        Visit stonesteps50k.com
+      </a>
+      {studyHref('stone-steps-50k') && (
+        <a href={studyHref('stone-steps-50k')} class="pf-link nudge">
+          Read the case study{' '}
+          <span data-nudge aria-hidden="true">
+            →
+          </span>
+        </a>
+      )}
+    </p>
+  </div>
+)}
+
+{slug === 'school-websites' && (
+  <div class="pf-school">
+    <div class="pf-school-head">
+      <h2 id="proof-heading" class="type-headline pf-title">
+        Where my school work <span class="voice">stands</span>
+      </h2>
+      <p class="type-lede">
+        My school work is in progress. Presbyterian Academy in Cincinnati is{' '}
+        {`being built now (${academyStatus ?? 'In progress'}), and it will not appear here as finished work, or with results, until it is.`}{' '}
+        These live sites were handed over the way a school site will be.
+      </p>
+    </div>
+    <ul class="pf-school-list" role="list">
+      {[SS, FRT, TM].map((a) => (
         <li data-reveal>
           <Frame
-            variant="film"
             src={a.src}
             alt={a.alt}
-            edge={a.edge}
-            widths={[480, 800, 1200]}
-            sizes={
-              also.length > 2 ? '(min-width: 64rem) 30vw, 92vw' : '(min-width: 64rem) 44vw, 92vw'
-            }
-            caption={a.caption}
+            url={a.url}
+            widths={[480, 800]}
+            sizes="(min-width: 64rem) 28vw, (min-width: 48rem) 45vw, 92vw"
+            caption={`${a.name}. ${a.fact}`}
           />
           {studyHref(a.id) && (
-            <a href={studyHref(a.id)} class="lp-textlink nudge">
+            <a href={studyHref(a.id)} class="pf-link nudge">
               Read the case study{' '}
               <span data-nudge aria-hidden="true">
                 →
@@ -278,52 +308,21 @@ const alsoH = voiceSplit(alsoHeading);
 )}
 
 <style>
-  .lp-lead-title {
-    margin: 0 0 clamp(2rem, 4vw, 3rem);
-    max-width: 20ch;
-  }
-  .lp-lead-grid {
-    display: grid;
-    gap: clamp(2rem, 4vw, 3.5rem);
-    align-items: start;
-  }
-  @media (min-width: 64rem) {
-    .lp-lead-grid {
-      grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    }
-  }
-  /* The facts: a figure in Bebas over a hairline, then what it means. */
-  .lp-facts {
+  .pf-title {
     margin: 0;
-    display: grid;
-    gap: 0;
-    border-top: 3px double var(--heading);
+    max-width: 22ch;
   }
-  .lp-facts > div {
-    padding-block: 1.1rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .lp-facts dt {
-    color: var(--heading);
-    line-height: 1;
-  }
-  .lp-facts dd {
-    margin: 0.4rem 0 0;
-    font-size: var(--text-body);
-    line-height: 1.5;
-    max-width: 34ch;
-  }
-  .lp-links {
+  .pf-links {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem 1.5rem;
     margin: 1.25rem 0 0;
   }
-  .lp-textlink {
+  .pf-link {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    min-height: 44px;
+    min-height: var(--tap);
     font-family: var(--font-ui);
     font-weight: 600;
     color: var(--link);
@@ -331,55 +330,194 @@ const alsoH = voiceSplit(alsoHeading);
     text-decoration-color: color-mix(in oklab, var(--link) 40%, transparent);
     text-underline-offset: 0.2em;
   }
-  .lp-textlink:hover {
+  .pf-link:hover {
     text-decoration-color: currentColor;
   }
 
-  /* The smaller prints: other live work, on film. */
-  .lp-also {
-    margin-top: clamp(3.5rem, 7vw, 6rem);
+  /* ---- Church: two prints laid over each other, the facts as prose ---------- */
+  .pf-church-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+    margin-top: clamp(2rem, 4vw, 3rem);
   }
-  .lp-also--solo {
-    margin-top: 0;
+  @media (min-width: 64rem) {
+    .pf-church-grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      align-items: start;
+    }
   }
-  .lp-also-title {
-    margin: 0 0 1.5rem;
+  .pf-church-prints {
+    position: relative;
+  }
+  /* The phone print is laid over the corner from 48rem up; on a phone the
+     caption would sit under it, and the hero has just shown the home page. */
+  .pf-phone {
+    display: none;
+  }
+  @media (min-width: 48rem) {
+    .pf-church-prints {
+      padding-bottom: 3rem;
+    }
+    .pf-church-main {
+      margin-right: clamp(2rem, 9vw, 7rem);
+    }
+    .pf-phone {
+      display: block;
+    }
+  }
+  .pf-phone {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: clamp(7.5rem, 22vw, 11rem);
+    margin: 0;
+    padding: 0.35rem 0.35rem 0.5rem;
+    background: var(--paper-raised);
+    border-radius: 2px;
+    box-shadow: var(--shadow-frame);
+  }
+  .pf-phone :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--paper-deep);
+  }
+  .pf-phone figcaption {
+    margin-top: 0.35rem;
+  }
+  .pf-church-copy {
+    display: grid;
+    gap: 1.1rem;
+    max-width: 38rem;
+  }
+  .pf-church-copy > p {
+    margin: 0;
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+  .pf-church-copy > p.type-lede {
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--heading);
+  }
+  .pf-list {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .pf-list-title {
+    margin: 0 0 0.5rem;
     font-family: var(--font-serif);
     font-style: italic;
     font-weight: 400;
-    font-size: var(--text-h4);
-    line-height: 1.15;
+    font-size: var(--text-h5);
     color: var(--marker);
   }
-  .lp-note {
-    margin: 1.25rem 0 clamp(2rem, 4vw, 3rem);
-    max-width: 52ch;
+  .pf-list ul {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0 clamp(2rem, 5vw, 4rem);
   }
-  .lp-also-list {
-    list-style: none;
+  @media (min-width: 48rem) {
+    .pf-list ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .pf-list li p {
+    margin: 0 0 1rem;
+    max-width: 40ch;
+    font-size: var(--text-body);
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .pf-list-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--heading);
+    text-decoration: underline;
+    text-decoration-color: var(--marker);
+    text-underline-offset: 0.22em;
+  }
+  .pf-list-name:hover {
+    color: var(--link);
+  }
+
+  /* ---- Nonprofit: the site large, then the two pages that prove the facts -- */
+  .pf-np-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+  }
+  @media (min-width: 64rem) {
+    .pf-np-head {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      column-gap: clamp(3rem, 6vw, 6rem);
+      align-items: end;
+    }
+  }
+  .pf-np-head > p {
+    margin: 0;
+    max-width: 44ch;
+  }
+  .pf-np-facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 48rem) {
+    .pf-np-facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: clamp(2rem, 4vw, 3.5rem);
+    }
+    /* Laid down by hand: the second print a little lower, a little in. */
+    .pf-np-fact:nth-child(2) {
+      margin-top: clamp(2rem, 6vw, 5rem);
+    }
+  }
+  .pf-np-fact {
+    margin: 0;
+  }
+  .pf-np-fact figcaption {
+    margin-top: 1rem;
+    max-width: 44ch;
+    font-size: var(--text-body);
+    line-height: 1.55;
+    color: var(--foreground);
+  }
+
+  /* ---- School: the status in words, three small live prints ------------------ */
+  .pf-school-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    max-width: 50rem;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+  }
+  .pf-school-head > p {
+    margin: 0;
+    max-width: 54ch;
+  }
+  .pf-school-list {
     margin: 0;
     padding: 0;
     display: grid;
     gap: clamp(2rem, 4vw, 3rem);
   }
   @media (min-width: 48rem) {
-    .lp-also-list--2 {
+    .pf-school-list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    /* Two prints set at different heights, as if laid down by hand. */
-    .lp-also-list--2 > li:nth-child(2) {
-      margin-top: clamp(1.5rem, 4vw, 3.5rem);
     }
   }
   @media (min-width: 64rem) {
-    .lp-also-list--3 {
+    .pf-school-list {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-    .lp-also-list--3 > li:nth-child(2) {
-      margin-top: 2.5rem;
-    }
-  }
-  .lp-also-list li > .lp-textlink {
-    margin-top: 0.25rem;
   }
 </style>

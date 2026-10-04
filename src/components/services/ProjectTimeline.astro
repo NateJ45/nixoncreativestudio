@@ -23,6 +23,7 @@
    each track's label carry the same facts as text.
    ============================================================================ */
 import type { ProcessStep } from '../../lib/homePage';
+import { PROCESS_DURATIONS } from '../../lib/processDurations';
 
 interface Props {
   steps: ProcessStep[];
@@ -45,13 +46,8 @@ const FOLLOW = 4;
 const pct = (w: number) => `${(w / SCALE) * 100}%`;
 const ticks = Array.from({ length: SCALE / 2 + 1 }, (_, i) => i * 2);
 
-/** How long each step takes, in the order of the CMS steps. */
-const DURATIONS = [
-  'One hour',
-  'The brief sets the timeline',
-  'A preview at every milestone',
-  'The first month after launch',
-];
+/** How long each step takes, in the order of the CMS steps (shared with LandingSteps). */
+const DURATIONS = PROCESS_DURATIONS;
 ---
 
 <figure class="tl" aria-labelledby="tl-caption">
