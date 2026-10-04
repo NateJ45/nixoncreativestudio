@@ -23,8 +23,10 @@
      elsewhere, and the arrows are hidden (they need the script).
    - Browsers without animation-timeline (Firefox today) get a plain snap row
      with big frames and peeking neighbours.
-   - Reduced motion: moves jump instead of gliding and the marker loop does
-     not draw. The fan is position, not animation, so it stays.
+   - Reduced motion: the reel is the plain snap row (as in Firefox), moves
+     jump instead of gliding and the marker loop does not draw. The fan is a
+     scroll-driven animation, which counts as running for as long as the page
+     is open, so it is off under reduce (tests/reduced-motion.spec.ts).
 
    Images: real captures of the live sites (scripts/brand/capture-home-reel.mjs),
    a phone capture under 700px and a desktop capture above, AVIF with a WebP
@@ -734,212 +736,76 @@ const startSlide = slides[start];
   }
 
   /* ===== The fan ===================================================== */
-  @supports (animation-timeline: view()) {
-    .show {
-      --S: 14cqi;
-      --F: clamp(44cqi, (100svh - 470px) * 1.48, 56cqi);
-      --rise: calc(var(--F) * 0.27);
-    }
-    .track {
-      gap: 0;
-      padding: var(--rise) calc(50cqi - var(--S) / 2) 0;
-    }
-    .slide {
-      flex: 0 0 var(--S);
-      height: calc(var(--F) * 0.6625 + var(--capH));
-      view-timeline: --slot inline;
-    }
-    .vp {
-      position: absolute;
-      left: 50%;
-      bottom: var(--capH);
-      width: var(--F);
-      margin-left: calc(var(--F) / -2);
-      transform-origin: 50% 100%;
-      animation: fan linear both;
-      animation-duration: auto;
-      animation-timeline: --slot;
-    }
-    .vp figcaption {
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      width: min(calc(100cqi - 32px), 44rem);
-      translate: -50% 0;
-      text-align: center;
-      justify-items: center;
-      /* Hidden unless the cap timeline shows it, so no caption ever overlaps another. */
-      visibility: hidden;
-      animation: cap linear both;
-      animation-duration: auto;
-      animation-timeline: --slot;
-    }
-    /* Positions in units of the centre frame (F) and the slot (S). One step is 14/114 of
-       the view timeline: d=1 at 37.72%, d=2 at 25.44%, d=3 at 13.16%. */
-    @keyframes fan {
-      0% {
-        translate: calc(var(--F) * 0.6 - var(--S) * 4.071) calc(var(--F) * -0.5);
-        scale: 0.3;
-        z-index: 5;
-        opacity: 0;
-      }
-      13.16% {
-        translate: calc(var(--F) * 0.62 - var(--S) * 3) calc(var(--F) * -0.52);
-        scale: 0.36;
-        z-index: 7;
-        opacity: 0.85;
-      }
-      25.44% {
-        translate: calc(var(--F) * 0.75 - var(--S) * 2) calc(var(--F) * -0.27);
-        scale: 0.48;
-        z-index: 8;
-        opacity: 1;
-      }
-      37.72% {
-        translate: calc(var(--F) * 0.62 - var(--S) * 1) calc(var(--F) * -0.02);
-        scale: 0.62;
-        z-index: 9;
-      }
-      50% {
-        translate: 0 0;
-        scale: 1;
-        z-index: 10;
-      }
-      62.28% {
-        translate: calc(var(--F) * -0.62 + var(--S) * 1) 0;
-        scale: 0.62;
-        z-index: 9;
-      }
-      74.56% {
-        translate: calc(var(--F) * -0.76 + var(--S) * 2) calc(var(--F) * -0.24);
-        scale: 0.5;
-        z-index: 8;
-        opacity: 1;
-      }
-      86.84% {
-        translate: calc(var(--F) * -0.6 + var(--S) * 3) calc(var(--F) * -0.46);
-        scale: 0.38;
-        z-index: 7;
-        opacity: 0.85;
-      }
-      100% {
-        translate: calc(var(--F) * -0.6 + var(--S) * 4.071) calc(var(--F) * -0.46);
-        scale: 0.3;
-        z-index: 5;
-        opacity: 0;
-      }
-    }
-    @keyframes cap {
-      0%,
-      45% {
-        opacity: 0;
-        visibility: hidden;
-      }
-      48.5%,
-      51.5% {
-        opacity: 1;
-        visibility: visible;
-      }
-      55%,
-      100% {
-        opacity: 0;
-        visibility: hidden;
-      }
-    }
-
-    /* The china-marker loop round the centre position. Frames travel under it; it fades
-       while they move and settles round whichever frame lands. */
-    .loop {
-      display: block;
-      position: absolute;
-      z-index: 20;
-      left: 50%;
-      top: calc(var(--rise) - var(--pull) - 13px);
-      width: calc(var(--F) + 26px);
-      height: calc(var(--F) * 0.6625 + 26px);
-      translate: -50% 0;
-      overflow: visible;
-      pointer-events: none;
-      transition: opacity 0.35s var(--ease-settle);
-    }
-    .show:global(.is-moving) .loop {
-      opacity: 0;
-      transition-duration: 0.12s;
-    }
-    .loop path {
-      fill: none;
-      stroke: var(--marker);
-      stroke-width: 3.4;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      vector-effect: non-scaling-stroke;
-    }
-    /* Tuck the raised side stacks up beside the buttons, less on tablets where the
-       copy runs wider. */
-    @media (min-width: 701px) {
+  /* Only for visitors who have not asked for less motion. The fan is a scroll-driven
+     animation on every frame, and a scroll-driven animation is a RUNNING animation for
+     as long as the page is open (tests/reduced-motion.spec.ts, PORTS card 61, found it
+     on 2026-10-04). Under reduce the reel is the plain snap row that browsers without
+     animation-timeline already get: big frames, peeking neighbours, moves that jump. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
       .show {
-        --pull: calc(var(--rise) * 0.55);
+        --S: 14cqi;
+        --F: clamp(44cqi, (100svh - 470px) * 1.48, 56cqi);
+        --rise: calc(var(--F) * 0.27);
       }
-    }
-    @media (min-width: 1100px) {
-      .show {
-        --pull: calc(var(--rise) * 0.92);
-      }
-    }
-    /* On a wide screen the fan's bottom edge (and the strip under it) falls below a
-       900px fold, so the arrows leave the strip and sit at the centre frame's sides,
-       halfway down it, where they are visible on arrival. The strip keeps the counter.
-       Offsets: half the frame height, the caption block, the strip's margin and padding. */
-    @media (min-width: 1100px) {
-      :global(.js) .ctrl {
-        width: min(100% - 2 * var(--gutter), 380px);
-      }
-      .nav-btn {
-        position: absolute;
-        z-index: 30;
-        top: calc(var(--F) * -0.33125 - var(--capH) - 1.25rem - 18px - 28px);
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: var(--ink);
-        box-shadow: var(--shadow-print);
-      }
-      .prev {
-        left: calc(50% - var(--F) / 2 - 84px);
-      }
-      .next {
-        right: calc(50% - var(--F) / 2 - 84px);
-      }
-      .nav-btn[disabled] {
-        opacity: 0;
-        pointer-events: none;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .show {
-        --S: 30cqi;
-        --F: clamp(60cqi, (100svh - 470px) * 0.76, 74cqi);
-        --rise: calc(var(--F) * 0.07);
+      .track {
+        gap: 0;
+        padding: var(--rise) calc(50cqi - var(--S) / 2) 0;
       }
       .slide {
-        height: calc(var(--F) * 1.3285 + var(--capH));
+        flex: 0 0 var(--S);
+        height: calc(var(--F) * 0.6625 + var(--capH));
+        view-timeline: --slot inline;
       }
-      .loop {
-        height: calc(var(--F) * 1.3285 + 22px);
-        width: calc(var(--F) + 20px);
-        top: calc(var(--rise) - var(--pull) - 11px);
+      .vp {
+        position: absolute;
+        left: 50%;
+        bottom: var(--capH);
+        width: var(--F);
+        margin-left: calc(var(--F) / -2);
+        transform-origin: 50% 100%;
+        animation: fan linear both;
+        animation-duration: auto;
+        animation-timeline: --slot;
       }
-      /* Slot is 30% of the reel: one step is 30/130 of the timeline, d=1 at 26.92%. */
+      .vp figcaption {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        width: min(calc(100cqi - 32px), 44rem);
+        translate: -50% 0;
+        text-align: center;
+        justify-items: center;
+        /* Hidden unless the cap timeline shows it, so no caption ever overlaps another. */
+        visibility: hidden;
+        animation: cap linear both;
+        animation-duration: auto;
+        animation-timeline: --slot;
+      }
+      /* Positions in units of the centre frame (F) and the slot (S). One step is 14/114 of
+       the view timeline: d=1 at 37.72%, d=2 at 25.44%, d=3 at 13.16%. */
       @keyframes fan {
         0% {
-          translate: calc(var(--F) * 0.42 - var(--S) * 2.1667) calc(var(--F) * -0.07);
-          scale: 0.7;
-          z-index: 7;
+          translate: calc(var(--F) * 0.6 - var(--S) * 4.071) calc(var(--F) * -0.5);
+          scale: 0.3;
+          z-index: 5;
+          opacity: 0;
         }
-        26.92% {
-          translate: calc(var(--F) * 0.3 - var(--S)) calc(var(--F) * -0.035);
-          scale: 0.84;
+        13.16% {
+          translate: calc(var(--F) * 0.62 - var(--S) * 3) calc(var(--F) * -0.52);
+          scale: 0.36;
+          z-index: 7;
+          opacity: 0.85;
+        }
+        25.44% {
+          translate: calc(var(--F) * 0.75 - var(--S) * 2) calc(var(--F) * -0.27);
+          scale: 0.48;
+          z-index: 8;
+          opacity: 1;
+        }
+        37.72% {
+          translate: calc(var(--F) * 0.62 - var(--S) * 1) calc(var(--F) * -0.02);
+          scale: 0.62;
           z-index: 9;
         }
         50% {
@@ -947,15 +813,158 @@ const startSlide = slides[start];
           scale: 1;
           z-index: 10;
         }
-        73.08% {
-          translate: calc(var(--F) * -0.3 + var(--S)) calc(var(--F) * -0.035);
-          scale: 0.84;
+        62.28% {
+          translate: calc(var(--F) * -0.62 + var(--S) * 1) 0;
+          scale: 0.62;
           z-index: 9;
         }
-        100% {
-          translate: calc(var(--F) * -0.42 + var(--S) * 2.1667) calc(var(--F) * -0.07);
-          scale: 0.7;
+        74.56% {
+          translate: calc(var(--F) * -0.76 + var(--S) * 2) calc(var(--F) * -0.24);
+          scale: 0.5;
+          z-index: 8;
+          opacity: 1;
+        }
+        86.84% {
+          translate: calc(var(--F) * -0.6 + var(--S) * 3) calc(var(--F) * -0.46);
+          scale: 0.38;
           z-index: 7;
+          opacity: 0.85;
+        }
+        100% {
+          translate: calc(var(--F) * -0.6 + var(--S) * 4.071) calc(var(--F) * -0.46);
+          scale: 0.3;
+          z-index: 5;
+          opacity: 0;
+        }
+      }
+      @keyframes cap {
+        0%,
+        45% {
+          opacity: 0;
+          visibility: hidden;
+        }
+        48.5%,
+        51.5% {
+          opacity: 1;
+          visibility: visible;
+        }
+        55%,
+        100% {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+
+      /* The china-marker loop round the centre position. Frames travel under it; it fades
+       while they move and settles round whichever frame lands. */
+      .loop {
+        display: block;
+        position: absolute;
+        z-index: 20;
+        left: 50%;
+        top: calc(var(--rise) - var(--pull) - 13px);
+        width: calc(var(--F) + 26px);
+        height: calc(var(--F) * 0.6625 + 26px);
+        translate: -50% 0;
+        overflow: visible;
+        pointer-events: none;
+        transition: opacity 0.35s var(--ease-settle);
+      }
+      .show:global(.is-moving) .loop {
+        opacity: 0;
+        transition-duration: 0.12s;
+      }
+      .loop path {
+        fill: none;
+        stroke: var(--marker);
+        stroke-width: 3.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+      /* Tuck the raised side stacks up beside the buttons, less on tablets where the
+       copy runs wider. */
+      @media (min-width: 701px) {
+        .show {
+          --pull: calc(var(--rise) * 0.55);
+        }
+      }
+      @media (min-width: 1100px) {
+        .show {
+          --pull: calc(var(--rise) * 0.92);
+        }
+      }
+      /* On a wide screen the fan's bottom edge (and the strip under it) falls below a
+       900px fold, so the arrows leave the strip and sit at the centre frame's sides,
+       halfway down it, where they are visible on arrival. The strip keeps the counter.
+       Offsets: half the frame height, the caption block, the strip's margin and padding. */
+      @media (min-width: 1100px) {
+        :global(.js) .ctrl {
+          width: min(100% - 2 * var(--gutter), 380px);
+        }
+        .nav-btn {
+          position: absolute;
+          z-index: 30;
+          top: calc(var(--F) * -0.33125 - var(--capH) - 1.25rem - 18px - 28px);
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: var(--ink);
+          box-shadow: var(--shadow-print);
+        }
+        .prev {
+          left: calc(50% - var(--F) / 2 - 84px);
+        }
+        .next {
+          right: calc(50% - var(--F) / 2 - 84px);
+        }
+        .nav-btn[disabled] {
+          opacity: 0;
+          pointer-events: none;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .show {
+          --S: 30cqi;
+          --F: clamp(60cqi, (100svh - 470px) * 0.76, 74cqi);
+          --rise: calc(var(--F) * 0.07);
+        }
+        .slide {
+          height: calc(var(--F) * 1.3285 + var(--capH));
+        }
+        .loop {
+          height: calc(var(--F) * 1.3285 + 22px);
+          width: calc(var(--F) + 20px);
+          top: calc(var(--rise) - var(--pull) - 11px);
+        }
+        /* Slot is 30% of the reel: one step is 30/130 of the timeline, d=1 at 26.92%. */
+        @keyframes fan {
+          0% {
+            translate: calc(var(--F) * 0.42 - var(--S) * 2.1667) calc(var(--F) * -0.07);
+            scale: 0.7;
+            z-index: 7;
+          }
+          26.92% {
+            translate: calc(var(--F) * 0.3 - var(--S)) calc(var(--F) * -0.035);
+            scale: 0.84;
+            z-index: 9;
+          }
+          50% {
+            translate: 0 0;
+            scale: 1;
+            z-index: 10;
+          }
+          73.08% {
+            translate: calc(var(--F) * -0.3 + var(--S)) calc(var(--F) * -0.035);
+            scale: 0.84;
+            z-index: 9;
+          }
+          100% {
+            translate: calc(var(--F) * -0.42 + var(--S) * 2.1667) calc(var(--F) * -0.07);
+            scale: 0.7;
+            z-index: 7;
+          }
         }
       }
     }
