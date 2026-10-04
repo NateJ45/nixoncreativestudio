@@ -221,6 +221,19 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 | This foundation, CSS as files          | 94, 97, 96 | 2.77, 2.45, 2.47 s | 98, 98, 98      | 2.17, 2.16, 2.15 s | 0   | 0 ms      |
 | This foundation, CSS inlined (shipped) | 97, 97, 97 | 2.49, 2.43, 2.43 s | 99, 99, 99      | 1.82, 1.82, 1.82 s | 0   | 0 ms      |
 
+**Performance pass (2026-10-04, branch `perf-pass`, same method, median of 3; LCP in ms, transfer at load in KB):**
+
+| Change                                                                              | Home LCP / KB | /services  | /about     | /contact   | /photography |
+| ----------------------------------------------------------------------------------- | ------------- | ---------- | ---------- | ---------- | ------------ |
+| Before the pass                                                                     | 1999 / 315    | 1901 / 244 | 1997 / 437 | 1824 / 199 | 1752 / 259   |
+| 1. Dead kit and packages out, Tailwind scan narrowed (inline CSS 137 to 100 KB raw) | 1831 / 304    | 1748 / 228 | 1990 / 420 | 1824 / 188 | 1747 / 236   |
+| 2. Fonts split core / ext (preloaded 60 to 39 KB)                                   | 1886 / 283    | 1553 / 207 | 1848 / 391 | 1694 / 167 | 1534 / 216   |
+| 3. AVIF and true `sizes` on the About, contact, call-sheet photos                   | 1875 / 283    | 1555 / 207 | 1702 / 306 | 1615 / 164 | 1532 / 216   |
+| 4. Prefetch on hover, icons cached                                                  | 1930 / 253    | 1546 / 134 | 1530 / 232 | 1714 / 121 | 1537 / 114   |
+| Final build                                                                         | 1859 / 253    | 1545 / 134 | 1690 / 232 | 1557 / 121 | 1533 / 114   |
+
+Scores 99 to 100 throughout (they were already 99 locally, so the score cannot show the gain; LCP and bytes do). 5. The analytics beacon after load (A/B with a dummy token, median of 5): home LCP 2015 to 1850, /contact 1862 to 1558. CLS 0 and TBT 0 in every run. Production also carries Cloudflare's Bot Fight Mode script, which only the dashboard can remove: `docs/redesign-2026/performance-handoff.md`.
+
 Accessibility 100 on every run. JS at load fell from about 116 KB to 10 KB on both pages (the header, menu and back-to-top no longer hydrate React). The home hero itself is still the old one; its rebuild owns the rest of the LCP budget. Local numbers read differently from CI's; the CI preview run is the authority (Gotcha 9).
 
 ## 11. Open decisions (Nathan's)
