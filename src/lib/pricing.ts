@@ -3,8 +3,9 @@
    ============================================================================
    Foundation, edit with care.
 
-   Both the /services page (full tier cards and the "add to any project" cards)
-   and the homepage PricingTeaser read their numbers through here, so the two can
+   Both the /services page (the PriceTiers price sheet, the price list slip, the
+   Care plan and the photography rate) and the homepage PricingTeaser read their
+   numbers through here, so the two can
    never drift apart. The values live in the EmDash admin, under "Pricing &
    services" (the `pricing_tiers` and `pricing_addons` collections, schemas in
    cms/schema/). If the collections are empty, unpublished or unreadable, the

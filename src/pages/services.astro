@@ -1,803 +1,1025 @@
 ---
 // Safe to edit. The words on this page are CMS content (Services page, Service
-// offerings, Pricing tiers and Add-ons in the EmDash admin), read below. The
-// Selected Work band reads the CMS too, so this page is server-rendered (see the
-// note above the template).
+// offerings, Pricing tiers and Add-ons in the EmDash admin; the process steps are
+// the Home page entry's), read below. What stays in code is listed in
+// .claude/rules/homepage-and-pages.md ("/services").
 /* ============================================================================
-   /services | Services
+   /services | Services (redesign 2026)
    ============================================================================
-   Seven-block stack:
-     1. Hero (positioning statement, solid-token headline)
-     2. Three service chapters as elevated, alternating spotlight-cards
-     3. Process recap (reuses the homepage Process component)
-     4. "What a website costs" band: three web tiers (Launch / Signature /
-        Flagship) + an "add to any project" strip (photography, brand, care)
-     5. "Why it costs what it costs" justification block
-     6. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
-     7. CTA banner
+   The page for depth. The homepage shows the work, a price teaser and the
+   process in brief; this page answers what a buyer asks next, one band each,
+   and repeats none of the homepage's bands (redesign 2026, A item 11):
 
-   The process steps reuse ProcessBand (the homepage's closing band) in its
-   soft, no-CTA variant, so the four steps read identically across the site.
+     1. Hero (window-light, the one moving ground): the services headline with
+        its italic turn, the intro, a call to action, and the price list as a
+        printed slip (every published price on one page, each a link down).
+     2. Web design (paper): the offering, its included lines, and a large
+        print of a live client site (FRT's library) as proof.
+     3. What a website costs (sunk paper): PriceTiers, the three tiers as one
+        ruled price sheet with who each fits, then the mid-page call to action.
+     4. Strategy (paper): the offering at $1,500 on its own, and the one-page
+        brief drawn as the document it is (BriefSheet).
+     5. How a project runs (sunk paper): ProjectTimeline, the four CMS steps
+        with real durations on a week scale drawn to scale.
+     6. Yours to keep (deep, the one ink band): the handoff (editor, guide,
+        backups, accessibility checks, ownership) beside the Care plan.
+     7. Photography (paper): the offering and a call sheet with the rate and
+        the photographer's print (CallSheet). No placeholder panel.
+     8. Why it costs what it costs (sunk paper): the four reasons, including
+        what a cheaper quote leaves out, and the note on tools.
+     9. Common questions (paper): the FAQ (native <details>).
+    10. Close (sunk paper): the closing call to action, then the ink footer.
 
-   Motion vocabulary used here (all reduced-motion safe, defined globally):
-     data-reveal / data-reveal="left|right"  scroll fade+rise
-     spotlight-card + data-spotlight          cursor-following glow on a card
-     hover-lift                               lift on hover
-     data-countup                             number animates up when in view
+   Grounds: window-light at the top only (the moving one), paper, one deep
+   band (DESIGN.md "Grounds"). The sunk bands are paper with the paper-deep
+   token behind them (`bg-muted`), so the ground changes between bands without
+   a second texture.
 
-   PRICING LIVES IN THE CMS (Pricing tiers and Add-ons in the EmDash admin): the
-   `tiers` and `addOns` arrays are read below through src/lib/pricing.ts and
-   shared with the homepage PricingTeaser, so the two never drift. The FAQ
-   answers here are prose and can't import those values, so when a price changes,
-   change it in the admin AND in the matching FAQ answer. The
-   numbers reflect the 2026 market for an agency-grade solo studio: Launch
-   from $4,000, Signature from $7,000 (where most projects land), Flagship
-   from $12,000, photography from $900, brand $500+, care from $100/mo.
+   Prices are never typed here: tiers and add-ons come from getPricingTiers()
+   and getAddOns(), the offering floors from getServiceOfferings(). The FAQ
+   answers are prose and cannot read those values, so a price change in the
+   admin also needs the matching FAQ answer edited.
+
+   JSON-LD: Service x3 and FAQPage from buildServiceSchemas(), unchanged (the
+   golden file src/lib/servicesPage.jsonld.golden.json pins it).
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ProcessBand from '../components/ProcessBand.astro';
-import CtaBanner from '../components/CtaBanner.astro';
-import SelectedWork from '../components/SelectedWork.astro';
-import { Image } from 'astro:assets';
-// Real proof for the Web design service: a shipped client site, shown at full
-// strength. Swap this import for any other case-study cover to feature a
-// different project.
-import webDesignShot from '../assets/case-studies/second-presbyterian-chicago.png';
+import Band from '../components/Band.astro';
+import Frame from '../components/Frame.astro';
+import PriceTiers from '../components/PriceTiers.astro';
+import BriefSheet from '../components/services/BriefSheet.astro';
+import ProjectTimeline from '../components/services/ProjectTimeline.astro';
+import CallSheet from '../components/services/CallSheet.astro';
+import { buttonVariants } from '../components/ui/button';
+// Real proof for Web design: a live client site (the Foundation for Reformed
+// Theology's library, foundationrt.org/resources), cropped from the redesign
+// captures. Only live work is shown as live (docs/redesign-2026/00-synthesis.md).
+import webDesignShot from '../assets/services/frt-library.webp';
+import headshot from '../assets/brand/headshot.jpg';
 import { SITE_URL, getSite } from '../data/site';
-// Tiers + add-ons come from the CMS (Pricing tiers and Add-ons in the admin;
-// the homepage PricingTeaser reads the same tiers), so the numbers can never
-// drift between pages. The committed cms/content/pricing_*.json is the fallback.
 import { getAddOns, getPricingTiers } from '../lib/pricing';
+import { getHomePage } from '../lib/homePage';
 import {
   buildServiceSchemas,
   getServiceOfferings,
   getServicesPage,
   servicesTitle,
+  type ServiceOffering,
 } from '../lib/servicesPage';
+import { voiceSplit } from '../lib/voiceSplit';
 
-// The price tiers and add-on cards, from the CMS (committed fallback if it is
-// empty or unreadable). Read first because the Web design JSON-LD offer below
-// takes its floor from the first tier.
 const tiers = await getPricingTiers(Astro);
 const addOns = await getAddOns(Astro);
-
-// The page words and the three service chapters, from the CMS (Services page and
-// Service offerings in the admin; committed fallback cms/content/page_services.json
-// and service_offerings.json). One D1 read each, tagged for the route cache.
 const page = await getServicesPage(Astro);
 const services = await getServiceOfferings(Astro);
+const home = await getHomePage(Astro);
 const site = await getSite(Astro);
 
-// The three services are parallel offerings a client picks from, not an
-// ordered sequence (you can buy photography without strategy), so they carry
-// no 01/02/03 numerals. Numbered markers live only on the genuinely-ordered
-// Process band. Strategy is listed first because most projects start there.
-// The chapters (title, lede, body, bullets, starting price) are the "Service
-// offerings" entries; only the picture is still code (below).
+// The three offerings by slug. The layout places each in its own band, so a
+// missing one (an admin unpublish) just drops its band.
+const bySlug = (slug: string): ServiceOffering | undefined => services.find((s) => s.slug === slug);
+const strategy = bySlug('strategy');
+const webDesign = bySlug('web-design');
+const photography = bySlug('photography');
+// The add-ons by position: photography, brand and strategy, care plan.
+const careAddOn = addOns.find((a) => /care/i.test(a.name));
+const photoAddOn = addOns.find((a) => /photo/i.test(a.name));
+// Brand work is priced as an add-on; its note sits under the Strategy chapter,
+// where the price list's "Brand & strategy" line points.
+const brandAddOn = addOns.find((a) => /brand/i.test(a.name));
+// The Care plan's price is a display string ("from $100/mo"). The deep band sets
+// its dollar figure as a numeral, so split it: the first dollar amount, and a
+// per-month line when the string is a monthly price. Anything else shows whole.
+const careFigure = careAddOn?.price.match(/\$[\d,]+/)?.[0];
+const carePer =
+  careAddOn && /\/\s*mo|month/i.test(careAddOn.price) ? 'a month, to start' : undefined;
 
-// Real proof for the Web design service: a shipped client site, shown at full
-// strength. It is an image file in the code (not a CMS upload yet), keyed by the
-// offering's slug; the offering's "Describe the picture" box must be filled in too,
-// or the placeholder panel shows instead (a picture never ships without alt text).
-// Swap the import above to feature a different project.
-const offeringImages: Record<string, ImageMetadata> = { 'web-design': webDesignShot };
-
-// Placeholder glyphs for the services without a real image yet (Strategy,
-// Photography). Inner SVG markup, drawn into the placeholder panel; they match
-// the hero three-service flow icons so the page reads as one set.
-const placeholderIcons: Record<string, string> = {
-  strategy:
-    '<circle cx="12" cy="12" r="9" /><polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5" />',
-  photography:
-    '<path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13" r="3.2" />',
-};
-
-// `tiers` (the three web design tiers: Launch / Signature / Flagship) and
-// `addOns` (photography, brand, care) are read above from the CMS, the single
-// source shared with the homepage teaser. Edit any price in the admin, not here.
-
-// JSON-LD schemas for /services: Service (one per offering) and FAQPage, built
-// from the same data the page renders (src/lib/servicesPage.ts), so the structured
-// data can never disagree with the visible page. FAQPage does the most work here:
-// Google will surface FAQ answers directly in search results for matching queries.
+// JSON-LD (Service per offering, FAQPage) from the same data the page shows.
 // Web design has no price of its own; its floor is the first Pricing tier.
 const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]?.priceFrom);
 
-// Server-rendered like every page (CMS-DESIGN PR 2). The Selected Work band reads case studies from EmDash (D1) at request time.
-// The route cache is tagged with the case studies this page read (BaseLayout sets
-// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
+const money = (n: number) => `$${n.toLocaleString('en-US')}`;
+
+// The price list in the hero: every published price, each a link to its band.
+// Tier and offering floors are numbers; add-on prices are display strings.
+const priceList: { label: string; price: string; href: string }[] = [
+  ...tiers.map((t) => ({
+    label: `${t.name} website`,
+    price: `from ${money(t.priceFrom)}`,
+    href: '#prices',
+  })),
+  ...(strategy?.priceFrom
+    ? [{ label: 'Strategy on its own', price: money(strategy.priceFrom), href: '#strategy' }]
+    : []),
+  ...addOns.map((a) => ({
+    label: a.name,
+    price: a.price,
+    href: /care/i.test(a.name) ? '#care' : /photo/i.test(a.name) ? '#photography' : '#strategy',
+  })),
+];
+
+// Headlines turn into the italic second voice for their last phrase.
+const hero = voiceSplit(page.heading);
+const pricingH = voiceSplit(page.pricing.heading);
+const whyH = voiceSplit(page.why.heading);
+const faqH = voiceSplit(page.faq.heading);
+const processH = voiceSplit(home.process.heading);
+const closeH = voiceSplit(page.ctaTitle ?? site.ctaDefault.title);
+
+// The four reasons: the last one ("What a cheaper quote leaves out") is set
+// apart in the band's left column; the other three are the list.
+const whyLast = page.why.items.at(-1);
+const whyRest = page.why.items.slice(0, -1);
+
+// Written in code (no CMS field yet): the handoff list. Each line is a promise
+// the studio already makes elsewhere (Home hero, the Web design offering, the
+// Care plan note); keep them in step.
+const HANDOFF: { title: string; body: string }[] = [
+  {
+    title: 'An editor your team can use',
+    body: 'Staff or volunteers change pages, photos and events themselves, without a developer.',
+  },
+  {
+    title: 'A written guide',
+    body: 'The everyday edits, written down for whoever runs the site next.',
+  },
+  {
+    title: 'Backups that are checked',
+    body: 'The site and its content are backed up automatically, and I check that the backups work.',
+  },
+  {
+    title: 'Accessibility checks',
+    body: 'Tested against WCAG AA before launch, on every change.',
+  },
+  {
+    title: 'Yours outright',
+    body: 'No lock-in. The custom-coded builds cost little or nothing a month to host.',
+  },
+];
 ---
 
 <BaseLayout
   title={servicesTitle(page.seoTitle, site.studioName)}
   description={page.seoDescription}
   schemas={schemas}
+  preloadFonts={['italic']}
 >
-  <!-- ----------------------------------------------------------------------
-       Hero. Two columns at lg+: the positioning headline + sub on the left, an
-       animated "three-service flow" on the right (Strategy -> Web design ->
-       Photography, the order the copy names), so the empty right half now carries
-       a visual that illustrates the sentence. Single column below lg, where the
-       flow is hidden (it only earns its place beside the copy at lg+) and the
-       hero tightens to just the headline + sub. The headline uses its own clamp (smaller than
-       the global h1) so the long title sits comfortably and never runs off the
-       bottom on short or mobile screens. The flow is decorative (aria-hidden);
-       the headline carries the real content and the solid heading color (no
-       gradient text).
-       ---------------------------------------------------------------------- -->
-  <section class="py-xl lg:py-2xl" aria-labelledby="services-hero-heading">
-    <div class="ncs-container">
-      <div class="grid items-center gap-xl lg:grid-cols-[1.05fr_0.95fr]">
-        <div class="flex flex-col gap-m">
-          <h1
-            id="services-hero-heading"
-            class="services-headline leading-[0.98]"
-            data-reveal
-            style="--reveal-delay: 80ms;"
-          >
-            {page.heading}
-          </h1>
-          <p
-            class="max-w-[52ch] text-lg leading-[1.6] text-text"
-            data-reveal
-            style="--reveal-delay: 180ms;"
-          >
-            {page.intro}
-          </p>
-        </div>
-
-        <!-- Three-service flow. Decorative reinforcement of the headline
-             (aria-hidden), and the right half of the two-column hero. It only
-             earns its place beside the copy at lg+, so it is hidden below lg
-             rather than stacked under the copy on mobile (where it just repeated
-             the headline and pushed the page down). -->
-        <div
-          class="services-flow hidden lg:block"
-          aria-hidden="true"
-          data-reveal="fade"
-          style="--reveal-delay: 300ms;"
-        >
-          <div class="flow-card surface-card spotlight-card hover-lift rounded-2xl" data-spotlight>
-            <ol class="flow-track relative z-10">
-              <li class="flow-step" style="--i: 0;">
-                <span class="flow-marker">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5"></polygon>
-                  </svg>
-                </span>
-                <span class="flow-text">
-                  <span class="flow-name">Strategy</span>
-                  <span class="flow-desc">Goals, audience, scope</span>
-                </span>
-              </li>
-
-              <li class="flow-step" style="--i: 1;">
-                <span class="flow-marker">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                    <path d="M3 9h18"></path>
-                    <path d="M6 6.5h.01"></path>
-                  </svg>
-                </span>
-                <span class="flow-text">
-                  <span class="flow-name">Web design</span>
-                  <span class="flow-desc">Designed, built, yours</span>
-                </span>
-              </li>
-
-              <li class="flow-step" style="--i: 2;">
-                <span class="flow-marker">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"></path>
-                    <circle cx="12" cy="13" r="3.2"></circle>
-                  </svg>
-                </span>
-                <span class="flow-text">
-                  <span class="flow-name">Photography</span>
-                  <span class="flow-desc">Shot for the site</span>
-                </span>
-              </li>
-            </ol>
-          </div>
+  {/* 1. Hero. Window-light, the page's one moving ground. Nothing here waits on
+       a reveal; the LCP element is the headline text. */}
+  <Band ground="window-light" underHeader labelledby="services-hero-heading" class="svc-hero">
+    <div class="svc-hero-grid">
+      <div class="svc-hero-copy">
+        <h1 id="services-hero-heading" class="svc-hero-title">
+          {hero.head}
+          {hero.tail && ' '}
+          {hero.tail && <span class="voice">{hero.tail}</span>}
+        </h1>
+        <p class="type-lede svc-hero-intro">{page.intro}</p>
+        <div class="svc-actions">
+          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+            Get an honest ballpark
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+          <a href="#prices" class="svc-textlink">
+            See the price sheet
+          </a>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ----------------------------------------------------------------------
-       Service offerings. Each is its own elevated spotlight-card with a
-       cursor-following glow, a hover lift, and a staggered scroll-reveal.
-       These are parallel services (not an ordered sequence), so the list is
-       a <ul> and carries no numerals. The cards alternate reveal direction
-       (left / right / left) so they arrive with a little choreography.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-label="Service details">
-    <div class="ncs-container">
-      <ul class="flex list-none flex-col gap-l p-0">
-        {services.map((service, index) => {
-          // The proof visual sits left for even services, right for odd, so the
-          // run reads as a guided tour rather than a stack. On mobile the copy
-          // leads and the visual follows (DOM order: copy first, visual second).
-          const visualLeft = index % 2 === 0;
-          // The picture needs both the image file (code, keyed by slug) and a
-          // description; without alt text the placeholder panel shows instead.
-          const shot = service.imageAlt ? offeringImages[service.slug] : undefined;
-          return (
-            <li
-              class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
-              data-spotlight
-              data-reveal={visualLeft ? 'left' : 'right'}
-              style={`--reveal-delay: ${index * 90}ms;`}
-            >
-              <div class="relative z-10 grid grid-cols-1 items-center gap-l md:grid-cols-2 md:gap-xl">
-                {/* Copy: title, lede, body, and the what's-included list. No
-                   sequence numeral: these are parallel offerings, not steps. */}
-                <div class:list={['flex flex-col gap-m', visualLeft ? 'md:order-2' : 'md:order-1']}>
-                  <div class="flex flex-col gap-s">
-                    <h2 class="text-heading">{service.title}</h2>
-                    <p class="max-w-[48ch] text-[1.0625rem] leading-[1.55] font-medium text-text">
-                      {service.lede}
-                    </p>
-                    <p class="max-w-[52ch] leading-[1.7] text-text-muted">{service.body}</p>
-                  </div>
-
-                  {/* What's included, as a checked list. The dot glyph is
-                     decorative; the text carries the meaning. */}
-                  <div class="flex flex-col gap-s">
-                    <p class="text-sm font-semibold tracking-[0.12em] text-text-muted uppercase">
-                      What's included
-                    </p>
-                    <ul class="flex flex-col gap-2 leading-[1.5] text-text">
-                      {service.points.map((point) => (
-                        <li class="flex items-start gap-s">
-                          <span
-                            class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                            aria-hidden="true"
-                          />
-                          <span>{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Proof visual: a real shipped site for Web design; a labelled
-                   placeholder panel for the services without an image yet. Drop
-                   a real <Image> in (set `image` on the service) and it inherits
-                   the same frame. */}
-                <div class:list={[visualLeft ? 'md:order-1' : 'md:order-2']}>
-                  {shot ? (
-                    <div class="services-shot-frame">
-                      <Image
-                        src={shot}
-                        alt={service.imageAlt ?? ''}
-                        widths={[400, 640, 900]}
-                        sizes="(min-width: 768px) 42vw, 90vw"
-                        class="services-shot-img"
-                      />
-                    </div>
-                  ) : (
-                    <div class="services-shot-frame services-shot-placeholder" aria-hidden="true">
-                      <svg
-                        class="services-shot-ph-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.4"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        set:html={
-                          service.placeholderIcon !== 'none'
-                            ? placeholderIcons[service.placeholderIcon]
-                            : ''
-                        }
-                      />
-                      <span class="services-shot-ph-label">{service.title}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* The price list: a printed slip with every published price. */}
+      <aside class="price-slip" aria-labelledby="price-list-title" id="price-list">
+        <p class="slip-head">
+          <span id="price-list-title" class="slip-title">
+            Price list
+          </span>
+          <span class="slip-meta">{new Date().getFullYear()}</span>
+        </p>
+        <ul class="slip-lines" role="list">
+          {priceList.map((line) => (
+            <li>
+              <a href={line.href}>
+                <span class="slip-label">{line.label}</span>
+                <span class="slip-dots" aria-hidden="true" />
+                <span class="slip-price">{line.price}</span>
+              </a>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+        <p class="slip-foot">The first conversation is free.</p>
+      </aside>
     </div>
-  </section>
+  </Band>
 
-  <!-- Process recap. The same ProcessBand the homepage closes with, in its
-       soft mid-page variant with no CTA, so the four steps read identically
-       across the site. -->
-  <ProcessBand variant="soft" showCta={false} headingId="process-heading" />
+  {/* 2. Web design: the offering, with a live client site printed large. */}
+  {webDesign && (
+    <Band ground="paper" still labelledby="web-design-heading" id="web-design">
+      <div class="chapter chapter--wide">
+        <div class="chapter-copy">
+          <h2 id="web-design-heading" class="type-headline">
+            {webDesign.title}
+          </h2>
+          <p class="type-lede chapter-lede">{webDesign.lede}</p>
+          <p class="type-body">{webDesign.body}</p>
+          <ul class="included" role="list" aria-label={`${webDesign.title}: included`}>
+            {webDesign.points.map((p) => (
+              <li>{p}</li>
+            ))}
+          </ul>
+        </div>
+        {webDesign.imageAlt && (
+          <div class="chapter-proof" data-reveal>
+            <Frame
+              src={webDesignShot}
+              alt={webDesign.imageAlt}
+              url="foundationrt.org/resources"
+              widths={[480, 800, 1200, 1600]}
+              sizes="(min-width: 64rem) 52vw, 92vw"
+              caption="Foundation for Reformed Theology, Richmond, Virginia. Decades of sermons, lectures and bibliographies in one library its own staff publish to."
+            />
+          </div>
+        )}
+      </div>
+    </Band>
+  )}
 
-  <!-- ----------------------------------------------------------------------
-       What a website costs. Three web tiers (Launch / Signature / Flagship),
-       each publishing an honest "from" floor plus the typical range, then a
-       lighter "add to any project" strip for photography, brand, and care.
-       Numbers live in the CMS (the `tiers` and `addOns` reads); the FAQ must agree.
-       The floor counts up on scroll, but the static text is always the real
-       number so no-JS visitors and crawlers see the true figure.
-       ---------------------------------------------------------------------- -->
-  <section class="bg-bg-soft py-2xl" aria-labelledby="services-pricing-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex max-w-[62ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-pricing-heading" class="text-heading">
-          {page.pricing.heading}
-        </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">{page.pricing.sub}</p>
-      </header>
+  {/* 3. What a website costs: the price sheet, then the mid-page CTA. */}
+  <Band ground="paper" still labelledby="services-pricing-heading" id="prices" class="bg-muted">
+    <div class="band-head">
+      <h2 id="services-pricing-heading" class="type-headline">
+        {pricingH.head}
+        {pricingH.tail && ' '}
+        {pricingH.tail && <span class="voice">{pricingH.tail}</span>}
+      </h2>
+      <p class="type-body band-sub">{page.pricing.sub}</p>
+    </div>
+    <PriceTiers tiers={tiers} />
+    <p class="type-caption sheet-foot">{page.pricing.footnote}</p>
 
-      <ul class="grid list-none [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))] gap-l p-0">
-        {tiers.map((tier, index) => (
-          <li
-            class:list={[
-              'tier-card spotlight-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
-              tier.highlighted && 'tier-card--featured',
-            ]}
-            data-spotlight
-            data-reveal
-            style={`--reveal-delay: ${index * 110}ms;`}
-          >
-            {tier.badge && (
-              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold tracking-[0.1em] text-primary-foreground uppercase">
-                {tier.badge}
-              </span>
-            )}
-
-            <div class="relative z-10 flex flex-col gap-m">
-              <h3 class="text-h4 text-heading">{tier.name}</h3>
-
-              {/* Price line: the floor counts up to its real value, with the
-                   typical range stated underneath so the "from" is honest. */}
-              <div class="flex flex-col gap-1">
-                <p class="flex items-baseline gap-xs">
-                  <span class="text-sm font-medium text-text-muted">from</span>
-                  <span class="font-display text-h2 leading-none text-heading">
-                    $
-                    <span
-                      data-countup
-                      data-countup-to={tier.priceFrom}
-                      data-countup-duration="1200"
-                    >
-                      {tier.priceFrom.toLocaleString()}
-                    </span>
-                    {tier.priceSuffix}
-                  </span>
-                </p>
-                <p class="text-sm text-text-muted">{tier.range}</p>
-              </div>
-
-              <p class="leading-[1.6] text-text-muted">{tier.note}</p>
-
-              <ul class="mt-xs flex flex-col gap-2 leading-[1.5] text-text">
-                {tier.features.map((feature) => (
-                  <li class="flex items-start gap-s">
-                    <span
-                      class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                      aria-hidden="true"
-                    />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
-        {page.pricing.footnote}
+    <div class="midcta">
+      <p class="midcta-text">
+        Not sure which tier you are? Tell me what the site needs to do and I will say which one, and
+        roughly what it costs. Have a quote from someone else? Send it along and I will tell you
+        plainly what is different.
       </p>
+      <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+        Ask what yours would cost
+        <span data-nudge aria-hidden="true">
+          →
+        </span>
+      </a>
+    </div>
+  </Band>
 
-      <!-- Add to any project: photography, standalone brand, optional care.
-           Lighter cards than the tiers above; these attach to a build. -->
-      <div class="mt-2xl" data-reveal>
-        <h3 class="text-h5 text-heading">{page.addonsHeading}</h3>
-        <ul class="mt-m grid list-none [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))] gap-m p-0">
-          {addOns.map((addOn, index) => (
-            <li
-              class="surface-card flex flex-col gap-xs rounded-xl p-m"
-              data-reveal
-              style={`--reveal-delay: ${index * 90}ms;`}
-            >
-              <h4 class="text-h5 text-heading">{addOn.name}</h4>
-              <p class="font-display text-xl leading-none text-link">{addOn.price}</p>
-              <p class="text-sm leading-[1.6] text-text-muted">{addOn.note}</p>
+  {/* 4. Strategy, and the one-page brief it produces. */}
+  {strategy && (
+    <Band ground="paper" still labelledby="strategy-heading" id="strategy">
+      {/* The heading and the price set as one ruled line across the band, like
+           the total line of an estimate; then the brief (the thing strategy
+           produces) leads, and the words follow it. */}
+      <div class="strat-head">
+        <h2 id="strategy-heading" class="type-headline">
+          {strategy.title}
+        </h2>
+        {strategy.priceFrom && (
+          <p class="chapter-price">
+            <span class="chapter-price-note">on its own, included in every website</span>
+            <span class="type-numeral">{money(strategy.priceFrom)}</span>
+          </p>
+        )}
+      </div>
+      <div class="chapter chapter--flip chapter--doc-lead">
+        <div class="chapter-copy">
+          <p class="type-lede chapter-lede">{strategy.lede}</p>
+          <p class="type-body">{strategy.body}</p>
+          <ul class="included" role="list" aria-label={`${strategy.title}: included`}>
+            {strategy.points.map((p) => (
+              <li>{p}</li>
+            ))}
+          </ul>
+          {brandAddOn && <p class="type-caption chapter-aside">{brandAddOn.note}</p>}
+        </div>
+        <div class="chapter-proof chapter-proof--doc" data-reveal>
+          <BriefSheet />
+        </div>
+      </div>
+    </Band>
+  )}
+
+  {/* 5. How a project runs, drawn to scale. */}
+  <Band ground="paper" still labelledby="process-heading" id="process" class="bg-muted">
+    <div class="band-head">
+      <h2 id="process-heading" class="type-headline">
+        {processH.head}
+        {processH.tail && ' '}
+        {processH.tail && <span class="voice">{processH.tail}</span>}
+      </h2>
+    </div>
+    <ProjectTimeline steps={home.process.steps} />
+  </Band>
+
+  {/* 6. Yours to keep: the handoff, and the Care plan. The one deep band. */}
+  <Band ground="deep" still labelledby="handoff-heading" id="care">
+    <div class="handoff">
+      <div>
+        <h2 id="handoff-heading" class="type-headline">
+          What you get <span class="voice">at handoff</span>
+        </h2>
+        <p class="type-body handoff-sub">
+          A site your next volunteer can run. On launch day it is handed over with all of this:
+        </p>
+        <ul class="handoff-list" role="list">
+          {HANDOFF.map((h) => (
+            <li>
+              <h3>{h.title}</h3>
+              <p>{h.body}</p>
             </li>
           ))}
         </ul>
       </div>
+      {careAddOn && (
+        <section class="care" aria-labelledby="care-heading">
+          <h3 id="care-heading" class="care-title">
+            {careAddOn.name}
+          </h3>
+          <p class="care-price">
+            <span class="type-numeral">{careFigure ?? careAddOn.price}</span>
+            {careFigure && carePer && <span class="care-per">{carePer}</span>}
+          </p>
+          <p class="care-note">{careAddOn.note}</p>
+          <a href="/contact/" class="care-link nudge">
+            Ask about the Care plan{' '}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+        </section>
+      )}
     </div>
-  </section>
+  </Band>
 
-  <!-- ----------------------------------------------------------------------
-       Why it costs what it costs. The honest justification block that follows
-       the price immediately, so the "someone quoted me less" objection is
-       answered the moment it forms. Two-column hairline-ruled list, not cards.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-why-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-why-heading" class="text-heading">
-          {page.why.heading}
+  {/* 7. Photography, as a call sheet. */}
+  {photography && (
+    <Band ground="paper" still labelledby="photography-heading" id="photography">
+      <div class="chapter chapter--flip">
+        <div class="chapter-copy">
+          <h2 id="photography-heading" class="type-headline">
+            {photography.title}
+          </h2>
+          <p class="type-lede chapter-lede">{photography.lede}</p>
+          <p class="type-body">{photography.body}</p>
+          <a href="/contact/" class="svc-textlink nudge">
+            Book a photo day{' '}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+        </div>
+        <div class="chapter-proof chapter-proof--doc">
+          <CallSheet
+            priceFrom={photography.priceFrom}
+            rateNote={photoAddOn?.note}
+            shots={photography.points}
+            headshot={headshot}
+            headshotAlt="Nathan Nixon, smiling outdoors"
+          />
+        </div>
+      </div>
+    </Band>
+  )}
+
+  {/* 8. Why it costs what it costs, and what a cheaper quote leaves out. */}
+  <Band ground="paper" still labelledby="services-why-heading" class="bg-muted">
+    <div class="why">
+      <div class="why-head">
+        <h2 id="services-why-heading" class="type-headline">
+          {whyH.head}
+          {whyH.tail && ' '}
+          {whyH.tail && <span class="voice">{whyH.tail}</span>}
         </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">{page.why.sub}</p>
-      </header>
-
-      <ul class="grid list-none gap-l p-0 md:grid-cols-2">
-        {page.why.items.map((point, index) => (
-          <li
-            class="flex flex-col gap-xs border-t border-border pt-m"
-            data-reveal
-            style={`--reveal-delay: ${index * 90}ms;`}
-          >
-            <h3 class="text-h5 text-heading">{point.title}</h3>
-            <p class="max-w-[52ch] leading-[1.7] text-text-muted">{point.body}</p>
-          </li>
-        ))}
-      </ul>
-
-      <!-- Quiet, honest note on tooling. Addresses the modern-tools / AI
-           question head-on and reframes it to judgment + accountability, so it
-           reads as a trust signal rather than a confession. -->
-      <p class="mt-l max-w-[60ch] leading-[1.7] text-text-muted" data-reveal>
-        {page.why.closing}
-      </p>
+        <p class="type-body band-sub">{page.why.sub}</p>
+        {/* The last reason is the answer to "someone quoted me less": it gets
+             the left column, set on a double rule like a total, so a director
+             comparing quotes finds it without reading the list. */}
+        {whyLast && (
+          <div class="why-item why-feature">
+            <h3>{whyLast.title}</h3>
+            <p>{whyLast.body}</p>
+          </div>
+        )}
+      </div>
+      <div class="why-body">
+        <ul class="why-list" role="list">
+          {whyRest.map((item) => (
+            <li class="why-item">
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))}
+        </ul>
+        <p class="type-body why-closing">{page.why.closing}</p>
+      </div>
     </div>
-  </section>
+  </Band>
 
-  <!-- ----------------------------------------------------------------------
-       FAQ. Native <details>/<summary> for accessible, JS-free disclosure.
-       The answer wrapper animates open and closed with a CSS grid trick:
-       grid-template-rows goes from 0fr (collapsed) to 1fr (open), which
-       transitions smoothly without needing a fixed pixel height. The "+"
-       marker rotates to "x" via the group-open: variant. The whole row
-       still works with keyboard and screen readers because it is a real
-       <details> element.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-faq-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-faq-heading" class="text-heading">
-          {page.faq.heading}
+  {/* 9. Common questions. Native <details>, works without JavaScript. */}
+  <Band ground="paper" still labelledby="services-faq-heading" id="faq">
+    <div class="faq">
+      <div class="faq-head">
+        <h2 id="services-faq-heading" class="type-headline">
+          {faqH.head}
+          {faqH.tail && ' '}
+          {faqH.tail && <span class="voice">{faqH.tail}</span>}
         </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">{page.faq.sub}</p>
-      </header>
-
-      <div class="flex flex-col border-t border-border">
-        {page.faq.items.map((item, index) => (
-          /* `group` lets the summary's open-state pseudo and the answer
-               wrapper both react via group-open:. */
-          <details
-            class="faq-item group border-b border-border"
-            data-reveal="fade"
-            style={`--reveal-delay: ${index * 70}ms;`}
-          >
-            {/* list-none drops the default disclosure triangle. The webkit
-                 marker pseudo hides the Safari version. The "+" rotates to an
-                 "x" when open; the rotation plus the smooth panel are two
-                 non-color cues, so state is never signalled by color alone. */}
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg] hover:text-link [&::-webkit-details-marker]:hidden">
-              {item.question}
+        <p class="type-body band-sub">{page.faq.sub}</p>
+      </div>
+      <div class="faq-list">
+        {page.faq.items.map((item) => (
+          <details class="faq-item">
+            <summary>
+              <span>{item.question}</span>
+              <span class="faq-mark" aria-hidden="true" />
             </summary>
-            {/* Animated reveal: the grid row scales from 0fr to 1fr. The
-                 inner div needs overflow-hidden so the clipped content does
-                 not spill while the row is collapsing. */}
-            <div class="faq-answer grid">
-              <div class="overflow-hidden">
-                <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.answer}</p>
-              </div>
-            </div>
+            <p>{item.answer}</p>
           </details>
         ))}
       </div>
     </div>
-  </section>
+  </Band>
 
-  <!-- Recent work proof strip. Reuses the homepage Selected Work block
-       (collection-driven, featured===true), so the services page proves the
-       work with real shipped sites right before it asks for the inquiry. -->
-  <SelectedWork />
-
-  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
+  {/* 10. Close. */}
+  <Band ground="paper" still labelledby="services-close-heading" class="bg-muted">
+    <div class="close">
+      <h2 id="services-close-heading" class="type-display close-title">
+        {closeH.head}
+        {closeH.tail && ' '}
+        {closeH.tail && <span class="voice">{closeH.tail}</span>}
+      </h2>
+      <div class="close-side">
+        <p class="type-body">{page.ctaSub ?? site.ctaDefault.sub}</p>
+        <div class="svc-actions">
+          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+            {site.ctaDefault.label}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+          <a href={site.emailHref} class="svc-textlink">
+            {site.email}
+          </a>
+          <a href={site.phoneHref} class="svc-textlink">
+            {site.phone}
+          </a>
+        </div>
+      </div>
+    </div>
+  </Band>
 </BaseLayout>
 
 <style>
-  /* ----------------------------------------------------------------------
-     Services hero headline. A controlled clamp, smaller than the global h1, so
-     the long title sits comfortably in the two-column layout and never runs off
-     the bottom on short or mobile screens. text-wrap: balance evens the lines.
-     ---------------------------------------------------------------------- */
-  .services-headline {
-    font-size: clamp(2rem, 4.4vw, 3.4rem);
+  /* ---- 1. Hero ------------------------------------------------------------ */
+  .svc-hero-grid {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 64rem) {
+    .svc-hero-grid {
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+    }
+  }
+  .svc-hero-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h1);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+    color: var(--heading);
     text-wrap: balance;
+    max-width: 21ch;
+    margin: 0;
+  }
+  /* The turn runs on from the caps and is set a step smaller than the usual
+     voice, so the topic (the three services) stays the loudest line. */
+  .svc-hero-title .voice {
+    font-size: 0.74em;
+    line-height: 1;
+  }
+  .svc-hero-intro {
+    margin-top: 1.5rem;
+    max-width: 44ch;
+  }
+  .svc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.75rem;
+    margin-top: 2rem;
+  }
+  .svc-textlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--link) 40%, transparent);
+    text-underline-offset: 0.2em;
+  }
+  .svc-textlink:hover {
+    text-decoration-color: currentColor;
   }
 
-  /* ----------------------------------------------------------------------
-     Three-service card (hero right column). The three services in the order the
-     copy names them (Strategy -> Web design -> Photography), held in one
-     elevated card with a connecting rail and ringed icon markers. Built on the
-     site's card vocabulary (.surface-card depth + .spotlight-card cursor glow +
-     .hover-lift), so it reads as a deliberate, premium panel rather than a
-     floaty diagram. Decorative (aria-hidden); the headline carries the real
-     content. No background glow and no looping animation: the depth, the accent
-     edge, and the cursor glow are the polish.
-     ---------------------------------------------------------------------- */
-  .services-flow {
-    position: relative;
+  /* The price list slip: a small printed sheet laid on the windowsill. */
+  .price-slip {
+    background: var(--paper-raised);
+    color: var(--foreground);
+    border-radius: 2px;
+    box-shadow: var(--shadow-print);
+    padding: 1.5rem clamp(1.25rem, 3vw, 1.75rem) 1.25rem;
+    max-width: 28rem;
+    width: 100%;
   }
-  .flow-card {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    padding: clamp(1.5rem, 3.2vw, 2.4rem);
+  @media (min-width: 64rem) {
+    .price-slip {
+      justify-self: end;
+      transform: rotate(1.25deg);
+    }
   }
-  /* A thin accent rule along the top edge, clipped by the card's overflow, as a
-     quiet "designed" cue (the same motif as the pricing tier cards). ::after is
-     free here: .spotlight-card's glow uses ::before. */
-  .flow-card::after {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 3px;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(
-      to right,
-      var(--accent),
-      color-mix(in oklab, var(--secondary) 90%, transparent)
-    );
-    opacity: 0.85;
+  .slip-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 0 0 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px double var(--heading);
   }
-
-  .flow-track {
-    --marker: 2.9rem;
-    --flow-gap: clamp(1.75rem, 3.4vw, 3rem);
-    --rail: color-mix(in oklab, var(--heading) 16%, transparent);
-    position: relative;
+  .slip-title {
+    font-family: var(--font-display);
+    font-size: var(--text-h4);
+    line-height: 1;
+    color: var(--heading);
+  }
+  .slip-meta {
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--muted-foreground);
+  }
+  .slip-lines {
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+  .slip-lines a {
     display: flex;
-    flex-direction: column;
-    gap: var(--flow-gap);
+    align-items: baseline;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding-block: 0.65rem;
+    border-bottom: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none;
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+  }
+  .slip-lines a:hover .slip-label,
+  .slip-lines a:focus-visible .slip-label {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .slip-label {
+    color: var(--heading);
+  }
+  /* Dot leaders, as on a printed price list. */
+  .slip-dots {
+    flex: 1;
+    min-width: 1rem;
+    border-bottom: 1px dotted var(--muted-foreground);
+    transform: translateY(-0.25em);
+  }
+  .slip-price {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-weight: 600;
+    color: var(--heading);
+    white-space: nowrap;
+  }
+  .slip-foot {
+    margin: 0.85rem 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.125rem;
+    color: var(--marker);
   }
 
-  .flow-step {
-    position: relative;
+  /* ---- Chapters (Web design, Strategy, Photography) ------------------------ */
+  .chapter {
     display: grid;
-    grid-template-columns: var(--marker) 1fr;
+    gap: clamp(2.5rem, 5vw, 4.5rem);
     align-items: start;
-    gap: 1.1rem;
   }
-
-  /* The connecting rail: a static line from each marker's centre down to the
-     next, so the three read as one ordered sequence. */
-  .flow-step:not(:last-child)::before {
+  @media (min-width: 64rem) {
+    .chapter {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .chapter--wide {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      align-items: center;
+    }
+    .chapter--flip .chapter-copy {
+      order: 2;
+    }
+    .chapter--flip .chapter-proof {
+      order: 1;
+    }
+  }
+  .chapter-copy {
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+  }
+  .chapter-copy > * {
+    margin: 0;
+  }
+  .chapter-aside {
+    max-width: 52ch;
+  }
+  .chapter-lede {
+    max-width: 36ch;
+  }
+  .chapter-proof--doc {
+    display: flex;
+    justify-content: center;
+  }
+  /* Strategy: heading and price on one ruled line, the estimate's total. */
+  .strat-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+    padding-bottom: 1rem;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+    border-bottom: 3px double var(--heading);
+  }
+  .strat-head > * {
+    margin: 0;
+  }
+  .chapter-price {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+  }
+  @media (min-width: 64rem) {
+    .chapter--doc-lead {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+    }
+  }
+  .chapter-price-note {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: var(--marker);
+  }
+  .included {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    border-top: 1px solid var(--border);
+    max-width: 40rem;
+  }
+  .included li {
+    padding: 0.7rem 0 0.7rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    line-height: 1.45;
+  }
+  .included li::before {
     content: '';
     position: absolute;
-    left: calc(var(--marker) / 2);
-    transform: translateX(-50%);
-    top: calc(var(--marker) / 2);
-    height: calc(100% + var(--flow-gap));
-    width: 2px;
-    border-radius: 2px;
-    background: var(--rail);
+    left: 0;
+    top: 1.35rem;
+    width: 0.7rem;
+    border-top: 1.5px solid var(--marker);
   }
 
-  .flow-marker {
-    position: relative;
-    z-index: 1;
-    width: var(--marker);
-    height: var(--marker);
+  /* ---- Band heads ------------------------------------------------------------ */
+  .band-head {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+    max-width: 52rem;
+  }
+  .band-head > * {
+    margin: 0;
+  }
+  .band-sub {
+    max-width: 58ch;
+  }
+  .sheet-foot {
+    margin-top: 1.25rem;
+    max-width: 60ch;
+  }
+
+  /* Mid-page CTA, under the price sheet: one line and the button. */
+  .midcta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--heading);
+  }
+  .midcta-text {
+    margin: 0;
+    max-width: 52ch;
+    font-family: var(--font-serif);
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--heading);
+  }
+
+  /* ---- 6. Handoff and Care (deep) -------------------------------------------- */
+  .handoff {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 64rem) {
+    .handoff {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+  .handoff-sub {
+    margin: 1.25rem 0 0;
+    max-width: 44ch;
+  }
+  .handoff-list {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+  @media (min-width: 40rem) {
+    .handoff-list li {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      column-gap: 2rem;
+      align-items: baseline;
+    }
+    .handoff-list li p {
+      margin-top: 0;
+    }
+  }
+  .handoff-list li {
+    padding-block: 1.1rem;
+    border-top: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent);
+  }
+  .handoff-list h3 {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .handoff-list p {
+    margin: 0.35rem 0 0;
+    font-size: var(--text-body);
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  /* The Care plan: a raised panel on the ink board. */
+  .care {
+    background: var(--card);
+    color: var(--card-foreground);
+    border-radius: 2px;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+  }
+  .care-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 1;
+    color: var(--heading);
+  }
+  .care-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 1rem 0 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px double var(--heading);
+    width: fit-content;
+  }
+  .care-per {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: var(--marker);
+  }
+  .care-note {
+    margin: 1.25rem 0 0;
+    font-size: var(--text-body);
+    line-height: 1.55;
+  }
+  .care-link {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    border: 1.5px solid var(--rail);
-    background: var(--card);
+    gap: 0.4rem;
+    min-height: 44px;
+    margin-top: 1rem;
+    font-family: var(--font-ui);
+    font-weight: 600;
     color: var(--link);
-    transition:
-      color 0.3s ease,
-      border-color 0.3s ease;
-  }
-  .flow-marker svg {
-    width: 1.35rem;
-    height: 1.35rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 
-  .flow-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    padding-top: 0.15rem;
+  /* ---- 8. Why ------------------------------------------------------------------ */
+  .why {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
   }
-  .flow-name {
+  @media (min-width: 64rem) {
+    .why {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+      column-gap: 4rem;
+    }
+  }
+  .why-head {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
+  .why-head > * {
+    margin: 0;
+  }
+  .why-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .why-list li {
+    padding-block: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .why-body {
+    display: grid;
+    gap: 2rem;
+    align-content: start;
+  }
+  .why-list h3 {
+    margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    font-weight: 400;
+    font-size: var(--text-h4);
     line-height: 1;
     letter-spacing: 0.01em;
     color: var(--heading);
   }
-  .flow-desc {
-    font-size: 0.9rem;
-    line-height: 1.4;
+  .why-list p {
+    margin: 0.5rem 0 0;
+    font-size: var(--text-body);
+    line-height: 1.55;
+    max-width: 60ch;
+  }
+  /* What a cheaper quote leaves out: the line that answers the objection,
+     set on a double rule like a total, larger than the list beside it. */
+  .why-feature {
+    margin-top: 1rem;
+    padding-top: 1.25rem;
+    border-top: 3px double var(--heading);
+  }
+  .why-feature h3 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: var(--text-h4);
+    line-height: 1.15;
+    color: var(--marker);
+  }
+  .why-feature p {
+    margin: 0.75rem 0 0;
+    font-size: var(--text-lede);
+    line-height: 1.45;
+    color: var(--heading);
+  }
+  .why-closing {
+    margin: 0;
+    font-style: italic;
     color: var(--muted-foreground);
   }
 
-  /* ----------------------------------------------------------------------
-     Service proof visuals. Each offering carries a framed visual: a real
-     shipped-site screenshot for Web design, and a labelled placeholder panel
-     for the services without a real image yet (Strategy, Photography). One
-     frame treatment for all, so the run reads as a system; swap a placeholder
-     for a real <Image> and it inherits the same frame. The framed-artifact
-     shadow is the shared --shadow-frame token (same as SiteShowcase).
-     ---------------------------------------------------------------------- */
-  .services-shot-frame {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    border-radius: 0.9rem;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-frame);
-    background: var(--muted);
+  /* ---- 9. FAQ ------------------------------------------------------------------ */
+  .faq {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
   }
-  .services-shot-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top; /* show the site header, not a mid-page crop */
-    display: block;
+  @media (min-width: 64rem) {
+    .faq {
+      grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+      column-gap: 4rem;
+    }
+    .faq-head {
+      position: sticky;
+      top: calc(var(--header-h) + 2rem);
+      align-self: start;
+    }
   }
-  /* Placeholder panel: a faint brand dot texture plus the service glyph and
-     name, so an un-filled slot reads as a deliberate panel, not a broken
-     image. Decorative (aria-hidden); the service <h2> carries the name to AT. */
-  .services-shot-placeholder {
+  .faq-head {
+    display: grid;
+    gap: 1rem;
+  }
+  .faq-head > * {
+    margin: 0;
+  }
+  .faq-list {
+    border-top: 1px solid var(--heading);
+  }
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+  }
+  .faq-item summary {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    background-color: var(--muted);
-    background-image: radial-gradient(
-      color-mix(in oklab, var(--heading) 12%, transparent) 1px,
-      transparent 1px
-    );
-    background-size: 18px 18px;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 44px;
+    padding-block: 1.1rem;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    line-height: 1.35;
+    color: var(--heading);
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-item summary:hover {
     color: var(--link);
   }
-  .services-shot-ph-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    opacity: 0.9;
+  /* A drawn plus that turns into a minus: two strokes, one rotates away. */
+  .faq-mark {
+    position: relative;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
   }
-  .services-shot-ph-label {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    letter-spacing: 0.02em;
-    color: var(--muted-foreground);
-  }
-
-  /* ----------------------------------------------------------------------
-     Pricing tier cards. Built on .surface-card (real depth in both themes),
-     .spotlight-card (cursor glow), and the price count-up. Added here:
-       - a top accent rule as a shared highlight motif (full on the featured
-         tier, drawing in on hover for the others),
-       - a soft accent-glow bloom + warmed border + deeper shadow on hover, so
-         the card reads as rising. The rise is shadow-based, not transform-based:
-         these <li>s carry data-reveal, whose .is-visible sets transform:none on
-         the same element and would cancel a transform lift.
-       - the featured (Signature) tier carries an always-on accent glow and an
-         accent border so the recommended option draws the eye at rest.
-     Transitions are disabled by the global reduced-motion rule; every rest
-     state is complete and legible without motion. Decorative only (text and
-     contrast untouched), and a top-edge rule, never a side stripe. */
-  .tier-card {
-    transition:
-      box-shadow 0.32s ease,
-      border-color 0.3s ease;
-  }
-
-  /* Top accent rule on the top edge, clipped to the rounded corners by the
-     card's own overflow-hidden. Faint and slightly short at rest, drawing to
-     full width + full opacity on hover/focus. */
-  .tier-card::after {
+  .faq-mark::before,
+  .faq-mark::after {
     content: '';
     position: absolute;
-    inset: 0 0 auto 0;
-    height: 3px;
-    z-index: 4;
-    background: var(--accent);
-    opacity: 0.3;
-    transform: scaleX(0.88);
-    transform-origin: center;
-    transition:
-      opacity 0.3s ease,
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: none;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 2px solid var(--marker);
+    transform: translateY(-50%);
+    transition: transform 0.3s var(--ease-settle);
+  }
+  .faq-mark::after {
+    transform: translateY(-50%) rotate(90deg);
+  }
+  .faq-item[open] .faq-mark::after {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  .faq-item p {
+    margin: 0 0 1.4rem;
+    max-width: 62ch;
+    font-size: var(--text-body);
+    line-height: 1.6;
   }
 
-  .tier-card:hover,
-  .tier-card:focus-within {
-    box-shadow:
-      var(--shadow-card-hover),
-      var(--card-highlight),
-      0 26px 52px -28px color-mix(in oklab, var(--accent) 60%, transparent);
-    border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+  /* ---- 10. Close ----------------------------------------------------------------- */
+  .close {
+    display: grid;
+    gap: 2rem;
+    align-items: end;
   }
-  .tier-card:hover::after,
-  .tier-card:focus-within::after {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-
-  /* Featured (Signature): accent border, the top rule already at full, and a
-     soft always-on accent glow layered over the surface-card shadow. */
-  .tier-card--featured {
-    border-color: color-mix(in oklab, var(--accent) 70%, var(--border));
-    box-shadow:
-      var(--shadow-card),
-      var(--card-highlight),
-      0 20px 46px -30px color-mix(in oklab, var(--accent) 60%, transparent);
-  }
-  .tier-card--featured::after {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-  .tier-card--featured:hover,
-  .tier-card--featured:focus-within {
-    box-shadow:
-      var(--shadow-card-hover),
-      var(--card-highlight),
-      0 30px 58px -26px color-mix(in oklab, var(--accent) 68%, transparent);
-  }
-
-  /* FAQ smooth open/close, JS-free.
-     The answer wrapper is a CSS grid whose single row animates from 0fr
-     (height collapsed to nothing) to 1fr (full natural height). Animating
-     grid-template-rows transitions cleanly between the two without us ever
-     knowing the pixel height, which is what makes a content-driven panel
-     animate at all. The inner overflow-hidden div clips the text while the
-     row is mid-transition. */
-  .faq-answer {
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 300ms ease;
-  }
-
-  .faq-item[open] .faq-answer {
-    grid-template-rows: 1fr;
-  }
-
-  /* Respect reduced-motion: the panel still opens and closes, just instantly,
-     matching the global motion policy. */
-  @media (prefers-reduced-motion: reduce) {
-    .faq-answer {
-      transition: none;
+  @media (min-width: 64rem) {
+    .close {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      column-gap: 4rem;
     }
+  }
+  .close-title {
+    margin: 0;
+  }
+  .close-title .voice {
+    display: block;
+  }
+  .close-side > p {
+    margin: 0;
   }
 </style>

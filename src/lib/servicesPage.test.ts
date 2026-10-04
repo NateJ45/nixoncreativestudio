@@ -199,8 +199,10 @@ test('the committed fallback holds the three offerings in order', async () => {
   assert.equal(offerings[1].points.length, 5);
   assert.equal(
     offerings[1].imageAlt,
-    'The Second Presbyterian Church of Chicago website, designed and built by the studio',
+    'The Foundation for Reformed Theology library page: Bibliographies, 48 entries, and John Calvin Studies, 95 entries, with their latest additions.',
   );
+  // The picture description is capped at 160 characters in the admin.
+  assert.ok((offerings[1].imageAlt ?? '').length <= 160);
   assert.equal(offerings[0].imageAlt, undefined);
 });
 
