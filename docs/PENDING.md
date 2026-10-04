@@ -15,6 +15,16 @@ Read this file early in any session on this repo.
 
 ## Waiting on a human
 
+### Case study pictures and words held in code (2026 redesign, page-work)
+
+**Blocks:** retiring the interim entries in `src/data/workExtras.ts`.
+
+1. **First Baptist Church Muncie: replace the Wix-era pictures in the admin.** The production entry's **Cover image**, **Showcase: desktop**, **Showcase: mobile** and both **Feature highlights** pictures (ministries, architecture) are captures of the OLD Wix site. The page shows the new build instead, from `BUNDLED_MEDIA` (`src/assets/case-studies/shots/first-baptist-muncie-cover.png` and the three `-detail-*.png` files, captured 2026-10-04 from https://fbcm-site.nathanjnixon86.workers.dev/; the full-page `first-baptist-muncie-home.png` is the new build too). Upload those files to the entry (cover, highlights with the titles and captions in `workExtras.ts`), then delete the `first-baptist-muncie` entry from `BUNDLED_MEDIA`. The "Built with" stack terms (Wix, ChurchCenter) also describe the old site: set Astro, Sanity, Cloudflare Workers.
+2. **Reid Design: rewrite the Body in the admin.** It still lists a budget calculator, a style quiz, an affiliate shop and more that are not live; the page holds the body back (`BODY_HELD_BACK`). Check the Designer note too (it talks about a before/after slider). Then remove `reid-design` from `BODY_HELD_BACK`.
+3. **Fields the schema does not have yet.** The case study ledger's Place and "What they run themselves" lines and the showreel choice live in `LEDGER_FACTS` and `SHOWREELS`. A schema PR (lead's call) can add `place`, `runs_themselves` and a showreel field; then move the values into the admin. Theology Matters and Foundation for Reformed Theology have no Place line until Nathan confirms where they are.
+4. **Year on case studies.** The ledger now shows the Year field. An older comment said project timing was deliberately not shown; Nathan to confirm the year should appear (one line in `src/pages/work/[slug].astro` to remove it).
+5. **Showreels date.** The Stone Steps and Reid walkthroughs were recorded 2026-10-04; the Stone Steps race clock is a real countdown and will date. Re-shoot with `docs/redesign-2026/mockups/d8-showreel/_capture` when either site changes, and consider MP4 twins of the clips for older iPhones (VP9 only today; they fail silently to stills).
+
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).

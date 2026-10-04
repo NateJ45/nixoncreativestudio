@@ -45,7 +45,7 @@ Moved out of CLAUDE.md. Loads when a foundation file is touched.
 - `src/components/starwind/` Starwind Astro-native primitives + `starwind.config.json` (vendored as a unit with `src/styles/starwind.css`)
 - `src/components/primereact/` PrimeReact escape hatch (passthrough + island + README)
 - Aceternity / Magic UI component swaps in `src/components/ui/aceternity/` and `src/components/ui/`
-- React islands: `Photo.tsx`, `PhotoGallery.tsx`, `TestimonialCarousel.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`, `WorkFilter.tsx`
+- React islands: `Photo.tsx`, `PhotoGallery.tsx`, `TestimonialCarousel.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`
 - Astro wrappers: `HeroShowcase.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
 - The 2026 design primitives: `Band.astro`, `Frame.astro`, `Logo.astro`, `MobileMenu.astro`, `BackToTop.astro`, `Header.astro`, `Footer.astro`, `src/scripts/grounds.ts`, the assets in `src/assets/grounds/`, `src/assets/brand/` and `src/assets/fonts/` (regenerate with `scripts/brand/`), and `DESIGN.md`
 - `src/lib/readingTime.ts`

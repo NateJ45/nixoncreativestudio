@@ -181,6 +181,9 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 - **Links**: text inherits its colour with a marker underline; `text-link` (brick, or vermilion on ink) for accent links; `.card-link` for "Read more" with an arrow.
 - **Frame** (`Frame.astro`): a real screenshot as a print. `variant="browser"` (ink chrome bar, live address, optional "Launching soon" tag) or `variant="film"` (ink rebate, sprocket rows, edge print of facts, optional china-marker `pick` loop). Only live work is shown as live.
 - **Band** (`Band.astro`): one ground, one job (section 4).
+- **Showreel** (`Showreel.astro`, `src/scripts/showreel.ts`): a directed walkthrough of a live client site on its case study, a camera over sharp stills with short live clips cut in. Poster first (it is the LCP), nothing downloads until after load and idle, plays only in view, a Play/Pause button, a designed still under reduced motion. Only on case studies, never the home hero.
+- **WorkPrint** (`WorkPrint.astro`): one study on /work as a print on the table, a Frame plus its sector, title, outcome and two links. The /work page varies its size and placement so no two neighbours share a shape.
+- **Facts ledger** (case studies): the job's facts as plain-label rows on hairlines (Place, Year, My role, What they run themselves), sentence case, no mono. The stack is one caption line under it.
 - **Back to top**: a small ink square, bottom right, after 600px of scroll. No React.
 - **Focus**: one ring everywhere, 3px marker (vermilion on ink), 3px offset.
 

@@ -238,7 +238,9 @@ placeholder. Override alt or size with props.
 <PortableText value={d.body} />
 ```
 
-Template rules that replace the MDX component imports:
+**Since the 2026 redesign** the case study template (`src/pages/work/[slug].astro`) no longer uses SiteShowcase or FeatureHighlight: the cover (or a showreel) is the hero, `results` is "What changed", the body is the story with the "What I built" list in a disclosure, up to four `highlights` are detail crops in one band with the before/after slider, and the showcase captures feed only the homepage hero scene. The rules below are the original MDX migration's mapping, kept as history.
+
+Template rules that replaced the MDX component imports (2026-10, before the redesign):
 
 1. **SiteShowcase**: render `showcase_desktop` in the browser frame, linking to
    `showcase_href`, address-bar text `showcase_label`, motion per
