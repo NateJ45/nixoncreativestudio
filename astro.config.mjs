@@ -75,9 +75,15 @@ export default defineConfig({
   // can add one in the admin when he renames or retires a page. The two that used to be
   // here (/now to /about/#now, the retired /work/west-chester-preschool) are rows in
   // production now; a config redirect would shadow them.
+  // Hover (and keyboard focus) strategy since the 2026-10-04 performance pass: the
+  // viewport strategy fetched every page whose link scrolled into view (25 to 36 KB
+  // each, 6 to 9 pages on the home page) whether or not anyone clicked. A hover
+  // still gives about 100 to 300 ms of head start, and a cached page answers in
+  // about 80 ms, so a click is just as quick and no bytes are spent on links
+  // nobody follows. Gotcha 19 (reusable caching, trailing slashes) still applies.
   prefetch: {
     prefetchAll: true,
-    defaultStrategy: 'viewport',
+    defaultStrategy: 'hover',
   },
   // imageService: 'compile' makes Astro optimize <Image /> at BUILD time with
   // Sharp, emitting static .webp files into dist/_astro/. Without it the
