@@ -221,7 +221,7 @@ monitoring, point UptimeRobot's free tier at the homepage.
 ## Deliberate absences
 
 - **No console-error smoke pass.** There is significant client JS here
-  (three.js / r3f, Lenis, Embla, motion) and nothing asserts that a page
+  (three.js / r3f until the 2026 redesign, Embla, motion) and nothing asserts that a page
   hydrates without throwing. The family standard does not include one either;
   add it here first if it ever becomes a family suite.
 - **No visual-regression / screenshot suite.** The family standard runs one
