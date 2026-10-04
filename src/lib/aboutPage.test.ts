@@ -78,47 +78,50 @@ test('the committed fallback reproduces the words /about used to hold', async ()
   assert.match(logs[0], /page_about\/about is missing or unpublished/);
 
   assert.equal(about.seoTitle, 'About');
-  assert.equal(
+  assert.match(
     about.seoDescription,
-    'About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio.',
+    /^Nathan Nixon plans, designs and builds every Nixon Creative Studio site himself/,
   );
   assert.equal(about.ctaTitle, 'Want to talk about a project?');
-  assert.equal(about.heading, 'A one-person studio for');
-  assert.equal(about.headingAccent, 'sites your own people can run.');
-  assert.match(about.intro, /^I'm Nathan Nixon\. I run Nixon Creative Studio out of Cincinnati/);
-  assert.match(about.intro, /hands you the finished site\.$/);
+  assert.equal(about.heading, 'The person you meet on day one');
+  assert.equal(about.headingAccent, 'is the same person who hands you the finished site.');
+  assert.match(about.intro, /^I'm Nathan Nixon\. I run Nixon Creative Studio from Cincinnati/);
+  assert.match(about.intro, /to launch day, and after it\.$/);
   assert.deepEqual(about.thesis, {
-    before:
-      'One person on every project, start to finish: strategy, design, photography, and code. I work with',
-    accent: 'churches, schools, nonprofits, and small businesses',
-    after: 'around Cincinnati in person, and anywhere for web work.',
+    before: 'I work with',
+    accent: 'churches, schools, nonprofits and small businesses',
+    after: 'in person around Cincinnati, and anywhere for web work.',
   });
-  assert.equal(about.story.heading, 'The longer story');
-  assert.equal(about.story.body.length, 4, 'the four story paragraphs');
+  assert.equal(about.story.heading, 'I came to this work through a camera.');
+  assert.equal(about.story.body.length, 7, 'the seven short story paragraphs');
   assert.equal(about.outside.heading, 'Outside the studio');
   assert.deepEqual(
     about.outside.photos.map((p) => [p.caption, p.file]),
     [
-      ['A park afternoon', 'src/assets/about/family.jpg'],
-      ['Race day', 'src/assets/about/running.jpg'],
-      ['Out exploring', 'src/assets/about/exploring.jpg'],
-      ['Wedding day', 'src/assets/about/wedding.jpg'],
-      ['From the other side of the lens', 'src/assets/about/portrait-bw.jpg'],
+      ['A park afternoon. Most of the watermelon went on the baby.', 'src/assets/about/family.jpg'],
+      ["Race day: bib 4095 at Parkinson's Steady Strides, 2024.", 'src/assets/about/running.jpg'],
+      [
+        'Out exploring with one of the kids, by some old railroad cars.',
+        'src/assets/about/exploring.jpg',
+      ],
+      ['Our wedding day, beside a lake.', 'src/assets/about/wedding.jpg'],
+      // The last photo is the one the page sets large beside the story.
+      ['From the other side of the lens.', 'src/assets/about/portrait-bw.jpg'],
     ],
   );
   assert.deepEqual(
     about.principles.items.map((p) => p.title),
     [
-      'Strategy before pixels',
-      'The right platform for the job',
-      'Cincinnati base, clients anywhere',
+      'You work with me, start to finish',
+      'A plan we both sign off first',
+      'A site your own people can run',
     ],
   );
   assert.equal(about.currently.heading, 'Currently');
-  assert.equal(about.currently.updated, '2026-10-01');
+  assert.equal(about.currently.updated, '2026-10-04');
   assert.deepEqual(about.currently.workingOn, [
     "Finishing the Presbyterian Academy website ahead of the school's first term.",
-    'Buying our first house, here in Cincinnati.',
+    'Settling into our first house, here in Cincinnati.',
   ]);
   assert.deepEqual(
     about.currently.booking.map((b) => [b.label, b.status]),
@@ -161,15 +164,15 @@ test('the fallback keeps pointing at the bundled pictures, with their alt text',
   }
 });
 
-test('the story renders as four bare paragraphs carrying the original text', async () => {
+test('the story renders as seven short bare paragraphs carrying the committed text', async () => {
   const { d } = deps(reader({}));
   const about = await getAboutPage({}, { deps: d });
   const html = restrictPortableText(about.story.body).map((b) => blockHtml(b));
-  assert.equal(html.length, 4);
-  assert.match(html[0], /^I came to this work through a camera\. For years I photographed/);
-  assert.ok(html[0].includes("the studio's main work now"), 'apostrophes stay literal');
-  assert.match(html[2], /^I also do plenty of this work as a volunteer\./);
-  assert.match(html[3], /a few episodes into a history drama\.$/);
+  assert.equal(html.length, 7);
+  assert.match(html[0], /^For years I photographed portraits, families and weddings/);
+  assert.ok(html[4].includes("the studio's main work now"), 'apostrophes stay literal');
+  assert.match(html[3], /^I'm also on the volunteer media team at Crestview Presbyterian Church\./);
+  assert.match(html[6], /a few episodes into a history drama\.$/);
   assert.ok(
     html.every((p) => !p.includes('<')),
     'no markup in the committed story',
@@ -180,7 +183,7 @@ test('an unreadable read (D1 down, or an error) serves the same fallback and log
   for (const r of [reader({ throws: true }), reader({ error: new Error('boom') })]) {
     const { d, logs } = deps(r);
     const about = await getAboutPage({}, { deps: d });
-    assert.equal(about.heading, 'A one-person studio for');
+    assert.equal(about.heading, 'The person you meet on day one');
     assert.equal(logs.length, 1);
   }
 });
