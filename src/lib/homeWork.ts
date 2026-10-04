@@ -7,8 +7,8 @@
    src/assets/home/ (captured by scripts/brand/capture-home-reel.mjs):
 
      REEL   the hero carousel: ten browser frames from five sites, two pages each.
-     SHEET  the "proof sheet" work band: one film strip per live site, with a short
-            note and the facts printed on the film edge.
+     SHEET  the "proof sheet" work band: a detail from each live site that the reel does
+            not show, with a short note and a fact the reel's captions do not state.
 
    The pictures and the art direction (which page, which crop, which caption) are
    curated here, in code. Whether a site may appear at all is the CMS's call, read
@@ -171,7 +171,7 @@ export interface SheetFrame {
   img: string;
   alt: string;
   caption: string;
-  /** The china-marker loop round the keeper (one per strip). */
+  /** The china-marker loop round the keeper (one on the whole sheet: the lead job's). */
   pick?: boolean;
   /** Relative width of this frame in the strip at desktop (flex-grow). */
   grow?: number;
@@ -182,7 +182,7 @@ export interface SheetJob {
   name: string;
   /** The italic line under the name. */
   kind: string;
-  /** Facts printed on the film edge (real, checkable, short). */
+  /** Facts printed on the film edge (real, checkable, short: they must read whole on a phone). */
   edge: string[];
   frames: SheetFrame[];
   /** Two short paragraphs: what was done, then one proven fact. */
@@ -192,13 +192,19 @@ export interface SheetJob {
   host: string;
 }
 
-/** The proof sheet, in order. Stone Steps leads (the lead case study). */
+/**
+ * The proof sheet, in order. Stone Steps leads (the lead case study). Each job shows a DETAIL
+ * the hero reel does not: the reel prints every site's first screen, so the sheet prints a
+ * section further in (scripts/brand/capture-home-sheet.mjs captures the newer ones), with a
+ * fact the reel's captions do not already state. Only the lead carries the china-marker pick:
+ * one circled keeper per sheet (the hero has the other loop on the page).
+ */
 export const SHEET: SheetJob[] = [
   {
     study: 'stone-steps-50k',
     name: 'Stone Steps 50K',
     kind: 'A trail race in Mt. Airy Forest, Cincinnati',
-    edge: ['Stone Steps 50K', 'Cincinnati OH', '2026', 'stonesteps50k.com'],
+    edge: ['Stone Steps 50K', 'Cincinnati', '2026'],
     frames: [
       {
         img: 'ss-elev',
@@ -208,7 +214,7 @@ export const SHEET: SheetJob[] = [
         grow: 1,
       },
       {
-        img: 'ss-records',
+        img: 'ss-records-board',
         alt: "The records board: men's and women's course records for the 50K and 27K, with times and years.",
         caption: 'The records board, built from the results',
         grow: 1,
@@ -223,49 +229,33 @@ export const SHEET: SheetJob[] = [
     study: 'foundation-for-reformed-theology',
     name: 'Foundation for Reformed Theology',
     kind: 'A ministry to working pastors',
-    edge: ['Foundation for Reformed Theology', 'foundationrt.org', 'Home and library'],
+    edge: ['Foundation for Reformed Theology', 'The library'],
     frames: [
       {
-        img: 'frt',
-        alt: 'The Foundation for Reformed Theology home page: a serif headline, Recovering the historic faith of the church, beside an archival black-and-white photograph of a scholar in his study.',
-        caption: 'Home page, desktop',
-        grow: 1.65,
-      },
-      {
-        img: 'frt-library',
-        alt: 'The resources section: bibliographies, John Calvin studies, foundation publications, sermons and lectures, and worship leadership, each with a one-line description.',
-        caption: 'The library, by kind of resource',
-        pick: true,
-        grow: 1,
+        img: 'frt-browse',
+        alt: 'The library page of the Foundation for Reformed Theology: Browse another way, with All Authors (84 contributors, among them John Calvin and Karl Barth) and All Topics (55 subjects, among them Doctrinal Theology and Preaching).',
+        caption: 'The library, by author and by subject',
       },
     ],
-    note: 'Decades of sermons, lectures, bibliographies and seminar material, gathered into one library you can search and browse by topic.',
-    fact: 'It scores 100 on all four of Google’s Lighthouse checks on a phone (speed, accessibility, best practices and search), measured September 2026.',
-    url: 'https://foundationrt.org/',
+    note: 'Below the five kinds of resource, the library opens two more ways: by the person who wrote it and by its subject.',
+    fact: 'The page lists 84 contributors and 55 subjects (October 2026).',
+    url: 'https://foundationrt.org/resources/',
     host: 'foundationrt.org',
   },
   {
     study: 'theology-matters',
     name: 'Theology Matters',
     kind: 'A theology journal, Volume 32',
-    edge: ['Theology Matters', 'Winter 2026 issue', 'theologymatters.com'],
+    edge: ['Theology Matters', 'Listen to this essay'],
     frames: [
       {
-        img: 'tm',
-        alt: "The Theology Matters home page: the journal's script masthead, the featured essay with an illuminated image, and the current issue set as a printed cover.",
-        caption: 'Home page, desktop',
-        grow: 1.6,
-      },
-      {
-        img: 'tm-article',
-        alt: 'An article page from Theology Matters, set in a large serif with an italic summary.',
-        caption: 'An article page',
-        pick: true,
-        grow: 1,
+        img: 'tm-audio',
+        alt: 'The audio player at the head of a Theology Matters essay: Listen to this essay, The Nicene Creed in Historical Context, 45 minutes 46, read by an AI voice generated by ElevenLabs.',
+        caption: 'The player at the head of an essay',
       },
     ],
-    note: 'Every article has an audio version, so the journal can be listened to as well as read.',
-    fact: '149 of its 154 articles link back to the print edition they first appeared in.',
+    note: 'Every article gets its audio version on its own, so the journal can be listened to as well as read.',
+    fact: 'The essay in this frame runs 45 minutes 46 seconds, read by an AI voice.',
     url: 'https://theologymatters.com/',
     host: 'theologymatters.com',
   },
@@ -282,26 +272,24 @@ export const SHEET: SheetJob[] = [
         grow: 0.42,
       },
       {
-        img: 'mas',
-        alt: "The MAS Monograms home page on deep indigo: Custom monogramming, made just for you, beside stitched photographs of a monogrammed tote, a towel and a child's name on a pillow.",
-        caption: 'Home page, desktop',
-        grow: 1.15,
+        img: 'mas-steps',
+        alt: 'How it works on the MAS Monograms home page: 01 Browse, pick your item; 02 Request, submit a free quote form; 03 Quote, get your custom price in 1 day; 04 Stitch, approve and I get to work.',
+        caption: 'From first idea to finished piece',
+        grow: 2.2,
       },
       {
         img: 'mas-maker',
         alt: "Mary Ann at her desk, beside the heading Hi, I'm Mary Ann, and a short note that every order comes straight to her.",
         caption: 'Meet the maker',
-        pick: true,
         grow: 1,
       },
     ],
-    note: 'Moved off Squarespace onto a site Mary Ann edits herself, page by page, with no monthly platform fee.',
-    fact: 'Quotes come in through a short form instead of a cart, because for handmade embroidery that is still the honest way to set a price.',
+    note: 'Quotes come in through a short form instead of a cart, because for handmade embroidery that is still the honest way to set a price.',
+    fact: 'The price comes back within a day, from Mary Ann herself.',
     url: 'https://mas-monograms.com/',
     host: 'mas-monograms.com',
   },
 ];
-
 /** What the gate needs from a case study (a structural subset of CaseStudy). */
 export interface StudyGate {
   id: string;

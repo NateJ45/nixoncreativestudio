@@ -78,6 +78,26 @@ test('every curated picture exists in src/assets/home', () => {
   for (const j of SHEET) for (const f of j.frames) assert.ok(sheet.has(`${f.img}.webp`), f.img);
 });
 
+test('the proof sheet adds to the reel instead of repeating it', () => {
+  // One china-marker pick on the whole sheet, on the lead job.
+  const picks = SHEET.flatMap((j, i) => j.frames.filter((f) => f.pick).map(() => i));
+  assert.deepEqual(picks, [0]);
+  // No sheet picture is a reel picture, and no sheet fact repeats a reel caption.
+  const reelIds = new Set(REEL.map((s) => s.id));
+  const reelFacts = new Set(REEL.map((s) => s.fact));
+  for (const j of SHEET) {
+    for (const f of j.frames) assert.ok(!reelIds.has(f.img), f.img);
+    assert.ok(!reelFacts.has(j.fact), j.fact);
+    assert.ok(!reelFacts.has(j.note), j.note);
+  }
+});
+
+test('film edge print is short enough to read whole on a phone', () => {
+  // About 20 characters fit the rebate of a 390 px strip at the edge-print size; the edge
+  // wraps rather than clipping, but a single fact must never be wider than the strip.
+  for (const j of SHEET) for (const e of j.edge) assert.ok(e.length <= 34, e);
+});
+
 test('no curated copy carries an em-dash', () => {
   const words = JSON.stringify([REEL, SHEET]);
   assert.ok(!words.includes('—'));
