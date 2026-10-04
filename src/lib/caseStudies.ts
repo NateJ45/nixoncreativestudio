@@ -27,6 +27,8 @@
      strings. (The per-entry call getEntryTerms() needs entry.data.id, the ULID,
      not the slug; hydration makes that unnecessary here.)
    - `results` is a repeater: rows of { text }. Flattened to string[] here.
+   - `launch_status` (optional, empty = live) gates the links: a study that is not
+     live gets no liveUrl, no showcaseHref and no hero place (src/lib/launchStatus.ts).
    - Empty optional fields may come back as null; the helpers return undefined
      for those so a plain truthiness check works in templates.
    ============================================================================ */
@@ -35,6 +37,7 @@ import { getEmDashCollection, getEmDashEntry, getTaxonomyTermsWithCacheHint } fr
 import type { ImageValue } from 'emdash';
 import type { RouteCache } from './routeCache';
 import { slugify } from './portableText';
+import { gateLinks, launchStatusOf, type LaunchStatus } from './launchStatus.ts';
 
 /** A Portable Text block. Kept loose on purpose; the renderer does the work. */
 export type PTBlock = {
@@ -75,6 +78,12 @@ export interface CaseStudy {
   heroOrder?: number;
   published: Date;
   updated?: Date;
+  /**
+   * Whether the site is live (the optional launch_status field; empty reads as live). When it is
+   * not, liveUrl and showcaseHref are undefined and inHero is false (src/lib/launchStatus.ts),
+   * so a template can never present unlaunched work as live. Show launchStatusLabel(status).
+   */
+  launchStatus: LaunchStatus;
   liveUrl?: string;
   outcome?: string;
   testimonial?: { quote: string; name: string; title?: string };
@@ -149,6 +158,14 @@ const img = (v: unknown): ImageValue | undefined =>
 
 function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
   const quote = str(d.testimonial_quote);
+  const launchStatus = launchStatusOf(d.launch_status);
+  // A study that is not live keeps no live link, no showcase link and no hero place.
+  const links = gateLinks(launchStatus, {
+    // in_hero and hero_order exist from PR 13; before the data load they read as undefined.
+    inHero: Boolean(d.in_hero),
+    liveUrl: str(d.live_url),
+    showcaseHref: str(d.showcase_href),
+  });
   return {
     id,
     title: String(d.title ?? ''),
@@ -162,12 +179,12 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
     description: str(d.description),
     cover: img(d.cover),
     featured: Boolean(d.featured),
-    // in_hero and hero_order exist from PR 13; before the data load they read as undefined.
-    inHero: Boolean(d.in_hero),
+    inHero: links.inHero,
     heroOrder: whole(d.hero_order),
     published: date(d.published) ?? new Date(0),
     updated: date(d.updated),
-    liveUrl: str(d.live_url),
+    launchStatus,
+    liveUrl: links.liveUrl,
     outcome: str(d.outcome),
     testimonial: quote
       ? { quote, name: String(d.testimonial_name ?? ''), title: str(d.testimonial_title) }
@@ -178,7 +195,7 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
     showcaseDesktop: img(d.showcase_desktop),
     showcaseMobile: img(d.showcase_mobile),
     showcaseAlt: str(d.showcase_alt),
-    showcaseHref: str(d.showcase_href),
+    showcaseHref: links.showcaseHref,
     showcaseLabel: str(d.showcase_label),
     showcaseVariant: d.showcase_variant === 'zoom' ? 'zoom' : 'scroll',
     highlights: Array.isArray(d.highlights) ? (d.highlights as Highlight[]) : [],
@@ -246,7 +263,7 @@ export function bodyHeadings(body: PTBlock[]): { text: string; slug: string }[] 
  *   highlights, PortableText(rest)
  *
  * where brief ends just before the 'The approach' heading, approach runs from
- * that heading through the 'What we built' heading (inclusive, so the
+ * that heading through the 'What I built' (or older 'What we built') heading (inclusive, so the
  * highlights land right under it), and rest is everything after. If a
  * heading is missing the body degrades gracefully: the slider and highlights
  * simply land at the end of the run that exists.
@@ -255,7 +272,10 @@ export function splitBody(body: PTBlock[]) {
   const text = (b: PTBlock) => (b.children ?? []).map((c) => c.text ?? '').join('');
   const at = (label: string) => body.findIndex((b) => b.style === 'h2' && text(b) === label);
   const approach = at('The approach');
-  const built = at('What we built');
+  // The heading was "What we built" until the 2026 copy pass moved the case studies to first
+  // person singular ("What I built"); either one places the highlights.
+  const builtI = at('What I built');
+  const built = builtI >= 0 ? builtI : at('What we built');
   const a = approach >= 0 ? approach : body.length;
   const b = built >= a ? built + 1 : a;
   return { brief: body.slice(0, a), approach: body.slice(a, b), rest: body.slice(b) };

@@ -92,6 +92,16 @@ export const FIELDS = [
   },
   { slug: 'updated', type: 'datetime', label: 'Updated' },
   { slug: 'live_url', type: 'url', label: 'Live site URL' },
+  // Redesign 2026 (D's copy audit): whether the site is actually live. OPTIONAL on purpose
+  // (CLAUDE.md rule 13; EmDash cannot make an existing optional field required): an old entry
+  // reads as empty, and empty means live. Anything else hides the live link, the showcase link
+  // and the hero place (src/lib/launchStatus.ts). Keep the options equal to LAUNCH_STATUSES there.
+  {
+    slug: 'launch_status',
+    type: 'select',
+    label: 'Launch status (leave empty when the site is live)',
+    validation: { options: ['live', 'launching-soon', 'in-progress', 'built-not-launched'] },
+  },
   { slug: 'outcome', type: 'text', label: 'Outcome (one honest line, max 160)' },
   { slug: 'testimonial_quote', type: 'text', label: 'Testimonial quote' },
   { slug: 'testimonial_name', type: 'string', label: 'Testimonial name' },
