@@ -161,17 +161,17 @@ PAPER_TEXT.push(
   ['secondary-foreground', 'secondary', 'ink on the quiet secondary button'],
   ['destructive', 'background', 'form error text'],
   ['destructive', 'card', 'form error text in a card'],
-  ['error-foreground', 'error', 'Starwind error surface'],
-  ['info-foreground', 'info', 'Starwind info surface'],
-  ['success-foreground', 'success', 'Starwind success surface'],
-  ['warning-foreground', 'warning', 'Starwind warning surface'],
+  ['error-foreground', 'error', 'status error surface'],
+  ['info-foreground', 'info', 'status info surface'],
+  ['success-foreground', 'success', 'status success surface'],
+  ['warning-foreground', 'warning', 'status warning surface'],
   ['popover-foreground', 'popover', 'menus and popovers'],
 );
 
 const PAPER_NON_TEXT: Pair[] = [];
 for (const bg of PAPER_GROUNDS) PAPER_NON_TEXT.push(['ring', bg, 'focus ring']);
 PAPER_NON_TEXT.push(
-  ['outline', 'background', 'Starwind outline token, tracks --ring'],
+  ['outline', 'background', 'outline token, tracks --ring'],
   ['input', 'background', 'form field edge'],
   ['input', 'card', 'form field edge in a card'],
   ['input', 'muted', 'form field edge on sunk paper'],

@@ -335,20 +335,6 @@ Also open from the same PR: `scripts/ci-dataset/terms.json` pins each CI case st
 
 `scripts/cms/apply-schema.mjs` and `scripts/cms/load-content.mjs` (CMS-DESIGN PR 3) were tested against in-memory fakes of the EmDash REST API and the `emdash` CLI, because `ncs-ci` has no admin user and so no API token. Three response shapes are read defensively because they were never observed: a field row's sort key (`sortOrder` or `sort_order`), a menu item's URL key (`customUrl`, `custom_url` or `url`), and the `content get --raw` result (`data` and `_rev` at the top level). The first content PR (4) must start with `npm run cms:schema -- --collection <slug> --url <instance> --dry-run` (docs/CMS-DESIGN.md 2.6), then a second real run that prints only `unchanged`. If a shape differs, fix the one helper (`scripts/lib/emdash-schema.mjs` or `scripts/lib/cms-load.mjs`) and add the observed shape to its unit test. Delete this row once a real schema apply and a real content load both rerun as no-ops.
 
----
-
-### 8. Unused dependencies after the redesign foundation (2026-10-04)
-
-`three`, `@react-three/fiber` and `@types/three` are no longer imported (the
-WebGL hero was deleted); `@fontsource-variable/source-sans-3` and
-`@fontsource-variable/geist` are unused (fonts are self-hosted from
-`src/assets/fonts/`); `@fontsource/bebas-neue` is still read by the OG
-generators and `src/pages/coming-soon.astro`. The EmDash/zustand shim in
-`astro.config.mjs` mentions R3F as zustand's consumer; check whether zustand is
-still pulled in before removing the shim. Removing packages changes the
-lockfile, so it is a deliberate, separate PR (not done by the foundation agent,
-which was told not to touch dependencies).
-
 ## Deliberate absences (do not "fix" these)
 
 These are recorded so a future session stops re-deriving them.

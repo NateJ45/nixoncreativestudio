@@ -113,15 +113,15 @@ Do not add a hue. Do not put `--marker-hot` or `--river` text on paper. Do not u
 
 ## 3. Typography
 
-Three families by role, four files, all self-hosted woff2 latin subsets in `src/assets/fonts/` (from Fontsource):
+Three families by role, four faces, all self-hosted woff2 from Fontsource's latin subsets, each split into a "core" and an "ext" file by `unicode-range` (`scripts/brand/subset-fonts.py`, sources in `scripts/brand/font-sources/`): core holds what English copy uses (ASCII, curly quotes, dashes, ellipsis, (c), the middle dot) and is about 40% smaller; ext holds the accented letters and rarer marks and downloads only on a page whose text needs one. Sizes below are the core files.
 
-- **Bebas Neue** (13.8 KB, preloaded): Nathan's logo face. The display line, headlines h1 to h4, numerals (prices, durations, years), the phone-menu rows. Tracking 0.01em; never body copy, never long labels.
-- **Newsreader** regular (22.5 KB, preloaded), italic (24.3 KB, on demand), semibold (23.9 KB, on demand): body, ledes, h5 and h6, and the **second voice**: the italic turn at the end of a Bebas headline, in china-marker red (`.voice`, "I MAKE WEBSITES THAT / _pull their weight._"). Every big headline turns into the italic for its last phrase, so no headline is a block of caps.
+- **Bebas Neue** (9.6 KB, preloaded): Nathan's logo face. The display line, headlines h1 to h4, numerals (prices, durations, years), the phone-menu rows. Tracking 0.01em; never body copy, never long labels.
+- **Newsreader** regular (13.8 KB, preloaded), italic (15.3 KB, on demand), semibold (14.8 KB, on demand): body, ledes, h5 and h6, and the **second voice**: the italic turn at the end of a Bebas headline, in china-marker red (`.voice`, "I MAKE WEBSITES THAT / _pull their weight._"). Every big headline turns into the italic for its last phrase, so no headline is a block of caps.
 - **System sans** (0 KB): the furniture. Nav, buttons, form fields and labels, captions, edge print. Legible, not expressive.
 
 Role classes (globals.css section 5): `.type-display`, `.type-headline`, `.voice`, `.type-lede`, `.type-body`, `.type-caption`, `.type-numeral`, `.type-ui`. Use the role, not a size. Fluid scale tokens: `--text-display`, `--text-h1` to `--text-h6`, `--text-lede`, `--text-body`, `--text-ui`, `--text-caption`, `--text-numeral` (utilities `text-h2` and so on).
 
-**Loading and CLS.** BaseLayout preloads Bebas and Newsreader regular on every page (36.2 KB, down from 42.5 KB for Bebas plus Source Sans 3). A page whose first screen sets the italic or bold text adds `preloadFonts={['italic']}` or `['semibold']` to BaseLayout. Every family has a metric-matched local fallback (`size-adjust` and ascent / descent overrides measured from the font tables): Bebas against Impact (77.47%), Newsreader against Georgia (95.74% roman, 87.45% italic, 86.15% bold). Measured CLS 0 on every Lighthouse run (home and /services, mobile).
+**Loading and CLS.** BaseLayout preloads the core files of Bebas and Newsreader regular on every page (23.4 KB; 36.2 KB before the core/ext split, 42.5 KB for Bebas plus Source Sans 3 before that). A page whose first screen sets the italic or bold text adds `preloadFonts={['italic']}` or `['semibold']` to BaseLayout. Every family has a metric-matched local fallback (`size-adjust` and ascent / descent overrides measured from the font tables): Bebas against Impact (77.47%), Newsreader against Georgia (95.74% roman, 87.45% italic, 86.15% bold). Measured CLS 0 on every Lighthouse run (home and /services, mobile).
 
 No monospace labels, no tracked uppercase eyebrows. Uppercase small text appears only as film edge print, and only for facts.
 
@@ -223,6 +223,19 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 | Before (36c3a1f)                       | 92, 97, 93 | 3.20, 2.58, 3.19 s | 99, 99, 99      | 1.69, 1.77, 1.99 s | 0   | 0 to 4 ms |
 | This foundation, CSS as files          | 94, 97, 96 | 2.77, 2.45, 2.47 s | 98, 98, 98      | 2.17, 2.16, 2.15 s | 0   | 0 ms      |
 | This foundation, CSS inlined (shipped) | 97, 97, 97 | 2.49, 2.43, 2.43 s | 99, 99, 99      | 1.82, 1.82, 1.82 s | 0   | 0 ms      |
+
+**Performance pass (2026-10-04, branch `perf-pass`, same method, median of 3; LCP in ms, transfer at load in KB):**
+
+| Change                                                                              | Home LCP / KB | /services  | /about     | /contact   | /photography |
+| ----------------------------------------------------------------------------------- | ------------- | ---------- | ---------- | ---------- | ------------ |
+| Before the pass                                                                     | 1999 / 315    | 1901 / 244 | 1997 / 437 | 1824 / 199 | 1752 / 259   |
+| 1. Dead kit and packages out, Tailwind scan narrowed (inline CSS 137 to 100 KB raw) | 1831 / 304    | 1748 / 228 | 1990 / 420 | 1824 / 188 | 1747 / 236   |
+| 2. Fonts split core / ext (preloaded 60 to 39 KB)                                   | 1886 / 283    | 1553 / 207 | 1848 / 391 | 1694 / 167 | 1534 / 216   |
+| 3. AVIF and true `sizes` on the About, contact, call-sheet photos                   | 1875 / 283    | 1555 / 207 | 1702 / 306 | 1615 / 164 | 1532 / 216   |
+| 4. Prefetch on hover, icons cached                                                  | 1930 / 253    | 1546 / 134 | 1530 / 232 | 1714 / 121 | 1537 / 114   |
+| Final build                                                                         | 1859 / 253    | 1545 / 134 | 1690 / 232 | 1557 / 121 | 1533 / 114   |
+
+Scores 99 to 100 throughout (they were already 99 locally, so the score cannot show the gain; LCP and bytes do). 5. The analytics beacon after load (A/B with a dummy token, median of 5): home LCP 2015 to 1850, /contact 1862 to 1558. CLS 0 and TBT 0 in every run. Production also carries Cloudflare's Bot Fight Mode script, which only the dashboard can remove: `docs/redesign-2026/performance-handoff.md`.
 
 Accessibility 100 on every run. JS at load fell from about 116 KB to 10 KB on both pages (the header, menu and back-to-top no longer hydrate React). The home hero itself is still the old one; its rebuild owns the rest of the LCP budget. Local numbers read differently from CI's; the CI preview run is the authority (Gotcha 9).
 

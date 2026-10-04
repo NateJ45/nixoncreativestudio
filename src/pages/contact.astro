@@ -37,7 +37,7 @@
    removed; Turnstile was never on this page).
    ============================================================================ */
 
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import headshot from '../assets/brand/headshot.jpg';
 import Band from '../components/Band.astro';
@@ -109,7 +109,9 @@ const optionalMark = 'optional';
       </div>
       {/* A real photograph and a true line: one person reads what you send. */}
       <figure class="contact-person">
-        <Image
+        <Picture
+          formats={['avif', 'webp']}
+          pictureAttributes={{ class: 'contents' }}
           src={headshot}
           alt={`${site.ownerName}, who runs ${site.studioName} and reads every message`}
           widths={[176, 264, 352]}

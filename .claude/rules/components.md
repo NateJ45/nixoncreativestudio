@@ -4,7 +4,6 @@ paths:
   - 'src/layouts/**'
   - 'src/pages/**'
   - 'components.json'
-  - 'starwind.config.json'
 ---
 
 # Components, code conventions and images
@@ -15,13 +14,12 @@ Moved out of CLAUDE.md. Loads when components, layouts or pages are touched.
 
 When building UI, reach for components in this order:
 
-1. Existing components in `src/components/` that already match this site's design
-2. shadcn/ui primitives in `src/components/ui/` (radix-nova style, plus the `@fulldev` registry)
-3. Starwind UI in `src/components/starwind/` for Astro-native, zero-JS primitives (accordion, dialog, dropdown, tabs) where no React state is needed
-4. Aceternity UI for motion-rich blocks (hero, bento, parallax)
-5. Magic UI for smaller flourishes (marquee, animated text)
-6. PrimeReact (`src/components/primereact/`) only for heavy, behavior-rich widgets with no lighter equivalent (data tables, file upload, complex pickers)
-7. Custom build only if nothing above fits
+1. Existing components in `src/components/` that already match this site's design (the 2026 primitives below come first)
+2. An Astro component with native HTML (`<dialog>`, `<details>`, popover) and a few lines of script
+3. A shadcn/ui primitive in `src/components/ui/` (only `button.tsx` and `marquee.tsx` are installed). The Starwind kit, PrimeReact and the other shadcn, Aceternity and Magic UI primitives were deleted in the 2026-10-04 performance pass because nothing used them and Tailwind put their classes into every page's CSS. Re-adding one runs its CLI and adds a package: ask Nathan first, and delete it again if the page that wanted it goes
+4. Custom build only if nothing above fits
+
+Every file under `src/` feeds Tailwind's class scan, so an unused component is not free: its classes ship inlined in every page. Delete what nothing imports.
 
 For where to pull each of these from (free sources, the shadcn CLI commands, the token-remap cheat sheet), see `docs/agent/component-sources.md`.
 
@@ -82,7 +80,7 @@ Beyond those, the homepage components (`src/components/home/`: HomeHero, HeroRee
 ## Image handling
 
 - Source photos live in `src/assets/` so Astro can optimize at build time.
-- Use the `<Picture />` component for art-directed images (different crops at different breakpoints).
+- Use the `<Picture />` component for art-directed images (different crops at different breakpoints), and for every photograph: `formats={['avif', 'webp']}` with `pictureAttributes={{ class: 'contents' }}` so the `<picture>` adds no box and the img's own classes still lay it out. AVIF halved the About photos (216 to 131 KB at load, 2026-10-04). `sizes` must describe the rendered width at each breakpoint (measure it at 390 and 1440); a single value for prints of different widths under-serves the wide one.
 - Always include `alt` text. `alt=""` is acceptable for purely decorative images.
 - For individual photos that need a fade-in or future blur-placeholder, use the `Photo` React island in `src/components/Photo.tsx`. It expects a build-resolved src URL (typically from an Astro `import` of a JPG asset) plus width and height. The `placeholder` prop accepts a base64 data URL when blur generation gets wired later.
 - For the photography page galleries, use the `PhotoGallery` React island. It composes `react-photo-album` for the justified grid with `yet-another-react-lightbox` (Zoom + Thumbnails plugins) for the fullscreen viewer. Pass a `photos` array of `{ src, width, height, alt?, caption? }`.

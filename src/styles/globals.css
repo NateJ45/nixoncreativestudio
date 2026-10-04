@@ -42,6 +42,15 @@
 @source not '../../README.md';
 @source not '../../PRODUCT.md';
 @source not '../../DESIGN.md';
+/* Code that never renders on a public page (2026-10-04 performance pass): the
+   unit tests (utils.test.ts names classes like text-red-500 as test data), the
+   Playwright specs, the Node scripts, and the admin help plugin (it injects its
+   own .sh-* stylesheet). Every class they name used to ship in each page's
+   inlined CSS. */
+@source not '../lib/*.test.ts';
+@source not '../../tests';
+@source not '../../scripts';
+@source not '../../plugins';
 
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
@@ -60,40 +69,104 @@
    descent overrides, computed from the real font tables against the system
    fonts) so the swap does not move the layout.
 
-   Budget: Bebas Neue 13.8 KB + Newsreader regular 22.5 KB are preloaded by
-   BaseLayout on every page (36 KB). The italic (24.3 KB) and the semibold
-   (23.9 KB) load only when a page uses them; a page whose first screen sets
+   Budget: the core files of Bebas Neue (9.6 KB) and Newsreader regular
+   (13.8 KB) are preloaded by BaseLayout on every page (23.4 KB, was 36.2 KB
+   before the core/ext split). The italic core (15.3 KB) and the semibold core
+   (14.8 KB) load only when a page uses them; a page whose first screen sets
    the italic can preload it with <BaseLayout preloadFonts={['italic']}>.
    ---------------------------------------------------------------------------- */
+/* Each face is split in two by unicode-range (scripts/brand/subset-fonts.py,
+   2026-10-04 performance pass): a "core" file with what English copy uses
+   (ASCII, curly quotes, dashes, ellipsis, (c), the middle dot, about 40%
+   smaller, and the one BaseLayout preloads) and an "ext" file with the rest of
+   the latin subset (accented letters, rarer marks), which the browser fetches
+   only when a page's text contains one of them. Keep the ranges in step with
+   CORE in that script. */
 @font-face {
   font-family: 'Bebas Neue';
-  src: url('../assets/fonts/bebas-neue-latin-400.woff2') format('woff2');
+  src: url('../assets/fonts/bebas-neue-latin-400-core.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
 }
 @font-face {
-  font-family: 'Newsreader';
-  src: url('../assets/fonts/newsreader-latin-400.woff2') format('woff2');
+  font-family: 'Bebas Neue';
+  src: url('../assets/fonts/bebas-neue-latin-400-ext.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308, U+2002, U+200B, U+201A,
+    U+201E, U+2039-203A, U+2044, U+2215;
 }
 @font-face {
   font-family: 'Newsreader';
-  src: url('../assets/fonts/newsreader-latin-400-italic.woff2') format('woff2');
+  src: url('../assets/fonts/newsreader-latin-400-core.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-400-ext.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+201A, U+201E,
+    U+2032-2033, U+2039-203A, U+2044, U+2215;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-400-italic-core.woff2') format('woff2');
   font-weight: 400;
   font-style: italic;
   font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
 }
-/* Semibold covers <strong> and <b> in body copy, so the browser never fakes a
-   bold serif. Weights 500 to 700 all resolve to this one file. */
 @font-face {
   font-family: 'Newsreader';
-  src: url('../assets/fonts/newsreader-latin-600.woff2') format('woff2');
+  src: url('../assets/fonts/newsreader-latin-400-italic-ext.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+201A, U+201E,
+    U+2032-2033, U+2039-203A, U+2044, U+2215;
+}
+/* Semibold covers <strong> and <b> in body copy, so the browser never fakes a
+   bold serif. Weights 500 to 700 all resolve to these files. */
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-600-core.woff2') format('woff2');
   font-weight: 500 700;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-600-ext.woff2') format('woff2');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+201A, U+201E,
+    U+2032-2033, U+2039-203A, U+2044, U+2215;
 }
 
 /* Fallbacks. Numbers measured from the font tables (DESIGN.md "Type"): Bebas
@@ -934,27 +1007,9 @@
   .spotlight-card {
     position: relative;
   }
-  /* Animated underline link. Grows from the left on hover/focus. */
-  .link-underline {
-    position: relative;
-    text-decoration: none;
-  }
-  .link-underline::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    height: 1px;
-    width: 100%;
-    transform: scaleX(0);
-    transform-origin: left;
-    background: var(--marker);
-    transition: transform 0.3s var(--ease-settle);
-  }
-  .link-underline:hover::after,
-  .link-underline:focus-visible::after {
-    transform: scaleX(1);
-  }
+  /* (.link-underline was deleted in the 2026-10-04 performance pass: no page
+     used it. .surface-card, .hover-lift, .spotlight-card and [data-hidden] are
+     only used by the old /work index; delete them when its rebuild lands.) */
 }
 
 /* ----------------------------------------------------------------------------
@@ -1259,7 +1314,7 @@ html.ncs-gated .ncs-overlay {
 
   /* Focus ring: the marker, 5.64:1 on paper. */
   --ring: #ae2f1b; /* = --marker */
-  --outline: #ae2f1b; /* Starwind's focus token, = --ring */
+  --outline: #ae2f1b; /* = --ring (the retired Starwind kit's focus token) */
 
   /* Form errors and destructive actions: brick reads as an alarm on paper
      without a new hue (7.23:1). */
@@ -1289,9 +1344,9 @@ html.ncs-gated .ncs-overlay {
   --sidebar-border: rgb(10 22 40 / 0.14);
   --sidebar-ring: #ae2f1b;
 
-  /* Starwind UI extra semantic tokens (accordion / dialog / dropdown / tabs).
-     starwind.css maps each onto a utility. Status colours are soft surfaces
-     with deep foregrounds, all AA. */
+  /* Status tokens, kept from the retired Starwind kit (deleted 2026-10-04) for
+     any future status surface. No utility maps them now; read them as
+     var(--success) and so on. Soft surfaces with deep foregrounds, all AA. */
   --primary-accent: #15233a; /* = --ink-raised: primary hover */
   --secondary-accent: #ddd3c1; /* paper-deep, pressed */
   --info: #d9e2e6;

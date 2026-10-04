@@ -229,7 +229,8 @@ Every entry below was measured, not assumed.
     fallback was deleted so a row removed in the admin really stops working.
 19. **A prefetch is only worth anything if the browser may reuse it, and every
     internal link must already carry its trailing slash.** Measured 2026-10-03 on
-    the live site with a real foreground browser: Astro's viewport prefetch fired
+    the live site with a real foreground browser (the strategy was viewport then;
+    it is hover since 2026-10-04, so only links a visitor points at are fetched): Astro's viewport prefetch fired
     for every link, then the click fetched the page AGAIN (80 to 400ms per
     navigation, against about 5ms when pages were static files). Two causes.
     (a) The route cache sends the browser `Cache-Control: no-cache` and no ETag,

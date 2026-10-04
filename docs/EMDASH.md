@@ -34,7 +34,10 @@ are created in the admin and pages are changed to call `getEmDashCollection()`.
    to a shim with named exports only. `zustand` (via `@react-three/fiber`, the
    WebGL hero) default-imports it, so the build failed with `MISSING_EXPORT`.
    A small Vite plugin in `astro.config.mjs` (`ncs-zustand-sync-store-shim`)
-   rewrites zustand's import. Re-check after upgrading emdash or zustand.
+   rewrote zustand's import. Retired 2026-10-04: `@react-three/fiber` was
+   uninstalled with the WebGL hero and `npm ls zustand` is empty, so the plugin
+   was deleted. If a new package brings zustand back and the build dies with
+   `MISSING_EXPORT`, restore the plugin from git history.
 2. **Sessions.** The live site had `session: false`; EmDash sign-in then fails with "needs an Astro session driver". Removed it; the adapter now uses KV binding `SESSION` (namespace `ncs-emdash-sessions`).
 3. The Cloudflare API MCP connector in Claude Code has an invalid token; all
    provisioning was done with the wrangler OAuth login instead.

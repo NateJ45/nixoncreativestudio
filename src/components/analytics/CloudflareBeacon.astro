@@ -4,16 +4,31 @@
    ============================================================================
    Foundation, edit with care.
 
-   A plain deferred script, not Partytown. The beacon is ~7KB and cheap on
-   the main thread; Partytown's sandbox (an iframe plus a service worker)
-   cost ~540ms of throttled main-thread time on the Lighthouse mobile run,
-   more than the beacon it was isolating. `defer` keeps it off the parser
-   and after the LCP path; is:inline keeps Astro from bundling it.
+   Loaded AFTER the page has loaded and gone idle (2026-10-04 performance
+   pass), not as a <script defer> in <head>. A deferred script still starts
+   downloading during the first paint, so the 7 KB beacon (plus its
+   connection to static.cloudflareinsights.com) competed with the hero image
+   for the simulated phone link: the forensics pass measured beacon plus
+   Cloudflare's injected bot script at -467 ms LCP and +4 Lighthouse points
+   when blocked (docs/redesign-2026/C-performance-forensics.md). The beacon
+   reads Web Vitals from the browser's buffered performance entries, so a
+   late start still reports this page's LCP, CLS and INP. type="module" is
+   what Cloudflare's own snippet uses now (old browsers skip it).
+
+   Not Partytown: its sandbox (an iframe plus a service worker) cost ~540 ms
+   of throttled main-thread time on the Lighthouse mobile run, more than the
+   beacon it was isolating.
 
    Rendered by Analytics.astro only when PUBLIC_CF_ANALYTICS_TOKEN is set.
    Its own component because prettier-plugin-astro cannot parse a <script>
    nested inside a template expression; Analytics.astro keeps the condition
    and this file keeps the tag at the top level.
+
+   The OTHER Cloudflare script on production pages,
+   /cdn-cgi/challenge-platform/scripts/jsd/main.js, is not in this repo: the
+   edge injects it because Bot Fight Mode is on (JavaScript Detections cannot
+   be turned off separately on the Free plan). See
+   docs/redesign-2026/performance-handoff.md for Nathan's dashboard choice.
    ============================================================================ */
 
 interface Props {
@@ -28,9 +43,23 @@ const { token } = Astro.props;
 const beaconConfig = JSON.stringify({ token });
 ---
 
-<script
-  is:inline
-  defer
-  src="https://static.cloudflareinsights.com/beacon.min.js"
-  data-cf-beacon={beaconConfig}
-></script>
+<script is:inline data-cf-beacon-config={beaconConfig}>
+  (function () {
+    var cfg = document.currentScript && document.currentScript.dataset.cfBeaconConfig;
+    if (!cfg || window.__ncsBeacon) return;
+    window.__ncsBeacon = true; // once per visit: the beacon follows view transitions itself
+    function add() {
+      var s = document.createElement('script');
+      s.type = 'module';
+      s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      s.setAttribute('data-cf-beacon', cfg);
+      document.head.appendChild(s);
+    }
+    function idle() {
+      if ('requestIdleCallback' in window) requestIdleCallback(add, { timeout: 3000 });
+      else setTimeout(add, 1500);
+    }
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true });
+  })();
+</script>
