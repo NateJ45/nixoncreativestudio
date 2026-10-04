@@ -1,0 +1,1051 @@
+---
+// Safe to edit. The words are CMS content (EmDash admin: Pages, "Other pages",
+// one entry per landing page, read by getLandingPage()); prices come from the
+// Pricing tiers, Add-ons and the Photography offering. What stays in code is
+// listed in src/lib/landingPage.ts and docs/EDITING-GUIDE.md.
+/* ============================================================================
+   LandingPage | the four search landing pages
+   ============================================================================
+   /church-websites/, /nonprofit-websites/, /school-websites/ and
+   /cincinnati-event-photography/ are one-line routes that render this with
+   their slug. The contact form is one click away from the first screen, with
+   the organization type preset.
+
+   Each web page has its OWN composition (polish 2026-10-04: the three had
+   read as one template with the words swapped, and repeated /services' price
+   sheet, process, handoff list and close word for word). What differs:
+
+   Church (the build and the people who run it)
+     1. Hero, quiet paper (no moving ground): the h1 and intro beside a large
+        print of the FBCM home page ("Launching soon").
+     2. The first CMS section, what a church site has to get right (sunk).
+     3. Proof (paper): the visit page and the phone view, the facts as prose,
+        the two other live sites as a list.
+     4. Who does what, week to week (deep): LandingSteps "ledger".
+     5. The second CMS section, giving and livestreams (paper).
+     6. What it costs (sunk): LandingCost, Launch and Signature.
+     7. Questions (paper). 8. Close on the contours (still).
+
+   Nonprofit (the Stone Steps facts)
+     1. Hero on the contours of the Ohio's bend (the moving ground): a wide
+        headline, the intro in two columns. No print: the proof is next.
+     2. Proof first (paper): Stone Steps, its records and its climbing chart,
+        each fact a sentence.
+     3. The CMS sections, one fact entered once and leaving WordPress (sunk).
+     4. What the director does, and when (paper): LandingSteps "pairs".
+     5. What it costs (sunk): LandingCost "below". 6. Questions (paper).
+     7. Close (sunk paper, still).
+
+   School (the continuity answer first)
+     1. Hero, window light (the moving ground): the h1 beside the board's
+        question, set as a quotation, linking to its answer.
+     2. The answer (deep): the first CMS section with the Care plan.
+     3. The second CMS section, what the site does for the office (paper).
+     4. What the office does at each step (sunk): LandingSteps "rail".
+     5. What it costs (paper). 6. Where my school work stands (sunk).
+     7. Questions (paper). 8. Close on the contours (still).
+
+   Photography (unchanged): window-light hero with the at-a-glance slip, the
+   first CMS section beside the call sheet, event photographs or the honest
+   "gallery on its way" note, the other sections, questions, close. While no
+   event photograph is published the page asks to stay out of search results
+   (photographyRobots()).
+
+   Never on these pages: the full price sheet (it lives on /services/ and the
+   cost band links to it), the handoff list, a film-sprocket frame or the
+   china-marker loop (kept for the one circled price on /services).
+
+   JSON-LD: Service, FAQPage and BreadcrumbList (buildLandingSchemas()), on top
+   of the site-wide Organization + LocalBusiness block.
+   ============================================================================ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Band from '../Band.astro';
+import Frame from '../Frame.astro';
+import CallSheet from '../services/CallSheet.astro';
+import LandingProof from './LandingProof.astro';
+import LandingProse from './LandingProse.astro';
+import LandingCare from './LandingCare.astro';
+import LandingCost from './LandingCost.astro';
+import LandingSteps from './LandingSteps.astro';
+import { buttonVariants } from '../ui/button';
+import headshot from '../../assets/brand/headshot.jpg';
+import fbcmHome from '../../assets/home/reel/fbcm-home-d.webp';
+import ssPhone from '../../assets/home/reel/ss-home-m.webp';
+import { Image } from 'astro:assets';
+import { SITE_URL, getSite } from '../../data/site';
+import { getAddOns, getPricingTiers } from '../../lib/pricing';
+import { getServiceOfferings } from '../../lib/servicesPage';
+import { getHomePage } from '../../lib/homePage';
+import { getPhotographyPage } from '../../lib/indexPages';
+import { galleryItem, getPhotos, photographyRobots } from '../../lib/photos';
+import { launchStatusLabel } from '../../lib/launchStatus';
+import { proseTitle } from '../../lib/prosePage';
+import { voiceSplit } from '../../lib/voiceSplit';
+import {
+  LANDING_LINKS,
+  LANDING_SEGMENTS,
+  buildLandingSchemas,
+  contactHref,
+  getLandingPage,
+  money,
+  type LandingSlug,
+} from '../../lib/landingPage';
+
+interface Props {
+  slug: LandingSlug;
+}
+const { slug } = Astro.props;
+const segment = LANDING_SEGMENTS[slug];
+const isPhoto = segment.kind === 'photo';
+const isChurch = slug === 'church-websites';
+const isNonprofit = slug === 'nonprofit-websites';
+const isSchool = slug === 'school-websites';
+
+const page = await getLandingPage(slug, Astro);
+const site = await getSite(Astro);
+const tiers = await getPricingTiers(Astro);
+const addOns = await getAddOns(Astro);
+const offerings = await getServiceOfferings(Astro);
+const home = isPhoto ? undefined : await getHomePage(Astro);
+
+const careAddOn = addOns.find((a) => /care/i.test(a.name));
+const photoAddOn = addOns.find((a) => /photo/i.test(a.name));
+const photoOffering = offerings.find((o) => o.slug === 'photography');
+
+// ---- Photography: the event photographs, if any are published -----------------
+const photos = isPhoto ? (await getPhotos(Astro)).filter((p) => p.category === 'events') : [];
+const photoPage = isPhoto ? await getPhotographyPage(Astro) : undefined;
+const shown = photos.slice(0, 6).flatMap((p) => {
+  const item = galleryItem(p, Astro.url.origin);
+  return item ? [{ photo: p, item }] : [];
+});
+const robots = isPhoto ? photographyRobots(shown.length) : undefined;
+
+// ---- Prices ---------------------------------------------------------------------
+// The lowest published floor for this service: the first tier for web work, the
+// Photography offering for a photo day. Never typed here.
+const minPrice = isPhoto ? photoOffering?.priceFrom : tiers[0]?.priceFrom;
+const cta = contactHref(segment.sector);
+
+// ---- Sections, by position (the CMS body's Heading 2 sections, FAQ excluded) -----
+const [first, ...rest] = page.sections;
+
+// ---- Headings ----------------------------------------------------------------------
+const hero = voiceSplit(page.heading);
+const faqH = voiceSplit(page.faq.heading);
+const closeH = voiceSplit(segment.closeTitle);
+const closeSub = segment.closeSub ?? site.ctaDefault.sub;
+
+// Photography's at-a-glance slip: facts that are true elsewhere on the site.
+const glance: { label: string; value: string }[] = [
+  ...(minPrice ? [{ label: 'Half day', value: `from ${money(minPrice)}` }] : []),
+  { label: 'Where', value: 'Greater Cincinnati region' },
+  { label: 'Photographer', value: site.ownerName },
+  { label: 'Booked', value: 'With a website, or on its own' },
+];
+
+// Other pages worth reading next: the other three landing pages, services, the work.
+const more = [
+  ...LANDING_LINKS.filter((l) => l.slug !== slug),
+  { slug: 'services', label: 'All services and prices', href: '/services/' },
+  { slug: 'work', label: 'The work', href: '/work/' },
+];
+
+const schemas = buildLandingSchemas({ segment, page, siteUrl: SITE_URL, minPrice });
+
+// The church hero's large print: FBCM's home page, with its true status.
+const fbcmTag = launchStatusLabel('launching-soon');
+
+// The hero ground and composition per page (see the header).
+const heroGround = isChurch ? 'paper' : isNonprofit ? 'paper-contours' : 'window-light';
+---
+
+<BaseLayout
+  title={proseTitle(page.title, site.studioName)}
+  description={page.summary}
+  schemas={schemas}
+  robots={robots}
+  preloadFonts={['italic']}
+>
+  {/* 1. Hero. Nothing here waits on a reveal. */}
+  <Band
+    ground={heroGround}
+    still={isChurch}
+    underHeader
+    labelledby="landing-heading"
+    class={`lp-hero lp-hero--${segment.slug}`}
+  >
+    <div class="lp-hero-grid">
+      <div class="lp-hero-copy">
+        <h1 id="landing-heading" class="lp-hero-title">
+          {hero.head}
+          {hero.tail && ' '}
+          {hero.tail && <span class="voice">{hero.tail}</span>}
+        </h1>
+        <div class="lp-hero-intro">
+          <p class="type-lede" set:html={page.intro[0]} />
+        </div>
+        <div class="lp-actions">
+          <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+            {segment.ctaLabel}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+          <a href={isPhoto ? '#photo-day' : isNonprofit ? '#work' : '#prices'} class="lp-textlink">
+            {isPhoto
+              ? 'See the call sheet'
+              : isNonprofit
+                ? 'See the race site'
+                : 'See what it costs'}
+          </a>
+        </div>
+        {/* Further intro paragraphs sit under the buttons, so the call to action
+             stays in the first screen. */}
+        {page.intro.slice(1).map((html) => (
+          <p class="lp-hero-note" set:html={html} />
+        ))}
+      </div>
+
+      {/* Church: the build itself, printed large. On a desktop it is the
+           largest thing in the first screen, so it loads eagerly. */}
+      {isChurch && (
+        <div class="lp-hero-print">
+          {/* Eager but NOT fetchpriority high: on a desktop it is in the first
+               screen; on a phone it sits under the copy and the lede is the
+               LCP, so it is not raised above the fonts. Measured 2026-10-04,
+               mobile Lighthouse median 2.13 s LCP either way (the proof
+               band's first print also loads early on a phone). */}
+          <Frame
+            url="fbcm-site.nathanjnixon86.workers.dev"
+            tag={fbcmTag}
+            alt=""
+            caption="First Baptist Church, Muncie, Indiana. Finished, and waiting on the church's move off Wix."
+          >
+            <Image
+              src={fbcmHome}
+              alt="The new First Baptist Church Muncie home page, with the Sunday service time and the address under the headline."
+              widths={[480, 800, 1200, 1600]}
+              sizes="(min-width: 82.5rem) 42rem, (min-width: 64rem) 52vw, 92vw"
+              loading="eager"
+              decoding="async"
+            />
+          </Frame>
+        </div>
+      )}
+
+      {/* Nonprofit: the race site on a phone, laid on the map at a tilt (desktop
+           only, lazy: a phone never downloads it). The large prints are the
+           next band. */}
+      {isNonprofit && (
+        <a href="#work" class="lp-hero-phone">
+          <Image
+            src={ssPhone}
+            alt="The Stone Steps 50K home page on a phone: the race name and the date, Sunday, October 25, 2026."
+            widths={[280, 480]}
+            sizes="16rem"
+            loading="lazy"
+          />
+          <span class="type-caption">Stone Steps 50K, Cincinnati. Live.</span>
+        </a>
+      )}
+
+      {/* School: the question a board asks first, linking to its answer. */}
+      {isSchool && first && (
+        <figure class="lp-question">
+          <blockquote>
+            <p>What happens if you're not around next year?</p>
+          </blockquote>
+          <figcaption class="type-caption">
+            The first thing a school board asked me.{' '}
+            <a href={`#${first.id}`} class="lp-inline">
+              The answer comes first
+            </a>
+            .
+          </figcaption>
+        </figure>
+      )}
+
+      {/* Photography: the at-a-glance slip. */}
+      {isPhoto && (
+        <aside class="lp-glance" aria-labelledby="glance-title">
+          <p class="lp-glance-head">
+            <span id="glance-title" class="lp-glance-title">
+              {segment.linkLabel}
+            </span>
+            <span class="lp-glance-meta">At a glance</span>
+          </p>
+          <dl class="lp-glance-rows">
+            {glance.map((g) => (
+              <div>
+                <dt>{g.label}</dt>
+                <dd>{g.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p class="lp-glance-foot">The first conversation is free.</p>
+        </aside>
+      )}
+    </div>
+  </Band>
+
+  {
+    /* ============================== CHURCH ============================== */
+    isChurch && home && segment.steps && segment.cost && (
+      <>
+        {first && (
+          <Band ground="paper" still labelledby={`${first.id}-heading`} class="bg-muted">
+            <LandingProse section={first} />
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="proof-heading" id="work">
+          <LandingProof slug={slug} />
+        </Band>
+        <Band ground="deep" still labelledby="steps-heading">
+          <LandingSteps
+            heading={segment.steps.heading}
+            steps={home.process.steps}
+            yours={segment.steps.yours}
+            variant="ledger"
+          />
+        </Band>
+        {rest.length > 0 && (
+          <Band ground="paper" still labelledby={`${rest[0].id}-heading`}>
+            <div class="lp-stack">
+              {rest.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="prices-heading" id="prices" class="bg-muted">
+          <LandingCost
+            cost={segment.cost}
+            tiers={tiers}
+            href={cta}
+            ctaLabel={segment.midCtaLabel}
+          />
+        </Band>
+      </>
+    )
+  }
+
+  {
+    /* ============================ NONPROFIT ============================= */
+    isNonprofit && home && segment.steps && segment.cost && (
+      <>
+        <Band ground="paper" still labelledby="proof-heading" id="work">
+          <LandingProof slug={slug} />
+        </Band>
+        {first && (
+          <Band ground="paper" still labelledby={`${first.id}-heading`} class="bg-muted">
+            <div class="lp-stack">
+              {page.sections.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="steps-heading">
+          <LandingSteps
+            heading={segment.steps.heading}
+            steps={home.process.steps}
+            yours={segment.steps.yours}
+            variant="pairs"
+          />
+        </Band>
+        <Band ground="paper" still labelledby="prices-heading" id="prices" class="bg-muted">
+          <LandingCost
+            cost={segment.cost}
+            tiers={tiers}
+            href={cta}
+            ctaLabel={segment.midCtaLabel}
+            layout="below"
+          />
+        </Band>
+      </>
+    )
+  }
+
+  {
+    /* ============================== SCHOOL ============================== */
+    isSchool && home && segment.steps && segment.cost && (
+      <>
+        {first && (
+          <Band ground="deep" still labelledby={`${first.id}-heading`} class="lp-ink">
+            <div class="lp-ink-grid">
+              <LandingProse section={first} wide />
+              {careAddOn && <LandingCare care={careAddOn} href={cta} />}
+            </div>
+          </Band>
+        )}
+        {rest.length > 0 && (
+          <Band ground="paper" still labelledby={`${rest[0].id}-heading`}>
+            <div class="lp-stack">
+              {rest.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="steps-heading" class="bg-muted">
+          <LandingSteps
+            heading={segment.steps.heading}
+            steps={home.process.steps}
+            yours={segment.steps.yours}
+            variant="rail"
+          />
+        </Band>
+        <Band ground="paper" still labelledby="prices-heading" id="prices">
+          <LandingCost
+            cost={segment.cost}
+            tiers={tiers}
+            href={cta}
+            ctaLabel={segment.midCtaLabel}
+          />
+        </Band>
+        <Band ground="paper" still labelledby="proof-heading" class="bg-muted" id="work">
+          <LandingProof slug={slug} />
+        </Band>
+      </>
+    )
+  }
+
+  {
+    /* =========================== PHOTOGRAPHY ============================ */
+    isPhoto && (
+      <>
+        {first && (
+          <Band ground="paper" still labelledby={`${first.id}-heading`} id="photo-day">
+            <div class="lp-photo-grid">
+              <LandingProse section={first} wide />
+              <div class="lp-photo-sheet">
+                <CallSheet
+                  priceFrom={photoOffering?.priceFrom}
+                  rateNote={photoAddOn?.note}
+                  shots={photoOffering?.points ?? []}
+                  headshot={headshot}
+                  headshotAlt="Nathan Nixon, smiling outdoors"
+                />
+              </div>
+            </div>
+          </Band>
+        )}
+        <Band ground="paper" still labelledby="photos-heading" class="bg-muted" id="photos">
+          {shown.length > 0 ? (
+            <div>
+              <h2 id="photos-heading" class="type-headline">
+                Recent <span class="voice">event work</span>
+              </h2>
+              <ul class="lp-prints" role="list">
+                {shown.map(({ photo, item }) => (
+                  <li data-reveal>
+                    <figure class="lp-print">
+                      <img
+                        src={item.src}
+                        srcset={item.srcSet.map((s) => `${s.src} ${s.width}w`).join(', ')}
+                        sizes="(min-width: 64rem) 30vw, (min-width: 40rem) 46vw, 92vw"
+                        width={item.width}
+                        height={item.height}
+                        alt={item.alt}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <figcaption class="type-caption">
+                        {[photo.caption ?? photo.title, photo.location, photo.year || undefined]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </figcaption>
+                    </figure>
+                  </li>
+                ))}
+              </ul>
+              <a href="/photography/" class="lp-textlink nudge">
+                See the full gallery{' '}
+                <span data-nudge aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </div>
+          ) : (
+            <div class="lp-empty">
+              <h2 id="photos-heading" class="type-headline">
+                {voiceSplit(photoPage?.emptyHeading ?? '').head}{' '}
+                <span class="voice">{voiceSplit(photoPage?.emptyHeading ?? '').tail}</span>
+              </h2>
+              <p class="type-lede">{photoPage?.emptyBody}</p>
+              <a href="/photography/" class="lp-textlink nudge">
+                The photography page{' '}
+                <span data-nudge aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </div>
+          )}
+          <div class="lp-midcta">
+            <p class="lp-midcta-text">
+              Tell me the date, the place and what the pictures are for, and I will tell you whether
+              a half day or a full day fits.
+            </p>
+            <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+              {segment.midCtaLabel}
+              <span data-nudge aria-hidden="true">
+                →
+              </span>
+            </a>
+          </div>
+        </Band>
+        {rest.length > 0 && (
+          <Band ground="paper" still labelledby={`${rest[0].id}-heading`}>
+            <div class="lp-stack">
+              {rest.map((s) => (
+                <LandingProse section={s} />
+              ))}
+            </div>
+          </Band>
+        )}
+      </>
+    )
+  }
+
+  {/* Questions. Native <details>: every answer is in the HTML and opens
+       without JavaScript. The same words are the FAQPage JSON-LD. Each page
+       asks its own questions (the CMS entry). */}
+  <Band
+    ground="paper"
+    still
+    labelledby="faq-heading"
+    id="questions"
+    class={isPhoto ? 'bg-muted' : undefined}
+  >
+    <div class="lp-faq">
+      <div class="lp-faq-head">
+        <h2 id="faq-heading" class="type-headline">
+          {faqH.head}
+          {faqH.tail && ' '}
+          {faqH.tail && <span class="voice">{faqH.tail}</span>}
+        </h2>
+        <p class="type-body">
+          Something else?{' '}
+          <a href={cta} class="lp-inline">
+            Ask me directly
+          </a>
+          ; I reply myself.
+        </p>
+      </div>
+      <div class="lp-faq-list">
+        {page.faq.items.map((item) => (
+          <details class="lp-faq-item">
+            <summary>
+              <span>{item.question}</span>
+              <span class="lp-faq-mark" aria-hidden="true" />
+            </summary>
+            {item.answerHtml.map((html) => (
+              <p set:html={html} />
+            ))}
+          </details>
+        ))}
+      </div>
+    </div>
+  </Band>
+
+  {/* Close. Church and school: the survey sheet of the Ohio's bend. The
+       nonprofit page already opened on it, so it closes on sunk paper. */}
+  <Band
+    ground={isNonprofit ? 'paper' : 'paper-contours'}
+    still
+    labelledby="close-heading"
+    class={isNonprofit ? 'bg-muted' : undefined}
+  >
+    <div class="lp-close">
+      <h2 id="close-heading" class="type-display lp-close-title">
+        {closeH.head}
+        {closeH.tail && ' '}
+        {closeH.tail && <span class="voice">{closeH.tail}</span>}
+      </h2>
+      <div class="lp-close-side">
+        <p class="type-body">{closeSub}</p>
+        <div class="lp-actions">
+          <a href={cta} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+            {segment.ctaLabel}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+          <a href={site.emailHref} class="lp-textlink">
+            {site.email}
+          </a>
+          <a href={site.phoneHref} class="lp-textlink">
+            {site.phone}
+          </a>
+        </div>
+      </div>
+    </div>
+    <nav class="lp-more" aria-label="More from the studio">
+      <h2 class="lp-more-title">Also from the studio</h2>
+      <ul role="list">
+        {more.map((m) => (
+          <li>
+            <a href={m.href} class="lp-more-link">
+              {m.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </Band>
+</BaseLayout>
+
+<style>
+  /* ---- 1. Hero ---------------------------------------------------------------- */
+  .lp-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 64rem) {
+    .lp-hero-grid {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.85fr);
+    }
+    /* Church: the print is the bigger half. */
+    :global(.lp-hero--church-websites) .lp-hero-grid {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+      column-gap: clamp(3rem, 5vw, 5rem);
+    }
+  }
+  .lp-hero-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h1);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    text-wrap: balance;
+    max-width: 22ch;
+    margin: 0;
+  }
+  /* A step under the site's h1 size: these headlines are long (they carry the
+     search phrase), and the call to action has to stay in the first screen. */
+  @media (min-width: 64rem) {
+    .lp-hero-title {
+      font-size: clamp(3rem, 1.2rem + 3.6vw, 4.75rem);
+    }
+    :global(.lp-hero--church-websites) .lp-hero-title {
+      font-size: clamp(2.75rem, 1rem + 3vw, 4.25rem);
+    }
+  }
+  .lp-hero-title .voice {
+    font-size: 0.7em;
+    line-height: 1;
+  }
+  .lp-hero-note {
+    margin: 1.75rem 0 0;
+    max-width: 46ch;
+    font-size: var(--text-body);
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .lp-hero-intro {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    max-width: 46ch;
+  }
+  .lp-hero-intro p {
+    margin: 0;
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+  .lp-hero-intro p.type-lede {
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--heading);
+  }
+  .lp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.75rem;
+    margin-top: 2rem;
+  }
+  .lp-textlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--link) 40%, transparent);
+    text-underline-offset: 0.2em;
+    overflow-wrap: anywhere;
+  }
+  .lp-textlink:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* Nonprofit: the phone print on the map. */
+  .lp-hero-phone {
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    .lp-hero-phone {
+      display: grid;
+      gap: 0.5rem;
+      justify-self: center;
+      width: min(16rem, 100%);
+      padding: 0.45rem 0.45rem 0.6rem;
+      background: var(--paper-raised);
+      border-radius: 2px;
+      box-shadow: var(--shadow-frame);
+      transform: rotate(-2.5deg);
+      color: var(--muted-foreground);
+      text-decoration: none;
+    }
+    .lp-hero-phone :global(img) {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--paper-deep);
+    }
+    .lp-hero-phone:hover .type-caption,
+    .lp-hero-phone:focus-visible .type-caption {
+      color: var(--link);
+      text-decoration: underline;
+    }
+  }
+
+  /* Church: the large print. */
+  .lp-hero-print {
+    min-width: 0;
+  }
+
+  /* School: the board's question as a quotation, in the red-pen italic. */
+  .lp-question {
+    margin: 0;
+    padding-left: clamp(1.25rem, 3vw, 2rem);
+    border-left: 3px double var(--heading);
+  }
+  .lp-question blockquote {
+    margin: 0;
+  }
+  .lp-question blockquote p {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+    line-height: 1.15;
+    color: var(--marker);
+    text-wrap: balance;
+  }
+  .lp-question figcaption {
+    margin-top: 1rem;
+  }
+
+  /* Photography: the at-a-glance slip, a printed slip laid on the sill. */
+  .lp-glance {
+    background: var(--paper-raised);
+    color: var(--foreground);
+    border-radius: 2px;
+    box-shadow: var(--shadow-print);
+    padding: 1.5rem clamp(1.25rem, 3vw, 1.75rem) 1.25rem;
+    max-width: 26rem;
+    width: 100%;
+  }
+  @media (min-width: 64rem) {
+    .lp-glance {
+      justify-self: end;
+      transform: rotate(-1deg);
+    }
+  }
+  .lp-glance-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 0 0 0.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px double var(--heading);
+  }
+  .lp-glance-title {
+    font-family: var(--font-display);
+    font-size: var(--text-h4);
+    line-height: 1;
+    color: var(--heading);
+  }
+  .lp-glance-meta {
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--muted-foreground);
+  }
+  .lp-glance-rows {
+    margin: 0;
+  }
+  .lp-glance-rows > div {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+  }
+  .lp-glance-rows dt {
+    color: var(--muted-foreground);
+  }
+  .lp-glance-rows dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .lp-glance-foot {
+    margin: 0.85rem 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.125rem;
+    color: var(--marker);
+  }
+
+  /* ---- Section stacks ------------------------------------------------------------ */
+  .lp-stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(3.5rem, 7vw, 6rem);
+  }
+  .lp-photo-grid {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: start;
+  }
+  @media (min-width: 64rem) {
+    .lp-photo-grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      column-gap: clamp(3rem, 6vw, 6rem);
+    }
+  }
+  .lp-photo-sheet {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ---- Mid-page call (photography) ------------------------------------------------ */
+  .lp-midcta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--heading);
+  }
+  .lp-midcta-text {
+    margin: 0;
+    max-width: 52ch;
+    font-family: var(--font-serif);
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--heading);
+  }
+
+  /* ---- Deep band (school: the continuity answer and Care) ------------------------- */
+  .lp-ink-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 64rem) {
+    .lp-ink-grid {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  /* ---- Photographs ----------------------------------------------------------------- */
+  .lp-prints {
+    list-style: none;
+    margin: clamp(2rem, 4vw, 3rem) 0 1.5rem;
+    padding: 0;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  @media (min-width: 40rem) {
+    .lp-prints {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .lp-prints {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .lp-print {
+    margin: 0;
+    padding: clamp(0.4rem, 1vw, 0.75rem);
+    background: var(--paper-raised);
+    border-radius: 2px;
+    box-shadow: var(--shadow-frame);
+  }
+  .lp-print img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--paper-deep);
+  }
+  .lp-print figcaption {
+    margin-top: 0.6rem;
+  }
+  .lp-empty {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 46rem;
+  }
+  .lp-empty > * {
+    margin: 0;
+  }
+
+  /* ---- Questions ------------------------------------------------------------------- */
+  .lp-faq {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+  @media (min-width: 64rem) {
+    .lp-faq {
+      grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+      column-gap: 4rem;
+    }
+    .lp-faq-head {
+      position: sticky;
+      top: calc(var(--header-h) + 2rem);
+      align-self: start;
+    }
+  }
+  .lp-faq-head {
+    display: grid;
+    gap: 1rem;
+  }
+  .lp-faq-head > * {
+    margin: 0;
+  }
+  .lp-inline {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .lp-faq-list {
+    border-top: 1px solid var(--heading);
+  }
+  .lp-faq-item {
+    border-bottom: 1px solid var(--border);
+  }
+  .lp-faq-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 44px;
+    padding-block: 1.1rem;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    line-height: 1.35;
+    color: var(--heading);
+  }
+  .lp-faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .lp-faq-item summary:hover {
+    color: var(--link);
+  }
+  .lp-faq-mark {
+    position: relative;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+  }
+  .lp-faq-mark::before,
+  .lp-faq-mark::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 2px solid var(--marker);
+    transform: translateY(-50%);
+    transition: transform 0.3s var(--ease-settle);
+  }
+  .lp-faq-mark::after {
+    transform: translateY(-50%) rotate(90deg);
+  }
+  .lp-faq-item[open] .lp-faq-mark::after {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  .lp-faq-item p {
+    margin: 0 0 1.4rem;
+    max-width: 62ch;
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+
+  /* ---- Close ------------------------------------------------------------------------ */
+  .lp-close {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    align-items: end;
+  }
+  @media (min-width: 64rem) {
+    .lp-close {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      column-gap: 4rem;
+    }
+  }
+  .lp-close-title {
+    margin: 0;
+  }
+  .lp-close-title .voice {
+    display: block;
+  }
+  .lp-close-side > p {
+    margin: 0;
+    max-width: 46ch;
+  }
+  .lp-more {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .lp-more-title {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    color: var(--muted-foreground);
+  }
+  .lp-more ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.75rem;
+  }
+  .lp-more-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--heading);
+    text-decoration: underline;
+    text-decoration-color: var(--marker);
+    text-underline-offset: 0.22em;
+  }
+  .lp-more-link:hover {
+    color: var(--link);
+  }
+</style>

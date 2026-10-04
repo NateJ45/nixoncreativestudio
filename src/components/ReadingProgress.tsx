@@ -59,8 +59,8 @@ export default function ReadingProgress() {
           // Brand gradient (navy → NCS blue → amber) with a soft glow at the
           // leading edge so the bar reads as a crafted element, not a default.
           backgroundImage:
-            'linear-gradient(90deg, var(--color-primary), var(--color-accent) 45%, var(--color-tertiary))',
-          boxShadow: '0 0 12px color-mix(in oklab, var(--color-accent) 65%, transparent)',
+            'linear-gradient(90deg, var(--primary), var(--accent) 45%, var(--tertiary))',
+          boxShadow: '0 0 12px color-mix(in oklab, var(--accent) 65%, transparent)',
         }}
       />
     </div>

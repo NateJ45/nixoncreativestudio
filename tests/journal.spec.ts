@@ -16,8 +16,8 @@ import { journalDraftSlug, journalEmpty, journalSlugs } from './routes';
 //     production is in) the sitemap is a valid empty one and the feed has no journal
 //     item.
 //
-// The axe sweeps (a11y.spec.ts, a11y-dark.spec.ts) cover /journal and the entry page
-// in both themes through tests/routes.ts.
+// The axe sweep (a11y.spec.ts) covers /journal and the entry page through
+// tests/routes.ts.
 
 const entry = journalSlugs[0];
 const DRAFT_TEXT = 'must never be visible';
@@ -49,8 +49,18 @@ test.describe('/journal/<entry>', () => {
     // No leading whitespace inside the <pre> (it would indent the first line).
     expect(await pre.evaluate((el) => el.textContent)).toBe("const greeting = 'hello';");
 
-    // Tag chips in the header and the "Filed under" footer.
-    await expect(page.locator('article li', { hasText: 'CI notes' })).toHaveCount(2);
+    // Tags are plain words in the caption line and in the "Filed under" footer (no chips).
+    await expect(page.locator('article header, article > section').first()).toContainText(
+      'CI notes',
+    );
+    await expect(page.locator('article footer')).toContainText('Filed under CI notes');
+    // No mono labels or eyebrows. The code block checked above is rightly monospace (it is
+    // content, not a label), so <pre> and <code> are left out (2026-10-04).
+    await expect(
+      page.locator(
+        'article .font-mono:not(pre, code), article [class*="uppercase"]:not(pre, code)',
+      ),
+    ).toHaveCount(0);
 
     // The cover is a resized WebP, not the original.
     const cover = page.locator('article img').first();

@@ -71,7 +71,7 @@ export default function Photo({
     position: 'relative',
     aspectRatio: `${width} / ${height}`,
     overflow: 'hidden',
-    backgroundColor: placeholder ? undefined : 'var(--color-bg-soft)',
+    backgroundColor: placeholder ? undefined : 'var(--muted)',
     backgroundImage: placeholder ? `url(${placeholder})` : undefined,
     backgroundSize: 'cover',
     backgroundPosition: 'center',

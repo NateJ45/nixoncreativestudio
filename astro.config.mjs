@@ -37,8 +37,8 @@ const helpContent = JSON.parse(
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
 //                 loads the beacon with `defer`)
-//   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
-//                 the WebGL hero)
+//   - react     : enables React islands (the photo gallery and lightbox, the
+//                 testimonial carousel, reading progress, the /work filter)
 //
 // prefetch: links preload as they enter the viewport, so navigation feels
 // instant and pairs with the View Transitions router.
@@ -49,6 +49,14 @@ const helpContent = JSON.parse(
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'server',
+  // Inline every stylesheet into the HTML (redesign 2026-10-04). Render-blocking
+  // CSS was the one non-JS lever C-performance-forensics found (about -1 s LCP),
+  // and the foundation measured it locally on the production build, mobile
+  // Lighthouse x3: home 94-97 to 97-97-97 (LCP 2.45-2.77 s to 2.43-2.49 s),
+  // /services 98 to 99 (LCP 2.16 s to 1.82 s). Cost: about 25 KB of CSS in
+  // every HTML response, not cached across pages. Delete this line to go back
+  // to stylesheet files. DESIGN.md "Measured" has the table.
+  build: { inlineStylesheets: 'always' },
   // Route cache on Cloudflare's Workers Cache. A page opts in by calling
   // Astro.cache.set(): BaseLayout sets the lifetime for every page that uses
   // it, and the CMS readers (src/lib/caseStudies.ts) add the tags of the rows
@@ -67,9 +75,15 @@ export default defineConfig({
   // can add one in the admin when he renames or retires a page. The two that used to be
   // here (/now to /about/#now, the retired /work/west-chester-preschool) are rows in
   // production now; a config redirect would shadow them.
+  // Hover (and keyboard focus) strategy since the 2026-10-04 performance pass: the
+  // viewport strategy fetched every page whose link scrolled into view (25 to 36 KB
+  // each, 6 to 9 pages on the home page) whether or not anyone clicked. A hover
+  // still gives about 100 to 300 ms of head start, and a cached page answers in
+  // about 80 ms, so a click is just as quick and no bytes are spent on links
+  // nobody follows. Gotcha 19 (reusable caching, trailing slashes) still applies.
   prefetch: {
     prefetchAll: true,
-    defaultStrategy: 'viewport',
+    defaultStrategy: 'hover',
   },
   // imageService: 'compile' makes Astro optimize <Image /> at BUILD time with
   // Sharp, emitting static .webp files into dist/_astro/. Without it the
@@ -110,25 +124,41 @@ export default defineConfig({
     // EmDash's own per-collection sitemap (needs the `seo` support and a
     // `/work/{slug}/` URL pattern on the case_studies collection), added to the
     // same sitemap-index.xml via customSitemaps so robots.txt and Search
-    // Console keep pointing at the one URL they already know.
+    // Console keep pointing at the one URL they already know. /coming-soon/ is
+    // NOT listed: it is the pre-launch gate page, not content (redesign 2026, E #12).
     sitemap({
       customPages: [
         'https://nixoncreativestudio.com/',
         'https://nixoncreativestudio.com/work/',
         'https://nixoncreativestudio.com/about/',
         'https://nixoncreativestudio.com/services/',
+        // The search landing pages (src/lib/landingPage.ts LANDING_SLUGS).
+        // /cincinnati-event-photography/ is left out on purpose: it is noindex
+        // until an Events photo is published (photographyRobots()), and a sitemap
+        // must not list a noindex page. Add it here once event photos are live.
+        'https://nixoncreativestudio.com/church-websites/',
+        'https://nixoncreativestudio.com/nonprofit-websites/',
+        'https://nixoncreativestudio.com/school-websites/',
         'https://nixoncreativestudio.com/photography/',
         'https://nixoncreativestudio.com/journal/',
         'https://nixoncreativestudio.com/contact/',
         'https://nixoncreativestudio.com/colophon/',
         'https://nixoncreativestudio.com/privacy/',
         'https://nixoncreativestudio.com/accessibility/',
-        'https://nixoncreativestudio.com/coming-soon/',
       ],
       customSitemaps: [
         'https://nixoncreativestudio.com/sitemap-case_studies.xml',
         'https://nixoncreativestudio.com/sitemap-posts.xml',
       ],
+      // The integration also lists every static server route on its own (found
+      // 2026-10-04: the build put /coming-soon/ and /cincinnati-event-photography/
+      // in sitemap-0.xml although neither is in customPages). Leaving a page out
+      // of customPages is therefore not enough: name it here too.
+      filter: (page) =>
+        ![
+          'https://nixoncreativestudio.com/coming-soon/',
+          'https://nixoncreativestudio.com/cincinnati-event-photography/',
+        ].includes(page),
     }),
     react(),
     // EmDash CMS trial: D1 for content, R2 for media, admin at /_emdash/admin.
@@ -148,36 +178,19 @@ export default defineConfig({
   ],
 
   vite: {
-    // `astro dev` only (build does not pre-bundle): the dependency optimizer pre-bundles zustand
-    // BEFORE the shim plugin below can rewrite its import, so a clean checkout died with the same
-    // MISSING_EXPORT in dev. Excluding zustand leaves it to the normal transform pipeline, where
-    // the plugin applies. Found 2026-10-03 while testing the admin help plugin locally.
-    optimizeDeps: { exclude: ['zustand', 'zustand/traditional'] },
-    plugins: [
-      tailwindcss(),
-      // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).
-      // EmDash aliases `use-sync-external-store/shim/with-selector.js` to its
-      // own ESM shim, which only has a NAMED export. zustand (pulled in by
-      // @react-three/fiber for the WebGL hero) does a DEFAULT import of that
-      // file, so the build dies with MISSING_EXPORT. Rewriting zustand's import
-      // to a namespace import of the same shim keeps both sides happy.
-      {
-        name: 'ncs-zustand-sync-store-shim',
-        enforce: 'pre',
-        transform(code, id) {
-          if (!/zustand[\\/]esm[\\/]traditional\.mjs/.test(id)) return null;
-          const shim = fileURLToPath(
-            new URL(
-              './node_modules/emdash/src/astro/integration/shims/use-sync-external-store-with-selector.js',
-              import.meta.url,
-            ),
-          ).replace(/\\/g, '/');
-          return code.replace(
-            /import useSyncExternalStoreExports from 'use-sync-external-store\/shim\/with-selector\.js';/,
-            `import * as useSyncExternalStoreExports from '${shim}';`,
-          );
-        },
-      },
-    ],
+    // (The EmDash/zustand shim plugin and its optimizeDeps exclusion were removed in the
+    // 2026-10-04 performance pass: zustand only came in with @react-three/fiber, which was
+    // uninstalled with the WebGL hero, and `npm ls zustand` is empty. If a future package
+    // brings zustand back and the build dies with MISSING_EXPORT on
+    // use-sync-external-store/shim/with-selector.js, restore the shim from git history.)
+    // Ground textures (src/assets/grounds, DESIGN.md "Grounds") must stay
+    // separate files. Vite inlines assets under 4 KB as base64, which put the
+    // wall and ink-board tiles INSIDE the render-blocking stylesheet, defeating
+    // the point of attaching them after the load event (2026-10-04). Everything
+    // else keeps Vite's default.
+    build: {
+      assetsInlineLimit: (file) => (file.includes('/assets/grounds/') ? false : undefined),
+    },
+    plugins: [tailwindcss()],
   },
 });

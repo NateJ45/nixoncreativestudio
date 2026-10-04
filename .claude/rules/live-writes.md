@@ -15,3 +15,9 @@ Applies to every session. Source: vault gotcha `classifier-blocks-live-writes-pl
 Switching the session to ask mode, so Nathan approves each call, has also worked. A standing permission can work too: Nathan allow-lists one narrow platform command himself in the project's `.claude/settings.local.json` (push or pull style, never "run anything"), deployed from a folder holding only the artifact, with each run proven by a read-back compare.
 
 In this repo that already means: production data steps run from the main session in Nathan's presence (Never-break rule 5), `wrangler deploy` is never run locally without `CLOUDFLARE_ENV=ci`, and the `www` redirect rule (Gotcha 24) is changed only through a command Nathan runs or approves.
+
+## The production-write guard (2026-10-04)
+
+The `cms:schema`, `cms:load` and `cms:tidy` scripts refuse a production target unless the command has BOTH `--yes` AND `NCS_PRODUCTION_WRITE=yes` in the environment (`scripts/cms/args.mjs`). `scripts/cms/production-load.mjs` sets the variable itself only after a person types "yes". A delegated agent must never set it, never pass `--url` for the production domain to any write script, and never "test a guard" against production (use a dummy host such as `https://example.invalid`).
+
+Why: during the 2026 redesign an agent wrote markdown for a plan document with `node -e` in Git Bash. Backticked commands in the text ran as command substitutions, including `npm run cms:load -- --collection pages --url https://www.nixoncreativestudio.com --yes`, and wrote real page entries to production. Never put backticks inside a shell string: write any text containing them with the Write tool.

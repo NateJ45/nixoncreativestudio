@@ -20,7 +20,7 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
    npm run test:unit
    ```
 
-   This runs the `src/lib/*.test.ts` unit suites with Node's built-in test runner. `npm test` runs the Playwright suites in `tests/` (smoke, axe in both themes, reflow); it builds and serves `dist/client` itself, so it takes longer.
+   This runs the `src/lib/*.test.ts` unit suites with Node's built-in test runner. `npm test` runs the Playwright suites in `tests/` (smoke, axe, reflow) against a URL (`PLAYWRIGHT_BASE_URL`), never a local build.
 
 4. **Run the linter:**
 

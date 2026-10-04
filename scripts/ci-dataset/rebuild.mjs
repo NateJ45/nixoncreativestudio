@@ -39,7 +39,8 @@ import {
   PROD_URL,
   ROOT,
   assertCiConfig,
-  buildAndDeployCi,
+  buildCi,
+  deployCi,
   d1File,
   d1Query,
   r2GetCi,
@@ -92,49 +93,62 @@ async function get(url, tries = 4) {
 
 // ---- 1. from scratch: drop everything, redeploy, let EmDash migrate ----------
 if (FROM_SCRATCH) {
-  step('Dropping every table in ncs-ci');
-  const objects = d1Query(
-    "SELECT name, type, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'",
-  );
-  const virtual = objects.filter((o) => o.type === 'table' && /^CREATE VIRTUAL/i.test(o.sql ?? ''));
-  const isShadow = (name) => virtual.some((v) => name.startsWith(`${v.name}_`));
-  const lines = ['PRAGMA defer_foreign_keys = on;'];
-  for (const o of objects.filter((x) => x.type === 'view'))
-    lines.push(`DROP VIEW IF EXISTS "${o.name}";`);
-  for (const o of virtual) lines.push(`DROP TABLE IF EXISTS "${o.name}";`);
-  // Drop children before the tables they reference. SQLite checks a DROP against
-  // foreign keys, so dropping a parent first fails with "no such table: main.users"
-  // (the first, naive version of this step did exactly that).
-  const plain = objects.filter(
-    (x) => x.type === 'table' && !virtual.includes(x) && !isShadow(x.name),
-  );
-  const referencedBy = new Map(plain.map((t) => [t.name, new Set()]));
-  for (const t of plain) {
-    for (const m of (t.sql ?? '').matchAll(/references\s+["'`]?(\w+)["'`]?/gi)) {
-      if (m[1] !== t.name) referencedBy.get(m[1])?.add(t.name);
-    }
-  }
-  const remaining = new Set(plain.map((t) => t.name));
-  while (remaining.size) {
-    const ready = [...remaining].filter(
-      (n) => ![...referencedBy.get(n)].some((c) => remaining.has(c)),
+  // Build BEFORE dropping: the old Worker runs a cron every minute and re-seeds a dropped database from
+  // ITS (old) seed, so a long build between the drop and the deploy leaves an old-schema database
+  // (found 2026-10-04: new fields missing twice).
+  step('Building the ci Worker (CLOUDFLARE_ENV=ci)');
+  buildCi();
+
+  const dropAll = () => {
+    step('Dropping every table in ncs-ci');
+    const objects = d1Query(
+      "SELECT name, type, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'",
     );
-    // A cycle would leave nothing ready: drop the rest in listed order rather than loop forever.
-    for (const n of ready.length ? ready : [...remaining]) {
-      lines.push(`DROP TABLE IF EXISTS "${n}";`);
-      remaining.delete(n);
+    const virtual = objects.filter(
+      (o) => o.type === 'table' && /^CREATE VIRTUAL/i.test(o.sql ?? ''),
+    );
+    const isShadow = (name) => virtual.some((v) => name.startsWith(`${v.name}_`));
+    const lines = ['PRAGMA defer_foreign_keys = on;'];
+    for (const o of objects.filter((x) => x.type === 'view'))
+      lines.push(`DROP VIEW IF EXISTS "${o.name}";`);
+    for (const o of virtual) lines.push(`DROP TABLE IF EXISTS "${o.name}";`);
+    // Drop children before the tables they reference. SQLite checks a DROP against
+    // foreign keys, so dropping a parent first fails with "no such table: main.users"
+    // (the first, naive version of this step did exactly that).
+    const plain = objects.filter(
+      (x) => x.type === 'table' && !virtual.includes(x) && !isShadow(x.name),
+    );
+    const referencedBy = new Map(plain.map((t) => [t.name, new Set()]));
+    for (const t of plain) {
+      for (const m of (t.sql ?? '').matchAll(/references\s+["'`]?(\w+)["'`]?/gi)) {
+        if (m[1] !== t.name) referencedBy.get(m[1])?.add(t.name);
+      }
     }
-  }
-  const dir = mkdtempSync(join(tmpdir(), 'ncs-ci-'));
-  const dropFile = join(dir, 'drop.sql');
-  writeFileSync(dropFile, lines.join('\n') + '\n');
-  d1File(dropFile);
-  rmSync(dir, { recursive: true, force: true });
-  say(`dropped ${lines.length - 1} object(s)`);
+    const remaining = new Set(plain.map((t) => t.name));
+    while (remaining.size) {
+      const ready = [...remaining].filter(
+        (n) => ![...referencedBy.get(n)].some((c) => remaining.has(c)),
+      );
+      // A cycle would leave nothing ready: drop the rest in listed order rather than loop forever.
+      for (const n of ready.length ? ready : [...remaining]) {
+        lines.push(`DROP TABLE IF EXISTS "${n}";`);
+        remaining.delete(n);
+      }
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'ncs-ci-'));
+    const dropFile = join(dir, 'drop.sql');
+    writeFileSync(dropFile, lines.join('\n') + '\n');
+    d1File(dropFile);
+    rmSync(dir, { recursive: true, force: true });
+    say(`dropped ${lines.length - 1} object(s)`);
+  };
+  dropAll();
 
-  step('Building and deploying the ci Worker (CLOUDFLARE_ENV=ci)');
-  buildAndDeployCi();
+  step('Deploying the ci Worker');
+  deployCi();
 
+  // (2026-10-04: 30 s was not enough: a from-scratch rebuild seeded the previous version's schema, missing three new
+  // fields, although the new version was serving a few minutes later. Now 120 s.)
   // The deploy returns before every edge has switched to the new Worker version. A first request that
   // lands on the PREVIOUS version applies THAT version's seed (found 2026-10-03: a from-scratch rebuilt
   // ncs-ci with the old case_studies fields, so a new field had no column). Give the rollout a moment,
@@ -152,11 +166,16 @@ if (FROM_SCRATCH) {
   step("Waiting for EmDash to apply THIS checkout's seed (not a previous Worker version's)");
   const seed = JSON.parse(readFileSync(resolve(ROOT, 'seed/seed.json'), 'utf8'));
   const missingNow = () => {
-    const haveFields = new Set(
-      d1Query(
+    // Right after a drop the tables are not there until the Worker has migrated: count everything as missing.
+    let rows;
+    try {
+      rows = d1Query(
         'SELECT c.slug AS collection, f.slug AS field FROM _emdash_fields f JOIN _emdash_collections c ON c.id = f.collection_id',
-      ).map((r) => `${r.collection}.${r.field}`),
-    );
+      );
+    } catch {
+      rows = [];
+    }
+    const haveFields = new Set(rows.map((r) => `${r.collection}.${r.field}`));
     const haveRedirects = new Set(
       d1Query('SELECT source FROM _emdash_redirects').map((r) => r.source),
     );
@@ -167,11 +186,23 @@ if (FROM_SCRATCH) {
       redirects: (seed.redirects ?? []).map((r) => r.source).filter((x) => !haveRedirects.has(x)),
     };
   };
-  let left = missingNow();
-  for (let i = 0; i < 30 && (left.fields.length || left.redirects.length); i += 1) {
-    await new Promise((r) => setTimeout(r, 5000));
-    await get(`${CI.url}/`).catch(() => undefined); // keep nudging the Worker so it keeps seeding
-    left = missingNow();
+  const pollSeed = async () => {
+    let l = missingNow();
+    for (let i = 0; i < 30 && (l.fields.length || l.redirects.length); i += 1) {
+      await new Promise((r) => setTimeout(r, 5000));
+      await get(`${CI.url}/`).catch(() => undefined); // keep nudging the Worker so it keeps seeding
+      l = missingNow();
+    }
+    return l;
+  };
+  let left = await pollSeed();
+  if (left.fields.length || left.redirects.length) {
+    say(
+      'the seed is incomplete (an old Worker version seeded it): dropping again now that the new version is live',
+    );
+    dropAll();
+    await get(`${CI.url}/`).catch(() => undefined);
+    left = await pollSeed();
   }
   if (left.fields.length || left.redirects.length) {
     throw new Error(

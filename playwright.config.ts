@@ -56,7 +56,7 @@ export default defineConfig({
       use: { ...devices['iPhone 14'] },
       // reduced-motion added 2026-09-30 (starter PORTS.md card 61): WebKit is the
       // engine that strands a 0.01ms transition, so that is where it must run.
-      testMatch: /(smoke|a11y|a11y-dark|reduced-motion)\.spec\.ts$/,
+      testMatch: /(smoke|a11y|reduced-motion)\.spec\.ts$/,
     },
   ],
 });

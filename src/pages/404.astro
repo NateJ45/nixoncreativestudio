@@ -7,130 +7,176 @@
 /* ============================================================================
    /404 | Page not found
    ============================================================================
-   Hero-style single column, centered. An oversized low-opacity navy "404"
-   anchors the page as a quiet centerpiece, the warm "that page wandered off"
-   copy sits below, and the same helpful links carry visitors back into the site.
-   The whole block reveals in on load. The "404" floats gently (and the
-   float pauses under prefers-reduced-motion via the local @media rule).
+   One band on the paper-contours ground: a lost visitor is looking at the map,
+   which is where the Ohio River's contours belong. Left, the voice ("That page
+   wandered off." with the last two words in the italic), the CMS body and the CMS
+   links (the first is the button). Right, "Or go straight to", the site's own
+   primary menu as large links, so a visitor who followed a dead link can reach
+   any page in one click (the Journal entry is left out while there are no posts,
+   exactly as in the header). A big "404" sits behind in the river's slate, as
+   decoration only.
+
+   The numeral is drawn by CSS (.notfound-glyph::before), not a text node: it is
+   decoration under WCAG 1.4.3, and as a real text node axe read it as body copy
+   and failed the page (Lighthouse accessibility 0.96 on staging, 2026-09-06).
+   Nothing here starts at opacity 0 and nothing needs JavaScript.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Band from '../components/Band.astro';
 import { buttonVariants } from '../components/ui/button';
 import { getSite } from '../data/site';
+import { getMenuItems } from '../lib/cms';
+import { hasJournalEntries } from '../lib/journal';
 import { getNotFoundPage, indexTitle } from '../lib/indexPages';
+import { splitVoice } from '../lib/voice';
 
 const site = await getSite(Astro);
 // A real unknown URL answers 404 and must never reach the route cache (the layout
 // already skips cachePublicPage for it, and src/worker.ts forces no-store on any non-200),
-// so the read only tags the page when it is rendered as a 200, i.e. for /404/ itself.
-const page = await getNotFoundPage({
-  cache: (Astro.response.status ?? 200) < 400 ? Astro.cache : undefined,
-});
-// The first link is the blue button, the rest are plain links.
+// so the reads only tag the page when it is rendered as a 200, i.e. for /404/ itself.
+const cache = (Astro.response.status ?? 200) < 400 ? Astro.cache : undefined;
+const page = await getNotFoundPage({ cache });
+const menu = await getMenuItems('primary', { cache });
+const showJournal = await hasJournalEntries(Astro);
+
+// The first link is the button, the rest are plain links.
 const [primaryLink, ...otherLinks] = page.links;
+const { lead, voice } = splitVoice(page.heading);
+
+// The primary menu as destinations (trailing slashes already applied by getMenuItems).
+const destinations = menu.filter((item) => showJournal || !item.url.startsWith('/journal'));
 ---
 
 <BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
-  <section
-    class="relative isolate flex min-h-[70vh] items-center overflow-hidden py-2xl"
-    aria-labelledby="notfound-heading"
-  >
-    <div class="ncs-container flex flex-col items-center gap-m text-center">
-      {/* Oversized quiet centerpiece. A low-opacity navy numeral as a backdrop.
-          Decorative: the real "404" meaning is announced in the line below, so
-          this is aria-hidden.
+  <Band ground="paper-contours" underHeader labelledby="notfound-heading" class="notfound-band">
+    <div class="notfound-grid">
+      <div class="notfound-copy">
+        <div class="notfound-numeral" aria-hidden="true">
+          <span class="notfound-glyph"></span>
+        </div>
 
-          The glyph itself is drawn by CSS (.notfound-glyph::before) rather than
-          being a text node. It is pure decoration under WCAG 1.4.3, which is
-          the only reason its 10-20% opacity is allowed to sit below the 3:1
-          text-contrast bar; as a real text node axe read it as body copy and
-          failed the page (Lighthouse accessibility 0.96 on staging,
-          2026-09-06). Generated content keeps the exact same rendering and puts
-          it where decoration belongs. */}
-      <div
-        class="notfound-figure pointer-events-none leading-none select-none"
-        aria-hidden="true"
-        data-reveal="scale"
-      >
-        <span class="notfound-glyph block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"></span>
-      </div>
+        <h1 id="notfound-heading" class="type-display notfound-title">
+          {lead}
+          {/* Astro drops the line break between two expressions, so the space is explicit
+              (without it the heading read "That pagewandered off.", to screen readers too). */}
+          {voice && ' '}
+          {voice && <span class="voice">{voice}</span>}
+        </h1>
 
-      {/* Quiet mono label above the heading. Lowercase and lightly tracked so
-          it reads as a small status line, not a shouted section eyebrow. */}
-      <p class="font-mono text-sm text-text-muted" data-reveal style="--reveal-delay: 80ms">
-        {page.label}
-      </p>
+        <p class="type-lede">{page.body}</p>
 
-      <h1
-        id="notfound-heading"
-        class="max-w-[18ch] leading-[0.95]"
-        data-reveal
-        style="--reveal-delay: 160ms"
-      >
-        {page.heading}
-      </h1>
-
-      <p
-        class="max-w-[50ch] text-lg leading-[1.6] text-text"
-        data-reveal
-        style="--reveal-delay: 240ms"
-      >
-        {page.body}
-      </p>
-
-      <div
-        class="mt-s flex flex-wrap items-center justify-center gap-m"
-        data-reveal
-        style="--reveal-delay: 320ms"
-      >
-        <span class="inline-block">
-          <a
-            href={primaryLink.href}
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-          >
+        <div class="notfound-actions">
+          <a href={primaryLink.href} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
             {primaryLink.label}
           </a>
-        </span>
-        {otherLinks.map((link) => (
-          <a class="card-link" href={link.href}>
-            {link.label}
-          </a>
-        ))}
+          {otherLinks.map((link) => (
+            <a class="card-link" href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        </div>
+
+        <p class="type-caption">{page.label}</p>
       </div>
+
+      {destinations.length > 0 && (
+        <nav class="notfound-nav" aria-label="Pages on this site">
+          <p class="type-caption notfound-nav-label">Or go straight to</p>
+          <ul>
+            {destinations.map((item) => (
+              <li>
+                <a href={item.url}>{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </div>
-  </section>
+  </Band>
 </BaseLayout>
 
 <style>
-  /* The numeral, as generated content. See the note in the markup: it is
-     decoration, so it is drawn here instead of being a text node that
-     contrast tooling reads as copy. Font, size, tracking and color all come
-     from the utility classes on the host span. */
+  .notfound-band {
+    min-height: min(80vh, 52rem);
+    display: flex;
+    align-items: center;
+  }
+  .notfound-grid {
+    display: grid;
+    gap: var(--spacing-xl);
+    align-items: end;
+  }
+  @media (min-width: 64rem) {
+    .notfound-grid {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    }
+  }
+  .notfound-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-m);
+  }
+  .notfound-title {
+    font-size: var(--text-h1);
+    max-width: 14ch;
+  }
+  .notfound-title .voice {
+    display: block;
+  }
+  .notfound-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-s) var(--spacing-l);
+  }
+
+  /* The numeral, as generated content (see the note at the top). Decoration only:
+     the river's slate, large, sitting above the headline. */
+  .notfound-numeral {
+    pointer-events: none;
+    user-select: none;
+    line-height: 0.8;
+  }
+  .notfound-glyph {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 16vw, 11rem);
+    line-height: 0.8;
+    letter-spacing: 0.01em;
+    color: var(--river);
+  }
   .notfound-glyph::before {
     content: '404';
   }
 
-  /* Gentle drift for the oversized 404. The reveal vocabulary handles the
-     entrance; this keeps it quietly alive afterward. Paused for visitors who
-     prefer reduced motion. */
-  .notfound-figure {
-    animation: notfound-float 7s ease-in-out infinite;
-    will-change: transform;
+  /* The menu as large links, set on hairlines like a ledger. */
+  .notfound-nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border);
   }
-
-  @keyframes notfound-float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-12px);
-    }
+  .notfound-nav li {
+    border-bottom: 1px solid var(--border);
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .notfound-figure {
-      animation: none;
-    }
+  .notfound-nav a {
+    display: block;
+    padding-block: 0.6rem;
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .notfound-nav a:hover,
+  .notfound-nav a:focus-visible {
+    color: var(--link);
+  }
+  .notfound-nav-label {
+    margin-bottom: var(--spacing-xs);
   }
 </style>

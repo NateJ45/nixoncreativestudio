@@ -5,12 +5,11 @@
    CTA Banner  [revamp]
    ============================================================================
    Reusable call-to-action band that closes most inner pages and sits above the
-   footer. Uses the theme-aware `.band-themed` surface: a light surface with a
-   soft accent glow in light mode, and the full navy aurora in dark mode. So in
-   light mode it reads light (not a dark block before the footer), while in dark
-   mode it still flows into the navy footer. Text uses theme-aware tokens
-   (text-heading / text-text-muted) so it stays legible on either surface.
-   Scroll-reveal on the copy plus a shine button carry the motion.
+   footer. Sits on the paper-contours ground (the Ohio River's contours: the
+   close of a page is where "Cincinnati" belongs, DESIGN.md "Grounds"), so it
+   reads as a deliberate change of ground before the ink footer. Text uses the
+   semantic tokens (text-heading / text-text-muted), which that ground
+   re-scopes to stay AA over its worst pixel.
 
    All motion is reduced-motion safe (see globals.css section 6).
    ============================================================================ */
@@ -33,17 +32,16 @@ const {
   title = site.ctaDefault.title,
   sub = site.ctaDefault.sub,
   ctaLabel = site.ctaDefault.label,
-  ctaHref = '/contact',
+  ctaHref = '/contact/',
 } = Astro.props;
 ---
 
-<section class="band-themed cta-band py-2xl" aria-labelledby="cta-banner-title">
+<section class="ground ground-paper-contours cta-band py-2xl" aria-labelledby="cta-banner-title">
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
-       below the copy on narrow screens. -->
-  <div
-    class="ncs-container relative z-10 flex flex-wrap items-center justify-between gap-l"
-    data-reveal
-  >
+       below the copy on narrow screens. No data-reveal: it is a heading and a
+       call to action (DESIGN.md: never reveal headings, prose or CTAs), and the
+       review of 2026-10-04 caught this band blank at the foot of case studies. -->
+  <div class="ncs-container relative z-10 flex flex-wrap items-center justify-between gap-l">
     <div class="flex max-w-[50ch] flex-col gap-s">
       <h2 id="cta-banner-title" class="text-heading">
         {title}
@@ -52,34 +50,9 @@ const {
     </div>
 
     <span class="inline-block">
-      <a
-        href={ctaHref}
-        class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-      >
+      <a href={ctaHref} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
         {ctaLabel}
       </a>
     </span>
   </div>
 </section>
-
-<style>
-  /* Dark mode: melt the band into the page above and the footer below. The band
-     base is navy and the footer is navy too, but the dark aurora's amber glow
-     pools at the band's bottom (a hard orange-to-navy seam where the footer
-     starts) while the page background above is a deeper near-black. Two edge
-     gradients fade the bottom to the footer navy (--color-primary) and the top
-     to the page background (--color-bg), so the band emerges from the content
-     and dissolves into the footer. It sits above the aurora (z-index:0) and
-     below the copy (z-10). Light mode keeps its deliberate light-band-to-navy-
-     footer change, so no fade there. */
-  :global(.dark) .cta-band::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      linear-gradient(to bottom, var(--color-bg) 0%, transparent 26%),
-      linear-gradient(to top, var(--color-primary) 0%, transparent 30%);
-  }
-</style>

@@ -1,39 +1,43 @@
 ---
 // Foundation, edit with care. Draws /privacy, /accessibility and /colophon from
-// one CMS entry each (docs/CMS-DESIGN.md 1.10). The class strings below are the
-// ones the three hand-written pages carried; they are kept byte for byte so the
-// move to the CMS changed no pixel (checked with the render-parity harness).
+// one CMS entry each (docs/CMS-DESIGN.md 1.10), on the redesign's grounds.
 /* ============================================================================
    ProsePage
    ============================================================================
    One template for the long-text pages. The route (src/pages/privacy.astro and
    its two siblings) reads its `pages` entry with getProsePage() and hands the
-   result here; this component wraps it in BaseLayout and picks a layout:
+   result here; this component wraps it in BaseLayout and picks a layout. Both
+   start with the same top band: window-light (moving, under the header) holding
+   a plain headline, the lead paragraph(s) and, on the document layout, the
+   "Last updated" line. There is no eyebrow label: the entry's `eyebrow` field is
+   no longer drawn (the headline says what the page is).
 
    DOCUMENT (page.showToc true: Privacy, Accessibility)
-     A small label, the headline, the lead paragraph and a "Last updated" badge,
-     then two columns on wide screens: a sticky "On this page" list (built from
-     the body's Heading 2s, so it can never drift from the headings) beside the
-     prose. A tiny scroll-spy script marks the section in view with aria-current.
-     It is purely additive: without JS the list is plain anchor links. Each block
-     reveals on scroll through the global data-reveal system (reduced-motion safe
-     and, because it is below the first block of <main>, exempt from the LCP rule
-     in CLAUDE.md gotcha 10).
+     A paper band with two columns on wide screens: a sticky "On this page" list
+     (built from the body's Heading 2s, so it can never drift from the headings)
+     beside the prose. A tiny scroll-spy script marks the section in view with
+     aria-current. It is purely additive: without JS the list is plain anchor
+     links. The first section and the list are visible at once (they sit in the
+     first screen); later sections reveal on scroll through the global data-reveal
+     system (reduced-motion safe, `.js`-gated).
 
    LEDGER (page.showToc false: Colophon)
-     The headline and lead paragraph over a ruled label/detail list, closing on
-     the "Start a project / See the work" links. `extraRows` are appended after
-     the CMS rows (the Colophon's computed "Last built" row lives in code).
+     A paper band holding the label/detail rows, then a short paper-contours band
+     closing on the "Start a project / See the work" links. `extraRows` are
+     appended after the CMS rows (the Colophon's computed "Last built" row lives
+     in code).
 
    The body arrives as trusted HTML strings (src/lib/prosePage.ts builds them
    from restricted Portable Text), so paragraphs and list items are set with
-   set:html.
+   set:html. Headings use the site's heading roles (Bebas), body the reading
+   serif, furniture the system sans; no mono labels.
 
    Page script: registers on astro:page-load with the dataset re-bind guard so it
    survives View Transitions navigations (the footer links are the usual way in).
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Band from './Band.astro';
 import { buttonVariants } from './ui/button';
 import { getSite } from '../data/site';
 import { lastUpdatedLabel, proseTitle, type ProsePage, type ProseRow } from '../lib/prosePage';
@@ -53,169 +57,106 @@ const tocSections = page.sections.filter((s) => s.heading);
 const headingId = `${page.slug}-heading`;
 const allRows = [...page.rows, ...extraRows];
 const updated = page.lastUpdated ? lastUpdatedLabel(page.lastUpdated) : undefined;
-
-// Inline h2 styling: h3 visual size, since the page already has an h1. scroll-mt
-// keeps an anchored heading clear of the sticky site header.
-const h2Class = 'mb-s text-h3 text-heading scroll-mt-[6rem]';
-const h3Class = 'mb-xs mt-l text-lg font-semibold text-heading scroll-mt-[6rem]';
-const pClass = 'mb-m last:mb-0';
 ---
 
 <BaseLayout title={proseTitle(page.title, site.studioName)} description={page.summary}>
-  <section class="py-2xl" aria-labelledby={headingId}>
-    {page.showToc ? (
-      <div class="ncs-container">
-        <header class="mb-xl flex max-w-[70ch] flex-col gap-m" data-reveal>
-          {page.eyebrow && <p class="font-mono text-sm text-text-muted">{page.eyebrow}</p>}
-          <h1 id={headingId} class="leading-[0.95]">
-            {page.heading}
-          </h1>
-          {page.intro.map((html) => (
-            <p class="text-lg leading-[1.6] text-text" set:html={html} />
-          ))}
-          {updated && (
-            <p>
-              <span class="inline-flex items-center gap-xs rounded-full border border-border bg-bg-soft px-s py-xs text-sm text-text-muted">
-                <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
-                Last updated {updated}
-              </span>
-            </p>
-          )}
-        </header>
+  <Band ground="window-light" underHeader tight labelledby={headingId}>
+    <header class="prose-head">
+      <h1 id={headingId}>{page.heading}</h1>
+      {page.intro.map((html) => (
+        <p class="type-lede" set:html={html} />
+      ))}
+      {updated && page.showToc && <p class="type-caption">Last updated {updated}</p>}
+    </header>
+  </Band>
 
-        <div class="flex flex-col gap-xl lg:flex-row lg:items-start lg:gap-2xl">
-          {tocSections.length > 0 && (
-            <nav
-              class="hidden shrink-0 lg:sticky lg:top-[6rem] lg:block lg:w-56"
-              aria-label="On this page"
-              data-prose-toc
-              data-reveal="left"
-            >
-              <p class="mb-s text-sm tracking-[0.16em] text-text-muted uppercase">On this page</p>
-              <ul class="gap-2xs flex flex-col border-l border-border">
-                {tocSections.map((s) => (
-                  <li>
-                    <a
-                      href={`#${s.id}`}
-                      data-toc-link={s.id}
-                      class={
-                        'py-2xs block border-l-2 border-transparent pl-m text-[0.95rem] ' +
-                        'text-text-muted transition-colors duration-200 ' +
-                        'hover:text-link focus-visible:text-link ' +
-                        'aria-[current=true]:border-accent aria-[current=true]:font-semibold ' +
-                        'aria-[current=true]:text-link'
-                      }
-                      style="margin-left: -1px;"
-                    >
-                      {s.heading}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          )}
-
-          <div class="max-w-[70ch] text-[1.0625rem] leading-[1.7] text-text">
-            {page.sections.map((s, index) => (
-              <div class={index === 0 ? 'mt-0' : 'mt-xl'} data-reveal>
-                {s.heading && (
-                  <h2 id={s.id} class={h2Class}>
+  {page.showToc ? (
+    <Band>
+      <div class="prose-layout">
+        {tocSections.length > 0 && (
+          <nav class="prose-toc" aria-label="On this page" data-prose-toc>
+            <p class="type-caption prose-toc-label">On this page</p>
+            <ul>
+              {tocSections.map((s) => (
+                <li>
+                  <a href={`#${s.id}`} data-toc-link={s.id}>
                     {s.heading}
-                  </h2>
-                )}
-                {s.blocks.map((b) => {
-                  if (b.kind === 'h3') {
-                    return (
-                      <h3 id={b.id} class={h3Class}>
-                        {b.text}
-                      </h3>
-                    );
-                  }
-                  if (b.kind === 'list' && b.ordered) {
-                    return (
-                      <ol class="mb-m flex list-decimal flex-col gap-s pl-l">
-                        {b.items.map((item) => (
-                          <li set:html={item} />
-                        ))}
-                      </ol>
-                    );
-                  }
-                  if (b.kind === 'list') {
-                    // The amber-dash tick list (the ledger motif used on About).
-                    return (
-                      <ul class="mb-m flex flex-col gap-s">
-                        {b.items.map((item) => (
-                          <li class="flex items-start gap-s">
-                            <span
-                              class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
-                              aria-hidden="true"
-                            />
-                            <span set:html={item} />
-                          </li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  return <p class={pClass} set:html={b.html} />;
-                })}
-              </div>
-            ))}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
-            {updated && (
-              <p
-                class="mt-xl border-t border-border pt-l text-[0.95rem] text-text-muted italic"
-                data-reveal="fade"
-              >
-                Last updated: {updated}.
-              </p>
-            )}
-          </div>
+        <div class="prose-body">
+          {page.sections.map((s, index) => (
+            <section class="prose-section" data-reveal={index === 0 ? undefined : ''}>
+              {s.heading && (
+                <h2 id={s.id} class="prose-h2">
+                  {s.heading}
+                </h2>
+              )}
+              {s.blocks.map((b) => {
+                if (b.kind === 'h3') {
+                  return (
+                    <h3 id={b.id} class="prose-h3">
+                      {b.text}
+                    </h3>
+                  );
+                }
+                if (b.kind === 'list' && b.ordered) {
+                  return (
+                    <ol class="prose-list prose-list--ordered">
+                      {b.items.map((item) => (
+                        <li set:html={item} />
+                      ))}
+                    </ol>
+                  );
+                }
+                if (b.kind === 'list') {
+                  return (
+                    <ul class="prose-list">
+                      {b.items.map((item) => (
+                        <li set:html={item} />
+                      ))}
+                    </ul>
+                  );
+                }
+                return <p set:html={b.html} />;
+              })}
+            </section>
+          ))}
         </div>
       </div>
-    ) : (
-      <div class="ncs-container flex flex-col gap-l">
-        <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
-          <h1 id={headingId}>{page.heading}</h1>
-          {page.intro.map((html) => (
-            <p class="text-lg leading-[1.55] text-text-muted" set:html={html} />
-          ))}
-        </header>
-
-        {/* Ruled label/detail list, matching the /about principles pattern so the
-              page reads as authored rather than scaffolded. */}
-        <dl class="mt-l flex flex-col">
+    </Band>
+  ) : (
+    <>
+      <Band>
+        {/* Ruled label/detail list: the label is the furniture sans, the detail the
+               reading serif. */}
+        <dl class="ledger">
           {allRows.map((row, index) => (
-            <div
-              class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-              data-reveal
-              style={`--reveal-delay: ${index * 80}ms;`}
-            >
-              <dt class="font-mono text-[0.8rem] tracking-[0.08em] text-text-muted uppercase">
-                {row.label}
-              </dt>
-              <dd class="max-w-[60ch] leading-[1.7] text-text">{row.detail}</dd>
+            <div class="ledger-row" data-reveal={index < 2 ? undefined : ''}>
+              <dt>{row.label}</dt>
+              <dd>{row.detail}</dd>
             </div>
           ))}
         </dl>
+      </Band>
 
-        {/* Quiet close, funnels onward like the rest of the site. */}
-        <div
-          class="mt-l flex flex-wrap items-center gap-m border-t border-border pt-2xl"
-          data-reveal
-        >
-          <a
-            href="/contact/"
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-          >
+      {/* Quiet close, funnels onward like the rest of the site. */}
+      <Band ground="paper-contours" still tight label="Next steps">
+        <div class="ledger-close">
+          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
             Start a project
           </a>
-          <a class="card-link text-lg" href="/work/">
+          <a class="card-link" href="/work/">
             See the work
           </a>
         </div>
-      </div>
-    )}
-  </section>
+      </Band>
+    </>
+  )}
 
   <script>
     // Scroll-spy: marks the "On this page" link for the section in view with
@@ -277,3 +218,182 @@ const pClass = 'mb-m last:mb-0';
     initProseToc();
   </script>
 </BaseLayout>
+
+<style>
+  .prose-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    max-width: 52rem;
+  }
+  .prose-head :global(.type-lede) {
+    max-width: 44ch;
+  }
+
+  /* ---- document layout ---- */
+  .prose-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+  @media (min-width: 64rem) {
+    .prose-layout {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--spacing-2xl);
+    }
+  }
+  /* The list is for wide screens only; a phone reads straight down. */
+  .prose-toc {
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    .prose-toc {
+      display: block;
+      position: sticky;
+      top: 6rem;
+      flex: none;
+      width: 14rem;
+    }
+  }
+  .prose-toc-label {
+    margin-bottom: var(--spacing-s);
+  }
+  .prose-toc ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border);
+  }
+  .prose-toc a {
+    /* A 44px row at least (the studio's touch bar; a tablet in landscape
+       shows this list): the padding alone made 42px. */
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
+    margin-left: -1px;
+    padding: 0.7rem 0 0.7rem var(--spacing-m);
+    border-left: 2px solid transparent;
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .prose-toc a:hover,
+  .prose-toc a:focus-visible {
+    color: var(--link);
+  }
+  .prose-toc a[aria-current='true'] {
+    border-left-color: var(--marker);
+    font-weight: 600;
+    color: var(--link);
+  }
+
+  .prose-body {
+    max-width: 44rem;
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.65;
+    color: var(--foreground);
+  }
+  .prose-section + .prose-section {
+    margin-top: var(--spacing-xl);
+  }
+  /* scroll-margin keeps an anchored heading clear of the sticky site header. */
+  .prose-h2 {
+    margin-bottom: var(--spacing-s);
+    scroll-margin-top: 6rem;
+    font-size: var(--text-h3);
+  }
+  .prose-h3 {
+    margin: var(--spacing-l) 0 var(--spacing-xs);
+    scroll-margin-top: 6rem;
+    font-size: var(--text-h4);
+  }
+  .prose-body :global(p) {
+    margin-bottom: var(--spacing-m);
+  }
+  .prose-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .prose-body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+  /* The dash list: a short china-marker dash in front of each item. */
+  .prose-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    margin: 0 0 var(--spacing-m);
+    padding: 0;
+    list-style: none;
+  }
+  .prose-list > :global(li) {
+    position: relative;
+    padding-left: 1.75rem;
+  }
+  .prose-list > :global(li)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.85em;
+    width: 1rem;
+    height: 2px;
+    background: var(--marker);
+  }
+  .prose-list--ordered {
+    list-style: decimal;
+    padding-left: var(--spacing-l);
+  }
+  .prose-list--ordered > :global(li) {
+    padding-left: 0;
+  }
+  .prose-list--ordered > :global(li)::before {
+    content: none;
+  }
+
+  /* ---- ledger layout ---- */
+  .ledger {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+  .ledger-row {
+    display: grid;
+    gap: var(--spacing-s);
+    padding-block: var(--spacing-l);
+    border-top: 1px solid var(--border);
+  }
+  @media (min-width: 48rem) {
+    .ledger-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: var(--spacing-l);
+    }
+  }
+  .ledger dt {
+    font-family: var(--font-display);
+    font-size: var(--text-h4);
+    line-height: 1.05;
+    letter-spacing: 0.015em;
+    color: var(--heading);
+  }
+  .ledger dd {
+    max-width: 60ch;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.65;
+    color: var(--foreground);
+  }
+  .ledger-close {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-m) var(--spacing-l);
+  }
+</style>

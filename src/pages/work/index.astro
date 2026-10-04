@@ -1,241 +1,364 @@
 ---
 // Safe to edit. Page content is read from the EmDash CMS (collection
-// `case_studies`); add or edit entries in the EmDash admin to grow the list.
-// Server-rendered like every page. The route cache is tagged with the case studies
-// this page read (src/lib/routeCache.ts), so a publish purges it.
+// `case_studies`, and the Work page entry for the words); add or edit entries in
+// the EmDash admin. Server-rendered like every page; the route cache is tagged with
+// the rows this page read (src/lib/routeCache.ts), so a publish purges it.
 /* ============================================================================
-   /work | Selected Work Index
+   /work | The work
    ============================================================================
-   Landing for the full case study list. Loads every entry from the EmDash
-   case_studies collection, sorts newest first by project date, and
-   renders each as a card linking to /work/{slug}.
+   Rebuilt in the 2026 redesign (A item 11: the old page was one featured card,
+   eight identical cards and then the same nine sites again as a link table).
+   Now a contact sheet laid out on the table, three bands:
 
-   This is the only place the full catalogue lives. The homepage Selected
-   Work section is a curated subset (featured===true).
+     1. Hero (window-light, the one moving ground): the Work page headline and
+        intro, then the LEAD printed large: the live study with the lowest
+        homepage scene order (Stone Steps today; src/lib/workIndex.ts), in a
+        film frame with its facts on the edge and the china-marker pick.
+     2. The rest of the live work (paper), a varied composition of browser
+        prints at different sizes and offsets, not a uniform grid. Film edges
+        and the china-marker pick stay on the lead only (one device, used once:
+        2026-10-04 review). Its heading and line
+        are the Work page's "live" fields.
+     3. Also built (deep, still): work that is finished or underway but not
+        live, smaller and quieter, each with its status label
+        (launchStatusLabel) and, for a launching-soon study, its preview link.
+        Never presented as live proof.
+
+   No sector filter: with nine studies in two groups the chips did not earn
+   their place (or their React island). The Work page's "eyebrow" and "filter
+   message" fields are no longer shown.
    ============================================================================ */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Band from '../../components/Band.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
-import EmDashCover from '../../components/emdash/EmDashCover.astro';
-import WorkFilter from '../../components/WorkFilter';
+import WorkPrint from '../../components/WorkPrint.astro';
 import { getSite } from '../../data/site';
 import { getCaseStudies } from '../../lib/caseStudies';
 import { getWorkPage, indexTitle } from '../../lib/indexPages';
+import { launchStatusLabel } from '../../lib/launchStatus';
+import { arrangeWork, prettyDomain, sectorLabel } from '../../lib/workIndex';
+import { LEDGER_FACTS } from '../../data/workExtras';
 
-// The page's words (label, headline, intro, filter message, live-sites heading and
-// text) are the Work page entry in the CMS, with the committed fallback in
-// cms/content/page_work.json. The cards themselves are the case studies.
 const site = await getSite(Astro);
 const page = await getWorkPage(Astro);
-
-// Already sorted newest first by project date.
 const entries = await getCaseStudies(Astro.cache);
+const { lead, live, also } = arrangeWork(entries);
 
-// Entries that ship a real, public live URL, for the "open any of them" proof
-// wall below the cards. The strongest trust signal a web vendor has is work a
-// visitor can click and inspect in five seconds, so these link straight to the
-// live site (not the case study). Domains are shown as plain text.
-const entriesLive = entries.filter((e) => e.liveUrl);
-const prettyDomain = (url: string) =>
-  url
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/+$/, '');
+// The headline turns into the italic voice for its last word ("SELECTED work."),
+// the way every big headline on the site does; a one-word headline stays all caps.
+const words = page.heading.trim().split(/\s+/);
+const headCaps = words.length > 1 ? words.slice(0, -1).join(' ') : page.heading;
+const headVoice = words.length > 1 ? words[words.length - 1] : undefined;
 
-// Distinct sectors for the filter chips, in a fixed display order. Year is
-// intentionally not surfaced anywhere on the portfolio (no year filter, no
-// year on cards), so clients can't read project timing or count per year.
-const sectorLabels: Record<string, string> = {
-  church: 'Church',
-  school: 'School',
-  nonprofit: 'Nonprofit',
-  'small-business': 'Small Business',
-};
-const presentSectors = Array.from(new Set(entries.map((e) => e.sector)));
-const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
-  .filter((s) => presentSectors.includes(s))
-  .map((value) => ({ value, label: sectorLabels[value] }));
+const placeOf = (id: string) => LEDGER_FACTS[id]?.place;
 ---
 
 <BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
-  <section class="py-2xl" aria-labelledby="work-index-heading">
-    <div class="ncs-container">
-      <!-- Intro block. Rendered as an h1 since this is the work landing.
-           The old decorative "01" mono eyebrow is gone; in its place a
-           plain text kicker plus an honest count of projects, both derived
-           from the real entries array so they never drift from the list. -->
-      <header class="mb-xl flex flex-col gap-xs">
-        {page.eyebrow && (
-          <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
-            {page.eyebrow}
-          </p>
-        )}
-        <h1 id="work-index-heading" data-reveal>
-          {page.heading}
-        </h1>
-        <p
-          data-reveal
-          style="--reveal-delay: 90ms"
-          class="max-w-[58ch] text-lg leading-[1.5] text-text-muted"
-        >
-          {entries.length}
-          {entries.length === 1 ? ' project' : ' projects'} {page.intro}
-        </p>
+  {/* 1. The headline and the lead print. */}
+  <Band ground="window-light" underHeader labelledby="work-title" class="w-hero">
+    <header class="w-head">
+      <h1 id="work-title" class="type-display">
+        {headCaps} {headVoice && <span class="voice">{headVoice}</span>}
+      </h1>
+      <p class="type-lede w-intro">
+        {entries.length}
+        {entries.length === 1 ? ' project' : ' projects'} {page.intro}
+      </p>
+    </header>
+    {lead && (
+      <div class="w-lead" data-work-lead>
+        <WorkPrint
+          cs={lead}
+          variant="film"
+          eager
+          pick
+          headingLevel={2}
+          place={placeOf(lead.id)}
+          sizes="(min-width: 64rem) 58vw, 92vw"
+        />
+      </div>
+    )}
+  </Band>
+
+  {/* 2. The rest of the live work, printed at different sizes. */}
+  {live.length > 0 && (
+    <Band ground="paper" labelledby="work-live" class="w-live">
+      <header class="w-live-head">
+        <h2 id="work-live" class="type-headline">
+          {page.liveHeading}
+        </h2>
+        <p class="w-live-body">{page.liveBody}</p>
       </header>
+      <ul class="w-sheet" role="list">
+        {live.map((cs) => (
+          <li class="w-sheet-item">
+            <WorkPrint
+              cs={cs}
+              variant="browser"
+              place={placeOf(cs.id)}
+              sizes="(min-width: 64rem) 50vw, 92vw"
+            />
+          </li>
+        ))}
+      </ul>
+    </Band>
+  )}
 
-      {/* Filter chips. Sector only, client-side. The chips toggle a
-          data-hidden attribute on the cards below; matching CSS in
-          globals.css hides them with display:none. */}
-      {sectors.length > 1 && (
-        <div class="mb-l">
-          <WorkFilter client:load sectors={sectors} />
-        </div>
-      )}
-
-      <!-- Card grid with an editorial feature row. The newest entry spans the
-           full width as a large horizontal card (image + body side by side at
-           md), then the rest fall into a 2/3-up grid. This breaks the
-           identical-card-grid look so the page reads as curated, not generated,
-           while staying a single <ul> the sector filter can hide/show.
-           Each card is an elevated .surface-card (real depth in light mode),
-           lifts on hover, lights a cursor-following glow, gently zooms its
-           cover, and morphs that cover into the detail-page hero via the
-           shared cover-${id} transition name. -->
-      <ul class="grid gap-l md:grid-cols-2 lg:grid-cols-3">
-        {entries.map((entry, i) => {
-          // Pretty sector label for the meta row: kebab-case → Title Case.
-          const sectorLabel = entry.sector
-            .replace(/-/g, ' ')
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-          // The first (newest) entry is the feature card: full-width, horizontal.
-          const isFeature = i === 0;
+  {/* 3. Also built: honest about what is not live yet. */}
+  {also.length > 0 && (
+    <Band ground="deep" still labelledby="work-also" class="w-also">
+      <div class="w-also-head">
+        <h2 id="work-also" class="type-headline">
+          Also <span class="voice">built</span>
+        </h2>
+        <p class="w-also-body">
+          Finished or underway, but not live yet. Each one says where it stands.
+        </p>
+      </div>
+      <ul class="w-also-list" role="list">
+        {also.map((cs) => {
+          const status = launchStatusLabel(cs.launchStatus);
+          const host = cs.liveUrl ? prettyDomain(cs.liveUrl) : undefined;
           return (
-            <li
-              data-work-card
-              data-sector={entry.sector}
-              class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
-            >
-              {/* Whole card is the link (standard card a11y pattern). Stagger
-                   is capped per row so the cascade stays consistent at any
-                   catalogue length. */}
-              <a
-                data-reveal
-                data-spotlight
-                style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
-                class:list={[
-                  'surface-card spotlight-card group hover-lift rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
-                  isFeature
-                    ? 'flex flex-col gap-m md:grid md:grid-cols-2 md:items-center md:gap-l'
-                    : 'flex h-full flex-col gap-m',
-                ]}
-                href={`/work/${entry.id}/`}
-              >
-                {/* Cover. alt="" because the card's h2 carries the same name;
-                     the transition:name wrapper morphs this cover into the
-                     detail page's hero during a View Transition. */}
-                <div
-                  transition:name={`cover-${entry.id}`}
-                  class="relative z-10 overflow-hidden rounded-lg"
-                >
-                  <EmDashCover
-                    cover={entry.cover}
-                    alt=""
-                    priority={i === 0}
-                    sizes={
-                      isFeature
-                        ? '(min-width: 64rem) 60vw, 100vw'
-                        : '(min-width: 56rem) 33vw, 100vw'
-                    }
-                    fit="cover"
-                    class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
-                  />
-                </div>
-
-                <div class="relative z-10 flex flex-1 flex-col gap-xs">
-                  <p class="text-xs font-semibold tracking-[0.06em] text-text-muted uppercase">
-                    {sectorLabel}
-                  </p>
-                  <h2
-                    class:list={[
-                      'text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link',
-                      isFeature ? 'text-h2' : 'text-h3',
-                    ]}
+            <li class="w-also-item" data-work-also data-status={cs.launchStatus}>
+              <p class="w-also-meta type-caption">
+                {status && <span class="w-also-status">{status}</span>}
+                <span>{sectorLabel(cs.sector)}</span>
+              </p>
+              <h3 class="w-also-title">
+                <a href={`/work/${cs.id}/`}>{cs.title}</a>
+              </h3>
+              <p class="w-also-text">{cs.outcome ?? cs.summary}</p>
+              <p class="w-also-links type-ui">
+                <a href={`/work/${cs.id}/`} class="card-link">
+                  Read the case study
+                </a>
+                {host && (
+                  <a
+                    href={cs.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-also-visit"
                   >
-                    {entry.title}
-                  </h2>
-                  {entry.outcome && (
-                    /* Outcome line: the honest one-line result, in --link so
-                         the proof-point reads at first scan. */
-                    <p class="leading-[1.4] font-semibold text-link">{entry.outcome}</p>
-                  )}
-                  <p class="leading-[1.5] text-text">{entry.summary}</p>
-                  {entry.stack.length > 0 && (
-                    /* Stack reveal (mono is the right register here: it is a
-                         genuine technical "inside the build" label). Collapsed
-                         until hover/focus; aria-hidden since the detail page
-                         carries the same info. */
-                    <p
-                      aria-hidden="true"
-                      class="max-h-0 overflow-hidden font-mono text-[0.75rem] tracking-[0.06em] text-text-muted uppercase opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
-                    >
-                      Built with {entry.stack.join(', ')}
-                    </p>
-                  )}
-                  <span class="card-link mt-auto pt-xs">Read the case study</span>
-                </div>
-              </a>
+                    See the finished build
+                    <span aria-hidden="true"> ↗</span>
+                    <span class="sr-only"> (opens in a new tab)</span>
+                  </a>
+                )}
+              </p>
             </li>
           );
         })}
       </ul>
-
-      {/* "No matches" placeholder. Server-rendered, hidden by default
-          via data-hidden, revealed by WorkFilter when all cards are
-          filtered out. Lets visitors know the filter is doing something
-          and isn't broken. aria-live="polite" so screen readers hear the
-          notice announced when the filter empties the grid (without it the
-          change is silent to assistive tech). */}
-      <p data-work-empty data-hidden aria-live="polite" class="mt-l text-text-muted">
-        {page.emptyFilterMessage}
-      </p>
-    </div>
-  </section>
-
-  {/* "Open any of them" proof wall: every shipped site as a clickable real
-      domain, linking straight to the live site in a new tab. A different, faster
-      affordance than the cards above (which open the case studies). Real domains
-      only, shown as plain text so it never reads as a fabricated badge. */}
-  {entriesLive.length > 1 && (
-    <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
-      <div class="ncs-container">
-        <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-          <h2 id="live-sites-heading">{page.liveHeading}</h2>
-          <p class="text-lg leading-[1.55] text-text-muted">{page.liveBody}</p>
-        </header>
-
-        <ul class="grid gap-x-l sm:grid-cols-2 lg:grid-cols-3">
-          {entriesLive.map((e, i) => (
-            <li data-reveal style={`--reveal-delay: ${Math.min(i, 5) * 60}ms`}>
-              <a
-                href={e.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="group flex items-baseline justify-between gap-s border-b border-border py-s pointer-coarse:min-h-11 pointer-coarse:items-center text-inherit no-underline transition-colors duration-150 hover:border-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <span class="font-display text-h4 leading-[1.1] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {e.client}
-                </span>
-                <span class="inline-flex shrink-0 items-center gap-1 font-mono text-[0.8rem] text-text-muted transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {prettyDomain(e.liveUrl ?? '')}
-                  <span aria-hidden="true">↗</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    </Band>
   )}
 
   <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
 </BaseLayout>
+
+<style>
+  /* ---- 1. hero -------------------------------------------------------------- */
+  .w-head {
+    display: grid;
+    gap: var(--spacing-m);
+    align-items: end;
+  }
+  .w-head h1 {
+    margin: 0;
+  }
+  .w-intro {
+    margin: 0;
+  }
+  @media (min-width: 64rem) {
+    .w-head {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      column-gap: var(--spacing-xl);
+    }
+  }
+  .w-lead {
+    margin-top: var(--spacing-xl);
+  }
+  /* The lead: the print large on the left, its words beside it at the foot. */
+  @media (min-width: 64rem) {
+    .w-lead :global(.wp) {
+      grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+      column-gap: var(--spacing-xl);
+      align-items: end;
+    }
+  }
+
+  /* ---- 2. the sheet ----------------------------------------------------------- */
+  .w-live-head {
+    display: grid;
+    gap: var(--spacing-s);
+    max-width: 44rem;
+    margin-bottom: var(--spacing-xl);
+  }
+  .w-live-head h2 {
+    margin: 0;
+  }
+  .w-live-body {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--foreground);
+  }
+  .w-sheet {
+    display: grid;
+    gap: var(--spacing-2xl) var(--spacing-l);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* Phones: one column, the prints stepping left and right like a hand-laid sheet. */
+  @media (max-width: 47.99rem) {
+    .w-sheet-item:nth-child(even) {
+      padding-left: 8%;
+    }
+    .w-sheet-item:nth-child(odd) {
+      padding-right: 8%;
+    }
+  }
+  /* Tablets: two columns, the second one dropped. */
+  @media (min-width: 48rem) and (max-width: 63.99rem) {
+    .w-sheet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .w-sheet-item:nth-child(even) {
+      margin-top: var(--spacing-2xl);
+    }
+  }
+  /* Desktop: a twelve-column table; five placements repeat, each a different size
+     and offset, so no two neighbours share a shape. */
+  @media (min-width: 64rem) {
+    .w-sheet {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      row-gap: var(--spacing-xl);
+    }
+    .w-sheet-item:nth-child(5n + 1) {
+      grid-column: 1 / span 7;
+    }
+    .w-sheet-item:nth-child(5n + 2) {
+      grid-column: 9 / span 4;
+      margin-top: var(--spacing-3xl);
+    }
+    .w-sheet-item:nth-child(5n + 3) {
+      grid-column: 2 / span 5;
+    }
+    .w-sheet-item:nth-child(5n + 4) {
+      grid-column: 7 / span 6;
+      margin-top: calc(var(--spacing-2xl) * -1);
+    }
+    .w-sheet-item:nth-child(5n) {
+      grid-column: 3 / span 8;
+    }
+    /* The wide one sets its words beside the print. */
+    .w-sheet-item:nth-child(5n) :global(.wp) {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+      column-gap: var(--spacing-l);
+      align-items: end;
+    }
+  }
+
+  /* ---- 3. also built ---------------------------------------------------------- */
+  .w-also-head {
+    display: grid;
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-l);
+  }
+  @media (min-width: 64rem) {
+    .w-also-head {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: end;
+      column-gap: var(--spacing-xl);
+    }
+  }
+  .w-also-head h2 {
+    margin: 0;
+  }
+  .w-also-body {
+    margin: 0;
+    max-width: 40ch;
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .w-also-list {
+    display: grid;
+    gap: var(--spacing-l);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .w-also-list {
+      grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+  }
+  .w-also-item {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+    padding-top: var(--spacing-m);
+    border-top: 1px solid color-mix(in oklab, var(--on-ink-muted) 40%, transparent);
+  }
+  .w-also-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin: 0;
+  }
+  .w-also-status {
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    background: var(--marker-hot);
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .w-also-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+    line-height: 1;
+  }
+  .w-also-title a {
+    color: var(--heading);
+    text-decoration: none;
+  }
+  .w-also-title a:hover,
+  .w-also-title a:focus-visible {
+    color: var(--link);
+  }
+  .w-also-text {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .w-also-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--spacing-m);
+    margin: 0;
+  }
+  .w-also-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .w-also-visit {
+    color: var(--on-ink-muted);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .w-also-visit:hover,
+  .w-also-visit:focus-visible {
+    color: var(--link);
+  }
+</style>

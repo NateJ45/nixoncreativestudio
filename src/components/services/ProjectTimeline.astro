@@ -1,0 +1,293 @@
+---
+// Safe to edit. The four steps (titles and paragraphs) are CMS content: the Home
+// page entry's process steps (getHomePage()), the same words the homepage uses.
+// The week figures come from the Services page FAQ ("six and ten weeks", "twelve
+// to sixteen weeks"); if that answer changes, change WEEKS below to match.
+/* ============================================================================
+   ProjectTimeline | the four-step process with its real durations, drawn to scale
+   ============================================================================
+   Replaces the ProcessBand reuse on /services (redesign 2026, A item 11: the page
+   repeated the homepage's bands). The steps are the same CMS words, so they still
+   read identically across the site; what this adds is time:
+
+     1. A week scale, 0 to 20 weeks, with two tracks drawn to that scale:
+        most websites launch between week 6 and week 10; larger projects
+        (custom photography, several content collections) between 12 and 16.
+        Each track ends with the month of follow-through after launch.
+        Per-step weeks are NOT drawn: no real split exists (the brief sets each
+        project's timeline), so strategy, design and build are one bar.
+     2. The four steps, numbered (the one real sequence on the page), each with
+        how long it takes in the red-pen italic.
+
+   The scale is decorative for screen readers (aria-hidden); the figcaption and
+   each track's label carry the same facts as text.
+   ============================================================================ */
+import type { ProcessStep } from '../../lib/homePage';
+import { PROCESS_DURATIONS } from '../../lib/processDurations';
+
+interface Props {
+  steps: ProcessStep[];
+}
+const { steps } = Astro.props;
+
+/** Weeks on the scale. */
+const SCALE = 20;
+/** The two tracks, from the Services FAQ answer "How long does a typical project take?". */
+const WEEKS = [
+  { label: 'Most websites', launchFrom: 6, launchTo: 10 },
+  {
+    label: 'Larger projects, with custom photography or several kinds of content',
+    launchFrom: 12,
+    launchTo: 16,
+  },
+];
+/** Follow-through after launch: the fourth process step's "first month". */
+const FOLLOW = 4;
+const pct = (w: number) => `${(w / SCALE) * 100}%`;
+const ticks = Array.from({ length: SCALE / 2 + 1 }, (_, i) => i * 2);
+
+/** How long each step takes, in the order of the CMS steps (shared with LandingSteps). */
+const DURATIONS = PROCESS_DURATIONS;
+---
+
+<figure class="tl" aria-labelledby="tl-caption">
+  <figcaption id="tl-caption" class="tl-caption">
+    Week 0 is a one-hour conversation and the brief. Most websites launch between week 6 and week
+    10; larger projects between week 12 and week 16. Then a month of follow-through.
+  </figcaption>
+
+  <div class="tl-chart">
+    {WEEKS.map((track) => (
+      <div class="tl-track">
+        <p class="tl-label">
+          <span>{track.label}</span>
+          <span class="tl-when">{`launch in weeks ${track.launchFrom} to ${track.launchTo}`}</span>
+        </p>
+        <div class="tl-bar" aria-hidden="true">
+          <span class="tl-seg tl-build" style={`left: 0; width: ${pct(track.launchFrom)};`} />
+          <span
+            class="tl-seg tl-launch"
+            style={`left: ${pct(track.launchFrom)}; width: ${pct(track.launchTo - track.launchFrom)};`}
+          />
+          <span
+            class="tl-seg tl-follow"
+            style={`left: ${pct(track.launchTo)}; width: ${pct(Math.min(FOLLOW, SCALE - track.launchTo))};`}
+          />
+          <span class="tl-start" />
+        </div>
+      </div>
+    ))}
+
+    <div class="tl-axis" aria-hidden="true">
+      {ticks.map((w) => (
+        <span class:list={['tl-tick', w % 4 === 0 && 'tl-tick--major']} style={`left: ${pct(w)};`}>
+          {w % 4 === 0 && <span class="tl-tick-label">{w === 0 ? 'Week 0' : w}</span>}
+        </span>
+      ))}
+    </div>
+
+    <ul class="tl-key" aria-hidden="true">
+      <li>
+        <span class="tl-swatch tl-build"></span>Strategy, then design and build
+      </li>
+      <li>
+        <span class="tl-swatch tl-launch"></span>Launch lands here
+      </li>
+      <li>
+        <span class="tl-swatch tl-follow"></span>A month of follow-through
+      </li>
+    </ul>
+  </div>
+</figure>
+
+<ol class="process-steps" role="list">
+  {steps.map((step, i) => (
+    <li>
+      <span class="step-num" aria-hidden="true">
+        {step.num}
+      </span>
+      <h3 class="step-title">{step.title}</h3>
+      {DURATIONS[i] && <p class="step-dur">{DURATIONS[i]}</p>}
+      <p class="step-body">{step.body}</p>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .tl {
+    margin: 0;
+  }
+  .tl-caption {
+    font-size: var(--text-body);
+    line-height: 1.55;
+    max-width: 52ch;
+    color: var(--foreground);
+  }
+  .tl-chart {
+    margin-top: clamp(1.75rem, 4vw, 2.75rem);
+    display: grid;
+    gap: 1.5rem;
+  }
+  .tl-label {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.75rem;
+    margin: 0 0 0.5rem;
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .tl-when {
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+  .tl-bar {
+    position: relative;
+    height: 1.1rem;
+  }
+  .tl-seg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+  }
+  .tl-build {
+    background: var(--ink);
+  }
+  /* The launch window: a china-marker tint between two hairlines. */
+  .tl-launch {
+    background: color-mix(in oklab, var(--marker) 22%, transparent);
+    border-inline: 1.5px solid var(--marker);
+  }
+  /* Follow-through: a dashed line, quieter than the build. */
+  .tl-follow {
+    top: 50%;
+    bottom: auto;
+    height: 0;
+    border-top: 3px dashed var(--ink);
+    transform: translateY(-50%);
+  }
+  .tl-start {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--marker);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 3px var(--paper-deep);
+  }
+
+  .tl-axis {
+    position: relative;
+    height: 2.25rem;
+    border-top: 2px solid var(--heading);
+  }
+  .tl-tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 0.4rem;
+    background: var(--heading);
+  }
+  .tl-tick--major {
+    height: 0.65rem;
+  }
+  .tl-tick-label {
+    position: absolute;
+    top: 0.85rem;
+    left: 0;
+    transform: translateX(-50%);
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+  .tl-tick:first-child .tl-tick-label {
+    transform: none;
+  }
+  .tl-tick:last-child .tl-tick-label {
+    transform: translateX(-100%);
+  }
+
+  .tl-key {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--muted-foreground);
+  }
+  .tl-key li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .tl-swatch {
+    display: inline-block;
+    width: 1.75rem;
+    height: 0.7rem;
+  }
+  .tl-swatch.tl-follow {
+    height: 0;
+    transform: none;
+  }
+
+  /* The four steps: numbered because the process really is ordered. */
+  .process-steps {
+    list-style: none;
+    margin: clamp(3rem, 6vw, 4.5rem) 0 0;
+    padding: 0;
+    display: grid;
+    gap: 2rem;
+  }
+  @media (min-width: 48rem) {
+    .process-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.5rem 3rem;
+    }
+  }
+  @media (min-width: 72rem) {
+    .process-steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .process-steps li {
+    padding-top: 1rem;
+    border-top: 1px solid var(--heading);
+  }
+  .step-num {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--text-numeral);
+    line-height: 0.9;
+    color: var(--heading);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .step-title {
+    margin: 0.75rem 0 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h4);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+  }
+  .step-dur {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.125rem;
+    color: var(--marker);
+  }
+  .step-body {
+    margin: 0.75rem 0 0;
+    font-size: var(--text-body);
+    line-height: 1.55;
+    max-width: 34ch;
+  }
+</style>

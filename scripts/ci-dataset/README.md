@@ -83,3 +83,7 @@ The design's singleton and list collections are already in `SNAPSHOT_ALL` in `sn
 - Taxonomy links are pinned in `terms.json` because the CLI cannot read per-entry terms. If a case study's tags change in production, CI keeps the old ones until `terms.json` is edited.
 - `emdash:site_id` and `emdash:seed_complete` are minted by EmDash on first run, so a `--from-scratch` gives the dataset a new site id. Nothing depends on it.
 - The refresh deletes case study rows that are not in the snapshot, but leaves unrelated tables (comments, 404 log, schedulers) alone.
+
+## Why --from-scratch builds first (2026-10-04)
+
+The ci Worker has a cron trigger that fires every minute. If the tables are dropped and a long build then runs, the OLD Worker version re-seeds the empty database from its own (old) seed before the new version is deployed, so new fields never appear. `--from-scratch` therefore builds first, drops and deploys back to back, and if the seed is still the old one it drops again once the new version is live (the new version then seeds correctly). Found when a rebuild twice produced a database without `case_studies.launch_status`, `case_studies.preview_url` and `site_settings.price_range`.

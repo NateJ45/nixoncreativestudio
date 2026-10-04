@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  applyRewrites,
   hasFileRefs,
   loadEntries,
   loadMenus,
@@ -14,6 +15,7 @@ import {
   toEntries,
 } from '../../scripts/lib/cms-load.mjs';
 import { isSafeTarget } from '../../scripts/cms/args.mjs';
+import { contentSurprises } from '../../scripts/lib/production-load.mjs';
 
 const quiet = () => {};
 
@@ -475,6 +477,130 @@ test('a patch dry run writes nothing and reads "would seed"; the rerun reads unc
   assert.ok(!before.calls.some((c) => c[1] === 'update'));
   const after = run({ in_hero: 1, hero_order: 1 }, true);
   assert.deepEqual(after.lines, ['  a: unchanged']);
+});
+
+// ── patch "set" and "rewrite" (redesign 2026 copy pass) ─────────────────────
+
+test('toEntries keeps set and rewrite on a patch and rejects a bad rewrite', () => {
+  const [e] = (toEntries as (j: unknown) => Record<string, unknown>[])([
+    {
+      slug: 'a',
+      patch: true,
+      data: {},
+      set: { featured: false },
+      rewrite: { body: [{ find: 'we built', replace: 'I built' }] },
+    },
+  ]);
+  assert.deepEqual(e.set, { featured: false });
+  assert.deepEqual(e.rewrite, { body: [{ find: 'we built', replace: 'I built' }] });
+  assert.throws(
+    () => toEntries([{ slug: 'a', patch: true, data: {}, rewrite: { body: [{ find: '' }] } }]),
+    /"rewrite" must be/,
+  );
+  assert.throws(
+    () => toEntries([{ slug: 'a', patch: true, data: {}, set: [] }]),
+    /"set" must be an object/,
+  );
+  // Only a patch reads them.
+  assert.deepEqual(toEntries([{ slug: 'a', data: {}, set: { x: 1 } }]), [{ slug: 'a', data: {} }]);
+});
+
+test('applyRewrites edits strings, Portable Text spans and repeater rows, never other keys', () => {
+  const body = [
+    { _type: 'block', style: 'h2', children: [{ _type: 'span', text: 'What we built' }] },
+    { _type: 'block', children: [{ _type: 'span', text: 'They came to us in May.' }] },
+    { _type: 'image', alt: 'we built this' },
+  ];
+  const rules = [
+    { find: 'came to us', replace: 'came to me' },
+    { find: 'we built', replace: 'I built' },
+  ];
+  const { value, applied, missing } = applyRewrites(body, rules);
+  assert.equal(applied, 2);
+  assert.deepEqual(missing, []);
+  assert.equal(value[0].children[0].text, 'What I built');
+  assert.equal(value[1].children[0].text, 'They came to me in May.');
+  assert.equal(value[2].alt, 'we built this', 'only text keys are touched');
+  assert.equal(
+    applyRewrites('We built it.', [{ find: 'We built', replace: 'I built' }]).value,
+    'I built it.',
+  );
+  assert.deepEqual(applyRewrites([{ text: 'a row' }], [{ find: 'row', replace: 'line' }]).value, [
+    { text: 'a line' },
+  ]);
+});
+
+test('planPatch: a rewrite fires only while the old words are there, and says update', () => {
+  const rewrite = {
+    designer_note: [{ find: 'the time dropped a lot.', replace: 'the office had a record.' }],
+  };
+  const before = { data: { designer_note: 'After launch, the time dropped a lot.' } };
+  assert.deepEqual(planPatch(before, {}, { rewrite }), {
+    action: 'update',
+    data: { designer_note: 'After launch, the office had a record.' },
+  });
+  // Already applied: nothing to do, no note.
+  const done = { data: { designer_note: 'After launch, the office had a record.' } };
+  assert.deepEqual(planPatch(done, {}, { rewrite }), { action: 'unchanged' });
+  // Edited in the admin since: left alone, with a note saying so.
+  const edited = { data: { designer_note: 'Nathan rewrote this himself.' } };
+  const plan = planPatch(edited, {}, { rewrite });
+  assert.equal(plan.action, 'unchanged');
+  assert.match(plan.note ?? '', /designer_note: "the time dropped a lot\." not found, left alone/);
+});
+
+test('planPatch: set overwrites only what differs, and set-once fields still never overwrite', () => {
+  const existing = { data: { featured: 1, outcome: 'Old', in_hero: 0, launch_status: null } };
+  const plan = planPatch(
+    existing,
+    { in_hero: true, launch_status: 'built-not-launched' },
+    { set: { featured: false, outcome: 'New' } },
+  );
+  assert.deepEqual(plan, {
+    action: 'update',
+    data: { launch_status: 'built-not-launched', featured: false, outcome: 'New' },
+  });
+  // After the apply the same plan reads unchanged (booleans come back as 0/1).
+  const after = {
+    data: { featured: 0, outcome: 'New', in_hero: 0, launch_status: 'built-not-launched' },
+  };
+  assert.deepEqual(
+    planPatch(
+      after,
+      { in_hero: true, launch_status: 'built-not-launched' },
+      { set: { featured: false, outcome: 'New' } },
+    ),
+    { action: 'unchanged' },
+  );
+});
+
+test('a patch with overwrites reads "would update", which cms:production-load stops on', () => {
+  const stub = stubCli({
+    'case_studies/a': { id: 'A1', _rev: 'r1', status: 'published', data: { outcome: 'Old' } },
+  });
+  const lines: string[] = [];
+  loadEntries({
+    collection: 'case_studies',
+    entries: [{ slug: 'a', patch: true, data: {}, set: { outcome: 'New' } }],
+    emdashFn: stub.emdashFn,
+    withFile: stub.withFile,
+    imageValue: () => ({}),
+    dryRun: true,
+    log: (l: string) => void lines.push(l),
+  });
+  assert.deepEqual(lines, ['  a: would update']);
+  assert.ok(!stub.calls.some((c) => c[1] === 'update'), 'a dry run writes nothing');
+  assert.equal(contentSurprises(lines.map((l) => l.trim())).length, 1);
+});
+
+test('the committed case_studies.json loads: every rewrite rule is well formed', () => {
+  const entries = toEntries(
+    JSON.parse(readFileSync(join(process.cwd(), 'cms/content/case_studies.json'), 'utf8')),
+  );
+  assert.ok(
+    entries.every((e) => 'patch' in e && e.patch === true),
+    'every entry is a patch',
+  );
 });
 
 // ── every committed content file has a valid shape ──────────────────────────

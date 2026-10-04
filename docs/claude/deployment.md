@@ -14,7 +14,7 @@ Moved out of CLAUDE.md. Read when changing how the site deploys, adding or rotat
 
 Set in the Cloudflare dashboard → **Settings → Variables and Secrets** (the Build section, not the Runtime section: `PUBLIC_*` values are inlined into the bundle at build time, even though pages render per request):
 
-- `PUBLIC_WEB3FORMS_KEY` — contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action and shows an inline notice.
+- `PUBLIC_WEB3FORMS_KEY` — contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action: under `astro dev` it shows a developer note naming this variable; in any built copy (a branch or CI preview) it tells the visitor the form does not send there and gives the email address. Production must have it set in the BUILD variables, or the live form silently sends nothing.
 - `PUBLIC_CF_ANALYTICS_TOKEN` — Cloudflare Web Analytics token from dash.cloudflare.com → Analytics & Logs → Web Analytics. Without it the analytics beacon doesn't render.
 - `PUBLIC_GA_ID` — the GA4 web data stream Measurement ID (`G-...`) for property 532519109. Without it no GA4 script renders. The property went dark in 2026-06 because the Astro rebuild shipped without the tag; restored 2026-09-04.
 - `PUBLIC_COMING_SOON` — set to the literal string `true` to gate the entire site behind the coming-soon page (see below). Unset, or any other value, takes the site live.

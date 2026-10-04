@@ -1,26 +1,28 @@
 /* ============================================================================
    Nixon Creative Studio | Globals
    ============================================================================
-   Foundation, edit with care.
+   Foundation, edit with care. The design system behind this file is written
+   down in DESIGN.md at the repo root; read it before changing a token.
 
-   Single stylesheet imported by BaseLayout.astro. Loads Tailwind 4, the
-   two self-hosted webfonts, the brand tokens via @theme (which doubles
-   as utility class wiring), and base styles that survive Tailwind
-   preflight.
+   One art-directed theme since the 2026 redesign: a photographer's working
+   table. Warm fibre paper, the logo's deep ink, one china-marker red, and
+   "grounds" (window light on a limewash wall, the Ohio River's contours, an
+   ink board under a raking lamp) instead of flat washes.
 
-   The @theme block makes every token here available two ways at once:
-     - As a Tailwind utility class. --color-primary becomes bg-primary,
-       text-primary, border-primary; --font-display becomes font-display;
-       --spacing-m becomes p-m, gap-m, etc.
-     - As a CSS variable. var(--color-primary) still works inside any
-       inline style.
-
-   Order of contents below:
-     1. Tailwind core import
-     2. Webfont imports
-     3. @theme: brand tokens for utility wiring
-     4. Base styles (body, headings, motion respect, list resets)
-     5. Site-wide utility classes (.ncs-container, .card-link)
+   Single stylesheet imported by BaseLayout.astro. Order of contents:
+     1. Tailwind core import and scan exclusions
+     2. Webfonts (self-hosted, latin subset) and metric-matched fallbacks
+     3. @theme: type, spacing, layout, motion tokens (utility wiring)
+     4. Base styles (body, headings, links, focus, reduced motion)
+     5. Type roles (.type-display, .type-headline, .voice, .type-lede, ...)
+     6. Layout primitives (.ncs-container, .band, .rule)
+     7. Grounds (.ground-paper, .ground-paper-contours, .ground-window-light,
+        .ground-deep and the Band layers)
+     8. Motion vocabulary (reveal, drift, nudge, card link)
+     9. Legacy utilities still used by pages not yet redesigned
+    10. Toast, coming-soon gate, print
+    11. @theme inline: utility wiring and the shadcn token mapping
+    12. :root palette and semantic tokens, then the .on-ink inverse scope
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
@@ -39,72 +41,211 @@
 @source not '../../CLAUDE.md';
 @source not '../../README.md';
 @source not '../../PRODUCT.md';
+@source not '../../DESIGN.md';
+/* Code that never renders on a public page (2026-10-04 performance pass): the
+   unit tests (utils.test.ts names classes like text-red-500 as test data), the
+   Playwright specs, the Node scripts, and the admin help plugin (it injects its
+   own .sh-* stylesheet). Every class they name used to ship in each page's
+   inlined CSS. */
+@source not '../lib/*.test.ts';
+@source not '../../tests';
+@source not '../../scripts';
+@source not '../../plugins';
 
-/* ----------------------------------------------------------------------------
-   2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
-      Both default to font-display: swap from @fontsource.
-
-      Bebas is imported as the LATIN subset only (not the full 400.css, which
-      ships @font-face blocks for latin-ext, cyrillic, greek, etc.). The site
-      is English, so the extra subsets were dead weight in a render-blocking
-      stylesheet, and the latin woff2 is the exact file BaseLayout preloads.
-   ---------------------------------------------------------------------------- */
-@import '@fontsource/bebas-neue/latin-400.css';
-@import '@fontsource-variable/source-sans-3';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+/* One art-directed theme since the 2026 redesign: there is no dark mode and
+   nothing ever adds .dark to <html>. The variant is kept ONLY so the dark:
+   utilities that vendored shadcn primitives carry (src/components/ui/) stay
+   inert; without it Tailwind 4 would fall back to prefers-color-scheme and
+   switch them on for visitors whose OS is dark. Never write dark: in site code. */
 @custom-variant dark (&:is(.dark *));
 
 /* ----------------------------------------------------------------------------
-   3. Brand theme tokens.
-   Tailwind 4 turns @theme variables into utility classes. Add a token
-   here and the matching utility is available everywhere on the next
-   reload.
+   2. Webfonts. Three families, four files, all self-hosted woff2, latin subset
+   (from Fontsource; src/assets/fonts/). font-display: swap everywhere, and
+   every family has a metric-matched local fallback (size-adjust plus ascent /
+   descent overrides, computed from the real font tables against the system
+   fonts) so the swap does not move the layout.
+
+   Budget: the core files of Bebas Neue (9.6 KB) and Newsreader regular
+   (13.8 KB) are preloaded by BaseLayout on every page (23.4 KB, was 36.2 KB
+   before the core/ext split). The italic core (15.3 KB) and the semibold core
+   (14.8 KB) load only when a page uses them; a page whose first screen sets
+   the italic can preload it with <BaseLayout preloadFonts={['italic']}>.
+   ---------------------------------------------------------------------------- */
+/* Each face is split in two by unicode-range (scripts/brand/subset-fonts.py,
+   2026-10-04 performance pass): a "core" file with what English copy uses
+   (ASCII, curly quotes, dashes, ellipsis, (c), the middle dot, about 40%
+   smaller, and the one BaseLayout preloads) and an "ext" file with the rest of
+   the latin subset (accented letters, rarer marks), which the browser fetches
+   only when a page's text contains one of them. Keep the ranges in step with
+   CORE in that script. */
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('../assets/fonts/bebas-neue-latin-400-core.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('../assets/fonts/bebas-neue-latin-400-ext.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308, U+2002, U+200B, U+201A,
+    U+201E, U+2039-203A, U+2044, U+2215;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-400-core.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-400-ext.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+201A, U+201E,
+    U+2032-2033, U+2039-203A, U+2044, U+2215;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-400-italic-core.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-400-italic-ext.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+201A, U+201E,
+    U+2032-2033, U+2039-203A, U+2044, U+2215;
+}
+/* Semibold covers <strong> and <b> in body copy, so the browser never fakes a
+   bold serif. Weights 500 to 700 all resolve to these files. */
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-600-core.woff2') format('woff2');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+00B7, U+00D7, U+2013-2014, U+2018-2019,
+    U+201C-201D, U+2022, U+2026, U+20AC, U+2122, U+2212;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../assets/fonts/newsreader-latin-600-ext.woff2') format('woff2');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+00A1-00A8, U+00AA-00AD, U+00AF, U+00B1-00B6, U+00B8-00D6, U+00D8-00FF, U+0131, U+0152-0153,
+    U+02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+201A, U+201E,
+    U+2032-2033, U+2039-203A, U+2044, U+2215;
+}
+
+/* Fallbacks. Numbers measured from the font tables (DESIGN.md "Type"): Bebas
+   against Impact over a caps sample, Newsreader against Georgia over a body
+   sample. Impact and Georgia ship on Windows and macOS. */
+@font-face {
+  font-family: 'Bebas Fallback';
+  src: local('Impact');
+  size-adjust: 77.47%;
+  ascent-override: 116.17%;
+  descent-override: 38.72%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Newsreader Fallback';
+  src: local('Georgia');
+  font-style: normal;
+  font-weight: 400;
+  size-adjust: 95.74%;
+  ascent-override: 76.77%;
+  descent-override: 27.68%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Newsreader Fallback';
+  src: local('Georgia Italic'), local('Georgia-Italic');
+  font-style: italic;
+  font-weight: 400;
+  size-adjust: 87.45%;
+  ascent-override: 84.05%;
+  descent-override: 30.3%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Newsreader Fallback';
+  src: local('Georgia Bold'), local('Georgia-Bold');
+  font-style: normal;
+  font-weight: 500 700;
+  size-adjust: 86.15%;
+  ascent-override: 85.32%;
+  descent-override: 30.76%;
+  line-gap-override: 0%;
+}
+
+/* ----------------------------------------------------------------------------
+   3. Theme tokens (non-colour). Tailwind 4 turns @theme variables into
+   utilities: --font-display -> font-display, --text-h2 -> text-h2,
+   --spacing-l -> p-l / gap-l, --container-content -> max-w-content.
+   Colours live in :root (section 12) and are wired in @theme inline
+   (section 11), so a ground can re-scope them.
    ---------------------------------------------------------------------------- */
 @theme {
-  /* Brand palette. --color-* drives bg-*, text-*, border-*.
-     NOTE: The surface and text tokens below (bg, bg-soft, text, text-muted,
-     primary, heading) are re-aliased in the @theme inline block further
-     down so they switch with light/dark mode. The literals here are the
-     default light-mode values and the source-of-truth reference. */
-  --color-primary: #0a1628; /* Dark navy. Footer surface, headings (light mode). */
-  --color-accent: #3478bd; /* NCS blue. Buttons, links, primary CTAs.
-                                  Slightly darker than the original #3B82C4 so
-                                  white-on-accent text clears WCAG AA (4.67:1
-                                  vs the old 4.05:1). Same brand family, dialed
-                                  down a hair for the contrast budget. */
-  --color-secondary: #40aaed; /* Sky blue. Decorative + Footer-link rest color. */
-  --color-tertiary: #ffa334; /* Amber. Accent badges, small flourishes. Stays in dark mode. */
-
-  /* Heading color. New token so headings can flip independently in dark
-     mode without dragging the rest of the palette with them. */
-  --color-heading: #0a1628; /* Navy in light, near-white in dark. */
-
-  /* Text */
-  --color-text: #1a1a1a; /* Near-black body. */
-  /* Real muted value. This literal is re-aliased to --muted-foreground in the
-     @theme inline block below, which the :root / .dark switch sets to #5F6573
-     (light) and #9CA3AF (dark). Kept in sync here so the source-of-truth
-     reference is not misleading. */
-  --color-text-muted: #5f6573;
-
-  /* Surfaces */
-  --color-bg: #ffffff; /* Default page background. */
-  --color-bg-soft: #f4f7fa; /* Light blue-gray for alternating sections. */
-
-  /* Font families. --font-* drives font-display, font-body, font-mono. */
-  --font-display: 'Bebas Neue', system-ui, sans-serif;
-  --font-body: 'Source Sans 3 Variable', system-ui, sans-serif;
+  /* Families, by role (DESIGN.md "Type"):
+       display: Bebas Neue, the logo's face. Wordmark, headlines, numerals.
+       serif:   Newsreader. Body copy, ledes, and the italic second voice.
+       ui:      the system sans. Nav, buttons, labels, captions, form fields.
+                Zero bytes; the furniture should be legible, not expressive. */
+  --font-display: 'Bebas Neue', 'Bebas Fallback', Impact, 'Arial Narrow', sans-serif;
+  --font-serif: 'Newsreader', 'Newsreader Fallback', Georgia, 'Times New Roman', serif;
+  --font-body: 'Newsreader', 'Newsreader Fallback', Georgia, 'Times New Roman', serif;
+  --font-ui:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
-  /* Heading sizes (fluid clamp). --text-h1 etc. drive text-h1 utilities. */
+  /* Type scale. Fluid between a 360 px phone and a 1440 px desktop. Bebas is
+     condensed with a small cap height, so display sizes run about 20% larger
+     than a regular sans would need (d7a measured this). */
+  --text-display: clamp(3.25rem, 1.6rem + 7.2vw, 7.5rem);
+  --text-h1: clamp(2.75rem, 1.6rem + 4.8vw, 5.5rem);
+  --text-h2: clamp(2.25rem, 1.5rem + 3.2vw, 4rem);
+  --text-h3: clamp(1.6rem, 1.3rem + 1.4vw, 2.25rem);
+  --text-h4: clamp(1.3rem, 1.15rem + 0.7vw, 1.6rem);
+  --text-h5: clamp(1.15rem, 1.1rem + 0.25vw, 1.25rem);
   --text-h6: 1rem;
-  --text-h5: clamp(1.125rem, 1.5vw, 1.25rem);
-  --text-h4: clamp(1.25rem, 2vw, 1.5rem);
-  --text-h3: clamp(1.5rem, 2.5vw, 2rem);
-  --text-h2: clamp(2rem, 4vw, 3rem);
-  --text-h1: clamp(2.5rem, 6vw, 5rem);
+  --text-lede: clamp(1.25rem, 1.08rem + 0.75vw, 1.6rem);
+  --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --text-ui: 0.9375rem;
+  --text-caption: 0.875rem;
+  --text-numeral: clamp(2.75rem, 1.8rem + 4vw, 5rem);
 
   /* Fluid spacing scale. --spacing-* drives p-xs, gap-m, m-l, etc. */
   --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
@@ -113,54 +254,84 @@
   --spacing-l: clamp(2rem, 4vw, 3rem);
   --spacing-xl: clamp(3rem, 6vw, 5rem);
   --spacing-2xl: clamp(4rem, 8vw, 7rem);
+  --spacing-3xl: clamp(5rem, 11vw, 10rem);
 
-  /* Container width cap. --container-content drives a max-w-content utility. */
-  --container-content: 82.5rem; /* 1320px outer cap on the main column. */
+  /* Layout. --container-content is the outer cap on the main column;
+     --container-prose the reading measure. */
+  --container-content: 82.5rem;
+  --container-prose: 40rem;
+
+  /* Motion. One easing for everything that settles; a slow sway for grounds. */
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-sway: cubic-bezier(0.45, 0, 0.55, 1);
 }
 
 /* ----------------------------------------------------------------------------
    4. Base styles.
-   Tailwind preflight resets a lot, including removing default heading
-   sizes and stripping body font. The rules below put the brand defaults
-   back so even un-styled paragraphs and headings look right.
    ---------------------------------------------------------------------------- */
 @layer base {
+  :root {
+    /* Layout constants every component reads. --header-h is the sticky
+       header's height; a <Band underHeader> pulls itself up by it so its
+       ground runs under the transparent header. --gutter is the side margin. */
+    --header-h: 4.25rem;
+    --gutter: clamp(1rem, 4vw, 3.5rem);
+    --band-y: clamp(4.5rem, 9vw, 8.5rem);
+    --tap: 2.75rem; /* 44 px touch target */
+  }
+  @media (min-width: 64rem) {
+    :root {
+      --header-h: 5.5rem;
+    }
+  }
+
   html {
     scroll-behavior: smooth;
-    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    background-color: var(--background);
   }
 
   body {
     font-family: var(--font-body);
-    color: var(--color-text);
-    background-color: var(--color-bg);
-    line-height: 1.55;
+    font-size: var(--text-body);
+    font-optical-sizing: auto;
+    line-height: 1.6;
+    color: var(--foreground);
+    background-color: var(--background);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    @apply bg-background text-foreground;
   }
 
-  /* ---- Finishing details ---------------------------------------------------
-     Small craft touches: a brand-tinted text selection, a themed scrollbar, and
-     tabular figures so animated/changing numbers do not shift width. All flip
-     with the theme via the same tokens and stay legible in both modes. */
-  ::selection {
-    background-color: color-mix(in oklab, var(--color-accent) 28%, transparent);
-    color: var(--color-heading);
+  /* The furniture face: controls and labels never take the reading serif. */
+  button,
+  input,
+  textarea,
+  select,
+  label,
+  legend {
+    font-family: var(--font-ui);
+    color: inherit;
   }
-  .dark ::selection {
-    background-color: color-mix(in oklab, var(--color-secondary) 32%, transparent);
-    color: #ffffff;
+  /* Form inputs stay at 16px so iOS never zooms on focus. */
+  input,
+  textarea,
+  select {
+    font-size: max(1rem, 16px);
+  }
+
+  ::selection {
+    background-color: var(--marker);
+    color: var(--paper);
   }
 
   /* Firefox */
   html {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--color-accent) 50%, transparent) transparent;
+    scrollbar-color: color-mix(in oklab, var(--ink) 35%, transparent) transparent;
   }
-  /* WebKit / Blink. The thumb carries a bg-colored border so it reads as an
-     inset pill with breathing room; the border flips with the theme. */
+  /* WebKit / Blink. The thumb carries a paper border so it reads as an inset
+     pill with breathing room. */
   ::-webkit-scrollbar {
     width: 12px;
     height: 12px;
@@ -170,12 +341,12 @@
   }
   ::-webkit-scrollbar-thumb {
     border-radius: 9999px;
-    background-color: color-mix(in oklab, var(--color-accent) 45%, transparent);
-    border: 3px solid var(--color-bg);
+    background-color: color-mix(in oklab, var(--ink) 32%, transparent);
+    border: 3px solid var(--background);
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in oklab, var(--color-accent) 68%, transparent);
+    background-color: color-mix(in oklab, var(--ink) 55%, transparent);
   }
 
   /* Numbers that animate or change should not jiggle as digit widths vary. */
@@ -184,11 +355,91 @@
     font-feature-settings: 'tnum';
   }
 
+  /* Headings. Bebas Neue for h1 to h4, the reading serif below that. Colour is
+     the heading token, which an .on-ink ground re-scopes to paper. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    color: var(--heading);
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--text-h1);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+  }
+  h2 {
+    font-size: var(--text-h2);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+  }
+  h3 {
+    font-size: var(--text-h3);
+    line-height: 1;
+    letter-spacing: 0.012em;
+  }
+  h4 {
+    font-size: var(--text-h4);
+    line-height: 1.05;
+    letter-spacing: 0.015em;
+  }
+  h5,
+  h6 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  h5 {
+    font-size: var(--text-h5);
+  }
+  h6 {
+    font-size: var(--text-h6);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Links: inherit the text colour, with a china-marker underline. Components
+     that style their own links (nav, buttons, cards) override this. */
+  a {
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklab, var(--marker) 70%, transparent);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color 0.16s ease;
+  }
+  a:hover {
+    text-decoration-color: var(--marker);
+  }
+
+  /* Focus: one ring everywhere. 3px china-marker outline on paper; the
+     .on-ink scope swaps --ring to the vermilion that reads on ink. shadcn
+     primitives keep their own ring utilities on top. */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Lists used as nav menus or layout groups shouldn't carry bullets by
+     default. When you want bullets, add list-disc. */
+  ul,
+  ol {
+    list-style: none;
+    padding-left: 0;
+  }
+
   /* Copy-link controls that enhance.ts appends to long-form headings
      (case studies, journal). Hidden until the heading is hovered or the
-     control is focused; faintly visible on touch (no hover). Rules are scoped
-     under [data-prose] so they beat the prose's generic [&_a] link styling.
-     The box is 1.5rem (a 24px AA target) around a 1rem icon. */
+     control is focused; faintly visible on touch (no hover). The box is
+     1.5rem (a 24px AA target) around a 1rem icon. */
   [data-prose] :is(h2, h3) {
     position: relative;
   }
@@ -200,7 +451,7 @@
     height: 1.5rem;
     margin-left: 0.25em;
     vertical-align: middle;
-    color: var(--color-muted-foreground);
+    color: var(--muted-foreground);
     text-decoration: none;
     opacity: 0;
     transition:
@@ -216,15 +467,8 @@
     opacity: 1;
   }
   [data-prose] .heading-anchor:hover {
-    color: var(--color-link);
+    color: var(--link);
   }
-  [data-prose] .heading-anchor:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 3px;
-    border-radius: 6px;
-    opacity: 1;
-  }
-  /* Touch devices have no hover, so keep the control findable. */
   @media (hover: none) {
     [data-prose] .heading-anchor {
       opacity: 0.5;
@@ -232,8 +476,8 @@
   }
   /* Touch devices: the box grows to 44px (the 1rem icon stays centred and, with
      the matching negative margins, sits where it did and adds no line height).
-     A real box, not an ::after hit area: ::after is the "Copied" bubble below,
-     and positioning the anchor would move that bubble. */
+     A real box, not an ::after hit area: ::after is the "Copied" bubble below.
+     Carried over from main (starter PORTS.md cards 82 and 83). */
   @media (pointer: coarse) {
     [data-prose] .heading-anchor {
       width: 2.75rem;
@@ -243,8 +487,6 @@
       margin-right: -0.625rem;
     }
   }
-  /* "Copied" confirmation bubble above the control. Sizes are absolute so they
-     stay constant regardless of the heading's font size. */
   [data-prose] .heading-anchor[data-copied]::after {
     content: 'Copied';
     position: absolute;
@@ -252,80 +494,14 @@
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
-    background-color: var(--color-primary);
-    color: #ffffff;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
+    background-color: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
     line-height: 1;
     padding: 0.3rem 0.45rem;
-    border-radius: 0.3rem;
+    border-radius: 2px;
     pointer-events: none;
-  }
-
-  /* All headings inherit the display face and brand color by default.
-     --color-heading is aliased to the shadcn --heading token (see @theme
-     inline below), so this flips automatically between navy in light
-     mode and near-white in dark mode. */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-display);
-    font-weight: 400;
-    color: var(--color-heading);
-    text-wrap: balance;
-  }
-
-  h1 {
-    font-size: var(--text-h1);
-    line-height: 0.95;
-    letter-spacing: -0.01em;
-  }
-
-  h2 {
-    font-size: var(--text-h2);
-    line-height: 1;
-    letter-spacing: -0.005em;
-  }
-
-  h3 {
-    font-size: var(--text-h3);
-    line-height: 1.05;
-  }
-  h4 {
-    font-size: var(--text-h4);
-    line-height: 1.1;
-  }
-  h5 {
-    font-size: var(--text-h5);
-    line-height: 1.1;
-  }
-  h6 {
-    font-size: var(--text-h6);
-    line-height: 1.1;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  /* Lists used as nav menus or layout groups shouldn't carry bullets by
-     default. When you want bullets, add list-disc or restore via
-     component-level utility classes. */
-  ul,
-  ol {
-    list-style: none;
-    padding-left: 0;
-  }
-
-  /* Form elements inherit body font (preflight does this; explicit for
-     discoverability). */
-  button,
-  input,
-  textarea,
-  select {
-    font: inherit;
-    color: inherit;
   }
 
   /* Respect prefers-reduced-motion.
@@ -334,10 +510,11 @@
      hands EVERY element a transition, and WebKit never finishes a
      10-microsecond one: they pile up at progress 0 holding the OLD values.
      0s creates no transition at all; the delay matters because a staggered
-     delay alone creates one. `transitionend` no longer fires under reduce
-     (nothing in src/ listens for it). Animations keep 0.01ms so
-     `animationend` still fires (Radix/Starwind wait on it).
-     tests/reduced-motion.spec.ts holds this on the webkit-iphone project. */
+     delay alone creates one. Animations keep 0.01ms so `animationend` still
+     fires (Radix/Starwind wait on it). tests/reduced-motion.spec.ts holds
+     this on the webkit-iphone project. The grounds and the scroll-driven
+     drift are written inside no-preference queries, so under reduce they
+     simply show their designed still. */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -357,505 +534,522 @@
 }
 
 /* ----------------------------------------------------------------------------
-   5. Site-wide utility classes.
-   Two patterns that repeat across many components, well past the four-uses
-   threshold from CLAUDE.md, so they're worth keeping as named classes:
-     - .ncs-container: content-width cap with side padding.
-     - .card-link: accent arrow link that slides on hover.
+   5. Type roles. Use these on new work instead of re-deriving sizes; each one
+   is a role from DESIGN.md, not a size. Plain classes, so a page's markup says
+   what a line IS.
    ---------------------------------------------------------------------------- */
 
-.ncs-container {
-  max-width: var(--container-content);
-  margin-inline: auto;
-  /* Side padding holds a 1.5rem minimum, but grows to clear a display cutout
-     when the page runs edge-to-edge under viewport-fit=cover (landscape notch,
-     rounded corners). env() resolves to 0 on every non-notched device, so this
-     is identical to a flat 1.5rem everywhere except the phones that need it. */
-  padding-inline: max(1.5rem, env(safe-area-inset-left)) max(1.5rem, env(safe-area-inset-right));
-  width: 100%;
-}
-
-.card-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  /* Uses --color-link (not --color-accent) so accent-toned body text
-     hits WCAG AA on white and bg-bg-soft. --link is darker than --accent
-     in light mode; in dark mode the two converge. */
-  color: var(--color-link);
-  font-family: var(--font-body);
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 150ms ease;
-}
-
-.card-link::after {
-  content: '→';
-  display: inline-block;
-  transition: transform 150ms ease;
-}
-
-/* Hover cue is the arrow sliding right. Color stays at --link because the
-   only AA-compliant brighter step would defeat the purpose. */
-.card-link:hover::after,
-.card-link:focus-visible::after {
-  transform: translateX(0.25rem);
-}
-
-/* Touch devices: a standalone card-link is a real 44px-tall row (starter
-   PORTS.md card 82). It is already an inline-flex with align-items:center, so
-   the text stays centred in the taller box. Only <a>: the same class is also a
-   plain <span> inside a card that is itself the link. A real height, not a
-   hit-area ::after, because ::after here is the arrow. */
-@media (pointer: coarse) {
-  a.card-link {
-    min-height: 2.75rem;
+/* Sections 5 to 9 sit in the components layer, so a Tailwind utility on the
+   same element (px-0, py-2xl, text-left) still wins over these classes. */
+@layer components {
+  /* The one big line per page (home hero, a case study title). Bebas caps. */
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-display);
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    text-wrap: balance;
   }
-}
+  /* Section headlines: Bebas at h2 size, whatever the heading level. */
+  .type-headline {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h2);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    text-wrap: balance;
+  }
+  /* The second voice: the italic turn at the end of a Bebas headline
+   ("I MAKE WEBSITES THAT / pull their weight."). Serif italic, sentence case,
+   china-marker red, a little smaller than the caps. Put it on an <em> or
+   <span> INSIDE the heading. */
+  .voice {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.86em;
+    line-height: 0.95;
+    letter-spacing: -0.012em;
+    text-transform: none;
+    color: var(--marker);
+  }
+  /* Standfirst under a headline. Reading serif, larger. */
+  .type-lede {
+    font-family: var(--font-serif);
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--foreground);
+    max-width: 38ch;
+    text-wrap: pretty;
+  }
+  .type-body {
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    max-width: var(--container-prose);
+  }
+  /* Captions under frames and the facts under a figure. UI sans, muted. */
+  .type-caption {
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    line-height: 1.4;
+    color: var(--muted-foreground);
+  }
+  /* Prices, durations, years: Bebas lining tabular figures. */
+  .type-numeral {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-numeral);
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--heading);
+  }
+  /* Furniture text: nav, buttons, small labels. Sentence case, never tracked caps. */
+  .type-ui {
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    line-height: 1.3;
+  }
 
-/* ----------------------------------------------------------------------------
-   [data-hidden] utility.
-   Used by client-side filters (e.g. WorkFilter) to toggle visibility of
-   server-rendered elements without re-rendering. The presence of the
-   attribute is the on/off switch; the value doesn't matter.
-   ---------------------------------------------------------------------- */
-[data-hidden] {
-  display: none !important;
-}
+  /* ----------------------------------------------------------------------------
+   6. Layout primitives.
+   ---------------------------------------------------------------------------- */
 
-/* ----------------------------------------------------------------------------
-   6. Motion + effects system  [revamp]
+  /* Content-width cap with side padding. The padding grows to clear a display
+   cutout when the page runs edge-to-edge under viewport-fit=cover; env()
+   resolves to 0 on every non-notched device. */
+  .ncs-container {
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding-inline: max(var(--gutter), env(safe-area-inset-left))
+      max(var(--gutter), env(safe-area-inset-right));
+    width: 100%;
+  }
+
+  /* A band is one full-bleed horizontal section with one ground and one job.
+   Vertical rhythm is --band-y; .band--tight halves it. The Band component
+   (src/components/Band.astro) renders this; the class works on its own too. */
+  .band {
+    position: relative;
+    padding-block: var(--band-y);
+  }
+  .band--tight {
+    padding-block: calc(var(--band-y) / 2);
+  }
+  .band--flush {
+    padding-block: 0;
+  }
+  /* A band whose ground runs under the transparent sticky header: it pulls up by
+   the header's height and adds it back as padding. */
+  .band--under-header {
+    margin-top: calc((var(--header-h) + env(safe-area-inset-top)) * -1);
+    padding-top: calc(var(--header-h) + env(safe-area-inset-top) + var(--band-y) * 0.5);
+  }
+
+  /* A hairline rule in the current ink. */
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ----------------------------------------------------------------------------
+   7. Grounds.
    ----------------------------------------------------------------------------
-   The site's animation layer: scroll-reveal, animated backgrounds, hover
-   micro-interactions, and the keyframes shared across components.
+   The page is never one flat wash: each band sits on a ground, and the ground
+   changes deliberately between bands, never inside one. Four grounds:
 
-   Accessibility: every looping or scroll-triggered animation here is gated
-   behind `prefers-reduced-motion: no-preference`. The global reduced-motion
-   block in section 4 already neutralizes transitions/animations for everyone
-   who opts out, and the reveal init script in BaseLayout force-shows every
-   [data-reveal] element immediately under reduced motion, so no content ever
-   depends on motion to become visible.
+     .ground-paper           warm fibre paper, flat (the default page)
+     .ground-paper-contours  the Ohio River's contours on survey paper
+     .ground-window-light    limewash wall, late sun through a sash window
+     .ground-deep            ink board; a raking lamp crosses it (Band only).
+                             Always paired with .on-ink.
+
+   How they load: the class paints the ground COLOUR immediately (a token), so
+   nothing waits on an image. The texture images are attached only once
+   <html> carries .grounds-ready, which src/scripts/grounds.ts adds after the
+   window load event (plus an idle beat), so ground assets never compete with
+   the LCP request. Without JavaScript the grounds stay flat colour.
+
+   How they move: only <Band> renders the moving layers (.g-*), and only
+   transform and opacity animate. grounds.ts adds .is-off to a Band that is
+   off screen, which pauses its animations. Under prefers-reduced-motion
+   nothing runs and each ground shows a designed still. No ground layer
+   starts at opacity 0.
+
+   Contrast: scripts/brand/build-grounds.mjs checks every text token against
+   the worst pixel of each ground (the darkest wall in shade, a fully covered
+   contour line, the brightest raking-lit fibre) and fails if any pair drops
+   under AA. Run it after any palette edit.
    ---------------------------------------------------------------------------- */
 
-/* ---- Scroll reveal --------------------------------------------------------
-   Tag any element with data-reveal. The global IntersectionObserver in
-   BaseLayout adds .is-visible the first time it scrolls into view. Variants
-   change the entrance vector; --reveal-delay (inline style) staggers
-   siblings, e.g. style="--reveal-delay: 120ms". */
-/* The hidden-until-revealed state is scoped to .js (added to <html> by the
-   anti-FOUC script in BaseLayout before first paint). Without JavaScript the
-   class is absent, so [data-reveal] elements keep their default opacity:1 and
-   are fully visible: nothing depends on JS to be seen. With JS, the observer
-   in BaseLayout adds .is-visible as each element scrolls into view. */
-@media (prefers-reduced-motion: no-preference) {
-  .js [data-reveal] {
-    opacity: 0;
-    transform: translateY(1.75rem);
+  .ground {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    overflow: clip;
+  }
+  .ground-paper {
+    background-color: var(--paper);
+  }
+  .ground-paper-contours {
+    background-color: var(--ground-survey);
+    background-position: center;
+    background-size: cover;
+  }
+  .ground-window-light {
+    background-color: var(--ground-wall);
+    background-size: 384px 384px;
+  }
+  .ground-deep {
+    background-color: var(--ink);
+    background-size: 256px 256px;
+  }
+  .grounds-ready .ground-paper-contours:not(.has-layers) {
+    background-image: url('../assets/grounds/contours.svg');
+  }
+  .grounds-ready .ground-window-light {
+    background-image: url('../assets/grounds/wall.webp');
+  }
+  .grounds-ready .ground-deep {
+    background-image: url('../assets/grounds/ink-flat.webp');
+  }
+
+  /* Layers (Band only). The stack sits behind the band's content. */
+  .ground-layers {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .ground-layers > * {
+    position: absolute;
+  }
+
+  /* window-light: the sun patch. Desktop: right of centre, high on the wall, so
+   the light lands beside the headline. Phone: scaled up so one pane holds the
+   headline and the mullions fall outside it. Slides as the sun moves (16 s)
+   and dims as a cloud passes (13 s). */
+  .g-sunw {
+    top: -6%;
+    right: -30vw;
+    width: min(112vw, 1640px);
+    aspect-ratio: 760 / 520;
+  }
+  .g-sun {
+    position: absolute;
+    inset: 0;
+    background: center / 100% 100% no-repeat;
+  }
+  .grounds-ready .g-sun {
+    background-image: url('../assets/grounds/window.webp');
+  }
+  .g-falloff {
+    inset: 0;
+    background: linear-gradient(180deg, transparent 60%, rgb(80 60 35 / 0.07));
+  }
+  @media (max-width: 43.75rem) {
+    .g-sunw {
+      width: 330vw;
+      right: -150vw;
+      top: -4%;
+    }
+  }
+
+  /* paper-contours: the sheet drifts a few pixels, as under a loupe (16 s). */
+  .g-contours {
+    inset: -24px;
+    background: center / cover no-repeat;
+  }
+  .grounds-ready .g-contours {
+    background-image: url('../assets/grounds/contours.svg');
+  }
+  @media (max-width: 43.75rem) {
+    .g-contours {
+      background-position: 46% 50%;
+    }
+  }
+
+  /* deep: a raking lamp crosses the ink board every 14 s. A window with soft
+   edges travels left to right while its inner layer counter-translates, so the
+   lit fibres stay registered to the flat ones and only the lit region moves.
+   It rests off screen for the last 22% of the loop. */
+  .g-lamp {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 64vw;
+    overflow: hidden;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 38%, #000 62%, transparent);
+    mask: linear-gradient(90deg, transparent, #000 38%, #000 62%, transparent);
+    transform: translateX(18vw);
+  }
+  .g-lamp > i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    background-size: 256px 256px;
+    transform: translateX(-18vw);
+  }
+  .grounds-ready .g-lamp > i {
+    background-image: url('../assets/grounds/ink-rake.webp');
+  }
+  .g-vignette {
+    inset: 0;
+    background: radial-gradient(ellipse 120% 90% at 50% 35%, transparent 55%, rgb(0 0 0 / 0.3));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .g-sunw {
+      animation: ground-sun-move 16s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    .g-sun {
+      animation: ground-sun-cloud 13s ease-in-out infinite alternate;
+    }
+    .g-contours {
+      animation: ground-contours 16s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    .g-lamp {
+      animation: ground-lamp 14s var(--ease-sway) infinite;
+      will-change: transform;
+    }
+    .g-lamp > i {
+      animation: ground-lamp-inner 14s var(--ease-sway) infinite;
+      will-change: transform;
+    }
+    /* Off screen (grounds.ts): hold still. */
+    .is-off .ground-layers *,
+    .is-off .ground-layers {
+      animation-play-state: paused;
+    }
+  }
+  @keyframes ground-sun-move {
+    from {
+      transform: translate(1.2vw, -0.8vh);
+    }
+    to {
+      transform: translate(-1.6vw, 1.2vh);
+    }
+  }
+  @keyframes ground-sun-cloud {
+    0%,
+    35% {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.72;
+    }
+  }
+  @keyframes ground-contours {
+    from {
+      transform: translate(-14px, -8px);
+    }
+    to {
+      transform: translate(14px, 8px);
+    }
+  }
+  @keyframes ground-lamp {
+    0% {
+      transform: translateX(-64vw);
+    }
+    78%,
+    to {
+      transform: translateX(100vw);
+    }
+  }
+  @keyframes ground-lamp-inner {
+    0% {
+      transform: translateX(64vw);
+    }
+    78%,
+    to {
+      transform: translateX(-100vw);
+    }
+  }
+
+  /* ----------------------------------------------------------------------------
+   8. Motion vocabulary. Small on purpose: one entrance (reveal, below the
+   fold only), one scroll-driven drift, one hover nudge, plus the grounds.
+   Everything is reduced-motion safe and nothing in the first viewport starts
+   at opacity 0 (never-break rule 2).
+   ---------------------------------------------------------------------------- */
+
+  /* ---- Reveal ----------------------------------------------------------------
+   Tag an element below the fold with data-reveal (or data-reveal="left" /
+   "right" / "fade"). The observer in BaseLayout adds .is-visible as it enters.
+   Stagger siblings with style="--reveal-delay: 90ms". The hidden state is
+   scoped to .js, so without JavaScript everything is visible. Use it on
+   figures, frames and numerals; never on headings, prose or CTAs. */
+  @media (prefers-reduced-motion: no-preference) {
+    .js [data-reveal] {
+      opacity: 0;
+      transform: translateY(1.25rem);
+      transition:
+        opacity 0.7s var(--ease-settle),
+        transform 0.7s var(--ease-settle);
+      transition-delay: var(--reveal-delay, 0ms);
+    }
+    .js [data-reveal='fade'] {
+      transform: none;
+    }
+    .js [data-reveal='left'] {
+      transform: translateX(-1.5rem);
+    }
+    .js [data-reveal='right'] {
+      transform: translateX(1.5rem);
+    }
+    .js [data-reveal].is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* First screen: no reveal gate. Chrome does not count a zero-opacity
+     element as a contentful paint, so gating the top of the page on a script
+     pushed LCP past budget (/contact h1 painted 1.65s after first paint,
+     2026-09-06). Everything in the first block of <main> renders immediately. */
+    .js main > :first-child [data-reveal],
+    .js main > [data-reveal]:first-child {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ---- Drift (scroll-driven) ---------------------------------------------------
+   .motion-drift moves an element a little against the scroll as it crosses the
+   viewport, like a print lifting off the table. Compositor only (translate).
+   Browsers without scroll-driven animations (Firefox today) leave it still,
+   which is the designed fallback. --drift sets the distance (default 1.5rem). */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .motion-drift {
+        animation: motion-drift linear both;
+        animation-timeline: view();
+        animation-range: cover;
+      }
+    }
+  }
+  @keyframes motion-drift {
+    from {
+      translate: 0 var(--drift, 1.5rem);
+    }
+    to {
+      translate: 0 calc(var(--drift, 1.5rem) * -1);
+    }
+  }
+
+  /* ---- Nudge -------------------------------------------------------------------
+   The one hover cue for links and buttons with an arrow: the arrow moves 3px.
+   Put .nudge on the control and data-nudge on the arrow element. */
+  .nudge [data-nudge] {
+    display: inline-block;
+    transition: transform 0.3s var(--ease-settle);
+  }
+  .nudge:hover [data-nudge],
+  .nudge:focus-visible [data-nudge] {
+    transform: translateX(3px);
+  }
+
+  /* ---- Card link -------------------------------------------------------------
+   A text link with a trailing arrow that nudges on hover. --link (brick)
+   clears AA on every paper ground; inside .on-ink it is vermilion. */
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem; /* 44px touch target */
+    gap: var(--spacing-xs);
+    color: var(--link);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+  .card-link::after {
+    content: '→';
+    display: inline-block;
+    transition: transform 0.3s var(--ease-settle);
+  }
+  .card-link:hover::after,
+  .card-link:focus-visible::after {
+    transform: translateX(3px);
+  }
+
+  /* ---- Tap target -------------------------------------------------------------
+   The studio's 44px bar on touch. Add .tap-target to a link or button whose
+   box is shorter or narrower than 44px (a headline link, a short word in a
+   row of links). On a fine pointer the element keeps its own size, so a
+   desktop layout's density is untouched. A block element stays a block; an
+   inline one becomes inline-flex so min-height applies. Coarse pointer, or
+   any screen up to 64rem, where the layout is the touch one. */
+  @media (pointer: coarse), (max-width: 64rem) {
+    .tap-target {
+      min-height: var(--tap);
+      min-width: var(--tap);
+    }
+    .tap-target:where(a, button, span) {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+
+  /* [data-hidden]: client-side filters (WorkFilter) toggle visibility of
+   server-rendered elements with this attribute. */
+  [data-hidden] {
+    display: none !important;
+  }
+
+  /* ----------------------------------------------------------------------------
+   9. Legacy utilities. Still used by pages the redesign has not rebuilt yet
+   (services, work, about, contact, journal, photography). Retinted to the new
+   palette so those pages read acceptably; do NOT use them in new work, and
+   delete each one when the last page drops it (grep first).
+   ---------------------------------------------------------------------------- */
+
+  /* Elevated card: raised paper, a hairline and a soft printed shadow. */
+  .surface-card {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
     transition:
-      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      filter 0.7s ease;
-    transition-delay: var(--reveal-delay, 0ms);
+      box-shadow 0.3s ease,
+      transform 0.3s var(--ease-settle);
   }
-  .js [data-reveal='fade'] {
-    transform: none;
+  .surface-card:hover,
+  .surface-card:focus-within {
+    box-shadow: var(--shadow-card-hover);
   }
-  .js [data-reveal='scale'] {
-    transform: scale(0.93);
+  .hover-lift {
+    transition:
+      transform 0.3s var(--ease-settle),
+      box-shadow 0.3s ease;
   }
-  .js [data-reveal='left'] {
-    transform: translateX(-2rem);
+  .hover-lift:hover,
+  .hover-lift:focus-visible {
+    transform: translateY(-3px);
   }
-  .js [data-reveal='right'] {
-    transform: translateX(2rem);
+  /* Was a cursor-following glow; now it only positions the card (enhance.ts
+   still sets --mx/--my, harmlessly). The glow was decoration, not information. */
+  .spotlight-card {
+    position: relative;
   }
-  .js [data-reveal='blur'] {
-    filter: blur(14px);
-  }
-  .js [data-reveal].is-visible {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-
-  /* First screen: no reveal gate.
-     A [data-reveal] element starts at opacity 0 under .js and only clears once
-     the observer above has run and its 0.7s transition has played. Chrome does
-     not count a zero-opacity element as a contentful paint, so gating the top
-     of the page on that script is what pushed Largest Contentful Paint out past
-     the 4.5s budget: on /contact the h1 painted 1.65s after first paint and
-     Lighthouse read LCP at 5.8s, and /404 failed the same way (staging,
-     2026-09-06). Everything in the first block of <main> therefore renders
-     immediately; only content further down still reveals on scroll. The
-     observer still tags them .is-visible, which changes nothing. */
-  .js main > :first-child [data-reveal],
-  .js main > [data-reveal]:first-child {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
-
-/* ---- Heading emphasis -----------------------------------------------------
-   Gradient text (background-clip:text over a gradient) was removed site-wide.
-   It is an impeccable absolute ban: decorative, never meaningful, and a top
-   AI-portfolio tell. Heading emphasis is now carried by a solid brand token
-   plus weight/size: amber (text-tertiary) on dark/navy heroes, NCS blue
-   (text-link) on light surfaces. If you ever want a colored accent phrase,
-   wrap it in a solid token span, never a clipped gradient. */
-
-/* ---- Aurora / mesh background ---------------------------------------------
-   Drifting layered radial gradients for dark surfaces (hero, CTA bands). The
-   host element needs position + isolate; the gradient paints in ::before at
-   z-0, so foreground content should sit at z-10. Pair with .grain. */
-.bg-aurora::before {
-  content: '';
-  position: absolute;
-  inset: -25%;
-  z-index: 0;
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 60%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 50%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 30%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .bg-aurora::before {
-    animation: aurora-drift 20s ease-in-out infinite alternate;
-  }
-}
-
-/* ---- Film grain -----------------------------------------------------------
-   Subtle fractal-noise overlay via an inline SVG. Host needs position;
-   sits above the aurora (z-1) but below content (z-10). */
-.grain::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.32;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* ---- Theme-aware band -----------------------------------------------------
-   A closing/process band that reads LIGHT in light mode and navy in dark mode,
-   each with its own decorative glow. Lets light mode stay genuinely light while
-   dark mode keeps the navy aurora. Host needs nothing extra; the decoration
-   lives in ::before at z-(-1) so content sits naturally above it. Use
-   theme-aware text tokens on top (text-heading, text-text-muted, text-link),
-   not text-primary-foreground. Used by CtaBanner, ProcessBand, the Hero (under
-   its light-tuned WebGL flow) and the Footer, so light mode reads bright and
-   airy end to end while dark mode stays immersive navy. */
-.band-themed {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background-color: var(--color-bg-soft);
-}
-.dark .band-themed {
-  background-color: var(--color-primary);
-}
-.band-themed::before {
-  content: '';
-  position: absolute;
-  inset: -25%;
-  z-index: -1;
-  pointer-events: none;
-  /* Light mode: a confident accent/sky/amber glow over the light surface.
-     Raised from the original 10-12% so the band actually reads as a designed
-     surface in light mode instead of flat bg-soft (the third amber stop adds
-     warmth without tipping past AA on the text that sits over it). */
-  background:
-    radial-gradient(
-      46% 56% at 18% 14%,
-      color-mix(in oklab, var(--color-accent) 22%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 84% 24%,
-      color-mix(in oklab, var(--color-secondary) 16%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      50% 54% at 64% 92%,
-      color-mix(in oklab, var(--color-tertiary) 10%, transparent),
-      transparent 72%
-    );
-}
-.dark .band-themed::before {
-  /* Dark mode: the full navy aurora. */
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 55%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 45%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 28%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .band-themed::before {
-    animation: aurora-drift 22s ease-in-out infinite alternate;
-  }
-}
-
-/* ---- Hover micro-interactions --------------------------------------------- */
-.hover-lift {
-  transition:
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.3s ease;
-}
-.hover-lift:hover,
-.hover-lift:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--color-primary) 55%, transparent);
-}
-
-/* ---- Elevated card surface -------------------------------------------------
-   Add .surface-card to a card so it reads as lifted in BOTH themes: a tinted
-   card surface, a soft layered shadow, a 1px top highlight, and a border. This
-   is the fix for "light mode cards dissolve into the page" — light mode has no
-   color-step for elevation, so the shadow + highlight do the work the dark-mode
-   navy-on-near-black step does for free. Compose with data-spotlight for the
-   cursor glow and .hover-lift for the rise. */
-.surface-card {
-  background-color: var(--card);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-card), var(--card-highlight);
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.surface-card:hover,
-.surface-card:focus-within {
-  box-shadow: var(--shadow-card-hover), var(--card-highlight);
-}
-
-/* ---- Quiet texture / atmosphere washes (static, light + dark) --------------
-   .bg-dotgrid lays a faint dot grid that fades out toward the content via a
-   radial mask, so a section gains texture instead of reading as blank paper.
-   .bg-mesh-soft drops a low-opacity brand glow behind a light section, the
-   light-mode counterpart to the dark aurora. Both are decorative (z-index:-1
-   inside an isolated stacking context), carry no text, and are fully static so
-   there is nothing to gate for reduced motion. Host content sits naturally on
-   top; no z-10 needed because the decoration is below the local stack. */
-.bg-dotgrid {
-  position: relative;
-  isolation: isolate;
-}
-.bg-dotgrid::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(
-    color-mix(in oklab, var(--color-heading) 9%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-  mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-  opacity: 0.55;
-}
-.bg-mesh-soft {
-  position: relative;
-  isolation: isolate;
-}
-.bg-mesh-soft::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      42% 52% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 7%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      40% 48% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 6%, transparent),
-      transparent 70%
-    );
-}
-.dark .bg-mesh-soft::before {
-  background:
-    radial-gradient(
-      44% 54% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 12%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 10%, transparent),
-      transparent 72%
-    );
-}
-
-/* Shine sweep: add .shine to a position:relative, overflow:hidden element
-   (e.g. a button) and a light band sweeps across it on hover. */
-.shine {
-  position: relative;
-  overflow: hidden;
-}
-.shine::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40%;
-  height: 100%;
-  transform: translateX(-150%) skewX(-18deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .shine:hover::after,
-  .shine:focus-visible::after {
-    animation: shine-sweep 0.85s ease;
-  }
-}
-
-/* Cursor-following spotlight. Add .spotlight-card to a card; it sets its own
-   position:relative so the glow's ::before is always positioned against the
-   card (without it, a card that forgot `relative` anchors the glow to the
-   nearest positioned ancestor, which floats it off outside the card). The
-   enhancement script sets --mx/--my on pointer move so a soft brand glow tracks
-   the cursor. The glow sits above the surface but is pointer-transparent and
-   low-alpha so content stays legible. Give inner content `relative z-10` if a
-   card's text ever needs to sit above the glow explicitly. */
-.spotlight-card {
-  position: relative;
-}
-.spotlight-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-  background: radial-gradient(
-    16rem 16rem at var(--mx, 50%) var(--my, 50%),
-    color-mix(in oklab, var(--color-accent) 18%, transparent),
-    transparent 60%
-  );
-}
-.spotlight-card:hover::before,
-.spotlight-card:focus-within::before {
-  opacity: 1;
-}
-
-/* Animated underline link. Grows from the left on hover/focus. */
-.link-underline {
-  position: relative;
-  text-decoration: none;
-}
-.link-underline::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  height: 2px;
-  width: 100%;
-  transform: scaleX(0);
-  transform-origin: left;
-  background: currentColor;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.link-underline:hover::after,
-.link-underline:focus-visible::after {
-  transform: scaleX(1);
-}
-
-/* Soft float loop for decorative accents. */
-@media (prefers-reduced-motion: no-preference) {
-  .float-slow {
-    animation: float-slow 7s ease-in-out infinite;
-  }
-}
-
-/* ---- Shared keyframes ----------------------------------------------------- */
-@keyframes aurora-drift {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-  100% {
-    transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14);
-  }
-}
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-@keyframes shine-sweep {
-  to {
-    transform: translateX(320%) skewX(-18deg);
-  }
-}
-@keyframes scroll-cue {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0.5rem);
-    opacity: 0.15;
-  }
-}
-@keyframes pop-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  /* (.link-underline was deleted in the 2026-10-04 performance pass: no page
+     used it. .surface-card, .hover-lift, .spotlight-card and [data-hidden] are
+     only used by the old /work index; delete them when its rebuild lands.) */
 }
 
 /* ----------------------------------------------------------------------------
-   Toast.
-   A single transient status message, used by the mailto graceful fallback
-   (src/scripts/mailto-fallback.ts) to confirm "no mail app opened, address
-   copied" so an email click is never a silent dead-end. Navy in both themes
-   (matching the hero/footer anchors), bottom-centered and clear of the home
-   indicator. The element carries role=status + aria-live so assistive tech
-   announces it; the show/hide transition is neutralized by the global
-   reduced-motion rule, so it simply appears and disappears for those users.
+   10. Toast, coming-soon gate, print.
    ---------------------------------------------------------------------------- */
+
+/* Toast. A single transient status message, used by the mailto graceful
+   fallback (src/scripts/mailto-fallback.ts). Ink, bottom-centred, clear of the
+   home indicator. role=status + aria-live on the element. */
 .ncs-toast {
   position: fixed;
   left: 50%;
@@ -863,46 +1057,30 @@
   z-index: 60; /* above the sticky header (z-50) and back-to-top (z-40) */
   max-width: min(92vw, 32rem);
   padding: 0.75rem 1rem;
-  border-radius: 0.6rem;
-  background-color: var(--color-primary);
-  color: #ffffff;
-  font-family: var(--font-body);
+  border-radius: 2px;
+  background-color: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
   font-size: 0.95rem;
   line-height: 1.45;
-  box-shadow: 0 18px 44px -20px rgba(10, 22, 40, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: var(--shadow-print);
   opacity: 0;
   transform: translate(-50%, 0.75rem);
   pointer-events: none;
   transition:
     opacity 0.25s ease,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.3s var(--ease-settle);
 }
 .ncs-toast.is-visible {
   opacity: 1;
   transform: translate(-50%, 0);
-  /* Selectable once shown, so a visitor with no clipboard access can still
-     grab the address by hand. */
   pointer-events: auto;
 }
 
-/* ----------------------------------------------------------------------------
-   Coming-soon gate.
-   ----------------------------------------------------------------------------
-   The site ships with both the real content (Header / Main / Footer) and
-   the .ncs-overlay (ComingSoon) when PUBLIC_COMING_SOON=true at build
-   time. The inline gate script in BaseLayout's <head> decides which to
-   show by toggling html.ncs-gated synchronously before first paint:
-
-     - bypassed (matching localStorage / URL token): no class, overlay
-       hidden, real site visible.
-     - not bypassed: html.ncs-gated, overlay covers the viewport, real
-       content stripped from layout flow.
-
-   This is a soft gate, not security: the real HTML is in the source
-   either way. See BaseLayout's comment and the Coming Soon section
-   in docs/claude/deployment.md for the bypass workflow.
-   ---------------------------------------------------------------------- */
+/* Coming-soon gate. With PUBLIC_COMING_SOON=true the inline gate script in
+   BaseLayout adds html.ncs-gated before first paint unless the visitor holds
+   the bypass token; this CSS then shows only the overlay. Soft gate, not
+   security. See docs/claude/deployment.md. */
 .ncs-overlay {
   display: none;
 }
@@ -917,32 +1095,21 @@ html.ncs-gated .ncs-overlay {
   display: block;
 }
 
-/* ----------------------------------------------------------------------------
-   Print stylesheet.
-   Boards, committees, and clients sometimes print case studies (or any
-   prose page) for discussion. Strip the parts that don't translate
-   (navigation, theme toggle, back-to-top, footer link styling, etc.)
-   so the print version reads as a clean document with the wordmark
-   intact and the body legible.
-   ---------------------------------------------------------------------- */
+/* Print. Boards and committees print case studies; strip the chrome and
+   print black on white with the URLs after links. */
 @media print {
-  /* Hide chrome that doesn't help a printed page. */
   header nav,
   [data-work-card] + ul,
   .sm\:hidden,
   [aria-label='Open menu'],
   [data-astro-rerun],
+  .ground-layers,
   [aria-hidden='true']:not(svg) {
     display: none !important;
   }
-
-  /* Always print the back-to-top hidden — never the right tool on paper. */
   button[aria-label='Back to top'] {
     display: none !important;
   }
-
-  /* Drop colored backgrounds + flatten to black text on white so print
-     ink isn't burned on hero banners or CTA bands. */
   *,
   *::before,
   *::after {
@@ -951,9 +1118,6 @@ html.ncs-gated .ncs-overlay {
     box-shadow: none !important;
     text-shadow: none !important;
   }
-
-  /* Headings stay serif-friendly. The display font has personality but
-     limited print legibility. */
   h1,
   h2,
   h3,
@@ -963,60 +1127,66 @@ html.ncs-gated .ncs-overlay {
     font-family: Georgia, 'Times New Roman', serif !important;
     page-break-after: avoid;
   }
-
-  /* Body type tightens to comfortable print measure. */
   body {
     font-family: Georgia, 'Times New Roman', serif !important;
     font-size: 11pt;
     line-height: 1.5;
   }
-
-  /* Show link URLs after the link text so printed pages preserve their
-     references. Skip in-page anchors. */
   a[href]:not([href^='#'])::after {
     content: ' (' attr(href) ')';
     font-size: 0.85em;
     word-break: break-all;
   }
-
-  /* Images should never break across pages mid-element. */
   img,
   figure,
   pre,
   blockquote {
     page-break-inside: avoid;
   }
-
-  /* Force a page break before the next/prev case study nav so each
-     case study reads as a standalone document. */
   nav[aria-label='More case studies'] {
     page-break-before: always;
   }
-
-  /* CTA banner and footer aren't useful in print. */
   section[aria-labelledby='cta-banner-title'],
   footer {
     display: none !important;
   }
 }
 
+/* ----------------------------------------------------------------------------
+   11. Utility wiring. Every colour utility reads a :root variable, so the
+   .on-ink scope below can re-point the semantic ones inside a deep band and
+   every bg-* / text-* / border-* in it follows. shadcn's primitives use the
+   same names (bg-primary, text-muted-foreground, ring-ring), so they pick up
+   the palette too. If a shadcn primitive looks off-brand, the fix is almost
+   always in :root, not in the primitive.
+   ---------------------------------------------------------------------------- */
 @theme inline {
-  /* Brand surface and text tokens are aliased here (rather than defined
-     as literals in the first @theme block above) so they pick up the
-     :root / .dark switch below. Result: bg-bg, bg-bg-soft, text-text,
-     text-text-muted, text-heading, and text-link all flip with the theme. */
+  /* Palette (raw). Art direction only; prefer the semantic names below for
+     anything that must flip inside a deep band. */
+  --color-ink: var(--ink);
+  --color-ink-raised: var(--ink-raised);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-raised: var(--paper-raised);
+  --color-ground-wall: var(--ground-wall);
+  --color-ground-survey: var(--ground-survey);
+  --color-marker: var(--marker);
+  --color-marker-hot: var(--marker-hot);
+  --color-brick: var(--brick);
+  --color-river: var(--river);
+
+  /* Site semantic aliases (older utility names, kept: pages use them). */
   --color-bg: var(--background);
   --color-bg-soft: var(--muted);
   --color-text: var(--foreground);
   --color-text-muted: var(--muted-foreground);
   --color-heading: var(--heading);
   --color-link: var(--link);
+  --color-tertiary: var(--tertiary);
 
-  /* font-heading utility points at the display face (Bebas Neue), the real
-     heading font. font-sans tracks the body face so the utility and the
-     base body style agree (the unused Geist webfont was removed). */
+  /* shadcn semantic tokens. */
   --font-heading: var(--font-display);
-  --font-sans: 'Source Sans 3 Variable', system-ui, sans-serif;
+  --font-sans: var(--font-ui);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -1048,13 +1218,20 @@ html.ncs-gated .ncs-overlay {
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+
+  /* Radii: printed matter, not app chrome. 2px on almost everything. */
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: calc(var(--radius) * 2);
+
+  /* Shadows: printed objects on a table. No glows. */
+  --shadow-print: var(--shadow-print);
+  --shadow-frame: var(--shadow-frame);
+
   --animate-marquee: marquee var(--duration) infinite linear;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   @keyframes marquee {
@@ -1076,236 +1253,180 @@ html.ncs-gated .ncs-overlay {
 }
 
 /* ----------------------------------------------------------------------------
-   shadcn semantic tokens (overridden with brand values)
+   12. Palette and semantic tokens.
    ----------------------------------------------------------------------------
-   shadcn's @theme inline block above remaps Tailwind utilities like
-   bg-primary, bg-secondary, bg-accent to read from these variables. The
-   shadcn CLI seeded them with neutral oklch values; we override here so
-   the same utility names produce our brand colors.
-
-   Result: bg-primary stays navy, bg-secondary stays sky blue, bg-accent
-   stays NCS blue, exactly as Phase 1b set up. shadcn primitives
-   (Button, Card, Dialog, etc.) also pick up the brand palette because
-   they reference the same shadcn token names.
-
-   Use hex (or any valid CSS color) directly; oklch is shadcn's default
-   but not required.
+   Every colour is a plain hex literal so src/lib/theme-tokens.test.ts can
+   measure it (and scripts/brand/build-grounds.mjs can read it). A semantic
+   token that repeats a palette value says which one in its comment, and the
+   test asserts the two still match. Ratios are WCAG 2 against the surface
+   named; the full table is in DESIGN.md.
    ---------------------------------------------------------------------------- */
 :root {
-  /* Surfaces */
-  --background: #ffffff; /* = brand --color-bg */
-  --foreground: #1a1a1a; /* = brand --color-text */
-  /* Card surface sits a hair off pure white so a soft shadow has something
-     to separate from. Imperceptible as a color, but it lets light-mode cards
-     read as elevated instead of dissolving into a white page. */
-  --card: #fcfdfe;
-  --card-foreground: #1a1a1a;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
+  /* ---- Palette: the table ---------------------------------------------- */
+  /* Ink: the logo's navy, sampled from logo-navy.png. Headings, the deep
+     ground, buttons. 15.68:1 on paper. */
+  --ink: #0a1628;
+  /* Ink lifted one step: cards on the deep ground, the raking-lit board. */
+  --ink-raised: #15233a;
+  /* Body text: ink softened toward graphite for long reading. 13.33:1 on paper. */
+  --ink-body: #1d2532;
+  /* Meta and supporting text. 6.16:1 on paper. */
+  --ink-muted: #56585c;
 
-  /* Elevation + framing shadows. Light mode has no color-step to lean on the
-     way dark mode does (deep-navy card on near-black bg), so depth has to come
-     from real, soft shadows plus a 1px top highlight. --shadow-frame is the
-     shared recipe for framed artifacts (SiteShowcase, BeforeAfter). */
-  --shadow-card: 0 1px 2px rgba(10, 22, 40, 0.06), 0 12px 28px -16px rgba(10, 22, 40, 0.14);
-  --shadow-card-hover: 0 2px 6px rgba(10, 22, 40, 0.08), 0 22px 48px -22px rgba(10, 22, 40, 0.2);
-  --shadow-frame: 0 30px 70px -42px rgba(10, 22, 40, 0.55);
-  --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  /* Paper: warm fibre print paper. */
+  --paper: #f3eee4; /* the page */
+  --paper-deep: #e9e1d2; /* the same paper under the work lamp: sunk bands */
+  --paper-raised: #fbf8f2; /* a print lifted off the table: cards, captions */
+  --ground-wall: #e8dfcf; /* limewash wall in shade (window-light) */
+  --ground-sun: #fff1d6; /* the late sun on that wall (graphic only) */
+  --ground-survey: #e8e6d9; /* survey paper (paper-contours) */
 
-  /* Primary action color. Navy is the dominant brand surface; primitives
-     like Button (default variant) pick this up. Stays navy in dark mode
-     so the Footer and CtaBanner read as a slightly elevated dark surface
-     rather than inverting to light, and the default Button stays on-brand. */
-  --primary: #0a1628; /* = brand --color-primary */
-  --primary-foreground: #ffffff;
+  /* The marker: a red china marker on a contact sheet. The one strong accent:
+     the italic second voice, the focus ring, the button hover. 5.64:1 on
+     paper, 4.93:1 on the wall in shade. */
+  --marker: #ae2f1b;
+  /* Brick: the second accent, deeper. Accent-toned body text and links.
+     7.23:1 on paper. */
+  --brick: #8e2b1b;
+  /* Vermilion: the marker as it reads on ink (the voice, links and focus ring
+     on the deep ground, small graphic marks). 7.07:1 on ink. Never text on
+     paper (2.22:1). */
+  --marker-hot: #f2835f;
 
-  /* Heading color. Navy in light mode; flips to near-white in .dark. */
-  --heading: #0a1628;
+  /* Ohio River slate: the river band and its label on the contour ground.
+     Decorative only (3.36:1 on paper, not a text colour). */
+  --river: #6c8592;
+  /* Contour line ink (drawn at 11 to 15% opacity by build-grounds.mjs). */
+  --contour-ink: #7a5638;
+  /* Text the contour ground re-scopes, because a line or the river can sit
+     under any word: muted text one step darker (4.95:1 on the worst pixel),
+     and the marker deepened to brick (4.6:1). */
+  --contour-muted: #48494c;
+  --contour-marker: #8e2b1b; /* = --brick */
 
-  /* Secondary surface and accent. Both map to brand blues. */
-  --secondary: #40aaed; /* = brand --color-secondary (sky blue) */
-  --secondary-foreground: #ffffff;
-  --accent: #3478bd; /* = brand --color-accent (darker NCS blue for AA) */
-  --accent-foreground: #ffffff;
+  /* Text on ink. */
+  --on-ink: #f3eee4; /* = --paper, 15.68:1 on ink */
+  --on-ink-muted: #b8b6b0; /* 8.94:1 on ink, 7.77:1 on ink-raised */
+  --ring-on-ink: #f2835f; /* = --marker-hot */
 
-  /* Muted surface and supporting text.
-     --muted-foreground was bumped from #6B7280 to #5F6573 so meta copy
-     on bg-bg-soft (#F4F7FA) clears WCAG AA 4.5:1. The shift is small
-     enough to be visually unchanged in normal use. */
-  --muted: #f4f7fa; /* = brand --color-bg-soft */
-  --muted-foreground: #5f6573; /* slightly darkened for AA on bg-bg-soft */
+  /* ---- Semantic tokens (shadcn names, plus the site's) ------------------- */
+  --background: #f3eee4; /* = --paper */
+  --foreground: #1d2532; /* = --ink-body */
+  --card: #fbf8f2; /* = --paper-raised */
+  --card-foreground: #1d2532; /* = --ink-body */
+  --popover: #fbf8f2; /* = --paper-raised */
+  --popover-foreground: #1d2532; /* = --ink-body */
 
-  /* Link color for accent-toned body text (Footer links, .card-link
-     arrows, Process / Services step number prefixes, MDX prose anchors).
-     Distinct from --accent because the brand --accent (#3B82C4) only hits
-     ~4.05:1 on white and ~3.77:1 on bg-bg-soft, both under the AA 4.5:1
-     threshold for body-size text. --link runs darker in light mode so
-     accent-text contexts pass AA; in dark mode it matches the brightened
-     --accent so the two read identically against deep surfaces.
-     --accent itself keeps its brand value and continues to drive buttons,
-     focus rings, borders, and large CTAs where the higher-contrast
-     foreground (white) carries the AA requirement. */
-  --link: #2a6fb0; /* AA on #FFFFFF, #F4F7FA, and #0A1628 */
+  --heading: #0a1628; /* = --ink */
+  --link: #8e2b1b; /* = --brick */
+  --tertiary: #f2835f; /* = --marker-hot: graphic marks only (dots, bars) */
 
-  /* Borders and inputs. Match the alpha-on-black tones used across forms
-     and section dividers. */
-  --border: rgba(0, 0, 0, 0.08);
-  --input: rgba(0, 0, 0, 0.12);
+  /* Primary: the ink. Default buttons and the brand CTA at rest. */
+  --primary: #0a1628; /* = --ink */
+  --primary-foreground: #f3eee4; /* = --paper, 15.68:1 */
 
-  /* Focus ring. Matches the brand --accent so every shadcn input + button
-     gets a brand-coordinated ring. */
-  --ring: #3478bd;
+  /* Secondary: the sunk paper, so variant="secondary" is a quiet button
+     (ink on paper-deep, 13.96:1). The old sky-blue secondary failed AA. */
+  --secondary: #e9e1d2; /* = --paper-deep */
+  --secondary-foreground: #0a1628; /* = --ink */
 
-  /* Destructive surfaces (form errors, delete buttons). Keep shadcn's
-     default red since we don't have a brand-coordinated alarm color. */
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Accent: the marker. Brand button hover and active states. */
+  --accent: #ae2f1b; /* = --marker */
+  --accent-foreground: #f3eee4; /* = --paper, 5.64:1 */
 
-  /* Chart palette — left at shadcn neutrals; we don't ship data viz today. */
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Muted: the sunk paper and the meta text that sits on it. */
+  --muted: #e9e1d2; /* = --paper-deep */
+  --muted-foreground: #56585c; /* = --ink-muted, 5.49:1 on paper-deep */
 
-  /* Corner radius scale used by shadcn primitives. */
-  --radius: 0.5rem;
+  /* Hairlines and fields. --border is decorative (ink at 14%); --input is a
+     control edge and must reach 3:1 (3.57:1 on paper). */
+  --border: rgb(10 22 40 / 0.14);
+  --input: #857c6b;
 
-  /* Sidebar palette — left at shadcn neutrals; no sidebar in this site. */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1a1a1a;
+  /* Focus ring: the marker, 5.64:1 on paper. */
+  --ring: #ae2f1b; /* = --marker */
+  --outline: #ae2f1b; /* = --ring (the retired Starwind kit's focus token) */
+
+  /* Form errors and destructive actions: brick reads as an alarm on paper
+     without a new hue (7.23:1). */
+  --destructive: #8e2b1b; /* = --brick */
+
+  /* Elevation: printed objects on a table. Warm shadow, no glow. */
+  --shadow-print: 0 1px 1px rgb(40 30 20 / 0.16), 0 18px 36px -22px rgb(40 30 20 / 0.5);
+  --shadow-frame: 0 1px 1px rgb(40 30 20 / 0.2), 0 26px 50px -24px rgb(40 30 20 / 0.6);
+  --shadow-card: 0 1px 1px rgb(40 30 20 / 0.1), 0 12px 26px -18px rgb(40 30 20 / 0.32);
+  --shadow-card-hover: 0 1px 2px rgb(40 30 20 / 0.12), 0 20px 40px -22px rgb(40 30 20 / 0.42);
+
+  /* Corner radius: 2px, a trimmed print. */
+  --radius: 0.125rem;
+
+  /* Chart and sidebar: unused on this site; kept coherent with the palette. */
+  --chart-1: #0a1628;
+  --chart-2: #ae2f1b;
+  --chart-3: #6c8592;
+  --chart-4: #56585c;
+  --chart-5: #e9e1d2;
+  --sidebar: #fbf8f2;
+  --sidebar-foreground: #1d2532;
   --sidebar-primary: #0a1628;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f7fa;
+  --sidebar-primary-foreground: #f3eee4;
+  --sidebar-accent: #e9e1d2;
   --sidebar-accent-foreground: #0a1628;
-  --sidebar-border: rgba(0, 0, 0, 0.08);
-  --sidebar-ring: #3478bd; /* matches the live --ring (AA accent) */
+  --sidebar-border: rgb(10 22 40 / 0.14);
+  --sidebar-ring: #ae2f1b;
 
-  /* --------------------------------------------------------------------
-     Starwind UI extra semantic tokens.
-     Not part of shadcn's default set. Consumed by the vendored Starwind
-     primitives (accordion / dialog / dropdown / tabs) and any Starwind
-     component added later (button / alert / badge). Harmonized to the NCS
-     palette: --outline tracks --ring (NCS blue); the status colors are the
-     conventional soft-surface + deep-foreground pairs. starwind.css maps
-     each of these onto a bg-* / text-* / border-* utility via @theme inline. */
-  --primary-accent: #16243b; /* lifted navy for primary hover states */
-  --secondary-accent: #2a6fb0; /* deeper NCS blue for active/pressed secondary */
-  --info: #93c5fd; /* soft blue */
-  --info-foreground: #1e3a5f; /* deep blue text on info surfaces */
-  --success: #86efac; /* soft green */
-  --success-foreground: #14532d; /* deep green text on success surfaces */
-  --warning: #fde68a; /* soft amber */
-  --warning-foreground: #713f12; /* deep amber text on warning surfaces */
-  --error: oklch(0.577 0.245 27.325); /* matches --destructive */
-  --error-foreground: #ffffff;
-  --outline: #3478bd; /* matches --ring (NCS blue) */
+  /* Status tokens, kept from the retired Starwind kit (deleted 2026-10-04) for
+     any future status surface. No utility maps them now; read them as
+     var(--success) and so on. Soft surfaces with deep foregrounds, all AA. */
+  --primary-accent: #15233a; /* = --ink-raised: primary hover */
+  --secondary-accent: #ddd3c1; /* paper-deep, pressed */
+  --info: #d9e2e6;
+  --info-foreground: #2c3f48;
+  --success: #d8e4d0;
+  --success-foreground: #2c4a24;
+  --warning: #f3e0b8;
+  --warning-foreground: #5e3f0b;
+  --error: #8e2b1b; /* = --destructive */
+  --error-foreground: #f3eee4;
 }
 
 /* ----------------------------------------------------------------------------
-   Dark mode overrides.
-   ----------------------------------------------------------------------------
-   Applied when <html> carries the .dark class. The anti-FOUC script in
-   BaseLayout.astro decides whether to add that class on initial paint,
-   reading from localStorage["ncs-theme"] and prefers-color-scheme.
-
-   Design notes:
-     - --background is a deeper near-black (#050B16) so the navy --primary
-       still has a visible step against the page surface (used by Footer
-       and CtaBanner).
-     - --foreground is off-white rather than pure white; easier on the
-       eyes for long reading.
-     - --muted is a navy-tinted elevated dark, so bg-bg-soft sections
-       (Process, Services, Testimonials) get subtle hierarchy against
-       the page background without going gray.
-     - Brand colors (accent NCS blue, secondary sky blue, tertiary amber)
-       stay constant in both modes; they read fine on either surface.
-     - --primary stays navy so the Footer and CtaBanner read as the
-       darkest section, and the default Button stays on-brand.
-     - --border becomes white at low alpha so hairlines flip from
-       dark-on-light to light-on-dark.
+   The inverse scope. Anything inside .on-ink (every deep ground adds it) gets
+   paper text, vermilion accents and a vermilion focus ring, and its buttons
+   turn paper with ink labels, through the same utility names. This is how a
+   deep band works without a second set of components. Every pair here is in
+   theme-tokens.test.ts.
    ---------------------------------------------------------------------------- */
-.dark {
-  /* Surfaces */
-  --background: #050b16;
-  --foreground: #e5e7eb;
-  --card: #0a1628;
-  --card-foreground: #e5e7eb;
-  --popover: #0a1628;
-  --popover-foreground: #e5e7eb;
+.on-ink {
+  --background: #0a1628; /* = --ink */
+  --foreground: #f3eee4; /* = --on-ink */
+  --card: #15233a; /* = --ink-raised */
+  --card-foreground: #f3eee4;
+  --popover: #15233a;
+  --popover-foreground: #f3eee4;
+  --heading: #f3eee4; /* = --on-ink */
+  --link: #f2835f; /* = --marker-hot, 7.07:1 on ink */
+  --marker: #f2835f; /* the voice reads vermilion on ink */
+  --primary: #f3eee4; /* paper button on ink */
+  --primary-foreground: #0a1628;
+  --secondary: #15233a;
+  --secondary-foreground: #f3eee4;
+  --accent: #f2835f; /* hover: vermilion with an ink label, 7.07:1 */
+  --accent-foreground: #0a1628;
+  --muted: #15233a; /* = --ink-raised */
+  --muted-foreground: #b8b6b0; /* = --on-ink-muted, 8.94:1 on ink */
+  --border: rgb(243 238 228 / 0.18);
+  --input: #8d8a83; /* control edge on ink */
+  --ring: #f2835f; /* = --ring-on-ink */
+  --outline: #f2835f;
+  color: var(--foreground);
+}
 
-  /* Dark mode already has a real color-step for elevation (navy card on
-     near-black bg), so shadows go deeper-and-softer and the top highlight
-     drops to a faint sheen rather than a white line. */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.6);
-  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.45), 0 26px 54px -24px rgba(0, 0, 0, 0.7);
-  --shadow-frame: 0 30px 70px -40px rgba(0, 0, 0, 0.7);
-  --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  /* Primary stays navy in dark mode (see :root comment for why). */
-  --primary: #0a1628;
-  --primary-foreground: #ffffff;
-
-  /* Headings flip to a near-white that still reads as "brand light"
-     rather than pure white; subtle warmth keeps them on-brand. */
-  --heading: #f4f7fa;
-
-  /* Accent and secondary are brightened in dark mode for WCAG AA contrast.
-     On the dark surfaces below, the light-mode accent (#3B82C4) only hits
-     ~4.1:1, just under the 4.5:1 threshold for body-size accent text
-     (Process / Services step numbers, Footer accent links). The shifts
-     below clear AA on both #0F1E33 (bg-bg-soft) and #0A1628 (bg-primary)
-     while preserving the accent -> secondary lift on hover.
-
-     accent-foreground flips to navy because white text on the brightened
-     sky-blue accent surface (#40AAED) only hits 2.56:1; navy text on
-     the same surface is ~8.2:1. This affects the brand Button variant,
-     shadcn primitives that pair bg-accent with text-accent-foreground
-     on hover/focus, and anything else that follows the same pattern. */
-  --accent: #40aaed; /* was #3B82C4 in light; lifted to sky blue for AA */
-  --accent-foreground: #0a1628; /* navy on sky blue, 8.2:1 */
-  --secondary: #7ac8f0; /* was #40AAED in light; lighter sky for the hover step up */
-  --secondary-foreground: #0a1628; /* navy on lighter sky, ~10:1 */
-
-  /* Muted surface: navy-tinted elevated dark.
-     Muted-foreground: lighter gray so secondary copy still has contrast. */
-  --muted: #0f1e33;
-  --muted-foreground: #9ca3af;
-
-  /* Link color matches the brightened dark-mode --accent so accent text
-     and surface accents read identically on dark. See :root for why
-     --link exists as a separate token. */
-  --link: #40aaed;
-
-  /* Borders and inputs invert to white at low alpha. */
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.12);
-
-  /* Focus ring lifted to match the brighter dark-mode accent. */
-  --ring: #40aaed;
-
-  /* Destructive: shadcn red lifted slightly for dark mode contrast. */
-  --destructive: oklch(0.704 0.191 22.216);
-
-  /* Sidebar palette (not used today, but kept coherent for future). */
-  --sidebar: #0a1628;
-  --sidebar-foreground: #e5e7eb;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #0a1628;
-  --sidebar-accent: #0f1e33;
-  --sidebar-accent-foreground: #e5e7eb;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #40aaed; /* matches the live dark --ring */
-
-  /* Starwind UI extra semantic tokens — dark mode variants. */
-  --primary-accent: #1e3a5f; /* lifted navy for dark primary hover */
-  --secondary-accent: #7ac8f0; /* lighter sky for dark active secondary */
-  --info: #93c5fd;
-  --info-foreground: #1e3a5f;
-  --success: #86efac;
-  --success-foreground: #14532d;
-  --warning: #fde68a;
-  --warning-foreground: #713f12;
-  --error: oklch(0.704 0.191 22.216); /* matches dark --destructive */
-  --error-foreground: #ffffff;
-  --outline: #40aaed; /* matches dark --ring */
+/* The contour ground's own text tokens. A contour line or the river can sit
+   under any word on this ground, so muted text goes one step darker and the
+   marker deepens to brick; build-grounds.mjs measures both against the worst
+   pixel. Unlayered and top-level so theme-tokens.test.ts can read it. */
+.ground-paper-contours {
+  --muted-foreground: #48494c; /* = --contour-muted */
+  --marker: #8e2b1b; /* = --contour-marker */
 }

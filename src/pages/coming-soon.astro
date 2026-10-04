@@ -8,8 +8,8 @@
    Renders the ComingSoon component as the entire body. Uses its own
    minimal HTML doc rather than BaseLayout because the goal is full
    isolation from the WIP nav and footer: visitors should see one
-   focused page with the wordmark, a short pitch, and direct contact
-   options.
+   focused page with the logo, a short pitch, and direct contact
+   options. It is noindex and is not in the sitemap.
 
    When PUBLIC_COMING_SOON=true is set at build time, every other route
    on the site also renders this same component (see BaseLayout). To
@@ -21,7 +21,11 @@ import '../styles/globals.css';
 import { getSite, SITE_URL } from '../data/site';
 import ComingSoon from '../components/ComingSoon.astro';
 import { cachePublicPage } from '../lib/routeCache';
-import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
+// The same files globals.css's @font-face points at, so each preload and the
+// stylesheet's own fetch are one request (see BaseLayout).
+import bebasWoff2 from '../assets/fonts/bebas-neue-latin-400-core.woff2?url';
+import newsreaderWoff2 from '../assets/fonts/newsreader-latin-400-core.woff2?url';
+import newsreaderItalicWoff2 from '../assets/fonts/newsreader-latin-400-italic-core.woff2?url';
 
 // Standalone document (no BaseLayout), so it opts into the route cache itself.
 cachePublicPage(Astro.cache, Astro.url);
@@ -41,24 +45,17 @@ const description = `${site.studioName} is a small studio in ${site.address}: st
     <meta name="description" content={description} />
     <title>{title}</title>
 
-    <!-- Theme bootstrap. Same logic as BaseLayout so dark / light is
-         consistent if a visitor has a theme preference. -->
-    <script is:inline>
-      (function () {
-        try {
-          var stored = localStorage.getItem('ncs-theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
-          document.documentElement.classList.toggle('dark', isDark);
-          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-        } catch (e) {
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.classList.toggle('dark', prefersDark);
-          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
-        }
-      })();
-    </script>
-    <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
+    {/* Keep the gate page out of search: it is a pre-launch holding page, not content
+        (and it is not in the sitemap). */}
+    <meta name="robots" content="noindex, follow" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#e8dfcf" />
+
+    <link rel="preload" as="font" type="font/woff2" href={bebasWoff2} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={newsreaderWoff2} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={newsreaderItalicWoff2} crossorigin />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -69,5 +66,11 @@ const description = `${site.studioName} is a small studio in ${site.address}: st
   </head>
   <body>
     <ComingSoon />
+    {/* The grounds script attaches the wall texture after load and pauses the light
+        off screen; the mailto fallback copies the address when no mail app opens. */}
+    <script>
+      import '../scripts/grounds';
+      import '../scripts/mailto-fallback';
+    </script>
   </body>
 </html>

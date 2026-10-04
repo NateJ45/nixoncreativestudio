@@ -238,3 +238,19 @@ export function galleryItems(group: PhotoGroup, origin: string): GalleryItem[] {
     return item ? [item] : [];
   });
 }
+
+/* ----------------------------------------------------------------------------
+   Search visibility
+   ---------------------------------------------------------------------------- */
+
+/**
+ * The robots directive for /photography. While the gallery is empty the page is a
+ * service page with no portfolio behind it, a thin result for the "Cincinnati
+ * photographer" query, so it asks search engines to leave it out (`follow` keeps its
+ * links counted). The first published photo flips it back to indexable with no
+ * deploy: the page reads the photos on every render and publishing purges the cache.
+ * Returns undefined (no robots tag at all) once there is something to show.
+ */
+export function photographyRobots(photoCount: number): string | undefined {
+  return photoCount > 0 ? undefined : 'noindex, follow';
+}

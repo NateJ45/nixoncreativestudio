@@ -34,7 +34,10 @@ are created in the admin and pages are changed to call `getEmDashCollection()`.
    to a shim with named exports only. `zustand` (via `@react-three/fiber`, the
    WebGL hero) default-imports it, so the build failed with `MISSING_EXPORT`.
    A small Vite plugin in `astro.config.mjs` (`ncs-zustand-sync-store-shim`)
-   rewrites zustand's import. Re-check after upgrading emdash or zustand.
+   rewrote zustand's import. Retired 2026-10-04: `@react-three/fiber` was
+   uninstalled with the WebGL hero and `npm ls zustand` is empty, so the plugin
+   was deleted. If a new package brings zustand back and the build dies with
+   `MISSING_EXPORT`, restore the plugin from git history.
 2. **Sessions.** The live site had `session: false`; EmDash sign-in then fails with "needs an Astro session driver". Removed it; the adapter now uses KV binding `SESSION` (namespace `ncs-emdash-sessions`).
 3. The Cloudflare API MCP connector in Claude Code has an invalid token; all
    provisioning was done with the wrangler OAuth login instead.
@@ -329,7 +332,9 @@ Things found while reading EmDash 1.1.0 for this (all confirmed in `node_modules
 
 ## Hero scene and redirects (CMS-DESIGN PR 13, 2026-10-03)
 
-**The hero device scene is built from the case studies.** `case_studies` has two optional fields, `in_hero` (boolean, "Show in the homepage device scene") and `hero_order` (integer 1 to 99). `Hero.astro` reads the case studies once; `selectHeroStudies()` (`src/lib/heroSites.ts`) keeps those with `in_hero`, BOTH showcase captures and a usable `live_url`, ordered by `hero_order` (unnumbered last, ties newest first); `HeroShowcase.astro` renders them with width-only `/_image?href=<absolute media URL>&w=N&f=webp` URLs (`resizedImage()`; never a height, because of the 4096 px resizer limit above). The address bar is the live URL's host without `www.`. With no qualifying entry it renders the five bundled captures (`bundledSites`) exactly as before, which is what production does until Nathan loads the data (the fields do not exist there yet).
+**Retired 2026-10-04 (home page rebuild): the homepage no longer reads `in_hero` or `hero_order`.** The hero is now a reel of curated captures in `src/lib/homeWork.ts`, gated only by `launch_status` and `featured` (`.claude/rules/homepage-and-pages.md`). The two fields stay in the schema (removing a field is a production change); the history below is kept for context.
+
+**The hero device scene was built from the case studies.** `case_studies` has two optional fields, `in_hero` (boolean, "Show in the homepage device scene") and `hero_order` (integer 1 to 99). `Hero.astro` reads the case studies once; `selectHeroStudies()` (`src/lib/heroSites.ts`) keeps those with `in_hero`, BOTH showcase captures and a usable `live_url`, ordered by `hero_order` (unnumbered last, ties newest first); `HeroShowcase.astro` renders them with width-only `/_image?href=<absolute media URL>&w=N&f=webp` URLs (`resizedImage()`; never a height, because of the 4096 px resizer limit above). The address bar is the live URL's host without `www.`. With no qualifying entry it renders the five bundled captures (`bundledSites`) exactly as before, which is what production does until Nathan loads the data (the fields do not exist there yet).
 
 - Measured on `ncs-ci` (Lighthouse mobile, simulated, 12 runs of `/`): `main` LCP 2873 ms median, 695 KiB; this code in production's state 2877 ms, 694 KiB; on the CMS path 2862 ms, 617 KiB (a smaller scene in CI). The LCP element, the first phone capture, is 115 KiB on every path.
 - The two fields are optional because an existing optional field cannot be made required and the existing entries have neither (CLAUDE.md Gotcha 17). `d.in_hero` is read with `Boolean()` (it is stored 0/1).
@@ -434,7 +439,7 @@ Behaviour worth knowing:
 - **Fallback.** A missing, unpublished or unreadable entry, a blank required field, or a process or includes list shorter than four, serves the committed `cms/content/page_home.json` and logs `[cms] ... serving the committed fallback`. Production has no data loaded when this ships, so it renders from the fallback.
 - **One read per request.** The hero, three sections and `/services`' process band share one memoised read (a `WeakMap` on `Astro.request`) and one cache tag, so a publish purges `/` and `/services/`.
 - **The hero stays the LCP element it was.** Still server-rendered, still the CSS-only first-frame entrance, no `data-reveal` anywhere in it (CLAUDE.md Gotchas 10 and 14). Measured on `ncs-ci`, Lighthouse CLI mobile, same machine, route cache warm: median LCP 3614 ms on `main` (12 runs) against 3615 ms on the CMS path (12 runs) and 3624 ms on the fallback path (16 runs); the LCP element is the hero phone screenshot in all of them. The distribution is bimodal (a 2.7 to 2.9 s cluster and a 3.6 s cluster), so a 6-run median can swing by 400 ms by luck; use at least 12 runs when comparing.
-- **Not in the entry on purpose:** section order, every link target, the step numbers (counted from order), the hero device scene and the client marquee.
+- **Not in the entry on purpose:** section order, every link target, the hero reel and proof sheet (curated in `src/lib/homeWork.ts`), the process duration labels and the about band's words (no fields for them; see `.claude/rules/homepage-and-pages.md`). Since the 2026 rebuild the closing block is the homepage's last band ("Let's build a site you won't have to redo.") and the "Second link label" goes to the prices band (`#prices`) with the lowest tier price appended, although the schema's help text still says "Work page".
 - **Rendered difference.** The only DIFF against `main` on all five compared routes is the homepage meta, og and twitter description: it was the bare studio name and is now the tagline (the design seeds it that way, 1.1). The hero proof line rendered "photographed byone person" (no space before the link) in this PR; PR 7 fixed it.
 - **Production data is not loaded** (no admin token). Commands: docs/CMS-DESIGN.md 2.6 ("PR 6 data") and docs/LAUNCH-RUNBOOK.md.
 

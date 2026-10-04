@@ -1,28 +1,35 @@
 ---
-// Safe to edit. The page wiring is foundation; the copy at the top is
-// safe to swap when positioning changes.
+// Safe to edit. The page wiring is foundation; the copy comes from the CMS.
 /* ============================================================================
    /journal | Journal Index
    ============================================================================
    Listing for the journal (the CMS `posts` collection). Newest first, published
-   entries only (a draft is never listed), and a card per entry.
+   entries only (a draft is never listed), one card per entry.
+
+   Bands (DESIGN.md "Grounds"; one moving ground per page, at the top):
+     1. window-light (moving, under the header): the headline and intro. With no
+        entries it also holds a printed note card (the same card as the rate card
+        on /photography): what is coming and where to go meanwhile.
+     2. paper (only with entries): the newest entry large, the rest in a grid.
+     3. paper-contours: the closing banner.
 
    Two paths share this page:
-     1. Empty state. The live state today, because the collection has no
-        entries yet. Instead of a bare sentence, it ships an intentional,
-        on-brand "first dispatch is coming" card: an animated aurora mesh
-        over navy, the studio mark, and two onward links so the page never
-        reads as broken.
-     2. Populated list. A featured lead card (the newest entry, given the
-        most weight) followed by a reveal-staggered grid of the rest. Each
-        card shows its cover thumbnail when present, the date, a reading-time
-        stamp, and tag chips.
+     1. Empty state. The live state until the first entry publishes. There is no
+        placeholder entry and no "coming soon" mark: a plain note, and two ways onward
+        so the page is never a dead end. (The Journal link is also hidden from the
+        menus until there is an entry, see hasJournalEntries().)
+     2. Populated list. The lead entry gets the most weight; each entry shows its
+        cover (when it has one) as a printed frame, its date and reading time in the
+        caption type, and its tags as plain words.
 
-   All motion (reveal, spotlight, aurora, hover-lift) is reduced-motion
-   safe via the shared design system in globals.css.
+   The words (headline, intro, the empty-state note) are the Journal page entry in
+   the CMS, with the committed fallback in cms/content/page_journal.json. The entries
+   are read through src/lib/journal.ts (CMS-DESIGN PR 12). A failed read gives an empty
+   list, not an error page.
    ============================================================================ */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Band from '../../components/Band.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import EmDashPhoto from '../../components/emdash/EmDashPhoto.astro';
 import { buttonVariants } from '../../components/ui/button';
@@ -30,201 +37,224 @@ import { getSite } from '../../data/site';
 import { getJournalPage, indexTitle } from '../../lib/indexPages';
 import { formatJournalDate, getJournalEntries } from '../../lib/journal';
 
-// The page's words (headline, intro, the empty-state card text) are the Journal page
-// entry in the CMS, with the committed fallback in cms/content/page_journal.json.
-// The entries are the published rows of the CMS `posts` collection (Journal in the
-// admin), newest first, read through src/lib/journal.ts (CMS-DESIGN PR 12). A draft
-// is never in this list, and a failed read gives an empty list, not an error page.
 const site = await getSite(Astro);
 const page = await getJournalPage(Astro);
-
 const all = await getJournalEntries({ cache: Astro.cache });
 
-// Split the newest entry off the front: it becomes the featured lead card,
-// the rest fill the grid below. Slicing an array of length 0 or 1 is safe,
-// so this works for the empty and single-entry cases too.
+// The newest entry is the lead; slicing an array of length 0 or 1 is safe.
 const [lead, ...rest] = all;
 ---
 
 <BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
-  <section class="py-2xl" aria-labelledby="journal-heading">
-    <div class="ncs-container">
-      <header class="mb-xl flex flex-col gap-xs" data-reveal>
-        <h1 id="journal-heading">{page.heading}</h1>
-        <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{page.intro}</p>
+  <Band ground="window-light" underHeader labelledby="journal-heading">
+    <div class:list={['hero-grid', { 'hero-grid--note': all.length === 0 }]}>
+      <header class="hero-copy">
+        <h1 id="journal-heading" class="type-display">
+          {page.heading}
+        </h1>
+        <p class="type-lede">{page.intro}</p>
       </header>
 
-      {all.length === 0 ? (
-        /* Empty-state. The live state until the first entry publishes.
-             A designed "first dispatch is coming" card on the theme-aware band
-             surface (light in light mode, navy in dark), not a bare line, so
-             the page reads as intentional. */
-        <div
-          class="band-themed hover-lift rounded-2xl border border-border p-xl sm:p-2xl"
-          data-reveal="scale"
-        >
-          <div class="relative z-10 flex max-w-[58ch] flex-col gap-m">
-            {/* Studio mark. The wordmark initials set in the display face,
-                 echoing the header lockup. Decorative here, so aria-hidden. */}
-            <span
-              class="font-display text-h3 leading-none tracking-wide text-link"
-              aria-hidden="true"
-            >
-              NCS
-            </span>
-
-            {/* Lead-in line, deliberately NOT a tracked-uppercase eyebrow:
-                 a classic mono eyebrow stacked right over the heading is the
-                 loudest section-scaffold tell. Sentence-case, in the link tone,
-                 reads as a warm intro instead. */}
-            <p class="text-base font-semibold text-link">{page.emptyKicker}</p>
-
-            <h2 class="text-h2 text-heading">{page.emptyHeading}</h2>
-
-            <p class="text-lg leading-[1.6] text-text-muted">{page.emptyBody}</p>
-
-            <div class="mt-xs flex flex-wrap items-center gap-s">
-              {/* Primary CTA routed through the shared button recipe (brand /
-                   cta / shine) so it matches the real site button instead of a
-                   hand-rolled lookalike that can drift. */}
-              <span class="inline-block">
-                <a
-                  class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-                  href="/work/"
-                >
-                  See selected work
-                </a>
-              </span>
-              <a
-                class="link-underline inline-flex items-center px-1 py-2.5 font-semibold text-link no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                href="/contact/"
-              >
-                Say hello
-              </a>
-            </div>
+      {all.length === 0 && (
+        <div class="note">
+          <p class="note-kicker voice">{page.emptyKicker}</p>
+          <h2 class="note-title type-headline">{page.emptyHeading}</h2>
+          <p class="type-body">{page.emptyBody}</p>
+          <div class="note-actions">
+            <a href="/work/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+              See selected work
+            </a>
+            <a class="card-link" href="/contact/">
+              Say hello
+            </a>
           </div>
-        </div>
-      ) : (
-        <div class="flex flex-col gap-2xl">
-          {/* Featured lead card. The newest entry, given full width and the
-               most visual weight: cover on one side at desktop, copy on the
-               other. The whole card is a single <a> so the click target
-               covers art and body together. */}
-          <a
-            class="group spotlight-card hover-lift relative isolate grid overflow-hidden rounded-2xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent md:grid-cols-2"
-            href={`/journal/${lead.id}/`}
-            data-spotlight
-            data-reveal
-          >
-            {lead.cover && (
-              <div
-                class="relative z-10 overflow-hidden bg-bg max-md:aspect-[16/9] md:order-2"
-                transition:name={`journal-cover-${lead.id}`}
-              >
-                <EmDashPhoto
-                  image={lead.cover}
-                  alt=""
-                  widths={[600, 900, 1200]}
-                  sizes="(min-width: 48rem) 50vw, 100vw"
-                  class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                />
-              </div>
-            )}
-
-            <div class="relative z-10 flex flex-col gap-s p-l sm:p-xl md:order-1 md:justify-center">
-              {/* Meta row. The "Latest" status reads as a filled badge sitting
-                   inline with the date / reading-time, not as a tracked-uppercase
-                   eyebrow stacked over the title (that doubled the eyebrow count
-                   on the card). The date + reading time stay a genuine mono meta
-                   line. */}
-              <p class="flex flex-wrap items-center gap-s font-mono text-[0.8rem] tracking-[0.05em] text-text-muted uppercase">
-                <span class="rounded-full bg-accent px-2.5 py-0.5 font-semibold tracking-[0.08em] text-accent-foreground">
-                  Latest
-                </span>
-                <span>{formatJournalDate(lead.publishedAt)}</span>
-                <span aria-hidden="true">·</span>
-                <span>{lead.minutes} min read</span>
-              </p>
-              {/* Lead title at display scale (text-h1), a clear step above the
-                   grid cards (text-h3), so the newest entry carries real weight
-                   beyond the badge alone. Tighter leading suits the larger size. */}
-              <h2 class="text-h1 leading-[0.95] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {lead.title}
-              </h2>
-              <p class="max-w-[60ch] text-lg leading-[1.55] text-text">{lead.summary}</p>
-
-              {lead.tags && lead.tags.length > 0 && (
-                <ul class="mt-xs flex flex-wrap gap-2" aria-label="Topics">
-                  {lead.tags.map((tag) => (
-                    <li class="rounded-full border border-border bg-bg px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <span class="card-link mt-xs">Read on</span>
-            </div>
-          </a>
-
-          {/* The rest of the entries, reveal-staggered in a grid. Hidden
-              entirely when there's only the lead entry. */}
-          {rest.length > 0 && (
-            <ul class="grid [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-l">
-              {rest.map((entry, i) => (
-                <li data-reveal style={`--reveal-delay: ${i * 90}ms`}>
-                  <a
-                    class="group spotlight-card hover-lift relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                    href={`/journal/${entry.id}/`}
-                    data-spotlight
-                  >
-                    {entry.cover && (
-                      <div
-                        class="relative z-10 aspect-[16/9] overflow-hidden bg-bg"
-                        transition:name={`journal-cover-${entry.id}`}
-                      >
-                        <EmDashPhoto
-                          image={entry.cover}
-                          alt=""
-                          widths={[400, 600, 900]}
-                          sizes="(min-width: 60rem) 33vw, (min-width: 40rem) 50vw, 100vw"
-                          class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                        />
-                      </div>
-                    )}
-
-                    <div class="relative z-10 flex flex-1 flex-col gap-s p-l">
-                      <p class="flex flex-wrap items-center gap-s font-mono text-[0.78rem] tracking-[0.05em] text-text-muted uppercase">
-                        <span>{formatJournalDate(entry.publishedAt)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{entry.minutes} min read</span>
-                      </p>
-                      <h2 class="text-h3 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                        {entry.title}
-                      </h2>
-                      <p class="leading-[1.5] text-text">{entry.summary}</p>
-
-                      {entry.tags && entry.tags.length > 0 && (
-                        <ul class="flex flex-wrap gap-2" aria-label="Topics">
-                          {entry.tags.map((tag) => (
-                            <li class="rounded-full border border-border bg-bg px-2.5 py-0.5 font-mono text-[0.68rem] tracking-[0.06em] text-text-muted uppercase">
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      <span class="card-link mt-auto pt-xs">Read on</span>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
     </div>
-  </section>
+  </Band>
 
-  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
+  {lead && (
+    <Band labelledby="entries-heading">
+      <h2 id="entries-heading" class="sr-only">
+        All entries
+      </h2>
+
+      {/* The lead entry. The whole card is one link, so the target covers the
+             cover and the words together. */}
+      <a class="entry entry--lead" href={`/journal/${lead.id}/`} data-reveal>
+        {lead.cover && (
+          <div class="entry-cover" transition:name={`journal-cover-${lead.id}`}>
+            <EmDashPhoto
+              image={lead.cover}
+              alt=""
+              widths={[600, 900, 1200]}
+              sizes="(min-width: 64rem) 55vw, 92vw"
+              class="entry-img"
+            />
+          </div>
+        )}
+        <div class="entry-text">
+          <p class="type-caption">
+            {formatJournalDate(lead.publishedAt)} · {lead.minutes} min read
+            {lead.tags.length > 0 && <> · {lead.tags.join(', ')}</>}
+          </p>
+          <h2 class="entry-title entry-title--lead">{lead.title}</h2>
+          <p class="type-body">{lead.summary}</p>
+          <span class="card-link">Read on</span>
+        </div>
+      </a>
+
+      {rest.length > 0 && (
+        <ul class="entry-grid">
+          {rest.map((entry, i) => (
+            <li data-reveal style={`--reveal-delay: ${i * 90}ms`}>
+              <a class="entry" href={`/journal/${entry.id}/`}>
+                {entry.cover && (
+                  <div class="entry-cover" transition:name={`journal-cover-${entry.id}`}>
+                    <EmDashPhoto
+                      image={entry.cover}
+                      alt=""
+                      widths={[400, 600, 900]}
+                      sizes="(min-width: 60rem) 33vw, (min-width: 40rem) 50vw, 92vw"
+                      class="entry-img"
+                    />
+                  </div>
+                )}
+                <div class="entry-text">
+                  <p class="type-caption">
+                    {formatJournalDate(entry.publishedAt)} · {entry.minutes} min read
+                    {entry.tags.length > 0 && <> · {entry.tags.join(', ')}</>}
+                  </p>
+                  <h2 class="entry-title">{entry.title}</h2>
+                  <p class="type-body">{entry.summary}</p>
+                  <span class="card-link">Read on</span>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Band>
+  )}
+
+  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} ctaHref="/contact/" />
 </BaseLayout>
+
+<style>
+  /* ---- hero ---- */
+  .hero-grid {
+    display: grid;
+    gap: var(--spacing-xl);
+    align-items: end;
+  }
+  @media (min-width: 64rem) {
+    .hero-grid--note {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    }
+  }
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+  }
+
+  /* The empty-state note: a printed card, like the rate card on /photography. */
+  .note {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-s);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    box-shadow: var(--shadow-print);
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .note-kicker {
+    font-size: var(--text-h4);
+  }
+  .note-title {
+    font-size: var(--text-h3);
+  }
+  .note-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-s) var(--spacing-l);
+    margin-top: var(--spacing-xs);
+  }
+
+  /* ---- entries ---- */
+  .entry {
+    display: grid;
+    gap: var(--spacing-m);
+    color: inherit;
+    text-decoration: none;
+  }
+  .entry--lead {
+    align-items: center;
+  }
+  @media (min-width: 64rem) {
+    .entry--lead {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: var(--spacing-xl);
+    }
+  }
+  .entry-cover {
+    overflow: hidden;
+    box-shadow: var(--shadow-frame);
+    background: var(--paper-deep);
+    border-radius: 2px;
+  }
+  .entry-cover :global(.entry-img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    transition: transform 0.5s var(--ease-settle);
+  }
+  .entry:hover :global(.entry-img),
+  .entry:focus-visible :global(.entry-img) {
+    transform: scale(1.02);
+  }
+  .entry-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  .entry-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 0.98;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    transition: color 0.15s ease;
+  }
+  .entry-title--lead {
+    font-size: var(--text-h2);
+  }
+  .entry:hover .entry-title,
+  .entry:focus-visible .entry-title {
+    color: var(--link);
+  }
+  .entry-grid {
+    display: grid;
+    gap: var(--spacing-xl) var(--spacing-l);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    list-style: none;
+    margin: var(--spacing-xl) 0 0;
+    padding: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .entry-cover :global(.entry-img) {
+      transition: none;
+    }
+    .entry:hover :global(.entry-img),
+    .entry:focus-visible :global(.entry-img) {
+      transform: none;
+    }
+  }
+</style>

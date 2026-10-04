@@ -1,0 +1,141 @@
+---
+// Safe to edit. Draws one "Heading 2" section of a landing page's CMS body
+// (src/lib/landingPage.ts): the heading with its italic turn, then the
+// paragraphs, lists and sub-headings exactly as written in the admin.
+/* ============================================================================
+   LandingProse
+   ============================================================================
+   The block HTML is trusted: blockHtml() built it from restricted Portable
+   Text (paragraphs, bold, italic, safe links, lists), so set:html is safe.
+   A bullet list is set as ruled rows with a short china-marker dash, the
+   same mark as the "included" lists on /services; a bold lead phrase in an
+   item reads as that row's title.
+
+   Props:
+     section   one ProseSection
+     level     the heading level (2 by default; 3 when it sits inside a band
+               that already has an h2)
+     wide      the heading sits above the text instead of beside it
+
+   The heading's id is <section id>-heading, so a Band can be labelledby it.
+   ============================================================================ */
+import type { ProseSection } from '../../lib/prosePage';
+import { voiceSplit } from '../../lib/voiceSplit';
+
+interface Props {
+  section: ProseSection;
+  level?: 2 | 3;
+  wide?: boolean;
+}
+const { section, level = 2, wide = false } = Astro.props;
+const H = `h${level}` as 'h2' | 'h3';
+const h = voiceSplit(section.heading);
+---
+
+<div class:list={['lp-prose', { 'lp-prose--wide': wide }]} id={section.id}>
+  <H
+    id={`${section.id}-heading`}
+    class:list={[level === 2 ? 'type-headline' : 'lp-prose-h3', 'lp-prose-title']}
+  >
+    {h.head}
+    {h.tail && ' '}
+    {h.tail && <span class="voice">{h.tail}</span>}
+  </H>
+  <div class="lp-prose-body">
+    {section.blocks.map((b) =>
+      b.kind === 'p' ? (
+        <p set:html={b.html} />
+      ) : b.kind === 'h3' ? (
+        <h3 class="lp-prose-sub">{b.text}</h3>
+      ) : b.ordered ? (
+        <ol class="lp-rows" role="list">
+          {b.items.map((html) => (
+            <li set:html={html} />
+          ))}
+        </ol>
+      ) : (
+        <ul class="lp-rows" role="list">
+          {b.items.map((html) => (
+            <li set:html={html} />
+          ))}
+        </ul>
+      ),
+    )}
+  </div>
+</div>
+
+<style>
+  .lp-prose {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  @media (min-width: 64rem) {
+    .lp-prose:not(.lp-prose--wide) {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      column-gap: clamp(3rem, 6vw, 6rem);
+      align-items: start;
+    }
+  }
+  .lp-prose-title {
+    margin: 0;
+    max-width: 16ch;
+  }
+  .lp-prose-h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+  }
+  .lp-prose-body {
+    display: grid;
+    gap: 1.1rem;
+    align-content: start;
+    max-width: 40rem;
+  }
+  .lp-prose-body > * {
+    margin: 0;
+  }
+  .lp-prose-body p {
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+  /* The first paragraph is the section's lede. */
+  .lp-prose-body > p:first-child {
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--heading);
+  }
+  .lp-prose-sub {
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .lp-rows {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .lp-rows li {
+    position: relative;
+    padding: 1rem 0 1rem 1.6rem;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--text-body);
+    line-height: 1.55;
+  }
+  .lp-rows li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1.85rem;
+    width: 0.8rem;
+    border-top: 1.5px solid var(--marker);
+  }
+  /* A bold lead phrase is the row's title, in the heading colour. */
+  .lp-rows :global(strong) {
+    color: var(--heading);
+    font-weight: 600;
+  }
+</style>

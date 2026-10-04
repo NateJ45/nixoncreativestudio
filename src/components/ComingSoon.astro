@@ -2,27 +2,24 @@
 /* ============================================================================
    ComingSoon
    ============================================================================
-   Safe to edit. The actual visual treatment for the WIP gate. Renders
-   as the entire <body> contents on:
-     - /coming-soon/ (always)
+   Safe to edit. The visual treatment for the WIP gate. Renders as the entire
+   <body> contents on:
+     - /coming-soon/ (always; kept out of the sitemap and marked noindex)
      - every other route when PUBLIC_COMING_SOON=true (via BaseLayout)
 
-   Standalone visual: large wordmark, short pitch, contact options. No
-   nav, no footer, no theme toggle.
+   One band on the limewash window-light ground: the real logo lockup, "Launching
+   soon" with the italic second voice, a short honest line about the studio, and
+   the two ways to reach Nathan. No nav, no footer.
 
-   IMPORTANT: this component can render OUTSIDE BaseLayout, so it must NOT
-   depend on globals.css being present. Every color, font, and animation
-   below is declared in the self-contained <style> block at the bottom,
-   scoped under the .ncs-cs root. Brand tokens are duplicated here on
-   purpose so the page looks right even when the design system stylesheet
-   is not loaded. Light is the default; the .dark class (set by the theme
-   bootstrap in the page <head>) flips the surface and text tokens.
-
-   The standalone <head> still does the work it always did: theme
-   bootstrap script, Bebas Neue preload, meta tags. This file only owns
-   the body markup and its own styling.
+   Both hosts load globals.css (BaseLayout and the standalone /coming-soon/ page),
+   so this uses the site's tokens and the Band component like any other page; there
+   is no separate palette to keep in step. Nothing starts at opacity 0 and nothing
+   needs JavaScript (the grounds script only attaches the textures and pauses the
+   light off screen). Under prefers-reduced-motion the ground shows its still.
    ============================================================================ */
 
+import Band from './Band.astro';
+import Logo from './Logo.astro';
 import { getSite } from '../data/site';
 
 // Studio name, location, email and phone come from Site settings in the CMS.
@@ -30,434 +27,92 @@ const site = await getSite(Astro);
 ---
 
 <main class="ncs-cs">
-  <!-- Animated background. Three layers of drifting brand-color mesh on a
-       navy field, plus a faint film grain. All decorative, so aria-hidden.
-       The whole stack freezes under prefers-reduced-motion (see <style>). -->
-  <div class="ncs-cs__bg" aria-hidden="true">
-    <span class="ncs-cs__mesh ncs-cs__mesh--a"></span>
-    <span class="ncs-cs__mesh ncs-cs__mesh--b"></span>
-    <span class="ncs-cs__mesh ncs-cs__mesh--c"></span>
-    <span class="ncs-cs__grain"></span>
-  </div>
+  <Band ground="window-light" labelledby="coming-soon-heading" class="cs-band">
+    <div class="cs-inner">
+      <Logo lockup="full" width={280} eager />
 
-  <!-- Content. Each block carries a small entrance delay so the
-       wordmark, pitch, and contact links arrive in sequence. -->
-  <div class="ncs-cs__inner">
-    <!-- Small accent rule above the wordmark. Decorative anchor for the
-         eye before the big display text. -->
-    <span class="ncs-cs__rule ncs-cs__rise" style="--cs-delay: 0ms" aria-hidden="true"></span>
+      <h1 id="coming-soon-heading" class="type-display cs-title">
+        Launching <span class="voice">soon.</span>
+      </h1>
 
-    <h1 class="ncs-cs__wordmark ncs-cs__rise" style="--cs-delay: 80ms">
-      {site.studioName}
-    </h1>
+      <p class="type-lede">
+        {site.studioName} is a small studio in {site.address}. Web design and strategy for small
+        businesses, nonprofits, churches and schools anywhere, and photography across the Cincinnati
+        region. The new site goes live this season.
+      </p>
 
-    <p class="ncs-cs__eyebrow ncs-cs__rise" style="--cs-delay: 160ms">
-      Launching soon
-    </p>
+      <p class="type-body">
+        If you have a project in mind in the meantime, email or call me directly. I read every
+        inquiry myself.
+      </p>
 
-    <p class="ncs-cs__lead ncs-cs__rise" style="--cs-delay: 240ms">
-      A small studio in {site.address}: strategy-led web design and brand work for small businesses,
-      nonprofits, churches, and schools anywhere, plus photography across the Cincinnati region.
-    </p>
-
-    <p class="ncs-cs__note ncs-cs__rise" style="--cs-delay: 320ms">
-      The new site goes live this season. If you have a project in mind in the meantime, email or
-      call me directly. I read every inquiry myself.
-    </p>
-
-    <!-- Contact CTAs. Larger tap targets than typical body links since this
-         is a near-empty page; visitors expect to be able to click without
-         hunting. -->
-    <ul class="ncs-cs__contact ncs-cs__rise" style="--cs-delay: 400ms">
-      <li>
-        <a class="ncs-cs__link" href={site.emailHref}>
-          {site.email}
-        </a>
-      </li>
-      <li class="ncs-cs__sep" aria-hidden="true">
-        ·
-      </li>
-      <li>
-        <a class="ncs-cs__link" href={site.phoneHref}>
-          {site.phone}
-        </a>
-      </li>
-    </ul>
-  </div>
+      <ul class="cs-contact">
+        <li>
+          <a href={site.emailHref}>{site.email}</a>
+        </li>
+        <li>
+          <a href={site.phoneHref}>{site.phone}</a>
+        </li>
+      </ul>
+    </div>
+  </Band>
 </main>
 
 <style>
-  /* ==========================================================================
-     Self-contained tokens + reset.
-     Scoped under .ncs-cs so nothing here can leak into the rest of the site
-     when this component renders inside BaseLayout. Brand hex values match
-     globals.css; they are repeated here on purpose so the gate looks right
-     with or without the design system stylesheet.
-     ========================================================================== */
   .ncs-cs {
-    /* Brand palette (light defaults) */
-    --cs-navy: #0a1628;
-    --cs-accent: #3478bd;
-    --cs-link: #2a6fb0;
-    --cs-sky: #40aaed;
-    --cs-amber: #ffa334;
-
-    /* Surface + text (light) */
-    --cs-bg: #f4f7fa;
-    --cs-heading: #0a1628;
-    --cs-text: #1a1a1a;
-    --cs-muted: #5f6573;
-    --cs-on-mesh: #0a1628;
-
-    --cs-font-display: 'Bebas Neue', ui-sans-serif, system-ui, sans-serif;
-    --cs-font-body: 'Source Sans 3 Variable', 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-    --cs-font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', monospace;
-
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    display: flex;
+    display: block;
     min-height: 100vh;
     min-height: 100dvh;
+    background: var(--background);
+  }
+  .ncs-cs :global(.cs-band) {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    padding: clamp(2rem, 6vw, 5rem) clamp(1.25rem, 5vw, 3rem);
-    background-color: var(--cs-bg);
-    color: var(--cs-text);
-    font-family: var(--cs-font-body);
-    text-align: center;
-    -webkit-font-smoothing: antialiased;
+    min-height: inherit;
+    padding-block: clamp(2rem, 6vw, 5rem);
   }
-
-  /* Dark mode: flip surface + text, keep the brand hues vivid. The .dark
-     class is applied to <html> by the theme bootstrap before first paint. */
-  :global(.dark) .ncs-cs {
-    --cs-bg: #0a1628;
-    --cs-heading: #f4f7fa;
-    --cs-text: #e8edf3;
-    --cs-muted: #9ca3af;
-    --cs-link: #40aaed;
-    --cs-on-mesh: #f4f7fa;
-  }
-
-  /* ==========================================================================
-     Animated background. A deep navy field with three soft radial "mesh"
-     blobs (navy -> NCS blue -> sky, plus an amber spark) that drift and
-     breathe, giving an aurora feel. z-index keeps it behind the content.
-     ========================================================================== */
-  .ncs-cs__bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: radial-gradient(120% 90% at 50% 8%, #11243f 0%, var(--cs-navy) 60%), var(--cs-navy);
-    overflow: hidden;
-  }
-
-  /* In light mode the field stays navy so the mesh reads with depth; the
-     content card sits in front with its own light surface via the inner
-     panel below. */
-
-  .ncs-cs__mesh {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.55;
-    will-change: transform;
-  }
-
-  .ncs-cs__mesh--a {
-    top: -10%;
-    left: 8%;
-    width: 46vmax;
-    height: 46vmax;
-    background: radial-gradient(circle at 30% 30%, var(--cs-accent), transparent 65%);
-    animation: cs-drift-a 22s ease-in-out infinite alternate;
-  }
-
-  .ncs-cs__mesh--b {
-    bottom: -18%;
-    right: 2%;
-    width: 50vmax;
-    height: 50vmax;
-    background: radial-gradient(circle at 60% 40%, var(--cs-sky), transparent 62%);
-    opacity: 0.45;
-    animation: cs-drift-b 26s ease-in-out infinite alternate;
-  }
-
-  .ncs-cs__mesh--c {
-    top: 30%;
-    left: 38%;
-    width: 34vmax;
-    height: 34vmax;
-    background: radial-gradient(circle at 50% 50%, var(--cs-amber), transparent 60%);
-    opacity: 0.18;
-    animation: cs-drift-c 30s ease-in-out infinite alternate;
-  }
-
-  /* Faint film grain on top of the mesh for texture. SVG noise as a data
-     URI so there is no extra request. */
-  .ncs-cs__grain {
-    position: absolute;
-    inset: -50%;
-    opacity: 0.06;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation: cs-grain 8s steps(6) infinite;
-  }
-
-  @keyframes cs-drift-a {
-    from {
-      transform: translate3d(0, 0, 0) scale(1);
-    }
-    to {
-      transform: translate3d(8vw, 6vh, 0) scale(1.12);
-    }
-  }
-  @keyframes cs-drift-b {
-    from {
-      transform: translate3d(0, 0, 0) scale(1.05);
-    }
-    to {
-      transform: translate3d(-7vw, -5vh, 0) scale(0.95);
-    }
-  }
-  @keyframes cs-drift-c {
-    from {
-      transform: translate3d(0, 0, 0) scale(0.9);
-    }
-    to {
-      transform: translate3d(5vw, -7vh, 0) scale(1.15);
-    }
-  }
-  @keyframes cs-grain {
-    0% {
-      transform: translate(0, 0);
-    }
-    100% {
-      transform: translate(-8%, 6%);
-    }
-  }
-
-  /* ==========================================================================
-     Content panel. Sits above the background. A SOLID light surface in light
-     mode (the site's bg-soft) and a SOLID navy in dark, each lifted off the
-     mesh by a real soft shadow plus a thin border, so the copy always reads
-     cleanly over the moving background. No backdrop blur, no translucent
-     white border (that glassmorphism pattern is banned site-wide); depth here
-     comes from the shadow and the surface step, the same way .surface-card
-     does it in the main design system.
-     ========================================================================== */
-  .ncs-cs__inner {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 42rem;
-    padding: clamp(1.75rem, 5vw, 3rem);
-    border-radius: 1.25rem;
-    /* Light: solid bg-soft panel keeps body copy fully readable over the navy
-       mesh, lifted by a soft layered shadow and a hairline border. */
-    background: var(--cs-bg);
-    border: 1px solid rgba(10, 22, 40, 0.08);
-    box-shadow:
-      0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
-      0 24px 60px -28px rgba(10, 22, 40, 0.55);
-  }
-
-  :global(.dark) .ncs-cs__inner {
-    /* Dark: a solid navy a touch lighter than the field so the panel still
-       reads as a raised surface, with a subtle sky-toned edge. */
-    background: #0d1c33;
-    border-color: rgba(64, 170, 237, 0.22);
-    box-shadow:
-      0 1px 0 0 rgba(64, 170, 237, 0.12) inset,
-      0 24px 70px -30px rgba(0, 0, 0, 0.7);
-  }
-
-  /* Accent rule above the wordmark. */
-  .ncs-cs__rule {
-    display: block;
-    width: 3rem;
-    height: 3px;
-    margin: 0 auto 1.5rem;
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--cs-accent), var(--cs-sky));
-  }
-
-  /* ==========================================================================
-     Wordmark. A single SOLID heading color carried by Bebas weight and size,
-     with a soft brand glow behind the glyphs via text-shadow. No clipped
-     paint on the text, which the site bans; the glow is faint navy in light
-     mode and a sky-toned halo in dark, so the wordmark reads as the
-     centerpiece without any moving sheen.
-     ========================================================================== */
-  .ncs-cs__wordmark {
-    margin: 0;
-    font-family: var(--cs-font-display);
-    font-weight: 400;
-    line-height: 0.92;
-    letter-spacing: 0.01em;
-    font-size: clamp(2.75rem, 11vw, 6rem);
-    color: var(--cs-heading);
-    text-shadow: 0 2px 18px rgba(10, 22, 40, 0.12);
-  }
-
-  /* Dark: a subtle sky-blue halo gives the navy field some lift behind the
-     light wordmark. Still a glow, not text-clip. */
-  :global(.dark) .ncs-cs__wordmark {
-    text-shadow: 0 2px 28px rgba(64, 170, 237, 0.22);
-  }
-
-  .ncs-cs__eyebrow {
-    margin: 1rem 0 0;
-    font-family: var(--cs-font-mono);
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--cs-muted);
-  }
-
-  .ncs-cs__lead {
-    margin: 1.5rem auto 0;
-    max-width: 42ch;
-    font-size: clamp(1.0625rem, 2vw, 1.1875rem);
-    line-height: 1.6;
-    color: var(--cs-text);
-  }
-
-  .ncs-cs__note {
-    margin: 1rem auto 0;
-    max-width: 42ch;
-    line-height: 1.6;
-    color: var(--cs-muted);
-  }
-
-  /* ==========================================================================
-     Contact links. Large tap targets, animated underline that wipes in on
-     hover/focus (color is never the only cue: the underline and a slight
-     lift carry the state too).
-     ========================================================================== */
-  .ncs-cs__contact {
-    list-style: none;
-    margin: 2.25rem 0 0;
-    padding: 0;
+  .cs-inner {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
+    align-items: flex-start;
+    gap: var(--spacing-m);
+    max-width: 44rem;
+  }
+  .cs-title {
+    margin-top: var(--spacing-m);
+    font-size: var(--text-h1);
+  }
+  .cs-title .voice {
+    display: block;
   }
 
-  .ncs-cs__sep {
-    display: none;
-    color: var(--cs-muted);
+  /* The two contact links: large, set on hairlines, 44px+ targets. */
+  .cs-contact {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    margin: var(--spacing-s) 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border);
   }
-
-  @media (min-width: 640px) {
-    .ncs-cs__contact {
-      flex-direction: row;
-      justify-content: center;
-      gap: 1.5rem;
-    }
-    .ncs-cs__sep {
-      display: block;
-    }
+  .cs-contact li {
+    border-bottom: 1px solid var(--border);
   }
-
-  .ncs-cs__link {
-    position: relative;
-    display: inline-block;
-    font-family: var(--cs-font-body);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--cs-link);
+  .cs-contact a {
+    display: block;
+    padding-block: 0.75rem;
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    color: var(--heading);
     text-decoration: none;
-    padding-bottom: 2px;
-    transition:
-      transform 0.18s ease,
-      color 0.15s ease;
+    overflow-wrap: anywhere;
+    transition: color 0.15s ease;
   }
-
-  /* Animated underline drawn with a pseudo-element so it can wipe from the
-     left rather than just appear. */
-  .ncs-cs__link::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 2px;
-    width: 100%;
-    background: currentColor;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.22s ease;
-  }
-
-  .ncs-cs__link:hover,
-  .ncs-cs__link:focus-visible {
-    transform: translateY(-1px);
-  }
-
-  .ncs-cs__link:hover::after,
-  .ncs-cs__link:focus-visible::after {
-    transform: scaleX(1);
-  }
-
-  /* Touch devices: 44px-tall links. The padding is added above and below the
-     text and the underline moves up with it, so it still sits just under the
-     words. */
-  @media (pointer: coarse) {
-    .ncs-cs__link {
-      padding-block: 0.65rem;
-    }
-    .ncs-cs__link::after {
-      bottom: calc(0.65rem - 2px);
-    }
-  }
-
-  /* Visible focus ring for keyboard users (no globals.css to lean on). */
-  .ncs-cs__link:focus-visible {
-    outline: 2px solid var(--cs-accent);
-    outline-offset: 4px;
-    border-radius: 3px;
-  }
-
-  /* ==========================================================================
-     Entrance. Each .ncs-cs__rise element lifts into place once, with a
-     per-element delay set inline via --cs-delay. One-shot, forwards-filled.
-
-     It deliberately does NOT fade up from opacity 0. Chrome does not count a
-     zero-opacity element as a contentful paint and does not re-count it once
-     it fades in, so the earlier fade version left this page with no Largest
-     Contentful Paint at all: Lighthouse reported "audit did not produce a
-     value" for LCP and scored no performance category (staging, 2026-09-06).
-     The lift alone reads as the same staggered arrival, and every line is
-     painted from the first frame.
-     ========================================================================== */
-  .ncs-cs__rise {
-    transform: translateY(14px);
-    animation: cs-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: var(--cs-delay, 0ms);
-  }
-
-  @keyframes cs-rise {
-    to {
-      transform: translateY(0);
-    }
-  }
-
-  /* ==========================================================================
-     Reduced-motion: freeze every animation. The mesh holds a static
-     position and the entrance lift is skipped (content sits where it lands).
-     The wordmark is a static solid color now, so it needs no special
-     handling here. Hover transitions on the links are short and
-     intentional, so they stay.
-     ========================================================================== */
-  @media (prefers-reduced-motion: reduce) {
-    .ncs-cs__mesh,
-    .ncs-cs__grain {
-      animation: none !important;
-    }
-    .ncs-cs__rise {
-      animation: none !important;
-      transform: none;
-    }
+  .cs-contact a:hover,
+  .cs-contact a:focus-visible {
+    color: var(--link);
   }
 </style>

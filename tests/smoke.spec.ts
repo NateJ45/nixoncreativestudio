@@ -94,3 +94,58 @@ test.describe('Smoke: unknown and draft journal entries', () => {
     });
   }
 });
+
+// The pre-launch gate page is a holding page: not indexable and not in the sitemap.
+test('/coming-soon/ is noindex and absent from the sitemap', async ({ page, request }) => {
+  await page.goto('/coming-soon/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  await expect(page.locator('h1')).toContainText('Launching');
+  const res = await request.get('/sitemap-0.xml');
+  if (res.ok()) expect(await res.text()).not.toContain('/coming-soon');
+});
+
+// The phone menu (src/components/MobileMenu.astro). With JavaScript it is a
+// modal <dialog>: aria-expanded on the trigger, Tab and Shift+Tab stay inside,
+// Escape closes it and focus returns to the trigger. Without JavaScript the
+// same dialog is a popover the buttons open and close.
+test.describe('Smoke: phone menu', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('opens, traps focus, and closes on Escape back to the trigger', async ({
+    page,
+    browserName,
+  }) => {
+    // WebKit does not move focus to links with Tab by default.
+    test.skip(browserName === 'webkit', 'Tab skips links in WebKit');
+    await page.goto('/services/', { waitUntil: 'load' });
+    const trigger = page.locator('header [data-menu-open]');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await trigger.click();
+    const menu = page.locator('#site-menu');
+    await expect(menu.locator('nav a').first()).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    for (const key of ['Tab', 'Shift+Tab']) {
+      for (let i = 0; i < 12; i++) {
+        await page.keyboard.press(key);
+        const inside = await page.evaluate(() => !!document.activeElement?.closest('#site-menu'));
+        expect(inside, `${key} ${i + 1} stays in the menu`).toBe(true);
+      }
+    }
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    await expect(trigger).toBeFocused();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+    test('the menu button still opens and closes the menu', async ({ page }) => {
+      await page.goto('/services/', { waitUntil: 'domcontentloaded' });
+      await page.locator('header [data-menu-open]').click();
+      const menu = page.locator('#site-menu');
+      await expect(menu.locator('nav a').first()).toBeVisible();
+      await menu.locator('[data-menu-close]').click();
+      await expect(menu).toBeHidden();
+    });
+  });
+});
