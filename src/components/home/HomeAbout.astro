@@ -3,22 +3,27 @@
 /* ============================================================================
    HomeAbout ("Who you work with" on the homepage)
    ============================================================================
-   Nathan's portrait beside the line the copy audit kept ("The person you meet
-   on day one is the same person who hands you the finished site."), a short
-   bio and two real snapshots, then a link to /about/.
+   Nathan's black-and-white studio portrait, large, beside the line the copy
+   audit kept ("The person you meet on day one is the same person who hands
+   you the finished site."), a short bio and two real snapshots, then a link
+   to /about/. The d7a mock-up's composition: two equal halves, the portrait
+   filling its half on the ink like a print in the darkroom (it was a small
+   colour headshot in a 5/7 split, which left a wide empty field of ink at
+   1440: 2026-10-04 review).
 
-   Ground: deep (the ink board, still), so the portrait sits like a print on
-   a dark table.
+   Ground: deep (the ink board, still).
 
    The words here are in code: the Home page entry has no field for this band
    (and the CMS schema is not this page's to change). They restate the About
    page's own story (cms/content/page_about.json), so change both together.
-   Pictures: the bundled headshot and two of the About photos, parked until
-   needed (DeferredPicture: Gotcha 14).
+   Pictures: the bundled portrait and two of the About photos, native lazy
+   loading. The band sits several screens below the fold at every width, far
+   outside Chrome's lazy-load distance at load, so they never compete with the
+   LCP (Gotcha 14) and need no parking script.
    ============================================================================ */
-import DeferredPicture from './DeferredPicture.astro';
+import { Picture } from 'astro:assets';
 import Band from '../Band.astro';
-import headshot from '../../assets/brand/headshot.jpg';
+import portrait from '../../assets/about/portrait-bw.jpg';
 import running from '../../assets/about/running.jpg';
 import exploring from '../../assets/about/exploring.jpg';
 import { getSite } from '../../data/site';
@@ -29,11 +34,14 @@ const site = await getSite(Astro);
 <Band ground="deep" still id="about" labelledby="about-heading" class="home-about">
   <div class="about-grid">
     <figure class="portrait" data-reveal="fade">
-      <DeferredPicture
-        src={headshot}
-        alt={`${site.ownerName}, smiling, outdoors in summer light`}
-        widths={[400, 640, 900, 1200]}
-        sizes="(max-width: 820px) 92vw, 40vw"
+      <Picture
+        src={portrait}
+        formats={['avif', 'webp']}
+        alt={`A black-and-white studio portrait of ${site.ownerName} looking off to the side.`}
+        widths={[480, 720, 960, 1280]}
+        sizes="(max-width: 820px) 92vw, (min-width: 82.5rem) 38rem, 46vw"
+        loading="lazy"
+        decoding="async"
       />
       <figcaption>{site.ownerName}, Cincinnati</figcaption>
     </figure>
@@ -62,20 +70,26 @@ const site = await getSite(Astro);
       </div>
       <div class="mini">
         <figure>
-          <DeferredPicture
+          <Picture
             src={running}
+            formats={['avif', 'webp']}
             alt="Nathan and a friend at the end of a charity 5K, race bibs on."
             widths={[200, 300]}
             sizes="140px"
+            loading="lazy"
+            decoding="async"
           />
           <figcaption>Race day</figcaption>
         </figure>
         <figure>
-          <DeferredPicture
+          <Picture
             src={exploring}
+            formats={['avif', 'webp']}
             alt="Nathan carrying a small child in front of old railroad cars."
             widths={[200, 300]}
             sizes="140px"
+            loading="lazy"
+            decoding="async"
           />
           <figcaption>Out exploring</figcaption>
         </figure>
@@ -90,13 +104,12 @@ const site = await getSite(Astro);
 <style>
   .about-grid {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
     gap: clamp(2rem, 5vw, 5rem);
     align-items: center;
   }
   .portrait {
     margin: 0;
-    max-width: 34rem;
   }
   .portrait :global(img) {
     display: block;
@@ -104,6 +117,15 @@ const site = await getSite(Astro);
     height: auto;
     border-radius: 2px;
     box-shadow: var(--shadow-frame);
+  }
+  /* Beside the text, the print stands upright so it holds the height of the column
+     (the studio's black background takes the trim; the face stays in frame). */
+  @media (min-width: 821px) {
+    .portrait :global(img) {
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+      object-position: 42% 30%;
+    }
   }
   .portrait figcaption,
   .mini figcaption {
