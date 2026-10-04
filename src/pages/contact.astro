@@ -338,10 +338,24 @@ const optionalMark = 'optional';
               <p class="type-caption">It goes straight to my inbox.</p>
             </div>
 
-            {!formActive && (
+            {/* No access key in this build. The developer's note shows under
+                 `astro dev` only; any built copy without the key (a branch
+                 preview, the CI preview) tells a visitor plainly instead.
+                 Production sets PUBLIC_WEB3FORMS_KEY in the Cloudflare BUILD
+                 variables (docs/claude/deployment.md), so neither shows there. */}
+            {!formActive && import.meta.env.DEV && (
               <p class="type-caption">
                 The Web3Forms access key is missing. Set <code>PUBLIC_WEB3FORMS_KEY</code> in{' '}
                 <code>.env</code> locally and in the Cloudflare build settings before launch.
+              </p>
+            )}
+            {!formActive && !import.meta.env.DEV && (
+              <p class="type-caption">
+                This copy of the site is a preview, and its form does not send. Email me at{' '}
+                <a href={site.emailHref} class="text-link underline underline-offset-2">
+                  {site.email}
+                </a>{' '}
+                instead.
               </p>
             )}
           </form>
@@ -535,12 +549,13 @@ const optionalMark = 'optional';
       margin: 0 0 var(--spacing-m);
       max-width: 52ch;
     }
-    /* The form is a tray: a step deeper than the page, with a hairline and a hard
-       offset shadow, so the fields (a step LIGHTER than both) are the thing you see. */
+    /* The form is a tray: a step deeper than the page, with a hairline and the
+       soft print shadow (DESIGN.md "Elevation": no hard offset shadows), so the
+       fields (a step LIGHTER than both) are the thing you see. */
     .contact-card {
       background: var(--muted);
       border: 1px solid var(--input);
-      box-shadow: 6px 6px 0 color-mix(in srgb, var(--heading) 16%, transparent);
+      box-shadow: var(--shadow-print);
       padding: clamp(1.1rem, 1rem + 2.2vw, 2.25rem);
     }
     .contact-voice {
