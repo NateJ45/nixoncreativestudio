@@ -86,12 +86,17 @@ const schemas = [
   <article>
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
       <div class="ncs-container max-w-[64rem]" data-reveal>
+        {/* The animated underline sits on an inner span, not the link: on a touch
+            device the link is a 44px-tall row, and an underline on the link's own
+            box would drop to the bottom of that row, away from the words. */}
         <a
-          class="link-underline mb-l inline-flex items-center gap-1 font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline"
+          class="mb-l inline-flex items-center font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline pointer-coarse:min-h-11"
           href="/journal/"
         >
-          <span aria-hidden="true">&larr;</span>
-          <span>Journal</span>
+          <span class="link-underline inline-flex items-center gap-1">
+            <span aria-hidden="true">&larr;</span>
+            <span>Journal</span>
+          </span>
         </a>
 
         <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">

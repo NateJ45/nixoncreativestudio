@@ -400,6 +400,18 @@ const site = await getSite(Astro);
     transform: scaleX(1);
   }
 
+  /* Touch devices: 44px-tall links. The padding is added above and below the
+     text and the underline moves up with it, so it still sits just under the
+     words. */
+  @media (pointer: coarse) {
+    .ncs-cs__link {
+      padding-block: 0.65rem;
+    }
+    .ncs-cs__link::after {
+      bottom: calc(0.65rem - 2px);
+    }
+  }
+
   /* Visible focus ring for keyboard users (no globals.css to lean on). */
   .ncs-cs__link:focus-visible {
     outline: 2px solid var(--cs-accent);
