@@ -211,16 +211,26 @@ const heroGround = isChurch ? 'paper' : isNonprofit ? 'paper-contours' : 'window
            largest thing in the first screen, so it loads eagerly. */}
       {isChurch && (
         <div class="lp-hero-print">
+          {/* Eager but NOT fetchpriority high: on a desktop it is in the first
+               screen; on a phone it sits under the copy and the lede is the
+               LCP, so it is not raised above the fonts. Measured 2026-10-04,
+               mobile Lighthouse median 2.13 s LCP either way (the proof
+               band's first print also loads early on a phone). */}
           <Frame
-            src={fbcmHome}
-            alt="The new First Baptist Church Muncie home page, with the Sunday service time and the address under the headline."
             url="fbcm-site.nathanjnixon86.workers.dev"
             tag={fbcmTag}
-            eager
-            widths={[480, 800, 1200, 1600]}
-            sizes="(min-width: 82.5rem) 42rem, (min-width: 64rem) 52vw, 92vw"
+            alt=""
             caption="First Baptist Church, Muncie, Indiana. Finished, and waiting on the church's move off Wix."
-          />
+          >
+            <Image
+              src={fbcmHome}
+              alt="The new First Baptist Church Muncie home page, with the Sunday service time and the address under the headline."
+              widths={[480, 800, 1200, 1600]}
+              sizes="(min-width: 82.5rem) 42rem, (min-width: 64rem) 52vw, 92vw"
+              loading="eager"
+              decoding="async"
+            />
+          </Frame>
         </div>
       )}
 
