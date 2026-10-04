@@ -150,6 +150,15 @@ export default defineConfig({
         'https://nixoncreativestudio.com/sitemap-case_studies.xml',
         'https://nixoncreativestudio.com/sitemap-posts.xml',
       ],
+      // The integration also lists every static server route on its own (found
+      // 2026-10-04: the build put /coming-soon/ and /cincinnati-event-photography/
+      // in sitemap-0.xml although neither is in customPages). Leaving a page out
+      // of customPages is therefore not enough: name it here too.
+      filter: (page) =>
+        ![
+          'https://nixoncreativestudio.com/coming-soon/',
+          'https://nixoncreativestudio.com/cincinnati-event-photography/',
+        ].includes(page),
     }),
     react(),
     // EmDash CMS trial: D1 for content, R2 for media, admin at /_emdash/admin.

@@ -58,6 +58,9 @@ const destinations = menu.filter((item) => showJournal || !item.url.startsWith('
 
         <h1 id="notfound-heading" class="type-display notfound-title">
           {lead}
+          {/* Astro drops the line break between two expressions, so the space is explicit
+              (without it the heading read "That pagewandered off.", to screen readers too). */}
+          {voice && ' '}
           {voice && <span class="voice">{voice}</span>}
         </h1>
 
