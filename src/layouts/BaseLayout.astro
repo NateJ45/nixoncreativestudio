@@ -276,20 +276,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       </div>
     )}
 
-    <!--
-      Lenis smooth scroll initializer. The script is a normal client-side
-      module (no is:inline) so Astro bundles it and hashes the URL. Lives
-      at the end of body so Lenis has the document mounted before it
-      attaches its scroll listeners.
-
-      View Transitions reuse loaded modules across same-origin navigations,
-      so the Lenis instance keeps running without re-initializing on every
-      page change. The script itself honors prefers-reduced-motion and
-      becomes a no-op when the user has reduced-motion set.
-    -->
-    <script>
-      import '../scripts/lenis-init';
-    </script>
+    {/* No smooth-scroll library: scrolling is the browser's own (decided 2026-10-04). */}
     <!--
       Progressive enhancement layer. Wires the declarative data-* effects
       (cursor spotlight, count-up numbers, scroll-aware header)

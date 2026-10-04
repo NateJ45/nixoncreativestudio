@@ -58,7 +58,7 @@ Pages are runs of `<Band ground="...">` (`src/components/Band.astro`): `paper` (
 
 Defined once in globals.css section 8. Use these; don't reinvent:
 
-- `data-reveal` (+ `fade` / `left` / `right`, stagger with `style="--reveal-delay: 90ms"`): figures, frames and numerals below the fold only. Hidden state scoped to `.js`; the first block of `<main>` never waits (never-break rule 2). **Screenshot trap:** a fast or `fullPage`-only capture leaves revealed bands blank; scroll through in 400 px steps with pauses first (Lenis smooth-scrolls).
+- `data-reveal` (+ `fade` / `left` / `right`, stagger with `style="--reveal-delay: 90ms"`): figures, frames and numerals below the fold only. Hidden state scoped to `.js`; the first block of `<main>` never waits (never-break rule 2). **Screenshot trap:** a fast or `fullPage`-only capture leaves revealed bands blank; scroll through in 400 px steps with pauses first.
 - `.motion-drift` (`--drift`): a scroll-driven translate as an element crosses the viewport; still where unsupported.
 - `.nudge` + `data-nudge` on an arrow, and `.card-link`: the 3 px arrow nudge.
 - `data-countup data-countup-to="10"`: count-ups. Always render the real final value as the static text.
