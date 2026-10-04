@@ -411,11 +411,13 @@ const schemas = [
         <nav class="cs-more" aria-label="More case studies">
           {neighbours.map((n) => (
             <a href={`/work/${n.id}/`} class="cs-more-link">
-              <span class="type-caption">
+              {/* The title comes first for screen readers ("MAS Monograms, Small business"). */}
+              <span class="cs-more-title">{n.title}</span>
+              <span class="type-caption cs-more-kind">
+                <span class="sr-only">, </span>
                 {n.sector}
                 {n.status && ` / ${n.status}`}
               </span>
-              <span class="cs-more-title">{n.title}</span>
             </a>
           ))}
           <a href="/work/" class="card-link cs-more-all">
@@ -833,6 +835,10 @@ const schemas = [
     min-height: 44px;
     color: inherit;
     text-decoration: none;
+  }
+  /* Visually the sector sits above the title. */
+  .cs-more-kind {
+    order: -1;
   }
   .cs-more-title {
     font-family: var(--font-display);
