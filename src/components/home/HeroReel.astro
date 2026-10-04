@@ -1,0 +1,950 @@
+---
+// Safe to edit.
+/* ============================================================================
+   HeroReel (the fanned carousel of client sites in the home hero)
+   ============================================================================
+   Nathan's sketch, built in the d7a mock-up (docs/redesign-2026/mockups/
+   d7a-carousel-contact-sheet, RATIONALE.md): one large frame in the centre,
+   smaller frames stacked to each side at different heights, arrows underneath.
+
+   How it works:
+   - The fan is pure CSS. The reel is a horizontal scroll-snap row; every slide
+     owns a `view-timeline` and its frame reads its own position from it
+     (`animation-timeline`), taking its place in the fan through translate,
+     scale, z-index and, at the edges, opacity. Slots are 14% of the reel, so
+     one step is a fixed 14/114 of the timeline at any width.
+   - No JavaScript is needed to scroll it (swipe, trackpad, shift-wheel, the
+     scrollbar-free row). The small script below only adds the arrows, the
+     Left/Right/Home/End keys on the focused reel, mouse drag, click a side
+     frame to centre it, the live counter, and loading the parked frames. About
+     1.4 KB gzipped. It never
+     moves on its own (no auto-advance).
+   - No JavaScript: the reel is still the fan in Chrome, a plain sideways row
+     elsewhere, and the arrows are hidden (they need the script).
+   - Browsers without animation-timeline (Firefox today) get a plain snap row
+     with big frames and peeking neighbours.
+   - Reduced motion: moves jump instead of gliding and the marker loop does
+     not draw. The fan is position, not animation, so it stays.
+
+   Images: real captures of the live sites (scripts/brand/capture-home-reel.mjs),
+   a phone capture under 700px and a desktop capture above, AVIF with a WebP
+   fallback, through Astro's image pipeline (resized by the Images binding on
+   the first request, then cached for 30 days). The start frame is the LCP
+   element: eager, fetchpriority high, width and height. Every other frame is
+   parked (srcsets in data- attributes, a blank placeholder) until the load
+   event and an idle beat, or until the visitor touches the reel, so nothing
+   but the start frame competes for bandwidth before the LCP (Gotcha 14); a
+   <noscript> copy keeps every frame for a visitor without JavaScript. Each
+   slide carries four srcsets, so the widths are kept few.
+
+   Which slides appear is decided by src/lib/homeWork.ts (gateReel): curated
+   in code, gated by the case studies' launch status.
+   ============================================================================ */
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { ReelSlide } from '../../lib/homeWork';
+
+interface Props {
+  slides: ReelSlide[];
+  /** Index of the slide the reel opens on. */
+  start: number;
+}
+
+const { slides, start } = Astro.props;
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../../assets/home/reel/*.webp', {
+  eager: true,
+});
+const asset = (name: string): ImageMetadata => {
+  const file = files[`../../assets/home/reel/${name}.webp`];
+  if (!file) throw new Error(`HeroReel: missing src/assets/home/reel/${name}.webp`);
+  return file.default;
+};
+
+const DESK_WIDTHS = [640, 960, 1280, 1600];
+const PHONE_WIDTHS = [400, 600, 900];
+const DESK_SIZES = '(max-width: 700px) 74vw, min(56vw, 900px)';
+const PHONE_SIZES = '74vw';
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+async function srcset(src: ImageMetadata, widths: number[], format: 'avif' | 'webp') {
+  const img = await getImage({ src, widths, format });
+  return { src: img.src, srcset: img.srcSet.attribute };
+}
+
+const frames = await Promise.all(
+  slides.map(async (slide, i) => {
+    const desk = asset(`${slide.id}-d`);
+    const phone = asset(`${slide.id}-m`);
+    const [dAvif, dWebp, mAvif, mWebp] = await Promise.all([
+      srcset(desk, DESK_WIDTHS, 'avif'),
+      srcset(desk, DESK_WIDTHS, 'webp'),
+      srcset(phone, PHONE_WIDTHS, 'avif'),
+      srcset(phone, PHONE_WIDTHS, 'webp'),
+    ]);
+    return {
+      slide,
+      first: i === start,
+      desk: { width: desk.width, height: desk.height, avif: dAvif, webp: dWebp },
+      phone: { width: phone.width, height: phone.height, avif: mAvif, webp: mWebp },
+    };
+  }),
+);
+
+type Frame = (typeof frames)[number];
+
+const n = slides.length;
+const startSlide = slides[start];
+---
+
+{/* The marker loop and the arrows' icons are drawn inline (no requests). */}
+<div class="show" data-reel aria-roledescription="carousel" aria-label="Websites I have built">
+  <div
+    class="reel"
+    tabindex="0"
+    aria-label="Client websites. Use the arrow keys or swipe to move between them."
+  >
+    <ul class="track" id="hero-reel-track" role="list">
+      {frames.map((f: Frame, i: number) => {
+        const s = f.slide;
+        // park: srcsets wait in data- attributes until the script promotes them (after
+        // the load event, or the moment the visitor touches the reel), so only the start
+        // frame competes with the page for bandwidth before the LCP (Gotcha 14).
+        const set = (park: boolean, v: string) => (park ? { 'data-srcset': v } : { srcset: v });
+        const picture = (park: boolean) => (
+          <picture class:list={{ park }}>
+            <source
+              media="(max-width: 700px)"
+              type="image/avif"
+              sizes={PHONE_SIZES}
+              width={f.phone.width}
+              height={f.phone.height}
+              {...set(park, f.phone.avif.srcset)}
+            />
+            <source
+              media="(max-width: 700px)"
+              type="image/webp"
+              sizes={PHONE_SIZES}
+              width={f.phone.width}
+              height={f.phone.height}
+              {...set(park, f.phone.webp.srcset)}
+            />
+            <source type="image/avif" sizes={DESK_SIZES} {...set(park, f.desk.avif.srcset)} />
+            <img
+              src={park ? BLANK : f.desk.webp.src}
+              data-src={park ? f.desk.webp.src : undefined}
+              {...set(park, f.desk.webp.srcset)}
+              sizes={DESK_SIZES}
+              width={f.desk.width}
+              height={f.desk.height}
+              alt={s.alt}
+              loading={f.first ? 'eager' : 'lazy'}
+              fetchpriority={f.first ? 'high' : undefined}
+              decoding="async"
+              draggable="false"
+            />
+          </picture>
+        );
+        return (
+          <li
+            class:list={['slide', { 'is-start': f.first }]}
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${n}: ${s.site}, ${s.page}`}
+            data-site={s.site}
+          >
+            <figure class:list={['vp', { 'vp--soon': s.soon }]}>
+              <div class="print">
+                <div class="chrome" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <span class="url">{s.host}</span>
+                  {s.soon && <b class="tag">Launching soon</b>}
+                </div>
+                {picture(!f.first)}
+                {!f.first && <noscript>{picture(false)}</noscript>}
+              </div>
+              <figcaption>
+                <span class="cap-name">
+                  <b>{s.site}</b> <span class="cap-page">{s.page}</span>
+                </span>
+                <span class="cap-fact">{s.fact}</span>
+                <span class="cap-link">
+                  {s.url ? (
+                    <a href={s.url}>
+                      {s.host.split('/')[0]}
+                      <span class="sr-only"> (the live site)</span>
+                    </a>
+                  ) : (
+                    <span class="soon">Launching soon on its own domain</span>
+                  )}
+                </span>
+              </figcaption>
+            </figure>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+  <svg class="loop" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M4 3.2 C 22 0.8, 64 0.6, 98.6 2 C 99.6 30, 99.8 66, 98.6 96.5 C 70 99.4, 30 99.6, 1.6 98.2 C 0.4 70, 0.2 36, 1.2 3.4 C 9 1.6, 18 1.2, 28 1.6"></path>
+  </svg>
+  <div class="ctrl">
+    <button
+      class="nav-btn prev"
+      type="button"
+      aria-controls="hero-reel-track"
+      aria-label="Previous site"
+    >
+      <svg viewBox="0 0 30 18" aria-hidden="true">
+        <path d="M28 9H3M10 2 3 9l7 7"></path>
+      </svg>
+    </button>
+    <p class="count" aria-live="polite">
+      <span class="c-n">{start + 1}</span>
+      <span class="c-of"> of {n}</span>
+      <span class="c-site">{startSlide.site}</span>
+    </p>
+    <button
+      class="nav-btn next"
+      type="button"
+      aria-controls="hero-reel-track"
+      aria-label="Next site"
+    >
+      <svg viewBox="0 0 30 18" aria-hidden="true">
+        <path d="M2 9h25M20 2l7 7-7 7"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  // The reel's controls. Bound on astro:page-load (view transitions keep this module alive),
+  // with a dataset guard so a revisit never binds twice; window listeners are dropped when
+  // the page is swapped out.
+  function bind(show: HTMLElement) {
+    if (show.dataset.bound) return;
+    show.dataset.bound = '1';
+    const reel = show.querySelector<HTMLElement>('.reel')!;
+    const slides = [...show.querySelectorAll<HTMLElement>('.slide')];
+    const n = slides.length;
+    const prev = show.querySelector<HTMLButtonElement>('.prev')!;
+    const next = show.querySelector<HTMLButtonElement>('.next')!;
+    const cN = show.querySelector('.c-n')!;
+    const cSite = show.querySelector('.c-site')!;
+    const rm = matchMedia('(prefers-reduced-motion: reduce)');
+    const off = new AbortController();
+    const { signal } = off;
+    document.addEventListener('astro:before-swap', () => off.abort(), { once: true });
+
+    let cur = -1;
+    const left = (i: number) => {
+      const s = slides[i];
+      return s.offsetLeft + s.offsetWidth / 2 - reel.clientWidth / 2;
+    };
+    const nearest = () => {
+      let best = 0;
+      let bd = Infinity;
+      for (let i = 0; i < n; i++) {
+        const d = Math.abs(left(i) - reel.scrollLeft);
+        if (d < bd) [bd, best] = [d, i];
+      }
+      return best;
+    };
+    // Repeated presses count from the frame still being travelled to, if any.
+    let tgt = -1;
+    const base = () => (tgt >= 0 && Math.abs(left(tgt) - reel.scrollLeft) > 2 ? tgt : cur);
+    const go = (i: number, now = false) => {
+      i = Math.max(0, Math.min(n - 1, i));
+      tgt = i;
+      reel.scrollTo({ left: left(i), behavior: now || rm.matches ? 'instant' : 'smooth' });
+    };
+    const update = () => {
+      const i = nearest();
+      if (i === cur) return;
+      cur = i;
+      cN.textContent = String(i + 1);
+      cSite.textContent = slides[i].dataset.site ?? '';
+      prev.disabled = i === 0;
+      next.disabled = i === n - 1;
+      slides.forEach((s, k) => s.toggleAttribute('data-centre', k === i));
+    };
+
+    let raf = 0;
+    let still = 0;
+    reel.addEventListener(
+      'scroll',
+      () => {
+        if (!raf) raf = requestAnimationFrame(() => ((raf = 0), update()));
+        show.classList.add('is-moving');
+        clearTimeout(still);
+        still = window.setTimeout(() => {
+          show.classList.remove('is-moving');
+          tgt = -1;
+        }, 140);
+      },
+      { passive: true },
+    );
+    prev.addEventListener('click', () => go(base() - 1));
+    next.addEventListener('click', () => go(base() + 1));
+    reel.addEventListener('keydown', (e) => {
+      const k = (
+        { ArrowLeft: base() - 1, ArrowRight: base() + 1, Home: 0, End: n - 1 } as Record<
+          string,
+          number
+        >
+      )[e.key];
+      if (k === undefined || e.target !== reel) return;
+      e.preventDefault();
+      go(k);
+    });
+
+    // Mouse drag (touch and trackpads scroll natively).
+    let x0 = 0;
+    let s0 = 0;
+    let i0 = 0;
+    let moved = false;
+    let down = false;
+    reel.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button) return;
+      down = true;
+      moved = false;
+      x0 = e.clientX;
+      s0 = reel.scrollLeft;
+      i0 = cur;
+    });
+    addEventListener(
+      'pointermove',
+      (e) => {
+        if (!down) return;
+        const dx = e.clientX - x0;
+        if (!moved && Math.abs(dx) > 6) {
+          moved = true;
+          reel.classList.add('is-drag');
+          void getComputedStyle(reel).scrollSnapType; // snap off before the first scroll write
+        }
+        if (moved) reel.scrollLeft = s0 - dx;
+      },
+      { signal },
+    );
+    addEventListener(
+      'pointerup',
+      (e) => {
+        if (!down) return;
+        down = false;
+        if (!moved) return;
+        const dx = e.clientX - x0;
+        reel.classList.remove('is-drag');
+        const steps = Math.max(1, Math.round(Math.abs(dx) / slides[0].offsetWidth / 1.5));
+        go(Math.abs(dx) > 40 ? i0 - Math.sign(dx) * steps : i0);
+      },
+      { signal },
+    );
+    reel.addEventListener('dragstart', (e) => e.preventDefault());
+    reel.addEventListener(
+      'click',
+      (e) => {
+        if (moved) {
+          e.preventDefault();
+          moved = false;
+          return;
+        }
+        const target = e.target as HTMLElement;
+        const s = target.closest<HTMLElement>('.slide');
+        if (!s || target.closest('a')) return;
+        const i = slides.indexOf(s);
+        if (i !== cur) go(i);
+      },
+      true,
+    );
+    addEventListener('resize', () => go(cur, true), { signal });
+
+    const start = Math.max(
+      0,
+      slides.findIndex((s) => s.classList.contains('is-start')),
+    );
+    if (Math.abs(reel.scrollLeft - left(start)) > 2) go(start, true);
+    update();
+
+    // Promote the parked frames: once the page has loaded and gone quiet, or at once if
+    // the visitor reaches for the reel first.
+    const promote = () => {
+      show.querySelectorAll<HTMLElement>('.park [data-srcset], .park [data-src]').forEach((el) => {
+        for (const a of ['srcset', 'src'] as const) {
+          const v = el.dataset[a];
+          if (v) {
+            el.setAttribute(a, v);
+            delete el.dataset[a];
+          }
+        }
+      });
+    };
+    for (const type of ['pointerdown', 'touchstart', 'focusin', 'keydown'] as const)
+      show.addEventListener(type, promote, { once: true, passive: true });
+    const idle = () =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(promote, { timeout: 1500 })
+        : setTimeout(promote, 300);
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true, signal });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-reel]').forEach(bind);
+  });
+</script>
+
+<style>
+  /* ===== Geometry =====================================================
+     Base = a plain scroll-snap row (no-JS without scroll timelines, and
+     Firefox). The fan is the @supports block further down. */
+  .show {
+    --F: min(74cqi, 820px);
+    --capH: 8.4rem;
+    --rise: 0px;
+    --pull: 0px;
+    container-type: inline-size;
+    display: flow-root;
+    position: relative;
+    z-index: 1;
+    max-width: 1600px;
+    margin-inline: auto;
+  }
+  .reel {
+    position: relative;
+    margin-top: calc(var(--pull) * -1);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .reel::-webkit-scrollbar {
+    display: none;
+  }
+  /* Focus shows on the frame in the centre, not round the whole reel. */
+  .reel:focus-visible {
+    outline: none;
+  }
+  /* In ink, not red, so the ring reads apart from the china-marker loop. */
+  .reel:focus-visible [data-centre] .print {
+    outline: 3px solid var(--heading);
+    outline-offset: 4px;
+  }
+  :global(html:not(.js)) .reel:focus-visible {
+    outline: 3px solid var(--marker);
+    outline-offset: -4px;
+  }
+  .track {
+    display: flex;
+    width: max-content; /* so the end padding counts and the last frame can reach the centre */
+    gap: clamp(12px, 2cqi, 28px);
+    margin: 0;
+    padding: 10px calc(50cqi - var(--F) / 2) 6px;
+    list-style: none;
+  }
+  .slide {
+    flex: 0 0 var(--F);
+    position: relative;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+  .slide.is-start {
+    scroll-initial-target: nearest;
+  }
+  .vp {
+    margin: 0;
+    position: relative;
+    font-size: calc(var(--F) / 60);
+    cursor: pointer;
+  }
+  .vp picture,
+  .vp img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .vp img {
+    background: var(--paper-deep);
+    object-fit: cover;
+    -webkit-user-drag: none;
+  }
+  .print > picture {
+    box-shadow: var(--shadow-frame);
+  }
+  /* A parked frame keeps its capture's shape while its blank placeholder shows. */
+  .vp img {
+    aspect-ratio: 1600 / 1000;
+  }
+  @media (max-width: 700px) {
+    .vp img {
+      aspect-ratio: 1170 / 1464;
+    }
+  }
+  :global(html:not(.js)) .park {
+    display: none;
+  }
+
+  /* ===== The print: browser chrome over a real capture ================ */
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.42em;
+    height: 2.2em;
+    padding: 0 0.9em;
+    background: var(--ink);
+    color: var(--on-ink-muted);
+    border-radius: 0.55em 0.55em 0 0;
+    box-shadow: var(--shadow-frame);
+    position: relative;
+    z-index: 1;
+  }
+  .chrome i {
+    flex: none;
+    width: 0.66em;
+    height: 0.66em;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.42;
+  }
+  .chrome .url {
+    flex: 0 1 26em;
+    margin-left: 1em;
+    height: 1.45em;
+    border-radius: 0.73em;
+    background: var(--ink-raised);
+    font: 500 0.86em/1.7 var(--font-ui);
+    padding: 0 1.1em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .chrome .tag {
+    margin-left: auto;
+    font: 700 0.82em/1 var(--font-ui);
+    background: var(--marker-hot);
+    color: var(--ink);
+    padding: 0.42em 0.7em;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  /* ===== Caption under the centre frame =============================== */
+  .vp figcaption {
+    display: grid;
+    gap: 0.3rem;
+    padding-top: 1.6rem;
+    font-size: 1rem;
+    cursor: auto;
+  }
+  .cap-name {
+    font: 400 1.35rem/1 var(--font-display);
+    letter-spacing: 0.02em;
+    color: var(--heading);
+  }
+  .cap-name b {
+    font-weight: 400;
+  }
+  .cap-page {
+    font: italic 400 1.05rem/1 var(--font-serif);
+    letter-spacing: 0;
+    color: var(--marker);
+  }
+  .cap-fact {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.38;
+    max-width: 48ch;
+    text-wrap: balance;
+    color: var(--foreground);
+  }
+  .cap-link {
+    font: 500 0.9375rem/1.3 var(--font-ui);
+  }
+  .cap-link a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 0.5rem;
+    color: var(--heading);
+    text-decoration: underline;
+    text-decoration-color: var(--marker);
+    text-underline-offset: 0.2em;
+  }
+  .cap-link .soon {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+    color: var(--marker);
+  }
+
+  /* ===== Controls: a strip of film under the fan ====================== */
+  .ctrl {
+    display: none;
+  }
+  :global(.js) .ctrl {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.75rem, 3cqi, 2.5rem);
+    position: relative;
+    width: min(100% - 2 * var(--gutter), 640px);
+    margin: 1.25rem auto 0;
+    padding: 18px clamp(8px, 1.6vw, 18px);
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 2px;
+  }
+  /* sprocket rows */
+  .ctrl::before,
+  .ctrl::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0 11px,
+      var(--paper-deep) 11px 25px,
+      transparent 25px 34px
+    );
+    opacity: 0.18;
+  }
+  .ctrl::before {
+    top: 6px;
+  }
+  .ctrl::after {
+    bottom: 6px;
+  }
+  .nav-btn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--paper);
+    cursor: pointer;
+    transition:
+      color 0.2s var(--ease-settle),
+      translate 0.25s var(--ease-settle);
+  }
+  .nav-btn svg {
+    width: 30px;
+    height: 18px;
+  }
+  .nav-btn path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .nav-btn:hover:not([disabled]) {
+    color: var(--marker-hot);
+  }
+  .prev:hover:not([disabled]) {
+    translate: -3px 0;
+  }
+  .next:hover:not([disabled]) {
+    translate: 3px 0;
+  }
+  .nav-btn:focus-visible {
+    outline: 3px solid var(--marker-hot);
+    outline-offset: 2px;
+  }
+  .nav-btn[disabled] {
+    cursor: default;
+    opacity: 0.35;
+  }
+  .count {
+    margin: 0;
+    min-width: 15rem;
+    text-align: center;
+    font: 600 0.75rem/1.3 var(--font-ui);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--on-ink-muted);
+  }
+  .c-n {
+    color: var(--paper);
+  }
+  .c-site {
+    display: block;
+    margin-top: 0.3rem;
+    font: 400 1.2rem/1 var(--font-display);
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--paper);
+  }
+  :global(.js) .reel.is-drag {
+    scroll-snap-type: none;
+    cursor: grabbing;
+  }
+  :global(.js) .reel.is-drag * {
+    user-select: none;
+  }
+  .loop {
+    display: none;
+  }
+
+  @media (max-width: 700px) {
+    .show {
+      --F: 74cqi;
+      --capH: 9.25rem;
+    }
+    .vp {
+      font-size: calc(var(--F) / 26);
+    }
+    .chrome {
+      justify-content: center;
+      height: 2em;
+      border-radius: 1.1em 1.1em 0 0;
+    }
+    .chrome i {
+      display: none;
+    }
+    .chrome .url {
+      margin: 0;
+      flex: 0 1 16em;
+      text-align: center;
+      font-size: 0.8em;
+    }
+    .chrome .tag {
+      position: absolute;
+      right: 0.6em;
+      font-size: 0.62em;
+    }
+    .vp img,
+    .print > picture {
+      border-radius: 0 0 1.1em 1.1em;
+    }
+    .count {
+      min-width: 0;
+      flex: 1;
+    }
+    .nav-btn {
+      width: 52px;
+    }
+  }
+
+  /* ===== The fan ===================================================== */
+  @supports (animation-timeline: view()) {
+    .show {
+      --S: 14cqi;
+      --F: clamp(44cqi, (100svh - 470px) * 1.48, 56cqi);
+      --rise: calc(var(--F) * 0.27);
+    }
+    .track {
+      gap: 0;
+      padding: var(--rise) calc(50cqi - var(--S) / 2) 0;
+    }
+    .slide {
+      flex: 0 0 var(--S);
+      height: calc(var(--F) * 0.6625 + var(--capH));
+      view-timeline: --slot inline;
+    }
+    .vp {
+      position: absolute;
+      left: 50%;
+      bottom: var(--capH);
+      width: var(--F);
+      margin-left: calc(var(--F) / -2);
+      transform-origin: 50% 100%;
+      animation: fan linear both;
+      animation-duration: auto;
+      animation-timeline: --slot;
+    }
+    .vp figcaption {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: min(calc(100cqi - 32px), 44rem);
+      translate: -50% 0;
+      text-align: center;
+      justify-items: center;
+      /* Hidden unless the cap timeline shows it, so no caption ever overlaps another. */
+      visibility: hidden;
+      animation: cap linear both;
+      animation-duration: auto;
+      animation-timeline: --slot;
+    }
+    /* Positions in units of the centre frame (F) and the slot (S). One step is 14/114 of
+       the view timeline: d=1 at 37.72%, d=2 at 25.44%, d=3 at 13.16%. */
+    @keyframes fan {
+      0% {
+        translate: calc(var(--F) * 0.6 - var(--S) * 4.071) calc(var(--F) * -0.5);
+        scale: 0.3;
+        z-index: 5;
+        opacity: 0;
+      }
+      13.16% {
+        translate: calc(var(--F) * 0.62 - var(--S) * 3) calc(var(--F) * -0.52);
+        scale: 0.36;
+        z-index: 7;
+        opacity: 0.85;
+      }
+      25.44% {
+        translate: calc(var(--F) * 0.75 - var(--S) * 2) calc(var(--F) * -0.27);
+        scale: 0.48;
+        z-index: 8;
+        opacity: 1;
+      }
+      37.72% {
+        translate: calc(var(--F) * 0.62 - var(--S) * 1) calc(var(--F) * -0.02);
+        scale: 0.62;
+        z-index: 9;
+      }
+      50% {
+        translate: 0 0;
+        scale: 1;
+        z-index: 10;
+      }
+      62.28% {
+        translate: calc(var(--F) * -0.62 + var(--S) * 1) 0;
+        scale: 0.62;
+        z-index: 9;
+      }
+      74.56% {
+        translate: calc(var(--F) * -0.76 + var(--S) * 2) calc(var(--F) * -0.24);
+        scale: 0.5;
+        z-index: 8;
+        opacity: 1;
+      }
+      86.84% {
+        translate: calc(var(--F) * -0.6 + var(--S) * 3) calc(var(--F) * -0.46);
+        scale: 0.38;
+        z-index: 7;
+        opacity: 0.85;
+      }
+      100% {
+        translate: calc(var(--F) * -0.6 + var(--S) * 4.071) calc(var(--F) * -0.46);
+        scale: 0.3;
+        z-index: 5;
+        opacity: 0;
+      }
+    }
+    @keyframes cap {
+      0%,
+      45% {
+        opacity: 0;
+        visibility: hidden;
+      }
+      48.5%,
+      51.5% {
+        opacity: 1;
+        visibility: visible;
+      }
+      55%,
+      100% {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+    /* The china-marker loop round the centre position. Frames travel under it; it fades
+       while they move and settles round whichever frame lands. */
+    .loop {
+      display: block;
+      position: absolute;
+      z-index: 20;
+      left: 50%;
+      top: calc(var(--rise) - var(--pull) - 13px);
+      width: calc(var(--F) + 26px);
+      height: calc(var(--F) * 0.6625 + 26px);
+      translate: -50% 0;
+      overflow: visible;
+      pointer-events: none;
+      transition: opacity 0.35s var(--ease-settle);
+    }
+    .show:global(.is-moving) .loop {
+      opacity: 0;
+      transition-duration: 0.12s;
+    }
+    .loop path {
+      fill: none;
+      stroke: var(--marker);
+      stroke-width: 3.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+    /* Tuck the raised side stacks up beside the buttons, less on tablets where the
+       copy runs wider. */
+    @media (min-width: 701px) {
+      .show {
+        --pull: calc(var(--rise) * 0.55);
+      }
+    }
+    @media (min-width: 1100px) {
+      .show {
+        --pull: calc(var(--rise) * 0.92);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .show {
+        --S: 30cqi;
+        --F: clamp(60cqi, (100svh - 470px) * 0.76, 74cqi);
+        --rise: calc(var(--F) * 0.07);
+      }
+      .slide {
+        height: calc(var(--F) * 1.3285 + var(--capH));
+      }
+      .loop {
+        height: calc(var(--F) * 1.3285 + 22px);
+        width: calc(var(--F) + 20px);
+        top: calc(var(--rise) - var(--pull) - 11px);
+      }
+      /* Slot is 30% of the reel: one step is 30/130 of the timeline, d=1 at 26.92%. */
+      @keyframes fan {
+        0% {
+          translate: calc(var(--F) * 0.42 - var(--S) * 2.1667) calc(var(--F) * -0.07);
+          scale: 0.7;
+          z-index: 7;
+        }
+        26.92% {
+          translate: calc(var(--F) * 0.3 - var(--S)) calc(var(--F) * -0.035);
+          scale: 0.84;
+          z-index: 9;
+        }
+        50% {
+          translate: 0 0;
+          scale: 1;
+          z-index: 10;
+        }
+        73.08% {
+          translate: calc(var(--F) * -0.3 + var(--S)) calc(var(--F) * -0.035);
+          scale: 0.84;
+          z-index: 9;
+        }
+        100% {
+          translate: calc(var(--F) * -0.42 + var(--S) * 2.1667) calc(var(--F) * -0.07);
+          scale: 0.7;
+          z-index: 7;
+        }
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The marker goes round the centre frame once as the page opens: a wipe, so the stroke
+       is whole the moment it lands. */
+    .loop {
+      animation: draw 0.9s 0.5s var(--ease-settle) both;
+    }
+    @keyframes draw {
+      from {
+        clip-path: inset(0 100% 0 0);
+      }
+      to {
+        clip-path: inset(0 0 0 0);
+      }
+    }
+  }
+</style>

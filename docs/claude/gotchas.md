@@ -144,7 +144,10 @@ Every entry below was measured, not assumed.
     trace before blaming the LCP element. Local Lighthouse on this Windows
     machine reads higher than CI in absolute terms (GPU start-up delays first
     paint by about a second), so compare before and after on the same machine,
-    never against the CI number.
+    never against the CI number. The 2026 home rebuild hit the same wall: with the
+    hero reel's neighbouring frames and the proof-sheet crops loading beside the
+    start frame, local LCP was 2.66 s; parking them (`HeroReel` promotes after
+    load, `home/DeferredPicture.astro` on scroll-in or 3.5 s) brought it to 1.98 s.
 
 15. **The route cache is a second layer in front of the Worker, and it stores
     whatever a response asks for.** Added 2026-10-03 (CMS-DESIGN PR 2). The

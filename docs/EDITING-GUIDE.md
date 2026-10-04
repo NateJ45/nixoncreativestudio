@@ -25,30 +25,30 @@ The admin also explains itself: a short tour opens the first time you open the d
 
 Everything is in the left sidebar. The groups are Site, Pages, Pricing & services, then Case Studies, Journal and Photography, with Media below them.
 
-| I want to change                                                    | Go to (sidebar)                           | Then                                                                   |
-| ------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- |
-| My email, phone, location, social links, tagline                    | **Site settings**                         | Open the one entry, change the box, Publish.                           |
-| The footer "Currently" line (seasonal)                              | **Site settings**                         | Box "Footer Currently line".                                           |
-| The default closing banner ("Tell me what you are building")        | **Site settings**                         | The three "Closing banner" boxes. A page can override its own.         |
-| The homepage headline, section headings, process steps              | **Pages, Home page**                      | The headline is two boxes: the plain part and the coloured part.       |
-| A price (Launch, Signature, Flagship)                               | **Pricing & services, Pricing tiers**     | Open the tier, "Starting price", Publish. Then do the price checklist. |
-| An add-on card ("Add to any project")                               | **Pricing & services, Add-ons**           | Name, price as it reads, what it covers.                               |
-| A Services question and answer (FAQ)                                | **Pages, Services page**                  | Box "Questions and answers": 3 to 10 rows.                             |
-| The Strategy, Web design and Photography chapters on Services       | **Pricing & services, Service offerings** | One entry per chapter.                                                 |
-| The About text, the headshot, the Currently block                   | **Pages, About page**                     | See practice edit 3.                                                   |
-| The Contact page words, budget and timeline choices                 | **Pages, Contact page**                   | Renaming a choice changes what arrives in your inquiry email.          |
-| The Work, Photography, Journal or not-found page words              | **Pages**, the page with that name        | Headline, intro, empty-state texts.                                    |
-| Privacy, Accessibility or Colophon text and the "Last updated" date | **Pages, Other pages**                    | Three entries. Set "Last updated" to today when the text changes.      |
-| A case study (add, edit, hide, feature on the homepage)             | **Case Studies**                          | See 4.1.                                                               |
-| A Journal entry                                                     | **Journal**                               | See 4.2.                                                               |
-| A photo on the Photography page                                     | **Photography, Photos**                   | See 4.3.                                                               |
-| The header or footer links                                          | **Menus** (under Manage in the sidebar)   | See 4.5.                                                               |
-| A redirect for an old or renamed address                            | **Redirects** (Admin login only)          | See 4.4.                                                               |
-| Which sites rotate in the homepage hero                             | **Case Studies**, the case study          | Tick "Show in the homepage device scene" and give it a number.         |
-| A case study whose site is not live (yet)                           | **Case Studies**, the case study          | Box "Launch status". See 4.1, step 3.                                  |
-| The price range search engines read                                 | **Site settings**                         | Box "Price range for search engines" (not shown on the page).          |
-| A picture's file (swap the headshot, replace a cover)               | The entry that holds it                   | Upload a new one in the picture field and rewrite its description.     |
-| Page search titles and descriptions                                 | The same page entry                       | "Search and tab title" and "Search description" at the top.            |
+| I want to change                                                    | Go to (sidebar)                           | Then                                                                                                 |
+| ------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| My email, phone, location, social links, tagline                    | **Site settings**                         | Open the one entry, change the box, Publish.                                                         |
+| The footer "Currently" line (seasonal)                              | **Site settings**                         | Box "Footer Currently line".                                                                         |
+| The default closing banner ("Tell me what you are building")        | **Site settings**                         | The three "Closing banner" boxes. A page can override its own.                                       |
+| The homepage headline, section headings, process steps              | **Pages, Home page**                      | The headline is two boxes: the plain part and the coloured part.                                     |
+| A price (Launch, Signature, Flagship)                               | **Pricing & services, Pricing tiers**     | Open the tier, "Starting price", Publish. Then do the price checklist.                               |
+| An add-on card ("Add to any project")                               | **Pricing & services, Add-ons**           | Name, price as it reads, what it covers.                                                             |
+| A Services question and answer (FAQ)                                | **Pages, Services page**                  | Box "Questions and answers": 3 to 10 rows.                                                           |
+| The Strategy, Web design and Photography chapters on Services       | **Pricing & services, Service offerings** | One entry per chapter.                                                                               |
+| The About text, the headshot, the Currently block                   | **Pages, About page**                     | See practice edit 3.                                                                                 |
+| The Contact page words, budget and timeline choices                 | **Pages, Contact page**                   | Renaming a choice changes what arrives in your inquiry email.                                        |
+| The Work, Photography, Journal or not-found page words              | **Pages**, the page with that name        | Headline, intro, empty-state texts.                                                                  |
+| Privacy, Accessibility or Colophon text and the "Last updated" date | **Pages, Other pages**                    | Three entries. Set "Last updated" to today when the text changes.                                    |
+| A case study (add, edit, hide, feature on the homepage)             | **Case Studies**                          | See 4.1.                                                                                             |
+| A Journal entry                                                     | **Journal**                               | See 4.2.                                                                                             |
+| A photo on the Photography page                                     | **Photography, Photos**                   | See 4.3.                                                                                             |
+| The header or footer links                                          | **Menus** (under Manage in the sidebar)   | See 4.5.                                                                                             |
+| A redirect for an old or renamed address                            | **Redirects** (Admin login only)          | See 4.4.                                                                                             |
+| Which sites show in the homepage hero and proof sheet               | Not in the admin (code)                   | Curated in `src/lib/homeWork.ts`; a study's Launch status and Featured box can only take a site OUT. |
+| A case study whose site is not live (yet)                           | **Case Studies**, the case study          | Box "Launch status". See 4.1, step 3.                                                                |
+| The price range search engines read                                 | **Site settings**                         | Box "Price range for search engines" (not shown on the page).                                        |
+| A picture's file (swap the headshot, replace a cover)               | The entry that holds it                   | Upload a new one in the picture field and rewrite its description.                                   |
+| Page search titles and descriptions                                 | The same page entry                       | "Search and tab title" and "Search description" at the top.                                          |
 
 **The "live view" button** at the top of an entry opens the public page where that entry shows. For the page entries it opens that page; for Pricing tiers, Add-ons and Service offerings it opens Services; for Photos it opens Photography; for Site settings it opens the homepage. Save and publish first, since it shows what is live.
 
@@ -103,9 +103,8 @@ The four Lighthouse numbers on the same page are measured facts. Change them onl
 2. Fill the required boxes: Title, Client, Sector, Summary (200 characters at most), Cover image, Year and Published (the case study date). Cover images work best as a real screenshot of the finished site, at least 1600 px wide.
 3. Add the Outcome line (one honest sentence, 160 characters at most), the live URL, the services, topics and stack tags, and the body text. If the site is not live, pick its **Launch status**: Launching soon, In progress, or Built, not launched. Leave the box empty when the site is live. For a finished site waiting on its domain, pick Launching soon and put its preview address in **Preview address**: the page links there, labelled Launching soon. Anything else that is not live hides the visit link, and every status but live keeps the study out of the hero, so the page never sends a visitor to a site that is not yours or not finished.
 4. For the animated "live site" frame, upload the full-page desktop capture under "Showcase: desktop" and write its description.
-5. To feature it on the homepage Selected Work strip, tick **Featured on the homepage**. The three newest featured studies show, so untick an older one if you want room.
-6. To put the site in the rotating homepage hero scene, tick **Show in the homepage device scene** and give it the next order number. It only joins if it also has both a desktop and a mobile capture and a live URL.
-7. Press **Publish**. The page appears at /work/ and /work/your-slug/. The share image for social previews is built at the next deploy, so it may not appear straight away.
+5. **Featured on the homepage** feeds the Selected Work list on /services/. The homepage itself shows a hand-picked set of sites (the hero carousel and the proof sheet, chosen in code with their own screenshots); unticking Featured, or picking a Launch status other than live, takes that site off the homepage within seconds, five minutes at worst. Adding a new site to the homepage is a code change (ask for it). The "Show in the homepage device scene" box and its order number no longer do anything since the 2026 redesign.
+6. Press **Publish**. The page appears at /work/ and /work/your-slug/. The share image for social previews is built at the next deploy, so it may not appear straight away.
 
 Never invent a testimonial. The quote boxes stay empty until a client has actually said it. The same goes for outcomes: write what you can show (a fact, a date, a number you measured), never what you hope happened.
 

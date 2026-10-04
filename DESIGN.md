@@ -181,6 +181,9 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 - **Links**: text inherits its colour with a marker underline; `text-link` (brick, or vermilion on ink) for accent links; `.card-link` for "Read more" with an arrow.
 - **Frame** (`Frame.astro`): a real screenshot as a print. `variant="browser"` (ink chrome bar, live address, optional "Launching soon" tag) or `variant="film"` (ink rebate, sprocket rows, edge print of facts, optional china-marker `pick` loop). Only live work is shown as live.
 - **Band** (`Band.astro`): one ground, one job (section 4).
+- **Hero reel** (`home/HeroReel.astro`, the home page): the fan of browser prints from Nathan's sketch. A scroll-snap row whose frames take their fan position from a CSS view timeline; arrows on a strip of film underneath; the china-marker loop round the centre position; a caption naming the centre site with one proven fact. Never auto-advances. The start frame is the LCP image; every other frame is parked until after load (Gotcha 14).
+- **Proof-sheet strip** (`home/ProofSheet.astro`): several frames from one job on one strip of film (ink rebate, sprocket rows, facts on the edge, the keeper circled), beside a note: the story in ink, one checkable fact under a hairline. Each job on a page takes a different composition.
+- **DeferredPicture** (`home/DeferredPicture.astro`): a below-the-fold picture parked in `data-` attributes until it scrolls into view or 3.5 s after load, with a `<noscript>` copy. Use it for any picture that sits inside Chrome's lazy-load distance on a phone.
 - **Back to top**: a small ink square, bottom right, after 600px of scroll. No React.
 - **Focus**: one ring everywhere, 3px marker (vermilion on ink), 3px offset.
 

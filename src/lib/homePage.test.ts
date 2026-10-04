@@ -50,21 +50,21 @@ test('the committed fallback reproduces the words the hero and sections used to 
   assert.equal(home.hero.headingAccent, 'pull their weight.');
   assert.equal(
     home.hero.positioning,
-    'A website your next volunteer can run. I plan, design and build it, then hand it over for you to own.',
+    'For churches, nonprofits, schools and small businesses: a website your next volunteer can run.',
   );
   assert.deepEqual(home.hero.proof, {
-    before: 'Cincinnati web design. Every site is planned, designed and built by',
+    before: 'Every site is planned, designed and built in Cincinnati by',
     linkText: 'one person',
-    after: ', who can take the photos too.',
+    after: ', who hands it over for you to own.',
   });
   assert.equal(home.hero.primaryLabel, 'Start a project');
-  assert.equal(home.hero.secondaryLabel, 'See the work');
+  assert.equal(home.hero.secondaryLabel, 'Prices published');
 
-  assert.equal(home.work.heading, 'Selected work');
-  assert.match(home.work.sub, /^A few recent projects\. Each one started with a conversation/);
+  assert.equal(home.work.heading, 'The proof sheet. Every site is live.');
+  assert.match(home.work.sub, /^Each one started with what the organization already had/);
   assert.equal(home.work.linkLabel, 'Explore more projects');
 
-  assert.equal(home.pricing.heading, 'What it costs');
+  assert.equal(home.pricing.heading, 'What it costs, before you ask.');
   assert.equal(home.pricing.includesLead, 'Every build includes, whatever the tier:');
   assert.deepEqual(home.pricing.includes, [
     'A custom design, yours to keep',
@@ -74,8 +74,11 @@ test('the committed fallback reproduces the words the hero and sections used to 
   ]);
   assert.equal(home.pricing.linkLabel, 'See full pricing and services');
 
-  assert.equal(home.process.heading, 'How a project runs');
-  assert.equal(home.process.sub, 'Four steps, from the first conversation to launch day.');
+  assert.equal(home.process.heading, 'How it works, and how long it takes');
+  assert.equal(
+    home.process.sub,
+    'Four steps. Most sites take six to ten weeks from kickoff to launch; bigger ones with custom photography or several collections run twelve to sixteen.',
+  );
   assert.deepEqual(
     home.process.steps.map((s) => [s.num, s.title]),
     [
@@ -85,7 +88,7 @@ test('the committed fallback reproduces the words the hero and sections used to 
       ['04', 'Launch and follow-through'],
     ],
   );
-  assert.equal(home.process.ctaTitle, 'Tell me what you are building.');
+  assert.equal(home.process.ctaTitle, "Let's build a site you won't have to redo.");
   assert.equal(home.process.ctaLabel, 'Start a project');
 
   assert.equal(home.seoTitle, 'Cincinnati Web Design for Churches and Nonprofits');

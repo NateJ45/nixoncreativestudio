@@ -18,7 +18,7 @@ import type { Page } from '@playwright/test';
 // =============================================================================
 export async function settle(page: Page): Promise<void> {
   // Race the font wait: WebKit can leave fonts.ready pending while heavy
-  // resources (the WebGL hero, the photo grid) are still loading.
+  // resources (the photo grid) are still loading.
   await page.evaluate(() =>
     Promise.race([
       document.fonts.ready.then(() => true),
