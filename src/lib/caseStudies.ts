@@ -84,7 +84,13 @@ export interface CaseStudy {
    * so a template can never present unlaunched work as live. Show launchStatusLabel(status).
    */
   launchStatus: LaunchStatus;
+  /**
+   * The visit link. For a launching-soon study this is its preview_url (labelled with the
+   * status, never as live); for any other non-live status it is undefined.
+   */
   liveUrl?: string;
+  /** Set only for a launching-soon study with a preview_url (the same address as liveUrl). */
+  previewUrl?: string;
   outcome?: string;
   testimonial?: { quote: string; name: string; title?: string };
   results: string[];
@@ -164,6 +170,7 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
     // in_hero and hero_order exist from PR 13; before the data load they read as undefined.
     inHero: Boolean(d.in_hero),
     liveUrl: str(d.live_url),
+    previewUrl: str(d.preview_url),
     showcaseHref: str(d.showcase_href),
   });
   return {
@@ -185,6 +192,7 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
     updated: date(d.updated),
     launchStatus,
     liveUrl: links.liveUrl,
+    previewUrl: links.previewUrl,
     outcome: str(d.outcome),
     testimonial: quote
       ? { quote, name: String(d.testimonial_name ?? ''), title: str(d.testimonial_title) }

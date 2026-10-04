@@ -31,14 +31,44 @@ test('a study that is not live loses its live link, showcase link and hero place
     showcaseHref: 'https://secondpreschicago.org/',
     inHero: true,
   };
-  assert.deepEqual(gateLinks('live', links), links);
+  assert.deepEqual(gateLinks('live', links), { ...links, previewUrl: undefined });
   for (const s of ['built-not-launched', 'in-progress', 'launching-soon'] as const) {
     assert.deepEqual(gateLinks(s, links), {
       liveUrl: undefined,
+      previewUrl: undefined,
       showcaseHref: undefined,
       inHero: false,
     });
   }
+});
+
+test('a launching-soon study keeps its preview address as the visit link, nothing else does', () => {
+  const links = {
+    liveUrl: 'https://www.fbcmuncie.org/',
+    previewUrl: 'https://fbcm-site.nathanjnixon86.workers.dev/',
+    showcaseHref: 'https://www.fbcmuncie.org/',
+    inHero: true,
+  };
+  assert.deepEqual(gateLinks('launching-soon', links), {
+    liveUrl: 'https://fbcm-site.nathanjnixon86.workers.dev/',
+    previewUrl: 'https://fbcm-site.nathanjnixon86.workers.dev/',
+    showcaseHref: undefined,
+    inHero: false,
+  });
+  for (const s of ['built-not-launched', 'in-progress'] as const) {
+    assert.equal(gateLinks(s, links).liveUrl, undefined, `${s} gets no visit link`);
+    assert.equal(gateLinks(s, links).previewUrl, undefined);
+  }
+  // A live study links to its real site; a preview address is ignored.
+  assert.equal(gateLinks('live', links).liveUrl, 'https://www.fbcmuncie.org/');
+  assert.equal(gateLinks('live', links).previewUrl, undefined);
+});
+
+test('preview_url is an optional schema field', () => {
+  const field = FIELDS.find((f: { slug: string }) => f.slug === 'preview_url');
+  assert.ok(field);
+  assert.equal(field.type, 'url');
+  assert.ok(!field.required);
 });
 
 test('the schema field is optional and offers exactly the reader values', () => {

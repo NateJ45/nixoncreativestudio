@@ -38,6 +38,7 @@ separate from the `published` and `updated` content fields below.
 | `updated`           | datetime     | no  | ISO string (no entry has one yet)                                                                            | `updated`                                  |
 | `live_url`          | url          | no  | string                                                                                                       | `liveUrl`                                  |
 | `launch_status`     | select       | no  | `"live"`, `"launching-soon"`, `"in-progress"` or `"built-not-launched"`; empty reads as live (2026 redesign) | none                                       |
+| `preview_url`       | url          | no  | string; the visit link only while `launch_status` is `launching-soon` (2026 redesign)                        | none                                       |
 | `outcome`           | text         | no  | string, max 160 chars                                                                                        | `outcome`                                  |
 | `testimonial_quote` | text         | no  | string (no entry has one yet)                                                                                | `testimonial.quote`                        |
 | `testimonial_name`  | string       | no  | string                                                                                                       | `testimonial.name`                         |

@@ -4,9 +4,10 @@ Written 2026-10-04 by the content agent on branch `redesign-content`. **Nothing 
 
 ## What this branch changes in the CMS
 
-Schema (two optional fields, rule 13, so existing entries keep working):
+Schema (three optional fields, rule 13, so existing entries keep working):
 
 - `case_studies.launch_status`: select `live`, `launching-soon`, `in-progress`, `built-not-launched`. Empty reads as live. The reader (`src/lib/launchStatus.ts`) hides the live link, the showcase link and the hero place of any study that is not live.
+- `case_studies.preview_url`: url. Used as the visit link ONLY while the status is `launching-soon` (FBCM: https://fbcm-site.nathanjnixon86.workers.dev/, Nathan 2026-10-04).
 - `site_settings.price_range`: string, max 40, read only by the JSON-LD (`priceRange`). Value `From $900`.
 
 Content (the committed fallback in `cms/content/`):
@@ -83,7 +84,7 @@ npm run cms:production-load -- --from menus
 
 The orchestrated run reaches `case_studies`:
 
-- Schema dry run: `unchanged field x` for the existing fields, `would added field launch_status (select)` (and, if PR 13 has still not been loaded, `would added field in_hero (boolean)` and `would added field hero_order (integer)`), possibly `would reorder fields`. Nothing else. Applied, then the re-check reads unchanged.
+- Schema dry run: `unchanged field x` for the existing fields, `would added field launch_status (select)`, `would added field preview_url (url)` (and, if PR 13 has still not been loaded, `would added field in_hero (boolean)` and `would added field hero_order (integer)`), possibly `would reorder fields`. Nothing else. Applied, then the re-check reads unchanged.
 - Content dry run: one line per study. `would seed` (only new fields set) or `would update` (an overwrite or a rewrite). **The run stops on the first `would update`, by design.** Read the lines AND the indented notes under them: a note `<field>: "<words>" not found, left alone (edit by hand)` means the old words were not where D found them (you edited that field since, or the wording differs slightly). That field is untouched; fix it by hand in the admin later (list below).
 
 Then by hand:
@@ -100,7 +101,7 @@ The last dry run must read `unchanged` for all nine (notes may remain for rules 
 
 The loader can only change words it knows. These need you in the admin (read-only checks before, a look at the live page after):
 
-1. **First Baptist Church Muncie:** the cover, the showcase captures and their alt text still show the Wix site. Replace them with captures of the new build (fbcm-site.nathanjnixon86.workers.dev) and fix the Stack and Topics tags (Astro, Sanity, Cloudflare Workers). Keep the live URL as fbcmuncie.org: it is hidden while the status is "Launching soon", and becomes right at the cutover. At the cutover, clear Launch status.
+1. **First Baptist Church Muncie:** the cover, the showcase captures and their alt text still show the Wix site. Replace them with captures of the new build (fbcm-site.nathanjnixon86.workers.dev) and fix the Stack and Topics tags (Astro, Sanity, Cloudflare Workers). Keep the live URL as fbcmuncie.org: while the status is "Launching soon" the page links to the preview address instead (labelled Launching soon). At the cutover, clear Launch status (and the preview address), and fbcmuncie.org becomes the link.
 2. **Reid Design:** the body and the feature highlights still describe the Budget Calculator, Style Quiz, before/after sliders, journal, shop and press strip, which now redirect away. Cut those passages and highlights, and describe the live concept room, paint-chip prices and room and style picker. Turn Featured back on once it reads true.
 3. **Second Presbyterian Chicago:** read the summary and body for anything that says the church uses the site ("anyone on the communications team can now add a sermon", "now one edit"); the results are already rewritten.
 4. **Presbyterian Academy:** read the body for any faculty, tuition or term detail presented as real. When the school confirms its content and the site is finished, clear Launch status and decide on Featured and the hero.

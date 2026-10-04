@@ -102,6 +102,9 @@ export const FIELDS = [
     label: 'Launch status (leave empty when the site is live)',
     validation: { options: ['live', 'launching-soon', 'in-progress', 'built-not-launched'] },
   },
+  // Optional too: where a finished build can be seen before launch. Shown as the visit link
+  // ONLY while launch_status is launching-soon (src/lib/launchStatus.ts).
+  { slug: 'preview_url', type: 'url', label: 'Preview address (used only while Launching soon)' },
   { slug: 'outcome', type: 'text', label: 'Outcome (one honest line, max 160)' },
   { slug: 'testimonial_quote', type: 'text', label: 'Testimonial quote' },
   { slug: 'testimonial_name', type: 'string', label: 'Testimonial name' },

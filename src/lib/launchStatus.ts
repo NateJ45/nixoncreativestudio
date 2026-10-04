@@ -60,17 +60,30 @@ export function launchStatusLabel(status: LaunchStatus): string | undefined {
 /** The link fields a study carries, before the status rule is applied. */
 export interface StudyLinks {
   liveUrl?: string;
+  /** The optional preview_url field: where a finished, not yet launched build can be seen. */
+  previewUrl?: string;
   showcaseHref?: string;
   inHero: boolean;
 }
 
 /**
  * Apply the honesty rule: a study that is not live keeps none of its "go and look at it"
- * links and never appears in the hero scene (selectHeroStudies also needs a live URL, so
+ * links (except a launching-soon study, which may keep its preview_url as the visit link) and never appears in the hero scene (selectHeroStudies also needs a live URL, so
  * dropping the URL alone would already keep it out; inHero is cleared too so the two
  * signals agree).
  */
 export function gateLinks<T extends StudyLinks>(status: LaunchStatus, links: T): T {
-  if (isLive(status)) return links;
-  return { ...links, liveUrl: undefined, showcaseHref: undefined, inHero: false };
+  if (isLive(status)) return { ...links, previewUrl: undefined };
+  // Launching soon: the build is finished, so its preview address may stand in as the visit
+  // link (Nathan, 2026-10-04: FBCM on workers.dev). Templates label it with
+  // launchStatusLabel(), never as live. The production URL is still dropped (it may be the old
+  // site) and the study stays out of the hero.
+  const visit = status === 'launching-soon' ? links.previewUrl : undefined;
+  return {
+    ...links,
+    liveUrl: visit,
+    previewUrl: visit,
+    showcaseHref: undefined,
+    inHero: false,
+  };
 }
