@@ -155,6 +155,10 @@ Commands and the exact lines to expect: `docs/LAUNCH-RUNBOOK.md` ("PR 13") and `
 
 For Nathan on the way (updated 2026-10-04): the homepage hero no longer reads `in_hero` / `hero_order`; the 2026 home rebuild curates the reel in code (`src/lib/homeWork.ts`), and a case study's Launch status or Featured box can only take a site off it.
 
+### DONE 2026-10-04: Load the redesign 2026 copy and case-study status into production
+
+Ran on 2026-10-04 with Nathan present; see the STATUS block at the top of `docs/redesign-2026/content-production-plan.md`. What remains is admin-only and listed there. The heading below is kept for the history of the plan.
+
 ### Load the redesign 2026 copy and case-study status into production (needs `EMDASH_TOKEN`, Nathan present)
 
 **Blocks:** the honest copy reaching the live site. Until the load, production keeps the old words (Second Presbyterian Chicago "live", the Academy's placeholder claims, "Every project here is a real, shipped site", Strategy JSON-LD wording) and the two new optional fields (`case_studies.launch_status`, `site_settings.price_range`) do not exist, so the reader treats every study as live. It rides on the same `npm run cms:production-load` as PR 13 and 14 above, but the copy steps stop by design and run by hand. Exact commands, the line each dry run must print, the admin-only edits (FBCM images and tags, Reid's body and highlights) and the CI follow-up: `docs/redesign-2026/content-production-plan.md`.
