@@ -54,7 +54,13 @@ test.describe('/journal/<entry>', () => {
       'CI notes',
     );
     await expect(page.locator('article footer')).toContainText('Filed under CI notes');
-    await expect(page.locator('article .font-mono, article [class*="uppercase"]')).toHaveCount(0);
+    // No mono labels or eyebrows. The code block checked above is rightly monospace (it is
+    // content, not a label), so <pre> and <code> are left out (2026-10-04).
+    await expect(
+      page.locator(
+        'article .font-mono:not(pre, code), article [class*="uppercase"]:not(pre, code)',
+      ),
+    ).toHaveCount(0);
 
     // The cover is a resized WebP, not the original.
     const cover = page.locator('article img').first();

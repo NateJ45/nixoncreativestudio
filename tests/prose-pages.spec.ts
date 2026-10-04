@@ -122,7 +122,11 @@ test.describe('the prose pages carry no mono labels or eyebrows', () => {
   for (const path of ['/privacy/', '/accessibility/', '/colophon/']) {
     test(`${path} uses plain headings`, async ({ page }) => {
       await page.goto(path, { waitUntil: 'domcontentloaded' });
-      await expect(page.locator('main .font-mono, main [class*="uppercase"]')).toHaveCount(0);
+      // Code in the prose (the Privacy page's `_ga` cookie name) is rightly monospace: it is
+      // content, not a label, so <code> and <pre> are left out (2026-10-04).
+      await expect(
+        page.locator('main .font-mono:not(code, pre), main [class*="uppercase"]:not(code, pre)'),
+      ).toHaveCount(0);
       // The first thing in the page is the headline, not a label above it.
       await expect(page.locator('main h1')).toHaveCount(1);
     });
