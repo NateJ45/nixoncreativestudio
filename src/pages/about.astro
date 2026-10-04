@@ -1,75 +1,56 @@
 ---
-// Safe to edit. The page words, photos, principles, Currently lists and
-// Lighthouse numbers live in the EmDash admin (Pages, "About page"; read through
-// getAboutPage in src/lib/aboutPage.ts, with cms/content/page_about.json as the
-// committed fallback). This file holds the layout. The Testimonials band reads
-// the EmDash CMS too, so this page is server-rendered (see the note above the
-// template).
+// Safe to edit. The page words, photos, principles and Currently lists live in
+// the EmDash admin (Pages, "About page"; read through getAboutPage in
+// src/lib/aboutPage.ts, with cms/content/page_about.json as the committed
+// fallback). This file holds the layout and the "What I check" ledger. The
+// Testimonials band reads the case studies, so the page is server-rendered and
+// route-cached like every page.
 /* ============================================================================
-   /about | About Nathan Nixon  [editorial-grid revamp]
+   /about | Nathan Nixon, a real person (redesign 2026)
    ============================================================================
-   One page-wide editorial grid, reused by every section, so the whole page
-   reads as a single ruled document with ONE dead-straight left axis:
+   The page is the first meeting: his face and the line the copy audit kept
+   ("the person you meet on day one is the same person who hands you the
+   finished site"), then his story in short paragraphs beside a portrait, a
+   few captioned prints from the rest of his life, how he works and what he
+   checks, what he is doing now, and one way to start a conversation.
 
-     [ 13rem marker rail ] [ content track ]
+   Bands and grounds (DESIGN.md section 4):
+     1. Opening       window-light (the page's one moving ground) under the
+                      header: headline, intro, who for; the headshot as a print.
+     2. Story         deep (still): the LAST photo of the CMS list sits large
+                      beside the story (the black-and-white portrait melts into
+                      the ink), the paragraphs in Nathan's voice.
+     3. Prints        paper: the other photos as small captioned prints in one
+                      justified row (they are snapshots, never heroes).
+     4. How I work    paper-deep: three commitments, and the "What I check"
+                      ledger laid beside them like a printed card.
+     5. Currently     paper: booking first, then working on, reading, learning.
+     6. Testimonials  silent until a case study carries a real quote.
+     7. Closing       paper-contours (still): the question, the button, the email.
 
-   - The LEFT rail is a quiet mono WORD label (ABOUT / IN SHORT / STORY /
-     PRACTICE / NOW) plus a little real meta where it helps (the location stamp,
-     the Currently freshness + last-updated). The labels are decorative
-     (aria-hidden), never headings, so the heading tree stays clean. Below lg the
-     rail collapses and its label sits as a small kicker above each heading.
-   - The RIGHT track holds every heading and all real content on one left edge.
-     Running prose is capped to a readable measure; the h1, the thesis quote, the
-     Terminal, and the principle bodies break out to the full track width, so no
-     row leaves a lonely text ribbon in a wide field and nothing is centered.
-
-   Section rhythm is one token (py) plus a single border-t hairline opening every
-   section after the masthead, so the page is one continuous ruled column instead
-   of a stack of slabs. The page is mostly ONE surface in both themes: the ruled
-   editorial column carries no full-bleed background bands mid-page (the old
-   bg-mesh-soft seam is gone). The inset surface changes are the single Currently
-   .surface-card and, near the foot, the Testimonials band.
-
-   Two deliberate full-bleed exceptions sit at the TAIL of the page, after the
-   ruled column ends: the Testimonials .band-themed band (the .band-themed surface
-   is owned by Testimonials.astro itself, not set here) and the closing CtaBanner.
-   Both are intentional closing beats, not mid-column slabs, so the editorial
-   one-surface read holds through every section above them.
-
-   Motion: the existing data-reveal / spotlight vocabulary only, reduced-motion
-   safe. No scroll-spy, no sticky positioning, no new JS.
+   No eyebrows, no mono labels, no terminal card and no score dial (the 2026
+   audits: developer props aimed at the wrong buyer). Every big headline is
+   Bebas, and the line under it is the italic second voice.
    ============================================================================ */
 
-import BaseLayout from '../layouts/BaseLayout.astro';
-import CtaBanner from '../components/CtaBanner.astro';
-import Testimonials from '../components/Testimonials.astro';
-import Terminal from '../components/Terminal.astro';
-import LighthouseScore from '../components/LighthouseScore.astro';
-import Lightbox from '../components/Lightbox.astro';
 import { Image } from 'astro:assets';
-import { blockHtml, restrictPortableText } from '../lib/portableText';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Band from '../components/Band.astro';
+import Testimonials from '../components/Testimonials.astro';
 import EmDashPhoto from '../components/emdash/EmDashPhoto.astro';
+import { buttonVariants } from '../components/ui/button';
+import { blockHtml, restrictPortableText } from '../lib/portableText';
 import { getSite } from '../data/site';
-import {
-  aboutTitle,
-  buildPersonSchema,
-  freshnessLabel,
-  getAboutPage,
-  updatedLabel,
-} from '../lib/aboutPage';
+import { aboutTitle, buildPersonSchema, getAboutPage, updatedLabel } from '../lib/aboutPage';
 
-// Contact details, socials and the owner name come from Site settings in the CMS
-// (with the committed fallback), shared with the header and footer. The words,
-// photos, Currently lists and scores come from the About page entry (also with the
-// committed fallback, which is what production serves until its data is loaded).
+// Contact details, the owner name and the location come from Site settings
+// (shared with the header and footer); everything else from the About entry.
 const site = await getSite(Astro);
 const about = await getAboutPage(Astro);
 
-// Pictures bundled with the site, resized at request time by the same /_image
-// resizer as the CMS media. They are what the committed fallback points at
-// (cms/content/page_about.json names each by its repo path), so the page still
-// shows its pictures while the CMS is empty. A CMS entry carries real EmDash
-// media instead and renders through EmDashPhoto (a resized WebP from /_image).
+// Pictures bundled with the site, which the committed fallback names by repo
+// path. A CMS entry carries EmDash media instead (rendered by EmDashPhoto as a
+// resized WebP from /_image); both paths end up as a resized WebP.
 import headshot from '../assets/brand/headshot.jpg';
 import familyPhoto from '../assets/about/family.jpg';
 import runningPhoto from '../assets/about/running.jpg';
@@ -85,507 +66,710 @@ const bundled: Record<string, ImageMetadata> = {
   'src/assets/about/portrait-bw.jpg': portraitBwPhoto,
 };
 
-// "Outside the studio" gallery. Real, lightly captioned snapshots of the life
-// behind the one-person studio. Captions are honest and deliberately generic
-// (no names), so nothing presumes more than the photo shows. Each photo is a
-// click / keyboard zoom trigger for the shared Lightbox at the foot of the page.
-// A photo is either CMS media (`image`) or a bundled asset (`file`); one with
-// neither bundled asset nor media is dropped, never rendered half-built.
-const photos = about.outside.photos.flatMap((photo) =>
-  photo.image || (photo.file && bundled[photo.file])
-    ? [{ ...photo, src: photo.file ? bundled[photo.file] : undefined }]
-    : [],
-);
+// Every usable photo with its proportions (width / height). The proportions
+// drive the justified row of prints; a CMS image carries its stored size.
+const photos = about.outside.photos.flatMap((photo) => {
+  const src = photo.file ? bundled[photo.file] : undefined;
+  if (!src && !photo.image) return [];
+  const media = (photo.image ?? {}) as { width?: number; height?: number };
+  const w = src?.width ?? media.width;
+  const h = src?.height ?? media.height;
+  const ratio = w && h ? w / h : 0.75;
+  return [{ ...photo, src, ratio }];
+});
+// The last photo sits large beside the story; the rest are the small prints.
+// (Production's list and the fallback both end with the black-and-white
+// portrait. The reader guarantees at least three photos, so two or more prints.)
+const storyPhoto = photos.at(-1);
+const prints = photos.slice(0, -1);
 const headshotSrc = about.headshot.file ? bundled[about.headshot.file] : undefined;
 
-// The story: a Portable Text field reduced to paragraphs (headings become
-// paragraphs, pictures and other blocks are ignored; bold, italic and safe links
-// are the only marks) and rendered as bare <p> elements. It deliberately does NOT
-// use RestrictedPortableText: that hands the blocks to emdash/ui's PortableText,
-// whose 9.5 KB stylesheet would add a render-blocking <link> to this page, and a
-// story of paragraphs needs none of it (measured in the PR 8 parity run).
+// The story: Portable Text reduced to bare paragraphs (blockHtml), NOT emdash/ui's
+// PortableText, whose stylesheet would be a render-blocking link (never-break 4).
 const storyParagraphs = restrictPortableText(about.story.body).map((b) => blockHtml(b));
 
-// The Currently block (merged in from the old standalone /now page, a Derek
-// Sivers-style snapshot) is rewritten about once a quarter in the admin (Pages,
-// About page). The freshness pill and the "last updated" stamp read the
-// "Currently last updated" date, so the section stays honest.
-const lastUpdatedLabel = updatedLabel(about.currently.updated);
-const freshness = freshnessLabel(about.currently.updated);
+const lastUpdated = updatedLabel(about.currently.updated);
 
-// Capacity signals. status drives the chip color and the readable label, so
-// availability never reads on color alone. open -> green, limited -> amber.
-const statusMeta = {
-  // Status text must clear AA (4.5:1, it is text-xs small text) on the now-sheet
-  // .surface-card in BOTH themes. The brand amber (--tertiary) only passes on the
-  // navy heroes, not on light, so "limited" uses amber-700 on light, mirroring the
-  // emerald pattern. In dark mode the shades are lifted to amber-300 / emerald-300:
-  // lighter shades on the dark navy card give more headroom over the 4.5:1 line
-  // than the -400s, so the small chip text stays comfortably legible. The dot color
-  // stays brand and is decorative; the readable word carries the meaning, never color.
-  open: { word: 'Open', dot: 'bg-emerald-500', text: 'text-emerald-700' },
-  limited: { word: 'Limited', dot: 'bg-tertiary', text: 'text-amber-700' },
-};
+// Availability is never colour alone: each row prints its status word.
+const statusWord = { open: 'Open', limited: 'Limited' } as const;
 
-// Reused layout tokens. railGrid is the page's one asymmetric grid; railLabel is
-// the quiet mono word-label in the left rail.
-const railGrid =
-  'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
-const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
+// What Nathan checks on the sites he builds and looks after. Stays in code for
+// now: the page_about schema has no field for it, and the schema is frozen
+// during the redesign. Keep every row TRUE (docs/redesign-2026/D: only
+// accessibility is gated on every change; backups and uptime are watched).
+const checks = [
+  {
+    what: 'Accessibility',
+    how: 'Checked against WCAG AA before launch, and again by automated checks on every change I make.',
+    when: 'Every change',
+  },
+  {
+    what: 'Backups',
+    how: 'Content backups run on their own, and a weekly check tells me if one did not.',
+    when: 'Weekly',
+  },
+  {
+    what: 'Uptime and DNS',
+    how: 'Watched from my studio status board, so an outage or a lapsing domain reaches me early.',
+    when: 'Every 15 minutes',
+  },
+];
 
-// JSON-LD schemas specific to the About page: Person for the studio owner,
-// linked back to the Organization defined site-wide. Built from the page entry's
-// job title and the site settings, so it can never disagree with the page.
+// Person JSON-LD (pinned byte-for-byte by a unit test), linked to the site-wide
+// Organization.
 const schemas = [buildPersonSchema(about, site)];
-
-// Server-rendered like every page (CMS-DESIGN PR 2). The Testimonials band reads case studies from EmDash (D1) at request time.
-// The route cache is tagged with the case studies this page read (BaseLayout sets
-// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
 ---
 
 <BaseLayout
   title={aboutTitle(about.seoTitle, site.studioName)}
   description={about.seoDescription}
   schemas={schemas}
+  preloadFonts={['italic']}
 >
-  <!-- ====================================================================
-       Masthead (ABOUT). The page head: who Nathan is, paired with the
-       portrait placeholder. Establishes the rail + track spine on the first
-       screen. No top hairline (it opens the page).
-       ==================================================================== -->
-  <section class="pt-2xl pb-2xl" aria-labelledby="about-hero-heading">
-    <div class="ncs-container">
-      <div class={railGrid}>
-        <!-- Rail: decorative word-label + a quiet location stamp. -->
-        <div class="flex flex-col gap-2" aria-hidden="true">
-          <p class={railLabel}>About</p>
-          <p class="font-mono text-[0.8rem] text-text-muted">{site.address}</p>
+  {/* 1. Opening: the window-light wall, the one moving ground on the page. */}
+  <Band ground="window-light" underHeader labelledby="about-hero-heading" class="about-open">
+    <div class="open-grid">
+      <div class="open-copy">
+        <h1 id="about-hero-heading" class="open-title">
+          {about.heading} <span class="voice">{about.headingAccent}</span>
+        </h1>
+        <p class="type-lede open-intro">{about.intro}</p>
+        <p class="open-who">
+          {about.thesis.before} <strong>{about.thesis.accent}</strong> {about.thesis.after}
+        </p>
+      </div>
+
+      {/* The headshot as a print on the wall. It is the LCP image on desktop:
+          eager, high priority, explicit size, never revealed. */}
+      <figure class="open-print">
+        <div class="print">
+          {headshotSrc ? (
+            <Image
+              src={headshotSrc}
+              alt={about.headshot.alt}
+              widths={[320, 480, 640, 900]}
+              sizes="(min-width: 64rem) 30rem, (min-width: 40rem) 14rem, 58vw"
+              loading="eager"
+              fetchpriority="high"
+              class="print-img"
+            />
+          ) : (
+            <EmDashPhoto
+              image={about.headshot.image!}
+              alt={about.headshot.alt}
+              widths={[320, 480, 640, 900]}
+              sizes="(min-width: 64rem) 30rem, (min-width: 40rem) 14rem, 58vw"
+              priority
+              class="print-img"
+            />
+          )}
         </div>
+        <figcaption class="type-caption">
+          {site.ownerName}, {site.address}.
+        </figcaption>
+      </figure>
+    </div>
+  </Band>
 
-        <!-- Track: oversized h1 breakout, then intro | portrait split. -->
-        <div class="min-w-0">
-          <h1 id="about-hero-heading" class="max-w-[20ch] leading-[0.95]" data-reveal>
-            {about.heading} <span class="text-link">{about.headingAccent}</span>
-          </h1>
+  {/* 2. The story, on the ink board: the turn of the page. */}
+  <Band ground="deep" still id="story" labelledby="about-story-heading">
+    <div class="story-grid">
+      {storyPhoto && (
+        <figure class="story-photo" data-reveal="fade">
+          {storyPhoto.src ? (
+            <Image
+              src={storyPhoto.src}
+              alt={storyPhoto.alt}
+              widths={[480, 720, 960, 1280]}
+              sizes="(min-width: 64rem) 36rem, 92vw"
+              class="story-img"
+            />
+          ) : (
+            <EmDashPhoto
+              image={storyPhoto.image!}
+              alt={storyPhoto.alt}
+              widths={[480, 720, 960, 1280]}
+              sizes="(min-width: 64rem) 36rem, 92vw"
+              class="story-img"
+            />
+          )}
+          <figcaption class="type-caption">{storyPhoto.caption}</figcaption>
+        </figure>
+      )}
 
-          <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
-               rail collapses at, so the portrait never goes side-by-side before the
-               rail is beside it (no awkward mid-range two-column-before-the-rail). -->
-          <div class="mt-l grid items-start gap-xl lg:grid-cols-[1.4fr_1fr]">
-            <p
-              class="max-w-[58ch] text-lg leading-[1.6] text-text"
-              data-reveal="right"
-              style="--reveal-delay: 120ms;"
-            >
-              {about.intro}
-            </p>
+      <div class="story-copy">
+        <h2 id="about-story-heading">{about.story.heading}</h2>
+        <p class="voice-line">{about.story.sub}</p>
+        <div class="story-body">
+          {storyParagraphs.map((html) => (
+            <p set:html={html} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </Band>
 
-            <!-- Portrait. The headshot fills the original 4:5 frame (the square
-                 source is center-cropped via object-cover); the amber glow behind
-                 and the ring/shadow are kept from the placeholder treatment. -->
-            <div
-              class="relative isolate w-full max-w-[18rem]"
-              data-reveal="scale"
-              style="--reveal-delay: 120ms;"
-            >
-              <div
-                class="absolute -right-4 -bottom-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
-                aria-hidden="true"
-              ></div>
-              {headshotSrc ? (
+  {/* 3. The rest of life, as small prints: snapshots, captioned with facts. */}
+  <Band labelledby="about-outside-heading">
+    <header class="band-head">
+      <h2 id="about-outside-heading">{about.outside.heading}</h2>
+      <p class="voice-line">{about.outside.sub}</p>
+    </header>
+    <ul class="prints" role="list">
+      {prints.map((photo) => (
+        <li
+          class:list={['prints-item', { 'is-wide': photo.ratio > 1 }]}
+          style={`--r: ${photo.ratio.toFixed(3)};`}
+          data-reveal
+        >
+          <figure>
+            <div class="print print--small">
+              {photo.src ? (
                 <Image
-                  src={headshotSrc}
-                  alt={about.headshot.alt}
-                  widths={[288, 432, 576, 864]}
-                  sizes="(min-width: 64rem) 18rem, 60vw"
-                  loading="eager"
-                  class="aspect-[4/5] w-full rounded-xl border border-border object-cover shadow-lg ring-1 ring-black/5"
+                  src={photo.src}
+                  alt={photo.alt}
+                  widths={[240, 360, 480, 720]}
+                  sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 30vw, 46vw"
+                  class="print-img"
                 />
               ) : (
-                <div class="aspect-[4/5] w-full overflow-hidden rounded-xl border border-border shadow-lg ring-1 ring-black/5">
-                  <EmDashPhoto
-                    image={about.headshot.image!}
-                    alt={about.headshot.alt}
-                    widths={[288, 432, 576, 864]}
-                    sizes="(min-width: 64rem) 18rem, 60vw"
-                    priority
-                    class="block h-full w-full object-cover"
-                  />
-                </div>
+                <EmDashPhoto
+                  image={photo.image!}
+                  alt={photo.alt}
+                  widths={[240, 360, 480, 720]}
+                  sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 30vw, 46vw"
+                  class="print-img"
+                />
               )}
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+            <figcaption class="type-caption">{photo.caption}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  </Band>
 
-  <!-- ====================================================================
-       Thesis (IN SHORT). The studio's one-line thesis, promoted from a stray
-       centered sentence to a left-aligned breakout pull-quote on the shared
-       axis. This is the only home for this line.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-label="In short">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <div class="flex flex-col gap-3" aria-hidden="true">
-          <p class={railLabel}>In short</p>
-          <span class="h-px w-12 bg-tertiary"></span>
-        </div>
-
-        <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal="blur">
-          {about.thesis.before} <span class="text-link">{about.thesis.accent}</span>{' '}
-          {about.thesis.after}
+  {/* 4. How I work: three commitments, and the ledger of what gets checked. */}
+  <Band labelledby="about-how-heading" class="ground-sunk">
+    <div class="how-grid">
+      <div>
+        <header class="band-head">
+          <h2 id="about-how-heading">{about.principles.heading}</h2>
+          <p class="voice-line">{about.principles.sub}</p>
+        </header>
+        <ol class="commitments" role="list">
+          {about.principles.items.map((principle) => (
+            <li>
+              <h3>{principle.title}</h3>
+              <p>{principle.body}</p>
+            </li>
+          ))}
+        </ol>
+        <p class="how-next type-ui">
+          <a href="/work/">See the sites I have built</a>
+          <a href="/contact/">Start a project</a>
         </p>
       </div>
-    </div>
-  </section>
 
-  <!-- ====================================================================
-       Story + Terminal (STORY). The why behind a one-person studio, with
-       "plain code under the hood" SHOWN via the Terminal as a wide figure
-       beside the prose.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-labelledby="about-story-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">
-          Story
-        </p>
-
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-story-heading">{about.story.heading}</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.story.sub}</p>
-          </header>
-
-          <div class="mt-l grid gap-xl lg:grid-cols-2">
-            <div
-              class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text"
-              data-reveal
-              style="--reveal-delay: 120ms;"
-            >
-              {storyParagraphs.map((html) => (
-                <p set:html={html} />
-              ))}
+      <section class="ledger" aria-labelledby="about-checks-heading" data-reveal>
+        <h3 id="about-checks-heading" class="ledger-title">
+          What I check on the sites I look after
+        </h3>
+        <dl>
+          {checks.map((row) => (
+            <div class="ledger-row">
+              <dt>{row.what}</dt>
+              <dd class="ledger-how">{row.how}</dd>
+              <dd class="ledger-when type-caption">{row.when}</dd>
             </div>
-
-            <!-- "Plain code under the hood," shown rather than told. The terminal
-                 and the Lighthouse panel pair as one column that rides alongside
-                 the story on desktop (lg:sticky), so the column never leaves a
-                 gap below it. The grid is stretch (no items-start) so this cell
-                 is as tall as the prose, giving the sticky element room to travel.
-                 Both are decorative for assistive tech (each carries its own
-                 sr-only summary).
-                 min-w-0 matters: the terminal's window title is nowrap, so
-                 without it this grid item's min-content (~318px) sets the
-                 mobile column width and the page scrolls sideways at 320px
-                 (WCAG 1.4.10, caught by tests/reflow.spec.ts). With it the
-                 column stays at the container width and the title ellipsizes
-                 the way Terminal.astro's own CSS intends. -->
-            <div class="w-full min-w-0">
-              <div
-                class="flex flex-col gap-m lg:sticky lg:top-24"
-                data-reveal="scale"
-                style="--reveal-delay: 200ms;"
-              >
-                <Terminal />
-                <LighthouseScore
-                  performance={about.lighthouse.performance}
-                  accessibility={about.lighthouse.accessibility}
-                  bestPractices={about.lighthouse.bestPractices}
-                  seo={about.lighthouse.seo}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+          ))}
+        </dl>
+      </section>
     </div>
-  </section>
+  </Band>
 
-  <!-- ====================================================================
-       Outside the studio (OUTSIDE). Real snapshots of the life behind the
-       one-person studio, picking up the "when I'm not at a screen" line that
-       closes the Story. A CSS-columns masonry so every photo keeps its real
-       aspect ratio (no uniform-grid cropping across the mix of portraits and
-       landscapes); each photo is a keyboard- and click-operable zoom trigger
-       (a real <button>) for the shared Lightbox rendered at the foot of the page.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-labelledby="about-outside-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">
-          Outside
-        </p>
+  {/* 5. Currently. id="now" keeps the /now redirect and the footer link landing here. */}
+  <Band id="now" labelledby="about-currently-heading" class="scroll-mt-24">
+    <div class="now-grid">
+      <header class="band-head now-head">
+        <h2 id="about-currently-heading">{about.currently.heading}</h2>
+        <p class="voice-line">{about.currently.sub}</p>
+        <p class="type-caption now-stamp">Last updated {lastUpdated}.</p>
+      </header>
 
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-outside-heading">{about.outside.heading}</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.outside.sub}</p>
-          </header>
-
-          <ul class="mt-l columns-2 gap-m lg:columns-3 [&>li]:mb-m [&>li]:break-inside-avoid">
-            {photos.map((photo, index) => (
-              <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
-                <figure>
-                  <button
-                    type="button"
-                    data-zoom
-                    title="View larger"
-                    class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  >
-                    {photo.src ? (
-                      <Image
-                        src={photo.src}
-                        alt={photo.alt}
-                        widths={[320, 560, 840, 1200, 1600]}
-                        sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
-                        class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                    ) : (
-                      <EmDashPhoto
-                        image={photo.image!}
-                        alt={photo.alt}
-                        widths={[320, 560, 840, 1200, 1600]}
-                        sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
-                        class="block h-auto w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                    )}
-                  </button>
-                  <figcaption class="mt-xs font-mono text-xs tracking-[0.06em] text-text-muted uppercase">
-                    {photo.caption}
-                  </figcaption>
-                </figure>
+      <div class="now-sheet">
+        <section class="now-block now-booking" aria-labelledby="now-booking">
+          <h3 id="now-booking">Booking</h3>
+          <ul role="list">
+            {about.currently.booking.map((slot) => (
+              <li>
+                <p class="now-slot">
+                  <span class="now-label">{slot.label}</span>
+                  <span class:list={['now-status', `is-${slot.status}`]}>
+                    {statusWord[slot.status]}
+                  </span>
+                </p>
+                <p class="now-detail">{slot.detail}</p>
               </li>
             ))}
           </ul>
-        </div>
-      </div>
-    </div>
-  </section>
+        </section>
 
-  <!-- ====================================================================
-       How I work (PRACTICE). Three principles as an authored manifesto: a
-       hairline-ruled list (not a card grid), the body running to the track
-       edge so text finally reaches the right margin. No section background.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-labelledby="about-how-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">
-          Practice
-        </p>
+        <section class="now-block" aria-labelledby="now-working">
+          <h3 id="now-working">Working on</h3>
+          <ul role="list">
+            {about.currently.workingOn.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </section>
 
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-how-heading">{about.principles.heading}</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.principles.sub}</p>
-          </header>
-
-          <ul class="mt-l flex flex-col">
-            {about.principles.items.map((principle, index) => (
-              <li
-                class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-                data-reveal
-                style={`--reveal-delay: ${index * 100}ms;`}
-              >
-                <h3 class="text-h4 text-heading">{principle.title}</h3>
-                <p class="leading-[1.7] text-text">{principle.body}</p>
+        <section class="now-block" aria-labelledby="now-reading">
+          <h3 id="now-reading">Reading</h3>
+          <ul role="list">
+            {about.currently.reading.map((book) => (
+              <li>
+                <cite>{book.title}</cite>
+                <span class="now-by">
+                  {book.author}
+                  {book.note && <> ({book.note})</>}
+                </span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
+
+        <section class="now-block" aria-labelledby="now-learning">
+          <h3 id="now-learning">Learning</h3>
+          <ul role="list">
+            {about.currently.learning.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
-  </section>
+  </Band>
 
-  <!-- ====================================================================
-       Currently (NOW). The present-tense snapshot, calmed from four loose
-       carded sub-sections into one dated now-sheet. The freshness pill +
-       last-updated stamp move into the rail; the body is a single
-       .surface-card ledger (the only inset card on the page). id="now" +
-       scroll-mt so the /now redirect and footer link still land here.
-       ==================================================================== -->
-  <section id="now" class="scroll-mt-2xl pb-2xl" aria-labelledby="about-currently-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <!-- Rail: word-label (decorative) + the real freshness meta. -->
-        <div class="flex flex-col gap-s">
-          <p class={railLabel} aria-hidden="true">
-            Now
-          </p>
-          <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text">
-            <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
-              <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
-              <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-            </span>
-            <span>{freshness}</span>
-          </p>
-          <p class="font-mono text-[0.8rem] text-text-muted italic">
-            Last updated {lastUpdatedLabel}.
-          </p>
-        </div>
-
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-currently-heading">{about.currently.heading}</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">{about.currently.sub}</p>
-          </header>
-
-          <!-- One now-sheet: the page's single inset card. Two-column ledger at
-               md; stacks to one column below. -->
-          <div
-            class="surface-card mt-l rounded-xl p-l md:p-xl"
-            data-reveal
-            style="--reveal-delay: 120ms;"
-          >
-            <div class="grid gap-xl md:grid-cols-2 md:gap-2xl">
-              <!-- Left: Working on, then Booking. -->
-              <div class="flex flex-col gap-l">
-                <section aria-labelledby="now-working">
-                  <h3 id="now-working" class="text-h5 text-heading">
-                    Working on
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {about.currently.workingOn.map((item, index) => (
-                      <li
-                        class="flex items-start gap-s border-t border-border py-s"
-                        data-reveal="left"
-                        style={`--reveal-delay: ${index * 90}ms;`}
-                      >
-                        <span
-                          class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary"
-                          aria-hidden="true"
-                        />
-                        <span class="leading-[1.55] text-text">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-
-                <section aria-labelledby="now-booking">
-                  <h3 id="now-booking" class="text-h5 text-heading">
-                    Booking
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {about.currently.booking.map((slot, index) => {
-                      const meta = statusMeta[slot.status];
-                      return (
-                        <li
-                          class="border-t border-border py-s"
-                          data-reveal
-                          style={`--reveal-delay: ${index * 90}ms;`}
-                        >
-                          <span
-                            class:list={[
-                              'inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.06em] uppercase',
-                              meta.text,
-                            ]}
-                          >
-                            <span
-                              class:list={['h-2 w-2 rounded-full', meta.dot]}
-                              aria-hidden="true"
-                            />
-                            {meta.word}
-                          </span>
-                          <span class="ml-2 align-middle font-display text-h5 text-heading">
-                            {slot.label}
-                          </span>
-                          <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              </div>
-
-              <!-- Right: Reading, then Learning. -->
-              <div class="flex flex-col gap-l">
-                <section aria-labelledby="now-reading">
-                  <h3 id="now-reading" class="text-h5 text-heading">
-                    Reading
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {about.currently.reading.map((book, index) => (
-                      <li
-                        class="border-t border-border py-s"
-                        data-reveal="right"
-                        style={`--reveal-delay: ${index * 90}ms;`}
-                      >
-                        <span class="font-display text-h5 leading-tight text-heading">
-                          {book.title}
-                          {book.note && (
-                            <span class="ml-2 align-middle text-xs font-medium tracking-[0.06em] text-link uppercase">
-                              ({book.note})
-                            </span>
-                          )}
-                        </span>
-                        <span class="block text-sm text-text-muted">{book.author}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-
-                <section aria-labelledby="now-learning">
-                  <h3 id="now-learning" class="text-h5 text-heading">
-                    Learning
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {about.currently.learning.map((item, index) => (
-                      <li
-                        class="border-t border-border py-s leading-[1.55] text-text"
-                        data-reveal="right"
-                        style={`--reveal-delay: ${index * 90}ms;`}
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Client testimonials. Renders only when a case study carries a real
-       `testimonial` in its frontmatter; otherwise this is silent (no empty
-       block, no fabricated quote). This is the first of the two deliberate
-       full-bleed beats at the tail of the page (after the ruled column ends):
-       its .band-themed surface is set inside Testimonials.astro, not here. -->
+  {/* 6. Client quotes: renders nothing until a case study carries a real one. */}
   <Testimonials heading={about.testimonials.heading} sub={about.testimonials.sub} />
 
-  <!-- Closing CTA: the second deliberate full-bleed break, outside the grid. -->
-  <CtaBanner title={about.ctaTitle} sub={about.ctaSub} />
-
-  <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
-  <Lightbox />
+  {/* 7. Closing, on the Ohio's contours (still: the wall at the top is the one moving ground). */}
+  <Band ground="paper-contours" still labelledby="about-close-heading">
+    <div class="close">
+      <h2 id="about-close-heading">{about.ctaTitle ?? site.ctaDefault.title}</h2>
+      <p class="type-lede">{about.ctaSub ?? site.ctaDefault.sub}</p>
+      <div class="close-actions">
+        <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+          {site.ctaDefault.label}
+        </a>
+        <p class="type-ui close-email">
+          Or write to me at <a href={site.emailHref}>{site.email}</a>
+        </p>
+      </div>
+    </div>
+  </Band>
 </BaseLayout>
 
 <style>
-  /* Freshness-pill pulse: an expanding, fading ring behind the solid dot (now in
-     the Currently rail). The label text carries the meaning, so this is
-     reinforcement only; disabled under reduced motion. */
-  .now-pulse-ring {
-    animation: now-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  /* ---- 1. Opening ------------------------------------------------------- */
+  .open-grid {
+    display: grid;
+    gap: 2rem;
+    align-items: end;
   }
-  @keyframes now-ping {
-    0% {
-      transform: scale(1);
-      opacity: 0.7;
+  .open-copy {
+    min-width: 0;
+  }
+  .open-title {
+    font-size: var(--text-h1);
+    line-height: 0.9;
+    max-width: 14ch;
+  }
+  /* The italic turn runs long here (the kept line), so it sits on its own
+     lines at a reading size instead of the usual 0.86em. */
+  .open-title .voice {
+    display: block;
+    margin-top: 0.3em;
+    font-size: 0.56em;
+    line-height: 1.08;
+    max-width: 22ch;
+  }
+  .open-intro {
+    margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    max-width: 36ch;
+  }
+  .open-who {
+    margin-top: 1rem;
+    max-width: 44ch;
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.55;
+    color: var(--foreground);
+  }
+  .open-who strong {
+    font-weight: 400;
+    color: var(--heading);
+  }
+  .open-print {
+    order: -1;
+    width: min(14rem, 58vw);
+    margin: 0;
+  }
+  .open-print figcaption {
+    margin-top: 0.75rem;
+  }
+
+  /* A print: the photograph with a trimmed paper border and a soft table
+     shadow (DESIGN.md "Elevation"). */
+  .print {
+    background: var(--paper-raised);
+    padding: clamp(0.4rem, 0.3rem + 0.4vw, 0.75rem);
+    border-radius: 2px;
+    box-shadow: var(--shadow-frame);
+  }
+  .print-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .open-print .print-img {
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+
+  @media (min-width: 64rem) {
+    .open-grid {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+      align-items: center;
     }
-    75%,
-    100% {
-      transform: scale(2.4);
-      opacity: 0;
+    .open-print {
+      order: 0;
+      width: 100%;
+      max-width: 30rem;
+      justify-self: end;
+      transform: rotate(1.25deg);
+    }
+    .open-print figcaption {
+      transform: rotate(-1.25deg);
     }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .now-pulse-ring {
-      animation: none;
+
+  /* ---- 2. Story --------------------------------------------------------- */
+  .story-grid {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+  .story-photo {
+    margin: 0;
+  }
+  .story-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .story-photo figcaption {
+    margin-top: 0.75rem;
+    color: var(--muted-foreground);
+  }
+  .story-copy {
+    min-width: 0;
+  }
+  .story-copy h2 {
+    max-width: 16ch;
+  }
+  .story-body {
+    margin-top: clamp(1.75rem, 1rem + 2vw, 2.5rem);
+    display: grid;
+    gap: 1.1em;
+    max-width: 36rem;
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.65;
+  }
+  /* The first paragraph opens at the lede size, like a standfirst. */
+  .story-body > p:first-child {
+    font-size: var(--text-lede);
+    line-height: 1.4;
+  }
+  @media (min-width: 64rem) {
+    .story-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: clamp(3rem, 6vw, 6rem);
+      align-items: start;
     }
+    /* The portrait travels beside the long story instead of leaving a hole. */
+    .story-photo {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+
+  /* ---- Shared band head: Bebas headline, then the italic second voice. --- */
+  .band-head h2 {
+    max-width: 18ch;
+  }
+  .voice-line {
+    margin-top: 0.6rem;
+    max-width: 34ch;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--text-lede);
+    line-height: 1.3;
+    color: var(--marker);
+  }
+
+  /* ---- 3. Prints: one justified row on wide screens (every print the same
+     height, each as wide as its proportions ask), two up on phones. -------- */
+  .prints {
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 0.875rem;
+    align-items: start;
+  }
+  .prints-item.is-wide {
+    grid-column: span 2;
+  }
+  .prints figure {
+    margin: 0;
+  }
+  .prints figcaption {
+    margin-top: 0.6rem;
+    max-width: 28ch;
+  }
+  @media (min-width: 48rem) {
+    .prints {
+      display: flex;
+      align-items: flex-start;
+      gap: clamp(1rem, 2.5vw, 2.25rem);
+    }
+    .prints-item {
+      flex: var(--r) 1 0;
+      min-width: 0;
+    }
+    /* Laid on the table, not ruled into a grid: every other print sits a
+       little lower. */
+    .prints-item:nth-child(even) {
+      margin-top: clamp(1.5rem, 3vw, 3rem);
+    }
+  }
+
+  /* ---- 4. How I work + the ledger --------------------------------------- */
+  :global(.band.ground-sunk) {
+    background-color: var(--paper-deep);
+  }
+  .how-grid {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  .commitments {
+    margin-top: clamp(1.75rem, 3vw, 2.75rem);
+  }
+  .commitments li {
+    display: grid;
+    gap: 0.5rem;
+    padding-block: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .commitments h3 {
+    font-size: var(--text-h3);
+  }
+  .commitments p {
+    max-width: 40rem;
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+  .ledger {
+    align-self: start;
+    background: var(--paper-raised);
+    padding: clamp(1.25rem, 1rem + 1.5vw, 2.25rem);
+    border-radius: 2px;
+    box-shadow: var(--shadow-frame);
+  }
+  .ledger-title {
+    font-size: var(--text-h4);
+    max-width: 20ch;
+  }
+  .ledger dl {
+    margin-top: 1.25rem;
+  }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 1rem;
+    padding-block: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .ledger-row dt {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-body);
+    color: var(--heading);
+  }
+  .ledger-how {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-family: var(--font-serif);
+    line-height: 1.5;
+  }
+  .ledger-when {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: baseline;
+  }
+  @media (min-width: 64rem) {
+    .how-grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+    }
+    .commitments li {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 2rem;
+    }
+    .ledger {
+      margin-top: clamp(4rem, 8vw, 7.5rem);
+      transform: rotate(-0.6deg);
+    }
+  }
+
+  .how-next {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .how-next a {
+    display: inline-block;
+    padding-block: 0.75rem;
+    color: var(--link);
+    font-weight: 600;
+  }
+
+  /* ---- 5. Currently ----------------------------------------------------- */
+  .now-grid {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+  .now-stamp {
+    margin-top: 1rem;
+  }
+  .now-sheet {
+    display: grid;
+    gap: 2rem 3rem;
+  }
+  .now-block h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h5);
+    line-height: 1.25;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .now-block ul {
+    margin-top: 0.25rem;
+  }
+  .now-block li {
+    padding-block: 0.7rem;
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.5;
+  }
+  .now-block li + li {
+    border-top: 1px solid var(--border);
+  }
+  .now-block cite {
+    font-style: italic;
+    color: var(--heading);
+  }
+  .now-by {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--muted-foreground);
+  }
+  .now-slot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+  }
+  .now-label {
+    font-family: var(--font-display);
+    font-size: var(--text-h4);
+    line-height: 1;
+    letter-spacing: 0.015em;
+    color: var(--heading);
+  }
+  .now-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    color: var(--heading);
+  }
+  .now-status::before {
+    content: '';
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--heading);
+  }
+  .now-status.is-limited::before {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--heading);
+  }
+  .now-detail {
+    margin-top: 0.35rem;
+    max-width: 44ch;
+  }
+  @media (min-width: 48rem) {
+    .now-sheet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .now-booking {
+      grid-column: 1 / -1;
+    }
+    .now-booking ul {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 3rem;
+    }
+    .now-booking li + li {
+      border-top: 0;
+    }
+  }
+  @media (min-width: 64rem) {
+    .now-grid {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      align-items: start;
+    }
+    .now-sheet {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 2.25rem;
+    }
+  }
+
+  /* ---- 7. Closing ------------------------------------------------------- */
+  .close {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 46rem;
+  }
+  .close-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.75rem;
+  }
+  .close-email a {
+    display: inline-block;
+    padding-block: 0.75rem;
   }
 </style>

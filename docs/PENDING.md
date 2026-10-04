@@ -52,6 +52,39 @@ load would revert it and fail the Colophon rows test.
 then the real load, then `npm run ci-dataset:snapshot` and confirm `rows.sql`
 is byte-identical to the hand edit. Never from a delegated agent (never-break rule 5).
 
+**Added by the page-misc pass (2026-10-04):** the same load now also carries
+`pages` Privacy (no map sentence, a line about Cloudflare's bot-detection
+script, last updated 2026-10-04; true only once the contact redesign has
+removed the Google Map iframe, so load it after that merges), Accessibility (the
+AAA paragraph names the real colours instead of "brand-blue"), Colophon (a "Look
+and motion" row, an honest Photography row, EmDash in "Built with"), and
+`page_photography` and `page_journal` (new meta description, intro and
+empty-state text). `rows.sql` carries these by hand too (the rows were rewritten
+from `cms/content/*.json`, keeping their ids).
+
+### 2c. /services redesign: data to load and photographs to supply (redesign 2026)
+
+- **Production load (main session with Nathan, dry run first):** the committed
+  `cms/content/service_offerings.json` now describes the Web design picture as the
+  Foundation for Reformed Theology library (it used to describe Second Presbyterian
+  Chicago, which is not live). `npm run cms:production-load -- --only service_offerings --dry-run`
+  should show only the `web-design` entry's picture description changing.
+- **CI dataset:** `scripts/ci-dataset/rows.sql` still carries the services copy from
+  before the redesign content pass (for example "organizations that care about the
+  long run"), so `tests/services-copy.spec.ts` will fail against `ncs-ci` until the
+  rows are hand-edited to match `cms/content/page_services.json` and
+  `service_offerings.json`, or refreshed after the production load. A lead decision.
+- **Nathan to supply:** two or three photographs he took for a client (a space, a
+  headshot, an event), with the client's permission. The Photography band then gets a
+  framed print beside the call sheet; until then it shows the call sheet and his own
+  headshot, captioned as the photographer.
+
+### 2d. Load the redesigned About page words into production (redesign 2026, main session with Nathan)
+
+**Why:** the /about rebuild (branch `page-about`) rewrote `cms/content/page_about.json`: the kept line as the headline, a shorter intro, the story in seven short paragraphs (the house is now bought), fact captions on the photos, the three principles as commitments, a new Currently date and the "two to three months" booking line. Production still holds the older words (including "organizations that take their work seriously."), so until the load the live page shows the new layout with the old words. Nothing breaks: production's photo list also ends with the black-and-white portrait, which the page now sets beside the story. `scripts/ci-dataset/rows.sql` carries the same words by hand (production's media objects kept) so `tests/about-copy.spec.ts` agrees in CI.
+
+**Do, when the redesign merges:** `npm run cms:production-load -- --only page_about --dry-run` (expect only the `about` entry, text fields; the pictures are unchanged), then the real load, then `npm run ci-dataset:snapshot` and confirm the `ec_page_about` row matches the hand edit. Never from a delegated agent (never-break rule 5). Before the load, Nathan confirms the photo captions and credits (the page agent's report lists them).
+
 ### 2b. Regenerate the OG cards and icons in the new palette (redesign 2026)
 
 `scripts/generate-og.mjs`, `generate-og-default.mjs` and `generate-icons.mjs`

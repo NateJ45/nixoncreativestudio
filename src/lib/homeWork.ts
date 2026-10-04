@@ -54,10 +54,11 @@ export interface ReelSlide {
 }
 
 /**
- * The reel, in order. It opens on Stone Steps (REEL_START), the lead case study; to its
- * right come Foundation for Reformed Theology, Theology Matters, MAS Monograms and the new
- * First Baptist Muncie build, and each site's second page sits to the left, so the fan has
- * frames on both sides from the first paint.
+ * The reel, in order. It opens on Stone Steps (REEL_START), the lead case study; the new
+ * First Baptist Muncie build comes second, right beside it, as the church proof (Nathan,
+ * 2026-10-04); then Foundation for Reformed Theology, Theology Matters, MAS Monograms and
+ * FBCM's second page. The other sites' second pages sit to the left, so the fan has frames
+ * on both sides from the first paint.
  */
 export const REEL: ReelSlide[] = [
   {
@@ -111,6 +112,16 @@ export const REEL: ReelSlide[] = [
     alt: 'The Stone Steps 50K home page: the race name in large stamped letters, the race date, and a photograph of a runner on a wooded trail.',
   },
   {
+    id: 'fbcm-home',
+    study: 'first-baptist-muncie',
+    site: 'First Baptist Church, Muncie',
+    page: 'Home page',
+    host: 'New site, not yet on its domain',
+    soon: true,
+    fact: 'A finished church site, every page filled in. It goes live when the church moves its address over.',
+    alt: 'The new First Baptist Church of Muncie home page: Praise and Proclaim, set in capitals over a photograph of the worship band, with the Sunday service time and address.',
+  },
+  {
     id: 'frt-home',
     study: 'foundation-for-reformed-theology',
     site: 'Foundation for Reformed Theology',
@@ -139,16 +150,6 @@ export const REEL: ReelSlide[] = [
     url: 'https://mas-monograms.com/',
     fact: 'Mary Ann edits it herself, page by page, with no monthly platform fee.',
     alt: 'The MAS Monograms home page on deep blue: Custom monogramming, made just for you, beside photographs of a monogrammed tote, a towel and a stitched name.',
-  },
-  {
-    id: 'fbcm-home',
-    study: 'first-baptist-muncie',
-    site: 'First Baptist Church, Muncie',
-    page: 'Home page',
-    host: 'New site, not yet on its domain',
-    soon: true,
-    fact: 'A finished church site, every page filled in. It goes live when the church moves its address over.',
-    alt: 'The new First Baptist Church of Muncie home page: Praise and Proclaim, set in capitals over a photograph of the worship band, with the Sunday service time and address.',
   },
   {
     id: 'fbcm-expect',

@@ -26,16 +26,17 @@ test('with no CMS rows, every curated slide and job stands, without case-study l
   for (const j of jobs) assert.equal(j.caseStudyHref, undefined);
 });
 
-test('the reel opens on Stone Steps and runs FRT, Theology Matters, MAS, then FBCM to its right', () => {
+test('the reel opens on Stone Steps with FBCM second, then FRT, Theology Matters and MAS', () => {
   const start = REEL.findIndex((s) => s.id === REEL_START_ID);
   assert.equal(REEL[start].study, 'stone-steps-50k');
   const right = [...new Set(REEL.slice(start + 1).map((s) => s.study))];
   assert.deepEqual(right, [
+    'first-baptist-muncie',
     'foundation-for-reformed-theology',
     'theology-matters',
     'mas-monograms',
-    'first-baptist-muncie',
   ]);
+  assert.equal(REEL[start + 1].id, 'fbcm-home');
 });
 
 test('a study that is not live drops its slides and its job (the honesty rule)', () => {

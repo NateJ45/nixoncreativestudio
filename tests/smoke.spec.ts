@@ -94,3 +94,12 @@ test.describe('Smoke: unknown and draft journal entries', () => {
     });
   }
 });
+
+// The pre-launch gate page is a holding page: not indexable and not in the sitemap.
+test('/coming-soon/ is noindex and absent from the sitemap', async ({ page, request }) => {
+  await page.goto('/coming-soon/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  await expect(page.locator('h1')).toContainText('Launching');
+  const res = await request.get('/sitemap-0.xml');
+  if (res.ok()) expect(await res.text()).not.toContain('/coming-soon');
+});

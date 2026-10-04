@@ -118,6 +118,17 @@ test.describe('/colophon/ rows', () => {
   });
 });
 
+test.describe('the prose pages carry no mono labels or eyebrows', () => {
+  for (const path of ['/privacy/', '/accessibility/', '/colophon/']) {
+    test(`${path} uses plain headings`, async ({ page }) => {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('main .font-mono, main [class*="uppercase"]')).toHaveCount(0);
+      // The first thing in the page is the headline, not a label above it.
+      await expect(page.locator('main h1')).toHaveCount(1);
+    });
+  }
+});
+
 test.describe('/privacy/ links and meta', () => {
   test('external links open in a new tab safely, the email link does not', async ({ page }) => {
     await page.goto('/privacy/', { waitUntil: 'domcontentloaded' });

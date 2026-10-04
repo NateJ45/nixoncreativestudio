@@ -22,10 +22,11 @@
    disagree with the visible page. It is a pure function with a unit test that
    pins its output byte-for-byte to what the page emitted before the move.
 
-   Stays in code (docs/CMS-DESIGN.md 1.6): section order, the three-service flow
-   card, "What's included", the placeholder icon SVG markup, the Web design
-   picture (an image file in src/assets, not a CMS upload yet) and the process
-   steps (the homepage's).
+   Stays in code: section order, the Web design picture (an image file in
+   src/assets, not a CMS upload yet) and the extra words listed in
+   .claude/rules/homepage-and-pages.md ("/services since the 2026 redesign").
+   The process steps are the homepage's. `placeholderIcon` is still read but
+   no longer drawn: the 2026 page has no placeholder panels.
    ============================================================================ */
 
 import { choice, getOrdered, getSingleton, int, rows, text, texts, type Raw } from './cms.ts';
@@ -68,7 +69,7 @@ export interface ServiceOffering {
   body: string;
   /** Standalone starting price for the JSON-LD Offer; undefined for none. */
   priceFrom?: number;
-  /** Description of the picture; empty means "show the placeholder panel". */
+  /** Description of the picture; empty means the chapter shows no picture. */
   imageAlt?: string;
   placeholderIcon: PlaceholderIcon;
   points: string[];

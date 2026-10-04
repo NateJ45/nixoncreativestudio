@@ -33,9 +33,12 @@
    aboutTitle) are unit tested in aboutPage.test.ts, including a golden check
    that the Person JSON-LD is byte-equal to what the page emitted before.
 
-   Stays in code (docs/CMS-DESIGN.md 1.7): the typing Terminal, the rail words
-   (About, In short, Story, ...), section order, and the testimonial quotes
-   (they come from the case studies).
+   Stays in code: section order, the "What I check" ledger (no schema field
+   yet), the Currently sub-headings, and the testimonial quotes (they come from
+   the case studies). Since the 2026 redesign the page sets the LAST photo large
+   beside the story and the rest as small prints, and it no longer shows the
+   four Lighthouse scores (a score on the page must be dated and measured; the
+   fields are still read and validated so an entry stays valid, but unused).
    ============================================================================ */
 
 import type { ImageValue } from 'emdash';

@@ -886,6 +886,35 @@ const startSlide = slides[start];
         --pull: calc(var(--rise) * 0.92);
       }
     }
+    /* On a wide screen the fan's bottom edge (and the strip under it) falls below a
+       900px fold, so the arrows leave the strip and sit at the centre frame's sides,
+       halfway down it, where they are visible on arrival. The strip keeps the counter.
+       Offsets: half the frame height, the caption block, the strip's margin and padding. */
+    @media (min-width: 1100px) {
+      :global(.js) .ctrl {
+        width: min(100% - 2 * var(--gutter), 380px);
+      }
+      .nav-btn {
+        position: absolute;
+        z-index: 30;
+        top: calc(var(--F) * -0.33125 - var(--capH) - 1.25rem - 18px - 28px);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--ink);
+        box-shadow: var(--shadow-print);
+      }
+      .prev {
+        left: calc(50% - var(--F) / 2 - 84px);
+      }
+      .next {
+        right: calc(50% - var(--F) / 2 - 84px);
+      }
+      .nav-btn[disabled] {
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
 
     @media (max-width: 700px) {
       .show {
