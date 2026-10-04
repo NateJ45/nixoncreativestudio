@@ -27,6 +27,7 @@ import {
   type RenderImageContext,
   type RenderImageProps,
 } from 'react-photo-album';
+import SSR from 'react-photo-album/ssr';
 import 'react-photo-album/rows.css';
 
 import Lightbox from 'yet-another-react-lightbox';
@@ -97,19 +98,35 @@ function renderFadeImage(
   );
 }
 
+/**
+ * Container widths the justified grid is laid out for (react-photo-album "SSR"
+ * breakpoints). The server renders one copy of the grid per breakpoint and a
+ * container query shows the one for the real width, so the grid has its full
+ * height in the server HTML. Hydration keeps that same copy (the album snaps its
+ * measured width down to the breakpoint and the rows scale by percentage), so
+ * nothing moves. Without this the album rendered an EMPTY container on the
+ * server and grew to its full height on hydration: a layout shift the moment the
+ * gallery scrolled into view (CI caught it with one test photo, 2026-10-04).
+ */
+export const GALLERY_BREAKPOINTS = [320, 480, 720, 960, 1200] as const;
+
 export default function PhotoGallery({ photos, targetRowHeight = 300 }: PhotoGalleryProps) {
   // Lightbox index. -1 means closed. Setting >= 0 opens at that slide.
   const [index, setIndex] = useState<number>(-1);
 
   return (
     <>
-      <RowsPhotoAlbum
-        photos={photos}
-        onClick={({ index }) => setIndex(index)}
-        targetRowHeight={targetRowHeight}
-        spacing={12}
-        render={{ image: renderFadeImage }}
-      />
+      <div data-photo-gallery>
+        <SSR breakpoints={GALLERY_BREAKPOINTS}>
+          <RowsPhotoAlbum
+            photos={photos}
+            onClick={({ index }) => setIndex(index)}
+            targetRowHeight={targetRowHeight}
+            spacing={12}
+            render={{ image: renderFadeImage }}
+          />
+        </SSR>
+      </div>
 
       <Lightbox
         slides={photos.map((p) => ({
