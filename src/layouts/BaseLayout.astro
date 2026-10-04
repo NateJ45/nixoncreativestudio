@@ -99,6 +99,11 @@ interface Props {
   /** Extra fonts to preload because this page's first screen uses them
       (see the font note at the top of this file). */
   preloadFonts?: Array<'italic' | 'semibold'>;
+  /** Robots directive for this page ("noindex, follow"). Leave unset for an
+      indexable page. Used by /photography while its gallery is empty
+      (src/lib/photos.ts photographyRobots). The Coming Soon gate's own
+      noindex wins when it is on. */
+  robots?: string;
 }
 // Site settings (studio name, default description, feed title) come from the
 // CMS, with the committed fallback; the Header, Footer and StructuredData share
@@ -112,6 +117,7 @@ const {
   ogType = 'website',
   schemas = [],
   preloadFonts = [],
+  robots,
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -167,7 +173,9 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#f3eee4" />
 
-    {comingSoonEnabled && <meta name="robots" content="noindex, follow" />}
+    {(comingSoonEnabled || robots) && (
+      <meta name="robots" content={comingSoonEnabled ? 'noindex, follow' : robots} />
+    )}
 
     {/* The blocking gate script itself lives in ComingSoonGate.astro (a
         <script> cannot sit inside this expression: prettier-plugin-astro
