@@ -82,6 +82,8 @@ bindings, which a test run should not). CI installs chromium and webkit and runs
 | `redirects-hero.spec.ts`  | **CMS-DESIGN PR 13.** `/now` ends at `/about/#now` through permanent redirects and lands on the About page, the retired `/work/west-chester-preschool/` answers 301 to `/work/`, an unknown slug still answers a real 404. The redirects are EmDash rows only (no code fallback), so the CI dataset must hold them. (The hero-scene checks were retired with the scene; see `home-hero.spec.ts`.) Chromium only                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `reflow.spec.ts`          | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
+Tap targets are measured by hand, not in CI: `scripts/measure-tap-targets.mjs <url> --paths ...` at 390px (recipe and quirks in `.claude/rules/testing-ci.md`). `a11y.spec.ts` already runs axe's `target-size` rule (the 24px AA floor); the script checks the 44px comfort target.
+
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
 document without the theme bootstrap, so the dark sweep skips it.
@@ -216,6 +218,19 @@ because the repo is public and Actions minutes are free there.
 
 Best-effort only: GitHub's scheduler can be delayed under load. For real
 monitoring, point UptimeRobot's free tier at the homepage.
+
+### Tap-target measurement (`scripts/measure-tap-targets.mjs`)
+
+`node scripts/measure-tap-targets.mjs <baseUrl>` counts links and buttons whose
+tappable area is under 44px on a phone width, and hit-tests any that rely on a
+stretched `::after` pseudo-element so a grown area that steals taps from a
+neighbour shows up. Not a CI gate (it needs a served site and a browser); it is
+the manual instrument to verify the 44px claim before and after a change. Exit
+code 1 when anything is under 44px or a tap is stolen.
+
+By default it skips content inside closed `<details>` elements (those without an
+`open` attribute), since that content is not rendered or tappable. Pass
+`--include-closed-details` to measure them anyway (the old behaviour).
 
 ---
 

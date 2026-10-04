@@ -474,6 +474,19 @@
       opacity: 0.5;
     }
   }
+  /* Touch devices: the box grows to 44px (the 1rem icon stays centred and, with
+     the matching negative margins, sits where it did and adds no line height).
+     A real box, not an ::after hit area: ::after is the "Copied" bubble below.
+     Carried over from main (starter PORTS.md cards 82 and 83). */
+  @media (pointer: coarse) {
+    [data-prose] .heading-anchor {
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-block: -0.6rem;
+      margin-left: calc(0.25em - 0.625rem);
+      margin-right: -0.625rem;
+    }
+  }
   [data-prose] .heading-anchor[data-copied]::after {
     content: 'Copied';
     position: absolute;
