@@ -38,8 +38,8 @@ Things that still need configuration before / during the public launch. Everythi
 
 - [ ] Refresh the four arrays + `lastUpdated` in the Currently section of `src/pages/about.astro` about once a quarter.
 - [ ] Refresh the footer "Currently" line (Site settings in the EmDash admin) seasonally.
-- [ ] Re-run `npm run og` after editing brand colors, tagline, or wordmark.
-- [ ] Re-run `npm run icons` after editing brand navy, the accent amber, or the wordmark font (regenerates the favicon / app-icon set).
+- [ ] Re-run `npm run og` and `npm run og:pages` after editing brand colours, the home tagline, or the logo (`scripts/lib/brand-card.mjs` holds the card design).
+- [ ] Re-run `npm run icons` after editing brand ink, the marker colour, or the wordmark font (regenerates the favicon / app-icon set).
 
 ### Brand drift to be aware of
 
