@@ -37,8 +37,8 @@ const helpContent = JSON.parse(
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
 //                 loads the beacon with `defer`)
-//   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
-//                 the photo gallery)
+//   - react     : enables React islands (the photo gallery and lightbox, the
+//                 testimonial carousel, reading progress, the /work filter)
 //
 // prefetch: links preload as they enter the viewport, so navigation feels
 // instant and pairs with the View Transitions router.
@@ -156,11 +156,11 @@ export default defineConfig({
   ],
 
   vite: {
-    // `astro dev` only (build does not pre-bundle): the dependency optimizer pre-bundles zustand
-    // BEFORE the shim plugin below can rewrite its import, so a clean checkout died with the same
-    // MISSING_EXPORT in dev. Excluding zustand leaves it to the normal transform pipeline, where
-    // the plugin applies. Found 2026-10-03 while testing the admin help plugin locally.
-    optimizeDeps: { exclude: ['zustand', 'zustand/traditional'] },
+    // (The EmDash/zustand shim plugin and its optimizeDeps exclusion were removed in the
+    // 2026-10-04 performance pass: zustand only came in with @react-three/fiber, which was
+    // uninstalled with the WebGL hero, and `npm ls zustand` is empty. If a future package
+    // brings zustand back and the build dies with MISSING_EXPORT on
+    // use-sync-external-store/shim/with-selector.js, restore the shim from git history.)
     // Ground textures (src/assets/grounds, DESIGN.md "Grounds") must stay
     // separate files. Vite inlines assets under 4 KB as base64, which put the
     // wall and ink-board tiles INSIDE the render-blocking stylesheet, defeating
@@ -169,31 +169,6 @@ export default defineConfig({
     build: {
       assetsInlineLimit: (file) => (file.includes('/assets/grounds/') ? false : undefined),
     },
-    plugins: [
-      tailwindcss(),
-      // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).
-      // EmDash aliases `use-sync-external-store/shim/with-selector.js` to its
-      // own ESM shim, which only has a NAMED export. zustand (pulled in by
-      // @react-three/fiber for the WebGL hero) does a DEFAULT import of that
-      // file, so the build dies with MISSING_EXPORT. Rewriting zustand's import
-      // to a namespace import of the same shim keeps both sides happy.
-      {
-        name: 'ncs-zustand-sync-store-shim',
-        enforce: 'pre',
-        transform(code, id) {
-          if (!/zustand[\\/]esm[\\/]traditional\.mjs/.test(id)) return null;
-          const shim = fileURLToPath(
-            new URL(
-              './node_modules/emdash/src/astro/integration/shims/use-sync-external-store-with-selector.js',
-              import.meta.url,
-            ),
-          ).replace(/\\/g, '/');
-          return code.replace(
-            /import useSyncExternalStoreExports from 'use-sync-external-store\/shim\/with-selector\.js';/,
-            `import * as useSyncExternalStoreExports from '${shim}';`,
-          );
-        },
-      },
-    ],
+    plugins: [tailwindcss()],
   },
 });

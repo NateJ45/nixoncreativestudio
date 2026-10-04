@@ -42,6 +42,15 @@
 @source not '../../README.md';
 @source not '../../PRODUCT.md';
 @source not '../../DESIGN.md';
+/* Code that never renders on a public page (2026-10-04 performance pass): the
+   unit tests (utils.test.ts names classes like text-red-500 as test data), the
+   Playwright specs, the Node scripts, and the admin help plugin (it injects its
+   own .sh-* stylesheet). Every class they name used to ship in each page's
+   inlined CSS. */
+@source not '../lib/*.test.ts';
+@source not '../../tests';
+@source not '../../scripts';
+@source not '../../plugins';
 
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
@@ -934,27 +943,9 @@
   .spotlight-card {
     position: relative;
   }
-  /* Animated underline link. Grows from the left on hover/focus. */
-  .link-underline {
-    position: relative;
-    text-decoration: none;
-  }
-  .link-underline::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    height: 1px;
-    width: 100%;
-    transform: scaleX(0);
-    transform-origin: left;
-    background: var(--marker);
-    transition: transform 0.3s var(--ease-settle);
-  }
-  .link-underline:hover::after,
-  .link-underline:focus-visible::after {
-    transform: scaleX(1);
-  }
+  /* (.link-underline was deleted in the 2026-10-04 performance pass: no page
+     used it. .surface-card, .hover-lift, .spotlight-card and [data-hidden] are
+     only used by the old /work index; delete them when its rebuild lands.) */
 }
 
 /* ----------------------------------------------------------------------------
@@ -1259,7 +1250,7 @@ html.ncs-gated .ncs-overlay {
 
   /* Focus ring: the marker, 5.64:1 on paper. */
   --ring: #ae2f1b; /* = --marker */
-  --outline: #ae2f1b; /* Starwind's focus token, = --ring */
+  --outline: #ae2f1b; /* = --ring (the retired Starwind kit's focus token) */
 
   /* Form errors and destructive actions: brick reads as an alarm on paper
      without a new hue (7.23:1). */
@@ -1289,9 +1280,9 @@ html.ncs-gated .ncs-overlay {
   --sidebar-border: rgb(10 22 40 / 0.14);
   --sidebar-ring: #ae2f1b;
 
-  /* Starwind UI extra semantic tokens (accordion / dialog / dropdown / tabs).
-     starwind.css maps each onto a utility. Status colours are soft surfaces
-     with deep foregrounds, all AA. */
+  /* Status tokens, kept from the retired Starwind kit (deleted 2026-10-04) for
+     any future status surface. No utility maps them now; read them as
+     var(--success) and so on. Soft surfaces with deep foregrounds, all AA. */
   --primary-accent: #15233a; /* = --ink-raised: primary hover */
   --secondary-accent: #ddd3c1; /* paper-deep, pressed */
   --info: #d9e2e6;
