@@ -19,7 +19,9 @@
    Props:
      variant     'browser' (default) | 'film'
      src         ImageMetadata (an import from src/assets) or a URL string
-                 (a CMS /_image?... URL; then width and height are required)
+                 (a CMS /_image?... URL; then width and height are required).
+                 Leave it out and pass the picture as the default slot instead
+                 (a CMS image rendered by emdash/ui Image, or a <picture>).
      alt         what the screenshot shows ("Stone Steps 50K home page")
      width/height intrinsic size (required for a string src)
      widths, sizes  responsive sizes for an ImageMetadata src
@@ -41,7 +43,7 @@ import { Image } from 'astro:assets';
 
 interface Props {
   variant?: 'browser' | 'film';
-  src: ImageMetadata | string;
+  src?: ImageMetadata | string;
   alt: string;
   width?: number;
   height?: number;
@@ -73,7 +75,7 @@ const {
   class: className,
 } = Astro.props;
 
-const isMeta = typeof src !== 'string';
+const isMeta = !!src && typeof src !== 'string';
 const loading = eager ? 'eager' : 'lazy';
 const fetchpriority = eager ? 'high' : undefined;
 ---
@@ -96,7 +98,9 @@ const fetchpriority = eager ? 'high' : undefined;
         {tag && <span class="frame-tag">{tag}</span>}
       </div>
     )}
-    {isMeta ? (
+    {!src ? (
+      <slot />
+    ) : isMeta ? (
       <Image
         src={src as ImageMetadata}
         alt={alt}
@@ -136,6 +140,15 @@ const fetchpriority = eager ? 'high' : undefined;
     position: relative;
   }
   .frame-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--paper-deep);
+  }
+  /* A slotted picture (no src prop) gets the same treatment as .frame-img. */
+  .frame-print > :global(img),
+  .frame-print > :global(picture),
+  .frame-print > :global(picture img) {
     display: block;
     width: 100%;
     height: auto;

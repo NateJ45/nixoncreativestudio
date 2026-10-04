@@ -1,8 +1,8 @@
 ---
-// Foundation, edit with care. This page renders every case study from the
-// EmDash CMS; layout changes here apply to every entry.
+// Safe to edit (the 2026 redesign rebuilt it). This page renders every case study
+// from the EmDash CMS; layout changes here apply to every entry.
 /* ============================================================================
-   /work/[slug] | Case Study Detail Page
+   /work/[slug] | Case study
    ============================================================================
    One server-rendered page per case study, read per request from the EmDash
    `case_studies` collection (D1). There is no getStaticPaths: an unknown slug
@@ -10,35 +10,49 @@
    with the rows this page read (src/lib/routeCache.ts), so a published edit
    purges it.
 
-   Same shape for every entry: reading progress bar, hero block (meta +
-   title + client + summary + service badges + image), the body, then
-   next/previous navigation + CtaBanner. The body is rebuilt from the stored
-   fields per the placement rule in docs/EMDASH-SCHEMA.md:
+   Written for a church board member, not a developer (2026 redesign, A items 7
+   and 11, B 2.2): outcome first, then the decision, then the proof. Bands:
 
-     SiteShowcase (desktop + phone captures)
-     Portable Text up to "The approach"
-     BeforeAfter slider (only when both images exist)
-     Portable Text "The approach" .. "What we built"
-     FeatureHighlight rows (one per `highlights` row)
-     rest of the Portable Text
-     Lightbox (once, when there are highlights)
+     1. Hero (window-light, the page's one moving ground): sector and status,
+        the title ONCE (the client name only appears again when it differs),
+        the outcome as the standfirst, the visit link, then the shipped site
+        printed large: a directed showreel for the studies that have one
+        (src/data/workExtras.ts SHOWREELS; the poster is the LCP), otherwise
+        the cover in a browser frame. Under it, a short facts ledger in plain
+        labels and the stack in one quiet line.
+     2. What changed (paper): the `results` lines, then a mid-page call to
+        action that preselects the sector on the contact form.
+     3. The story (paper-deep): the body (the brief, the decision, what was
+        built), headings in the margin.
+     4. The details (deep, still): 2 to 4 detail crops at a legible size from
+        `highlights` (click to zoom), then the before/after slider.
+     5. A note from the designer, a testimonial if one exists, more work.
+     6. The closing call to action (CtaBanner, contours) and the footer.
+
+   Honesty (launchStatus.ts): a study that is not live shows its status label
+   next to the sector, in the frame's chrome and in the ledger, and never a
+   "visit the live site" link. Launching soon links its preview build, labelled
+   as such. The body is drawn by renderJournalBody() (a pure renderer), never by
+   emdash/ui's PortableText, whose stylesheet would block rendering.
    ============================================================================ */
 
-import { PortableText } from 'emdash/ui';
+import { Image as EmDashImage } from 'emdash/ui';
+import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Band from '../../components/Band.astro';
+import Frame from '../../components/Frame.astro';
+import Showreel from '../../components/Showreel.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
-import EmDashCover from '../../components/emdash/EmDashCover.astro';
-import CaseHeading from '../../components/emdash/CaseHeading.astro';
-import SiteShowcase from '../../components/SiteShowcase.astro';
-import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import BeforeAfter from '../../components/BeforeAfter.astro';
 import Lightbox from '../../components/Lightbox.astro';
-import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
-import ReadingProgress from '../../components/ReadingProgress';
-import { readingTime } from '../../lib/readingTime';
-import { getCaseStudies, bodyText, bodyHeadings, splitBody } from '../../lib/caseStudies';
-import { SITE_URL } from '../../data/site';
+import { buttonVariants } from '../../components/ui/button';
+import { getCaseStudies } from '../../lib/caseStudies';
+import { launchStatusLabel } from '../../lib/launchStatus';
+import { renderJournalBody } from '../../lib/journalBody';
+import { prettyDomain, sectorLabel, sectorLine } from '../../lib/workIndex';
+import { getSite, SITE_URL } from '../../data/site';
+import { BODY_HELD_BACK, BUNDLED_MEDIA, LEDGER_FACTS, SHOWREELS } from '../../data/workExtras';
 
 // The static pages 301 /about to /about/ (Cloudflare's asset handler). This server
 // route does the same, so /work/reid-design is not a second live copy of the page.
@@ -47,7 +61,7 @@ if (!Astro.url.pathname.endsWith('/')) {
 }
 
 const slug = Astro.params.slug ?? '';
-// One list read gives us the entry plus its neighbours for the next/prev nav.
+// One list read gives us the entry, its neighbours and the sector count.
 const all = await getCaseStudies(Astro.cache);
 const index = all.findIndex((e) => e.id === slug);
 
@@ -59,81 +73,124 @@ if (index === -1) {
   return new Response(null, { status: 404 });
 }
 
-const entry = all[index];
-// Newest first: the next index is the OLDER project (the old "previous"), the
-// previous index is the newer one (the old "next"). Trimmed to what the nav uses.
-const trim = (e: (typeof all)[number] | undefined) =>
-  e ? { id: e.id, title: e.title, summary: e.summary } : undefined;
-const previous = trim(all[index + 1]);
-const next = trim(index > 0 ? all[index - 1] : undefined);
-
-// Table-of-contents headings (the body h2s). Both the sticky sidebar TOC and the
-// wide two-column body layout only kick in when there are at least two, so short
-// studies stay single-column and centered.
-const tocHeadings = bodyHeadings(entry.body);
-const hasToc = tocHeadings.length >= 2;
+const site = await getSite(Astro);
+const cs = all[index];
 const {
   title,
   client,
   sector,
-  services,
   summary,
   role,
-  tags,
-  published,
-  updated,
   stack,
-  liveUrl,
+  year,
   outcome,
   testimonial,
   results,
   designerNote,
-} = entry;
+} = cs;
 
-// The three runs of body prose the showcase / slider / highlights slot between.
-const parts = splitBody(entry.body);
-const hasBeforeAfter = !!(entry.beforeImage && entry.afterImage);
-// Heading renderer that adds the ids the TOC links to.
-const ptComponents = { block: { h2: CaseHeading, h3: CaseHeading } };
+// Newest first: the next index is the OLDER project, the previous index the newer one.
+const neighbours = [all[index - 1], all[index + 1]].filter(Boolean).map((e) => ({
+  id: e.id,
+  title: e.title,
+  status: launchStatusLabel(e.launchStatus),
+  sector: sectorLabel(e.sector),
+}));
 
-// Pretty-printed sector label for the meta row. kebab-case → Title Case.
-const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+// ---- status and links --------------------------------------------------------
+const status = launchStatusLabel(cs.launchStatus);
+const isLive = cs.launchStatus === 'live';
+// gateLinks() already dropped liveUrl for anything not live, except a launching-soon
+// study's preview build, which is labelled as a preview here and never as live.
+const visitUrl = cs.liveUrl;
+const visitHost = visitUrl ? prettyDomain(visitUrl) : undefined;
 
-// Sector-aware copy for the closing CTA, plus a deep link that preselects the
-// matching Organization type on the contact form (/contact?org_type=<sector>).
-// So a visitor finishing a church study sees "your church" and lands on the form
-// with "Church" already chosen. Keyed by the schema's four sectors.
-const sectorCopy: Record<string, { phrase: string; plural: string }> = {
-  church: { phrase: 'church', plural: 'churches' },
-  school: { phrase: 'school', plural: 'schools' },
-  nonprofit: { phrase: 'nonprofit', plural: 'nonprofits' },
-  'small-business': { phrase: 'small business', plural: 'small businesses' },
-};
-const sc = sectorCopy[sector];
-const ctaTitle = sc ? `Web work for ${sc.plural}, start to finish.` : undefined;
-const ctaSub = sc
-  ? `I work with ${sc.plural} like this one all the time. The earlier we talk, the better we can pace it together.`
-  : undefined;
-const ctaHref = sc ? `/contact?org_type=${sector}` : undefined;
+// ---- the hero picture ----------------------------------------------------------
+const reel = isLive ? SHOWREELS[cs.id] : undefined;
+const bundled = BUNDLED_MEDIA[cs.id];
+const heroAlt =
+  bundled?.cover?.alt ?? `The ${client} home page${isLive ? '' : `, ${status?.toLowerCase()}`}`;
 
-// Reading time from the plain text of the body. ~200 wpm rounded up. Renders next
-// to the meta row so visitors know how long the case study is before
-// committing to scroll.
-const minutes = readingTime(bodyText(entry.body));
+// ---- the facts ledger (plain labels; rows only when there is a real value) -----
+const facts = LEDGER_FACTS[cs.id] ?? {};
+const sameName = (a: string, b: string) =>
+  a.toLowerCase().replace(/^the\s+/, '') === b.toLowerCase().replace(/^the\s+/, '');
+const ledger = [
+  // The title IS the client name for most entries; print it once (A item 7).
+  !sameName(client, title) && { label: 'Client', value: client },
+  facts.place && { label: 'Place', value: facts.place },
+  year && { label: 'Year', value: String(year) },
+  role && { label: 'My role', value: role },
+  // Only for a site the client actually runs: never claim a handover that has not happened.
+  (isLive || cs.launchStatus === 'launching-soon') &&
+    facts.runsThemselves && { label: 'What they run themselves', value: facts.runsThemselves },
+].filter(Boolean) as { label: string; value: string }[];
 
-// Note: published / updated dates are intentionally NOT displayed in the UI
-// (the client doesn't want project timing showcased). They feed sort order, the
-// RSS feed, and the JSON-LD below.
+// ---- the details (2 to 4 legible crops) ---------------------------------------
+// The CMS highlights, unless the study has bundled replacements for stale CMS images.
+type Detail =
+  | {
+      kind: 'cms';
+      image: (typeof cs.highlights)[number]['image'];
+      alt: string;
+      title: string;
+      caption: string;
+    }
+  | { kind: 'bundled'; image: ImageMetadata; alt: string; title?: string; caption?: string };
+const details: Detail[] = (
+  bundled?.details
+    ? bundled.details.map((d) => ({
+        kind: 'bundled' as const,
+        image: d.src,
+        alt: d.alt,
+        title: d.title,
+        caption: d.caption,
+      }))
+    : cs.highlights.map((h) => ({
+        kind: 'cms' as const,
+        image: h.image,
+        alt: h.alt,
+        title: h.title,
+        caption: h.caption,
+      }))
+).slice(0, 4);
+const hasBeforeAfter = !!(cs.beforeImage && cs.afterImage);
+
+// ---- the story ----------------------------------------------------------------
+// A body that still describes features that are not live is held back (workExtras.ts).
+// The story is the brief and the decisions; the "What I built" feature list after it reads
+// like a spec, so it folds into a disclosure under the story (open it to read the full list).
+const bodyBlocks = BODY_HELD_BACK.has(cs.id) ? [] : cs.body;
+const builtAt = bodyBlocks.findIndex(
+  (b) =>
+    b.style === 'h2' &&
+    /^what (i|we) built$/i.test(
+      (b.children ?? [])
+        .map((c) => c.text ?? '')
+        .join('')
+        .trim(),
+    ),
+);
+const storyBlocks = builtAt >= 0 ? bodyBlocks.slice(0, builtAt) : bodyBlocks;
+// The list runs from after its heading to the next h2 (anything after that stays in the story).
+const nextH2 = builtAt >= 0 ? bodyBlocks.findIndex((b, i) => i > builtAt && b.style === 'h2') : -1;
+const builtBlocks =
+  builtAt >= 0 ? bodyBlocks.slice(builtAt + 1, nextH2 > 0 ? nextH2 : undefined) : [];
+const afterBlocks = nextH2 > 0 ? bodyBlocks.slice(nextH2) : [];
+const bodyHtml = renderJournalBody(storyBlocks);
+const builtHtml = builtBlocks.length ? renderJournalBody(builtBlocks) : '';
+const afterHtml = afterBlocks.length ? renderJournalBody(afterBlocks) : '';
+
+// ---- calls to action ----------------------------------------------------------
+// The sector preselects Organization type on the contact form (/contact/?org_type=<sector>).
+const contactHref = `/contact/?org_type=${sector}`;
+const countLine = sectorLine(all, sector);
+const ctaSub = [countLine, site.ctaDefault.sub].filter(Boolean).join(' ');
 
 // Social card. BaseLayout derives /og/work/<slug>.png from the pathname (the
-// per-case-study card generated by scripts/generate-og.mjs), so no ogImage prop
-// is passed; the JSON-LD image points at the same card.
-const ogCardUrl = new URL(`/og/work/${entry.id}.png`, SITE_URL).toString();
-
-// Article + CreativeWork JSON-LD for this case study. CreativeWork is
-// the more general type that fits portfolio entries; Article gives
-// search engines a date / headline / image they can show in rich
-// results. Both reference the studio Organization via @id.
+// per-case-study card generated by scripts/generate-og.mjs); the JSON-LD image
+// points at the same card.
+const ogCardUrl = new URL(`/og/work/${cs.id}.png`, SITE_URL).toString();
 const schemas = [
   {
     '@context': 'https://schema.org',
@@ -141,394 +198,660 @@ const schemas = [
     headline: title,
     description: summary,
     image: ogCardUrl,
-    datePublished: published.toISOString(),
-    ...(updated ? { dateModified: updated.toISOString() } : {}),
+    datePublished: cs.published.toISOString(),
+    ...(cs.updated ? { dateModified: cs.updated.toISOString() } : {}),
     author: { '@id': `${SITE_URL}#organization` },
     publisher: { '@id': `${SITE_URL}#organization` },
     about: client,
-    keywords: services.join(', '),
+    keywords: cs.services.join(', '),
   },
 ];
 ---
 
 <BaseLayout
-  title={`${title} | Nixon Creative Studio`}
+  title={`${title} | ${site.studioName}`}
   description={summary}
   ogType="article"
   schemas={schemas}
 >
-  {/* Reading progress bar pinned to the top of the viewport. Only
-      rendered here, not in BaseLayout, because the rest of the site has
-      mostly short pages where a progress bar would be visual noise. */}
-  <ReadingProgress client:idle />
-
-  <article>
-    <!-- Hero block. Two-column on >= 56rem (copy left, image right),
-         stacked on mobile. Generous padding so the case study feels like
-         its own landing, not a continuation of the previous page. -->
-    <header class="py-2xl">
-      <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-2">
-        <div class="flex flex-col gap-m" data-reveal>
-          <!-- Meta stamp: sector + read time. Mono and muted. No year. -->
-          <p class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-            <span>{sectorLabel}</span>
-            <span aria-hidden="true">·</span>
-            <span>{minutes} min read</span>
-          </p>
-
-          <h1 class="leading-[0.95]">{title}</h1>
-
-          <!-- Client line below the title; client and title often differ
-               for ministry or program-level engagements. -->
-          <p class="font-display text-h4 text-link">{client}</p>
-
-          <p class="max-w-[56ch] text-lg leading-[1.6] text-text">{summary}</p>
-
-          {/* Outcome callout (optional). The honest, one-line result of the
-              project, lifted out of the body so the proof reads at first scan.
-              Marked as the takeaway by a small label + larger --link type and
-              whitespace, not a side-stripe border (an absolute-ban tell). */}
-          {outcome && (
-            <div class="mt-s max-w-[56ch]">
-              <p class="text-xs font-semibold tracking-[0.12em] text-text-muted uppercase">
-                Outcome
-              </p>
-              <p class="mt-1 text-xl leading-[1.4] font-semibold text-link">{outcome}</p>
-            </div>
-          )}
-
-          {/* Live site link (optional). For a web design portfolio this is
-              the strongest single trust signal: a click straight to real,
-              working proof. Rendered as a brand-weight link with an external
-              cue; opens in a new tab with rel noopener for safety. */}
-          {liveUrl && (
-            <a
-              href={liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex w-fit items-center gap-2 font-body text-base font-semibold text-link underline underline-offset-4 transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-            >
-              Visit the live site
-              <span aria-hidden="true">↗</span>
+  <article class="cs">
+    {/* 1. Hero: outcome first, then the site itself, then the facts. */}
+    <Band ground="window-light" underHeader labelledby="cs-title" class="cs-hero">
+      <div class="cs-top">
+        <div class="cs-head">
+          <p class="cs-kind type-ui">
+            <a href="/work/" class="cs-crumb">
+              All work
             </a>
-          )}
-
-          {/* Role line (optional). Tiny mono uppercase, sits below the
-              summary as a credit. Useful when the case study wants to
-              clarify whether Nathan led design, code, photography, or
-              some combination. */}
-          {role && (
-            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">Role:</span> {role}
+            <span aria-hidden="true">/</span>
+            <span>{sectorLabel(sector)}</span>
+            {status && <span class="cs-status">{status}</span>}
+          </p>
+          <h1
+            id="cs-title"
+            class:list={['type-display cs-title', title.length > 20 && 'cs-title--long']}
+          >
+            {title}
+          </h1>
+          <p class="type-lede cs-outcome">{outcome ?? summary}</p>
+          {visitUrl && (
+            <p class="cs-visit type-ui">
+              <a href={visitUrl} target="_blank" rel="noopener noreferrer" class="card-link">
+                {isLive ? `Visit ${visitHost}` : `See the finished build at ${visitHost}`}
+                <span class="sr-only"> (opens in a new tab)</span>
+              </a>
+              {!isLive && status && (
+                <span class="cs-visit-note"> {status}: the address is a preview.</span>
+              )}
             </p>
           )}
+        </div>
 
-          {/* Stack list (optional). When present, render a tiny tools
-              line so designers and devs evaluating the work can scan
-              what was used. Plain text, no styling flourish. */}
-          {stack && stack.length > 0 && (
-            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">Built with:</span> {stack.join(', ')}
-            </p>
+        <div class="cs-facts">
+          {ledger.length > 0 && (
+            <dl class="cs-ledger">
+              {ledger.map((row) => (
+                <div class="cs-ledger-row">
+                  <dt class="type-caption">{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
           )}
+          {stack.length > 0 && <p class="type-caption cs-stack">Built with {stack.join(', ')}.</p>}
+        </div>
 
-          <!-- Service badges. Each rendered as an outlined accent-color
-               pill. flex-wrap so they wrap on narrow screens. -->
-          <ul class="mt-s flex flex-wrap gap-xs" aria-label="Services delivered">
-            {services.map((service) => (
-              <li class="inline-flex items-center rounded-full border border-link px-2.5 py-1 font-body text-[0.8rem] text-link">
-                {service}
+        <div class="cs-print">
+          {reel ? (
+            <Showreel slug={cs.id} spec={reel} url={visitHost} />
+          ) : bundled?.cover ? (
+            <Frame
+              src={bundled.cover.src}
+              alt={heroAlt}
+              eager
+              url={visitHost}
+              tag={status}
+              widths={[640, 960, 1280, 1440]}
+              sizes="(min-width: 82.5rem) 76rem, 92vw"
+            />
+          ) : (
+            cs.cover && (
+              <Frame alt={heroAlt} url={isLive ? visitHost : undefined} tag={status}>
+                <EmDashImage
+                  image={cs.cover}
+                  alt={heroAlt}
+                  priority
+                  sizes="(min-width: 82.5rem) 76rem, 92vw"
+                />
+              </Frame>
+            )
+          )}
+        </div>
+      </div>
+    </Band>
+
+    {/* 2. What changed: the result, then a call to action mid-page. */}
+    {results.length > 0 && (
+      <Band ground="paper" labelledby="cs-changed" class="cs-changed">
+        <div class="cs-split">
+          <h2 id="cs-changed" class="type-headline">
+            What <span class="voice">changed</span>
+          </h2>
+          <ul class="cs-results" role="list">
+            {results.map((line) => (
+              <li>{line}</li>
+            ))}
+          </ul>
+        </div>
+        <div class="cs-midcta">
+          <p class="type-lede">
+            Planning something like this for your {sectorLabel(sector).toLowerCase()}?
+          </p>
+          <a href={contactHref} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
+            {site.ctaDefault.label}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+        </div>
+      </Band>
+    )}
+
+    {/* 3. The story: the brief and the decisions, headings in the margin. */}
+    {(bodyHtml || builtHtml || afterHtml) && (
+      <section class="band ground cs-story" aria-label="The story">
+        <div class="ncs-container">
+          {bodyHtml && <div class="cs-prose" set:html={bodyHtml} />}
+          {builtHtml && (
+            <details class="cs-built">
+              <summary class="type-ui">The full build, as a list</summary>
+              <div class="cs-prose cs-prose--list" set:html={builtHtml} />
+            </details>
+          )}
+          {afterHtml && <div class="cs-prose cs-prose--after" set:html={afterHtml} />}
+        </div>
+      </section>
+    )}
+
+    {/* 4. The details, printed on the ink board. */}
+    {(details.length > 0 || hasBeforeAfter) && (
+      <Band ground="deep" still labelledby="cs-details" class="cs-details">
+        <h2 id="cs-details" class="type-headline">
+          In the <span class="voice">details</span>
+        </h2>
+        {details.length > 0 && (
+          <ul class:list={['cs-crops', `cs-crops--${details.length}`]} role="list">
+            {details.map((d) => (
+              <li class="cs-crop">
+                <figure>
+                  <button
+                    type="button"
+                    class="cs-zoom"
+                    data-zoom
+                    aria-label={`View ${d.title ?? 'this detail'} full size`}
+                  >
+                    {d.kind === 'cms' ? (
+                      <EmDashImage
+                        image={d.image}
+                        alt={d.alt}
+                        sizes="(min-width: 64rem) 46vw, 92vw"
+                      />
+                    ) : (
+                      <Image
+                        src={d.image}
+                        alt={d.alt}
+                        widths={[640, 960, 1440]}
+                        sizes="(min-width: 64rem) 46vw, 92vw"
+                      />
+                    )}
+                  </button>
+                  {(d.title || d.caption) && (
+                    <figcaption>
+                      {d.title && <h3 class="cs-crop-title">{d.title}</h3>}
+                      {d.caption && <p class="cs-crop-caption">{d.caption}</p>}
+                    </figcaption>
+                  )}
+                </figure>
               </li>
             ))}
           </ul>
-
-          {/* Tags (optional). The service pills above are the primary scope,
-              so the tags read as quiet supporting metadata: plain muted text,
-              comma-separated, NOT a second row of pills (two near-identical
-              pill rows read as two filter-chip rows). A "Tags:" lead-in mirrors
-              the Role / Built with credit lines above. */}
-          {tags && tags.length > 0 && (
-            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">Tags:</span> {tags.join(', ')}
-            </p>
-          )}
-        </div>
-
-        <!-- Hero image. EmDashCover wraps the EmDash Image, which paints the media
-             item's blurhash as a placeholder until the real image lands. It is
-             the LCP image, so it is marked priority (eager + high fetch priority).
-
-             alt="" because the case study's h1 sits just above the image
-             inside the same <header>, so a descriptive alt would make
-             screen readers announce the title twice. -->
-        <div transition:name={`cover-${entry.id}`}>
-          <EmDashCover cover={entry.cover} alt="" priority sizes="(min-width: 56rem) 50vw, 100vw" />
-        </div>
-      </div>
-    </header>
-
-    <!-- MDX body + optional TOC sidebar. Two-column at xl (sticky TOC left,
-         content right); single column below. The content column holds the prose,
-         the "what changed" block, AND the designer's note, so they all share one
-         alignment instead of drifting to different centers.
-
-         Every text block is capped to ONE rem-based measure (max-w-[40rem]) and
-         centered, so headings and paragraphs line up. (The old code capped them
-         in `ch`, which is font-size relative, so the bigger h2s came out wider
-         than the paragraphs and their left edges did not match.) Full-width media
-         (FeatureHighlight, SiteShowcase) still spans the column. The sticky TOC
-         and the h2 scroll targets sit below the ~83px sticky header so neither
-         gets covered.
-
-         The TOC renders only when the body has at least two h2s; short studies
-         stay single column. -->
-    <div class="ncs-container">
-      <div
-        class:list={[
-          'mx-auto grid max-w-[62rem] gap-xl pt-l pb-2xl',
-          hasToc ? 'xl:grid-cols-[14rem_minmax(0,1fr)]' : 'xl:grid-cols-1',
-        ]}
-      >
-        {/* Sticky TOC. Lists every h2 in the MDX body as a jump link. Hidden
-            below xl. top-[6.5rem] clears the sticky header. Native <nav
-            aria-label> so screen readers identify it.
-
-            data-case-toc + per-link data-toc-link="<slug>" wire the scroll-spy
-            at the end of <article>: an IntersectionObserver marks the link for
-            the section in view as active. With JS off (or no IntersectionObserver)
-            this stays a plain list of working jump links. */}
-        {hasToc && (
-          <nav aria-label="In this case study" class="hidden xl:block" data-case-toc>
-            <div class="sticky top-[6.5rem] flex flex-col gap-xs">
-              <p class="font-mono text-[0.75rem] tracking-[0.08em] text-text-muted uppercase">
-                In this case study
-              </p>
-              <ul class="flex flex-col gap-xs">
-                {tocHeadings.map((h) => (
-                  <li>
-                    <a
-                      href={`#${h.slug}`}
-                      data-toc-link={h.slug}
-                      class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link aria-[current=true]:font-medium aria-[current=true]:text-link"
-                    >
-                      {h.text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </nav>
         )}
-
-        {/* Content column: prose, then results, then the designer's note, all on
-            one alignment. */}
-        <div class="min-w-0">
-          {/* MDX prose. Text blocks centered at one consistent rem measure so
-              their edges line up; media (FeatureHighlight, SiteShowcase) spans
-              the column. The arbitrary descendant selectors style the MDX output
-              without the typography plugin and without leaking site-wide; the
-              scroll-mt clears the sticky header on a jump-link click. */}
-          <div
-            data-prose
-            class:list={[
-              'text-[1.0625rem] leading-[1.7] text-text',
-              '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-[6.5rem] [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
-              // h3 is a quieter subsection head: display face, heading color, one
-              // step smaller (text-h4) and tighter top space than the h2.
-              '[&_h3]:mt-l [&_h3]:mb-s [&_h3]:max-w-[40rem] [&_h3]:font-display [&_h3]:text-h4 [&_h3]:text-heading',
-              '[&_li]:mb-1 [&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5',
-              // Ordered lists mirror the bullet list spacing but number their items.
-              '[&_ol]:mb-m [&_ol]:max-w-[40rem] [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:text-text',
-              '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
-              // Inline emphasis: bold runs lift to the heading color; inline code
-              // drops to the mono face at a slightly smaller size so it reads as code.
-              '[&_strong]:font-semibold [&_strong]:text-heading',
-              '[&_code]:font-mono [&_code]:text-[0.9em]',
-              // Blockquote: italic, muted, held to the body measure. NO side-stripe
-              // border (an absolute-ban tell) — the italic + muted color carries it.
-              '[&_blockquote]:max-w-[40rem] [&_blockquote]:text-text-muted [&_blockquote]:italic',
-              '[&_h2]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem]',
-            ]}
-          >
-            {entry.showcaseDesktop && entry.showcaseHref && (
-              <SiteShowcase
-                desktop={entry.showcaseDesktop}
-                mobile={entry.showcaseMobile}
-                alt={entry.showcaseAlt ?? `The ${client} homepage`}
-                href={entry.showcaseHref}
-                label={entry.showcaseLabel}
-                variant={entry.showcaseVariant}
-              />
-            )}
-            <PortableText value={parts.brief} components={ptComponents} />
-            {hasBeforeAfter && (
-              <BeforeAfter
-                beforeImage={entry.beforeImage}
-                afterImage={entry.afterImage}
-                beforeAlt={entry.beforeAlt ?? 'The previous site'}
-                afterAlt={entry.afterAlt ?? 'The redesigned site'}
-                beforeLabel={entry.beforeLabel}
-                afterLabel={entry.afterLabel}
-              />
-            )}
-            <PortableText value={parts.approach} components={ptComponents} />
-            {entry.highlights.map((h) => (
-              <FeatureHighlight
-                image={h.image}
-                alt={h.alt}
-                title={h.title}
-                body={h.caption}
-                side={h.side}
-                eyebrow={h.eyebrow}
-              />
-            ))}
-            <PortableText value={parts.rest} components={ptComponents} />
-            {entry.highlights.length > 0 && <Lightbox />}
+        {hasBeforeAfter && (
+          <div class="cs-ba">
+            <h3 class="cs-ba-title">Before and after</h3>
+            <BeforeAfter
+              beforeImage={cs.beforeImage}
+              afterImage={cs.afterImage}
+              beforeAlt={cs.beforeAlt ?? 'The previous site'}
+              afterAlt={cs.afterAlt ?? 'The redesigned site'}
+              beforeLabel={cs.beforeLabel}
+              afterLabel={cs.afterLabel}
+            />
           </div>
+        )}
+        {details.length > 0 && <Lightbox />}
+      </Band>
+    )}
 
-          {/* "What changed" + the signed designer's note, in the SAME column and
-              at the same measure as the prose, so the body closes in alignment
-              instead of jumping to a different center. */}
-          {(results?.length || designerNote) && (
-            <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
-              {results && results.length > 0 && <ResultsBlock changes={results} />}
-              {designerNote && <DesignerNote note={designerNote} />}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-
-    {/* Testimonial pull-quote (optional). Real client social proof, set
-        apart from the body as an editorial quote. Renders nothing when the
-        frontmatter has no testimonial, so it is safe to leave off until a
-        real quote is collected. Never fabricated.
-
-        Left-aligned at the same measure (max-w-[40rem]) as the body prose,
-        results, and designer note above, so the page closes in alignment
-        instead of jumping to a centered block. It still reads as a pull-quote
-        through the larger display type, not through centering. */}
-    {testimonial && (
-      <aside class="border-t border-border py-2xl" aria-label="Client testimonial" data-reveal>
-        <figure class="ncs-container max-w-[40rem]">
-          <blockquote class="font-display text-h3 leading-[1.2] text-heading">
+    {/* 5. The designer's note, a client's words if there are any, and more work. */}
+    <Band ground="paper" label="A note from the designer, and more work" class="cs-close">
+      {designerNote && <DesignerNote note={designerNote} />}
+      {testimonial && (
+        <figure class="cs-quote">
+          <blockquote>
             <p>“{testimonial.quote}”</p>
           </blockquote>
-          <figcaption class="mt-m font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-            <span class="text-text">{testimonial.name}</span>
-            {testimonial.title ? ` · ${testimonial.title}` : ''}
+          <figcaption class="type-caption">
+            {testimonial.name}
+            {testimonial.title ? `, ${testimonial.title}` : ''}
           </figcaption>
         </figure>
-      </aside>
-    )}
-
-    {/* Next / previous case study nav. Sits between the body and the
-        CtaBanner so visitors who finished reading have a forward path
-        before hitting the "Start a project" CTA. Hidden entirely when
-        there's only one case study in the catalogue. */}
-    {(previous || next) && (
-      <nav class="border-t border-border py-xl" aria-label="More case studies">
-        <div class="ncs-container grid grid-cols-1 gap-l sm:grid-cols-2">
-          {previous ? (
-            <a
-              href={`/work/${previous.id}/`}
-              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
-                ← Previous case study
+      )}
+      {neighbours.length > 0 && (
+        <nav class="cs-more" aria-label="More case studies">
+          {neighbours.map((n) => (
+            <a href={`/work/${n.id}/`} class="cs-more-link">
+              {/* The title comes first for screen readers ("MAS Monograms, Small business"). */}
+              <span class="cs-more-title">{n.title}</span>
+              <span class="type-caption cs-more-kind">
+                <span class="sr-only">, </span>
+                {n.sector}
+                {n.status && ` / ${n.status}`}
               </span>
-              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {previous.title}
-              </span>
-              <span class="text-[0.95rem] leading-[1.5] text-text-muted">{previous.summary}</span>
             </a>
-          ) : (
-            <span />
-          )}
-
-          {next ? (
-            <a
-              href={`/work/${next.id}/`}
-              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-right"
-            >
-              <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
-                Next case study →
-              </span>
-              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {next.title}
-              </span>
-              <span class="text-[0.95rem] leading-[1.5] text-text-muted">{next.summary}</span>
-            </a>
-          ) : (
-            <span />
-          )}
-        </div>
-      </nav>
-    )}
+          ))}
+          <a href="/work/" class="card-link cs-more-all">
+            All the work
+          </a>
+        </nav>
+      )}
+    </Band>
   </article>
 
-  {/* Sticky-TOC scroll-spy. Marks the TOC link for the section currently in
-      view with aria-current (which the link's aria-[current=true] classes paint
-      as text-link + font-medium). Purely additive: with JS off, no
-      IntersectionObserver, or fewer than two h2s (no TOC rendered), the TOC
-      stays a plain list of working jump links and the prose is unaffected.
-      No motion of its own, so nothing to gate for reduced-motion. */}
-  <script>
-    // Wrapped in astro:page-load so the scroll-spy re-binds after View
-    // Transitions navigations. The dataset flag keeps it from observing twice.
-    function initCaseToc() {
-      const toc = document.querySelector<HTMLElement>('[data-case-toc]');
-      if (!toc || toc.dataset.spyBound || !('IntersectionObserver' in window)) return;
-      toc.dataset.spyBound = 'true';
-
-      // Map each section slug to its TOC link, in document order.
-      const links = new Map<string, HTMLAnchorElement>();
-      toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
-        const id = a.getAttribute('data-toc-link');
-        if (id) links.set(id, a);
-      });
-      if (links.size === 0) return;
-
-      // Track which sections are currently intersecting; the topmost one wins.
-      const visible = new Set<string>();
-
-      const setCurrent = (id: string | null) => {
-        links.forEach((a, key) => {
-          if (key === id) a.setAttribute('aria-current', 'true');
-          else a.removeAttribute('aria-current');
-        });
-      };
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const id = entry.target.id;
-            if (entry.isIntersecting) visible.add(id);
-            else visible.delete(id);
-          }
-          // Pick the visible section nearest the top of the document order.
-          let topId: string | null = null;
-          for (const id of links.keys()) {
-            if (visible.has(id)) {
-              topId = id;
-              break;
-            }
-          }
-          setCurrent(topId);
-        },
-        // Bias the active zone toward the upper portion of the viewport so a
-        // heading is marked current as it reaches reading position.
-        { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
-      );
-
-      // Observe the real h2 heading elements (the MDX output ids match the slugs).
-      links.forEach((_, id) => {
-        const heading = document.getElementById(id);
-        if (heading) observer.observe(heading);
-      });
-    }
-    document.addEventListener('astro:page-load', initCaseToc);
-    initCaseToc();
-  </script>
-  <CtaBanner title={ctaTitle} sub={ctaSub} ctaHref={ctaHref} />
+  <CtaBanner sub={ctaSub} ctaHref={contactHref} />
 </BaseLayout>
+
+<style>
+  /* ---- 1. hero -------------------------------------------------------------- */
+  .cs-head {
+    display: grid;
+    gap: var(--spacing-m);
+    align-content: start;
+  }
+  .cs-kind {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin: 0;
+    color: var(--muted-foreground);
+  }
+  .cs-crumb {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--link);
+    font-weight: 600;
+  }
+  .cs-status {
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .cs-title {
+    margin: 0;
+  }
+  /* A long name ("Second Presbyterian Church of Chicago") steps down a size so it
+     sets in two or three lines, not four. */
+  .cs-title--long {
+    font-size: clamp(2.75rem, 1.4rem + 4.4vw, 5.25rem);
+  }
+  .cs-outcome {
+    max-width: 44ch;
+    margin: 0;
+    color: var(--heading);
+  }
+  .cs-visit {
+    margin: 0;
+  }
+  .cs-visit .card-link {
+    min-height: 44px;
+  }
+  .cs-visit-note {
+    color: var(--muted-foreground);
+  }
+  /* Phone: words, picture, facts. Desktop: words beside the facts, then the
+     picture across the whole width. Only the facts move visually; they hold no
+     links, so the focus order is unaffected. */
+  .cs-top {
+    display: grid;
+    gap: var(--spacing-l);
+    grid-template-areas: 'head' 'print' 'facts';
+  }
+  .cs-head {
+    grid-area: head;
+  }
+  .cs-facts {
+    grid-area: facts;
+  }
+  .cs-print {
+    grid-area: print;
+  }
+  @media (min-width: 64rem) {
+    .cs-top {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+      grid-template-areas: 'head facts' 'print print';
+      column-gap: var(--spacing-xl);
+      align-items: end;
+    }
+    .cs-print {
+      margin-top: var(--spacing-s);
+    }
+  }
+  /* The ledger: the facts of the job in plain labels, sentence case, no mono,
+     each on a hairline like the rows of a contact sheet's notes. */
+  .cs-ledger {
+    display: grid;
+    margin: 0;
+  }
+  .cs-ledger-row {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: var(--spacing-s);
+    padding: 0.6rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .cs-ledger-row:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+  .cs-ledger-row dt {
+    padding-top: 0.15rem;
+  }
+  .cs-ledger-row dd {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    color: var(--heading);
+  }
+  @media (max-width: 26rem) {
+    .cs-ledger-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+    }
+  }
+  .cs-stack {
+    margin: var(--spacing-s) 0 0;
+  }
+
+  /* ---- 2. what changed ------------------------------------------------------ */
+  .cs-split {
+    display: grid;
+    gap: var(--spacing-l);
+  }
+  @media (min-width: 56rem) {
+    .cs-split {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: start;
+    }
+  }
+  .cs-split h2 {
+    margin: 0;
+  }
+  .cs-results {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+  .cs-results li {
+    padding: var(--spacing-s) 0;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-serif);
+    font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+    line-height: 1.45;
+    color: var(--heading);
+    text-wrap: pretty;
+  }
+  .cs-results li:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+  .cs-midcta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m) var(--spacing-l);
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-l);
+    background: var(--paper-deep);
+    border-radius: 2px;
+  }
+  .cs-midcta p {
+    margin: 0;
+    max-width: 32ch;
+    color: var(--heading);
+  }
+
+  /* ---- 3. the story --------------------------------------------------------- */
+  .cs-story {
+    background: var(--paper-deep);
+  }
+  /* Headings sit in the left margin at desktop; paragraphs, lists and the smaller
+     headings run in the reading column. The markup is renderJournalBody()'s, so the
+     selectors are :global. */
+  .cs-prose {
+    display: grid;
+    gap: 0 var(--spacing-xl);
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.65;
+    color: var(--foreground);
+  }
+  @media (min-width: 64rem) {
+    .cs-prose {
+      grid-template-columns: 16rem minmax(0, var(--container-prose));
+    }
+    .cs-prose > :global(*) {
+      grid-column: 2;
+    }
+    .cs-prose > :global(h2) {
+      grid-column: 1;
+      position: sticky;
+      top: 6.5rem;
+      align-self: start;
+    }
+  }
+  .cs-prose :global(h2) {
+    margin: var(--spacing-l) 0 var(--spacing-s);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 1;
+    color: var(--heading);
+    scroll-margin-top: 6.5rem;
+  }
+  .cs-prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  @media (min-width: 64rem) {
+    .cs-prose :global(h2) {
+      margin-top: 0.35rem;
+    }
+    .cs-prose :global(h2 + *) {
+      margin-top: 0;
+    }
+  }
+  .cs-prose :global(h3) {
+    margin: var(--spacing-l) 0 var(--spacing-xs);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    color: var(--heading);
+  }
+  .cs-prose :global(p),
+  .cs-prose :global(ul),
+  .cs-prose :global(ol),
+  .cs-prose :global(blockquote) {
+    max-width: var(--container-prose);
+    margin: 0 0 var(--spacing-m);
+  }
+  .cs-prose :global(ul),
+  .cs-prose :global(ol) {
+    padding-left: 1.25rem;
+  }
+  .cs-prose :global(ul) {
+    list-style: disc;
+  }
+  .cs-prose :global(ol) {
+    list-style: decimal;
+  }
+  .cs-prose :global(li) {
+    margin-bottom: 0.4rem;
+  }
+  .cs-prose :global(a) {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .cs-prose :global(strong) {
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .cs-prose :global(blockquote) {
+    font-style: italic;
+    color: var(--muted-foreground);
+  }
+
+  /* ---- 4. the details ------------------------------------------------------- */
+  .cs-details h2 {
+    margin: 0 0 var(--spacing-xl);
+  }
+  .cs-crops {
+    display: grid;
+    gap: var(--spacing-xl) var(--spacing-l);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 64rem) {
+    .cs-crops {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* An odd count opens with one crop across the whole width, then pairs. */
+    .cs-crops--1 .cs-crop:first-child,
+    .cs-crops--3 .cs-crop:first-child {
+      grid-column: 1 / -1;
+    }
+    .cs-crops--3 .cs-crop:first-child figure {
+      display: grid;
+      grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+      gap: var(--spacing-l);
+      align-items: end;
+    }
+  }
+  .cs-crop figure {
+    margin: 0;
+  }
+  /* The disclosure for the build list: a quiet row in the reading column. */
+  .cs-built {
+    margin-top: var(--spacing-l);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  @media (min-width: 64rem) {
+    .cs-built {
+      margin-left: calc(16rem + var(--spacing-xl));
+      max-width: var(--container-prose);
+    }
+  }
+  .cs-built summary {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+    color: var(--link);
+    cursor: pointer;
+  }
+  .cs-built[open] summary {
+    margin-bottom: var(--spacing-s);
+  }
+  .cs-prose--list {
+    display: block;
+  }
+  .cs-prose--after {
+    margin-top: var(--spacing-l);
+  }
+  .cs-zoom {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: var(--ink-raised);
+    /* A thin paper edge so dark screenshots do not sink into the ink board. */
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--paper) 22%, transparent),
+      0 30px 60px -30px color-mix(in oklab, var(--ink) 90%, transparent);
+    cursor: zoom-in;
+    overflow: hidden;
+  }
+  .cs-zoom :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .cs-zoom:focus-visible {
+    outline: 3px solid var(--marker-hot);
+    outline-offset: 4px;
+  }
+  .cs-crop figcaption {
+    margin-top: var(--spacing-s);
+  }
+  .cs-crop-title {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 1.1875rem;
+    line-height: 1.3;
+    color: var(--heading);
+  }
+  .cs-crop-caption {
+    margin: 0;
+    max-width: 52ch;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .cs-ba {
+    margin-top: var(--spacing-2xl);
+  }
+  .cs-ba-title {
+    margin: 0 0 var(--spacing-s);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 1;
+    color: var(--heading);
+  }
+
+  /* ---- 5. note, quote, more work ------------------------------------------- */
+  .cs-quote {
+    max-width: 44rem;
+    margin: var(--spacing-2xl) 0 0;
+  }
+  .cs-quote blockquote {
+    margin: 0 0 var(--spacing-s);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--heading);
+  }
+  .cs-quote blockquote p {
+    margin: 0;
+  }
+  .cs-more {
+    display: grid;
+    gap: var(--spacing-m) var(--spacing-l);
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-l);
+    border-top: 1px solid var(--border);
+  }
+  @media (min-width: 48rem) {
+    .cs-more {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+      align-items: end;
+    }
+  }
+  .cs-more-link {
+    display: grid;
+    gap: 0.25rem;
+    min-height: 44px;
+    color: inherit;
+    text-decoration: none;
+  }
+  /* Visually the sector sits above the title. */
+  .cs-more-kind {
+    order: -1;
+  }
+  .cs-more-title {
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    line-height: 1;
+    color: var(--heading);
+    transition: color 150ms ease;
+  }
+  .cs-more-link:hover .cs-more-title,
+  .cs-more-link:focus-visible .cs-more-title {
+    color: var(--link);
+  }
+  .cs-more-all {
+    min-height: 44px;
+  }
+</style>

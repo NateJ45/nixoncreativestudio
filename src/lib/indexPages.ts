@@ -17,7 +17,7 @@
 
    The photos themselves are not read here: see src/lib/photos.ts.
 
-   Stays in code (docs/CMS-DESIGN.md 1.9): the Work filter chips and cards (they are
+   Stays in code (docs/CMS-DESIGN.md 1.9): the Work page layout and prints (they are
    the case studies), the project count, the Journal card's mark and buttons, the
    Photography "In progress" label and link, and every layout.
    ============================================================================ */

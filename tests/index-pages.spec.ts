@@ -26,10 +26,8 @@ const read = <T>(file: string): T =>
   JSON.parse(readFileSync(join(process.cwd(), file), 'utf8')) as T;
 
 interface WorkData {
-  eyebrow: string;
   heading: string;
   intro: string;
-  empty_filter_message: string;
   live_heading: string;
   live_body: string;
 }
@@ -71,43 +69,46 @@ test.describe('/work', () => {
     page,
   }) => {
     await page.goto('/work/', { waitUntil: 'domcontentloaded' });
+    // The headline is the CMS heading; its last word is set in the italic voice.
     await expect(page.locator('h1')).toHaveText(work.heading);
-    await expect(page.getByText(work.eyebrow, { exact: true })).toBeVisible();
-    const cards = await page.locator('[data-work-card]').count();
-    expect(cards, 'the CI dataset holds three case studies').toBeGreaterThan(0);
+    // Every study is on the page once: the lead, the live sheet, or the Also built strip.
+    const shown =
+      (await page.locator('[data-work-item]').count()) +
+      (await page.locator('[data-work-also]').count());
+    expect(shown, 'the CI dataset holds three case studies').toBeGreaterThan(0);
     // "3 projects for churches, ..." : the number is computed, the rest is the CMS text.
     const intro = page.locator('header p', { hasText: work.intro.slice(0, 30) });
     await expect(intro).toHaveText(
-      new RegExp(`^\\s*${cards}\\s+projects?\\s+${work.intro.slice(0, 30)}`),
+      new RegExp(`^\\s*${shown}\\s+projects?\\s+${work.intro.slice(0, 30)}`),
     );
-    await expect(page.locator('#live-sites-heading')).toHaveText(work.live_heading);
-    await expect(page.getByText(work.live_body)).toBeAttached();
   });
 
-  test('the sector filter chips still filter the cards (the WorkFilter island works)', async ({
+  test('a live study leads, and nothing that is not live is presented as live', async ({
     page,
   }) => {
     await page.goto('/work/', { waitUntil: 'domcontentloaded' });
-    const chips = page.getByRole('group').getByRole('button');
-    // The island hydrates on load; wait for the chips to be interactive.
-    await expect(chips.first()).toBeVisible();
-    const count = await chips.count();
-    expect(count, 'All plus at least two sectors').toBeGreaterThan(2);
-    const total = await page.locator('[data-work-card]').count();
-    // Pick a sector chip (not "All") and check some, but not all, cards hide.
-    // The chips are server-rendered, so a click can land before React has bound it;
-    // retry the click until the filter has taken effect.
-    let hidden = 0;
-    await expect(async () => {
-      await chips.nth(1).click();
-      hidden = await page.locator('[data-work-card][data-hidden]').count();
-      expect(hidden, 'a sector chip hides the other sectors').toBeGreaterThan(0);
-    }).toPass({ timeout: 15000 });
-    expect(hidden).toBeLessThan(total);
-    await chips.first().click();
-    await expect(page.locator('[data-work-card][data-hidden]')).toHaveCount(0);
-    // The empty-filter message is in the page (hidden) with the CMS words.
-    await expect(page.locator('[data-work-empty]')).toHaveText(work.empty_filter_message);
+    const lead = page.locator('[data-work-lead] [data-work-item]');
+    if ((await lead.count()) > 0) {
+      await expect(lead).toHaveAttribute('data-status', 'live');
+    }
+    // The live sheet only ever holds live studies.
+    for (const item of await page.locator('[data-work-item]').all()) {
+      await expect(item).toHaveAttribute('data-status', 'live');
+    }
+    // Each Also built entry carries its status label and links to its case study.
+    for (const item of await page.locator('[data-work-also]').all()) {
+      await expect(item.locator('.w-also-status')).toHaveText(
+        /Launching soon|In progress|Built, not launched/,
+      );
+      await expect(item.locator('a[href^="/work/"]').first()).toBeVisible();
+    }
+    // The live sheet's heading and line are the Work page's live fields.
+    if ((await page.locator('#work-live').count()) > 0) {
+      await expect(page.locator('#work-live')).toHaveText(work.live_heading);
+      await expect(page.getByText(work.live_body)).toBeAttached();
+    }
+    // No filter chips and no React island any more.
+    await expect(page.locator('astro-island')).toHaveCount(0);
   });
 });
 

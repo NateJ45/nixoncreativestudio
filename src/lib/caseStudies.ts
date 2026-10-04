@@ -76,6 +76,8 @@ export interface CaseStudy {
   inHero: boolean;
   /** Position in the hero scene, lowest first. Undefined when unset or the field does not exist yet. */
   heroOrder?: number;
+  /** The project year (the Year field). Shown in the case study's facts ledger. */
+  year?: number;
   published: Date;
   updated?: Date;
   /**
@@ -188,6 +190,7 @@ function normalize(id: string, d: Raw, order: TermOrder): CaseStudy {
     featured: Boolean(d.featured),
     inHero: links.inHero,
     heroOrder: whole(d.hero_order),
+    year: whole(d.year),
     published: date(d.published) ?? new Date(0),
     updated: date(d.updated),
     launchStatus,

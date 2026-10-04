@@ -39,3 +39,8 @@ Update in the same commits: `CLAUDE.md` or `.claude/rules/homepage-and-pages.md`
 ## Finishing
 
 Commit to your branch with clear messages ending in `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Do NOT push, open a PR, merge or deploy; the lead merges. Your final report (under 350 words, no em-dashes): branch and commit hashes, files changed, what the page now is (one paragraph), before/after screenshot paths, the gate outputs and Lighthouse numbers, the impeccable result, open questions and anything for Nathan to supply or approve (photos, quotes, numbers). If a hard rule or a decision blocks you, choose the safest default, document it, and carry on.
+
+## Production safety (added 2026-10-04 after an incident)
+
+- Never run any `cms:*` script, `emdash` write command or `wrangler` command whose target is the production domain, and never set `NCS_PRODUCTION_WRITE`. Dry runs against production are also off limits: use the committed fallback JSON and the local dev server.
+- Never put backticks, `$()` or markdown inside a shell string (`node -e`, `echo`, heredocs): bash runs them. Write files with the Write tool, always.
