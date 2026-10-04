@@ -11,6 +11,12 @@
    (C-performance-forensics measured React island JS as the largest mobile
    LCP cost).
 
+   Without JavaScript (2026-10-04 polish): the same dialog is a popover the
+   buttons open and close with popovertarget, so the menu works with scripts
+   off. With JavaScript the script removes that wiring and uses showModal(),
+   sets aria-expanded on the trigger, keeps Tab and Shift+Tab inside the open
+   menu, and returns focus to the trigger when it closes.
+
    Rows: each menu item in Bebas, with its "Title attribute" from the menu
    editor as a one-line descriptor under it, hairline-divided like the index
    of a contact sheet. Then the Start a project button and the direct contact
@@ -45,12 +51,18 @@ const socials = [
 ];
 ---
 
+{/* Without JavaScript the buttons drive the dialog as a popover
+     (popovertarget): the menu still opens and closes, Escape closes it, and
+     the browser reports the expanded state. The script below takes over on
+     load: it removes the popover wiring and opens the dialog with showModal(). */}
 <button
   type="button"
   class="menu-trigger"
   aria-label="Open menu"
   aria-haspopup="dialog"
   aria-controls="site-menu"
+  popovertarget="site-menu"
+  popovertargetaction="show"
   data-menu-open
 >
   <svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24">
@@ -58,13 +70,20 @@ const socials = [
   </svg>
 </button>
 
-<dialog id="site-menu" class="site-menu" aria-label="Menu">
+<dialog id="site-menu" class="site-menu" aria-label="Menu" popover="auto">
   <div class="site-menu-shell">
     <div class="site-menu-top">
       <a href="/" class="site-menu-logo" data-menu-close-on-click>
         <Logo lockup="top" topWidth={150} />
       </a>
-      <button type="button" class="menu-trigger" aria-label="Close menu" data-menu-close>
+      <button
+        type="button"
+        class="menu-trigger"
+        aria-label="Close menu"
+        popovertarget="site-menu"
+        popovertargetaction="hide"
+        data-menu-close
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true" width="24" height="24">
           <path d="M5 5l14 14M19 5L5 19"></path>
         </svg>
@@ -124,15 +143,61 @@ const socials = [
 <script>
   // Bind on every astro:page-load (the header is swapped on each View
   // Transitions navigation), guarded so a node is never bound twice.
+  const FOCUSABLE =
+    'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
   function bindMenu(): void {
     const dialog = document.querySelector<HTMLDialogElement>('#site-menu');
     if (!dialog || dialog.dataset.bound) return;
     dialog.dataset.bound = 'true';
-    document.querySelectorAll<HTMLButtonElement>('[data-menu-open]').forEach((btn) => {
-      btn.addEventListener('click', () => dialog.showModal());
+    const triggers = document.querySelectorAll<HTMLButtonElement>('[data-menu-open]');
+
+    // JavaScript is here: drop the no-JS popover wiring and use a modal dialog
+    // (focus trap, inert page, Escape, focus return).
+    if (dialog.matches(':popover-open')) dialog.hidePopover();
+    dialog.removeAttribute('popover');
+    document
+      .querySelectorAll('[popovertarget="site-menu"]')
+      .forEach((b) => b.removeAttribute('popovertarget'));
+
+    let opener: HTMLElement | null = null;
+    const setExpanded = (open: boolean) =>
+      triggers.forEach((b) => b.setAttribute('aria-expanded', String(open)));
+    setExpanded(false);
+
+    triggers.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        opener = btn;
+        dialog.showModal();
+        setExpanded(true);
+      });
+    });
+    dialog.addEventListener('close', () => {
+      setExpanded(false);
+      // Back to the button that opened it (Escape, the close button, a link).
+      opener?.focus({ preventScroll: true });
     });
     dialog.querySelectorAll('[data-menu-close]').forEach((btn) => {
       btn.addEventListener('click', () => dialog.close());
+    });
+    // Keep Tab and Shift+Tab inside the open menu. showModal() makes the page
+    // inert, but Chrome still lets Tab leave the dialog for the browser's own
+    // UI and come back in at the top of the document.
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const items = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     });
     // A link inside closes the menu so it does not linger over the next page.
     dialog.querySelectorAll('[data-menu-close-on-click]').forEach((a) => {
@@ -186,10 +251,18 @@ const socials = [
     color: var(--foreground);
     overflow-y: auto;
   }
+  /* Without JavaScript the dialog is a popover: the UA hides a dialog with no
+     `open` attribute, so the open popover is shown here, full screen. */
+  .site-menu:popover-open {
+    display: block;
+    position: fixed;
+    inset: 0;
+  }
   .site-menu::backdrop {
     background: transparent;
   }
-  :global(html:has(dialog.site-menu[open])) {
+  :global(html:has(dialog.site-menu[open])),
+  :global(html:has(dialog.site-menu:popover-open)) {
     overflow: hidden;
   }
   .site-menu-shell {
@@ -286,7 +359,8 @@ const socials = [
   /* The rows cascade in when the menu opens. Inside the no-preference query,
      so with reduced motion every row is simply there. */
   @media (prefers-reduced-motion: no-preference) {
-    .site-menu[open] .menu-row {
+    .site-menu[open] .menu-row,
+    .site-menu:popover-open .menu-row {
       animation: menu-in 0.5s var(--ease-settle) both;
       animation-delay: calc(var(--i, 0) * 45ms + 60ms);
     }
