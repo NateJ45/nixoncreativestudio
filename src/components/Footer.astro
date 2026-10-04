@@ -256,8 +256,9 @@ const legal = [
   .footer-plain {
     color: var(--muted-foreground);
   }
-  /* 44px tap rows on touch devices; a mouse keeps the compact density. */
-  @media (pointer: coarse) {
+  /* 44px tap rows on touch devices and narrow screens; a mouse on a wide
+     screen keeps the compact density. */
+  @media (pointer: coarse), (max-width: 47.99rem) {
     .footer-columns .footer-link,
     .footer-legal .footer-link {
       display: inline-flex;

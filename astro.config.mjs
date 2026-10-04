@@ -38,7 +38,7 @@ const helpContent = JSON.parse(
 //                 than the one small beacon it isolated; Analytics.astro now
 //                 loads the beacon with `defer`)
 //   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
-//                 the WebGL hero)
+//                 the photo gallery)
 //
 // prefetch: links preload as they enter the viewport, so navigation feels
 // instant and pairs with the View Transitions router.
@@ -49,6 +49,14 @@ const helpContent = JSON.parse(
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'server',
+  // Inline every stylesheet into the HTML (redesign 2026-10-04). Render-blocking
+  // CSS was the one non-JS lever C-performance-forensics found (about -1 s LCP),
+  // and the foundation measured it locally on the production build, mobile
+  // Lighthouse x3: home 94-97 to 97-97-97 (LCP 2.45-2.77 s to 2.43-2.49 s),
+  // /services 98 to 99 (LCP 2.16 s to 1.82 s). Cost: about 25 KB of CSS in
+  // every HTML response, not cached across pages. Delete this line to go back
+  // to stylesheet files. DESIGN.md "Measured" has the table.
+  build: { inlineStylesheets: 'always' },
   // Route cache on Cloudflare's Workers Cache. A page opts in by calling
   // Astro.cache.set(): BaseLayout sets the lifetime for every page that uses
   // it, and the CMS readers (src/lib/caseStudies.ts) add the tags of the rows
@@ -153,6 +161,14 @@ export default defineConfig({
     // MISSING_EXPORT in dev. Excluding zustand leaves it to the normal transform pipeline, where
     // the plugin applies. Found 2026-10-03 while testing the admin help plugin locally.
     optimizeDeps: { exclude: ['zustand', 'zustand/traditional'] },
+    // Ground textures (src/assets/grounds, DESIGN.md "Grounds") must stay
+    // separate files. Vite inlines assets under 4 KB as base64, which put the
+    // wall and ink-board tiles INSIDE the render-blocking stylesheet, defeating
+    // the point of attaching them after the load event (2026-10-04). Everything
+    // else keeps Vite's default.
+    build: {
+      assetsInlineLimit: (file) => (file.includes('/assets/grounds/') ? false : undefined),
+    },
     plugins: [
       tailwindcss(),
       // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).
