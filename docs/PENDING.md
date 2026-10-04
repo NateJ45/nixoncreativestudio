@@ -62,6 +62,23 @@ and motion" row, an honest Photography row, EmDash in "Built with"), and
 empty-state text). `rows.sql` carries these by hand too (the rows were rewritten
 from `cms/content/*.json`, keeping their ids).
 
+### 2c. /services redesign: data to load and photographs to supply (redesign 2026)
+
+- **Production load (main session with Nathan, dry run first):** the committed
+  `cms/content/service_offerings.json` now describes the Web design picture as the
+  Foundation for Reformed Theology library (it used to describe Second Presbyterian
+  Chicago, which is not live). `npm run cms:production-load -- --only service_offerings --dry-run`
+  should show only the `web-design` entry's picture description changing.
+- **CI dataset:** `scripts/ci-dataset/rows.sql` still carries the services copy from
+  before the redesign content pass (for example "organizations that care about the
+  long run"), so `tests/services-copy.spec.ts` will fail against `ncs-ci` until the
+  rows are hand-edited to match `cms/content/page_services.json` and
+  `service_offerings.json`, or refreshed after the production load. A lead decision.
+- **Nathan to supply:** two or three photographs he took for a client (a space, a
+  headshot, an event), with the client's permission. The Photography band then gets a
+  framed print beside the call sheet; until then it shows the call sheet and his own
+  headshot, captioned as the photographer.
+
 ### 2b. Regenerate the OG cards and icons in the new palette (redesign 2026)
 
 `scripts/generate-og.mjs`, `generate-og-default.mjs` and `generate-icons.mjs`

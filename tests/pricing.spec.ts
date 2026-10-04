@@ -5,8 +5,7 @@ import { join } from 'node:path';
 // =============================================================================
 // Pricing: the static (no-JS) number IS the CMS number (CMS-DESIGN PR 5 gate)
 // =============================================================================
-// The homepage "What it costs" band and the /services tier cards count their
-// prices up on scroll. The count-up script starts from 0, so the number a
+// The homepage "What it costs" band counts its prices up on scroll. The count-up script starts from 0, so the number a
 // visitor with no JavaScript (or a crawler, or a reduced-motion user before the
 // observer fires) sees is the server-rendered text. That text must equal the
 // price in the CMS, and the count-up target (`data-countup-to`) must equal it
@@ -34,7 +33,7 @@ const addOns = JSON.parse(
 test.describe('Pricing without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  for (const route of ['/', '/services/']) {
+  for (const route of ['/']) {
     test(`${route}: every count-up shows its real CMS number as static text`, async ({ page }) => {
       await page.goto(route, { waitUntil: 'domcontentloaded' });
       const counters = page.locator('[data-countup]');
@@ -58,12 +57,23 @@ test.describe('Pricing without JavaScript', () => {
     });
   }
 
-  test('/services/: add-on prices and the Web design JSON-LD floor come from the same data', async ({
-    page,
-  }) => {
+  // /services sets the tier prices as plain printed figures on the price sheet
+  // (no count-up: price as a document, redesign 2026), and lists every published
+  // price, add-ons included, on the price list slip in the hero.
+  test('/services/: the price sheet and the price list show the CMS prices', async ({ page }) => {
     await page.goto('/services/', { waitUntil: 'domcontentloaded' });
+    const figures = page.locator('#prices .tier-figure');
+    await expect(figures).toHaveCount(tiers.length);
+    for (const [i, t] of tiers.entries()) {
+      const expected = `$${t.data.price_from.toLocaleString('en-US')}${t.data.price_suffix ?? ''}`;
+      await expect(figures.nth(i)).toHaveText(expected);
+    }
+    const slip = page.locator('#price-list');
+    for (const t of tiers) {
+      await expect(slip).toContainText(`from $${t.data.price_from.toLocaleString('en-US')}`);
+    }
     for (const a of addOns) {
-      await expect(page.getByText(a.data.price, { exact: true })).toBeVisible();
+      await expect(slip.getByText(a.data.price, { exact: true })).toBeVisible();
     }
     const ld = await page
       .locator('script[type="application/ld+json"]')

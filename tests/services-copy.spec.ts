@@ -3,26 +3,30 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // =============================================================================
-// /services copy and structured data: the words ARE the CMS words (PR 7 gate)
+// /services copy and structured data: the words ARE the CMS words (PR 7 gate,
+// rebuilt for the 2026 redesign of the page)
 // =============================================================================
 // The headline, section headings, the four reasons, the FAQ and the three service
-// chapters now come from the `page_services` and `service_offerings` entries, and
-// the Service and FAQPage JSON-LD is built from the same rows. Two things matter
-// beyond the words being right: it is all server-rendered (it is in the HTML a
-// visitor with no JavaScript, or Google, gets), and the structured data matches the
-// visible page, so an FAQ edit can never leave Google reading an old answer.
+// chapters come from the `page_services` and `service_offerings` entries; the
+// process steps from the Home page entry; and the Service and FAQPage JSON-LD is
+// built from the same rows. Two things matter beyond the words being right: it is
+// all server-rendered (in the HTML a visitor with no JavaScript, or Google, gets),
+// and the structured data matches the visible page.
 //
-// The expected text comes from cms/content/*.json. The CI dataset (`ncs-ci`) is
-// generated from the same files (scripts/ci-dataset/cms-fixtures.mjs) and
-// production serves them as its fallback until its data is loaded. Run against
-// production after an admin edit and this test will (correctly) notice the words
-// moved: update the JSON in the same change.
+// Headlines turn into the italic second voice for their last phrase (a <span
+// class="voice"> inside the heading), so a heading's text is still exactly the
+// CMS words; toHaveText normalises the whitespace between the two parts.
+//
+// The expected text comes from cms/content/*.json. The CI dataset (`ncs-ci`) has
+// to carry the same words (scripts/ci-dataset/rows.sql); production serves the
+// JSON as its fallback until its data is loaded. Run against production after an
+// admin edit and this test will (correctly) notice the words moved: update the
+// JSON in the same change.
 
 interface Services {
   heading: string;
   intro: string;
   pricing_heading: string;
-  addons_heading: string;
   why_heading: string;
   why_items: { title: string; body: string }[];
   faq_heading: string;
@@ -30,12 +34,23 @@ interface Services {
 }
 interface Offering {
   slug: string;
-  data: { title: string; body: string; price_from?: number; points: { text: string }[] };
+  data: {
+    title: string;
+    body: string;
+    price_from?: number;
+    image_alt?: string;
+    points: { text: string }[];
+  };
+}
+interface Home {
+  process_heading: string;
+  process_steps: { title: string; body: string }[];
 }
 const readJson = <T>(name: string): T =>
   JSON.parse(readFileSync(join(process.cwd(), 'cms/content', `${name}.json`), 'utf8')) as T;
 const services = readJson<{ data: Services }>('page_services').data;
 const offerings = readJson<Offering[]>('service_offerings');
+const home = readJson<{ data: Home }>('page_home').data;
 
 // A fresh context with scripts off: the page the no-JS visitor (or a crawler) gets.
 test.describe('Services copy without JavaScript', () => {
@@ -44,11 +59,12 @@ test.describe('Services copy without JavaScript', () => {
   test('/services/: headline, section headings and the FAQ are the CMS words', async ({ page }) => {
     await page.goto('/services/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('h1#services-hero-heading')).toHaveText(services.heading);
+    await expect(page.getByText(services.intro, { exact: true })).toBeVisible();
     await expect(page.locator('#services-pricing-heading')).toHaveText(services.pricing_heading);
     await expect(page.locator('#services-why-heading')).toHaveText(services.why_heading);
     await expect(page.locator('#services-faq-heading')).toHaveText(services.faq_heading);
-    await expect(page.getByRole('heading', { name: services.addons_heading })).toBeVisible();
 
+    // Native <details>: closed by default, and the answer is in the HTML.
     const faq = page.locator('details.faq-item');
     await expect(faq).toHaveCount(services.faq.length);
     for (const [i, item] of services.faq.entries()) {
@@ -56,27 +72,59 @@ test.describe('Services copy without JavaScript', () => {
       await expect(faq.nth(i).locator('p')).toHaveText(item.answer);
     }
 
-    const why = page.locator('#services-why-heading').locator('xpath=ancestor::section[1]//li');
-    await expect(why.locator('h3')).toHaveText(services.why_items.map((w) => w.title));
+    // The last reason sits in the band's left column, the rest in the list.
+    const why = page.locator('.why-item');
+    const titles = services.why_items.map((w) => w.title);
+    await expect(why.locator('h3')).toHaveText([...titles.slice(-1), ...titles.slice(0, -1)]);
   });
 
-  test('/services/: each chapter shows its title, paragraph and included lines', async ({
+  test('/services/: each offering has its own band with its words and included lines', async ({
     page,
   }) => {
     await page.goto('/services/', { waitUntil: 'domcontentloaded' });
-    const chapters = page.locator('section[aria-label="Service details"] > div > ul > li');
-    await expect(chapters).toHaveCount(offerings.length);
-    for (const [i, o] of offerings.entries()) {
-      await expect(chapters.nth(i).locator('h2')).toHaveText(o.data.title);
-      await expect(chapters.nth(i).getByText(o.data.body, { exact: true })).toBeVisible();
+    for (const o of offerings) {
+      const band = page.locator(`section#${o.slug}`);
+      await expect(band.locator('h2').first()).toHaveText(o.data.title);
+      await expect(band.getByText(o.data.body, { exact: true })).toBeVisible();
       for (const point of o.data.points) {
-        await expect(chapters.nth(i).getByText(point.text, { exact: true })).toBeVisible();
+        await expect(band.getByText(point.text, { exact: true })).toBeVisible();
       }
     }
-    // The Web design chapter keeps its real screenshot; the other two keep the placeholder panel.
-    await expect(chapters.nth(1).locator('img')).toHaveCount(1);
-    await expect(chapters.nth(0).locator('.services-shot-placeholder')).toHaveCount(1);
-    await expect(chapters.nth(2).locator('.services-shot-placeholder')).toHaveCount(1);
+    // No placeholder panels (redesign 2026): Web design shows a real client
+    // site, described by the CMS alt text; Strategy draws the one-page brief;
+    // Photography draws the call sheet.
+    const web = offerings.find((o) => o.slug === 'web-design');
+    await expect(page.locator('section#web-design img')).toHaveAttribute(
+      'alt',
+      web?.data.image_alt ?? '',
+    );
+    await expect(page.locator('section#strategy figure.brief')).toHaveCount(1);
+    await expect(page.locator('section#photography figure.call')).toHaveCount(1);
+    await expect(page.locator('.services-shot-placeholder')).toHaveCount(0);
+  });
+
+  test('/services/: the process shows the CMS steps with their durations', async ({ page }) => {
+    await page.goto('/services/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#process-heading')).toHaveText(home.process_heading);
+    const steps = page.locator('.process-steps > li');
+    await expect(steps).toHaveCount(home.process_steps.length);
+    for (const [i, step] of home.process_steps.entries()) {
+      await expect(steps.nth(i).locator('h3')).toHaveText(step.title);
+      await expect(steps.nth(i).locator('.step-body')).toHaveText(step.body);
+      await expect(steps.nth(i).locator('.step-dur')).not.toBeEmpty();
+    }
+  });
+
+  test('/services/: a call to action in the hero, mid-page and at the close', async ({ page }) => {
+    await page.goto('/services/', { waitUntil: 'domcontentloaded' });
+    for (const where of [
+      '#services-hero-heading',
+      '#services-pricing-heading',
+      '#services-close-heading',
+    ]) {
+      const band = page.locator(where).locator('xpath=ancestor::section[1]');
+      await expect(band.locator('a[href="/contact/"]').first()).toBeVisible();
+    }
   });
 
   test('/services/: the Service and FAQPage JSON-LD is built from the same data', async ({

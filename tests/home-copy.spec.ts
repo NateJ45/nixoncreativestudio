@@ -94,16 +94,8 @@ test.describe('Homepage copy without JavaScript', () => {
       page.locator('.process-band').getByRole('link', { name: home.process_cta_label }),
     ).toHaveAttribute('href', '/contact/');
   });
-
-  test('/services/: the process recap shows the same CMS steps', async ({ page }) => {
-    await page.goto('/services/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#process-heading')).toHaveText(home.process_heading);
-    const steps = page.locator('.process-steps > li');
-    await expect(steps).toHaveCount(4);
-    for (const [i, step] of home.process_steps.entries()) {
-      await expect(steps.nth(i).locator('h3')).toHaveText(step.title);
-    }
-  });
+  // The /services process (the same CMS steps, drawn on a week scale) is checked
+  // in tests/services-copy.spec.ts.
 });
 
 // The first block of the page must not sit behind the JS-gated reveal system

@@ -53,7 +53,7 @@ The 2026 redesign primitives (DESIGN.md section 8) come first:
 - `MobileMenu.astro` — the phone menu: a header button that opens a full-screen native `<dialog>` (focus trap, Escape, inert page) with the menu rows, the Start a project button and the contact lines. Its nav is labelled "Menu" so the smoke test's `nav[aria-label="Primary"]` stays the desktop nav.
 - `BackToTop.astro` — a small ink button bottom right after 600 px of scroll; plain HTML and a few lines of script.
 
-Beyond those, the homepage-section components (Hero, HeroShowcase, ClientMarquee, SelectedWork, PricingTeaser, ProcessBand, all due to be rebuilt) and the Header / Footer, these reusable components live in `src/components/`. `ProcessBand` is reused on `/services` in its soft, no-CTA variant (`variant="soft" showCta={false}`); `CtaBanner` is the tail-of-page inquiry block on `/about`, `/photography`, and `/services`.
+Beyond those, the homepage-section components (Hero, HeroShowcase, ClientMarquee, SelectedWork, PricingTeaser, ProcessBand, all due to be rebuilt) and the Header / Footer, these reusable components live in `src/components/`. `/services` has its own components: `PriceTiers` (the ruled price sheet, built so the homepage can adopt it) and `src/components/services/` (`BriefSheet`, `ProjectTimeline`, `CallSheet`); `CtaBanner` is the tail-of-page inquiry block on `/about` and `/photography`.
 
 - `ReadingProgress.tsx` — thin top bar that fills as the visitor scrolls. Rendered only on case study and journal detail pages.
 - `CopyEmail.tsx` — mailto link plus a one-click copy-to-clipboard button with sr-live "Copied" status. Contact page sidebar (the footer uses a plain mailto link).
