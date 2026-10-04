@@ -11,6 +11,7 @@ import {
   heroPhoto,
   mediaUrl,
   normalizePhoto,
+  photographyRobots,
   resizedUrl,
   type Photo,
 } from './photos.ts';
@@ -240,4 +241,12 @@ test('a group becomes gallery items in its own order', () => {
   const groups = groupPhotos([photo('b', { year: 2020 }), photo('a', { year: 2026 })]);
   const items = galleryItems(groups[0], 'https://example.test');
   assert.equal(items.length, 2);
+});
+
+// ── Search visibility ────────────────────────────────────────────────────────
+
+test('photographyRobots: noindex while the gallery is empty, no tag once it has a photo', () => {
+  assert.equal(photographyRobots(0), 'noindex, follow');
+  assert.equal(photographyRobots(1), undefined);
+  assert.equal(photographyRobots(24), undefined);
 });

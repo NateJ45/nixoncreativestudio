@@ -50,6 +50,8 @@ Everything is in the left sidebar. The groups are Site, Pages, Pricing & service
 | A picture's file (swap the headshot, replace a cover)               | The entry that holds it                   | Upload a new one in the picture field and rewrite its description.     |
 | Page search titles and descriptions                                 | The same page entry                       | "Search and tab title" and "Search description" at the top.            |
 
+**On the Services page (2026 redesign)** a few things are not in the admin yet: who each tier "Fits", the "What you get at handoff" list, the lines on the drawn brief and call sheet, and the step durations on the timeline. Ask for a code change to reword them. In Service offerings the box "Icon on the placeholder panel" no longer does anything (the page has no placeholder panels), and the Web design picture is the Foundation for Reformed Theology library: if you rewrite its "Describe the picture" box, describe that picture. If you change how long projects take in the FAQ, the timeline needs the same change in code.
+
 **The "live view" button** at the top of an entry opens the public page where that entry shows. For the page entries it opens that page; for Pricing tiers, Add-ons and Service offerings it opens Services; for Photos it opens Photography; for Site settings it opens the homepage. Save and publish first, since it shows what is live.
 
 ---
