@@ -33,7 +33,7 @@
    Bebas, and the line under it is the italic second voice.
    ============================================================================ */
 
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Band from '../components/Band.astro';
 import Testimonials from '../components/Testimonials.astro';
@@ -82,6 +82,19 @@ const photos = about.outside.photos.flatMap((photo) => {
 // portrait. The reader guarantees at least three photos, so two or more prints.)
 const storyPhoto = photos.at(-1);
 const prints = photos.slice(0, -1);
+
+// `sizes` for one small print, from the layout below (performance pass 2026-10-04:
+// one fixed 20rem / 46vw value under-served the wide print, which renders about
+// twice as wide as the portraits, and over-served the portraits on desktop).
+// Phones: a two-column grid, a wide print spans both. From 48rem: one flex row,
+// each print's width proportional to its ratio (flex-grow = ratio) inside a
+// band whose prints share about 70rem at full width (measured: 205 px portraits,
+// 428 px wide print at 1440).
+const ratioSum = prints.reduce((s, p) => s + p.ratio, 0) || 1;
+const printSizes = (ratio: number) => {
+  const share = ratio / ratioSum;
+  return `(min-width: 82.5rem) ${(70 * share).toFixed(1)}rem, (min-width: 48rem) ${(85 * share).toFixed(1)}vw, ${ratio > 1 ? '92vw' : '46vw'}`;
+};
 const headshotSrc = about.headshot.file ? bundled[about.headshot.file] : undefined;
 
 // The story: Portable Text reduced to bare paragraphs (blockHtml), NOT emdash/ui's
@@ -144,7 +157,9 @@ const schemas = [buildPersonSchema(about, site)];
       <figure class="open-print">
         <div class="print">
           {headshotSrc ? (
-            <Image
+            <Picture
+              formats={['avif', 'webp']}
+              pictureAttributes={{ class: 'contents' }}
               src={headshotSrc}
               alt={about.headshot.alt}
               widths={[320, 480, 640, 900]}
@@ -177,7 +192,9 @@ const schemas = [buildPersonSchema(about, site)];
       {storyPhoto && (
         <figure class="story-photo" data-reveal="fade">
           {storyPhoto.src ? (
-            <Image
+            <Picture
+              formats={['avif', 'webp']}
+              pictureAttributes={{ class: 'contents' }}
               src={storyPhoto.src}
               alt={storyPhoto.alt}
               widths={[480, 720, 960, 1280]}
@@ -225,11 +242,13 @@ const schemas = [buildPersonSchema(about, site)];
           <figure>
             <div class="print print--small">
               {photo.src ? (
-                <Image
+                <Picture
+                  formats={['avif', 'webp']}
+                  pictureAttributes={{ class: 'contents' }}
                   src={photo.src}
                   alt={photo.alt}
                   widths={[240, 360, 480, 720]}
-                  sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 30vw, 46vw"
+                  sizes={printSizes(photo.ratio)}
                   class="print-img"
                 />
               ) : (
@@ -237,7 +256,7 @@ const schemas = [buildPersonSchema(about, site)];
                   image={photo.image!}
                   alt={photo.alt}
                   widths={[240, 360, 480, 720]}
-                  sizes="(min-width: 64rem) 20rem, (min-width: 40rem) 30vw, 46vw"
+                  sizes={printSizes(photo.ratio)}
                   class="print-img"
                 />
               )}

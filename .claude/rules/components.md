@@ -81,7 +81,7 @@ Beyond those, the homepage components (`src/components/home/`: HomeHero, HeroRee
 ## Image handling
 
 - Source photos live in `src/assets/` so Astro can optimize at build time.
-- Use the `<Picture />` component for art-directed images (different crops at different breakpoints).
+- Use the `<Picture />` component for art-directed images (different crops at different breakpoints), and for every photograph: `formats={['avif', 'webp']}` with `pictureAttributes={{ class: 'contents' }}` so the `<picture>` adds no box and the img's own classes still lay it out. AVIF halved the About photos (216 to 131 KB at load, 2026-10-04). `sizes` must describe the rendered width at each breakpoint (measure it at 390 and 1440); a single value for prints of different widths under-serves the wide one.
 - Always include `alt` text. `alt=""` is acceptable for purely decorative images.
 - For individual photos that need a fade-in or future blur-placeholder, use the `Photo` React island in `src/components/Photo.tsx`. It expects a build-resolved src URL (typically from an Astro `import` of a JPG asset) plus width and height. The `placeholder` prop accepts a base64 data URL when blur generation gets wired later.
 - For the photography page galleries, use the `PhotoGallery` React island. It composes `react-photo-album` for the justified grid with `yet-another-react-lightbox` (Zoom + Thumbnails plugins) for the fullscreen viewer. Pass a `photos` array of `{ src, width, height, alt?, caption? }`.
