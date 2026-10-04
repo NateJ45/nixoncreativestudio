@@ -65,6 +65,19 @@ for (const slug of caseStudySlugs) {
       }
     });
 
+    test('the closing band shows its heading and button without waiting on a reveal', async ({
+      page,
+    }) => {
+      // Found blank at the foot of every case study on 2026-10-04: the band's copy sat
+      // behind data-reveal. Jump straight to the end, as a visitor pressing End would.
+      await page.goto(`/work/${slug}/`, { waitUntil: 'load' });
+      await page.keyboard.press('End');
+      const band = page.locator('.cta-band');
+      await expect(band.locator('#cta-banner-title')).toBeVisible();
+      await expect(band.locator('[data-reveal]')).toHaveCount(0);
+      await expect(band.locator('a[href^="/contact/"]')).toBeVisible();
+    });
+
     test('a showreel, when there is one, keeps its poster as a real eager image', async ({
       page,
     }) => {
@@ -75,5 +88,29 @@ for (const slug of caseStudySlugs) {
       await expect(poster).toHaveAttribute('width', /\d+/);
       await expect(poster).toHaveAttribute('height', /\d+/);
     });
+  });
+}
+
+// The two CI studies that are not live (scripts/ci-dataset/rows.sql carries their
+// launch_status, as cms/content does): the status shows, and neither the frame's
+// address bar nor any link names the church's or the school's own domain.
+const notLive: Record<string, { label: RegExp; domain: RegExp }> = {
+  'second-presbyterian-chicago': { label: /Built, not launched/, domain: /secondpreschicago\.org/ },
+  'presbyterian-academy': { label: /In progress/, domain: /presbyterianacademy\.org/ },
+};
+for (const [slug, want] of Object.entries(notLive)) {
+  if (!caseStudySlugs.includes(slug)) continue;
+  test(`/work/${slug}/ is labelled as not live and links no live address`, async ({ page }) => {
+    await page.goto(`/work/${slug}/`, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.cs-status')).toHaveText(want.label);
+    if ((await page.locator('.cs-hero .frame').count()) > 0) {
+      await expect(page.locator('.cs-hero .frame-tag')).toHaveText(want.label);
+    }
+    const chrome = await page.locator('.cs-hero .frame-url').allInnerTexts();
+    for (const t of chrome) expect(t).not.toMatch(want.domain);
+    const hrefs = await page
+      .locator('main a[href^="http"]')
+      .evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''));
+    for (const h of hrefs) expect(h).not.toMatch(want.domain);
   });
 }

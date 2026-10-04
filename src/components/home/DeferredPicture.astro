@@ -8,8 +8,12 @@
    (1250 px or more) is NOT held back, so the homepage's work and about
    pictures were downloading beside the hero's LCP frame and pushing it past
    2.5 s. This renders the picture with its AVIF and WebP srcsets parked in
-   data- attributes and promotes them when the picture scrolls into view (no
-   rootMargin, on purpose) or 3.5 s after the load event, whichever is first.
+   data- attributes and promotes them as the picture comes near the viewport.
+   The watch starts only after the load event and an idle beat (so nothing
+   here competes with the LCP), then looks half a screen ahead so a reader scrolling at a normal
+   pace finds the picture already there. There is no timer: a visitor who never
+   scrolls downloads none of these (the old 3.5 s warm-up fetched every one,
+   measured 2026-10-04 as most of the home page's idle bytes).
    A <noscript> copy is the real picture for a visitor without JavaScript.
    Width and height are always set, so nothing shifts when it arrives.
 
@@ -64,7 +68,7 @@ const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAA
 </noscript>
 
 <script>
-  // Promote each parked picture once: on scroll into view, or 3.5 s after load.
+  // Promote each parked picture once, when it comes within half a screen of the viewport.
   // astro:page-load keeps it working across view transitions; a promoted picture
   // loses its marker, so a second run does nothing to it.
   function promote(pic: Element) {
@@ -83,18 +87,25 @@ const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAA
   document.addEventListener('astro:page-load', () => {
     const pending = () => Array.from(document.querySelectorAll('[data-defer-pic]'));
     if (!pending().length) return;
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver((entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          promote(e.target.closest('picture') ?? e.target);
-          io.unobserve(e.target);
-        }
-      });
+    const watch = () => {
+      if (!('IntersectionObserver' in window)) return pending().forEach(promote);
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            promote(e.target.closest('picture') ?? e.target);
+            io.unobserve(e.target);
+          }
+        },
+        { rootMargin: '0px 0px 50% 0px' },
+      );
       pending().forEach((p) => io.observe(p.querySelector('img') ?? p));
-    }
-    const warm = () => setTimeout(() => pending().forEach(promote), 3500);
-    if (document.readyState === 'complete') warm();
-    else addEventListener('load', warm, { once: true });
+    };
+    const idle = () =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(watch, { timeout: 1500 })
+        : setTimeout(watch, 300);
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true });
   });
 </script>

@@ -16,8 +16,8 @@
    - No JavaScript is needed to scroll it (swipe, trackpad, shift-wheel, the
      scrollbar-free row). The small script below only adds the arrows, the
      Left/Right/Home/End keys on the focused reel, mouse drag, click a side
-     frame to centre it, the live counter, and loading the parked frames. About
-     1.4 KB gzipped. It never
+     frame to centre it, the live counter, and loading the parked frames near
+     the visible ones. About 1.6 KB gzipped. It never
      moves on its own (no auto-advance).
    - No JavaScript: the reel is still the fan in Chrome, a plain sideways row
      elsewhere, and the arrows are hidden (they need the script).
@@ -33,9 +33,11 @@
    fallback, through Astro's image pipeline (resized by the Images binding on
    the first request, then cached for 30 days). The start frame is the LCP
    element: eager, fetchpriority high, width and height. Every other frame is
-   parked (srcsets in data- attributes, a blank placeholder) until the load
-   event and an idle beat, or until the visitor touches the reel, so nothing
-   but the start frame competes for bandwidth before the LCP (Gotcha 14); a
+   parked (srcsets in data- attributes, a blank placeholder) until after the
+   load event, and then only the frames the fan actually shows; one more each
+   side when the visitor reaches for the reel, and the rest only as it
+   travels towards them. Nothing but the start frame competes for bandwidth
+   before the LCP (Gotcha 14), and an idle visitor never fetches the far end; a
    <noscript> copy keeps every frame for a visitor without JavaScript. Each
    slide carries four srcsets, so the widths are kept few.
 
@@ -164,7 +166,22 @@ const startSlide = slides[start];
                   {s.soon && <b class="tag">Launching soon</b>}
                 </div>
                 {picture(!f.first)}
-                {!f.first && <noscript>{picture(false)}</noscript>}
+                {/* Without JavaScript: one plain WebP srcset (the parked picture's four would
+                    double the reel's markup for the few visitors who read this copy). */}
+                {!f.first && (
+                  <noscript>
+                    <img
+                      src={f.desk.webp.src}
+                      srcset={f.desk.webp.srcset}
+                      sizes={DESK_SIZES}
+                      width={f.desk.width}
+                      height={f.desk.height}
+                      alt={s.alt}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </noscript>
+                )}
               </div>
               <figcaption>
                 <span class="cap-name">
@@ -368,10 +385,14 @@ const startSlide = slides[start];
     if (Math.abs(reel.scrollLeft - left(start)) > 2) go(start, true);
     update();
 
-    // Promote the parked frames: once the page has loaded and gone quiet, or at once if
-    // the visitor reaches for the reel first.
-    const promote = () => {
-      show.querySelectorAll<HTMLElement>('.park [data-srcset], .park [data-src]').forEach((el) => {
+    // Promote parked frames, a few at a time. A frame's srcsets wait in data- attributes
+    // until it is on screen or one step away from it: after the load event, the frames the
+    // fan actually shows (measured, so it holds at any width and in the plain row); when the
+    // visitor reaches for the reel (arrow, key, swipe, drag, focus) or it scrolls, those plus
+    // one neighbour each side. Frames further along never download unless the reel travels
+    // towards them (it was every frame on an idle timer: 2026-10-04 review, 607 KB at 1440).
+    const promote = (slide: HTMLElement) => {
+      slide.querySelectorAll<HTMLElement>('.park [data-srcset], .park [data-src]').forEach((el) => {
         for (const a of ['srcset', 'src'] as const) {
           const v = el.dataset[a];
           if (v) {
@@ -381,12 +402,57 @@ const startSlide = slides[start];
         }
       });
     };
+    // The fan holds frames beyond its reach piled at its outer positions, so a box test
+    // alone would count them; only frames within the fan's reach of the centre (three each
+    // side on a wide screen, two on a phone) can be the ones on show.
+    const reach = () => (matchMedia('(max-width: 700px)').matches ? 2 : 3);
+    const onScreen = () => {
+      const box = reel.getBoundingClientRect();
+      const c = cur < 0 ? nearest() : cur;
+      return slides.flatMap((s, i) => {
+        if (Math.abs(i - c) > reach()) return [];
+        const r = s.querySelector('.vp')!.getBoundingClientRect();
+        const seen =
+          r.width > 0 &&
+          r.right > Math.max(0, box.left) &&
+          r.left < Math.min(innerWidth, box.right) &&
+          r.bottom > 0 &&
+          r.top < innerHeight &&
+          Number(getComputedStyle(s.querySelector('.vp')!).opacity) > 0.05;
+        return seen ? [i] : [];
+      });
+    };
+    let woken = false;
+    const near = (reach: number) => {
+      for (const i of onScreen())
+        for (let k = i - reach; k <= i + reach; k++) if (slides[k]) promote(slides[k]);
+    };
+    const wake = () => {
+      woken = true;
+      near(1);
+    };
     for (const type of ['pointerdown', 'touchstart', 'focusin', 'keydown'] as const)
-      show.addEventListener(type, promote, { once: true, passive: true });
+      show.addEventListener(type, wake, { passive: true, signal });
+    reel.addEventListener('scroll', () => woken && requestAnimationFrame(() => near(1)), {
+      passive: true,
+      signal,
+    });
+    reel.addEventListener('scroll', () => !woken && wake(), { once: true, passive: true });
+    const firstLook = () => {
+      if (!('IntersectionObserver' in window)) return near(0);
+      const io = new IntersectionObserver((entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        near(0);
+      });
+      io.observe(reel);
+    };
+    // After load AND an idle beat: on a fast connection the LCP can land after the load
+    // event, and a layout read in that gap counted against it (Lighthouse, 2026-10-04).
     const idle = () =>
       'requestIdleCallback' in window
-        ? requestIdleCallback(promote, { timeout: 1500 })
-        : setTimeout(promote, 300);
+        ? requestIdleCallback(firstLook, { timeout: 1500 })
+        : setTimeout(firstLook, 300);
     if (document.readyState === 'complete') idle();
     else addEventListener('load', idle, { once: true, signal });
   }

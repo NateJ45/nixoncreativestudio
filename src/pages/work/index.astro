@@ -14,8 +14,10 @@
         intro, then the LEAD printed large: the live study with the lowest
         homepage scene order (Stone Steps today; src/lib/workIndex.ts), in a
         film frame with its facts on the edge and the china-marker pick.
-     2. The rest of the live work (paper), a varied composition of prints at
-        different sizes and offsets, not a uniform grid. Its heading and line
+     2. The rest of the live work (paper), a varied composition of browser
+        prints at different sizes and offsets, not a uniform grid. Film edges
+        and the china-marker pick stay on the lead only (one device, used once:
+        2026-10-04 review). Its heading and line
         are the Work page's "live" fields.
      3. Also built (deep, still): work that is finished or underway but not
         live, smaller and quieter, each with its status label
@@ -89,11 +91,11 @@ const placeOf = (id: string) => LEDGER_FACTS[id]?.place;
         <p class="w-live-body">{page.liveBody}</p>
       </header>
       <ul class="w-sheet" role="list">
-        {live.map((cs, i) => (
+        {live.map((cs) => (
           <li class="w-sheet-item">
             <WorkPrint
               cs={cs}
-              variant={i % 2 === 0 ? 'browser' : 'film'}
+              variant="browser"
               place={placeOf(cs.id)}
               sizes="(min-width: 64rem) 50vw, 92vw"
             />

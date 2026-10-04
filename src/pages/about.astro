@@ -447,12 +447,15 @@ const schemas = [buildPersonSchema(about, site)];
     border-radius: 2px;
     box-shadow: var(--shadow-frame);
   }
-  .print-img {
+  /* :global(img): on the CMS path the <img> is rendered inside EmDashPhoto, which does
+     not carry this page's scope, so a plain .print-img rule never reached it and the
+     picture sat at its width attribute inside a wider mat (2026-10-04 review). */
+  .print :global(img) {
     display: block;
     width: 100%;
     height: auto;
   }
-  .open-print .print-img {
+  .open-print :global(img) {
     aspect-ratio: 4 / 5;
     object-fit: cover;
     object-position: 50% 30%;
@@ -484,7 +487,7 @@ const schemas = [buildPersonSchema(about, site)];
   .story-photo {
     margin: 0;
   }
-  .story-img {
+  .story-photo :global(img) {
     display: block;
     width: 100%;
     height: auto;
@@ -554,6 +557,16 @@ const schemas = [buildPersonSchema(about, site)];
   }
   .prints figure {
     margin: 0;
+  }
+  /* The photograph fills its mat at the print's own proportions (--r, the same ratio the
+     row lays out by). A CMS image can arrive at another size than the one stored with it
+     (the wedding print filled only two-thirds of its mat on the CI preview, 2026-10-04),
+     so the box is set here, not left to the file. */
+  .print--small :global(img) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--r);
+    object-fit: cover;
   }
   .prints figcaption {
     margin-top: 0.6rem;
