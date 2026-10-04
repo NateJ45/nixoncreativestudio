@@ -181,6 +181,7 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 - **Links**: text inherits its colour with a marker underline; `text-link` (brick, or vermilion on ink) for accent links; `.card-link` for "Read more" with an arrow.
 - **Frame** (`Frame.astro`): a real screenshot as a print. `variant="browser"` (ink chrome bar, live address, optional "Launching soon" tag) or `variant="film"` (ink rebate, sprocket rows, edge print of facts, optional china-marker `pick` loop). Only live work is shown as live.
 - **Band** (`Band.astro`): one ground, one job (section 4).
+- **Printed note card** (`PhotoRateCard.astro`, the `.note` on /journal): `--card` fill, hairline, `--shadow-print`, 2px. The honest empty state: real information (a rate, a status) in the space a photograph would fill, never a placeholder picture. Inside a deep band it re-scopes to ink-raised on its own.
 - **Back to top**: a small ink square, bottom right, after 600px of scroll. No React.
 - **Focus**: one ring everywhere, 3px marker (vermilion on ink), 3px offset.
 

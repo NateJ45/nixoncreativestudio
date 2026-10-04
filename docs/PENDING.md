@@ -52,6 +52,16 @@ load would revert it and fail the Colophon rows test.
 then the real load, then `npm run ci-dataset:snapshot` and confirm `rows.sql`
 is byte-identical to the hand edit. Never from a delegated agent (never-break rule 5).
 
+**Added by the page-misc pass (2026-10-04):** the same load now also carries
+`pages` Privacy (no map sentence, a line about Cloudflare's bot-detection
+script, last updated 2026-10-04; true only once the contact redesign has
+removed the Google Map iframe, so load it after that merges), Accessibility (the
+AAA paragraph names the real colours instead of "brand-blue"), Colophon (a "Look
+and motion" row, an honest Photography row, EmDash in "Built with"), and
+`page_photography` and `page_journal` (new meta description, intro and
+empty-state text). `rows.sql` carries these by hand too (the rows were rewritten
+from `cms/content/*.json`, keeping their ids).
+
 ### 2b. Regenerate the OG cards and icons in the new palette (redesign 2026)
 
 `scripts/generate-og.mjs`, `generate-og-default.mjs` and `generate-icons.mjs`
