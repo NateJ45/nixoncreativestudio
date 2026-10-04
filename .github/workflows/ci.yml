@@ -285,6 +285,10 @@ jobs:
       - name: Run tests (smoke, a11y light + dark, reflow)
         env:
           PLAYWRIGHT_BASE_URL: ${{ needs.site.outputs.preview_url }}
+          # The journal is switched off (no entries published, Journal hidden from the
+          # menu), so the specs run in their journal-empty mode (tests/routes.ts).
+          # Remove this line when the journal comes back.
+          JOURNAL_EMPTY: '1'
           # Playwright's default --shard hands each shard a CONTIGUOUS block of an
           # EQUAL NUMBER of tests, in project order (all 178 chromium tests, then
           # the 77 webkit-iphone ones). The tests are not equal: webkit-iphone is
