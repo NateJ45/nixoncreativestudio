@@ -980,6 +980,24 @@
     transform: translateX(3px);
   }
 
+  /* ---- Tap target -------------------------------------------------------------
+   The studio's 44px bar on touch. Add .tap-target to a link or button whose
+   box is shorter or narrower than 44px (a headline link, a short word in a
+   row of links). On a fine pointer the element keeps its own size, so a
+   desktop layout's density is untouched. A block element stays a block; an
+   inline one becomes inline-flex so min-height applies. Coarse pointer, or
+   any screen up to 64rem, where the layout is the touch one. */
+  @media (pointer: coarse), (max-width: 64rem) {
+    .tap-target {
+      min-height: var(--tap);
+      min-width: var(--tap);
+    }
+    .tap-target:where(a, button, span) {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+
   /* [data-hidden]: client-side filters (WorkFilter) toggle visibility of
    server-rendered elements with this attribute. */
   [data-hidden] {

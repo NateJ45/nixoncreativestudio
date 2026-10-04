@@ -260,7 +260,11 @@ const legal = [
     flex-direction: column;
     gap: 0.25rem;
   }
+  /* A mouse on a wide screen keeps the compact density, but every link is at
+     least the 24px WCAG 2.5.8 box (the text line is 20px). */
   .footer-link {
+    display: inline-block;
+    padding-block: 0.125rem;
     color: var(--link);
     text-decoration: none;
   }
@@ -272,14 +276,20 @@ const legal = [
   .footer-plain {
     color: var(--muted-foreground);
   }
-  /* 44px tap rows on touch devices and narrow screens; a mouse on a wide
-     screen keeps the compact density. */
-  @media (pointer: coarse), (max-width: 47.99rem) {
+  /* 44 by 44 tap boxes on touch devices and on every screen up to 64rem (the
+     touch layouts); "Work" is 35px of text, so the box also grows sideways.
+     The column gap shrinks to 0 so the rows do not spread further apart. */
+  @media (pointer: coarse), (max-width: 64rem) {
     .footer-columns .footer-link,
     .footer-legal .footer-link {
       display: inline-flex;
       align-items: center;
       min-height: var(--tap);
+      min-width: var(--tap);
+      padding-block: 0;
+    }
+    .footer-columns ul {
+      gap: 0;
     }
   }
 

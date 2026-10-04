@@ -268,7 +268,11 @@ const updated = page.lastUpdated ? lastUpdatedLabel(page.lastUpdated) : undefine
     border-left: 1px solid var(--border);
   }
   .prose-toc a {
-    display: block;
+    /* A 44px row at least (the studio's touch bar; a tablet in landscape
+       shows this list): the padding alone made 42px. */
+    display: flex;
+    align-items: center;
+    min-height: var(--tap);
     margin-left: -1px;
     padding: 0.7rem 0 0.7rem var(--spacing-m);
     border-left: 2px solid transparent;
