@@ -45,8 +45,8 @@ A few standards show up in every project, and they are the reason the sites hold
 ## How this site is built
 
 - **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'server'` with Cloudflare's route cache
-- **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
-- **React 19** islands for the interactive pieces: full-screen mobile nav, contact form, photo gallery + lightbox, WebGL hero
+- **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; the design system is `DESIGN.md`, its tokens in `src/styles/globals.css`
+- **React 19** islands only where they earn it: the photo gallery and lightbox, the contact page copy button, the work filter (the header, phone menu and footer carry no React)
 - **EmDash CMS** (D1 and R2 on Cloudflare) for case studies, the journal and the photography set; no Astro content collections
 - **[Motion](https://motion.dev)** + **[Lenis](https://lenis.darkroom.engineering)** smooth scroll + Astro View Transitions for soft page-to-page navigation
 - Component primitives from **Starwind** (zero-JS, Astro-native), **shadcn/ui**, with **Aceternity** and **Magic UI** for motion flourishes

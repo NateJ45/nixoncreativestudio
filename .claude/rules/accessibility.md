@@ -19,7 +19,7 @@ Target: WCAG 2.1 AA on the one art-directed theme (dark mode retired in the 2026
 
 AA is the standard for this site, by choice, in line with W3C's own guidance that AAA is not recommended as a blanket requirement for whole sites. AAA is not targeted because a few of its criteria pull against a brand-led design, and the gap is small and intentional, not an oversight:
 
-- **1.4.6 Enhanced contrast (7:1):** the accent-toned tokens clear AA but sit just under 7:1 by design, to keep the NCS-blue identity vivid: `--link` `#2A6FB0` on white (5.25:1), `--muted-foreground` `#5F6573` on white (5.84:1), white-on-`--accent` buttons (~4.7:1), footer sky-on-navy (~6.5:1). Body text and headings already exceed 7:1. Pushing these to 7:1 would mean darkening the brand blues; that trade was declined.
+- **1.4.6 Enhanced contrast (7:1):** body text and headings exceed 7:1 on every paper ground; the accents clear AA and some sit under 7:1 by design to keep the china-marker red vivid: `--marker` on paper 5.64:1, `--ink-muted` on paper 6.16:1, paper on the marker button 5.64:1. The full table is in `DESIGN.md` section 2.
 - **2.5.5 Target Size (44px):** on phones the interactive controls (hamburger, mobile-nav close + social, back-to-top, copy-email button, before/after handle, carousel arrows + dots, footer links) are sized to the 44px comfort target, so the AAA bar is effectively met on mobile. A few standalone text links (the wordmark, the hero "See the work" link, the footer email link, the decorative client marquee) still size to their text height (24-34px); they clear the AA 24px rule (2.5.8) and the inline-text exception covers links inside prose. A mouse-driven desktop deliberately keeps its tuned compact density: footer link tap-height and copy-email sizing are gated on `pointer: coarse`, so every touch device (phone and tablet, including iPads) gets the 44px targets while a desktop with a mouse stays compact. Gating on input type, not screen width, is what keeps tablets covered.
 - **3.1.5 Reading Level / 2.4.9 Link Purpose (link-only):** confident marketing copy and repeated "Read the case study" links don't meet the AAA bars.
 
@@ -41,22 +41,23 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 
 **Interactive elements.**
 
-- Icon-only buttons and links require `aria-label`. Lucide SVG icons carry no accessible name on their own; the label lives on the wrapper. See `MobileNav.tsx`, `ThemeToggle.tsx` for the pattern.
+- Icon-only buttons and links require `aria-label`. Lucide SVG icons carry no accessible name on their own; the label lives on the wrapper. See `MobileMenu.astro` and `BackToTop.astro` for the pattern.
 - Hover and focus states must not be color-only. Pair color changes with underline, motion, or icon swap.
 - Stick to native interactive elements (`<button>`, `<a>`, `<details>`, `<summary>`) whenever possible. Custom controls take real work to make accessible.
 
-**Color tokens by responsibility** (definitions and contrast math in `globals.css`):
+**Color tokens by responsibility** (definitions in `globals.css`, every pair asserted in `src/lib/theme-tokens.test.ts`, the table in `DESIGN.md`):
 
-- `--accent` (`#3478BD` light, `#40AAED` dark): buttons, focus rings, large CTAs. Paired with white text in light mode, navy in dark.
-- `--link` (`#2A6FB0` light, `#40AAED` dark): accent-toned body text (card-link arrows, Process / Services step numbers, prose anchors). Darker than `--accent` in light so body-size text clears AA.
-- `--secondary` (`#40AAED`): decorative gradients and Footer body links sitting on the navy footer.
-- `--muted-foreground` (`#5F6573` light, `#9CA3AF` dark): meta and supporting text on bg-soft surfaces.
+- `--marker` (`#AE2F1B`): the italic voice, the focus ring (3:1 non-text), the brand button hover with paper text.
+- `--link` (`#8E2B1B`, brick): links and accent-toned body text on paper; vermilion `#F2835F` inside `.on-ink`.
+- `--muted-foreground` (`#56585C`): meta text; `#B8B6B0` on ink; `#48494C` on the contour ground.
+- `--marker-hot` / `--tertiary` (`#F2835F`): text only on ink; graphic marks elsewhere.
+- Text over a textured ground is checked against the ground's worst pixel by `node scripts/brand/build-grounds.mjs --check`.
 
 New tokens or hex literals must clear WCAG AA against every surface they appear on (4.5:1 body text, 3:1 large text and UI components). Add the pair to `src/lib/theme-tokens.test.ts` before introducing one.
 
 **Motion.** `globals.css` disables animations (0.01ms, so `animationend` still fires) and transitions (`0s` duration AND delay, since 2026-09-30, starter PORTS.md card 61: a 0.01ms transition on `all` strands in WebKit; so `transitionend` does not fire under reduce) globally under `prefers-reduced-motion: reduce`, and the Lenis smooth scroll becomes a no-op. New animations inherit this; no per-component handling needed.
 
-**Mobile and safe areas.** The viewport meta carries `viewport-fit=cover` so the navy hero and footer run edge-to-edge into the notch on modern phones. Because of that, content that touches a screen edge must add the matching `env(safe-area-inset-*)`: side insets are handled once in `.ncs-container` (so every page's content clears a landscape notch), and the sticky header, the mobile-nav panel (`.mnav-shell`), the fixed back-to-top button, and the lightbox close button each add their own top/bottom/side inset. `env()` resolves to 0 on non-notched devices, so these read as the flat base padding everywhere except the phones that need them. If you add a new `position: fixed` element at a screen edge, or remove `viewport-fit=cover`, revisit those insets. Touch targets are sized to 44px on touch devices (see Target Size above); reach for the `pointer-coarse:` variant (not a `max-*` width breakpoint) when a control should stay compact for a mouse but grow for touch, so phones and tablets are both covered. Form inputs stay at `text-base` (16px) so iOS doesn't zoom on focus.
+**Mobile and safe areas.** The viewport meta carries `viewport-fit=cover` so the grounds and the ink footer run edge-to-edge into the notch on modern phones. Because of that, content that touches a screen edge must add the matching `env(safe-area-inset-*)`: side insets are handled once in `.ncs-container` (so every page's content clears a landscape notch), and the sticky header, the phone menu dialog (`.site-menu-shell`), the fixed back-to-top button, and the lightbox close button each add their own top/bottom/side inset. `env()` resolves to 0 on non-notched devices, so these read as the flat base padding everywhere except the phones that need them. If you add a new `position: fixed` element at a screen edge, or remove `viewport-fit=cover`, revisit those insets. Touch targets are sized to 44px on touch devices (see Target Size above); reach for the `pointer-coarse:` variant (not a `max-*` width breakpoint) when a control should stay compact for a mouse but grow for touch, so phones and tablets are both covered. Form inputs stay at `text-base` (16px) so iOS doesn't zoom on focus.
 
 **Language and metadata.** `<html lang="en">` and the document `title` / `description` come from `BaseLayout`. Pass `title` and `description` through every page that uses the layout.
 

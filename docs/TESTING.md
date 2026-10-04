@@ -121,10 +121,11 @@ stripping, so there is nothing to configure and nothing to install.
 | `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css` (one theme since the 2026 redesign)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
-Card 9). It parses the real hex out of the `@theme` and `:root` blocks,
-asserts text pairs at 4.5:1 and focus-ring / control-edge pairs at 3:1, and
-additionally asserts that the `@theme` literals still mirror their `:root`
-twins so the palette documentation cannot quietly go stale. Its header comment
+Card 9). Since the 2026 redesign it parses the real hex out of the `:root`,
+`.on-ink` and `.ground-paper-contours` blocks, asserts text pairs at 4.5:1 and
+focus-ring / control-edge pairs at 3:1 on every ground, and asserts every
+`= --token` mirror note so the palette documentation cannot quietly go stale.
+The textured grounds are checked per pixel by `node scripts/brand/build-grounds.mjs --check`. Its header comment
 lists every deliberate non-assertion and why. 85 assertions pass as of
 2026-08-27; the gate was proved to bite by temporarily lightening
 `--muted-foreground`, which produced 4 failures.

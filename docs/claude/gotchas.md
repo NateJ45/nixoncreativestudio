@@ -16,19 +16,15 @@ Every entry below was measured, not assumed.
    breaks `npm run format:check` too. The only expected output is a handful
    of unused-variable warnings.
 
-2. **`variant="secondary"` on the shadcn Button or Badge fails contrast.** In
-   light mode that renders `--secondary-foreground` (white) on `--secondary`
-   (sky blue `#40AAED`): **2.56:1**, well under the 4.5:1 the rest of this site
-   holds. It is not a live defect only because the variant is unused across the
-   entire codebase. The day you reach for it, either fix the token pair or use
-   a different variant, and add the pair to `src/lib/theme-tokens.test.ts`.
+2. **Retired 2026-10-04: `variant="secondary"` used to fail contrast.** It
+   rendered white on the old sky blue (2.56:1). Since the redesign
+   `--secondary` is the sunk paper with ink text (13.96:1), asserted in
+   `src/lib/theme-tokens.test.ts`, so the variant is safe to use.
 
-3. **The `--link` comment in `globals.css` overclaims.** It says AA on
-   `#FFFFFF`, `#F4F7FA` **and** `#0A1628`. The first two are true (5.25:1 and
-   4.88:1); navy is **3.45:1** and fails body text. Harmless today because the
-   pair is never rendered (the navy Footer is a dark-mode state, where the link
-   colour switches to `--secondary`), but do not trust the comment as a licence
-   to put `text-link` on a navy surface. Logged in `docs/PENDING.md`.
+3. **Retired 2026-10-04: the `--link` comment overclaimed AA on navy.** The
+   redesign replaced the palette: `--link` is brick on paper (7.23:1) and the
+   `.on-ink` scope switches it to vermilion on ink (7.07:1); both are asserted
+   in `src/lib/theme-tokens.test.ts`.
 
 4. **The live site does two redirect hops, so uptime checks need `-L`.**
    `nixoncreativestudio.com` 301s to `www.`, and `www.…/about` 307s to
@@ -351,3 +347,20 @@ https://www.nixoncreativestudio.com/_astro/<any chunk>.js` must be 200, while
     baseline recapture, rebuild and check the byte count does not move (it did
     not). Keep utility class names out of prose the scanner can see, or leave
     `docs/` excluded.
+
+26. **In CSS, read the raw token (`var(--link)`), never the Tailwind alias
+    (`var(--color-link)`).** `@theme inline` maps `--color-link: var(--link)`
+    at `:root`, where the var() is resolved once and inherited as a value. A
+    ground that re-scopes `--link` (`.on-ink`, `.ground-paper-contours`)
+    changes what the `text-link` UTILITY reads (it inlines `var(--link)`),
+    but not what `var(--color-link)` in a stylesheet reads. Found 2026-10-04:
+    the whole ink footer rendered its headings and links in the paper-ground
+    colours. All of `src/` was switched to the raw names in the same commit.
+
+27. **Vite inlines assets under 4 KB into the CSS as base64.** The ground tiles
+    (`src/assets/grounds/`, 0.5 to 3 KB) landed inside the render-blocking
+    stylesheet, so the "attach after load" deferral did nothing for them and
+    the CSS grew by about 7 KB. `astro.config.mjs` now sets
+    `vite.build.assetsInlineLimit` to a function that returns `false` for that
+    folder (2026-10-04). Check `dist/client/_astro/` for the files after a
+    build if you add an asset that must stay a separate request.

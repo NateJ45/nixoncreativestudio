@@ -6,8 +6,8 @@ Moved out of CLAUDE.md. Read when choosing a library, wiring a new dependency, o
 
 - Astro 7 with TypeScript in strict mode and `output: 'server'` with the Cloudflare route cache (see the section above)
 - No Astro content collections any more (CMS-DESIGN PR 12 deleted `journal` and `photos`; the case studies went in the EmDash migration): case studies, journal entries and photos are EmDash collections (`case_studies`, `posts` shown as Journal, `photos`), read through `src/lib/caseStudies.ts`, `src/lib/journal.ts` and `src/lib/photos.ts`. `src/live.config.ts` is the only content config
-- Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
-- React 19 islands for anything interactive: full-screen mobile nav panel, contact form handler, photo lightbox, WebGL hero canvas, testimonials carousel, back-to-top, copy-email, /work filter chips. Astro components for everything static
+- Tailwind 4 via `@tailwindcss/vite`. Tokens in `src/styles/globals.css` (`:root` palette wired through `@theme inline`), documented in `DESIGN.md`. There is no `tailwind.config.mjs` file
+- React 19 islands only where interactivity earns the cost: photo gallery and lightbox, testimonials carousel, copy-email on /contact, /work filter chips. The shared chrome (header, phone menu as a native `<dialog>`, footer, back-to-top) is Astro plus a few lines of script, so no page loads React for it (2026 redesign). Astro components for everything static
 - shadcn/ui primitives in `src/components/ui/` (Nova preset, Radix base). Includes a Nathan-added `brand` variant and `cta` size on Button for marketing CTAs. `components.json` also wires the `@fulldev` registry for more free shadcn-compatible components
 - Aceternity UI for motion-rich blocks (bento-grid, spotlight)
 - Magic UI for smaller flourishes (marquee, animated-beam)
@@ -21,7 +21,7 @@ Moved out of CLAUDE.md. Read when choosing a library, wiring a new dependency, o
 - `astro-expressive-code` and `@astrojs/mdx` were REMOVED in CMS-DESIGN PR 14 (unused since PR 12: no `.mdx` file is left, journal code blocks are drawn by `src/lib/journalBody.ts`). If MDX ever comes back, reinstall both and put expressive-code before `mdx()` in the integrations array.
 - `Analytics.astro` loads the Cloudflare Web Analytics beacon as a plain `<script defer>` (Partytown was removed 2026-09-04: its sandbox cost more main-thread time than the 7KB beacon) and, when `PUBLIC_GA_ID` is set, the GA4 gtag after the `load` event. The two script tags live in `src/components/analytics/` (`CloudflareBeacon.astro`, `GoogleAnalytics.astro`); `Analytics.astro` reads the env and wraps each in its condition
 - Astro `prefetch` enabled (`prefetchAll`, viewport strategy) so links preload as they enter the viewport, pairing with the View Transitions router
-- `three` + `@react-three/fiber` for the optional WebGL hero background (`HeroCanvas.tsx`), guarded behind WebGL support + reduced-motion with the CSS aurora as the fallback
+- Fonts: Bebas Neue and Newsreader as self-hosted woff2 files in `src/assets/fonts/` (latin subsets from Fontsource, with metric-matched fallbacks in globals.css). The `@fontsource` packages remain only for the OG generators and the coming-soon page. `three` and `@react-three/fiber` are no longer imported (the WebGL hero was removed 2026-10-04); removing them is in docs/PENDING.md
 - `embla-carousel-react` + `embla-carousel-autoplay` for the client-testimonials carousel (`TestimonialCarousel.tsx`)
 - `@lhci/cli` (dev-only) for Lighthouse CI; see "Testing, linting, and CI" below
 - One art-directed (light) theme since the 2026 redesign: no dark mode, no theme toggle (`DESIGN.md`)

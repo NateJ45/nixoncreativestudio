@@ -35,38 +35,30 @@ Nothing else in this repo reads `SITE_URL`. The canonical site origin for the
 build lives in `astro.config.mjs` (`site: 'https://nixoncreativestudio.com'`)
 and is unrelated.
 
-### 2. Decide what to do about the `--link` comment in `globals.css`
+### 2. Load the redesign's Colophon and Accessibility wording into production (redesign 2026, main session with Nathan)
 
-**File:** `src/styles/globals.css`, the `--link` declaration in `:root`
-(and the matching paragraph under "Brand colors" in `.claude/rules/styling.md`).
+**Why:** the foundation commit for the 2026 redesign changed the committed
+fallback `cms/content/pages.json`: two Colophon rows (Type: Bebas Neue and
+Newsreader instead of Source Sans 3; Accessibility: no "light or dark") and two
+Accessibility paragraphs (no "both the light and the dark theme"). Production
+still says Source Sans 3 and light/dark, which is no longer true once the
+redesign ships. `scripts/ci-dataset/rows.sql` (normally only written by
+`ci-dataset:snapshot`) carries the same edit by hand so the CI dataset and
+`tests/prose-pages.spec.ts` agree; a snapshot taken from production BEFORE this
+load would revert it and fail the Colophon rows test.
 
-The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
-2026-08-27:
+**Do, when the redesign merges:** `npm run cms:production-load -- --only pages --dry-run`
+(expect exactly the `colophon` and `accessibility` entries to show as changed),
+then the real load, then `npm run ci-dataset:snapshot` and confirm `rows.sql`
+is byte-identical to the hand edit. Never from a delegated agent (never-break rule 5).
 
-| pair                   | ratio      | AA body text (4.5:1) |
-| ---------------------- | ---------- | -------------------- |
-| `#2A6FB0` on `#FFFFFF` | 5.25:1     | pass                 |
-| `#2A6FB0` on `#F4F7FA` | 4.88:1     | pass                 |
-| `#2A6FB0` on `#0A1628` | **3.45:1** | **fail**             |
+### 2b. Regenerate the OG cards and icons in the new palette (redesign 2026)
 
-The third claim is wrong. It is **not** a live accessibility defect: the pair
-is not rendered anywhere. In light mode the Footer is a light `.band-themed`
-surface, and the navy Footer is a dark-mode-only state where the link colour
-switches to `--secondary` (`#7AC8F0`, 9.8:1 on navy). So this is a documentation
-error, not a bug.
-
-It is left for a human because `globals.css` is a "foundation, edit with care"
-file per `CLAUDE.md`, and because there are two defensible fixes:
-
-- **a)** Correct the comment to say AA on the two paper surfaces only. Zero
-  risk, and the token keeps its current value.
-- **b)** Darken `--link` until it genuinely clears 4.5:1 on navy too, making the
-  comment true and giving a future navy-in-light-mode surface a safe link
-  colour. This changes rendered colour on every page and needs an eye on it.
-
-Option (a) is the recommendation. Whichever is chosen, add the navy pair to
-`src/lib/theme-tokens.test.ts` afterwards so the claim is machine-checked from
-then on.
+`scripts/generate-og.mjs`, `generate-og-default.mjs` and `generate-icons.mjs`
+still draw the old navy card with an amber studio name and the amber-spark
+favicon. Swap their brand constants to ink, paper and the marker red
+(`DESIGN.md`), then `npm run og` and `npm run icons` (the per-page cards
+regenerate on the next build). A design call for the lead or a page agent.
 
 ---
 
@@ -295,6 +287,18 @@ Also open from the same PR: `scripts/ci-dataset/terms.json` pins each CI case st
 `scripts/cms/apply-schema.mjs` and `scripts/cms/load-content.mjs` (CMS-DESIGN PR 3) were tested against in-memory fakes of the EmDash REST API and the `emdash` CLI, because `ncs-ci` has no admin user and so no API token. Three response shapes are read defensively because they were never observed: a field row's sort key (`sortOrder` or `sort_order`), a menu item's URL key (`customUrl`, `custom_url` or `url`), and the `content get --raw` result (`data` and `_rev` at the top level). The first content PR (4) must start with `npm run cms:schema -- --collection <slug> --url <instance> --dry-run` (docs/CMS-DESIGN.md 2.6), then a second real run that prints only `unchanged`. If a shape differs, fix the one helper (`scripts/lib/emdash-schema.mjs` or `scripts/lib/cms-load.mjs`) and add the observed shape to its unit test. Delete this row once a real schema apply and a real content load both rerun as no-ops.
 
 ---
+
+### 8. Unused dependencies after the redesign foundation (2026-10-04)
+
+`three`, `@react-three/fiber` and `@types/three` are no longer imported (the
+WebGL hero was deleted); `@fontsource-variable/source-sans-3` and
+`@fontsource-variable/geist` are unused (fonts are self-hosted from
+`src/assets/fonts/`); `@fontsource/bebas-neue` is still read by the OG
+generators and `src/pages/coming-soon.astro`. The EmDash/zustand shim in
+`astro.config.mjs` mentions R3F as zustand's consumer; check whether zustand is
+still pulled in before removing the shim. Removing packages changes the
+lockfile, so it is a deliberate, separate PR (not done by the foundation agent,
+which was told not to touch dependencies).
 
 ## Deliberate absences (do not "fix" these)
 
