@@ -126,11 +126,13 @@ export default defineConfig({
         'https://nixoncreativestudio.com/work/',
         'https://nixoncreativestudio.com/about/',
         'https://nixoncreativestudio.com/services/',
-        // The four search landing pages (src/lib/landingPage.ts LANDING_SLUGS).
+        // The search landing pages (src/lib/landingPage.ts LANDING_SLUGS).
+        // /cincinnati-event-photography/ is left out on purpose: it is noindex
+        // until an Events photo is published (photographyRobots()), and a sitemap
+        // must not list a noindex page. Add it here once event photos are live.
         'https://nixoncreativestudio.com/church-websites/',
         'https://nixoncreativestudio.com/nonprofit-websites/',
         'https://nixoncreativestudio.com/school-websites/',
-        'https://nixoncreativestudio.com/cincinnati-event-photography/',
         'https://nixoncreativestudio.com/photography/',
         'https://nixoncreativestudio.com/journal/',
         'https://nixoncreativestudio.com/contact/',

@@ -59,6 +59,10 @@ import LandingProse from './LandingProse.astro';
 import LandingCare from './LandingCare.astro';
 import { buttonVariants } from '../ui/button';
 import headshot from '../../assets/brand/headshot.jpg';
+import fbcmHome from '../../assets/home/reel/fbcm-home-d.webp';
+import ssHome from '../../assets/home/reel/ss-home-d.webp';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import { SITE_URL, getSite } from '../../data/site';
 import { getAddOns, getPricingTiers } from '../../lib/pricing';
 import { getServiceOfferings } from '../../lib/servicesPage';
@@ -153,6 +157,23 @@ const more = [
 ];
 
 const schemas = buildLandingSchemas({ segment, page, siteUrl: SITE_URL, minPrice });
+
+// The small hero print: the same lead site the proof band shows (LandingProof.astro).
+const HERO_PRINTS: Partial<
+  Record<LandingSlug, { src: ImageMetadata; alt: string; caption: string }>
+> = {
+  'church-websites': {
+    src: fbcmHome,
+    alt: 'The new First Baptist Church Muncie home page, with the Sunday service time and the address.',
+    caption: 'First Baptist Church, Muncie. Launching soon.',
+  },
+  'nonprofit-websites': {
+    src: ssHome,
+    alt: 'The Stone Steps 50K home page, a runner climbing a wooded trail in Mt. Airy Forest.',
+    caption: 'Stone Steps 50K, Cincinnati. Live.',
+  },
+};
+const heroPrint = HERO_PRINTS[slug];
 ---
 
 <BaseLayout
@@ -193,23 +214,41 @@ const schemas = buildLandingSchemas({ segment, page, siteUrl: SITE_URL, minPrice
         ))}
       </div>
 
-      <aside class="lp-glance" aria-labelledby="glance-title">
-        <p class="lp-glance-head">
-          <span id="glance-title" class="lp-glance-title">
-            {segment.linkLabel}
-          </span>
-          <span class="lp-glance-meta">At a glance</span>
-        </p>
-        <dl class="lp-glance-rows">
-          {glance.map((g) => (
-            <div>
-              <dt>{g.label}</dt>
-              <dd>{g.value}</dd>
-            </div>
-          ))}
-        </dl>
-        <p class="lp-glance-foot">The first conversation is free.</p>
-      </aside>
+      <div class="lp-hero-side">
+        {/* Desktop only: a small print of the lead proof on the sill, so real work
+           is in the first screen (PRODUCT.md "Show, don't tell"). Lazy, so a
+           phone (where it is hidden) never downloads it; it is too small to be
+           the LCP element. */}
+        {heroPrint && (
+          <a href="#work" class="lp-hero-print">
+            <Image
+              src={heroPrint.src}
+              alt={heroPrint.alt}
+              widths={[400, 640]}
+              sizes="20rem"
+              loading="lazy"
+            />
+            <span class="type-caption">{heroPrint.caption}</span>
+          </a>
+        )}
+        <aside class="lp-glance" aria-labelledby="glance-title">
+          <p class="lp-glance-head">
+            <span id="glance-title" class="lp-glance-title">
+              {segment.linkLabel}
+            </span>
+            <span class="lp-glance-meta">At a glance</span>
+          </p>
+          <dl class="lp-glance-rows">
+            {glance.map((g) => (
+              <div>
+                <dt>{g.label}</dt>
+                <dd>{g.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p class="lp-glance-foot">The first conversation is free.</p>
+        </aside>
+      </div>
     </div>
   </Band>
 
@@ -561,6 +600,53 @@ const schemas = buildLandingSchemas({ segment, page, siteUrl: SITE_URL, minPrice
   }
   .lp-textlink:hover {
     text-decoration-color: currentColor;
+  }
+
+  /* The hero's right column: the small print above the slip (desktop only). */
+  .lp-hero-side {
+    display: grid;
+    justify-items: end;
+    gap: 0;
+  }
+  .lp-hero-print {
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    .lp-hero-print {
+      display: grid;
+      gap: 0.5rem;
+      width: min(20rem, 100%);
+      margin: 0 1.5rem 0.4rem 0;
+      padding: 0.45rem 0.45rem 0.6rem;
+      background: var(--paper-raised);
+      border-radius: 2px;
+      box-shadow: var(--shadow-frame);
+      transform: rotate(2deg);
+      color: var(--muted-foreground);
+      text-decoration: none;
+      position: relative;
+      z-index: 0;
+    }
+    .lp-hero-print img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--paper-deep);
+    }
+    .lp-hero-print:hover .type-caption,
+    .lp-hero-print:focus-visible .type-caption {
+      color: var(--link);
+      text-decoration: underline;
+    }
+    .lp-hero-side .lp-glance {
+      position: relative;
+      z-index: 1;
+    }
+  }
+  @media (max-width: 63.99rem) {
+    .lp-hero-side {
+      justify-items: start;
+    }
   }
 
   /* The at-a-glance slip: a printed slip laid on the sill, like /services' price list. */

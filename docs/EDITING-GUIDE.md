@@ -158,7 +158,7 @@ Each is an entry under **Pages, Other pages**. Each "Heading 2" in the body beco
 
 ### 4.7 The four landing pages (church, nonprofit, school, event photography)
 
-`/church-websites/`, `/nonprofit-websites/`, `/school-websites/` and `/cincinnati-event-photography/` are written for people who searched for that kind of work. Their words are entries under **Pages, Other pages**, the same list as Privacy, found by the slug (`church-websites` and so on). Until you load them into the admin (`docs/redesign-2026/content-production-plan.md`, "Landing pages"), the site shows the copy committed in `cms/content/pages.json`, and nothing looks different.
+`/church-websites/`, `/nonprofit-websites/`, `/school-websites/` and `/cincinnati-event-photography/` are written for people who searched for that kind of work. Their words are entries under **Pages, Other pages**, the same list as Privacy, found by the slug (`church-websites` and so on). The four entries are already in the admin (`docs/redesign-2026/content-production-plan.md`, "Incident"). If one is ever deleted or unpublished, the site shows the copy committed in `cms/content/pages.json` instead, so the page never goes blank.
 
 In each entry:
 
@@ -173,7 +173,7 @@ If an edit leaves a page without a lead paragraph, without a prose section, or w
 
 **What stays in code** (`src/lib/landingPage.ts` and `src/components/landing/LandingProof.astro`): the button labels and where they go (each preselects the right organization type on the contact form), the price band heading and the which-tier sentence, and the proof: which sites are shown and the facts printed beside them. The proof is in code on purpose. Every fact there was checked against a source (listed at the top of `LandingProof.astro`); when one changes, for example First Baptist Muncie launches on its own domain or Presbyterian Academy finishes, ask for that file to be updated, and keep the case study's launch status in the admin current, because the "Launching soon" and "In progress" labels follow it.
 
-**Event photography and search.** Like the Photography page, the event page asks Google to leave it out of results until at least one photo in the **Events** group is published. The first published event photo shows on the page (up to six) and makes it searchable, with no deploy.
+**Event photography and search.** Like the Photography page, the event page asks Google to leave it out of results until at least one photo in the **Events** group is published. The first published event photo shows on the page (up to six) and makes it searchable, with no deploy. It is also left out of the sitemap while it is hidden; once event photos are live, ask for its one line to be added back in `astro.config.mjs` (the comment there says where).
 
 ---
 

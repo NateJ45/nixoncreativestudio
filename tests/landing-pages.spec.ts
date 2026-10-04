@@ -8,10 +8,10 @@ import { join } from 'node:path';
 // =============================================================================
 // /church-websites/, /nonprofit-websites/, /school-websites/ and
 // /cincinnati-event-photography/. Their words are entries of the `pages`
-// collection; production and the CI dataset carry none yet, so both serve the
-// committed cms/content/pages.json, which is where the expected words below come
-// from. Once Nathan loads (and edits) the entries in production, a run against
-// production will notice the moved words: update the JSON in the same change.
+// collection. The CI dataset carries none yet, so CI serves the committed
+// cms/content/pages.json, which is where the expected words below come from.
+// Production holds the same words; once Nathan edits them in the admin, a run
+// against production will notice: update the JSON in the same change.
 //
 // What is pinned:
 //   1. With JavaScript OFF the page is whole: the h1 and intro are the CMS words,
@@ -125,9 +125,17 @@ for (const { path, slug, preset } of PAGES) {
   });
 }
 
-test('the four landing pages are in the sitemap', async ({ request }) => {
+// The three web pages are listed; the event photography page is not, because it
+// is noindex until an Events photo is published (astro.config.mjs).
+test('the web landing pages are in the sitemap, the noindex photo page is not', async ({
+  request,
+}) => {
   const res = await request.get('/sitemap-0.xml');
   test.skip(!res.ok(), 'sitemap-0.xml is built at deploy time');
   const xml = await res.text();
-  for (const { path } of PAGES) expect(xml).toContain(`https://nixoncreativestudio.com${path}`);
+  for (const { path } of PAGES) {
+    const url = `https://nixoncreativestudio.com${path}`;
+    if (path === '/cincinnati-event-photography/') expect(xml).not.toContain(url);
+    else expect(xml).toContain(url);
+  }
 });

@@ -29,8 +29,9 @@
                order.
      eyebrow, rows, show_toc, last_updated   not used on these pages.
 
-   If an entry is missing (production carries none until Nathan loads them,
-   docs/redesign-2026/content-production-plan.md), unpublished, or cannot make a
+   If an entry is missing (the CI dataset carries none until its next snapshot;
+   production holds all four, docs/redesign-2026/content-production-plan.md
+   "Incident"), unpublished, or cannot make a
    page (no intro, no prose section, fewer than three questions), the reader
    serves the committed cms/content/pages.json and logs a `[cms]` line.
 
