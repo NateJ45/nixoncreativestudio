@@ -36,7 +36,6 @@ interface Props {
   sizes: string;
   headingLevel?: 2 | 3;
   place?: string;
-  pick?: boolean;
   class?: string;
 }
 
@@ -47,7 +46,6 @@ const {
   sizes,
   headingLevel = 3,
   place,
-  pick = false,
   class: className,
 } = Astro.props;
 const status = launchStatusLabel(cs.launchStatus);
@@ -74,7 +72,7 @@ const titleId = `wp-${cs.id}`;
 >
   <a href={href} class="wp-pic" tabindex="-1" aria-hidden="true">
     {reelDir ? (
-      <Frame variant={variant} alt="" tag={status} edge={edge} pick={pick}>
+      <Frame variant={variant} alt="" tag={status} edge={edge}>
         <img
           src={`${reelDir}-d-poster-960.webp`}
           srcset={`${reelDir}-d-poster-640.webp 640w, ${reelDir}-d-poster-960.webp 960w, ${reelDir}-d-poster.webp 1600w`}
@@ -96,7 +94,6 @@ const titleId = `wp-${cs.id}`;
         url={variant === 'browser' ? host : undefined}
         tag={status}
         edge={edge}
-        pick={pick}
         widths={[480, 800, 1200, 1600]}
         sizes={sizes}
       />
@@ -108,7 +105,6 @@ const titleId = `wp-${cs.id}`;
           url={variant === 'browser' ? host : undefined}
           tag={status}
           edge={edge}
-          pick={pick}
         >
           {eager ? (
             <EmDashImage image={cs.cover} alt="" sizes={sizes} priority />
