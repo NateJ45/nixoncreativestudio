@@ -15,7 +15,7 @@
 
      1. Hero (window-light, the page's one moving ground): sector and status,
         the title ONCE (the client name only appears again when it differs),
-        the outcome as the standfirst, the visit link, then the shipped site
+        the outcome as the standfirst, the visit link, then the site
         printed large: a directed showreel for the studies that have one
         (src/data/workExtras.ts SHOWREELS; the poster is the LCP), otherwise
         the cover in a browser frame. Under it, a short facts ledger in plain
@@ -336,7 +336,7 @@ const schemas = [
     {/* 4. The details, printed on the ink board. */}
     {(details.length > 0 || hasBeforeAfter) && (
       <Band ground="deep" still labelledby="cs-details" class="cs-details">
-        <h2 id="cs-details" class="type-headline">
+        <h2 id="cs-details" class="type-headline cs-details-title">
           In the <span class="voice">details</span>
         </h2>
         {details.length > 0 && (
@@ -688,7 +688,10 @@ const schemas = [
   }
 
   /* ---- 4. the details ------------------------------------------------------- */
-  .cs-details h2 {
+  /* Its own class, not ".cs-details h2": cs-details sits on the Band component's root,
+     which does not carry this page's scope, so that selector never matched and the
+     heading sat flush on the first crop (2026-10-04 review). */
+  .cs-details-title {
     margin: 0 0 var(--spacing-xl);
   }
   .cs-crops {
@@ -792,7 +795,7 @@ const schemas = [
     margin-top: var(--spacing-2xl);
   }
   .cs-ba-title {
-    margin: 0 0 var(--spacing-s);
+    margin: 0 0 var(--spacing-l);
     font-family: var(--font-display);
     font-weight: 400;
     font-size: var(--text-h3);
