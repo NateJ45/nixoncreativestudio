@@ -31,6 +31,7 @@
 
 import { choice, getOrdered, getSingleton, int, rows, text, texts, type Raw } from './cms.ts';
 import type { RouteCache } from './routeCache.ts';
+import { buildFaqPageSchema } from './structuredData.ts';
 
 /** One FAQ row. Also the source of the FAQPage JSON-LD. */
 export interface FaqItem {
@@ -220,15 +221,8 @@ export function buildServiceSchemas(
           : {}),
       };
     }),
-    {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: faq.map(({ question, answer }) => ({
-        '@type': 'Question',
-        name: question,
-        acceptedAnswer: { '@type': 'Answer', text: answer },
-      })),
-    },
+    // The shared FAQPage builder (structuredData.ts); same keys, same order.
+    buildFaqPageSchema(faq),
   ];
 }
 

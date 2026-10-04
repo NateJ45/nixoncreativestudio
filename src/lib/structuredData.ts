@@ -73,3 +73,55 @@ export function buildOrganizationSchema(site: OrgSite): Record<string, unknown> 
     sameAs: [site.social.instagram, site.social.linkedin],
   };
 }
+
+/* ----------------------------------------------------------------------------
+   Per-page blocks shared by more than one page
+   ----------------------------------------------------------------------------
+   /services (buildServiceSchemas in servicesPage.ts) and the four search
+   landing pages (buildLandingSchemas in landingPage.ts) both publish an FAQ;
+   the landing pages also publish a breadcrumb. One builder each, so the shape
+   Google reads is the same everywhere. Every value comes from what the page
+   shows: never write an FAQ answer or a crumb that is not on the page.
+   ---------------------------------------------------------------------------- */
+
+/** One question and its plain-text answer, exactly as the page shows them. */
+export interface FaqEntry {
+  question: string;
+  answer: string;
+}
+
+/**
+ * The FAQPage block. Key order is part of /services' byte-for-byte golden test
+ * (servicesPage.jsonld.golden.json), so keep it: @context, @type, mainEntity.
+ */
+export function buildFaqPageSchema(faq: FaqEntry[]): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
+  };
+}
+
+/** One step of a breadcrumb trail: the visible name and the absolute URL. */
+export interface Crumb {
+  name: string;
+  url: string;
+}
+
+/** The BreadcrumbList block (E's SEO audit, item 11). Positions start at 1. */
+export function buildBreadcrumbSchema(trail: Crumb[]): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: c.url,
+    })),
+  };
+}

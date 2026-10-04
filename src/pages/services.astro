@@ -68,6 +68,8 @@ import {
   type ServiceOffering,
 } from '../lib/servicesPage';
 import { voiceSplit } from '../lib/voiceSplit';
+import { HANDOFF } from '../lib/handoff';
+import { LANDING_LINKS } from '../lib/landingPage';
 
 const tiers = await getPricingTiers(Astro);
 const addOns = await getAddOns(Astro);
@@ -132,31 +134,8 @@ const closeH = voiceSplit(page.ctaTitle ?? site.ctaDefault.title);
 const whyLast = page.why.items.at(-1);
 const whyRest = page.why.items.slice(0, -1);
 
-// Written in code (no CMS field yet): the handoff list. Each line is a promise
-// the studio already makes elsewhere (Home hero, the Web design offering, the
-// Care plan note); keep them in step.
-const HANDOFF: { title: string; body: string }[] = [
-  {
-    title: 'An editor your team can use',
-    body: 'Staff or volunteers change pages, photos and events themselves, without a developer.',
-  },
-  {
-    title: 'A written guide',
-    body: 'The everyday edits, written down for whoever runs the site next.',
-  },
-  {
-    title: 'Backups that are checked',
-    body: 'The site and its content are backed up automatically, and I check that the backups work.',
-  },
-  {
-    title: 'Accessibility checks',
-    body: 'Tested against WCAG AA before launch, on every change.',
-  },
-  {
-    title: 'Yours outright',
-    body: 'No lock-in. The custom-coded builds cost little or nothing a month to host.',
-  },
-];
+// The handoff list (written in code, no CMS field yet) lives in src/lib/handoff.ts,
+// shared with the church and nonprofit landing pages so the promise reads the same.
 ---
 
 <BaseLayout
@@ -228,6 +207,20 @@ const HANDOFF: { title: string; body: string }[] = [
               <li>{p}</li>
             ))}
           </ul>
+          {/* The three web landing pages (src/lib/landingPage.ts). */}
+          <p class="type-caption chapter-aside">
+            Written for your kind of organization:{' '}
+            {LANDING_LINKS.filter((l) => l.slug !== 'cincinnati-event-photography').map(
+              (l, i, all) => (
+                <>
+                  <a href={l.href} class="text-link underline underline-offset-2">
+                    {l.label.toLowerCase()}
+                  </a>
+                  {i < all.length - 1 ? ', ' : '.'}
+                </>
+              ),
+            )}
+          </p>
         </div>
         {webDesign.imageAlt && (
           <div class="chapter-proof" data-reveal>
@@ -375,6 +368,9 @@ const HANDOFF: { title: string; body: string }[] = [
             <span data-nudge aria-hidden="true">
               →
             </span>
+          </a>
+          <a href="/cincinnati-event-photography/" class="svc-textlink">
+            Event photography in Cincinnati
           </a>
         </div>
         <div class="chapter-proof chapter-proof--doc">

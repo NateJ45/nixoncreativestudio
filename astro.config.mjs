@@ -126,6 +126,11 @@ export default defineConfig({
         'https://nixoncreativestudio.com/work/',
         'https://nixoncreativestudio.com/about/',
         'https://nixoncreativestudio.com/services/',
+        // The four search landing pages (src/lib/landingPage.ts LANDING_SLUGS).
+        'https://nixoncreativestudio.com/church-websites/',
+        'https://nixoncreativestudio.com/nonprofit-websites/',
+        'https://nixoncreativestudio.com/school-websites/',
+        'https://nixoncreativestudio.com/cincinnati-event-photography/',
         'https://nixoncreativestudio.com/photography/',
         'https://nixoncreativestudio.com/journal/',
         'https://nixoncreativestudio.com/contact/',

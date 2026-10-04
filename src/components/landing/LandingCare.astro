@@ -1,0 +1,90 @@
+---
+// Safe to edit. The name, price and note are the Care plan add-on (CMS:
+// Pricing & services, "Add-ons"); the link goes to the contact form with the
+// page's organization type preset.
+/* ============================================================================
+   LandingCare | the Care plan, as a raised panel on the ink band
+   ============================================================================
+   The same panel /services draws beside its handoff list: the add-on's name,
+   its dollar figure as a numeral on a double rule (the bookkeeper's "this
+   figure is final"), "a month, to start" in the red-pen italic when the price
+   is monthly, the note, and a link. Inside a deep band, so the tokens are the
+   .on-ink ones (--card is ink-raised there).
+   ============================================================================ */
+import type { AddOn } from '../../lib/pricing';
+
+interface Props {
+  care: AddOn;
+  href: string;
+}
+const { care, href } = Astro.props;
+// "from $100/mo": the first dollar amount, and a per-month line when monthly.
+const figure = care.price.match(/\$[\d,]+/)?.[0];
+const per = /\/\s*mo|month/i.test(care.price) ? 'a month, to start' : undefined;
+---
+
+<section class="lp-care" aria-labelledby="lp-care-heading">
+  <h3 id="lp-care-heading" class="lp-care-title">
+    {care.name}
+  </h3>
+  <p class="lp-care-price">
+    <span class="type-numeral">{figure ?? care.price}</span>
+    {figure && per && <span class="lp-care-per">{per}</span>}
+  </p>
+  <p class="lp-care-note">{care.note}</p>
+  <a href={href} class="lp-care-link nudge">
+    Ask about the Care plan{' '}
+    <span data-nudge aria-hidden="true">
+      →
+    </span>
+  </a>
+</section>
+
+<style>
+  .lp-care {
+    background: var(--card);
+    color: var(--card-foreground);
+    border-radius: 2px;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+  }
+  .lp-care-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 1;
+    color: var(--heading);
+  }
+  .lp-care-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 1rem 0 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px double var(--heading);
+    width: fit-content;
+  }
+  .lp-care-per {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: var(--marker);
+  }
+  .lp-care-note {
+    margin: 1.25rem 0 0;
+    font-size: var(--text-body);
+    line-height: 1.55;
+  }
+  .lp-care-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    margin-top: 1rem;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+</style>

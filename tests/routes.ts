@@ -46,6 +46,11 @@ export const routes = [
   '/',
   '/about',
   '/services',
+  // The four search landing pages (src/lib/landingPage.ts).
+  '/church-websites',
+  '/nonprofit-websites',
+  '/school-websites',
+  '/cincinnati-event-photography',
   '/work',
   ...caseStudySlugs.map((slug) => `/work/${slug}`),
   '/journal',

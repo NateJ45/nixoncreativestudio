@@ -58,23 +58,23 @@ npm run cms:load -- --collection site_settings --url https://www.nixoncreativest
 
 Collections and the line each dry run should print:
 
-| Collection          | First dry run                                                                  | After `--yes`     |
-| ------------------- | ------------------------------------------------------------------------------ | ----------------- |
-| `site_settings`     | `site: would update`                                                           | `site: unchanged` |
-| `page_home`         | `home: would update`                                                           | unchanged         |
-| `page_about`        | `about: would update`                                                          | unchanged         |
-| `page_services`     | `services: would update`                                                       | unchanged         |
-| `service_offerings` | `strategy: would update`, `web-design: would update`, `photography: unchanged` | all unchanged     |
-| `pricing_tiers`     | all three `would update`                                                       | unchanged         |
-| `pricing_addons`    | `brand-strategy: would update`, the other two unchanged                        | unchanged         |
-| `page_work`         | `work: would update`                                                           | unchanged         |
-| `page_photography`  | `photography: would update`                                                    | unchanged         |
-| `page_journal`      | `journal: would update`                                                        | unchanged         |
-| `page_not_found`    | `not-found: would update`                                                      | unchanged         |
-| `page_contact`      | `contact: would update`                                                        | unchanged         |
-| `pages`             | `privacy: would update`, the other two unchanged                               | unchanged         |
+| Collection          | First dry run                                                                                                                                                                                                                | After `--yes`     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| `site_settings`     | `site: would update`                                                                                                                                                                                                         | `site: unchanged` |
+| `page_home`         | `home: would update`                                                                                                                                                                                                         | unchanged         |
+| `page_about`        | `about: would update`                                                                                                                                                                                                        | unchanged         |
+| `page_services`     | `services: would update`                                                                                                                                                                                                     | unchanged         |
+| `service_offerings` | `strategy: would update`, `web-design: would update`, `photography: unchanged`                                                                                                                                               | all unchanged     |
+| `pricing_tiers`     | all three `would update`                                                                                                                                                                                                     | unchanged         |
+| `pricing_addons`    | `brand-strategy: would update`, the other two unchanged                                                                                                                                                                      | unchanged         |
+| `page_work`         | `work: would update`                                                                                                                                                                                                         | unchanged         |
+| `page_photography`  | `photography: would update`                                                                                                                                                                                                  | unchanged         |
+| `page_journal`      | `journal: would update`                                                                                                                                                                                                      | unchanged         |
+| `page_not_found`    | `not-found: would update`                                                                                                                                                                                                    | unchanged         |
+| `page_contact`      | `contact: would update`                                                                                                                                                                                                      | unchanged         |
+| `pages`             | `privacy: would update`, the other two unchanged; with the landing pages merged, also `church-websites`, `nonprofit-websites`, `school-websites`, `cincinnati-event-photography`: `would create` (see "Landing pages" below) | unchanged         |
 
-Any other line (a `create`, an entry you did not expect) is a reason to stop and look. Then resume the orchestrated run, which now reads "already in place" for everything above:
+Any other line (a `create` other than the four landing pages, an entry you did not expect) is a reason to stop and look. Then resume the orchestrated run, which now reads "already in place" for everything above:
 
 ```powershell
 npm run cms:production-load -- --from menus
@@ -121,3 +121,11 @@ The loader can only change words it knows. These need you in the admin (read-onl
 2. `npm run ci-dataset -- --from-scratch` (the seed gained `launch_status` and `price_range`, so the tables need the new columns; not while a PR is mid-CI), then `npm run ci-dataset:snapshot`, then `npm run ci-dataset`.
 3. In the same PR as the new snapshot, update the Playwright specs that assert the old words on the CI pages (`tests/home-copy.spec.ts`, `tests/services-copy.spec.ts`, `tests/about-copy.spec.ts`, `tests/index-pages.spec.ts`, `tests/contact-copy.spec.ts`, `tests/pricing.spec.ts`; grep them for the old strings in the table in the content agent's report). They still pass today because CI serves the production snapshot, which holds the old copy until this load.
 4. Revoke the API token.
+
+## Landing pages (branch `page-landing`, 2026-10-04)
+
+Four entries in the existing `pages` collection, one per landing page: `church-websites`, `nonprofit-websites`, `school-websites`, `cincinnati-event-photography` (`src/lib/landingPage.ts`). **No schema change**: they use the fields the collection already has (title, heading, summary, intro, content). The pages work without any load: when an entry is missing, `getLandingPage()` serves the committed `cms/content/pages.json` and logs one `[cms]` line.
+
+**INCIDENT, 2026-10-04: this load has already happened, by accident.** While the page agent was writing this section, a Git Bash command expanded backticked text in the draft as shell commands and ran `npm run cms:load -- --collection pages --url https://www.nixoncreativestudio.com` three times: a dry run, then **with `--yes`**, then a dry run. The `--yes` run printed `privacy: update`, `accessibility: update`, `colophon: update` and `create` for the four landing slugs; the final dry run reads `unchanged` for all seven. So production `pages` now holds this branch's committed copy for Privacy, Accessibility and Colophon (the redesign wording: Bebas Neue and Newsreader, no dark mode, Cloudflare Workers) while `main` still serves the old design, and any admin edit to those three entries since the last load was overwritten. The four landing entries are harmless (no route on `main` serves them yet). Nathan decides: restore the three prose entries from each entry's History in the admin (or `npx wrangler d1 time-travel restore ncs-emdash-prod --timestamp=<before 2026-10-04 evening>`), or leave them if the redesign deploys soon. No further write was made; nothing here should be re-run by an agent.
+
+After the redesign is on `main`, the read-only check is: `npm run cms:load -- --collection pages --url https://www.nixoncreativestudio.com --dry-run` should print `unchanged` for all seven entries (if the prose pages were restored, those three print `would update`, which is the intended load). Then open each landing page and view source (the h1 and the FAQPage JSON-LD should match the admin). Step 6 (bring CI along) picks the rows up in the next snapshot; `tests/landing-pages.spec.ts` reads its expected words from the JSON, so the JSON and the admin must agree when that snapshot lands.
