@@ -175,11 +175,11 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 ## 8. Components
 
 - **Logo** (`Logo.astro`): the official lockup, navy on paper, white on ink; `lockup="responsive"` serves the top line below 48rem. Never redraw or set it in live type.
-- **Header**: transparent over the first ground, a paper bar with a hairline once scrolled. Logo left; nav and "Start a project" right. The button shows at every width, phones included. Below 48rem the nav moves into the phone menu (a native `<dialog>`, `MobileMenu.astro`). No React.
+- **Header**: transparent over the first ground, a paper bar with a hairline once scrolled. Logo left; nav and "Start a project" right. The button shows at every width, phones included. Below 48rem the nav moves into the phone menu (a native `<dialog>`, `MobileMenu.astro`): a modal with `aria-expanded` on the trigger, Tab kept inside, Escape back to the trigger; without JavaScript the same dialog is a popover the buttons open (`popovertarget`). No React.
 - **Footer**: the deep ground, still. White lockup, "Currently" with the status dot and the button, Explore / Contact / Connect, legal row.
 - **Buttons** (`buttonVariants({ variant: 'brand', size: 'cta' })`): ink with a paper label, marker red on hover and focus, a solid ring, an optional arrow nudge. On ink: paper with an ink label, vermilion on hover. 44px minimum in the header, 48px at `cta` size. `variant="secondary"` is a quiet paper-deep button (now AA). No lift, no glow, no shine.
 - **Links**: text inherits its colour with a marker underline; `text-link` (brick, or vermilion on ink) for accent links; `.card-link` for "Read more" with an arrow.
-- **Frame** (`Frame.astro`): a real screenshot as a print. `variant="browser"` (ink chrome bar, live address, optional "Launching soon" tag) or `variant="film"` (ink rebate, sprocket rows, edge print of facts, optional china-marker `pick` loop). Only live work is shown as live.
+- **Frame** (`Frame.astro`): a real screenshot as a print. `variant="browser"` (ink chrome bar, live address, optional "Launching soon" tag) or `variant="film"` (ink rebate, sprocket rows, edge print of facts, optional china-marker `pick` loop). Only live work is shown as live. **Spend the signature marks sparingly:** the film strip and the marker loop lose their meaning when every block carries them. The marker loop circles one thing per page at most (on /services, the kept price); the landing pages, /services and /contact use plain browser frames.
 - **Photo print** (/about, scoped `.print`): a personal photograph with a trimmed `--paper-raised` border (0.4 to 0.75rem), 2px radius and `--shadow-frame`, captioned below in `.type-caption` with a checkable fact. Small prints sit in one justified row (flex-grow = width/height, every other print a little lower), never as heroes; at most a 1.25deg tilt, and only at desktop.
 - **Band** (`Band.astro`): one ground, one job (section 4).
 - **Showreel** (`Showreel.astro`, `src/scripts/showreel.ts`): a directed walkthrough of a live client site on its case study, a camera over sharp stills with short live clips cut in. Poster first (it is the LCP), nothing downloads until after load and idle, plays only in view, a Play/Pause button, a designed still under reduced motion. Only on case studies, never the home hero.
@@ -190,6 +190,8 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 - **DeferredPicture** (`home/DeferredPicture.astro`): a below-the-fold picture parked in `data-` attributes until it scrolls into view or 3.5 s after load, with a `<noscript>` copy. Use it for any picture that sits inside Chrome's lazy-load distance on a phone.
 - **Printed note card** (`PhotoRateCard.astro`, the `.note` on /journal): `--card` fill, hairline, `--shadow-print`, 2px. The honest empty state: real information (a rate, a status) in the space a photograph would fill, never a placeholder picture. Inside a deep band it re-scopes to ink-raised on its own.
 - **Documents** (first used on `/services`): when a thing is a real piece of paper in Nathan's work, draw it as one. A sheet of `--paper-raised` with `--shadow-print`, a Bebas title over a **double rule** (`3px double var(--heading)`, the bookkeeper's mark for "this figure is final", also under prices), hairline-ruled rows, labels in the UI sans, and at most one red-pen note in the Newsreader italic. The price list slip (dot leaders), the price sheet (`PriceTiers.astro`, the kept price circled with the china-marker loop), the one-page brief and the photo-day call sheet (`src/components/services/`). Every line on a document must restate something true elsewhere; a document is never a placeholder. A sunk band (`bg-muted`, the `--paper-deep` token on a paper ground) is how a page alternates grounds without a second texture.
+- **Landing-page bands** (`src/components/landing/`): `LandingCost` (a paragraph in the reader's terms and the one or two tiers that fit as small price slips, linking to the full sheet on /services, never the sheet itself) and `LandingSteps` (the four process steps told from the client's side, as a `ledger`, `pairs` or `rail`). Each landing page composes them differently; facts are written as sentences, never as a row of big figures.
+- **Tap target** (`.tap-target`, globals.css): 44 by 44 on a coarse pointer and on screens up to 64rem, untouched on a desktop mouse. Header nav, footer links and the contents lists already meet it on their own.
 - **Back to top**: a small ink square, bottom right, after 600px of scroll. No React.
 - **Focus**: one ring everywhere, 3px marker (vermilion on ink), 3px offset.
 
@@ -215,6 +217,8 @@ Everything is inside `prefers-reduced-motion: no-preference`, and the global red
 - No dark mode, no new hues, no `dark:` classes in site code.
 - No `data-reveal` on headings, prose or CTAs; nothing in the first viewport at opacity 0.
 - No em-dashes in site copy.
+- No stat triplets (three big figures with a caption each). A fact is a sentence.
+- No hard offset shadows (`6px 6px 0`); elevation is `--shadow-print` or `--shadow-frame`.
 
 ## 10. Measured (2026-10-04, local `wrangler dev` of the production build, Lighthouse 12 mobile, 3 runs each)
 

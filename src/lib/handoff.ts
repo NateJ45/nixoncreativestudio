@@ -4,8 +4,9 @@
    Safe to edit.
 
    The five promises the studio makes about launch day. Shown on /services (the
-   "What you get at handoff" ink band) and on the church and nonprofit landing
-   pages (the same band), so the wording can never differ between them. Each
+   "What you get at handoff" ink band) only: the landing pages stopped
+   repeating it in the 2026-10-04 polish (the school page states its own
+   continuity answer from the CMS). Each
    line restates something already promised elsewhere (the Home hero, the Web
    design offering, the Care plan note); keep them in step.
 
