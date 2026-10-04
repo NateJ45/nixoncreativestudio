@@ -16,8 +16,8 @@
    - No JavaScript is needed to scroll it (swipe, trackpad, shift-wheel, the
      scrollbar-free row). The small script below only adds the arrows, the
      Left/Right/Home/End keys on the focused reel, mouse drag, click a side
-     frame to centre it, the live counter, and loading the parked frames. About
-     1.4 KB gzipped. It never
+     frame to centre it, the live counter, and loading the parked frames near
+     the visible ones. About 1.6 KB gzipped. It never
      moves on its own (no auto-advance).
    - No JavaScript: the reel is still the fan in Chrome, a plain sideways row
      elsewhere, and the arrows are hidden (they need the script).
@@ -33,9 +33,11 @@
    fallback, through Astro's image pipeline (resized by the Images binding on
    the first request, then cached for 30 days). The start frame is the LCP
    element: eager, fetchpriority high, width and height. Every other frame is
-   parked (srcsets in data- attributes, a blank placeholder) until the load
-   event and an idle beat, or until the visitor touches the reel, so nothing
-   but the start frame competes for bandwidth before the LCP (Gotcha 14); a
+   parked (srcsets in data- attributes, a blank placeholder) until after the
+   load event, and then only the frames the fan actually shows; one more each
+   side when the visitor reaches for the reel, and the rest only as it
+   travels towards them. Nothing but the start frame competes for bandwidth
+   before the LCP (Gotcha 14), and an idle visitor never fetches the far end; a
    <noscript> copy keeps every frame for a visitor without JavaScript. Each
    slide carries four srcsets, so the widths are kept few.
 
@@ -368,10 +370,14 @@ const startSlide = slides[start];
     if (Math.abs(reel.scrollLeft - left(start)) > 2) go(start, true);
     update();
 
-    // Promote the parked frames: once the page has loaded and gone quiet, or at once if
-    // the visitor reaches for the reel first.
-    const promote = () => {
-      show.querySelectorAll<HTMLElement>('.park [data-srcset], .park [data-src]').forEach((el) => {
+    // Promote parked frames, a few at a time. A frame's srcsets wait in data- attributes
+    // until it is on screen or one step away from it: after the load event, the frames the
+    // fan actually shows (measured, so it holds at any width and in the plain row); when the
+    // visitor reaches for the reel (arrow, key, swipe, drag, focus) or it scrolls, those plus
+    // one neighbour each side. Frames further along never download unless the reel travels
+    // towards them (it was every frame on an idle timer: 2026-10-04 review, 607 KB at 1440).
+    const promote = (slide: HTMLElement) => {
+      slide.querySelectorAll<HTMLElement>('.park [data-srcset], .park [data-src]').forEach((el) => {
         for (const a of ['srcset', 'src'] as const) {
           const v = el.dataset[a];
           if (v) {
@@ -381,14 +387,47 @@ const startSlide = slides[start];
         }
       });
     };
+    const onScreen = () => {
+      const box = reel.getBoundingClientRect();
+      return slides.flatMap((s, i) => {
+        const r = s.querySelector('.vp')!.getBoundingClientRect();
+        const seen =
+          r.width > 0 &&
+          r.right > Math.max(0, box.left) &&
+          r.left < Math.min(innerWidth, box.right) &&
+          r.bottom > 0 &&
+          r.top < innerHeight &&
+          Number(getComputedStyle(s.querySelector('.vp')!).opacity) > 0.05;
+        return seen ? [i] : [];
+      });
+    };
+    let woken = false;
+    const near = (reach: number) => {
+      for (const i of onScreen())
+        for (let k = i - reach; k <= i + reach; k++) if (slides[k]) promote(slides[k]);
+    };
+    const wake = () => {
+      woken = true;
+      near(1);
+    };
     for (const type of ['pointerdown', 'touchstart', 'focusin', 'keydown'] as const)
-      show.addEventListener(type, promote, { once: true, passive: true });
-    const idle = () =>
-      'requestIdleCallback' in window
-        ? requestIdleCallback(promote, { timeout: 1500 })
-        : setTimeout(promote, 300);
-    if (document.readyState === 'complete') idle();
-    else addEventListener('load', idle, { once: true, signal });
+      show.addEventListener(type, wake, { passive: true, signal });
+    reel.addEventListener('scroll', () => woken && requestAnimationFrame(() => near(1)), {
+      passive: true,
+      signal,
+    });
+    reel.addEventListener('scroll', () => !woken && wake(), { once: true, passive: true });
+    const firstLook = () => {
+      if (!('IntersectionObserver' in window)) return near(0);
+      const io = new IntersectionObserver((entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        near(0);
+      });
+      io.observe(reel);
+    };
+    if (document.readyState === 'complete') firstLook();
+    else addEventListener('load', firstLook, { once: true, signal });
   }
 
   document.addEventListener('astro:page-load', () => {
