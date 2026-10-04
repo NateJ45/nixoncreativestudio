@@ -166,7 +166,22 @@ const startSlide = slides[start];
                   {s.soon && <b class="tag">Launching soon</b>}
                 </div>
                 {picture(!f.first)}
-                {!f.first && <noscript>{picture(false)}</noscript>}
+                {/* Without JavaScript: one plain WebP srcset (the parked picture's four would
+                    double the reel's markup for the few visitors who read this copy). */}
+                {!f.first && (
+                  <noscript>
+                    <img
+                      src={f.desk.webp.src}
+                      srcset={f.desk.webp.srcset}
+                      sizes={DESK_SIZES}
+                      width={f.desk.width}
+                      height={f.desk.height}
+                      alt={s.alt}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </noscript>
+                )}
               </div>
               <figcaption>
                 <span class="cap-name">
