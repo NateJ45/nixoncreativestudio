@@ -56,6 +56,6 @@ Specific commitments:
 
 - All interactive elements reachable by keyboard with visible focus indicators.
 - Color contrast cleared for every token pair, asserted in `src/lib/theme-tokens.test.ts` (the table and ratios are in `DESIGN.md`).
-- Reduced motion respected globally via `prefers-reduced-motion: reduce` — animations, transitions, and Lenis smooth scroll all become no-ops.
+- Reduced motion respected globally via `prefers-reduced-motion: reduce`: animations and transitions become no-ops.
 - Audience includes church volunteers, nonprofit staff, and board members; copy defaults to non-technical readers unless context makes peer-readability obvious.
 - Skip link as the first focusable element, semantic landmarks (`<header>`, `<main>`, `<footer>`), proper heading hierarchy (one h1, no level skips).
