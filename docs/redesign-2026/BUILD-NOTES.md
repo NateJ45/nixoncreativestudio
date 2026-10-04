@@ -87,6 +87,9 @@ node scripts/brand/build-grounds.mjs --check   # only if you touched a colour to
 - `playwright.config.ts`: webkit-iphone runs `smoke`, `a11y`, `reduced-motion`.
 - `tests/smoke.spec.ts` still checks `header nav[aria-label="Primary"] a` (the desktop nav, server-rendered at every width) and `header a[href="/contact/"]` (the header button, now visible on phones too). The phone menu is a `<dialog>` whose nav is labelled "Menu", so it does not double the Primary list. Keep both labels if you touch the header.
 - `tests/prose-pages.spec.ts` asserts the Colophon rows against `cms/content/pages.json`. The foundation changed two Colophon rows and two Accessibility paragraphs (fonts, theme); `scripts/ci-dataset/rows.sql` carries the same edit by hand so CI agrees. See `docs/PENDING.md` for the production load.
+- 2026-10-04 CI-failure pass: the CMS rows in `scripts/ci-dataset/rows.sql` (site_settings, page_home, page_services, page_contact, page_work, page_not_found, pricing_tiers, pricing_addons, service_offerings) were brought back in line with `cms/content/*.json` by hand, same row ids, because the copy specs compare the preview to the JSON. After any copy edit in `cms/content`, make the matching `rows.sql` row carry it too, then apply the dataset to `ncs-ci`.
+- The sitemap integration lists every static server route on its own, so a page that must stay out (`/coming-soon/`, `/cincinnati-event-photography/` while noindex) goes in the `filter` in `astro.config.mjs`, not just out of `customPages`.
+- A headline built from two expressions needs an explicit `{' '}` between them: Astro drops the line break, and the heading reads "That pagewandered off." (also to screen readers).
 
 ## Grounds and logo assets
 
