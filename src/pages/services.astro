@@ -237,7 +237,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
        a <ul> and carries no numerals. The cards alternate reveal direction
        (left / right / left) so they arrive with a little choreography.
        ---------------------------------------------------------------------- -->
-  <section class="bg-dotgrid py-2xl" aria-label="Service details">
+  <section class="py-2xl" aria-label="Service details">
     <div class="ncs-container">
       <ul class="flex list-none flex-col gap-l p-0">
         {services.map((service, index) => {
@@ -440,7 +440,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
        the price immediately, so the "someone quoted me less" objection is
        answered the moment it forms. Two-column hairline-ruled list, not cards.
        ---------------------------------------------------------------------- -->
-  <section class="bg-dotgrid py-2xl" aria-labelledby="services-why-heading">
+  <section class="py-2xl" aria-labelledby="services-why-heading">
     <div class="ncs-container">
       <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="services-why-heading" class="text-heading">
@@ -569,8 +569,8 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     pointer-events: none;
     background: linear-gradient(
       to right,
-      var(--color-accent),
-      color-mix(in oklab, var(--color-secondary) 90%, transparent)
+      var(--accent),
+      color-mix(in oklab, var(--secondary) 90%, transparent)
     );
     opacity: 0.85;
   }
@@ -578,7 +578,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
   .flow-track {
     --marker: 2.9rem;
     --flow-gap: clamp(1.75rem, 3.4vw, 3rem);
-    --rail: color-mix(in oklab, var(--color-heading) 16%, transparent);
+    --rail: color-mix(in oklab, var(--heading) 16%, transparent);
     position: relative;
     list-style: none;
     margin: 0;
@@ -621,7 +621,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     border-radius: 9999px;
     border: 1.5px solid var(--rail);
     background: var(--card);
-    color: var(--color-link);
+    color: var(--link);
     transition:
       color 0.3s ease,
       border-color 0.3s ease;
@@ -642,12 +642,12 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     font-size: clamp(1.5rem, 2.2vw, 2rem);
     line-height: 1;
     letter-spacing: 0.01em;
-    color: var(--color-heading);
+    color: var(--heading);
   }
   .flow-desc {
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-text-muted);
+    color: var(--muted-foreground);
   }
 
   /* ----------------------------------------------------------------------
@@ -663,9 +663,9 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     aspect-ratio: 16 / 10;
     overflow: hidden;
     border-radius: 0.9rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border);
     box-shadow: var(--shadow-frame);
-    background: var(--color-bg-soft);
+    background: var(--muted);
   }
   .services-shot-img {
     width: 100%;
@@ -683,13 +683,13 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
-    background-color: var(--color-bg-soft);
+    background-color: var(--muted);
     background-image: radial-gradient(
-      color-mix(in oklab, var(--color-heading) 12%, transparent) 1px,
+      color-mix(in oklab, var(--heading) 12%, transparent) 1px,
       transparent 1px
     );
     background-size: 18px 18px;
-    color: var(--color-link);
+    color: var(--link);
   }
   .services-shot-ph-icon {
     width: 2.75rem;
@@ -700,7 +700,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     font-family: var(--font-display);
     font-size: 1.5rem;
     letter-spacing: 0.02em;
-    color: var(--color-text-muted);
+    color: var(--muted-foreground);
   }
 
   /* ----------------------------------------------------------------------
@@ -732,7 +732,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     inset: 0 0 auto 0;
     height: 3px;
     z-index: 4;
-    background: var(--color-accent);
+    background: var(--accent);
     opacity: 0.3;
     transform: scaleX(0.88);
     transform-origin: center;
@@ -747,8 +747,8 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     box-shadow:
       var(--shadow-card-hover),
       var(--card-highlight),
-      0 26px 52px -28px color-mix(in oklab, var(--color-accent) 60%, transparent);
-    border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
+      0 26px 52px -28px color-mix(in oklab, var(--accent) 60%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
   }
   .tier-card:hover::after,
   .tier-card:focus-within::after {
@@ -759,11 +759,11 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
   /* Featured (Signature): accent border, the top rule already at full, and a
      soft always-on accent glow layered over the surface-card shadow. */
   .tier-card--featured {
-    border-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-border));
+    border-color: color-mix(in oklab, var(--accent) 70%, var(--border));
     box-shadow:
       var(--shadow-card),
       var(--card-highlight),
-      0 20px 46px -30px color-mix(in oklab, var(--color-accent) 60%, transparent);
+      0 20px 46px -30px color-mix(in oklab, var(--accent) 60%, transparent);
   }
   .tier-card--featured::after {
     opacity: 1;
@@ -774,7 +774,7 @@ const schemas = buildServiceSchemas(services, page.faq.items, SITE_URL, tiers[0]
     box-shadow:
       var(--shadow-card-hover),
       var(--card-highlight),
-      0 30px 58px -26px color-mix(in oklab, var(--color-accent) 68%, transparent);
+      0 30px 58px -26px color-mix(in oklab, var(--accent) 68%, transparent);
   }
 
   /* FAQ smooth open/close, JS-free.

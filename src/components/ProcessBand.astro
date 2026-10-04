@@ -8,7 +8,7 @@
    ONE component, two placements, so the process reads identically everywhere:
 
      - Homepage close:  <ProcessBand />
-         The navy band-themed closing band with the inquiry CTA folded in
+         The closing band on the paper-contours ground, with the inquiry CTA folded in
          (variant 'band', showCta true). Ends the page on one decisive block.
 
      - /services mid-page:  <ProcessBand variant="soft" showCta={false} headingId="process-heading" />
@@ -28,7 +28,7 @@ import { buttonVariants } from './ui/button';
 import { getHomePage } from '../lib/homePage';
 
 interface Props {
-  /** 'band' = navy band-themed closing band (homepage); 'soft' = bg-soft mid-page section (/services). */
+  /** 'band' = closing band on the paper-contours ground (homepage); 'soft' = bg-soft mid-page section (/services). */
   variant?: 'band' | 'soft';
   /** Render the closing inquiry CTA tail. Defaults on (the homepage close). */
   showCta?: boolean;
@@ -51,7 +51,10 @@ const ctaSub = processCopy.ctaSub;
 ---
 
 <section
-  class:list={['process-band py-2xl', isBand ? 'band-themed process-band--closing' : 'bg-bg-soft']}
+  class:list={[
+    'process-band py-2xl',
+    isBand ? 'ground ground-paper-contours process-band--closing' : 'bg-bg-soft',
+  ]}
   aria-labelledby={headingId}
 >
   <div class="ncs-container relative z-10 flex flex-col gap-2xl">
@@ -103,10 +106,7 @@ const ctaSub = processCopy.ctaSub;
         </div>
 
         <span class="inline-block">
-          <a
-            href="/contact/"
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-          >
+          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
             {processCopy.ctaLabel}
           </a>
         </span>
@@ -125,7 +125,7 @@ const ctaSub = processCopy.ctaSub;
     left: 0;
     right: 0;
     height: 1px;
-    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+    background: color-mix(in oklab, var(--accent) 35%, transparent);
     transform: scaleX(1);
     transform-origin: left;
     z-index: 0;

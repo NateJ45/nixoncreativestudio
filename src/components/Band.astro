@@ -1,0 +1,122 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   Band
+   ============================================================================
+   One full-bleed horizontal section on one ground. Every redesigned page is a
+   run of Bands, and the ground changes deliberately between them, never
+   inside one (DESIGN.md "Grounds").
+
+     <Band ground="window-light" underHeader labelledby="hero-title">
+       ...
+     </Band>
+
+   Props:
+     ground       'paper' (default) | 'paper-contours' | 'window-light' | 'deep'
+                  'deep' also sets .on-ink, so every token inside flips to the
+                  inverse palette (paper text, vermilion links, paper buttons).
+     still        render the ground's texture but none of its moving layers.
+                  Rule of thumb: one moving ground per page, at the top.
+     underHeader  the ground runs up under the transparent sticky header (use
+                  on the first band of a page only).
+     tight        half the vertical padding.
+     flush        no vertical padding at all (the content sets its own).
+     container    wrap the slot in .ncs-container (default true). Pass false
+                  for full-bleed content (a carousel, a photograph).
+     as           the element: 'section' (default), 'div', 'footer', 'aside'.
+     labelledby   id of the band's heading; becomes aria-labelledby. Give a
+                  section either this or `label`.
+     label        aria-label when there is no visible heading.
+     id, class    passed through.
+
+   Motion: the moving layers are compositor-only (transform, opacity), paused
+   while the band is off screen (src/scripts/grounds.ts sets .is-off), and
+   absent under prefers-reduced-motion, where each ground shows a designed
+   still. Nothing starts at opacity 0.
+
+   Loading: the ground colour paints at once; the texture images attach after
+   the window load event (html.grounds-ready), so they never delay LCP.
+   ============================================================================ */
+
+export type Ground = 'paper' | 'paper-contours' | 'window-light' | 'deep';
+
+interface Props {
+  ground?: Ground;
+  still?: boolean;
+  underHeader?: boolean;
+  tight?: boolean;
+  flush?: boolean;
+  container?: boolean;
+  as?: 'section' | 'div' | 'footer' | 'aside';
+  labelledby?: string;
+  label?: string;
+  id?: string;
+  class?: string;
+}
+
+const {
+  ground = 'paper',
+  still = false,
+  underHeader = false,
+  tight = false,
+  flush = false,
+  container = true,
+  as: Tag = 'section',
+  labelledby,
+  label,
+  id,
+  class: className,
+} = Astro.props;
+
+// Which grounds have moving layers, and whether this band renders them.
+const moving = !still && ground !== 'paper';
+---
+
+<Tag
+  id={id}
+  class:list={[
+    'band ground',
+    `ground-${ground}`,
+    {
+      'on-ink': ground === 'deep',
+      'has-layers': moving,
+      'band--tight': tight,
+      'band--under-header': underHeader,
+      'band--flush': flush,
+    },
+    className,
+  ]}
+  data-ground={ground}
+  data-ground-motion={moving ? '' : undefined}
+  aria-labelledby={labelledby}
+  aria-label={label}
+>
+  {moving && (
+    <div class="ground-layers" aria-hidden="true">
+      {ground === 'window-light' && (
+        <>
+          <div class="g-sunw">
+            <div class="g-sun" />
+          </div>
+          <div class="g-falloff" />
+        </>
+      )}
+      {ground === 'paper-contours' && <div class="g-contours" />}
+      {ground === 'deep' && (
+        <>
+          <div class="g-lamp">
+            <i />
+          </div>
+          <div class="g-vignette" />
+        </>
+      )}
+    </div>
+  )}
+  {container ? (
+    <div class="ncs-container relative">
+      <slot />
+    </div>
+  ) : (
+    <slot />
+  )}
+</Tag>

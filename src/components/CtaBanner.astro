@@ -5,12 +5,11 @@
    CTA Banner  [revamp]
    ============================================================================
    Reusable call-to-action band that closes most inner pages and sits above the
-   footer. Uses the theme-aware `.band-themed` surface: a light surface with a
-   soft accent glow in light mode, and the full navy aurora in dark mode. So in
-   light mode it reads light (not a dark block before the footer), while in dark
-   mode it still flows into the navy footer. Text uses theme-aware tokens
-   (text-heading / text-text-muted) so it stays legible on either surface.
-   Scroll-reveal on the copy plus a shine button carry the motion.
+   footer. Sits on the paper-contours ground (the Ohio River's contours: the
+   close of a page is where "Cincinnati" belongs, DESIGN.md "Grounds"), so it
+   reads as a deliberate change of ground before the ink footer. Text uses the
+   semantic tokens (text-heading / text-text-muted), which that ground
+   re-scopes to stay AA over its worst pixel.
 
    All motion is reduced-motion safe (see globals.css section 6).
    ============================================================================ */
@@ -37,7 +36,7 @@ const {
 } = Astro.props;
 ---
 
-<section class="band-themed cta-band py-2xl" aria-labelledby="cta-banner-title">
+<section class="ground ground-paper-contours cta-band py-2xl" aria-labelledby="cta-banner-title">
   <!-- Copy on the left, button on the right. flex-wrap so the button drops
        below the copy on narrow screens. -->
   <div
@@ -52,10 +51,7 @@ const {
     </div>
 
     <span class="inline-block">
-      <a
-        href={ctaHref}
-        class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-      >
+      <a href={ctaHref} class={buttonVariants({ variant: 'brand', size: 'cta' })}>
         {ctaLabel}
       </a>
     </span>

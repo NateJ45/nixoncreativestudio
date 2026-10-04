@@ -21,7 +21,7 @@
    into the page margins.
 
    Stacking (the section is `isolate`, so these z-indexes are local):
-     z-0  background: band-themed glow + WebGL flow (left-weighted in light mode)
+     z-0  background: the window-light ground
      z-1  showcase scene (desktop: right-weighted, contained; mobile: faded backdrop)
      z-2  scrim (dark mode only) + bottom floor
      z-10 copy + marquee
@@ -49,7 +49,6 @@
    ============================================================================ */
 
 import { buttonVariants } from './ui/button';
-import HeroCanvas from './HeroCanvas';
 import HeroShowcase from './HeroShowcase.astro';
 import ClientMarquee from './ClientMarquee.astro';
 import { getHomePage } from '../lib/homePage';
@@ -82,33 +81,13 @@ try {
 ---
 
 <section
-  class="hero band-themed relative isolate flex flex-col overflow-hidden"
+  class="hero ground ground-window-light relative isolate flex flex-col overflow-hidden"
   style="--hero-marquee-h: 3.25rem; min-height: clamp(39rem, 72svh, 49rem);"
   aria-labelledby="hero-statement"
-  data-hero-dark
 >
-  <!-- ====================================================================
-       z-0 Background: animated aurora + grain (paints immediately, SSR) with
-       the WebGL brand-cloud flow layered over it once hydrated. Real photo
-       slot is commented until src/assets/brand/hero.jpg lands.
-       ==================================================================== -->
-  <div class="absolute inset-0 z-0" aria-hidden="true">
-    <!--
-    <Image src={heroPhoto} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
-    -->
-    <div class="grain absolute inset-0"></div>
-    <!-- client:media, not client:idle or client:only. The wrapper renders null
-         until its own effect decides to load the shader, so it SSRs as nothing;
-         client:only fetched React at page load on phones, where the shader is
-         never used. client:idle still did: the island hydrated everywhere and
-         then decided to do nothing below 1024px, and that React work landed in
-         the homepage's LCP window (Lighthouse mobile read LCP at 4.6s on
-         staging, 2026-09-06, with the whole gap coming from script). The media
-         query is the same 1024px gate the component checks internally, so on a
-         phone the island never hydrates at all, and a desktop-width resize
-         still brings it in. -->
-    <HeroCanvas client:media="(min-width: 1024px)" />
-  </div>
+  <!-- z-0 Background: the window-light ground (globals.css section 7). The
+       WebGL colour flow and the grain were removed in the 2026 redesign; this
+       whole hero is due to be rebuilt as the carousel hero. -->
 
   <!-- ====================================================================
        z-1 Showcase scene. A right-weighted layer of real client sites behind
@@ -189,11 +168,8 @@ try {
         <!-- Brand CTA as a styled <a>. buttonVariants is applied directly rather
              than via <Button asChild>, which does NOT merge its classes onto a
              slotted <a> during Astro SSR (the link rendered bare, no fill/hover).
-             Simple hover (brand fill + lift + shine sweep); no cursor-tracking. -->
-        <a
-          href="/contact/"
-          class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-        >
+             Simple hover (brand fill + lift +  sweep); no cursor-tracking. -->
+        <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
           {hero.primaryLabel}
         </a>
 
@@ -250,7 +226,7 @@ try {
     text-underline-offset: 0.2em;
   }
   .hero-person:focus-visible {
-    outline: 2px solid var(--color-secondary);
+    outline: 2px solid var(--secondary);
     outline-offset: 3px;
     border-radius: 3px;
   }
@@ -369,10 +345,10 @@ try {
   .hero-floor {
     background: linear-gradient(
       to top,
-      var(--color-bg-soft) 0%,
-      var(--color-bg-soft) 5%,
-      color-mix(in oklab, var(--color-bg-soft) 60%, transparent) 12%,
-      color-mix(in oklab, var(--color-bg-soft) 25%, transparent) 20%,
+      var(--muted) 0%,
+      var(--muted) 5%,
+      color-mix(in oklab, var(--muted) 60%, transparent) 12%,
+      color-mix(in oklab, var(--muted) 25%, transparent) 20%,
       transparent 30%
     );
   }
@@ -395,9 +371,9 @@ try {
       to bottom,
       transparent 0%,
       transparent 22%,
-      color-mix(in oklab, var(--color-bg-soft) 82%, transparent) 38%,
-      color-mix(in oklab, var(--color-bg-soft) 82%, transparent) 66%,
-      color-mix(in oklab, var(--color-bg-soft) 38%, transparent) 84%,
+      color-mix(in oklab, var(--muted) 82%, transparent) 38%,
+      color-mix(in oklab, var(--muted) 82%, transparent) 66%,
+      color-mix(in oklab, var(--muted) 38%, transparent) 84%,
       transparent 96%
     );
   }
@@ -425,7 +401,7 @@ try {
   /* Explicit focus ring (sky blue is ~7:1 on navy) so keyboard focus is clearly
      visible over the scene rather than relying on the UA default. */
   .hero-secondary:focus-visible {
-    outline: 2px solid var(--color-secondary);
+    outline: 2px solid var(--secondary);
     outline-offset: 4px;
     border-radius: 4px;
   }

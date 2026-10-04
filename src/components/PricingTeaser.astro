@@ -23,9 +23,7 @@
 
    Motion: the prices count up on scroll (real value is the static fallback, so
    no-JS and crawlers see the true number); staggered reveals via the shared
-   data-reveal. All reduced-motion safe. A soft brand glow (.bg-mesh-soft) gives
-   the band atmosphere without turning it into another full themed band (the
-   Process Band below already owns that), so the page rhythm holds.
+   data-reveal. All reduced-motion safe. It sits on the plain paper ground.
    ============================================================================ */
 
 import { getPricingTiers } from '../lib/pricing';
@@ -45,7 +43,7 @@ const { pricing } = await getHomePage(Astro);
 const includes = pricing.includes;
 ---
 
-<section class="pricing-teaser bg-mesh-soft py-2xl" aria-labelledby="home-pricing-heading">
+<section class="pricing-teaser py-2xl" aria-labelledby="home-pricing-heading">
   <div class="ncs-container">
     <!-- Header. Title carries it; the sub does the explaining an eyebrow would
          otherwise fake. Matches the Selected Work / Process Band header grammar. -->
@@ -165,7 +163,7 @@ const includes = pricing.includes;
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--color-accent);
+    background: var(--accent);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -215,11 +213,11 @@ const includes = pricing.includes;
   }
   .pricing-tier:hover .pricing-name,
   .pricing-tier:focus-within .pricing-name {
-    color: var(--color-link);
+    color: var(--link);
   }
   .pricing-tier:hover .pricing-price,
   .pricing-tier:focus-within .pricing-price {
-    color: var(--color-accent);
+    color: var(--accent);
     transform: translateY(-2px);
   }
 </style>

@@ -60,14 +60,13 @@ const [leadCategory, ...restCategories] = categories;
   <!-- ----------------------------------------------------------------------
        Hero. When a real photo exists it fills the surface behind a navy
        scrim; until then a navy aurora carries it (no placeholder image). The
-       headline accent is a solid amber phrase (no gradient text). data-hero-dark
-       makes the sticky header go transparent over it.
+       headline accent is a solid amber phrase (no gradient text).
+       The ink ground sits behind it.
        ---------------------------------------------------------------------- -->
   <section
     class="relative isolate flex flex-col justify-end overflow-hidden bg-primary text-primary-foreground"
     aria-labelledby="photography-hero-heading"
     style="min-height: clamp(30rem, 78vh, 46rem);"
-    data-hero-dark
   >
     <div class="absolute inset-0 -z-10" aria-hidden="true">
       {heroImage ? (
@@ -80,7 +79,7 @@ const [leadCategory, ...restCategories] = categories;
           sizes="100vw"
         />
       ) : (
-        <div class="bg-aurora grain absolute inset-0" />
+        <div class="ground-deep absolute inset-0" />
       )}
       <!-- Vertical scrim so the bottom-anchored copy always reads. -->
       <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90"></div>
@@ -205,7 +204,7 @@ const [leadCategory, ...restCategories] = categories;
 
       {/* Where the photos come from. A branded region note rather than a raw
            third-party map embed (which shipped as a blank tile box). */}
-      <section class="bg-mesh-soft py-2xl" aria-labelledby="photo-area-heading">
+      <section class="py-2xl" aria-labelledby="photo-area-heading">
         <div class="ncs-container">
           <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">
             <h2 id="photo-area-heading" class="text-heading">
@@ -224,7 +223,7 @@ const [leadCategory, ...restCategories] = categories;
          route to the work pages where the photography already lives. */
     <section class="py-2xl" aria-label="Photography portfolio status">
       <div class="ncs-container">
-        <div class="band-themed mx-auto max-w-[60ch] rounded-2xl p-xl text-center" data-reveal>
+        <div class="bg-bg-soft mx-auto max-w-[60ch] rounded-2xl p-xl text-center" data-reveal>
           <p class="text-sm font-semibold tracking-[0.12em] text-link uppercase">In progress</p>
           <h2 class="mt-s text-heading">{page.emptyHeading}</h2>
           <p class="mt-s leading-[1.6] text-text-muted">{page.emptyBody}</p>
