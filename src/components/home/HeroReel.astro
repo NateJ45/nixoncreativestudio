@@ -387,9 +387,15 @@ const startSlide = slides[start];
         }
       });
     };
+    // The fan holds frames beyond its reach piled at its outer positions, so a box test
+    // alone would count them; only frames within the fan's reach of the centre (three each
+    // side on a wide screen, two on a phone) can be the ones on show.
+    const reach = () => (matchMedia('(max-width: 700px)').matches ? 2 : 3);
     const onScreen = () => {
       const box = reel.getBoundingClientRect();
+      const c = cur < 0 ? nearest() : cur;
       return slides.flatMap((s, i) => {
+        if (Math.abs(i - c) > reach()) return [];
         const r = s.querySelector('.vp')!.getBoundingClientRect();
         const seen =
           r.width > 0 &&
@@ -426,8 +432,14 @@ const startSlide = slides[start];
       });
       io.observe(reel);
     };
-    if (document.readyState === 'complete') firstLook();
-    else addEventListener('load', firstLook, { once: true, signal });
+    // After load AND an idle beat: on a fast connection the LCP can land after the load
+    // event, and a layout read in that gap counted against it (Lighthouse, 2026-10-04).
+    const idle = () =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(firstLook, { timeout: 1500 })
+        : setTimeout(firstLook, 300);
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true, signal });
   }
 
   document.addEventListener('astro:page-load', () => {
