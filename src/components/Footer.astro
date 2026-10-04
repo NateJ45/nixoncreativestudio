@@ -9,8 +9,8 @@
    2026-10-04 (DESIGN.md "Footer").
 
    Top: the white logo lockup and the "Currently" status with the Start a
-   project button. Then three short columns: Explore (the footer menu),
-   Contact, Connect. Bottom row: copyright, the legal links, the tagline.
+   project button. Then four short columns: Explore (the footer menu), Services
+   (the four landing pages), Contact, Connect. Bottom row: copyright, the legal links, the tagline.
 
    Contact details, social URLs, studio name, CTA label and tagline come from
    Site settings through getSite(); the nav is the "footer" menu. Everything
@@ -24,6 +24,7 @@ import { getSite } from '../data/site';
 import { getMenuItems } from '../lib/cms';
 import { hasJournalEntries } from '../lib/journal';
 import { buttonVariants } from './ui/button';
+import { LANDING_LINKS } from '../lib/landingPage';
 
 const year = new Date().getFullYear();
 
@@ -85,6 +86,21 @@ const legal = [
               target={target}
               rel={target === '_blank' ? 'noopener noreferrer' : undefined}
             >
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- The four search landing pages (src/lib/landingPage.ts), in code so a
+         menu edit cannot drop them. -->
+    <nav aria-label="Services by kind of organization">
+      <h2 class="footer-heading">Services</h2>
+      <ul>
+        {LANDING_LINKS.map(({ label, href }) => (
+          <li>
+            <a class="footer-link" href={href}>
               {label}
             </a>
           </li>
