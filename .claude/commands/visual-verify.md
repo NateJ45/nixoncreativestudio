@@ -64,7 +64,7 @@ Run this after any visual change before pushing. If a specific route is passed a
 - **Contrast:** body text, heading text, button labels, link text all need to be readable on every ground they sit on. The brand tokens are calibrated for WCAG AA; a new hardcoded hex can break that.
 - **Mobile nav:** at 375px, the desktop nav should be hidden and the mobile hamburger visible. Tap the hamburger and confirm the drawer opens cleanly.
 - **Photography page:** the justified grid should fill its container without overflow. The lightbox should open on photo click (click a photo, confirm the overlay appears).
-- **Work filter chips** on `/work`: toggling a sector chip should hide/show cards without a page reload.
+- **Work** on `/work` and a case study: the lead print and the Stone Steps showreel poster show at once; the reel starts after load, pauses with its button, and shows a still under reduced motion.
 
 ---
 

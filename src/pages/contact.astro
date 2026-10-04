@@ -1,39 +1,48 @@
----
+﻿---
 // Foundation, edit with care. The form structure, the Web3Forms wiring, and the
 // inline enhancement script are the production inquiry pipeline; touch only with
-// intent. The layout shell around them is on the shared editorial grid.
+// intent. The layout shell around them is on the redesign's Band grounds.
 /* ============================================================================
    /contact | Contact
    ============================================================================
-   Form-driven inquiry page. Posts to Web3Forms.
+   Goal: the shortest honest path to an inquiry.
 
-   Layout: a full-width masthead (h1 + intro) over a two-column body, the form in
-   a surface-card on the left beside a ways-to-reach-me sidebar on the right. The
-   form spans the full content width so it stays roomy with no empty side column.
-   The old bg-bg-soft band is dissolved, so the page is one seamless surface and
-   dark mode is a single navy sheet; depth comes from the form's surface-card, and
-   the page closes on the shared band-themed CtaBanner.
+   Bands (DESIGN.md "Grounds"; one moving ground per page, at the top):
+     1. window-light (moving, under the header): a plain headline, the free-first-
+        conversation reassurance, and the two no-form ways to reach me.
+     2. paper: the form beside the "what happens next" ledger.
+     3. paper-contours (still): "Where I am" (the Ohio bend IS the map: a static
+        ground, no third-party iframe, no request that can fail) and the closing
+        email/phone line.
 
-   The form keeps real labels, native input types, required attributes, a hidden
-   honeypot, the three Web3Forms hidden inputs, and the inline enhancement script
-   (draft save/restore, ?org_type preselect, honeypot, fetch submit,
-   thank-you/error swap). Fields are grouped into three labeled fieldsets, with two
-   short field pairs side by side. Every field name, id, label/for, required, and
-   autocomplete routes to Web3Forms.
+   THE FORM asks for three things: name, email and what the project is. Everything
+   else (organization, type, current site, budget, timeline, phone, how you heard)
+   is optional and sits in a native <details>, so a visitor can send in a minute
+   and a qualified lead can still say more. The page does NOT mark required fields;
+   it marks optional ones (see optionalMark) and says plainly up top what is needed.
 
-   Spam protection is the hidden honeypot field (botcheck) alone. The optional
-   hCaptcha widget was removed. To bring it back: restore the .h-captcha div, the
-   js.hcaptcha.com/1/api.js script tag, the captcha gate in the submit handler,
-   and turn hCaptcha back on in the Web3Forms dashboard.
+   WEB3FORMS WIRING, unchanged: the three hidden inputs, the honeypot `botcheck`,
+   field names and ids, a native POST without JavaScript, fetch + JSON with it.
+   The `novalidate` attribute is added by the script (form.noValidate), not in the
+   markup, so without JavaScript the browser's own required/type checks still run.
 
-   Even without JavaScript the form submits natively to Web3Forms.
+   SUCCESS: the form swaps for a thank-you panel, the first step of the ledger is
+   ticked, location.hash becomes #sent and a `ncs:contact-sent` CustomEvent fires on
+   window. That event is the conversion hook: no analytics vendor is wired, so a tag
+   (GA4, Plausible, Cloudflare Web Analytics events) listens for it. The detail
+   carries only choice labels, never the name, email or message. See
+   .claude/rules/homepage-and-pages.md "Contact" for the listener snippet.
+
+   Spam protection is the hidden honeypot field (botcheck) alone (hCaptcha was
+   removed; Turnstile was never on this page).
    ============================================================================ */
 
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import headshot from '../assets/brand/headshot.jpg';
+import Band from '../components/Band.astro';
 import { getSite } from '../data/site';
-import { Button } from '../components/ui/button';
-import CopyEmail from '../components/CopyEmail';
-import CtaBanner from '../components/CtaBanner.astro';
+import { buttonVariants } from '../components/ui/button';
 import { contactTitle, getContactPage } from '../lib/contactPage';
 
 // Email, phone, location, the booking link and the form subject all come from
@@ -41,7 +50,8 @@ import { contactTitle, getContactPage } from '../lib/contactPage';
 const site = await getSite(Astro);
 
 // Organization type options. Match the sectors used in the case-studies
-// schema so the data we collect lines up with how we describe the work.
+// schema so the data we collect lines up with how we describe the work. The
+// values are the codes /contact?org_type=<sector> links rely on.
 const orgTypes = [
   { value: 'church', label: 'Church' },
   { value: 'school', label: 'School' },
@@ -66,139 +76,220 @@ const { budgets, timelines, heardFrom: heardFromOptions, nextSteps } = page;
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
 const formActive = web3formsKey.length > 0;
 
-// Shared class strings for the form. Pulled into consts because each
-// input/select/textarea repeats the same base styling.
-const fieldClass = 'flex flex-col gap-xs';
-const labelClass = 'font-body text-[0.95rem] font-semibold text-heading';
-// Suffix span styling for "(optional)" markers. Lower weight + muted
-// color so the label still reads as "<field name>" with optional as
-// supporting text rather than competing with it. Required fields stay
-// unmarked because required is the default expectation.
-const optionalMark = 'ml-1 font-normal text-text-muted';
-const inputClass =
-  'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
-  'transition-[border-color,box-shadow] duration-150 ' +
-  'focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25';
-// A <select> keeps the same box, but draws its focus ring as an OUTLINE rather
-// than the box-shadow ring above. WebKit paints natively-rendered form controls
-// itself and drops box-shadow on them, so on Safari and iOS the ring simply did
-// not exist on the four selects while every text field had one, on the same
-// classes (caught by the webkit-iphone run of tests/a11y-dark.spec.ts,
-// 2026-09-06). An outline paints on native controls in every engine and follows
-// the border radius, so the indicator looks the same and is actually there.
-const selectClass =
-  'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
-  'transition-[border-color,outline-color] duration-150 ' +
-  'focus:border-accent focus:outline-3 focus:outline-offset-0 focus:outline-accent/25';
-// Borderless fieldset reset so the groups don't break the grid or add chrome;
-// fieldsets after the first open with a hairline. The legend is styled mono +
-// uppercase so the form reads as a short, sectioned document.
-const fieldsetClass = 'm-0 flex min-w-0 flex-col gap-m border-0 p-0';
-const legendClass =
-  'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
+// Shortest message that still tells me something. Mirrored in the script's error
+// text and the textarea's minlength.
+const MIN_MESSAGE = 20;
+
+// Timing labels for the ledger rows, in the order of the CMS steps. Only used
+// when the CMS still has three steps, so an edited list never gets a wrong label.
+const stepWhen = nextSteps.length === 3 ? ['Today', 'Day 1 to 2', 'After that'] : [];
+
+const optionalMark = 'optional';
 ---
 
 <BaseLayout title={contactTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
-  <!-- ====================================================================
-       Masthead. The only h1. Full content width, left-aligned.
-       ==================================================================== -->
-  <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
-    <div class="ncs-container">
-      <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
-        {page.heading} <span class="text-link">{page.headingAccent}</span>
-      </h1>
-      <p
-        class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
-        data-reveal
-        style="--reveal-delay: 120ms;"
-      >
-        {page.intro}
-      </p>
+  {/* ====================================================================
+       Band 1: the calm top. Window-light ground (the one moving ground),
+       under the transparent header. The only h1. Nothing here is hidden or
+       revealed: it is the first screen.
+       ==================================================================== */}
+  <Band ground="window-light" underHeader tight labelledby="contact-hero-heading">
+    <div class="contact-hero">
+      <div class="contact-hero-text">
+        <h1 id="contact-hero-heading" class="type-headline contact-title">
+          {page.heading} <span class="voice">{page.headingAccent}</span>
+        </h1>
+        <p class="type-lede contact-lede">{page.intro}</p>
+        <p class="contact-free">The first conversation is free.</p>
+        <p class="contact-direct">
+          <a href={site.emailHref}>{site.email}</a>
+          <span aria-hidden="true">/</span>
+          <a href={site.phoneHref}>{site.phone}</a>
+        </p>
+      </div>
+      {/* A real photograph and a true line: one person reads what you send. */}
+      <figure class="contact-person">
+        <Image
+          src={headshot}
+          alt={`${site.ownerName}, who runs ${site.studioName} and reads every message`}
+          widths={[176, 264, 352]}
+          sizes="(min-width: 48rem) 11rem, 8rem"
+          loading="eager"
+          class="contact-person-img"
+        />
+        <figcaption class="type-caption">
+          {site.ownerName}, {site.address}
+        </figcaption>
+      </figure>
     </div>
-  </section>
+  </Band>
 
-  <!-- ====================================================================
-       The inquiry. The form in a surface-card beside the ways-to-reach-me
-       sidebar, spanning the full content width so the form is roomy and there
-       is no empty left column. The old bg-bg-soft band is gone, so the page is
-       one seamless surface.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-label="Inquiry form and ways to reach me">
-    <div class="ncs-container">
-      <div class="border-t border-border pt-2xl">
-        <div class="min-w-0">
-          <div class="grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
-            <!-- Three-state container. Form is shown by default; the thanks and
-                 error blocks below start with the .hidden Tailwind utility class
-                 and the inline script toggles it via classList. -->
-            <div data-reveal>
-              <form
-                class="surface-card flex flex-col gap-l rounded-xl p-l"
-                method="post"
-                action="https://api.web3forms.com/submit"
-                novalidate
-                data-contact-form
-              >
-                <!--
-                Web3Forms hidden fields:
-                  - access_key: routes the submission to Nathan's inbox.
-                  - subject: sets the email subject so inquiries are obvious.
-                  - from_name: sets the visible sender name.
-                The form posts natively to the same endpoint if JS is disabled,
-                so submissions always reach Web3Forms.
-              -->
-                <input type="hidden" name="access_key" value={web3formsKey} />
-                <input
-                  type="hidden"
-                  name="subject"
-                  value={`New project inquiry from ${site.domain}`}
-                />
-                <input type="hidden" name="from_name" value={`${site.studioName} website`} />
+  {/* ====================================================================
+       Band 2: the inquiry. The form on the left, the ledger on the right
+       (under the form on a phone). Paper ground, still.
+       ==================================================================== */}
+  <Band ground="paper" labelledby="contact-form-heading">
+    <div class="contact-grid">
+      <div class="contact-main">
+        <h2 id="contact-form-heading" class="contact-form-title type-headline">
+          Send me <span class="voice">a few lines.</span>
+        </h2>
+        <p class="contact-voice">I read every message myself.</p>
+        <p class="type-caption contact-need">
+          Your name, your email and what you are working on are all I need. Everything else is
+          optional.
+        </p>
 
-                <!-- Fieldset 1: about you. -->
-                <fieldset class={fieldsetClass}>
-                  <legend class={legendClass}>About you</legend>
+        <div class="contact-card">
+          <form
+            method="post"
+            action="https://api.web3forms.com/submit"
+            class="contact-form"
+            data-contact-form
+          >
+            {/* Web3Forms hidden fields:
+                - access_key: routes the submission to Nathan's inbox.
+                - subject: sets the email subject so inquiries are obvious.
+                - from_name: sets the visible sender name.
+              The form posts natively to the same endpoint if JS is disabled,
+              so submissions always reach Web3Forms. */}
+            <input type="hidden" name="access_key" value={web3formsKey} />
+            <input type="hidden" name="subject" value={`New project inquiry from ${site.domain}`} />
+            <input type="hidden" name="from_name" value={`${site.studioName} website`} />
 
-                  <!-- name + email side by side on wider screens. -->
-                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="name">
-                        Your name
-                      </label>
-                      <input
-                        class={inputClass}
-                        type="text"
-                        id="name"
-                        name="name"
-                        required
-                        autocomplete="name"
-                      />
-                    </div>
+            <div class="field">
+              <label for="name">Your name</label>
+              <input
+                class="control"
+                type="text"
+                id="name"
+                name="name"
+                required
+                autocomplete="name"
+                autocapitalize="words"
+                aria-describedby="name-error"
+              />
+              <p class="field-error" id="name-error" data-error-for="name" hidden></p>
+            </div>
 
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="email">
-                        Email
-                      </label>
-                      <input
-                        class={inputClass}
-                        type="email"
-                        id="email"
-                        name="email"
-                        required
-                        autocomplete="email"
-                      />
-                    </div>
-                  </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                class="control"
+                type="email"
+                id="email"
+                name="email"
+                required
+                autocomplete="email"
+                inputmode="email"
+                autocapitalize="none"
+                spellcheck="false"
+                aria-describedby="email-error"
+              />
+              <p class="field-error" id="email-error" data-error-for="email" hidden></p>
+            </div>
 
-                  <!-- Phone: optional. type="tel" lets mobile browsers pop the
-                     numeric keypad; autocomplete="tel" lets the OS / password
-                     manager pre-fill. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="phone">
-                      Phone <span class={optionalMark}>(optional)</span>
-                    </label>
+            <div class="field">
+              <label for="message">What are you working on?</label>
+              <textarea
+                class="control"
+                id="message"
+                name="message"
+                required
+                minlength={MIN_MESSAGE}
+                rows="9"
+                aria-describedby="message-hint message-error"
+              ></textarea>
+              <p class="field-hint" id="message-hint">
+                A few sentences is plenty: what the project is, who it is for, and roughly when you
+                would like it live.
+              </p>
+              <p class="field-error" id="message-error" data-error-for="message" hidden></p>
+            </div>
+
+            {/* Everything below is optional. A native <details> so it works with no
+              JavaScript; the script opens it when a draft or ?org_type preselect
+              put a value in it. */}
+            <details class="more" data-contact-more>
+              <summary>
+                <span class="more-label">Tell me more</span>
+                <span class="more-note">{optionalMark}</span>
+              </summary>
+
+              <div class="more-body">
+                <div class="field-pair">
+                  <div class="field">
+                    <label for="organization">Organization</label>
                     <input
-                      class={inputClass}
+                      class="control"
+                      type="text"
+                      id="organization"
+                      name="organization"
+                      autocomplete="organization"
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="org_type">Type of organization</label>
+                    <select class="control" id="org_type" name="org_type">
+                      <option value="" selected>
+                        Choose one
+                      </option>
+                      {orgTypes.map((opt) => (
+                        <option value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field-pair">
+                  <div class="field">
+                    <label for="budget">Budget range</label>
+                    <select class="control" id="budget" name="budget">
+                      <option value="" selected>
+                        Pick a range
+                      </option>
+                      {/* The label is the submitted value (see the top of the file). */}
+                      {budgets.map((label) => (
+                        <option value={label}>{label}</option>
+                      ))}
+                    </select>
+                    <p class="field-hint">
+                      Not sure? <a href="/services/">See what each tier covers</a>.
+                    </p>
+                  </div>
+                  <div class="field">
+                    <label for="timeline">Timeline</label>
+                    <select class="control" id="timeline" name="timeline">
+                      <option value="" selected>
+                        No preference
+                      </option>
+                      {timelines.map((label) => (
+                        <option value={label}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="current_website">Current website</label>
+                  <input
+                    class="control"
+                    type="url"
+                    id="current_website"
+                    name="current_website"
+                    autocomplete="url"
+                    inputmode="url"
+                    autocapitalize="none"
+                    spellcheck="false"
+                    placeholder="https://"
+                  />
+                </div>
+
+                <div class="field-pair">
+                  <div class="field">
+                    <label for="phone">Phone</label>
+                    <input
+                      class="control"
                       type="tel"
                       id="phone"
                       name="phone"
@@ -206,362 +297,567 @@ const legendClass =
                       inputmode="tel"
                     />
                   </div>
-
-                  <!-- Organization name: optional. Lets Nathan look the org up
-                     before the first reply. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="organization">
-                      Organization name <span class={optionalMark}>(optional)</span>
-                    </label>
-                    <input
-                      class={inputClass}
-                      type="text"
-                      id="organization"
-                      name="organization"
-                      autocomplete="organization"
-                    />
-                  </div>
-                </fieldset>
-
-                <!-- Fieldset 2: about the project. Opens with a hairline. -->
-                <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
-                  <legend class={legendClass}>About the project</legend>
-
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="org_type">
-                      Organization type
-                    </label>
-                    <select class={selectClass} id="org_type" name="org_type" required>
-                      <option value="" disabled selected>
-                        Pick the closest
-                      </option>
-                      {orgTypes.map((opt) => (
-                        <option value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <!-- Current website: optional. URL input gives mobile keyboard
-                     the dot/slash keys. Placeholder hints at expected format. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="current_website">
-                      Current website <span class={optionalMark}>(optional)</span>
-                    </label>
-                    <input
-                      class={inputClass}
-                      type="url"
-                      id="current_website"
-                      name="current_website"
-                      autocomplete="url"
-                      inputmode="url"
-                      placeholder="https://"
-                    />
-                  </div>
-
-                  <!-- budget + timeline side by side on wider screens. -->
-                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="budget">
-                        Budget range
-                      </label>
-                      <select class={selectClass} id="budget" name="budget" required>
-                        <option value="" disabled selected>
-                          Pick the closest
-                        </option>
-                        {/* The label is the submitted value (see the top of the file). */}
-                        {budgets.map((label) => (
-                          <option value={label}>{label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <!-- Timeline: optional. Helps triage against Nathan's
-                       per-quarter project cap without asking for exact dates. -->
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="timeline">
-                        Project timeline <span class={optionalMark}>(optional)</span>
-                      </label>
-                      <select class={selectClass} id="timeline" name="timeline">
-                        <option value="" selected>
-                          No preference
-                        </option>
-                        {timelines.map((label) => (
-                          <option value={label}>{label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="message">
-                      Project description
-                    </label>
-                    <textarea
-                      class={`${inputClass} min-h-32 resize-y`}
-                      id="message"
-                      name="message"
-                      required
-                      minlength="30"
-                      rows="6"
-                      placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
-                    ></textarea>
-                    <p class="mt-xs text-[0.85rem] text-text-muted">
-                      At least a few sentences, please. The more you share, the better I can scope
-                      the first conversation.
-                    </p>
-                  </div>
-                </fieldset>
-
-                <!-- Fieldset 3: one more thing. Opens with a hairline. -->
-                <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
-                  <legend class={legendClass}>One more thing</legend>
-
-                  <!-- Attribution: optional. Cheap signal on what marketing
-                     channels are bringing inquiries in. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="heard_from">
-                      How did you hear about Nixon Creative Studio?{' '}
-                      <span class={optionalMark}>(optional)</span>
-                    </label>
-                    <select class={selectClass} id="heard_from" name="heard_from">
+                  <div class="field">
+                    <label for="heard_from">How did you find me?</label>
+                    <select class="control" id="heard_from" name="heard_from">
                       <option value="" selected>
-                        Pick one if you'd like
+                        Pick one if you like
                       </option>
                       {heardFromOptions.map((label) => (
                         <option value={label}>{label}</option>
                       ))}
                     </select>
                   </div>
-                </fieldset>
-
-                <!-- Honeypot. sr-only is Tailwind's equivalent of the old
-                   .visually-hidden utility. Hidden from sighted users and
-                   screen readers; bots tend to fill every field, so the
-                   script discards submissions where this is non-empty. -->
-                <div class="sr-only" aria-hidden="true">
-                  <label for="botcheck">Leave this field empty</label>
-                  <input
-                    type="text"
-                    id="botcheck"
-                    name="botcheck"
-                    tabindex="-1"
-                    autocomplete="off"
-                  />
                 </div>
-
-                <!-- Submit. Shared shadcn Button (brand variant + cta size)
-                   matches the Hero and CtaBanner CTAs. self-start keeps it
-                   at content width inside the flex-column form layout. -->
-                <span class="inline-block self-start">
-                  <Button type="submit" variant="brand" size="cta" className="" data-contact-submit>
-                    <!-- Inline spinner. Hidden until the submit handler adds the
-                       .is-spinning class to the button; a CSS border-spinner
-                       that's static under prefers-reduced-motion (see the style
-                       block at the end of the page). aria-hidden because the
-                       label text already announces the "Sending..." state. -->
-                    <span class="contact-spinner" aria-hidden="true"></span>
-                    <span data-contact-submit-label>Send</span>
-                  </Button>
-                </span>
-
-                {!formActive && (
-                  <p class="text-[0.85rem] text-text-muted italic">
-                    The Web3Forms access key is missing. Set{' '}
-                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                      PUBLIC_WEB3FORMS_KEY
-                    </code>{' '}
-                    in{' '}
-                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                      .env
-                    </code>{' '}
-                    locally and in Cloudflare Pages settings before launch.
-                  </p>
-                )}
-              </form>
-
-              <!-- Thank-you panel. Starts hidden; the submit handler removes the
-                 hidden class on success. Same outer card surface as the form so
-                 the swap reads as a state change in the same container. -->
-              <div
-                class="hidden animate-in flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] duration-500 zoom-in-95 fade-in"
-                data-contact-thanks
-              >
-                <span
-                  class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent"
-                  aria-hidden="true"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="h-6 w-6"
-                  >
-                    <path d="M20 6 9 17l-5-5"></path>
-                  </svg>
-                </span>
-                <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
-                <p class="max-w-[56ch] leading-[1.6] text-text">
-                  I'll be in touch within one or two business days. If you don't hear back, check
-                  your spam folder for a reply from {site.domain}, then try the email link on the
-                  right.
-                </p>
               </div>
+            </details>
 
-              <!-- Error panel. Same hidden-class pattern. Amber band signals
-                 something went wrong without screaming red. -->
-              <div
-                class="mt-m hidden animate-in rounded-lg border border-tertiary/45 [background-color:color-mix(in_srgb,var(--tertiary)_14%,var(--background))] p-m text-text duration-300 fade-in slide-in-from-top-1"
-                data-contact-error
-                role="alert"
-              >
-                <p>
-                  Something went wrong on our end. Please try again, or email
-                  <a class="text-link underline underline-offset-2" href={site.emailHref}>
-                    {site.email}
-                  </a>
-                  directly.
-                </p>
-              </div>
+            {/* Honeypot. sr-only keeps it off screen; aria-hidden and tabindex -1
+              keep it out of the accessibility tree and the tab order. Bots tend to
+              fill every field, so the script discards submissions where this is
+              non-empty. */}
+            <div class="sr-only" aria-hidden="true">
+              <label for="botcheck">Leave this field empty</label>
+              <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
             </div>
 
-            <!-- --------------------------------------------------------------
-                 Sidebar. Direct contact details + what-happens-next + where.
-                 Sits in the track beside the form (stacks under it on narrow
-                 screens). The email and phone are also in the footer.
-                 -------------------------------------------------------------- -->
-            <aside class="flex flex-col gap-l" data-reveal style="--reveal-delay: 120ms;">
-              <div class="flex flex-col gap-s">
-                <h2 class="text-h4 text-heading">Direct</h2>
-                <ul class="flex flex-col gap-xs">
-                  <li>
-                    <CopyEmail client:load email={site.email} />
-                  </li>
-                  <li>
-                    <a
-                      class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
-                      href={site.phoneHref}
-                    >
-                      {site.phone}
-                    </a>
-                  </li>
-                </ul>
-              </div>
+            <p class="form-summary" data-form-summary role="alert" hidden></p>
 
-              <div class="flex flex-col gap-s">
-                <h2 class="text-h4 text-heading">What happens next</h2>
-                <!-- A quiet three-row ledger (the About "currently" tick motif),
-                     not a numbered 01/02/03 scaffold. Ordered list, list-none. -->
-                <ol class="flex list-none flex-col border-b border-border p-0">
-                  {nextSteps.map((step) => (
-                    <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
-                      <span
-                        class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
-                        aria-hidden="true"
-                      />
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
+            <div class="submit-row">
+              <button
+                type="submit"
+                class={`${buttonVariants({ variant: 'brand', size: 'cta' })} send`}
+                data-contact-submit
+              >
+                {/* Spinner: hidden until the submit handler adds .is-spinning. */}
+                <span class="contact-spinner" aria-hidden="true"></span>
+                <span data-contact-submit-label>Send me your project</span>
+              </button>
+              <p class="type-caption">It goes straight to my inbox.</p>
+            </div>
 
-              <div class="flex flex-col gap-s">
-                <h2 class="text-h4 text-heading">Where I am</h2>
-                <p class="leading-[1.6] text-text">
-                  {site.address}. {page.whereText}
-                </p>
-                <!-- Service-area map: a keyless Google Maps embed centered on
-                     the Cincinnati region (the ?output=embed form needs no API
-                     key). Unlike the old OpenStreetMap embed this loads Google's
-                     scripts, so it does add Google as a third party on this page;
-                     that's the trade for the Google Maps look. Change the q=
-                     place or z= zoom to reframe. loading="lazy" keeps it off the
-                     critical path. -->
-                <!-- bg-bg-soft fills the wrapper so the iframe doesn't flash a
-                     white panel in dark mode before Google's map tiles load. -->
-                <div class="mt-s overflow-hidden rounded-md border border-border bg-bg-soft">
-                  <iframe
-                    src="https://maps.google.com/maps?q=Cincinnati,+OH&z=9&output=embed"
-                    title="Map of the Greater Cincinnati service area"
-                    loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"
-                    class="block h-48 w-full"
-                  ></iframe>
-                </div>
-              </div>
+            {!formActive && (
+              <p class="type-caption">
+                The Web3Forms access key is missing. Set <code>PUBLIC_WEB3FORMS_KEY</code> in{' '}
+                <code>.env</code> locally and in the Cloudflare build settings before launch.
+              </p>
+            )}
+          </form>
 
-              {site.bookingUrl && (
-                /* Book-a-call CTA. Renders only when site.bookingUrl is set
-                     (e.g. a Cal.com link). Reads as a lighter-weight option
-                     next to "use the form" for warm leads who'd rather skip
-                     straight to scheduling. */
-                <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
-                  <h2 class="text-h4 text-heading">Rather book a call?</h2>
-                  <p class="leading-[1.6] text-text">
-                    Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
-                    working conversation.
-                  </p>
-                  <a
-                    class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
-                    href={site.bookingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open my calendar →
-                  </a>
-                </div>
-              )}
-            </aside>
+          {/* Thank-you panel. Starts hidden; the submit handler reveals it, moves
+            focus here and announces it (role=status). */}
+          <div class="contact-thanks" data-contact-thanks role="status" tabindex="-1" hidden>
+            <h2 class="type-headline">
+              Thanks, <span class="voice">your message is in.</span>
+            </h2>
+            <p class="type-body">
+              I will reply to <strong data-sent-email>your email address</strong>, and a person (me)
+              will be the one writing. If you do not hear back, check your spam folder for a message
+              from {site.domain}, or email me at <a href={site.emailHref}>{site.email}</a>.
+            </p>
+            <p class="type-body">
+              The steps beside this note show what comes next. In the meantime,
+              <a href="/work/">have a look at the work</a>.
+            </p>
+          </div>
+
+          {/* Error panel. role=alert so a failure is announced. */}
+          <div class="contact-error" data-contact-error role="alert" tabindex="-1" hidden>
+            <p>
+              The message did not go through. Please try once more, or email me at
+              <a href={site.emailHref}>{site.email}</a>
+              or call <a href={site.phoneHref}>{site.phone}</a>. Your text is still in the form.
+            </p>
           </div>
         </div>
       </div>
+
+      <aside class="contact-aside" aria-labelledby="contact-next-heading">
+        <h2 id="contact-next-heading" class="contact-aside-title type-headline">
+          What happens <span class="voice">next</span>
+        </h2>
+        {/* A quiet ledger of the real sequence. The script ticks the first row when
+          the message is sent. The CMS controls the wording (Contact page). */}
+        <ol class="steps" data-contact-steps>
+          {nextSteps.map((step, i) => (
+            <li>
+              <span class="step-tick" aria-hidden="true" />
+              <span class="step-text">
+                {stepWhen[i] && <span class="step-when">{stepWhen[i]}</span>}
+                {step}
+              </span>
+            </li>
+          ))}
+        </ol>
+
+        {site.bookingUrl && (
+          <p class="type-body contact-book">
+            Would a call suit you better?{' '}
+            <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer">
+              Pick a time on my calendar
+            </a>
+            .
+          </p>
+        )}
+      </aside>
     </div>
-  </section>
+  </Band>
 
-  <CtaBanner
-    title={page.ctaTitle}
-    sub={page.ctaSub}
-    ctaLabel={page.ctaLabel}
-    ctaHref={site.emailHref}
-  />
+  {/* ====================================================================
+       Band 3: where I am. The paper-contours ground draws the Ohio bend at
+       Cincinnati, so the place is shown without a map embed: nothing to load,
+       nothing to leak, nothing to fail. Still (the page's one moving ground is
+       the hero). No street address, only what Site settings publish.
+       ==================================================================== */}
+  <Band ground="paper-contours" still labelledby="contact-where-heading">
+    <div class="contact-where">
+      <div>
+        <h2 id="contact-where-heading" class="type-headline">
+          Working from <span class="voice">{site.address}.</span>
+        </h2>
+        <p class="type-body">{page.whereText}</p>
+      </div>
+      {site.bookingUrl && (
+        <div class="contact-close">
+          <p class="contact-close-title">Would a call suit you better?</p>
+          <p class="type-body">
+            A half-hour on my calendar. No pitch, just a working conversation.
+          </p>
+          <p class="contact-close-links">
+            <a
+              class={buttonVariants({ variant: 'brand', size: 'cta' })}
+              href={site.bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Pick a time
+            </a>
+          </p>
+        </div>
+      )}
+    </div>
+  </Band>
 
-  <!-- ----------------------------------------------------------------------
-       Submit-button spinner. Scoped Astro styles. The spinner is collapsed
-       (display:none) until the submit handler adds .is-spinning to the button,
-       at which point a small border-ring shows inline before the "Sending..."
-       label, picking up the button's existing flex gap. It uses currentColor
-       so it reads as white on the brand button. Under prefers-reduced-motion
-       the ring shows but does not rotate, so the state is still legible without
-       animation.
-       ---------------------------------------------------------------------- -->
   <style>
+    /* ---- Band 1: the calm top ---------------------------------------------- */
+    .contact-hero {
+      display: grid;
+      gap: var(--spacing-l);
+      align-items: end;
+    }
+    @media (min-width: 48rem) {
+      .contact-hero {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--spacing-2xl);
+      }
+    }
+    .contact-hero-text {
+      display: grid;
+      gap: var(--spacing-s);
+      max-width: 46rem;
+    }
+    .contact-title {
+      font-size: var(--text-h1);
+      margin: 0;
+    }
+    .contact-lede {
+      margin: 0;
+      max-width: 40ch;
+    }
+    .contact-free {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: var(--text-body);
+      color: var(--foreground);
+    }
+    .contact-direct {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 var(--spacing-s);
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: var(--text-body);
+      color: var(--muted-foreground);
+    }
+    .contact-direct a {
+      /* Body size, with a 44px touch height that does not change the line. */
+      display: inline-block;
+      padding-block: 0.85rem;
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .contact-person {
+      display: grid;
+      gap: var(--spacing-xs);
+      margin: 0;
+      justify-items: start;
+    }
+    .contact-person-img {
+      width: 8rem;
+      height: 8rem;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: var(--shadow-frame);
+    }
+    @media (min-width: 48rem) {
+      .contact-person-img {
+        width: 11rem;
+        height: 11rem;
+      }
+    }
+
+    /* ---- Band 2: form + ledger ---------------------------------------------- */
+    .contact-grid {
+      display: grid;
+      gap: var(--spacing-xl);
+    }
+    @media (min-width: 60rem) {
+      .contact-grid {
+        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+        gap: var(--spacing-2xl);
+        align-items: start;
+      }
+      .contact-aside {
+        position: sticky;
+        top: calc(var(--header-h) + var(--spacing-l));
+      }
+    }
+    .contact-form-title,
+    .contact-aside-title {
+      margin: 0 0 var(--spacing-xs);
+      font-size: var(--text-h3);
+    }
+    .contact-need {
+      margin: 0 0 var(--spacing-m);
+      max-width: 52ch;
+    }
+    /* The form is a tray: a step deeper than the page, with a hairline and a hard
+       offset shadow, so the fields (a step LIGHTER than both) are the thing you see. */
+    .contact-card {
+      background: var(--muted);
+      border: 1px solid var(--input);
+      box-shadow: 6px 6px 0 color-mix(in srgb, var(--heading) 16%, transparent);
+      padding: clamp(1.1rem, 1rem + 2.2vw, 2.25rem);
+    }
+    .contact-voice {
+      margin: 0 0 var(--spacing-xs);
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: var(--text-lede);
+      line-height: 1.2;
+      color: var(--marker);
+    }
+    .contact-form {
+      display: grid;
+      gap: var(--spacing-m);
+    }
+    .field {
+      display: grid;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    .field-pair {
+      display: grid;
+      align-items: start;
+      gap: var(--spacing-m);
+    }
+    @media (min-width: 40rem) {
+      .field-pair {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .field label {
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--heading);
+    }
+    .control {
+      width: 100%;
+      min-height: 3rem;
+      padding: 0.65rem 0.8rem;
+      font-family: var(--font-ui);
+      /* 16px stops iOS Safari zooming the page on focus. */
+      font-size: 1rem;
+      line-height: 1.4;
+      color: var(--foreground);
+      background: var(--card);
+      border: 1px solid var(--input);
+      scroll-margin-top: calc(var(--header-h) + 1rem);
+      border-radius: 2px;
+    }
+    textarea.control {
+      min-height: 12rem;
+      resize: vertical;
+    }
+    /* Invalid is a tinted field with a heavy brick edge; the focus ring (marker,
+       outside the box) stays a separate cue. */
+    .control[aria-invalid='true'] {
+      border: 2px solid var(--link);
+      background: color-mix(in srgb, var(--link) 7%, var(--card));
+    }
+    .field-hint a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .form-summary {
+      margin: 0;
+      padding: var(--spacing-xs) var(--spacing-s);
+      border: 2px solid var(--link);
+      background: color-mix(in srgb, var(--link) 7%, var(--card));
+      font-family: var(--font-ui);
+      font-weight: 600;
+      color: var(--foreground);
+    }
+    .form-summary[hidden] {
+      display: none;
+    }
+    @media (min-width: 40rem) {
+      .form-summary {
+        display: none;
+      }
+    }
+    .field-hint {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: var(--text-caption);
+      line-height: 1.4;
+      color: var(--muted-foreground);
+    }
+    .field-error {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--link);
+    }
+    .field-error[hidden] {
+      display: none;
+    }
+
+    /* The optional fields: a native disclosure with a 48px summary. */
+    .more {
+      border-top: 1px solid var(--border);
+      padding-top: var(--spacing-xs);
+    }
+    .more summary {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      min-height: 3rem;
+      padding-block: 0.6rem;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--heading);
+      list-style: none;
+    }
+    .more summary::-webkit-details-marker {
+      display: none;
+    }
+    .more summary::before {
+      content: '+';
+      display: inline-block;
+      width: 1rem;
+      font-weight: 400;
+      color: var(--marker);
+    }
+    .more[open] summary::before {
+      content: '\2212';
+    }
+    .more-note {
+      font-weight: 400;
+      color: var(--muted-foreground);
+    }
+    .more-body {
+      display: grid;
+      gap: var(--spacing-m);
+      padding-top: var(--spacing-xs);
+    }
+
+    .submit-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--spacing-s) var(--spacing-m);
+    }
+    .send {
+      min-height: 3.25rem;
+      padding-inline: 2rem;
+    }
+    .submit-row p {
+      margin: 0;
+    }
+    code {
+      font-size: 0.9em;
+    }
+
+    .contact-thanks {
+      display: grid;
+      gap: var(--spacing-s);
+    }
+    .contact-thanks[hidden],
+    .contact-error[hidden] {
+      display: none;
+    }
+    .contact-thanks h2 {
+      margin: 0;
+      font-size: var(--text-h3);
+    }
+    .contact-thanks p {
+      margin: 0;
+    }
+    .contact-thanks a,
+    .contact-error a,
+    .contact-book a {
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .contact-error {
+      scroll-margin-top: calc(var(--header-h) + 1rem);
+      margin-top: var(--spacing-m);
+      padding: var(--spacing-s) var(--spacing-m);
+      border: 2px solid var(--link);
+      background: var(--card);
+      color: var(--foreground);
+    }
+    .contact-error p {
+      margin: 0;
+    }
+
+    /* The ledger. */
+    .steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-s);
+      padding-block: var(--spacing-s);
+      border-top: 1px solid var(--border);
+      font-family: var(--font-serif);
+      font-size: var(--text-body);
+      line-height: 1.5;
+      color: var(--foreground);
+    }
+    .step-text {
+      display: grid;
+      gap: 0.1rem;
+    }
+    .step-when {
+      font-family: var(--font-ui);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--link);
+    }
+    .steps li[data-done] .step-when {
+      color: var(--muted-foreground);
+    }
+    .step-tick {
+      flex: none;
+      width: 1rem;
+      height: 2px;
+      margin-top: 0.8em;
+      background: var(--marker);
+    }
+    .steps li[data-done] {
+      color: var(--muted-foreground);
+    }
+    .steps li[data-done] .step-tick {
+      height: 0.55rem;
+      width: 0.9rem;
+      margin-top: 0.45em;
+      background: none;
+      border-bottom: 2px solid var(--marker);
+      border-left: 2px solid var(--marker);
+      transform: rotate(-45deg) scale(0.8);
+    }
+    .contact-book {
+      margin: var(--spacing-m) 0 0;
+    }
+
+    /* ---- Band 3: where I am ------------------------------------------------- */
+    .contact-where {
+      display: grid;
+      gap: var(--spacing-xl);
+    }
+    @media (min-width: 56rem) {
+      .contact-where {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        gap: var(--spacing-2xl);
+        align-items: end;
+      }
+    }
+    .contact-where h2 {
+      margin: 0 0 var(--spacing-s);
+      font-size: var(--text-h2);
+    }
+    .contact-where p {
+      margin: 0;
+    }
+    .contact-close {
+      display: grid;
+      gap: var(--spacing-xs);
+    }
+    .contact-close-title {
+      font-family: var(--font-display);
+      font-size: var(--text-h4);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      color: var(--heading);
+    }
+    .contact-close-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--spacing-s) var(--spacing-m);
+    }
+    .contact-where .contact-close-links {
+      margin: var(--spacing-xs) 0 0;
+    }
+    .contact-phone {
+      display: inline-block;
+      padding-block: 0.85rem;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* ---- Submit spinner ------------------------------------------------------
+       Collapsed until the submit handler adds .is-spinning, then a small ring
+       before the label. Static under prefers-reduced-motion (still a state cue). */
     .contact-spinner {
       display: none;
       width: 1em;
       height: 1em;
       border-radius: 9999px;
-      /* Faint full ring with one brighter arc so the rotation reads. */
       border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
       border-top-color: currentColor;
-      /* Optical alignment with the cap-height of the adjacent label text. */
       flex-shrink: 0;
     }
-
-    /* Shown only while submitting. */
     [data-contact-submit].is-spinning .contact-spinner {
       display: inline-block;
       animation: contact-spin 0.7s linear infinite;
     }
-
     @keyframes contact-spin {
       to {
         transform: rotate(360deg);
       }
     }
-
-    /* Reduced motion: keep the ring visible as a static state cue, no spin. */
     @media (prefers-reduced-motion: reduce) {
       [data-contact-submit].is-spinning .contact-spinner {
         animation: none;
@@ -569,222 +865,318 @@ const legendClass =
     }
   </style>
 
-  <!-- ----------------------------------------------------------------------
-       Submit handler. Posts via fetch, swaps form for thank-you panel on
-       success, shows inline error on failure. Switched from the `hidden`
-       HTML attribute to the .hidden Tailwind class because the attribute
-       loses specificity against class-based display rules.
-       ---------------------------------------------------------------------- -->
+  {/* ----------------------------------------------------------------------
+       Enhancement script: inline validation, draft save/restore, honeypot,
+       fetch submit, thank-you/error swap, the conversion hook.
+       ---------------------------------------------------------------------- */}
   <script>
-    // Wrapped in astro:page-load so the form's JS layer (honeypot, draft
-    // save/restore, thank-you/error swap) re-binds after a
-    // View Transitions navigation, not just on a hard load. The dataset guard
-    // keeps it from binding twice to the same form instance.
-    function initContactForm() {
-      const form = document.querySelector('[data-contact-form]') as HTMLFormElement | null;
-      const thanks = document.querySelector('[data-contact-thanks]') as HTMLElement | null;
-      const errorEl = document.querySelector('[data-contact-error]') as HTMLElement | null;
-      const submit = document.querySelector('[data-contact-submit]') as HTMLButtonElement | null;
-      const label = document.querySelector('[data-contact-submit-label]') as HTMLElement | null;
+    // Registered on astro:page-load so the form's JS layer re-binds after a View
+    // Transitions navigation, not just on a hard load. The dataset guard keeps it
+    // from binding twice to the same form instance.
+    type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-      if (form && form.dataset.enhanced) return;
-      if (form) form.dataset.enhanced = 'true';
+    function initContactForm(): void {
+      const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+      const thanks = document.querySelector<HTMLElement>('[data-contact-thanks]');
+      const errorEl = document.querySelector<HTMLElement>('[data-contact-error]');
+      const submit = document.querySelector<HTMLButtonElement>('[data-contact-submit]');
+      const label = document.querySelector<HTMLElement>('[data-contact-submit-label]');
+      const more = document.querySelector<HTMLDetailsElement>('[data-contact-more]');
+      const steps = document.querySelector<HTMLElement>('[data-contact-steps]');
+      const summary = document.querySelector<HTMLElement>('[data-form-summary]');
 
-      if (form && thanks && errorEl && submit && label) {
-        const originalLabel = label.textContent ?? 'Send';
+      if (!form || !thanks || !errorEl || !submit || !label) return;
+      if (form.dataset.enhanced) return;
+      form.dataset.enhanced = 'true';
 
-        /* ---- Draft auto-save ----------------------------------------------
-         If a visitor types a long message then accidentally navigates away
-         or refreshes, we want their draft to come back. localStorage save
-         on every input (with a tiny debounce), restore on mount, clear
-         after a successful submit. The honeypot field is never saved.
+      // We draw our own error text below, so switch off the browser's bubbles. Done
+      // here (not in the markup) so a no-JS visitor still gets native validation.
+      form.noValidate = true;
 
-         Skipped under private browsing / blocked storage; both blocks are
-         wrapped in try/catch so a SecurityError doesn't break the form.
-      --------------------------------------------------------------------- */
+      const originalLabel = label.textContent ?? 'Send me your project';
+      const field = (name: string): Field | null => form.elements.namedItem(name) as Field | null;
+      const minMessage = Number(field('message')?.getAttribute('minlength') ?? '20');
 
-        const DRAFT_KEY = 'ncs-contact-draft';
+      /* ---- Draft auto-save ----------------------------------------------------
+         A long message survives an accidental refresh: saved on input (debounced),
+         restored on load, cleared after a successful send. The honeypot and the
+         Web3Forms hidden fields are never saved. Storage can be blocked (private
+         browsing), so every access is in try/catch. */
+      const DRAFT_KEY = 'ncs-contact-draft';
+      const persistedNames = [
+        'name',
+        'email',
+        'phone',
+        'organization',
+        'org_type',
+        'current_website',
+        'budget',
+        'timeline',
+        'message',
+        'heard_from',
+      ];
+      // Optional fields live in the disclosure; open it when one holds a value.
+      const optionalNames = persistedNames.filter(
+        (n) => n !== 'name' && n !== 'email' && n !== 'message',
+      );
 
-        // Fields we persist. The hidden Web3Forms admin fields and the
-        // honeypot are intentionally excluded.
-        const persistedNames = [
-          'name',
-          'email',
-          'phone',
-          'organization',
-          'org_type',
-          'current_website',
-          'budget',
-          'timeline',
-          'message',
-          'heard_from',
-        ];
-
-        function restoreDraft(): void {
-          try {
-            const raw = localStorage.getItem(DRAFT_KEY);
-            if (!raw) return;
-            const data = JSON.parse(raw) as Record<string, string>;
-            persistedNames.forEach((name) => {
-              const el = form!.elements.namedItem(name) as
-                HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-              if (el && typeof data[name] === 'string' && data[name].length > 0) {
-                // A select's options are CMS-editable, and before CMS-DESIGN PR 9 they
-                // held codes ("under-4k"). Restore a saved choice only if an option
-                // with that exact value still exists, so an old draft or a renamed
-                // choice leaves the select on its placeholder instead of blank.
-                if (
-                  el instanceof HTMLSelectElement &&
-                  !Array.from(el.options).some((o) => o.value === data[name])
-                ) {
-                  return;
-                }
-                el.value = data[name];
-              }
-            });
-          } catch {
-            /* swallow */
-          }
-        }
-
-        function saveDraft(): void {
-          try {
-            const out: Record<string, string> = {};
-            persistedNames.forEach((name) => {
-              const el = form!.elements.namedItem(name) as
-                HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-              if (el && el.value) out[name] = el.value;
-            });
-            if (Object.keys(out).length === 0) {
-              localStorage.removeItem(DRAFT_KEY);
-              return;
-            }
-            localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
-          } catch {
-            /* swallow */
-          }
-        }
-
-        function clearDraft(): void {
-          try {
-            localStorage.removeItem(DRAFT_KEY);
-          } catch {
-            /* swallow */
-          }
-        }
-
-        // Tiny debounce so typing in the textarea doesn't write to storage
-        // on every keystroke.
-        let saveTimer: number | undefined;
-        function scheduleSave(): void {
-          if (saveTimer) window.clearTimeout(saveTimer);
-          saveTimer = window.setTimeout(saveDraft, 250);
-        }
-
-        restoreDraft();
-
-        // Context-aware preselect. A case study's closing CTA links here as
-        // /contact?org_type=<sector>, so a visitor arriving from a church study
-        // lands with "Church" already chosen. Only applied when the field is still
-        // empty, so it never overrides a restored draft; the param is then stripped
-        // from the URL so a refresh doesn't re-apply it. Convenience only: the form
-        // works identically without it.
-        try {
-          const params = new URLSearchParams(window.location.search);
-          const wanted = params.get('org_type');
-          if (wanted) {
-            const orgSelect = form.elements.namedItem('org_type') as HTMLSelectElement | null;
-            if (
-              orgSelect &&
-              !orgSelect.value &&
-              Array.from(orgSelect.options).some((o) => o.value === wanted)
-            ) {
-              orgSelect.value = wanted;
-              scheduleSave();
-            }
-            params.delete('org_type');
-            const qs = params.toString();
-            window.history.replaceState(
-              null,
-              '',
-              window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
-            );
-          }
-        } catch {
-          /* URL / select access guarded; the preselect is never required */
-        }
-
-        form.addEventListener('input', scheduleSave);
-        form.addEventListener('change', scheduleSave);
-
-        // Helpers that toggle visibility via the Tailwind .hidden class. The
-        // thanks panel needs `flex` when shown because it's a flex column.
-        const show = (el: HTMLElement, displayClass = 'flex') => {
-          el.classList.remove('hidden');
-          if (displayClass) el.classList.add(displayClass);
-        };
-        const hide = (el: HTMLElement, displayClass = 'flex') => {
-          if (displayClass) el.classList.remove(displayClass);
-          el.classList.add('hidden');
-        };
-
-        form.addEventListener('submit', async (event) => {
-          // Native validation first. The form carries `novalidate`, so the
-          // browser won't bubble its own messages on submit; we ask for them
-          // explicitly. checkValidity() returns false if any required/min-length
-          // field is invalid, and reportValidity() focuses the first offender and
-          // shows its native message. Bail before the honeypot/fetch flow so a
-          // blank or too-short field never silently submits and waits on a
-          // server reject.
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            form.reportValidity();
-            return;
-          }
-
-          // Honeypot. Real users never fill this; bots usually do. Pretend
-          // the submit worked but silently drop the request.
-          const honeypot = (form.elements.namedItem('botcheck') as HTMLInputElement | null)?.value;
-          if (honeypot) {
-            event.preventDefault();
-            hide(form);
-            show(thanks);
-            clearDraft();
-            return;
-          }
-
-          event.preventDefault();
-
-          hide(errorEl, 'block');
-          submit.disabled = true;
-          submit.classList.add('is-spinning');
-          label.textContent = 'Sending...';
-
-          try {
-            const data = new FormData(form);
-            const response = await fetch(form.action, {
-              method: 'POST',
-              body: data,
-              headers: { Accept: 'application/json' },
-            });
-
-            if (response.ok) {
-              hide(form);
-              show(thanks);
-              clearDraft();
-              thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-              show(errorEl, 'block');
-            }
-          } catch (_err) {
-            show(errorEl, 'block');
-          } finally {
-            submit.disabled = false;
-            submit.classList.remove('is-spinning');
-            label.textContent = originalLabel;
-          }
-        });
+      function openMoreIfFilled(): void {
+        if (!more) return;
+        if (optionalNames.some((n) => field(n)?.value)) more.open = true;
       }
+
+      function restoreDraft(): void {
+        try {
+          const raw = localStorage.getItem(DRAFT_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw) as Record<string, string>;
+          persistedNames.forEach((name) => {
+            const el = field(name);
+            if (el && typeof data[name] === 'string' && data[name].length > 0) {
+              // A select's options are CMS-editable. Restore a saved choice only if an
+              // option with that exact value still exists, so an old draft (codes) or a
+              // renamed choice leaves the select on its placeholder instead of blank.
+              if (
+                el instanceof HTMLSelectElement &&
+                !Array.from(el.options).some((o) => o.value === data[name])
+              ) {
+                return;
+              }
+              el.value = data[name];
+            }
+          });
+        } catch {
+          /* swallow */
+        }
+      }
+
+      function saveDraft(): void {
+        try {
+          const out: Record<string, string> = {};
+          persistedNames.forEach((name) => {
+            const el = field(name);
+            if (el && el.value) out[name] = el.value;
+          });
+          if (Object.keys(out).length === 0) {
+            localStorage.removeItem(DRAFT_KEY);
+            return;
+          }
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
+        } catch {
+          /* swallow */
+        }
+      }
+
+      function clearDraft(): void {
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+        } catch {
+          /* swallow */
+        }
+      }
+
+      let saveTimer: number | undefined;
+      function scheduleSave(): void {
+        if (saveTimer) window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(saveDraft, 250);
+      }
+
+      restoreDraft();
+
+      // Context-aware preselect. A case study's closing CTA links here as
+      // /contact/?org_type=<sector>, so a visitor from a church study lands with
+      // "Church" already chosen. Applied only when the field is still empty (never
+      // over a restored draft); the param is then stripped so a refresh does not
+      // re-apply it. Convenience only: the form works the same without it.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const wanted = params.get('org_type');
+        if (wanted) {
+          const orgSelect = field('org_type');
+          if (
+            orgSelect instanceof HTMLSelectElement &&
+            !orgSelect.value &&
+            Array.from(orgSelect.options).some((o) => o.value === wanted)
+          ) {
+            orgSelect.value = wanted;
+            scheduleSave();
+          }
+          params.delete('org_type');
+          const qs = params.toString();
+          window.history.replaceState(
+            null,
+            '',
+            window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
+          );
+        }
+      } catch {
+        /* URL / select access guarded; the preselect is never required */
+      }
+
+      openMoreIfFilled();
+
+      /* ---- Inline validation --------------------------------------------------
+         Three required fields. Each has a <p data-error-for> that the input points
+         at with aria-describedby, so a screen reader reads the error when focus
+         lands on the field. */
+      const rules: Record<string, (v: string) => string> = {
+        name: (v) => (v.trim() ? '' : 'Please add your name so I know who to reply to.'),
+        email: (v) => {
+          const t = v.trim();
+          if (!t) return 'Please add your email so I can reply.';
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)
+            ? ''
+            : 'That email address does not look right. Check for a missing @ or dot.';
+        },
+        message: (v) => {
+          const t = v.trim();
+          if (!t) return 'Tell me a little about the project.';
+          return t.length < minMessage
+            ? `A few more words, please: at least ${minMessage} characters, so I can reply with something useful.`
+            : '';
+        },
+      };
+
+      function setError(name: string, text: string): void {
+        const el = field(name);
+        const out = form!.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+        if (!el || !out) return;
+        out.textContent = text;
+        out.hidden = !text;
+        if (text) el.setAttribute('aria-invalid', 'true');
+        else el.removeAttribute('aria-invalid');
+      }
+
+      function validate(): Field | null {
+        let first: Field | null = null;
+        Object.keys(rules).forEach((name) => {
+          const el = field(name);
+          if (!el) return;
+          const msg = rules[name](el.value);
+          setError(name, msg);
+          if (msg && !first) first = el;
+        });
+        return first;
+      }
+
+      // Once a field has shown an error, re-check it as the visitor fixes it.
+      Object.keys(rules).forEach((name) => {
+        const el = field(name);
+        el?.addEventListener('input', () => {
+          if (el.getAttribute('aria-invalid') === 'true') setError(name, rules[name](el.value));
+        });
+      });
+
+      form.addEventListener('input', scheduleSave);
+      form.addEventListener('change', scheduleSave);
+
+      function showSent(): void {
+        const email = field('email')?.value.trim();
+        const slot = thanks!.querySelector<HTMLElement>('[data-sent-email]');
+        if (slot && email) slot.textContent = email;
+        form!.hidden = true;
+        errorEl!.hidden = true;
+        thanks!.hidden = false;
+        // Tick the first step of the ledger and mark the next one as current.
+        if (steps) {
+          const rows = steps.querySelectorAll('li');
+          rows[0]?.setAttribute('data-done', '');
+          rows[1]?.setAttribute('aria-current', 'step');
+        }
+        thanks!.focus({ preventScroll: true });
+        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        thanks!.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+      }
+
+      // The conversion hook. Not fired for a honeypot hit. The URL gets a #sent
+      // hash (a refresh does not re-count, and a hash cannot 404) and window gets a
+      // CustomEvent a tag can listen for. The detail holds choice labels only,
+      // never the name, email or message.
+      function announceSent(): void {
+        try {
+          window.history.replaceState(
+            null,
+            '',
+            window.location.pathname + window.location.search + '#sent',
+          );
+        } catch {
+          /* history may be locked down; the event is the real hook */
+        }
+        window.dispatchEvent(
+          new CustomEvent('ncs:contact-sent', {
+            detail: {
+              orgType: field('org_type')?.value ?? '',
+              budget: field('budget')?.value ?? '',
+              timeline: field('timeline')?.value ?? '',
+              heardFrom: field('heard_from')?.value ?? '',
+            },
+          }),
+        );
+      }
+
+      // A failed send: show the panel, move focus to it and scroll it clear of the
+      // sticky header, so nobody is left looking at a form that seems to do nothing.
+      function failSend(): void {
+        errorEl!.hidden = false;
+        errorEl!.focus({ preventScroll: true });
+        errorEl!.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        // Validate first and stop before any request, so a blank or too-short field
+        // never silently submits and waits on a server reject.
+        const firstBad = validate();
+        if (summary) {
+          const bad = Object.keys(rules).filter(
+            (n) => field(n)?.getAttribute('aria-invalid') === 'true',
+          );
+          summary.hidden = bad.length === 0;
+          summary.textContent = bad.length
+            ? `Please fix ${bad.length === 1 ? 'one thing' : bad.length + ' things'} above: ${bad.join(', ')}.`
+            : '';
+        }
+        if (firstBad) {
+          firstBad.focus();
+          return;
+        }
+
+        // Honeypot. Real users never fill this; bots usually do. Pretend it worked
+        // but drop the request (and do not count a conversion).
+        if (field('botcheck')?.value) {
+          showSent();
+          clearDraft();
+          return;
+        }
+
+        errorEl.hidden = true;
+        if (summary) summary.hidden = true;
+        submit.disabled = true;
+        submit.classList.add('is-spinning');
+        label.textContent = 'Sending...';
+
+        try {
+          const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { Accept: 'application/json' },
+          });
+          if (response.ok) {
+            showSent();
+            clearDraft();
+            announceSent();
+          } else {
+            failSend();
+          }
+        } catch (_err) {
+          failSend();
+        } finally {
+          submit.disabled = false;
+          submit.classList.remove('is-spinning');
+          label.textContent = originalLabel;
+        }
+      });
     }
     document.addEventListener('astro:page-load', initContactForm);
     initContactForm();

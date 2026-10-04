@@ -1,73 +1,66 @@
 ---
-// Foundation, edit with care. Server-rendered because the hero client marquee
-// and Selected Work read case studies from the EmDash CMS (see the note above
-// the template).
+// Safe to edit. Server-rendered and route-cached like every page (BaseLayout).
 /* ============================================================================
-   Homepage
+   Homepage (redesign 2026)
    ============================================================================
-   Homepage architecture (replaces the previous eight-section frame).
-   Section order is the IA, not decoration:
+   Section order is the IA. Each band has one job and its own ground, and the
+   ground changes deliberately between bands (DESIGN.md "Grounds"):
 
-     Hero          — a tall (clamped, not full 100svh) opening, navy in both
-                     themes. An oversized headline + positioning + the one-person
-                     differentiator + two CTAs on the left, a crossfading
-                     showcase of real client sites on the right (at lg), over a
-                     domain-warped WebGL flow, with the client-name marquee
-                     riding a thin strip at its base. Studio wordmark lives in the
-                     header, not here. (The old separate proof band was folded in
-                     here: its differentiator line became hero copy and its
-                     marquee moved to the hero floor.)
-     Selected Work — three featured case studies, asymmetric (one large + two
-                     medium). Real client names, real outcomes, real links into
-                     /work/{slug} for the long form.
-     Pricing Teaser— slim "What it costs" band: the three web-tier floors as a
-                     hairline editorial row, routing to /services for the full
-                     pricing. Reads numbers from the CMS pricing tiers (shared
-                     single source of truth with /services).
-     Process Band  — single band that combines the four-step process and the
-                     inquiry CTA. Closes the page with one strong block instead
-                     of three stacked sections.
+     HomeHero     paper-contours (the one moving ground)  the tagline, who it
+                  is for, the button, the price floor, the reel of his sites
+     ProofSheet   window-light, still   the work: film strips from four live
+                  sites, Stone Steps first
+     HomePrices   deep, still           the three published tiers
+     HomeProcess  paper                 four steps and how long they take
+     HomeAbout    deep, still           who you work with
+     HomeClose    paper-contours, still the closing call
+     Footer       deep (BaseLayout)
 
-   The words in all four sections are the CMS "Home page" entry (getHomePage);
-   the layout, section order and link targets stay in the components.
-
-   The Footer is rendered by BaseLayout, immediately under the Process Band.
-
-   Services, PhotoStrip, and Testimonials are no longer separate homepage
-   sections; each was re-homed where it belongs:
-     - Services        → /services and /about already carry the offering copy.
-     - PhotoStrip      → /photography is the dedicated photography surface; the
-                         homepage carries the work via the hero showcase, not a
-                         photo tile strip.
-     - Testimonials    → embedded inside individual case study pages, and the
-                         /about carousel, where the quote has earned context.
-
-   Architecture decision documented in PRODUCT.md and CLAUDE.md — refresh those
-   if the section frame ever needs to shift.
+   Words: the CMS "Home page" entry (getHomePage, fallback cms/content/
+   page_home.json) and the pricing tiers. Work: curated in src/lib/homeWork.ts,
+   gated by the case studies' launch status and featured flag (read once here
+   and passed down). Rules: .claude/rules/homepage-and-pages.md.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Hero from '../components/Hero.astro';
-import SelectedWork from '../components/SelectedWork.astro';
-import PricingTeaser from '../components/PricingTeaser.astro';
-import ProcessBand from '../components/ProcessBand.astro';
+import HomeHero from '../components/home/HomeHero.astro';
+import ProofSheet from '../components/home/ProofSheet.astro';
+import HomePrices from '../components/home/HomePrices.astro';
+import HomeProcess from '../components/home/HomeProcess.astro';
+import HomeAbout from '../components/home/HomeAbout.astro';
+import HomeClose from '../components/home/HomeClose.astro';
 import { getHomePage, homeTitle } from '../lib/homePage';
+import { getCaseStudies } from '../lib/caseStudies';
+import type { StudyGate } from '../lib/homeWork';
 import { getSite } from '../data/site';
 
-// The title and meta description, and every word in the four sections below, come
-// from the CMS "Home page" entry (committed fallback: cms/content/page_home.json).
-// One D1 read per request, shared with the components.
 const home = await getHomePage(Astro);
 const site = await getSite(Astro);
 
-// Server-rendered like every page (CMS-DESIGN PR 2). The hero client marquee and Selected Work read case studies from EmDash (D1) at request time.
-// The route cache is tagged with the case studies this page read (BaseLayout sets
-// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
+// The case studies decide which curated sites may show (homeWork.ts). The read tags the
+// route cache, so publishing a study purges the homepage. If it fails, the bundled sites
+// stand (each was checked live), and the page still renders.
+let studies: StudyGate[] = [];
+try {
+  studies = (await getCaseStudies(Astro.cache)).map((s) => ({
+    id: s.id,
+    featured: s.featured,
+    launchStatus: s.launchStatus,
+  }));
+} catch (err) {
+  console.warn('[home] case studies unreadable, showing the bundled work', err);
+}
 ---
 
-<BaseLayout title={homeTitle(home.seoTitle, site.studioName)} description={home.seoDescription}>
-  <Hero />
-  <SelectedWork />
-  <PricingTeaser />
-  <ProcessBand />
+<BaseLayout
+  title={homeTitle(home.seoTitle, site.studioName)}
+  description={home.seoDescription}
+  preloadFonts={['italic']}
+>
+  <HomeHero studies={studies} />
+  <ProofSheet studies={studies} />
+  <HomePrices />
+  <HomeProcess />
+  <HomeAbout />
+  <HomeClose />
 </BaseLayout>

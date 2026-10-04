@@ -6,8 +6,8 @@ import { join } from 'node:path';
 // Homepage copy: the words on the page ARE the CMS words (CMS-DESIGN PR 6 gate)
 // =============================================================================
 // The hero headline, the section headings, the pricing "every build includes"
-// list and the four process steps now come from the `page_home` entry. The hero
-// is the LCP element's neighbour, so two things matter beyond the words being
+// list and the four process steps now come from the `page_home` entry (the 2026
+// redesign's home: src/components/home/). The hero is the LCP element's neighbour, so two things matter beyond the words being
 // right: it is rendered by the server (it is in the HTML a visitor with no
 // JavaScript gets) and none of it starts at opacity 0 (CLAUDE.md Gotchas 10 and
 // 14), so moving the text to the CMS cannot have moved the LCP.
@@ -55,7 +55,7 @@ test.describe('Homepage copy without JavaScript', () => {
     await expect(h1).toHaveText(`${home.hero_heading} ${home.hero_heading_accent}`);
     // The coloured phrase is its own span (two fields, so an edit cannot break the headline).
     await expect(h1.locator('span')).toHaveText(home.hero_heading_accent);
-    await expect(page.locator('.hero-sub')).toHaveText(home.hero_positioning);
+    await expect(page.locator('.hero-positioning')).toHaveText(home.hero_positioning);
     const proof = page.locator('.hero-proof');
     await expect(proof).toContainText(home.hero_proof_before);
     await expect(proof.locator('a')).toHaveText(home.hero_proof_link_text);
@@ -66,44 +66,37 @@ test.describe('Homepage copy without JavaScript', () => {
       `${home.hero_proof_before} ${home.hero_proof_link_text}`,
     );
     await expect(
-      page.locator('.hero').getByRole('link', { name: home.hero_primary_label }),
+      page.locator('.home-hero').getByRole('link', { name: home.hero_primary_label }),
     ).toHaveAttribute('href', '/contact/');
-    await expect(
-      page.locator('.hero').getByRole('link', { name: home.hero_secondary_label }),
-    ).toHaveAttribute('href', '/work/');
+    // The second link quotes the lowest published tier and jumps to the prices band.
+    const price = page.locator('.home-hero a.hero-price');
+    await expect(price).toHaveText(new RegExp(`^${home.hero_secondary_label}, from \\$[\\d,]+$`));
+    await expect(price).toHaveAttribute('href', '#prices');
+    await expect(page.locator('#prices')).toHaveCount(1);
   });
 
   test('/: the section headings, includes list and the four process steps are the CMS words', async ({
     page,
   }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#selected-work-heading')).toHaveText(home.work_heading);
+    await expect(page.locator('#work-heading')).toHaveText(home.work_heading);
     await expect(page.locator('#home-pricing-heading')).toHaveText(home.pricing_heading);
-    const includes = page.locator('.pricing-teaser ul').first().locator('li');
+    const includes = page.locator('.home-prices .every-list li');
     await expect(includes).toHaveText(home.pricing_includes.map((i) => i.text));
-    await expect(page.locator('#process-band-heading')).toHaveText(home.process_heading);
-    const steps = page.locator('.process-steps > li');
-    await expect(steps).toHaveCount(4);
-    for (const [i, step] of home.process_steps.entries()) {
-      await expect(steps.nth(i)).toContainText(String(i + 1).padStart(2, '0'));
-      await expect(steps.nth(i).locator('h3')).toHaveText(step.title);
-      await expect(steps.nth(i).locator('p')).toHaveText(step.body);
-    }
-    await expect(page.getByText(home.process_cta_title, { exact: true })).toBeVisible();
-    await expect(
-      page.locator('.process-band').getByRole('link', { name: home.process_cta_label }),
-    ).toHaveAttribute('href', '/contact/');
-  });
-
-  test('/services/: the process recap shows the same CMS steps', async ({ page }) => {
-    await page.goto('/services/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#process-heading')).toHaveText(home.process_heading);
     const steps = page.locator('.process-steps > li');
     await expect(steps).toHaveCount(4);
     for (const [i, step] of home.process_steps.entries()) {
       await expect(steps.nth(i).locator('h3')).toHaveText(step.title);
+      await expect(steps.nth(i).locator('p')).toHaveText(step.body);
     }
+    await expect(page.locator('#close-heading')).toHaveText(home.process_cta_title);
+    await expect(
+      page.locator('.home-close').getByRole('link', { name: home.process_cta_label }),
+    ).toHaveAttribute('href', '/contact/');
   });
+  // The /services process (the same CMS steps, drawn on a week scale) is checked
+  // in tests/services-copy.spec.ts.
 });
 
 // The first block of the page must not sit behind the JS-gated reveal system

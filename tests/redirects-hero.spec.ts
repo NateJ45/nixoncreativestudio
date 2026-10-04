@@ -1,16 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 // =============================================================================
-// Redirects and the hero scene (CMS-DESIGN PR 13)
+// Redirects (CMS-DESIGN PR 13)
 // =============================================================================
 // REDIRECTS. The two retired URLs are EmDash Redirects rows (cms/content/redirects.json is
 // the committed record); there is no code fallback. The `ncs-ci` data holds the rows, so this
 // spec exercises EmDash's own path: a visitor must be sent to the right place with a
 // permanent redirect.
 //
-// HERO. HeroShowcase is built from the case studies with "Show in the homepage device scene"
-// ticked (CMS path) or, when none are, from its five bundled captures (fallback path). The
-// checks below hold on both, plus one rule per path.
+// The homepage hero scene these checks used to cover was retired in the 2026 redesign; the
+// hero reel has its own spec (tests/home-hero.spec.ts).
 
 /** Follow redirects by hand (max 4 hops), returning each hop's status and Location. */
 async function hops(request: import('@playwright/test').APIRequestContext, start: string) {
@@ -59,65 +58,5 @@ test.describe('Redirects', () => {
   test('a URL that was never redirected still answers a real 404', async ({ request }) => {
     const res = await request.get('/work/never-existed/', { maxRedirects: 0 });
     expect(res.status()).toBe(404);
-  });
-});
-
-test.describe('Hero device scene', () => {
-  test('the scene renders at least one site, and the address bar and slides agree', async ({
-    page,
-  }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    const stage = page.locator('.dev-desktop').locator('xpath=ancestor::*[@data-hero-showcase][1]');
-    const count = Number(await stage.getAttribute('data-count'));
-    expect(count).toBeGreaterThanOrEqual(1);
-    const hosts = await page
-      .locator('.dev-screen-desktop [data-host]')
-      .evaluateAll((els) => els.map((e) => e.getAttribute('data-host') ?? ''));
-    expect(hosts).toHaveLength(count);
-    for (const h of hosts) expect(h).toMatch(/^[a-z0-9.-]+\.[a-z]{2,}$/);
-    // One mobile slide per site, so both devices cycle in step.
-    // (The page renders the phone twice: inside the desktop cluster and as the small-screen
-    // backdrop, `.is-phone`. Count each.)
-    await expect(page.locator('.hero-stage:not(.is-phone) .dev-screen-phone .shot')).toHaveCount(
-      count,
-    );
-    await expect(page.locator('.hero-stage.is-phone .dev-screen-phone .shot')).toHaveCount(count);
-    // The first site is the one on screen at first paint.
-    await expect(page.locator('[data-address-text]')).toHaveText(hosts[0]);
-  });
-
-  test('a CMS-built scene uses width-only resized URLs (never a height), the fallback keeps its five', async ({
-    page,
-  }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    const srcs = await page
-      .locator('.dev-screen-desktop img.shot-img')
-      .evaluateAll((els) =>
-        els.map(
-          (e) =>
-            e.getAttribute('data-src') ??
-            e.parentElement?.querySelector('source')?.getAttribute('srcset') ??
-            '',
-        ),
-      );
-    const hosts = await page
-      .locator('.dev-screen-desktop [data-host]')
-      .evaluateAll((els) => els.map((e) => e.getAttribute('data-host') ?? ''));
-    const fromCms = srcs.some((s) => s.includes('%2F_emdash%2Fapi%2Fmedia%2Ffile%2F'));
-    if (fromCms) {
-      for (const s of srcs.filter(Boolean)) {
-        // The 4096 px resizer limit (docs/EMDASH.md): a height in the URL returns the 7 MB original.
-        expect(s, 'no h= parameter on a tall capture').not.toMatch(/[?&]h=/);
-        expect(s).toMatch(/[?&]w=\d+/);
-      }
-    } else {
-      expect(hosts).toEqual([
-        'secondpreschicago.org',
-        'theologymatters.com',
-        'stonesteps50k.com',
-        'mas-monograms.com',
-        'presbyterianacademy.org',
-      ]);
-    }
   });
 });

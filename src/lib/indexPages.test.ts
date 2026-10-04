@@ -93,7 +93,7 @@ test('the Photography fallback reproduces the words /photography used to hold', 
   assert.equal(page.seoTitle, 'Photography');
   assert.equal(
     page.seoDescription,
-    'Events, portraits, and environmental photography for organizations in the Cincinnati region.',
+    'Photography for churches, schools, nonprofits and small businesses around Cincinnati: events, portraits and spaces, from $900 for a half day.',
   );
   assert.equal(page.heading, 'Photography that matches the');
   assert.equal(page.headingAccent, 'website it lives on.');
@@ -116,10 +116,10 @@ test('the Photography fallback reproduces the words /photography used to hold', 
     page.categories.environments.body,
     'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.',
   );
-  assert.equal(page.emptyHeading, 'The photography portfolio is coming together.');
+  assert.equal(page.emptyHeading, 'A public gallery is on its way.');
   assert.equal(
     page.emptyBody,
-    "I'm pulling the strongest frames from recent church, school, and small-business projects. In the meantime, the work pages show the photography in context, paired with the sites it was shot for.",
+    "I am gathering the best frames from recent church, school and small-business shoots, with each client's permission. Until then, ask and I will send samples that fit your project.",
   );
   assert.equal(page.ctaTitle, 'Need photography for your project?');
   assert.equal(
@@ -139,13 +139,13 @@ test('the Journal fallback reproduces the words /journal used to hold', async ()
   assert.equal(page.heading, 'Journal');
   assert.equal(
     page.intro,
-    "Short notes from the studio: process, opinions, the occasional field report. Updated whenever there's something worth writing down.",
+    'Notes from the studio: how a build goes, what I learn on a shoot, and the occasional opinion. I write one when there is something worth saying.',
   );
-  assert.equal(page.emptyKicker, 'First dispatch is coming.');
-  assert.equal(page.emptyHeading, 'The first entry is being drafted.');
+  assert.equal(page.emptyKicker, 'Nothing published yet.');
+  assert.equal(page.emptyHeading, 'The first entry is still in the drafts.');
   assert.equal(
     page.emptyBody,
-    "This is where I'll write down how the studio works: the thinking behind a build and notes from a shoot. While you wait, two good places to land.",
+    'The case studies are the best account of how I work for now, and I am glad to talk a project through over email.',
   );
   assert.equal(page.ctaTitle, undefined);
 });

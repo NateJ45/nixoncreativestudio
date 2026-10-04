@@ -125,10 +125,29 @@ test.describe('/photography', () => {
     await expect(page.getByText(photography.empty_heading)).toHaveCount(0);
     // Only the group that has a photo gets a section and a card.
     await expect(page.locator('#events-heading')).toHaveText(photography.events_title);
-    await expect(page.getByText(photography.events_intro)).toBeVisible();
+    await expect(page.getByText(photography.events_intro).first()).toBeVisible();
     await expect(page.locator('#portraits')).toHaveCount(0);
     await expect(page.locator('#environments')).toHaveCount(0);
     await expect(page.locator('a[href="#events"]')).toContainText('1 photo');
+  });
+
+  test('is indexable once a photo exists (noindex only while the gallery is empty)', async ({
+    page,
+  }) => {
+    // The CI dataset carries one photo, so the page must NOT ask to stay out of search.
+    // The empty-gallery side (noindex, follow) is unit-tested in src/lib/photos.test.ts
+    // (photographyRobots) and measured with NCS_CI_NO_TEST_CONTENT=1.
+    await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  });
+
+  test('is a service page: the rate, how booking works and a clear ask', async ({ page }) => {
+    await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('from $900', { exact: false }).first()).toBeVisible();
+    await expect(page.locator('#booking-heading')).toContainText('How booking');
+    await expect(page.locator('main ol li')).toHaveCount(4);
+    const ask = page.locator('main').getByRole('link', { name: 'Ask about a shoot' });
+    await expect(ask.first()).toHaveAttribute('href', '/contact/');
   });
 
   test('the gallery renders the test photo with width-only resizer URLs', async ({ page }) => {
@@ -271,9 +290,21 @@ test.describe('the not-found page', () => {
     await expect(page.getByText(notFound.label, { exact: true })).toBeVisible();
     await expect(page.getByText(notFound.body)).toBeVisible();
     const links = await page
-      .locator('main a')
+      .locator('main .notfound-actions a')
       .evaluateAll((as) => as.map((a) => [a.textContent?.trim(), a.getAttribute('href')]));
     expect(links).toEqual(notFound.links.map((l) => [l.label, l.href]));
+  });
+
+  test('offers the site menu as next links, and no Journal link while there are no posts', async ({
+    page,
+  }) => {
+    await page.goto('/this-page-does-not-exist-pr11/', { waitUntil: 'domcontentloaded' });
+    const nav = page.locator('nav[aria-label="Pages on this site"] a');
+    expect(await nav.count()).toBeGreaterThan(2);
+    for (const href of await nav.evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''))) {
+      expect(href, href).toMatch(/^\/.*\/$|^\/$/);
+      if (journalEmpty) expect(href).not.toContain('/journal');
+    }
   });
 
   test('/404/ by name answers 200 so Lighthouse can audit the template', async ({ page }) => {

@@ -1,0 +1,387 @@
+---
+// Safe to edit. The tier names, prices, ranges, notes, included lines and the
+// badge are CMS content (Pricing & services, "Pricing tiers" in the EmDash admin,
+// committed fallback cms/content/pricing_tiers.json); the caller reads them with
+// getPricingTiers() and passes them in. Only the "Fits" line per tier is code (no
+// CMS field holds it yet; see FITS below).
+/* ============================================================================
+   PriceTiers | the three website prices as one ruled price sheet
+   ============================================================================
+   Price as a real artifact (redesign 2026, d2 "ledger" mock-up): one sheet of
+   warm paper on the table, ruled like an estimate. Each tier is a column; each
+   line of the estimate (who it fits, what the site is, what is included) is a
+   row, and the rows line up across the three columns (CSS subgrid), so a board
+   member can read across "Fits" and compare. The price sits on a double rule,
+   the bookkeeper's mark for "this figure is final". The tier the CMS marks as
+   highlighted gets a china-marker loop round its price and its badge written
+   beside it in the red-pen italic (DESIGN.md: the keeper is circled).
+
+   Layout:
+     - 64rem and up: a label column on the left (decorative, aria-hidden) and
+       three tier columns. Each tier carries its own row labels for screen
+       readers (visually hidden at this width).
+     - Below 64rem: the columns become three slips stacked down the sheet, each
+       with its labels visible. Same markup, no duplicated text.
+
+   Not a card grid: no card shadows per tier, no top stripes, no glows. The
+   sheet is the one object; tiers are ruled columns on it.
+
+   Built as its own component so the homepage can adopt it later (the Home page
+   agent owns PricingTeaser). Props:
+     tiers     WebTier[] from getPricingTiers() (already ordered)
+     ctaHref   where each tier's "Ask about ..." link goes (default /contact/)
+     headingLevel  the tier names' heading level (default 3)
+   ============================================================================ */
+import type { WebTier } from '../lib/pricing';
+
+interface Props {
+  tiers: WebTier[];
+  ctaHref?: string;
+  headingLevel?: 2 | 3 | 4;
+}
+
+const { tiers, ctaHref = '/contact/', headingLevel = 3 } = Astro.props;
+const H = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+
+// Who each tier fits, by the audiences the studio serves (church, nonprofit,
+// school, small business). Code, keyed by the tier name in lower case, because the Pricing
+// tiers schema has no field for it yet; a tier whose name is not here shows
+// its short "who" line instead. Kept to examples, never a claim about past projects.
+const FITS: Record<string, string> = {
+  launch:
+    'A small church, a nonprofit with one main program, or a local business that needs a clear site its own people keep current.',
+  signature:
+    'A church with ministries, events and sermons, a school with admissions and a calendar, or a nonprofit with programs and news to keep up.',
+  flagship:
+    'An organization that needs tools of its own: a results database, member areas, booking, or deep links into other systems.',
+};
+
+const price = (t: WebTier) => `$${t.priceFrom.toLocaleString('en-US')}`;
+---
+
+<div class="sheet">
+  {/* The label column: the ledger's row heads at desktop. Decorative; every tier
+       column carries the same labels for assistive tech. */}
+  <div class="sheet-labels" aria-hidden="true">
+    <span></span>
+    <span>Price</span>
+    <span>Fits</span>
+    <span>The site</span>
+    <span>Includes</span>
+    <span></span>
+  </div>
+
+  <ol class="tiers" role="list">
+    {tiers.map((tier) => (
+      <li class:list={['tier', tier.highlighted && 'tier--pick']}>
+        <div class="tier-head">
+          <H class="tier-name">{tier.name}</H>
+          <p class="tier-who">{tier.who}</p>
+          {tier.badge && <p class="tier-badge">{tier.badge}</p>}
+        </div>
+
+        <div class="tier-price">
+          <p class="row-label row-label--sr">Price</p>
+          <p class="tier-amount">
+            <span class="tier-from">from</span>
+            <span class="tier-figure">
+              {price(tier)}
+              {tier.priceSuffix}
+              {tier.highlighted && (
+                <svg
+                  class="tier-loop"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path d="M5 14C30 4 76 3 96 12c3 22 2 56-3 78-28 7-62 7-87 0C1 68 1 36 5 14z" />
+                </svg>
+              )}
+            </span>
+          </p>
+          <p class="tier-range">{tier.range}</p>
+        </div>
+
+        <div class="tier-row">
+          <p class="row-label">Fits</p>
+          <p>{FITS[tier.name.toLowerCase()] ?? tier.who}</p>
+        </div>
+
+        <div class="tier-row">
+          <p class="row-label">The site</p>
+          <p>{tier.note}</p>
+        </div>
+
+        <div class="tier-row">
+          <p class="row-label">Includes</p>
+          <ul class="tier-features" role="list">
+            {tier.features.map((f) => (
+              <li>{f}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="tier-cta">
+          <a class="tier-link nudge" href={ctaHref}>
+            Ask about {tier.name}
+            <span data-nudge aria-hidden="true">
+              →
+            </span>
+          </a>
+        </div>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  /* The sheet: one piece of raised paper with a soft print shadow. */
+  .sheet {
+    position: relative;
+    background: var(--paper-raised);
+    color: var(--foreground);
+    border-radius: 2px;
+    box-shadow: var(--shadow-print);
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+  }
+
+  .sheet-labels {
+    display: none;
+  }
+
+  .tiers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  /* Phone and tablet: three slips down the sheet, ruled between. */
+  .tier {
+    display: grid;
+    gap: 1.1rem;
+    padding-block: 1.75rem;
+    border-top: 1px solid var(--border);
+  }
+  .tier:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .tier:last-child {
+    padding-bottom: 0;
+  }
+
+  .row-label {
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    color: var(--muted-foreground);
+    margin: 0 0 0.25rem;
+  }
+
+  /* The price says "from" itself; its label is for screen readers only. */
+  .row-label--sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .tier-name {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-h3);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    margin: 0;
+  }
+  .tier-who {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    color: var(--muted-foreground);
+  }
+  /* The badge, written in the margin in red pen. */
+  .tier-badge {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.125rem;
+    line-height: 1.3;
+    color: var(--marker);
+  }
+
+  /* The price on a double rule: "this figure is final". */
+  .tier-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0;
+    padding-bottom: 0.45rem;
+    border-bottom: 3px double var(--heading);
+    width: fit-content;
+  }
+  .tier-from {
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    color: var(--muted-foreground);
+  }
+  .tier-figure {
+    position: relative;
+    font-family: var(--font-display);
+    font-size: var(--text-numeral);
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--heading);
+  }
+  /* The china-marker loop round the kept price. Drawn, not animated. */
+  .tier-loop {
+    position: absolute;
+    inset: -0.45em -0.4em -0.35em -0.2em;
+    width: calc(100% + 0.6em);
+    height: calc(100% + 0.8em);
+    overflow: visible;
+    pointer-events: none;
+  }
+  .tier-loop path {
+    fill: none;
+    stroke: var(--marker);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .tier-range {
+    margin: 0.6rem 0 0;
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    color: var(--muted-foreground);
+  }
+
+  .tier-row p:not(.row-label) {
+    margin: 0;
+    font-size: var(--text-body);
+    line-height: 1.5;
+    max-width: 40ch;
+  }
+  .tier-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+    font-size: var(--text-body);
+    line-height: 1.45;
+  }
+  /* A short ruled dash, like a line item on an estimate. */
+  .tier-features li {
+    position: relative;
+    padding-left: 1.1rem;
+  }
+  .tier-features li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.75em;
+    width: 0.55rem;
+    border-top: 1px solid var(--muted-foreground);
+  }
+
+  .tier-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--link) 40%, transparent);
+    text-underline-offset: 0.2em;
+  }
+  .tier-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* Desktop: the ledger. Label column + three tier columns; each tier spans six
+     rows of a shared grid (subgrid) so "Fits", "The site" and "Includes" line
+     up across the sheet. */
+  @media (min-width: 64rem) {
+    .sheet {
+      display: grid;
+      grid-template-columns: 7rem repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(6, auto);
+      column-gap: 0;
+    }
+    .sheet-labels {
+      display: grid;
+      grid-row: 1 / span 6;
+      grid-template-rows: subgrid;
+      font-family: var(--font-ui);
+      font-size: var(--text-caption);
+      font-weight: 600;
+      color: var(--muted-foreground);
+    }
+    .sheet-labels span {
+      padding-block: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .sheet-labels span:first-child {
+      border-top: 0;
+    }
+    .tiers {
+      grid-column: 2 / span 3;
+      grid-row: 1 / span 6;
+      display: grid;
+      grid-template-columns: subgrid;
+      grid-template-rows: subgrid;
+    }
+    .tier {
+      grid-row: 1 / span 6;
+      grid-template-rows: subgrid;
+      gap: 0;
+      padding: 0 1.5rem;
+      border-top: 0;
+      border-left: 1px solid var(--border);
+    }
+    .tier:first-child {
+      padding-top: 0;
+    }
+    .tier > * {
+      padding-block: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .tier > .tier-head {
+      border-top: 0;
+      padding-top: 0;
+    }
+    .tier > .tier-cta {
+      padding-bottom: 0;
+    }
+    /* The label column says it; keep the words for screen readers only. */
+    .tier .row-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .tier-head,
+    .tier-price,
+    .tier-row,
+    .tier-cta {
+      position: relative;
+    }
+  }
+</style>

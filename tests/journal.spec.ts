@@ -49,8 +49,12 @@ test.describe('/journal/<entry>', () => {
     // No leading whitespace inside the <pre> (it would indent the first line).
     expect(await pre.evaluate((el) => el.textContent)).toBe("const greeting = 'hello';");
 
-    // Tag chips in the header and the "Filed under" footer.
-    await expect(page.locator('article li', { hasText: 'CI notes' })).toHaveCount(2);
+    // Tags are plain words in the caption line and in the "Filed under" footer (no chips).
+    await expect(page.locator('article header, article > section').first()).toContainText(
+      'CI notes',
+    );
+    await expect(page.locator('article footer')).toContainText('Filed under CI notes');
+    await expect(page.locator('article .font-mono, article [class*="uppercase"]')).toHaveCount(0);
 
     // The cover is a resized WebP, not the original.
     const cover = page.locator('article img').first();

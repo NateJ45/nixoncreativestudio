@@ -40,17 +40,16 @@ Moved out of CLAUDE.md. Loads when a foundation file is touched.
 - `src/styles/globals.css` (Tailwind 4 `@theme` blocks for brand tokens, shadcn `:root` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the Starwind extra semantic tokens `--outline` + status colors in `:root`)
 - `src/styles/starwind.css` (Starwind accordion keyframes + `@theme inline` mappings for its extra tokens; imported in BaseLayout right after globals.css)
 - `src/live.config.ts` (the EmDash live collection; there is no `src/content.config.ts` any more)
-- `src/layouts/BaseLayout.astro` structure (the `.js` marker script, skip link, header/main/footer wiring, View Transitions ClientRouter, Lenis script tag, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
+- `src/layouts/BaseLayout.astro` structure (the `.js` marker script, skip link, header/main/footer wiring, View Transitions ClientRouter, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
 - `src/components/ui/` shadcn primitives (installed via shadcn CLI; the custom `brand` variant and `cta` size in `button.tsx` are the only Nathan-edits)
 - `src/components/starwind/` Starwind Astro-native primitives + `starwind.config.json` (vendored as a unit with `src/styles/starwind.css`)
 - `src/components/primereact/` PrimeReact escape hatch (passthrough + island + README)
 - Aceternity / Magic UI component swaps in `src/components/ui/aceternity/` and `src/components/ui/`
 - React islands: `Photo.tsx`, `PhotoGallery.tsx`, `TestimonialCarousel.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`
-- Astro wrappers: `HeroShowcase.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
+- Astro wrappers: `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
 - The 2026 design primitives: `Band.astro`, `Frame.astro`, `Logo.astro`, `MobileMenu.astro`, `BackToTop.astro`, `Header.astro`, `Footer.astro`, `src/scripts/grounds.ts`, the assets in `src/assets/grounds/`, `src/assets/brand/` and `src/assets/fonts/` (regenerate with `scripts/brand/`), and `DESIGN.md`
 - `src/lib/readingTime.ts`
 - `src/lib/cms.ts`, `src/lib/cmsFallback.ts`, `src/lib/portableText.ts`, `src/components/emdash/RestrictedPortableText.astro`, `scripts/lib/emdash-schema.mjs`, `scripts/lib/cms-load.mjs`, `scripts/cms/` (the CMS foundation; a bug here reaches every editable page)
-- `src/scripts/lenis-init.ts` (smooth scroll setup)
 - `scripts/generate-og-default.mjs`, `scripts/generate-icons.mjs`
 - `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`, `eslint.config.js`, `.prettierrc`, `.prettierignore`, `playwright.config.ts`, `lighthouserc.json`, `.github/workflows/ci.yml`, `.github/workflows/lighthouse.yml`
 - `ComingSoonGate.astro` and `src/components/analytics/` (the inline script tags BaseLayout and Analytics render conditionally)

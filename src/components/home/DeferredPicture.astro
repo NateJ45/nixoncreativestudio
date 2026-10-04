@@ -1,0 +1,100 @@
+---
+// Safe to edit.
+/* ============================================================================
+   DeferredPicture (a below-the-fold picture that waits until it is needed)
+   ============================================================================
+   CLAUDE.md Gotcha 14: Lighthouse counts every request that starts before the
+   LCP, and a native loading="lazy" image inside Chrome's lazy-load distance
+   (1250 px or more) is NOT held back, so the homepage's work and about
+   pictures were downloading beside the hero's LCP frame and pushing it past
+   2.5 s. This renders the picture with its AVIF and WebP srcsets parked in
+   data- attributes and promotes them when the picture scrolls into view (no
+   rootMargin, on purpose) or 3.5 s after the load event, whichever is first.
+   A <noscript> copy is the real picture for a visitor without JavaScript.
+   Width and height are always set, so nothing shifts when it arrives.
+
+   The same pattern as ScrollShot's `defer` (src/components/emdash/).
+   ============================================================================ */
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  widths: number[];
+  sizes: string;
+  class?: string;
+}
+
+const { src, alt, widths, sizes, class: className } = Astro.props;
+const [avif, webp] = await Promise.all([
+  getImage({ src, widths, format: 'avif' }),
+  getImage({ src, widths, format: 'webp' }),
+]);
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+---
+
+<picture class={className} data-defer-pic>
+  <source type="image/avif" sizes={sizes} data-srcset={avif.srcSet.attribute} />
+  <img
+    src={BLANK}
+    data-src={webp.src}
+    data-srcset={webp.srcSet.attribute}
+    sizes={sizes}
+    alt={alt}
+    width={src.width}
+    height={src.height}
+    decoding="async"
+  />
+</picture>
+<noscript>
+  <picture class={className}>
+    <source type="image/avif" sizes={sizes} srcset={avif.srcSet.attribute} />
+    <img
+      src={webp.src}
+      srcset={webp.srcSet.attribute}
+      sizes={sizes}
+      alt={alt}
+      width={src.width}
+      height={src.height}
+      loading="lazy"
+      decoding="async"
+    />
+  </picture>
+</noscript>
+
+<script>
+  // Promote each parked picture once: on scroll into view, or 3.5 s after load.
+  // astro:page-load keeps it working across view transitions; a promoted picture
+  // loses its marker, so a second run does nothing to it.
+  function promote(pic: Element) {
+    if (!pic.hasAttribute('data-defer-pic')) return;
+    pic.removeAttribute('data-defer-pic');
+    pic.querySelectorAll<HTMLElement>('[data-srcset], [data-src]').forEach((el) => {
+      for (const a of ['srcset', 'src'] as const) {
+        const v = el.dataset[a];
+        if (v) {
+          el.setAttribute(a, v);
+          delete el.dataset[a];
+        }
+      }
+    });
+  }
+  document.addEventListener('astro:page-load', () => {
+    const pending = () => Array.from(document.querySelectorAll('[data-defer-pic]'));
+    if (!pending().length) return;
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          promote(e.target.closest('picture') ?? e.target);
+          io.unobserve(e.target);
+        }
+      });
+      pending().forEach((p) => io.observe(p.querySelector('img') ?? p));
+    }
+    const warm = () => setTimeout(() => pending().forEach(promote), 3500);
+    if (document.readyState === 'complete') warm();
+    else addEventListener('load', warm, { once: true });
+  });
+</script>
