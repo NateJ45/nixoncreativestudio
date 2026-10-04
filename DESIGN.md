@@ -113,15 +113,15 @@ Do not add a hue. Do not put `--marker-hot` or `--river` text on paper. Do not u
 
 ## 3. Typography
 
-Three families by role, four files, all self-hosted woff2 latin subsets in `src/assets/fonts/` (from Fontsource):
+Three families by role, four faces, all self-hosted woff2 from Fontsource's latin subsets, each split into a "core" and an "ext" file by `unicode-range` (`scripts/brand/subset-fonts.py`, sources in `scripts/brand/font-sources/`): core holds what English copy uses (ASCII, curly quotes, dashes, ellipsis, (c), the middle dot) and is about 40% smaller; ext holds the accented letters and rarer marks and downloads only on a page whose text needs one. Sizes below are the core files.
 
-- **Bebas Neue** (13.8 KB, preloaded): Nathan's logo face. The display line, headlines h1 to h4, numerals (prices, durations, years), the phone-menu rows. Tracking 0.01em; never body copy, never long labels.
-- **Newsreader** regular (22.5 KB, preloaded), italic (24.3 KB, on demand), semibold (23.9 KB, on demand): body, ledes, h5 and h6, and the **second voice**: the italic turn at the end of a Bebas headline, in china-marker red (`.voice`, "I MAKE WEBSITES THAT / _pull their weight._"). Every big headline turns into the italic for its last phrase, so no headline is a block of caps.
+- **Bebas Neue** (9.6 KB, preloaded): Nathan's logo face. The display line, headlines h1 to h4, numerals (prices, durations, years), the phone-menu rows. Tracking 0.01em; never body copy, never long labels.
+- **Newsreader** regular (13.8 KB, preloaded), italic (15.3 KB, on demand), semibold (14.8 KB, on demand): body, ledes, h5 and h6, and the **second voice**: the italic turn at the end of a Bebas headline, in china-marker red (`.voice`, "I MAKE WEBSITES THAT / _pull their weight._"). Every big headline turns into the italic for its last phrase, so no headline is a block of caps.
 - **System sans** (0 KB): the furniture. Nav, buttons, form fields and labels, captions, edge print. Legible, not expressive.
 
 Role classes (globals.css section 5): `.type-display`, `.type-headline`, `.voice`, `.type-lede`, `.type-body`, `.type-caption`, `.type-numeral`, `.type-ui`. Use the role, not a size. Fluid scale tokens: `--text-display`, `--text-h1` to `--text-h6`, `--text-lede`, `--text-body`, `--text-ui`, `--text-caption`, `--text-numeral` (utilities `text-h2` and so on).
 
-**Loading and CLS.** BaseLayout preloads Bebas and Newsreader regular on every page (36.2 KB, down from 42.5 KB for Bebas plus Source Sans 3). A page whose first screen sets the italic or bold text adds `preloadFonts={['italic']}` or `['semibold']` to BaseLayout. Every family has a metric-matched local fallback (`size-adjust` and ascent / descent overrides measured from the font tables): Bebas against Impact (77.47%), Newsreader against Georgia (95.74% roman, 87.45% italic, 86.15% bold). Measured CLS 0 on every Lighthouse run (home and /services, mobile).
+**Loading and CLS.** BaseLayout preloads the core files of Bebas and Newsreader regular on every page (23.4 KB; 36.2 KB before the core/ext split, 42.5 KB for Bebas plus Source Sans 3 before that). A page whose first screen sets the italic or bold text adds `preloadFonts={['italic']}` or `['semibold']` to BaseLayout. Every family has a metric-matched local fallback (`size-adjust` and ascent / descent overrides measured from the font tables): Bebas against Impact (77.47%), Newsreader against Georgia (95.74% roman, 87.45% italic, 86.15% bold). Measured CLS 0 on every Lighthouse run (home and /services, mobile).
 
 No monospace labels, no tracked uppercase eyebrows. Uppercase small text appears only as film edge print, and only for facts.
 

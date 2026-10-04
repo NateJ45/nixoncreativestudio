@@ -42,11 +42,13 @@ import { ClientRouter } from 'astro:transitions';
 // Opt-in per page with preloadFonts: 'italic' (a page whose first screen sets
 // the italic second voice, like the home hero) and 'semibold' (bold body copy
 // above the fold). Preload only what the first screen uses: each file is
-// about 24 KB on the simulated slow-4G link.
-import bebasWoff2 from '../assets/fonts/bebas-neue-latin-400.woff2?url';
-import newsreaderWoff2 from '../assets/fonts/newsreader-latin-400.woff2?url';
-import newsreaderItalicWoff2 from '../assets/fonts/newsreader-latin-400-italic.woff2?url';
-import newsreaderSemiboldWoff2 from '../assets/fonts/newsreader-latin-600.woff2?url';
+// 10 to 15 KB on the simulated slow-4G link. Only the "core" file of each face
+// is preloaded: the "ext" file (accented letters, rarer marks) downloads on its
+// own when a page's text needs it (globals.css section 2, unicode-range).
+import bebasWoff2 from '../assets/fonts/bebas-neue-latin-400-core.woff2?url';
+import newsreaderWoff2 from '../assets/fonts/newsreader-latin-400-core.woff2?url';
+import newsreaderItalicWoff2 from '../assets/fonts/newsreader-latin-400-italic-core.woff2?url';
+import newsreaderSemiboldWoff2 from '../assets/fonts/newsreader-latin-600-core.woff2?url';
 
 // Coming-soon gate. Implemented client-side so the owner can bypass
 // per-device by visiting a magic URL, while everyone else lands on

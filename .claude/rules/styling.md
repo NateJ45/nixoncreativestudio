@@ -51,7 +51,7 @@ Pages are runs of `<Band ground="...">` (`src/components/Band.astro`): `paper` (
 
 - Bebas Neue (logo face): display, h1 to h4, numerals. Newsreader: body, ledes, h5 and h6, and the italic **second voice** (`.voice`, marker red) that ends each big headline. System sans: nav, buttons, labels, captions, form fields.
 - Role classes: `.type-display`, `.type-headline`, `.voice`, `.type-lede`, `.type-body`, `.type-caption`, `.type-numeral`, `.type-ui`. Scale tokens `--text-display`, `--text-h1` to `--text-h6`, `--text-lede`, `--text-body`, `--text-ui`, `--text-caption`, `--text-numeral`.
-- Fonts are self-hosted in `src/assets/fonts/` with metric-matched fallbacks. BaseLayout preloads Bebas and Newsreader regular; add `preloadFonts={['italic']}` (or `'semibold'`) when the first screen uses them.
+- Fonts are self-hosted in `src/assets/fonts/` with metric-matched fallbacks, each face split into a preloadable `-core` file and a `-ext` file by `unicode-range` (regenerate both with `python scripts/brand/subset-fonts.py`; never edit the woff2 files by hand). BaseLayout preloads the Bebas and Newsreader regular core files; add `preloadFonts={['italic']}` (or `'semibold'`) when the first screen uses them.
 - No mono or tracked-uppercase eyebrows; uppercase small text only as film edge print of facts.
 
 ## Motion vocabulary
