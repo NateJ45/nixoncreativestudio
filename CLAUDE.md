@@ -17,10 +17,9 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 - Words, prices, menus, redirects, case studies, journal, photos: the EmDash admin at `/_emdash/admin/` (passkey login), not files. Committed fallback and seed: `cms/content/*.json`; field definitions: `cms/schema/*.mjs`; readers: `src/lib/*.ts`; shared values via `getSite()` in `src/data/site.ts`.
 - Case studies are collection `case_studies` in EmDash (D1, R2, KV), read by `src/lib/caseStudies.ts`. There are no Astro content collections and no `src/content/`; `src/live.config.ts` is the only content config.
 - Cache and headers: `src/worker.ts`, `src/lib/routeCache.ts`, `cachePublicPage()` in `BaseLayout`. `public/_headers` no longer reaches HTML (Gotcha 15).
-- The 2026 redesign is live (rounds 1 and 2); where it stopped, what Nathan has decided and what to try next: `docs/redesign-2026/ROUND-2-HANDOFF.md`. Design system: `DESIGN.md`.
+- The 2026 redesign was ROLLED BACK on 2026-10-05 (Nathan did not like the look). The site runs the pre-redesign look (state of 48846c6, after the EmDash move). The redesign stays in git history (PRs #95, #97, #98) and in `docs/redesign-2026/`; revert the revert PR to bring it back. `cms/` (content JSON and schema) was deliberately kept at the redesign version because production and the CI dataset already hold that copy and the extra `launch_status` and `price_range` fields; the old code ignores unknown fields.
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.
 - Read `docs/claude/strategy-and-audience.md` before any design call (the original strategy docx was deleted; use `PRODUCT.md` and `docs/`).
-- The design system is `DESIGN.md` (palette, type, grounds, components, open decisions). The 2026 redesign lives in `docs/redesign-2026/`; page agents start with its `BUILD-NOTES.md`.
 
 ## Vault
 
@@ -56,7 +55,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 4. **Never import `emdash/ui`'s `PortableText`** on a public page: its 9.5 KB stylesheet becomes a render-blocking link everywhere. Use `blockHtml()` / `renderJournalBody()`.
 5. **Production data steps** (`cms:production-load`, `cms:tidy`) run from the main session in Nathan's presence, `--dry-run` first, never from a delegated agent.
 6. **Contact and identity strings come from `getSite()`**, never hardcoded in `.astro` files; React islands get them as props and must not import `src/data/site.ts`.
-7. **Colors come from tokens** (`bg-primary`, `text-link`; in CSS the raw `var(--link)`), never hex in components. Every new pair clears WCAG AA and goes into `theme-tokens.test.ts` (one theme; dark mode was retired in the 2026 redesign). Heading emphasis is a solid token span, never gradient text. Accessibility stays at Lighthouse 100.
+7. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA in both themes. Heading emphasis is a solid token span, never gradient text. Accessibility stays at Lighthouse 100.
 8. **Internal links carry their trailing slash** (menu items go through `withTrailingSlash()`), or prefetch is wasted on a 301 (Gotcha 19).
 9. **The `www` to apex redirect rule must exempt `/_emdash/` and `/_astro/`**, or the admin breaks (Gotcha 24).
 10. **Template-expression comments are `{/* */}`**, never `<!-- -->` (breaks lint and format, Gotcha 1). A conditional `<script>` goes in its own component.
@@ -81,7 +80,7 @@ Path-scoped rules (load automatically when you touch matching files):
 
 - `.claude/rules/homepage-and-pages.md`: homepage section order, every CMS-DESIGN PR 6 to 12 page contract (`src/pages`, `src/components`, `src/lib`).
 - `.claude/rules/cms-content.md`: content editing, site data and menus, collections, routes table (`cms/`, `src/lib`, `src/data`, `scripts/cms`).
-- `.claude/rules/styling.md`: palette and scopes, grounds and bands, type roles, motion vocabulary (summary of `DESIGN.md`).
+- `.claude/rules/styling.md`: brand colors, shadcn mapping, theme, motion vocabulary, typography.
 - `.claude/rules/components.md`: component order of preference, Button variants, `client:only`, studio components, code conventions, images.
 - `.claude/rules/accessibility.md`: AA target, required patterns, token contrast, before-merging checks.
 - `.claude/rules/build-pipeline.md`: `npm run build` chain, OG cards, icons.
@@ -92,7 +91,7 @@ Path-scoped rules (load automatically when you touch matching files):
 Reference docs, read when needed (`docs/claude/`):
 
 - `emdash-architecture.md`: read before changing rendering, caching, images, wrangler config or the CI dataset.
-- `gotchas.md`: full text of Gotchas 1 to 27 (index below). Read the entry before touching what its line mentions.
+- `gotchas.md`: full text of Gotchas 1 to 25 (index below). Read the entry before touching what its line mentions.
 - `deployment.md`: read when changing deploys, env vars (`PUBLIC_*`), the Coming Soon gate or security headers.
 - `stack.md`: read when choosing or wiring a library.
 - `setup-checklist.md`: read when asked what is unconfigured or what content is outstanding.
@@ -104,8 +103,8 @@ Existing docs: `docs/EMDASH.md` (what exists, gotchas), `docs/EMDASH-SCHEMA.md`,
 ## Gotcha index (full text: `docs/claude/gotchas.md`)
 
 1. Lint is green and gated; a red run is your change.
-2. Retired: `variant="secondary"` used to fail contrast (now AA).
-3. Retired: the old `--link` navy claim (palette replaced 2026-10-04).
+2. `variant="secondary"` on Button or Badge fails contrast (unused today).
+3. The `--link` comment in `globals.css` overclaims; never `text-link` on navy.
 4. Live site does two redirect hops; uptime checks need `curl -L`.
 5. Parity harness needs no site-specific normalizer rules.
 6. `npm run build` kills stale dev servers first (`free-dist.mjs`).
@@ -128,5 +127,3 @@ Existing docs: `docs/EMDASH.md` (what exists, gotchas), `docs/EMDASH-SCHEMA.md`,
 23. Mobile speed: how to measure, what moved it, dead ends.
 24. The `www` redirect rule must exempt `/_emdash/` and `/_astro/`.
 25. Committed parity baselines and Markdown docs feed Tailwind's scan; `globals.css` excludes them with `@source not`.
-26. In CSS read `var(--link)`, never `var(--color-link)`: the alias ignores a ground's scope.
-27. Vite inlines assets under 4 KB into CSS; `astro.config.mjs` keeps the ground textures out.

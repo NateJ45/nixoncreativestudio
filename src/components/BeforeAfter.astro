@@ -65,9 +65,9 @@ const {
 } = Astro.props;
 ---
 
-<figure class="ba-figure">
+<figure class="my-l">
   <div
-    class="ba relative overflow-hidden rounded-[2px] shadow-[var(--shadow-frame)] select-none"
+    class="ba relative overflow-hidden rounded-xl border border-border shadow-[var(--shadow-frame)] select-none"
     data-beforeafter
     style="--pos: 50%;"
   >
@@ -113,11 +113,11 @@ const {
 
     <!-- Corner labels, color-coded. Before (left) is a neutral pill; After
          (right) is the brand-accent pill, marking it as the new site. -->
-    <span class="ba-label ba-label--before pointer-events-none absolute top-3 left-3 z-10">
+    <span class="pointer-events-none absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary/85 px-3 py-1 font-mono text-xs font-semibold tracking-[0.08em] text-primary-foreground uppercase shadow-sm backdrop-blur-sm">
       <span aria-hidden="true">←</span>
       {beforeLabel}
     </span>
-    <span class="ba-label ba-label--after pointer-events-none absolute top-3 right-3 z-10">
+    <span class="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 font-mono text-xs font-semibold tracking-[0.08em] text-accent-foreground uppercase shadow-sm">
       {afterLabel}
       <span aria-hidden="true">→</span>
     </span>
@@ -128,8 +128,8 @@ const {
       style="left: var(--pos);"
       aria-hidden="true"
     >
-      <span class="ba-line absolute inset-y-0 -ml-px w-0.5"></span>
-      <span class="absolute top-1/2 -mt-[1.375rem] -ml-[1.375rem] flex h-11 w-11 items-center justify-center ba-knob rounded-full shadow-md">
+      <span class="absolute inset-y-0 -ml-px w-0.5 bg-white/90"></span>
+      <span class="absolute top-1/2 -mt-[1.375rem] -ml-[1.375rem] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg text-text shadow-md">
         <svg
           viewBox="0 0 24 24"
           width="18"
@@ -157,48 +157,12 @@ const {
       aria-label={`Comparison slider: drag to reveal the previous site on the left and the redesigned site on the right`}
     />
   </div>
-  <figcaption class="ba-caption type-caption">
+  <figcaption class="mt-xs text-center font-mono text-[0.75rem] text-text-muted">
     Drag the handle: the previous site is on the left, the redesign on the right.
   </figcaption>
 </figure>
 
 <style>
-  .ba-figure {
-    margin: 0;
-  }
-  /* Labels: sentence case UI sans, ink and paper chips (no mono, no tracked caps). */
-  .ba-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.6rem;
-    border-radius: 2px;
-    font: 600 0.8125rem/1.2 var(--font-ui);
-  }
-  .ba-label--before {
-    background: var(--ink);
-    color: var(--paper);
-  }
-  .ba-label--after {
-    background: var(--paper);
-    color: var(--ink);
-  }
-  .ba-line {
-    background: var(--paper);
-  }
-  .ba-knob {
-    border: 2px solid var(--paper);
-    background: var(--ink);
-    color: var(--paper);
-  }
-  .ba-caption {
-    margin-top: var(--spacing-s);
-  }
-  /* The range input is invisible; show the keyboard focus on the frame. */
-  .ba:has(.ba-range:focus-visible) {
-    outline: 3px solid var(--ring);
-    outline-offset: 4px;
-  }
   /* Clip the BEFORE layer from the left edge to the slider position, so the
      left side shows "before" and the right side shows the base "after". */
   .ba-before {

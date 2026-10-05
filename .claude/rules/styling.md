@@ -7,64 +7,86 @@ paths:
   - 'src/pages/**'
 ---
 
-# Styling: palette, grounds, type, motion
+# Styling: brand colors, theme, motion, typography
 
-Loads when styles, components, layouts or pages are touched. The design system is `DESIGN.md` at the repo root (north star, every token with its contrast, the grounds, components, do's and don'ts, open decisions). This file is the working summary; the CSS in `src/styles/globals.css` wins if they disagree.
+Moved out of CLAUDE.md. Loads when styles, components, layouts or pages are touched.
 
-## Palette and tokens
+## Brand colors
 
-One art-directed theme since the 2026 redesign: warm fibre paper, the logo's ink, one china-marker red. Every colour is a plain hex literal in `:root` (globals.css section 12) and is wired to utilities through `@theme inline` (section 11), so `bg-primary`, `text-heading`, `text-link`, `text-text-muted`, `bg-bg-soft`, `border-border`, `ring-ring` all work. Use utilities or tokens, never hex in a component.
+Declared in the `@theme` block inside `src/styles/globals.css`. Reference via utility classes (`bg-primary`, `text-accent`, `border-secondary`) rather than hardcoded hex anywhere in component code.
 
-| Token                                     | Hex       | Use                                                   |
-| ----------------------------------------- | --------- | ----------------------------------------------------- |
-| `--ink` (`--primary`, `--heading`)        | `#0A1628` | Headings, buttons, the deep ground                    |
-| `--ink-body` (`--foreground`)             | `#1D2532` | Body text                                             |
-| `--ink-muted` (`--muted-foreground`)      | `#56585C` | Meta text                                             |
-| `--paper` (`--background`)                | `#F3EEE4` | The page                                              |
-| `--paper-deep` (`--muted`, `--secondary`) | `#E9E1D2` | Sunk bands, quiet buttons                             |
-| `--paper-raised` (`--card`)               | `#FBF8F2` | Cards, popovers                                       |
-| `--marker` (`--accent`, `--ring`)         | `#AE2F1B` | The italic voice, button hover, focus ring            |
-| `--brick` (`--link`, `--destructive`)     | `#8E2B1B` | Links and accent text, form errors                    |
-| `--marker-hot` (`--tertiary`)             | `#F2835F` | The marker on ink; graphic marks. Never text on paper |
+| Role                                     | Hex       |
+| ---------------------------------------- | --------- |
+| Primary (dark navy)                      | `#0A1628` |
+| Accent (NCS blue)                        | `#3478BD` |
+| Link (deeper NCS blue, accent body text) | `#2A6FB0` |
+| Secondary (sky blue)                     | `#40AAED` |
+| Tertiary (amber)                         | `#FFA334` |
+| Heading                                  | `#0A1628` |
+| Base text                                | `#1A1A1A` |
+| Section background (ultra light)         | `#F4F7FA` |
+| Muted text                               | `#5F6573` |
+| White                                    | `#FFFFFF` |
 
-shadcn mapping: `--primary` is ink (default Button), `--accent` is the marker, `--secondary` is paper-deep (so `variant="secondary"` is now AA; Gotcha 2 is retired). If a shadcn primitive looks off-brand, fix `:root`, not the primitive.
+The accent and muted-text values are shifted slightly darker from their
+original brand swatches (`#3B82C4` and `#6B7280`) so white-on-accent and
+muted-on-soft-bg both clear WCAG AA 4.5:1. The shifts are small enough
+to be visually unchanged in normal use. `--link` is a dedicated darker
+NCS blue used for accent-toned body text (Footer rest links, card-link
+arrows, Process / Services step numbers, prose anchors) so the brand
+`--accent` can keep its vibrancy for buttons, focus rings, and large
+CTAs where the white foreground carries the contrast.
 
-**Scopes.** `.on-ink` (every deep ground) re-points the semantic tokens: paper text, vermilion links and voice, paper buttons with ink labels, a vermilion ring. `.ground-paper-contours` darkens `--muted-foreground` and turns `--marker` brick. **So in CSS write `var(--link)`, `var(--heading)`, `var(--marker)`; never `var(--color-link)`**: the `--color-*` aliases resolve at `:root` and ignore the scope (Gotcha 26).
+### shadcn token mapping (foundation, do not change casually)
 
-Every new pair goes into `src/lib/theme-tokens.test.ts`; any token change re-runs `node scripts/brand/build-grounds.mjs` (it checks text against each ground's worst pixel).
+shadcn's CLI defines its own `@theme inline` block that points `--color-primary`, `--color-secondary`, `--color-accent`, `--color-background`, `--color-foreground` at semantic tokens (`--primary`, `--secondary`, etc.) declared further down in `:root`. Without intervention, `bg-primary` would produce shadcn's default grayscale.
 
-## Theme
+The `:root` block in `globals.css` overrides shadcn's defaults so `--primary` is brand navy, `--accent` is NCS blue, `--secondary` is sky blue, and so on. This means:
 
-One theme. No dark mode, no toggle, no `.dark` block, no stored preference. `@custom-variant dark (&:is(.dark *))` stays only so the `dark:` utilities inside vendored shadcn primitives stay inert (without it Tailwind 4 would follow `prefers-color-scheme`); nothing adds `.dark`, and site code never writes `dark:`. The inline script in `BaseLayout.astro` only adds `.js` to `<html>`. The removal is one revertible commit ("Retire dark mode and the theme toggle").
+- `bg-primary` on a marketing surface and shadcn's Button default variant both produce brand navy.
+- `bg-accent` produces NCS blue everywhere, including shadcn primitives' focus rings (`--ring` is also pointed at NCS blue).
 
-## Grounds and bands
+If a new shadcn primitive ever looks "off-brand," the fix is almost always in that `:root` block, not in the primitive's source.
 
-Pages are runs of `<Band ground="...">` (`src/components/Band.astro`): `paper` (default), `window-light` (limewash wall and late sun, the hero), `paper-contours` (the Ohio bend, closing bands), `deep` (ink board under a raking lamp, always `.on-ink`). Props: `still`, `underHeader`, `tight`, `flush`, `container`, `as`, `labelledby`, `label`. The classes (`ground ground-window-light` and so on) also work alone on a section: texture without the moving layer.
+## Theme system
 
-- One moving ground per page, at the top; `still` on the rest; the footer is always still.
-- Never a deep band under the plain header. The one exception is a page that passes `headerOnInk` to BaseLayout (the home hero, DESIGN.md "Hero ground"): the header then shows its on-ink face until it scrolls.
-- Textures attach after the load event (`html.grounds-ready`, `src/scripts/grounds.ts`) and never sit in the CSS (`astro.config.mjs` keeps `src/assets/grounds/` out of Vite's inlining), so they never delay LCP.
-- Moving layers animate transform and opacity only, pause off screen (`.is-off`) and show a still under reduced motion.
-- Component classes are in `@layer components`, so a utility on the same element wins; a component's scoped `<style>` beats both.
+Three-state toggle (light / dark / system), persisted to `localStorage["ncs-theme"]`. System is the default for first-time visitors; while set to System, the page listens to `matchMedia('(prefers-color-scheme: dark)')` and flips live when the OS changes.
 
-## Type
+The wiring, in order of execution:
 
-- Bebas Neue (logo face): display, h1 to h4, numerals. Newsreader: body, ledes, h5 and h6, and the italic **second voice** (`.voice`, marker red) that ends each big headline. System sans: nav, buttons, labels, captions, form fields.
-- Role classes: `.type-display`, `.type-headline`, `.voice`, `.type-lede`, `.type-body`, `.type-caption`, `.type-numeral`, `.type-ui`. Scale tokens `--text-display`, `--text-h1` to `--text-h6`, `--text-lede`, `--text-body`, `--text-ui`, `--text-caption`, `--text-numeral`.
-- Fonts are self-hosted in `src/assets/fonts/` with metric-matched fallbacks, each face split into a preloadable `-core` file and a `-ext` file by `unicode-range` (regenerate both with `python scripts/brand/subset-fonts.py`; never edit the woff2 files by hand). BaseLayout preloads the Bebas and Newsreader regular core files; add `preloadFonts={['italic']}` (or `'semibold'`) when the first screen uses them.
-- No mono or tracked-uppercase eyebrows; uppercase small text only as film edge print of facts.
+1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint. Reads `localStorage["ncs-theme"]` and `prefers-color-scheme`, applies the `.dark` class on `<html>` plus an inline `color-scheme` style so native widgets (scrollbars, form controls) follow. No flash of the wrong theme on initial paint or after View Transitions.
+2. **`ThemeToggle.tsx`** (React island in the Header and the mobile nav panel) cycles light → dark → system on click, writes to the same localStorage key, and re-binds the matchMedia listener whenever the chosen theme changes.
+3. **`globals.css`** defines color tokens for both modes. `:root` carries light; `.dark` carries the overrides. Brand `--accent` and `--secondary` keep their visual identity in both modes; only the surface and text tokens flip. See Brand colors above for the exact token responsibilities.
 
-## Motion vocabulary
+`--primary` (navy) deliberately stays navy in dark mode so the default Button and the navy aurora bands stay on-brand. The Hero, Footer, Process Band, and CtaBanner are all theme-aware via `.band-themed` (light surface + soft brand glow in light mode, navy aurora in dark), so light mode reads bright and airy from top to bottom while dark mode stays one immersive navy field. `--accent-foreground` flips to navy in dark mode so white text on the brightened sky-blue accent doesn't fail contrast.
 
-Defined once in globals.css section 8. Use these; don't reinvent:
+## Motion and effects system
 
-- `data-reveal` (+ `fade` / `left` / `right`, stagger with `style="--reveal-delay: 90ms"`): figures, frames and numerals below the fold only. Hidden state scoped to `.js`; the first block of `<main>` never waits (never-break rule 2). **Screenshot trap:** a fast or `fullPage`-only capture leaves revealed bands blank; scroll through in 400 px steps with pauses first.
-- `.motion-drift` (`--drift`): a scroll-driven translate as an element crosses the viewport; still where unsupported.
-- `.nudge` + `data-nudge` on an arrow, and `.card-link`: the 3 px arrow nudge.
-- `data-countup data-countup-to="10"`: count-ups. Always render the real final value as the static text.
-- The grounds (above).
-- Gone, do not bring back: aurora, grain, `.band-themed`, `.bg-mesh-soft`, `.bg-dotgrid`, `.shine`, the cursor spotlight glow (`.spotlight-card` is now inert), gradient text, the WebGL hero.
+The site runs a deliberately animation-rich, polished design. The homepage and inner pages lean into scroll motion, animated backgrounds, and hover micro-interactions on purpose. The one hard constraint: every effect must stay WCAG AA and reduced-motion safe, which the system below handles automatically.
 
-Legacy utilities still used by pages not yet rebuilt (`.surface-card`, `.hover-lift`, `.spotlight-card`, `.link-underline`) live in globals.css section 9, retinted. New work does not use them; delete each when its last user goes.
+The motion layer is two files plus a vocabulary of declarative classes and `data-*` attributes, all defined once in `src/styles/globals.css` (section 6) and wired in `src/layouts/BaseLayout.astro`:
 
-**No-JS robustness:** reveal hidden states are scoped to `.js`; grounds stay flat colour; the phone menu needs JS to open, but the header button to /contact/ and the footer nav stay usable without it. Page enhancement scripts register on `astro:page-load` with a dataset re-bind guard.
+- **`src/scripts/enhance.ts`** (imported in BaseLayout, runs on every `astro:page-load`) powers `[data-spotlight]` (sets `--mx`/`--my` for a cursor-tracking glow), `[data-countup]` (animates a number up to `data-countup-to` when scrolled into view; optional `-suffix`/`-prefix`/`-duration`), and `[data-header]` (toggles `data-scrolled` for the sticky frosted header). (The old `[data-magnetic]` cursor-follow button pull was removed.)
+- **The reveal observer** (inline `<script>` at the end of BaseLayout, also on `astro:page-load`) adds `.is-visible` to `[data-reveal]` elements as they enter the viewport. **Screenshot trap:** a Playwright `fullPage` capture does not scroll, so the observer never fires below the first viewport and every revealed band is captured at opacity 0 (a blank grey band, not a bug in the page). Scroll through the page in viewport-sized steps to the bottom, wait a beat, then capture (`.claude/commands/visual-verify.md` step 5). Re-take any screenshot with a large uniform band.
+
+Vocabulary (use these; don't reinvent):
+
+- `data-reveal` (+ variants `fade` / `scale` / `left` / `right` / `blur`) for scroll-in reveals; stagger siblings with inline `style="--reveal-delay: 120ms"`.
+- `.spotlight-card` + `data-spotlight` on a `position:relative` card for a cursor glow (put inner content in `relative z-10`).
+- add `.shine` (or `className="shine"` on the shadcn Button) to a CTA for a hover light sweep. (There is no cursor-follow "magnetic" pull anymore; it was removed site-wide.)
+- `data-countup data-countup-to="10"` for count-ups. **Always render the real final value as the span's static text** so no-JS visitors and crawlers see the true number; `enhance.ts` animates from 0 up to it.
+- **Heading emphasis: solid tokens, never gradient text.** Gradient text (`background-clip:text` over a gradient) was removed site-wide; it is an impeccable absolute-ban tell. The old `.text-gradient` / `.text-gradient-bright` utilities are deleted. For an accent phrase, wrap it in a solid token span: `text-tertiary` (amber, AA on the navy/dark heroes) or `text-link` (NCS blue, AA on light surfaces). Carry the rest of the emphasis with Bebas Neue weight and size.
+- `.surface-card` for an elevated card in **both** themes (tinted card surface + soft layered shadow + 1px top highlight + border, all from the `--shadow-card` / `--card-highlight` tokens). This is how light mode gets real depth (light has no color-step for elevation the way dark does). Compose with `data-spotlight` + `.hover-lift`. Used by /work cards, homepage Selected Work, /services offerings. The framed-artifact shadow (SiteShowcase, BeforeAfter) is the shared `--shadow-frame` token.
+- `.bg-dotgrid` (faint masked dot grid) and `.bg-mesh-soft` (low-opacity brand glow) give a light section quiet atmosphere without copying the dark aurora. Static, decorative (`z-index:-1` inside an isolated context), no reduced-motion concern.
+- `.bg-aurora` (+ `.grain`) on a `position:relative isolate` dark band for a drifting brand mesh (content at `relative z-10`); `.hover-lift`, `.link-underline` for smaller touches.
+- `.band-themed` for a closing/process band that should read **light in light mode** (soft accent glow on `bg-bg-soft`) and **navy aurora in dark mode**. It sets the surface + decorative glow per theme via `::before`; put theme-aware text tokens on top (`text-heading`, `text-text-muted`, `text-link`), never `text-primary-foreground`. Used by CtaBanner, ProcessBand, the Journal empty-state card, the About portrait frame, and now the Hero (under its light-tuned WebGL flow) and the Footer, so light mode reads bright and airy end to end while dark mode stays immersive navy. The Footer keeps its own top accent line via `.footer-seam::after` (dark mode only), since `.band-themed` owns `::before`.
+
+**No-JS robustness:** the reveal hidden state is scoped to `.js` (added to `<html>` by the anti-FOUC script before first paint), so without JS every `[data-reveal]` element stays fully visible. Any new always-hidden-until-JS pattern must follow the same `.js` gating. Page-level enhancement scripts (contact form, the prose-page scroll-spy in `ProsePage.astro`, journal heading tagger) must register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions navigations.
+
+## Typography
+
+- Headings (h1 through h6): Bebas Neue, weight 400. Self-hosted via `@fontsource/bebas-neue`.
+- Body, UI, buttons: Source Sans 3 (variable font). Self-hosted via `@fontsource-variable/source-sans-3`.
+- Labels and section numbers: `ui-monospace, 'SF Mono', monospace` (system, no file).
+
+Font families are declared in the `@theme` block in `src/styles/globals.css` as `--font-display`, `--font-body`, `--font-mono`, which Tailwind exposes automatically as `font-display`, `font-body`, `font-mono` utility classes. Bebas Neue gets a `<link rel="preload">` hint in `BaseLayout.astro` because the hero headline is almost always the LCP element.

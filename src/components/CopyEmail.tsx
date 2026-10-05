@@ -56,7 +56,11 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
   const linkClass =
     'transition-colors duration-150 hover:underline hover:underline-offset-2 ' +
     'focus-visible:underline focus-visible:underline-offset-2 ' +
-    (tone === 'dark' ? 'text-link' : 'text-link');
+    // The address is a 25px-tall line of text; on a touch device it becomes a
+    // 44px flex row (the copy button beside it is already 44px, so the row
+    // height does not change).
+    'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center ' +
+    (tone === 'dark' ? 'text-link dark:text-secondary' : 'text-link');
 
   const buttonClass =
     // 36px on a mouse desktop, 44px on any touch device (phone or tablet) where
@@ -64,7 +68,7 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
     // iPads too. The icon stays size-4; the larger box is invisible until hover.
     'inline-flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-none ' +
     (tone === 'dark'
-      ? 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link'
+      ? 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link dark:text-primary-foreground/70 dark:hover:bg-white/10 dark:hover:text-secondary dark:focus-visible:bg-white/10 dark:focus-visible:text-secondary'
       : 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link');
 
   return (

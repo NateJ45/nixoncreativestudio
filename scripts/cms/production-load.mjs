@@ -149,15 +149,12 @@ say('  npx wrangler d1 time-travel restore ncs-emdash-prod --timestamp <iso>');
 say('When this is all done, revoke the API token (Settings, API tokens).');
 say('');
 say(`Log file: ${logFile}`);
-// Set only after a person typed "yes": the child scripts refuse production without it.
-let typedYes = false;
 if (!flag('yes')) {
   const answer = await ask(`This WRITES to ${url}. Type yes to start: `);
   if (answer !== 'yes') {
     rl.close();
     die('Not started (you did not type yes). Nothing was written.');
   }
-  typedYes = true;
 }
 
 // ---- check the token works (read only) before any step ----------------------
@@ -189,11 +186,7 @@ function runStep({ tool, collection, mode }) {
       encoding: 'utf8',
       maxBuffer: 256 * 1024 * 1024,
       timeout: 15 * 60 * 1000,
-      env: {
-        ...process.env,
-        NO_COLOR: '1',
-        ...(typedYes ? { NCS_PRODUCTION_WRITE: 'yes' } : {}),
-      },
+      env: { ...process.env, NO_COLOR: '1' },
     },
   );
   const output = scrub(`${res.stdout || ''}${res.stderr ? `\n${res.stderr}` : ''}`);

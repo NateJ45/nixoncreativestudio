@@ -77,28 +77,27 @@ A second entry in a singleton collection is ignored by the site (the reader asks
 
 Group `Site`, `sortOrder: 0`, `titleField: 'studio_name'`. Replaces the values in `src/data/site.ts`. `site.ts` keeps only `domain`, `url` and the derived helpers, and gains a `getSite()` that merges code constants with this entry.
 
-| Field                 | Type   | Req | Validation                                         | Current source                                     |
-| --------------------- | ------ | --- | -------------------------------------------------- | -------------------------------------------------- |
-| `studio_name`         | string | yes | maxLength 40                                       | `site.studioName`                                  |
-| `owner_name`          | string | yes | maxLength 40                                       | `site.ownerName`                                   |
-| `email`               | string | yes | maxLength 80, pattern `^[^@\s]+@[^@\s]+\.[^@\s]+$` | `site.email`; `emailHref` derived                  |
-| `phone`               | string | yes | maxLength 24                                       | `site.phone`; `phoneHref` derived (digits only)    |
-| `location`            | string | yes | maxLength 40                                       | `site.address` ("Cincinnati, OH")                  |
-| `tagline`             | text   | yes | maxLength 160                                      | `site.tagline`; Organization JSON-LD description   |
-| `instagram_url`       | url    | yes |                                                    | `site.social.instagram`                            |
-| `linkedin_url`        | url    | yes |                                                    | `site.social.linkedin`                             |
-| `booking_url`         | url    | no  |                                                    | `site.bookingUrl` (empty hides "Book a call")      |
-| `newsletter_url`      | url    | no  |                                                    | `site.newsletterUrl` (empty hides Newsletter)      |
-| `header_cta_label`    | string | yes | maxLength 20                                       | Header "Start a project"                           |
-| `footer_blurb`        | text   | yes | maxLength 220                                      | Footer brand paragraph                             |
-| `footer_currently`    | text   | yes | maxLength 180                                      | Footer `currently`                                 |
-| `cta_default_title`   | string | yes | maxLength 60                                       | `CtaBanner` default title                          |
-| `cta_default_sub`     | text   | yes | maxLength 200                                      | `CtaBanner` default sub                            |
-| `cta_default_label`   | string | yes | maxLength 24                                       | `CtaBanner` default label                          |
-| `default_description` | text   | yes | maxLength 160                                      | BaseLayout fallback description                    |
-| `rss_title`           | string | yes | maxLength 70                                       | `rss.xml.js` title                                 |
-| `rss_description`     | text   | yes | maxLength 200                                      | `rss.xml.js` description                           |
-| `price_range`         | string | no  | maxLength 40 (added in the 2026 redesign)          | JSON-LD `priceRange` (`src/lib/structuredData.ts`) |
+| Field                 | Type   | Req | Validation                                         | Current source                                   |
+| --------------------- | ------ | --- | -------------------------------------------------- | ------------------------------------------------ |
+| `studio_name`         | string | yes | maxLength 40                                       | `site.studioName`                                |
+| `owner_name`          | string | yes | maxLength 40                                       | `site.ownerName`                                 |
+| `email`               | string | yes | maxLength 80, pattern `^[^@\s]+@[^@\s]+\.[^@\s]+$` | `site.email`; `emailHref` derived                |
+| `phone`               | string | yes | maxLength 24                                       | `site.phone`; `phoneHref` derived (digits only)  |
+| `location`            | string | yes | maxLength 40                                       | `site.address` ("Cincinnati, OH")                |
+| `tagline`             | text   | yes | maxLength 160                                      | `site.tagline`; Organization JSON-LD description |
+| `instagram_url`       | url    | yes |                                                    | `site.social.instagram`                          |
+| `linkedin_url`        | url    | yes |                                                    | `site.social.linkedin`                           |
+| `booking_url`         | url    | no  |                                                    | `site.bookingUrl` (empty hides "Book a call")    |
+| `newsletter_url`      | url    | no  |                                                    | `site.newsletterUrl` (empty hides Newsletter)    |
+| `header_cta_label`    | string | yes | maxLength 20                                       | Header "Start a project"                         |
+| `footer_blurb`        | text   | yes | maxLength 220                                      | Footer brand paragraph                           |
+| `footer_currently`    | text   | yes | maxLength 180                                      | Footer `currently`                               |
+| `cta_default_title`   | string | yes | maxLength 60                                       | `CtaBanner` default title                        |
+| `cta_default_sub`     | text   | yes | maxLength 200                                      | `CtaBanner` default sub                          |
+| `cta_default_label`   | string | yes | maxLength 24                                       | `CtaBanner` default label                        |
+| `default_description` | text   | yes | maxLength 160                                      | BaseLayout fallback description                  |
+| `rss_title`           | string | yes | maxLength 70                                       | `rss.xml.js` title                               |
+| `rss_description`     | text   | yes | maxLength 200                                      | `rss.xml.js` description                         |
 
 Derived, not edited: Organization / LocalBusiness JSON-LD in `StructuredData.astro` (from studio_name, email, phone, location, tagline, socials, plus code `url`), the contact form subject line, the copyright line.
 

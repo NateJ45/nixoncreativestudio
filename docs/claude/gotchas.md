@@ -16,15 +16,20 @@ Every entry below was measured, not assumed.
    breaks `npm run format:check` too. The only expected output is a handful
    of unused-variable warnings.
 
-2. **Retired 2026-10-04: `variant="secondary"` used to fail contrast.** It
-   rendered white on the old sky blue (2.56:1). Since the redesign
-   `--secondary` is the sunk paper with ink text (13.96:1), asserted in
-   `src/lib/theme-tokens.test.ts`, so the variant is safe to use.
+2. **`variant="secondary"` on the shadcn Button or Badge fails contrast.** In
+   light mode that renders `--secondary-foreground` (white) on `--secondary`
+   (sky blue `#40AAED`): **2.56:1**, well under the 4.5:1 the rest of this site
+   holds. It is not a live defect only because the variant is unused across the
+   entire codebase. The day you reach for it, either fix the token pair or use
+   a different variant, and add the pair to `src/lib/theme-tokens.test.ts`.
+   Dark mode is fine (navy on lighter sky, 9.8:1).
 
-3. **Retired 2026-10-04: the `--link` comment overclaimed AA on navy.** The
-   redesign replaced the palette: `--link` is brick on paper (7.23:1) and the
-   `.on-ink` scope switches it to vermilion on ink (7.07:1); both are asserted
-   in `src/lib/theme-tokens.test.ts`.
+3. **The `--link` comment in `globals.css` overclaims.** It says AA on
+   `#FFFFFF`, `#F4F7FA` **and** `#0A1628`. The first two are true (5.25:1 and
+   4.88:1); navy is **3.45:1** and fails body text. Harmless today because the
+   pair is never rendered (the navy Footer is a dark-mode state, where the link
+   colour switches to `--secondary`), but do not trust the comment as a licence
+   to put `text-link` on a navy surface. Logged in `docs/PENDING.md`.
 
 4. **The live site does two redirect hops, so uptime checks need `-L`.**
    `nixoncreativestudio.com` 301s to `www.`, and `www.…/about` 307s to
@@ -97,8 +102,7 @@ Every entry below was measured, not assumed.
     not a harness artifact, confirmed by screenshot in a real WebKit), the
     engine just never paints the shadow. `outline` paints on native controls in
     every engine and follows the border radius, so selects carry their ring as
-    an outline. The webkit-iphone project of the dark-mode axe spec (since folded
-    into `tests/a11y.spec.ts`, dark mode was retired in 2026) is what
+    an outline. The webkit-iphone project of `tests/a11y-dark.spec.ts` is what
     caught it; if a sibling repo "fixed" the same failure by skipping the check
     on webkit, that repo probably still ships the bug.
 
@@ -144,10 +148,7 @@ Every entry below was measured, not assumed.
     trace before blaming the LCP element. Local Lighthouse on this Windows
     machine reads higher than CI in absolute terms (GPU start-up delays first
     paint by about a second), so compare before and after on the same machine,
-    never against the CI number. The 2026 home rebuild hit the same wall: with the
-    hero reel's neighbouring frames and the proof-sheet crops loading beside the
-    start frame, local LCP was 2.66 s; parking them (`HeroReel` promotes after
-    load, `home/DeferredPicture.astro` on scroll-in or 3.5 s) brought it to 1.98 s.
+    never against the CI number.
 
 15. **The route cache is a second layer in front of the Worker, and it stores
     whatever a response asks for.** Added 2026-10-03 (CMS-DESIGN PR 2). The
@@ -229,8 +230,7 @@ Every entry below was measured, not assumed.
     fallback was deleted so a row removed in the admin really stops working.
 19. **A prefetch is only worth anything if the browser may reuse it, and every
     internal link must already carry its trailing slash.** Measured 2026-10-03 on
-    the live site with a real foreground browser (the strategy was viewport then;
-    it is hover since 2026-10-04, so only links a visitor points at are fetched): Astro's viewport prefetch fired
+    the live site with a real foreground browser: Astro's viewport prefetch fired
     for every link, then the click fetched the page AGAIN (80 to 400ms per
     navigation, against about 5ms when pages were static files). Two causes.
     (a) The route cache sends the browser `Cache-Control: no-cache` and no ETag,
@@ -351,20 +351,3 @@ https://www.nixoncreativestudio.com/_astro/<any chunk>.js` must be 200, while
     baseline recapture, rebuild and check the byte count does not move (it did
     not). Keep utility class names out of prose the scanner can see, or leave
     `docs/` excluded.
-
-26. **In CSS, read the raw token (`var(--link)`), never the Tailwind alias
-    (`var(--color-link)`).** `@theme inline` maps `--color-link: var(--link)`
-    at `:root`, where the var() is resolved once and inherited as a value. A
-    ground that re-scopes `--link` (`.on-ink`, `.ground-paper-contours`)
-    changes what the `text-link` UTILITY reads (it inlines `var(--link)`),
-    but not what `var(--color-link)` in a stylesheet reads. Found 2026-10-04:
-    the whole ink footer rendered its headings and links in the paper-ground
-    colours. All of `src/` was switched to the raw names in the same commit.
-
-27. **Vite inlines assets under 4 KB into the CSS as base64.** The ground tiles
-    (`src/assets/grounds/`, 0.5 to 3 KB) landed inside the render-blocking
-    stylesheet, so the "attach after load" deferral did nothing for them and
-    the CSS grew by about 7 KB. `astro.config.mjs` now sets
-    `vite.build.assetsInlineLimit` to a function that returns `false` for that
-    folder (2026-10-04). Check `dist/client/_astro/` for the files after a
-    build if you add an asset that must stay a separate request.

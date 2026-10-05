@@ -8,10 +8,12 @@ Where to find UI components for the NCS portfolio site, and the order to reach f
 
 When you need a new UI element, work down this list and stop at the first option that fits:
 
-1. **Existing components in `src/components/`** that already match this site's design. Check here first: the 2026 primitives (`Band`, `Frame`, `Logo`, the Button `brand` variant) are faster than anything external.
-2. **Native HTML in an Astro component** (`<dialog>`, `<details>`, popover) with a few lines of script, as `MobileMenu.astro` does.
-3. **A shadcn/ui primitive via the CLI.** Only `button.tsx` and `marquee.tsx` are installed now. The Starwind kit, PrimeReact and the other shadcn, Aceternity and Magic UI primitives were deleted in the 2026-10-04 performance pass: nothing used them, and because Tailwind scans every file under `src/`, their classes shipped in every page's inlined CSS. A CLI add usually adds a package, so ask Nathan first, and delete the component again if the page that wanted it goes away.
-4. **Custom build** if nothing above fits. Keep it in `src/components/` and comment the file with `// Safe to edit` or `// Foundation, edit with care`.
+1. **Existing components in `src/components/`** that already match this site's design. Check here first. Re-using `SectionHeading.astro`, `CaseStudyCover.astro`, or the Button `brand` variant is faster than reaching for anything external.
+2. **shadcn/ui primitives** in `src/components/ui/` (already installed), or a new one via the CLI. Best for interactive React-based UI: dialogs, sheets, dropdowns, inputs, badges.
+3. **Starwind UI** for Astro-native primitives. Accordion, dialog, dropdown, and tabs are already installed in `src/components/starwind/`. Use Starwind when the component can be 100% static Astro with zero React dependency.
+4. **Magic UI or Aceternity** for motion flourishes. Marquee, animated-beam, bento-grid, and spotlight are already in `src/components/ui/`. Browse [magicui.design](https://magicui.design) for the full Magic UI catalog; browse [ui.aceternity.com](https://ui.aceternity.com) for Aceternity blocks.
+5. **PrimeReact** (unstyled escape hatch) for complex behavior-heavy widgets only. See `src/components/primereact/README.md` for when this is warranted and how to wire it.
+6. **Custom build** if nothing above fits. Keep it in `src/components/` and comment the file with `// Safe to edit` or `// Foundation, edit with care`.
 
 ---
 
@@ -42,9 +44,15 @@ npx shadcn add @fulldev/hero-1
 
 Browse the full Fulldev catalog at [ui.full.dev](https://ui.full.dev).
 
-### Starwind (not installed since 2026-10-04)
+### Starwind primitives already installed
 
-`npx starwind@latest add <name> --yes` reinstalls a Starwind primitive (it brings `tailwind-variants` and `@tabler/icons` back, and needs its `starwind.css` token mappings; see git history before 2026-10-04). Starwind components render as static Astro HTML with a tiny vanilla-JS attribute system, so the JS cost is near zero.
+`src/components/starwind/` contains: accordion, dialog, dropdown, tabs. Add more:
+
+```sh
+npx starwind@latest add <name> --yes
+```
+
+Browse [starwind-ui.com](https://starwind-ui.com) for the full list. Starwind components render as static Astro HTML. Interactivity (open/close) is handled with a tiny vanilla-JS Alpine-style attribute system, not React, so the bundle cost is near zero.
 
 ---
 
@@ -52,13 +60,13 @@ Browse the full Fulldev catalog at [ui.full.dev](https://ui.full.dev).
 
 Browse, copy, token-remap, and drop into `src/components/`. Good for marketing-section layouts where you want full control of the markup.
 
-| Source                                     | Best for                                                                         | License                                              |
-| ------------------------------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| HyperUI (hyperui.dev/components/marketing) | Static sections, zero JS. Pure Tailwind HTML. Requires token remap at paste-in.  | MIT, no attribution required                         |
-| Shadcnblocks free tier (shadcnblocks.com)  | 55 marketing blocks that use shadcn semantic tokens natively. Minimal remap.     | MIT free tier                                        |
-| motion-primitives (motion-primitives.com)  | Scroll reveals, text/image transitions. Needs `motion` (uninstalled 2026-10-04). | MIT                                                  |
-| react-bits (react-bits.dev)                | CSS-first effects: aurora, text-scramble, blur-in. Pick the Tailwind variant.    | MIT + Commons Clause (client work OK, cannot resell) |
-| Animate UI                                 | Animated shadcn primitives using `motion` + Radix. Needs `motion` back.          | MIT                                                  |
+| Source                                     | Best for                                                                        | License                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| HyperUI (hyperui.dev/components/marketing) | Static sections, zero JS. Pure Tailwind HTML. Requires token remap at paste-in. | MIT, no attribution required                         |
+| Shadcnblocks free tier (shadcnblocks.com)  | 55 marketing blocks that use shadcn semantic tokens natively. Minimal remap.    | MIT free tier                                        |
+| motion-primitives (motion-primitives.com)  | Scroll reveals, text/image transitions. Uses `motion` (already installed).      | MIT                                                  |
+| react-bits (react-bits.dev)                | CSS-first effects: aurora, text-scramble, blur-in. Pick the Tailwind variant.   | MIT + Commons Clause (client work OK, cannot resell) |
+| Animate UI                                 | Animated shadcn primitives using `motion` + Radix. Zero new deps.               | MIT                                                  |
 
 ---
 
@@ -90,7 +98,7 @@ For every new component pasted or CLI-installed:
 3. Decide: static `.astro` vs. React island. Static unless the component has state, event handlers, or needs `useEffect`. When in doubt: static.
 4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). Exception: components above the fold that must be interactive on first paint (MobileNav, ThemeToggle).
 5. For Radix-based dialogs, sheets, or dropdown portals: use `client:only="react"` not `client:load`. See the note in .claude/rules/components.md under "Radix-based primitives need `client:only='react'`".
-6. Verify on the site's one theme (there is no dark mode since the 2026 redesign) before committing.
+6. Verify in both light and dark mode before committing.
 
 Example header comment:
 
@@ -101,17 +109,27 @@ Example header comment:
 
 ---
 
-## PrimeReact (removed 2026-10-04)
+## PrimeReact escape hatch
 
-PrimeReact was the escape hatch for complex behavior-heavy widgets with no Radix/shadcn equivalent (rich data tables, cascading selects, drag-drop upload, date-range pickers). Nothing used it, so the package and `src/components/primereact/` (provider wrapper, Tailwind passthrough, README) were deleted; git history before 2026-10-04 has them. Never use it for accordions, dialogs, dropdowns or tabs.
+PrimeReact is the sanctioned option for complex behavior-heavy widgets that have no Radix/shadcn equivalent. Good candidates: rich data tables with sorting and pagination, cascading selects, file upload with drag-drop, complex date-range pickers.
+
+Do NOT use PrimeReact for accordions, dialogs, dropdowns, tabs, or anything a static Astro component can render without JS.
+
+Files in `src/components/primereact/`:
+
+- `PrimeIsland.tsx` -- provider wrapper (unstyled mode enabled).
+- `passthrough.ts` -- baseline Tailwind passthrough for Button, InputText, Dialog.
+- `README.md` -- integration guide, usage example, and link to the community passthrough baseline covering 80+ components.
+
+Installed version: `primereact` v11.2.0 (React 19; v11 is a rewrite, see `src/components/primereact/README.md`).
 
 ---
 
 ## Bundle-cost notes
 
-- **Every file under `src/` costs CSS, used or not**: Tailwind scans it and the classes it names are inlined into every page. The kit removal on 2026-10-04 took about 37 KB raw (4.5 KB brotli) off each page's HTML.
-- **Starwind UI**: near-zero JS. Components render as static Astro HTML; JS ships only for interactive ones and only when they're on the page.
-- **motion-primitives, Animate UI, Magic UI, Aceternity**: need `motion` (about 30 KB+ of React-side JS per island), which is no longer installed. Prefer CSS animation.
+- **Starwind UI**: near-zero. Components render as static Astro HTML; JS ships only for interactive ones (accordion, dialog, dropdown) and only when they're on the page.
+- **motion-primitives, Animate UI**: zero marginal cost. `motion` is already installed.
+- **Magic UI, Aceternity**: zero marginal cost. `motion` and Radix are already in the bundle.
 - **PrimeReact**: 30-60 kB gzipped for a realistic widget set in unstyled mode. Worth it for DataTable or TreeSelect; not worth it for anything simpler.
 - **Avoid Mantine, Chakra UI, Ant Design**: each requires its own context provider and a parallel CSS variable namespace invisible to this project's token system. Maintaining two parallel theme configs on every brand change is not worth it.
 - **Avoid `framer-motion` imports**: some older Aceternity and Animata components import `framer-motion` instead of `motion/react`. With React 19 this causes peer-dep warnings. Import from `motion/react` instead.

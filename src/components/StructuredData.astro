@@ -32,7 +32,6 @@
    ============================================================================ */
 
 import { getSite } from '../data/site';
-import { buildOrganizationSchema } from '../lib/structuredData';
 
 interface Props {
   /** Extra schema objects appended to the Organization root schema. */
@@ -45,9 +44,31 @@ const { extra = [] } = Astro.props;
 // the canonical URL stays in code (SITE_URL, via site.url).
 const site = await getSite(Astro);
 
-// One builder for the Organization block (src/lib/structuredData.ts, unit-tested), so
-// the logo, image, priceRange and geo the SEO audit asked for ship on every page.
-const organization = buildOrganizationSchema(site);
+const organization = {
+  '@context': 'https://schema.org',
+  '@type': ['Organization', 'LocalBusiness'],
+  '@id': `${site.url}#organization`,
+  name: site.studioName,
+  url: site.url,
+  email: site.email,
+  telephone: site.phone,
+  founder: { '@type': 'Person', name: site.ownerName },
+  description: site.tagline,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Cincinnati',
+    addressRegion: 'OH',
+    addressCountry: 'US',
+  },
+  // Based locally, but web/strategy/brand work serves clients nationally; the
+  // region Place plus the country signals both (photography stays regional, see
+  // the per-Service areaServed on /services).
+  areaServed: [
+    { '@type': 'Place', name: 'Greater Cincinnati region' },
+    { '@type': 'Country', name: 'United States' },
+  ],
+  sameAs: [site.social.instagram, site.social.linkedin],
+};
 
 // Build the final array of schemas. Organization always first; extras
 // (per-page) follow.

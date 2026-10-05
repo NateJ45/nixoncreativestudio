@@ -3,35 +3,18 @@
 /* ============================================================================
    /photography | Photography  [CMS-driven]
    ============================================================================
-   A service page for photography across the Cincinnati region, with the real
-   gallery underneath once there are photographs. The words come from the
-   `page_photography` entry, the rate from the Photography add-on (Pricing add-ons)
-   and the pictures from the `photos` collection, all edited in the EmDash admin.
-   Server-rendered like every page; the route cache is tagged with what this page
-   read (src/lib/routeCache.ts), so a publish purges it. Readers:
-   src/lib/indexPages.ts, src/lib/pricing.ts and src/lib/photos.ts.
+   Image-heavy showcase. The words come from the `page_photography` entry and the
+   pictures from the `photos` collection, both edited in the EmDash admin
+   (Pages, Photography page; Photography, Photos). Server-rendered like every page;
+   the route cache is tagged with what this page read (src/lib/routeCache.ts), so a
+   publish purges it. Readers: src/lib/indexPages.ts and src/lib/photos.ts.
 
-   Bands (DESIGN.md "Grounds"; one moving ground per page, at the top):
-     1. window-light (moving, under the header): the headline, the intro, the ask,
-        and on the right either the lead photograph as a film frame (a photo is
-        flagged or exists) or the rate card (zero photos).
-     2. paper: what a shoot looks like (events, portraits, environments, the three
-        groups from the CMS). A group with photos links to its gallery; with zero
-        photos a plain, honest note says where the work is shown instead.
-     3. paper: one gallery per non-empty group (PhotoGallery island, client:visible).
-        Only when photos exist.
-     4. deep (still): how booking works, four real steps in order.
-     5. paper-contours (CtaBanner).
-
-   NEVER FAKE PHOTOGRAPHS. The zero-photo state ships no placeholder pictures and
-   none of Nathan's personal snapshots standing in for client work: it is a real
-   service page (what, how much, how it goes) and a sentence saying the public
-   gallery is on its way. The first published photo turns the gallery on with no
-   deploy.
-
-   SEARCH. While the gallery is empty the page asks to stay out of search results
-   (`robots: noindex, follow`, photographyRobots() in src/lib/photos.ts, through
-   BaseLayout's `robots` prop). It flips to indexable with the first photo.
+   Until real photos exist, the page does NOT ship placeholder rectangles (a
+   photographer's page full of blank gradients is the worst possible tell).
+   Instead it shows an honest "in progress" state and points visitors to the
+   work pages, where the photography already appears in context. Production is in
+   that state today: zero photos, and the committed text in
+   cms/content/page_photography.json renders until its CMS entry is loaded.
 
    To add work: Photography, Photos, "Add new": upload the picture, write what it
    shows (the description is required, a photo without one is left out), pick its
@@ -39,410 +22,219 @@
    its own gallery section. Pictures are served as resized WebP through the
    width-only /_image resizer (src/lib/photos.ts explains the 4096 px rule).
 
-   Still in code: the three band headings, the four booking steps and the gallery
-   note (Photography page entry has no fields for them).
+   All motion below is reduced-motion safe (handled globally in globals.css).
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Band from '../components/Band.astro';
 import CtaBanner from '../components/CtaBanner.astro';
-import Frame from '../components/Frame.astro';
-import PhotoRateCard from '../components/PhotoRateCard.astro';
+import EmDashPhoto from '../components/emdash/EmDashPhoto.astro';
 import PhotoGallery from '../components/PhotoGallery';
-import { buttonVariants } from '../components/ui/button';
 import { getSite } from '../data/site';
 import { getPhotographyPage, indexTitle } from '../lib/indexPages';
-import { getAddOns } from '../lib/pricing';
-import {
-  galleryItems,
-  getPhotos,
-  groupPhotos,
-  heroPhoto,
-  mediaUrl,
-  photographyRobots,
-  resizedUrl,
-} from '../lib/photos';
+import { galleryItems, getPhotos, groupPhotos, heroPhoto } from '../lib/photos';
 
 const site = await getSite(Astro);
 const page = await getPhotographyPage(Astro);
 const allPhotos = await getPhotos(Astro);
-const addOns = await getAddOns(Astro);
 const hasPhotos = allPhotos.length > 0;
 
-// The Photography add-on carries the floor and the half-day / full-day sentence.
-const rate = addOns.find((a) => a.name.toLowerCase() === 'photography');
-
-// Non-empty groups for the galleries (width-only /_image URLs, see photos.ts).
-const groups = groupPhotos(allPhotos);
-const countFor = (id: string) => groups.find((g) => g.id === id)?.photos.length ?? 0;
-const galleries = groups.map((group) => ({
+// Group into non-empty categories. cover drives the bento card thumbnail; items
+// drives the gallery for that category (width-only /_image URLs, see photos.ts).
+const categories = groupPhotos(allPhotos).map((group) => ({
   id: group.id,
   title: page.categories[group.id].title,
   body: page.categories[group.id].body,
+  cover: group.cover.image,
+  count: group.photos.length,
   photos: galleryItems(group, Astro.url.origin),
 }));
 
-// The lead photograph for the hero: a Featured photo, else the first. Drawn as a film
-// frame with its real facts on the rebate. Width-only resizer URL, real proportions.
-const lead = heroPhoto(allPhotos);
-const leadUrl = lead ? mediaUrl(lead.image, Astro.url.origin) : undefined;
-const leadWidth = lead ? Math.min(lead.width, 1600) : 0;
-const lead16 =
-  lead && leadUrl
-    ? {
-        src: resizedUrl(leadUrl, leadWidth),
-        width: leadWidth,
-        height: Math.round(leadWidth * (lead.height / lead.width)),
-        alt: lead.alt,
-        edge: [lead.title, lead.location, lead.year ? String(lead.year) : undefined].filter(
-          (f): f is string => Boolean(f),
-        ),
-        caption: lead.caption,
-      }
-    : undefined;
+// Hero background: a featured photo if one is flagged, else the first photo,
+// else nothing (the aurora carries the hero in the in-progress state).
+const heroImage = heroPhoto(allPhotos)?.image;
 
-// The three shoot types, in order. The words are the CMS group titles and intros.
-const shootTypes = (['events', 'portraits', 'environments'] as const).map((id) => ({
-  id,
-  title: page.categories[id].title,
-  body: page.categories[id].body,
-  count: countFor(id),
-}));
-
-// How booking goes: a real sequence, so these four are numbered. In code, not the CMS.
-const steps = [
-  {
-    title: 'Tell me what you need',
-    body: 'Send a note about the event, the people or the rooms, and where the pictures will be used.',
-  },
-  {
-    title: 'I send a written quote',
-    body: 'It follows the rates here and says what the day covers. Nothing is booked until you say yes.',
-  },
-  {
-    title: 'We shoot',
-    body: 'I come to you around Cincinnati. If I am building your site, the shoot is planned alongside the design so the pictures fit the pages.',
-  },
-  {
-    title: 'You get edited files',
-    body: 'Sized for the web, so the pages stay fast. For a website project they go straight into the build.',
-  },
-];
-
-// While the gallery is empty this page is a thin result for search, so it opts out.
-const robots = photographyRobots(allPhotos.length);
+const [leadCategory, ...restCategories] = categories;
 ---
 
-<BaseLayout
-  title={indexTitle(page.seoTitle, site.studioName)}
-  description={page.seoDescription}
-  robots={robots}
-  preloadFonts={['italic']}
->
-  {/* ------------------------------------------------------------------
-       1. Hero. Plain headline with the italic voice, the intro and the ask.
-       The right column is the lead photograph when one exists, else the
-       rate card (real information in the space a photograph would fill).
-       Nothing here waits on JavaScript or starts at opacity 0.
-       ------------------------------------------------------------------ */}
-  <Band ground="window-light" underHeader labelledby="photography-hero-heading">
-    <div class="hero-grid">
-      <div class="hero-copy">
-        <h1 id="photography-hero-heading" class="type-headline hero-title">
-          {page.heading} <span class="voice">{page.headingAccent}</span>
-        </h1>
-        <p class="type-lede">{page.intro}</p>
-        <div class="hero-actions">
-          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-            Ask about a shoot
-          </a>
-          <a class="card-link" href="/work/">
-            See the sites it was shot for
-          </a>
-        </div>
-      </div>
-
-      <div class="hero-side">
-        {lead16 ? (
-          <Frame
-            variant="film"
-            src={lead16.src}
-            width={lead16.width}
-            height={lead16.height}
-            alt={lead16.alt}
-            edge={lead16.edge}
-            caption={lead16.caption}
-            eager
-            sizes="(min-width: 64rem) 40vw, 92vw"
-          />
-        ) : (
-          rate && <PhotoRateCard price={rate.price} note={rate.note} />
-        )}
-      </div>
+<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
+  <!-- ----------------------------------------------------------------------
+       Hero. When a real photo exists it fills the surface behind a navy
+       scrim; until then a navy aurora carries it (no placeholder image). The
+       headline accent is a solid amber phrase (no gradient text). data-hero-dark
+       makes the sticky header go transparent over it.
+       ---------------------------------------------------------------------- -->
+  <section
+    class="relative isolate flex flex-col justify-end overflow-hidden bg-primary text-primary-foreground"
+    aria-labelledby="photography-hero-heading"
+    style="min-height: clamp(30rem, 78vh, 46rem);"
+    data-hero-dark
+  >
+    <div class="absolute inset-0 -z-10" aria-hidden="true">
+      {heroImage ? (
+        <EmDashPhoto
+          image={heroImage}
+          alt=""
+          class="h-full w-full object-cover"
+          priority
+          widths={[768, 1280, 1920]}
+          sizes="100vw"
+        />
+      ) : (
+        <div class="bg-aurora grain absolute inset-0" />
+      )}
+      <!-- Vertical scrim so the bottom-anchored copy always reads. -->
+      <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90"></div>
     </div>
-  </Band>
 
-  {/* ------------------------------------------------------------------
-       2. What a shoot looks like. The three groups from the CMS, set as
-       three columns on hairlines (no cards). With photos each links to its
-       gallery; with none, one honest line says where the work shows instead.
-       ------------------------------------------------------------------ */}
-  <Band labelledby="shoots-heading">
-    <header class="band-head" data-reveal>
-      <h2 id="shoots-heading" class="type-headline">
-        What a shoot <span class="voice">looks like.</span>
-      </h2>
-    </header>
+    <!-- Foreground copy cluster, anchored to the bottom of the frame. Opens
+         straight on the headline (no tracked-uppercase eyebrow); the Cincinnati
+         base reads in the lede below. -->
+    <div class="ncs-container relative z-10 py-2xl">
+      <h1
+        id="photography-hero-heading"
+        class="mb-m max-w-[20ch] leading-[0.92] text-primary-foreground"
+        data-reveal
+        style="text-wrap: balance;"
+      >
+        {page.heading} <span class="text-tertiary">{page.headingAccent}</span>
+      </h1>
 
-    <ul class="shoot-grid">
-      {shootTypes.map((shoot, i) => (
-        <li class="shoot" data-reveal style={`--reveal-delay: ${i * 90}ms;`}>
-          <h3 class="shoot-title type-headline">{shoot.title}</h3>
-          <p class="type-body">{shoot.body}</p>
-          {shoot.count > 0 && (
-            <a class="card-link" href={`#${shoot.id}`}>
-              {shoot.count} {shoot.count === 1 ? 'photo' : 'photos'}
-            </a>
-          )}
-        </li>
+      <p
+        class="max-w-[58ch] text-lg leading-[1.6] text-primary-foreground/90"
+        data-reveal
+        style="--reveal-delay: 120ms;"
+      >
+        {page.intro}
+      </p>
+    </div>
+  </section>
+
+  {hasPhotos && leadCategory ? (
+    <>
+      {/* ------------------------------------------------------------------
+           Category overview. Asymmetric spotlight cards: the lead category
+           fills a tall feature card, the rest stack beside it. Each shows its
+           newest photo behind the label and a small count, then jumps to that
+           category's gallery. The full blurb lives on the gallery section header
+           below, so it isn't repeated here.
+           ------------------------------------------------------------------ */}
+      <section class="bg-bg-soft py-2xl" aria-label="Browse photography by category">
+        <div class="ncs-container">
+          <ul class="grid gap-l lg:grid-cols-2 lg:grid-rows-2">
+            <li class="lg:row-span-2" data-reveal>
+              <a
+                class="spotlight-card group hover-lift relative block h-full min-h-[20rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                href={`#${leadCategory.id}`}
+                data-spotlight
+              >
+                <EmDashPhoto
+                  image={leadCategory.cover}
+                  alt=""
+                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  widths={[480, 768, 1024]}
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10"
+                  aria-hidden="true"
+                />
+                <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
+                  <h2 class="text-h3 text-primary-foreground">{leadCategory.title}</h2>
+                  <p class="font-mono text-sm text-primary-foreground/80">
+                    {leadCategory.count} {leadCategory.count === 1 ? 'photo' : 'photos'}
+                  </p>
+                </div>
+              </a>
+            </li>
+
+            {restCategories.map((category, i) => (
+              <li data-reveal style={`--reveal-delay: ${120 * (i + 1)}ms;`}>
+                <a
+                  class="spotlight-card group hover-lift relative block h-full min-h-[14rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                  href={`#${category.id}`}
+                  data-spotlight
+                >
+                  <EmDashPhoto
+                    image={category.cover}
+                    alt=""
+                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    widths={[480, 768]}
+                    sizes="(min-width: 1024px) 25vw, 100vw"
+                  />
+                  <div
+                    class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10"
+                    aria-hidden="true"
+                  />
+                  <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
+                    <h2 class="text-h3 text-primary-foreground">{category.title}</h2>
+                    <p class="font-mono text-sm text-primary-foreground/80">
+                      {category.count} {category.count === 1 ? 'photo' : 'photos'}
+                    </p>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------------
+           Gallery sections, one per non-empty category. PhotoGallery runs
+           react-photo-album (justified grid) + yet-another-react-lightbox.
+           ------------------------------------------------------------------ */}
+      {categories.map((category) => (
+        <section
+          class="scroll-mt-2xl py-2xl"
+          id={category.id}
+          aria-labelledby={`${category.id}-heading`}
+        >
+          <div class="ncs-container">
+            <header class="mb-l flex flex-col gap-s" data-reveal>
+              <h2 id={`${category.id}-heading`} class="text-heading">
+                {category.title}
+              </h2>
+              <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
+            </header>
+            <div data-reveal style="--reveal-delay: 120ms;">
+              {/* client:visible so each gallery hydrates only as it scrolls into view */}
+              <PhotoGallery client:visible photos={category.photos} />
+            </div>
+          </div>
+        </section>
       ))}
-    </ul>
 
-    {!hasPhotos && (
-      <div class="gallery-note" data-reveal>
-        <h3 class="type-headline gallery-note-title">{page.emptyHeading}</h3>
-        <div class="gallery-note-body">
-          <p class="type-body">{page.emptyBody}</p>
-          <a class="card-link" href="/work/">
+      {/* Where the photos come from. A branded region note rather than a raw
+           third-party map embed (which shipped as a blank tile box). */}
+      <section class="bg-mesh-soft py-2xl" aria-labelledby="photo-area-heading">
+        <div class="ncs-container">
+          <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">
+            <h2 id="photo-area-heading" class="text-heading">
+              Where these photos come from
+            </h2>
+            <p class="mt-s leading-[1.6] text-text-muted">
+              Almost everything here was shot within an hour of downtown Cincinnati: the city
+              itself, the northern suburbs, and the towns around them.
+            </p>
+          </div>
+        </div>
+      </section>
+    </>
+  ) : (
+    /* In-progress state. No placeholder galleries; an honest note plus a
+         route to the work pages where the photography already lives. */
+    <section class="py-2xl" aria-label="Photography portfolio status">
+      <div class="ncs-container">
+        <div class="band-themed mx-auto max-w-[60ch] rounded-2xl p-xl text-center" data-reveal>
+          <p class="text-sm font-semibold tracking-[0.12em] text-link uppercase">In progress</p>
+          <h2 class="mt-s text-heading">{page.emptyHeading}</h2>
+          <p class="mt-s leading-[1.6] text-text-muted">{page.emptyBody}</p>
+          <a class="card-link mt-m inline-flex" href="/work/">
             See the work
           </a>
         </div>
       </div>
-    )}
-  </Band>
-
-  {/* ------------------------------------------------------------------
-       3. Galleries, one per non-empty group. PhotoGallery runs
-       react-photo-album (justified grid) + yet-another-react-lightbox, and
-       hydrates only as it scrolls into view.
-       ------------------------------------------------------------------ */}
-  {galleries.map((gallery) => (
-    <Band
-      id={gallery.id}
-      labelledby={`${gallery.id}-heading`}
-      class="gallery-band scroll-mt-[4rem]"
-      tight
-    >
-      <header class="band-head" data-reveal>
-        <h2 id={`${gallery.id}-heading`} class="type-headline">
-          {gallery.title}
-        </h2>
-        <p class="type-lede">{gallery.body}</p>
-      </header>
-      <div data-reveal style="--reveal-delay: 120ms;">
-        <PhotoGallery client:visible photos={gallery.photos} />
-      </div>
-    </Band>
-  ))}
-
-  {hasPhotos && (
-    <Band tight label="Where these photographs were taken">
-      <p class="type-body place-note">
-        Almost everything here was shot within an hour of downtown Cincinnati: the city itself, the
-        northern suburbs, and the towns around them.
-      </p>
-    </Band>
+    </section>
   )}
 
-  {/* ------------------------------------------------------------------
-       4. How booking works. The deep ground, still. Four steps in order
-       (a real sequence, so numbered). With a lead photograph the rate card
-       sits here, since the hero spent its right column on the picture.
-       ------------------------------------------------------------------ */}
-  <Band ground="deep" still labelledby="booking-heading">
-    <div class="booking-grid">
-      <header class="booking-head" data-reveal>
-        <h2 id="booking-heading" class="type-headline">
-          How booking <span class="voice">works.</span>
-        </h2>
-        {lead16 && rate && (
-          <PhotoRateCard price={rate.price} note={rate.note} class="booking-rate" />
-        )}
-        <p>
-          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-            Ask about a shoot
-          </a>
-        </p>
-      </header>
-
-      <ol class="steps">
-        {steps.map((step, i) => (
-          <li class="step" data-reveal style={`--reveal-delay: ${i * 90}ms;`}>
-            <span class="step-n type-numeral" aria-hidden="true">
-              {i + 1}
-            </span>
-            <h3 class="step-title">{step.title}</h3>
-            <p class="step-body">{step.body}</p>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </Band>
-
-  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} ctaHref="/contact/" />
+  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
 </BaseLayout>
-
-<style>
-  /* ---- 1. hero ---- */
-  .hero-grid {
-    display: grid;
-    gap: var(--spacing-xl);
-    align-items: end;
-  }
-  @media (min-width: 64rem) {
-    .hero-grid {
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-    }
-  }
-  .hero-copy {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-  /* The headline is long ("Photography that matches the website it lives on."), so it
-     sets at h1 size rather than the display size. */
-  .hero-title {
-    font-size: var(--text-h1);
-    /* In em, not ch: `ch` is measured from whichever font is showing, so the
-       old 14ch was a different width in the fallback. And 14ch (5.6em) sat
-       right on the break of "that matches the": Bebas set it as three lines
-       (Photography / that / matches the), the fallback as two, so the hero
-       jumped a line when Bebas arrived (a layout shift in CI). 6.3em sets
-       "Photography / that matches the" in both fonts, with room either way. */
-    max-width: 6.3em;
-  }
-  .hero-title .voice {
-    display: block;
-  }
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-m) var(--spacing-l);
-    margin-top: var(--spacing-xs);
-  }
-
-  /* ---- 2. shoots ---- */
-  .band-head {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    margin-bottom: var(--spacing-l);
-  }
-  .shoot-grid {
-    display: grid;
-    gap: var(--spacing-l);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  @media (min-width: 48rem) {
-    .shoot-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--spacing-xl);
-    }
-  }
-  .shoot {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-s);
-    padding-top: var(--spacing-m);
-    border-top: 1px solid var(--border);
-  }
-  .shoot-title {
-    font-size: var(--text-h3);
-  }
-  .gallery-note {
-    display: grid;
-    gap: var(--spacing-m);
-    margin-top: var(--spacing-xl);
-    padding-top: var(--spacing-l);
-    border-top: 1px solid var(--border);
-  }
-  @media (min-width: 64rem) {
-    .gallery-note {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-      gap: var(--spacing-xl);
-    }
-  }
-  .gallery-note-title {
-    font-size: var(--text-h3);
-  }
-  .gallery-note-body {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-s);
-  }
-
-  /* ---- 3. galleries ---- */
-  .place-note {
-    max-width: 52ch;
-  }
-
-  /* ---- 4. booking ---- */
-  .booking-grid {
-    display: grid;
-    gap: var(--spacing-xl);
-  }
-  @media (min-width: 64rem) {
-    .booking-grid {
-      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-      align-items: start;
-    }
-  }
-  .booking-head {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-m);
-  }
-  .booking-head :global(.booking-rate) {
-    box-shadow: none;
-  }
-  .steps {
-    display: grid;
-    gap: var(--spacing-l);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  @media (min-width: 40rem) {
-    .steps {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  .step {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    padding-top: var(--spacing-m);
-    border-top: 1px solid var(--border);
-  }
-  .step-n {
-    font-size: var(--text-h2);
-    color: var(--marker);
-  }
-  .step-title {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: var(--text-h4);
-    letter-spacing: 0.01em;
-    color: var(--heading);
-  }
-  .step-body {
-    max-width: 38ch;
-    color: var(--muted-foreground);
-  }
-</style>

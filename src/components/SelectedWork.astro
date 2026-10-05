@@ -1,0 +1,324 @@
+---
+// Safe to edit. Collection-driven: this component reads real case studies
+// from the EmDash CMS (collection `case_studies`). To control what shows here,
+// tick "featured" on a case study in the EmDash admin. The three entries with
+// the newest project date appear, newest as the large primary card. The data
+// comes from D1 at request time (the whole site is server-rendered) and the
+// component tags the page's route cache via getCaseStudies(Astro.cache).
+/* ============================================================================
+   Selected Work (Act 2 of the three-act homepage)
+   ============================================================================
+   Three featured case studies, asymmetric. The first project sits at full
+   container width as a hero card with a two-column layout (image left,
+   body right at desktop, stacked on mobile). The other two sit beneath
+   in a 50/50 grid as medium cards, each stacked image-then-body.
+
+   Differentiation matters here: at the old three-equal-cards layout the
+   visitor pattern-matched every project to the previous one. The new
+   asymmetric layout puts the strongest piece up front and lets the eye
+   travel through the work instead of scanning a feature row.
+
+   Each case study card is a single <a> wrapping image + body so the click
+   target covers everything. The list is an <ol> because curation order
+   matters: the first featured entry is the leading recommendation, not
+   an interchangeable tile in a grid.
+
+   Data source: getCaseStudies() (EmDash), filtered to featured, sorted
+   newest-first by project date, capped at three. The hover-scroll images are the
+   entry's own `showcase_desktop` / `showcase_mobile` fields (the same full-page
+   captures that used to be globbed from src/assets), rendered with
+   ./emdash/ScrollShot.astro (width-only resizing; the emdash/ui Image asks for a
+   tall height that the resizer refuses). A missing capture falls back to the static cover
+   (EmDashCover). The highlighted line under each title is the case study's
+   `outcome` field when present.
+   ============================================================================ */
+
+import ScrollShot from './emdash/ScrollShot.astro';
+import EmDashCover from './emdash/EmDashCover.astro';
+import { getCaseStudies } from '../lib/caseStudies';
+import { getHomePage } from '../lib/homePage';
+
+// The section heading, sub paragraph and tail link are the CMS "Home page" copy
+// (committed fallback in cms/content/page_home.json). The cards below stay
+// derived from the case studies.
+const { work } = await getHomePage(Astro);
+
+// Pull the featured case studies, newest first, and take the top three to
+// fill the one-primary + two-secondary layout. If fewer than three are
+// flagged featured, the layout still renders with whatever exists.
+const allStudies = await getCaseStudies(Astro.cache);
+const featured = allStudies.filter((entry) => entry.featured).slice(0, 3);
+
+// Soft flat colour painted under a hover-scroll capture while it loads (the
+// cover's dominant colour; EmDash's Image also paints the capture's own
+// blurhash on the <img> itself).
+const bgFor = (c: { cover?: { dominantColor?: string } }) =>
+  c.cover?.dominantColor
+    ? `background-color:${c.cover.dominantColor};background-size:cover;background-position:top center;`
+    : 'background-position:top center;';
+
+// Pretty sector label for the meta row: kebab-case → Title Case.
+const sectorLabel = (sector: string) =>
+  sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+const [primary, ...secondaries] = featured;
+---
+
+{primary && (
+  <section class="py-2xl" aria-labelledby="selected-work-heading">
+    <div class="ncs-container">
+      {/* Section header. No mono-uppercase eyebrow, no numbered scaffold:
+         the title carries its own weight, and the sub paragraph does the
+         explanatory work that an eyebrow would otherwise pretend to do. */}
+      <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+        <h2 id="selected-work-heading">{work.heading}</h2>
+        <p class="text-lg leading-[1.55] text-text-muted">{work.sub}</p>
+      </header>
+
+      {/* Asymmetric card list. The grid is built with named template areas
+         so the visual layout reads cleanly in CSS even though the list is
+         a flat <ol> of three items. Single-column on mobile; primary spans
+         the full width on desktop while secondaries split the row below. */}
+      <ol class="grid list-none gap-l p-0 [grid-template-areas:'primary'_'secondary-a'_'secondary-b'] md:grid-cols-2 md:[grid-template-areas:'primary_primary'_'secondary-a_secondary-b']">
+        {/* Primary card. Hero-sized: 4:3 image at the desktop width of the
+           image column, generous body column with a heading at h2 sizing
+           that's noticeably larger than the secondaries. */}
+        <li class="[grid-area:primary]" data-reveal>
+          <a
+            class="work-card surface-card spotlight-card group grid grid-cols-1 items-center gap-l rounded-xl p-s text-inherit no-underline md:grid-cols-[1.15fr_1fr]"
+            href={`/work/${primary.id}/`}
+            data-spotlight
+          >
+            {/* Hover-scroll cover: the full-page capture sits top-aligned in a
+               4:3 frame and pans down the page on hover (CSS below), easing back
+               on hover-off. The cover's dominant colour is painted as the frame bg
+               (and EmDash paints the capture's blurhash on the image itself)
+               so there is no flash before the capture loads. alt="" because the
+               heading names the project. transition:name morphs to the
+               /work/[slug] hero on navigation. Falls back to the static cover if
+               a capture is ever missing. */}
+            {primary.showcaseDesktop ? (
+              <div
+                class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
+                transition:name={`cover-${primary.id}`}
+                style={bgFor(primary)}
+              >
+                <ScrollShot
+                  defer
+                  image={primary.showcaseDesktop}
+                  alt=""
+                  sizes="(min-width: 48rem) 60vw, 100vw"
+                  class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
+                />
+                {primary.showcaseMobile && (
+                  <div class="work-phone" aria-hidden="true">
+                    <div class="work-phone-screen">
+                      <ScrollShot
+                        defer
+                        image={primary.showcaseMobile}
+                        alt=""
+                        sizes="200px"
+                        class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div class="relative z-10" transition:name={`cover-${primary.id}`}>
+                <EmDashCover
+                  cover={primary.cover}
+                  alt=""
+                  sizes="(min-width: 48rem) 60vw, 100vw"
+                  fit="cover"
+                  class="work-cover aspect-[4/3] w-full rounded-lg"
+                />
+              </div>
+            )}
+
+            <div class="relative z-10 flex flex-col gap-s">
+              <p class="text-sm font-semibold text-text-muted">{sectorLabel(primary.sector)}</p>
+              <h3 class="text-h2 leading-[1.05] text-heading">{primary.title}</h3>
+              {primary.outcome && (
+                <p class="text-lg leading-[1.35] font-semibold text-link">{primary.outcome}</p>
+              )}
+              <p class="leading-[1.55] text-text">{primary.summary}</p>
+              <span class="card-link mt-xs">Read the case study</span>
+            </div>
+          </a>
+        </li>
+
+        {secondaries.map((entry, index) => (
+          <li
+            class={index === 0 ? '[grid-area:secondary-a]' : '[grid-area:secondary-b]'}
+            data-reveal
+            style={`--reveal-delay: ${120 + index * 120}ms;`}
+          >
+            <a
+              class="work-card surface-card spotlight-card group flex flex-col gap-m rounded-xl p-s text-inherit no-underline"
+              href={`/work/${entry.id}/`}
+              data-spotlight
+            >
+              {entry.showcaseDesktop ? (
+                <div
+                  class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
+                  transition:name={`cover-${entry.id}`}
+                  style={bgFor(entry)}
+                >
+                  <ScrollShot
+                    defer
+                    image={entry.showcaseDesktop}
+                    alt=""
+                    sizes="(min-width: 48rem) 30vw, 100vw"
+                    class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
+                  />
+                  {entry.showcaseMobile && (
+                    <div class="work-phone" aria-hidden="true">
+                      <div class="work-phone-screen">
+                        <ScrollShot
+                          defer
+                          image={entry.showcaseMobile}
+                          alt=""
+                          sizes="170px"
+                          class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div class="relative z-10" transition:name={`cover-${entry.id}`}>
+                  <EmDashCover
+                    cover={entry.cover}
+                    alt=""
+                    sizes="(min-width: 48rem) 30vw, 100vw"
+                    fit="cover"
+                    class="work-cover aspect-[4/3] w-full rounded-lg"
+                  />
+                </div>
+              )}
+
+              <div class="relative z-10 flex flex-col gap-xs">
+                <p class="text-sm font-semibold text-text-muted">{sectorLabel(entry.sector)}</p>
+                <h3 class="text-heading">{entry.title}</h3>
+                {entry.outcome && (
+                  <p class="leading-[1.4] font-semibold text-link">{entry.outcome}</p>
+                )}
+                <p class="leading-[1.55] text-text">{entry.summary}</p>
+                <span class="card-link mt-xs">Read the case study</span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ol>
+
+      {/* Tail link so the section opens onto the full catalogue instead of
+         dead-ending after three featured projects. */}
+      <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
+        <a class="card-link text-lg" href="/work/">
+          {work.linkLabel}
+        </a>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  /* ----------------------------------------------------------------------
+     Card hover. The card lifts on hover/focus, and the cover (a full-page site
+     capture) slowly pans down the page, easing back to the top on hover-off.
+     Reduced motion strips both so the page stays calm for visitors who need it.
+     ---------------------------------------------------------------------- */
+  .work-card {
+    transition: transform 200ms ease;
+  }
+
+  /* The cover scale lives on the image wrapper. overflow-hidden keeps the
+     scaled image inside its rounded corners. */
+  .work-cover {
+    overflow: hidden;
+  }
+
+  /* Hover-scroll: the full-page capture pans down the live page on hover, then
+     eases back to the top when the pointer leaves. The short base transition is
+     the graceful reset; the long hover transition is the slow scroll. Pure CSS,
+     gated to motion-OK so reduced-motion visitors get a still top-of-page frame.
+     -62% is a safe share for these tall captures (never scrolls past the end). */
+  .work-scroll {
+    transition: transform 0.8s ease;
+    will-change: transform;
+  }
+
+  /* A small phone that fades in at the card's bottom-right on hover and scrolls
+     the mobile capture in step with the desktop, so the card reads as a
+     responsive build. The phone's dark bg shows through the screen inset as the
+     bezel. Padded off the corner (right/bottom %). */
+  .work-phone {
+    position: absolute;
+    right: 5%;
+    bottom: 6%;
+    z-index: 2;
+    width: 21%;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 0.7rem;
+    background: #0b0e14;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.75);
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+    transition:
+      opacity 0.45s ease,
+      transform 0.45s ease;
+  }
+  .work-phone-screen {
+    position: absolute;
+    inset: 0.28rem;
+    overflow: hidden;
+    border-radius: 0.45rem;
+    background: #ffffff;
+  }
+  .work-phone-scroll {
+    transition: transform 0.8s ease;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .work-card:hover .work-scroll {
+      transform: translateY(-62%);
+      transition: transform 7s ease-out;
+    }
+    .work-card:hover .work-phone {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .work-card:hover .work-phone-scroll {
+      transform: translateY(-58%);
+      transition: transform 7s ease-out;
+    }
+  }
+
+  .work-card:hover,
+  .work-card:focus-visible {
+    transform: translateY(-0.25rem);
+  }
+
+  .work-card:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 0.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .work-card,
+    .work-cover,
+    .work-scroll,
+    .work-card:hover,
+    .work-card:focus-visible {
+      transform: none;
+      transition: none;
+    }
+    /* The hover phone is a motion flourish; keep it out under reduced motion. */
+    .work-phone {
+      display: none;
+    }
+  }
+</style>

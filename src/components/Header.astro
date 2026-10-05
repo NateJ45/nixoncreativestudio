@@ -3,66 +3,57 @@
 /* ============================================================================
    Site Header
    ============================================================================
-   Top of every page, sticky. Nathan's logo on the left, the primary nav and
-   the "Start a project" button on the right. Renders inside BaseLayout above
-   the <main> slot. Redesigned 2026-10-04 (DESIGN.md "Header").
+   Top of every page. Wordmark lockup on the left, primary navigation on the
+   right. Renders inside BaseLayout.astro above the <main> slot.
 
-   Surface: transparent at the top of the page, so the first band's ground
-   (paper, window light, contours) runs up under it when that band is a
-   <Band underHeader>. Once the page scrolls past 8px (enhance.ts sets
-   data-scrolled) it becomes a paper bar with a hairline. The header always
-   sits on a light ground, with one exception: a page whose first band is
-   the deep ground passes onInk (BaseLayout headerOnInk; the home hero), and
-   until the page scrolls the header shows its on-ink face: the white logo,
-   paper nav, a paper button with an ink label. Scrolled, it is the paper bar
-   with the navy logo as everywhere else.
+   Context-aware background (driven by enhance.ts):
+     - data-over-hero : a hero covers the bar at the top of the page, so the
+       header takes the hero's own surface colour. Theme-aware: the light hero
+       surface in light mode, navy with white text over the navy hero in dark.
+       Pages without a [data-hero-dark] element never get this state, so their
+       header is the frosted bar from the first paint.
+     - data-scrolled  : the page has scrolled past 8px; the bar frosts and
+       condenses. When both are present, over-hero wins (holds the hero
+       treatment while the hero is still behind it).
 
-   The "Start a project" button shows at EVERY width, phones included, so
-   every page has a visible call to action without opening the menu (E
-   found inner pages had none on mobile). Below 48rem the nav moves into the
-   MobileMenu dialog and the logo becomes its top line only.
+   All three visual states live in the scoped <style> block below rather than
+   in Tailwind data-variant utilities, so the precedence between them is
+   controlled by source order instead of specificity guesswork.
 
-   The nav carries no numerals: it is a flat set of destinations.
+   The nav carries no 01-06 numerals: it is a flat set of destinations, not an
+   ordered sequence, so numbered markers (which live only on the genuinely
+   ordered Process band) would be decorative scaffolding here.
    ============================================================================ */
 
-import { getSite } from '../data/site';
+import { getSite, emailHref, phoneHref } from '../data/site';
 import { getMenuItems } from '../lib/cms';
 import { hasJournalEntries } from '../lib/journal';
-import Logo from './Logo.astro';
-import MobileMenu from './MobileMenu.astro';
+import MobileNav from './MobileNav';
+import ThemeToggle from './ThemeToggle';
 import { buttonVariants } from './ui/button';
 import { cn } from '@/lib/utils';
 
 // Hide the Journal nav link until the journal has something to show: true only
 // when at least one PUBLISHED journal entry exists in the CMS (a draft does not
-// count). The read is memoised per request (the Footer asks too) and tagged for
-// the route cache, so publishing the first entry purges every page.
+// count), so the link appears exactly when /journal has real content. While there
+// is none the link is omitted from both the desktop nav and the mobile drawer
+// (they share this array). The read is memoised per request (the Footer asks too)
+// and tagged for the route cache, so publishing the first entry purges every page.
 const showJournal = await hasJournalEntries(Astro);
 
-interface Props {
-  /** The first band is the deep ground: show the on-ink face until scrolled. */
-  onInk?: boolean;
-}
-const { onInk = false } = Astro.props;
-
-// Site settings and the "primary" menu both come from the EmDash admin, each
-// falling back to the committed copy in cms/content/. Menu URLs already carry
-// their trailing slash (getMenuItems runs withTrailingSlash).
+// Site settings (studio name, contact details, CTA label) and the "primary" menu
+// both come from the EmDash admin (Site settings, Menus). Each falls back to the
+// committed copy in cms/content/ if it is missing or unreadable, so the header
+// never renders empty. The Journal item is the one code rule: any menu item that
+// points at /journal is dropped while the journal has nothing to show.
 const site = await getSite(Astro);
 const menu = await getMenuItems('primary', { cache: Astro.cache });
 
-// Active-route detection: a link is active when the path matches it or sits
-// beneath it (e.g. /work/foo).
-const path = Astro.url.pathname.replace(/\/+$/, '');
-const isActive = (href: string): boolean => {
-  const h = href.replace(/\/+$/, '');
-  if (h === '') return path === '';
-  return path === h || path.startsWith(`${h}/`);
-};
-
-// One nav model for both menus. `descriptor` is the item's "Title attribute"
-// in the menu editor, shown under the label in the phone menu only. Contact is
-// not in this menu: it is the "Start a project" button.
+// The nav model. MobileNav consumes the same array; `descriptor` is the item's
+// "Title attribute" box in the menu editor, shown as visible text under the label
+// in the phone menu (never as an HTML title). Contact is NOT in this menu: it is
+// the "Start a project" CTA button (desktop header below, and the drawer's own
+// CTA on mobile), both pointing at /contact.
 const navLinks = menu
   .filter((item) => showJournal || !item.url.startsWith('/journal'))
   .map((item) => ({
@@ -70,192 +61,184 @@ const navLinks = menu
     href: item.url,
     descriptor: item.titleAttr,
     target: item.target,
-    active: isActive(item.url),
   }));
+
+// Active-route detection so the current section is marked in the nav. Treats a
+// link as active when the path matches it or sits beneath it (e.g. /work/foo).
+const path = Astro.url.pathname.replace(/\/+$/, '');
+const isActive = (href: string): boolean => {
+  const h = href.replace(/\/+$/, '');
+  if (h === '') return path === '';
+  return path === h || path.startsWith(`${h}/`);
+};
 ---
 
-<header data-header class="ncs-header" data-on-ink={onInk ? '' : undefined}>
-  <div class="ncs-container header-row">
-    <!-- The logo is the home link; its alt text (the studio name) names the
-         link. transition:name keeps it in place across View Transitions. -->
-    <a class="header-logo" href="/" transition:name="site-logo">
-      <Logo lockup="responsive" width={236} topWidth={160} eager class="logo-navy" />
-      {onInk && (
-        <Logo
-          tone="white"
-          lockup="responsive"
-          width={236}
-          topWidth={160}
-          eager
-          class="logo-white"
-        />
-      )}
+<header data-header class="ncs-header sticky top-0 z-50">
+  <div class="ncs-container flex items-center justify-between gap-m">
+    <!-- Wordmark: the studio name, set in the display face. The text flips with
+         theme and goes white over the dark hero. transition:name morphs it
+         across View Transitions navigations. -->
+    <a
+      class="wordmark group inline-flex items-center no-underline pointer-coarse:min-h-11"
+      href="/"
+      transition:name="site-wordmark"
+    >
+      <span class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]">
+        {site.studioName}
+      </span>
     </a>
 
-    <nav aria-label="Primary" class="header-nav">
-      <ul>
-        {navLinks.map(({ label, href, target, active }) => (
-          <li>
-            <a
-              href={href}
-              target={target}
-              rel={target === '_blank' ? 'noopener noreferrer' : undefined}
-              class:list={['nav-link', { 'is-active': active }]}
-              aria-current={active ? 'page' : undefined}
-            >
-              {label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <!-- Right-side cluster: desktop nav, theme toggle, mobile drawer. -->
+    <div class="flex items-center gap-s">
+      <!-- Desktop nav at >= md (six items don't fit at sm next to the wordmark
+           and toggle); the MobileNav drawer takes over below md. -->
+      <nav aria-label="Primary" class="hidden md:block">
+        <ul class="flex items-center gap-m">
+          {navLinks.map(({ label, href, target }) => (
+            <li>
+              <a
+                target={target}
+                rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+                class:list={[
+                  'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
+                  isActive(href)
+                    ? 'is-active text-link'
+                    : 'text-text hover:text-link focus-visible:text-link',
+                ]}
+                href={href}
+                aria-current={isActive(href) ? 'page' : undefined}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-    <div class="header-actions">
-      <a href="/contact/" class={cn(buttonVariants({ variant: 'brand' }), 'header-cta')}>
-        {site.headerCtaLabel}
-      </a>
-      <div class="header-menu">
-        <MobileMenu links={navLinks} />
+      <!-- Vertical separator between the page nav and the primary action, so the
+           CTA reads as distinct. Inherits the header's text colour (dark on the
+           light bar, light over the navy hero) at low opacity, staying subtle in
+           every state. Desktop only, alongside the nav + CTA it divides. -->
+      <div
+        class="hidden h-6 w-px self-center bg-current opacity-20 md:block"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Primary CTA, promoted from the old Contact nav link: a prominent brand
+           button straight to the inquiry form. Desktop only; the MobileNav drawer
+           carries its own "Start a project" CTA. The brand fill stands out in
+           every header state (over the light or navy hero, and when scrolled). -->
+      <div class="hidden md:block">
+        <a
+          href="/contact/"
+          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'shine px-5 py-2.5')}
+        >
+          {site.headerCtaLabel}
+        </a>
+      </div>
+
+      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own.
+           client:idle, not client:load: hydrating it at load pulled React onto
+           the critical path on every page for a control nobody touches in the
+           first second, and it is hidden below md where the score is measured. -->
+      <div class="hidden md:block">
+        <ThemeToggle client:idle />
+      </div>
+
+      <!-- Mobile drawer. Hidden at >= md. The component server-renders only its
+           trigger button and mounts the Radix Sheet after hydration (the portal
+           does not SSR cleanly), which is what lets this be client:idle instead
+           of client:only: React no longer downloads inside the LCP window. -->
+      <div class="md:hidden">
+        <MobileNav
+          client:idle
+          links={navLinks}
+          studioName={site.studioName}
+          ctaLabel={site.headerCtaLabel}
+          email={site.email}
+          emailHref={emailHref(site.email)}
+          phone={site.phone}
+          phoneHref={phoneHref(site.phone)}
+          instagramUrl={site.social.instagram}
+          linkedinUrl={site.social.linkedin}
+        />
       </div>
     </div>
   </div>
 </header>
 
 <style>
+  /* ---- Header surface states ---------------------------------------------
+     Default: a frosted bar with a hairline divider, always legible over the
+     light inner-page heroes. */
   .ncs-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    /* The notch inset joins the bar's height when the page runs edge to edge
-       under viewport-fit=cover; env() is 0 everywhere else. */
-    height: calc(var(--header-h) + env(safe-area-inset-top));
-    padding-top: env(safe-area-inset-top);
-    background-color: transparent;
+    /* Top padding carries the status-bar / notch inset when the page runs
+       edge-to-edge under viewport-fit=cover, so the wordmark and nav never
+       slide under the notch in a standalone/landscape context. env() is 0 in
+       normal browser chrome, so this reads as a flat --spacing-m there. */
+    padding-top: calc(var(--spacing-m) + env(safe-area-inset-top));
+    padding-bottom: var(--spacing-m);
+    background-color: color-mix(in oklab, var(--color-bg) 95%, transparent);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     transition:
       background-color 0.3s ease,
-      box-shadow 0.3s ease;
+      box-shadow 0.3s ease,
+      padding 0.3s ease,
+      border-color 0.3s ease;
   }
+
+  /* Scrolled: frost deepens, the bar condenses and lifts. */
   .ncs-header[data-scrolled] {
-    background-color: color-mix(in oklab, var(--paper) 94%, transparent);
-    box-shadow: 0 1px 0 var(--border);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+    padding-bottom: 0.75rem;
+    background-color: color-mix(in oklab, var(--color-bg) 90%, transparent);
+    box-shadow: 0 10px 30px -18px rgba(10, 22, 40, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
-  .header-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    height: 100%;
+  /* Over the hero: a solid bar that takes the hero's own surface colour so the
+     two read as one continuous block. The header sits ABOVE the hero in flow
+     (not overlapping), so a transparent bar would reveal the page background,
+     not the hero, hence solid. Theme-aware: the light hero surface (bg-soft) in
+     light mode, navy in dark. Declared after [data-scrolled] so it wins while
+     the hero is still behind the bar. */
+  .ncs-header[data-over-hero] {
+    background-color: var(--color-bg-soft);
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-  .header-logo {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--tap);
-    margin-right: auto;
-    text-decoration: none;
+  :global(.dark) .ncs-header[data-over-hero] {
+    background-color: var(--primary);
   }
-  /* Phone: the top line, sized to leave room for the button and the menu at
-     320px. Tablet: the full lockup at 180px. Desktop: 236px. */
-  .header-logo :global(img) {
-    width: clamp(96px, calc(100vw - 228px), 160px);
+  /* Over the navy hero (dark mode) the wordmark + nav flip to white. In light
+     mode the default dark heading / nav-link colours already read cleanly on the
+     light hero surface, so no override is needed. The theme toggle + mobile
+     hamburger are React islands that set their own icon colour via a text-*
+     class; reach them with :global + a hook class so they flip white too. */
+  :global(.dark) .ncs-header[data-over-hero] .wordmark-text,
+  :global(.dark) .ncs-header[data-over-hero] .nav-link {
+    color: #ffffff;
   }
-  @media (min-width: 48rem) {
-    .header-logo :global(img) {
-      width: 180px;
-    }
-  }
-  @media (min-width: 64rem) {
-    .header-logo :global(img) {
-      width: 236px;
-    }
-  }
-
-  .header-nav {
-    display: none;
-  }
-  .header-nav ul {
-    display: flex;
-    align-items: center;
-    gap: clamp(0.75rem, 2vw, 1.75rem);
-  }
-  .nav-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* 44 by 44 at least: "Work" is 37px of text, so the box grows sideways. */
-    min-height: var(--tap);
-    min-width: var(--tap);
-    font-family: var(--font-ui);
-    font-size: var(--text-ui);
-    font-weight: 500;
-    color: var(--heading);
-    text-decoration-line: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.45em;
-    text-decoration-color: transparent;
-    transition: text-decoration-color 0.2s ease;
-  }
-  .nav-link:hover {
-    text-decoration-color: color-mix(in oklab, var(--marker) 55%, transparent);
-  }
-  /* Current page: a solid marker underline, plus aria-current for assistive
-     tech, so the state is never colour alone. */
-  .nav-link.is-active {
-    text-decoration-color: var(--marker);
+  :global(.dark) .ncs-header[data-over-hero] :global(.theme-toggle),
+  :global(.dark) .ncs-header[data-over-hero] :global(.mobile-trigger) {
+    color: #ffffff;
   }
 
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-  .header-cta {
-    min-height: var(--tap);
-    padding-inline: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-  @media (min-width: 48rem) {
-    .header-nav {
-      display: block;
-      margin-right: 0.5rem;
-    }
-    .header-menu {
-      display: none;
-    }
-    .header-cta {
-      padding-inline: 1.15rem;
-      font-size: var(--text-ui);
-    }
+  /* ---- Wordmark ----------------------------------------------------------- */
+  .wordmark-text {
+    color: var(--color-heading);
+    transition: color 0.2s ease;
   }
 
-  /* The on-ink face (onInk, until scrolled): only these four elements re-colour, so the
-     phone menu's dialog keeps its own paper tokens. */
-  .header-logo :global(.logo-white) {
-    display: none;
-  }
-  .ncs-header[data-on-ink]:not([data-scrolled]) .header-logo :global(.logo-navy) {
-    display: none;
-  }
-  .ncs-header[data-on-ink]:not([data-scrolled]) .header-logo :global(.logo-white) {
-    display: block;
-  }
-  .ncs-header[data-on-ink]:not([data-scrolled]) .nav-link,
-  .ncs-header[data-on-ink]:not([data-scrolled]) .header-menu > :global(.menu-trigger) {
-    color: var(--paper);
-  }
-  .ncs-header[data-on-ink]:not([data-scrolled]) .nav-link:hover,
-  .ncs-header[data-on-ink]:not([data-scrolled]) .nav-link.is-active {
-    text-decoration-color: var(--marker-hot);
-  }
-  .ncs-header[data-on-ink]:not([data-scrolled]) .header-cta {
-    --primary: var(--paper);
-    --primary-foreground: var(--ink);
-    --accent: var(--marker-hot);
-    --accent-foreground: var(--ink);
-    --background: var(--ink);
-    --ring: var(--marker-hot);
+  /* Active nav item keeps its underline drawn (the .link-underline base hides
+     it until hover). Paired with text-link + aria-current for a non-color cue. */
+  .nav-link.is-active::after {
+    transform: scaleX(1);
   }
 
   @media (prefers-reduced-motion: reduce) {
