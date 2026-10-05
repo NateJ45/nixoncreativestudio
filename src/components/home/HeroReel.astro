@@ -24,7 +24,7 @@
    - Browsers without animation-timeline (Firefox today) get a plain snap row
      with big frames and peeking neighbours.
    - Reduced motion: the reel is the plain snap row (as in Firefox), moves
-     jump instead of gliding and the marker loop does not draw. The fan is a
+     jump instead of gliding and no clip plays. The fan is a
      scroll-driven animation, which counts as running for as long as the page
      is open, so it is off under reduce (tests/reduced-motion.spec.ts).
 
@@ -41,12 +41,24 @@
    <noscript> copy keeps every frame for a visitor without JavaScript. Each
    slide carries four srcsets, so the widths are kept few.
 
+   The centre frame is live: when it is centred and the reel is in view, it
+   plays its short muted loop of the real site (public/reel/home/manifest.json,
+   read at build time through reelClips() in homeWork.ts), laid exactly over
+   its still, which stays underneath as the poster. The other frames show
+   stills. Clips wait until after the load event and an idle beat (the still
+   is the LCP and nothing competes with it), then only the centre one loads;
+   the next one preloads when the visitor reaches for the reel. No clip under
+   reduced motion, Save-Data or prefers-reduced-data, or without JavaScript.
+   A visible Pause button on the film strip stops it (WCAG 2.2.2).
+   The centre frame reads as the focused one by size, a deeper shadow and its
+   caption; there is no drawn loop (Nathan, 2026-10-04).
+
    Which slides appear is decided by src/lib/homeWork.ts (gateReel): curated
    in code, gated by the case studies' launch status.
    ============================================================================ */
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import type { ReelSlide } from '../../lib/homeWork';
+import { reelClips, type ReelSlide } from '../../lib/homeWork';
 
 interface Props {
   slides: ReelSlide[];
@@ -97,11 +109,17 @@ const frames = await Promise.all(
 
 type Frame = (typeof frames)[number];
 
+// The home clip manifest (V2-REELS). Globbed so a missing file is simply no manifest.
+const manifestFile = Object.values(
+  import.meta.glob<{ default: unknown }>('/public/reel/home/manifest.json', { eager: true }),
+)[0];
+const clips = reelClips(manifestFile?.default);
+
 const n = slides.length;
 const startSlide = slides[start];
 ---
 
-{/* The marker loop and the arrows' icons are drawn inline (no requests). */}
+{/* The arrows' icons are drawn inline (no requests). */}
 <div class="show" data-reel aria-roledescription="carousel" aria-label="Websites I have built">
   <div
     class="reel"
@@ -155,6 +173,8 @@ const startSlide = slides[start];
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${n}: ${s.site}, ${s.page}`}
             data-site={s.site}
+            data-clip-d={clips[s.id]?.d?.webm}
+            data-clip-m={clips[s.id]?.m?.webm}
           >
             <figure class:list={['vp', { 'vp--soon': s.soon }]}>
               <div class="print">
@@ -165,7 +185,7 @@ const startSlide = slides[start];
                   <span class="url">{s.host}</span>
                   {s.soon && <b class="tag">Launching soon</b>}
                 </div>
-                {picture(!f.first)}
+                <div class="shot">{picture(!f.first)}</div>
                 {/* Without JavaScript: one plain WebP srcset (the parked picture's four would
                     double the reel's markup for the few visitors who read this copy). */}
                 {!f.first && (
@@ -205,9 +225,6 @@ const startSlide = slides[start];
       })}
     </ul>
   </div>
-  <svg class="loop" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M4 3.2 C 22 0.8, 64 0.6, 98.6 2 C 99.6 30, 99.8 66, 98.6 96.5 C 70 99.4, 30 99.6, 1.6 98.2 C 0.4 70, 0.2 36, 1.2 3.4 C 9 1.6, 18 1.2, 28 1.6"></path>
-  </svg>
   <div class="ctrl">
     <button
       class="nav-btn prev"
@@ -224,6 +241,16 @@ const startSlide = slides[start];
       <span class="c-of"> of {n}</span>
       <span class="c-site">{startSlide.site}</span>
     </p>
+    {/* Shown by the script only when a clip can play. */}
+    <button class="motion-btn" type="button" aria-pressed="false" hidden>
+      <svg viewBox="0 0 16 16" aria-hidden="true" class="i-pause">
+        <path d="M5 3v10M11 3v10"></path>
+      </svg>
+      <svg viewBox="0 0 16 16" aria-hidden="true" class="i-play">
+        <path d="M5 3l8 5-8 5z"></path>
+      </svg>
+      <span class="motion-label">Pause the clip</span>
+    </button>
     <button
       class="nav-btn next"
       type="button"
@@ -257,6 +284,8 @@ const startSlide = slides[start];
     document.addEventListener('astro:before-swap', () => off.abort(), { once: true });
 
     let cur = -1;
+    // Set once the clip player is ready (after load and idle); a no-op until then.
+    let live = () => {};
     const left = (i: number) => {
       const s = slides[i];
       return s.offsetLeft + s.offsetWidth / 2 - reel.clientWidth / 2;
@@ -287,6 +316,7 @@ const startSlide = slides[start];
       prev.disabled = i === 0;
       next.disabled = i === n - 1;
       slides.forEach((s, k) => s.toggleAttribute('data-centre', k === i));
+      live();
     };
 
     let raf = 0;
@@ -300,6 +330,7 @@ const startSlide = slides[start];
         still = window.setTimeout(() => {
           show.classList.remove('is-moving');
           tgt = -1;
+          live();
         }, 140);
       },
       { passive: true },
@@ -430,7 +461,9 @@ const startSlide = slides[start];
     const wake = () => {
       woken = true;
       near(1);
+      warm();
     };
+    let warm = () => {};
     for (const type of ['pointerdown', 'touchstart', 'focusin', 'keydown'] as const)
       show.addEventListener(type, wake, { passive: true, signal });
     reel.addEventListener('scroll', () => woken && requestAnimationFrame(() => near(1)), {
@@ -451,8 +484,116 @@ const startSlide = slides[start];
     // event, and a layout read in that gap counted against it (Lighthouse, 2026-10-04).
     const idle = () =>
       'requestIdleCallback' in window
-        ? requestIdleCallback(firstLook, { timeout: 1500 })
-        : setTimeout(firstLook, 300);
+        ? requestIdleCallback(
+            () => {
+              firstLook();
+              player();
+            },
+            { timeout: 1500 },
+          )
+        : setTimeout(() => {
+            firstLook();
+            player();
+          }, 300);
+
+    // ---- The live centre frame ------------------------------------------------
+    // The centred slide plays its clip (data-clip-d / data-clip-m) over its still while
+    // the reel is in view and nothing is moving. One <video> per slide, made on first
+    // need; the others pause. Never under reduced motion, Save-Data or reduced data.
+    const motionBtn = show.querySelector<HTMLButtonElement>('.motion-btn')!;
+    const motionLabel = motionBtn.querySelector('.motion-label')!;
+    const phone = matchMedia('(max-width: 700px)');
+    const reducedData = matchMedia('(prefers-reduced-data: reduce)');
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    const clipOf = (slide: HTMLElement) =>
+      (phone.matches ? slide.dataset.clipM : slide.dataset.clipD) ||
+      slide.dataset.clipD ||
+      slide.dataset.clipM;
+    const allowed = () => !rm.matches && !reducedData.matches && !conn?.saveData;
+    let held = false; // the visitor pressed Pause
+    let inView = false;
+    const videoFor = (slide: HTMLElement, preload: 'auto' | 'metadata') => {
+      let v = slide.querySelector<HTMLVideoElement>('video.clip');
+      const src = clipOf(slide);
+      if (!src) return null;
+      if (!v) {
+        v = document.createElement('video');
+        v.className = 'clip';
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.setAttribute('aria-hidden', 'true');
+        v.setAttribute('disablepictureinpicture', '');
+        v.addEventListener('playing', () => v!.classList.add('is-on'));
+        slide.querySelector('.shot')!.append(v);
+      }
+      if (v.preload !== 'auto') v.preload = preload;
+      if (v.getAttribute('src') !== src) v.src = src;
+      return v;
+    };
+    const stopAll = (except?: HTMLElement) =>
+      slides.forEach((sl) => {
+        if (sl === except) return;
+        const v = sl.querySelector<HTMLVideoElement>('video.clip');
+        if (v && !v.paused) v.pause();
+        v?.classList.remove('is-on');
+      });
+    const setLabel = () => {
+      motionBtn.setAttribute('aria-pressed', String(held));
+      motionLabel.textContent = held ? 'Play the clip' : 'Pause the clip';
+      show.classList.toggle('is-held', held);
+    };
+    const player = () => {
+      if (!allowed() || !slides.some((sl) => clipOf(sl))) return;
+      live = () => {
+        const slide = slides[cur];
+        const can = !!slide && !!clipOf(slide);
+        motionBtn.hidden = !can;
+        stopAll(slide);
+        if (!can || held || !inView || show.classList.contains('is-moving')) {
+          slide?.querySelector<HTMLVideoElement>('video.clip')?.pause();
+          return;
+        }
+        const v = videoFor(slide, 'auto');
+        v?.play().catch(() => {});
+      };
+      // One neighbour, the next frame, when the visitor reaches for the reel.
+      warm = () => {
+        const nb = slides[cur + 1];
+        if (nb && !held) videoFor(nb, 'auto');
+      };
+      motionBtn.addEventListener('click', () => {
+        held = !held;
+        setLabel();
+        live();
+      });
+      const io = new IntersectionObserver(
+        (entries) => {
+          inView = entries.some((e) => e.isIntersecting);
+          live();
+        },
+        { threshold: 0.35 },
+      );
+      io.observe(reel);
+      signal.addEventListener('abort', () => io.disconnect());
+      for (const mq of [rm, reducedData])
+        mq.addEventListener(
+          'change',
+          () => {
+            if (!allowed()) {
+              held = true;
+              setLabel();
+            }
+            live();
+          },
+          { signal },
+        );
+      document.addEventListener('visibilitychange', () => (document.hidden ? stopAll() : live()), {
+        signal,
+      });
+      if (woken) warm();
+    };
     if (document.readyState === 'complete') idle();
     else addEventListener('load', idle, { once: true, signal });
   }
@@ -494,9 +635,9 @@ const startSlide = slides[start];
   .reel:focus-visible {
     outline: none;
   }
-  /* In ink, not red, so the ring reads apart from the china-marker loop. */
+  /* The focus ring sits on the centre frame. */
   .reel:focus-visible [data-centre] .print {
-    outline: 3px solid var(--heading);
+    outline: 3px solid var(--ring);
     outline-offset: 4px;
   }
   :global(html:not(.js)) .reel:focus-visible {
@@ -537,8 +678,33 @@ const startSlide = slides[start];
     object-fit: cover;
     -webkit-user-drag: none;
   }
-  .print > picture {
+  .shot {
+    position: relative;
     box-shadow: var(--shadow-frame);
+  }
+  /* The centre frame is the focused one: the deepest shadow on the table, as a print
+     lifted nearer the lamp. No drawn loop (Nathan, 2026-10-04). */
+  .slide[data-centre] .shot {
+    box-shadow:
+      var(--shadow-frame),
+      0 2.2em 4.5em -1.6em rgb(0 0 0 / 0.55);
+  }
+  /* The live clip lies exactly over the still and fades in once it is playing; the still
+     stays underneath, so a stall or a pause never shows a blank. */
+  .shot :global(video.clip) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 0;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-settle);
+    pointer-events: none;
+  }
+  .shot :global(video.clip.is-on) {
+    opacity: 1;
   }
   /* A parked frame keeps its capture's shape while its blank placeholder shows. */
   .vp img {
@@ -560,7 +726,7 @@ const startSlide = slides[start];
     gap: 0.42em;
     height: 2.2em;
     padding: 0 0.9em;
-    background: var(--ink);
+    background: var(--reel-chrome, var(--ink));
     color: var(--on-ink-muted);
     border-radius: 0.55em 0.55em 0 0;
     box-shadow: var(--shadow-frame);
@@ -580,7 +746,7 @@ const startSlide = slides[start];
     margin-left: 1em;
     height: 1.45em;
     border-radius: 0.73em;
-    background: var(--ink-raised);
+    background: var(--reel-url, var(--ink-raised));
     font: 500 0.86em/1.7 var(--font-ui);
     padding: 0 1.1em;
     overflow: hidden;
@@ -616,7 +782,7 @@ const startSlide = slides[start];
   .cap-page {
     font: italic 400 1.05rem/1 var(--font-serif);
     letter-spacing: 0;
-    color: var(--marker);
+    color: var(--reel-page, var(--marker));
   }
   .cap-fact {
     font-family: var(--font-serif);
@@ -644,7 +810,7 @@ const startSlide = slides[start];
     align-items: center;
     min-height: 44px;
     font-weight: 700;
-    color: var(--marker);
+    color: var(--reel-page, var(--marker));
   }
 
   /* ===== Controls: a strip of film under the fan ====================== */
@@ -660,7 +826,7 @@ const startSlide = slides[start];
     width: min(100% - 2 * var(--gutter), 640px);
     margin: 1.25rem auto 0;
     padding: 18px clamp(8px, 1.6vw, 18px);
-    background: var(--ink);
+    background: var(--reel-strip, var(--ink));
     color: var(--paper);
     border-radius: 2px;
   }
@@ -757,8 +923,59 @@ const startSlide = slides[start];
   :global(.js) .reel.is-drag * {
     user-select: none;
   }
-  .loop {
+  /* Pause / play for the live centre frame (shown by the script when a clip can play). */
+  .motion-btn {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgb(243 238 228 / 0.35);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .motion-btn[hidden] {
     display: none;
+  }
+  .motion-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .motion-btn path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .motion-btn .i-play path {
+    fill: currentColor;
+  }
+  .motion-btn .i-play,
+  .show:global(.is-held) .motion-btn .i-pause {
+    display: none;
+  }
+  .show:global(.is-held) .motion-btn .i-play {
+    display: block;
+  }
+  .motion-btn:hover {
+    color: var(--marker-hot);
+    border-color: currentColor;
+  }
+  .motion-btn:focus-visible {
+    outline: 3px solid var(--marker-hot);
+    outline-offset: 2px;
+  }
+  .motion-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   @media (max-width: 700px) {
@@ -789,7 +1006,8 @@ const startSlide = slides[start];
       font-size: 0.62em;
     }
     .vp img,
-    .print > picture {
+    .shot,
+    .shot :global(video.clip) {
       border-radius: 0 0 1.1em 1.1em;
     }
     .count {
@@ -921,33 +1139,6 @@ const startSlide = slides[start];
         }
       }
 
-      /* The china-marker loop round the centre position. Frames travel under it; it fades
-       while they move and settles round whichever frame lands. */
-      .loop {
-        display: block;
-        position: absolute;
-        z-index: 20;
-        left: 50%;
-        top: calc(var(--rise) - var(--pull) - 13px);
-        width: calc(var(--F) + 26px);
-        height: calc(var(--F) * 0.6625 + 26px);
-        translate: -50% 0;
-        overflow: visible;
-        pointer-events: none;
-        transition: opacity 0.35s var(--ease-settle);
-      }
-      .show:global(.is-moving) .loop {
-        opacity: 0;
-        transition-duration: 0.12s;
-      }
-      .loop path {
-        fill: none;
-        stroke: var(--marker);
-        stroke-width: 3.4;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        vector-effect: non-scaling-stroke;
-      }
       /* Tuck the raised side stacks up beside the buttons, less on tablets where the
        copy runs wider. */
       @media (min-width: 701px) {
@@ -975,7 +1166,8 @@ const startSlide = slides[start];
           width: 56px;
           height: 56px;
           border-radius: 50%;
-          background: var(--ink);
+          background: var(--reel-btn, var(--ink));
+          color: var(--reel-btn-fg, var(--paper));
           box-shadow: var(--shadow-print);
         }
         .prev {
@@ -998,11 +1190,6 @@ const startSlide = slides[start];
         }
         .slide {
           height: calc(var(--F) * 1.3285 + var(--capH));
-        }
-        .loop {
-          height: calc(var(--F) * 1.3285 + 22px);
-          width: calc(var(--F) + 20px);
-          top: calc(var(--rise) - var(--pull) - 11px);
         }
         /* Slot is 30% of the reel: one step is 30/130 of the timeline, d=1 at 26.92%. */
         @keyframes fan {
@@ -1032,22 +1219,6 @@ const startSlide = slides[start];
             z-index: 7;
           }
         }
-      }
-    }
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    /* The marker goes round the centre frame once as the page opens: a wipe, so the stroke
-       is whole the moment it lands. */
-    .loop {
-      animation: draw 0.9s 0.5s var(--ease-settle) both;
-    }
-    @keyframes draw {
-      from {
-        clip-path: inset(0 100% 0 0);
-      }
-      to {
-        clip-path: inset(0 0 0 0);
       }
     }
   }

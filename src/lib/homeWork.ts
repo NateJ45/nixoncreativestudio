@@ -171,8 +171,11 @@ export interface SheetFrame {
   img: string;
   alt: string;
   caption: string;
-  /** The china-marker loop round the keeper (one on the whole sheet: the lead job's). */
-  pick?: boolean;
+  /**
+   * A short muted loop of the live page (public path of a WebM) that plays over this frame's
+   * still while it is in view; the still stays for reduced motion, data saver and no JS.
+   */
+  clip?: string;
   /** Relative width of this frame in the strip at desktop (flex-grow). */
   grow?: number;
 }
@@ -196,8 +199,8 @@ export interface SheetJob {
  * The proof sheet, in order. Stone Steps leads (the lead case study). Each job shows a DETAIL
  * the hero reel does not: the reel prints every site's first screen, so the sheet prints a
  * section further in (scripts/brand/capture-home-sheet.mjs captures the newer ones), with a
- * fact the reel's captions do not already state. Only the lead carries the china-marker pick:
- * one circled keeper per sheet (the hero has the other loop on the page).
+ * fact the reel's captions do not already state. The lead's first frame is live: the course
+ * map clip from the Stone Steps showreel, the real page moving.
  */
 export const SHEET: SheetJob[] = [
   {
@@ -207,10 +210,16 @@ export const SHEET: SheetJob[] = [
     edge: ['Stone Steps 50K', 'Cincinnati', '2026'],
     frames: [
       {
+        img: 'ss-map',
+        alt: 'The course map on the Stone Steps site: two loops out of The Oval, the long loop of 5.3 miles lit in red over the forest, with its elevation profile from 531 to 868 feet.',
+        caption: 'The course map, moving as it does on the live site',
+        clip: '/reel/stone-steps-50k/ss-d-clip-map.webm',
+        grow: 1,
+      },
+      {
         img: 'ss-elev',
         alt: 'Elevation chart from the Stone Steps site: about 5,200 feet of climbing across seven loops, with an aid station marked at the end of each loop.',
         caption: 'The climbing, measured from USGS survey data',
-        pick: true,
         grow: 1,
       },
       {
@@ -352,4 +361,69 @@ export function splitVoice(text: string): { lead: string; voice: string } {
     return { lead: words.slice(0, -4).join(' '), voice: words.slice(-4).join(' ') };
   }
   return { lead: t, voice: '' };
+}
+
+/**
+ * The home hero's ground (DESIGN.md "Hero ground"). 'ink': the deep board under the header
+ * (the header shows its on-ink face), light contours with the river edged in vermilion, the
+ * lamp crossing it. 'paper': the survey sheet turned up. Read by HomeHero.astro and by
+ * index.astro (which tells BaseLayout the header sits on ink). One line to switch.
+ */
+export const HERO_GROUND: 'ink' | 'paper' = 'ink';
+
+/** One short muted loop of a live site, laid exactly over a reel still. */
+export interface ReelClip {
+  /** Public path of the WebM (served from public/). */
+  webm: string;
+  /** Optional poster frame (the still under it already shows; kept for the record). */
+  poster?: string;
+  w?: number;
+  h?: number;
+}
+/** A reel slide's clips: `d` over the desktop still (1600x1000), `m` over the phone still. */
+export interface ReelClipPair {
+  d?: ReelClip;
+  m?: ReelClip;
+}
+
+/**
+ * Until the home clip set lands (public/reel/home/manifest.json, produced with the reel
+ * stills), the Stone Steps start frame borrows its case-study clip so the player can be
+ * built and measured. Ignored as soon as a manifest exists.
+ */
+export const PLACEHOLDER_CLIPS: Record<string, ReelClipPair> = {
+  'ss-home': {
+    d: { webm: '/reel/stone-steps-50k/ss-d-clip-map.webm', w: 1272, h: 718 },
+    m: { webm: '/reel/stone-steps-50k/ss-m-clip-map.webm', w: 342, h: 772 },
+  },
+};
+
+const isClip = (c: unknown): c is ReelClip =>
+  !!c &&
+  typeof c === 'object' &&
+  typeof (c as ReelClip).webm === 'string' &&
+  /^\/reel\/[\w./-]+\.webm$/.test((c as ReelClip).webm);
+
+/**
+ * The clips the reel may play, keyed by reel slide id, read from the manifest
+ * (`{ clips: { [slideId]: { d?: ReelClip, m?: ReelClip } } }`). Anything malformed is
+ * dropped, so a bad manifest only means stills. No manifest: the placeholder set.
+ */
+export function reelClips(
+  manifest: unknown,
+  placeholder: Record<string, ReelClipPair> = PLACEHOLDER_CLIPS,
+): Record<string, ReelClipPair> {
+  if (manifest === undefined) return placeholder;
+  const clips = (manifest as { clips?: unknown })?.clips;
+  if (!clips || typeof clips !== 'object') return {};
+  const out: Record<string, ReelClipPair> = {};
+  for (const [id, pair] of Object.entries(clips as Record<string, unknown>)) {
+    if (!pair || typeof pair !== 'object') continue;
+    const { d, m } = pair as ReelClipPair;
+    const keep: ReelClipPair = {};
+    if (isClip(d)) keep.d = d;
+    if (isClip(m)) keep.m = m;
+    if (keep.d || keep.m) out[id] = keep;
+  }
+  return out;
 }
