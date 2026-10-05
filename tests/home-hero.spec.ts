@@ -104,6 +104,7 @@ test.describe('Hero reel, the live centre frame', () => {
       (el) => !!((el as HTMLElement).dataset.clipD || (el as HTMLElement).dataset.clipM),
     );
     test.skip(!hasClip, 'the centre slide has no clip in this build');
+    await page.locator('[data-reel] .reel').scrollIntoViewIfNeeded();
     const video = centre.locator('video.clip');
     await expect(video).toHaveCount(1, { timeout: 10000 });
     await expect
