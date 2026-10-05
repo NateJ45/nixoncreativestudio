@@ -121,7 +121,21 @@ export function r2PutCi(key, file, contentType) {
 }
 
 /** Deploy the ci Worker. CLOUDFLARE_ENV=ci is set here and nowhere else. */
+/** Build only (no deploy). */
+export function buildCi() {
+  runCiCommand(true, false);
+}
+
+/** Deploy the already-built ci Worker. */
+export function deployCi() {
+  runCiCommand(false, true);
+}
+
 export function buildAndDeployCi() {
+  runCiCommand(true, true);
+}
+
+function runCiCommand(doBuild, doDeploy) {
   const env = { ...process.env, CLOUDFLARE_ENV: 'ci' };
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -134,8 +148,8 @@ export function buildAndDeployCi() {
     });
     if (res.status !== 0) throw new Error(`${cmd} ${args.join(' ')} exited ${res.status}`);
   };
-  run(npm, ['run', 'build']);
-  run(npx, ['--no-install', 'wrangler', 'deploy']);
+  if (doBuild) run(npm, ['run', 'build']);
+  if (doDeploy) run(npx, ['--no-install', 'wrangler', 'deploy']);
 }
 
 /** SQL literal for a JS value (text, number, null). */
