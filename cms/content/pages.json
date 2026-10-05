@@ -22,7 +22,7 @@
             {
               "_type": "span",
               "_key": "k0",
-              "text": "Short version: a contact form, two analytics tools (a cookieless Cloudflare beacon and Google Analytics), an embedded Google Map on the contact page, and the things any web server logs. No advertising trackers. If you have questions, email ",
+              "text": "Short version: a contact form, two analytics tools (a cookieless Cloudflare beacon and Google Analytics), and the things any web server logs. No advertising trackers. If you have questions, email ",
               "marks": []
             },
             {
@@ -221,7 +221,7 @@
             {
               "_type": "span",
               "_key": "kq",
-              "text": "The hosting platform (Cloudflare Pages) records standard request data: IP address, user agent, requested URL, response code, timestamp. These logs are retained for a short window and used for operational purposes like blocking abuse and diagnosing errors. They are not used to build profiles of visitors.",
+              "text": "The hosting platform (Cloudflare Workers) records standard request data: IP address, user agent, requested URL, response code, timestamp. These logs are retained for a short window and used for operational purposes like blocking abuse and diagnosing errors. They are not used to build profiles of visitors. Cloudflare also serves a small bot-detection script from the same network (its \"JavaScript Detections\"); it is part of the hosting platform, not something I added, and I do not use it to track anyone.",
               "marks": []
             }
           ]
@@ -261,7 +261,7 @@
             {
               "_type": "span",
               "_key": "kw",
-              "text": " family) so it can tell a returning visit from a new one. They carry a random identifier, not your name or email, and the Analytics section above links the opt-out. The contact page also embeds a Google Map: when that map loads, Google may set its own cookies and receive your IP address, the same as if you visited Google Maps directly. Nothing else on the site sets cookies. If a future change adds more third-party content, this page will say so first.",
+              "text": " family) so it can tell a returning visit from a new one. They carry a random identifier, not your name or email, and the Analytics section above links the opt-out. Nothing else on the site sets cookies, and no page embeds a map, video or other third-party widget. If a future change adds more third-party content, this page will say so first.",
               "marks": []
             }
           ]
@@ -342,7 +342,7 @@
         }
       ],
       "show_toc": true,
-      "last_updated": "2026-09-04T00:00:00.000Z"
+      "last_updated": "2026-10-04T00:00:00.000Z"
     }
   },
   {
@@ -368,7 +368,7 @@
             {
               "_type": "span",
               "_key": "k0",
-              "text": "I build this site toward WCAG 2.1 AA, in both the light and the dark theme, and I check it on every change. No website is ever perfectly accessible, so if anything is hard to use with a keyboard or a screen reader, tell me and I'll fix it: ",
+              "text": "I build this site toward WCAG 2.1 AA and I check it on every change. No website is ever perfectly accessible, so if anything is hard to use with a keyboard or a screen reader, tell me and I'll fix it: ",
               "marks": []
             },
             {
@@ -410,7 +410,7 @@
             {
               "_type": "span",
               "_key": "k2",
-              "text": "The goal is WCAG 2.1 AA, the same standard most public bodies and larger organizations are held to, and it applies in both the light and the dark theme. Each page is built to score 100 on Lighthouse's accessibility audit, and an automated check runs on every change so that score does not quietly slip. That automated score is a useful floor, not a certificate: it catches the machine-checkable issues, which are only one part of the picture.",
+              "text": "The goal is WCAG 2.1 AA, the same standard most public bodies and larger organizations are held to, and it applies to every page. Each page is built to score 100 on Lighthouse's accessibility audit, and an automated check runs on every change so that score does not quietly slip. That automated score is a useful floor, not a certificate: it catches the machine-checkable issues, which are only one part of the picture.",
               "marks": []
             }
           ]
@@ -502,7 +502,7 @@
             {
               "_type": "span",
               "_key": "ke",
-              "text": "Text is chosen to clear the AA contrast bar against its background in both the light and the dark theme. Images that carry meaning have descriptions; purely decorative ones are hidden from assistive tech.",
+              "text": "Text is chosen to clear the AA contrast bar against every background it sits on, including the textured ones. Images that carry meaning have descriptions; purely decorative ones are hidden from assistive tech.",
               "marks": []
             }
           ]
@@ -564,7 +564,7 @@
             {
               "_type": "span",
               "_key": "kn",
-              "text": " (a widely used accessibility testing engine) in both themes, and structural changes get a manual keyboard pass from the address bar through every control. Automated tools like these only cover part of WCAG; the rest is judgment, whether the alt text is actually useful, whether the reading order makes sense, so I treat the tooling as a safety net under the hands-on work, not a stand-in for it.",
+              "text": " (a widely used accessibility testing engine), and structural changes get a manual keyboard pass from the address bar through every control. Automated tools like these only cover part of WCAG; the rest is judgment, whether the alt text is actually useful, whether the reading order makes sense, so I treat the tooling as a safety net under the hands-on work, not a stand-in for it.",
               "marks": []
             }
           ]
@@ -592,7 +592,7 @@
             {
               "_type": "span",
               "_key": "kr",
-              "text": "I aim for AA, not the stricter AAA, on purpose, in line with the W3C's own guidance that AAA is not meant as a blanket requirement for a whole site. A couple of AAA rules pull against a brand-led design: the deepest brand-blue text sits just under the 7:1 enhanced-contrast bar, for one. So the work targets AA and stops there by choice, not by oversight.",
+              "text": "I aim for AA, not the stricter AAA, on purpose, in line with the W3C's own guidance that AAA is not meant as a blanket requirement for a whole site. A couple of AAA rules pull against a brand-led design: the china-marker red used for the italic accents sits at about 5.6:1 and the grey caption text at about 6.2:1, both over the AA bar of 4.5:1 and under the 7:1 enhanced bar, for one. The main reading text, the headings and the links are well over 7:1. So the work targets AA and stops there by choice, not by oversight.",
               "marks": []
             }
           ]
@@ -659,7 +659,7 @@
         }
       ],
       "show_toc": true,
-      "last_updated": "2026-06-27T00:00:00.000Z"
+      "last_updated": "2026-10-04T00:00:00.000Z"
     }
   },
   {
@@ -687,23 +687,27 @@
       "rows": [
         {
           "label": "Built with",
-          "detail": "Custom-coded in Astro with TypeScript, styled with Tailwind CSS, and deployed to Cloudflare. No page builder, no stock template, no lock-in."
+          "detail": "Custom-coded in Astro with TypeScript, styled with Tailwind CSS, and deployed to Cloudflare. The words and photographs are kept in a small content system (EmDash) that I edit from a browser. No page builder, no stock template, no lock-in."
         },
         {
           "label": "Typography",
-          "detail": "Headings are set in Bebas Neue and everything else in Source Sans 3, both self-hosted so nothing loads from a third party."
+          "detail": "Headings are set in Bebas Neue, the face of the studio logo, and the reading text in Newsreader, with the system sans for buttons and labels. Both web fonts are self-hosted, so nothing loads from a third party."
         },
         {
           "label": "Accessibility",
-          "detail": "Built toward WCAG AA and checked automatically on every deploy. In plain terms: it works with a keyboard, with a screen reader, and in light or dark. There is a fuller statement on the accessibility page."
+          "detail": "Built toward WCAG AA and checked automatically on every deploy. In plain terms: it works with a keyboard and with a screen reader, and the text stays readable on every background. There is a fuller statement on the accessibility page."
         },
         {
           "label": "Performance",
           "detail": "Pages are put together on the Cloudflare network and then kept in a cache close to each visitor, images are resized to fit the screen, and the fonts ship with the site, so it stays fast on a phone and a slow connection."
         },
         {
+          "label": "Look and motion",
+          "detail": "One light theme, with no dark mode and no theme switch. No WebGL or 3D effects: the only movement is a slow drift of light across a few backgrounds and small fade-ins as you scroll. All of it switches off if your device is set to reduce motion."
+        },
+        {
           "label": "Photography",
-          "detail": "Every photograph on the site was shot by Nathan."
+          "detail": "There is no stock photography here. The pictures are real ones: client sites, and the portraits and snapshots on the About page."
         },
         {
           "label": "Privacy",
@@ -711,6 +715,1248 @@
         }
       ],
       "show_toc": false
+    }
+  },
+  {
+    "slug": "church-websites",
+    "data": {
+      "title": "Church Website Design in Cincinnati",
+      "heading": "Church website design in Cincinnati, built for a volunteer to keep current.",
+      "summary": "Church websites planned, designed and built by one person in Cincinnati: service times entered once, pages your staff edit themselves, from $4,000.",
+      "intro": [
+        {
+          "_type": "block",
+          "_key": "k0",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1",
+              "text": "I plan, design and build church websites myself, then hand them to the people who will run them. Your service time and address go in once, so the home page, the visit page and the footer can never disagree, and whoever updates the site next week does it on the page itself, with a preview, without calling me.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k2",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3",
+              "text": "I'm based in Cincinnati and build for churches anywhere. I also run the weekly livestream at my own church, Crestview Presbyterian, so I see from the inside how a church leans on its website on a Sunday.",
+              "marks": []
+            }
+          ]
+        }
+      ],
+      "content": [
+        {
+          "_type": "block",
+          "_key": "k4",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k5",
+              "text": "What a church website has to get right",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k6",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k7",
+              "text": "When a church asks me for a new site, the reasons behind the request are usually the same three, and they are rarely about how it looks.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k8",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k9",
+              "text": "The service time is wrong somewhere.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "ka",
+              "text": " It was typed into four places and someone changed three. I store each fact once (service times, the address, the livestream link) and every page reads it from there.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "kb",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "kc",
+              "text": "Only one person can update it.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "kd",
+              "text": " When that volunteer moves on, the site stops. Staff edit a page in place and see the change before it goes live, and a written guide covers the everyday jobs.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "ke",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "kf",
+              "text": "Moving off Wix or Squarespace looks like losing everything.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "kg",
+              "text": " It doesn't have to. Sermons, newsletters and news posts come across, at their original addresses where the old platform allows it, so old links in emails and search results keep working.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "kh",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "ki",
+              "text": "Giving and livestreams stay where they are",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kj",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "kk",
+              "text": "Your giving platform, your church management software and your YouTube channel stay where they are. The site puts them where people look for them: the Give button, the Watch live link and the calendar. You are not paying for a second system to do the same job.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kl",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "km",
+              "text": "Questions churches ask",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kn",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "ko",
+              "text": "What does a church website cost?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kp",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "kq",
+              "text": "A Launch site starts at $4,000, which suits most churches. A Signature site, for a church with ministries, events and a sermon library, starts at $7,000. Larger projects can be split into monthly payments, and the first conversation, which ends with a ballpark, is free.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kr",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "ks",
+              "text": "Can our volunteers really keep it up to date?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kt",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "ku",
+              "text": "Yes. Pages are edited in place with a live preview, and the handoff includes a written guide to the everyday jobs: a new event, a staff change, a different service time. If you would rather not touch it, the optional Care plan starts at $100 a month for updates, backups and security.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kv",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "kw",
+              "text": "What happens to our old sermons and posts?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kx",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "ky",
+              "text": "They come with you, at their original addresses where the old platform allows it, so links in old emails and search results keep working. For First Baptist Church in Muncie that meant 142 posts carried across from Wix.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "kz",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k10",
+              "text": "Do you only work with churches in Cincinnati?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k11",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k12",
+              "text": "No. I'm based in Cincinnati, and web design works well over video calls, so I build for churches anywhere. Photography is the one part that needs me on site, so that stays within the greater Cincinnati region.",
+              "marks": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "nonprofit-websites",
+    "data": {
+      "title": "Nonprofit Web Design in Cincinnati",
+      "heading": "Nonprofit web design in Cincinnati, for sites that keep their facts straight.",
+      "summary": "Websites for nonprofits and event organizers, built in Cincinnati so each fact is entered once and stays right without a webmaster. From $4,000.",
+      "intro": [
+        {
+          "_type": "block",
+          "_key": "k17",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k18",
+              "text": "Small nonprofits run on a director and a few volunteers, and the website is nobody's whole job. So I build it to need as little looking after as possible: each fact is entered once, the pages that depend on it update themselves, and your team edits the rest in place. Then I hand it over, and it's yours.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k19",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1a",
+              "text": "I'm based in Cincinnati and work with nonprofits anywhere.",
+              "marks": []
+            }
+          ]
+        }
+      ],
+      "content": [
+        {
+          "_type": "block",
+          "_key": "k1b",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1c",
+              "text": "One fact, entered once",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1d",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1e",
+              "text": "A results table, a program schedule, a board list, a price: when the same fact is typed into several pages, the pages drift apart, and a visitor finds the old one. I set your site up so each fact has one home and every page reads it from there.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1f",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1g",
+              "text": "Most of that is decided before I design anything. In the first meeting we list what your site states as fact, where each one comes from and who changes it, and that list becomes the structure your team edits.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1h",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1i",
+              "text": "Leaving an old WordPress site",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1j",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1k",
+              "text": "Many small nonprofits have a WordPress site someone built years ago, with plugins nobody updates and a login nobody can find. I move the content across, keep the addresses that matter, and replace the plugins with the few things the site needs. The Stone Steps 50K made that move in 2026.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1l",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1m",
+              "text": "Questions nonprofits ask",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "pb0",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "pb1",
+              "text": "Our board has to approve the spend. What will they need?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "pb2",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "pb3",
+              "text": "A number and a plan. The first conversation ends with a ballpark you can take to the board, and the first stage ends with a one-page brief, signed by both of us, that sets what is being built and the real dates. Larger projects can be split into monthly payments.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1r",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1s",
+              "text": "Do you offer a nonprofit discount?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1t",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1u",
+              "text": "No. The published prices are already set with small organizations in mind, so instead of a discount I offer monthly payments, which lets the budget follow your cash flow.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1v",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1w",
+              "text": "Who keeps it up to date after launch?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1x",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k1y",
+              "text": "Your team, with the editor and the written guide I hand over. If you would rather hand that off, the optional Care plan starts at $100 a month for updates, backups and security.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k1z",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k20",
+              "text": "Do we own the site?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k21",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k22",
+              "text": "Yes, outright. There is no lock-in, and the custom-coded builds cost little or nothing a month to host.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k23",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k24",
+              "text": "Is it accessible?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k25",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k26",
+              "text": "Every custom-coded site I build is checked against WCAG AA before launch and on every change after it.",
+              "marks": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "school-websites",
+    "data": {
+      "title": "School Website Design in Cincinnati",
+      "heading": "School websites your office can run, with a plan for who runs them next.",
+      "summary": "School websites planned, designed and built by one person in Cincinnati, handed over with an editor, a written guide and checked backups. From $4,000.",
+      "intro": [
+        {
+          "_type": "block",
+          "_key": "k27",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k28",
+              "text": "A school website has to outlast the person who launched it. The first thing a school board asked me was what happens if I'm not around next year. It's the right question, so this page answers it first.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k29",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2a",
+              "text": "I'm based in Cincinnati and work with schools anywhere.",
+              "marks": []
+            }
+          ]
+        }
+      ],
+      "content": [
+        {
+          "_type": "block",
+          "_key": "k2b",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2c",
+              "text": "If I'm not around next year",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k2d",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2e",
+              "text": "A one-person studio is a fair thing to worry about. Here is what your school holds on the day the site launches, whether or not you ever call me again.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k2f",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2g",
+              "text": "The site, yours outright.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k2h",
+              "text": " No lock-in: the site and its content belong to the school.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k2i",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2j",
+              "text": "A written guide",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k2k",
+              "text": " to the everyday edits, for whoever runs the site after the person who launched it.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k2l",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2m",
+              "text": "Backups that are checked.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k2n",
+              "text": " The site and its content are backed up automatically, and I check that the backups work.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k2o",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2p",
+              "text": "Standard tools.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k2q",
+              "text": " No private system: a web developer can pick the site up from the guide and the code.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k2r",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2s",
+              "text": "An optional Care plan",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k2t",
+              "text": " from $100 a month, if you would rather someone kept watching it.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k2u",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2v",
+              "text": "It's the same handoff every site I build gets.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k2w",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2x",
+              "text": "What the site does for the office",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k2y",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k2z",
+              "text": "Tuition, term dates, open-house days and the staff list are each entered once, and every page that shows them reads from that one place. Office staff edit a page in place and see it before it goes live.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k32",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k33",
+              "text": "Questions schools ask",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k34",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k35",
+              "text": "What if you're not around next year?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k36",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k37",
+              "text": "You keep the site, the content, the written guide and the backups, and a web developer can pick it up from there. If you want someone watching it month to month, the optional Care plan starts at $100 a month.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3c",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3d",
+              "text": "Can office staff update it without you?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3e",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3f",
+              "text": "Yes. Pages are edited in place with a preview, and the guide covers the everyday jobs: a term date, a new member of staff, a snow-day notice.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3g",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3h",
+              "text": "Have you built school sites before?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3i",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3j",
+              "text": "I'm building my first school sites now, so I won't show you a finished one or quote you results yet. What I can show you is live work for a trail race, a theological foundation and a journal, all handed over the same way.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "pb4",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "pb5",
+              "text": "Should we publish our tuition on the site?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k30",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k31",
+              "text": "Publishing tuition is your call, and I build it either way. Some schools do it on purpose, so families can see whether the school is within reach before they phone.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3k",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3l",
+              "text": "How long does it take?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3m",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3n",
+              "text": "Most school sites launch six to ten weeks after the first meeting. A larger site, with admissions, a calendar and a lot of content to move, can take twelve to sixteen weeks. The one-page brief at the end of the first stage sets the real dates.",
+              "marks": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "cincinnati-event-photography",
+    "data": {
+      "title": "Cincinnati Event Photography",
+      "heading": "Event photography in Cincinnati, shot for the web.",
+      "summary": "Event, team and space photography for Cincinnati organizations, from $900 for a half day, often shot for the website I'm building for you.",
+      "intro": [
+        {
+          "_type": "block",
+          "_key": "k3o",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3p",
+              "text": "I photograph events, people and places for organizations around Cincinnati, usually for the website I'm building for them and sometimes on their own. Because I design the pages too, I shoot for the layout: wide frames with room for a headline, portraits that crop cleanly, and spaces as they look on an ordinary day.",
+              "marks": []
+            }
+          ]
+        }
+      ],
+      "content": [
+        {
+          "_type": "block",
+          "_key": "k3q",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3r",
+              "text": "What I cover",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k3s",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3t",
+              "text": "Events.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k3u",
+              "text": " Services, fundraisers, races, open houses, assemblies, and the people at them.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k3v",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3w",
+              "text": "Team portraits.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k3x",
+              "text": " Headshots for staff and leadership pages, on site, with one consistent look.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k3y",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k3z",
+              "text": "Your spaces.",
+              "marks": ["strong"]
+            },
+            {
+              "_type": "span",
+              "_key": "k40",
+              "text": " The building, the rooms and the details, for the pages that need them.",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "level": 1
+        },
+        {
+          "_type": "block",
+          "_key": "k41",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k42",
+              "text": "I shoot across the greater Cincinnati region. Web design works from anywhere; photography needs me there.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k43",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k44",
+              "text": "Shot for the website",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k45",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k46",
+              "text": "A folder of photos still leaves someone to pick, crop and place them. When I'm also building your site, I already know which pages need which pictures, so the shot list comes from the page plan and the pictures go straight onto the pages they were taken for.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k47",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k48",
+              "text": "Booked on its own, a photo day starts with the same question: where will these pictures be used? The answer sets the shot list, the framing and what I deliver.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k49",
+          "style": "h2",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4a",
+              "text": "Questions about photo days",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4b",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4c",
+              "text": "What does a photo day cost?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4d",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4e",
+              "text": "A half day starts at $900 and a full day runs about $1,200. Photography can be folded into a website project or booked on its own.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4f",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4g",
+              "text": "Where do you shoot?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4h",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4i",
+              "text": "Across the greater Cincinnati region. Web design works with clients anywhere, but photography needs me there, so it stays local.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4j",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4k",
+              "text": "Do you only photograph for your web clients?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4l",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4m",
+              "text": "No. You can book a photo day on its own, whoever looks after your website.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4n",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4o",
+              "text": "What should we plan before the day?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4p",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4q",
+              "text": "A rough schedule and a short list of the people and moments that matter most. I turn that into a shot list before the day, so nothing important is left to luck.",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4r",
+          "style": "h3",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4s",
+              "text": "What do we get?",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "_type": "block",
+          "_key": "k4t",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "k4u",
+              "text": "Edited pictures, sized and optimized for the web, ready to drop into your site.",
+              "marks": []
+            }
+          ]
+        }
+      ]
     }
   }
 ]
