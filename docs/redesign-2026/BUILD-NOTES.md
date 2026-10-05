@@ -95,3 +95,4 @@ node scripts/brand/build-grounds.mjs --check   # only if you touched a colour to
 
 - `node scripts/brand/build-grounds.mjs` re-bakes `src/assets/grounds/` from the tokens in `globals.css` and checks every text token against each ground's worst pixel; `--check` only checks.
 - `node scripts/brand/build-logo.mjs` copies the vector logo from `docs/redesign-2026/brand/` into `src/assets/brand/` and regenerates the PNG-derived WebP fallbacks.
+- `node scripts/brand/capture-reels.mjs [slide-id] [d|m]` re-shoots the home page's live clips into `public/reel/home/` (six sites, a 16:10 desktop clip and a 4:5 phone clip each, WebM plus a poster that is the first frame, and `manifest.json`). About 2 minutes a clip; look at the decoded review frames in `node_modules/.cache/nx-reels/review/` before committing. How it works, the shot lists and the byte budget: `docs/redesign-2026/reels-notes.md`.
