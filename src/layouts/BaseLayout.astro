@@ -104,6 +104,9 @@ interface Props {
       (src/lib/photos.ts photographyRobots). The Coming Soon gate's own
       noindex wins when it is on. */
   robots?: string;
+  /** The first band is the deep ground under the header (the home hero): the
+      header shows its on-ink face until the page scrolls (Header.astro). */
+  headerOnInk?: boolean;
 }
 // Site settings (studio name, default description, feed title) come from the
 // CMS, with the committed fallback; the Header, Footer and StructuredData share
@@ -118,6 +121,7 @@ const {
   schemas = [],
   preloadFonts = [],
   robots,
+  headerOnInk = false,
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -260,7 +264,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       Skip to main content
     </a>
 
-    <Header />
+    <Header onInk={headerOnInk} />
     <main id="main" tabindex="-1">
       <slot />
     </main>

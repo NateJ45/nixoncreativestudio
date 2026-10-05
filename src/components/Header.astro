@@ -11,7 +11,11 @@
    (paper, window light, contours) runs up under it when that band is a
    <Band underHeader>. Once the page scrolls past 8px (enhance.ts sets
    data-scrolled) it becomes a paper bar with a hairline. The header always
-   sits on a light ground: never put a deep band under it.
+   sits on a light ground, with one exception: a page whose first band is
+   the deep ground passes onInk (BaseLayout headerOnInk; the home hero), and
+   until the page scrolls the header shows its on-ink face: the white logo,
+   paper nav, a paper button with an ink label. Scrolled, it is the paper bar
+   with the navy logo as everywhere else.
 
    The "Start a project" button shows at EVERY width, phones included, so
    every page has a visible call to action without opening the menu (E
@@ -34,6 +38,12 @@ import { cn } from '@/lib/utils';
 // count). The read is memoised per request (the Footer asks too) and tagged for
 // the route cache, so publishing the first entry purges every page.
 const showJournal = await hasJournalEntries(Astro);
+
+interface Props {
+  /** The first band is the deep ground: show the on-ink face until scrolled. */
+  onInk?: boolean;
+}
+const { onInk = false } = Astro.props;
 
 // Site settings and the "primary" menu both come from the EmDash admin, each
 // falling back to the committed copy in cms/content/. Menu URLs already carry
@@ -64,12 +74,22 @@ const navLinks = menu
   }));
 ---
 
-<header data-header class="ncs-header">
+<header data-header class="ncs-header" data-on-ink={onInk ? '' : undefined}>
   <div class="ncs-container header-row">
     <!-- The logo is the home link; its alt text (the studio name) names the
          link. transition:name keeps it in place across View Transitions. -->
     <a class="header-logo" href="/" transition:name="site-logo">
-      <Logo lockup="responsive" width={236} topWidth={160} eager />
+      <Logo lockup="responsive" width={236} topWidth={160} eager class="logo-navy" />
+      {onInk && (
+        <Logo
+          tone="white"
+          lockup="responsive"
+          width={236}
+          topWidth={160}
+          eager
+          class="logo-white"
+        />
+      )}
     </a>
 
     <nav aria-label="Primary" class="header-nav">
@@ -208,6 +228,34 @@ const navLinks = menu
       padding-inline: 1.15rem;
       font-size: var(--text-ui);
     }
+  }
+
+  /* The on-ink face (onInk, until scrolled): only these four elements re-colour, so the
+     phone menu's dialog keeps its own paper tokens. */
+  .header-logo :global(.logo-white) {
+    display: none;
+  }
+  .ncs-header[data-on-ink]:not([data-scrolled]) .header-logo :global(.logo-navy) {
+    display: none;
+  }
+  .ncs-header[data-on-ink]:not([data-scrolled]) .header-logo :global(.logo-white) {
+    display: block;
+  }
+  .ncs-header[data-on-ink]:not([data-scrolled]) .nav-link,
+  .ncs-header[data-on-ink]:not([data-scrolled]) .header-menu > :global(.menu-trigger) {
+    color: var(--paper);
+  }
+  .ncs-header[data-on-ink]:not([data-scrolled]) .nav-link:hover,
+  .ncs-header[data-on-ink]:not([data-scrolled]) .nav-link.is-active {
+    text-decoration-color: var(--marker-hot);
+  }
+  .ncs-header[data-on-ink]:not([data-scrolled]) .header-cta {
+    --primary: var(--paper);
+    --primary-foreground: var(--ink);
+    --accent: var(--marker-hot);
+    --accent-foreground: var(--ink);
+    --background: var(--ink);
+    --ring: var(--marker-hot);
   }
 
   @media (prefers-reduced-motion: reduce) {

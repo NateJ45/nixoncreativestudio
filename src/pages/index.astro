@@ -6,13 +6,14 @@
    Section order is the IA. Each band has one job and its own ground, and the
    ground changes deliberately between bands (DESIGN.md "Grounds"):
 
-     HomeHero     paper-contours (the one moving ground)  the tagline, who it
-                  is for, the button, the price floor, the reel of his sites
+     HomeHero     ink (HERO_GROUND; the one moving ground)  the tagline as a
+                  poster, who it is for, the button, the price floor, the reel
+                  of his sites with a live centre frame
      ProofSheet   window-light, still   the work: film strips from four live
-                  sites, Stone Steps first
-     HomePrices   deep, still           the three published tiers
+                  sites, Stone Steps first with a live frame
+     HomePrices   deep, still           the floor as one big numeral, then the tiers
      HomeProcess  paper                 four steps and how long they take
-     HomeAbout    deep, still           who you work with
+     HomeAbout    deep, still           who you work with (full-bleed portrait)
      HomeClose    paper-contours, still the closing call
      Footer       deep (BaseLayout)
 
@@ -31,7 +32,7 @@ import HomeAbout from '../components/home/HomeAbout.astro';
 import HomeClose from '../components/home/HomeClose.astro';
 import { getHomePage, homeTitle } from '../lib/homePage';
 import { getCaseStudies } from '../lib/caseStudies';
-import type { StudyGate } from '../lib/homeWork';
+import { HERO_GROUND, type StudyGate } from '../lib/homeWork';
 import { getSite } from '../data/site';
 
 const home = await getHomePage(Astro);
@@ -56,6 +57,7 @@ try {
   title={homeTitle(home.seoTitle, site.studioName)}
   description={home.seoDescription}
   preloadFonts={['italic']}
+  headerOnInk={HERO_GROUND === 'ink'}
 >
   <HomeHero studies={studies} />
   <ProofSheet studies={studies} />
