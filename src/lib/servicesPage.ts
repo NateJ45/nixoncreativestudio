@@ -22,16 +22,14 @@
    disagree with the visible page. It is a pure function with a unit test that
    pins its output byte-for-byte to what the page emitted before the move.
 
-   Stays in code: section order, the Web design picture (an image file in
-   src/assets, not a CMS upload yet) and the extra words listed in
-   .claude/rules/homepage-and-pages.md ("/services since the 2026 redesign").
-   The process steps are the homepage's. `placeholderIcon` is still read but
-   no longer drawn: the 2026 page has no placeholder panels.
+   Stays in code (docs/CMS-DESIGN.md 1.6): section order, the three-service flow
+   card, "What's included", the placeholder icon SVG markup, the Web design
+   picture (an image file in src/assets, not a CMS upload yet) and the process
+   steps (the homepage's).
    ============================================================================ */
 
 import { choice, getOrdered, getSingleton, int, rows, text, texts, type Raw } from './cms.ts';
 import type { RouteCache } from './routeCache.ts';
-import { buildFaqPageSchema } from './structuredData.ts';
 
 /** One FAQ row. Also the source of the FAQPage JSON-LD. */
 export interface FaqItem {
@@ -70,7 +68,7 @@ export interface ServiceOffering {
   body: string;
   /** Standalone starting price for the JSON-LD Offer; undefined for none. */
   priceFrom?: number;
-  /** Description of the picture; empty means the chapter shows no picture. */
+  /** Description of the picture; empty means "show the placeholder panel". */
   imageAlt?: string;
   placeholderIcon: PlaceholderIcon;
   points: string[];
@@ -221,8 +219,15 @@ export function buildServiceSchemas(
           : {}),
       };
     }),
-    // The shared FAQPage builder (structuredData.ts); same keys, same order.
-    buildFaqPageSchema(faq),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faq.map(({ question, answer }) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      })),
+    },
   ];
 }
 

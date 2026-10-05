@@ -17,7 +17,7 @@ import { journalEmpty, journalDraftSlug } from './routes';
 // THE PHOTO. The CI dataset carries exactly one `photos` entry, written by hand in
 // scripts/ci-dataset/ci-content/photos.json (production carries none). With it the
 // gallery renders and is axe-checked by the normal sweeps (a11y.spec.ts and
-// the axe sweep covers /photography). The "zero photos" page is the SAME render
+// a11y-dark.spec.ts cover /photography). The "zero photos" page is the SAME render
 // the page gave before this PR; it cannot be asserted here while the test photo
 // exists, so it is proved by the parity run and by src/lib/photos.test.ts (an empty
 // collection groups to nothing and has no hero).
@@ -26,8 +26,10 @@ const read = <T>(file: string): T =>
   JSON.parse(readFileSync(join(process.cwd(), file), 'utf8')) as T;
 
 interface WorkData {
+  eyebrow: string;
   heading: string;
   intro: string;
+  empty_filter_message: string;
   live_heading: string;
   live_body: string;
 }
@@ -69,46 +71,43 @@ test.describe('/work', () => {
     page,
   }) => {
     await page.goto('/work/', { waitUntil: 'domcontentloaded' });
-    // The headline is the CMS heading; its last word is set in the italic voice.
     await expect(page.locator('h1')).toHaveText(work.heading);
-    // Every study is on the page once: the lead, the live sheet, or the Also built strip.
-    const shown =
-      (await page.locator('[data-work-item]').count()) +
-      (await page.locator('[data-work-also]').count());
-    expect(shown, 'the CI dataset holds three case studies').toBeGreaterThan(0);
+    await expect(page.getByText(work.eyebrow, { exact: true })).toBeVisible();
+    const cards = await page.locator('[data-work-card]').count();
+    expect(cards, 'the CI dataset holds three case studies').toBeGreaterThan(0);
     // "3 projects for churches, ..." : the number is computed, the rest is the CMS text.
     const intro = page.locator('header p', { hasText: work.intro.slice(0, 30) });
     await expect(intro).toHaveText(
-      new RegExp(`^\\s*${shown}\\s+projects?\\s+${work.intro.slice(0, 30)}`),
+      new RegExp(`^\\s*${cards}\\s+projects?\\s+${work.intro.slice(0, 30)}`),
     );
+    await expect(page.locator('#live-sites-heading')).toHaveText(work.live_heading);
+    await expect(page.getByText(work.live_body)).toBeAttached();
   });
 
-  test('a live study leads, and nothing that is not live is presented as live', async ({
+  test('the sector filter chips still filter the cards (the WorkFilter island works)', async ({
     page,
   }) => {
     await page.goto('/work/', { waitUntil: 'domcontentloaded' });
-    const lead = page.locator('[data-work-lead] [data-work-item]');
-    if ((await lead.count()) > 0) {
-      await expect(lead).toHaveAttribute('data-status', 'live');
-    }
-    // The live sheet only ever holds live studies.
-    for (const item of await page.locator('[data-work-item]').all()) {
-      await expect(item).toHaveAttribute('data-status', 'live');
-    }
-    // Each Also built entry carries its status label and links to its case study.
-    for (const item of await page.locator('[data-work-also]').all()) {
-      await expect(item.locator('.w-also-status')).toHaveText(
-        /Launching soon|In progress|Built, not launched/,
-      );
-      await expect(item.locator('a[href^="/work/"]').first()).toBeVisible();
-    }
-    // The live sheet's heading and line are the Work page's live fields.
-    if ((await page.locator('#work-live').count()) > 0) {
-      await expect(page.locator('#work-live')).toHaveText(work.live_heading);
-      await expect(page.getByText(work.live_body)).toBeAttached();
-    }
-    // No filter chips and no React island any more.
-    await expect(page.locator('astro-island')).toHaveCount(0);
+    const chips = page.getByRole('group').getByRole('button');
+    // The island hydrates on load; wait for the chips to be interactive.
+    await expect(chips.first()).toBeVisible();
+    const count = await chips.count();
+    expect(count, 'All plus at least two sectors').toBeGreaterThan(2);
+    const total = await page.locator('[data-work-card]').count();
+    // Pick a sector chip (not "All") and check some, but not all, cards hide.
+    // The chips are server-rendered, so a click can land before React has bound it;
+    // retry the click until the filter has taken effect.
+    let hidden = 0;
+    await expect(async () => {
+      await chips.nth(1).click();
+      hidden = await page.locator('[data-work-card][data-hidden]').count();
+      expect(hidden, 'a sector chip hides the other sectors').toBeGreaterThan(0);
+    }).toPass({ timeout: 15000 });
+    expect(hidden).toBeLessThan(total);
+    await chips.first().click();
+    await expect(page.locator('[data-work-card][data-hidden]')).toHaveCount(0);
+    // The empty-filter message is in the page (hidden) with the CMS words.
+    await expect(page.locator('[data-work-empty]')).toHaveText(work.empty_filter_message);
   });
 });
 
@@ -125,29 +124,10 @@ test.describe('/photography', () => {
     await expect(page.getByText(photography.empty_heading)).toHaveCount(0);
     // Only the group that has a photo gets a section and a card.
     await expect(page.locator('#events-heading')).toHaveText(photography.events_title);
-    await expect(page.getByText(photography.events_intro).first()).toBeVisible();
+    await expect(page.getByText(photography.events_intro)).toBeVisible();
     await expect(page.locator('#portraits')).toHaveCount(0);
     await expect(page.locator('#environments')).toHaveCount(0);
     await expect(page.locator('a[href="#events"]')).toContainText('1 photo');
-  });
-
-  test('is indexable once a photo exists (noindex only while the gallery is empty)', async ({
-    page,
-  }) => {
-    // The CI dataset carries one photo, so the page must NOT ask to stay out of search.
-    // The empty-gallery side (noindex, follow) is unit-tested in src/lib/photos.test.ts
-    // (photographyRobots) and measured with NCS_CI_NO_TEST_CONTENT=1.
-    await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
-  });
-
-  test('is a service page: the rate, how booking works and a clear ask', async ({ page }) => {
-    await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('from $900', { exact: false }).first()).toBeVisible();
-    await expect(page.locator('#booking-heading')).toContainText('How booking');
-    await expect(page.locator('main ol li')).toHaveCount(4);
-    const ask = page.locator('main').getByRole('link', { name: 'Ask about a shoot' });
-    await expect(ask.first()).toHaveAttribute('href', '/contact/');
   });
 
   test('the gallery renders the test photo with width-only resizer URLs', async ({ page }) => {
@@ -202,16 +182,20 @@ test.describe('/photography', () => {
 // -----------------------------------------------------------------------------
 // The photo gallery under axe, AFTER it has hydrated
 // -----------------------------------------------------------------------------
-// The shared sweep (a11y.spec.ts) audits /photography as it loads, but
-// react-photo-album only lays its rows out once the island hydrates
+// The shared sweeps (a11y.spec.ts, a11y-dark.spec.ts) audit /photography as it
+// loads, but react-photo-album only lays its rows out once the island hydrates
 // (client:visible, on scroll). Without this test the photo would never be in front
-// of axe. It scrolls the gallery in, waits for the picture, and audits the page,
-// then again with the full-screen viewer open. (One theme since the 2026
-// redesign; this used to run twice, light and dark.)
+// of axe. It scrolls the gallery in, waits for the picture, and audits the page in
+// both themes, then again with the full-screen viewer open.
 test.describe('/photography gallery: no axe violations once rendered', () => {
-  {
-    test('the hydrated gallery and the open viewer pass axe', async ({ page }) => {
+  for (const theme of ['light', 'dark'] as const) {
+    test(`the hydrated gallery and the open viewer pass axe (${theme})`, async ({ page }) => {
+      await page.addInitScript(
+        ([key, value]) => window.localStorage.setItem(key, value),
+        ['ncs-theme', theme],
+      );
       await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveClass(theme === 'dark' ? /dark/ : /^(?!.*dark)/);
       await page.locator('#events .react-photo-album').scrollIntoViewIfNeeded();
       await expect(page.locator('#events .react-photo-album img')).toHaveCount(1);
       await settle(page);
@@ -290,21 +274,9 @@ test.describe('the not-found page', () => {
     await expect(page.getByText(notFound.label, { exact: true })).toBeVisible();
     await expect(page.getByText(notFound.body)).toBeVisible();
     const links = await page
-      .locator('main .notfound-actions a')
+      .locator('main a')
       .evaluateAll((as) => as.map((a) => [a.textContent?.trim(), a.getAttribute('href')]));
     expect(links).toEqual(notFound.links.map((l) => [l.label, l.href]));
-  });
-
-  test('offers the site menu as next links, and no Journal link while there are no posts', async ({
-    page,
-  }) => {
-    await page.goto('/this-page-does-not-exist-pr11/', { waitUntil: 'domcontentloaded' });
-    const nav = page.locator('nav[aria-label="Pages on this site"] a');
-    expect(await nav.count()).toBeGreaterThan(2);
-    for (const href of await nav.evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''))) {
-      expect(href, href).toMatch(/^\/.*\/$|^\/$/);
-      if (journalEmpty) expect(href).not.toContain('/journal');
-    }
   });
 
   test('/404/ by name answers 200 so Lighthouse can audit the template', async ({ page }) => {

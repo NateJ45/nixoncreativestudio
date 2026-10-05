@@ -50,35 +50,32 @@ test('the committed fallback reproduces the words the hero and sections used to 
   assert.equal(home.hero.headingAccent, 'pull their weight.');
   assert.equal(
     home.hero.positioning,
-    'For churches, nonprofits, schools and small businesses: a website your next volunteer can run.',
+    'For churches, schools, nonprofits, and small businesses, wherever you are.',
   );
   assert.deepEqual(home.hero.proof, {
-    before: 'Every site is planned, designed and built in Cincinnati by',
+    before: 'Based in Cincinnati. Every site designed, built, and photographed by',
     linkText: 'one person',
-    after: ', who hands it over for you to own.',
+    after: ', start to finish.',
   });
   assert.equal(home.hero.primaryLabel, 'Start a project');
-  assert.equal(home.hero.secondaryLabel, 'Prices published');
+  assert.equal(home.hero.secondaryLabel, 'See the work');
 
-  assert.equal(home.work.heading, 'The proof sheet. Every site is live.');
-  assert.match(home.work.sub, /^Each one started with what the organization already had/);
+  assert.equal(home.work.heading, 'Selected work');
+  assert.match(home.work.sub, /^A few recent projects\. Each one started with a conversation/);
   assert.equal(home.work.linkLabel, 'Explore more projects');
 
-  assert.equal(home.pricing.heading, 'What it costs, before you ask.');
+  assert.equal(home.pricing.heading, 'What it costs');
   assert.equal(home.pricing.includesLead, 'Every build includes, whatever the tier:');
   assert.deepEqual(home.pricing.includes, [
     'A custom design, yours to keep',
     '100 / 100 accessibility',
     'Strategy and a content system, included',
-    'One person from the first call to launch',
+    'One person, start to finish',
   ]);
   assert.equal(home.pricing.linkLabel, 'See full pricing and services');
 
-  assert.equal(home.process.heading, 'How it works, and how long it takes');
-  assert.equal(
-    home.process.sub,
-    'Four steps. Most sites take six to ten weeks from kickoff to launch; bigger ones with custom photography or several collections run twelve to sixteen.',
-  );
+  assert.equal(home.process.heading, 'How we work');
+  assert.equal(home.process.sub, 'Four steps, from the first conversation to launch day.');
   assert.deepEqual(
     home.process.steps.map((s) => [s.num, s.title]),
     [
@@ -88,10 +85,10 @@ test('the committed fallback reproduces the words the hero and sections used to 
       ['04', 'Launch and follow-through'],
     ],
   );
-  assert.equal(home.process.ctaTitle, "Let's build a site you won't have to redo.");
+  assert.equal(home.process.ctaTitle, 'Tell me what you are building.');
   assert.equal(home.process.ctaLabel, 'Start a project');
 
-  assert.equal(home.seoTitle, 'Cincinnati Web Design for Churches and Nonprofits');
+  assert.equal(home.seoTitle, 'Nixon Creative Studio | Strategy-led design and photography');
 });
 
 // ── Fallback path (production before its data is loaded) ─────────────────────

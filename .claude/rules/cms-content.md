@@ -54,21 +54,21 @@ There are no Astro content collections and no `src/content/` folder (CMS-DESIGN 
 
 Routes (all server-rendered per request, route-cached):
 
-| Path               | Source                                                                                                                                                   |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                | `src/pages/index.astro` (homepage: hero with the reel of client sites, proof sheet, prices, process, about, close; components in `src/components/home/`) |
-| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)                                                                     |
-| `/services`        | `src/pages/services.astro`                                                                                                                               |
-| `/work/`           | `src/pages/work/index.astro` (lead print, live sheet, Also built strip)                                                                                  |
-| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                                                                           |
-| `/photography/`    | `src/pages/photography.astro`                                                                                                                            |
-| `/journal/`        | `src/pages/journal/index.astro`                                                                                                                          |
-| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                                                                             |
-| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                                                                            |
-| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                                                                       |
-| `/privacy/`        | `src/pages/privacy.astro`                                                                                                                                |
-| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                                                                                |
-| `/now`             | 301 to `/about/#now` (an EmDash Redirects row)                                                                                                           |
-| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                                                                  |
-| `/404`             | `src/pages/404.astro` (custom not-found)                                                                                                                 |
-| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                                                               |
+| Path               | Source                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `/`                | `src/pages/index.astro` (homepage: hero with client marquee, selected work, pricing teaser, process band) |
+| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)                      |
+| `/services`        | `src/pages/services.astro`                                                                                |
+| `/work/`           | `src/pages/work/index.astro` (with filter chips)                                                          |
+| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                            |
+| `/photography/`    | `src/pages/photography.astro`                                                                             |
+| `/journal/`        | `src/pages/journal/index.astro`                                                                           |
+| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                              |
+| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                             |
+| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                        |
+| `/privacy/`        | `src/pages/privacy.astro`                                                                                 |
+| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                                 |
+| `/now`             | 301 to `/about/#now` (an EmDash Redirects row)                                                            |
+| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                   |
+| `/404`             | `src/pages/404.astro` (custom not-found)                                                                  |
+| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                |

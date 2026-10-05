@@ -26,7 +26,7 @@ Things that still need configuration before / during the public launch. Everythi
 
 ### Real content to ship
 
-- [ ] **Optional hero photograph** at `src/assets/brand/hero.jpg`. No longer a content gate: the hero ships complete today on the window-light ground with the device-pairing portfolio showcase (and is due to be rebuilt as the carousel hero). To use a real photo instead, drop it at that path and uncomment the `<Image />` import + tag in `Hero.astro`; it layers over the ground (there is no `.hero-placeholder` div anymore). Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a nonprofit at work, a Cincinnati storefront.
+- [ ] **Optional hero photograph** at `src/assets/brand/hero.jpg`. No longer a content gate: the hero ships complete today with the domain-warp WebGL flow plus the device-pairing portfolio showcase. To use a real photo instead, drop it at that path and uncomment the `<Image />` import + tag in `Hero.astro`; it layers over the WebGL / `.band-themed` glow (there is no `.hero-placeholder` div anymore). Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a nonprofit at work, a Cincinnati storefront.
 - [ ] **Real attributed testimonials** filled into a case study's `testimonial:` frontmatter. That renders a pull-quote on the case study page and populates the /about carousel (`Testimonials.astro` + `TestimonialCarousel.tsx`), which shows nothing until at least one real quote exists. The homepage carries no standalone testimonials band; quotes live where the context lives. Never fabricate one.
 - [ ] Drop a **real headshot** in `src/assets/brand/` for the `/about` page and swap the gradient placeholder div in `about.astro` for an Astro `<Image />`.
 - [x] **Real cover images** for the case studies in `src/assets/case-studies/{slug}.png`. Done: the covers live in EmDash media now (the repo copies were deleted in PR 12 except `second-presbyterian-chicago.png`, which `/services` imports). The full-page captures `src/assets/case-studies/shots/{slug}-home.png` and `{slug}-mobile.png` stay because `HeroShowcase` imports ten of them (PR 13 moves the hero scene). Re-capture if a client redesigns their site.
@@ -38,8 +38,8 @@ Things that still need configuration before / during the public launch. Everythi
 
 - [ ] Refresh the four arrays + `lastUpdated` in the Currently section of `src/pages/about.astro` about once a quarter.
 - [ ] Refresh the footer "Currently" line (Site settings in the EmDash admin) seasonally.
-- [ ] Re-run `npm run og` and `npm run og:pages` after editing brand colours, the home tagline, or the logo (`scripts/lib/brand-card.mjs` holds the card design).
-- [ ] Re-run `npm run icons` after editing brand ink, the marker colour, or the wordmark font (regenerates the favicon / app-icon set).
+- [ ] Re-run `npm run og` after editing brand colors, tagline, or wordmark.
+- [ ] Re-run `npm run icons` after editing brand navy, the accent amber, or the wordmark font (regenerates the favicon / app-icon set).
 
 ### Brand drift to be aware of
 

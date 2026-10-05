@@ -85,9 +85,7 @@ test('the option lists are the visible labels the form used to show', async () =
     'More than 6 months out',
     'Flexible, no fixed deadline',
   ]);
-  // Redesign 2026 added an AI-assistant choice before 'Somewhere else' (E: AI search is a real source).
-  assert.equal(page.heardFrom.length, 7);
-  assert.equal(page.heardFrom[5], 'An AI assistant, such as ChatGPT or Claude');
+  assert.equal(page.heardFrom.length, 6);
   assert.equal(page.heardFrom[0], 'A referral from someone I know');
   assert.equal(page.heardFrom[3], "I've worked with Nathan before");
 });

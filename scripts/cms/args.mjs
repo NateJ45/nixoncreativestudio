@@ -7,9 +7,8 @@
 
    THE GUARD. These scripts WRITE. An instance counts as safe without a flag
    only when it is the ncs-ci Worker or a local address. Anything else, the
-   production domain above all, needs `--yes` AND NCS_PRODUCTION_WRITE=yes, so a
-   stray `--url` or an EMDASH_URL left in the environment, or a command that
-   ran by accident, cannot touch production.
+   production domain above all, needs `--yes`, so a stray `--url` or an
+   EMDASH_URL left in the environment cannot touch production by accident.
    ============================================================================ */
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -58,24 +57,11 @@ export function isSafeTarget(url) {
 /** Exit with a clear message unless the target is safe or --yes was passed. */
 export function guardTarget(args) {
   if (!args.url) fail('Pass --url <instance> (or set EMDASH_URL).');
-  if (args.dryRun || isSafeTarget(args.url)) return;
-  if (!args.yes) {
-    fail(
-      `${args.url} is not the ncs-ci Worker or a local address, and this script writes.\n` +
-        'Check the target, then rerun with --yes (or add --dry-run to read only).',
-    );
-  }
-  // Second factor (added 2026-10-04 after a delegated agent ran a production load by
-  // accident: a backticked command inside a shell string ran as a command substitution,
-  // and --yes was in it). Production writes also need this environment variable, which
-  // only a person sets on purpose, or scripts/cms/production-load.mjs after its typed
-  // "yes". An agent must never set it.
-  if (process.env.NCS_PRODUCTION_WRITE !== 'yes') {
-    fail(
-      `${args.url} is production and this script writes. --yes is not enough: set NCS_PRODUCTION_WRITE=yes in the\n` +
-        'same command, and only with Nathan present (never-break rule 5; .claude/rules/live-writes.md).',
-    );
-  }
+  if (args.dryRun || isSafeTarget(args.url) || args.yes) return;
+  fail(
+    `${args.url} is not the ncs-ci Worker or a local address, and this script writes.\n` +
+      'Check the target, then rerun with --yes (or add --dry-run to read only).',
+  );
 }
 
 export function fail(message) {

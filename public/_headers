@@ -63,7 +63,7 @@
 # Immutable, content-hashed build assets
 # -----------------------------------------------------------------------------
 # Everything Astro emits under /_astro/ carries a content hash in its filename
-# (e.g. ClientRouter.X9zOFzxX.js, a-font.woff2, an-image.webp), so the bytes for
+# (e.g. HeroCanvas.X9zOFzxX.js, a-font.woff2, an-image.webp), so the bytes for
 # any given URL never change. Tell the browser it can keep these for a year and
 # never revalidate. A content change ships a new filename, so this is safe and
 # saves a round of requests on repeat visits and across pages. Lighthouse's
@@ -71,25 +71,3 @@
 # -----------------------------------------------------------------------------
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
-
-# -----------------------------------------------------------------------------
-# Icons, manifest and OG cards (2026-10-04 performance pass)
-# -----------------------------------------------------------------------------
-# These keep fixed names, so they are not immutable, but they change only when
-# `npm run icons` or `npm run og:pages` runs. The assets default was
-# `max-age=0, must-revalidate`, so every page view revalidated the favicon,
-# the manifest and the manifest's 192 px icon. A day is short enough that a
-# new icon set reaches returning visitors by tomorrow.
-# -----------------------------------------------------------------------------
-/favicon.svg
-  Cache-Control: public, max-age=86400
-/favicon.ico
-  Cache-Control: public, max-age=86400
-/apple-touch-icon.png
-  Cache-Control: public, max-age=86400
-/icon-*
-  Cache-Control: public, max-age=86400
-/site.webmanifest
-  Cache-Control: public, max-age=86400
-/og/*
-  Cache-Control: public, max-age=86400

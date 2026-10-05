@@ -71,7 +71,7 @@ test('Privacy: the committed fallback reproduces the page', async () => {
   assert.equal(page.eyebrow, 'Privacy notice');
   assert.equal(page.summary, 'What this site collects, and what it does with it.');
   assert.equal(page.showToc, true);
-  assert.equal(lastUpdatedLabel(page.lastUpdated ?? ''), 'October 4, 2026');
+  assert.equal(lastUpdatedLabel(page.lastUpdated ?? ''), 'September 4, 2026');
   assert.deepEqual(
     page.sections.map((s) => [s.id, s.heading]),
     [
@@ -122,7 +122,7 @@ test('Accessibility: the fallback keeps the three hand-picked anchors', async ()
   assert.equal(page.title, 'Accessibility');
   assert.equal(page.heading, 'Built to be used by everyone.');
   assert.equal(page.eyebrow, 'Accessibility');
-  assert.equal(lastUpdatedLabel(page.lastUpdated ?? ''), 'October 4, 2026');
+  assert.equal(lastUpdatedLabel(page.lastUpdated ?? ''), 'June 27, 2026');
   assert.deepEqual(
     page.sections.map((s) => [s.id, s.heading]),
     [
@@ -149,7 +149,7 @@ test('Accessibility: the practices are one five-item tick list, quotes entity-es
   assert.equal(practice.length, 2);
 });
 
-test('Colophon: the fallback is the ledger layout with the seven rows', async () => {
+test('Colophon: the fallback is the ledger layout with the six rows', async () => {
   const page = await getProsePage('colophon', {}, { deps: deps(reader({ entry: null })).d });
   assert.equal(page.showToc, false);
   assert.equal(page.heading, 'Colophon');
@@ -158,46 +158,13 @@ test('Colophon: the fallback is the ledger layout with the seven rows', async ()
   assert.equal(page.sections.length, 0);
   assert.deepEqual(
     page.rows.map((r) => r.label),
-    [
-      'Built with',
-      'Typography',
-      'Accessibility',
-      'Performance',
-      'Look and motion',
-      'Photography',
-      'Privacy',
-    ],
+    ['Built with', 'Typography', 'Accessibility', 'Performance', 'Photography', 'Privacy'],
   );
   // The "static HTML" line was rewritten in CMS-DESIGN PR 2; the copy must not claim it again.
   const performance = page.rows.find((r) => r.label === 'Performance');
   assert.match(performance?.detail ?? '', /^Pages are put together on the Cloudflare network/);
   assert.ok(!page.rows.some((r) => /static html/i.test(r.detail)));
   assert.match(page.intro[0], /^How this site is made, and the standards behind it\./);
-});
-
-// The Colophon and Privacy text are tied to the code (CLAUDE.md rule 17). These pin the
-// claims that the 2026 redesign made true, so a revert of the stack shows up here.
-test('Colophon names the faces the site loads and says what is not there', async () => {
-  const page = await getProsePage('colophon', {}, { deps: deps(reader({ entry: null })).d });
-  const detail = (label: string) => page.rows.find((r) => r.label === label)?.detail ?? '';
-  assert.match(detail('Typography'), /Bebas Neue/);
-  assert.match(detail('Typography'), /Newsreader/);
-  assert.doesNotMatch(detail('Typography'), /Source Sans/);
-  assert.match(detail('Built with'), /Astro/);
-  assert.match(detail('Built with'), /Cloudflare/);
-  assert.match(detail('Look and motion'), /no dark mode/i);
-  assert.match(detail('Look and motion'), /No WebGL/);
-  assert.match(detail('Look and motion'), /reduce motion/);
-});
-
-test('Privacy does not claim a map, and Accessibility does not claim blue text', async () => {
-  const privacy = await getProsePage('privacy', {}, { deps: deps(reader({ entry: null })).d });
-  const text = JSON.stringify(privacy);
-  assert.doesNotMatch(text, /Google Map/);
-  assert.match(text, /Cloudflare Web Analytics/);
-  assert.match(text, /JavaScript Detections/);
-  const access = await getProsePage('accessibility', {}, { deps: deps(reader({ entry: null })).d });
-  assert.doesNotMatch(JSON.stringify(access), /brand-blue/);
 });
 
 // ── CMS path ─────────────────────────────────────────────────────────────────

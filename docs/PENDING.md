@@ -15,20 +15,6 @@ Read this file early in any session on this repo.
 
 ## Waiting on a human
 
-### Redesign 2026: next session (read `docs/redesign-2026/ROUND-2-HANDOFF.md`)
-
-Round 2 is live and Nathan said "I like some things but it is not there yet". Start by asking him which parts he likes and what still feels boring, then pick from the untried ideas listed there. His `#nathan` tasks (quotes, portrait, photo permissions, Cloudflare toggles, admin edits) are in the vault note.
-
-### Case study pictures and words held in code (2026 redesign, page-work)
-
-**Blocks:** retiring the interim entries in `src/data/workExtras.ts`.
-
-1. **First Baptist Church Muncie: replace the Wix-era pictures in the admin.** The production entry's **Cover image**, **Showcase: desktop**, **Showcase: mobile** and both **Feature highlights** pictures (ministries, architecture) are captures of the OLD Wix site. The page shows the new build instead, from `BUNDLED_MEDIA` (`src/assets/case-studies/shots/first-baptist-muncie-cover.png` and the three `-detail-*.png` files, captured 2026-10-04 from https://fbcm-site.nathanjnixon86.workers.dev/; the full-page `first-baptist-muncie-home.png` is the new build too). Upload those files to the entry (cover, highlights with the titles and captions in `workExtras.ts`), then delete the `first-baptist-muncie` entry from `BUNDLED_MEDIA`. The "Built with" stack terms (Wix, ChurchCenter) also describe the old site: set Astro, Sanity, Cloudflare Workers.
-2. **Reid Design: rewrite the Body in the admin.** It still lists a budget calculator, a style quiz, an affiliate shop and more that are not live; the page holds the body back (`BODY_HELD_BACK`). Check the Designer note too (it talks about a before/after slider). Then remove `reid-design` from `BODY_HELD_BACK`.
-3. **Fields the schema does not have yet.** The case study ledger's Place and "What they run themselves" lines and the showreel choice live in `LEDGER_FACTS` and `SHOWREELS`. A schema PR (lead's call) can add `place`, `runs_themselves` and a showreel field; then move the values into the admin. Theology Matters and Foundation for Reformed Theology have no Place line until Nathan confirms where they are.
-4. **Year on case studies.** The ledger now shows the Year field. An older comment said project timing was deliberately not shown; Nathan to confirm the year should appear (one line in `src/pages/work/[slug].astro` to remove it).
-5. **Showreels date.** The Stone Steps and Reid walkthroughs were recorded 2026-10-04; the Stone Steps race clock is a real countdown and will date. Re-shoot with `docs/redesign-2026/mockups/d8-showreel/_capture` when either site changes, and consider MP4 twins of the clips for older iPhones (VP9 only today; they fail silently to stills).
-
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).
@@ -49,63 +35,38 @@ Nothing else in this repo reads `SITE_URL`. The canonical site origin for the
 build lives in `astro.config.mjs` (`site: 'https://nixoncreativestudio.com'`)
 and is unrelated.
 
-### 2. Load the redesign's Colophon and Accessibility wording into production (redesign 2026, main session with Nathan)
+### 2. Decide what to do about the `--link` comment in `globals.css`
 
-**Why:** the foundation commit for the 2026 redesign changed the committed
-fallback `cms/content/pages.json`: two Colophon rows (Type: Bebas Neue and
-Newsreader instead of Source Sans 3; Accessibility: no "light or dark") and two
-Accessibility paragraphs (no "both the light and the dark theme"). Production
-still says Source Sans 3 and light/dark, which is no longer true once the
-redesign ships. `scripts/ci-dataset/rows.sql` (normally only written by
-`ci-dataset:snapshot`) carries the same edit by hand so the CI dataset and
-`tests/prose-pages.spec.ts` agree; a snapshot taken from production BEFORE this
-load would revert it and fail the Colophon rows test.
+**File:** `src/styles/globals.css`, the `--link` declaration in `:root`
+(and the matching paragraph under "Brand colors" in `.claude/rules/styling.md`).
 
-**Do, when the redesign merges:** `npm run cms:production-load -- --only pages --dry-run`
-(expect exactly the `colophon` and `accessibility` entries to show as changed),
-then the real load, then `npm run ci-dataset:snapshot` and confirm `rows.sql`
-is byte-identical to the hand edit. Never from a delegated agent (never-break rule 5).
+The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
+2026-08-27:
 
-**Added by the page-misc pass (2026-10-04):** the same load now also carries
-`pages` Privacy (no map sentence, a line about Cloudflare's bot-detection
-script, last updated 2026-10-04; true only once the contact redesign has
-removed the Google Map iframe, so load it after that merges), Accessibility (the
-AAA paragraph names the real colours instead of "brand-blue"), Colophon (a "Look
-and motion" row, an honest Photography row, EmDash in "Built with"), and
-`page_photography` and `page_journal` (new meta description, intro and
-empty-state text). `rows.sql` carries these by hand too (the rows were rewritten
-from `cms/content/*.json`, keeping their ids).
+| pair                   | ratio      | AA body text (4.5:1) |
+| ---------------------- | ---------- | -------------------- |
+| `#2A6FB0` on `#FFFFFF` | 5.25:1     | pass                 |
+| `#2A6FB0` on `#F4F7FA` | 4.88:1     | pass                 |
+| `#2A6FB0` on `#0A1628` | **3.45:1** | **fail**             |
 
-### 2c. /services redesign: data to load and photographs to supply (redesign 2026)
+The third claim is wrong. It is **not** a live accessibility defect: the pair
+is not rendered anywhere. In light mode the Footer is a light `.band-themed`
+surface, and the navy Footer is a dark-mode-only state where the link colour
+switches to `--secondary` (`#7AC8F0`, 9.8:1 on navy). So this is a documentation
+error, not a bug.
 
-- **Production load (main session with Nathan, dry run first):** the committed
-  `cms/content/service_offerings.json` now describes the Web design picture as the
-  Foundation for Reformed Theology library (it used to describe Second Presbyterian
-  Chicago, which is not live). `npm run cms:production-load -- --only service_offerings --dry-run`
-  should show only the `web-design` entry's picture description changing.
-- **CI dataset:** `scripts/ci-dataset/rows.sql` still carries the services copy from
-  before the redesign content pass (for example "organizations that care about the
-  long run"), so `tests/services-copy.spec.ts` will fail against `ncs-ci` until the
-  rows are hand-edited to match `cms/content/page_services.json` and
-  `service_offerings.json`, or refreshed after the production load. A lead decision.
-- **Nathan to supply:** two or three photographs he took for a client (a space, a
-  headshot, an event), with the client's permission. The Photography band then gets a
-  framed print beside the call sheet; until then it shows the call sheet and his own
-  headshot, captioned as the photographer.
+It is left for a human because `globals.css` is a "foundation, edit with care"
+file per `CLAUDE.md`, and because there are two defensible fixes:
 
-### 2d. Load the redesigned About page words into production (redesign 2026, main session with Nathan)
+- **a)** Correct the comment to say AA on the two paper surfaces only. Zero
+  risk, and the token keeps its current value.
+- **b)** Darken `--link` until it genuinely clears 4.5:1 on navy too, making the
+  comment true and giving a future navy-in-light-mode surface a safe link
+  colour. This changes rendered colour on every page and needs an eye on it.
 
-**Why:** the /about rebuild (branch `page-about`) rewrote `cms/content/page_about.json`: the kept line as the headline, a shorter intro, the story in seven short paragraphs (the house is now bought), fact captions on the photos, the three principles as commitments, a new Currently date and the "two to three months" booking line. Production still holds the older words (including "organizations that take their work seriously."), so until the load the live page shows the new layout with the old words. Nothing breaks: production's photo list also ends with the black-and-white portrait, which the page now sets beside the story. `scripts/ci-dataset/rows.sql` carries the same words by hand (production's media objects kept) so `tests/about-copy.spec.ts` agrees in CI.
-
-**Do, when the redesign merges:** `npm run cms:production-load -- --only page_about --dry-run` (expect only the `about` entry, text fields; the pictures are unchanged), then the real load, then `npm run ci-dataset:snapshot` and confirm the `ec_page_about` row matches the hand edit. Never from a delegated agent (never-break rule 5). Before the load, Nathan confirms the photo captions and credits (the page agent's report lists them).
-
-### 2b. Regenerate the OG cards and icons in the new palette (redesign 2026)
-
-`scripts/generate-og.mjs`, `generate-og-default.mjs` and `generate-icons.mjs`
-still draw the old navy card with an amber studio name and the amber-spark
-favicon. Swap their brand constants to ink, paper and the marker red
-(`DESIGN.md`), then `npm run og` and `npm run icons` (the per-page cards
-regenerate on the next build). A design call for the lead or a page agent.
+Option (a) is the recommendation. Whichever is chosen, add the navy pair to
+`src/lib/theme-tokens.test.ts` afterwards so the claim is machine-checked from
+then on.
 
 ---
 
@@ -157,17 +118,7 @@ Commands and the exact lines to expect: `docs/LAUNCH-RUNBOOK.md` ("PR 13") and `
 
 **Done 2026-10-03: the temporary redirect code fallback is deleted.** The two redirect rows (`/now`, `/work/west-chester-preschool`) are live in production EmDash and answer 301 from there, so `src/lib/redirectFallback.ts`, its test and its use in `src/worker.ts` are gone (CLAUDE.md Gotcha 18 is now a short note). A redirect deleted in the admin now really stops working. Still open from this row: re-export the seed with the token (`node scripts/export-seed-from-instance.mjs --url https://www.nixoncreativestudio.com`) so `seed/seed.json` carries the live redirect rows, and run `node scripts/ci-dataset/cms-fixtures.mjs`.
 
-For Nathan on the way (updated 2026-10-04): the homepage hero no longer reads `in_hero` / `hero_order`; the 2026 home rebuild curates the reel in code (`src/lib/homeWork.ts`), and a case study's Launch status or Featured box can only take a site off it.
-
-### DONE 2026-10-04: Load the redesign 2026 copy and case-study status into production
-
-Ran on 2026-10-04 with Nathan present; see the STATUS block at the top of `docs/redesign-2026/content-production-plan.md`. What remains is admin-only and listed there. The heading below is kept for the history of the plan.
-
-### Load the redesign 2026 copy and case-study status into production (needs `EMDASH_TOKEN`, Nathan present)
-
-**Blocks:** the honest copy reaching the live site. Until the load, production keeps the old words (Second Presbyterian Chicago "live", the Academy's placeholder claims, "Every project here is a real, shipped site", Strategy JSON-LD wording) and the two new optional fields (`case_studies.launch_status`, `site_settings.price_range`) do not exist, so the reader treats every study as live. It rides on the same `npm run cms:production-load` as PR 13 and 14 above, but the copy steps stop by design and run by hand. Exact commands, the line each dry run must print, the admin-only edits (FBCM images and tags, Reid's body and highlights) and the CI follow-up: `docs/redesign-2026/content-production-plan.md`.
-
-**Home page rebuild (2026-10-04, branch page-home) adds to this load:** `cms/content/page_home.json` changed nine fields (hero positioning, proof sentence, secondary label "Prices published", the work, prices, process and closing headings and subs). The same rows must reach the CI dataset: `scripts/ci-dataset/rows.sql` holds an older `page_home` snapshot (it was already behind the content pass), so `tests/home-copy.spec.ts` fails on the ncs-ci preview until the lead refreshes it (production snapshot after the load, or a hand edit of the row as the foundation did for Colophon). The schema help text for `hero_secondary_label` still says it goes to the Work page; it now goes to the prices band.
+For Nathan on the way: the hero scene shows five sites in `hero_order` 1 to 5 (Second Presbyterian, Theology Matters, Stone Steps 50K, MAS Monograms, Presbyterian Academy). A site joins it only with BOTH its desktop and mobile capture set and a live URL; to add one, open its case study, tick "Show in the homepage device scene" and give it the next number. The two bundled-image fallbacks in `HeroShowcase.astro` (`bundledSites`) and the ten `*-home.png` / `*-mobile.png` files they import stay until you are sure you no longer want a no-database fallback; the files and the array can then be deleted together (CMS-DESIGN PR 14).
 
 ### Load the PR 4 data into production (needs `EMDASH_TOKEN` from Nathan)
 
@@ -343,6 +294,8 @@ Also open from the same PR: `scripts/ci-dataset/terms.json` pins each CI case st
 
 `scripts/cms/apply-schema.mjs` and `scripts/cms/load-content.mjs` (CMS-DESIGN PR 3) were tested against in-memory fakes of the EmDash REST API and the `emdash` CLI, because `ncs-ci` has no admin user and so no API token. Three response shapes are read defensively because they were never observed: a field row's sort key (`sortOrder` or `sort_order`), a menu item's URL key (`customUrl`, `custom_url` or `url`), and the `content get --raw` result (`data` and `_rev` at the top level). The first content PR (4) must start with `npm run cms:schema -- --collection <slug> --url <instance> --dry-run` (docs/CMS-DESIGN.md 2.6), then a second real run that prints only `unchanged`. If a shape differs, fix the one helper (`scripts/lib/emdash-schema.mjs` or `scripts/lib/cms-load.mjs`) and add the observed shape to its unit test. Delete this row once a real schema apply and a real content load both rerun as no-ops.
 
+---
+
 ## Deliberate absences (do not "fix" these)
 
 These are recorded so a future session stops re-deriving them.
@@ -353,7 +306,7 @@ These are recorded so a future session stops re-deriving them.
   (embedded-studio live preview) and 11 (preview click interceptor) have nothing
   to attach to here. There is no dataset to back up and no generated types file
   to go stale.
-- **No page-builder.** Card 12 is a method for converting hand-built pages into
+- **No page-builder.** Card 12 is a method for converting bespoke pages into
   CMS-driven sections. There is no CMS.
 - **No visual-regression suite.** The family standard runs one only where a
   site has a fixture-driven `/styleguide` route; this site does not. The

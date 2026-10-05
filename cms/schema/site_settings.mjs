@@ -147,15 +147,4 @@ export const FIELDS = [
     required: true,
     validation: { maxLength: 200 },
   },
-  // Redesign 2026 (E's SEO audit): the price range search engines read in the studio's
-  // structured data (schema.org priceRange). OPTIONAL (rule 13: the entry already exists); left
-  // empty, the structured data simply leaves priceRange out. Keep it true to the published
-  // floors on /services (photography from $900 is the lowest today).
-  {
-    slug: 'price_range',
-    type: 'string',
-    label:
-      'Price range for search engines, for example "From $900" (max 40; not shown on the page)',
-    validation: { maxLength: 40 },
-  },
 ];

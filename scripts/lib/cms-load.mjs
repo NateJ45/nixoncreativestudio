@@ -13,10 +13,7 @@
                          or a list:    [ { "slug": "launch", "data": { ... } }, ... ]
      (A list entry may carry "patch": true. It names an entry that ALREADY exists in the
       instance and gives only some of its fields, set once: see planPatch. case_studies.json
-      uses it for the PR 13 hero membership. Since the 2026 redesign a patch may also carry
-      "set": { field: value } (a deliberate overwrite) and "rewrite": { field: [ { "find",
-      "replace" } ] } (find and replace that only fires while the old words are still there);
-      either one makes the plan say "update", which cms:production-load stops on.)
+      uses it for the PR 13 hero membership.)
      menus.json          { "primary": { "label": "Header navigation",
                                         "items": [ { "label", "url", "titleAttr?", "target?" } ] }, ... }
      redirects.json      [ { "source": "/now", "destination": "/about/#now", "type": 301 } ]
@@ -55,36 +52,7 @@ export function toEntries(json, label = 'content') {
     }
     if (seen.has(e.slug)) throw new Error(`${label}: duplicate slug "${e.slug}"`);
     seen.add(e.slug);
-    if (e.patch !== true) return { slug: e.slug, data: e.data };
-    // A patch may also carry `set` (deliberate overwrites) and `rewrite` (guarded find and
-    // replace); see planPatch. Both only make sense on a patch, so they are read only here.
-    const out = { slug: e.slug, data: e.data, patch: true };
-    if (e.set !== undefined) {
-      if (!e.set || typeof e.set !== 'object' || Array.isArray(e.set)) {
-        throw new Error(`${label}[${i}] (${e.slug}): "set" must be an object`);
-      }
-      out.set = e.set;
-    }
-    if (e.rewrite !== undefined) {
-      const ok =
-        e.rewrite &&
-        typeof e.rewrite === 'object' &&
-        !Array.isArray(e.rewrite) &&
-        Object.values(e.rewrite).every(
-          (rules) =>
-            Array.isArray(rules) &&
-            rules.every(
-              (r) => r && typeof r.find === 'string' && r.find && typeof r.replace === 'string',
-            ),
-        );
-      if (!ok) {
-        throw new Error(
-          `${label}[${i}] (${e.slug}): "rewrite" must be { field: [ { "find", "replace" } ] }`,
-        );
-      }
-      out.rewrite = e.rewrite;
-    }
-    return out;
+    return { slug: e.slug, data: e.data, ...(e.patch === true ? { patch: true } : {}) };
   });
 }
 
@@ -163,80 +131,14 @@ export function planEntry(existing, desired, { force = false } = {}) {
  *   { action: 'unchanged', note? }   nothing to set, or the entry is not in this instance
  *   { action: 'seed', data }         data = just the fields to set
  */
-export function planPatch(existing, desired, { set = {}, rewrite = {} } = {}) {
+export function planPatch(existing, desired) {
   if (!existing) return { action: 'unchanged', note: 'not in this instance, skipped' };
   const current = dataOf(existing);
   const data = {};
   for (const [k, v] of Object.entries(desired)) {
     if (current[k] === undefined || current[k] === null) data[k] = v;
   }
-  // `set`: a deliberate overwrite (redesign 2026: the copy that is no longer true). Unlike the
-  // set-once fields above it DOES replace what the instance holds, so the plan says "update",
-  // which cms:production-load treats as a stop: Nathan reads the dry run and runs that one
-  // collection by hand (docs/redesign-2026/content-production-plan.md).
-  let overwrites = false;
-  for (const [k, v] of Object.entries(set)) {
-    if (!sameData(current, { [k]: v })) {
-      data[k] = v;
-      overwrites = true;
-    }
-  }
-  // `rewrite`: find and replace inside a field (a plain string, a Portable Text body, or a
-  // repeater of { text } rows), only where the exact old words are still there. A field Nathan
-  // has since edited in the admin no longer holds them, so it is left alone, with a note.
-  const notes = [];
-  for (const [field, rules] of Object.entries(rewrite)) {
-    const base = field in data ? data[field] : current[field];
-    const { value, applied, missing } = applyRewrites(base, rules);
-    if (applied > 0) {
-      data[field] = value;
-      overwrites = true;
-    }
-    for (const r of missing) {
-      notes.push(`${field}: "${r.find.slice(0, 48)}" not found, left alone (edit by hand)`);
-    }
-  }
-  const note = notes.length ? notes.join('; ') : undefined;
-  if (!Object.keys(data).length) return { action: 'unchanged', ...(note ? { note } : {}) };
-  return { action: overwrites ? 'update' : 'seed', data, ...(note ? { note } : {}) };
-}
-
-/**
- * Apply find/replace rules to a value: a string, or any string under a `text` key inside
- * arrays and objects (Portable Text spans, repeater rows). Returns the new value, how many
- * replacements happened, and the rules that are neither applied nor already done (a rule is
- * "done" when its old words are gone and its new words are present).
- */
-export function applyRewrites(value, rules) {
-  let applied = 0;
-  const hit = new Set();
-  const swap = (s) => {
-    let out = s;
-    for (const r of rules) {
-      if (out.includes(r.find)) {
-        out = out.split(r.find).join(r.replace);
-        applied += 1;
-        hit.add(r);
-      }
-    }
-    return out;
-  };
-  const walk = (v, key) => {
-    if (typeof v === 'string') return key === undefined || key === 'text' ? swap(v) : v;
-    if (Array.isArray(v)) return v.map((x) => walk(x, key === 'text' ? key : undefined));
-    if (v && typeof v === 'object') {
-      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x, k)]));
-    }
-    return v;
-  };
-  const next = walk(value, undefined);
-  const flat = JSON.stringify(next ?? '');
-  const missing = rules.filter(
-    // An empty replacement (a cut) is done as soon as the old words are gone.
-    (r) =>
-      !hit.has(r) && r.replace !== '' && !flat.includes(JSON.stringify(r.replace).slice(1, -1)),
-  );
-  return { value: next, applied, missing };
+  return Object.keys(data).length ? { action: 'seed', data } : { action: 'unchanged' };
 }
 
 /**
@@ -260,7 +162,7 @@ export function loadEntries({
   log = console.log,
 }) {
   const results = [];
-  for (const { slug, data: raw, patch, set, rewrite } of entries) {
+  for (const { slug, data: raw, patch } of entries) {
     const data = resolveFiles(raw, imageValue);
     let existing = null;
     try {
@@ -269,10 +171,7 @@ export function loadEntries({
       if (!/not found/i.test(e.message)) throw e;
     }
     if (patch) {
-      const plan = planPatch(existing, data, {
-        set: set ? resolveFiles(set, imageValue) : undefined,
-        rewrite,
-      });
+      const plan = planPatch(existing, data);
       log(`  ${slug}: ${dryRun && plan.action !== 'unchanged' ? 'would ' : ''}${plan.action}`);
       if (plan.note) log(`    (${plan.note})`);
       results.push({ slug, action: plan.action });

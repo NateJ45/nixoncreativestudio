@@ -14,7 +14,7 @@
                        -duration. Under reduced motion the final value is set
                        immediately.
      [data-header]     toggles data-scrolled on itself once the page scrolls,
-                       driving the sticky header's paper-bar state.
+                       driving the sticky frosted-header treatment.
      [data-prose]      marks a long-form content container (case study /
                        journal body); each id'd heading inside gets a
                        hover-revealed "copy link" anchor.
@@ -99,15 +99,25 @@ function initCountUp(): void {
    scroll listener re-queries the current header rather than closing over a
    stale node. The listener itself is registered once via a window flag.
 
-   One state, data-scrolled: the page has scrolled past 8px, and the
-   transparent header becomes a paper bar with a hairline (Header.astro). The
-   old data-over-hero state (a navy hero behind the bar) was retired with the
-   2026 redesign: the header only ever sits on light grounds now. */
+   Two states:
+     data-scrolled  : the page has scrolled past 8px (frost + condense).
+     data-over-hero : a [data-hero-dark] element exists AND still covers the
+                      bar (its bottom is below the header height). Drives the
+                      header's over-hero treatment, which takes the hero's own
+                      surface colour (theme-aware: light in light mode, navy
+                      with white text in dark). Pages without a hero never get
+                      this state, so their header is the frosted bar from first
+                      paint. */
+const HEADER_HEIGHT = 72; // approx; the threshold the hero must clear to "pass"
 
 function setHeaderState(): void {
   const header = document.querySelector('[data-header]');
   if (!header) return;
   header.toggleAttribute('data-scrolled', window.scrollY > 8);
+
+  const heroDark = document.querySelector('[data-hero-dark]');
+  const overHero = !!heroDark && heroDark.getBoundingClientRect().bottom > HEADER_HEIGHT;
+  header.toggleAttribute('data-over-hero', overHero);
 }
 
 function initHeader(): void {

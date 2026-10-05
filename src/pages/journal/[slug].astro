@@ -20,12 +20,9 @@
    plain monospace boxes (the old MDX journal used expressive-code, which
    Portable Text has no step for). Pictures in the body are not drawn yet.
 
-   Bands: window-light under the header (title, summary, a caption line, the cover
-   as a printed frame), paper for the reading column, then the closing banner. The
-   caption line (date, reading time, tags) is sentence-case UI sans, never mono
-   caps. The body is an editorial reading surface: a Bebas drop-cap on the first
-   paragraph, scroll-revealed h2 headings, a serif-italic pull-quote for
-   blockquotes, and figures printed with the frame shadow. The cover wrapper carries a shared
+   The body is treated as an editorial reading surface: a drop-cap on the
+   first paragraph, scroll-revealed h2 headings, styled blockquotes and
+   figures, and an end-of-article tag list. The cover wrapper carries a shared
    transition:name so it morphs from the index card during a View
    Transition. All motion is reduced-motion safe via globals.css.
 
@@ -36,7 +33,6 @@
    ============================================================================ */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Band from '../../components/Band.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import EmDashPhoto from '../../components/emdash/EmDashPhoto.astro';
@@ -88,150 +84,161 @@ const schemas = [
   <ReadingProgress client:idle />
 
   <article>
-    <Band ground="window-light" underHeader labelledby="journal-entry-heading">
-      <div class="entry-head">
-        <a class="card-link back-link" href="/journal/">
-          Journal
+    <header class="py-2xl" aria-labelledby="journal-entry-heading">
+      <div class="ncs-container max-w-[64rem]" data-reveal>
+        {/* The animated underline sits on an inner span, not the link: on a touch
+            device the link is a 44px-tall row, and an underline on the link's own
+            box would drop to the bottom of that row, away from the words. */}
+        <a
+          class="mb-l inline-flex items-center font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline pointer-coarse:min-h-11"
+          href="/journal/"
+        >
+          <span class="link-underline inline-flex items-center gap-1">
+            <span aria-hidden="true">&larr;</span>
+            <span>Journal</span>
+          </span>
         </a>
 
-        <h1 id="journal-entry-heading" class="type-display entry-title">
-          {title}
-        </h1>
-        <p class="type-lede">{summary}</p>
-        <p class="type-caption">
-          {publishedLabel} · {minutes} min read
-          {updatedLabel && updatedLabel !== publishedLabel && <> · Updated {updatedLabel}</>}
-          {tags.length > 0 && <> · {tags.join(', ')}</>}
+        <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+          <span>{publishedLabel}</span>
+          <span aria-hidden="true">·</span>
+          <span>{minutes} min read</span>
+          {updatedLabel && updatedLabel !== publishedLabel && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>Updated {updatedLabel}</span>
+            </>
+          )}
         </p>
 
+        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">
+          {title}
+        </h1>
+        <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
+
+        {tags.length > 0 && (
+          <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((tag) => (
+              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )}
+
         {cover && (
-          <div class="entry-cover" transition:name={`journal-cover-${entry.id}`}>
+          <div
+            class="mt-l overflow-hidden rounded-2xl bg-bg-soft"
+            data-reveal="scale"
+            transition:name={`journal-cover-${entry.id}`}
+          >
             <EmDashPhoto
               image={cover}
               alt=""
               widths={[600, 900, 1200]}
-              sizes="(min-width: 56rem) 64rem, 92vw"
-              class="entry-img"
+              sizes="(min-width: 56rem) 64rem, 100vw"
+              class="block h-auto w-full"
             />
           </div>
         )}
       </div>
-    </Band>
+    </header>
 
-    <Band tight>
-      {/* Editorial reading surface. Prose styling lives in the scoped wrapper
-           below so the entry body renders as a designed article. */}
-      <div data-prose class="journal-prose" set:html={bodyHtml} />
+    <div class="ncs-container">
+      <!-- Editorial reading surface. Prose styling lives in this scoped
+           wrapper so the entry body renders as a designed article:
+             - a drop-cap on the very first paragraph
+             - generous line-length and rhythm
+             - styled blockquotes (the pull-quote pattern) and figures
+           Scroll-reveal on the h2 headings is wired by the small script
+           below, which tags each one with data-reveal after mount. -->
+      <div
+        data-prose
+        class="journal-prose mx-auto max-w-[72ch] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
+        set:html={bodyHtml}
+      />
 
+      {/* End-of-article tag list. Mirrors the chips in the header but reads
+          as a footer to the piece, a natural stopping point before the CTA. */}
       {tags.length > 0 && (
-        <footer class="entry-foot" data-reveal>
-          <p class="type-caption">Filed under {tags.join(', ')}.</p>
-          <a class="card-link" href="/journal/">
-            All entries
-          </a>
+        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+          <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
+            Filed under
+          </p>
+          <ul class="flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((tag) => (
+              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] tracking-[0.06em] text-text uppercase">
+                {tag}
+              </li>
+            ))}
+          </ul>
         </footer>
       )}
-    </Band>
+    </div>
   </article>
 
-  <CtaBanner ctaHref="/contact/" />
+  <CtaBanner />
 </BaseLayout>
 
 <style>
-  .entry-head {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-m);
-    max-width: 64rem;
-  }
-  .entry-title {
-    font-size: var(--text-h1);
-    max-width: 22ch;
-  }
-  .entry-cover {
-    align-self: stretch;
-    margin-top: var(--spacing-m);
-    overflow: hidden;
-    border-radius: 2px;
-    background: var(--paper-deep);
-    box-shadow: var(--shadow-frame);
-  }
-  .entry-cover :global(.entry-img) {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-  .entry-foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-s) var(--spacing-l);
-    max-width: 72ch;
-    margin: var(--spacing-l) auto 0;
-    padding-top: var(--spacing-m);
-    border-top: 1px solid var(--border);
-  }
-
   /* ==========================================================================
      Journal prose styling
      ==========================================================================
      Scoped to .journal-prose so it only dresses the entry body, never the
      chrome around it. Astro's <style> is component-scoped, so the child
-     selectors need :global() to reach the HTML renderJournalBody() emits.
+     selectors need :global() to reach the HTML that <Content /> emits.
      ========================================================================== */
-  .journal-prose {
-    max-width: 72ch;
-    margin-inline: auto;
-    font-family: var(--font-serif);
-    font-size: var(--text-body);
-    line-height: 1.7;
-    color: var(--foreground);
-  }
 
-  /* Headings inside the body. h2 is the main subsection level; h3 a step below. */
+  /* Headings inside the body. h2 is the main subsection level; h3 a step
+     below. scroll-mt keeps a revealed heading clear of the reading-progress
+     bar when jumped to via an in-page anchor. */
   .journal-prose :global(h2) {
-    margin-top: var(--spacing-xl);
-    margin-bottom: var(--spacing-s);
-    scroll-margin-top: var(--spacing-l);
+    margin-top: var(--spacing-l, 2rem);
+    margin-bottom: var(--spacing-s, 0.75rem);
+    scroll-margin-top: var(--spacing-l, 2rem);
     font-size: var(--text-h3);
-    line-height: 1;
+    line-height: 1.1;
     color: var(--heading);
   }
   .journal-prose :global(h2:first-child) {
     margin-top: 0;
   }
   .journal-prose :global(h3) {
-    margin-top: var(--spacing-l);
-    margin-bottom: var(--spacing-xs);
-    font-size: var(--text-h4);
-    line-height: 1.05;
+    margin-top: var(--spacing-m, 1.5rem);
+    margin-bottom: var(--spacing-xs, 0.5rem);
+    font-size: 1.35rem;
+    line-height: 1.2;
     color: var(--heading);
   }
 
+  /* Body paragraphs. */
   .journal-prose :global(p) {
-    margin-bottom: var(--spacing-m);
+    margin-bottom: var(--spacing-m, 1.5rem);
   }
 
-  /* Drop-cap on the lead paragraph. Guarded to p:first-child (not :first-of-type)
-     so it only fires when a paragraph is the very first element in the body. */
+  /* Drop-cap on the lead paragraph of the article. An editorial flourish
+     that signals "this is a piece to read." Guarded to p:first-child (not
+     :first-of-type) so it ONLY fires when a paragraph is the very first
+     element in the body. If a post opens with a list, figure, or heading,
+     :first-of-type would still grab the first paragraph further down and
+     drop-cap it mid-flow; :first-child correctly skips the drop-cap then. */
   .journal-prose > :global(p:first-child::first-letter) {
     float: left;
     margin: 0.05em 0.12em 0 0;
     font-family: var(--font-display);
     font-size: 3.6em;
     line-height: 0.7;
-    color: var(--marker);
+    color: var(--link);
   }
 
+  /* Lists. */
   .journal-prose :global(ul) {
-    margin-bottom: var(--spacing-m);
+    margin-bottom: var(--spacing-m, 1.5rem);
     padding-left: 1.25rem;
     list-style: disc;
   }
   .journal-prose :global(ol) {
-    margin-bottom: var(--spacing-m);
+    margin-bottom: var(--spacing-m, 1.5rem);
     padding-left: 1.25rem;
     list-style: decimal;
   }
@@ -239,6 +246,7 @@ const schemas = [
     margin-bottom: 0.35rem;
   }
 
+  /* Inline links. */
   .journal-prose :global(a) {
     color: var(--link);
     text-decoration: underline;
@@ -249,16 +257,33 @@ const schemas = [
     text-underline-offset: 4px;
   }
 
-  /* Pull-quote: the serif italic second voice, set large, with no side rule and no
-     decorative glyph. A Markdown `>` and a Portable Text quote both land here. */
+  /* Pull-quote. A blockquote in the body reads as a designed pull-quote:
+     centered, larger display-leaning type, set apart from the body rhythm
+     by a big decorative opening quote-mark rather than a side rule (the
+     left-border treatment is the most common AI-UI tell). Markdown `> ...`
+     and a Portable Text quote both land here. */
   .journal-prose :global(blockquote) {
-    margin: var(--spacing-l) auto;
+    position: relative;
+    margin: var(--spacing-l, 2rem) auto;
     max-width: 56ch;
-    font-family: var(--font-serif);
-    font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.8rem);
+    padding-top: 1.75rem;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1.4;
     font-style: italic;
-    line-height: 1.35;
-    color: var(--marker);
+    color: var(--heading);
+  }
+  /* Oversized opening quote glyph, brand accent, sitting above the quote. */
+  .journal-prose :global(blockquote::before) {
+    content: '\201C';
+    position: absolute;
+    top: -0.35em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 3.2rem;
+    line-height: 1;
+    color: var(--accent);
   }
   .journal-prose :global(blockquote p) {
     margin-bottom: 0.5rem;
@@ -266,51 +291,55 @@ const schemas = [
   .journal-prose :global(blockquote p:last-child) {
     margin-bottom: 0;
   }
-  /* A cite line inside a quote reads as the attribution: caption sans, muted. */
+  /* A cite line inside a quote reads as the attribution, smaller and muted. */
   .journal-prose :global(blockquote cite) {
     display: block;
     margin-top: 0.5rem;
-    font-family: var(--font-ui);
-    font-size: var(--text-caption);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
     font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--muted-foreground);
   }
 
-  /* Figures and images in the body: printed with the frame shadow, caption beneath. */
+  /* Figures and images in the body. Full-width within the reading column,
+     rounded to match the cover, with a muted caption beneath. */
   .journal-prose :global(figure) {
-    margin: var(--spacing-l) 0;
+    margin: var(--spacing-l, 2rem) 0;
   }
   .journal-prose :global(img) {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 2px;
-    box-shadow: var(--shadow-frame);
+    border-radius: 0.75rem;
   }
   .journal-prose :global(figcaption) {
-    margin-top: 0.75rem;
-    font-family: var(--font-ui);
-    font-size: var(--text-caption);
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--muted-foreground);
   }
 
+  /* Horizontal rule as a soft section break. */
   .journal-prose :global(hr) {
-    margin: var(--spacing-l) 0;
+    margin: var(--spacing-l, 2rem) 0;
     border: 0;
     border-top: 1px solid var(--border);
   }
 
-  /* Inline code and code blocks (blocks are plain monospace boxes, see
-     src/lib/journalBody.ts). Code is the one place monospace belongs. */
+  /* Inline code + code blocks (blocks draw through JournalCode). Light touch so a stray code sample reads
+     cleanly without pulling a full syntax theme into the journal. */
   .journal-prose :global(code) {
     font-family: var(--font-mono);
     font-size: 0.9em;
   }
   .journal-prose :global(pre) {
-    margin-bottom: var(--spacing-m);
+    margin-bottom: var(--spacing-m, 1.5rem);
     overflow-x: auto;
-    border-radius: 2px;
-    background: var(--paper-deep);
+    border-radius: 0.75rem;
     padding: 1rem 1.25rem;
   }
 </style>

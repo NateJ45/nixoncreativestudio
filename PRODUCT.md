@@ -45,17 +45,18 @@ Reference sites pulled in early research (kept as positive anchors, not slavish 
 ## Design Principles
 
 1. **Show, don't tell.** Portfolio work is the proof. Adjective-heavy copy ("thoughtful," "bespoke," "creative") loses to a real screenshot of a real church website for a real congregation. Every page should put the work in front of the talk.
-2. **Warm restraint.** Professional without cold, confident without flash. One art-directed theme drawn from Nathan's own craft (a photographer's working table: fibre paper, the logo's ink, one china-marker red), Bebas Neue (his logo face) with a Newsreader italic as the second voice, and grounds taken from a real room and a real river instead of decorative washes (DESIGN.md). Motion is spent once per page and stays WCAG AA and reduced-motion safe. Warmth is carried by real photography, real client work, and plain-spoken copy, not by gimmicks.
+2. **Warm restraint.** Professional without cold, confident without flash. The visual system uses one accent (NCS blue), a single display face (Bebas Neue), and generous whitespace. The site is deliberately polished and animation-rich (a WebGL hero flow, scroll-in reveals, hover micro-interactions, depth on cards), but the motion is purposeful and on-brand, never decorative noise, and every effect stays WCAG AA and reduced-motion safe. Warmth is carried by real photography, real client work, and plain-spoken copy, not by gimmicks.
 3. **Practice what you preach.** The site itself is evidence of the craft Nathan sells. If it's slow, off-brand, broken on mobile, or inaccessible, the pitch collapses. Every shipped change has to clear the bar Nathan would set for a paying client.
 
 ## Accessibility & Inclusion
 
-Target: WCAG 2.1 AA on the site's one art-directed theme (dark mode and the theme toggle were retired in the 2026 redesign, following FBCM and Reid Design). Every page currently sits at 100 Lighthouse Accessibility and that bar holds for every future change.
+Target: WCAG 2.1 AA in both light and dark modes. Every page currently sits at 100 Lighthouse Accessibility and that bar holds for every future change.
 
 Specific commitments:
 
 - All interactive elements reachable by keyboard with visible focus indicators.
-- Color contrast cleared for every token pair, asserted in `src/lib/theme-tokens.test.ts` (the table and ratios are in `DESIGN.md`).
-- Reduced motion respected globally via `prefers-reduced-motion: reduce`: animations and transitions become no-ops.
+- Color contrast cleared in both themes (brand `--accent` and `--muted-foreground` shifted slightly darker from their original swatches to clear AA on white text and bg-soft body text).
+- Three-state theme (light / dark / system), system as the default for first-time visitors.
+- Reduced motion respected globally via `prefers-reduced-motion: reduce` — animations, transitions, and Lenis smooth scroll all become no-ops.
 - Audience includes church volunteers, nonprofit staff, and board members; copy defaults to non-technical readers unless context makes peer-readability obvious.
 - Skip link as the first focusable element, semantic landmarks (`<header>`, `<main>`, `<footer>`), proper heading hierarchy (one h1, no level skips).

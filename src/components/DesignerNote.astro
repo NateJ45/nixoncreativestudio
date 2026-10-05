@@ -13,8 +13,8 @@
    honest and specific to the project; it was drafted from each study's existing
    "Reflections" prose and honesty-checked before wiring in.
 
-   Rendered by src/pages/work/[slug].astro in its closing band. To edit, change the
-   case study's Designer note field in the admin.
+   Rendered by src/pages/work/[slug].astro. To edit, change `designerNote:` in the
+   case study's frontmatter.
    ============================================================================ */
 import { getSite } from '../data/site';
 
@@ -27,42 +27,44 @@ const { note } = Astro.props;
 const site = await getSite(Astro);
 ---
 
-<aside class="ncs-note" aria-labelledby="ncs-note-title">
-  <h2 id="ncs-note-title" class="type-headline ncs-note-title">
-    A note from <span class="voice">the designer</span>
-  </h2>
+<aside class="ncs-note" aria-label="A note from the designer" data-reveal>
+  <p class="ncs-note-eyebrow">A note from the designer</p>
   <p class="ncs-note-body">{note}</p>
   <p class="ncs-note-sign">{site.ownerName}</p>
 </aside>
 
 <style>
-  /* No side-tab border (a known AI tell) and no mono eyebrow (DESIGN.md). The
-     note reads as signed through type alone: a Bebas headline turning into the
-     italic voice, the note in the reading serif italic at lede size, and the
-     owner name set in the display face like a signature. */
+  /* No side-tab border (a known AI tell). The note reads as signed through type
+     alone: a quiet mono eyebrow, an editorial italic body, and the owner name
+     set in the display face like a signature. The parent container in
+     [slug].astro already supplies the separating top rule. */
   .ncs-note {
-    display: grid;
-    gap: var(--spacing-m);
-    max-width: 44rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-width: 60ch;
   }
-  .ncs-note-title {
+  .ncs-note-eyebrow {
     margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-muted-foreground);
   }
   .ncs-note-body {
     margin: 0;
-    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    line-height: 1.5;
+    color: var(--color-heading);
     font-style: italic;
-    font-size: var(--text-lede);
-    line-height: 1.45;
-    color: var(--heading);
-    text-wrap: pretty;
   }
   .ncs-note-sign {
-    margin: 0;
+    margin: 0.25rem 0 0;
     font-family: var(--font-display);
     font-size: 1.75rem;
     line-height: 1;
     letter-spacing: 0.02em;
-    color: var(--marker);
+    color: var(--color-heading);
   }
 </style>

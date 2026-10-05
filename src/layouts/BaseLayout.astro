@@ -10,14 +10,16 @@
    ============================================================================ */
 
 import '../styles/globals.css';
-// (starwind.css and the Starwind, PrimeReact and unused shadcn primitives were
-// deleted in the 2026 performance pass: Tailwind scans every file under src/,
-// so their classes were inlined into every page's CSS. DESIGN.md "Measured"
-// has the numbers.)
+// Starwind UI supplementary CSS. Imported AFTER globals.css so globals owns
+// the :root / .dark semantic tokens and the @custom-variant dark rule, and
+// this file only adds the accordion keyframes plus @theme inline mappings for
+// the Starwind-only tokens (--outline and the status colors). See the file
+// header in starwind.css for the split.
+import '../styles/starwind.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
-import BackToTop from '../components/BackToTop.astro';
+import BackToTop from '../components/BackToTop';
 import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
 import ComingSoonGate from '../components/ComingSoonGate.astro';
@@ -29,26 +31,31 @@ import { cachePublicPage } from '../lib/routeCache';
 // reload. Same-origin navigation only; external links work as normal.
 import { ClientRouter } from 'astro:transitions';
 
-// Font preloads (DESIGN.md "Type"). The ?url query hands back the hashed public
-// path of the SAME file globals.css's @font-face points at, so the preload and
-// the stylesheet's fetch are one request.
+// Resolve the Bebas Neue woff2 file through Vite's URL pipeline. The ?url
+// query asks Vite to copy the file into the build output and hand us the
+// hashed public path at build time. The same path appears in the global
+// stylesheet (loaded by @fontsource/bebas-neue/400.css), so the preload
+// link below points at the exact resource the browser will fetch.
 //
-// Preloaded on every page: Bebas Neue (every headline, the wordmark-sized
-// numerals; often the LCP text) and Newsreader regular (all body copy; without
-// it the swap from the fallback relays real text, which is what pushed CLS to
-// 0.17 on /work in 2026-09 with the old body face). The fallbacks are
-// metric-matched in globals.css, so even a late swap barely moves anything.
+// Why preload Bebas Neue specifically: it's the display font used by every
+// h1/h2 on the site, including the hero headline. The hero headline is
+// almost always the LCP (Largest Contentful Paint) element, so getting
+// the font loaded as early as possible shortens LCP measurably.
 //
-// Opt-in per page with preloadFonts: 'italic' (a page whose first screen sets
-// the italic second voice, like the home hero) and 'semibold' (bold body copy
-// above the fold). Preload only what the first screen uses: each file is
-// 10 to 15 KB on the simulated slow-4G link. Only the "core" file of each face
-// is preloaded: the "ext" file (accented letters, rarer marks) downloads on its
-// own when a page's text needs it (globals.css section 2, unicode-range).
-import bebasWoff2 from '../assets/fonts/bebas-neue-latin-400-core.woff2?url';
-import newsreaderWoff2 from '../assets/fonts/newsreader-latin-400-core.woff2?url';
-import newsreaderItalicWoff2 from '../assets/fonts/newsreader-latin-400-italic-core.woff2?url';
-import newsreaderSemiboldWoff2 from '../assets/fonts/newsreader-latin-600-core.woff2?url';
+// Source Sans 3 (body) is preloaded too, since 2026-09-06. It used to be
+// left out on the grounds that a variable font costs more bandwidth than
+// the LCP gain is worth, and that held while the scroll-reveal kept the
+// top of every page invisible until after the fonts had settled: the swap
+// happened behind a curtain. Now that first-screen content paints
+// immediately (see the reveal note in globals.css), the swap from the
+// system fallback to Source Sans 3 relaid out real text and Lighthouse
+// measured it: cumulative layout shift 0.17 on /work and 0.11 on /journal
+// against a 0.1 budget, attributed by name to this file. Fetching it in
+// parallel with the stylesheet rather than after it is what keeps the
+// first paint and the final paint the same shape. Latin subset only, the
+// same file the unicode-range in the stylesheet resolves to for English.
+import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
+import sourceSans3Woff2 from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
 
 // Coming-soon gate. Implemented client-side so the owner can bypass
 // per-device by visiting a magic URL, while everyone else lands on
@@ -75,7 +82,7 @@ import newsreaderSemiboldWoff2 from '../assets/fonts/newsreader-latin-600-core.w
 //
 // PUBLIC_ prefix on both: required because they're read at build
 // time AND inlined into the client script. The token is technically
-// visible in shipped HTML for anyone viewing source, soft gate, not
+// visible in shipped HTML for anyone viewing source — soft gate, not
 // security. For real auth, use Cloudflare Access at the DNS layer.
 const comingSoonEnabled = import.meta.env.PUBLIC_COMING_SOON === 'true';
 const previewToken = import.meta.env.PUBLIC_PREVIEW_TOKEN || '';
@@ -96,14 +103,6 @@ interface Props {
       (Person), case study detail pages (Article + CreativeWork),
       /services (Service + FAQPage). */
   schemas?: Array<Record<string, unknown>>;
-  /** Extra fonts to preload because this page's first screen uses them
-      (see the font note at the top of this file). */
-  preloadFonts?: Array<'italic' | 'semibold'>;
-  /** Robots directive for this page ("noindex, follow"). Leave unset for an
-      indexable page. Used by /photography while its gallery is empty
-      (src/lib/photos.ts photographyRobots). The Coming Soon gate's own
-      noindex wins when it is on. */
-  robots?: string;
 }
 // Site settings (studio name, default description, feed title) come from the
 // CMS, with the committed fallback; the Header, Footer and StructuredData share
@@ -116,8 +115,6 @@ const {
   ogImage,
   ogType = 'website',
   schemas = [],
-  preloadFonts = [],
-  robots,
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -166,16 +163,14 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
         scripts/generate-icons.mjs (run `npm run icons` after a brand change).
         Modern browsers take the SVG; the .ico is the legacy fallback; iOS uses
         the apple-touch PNG; the manifest carries the PWA / maskable icons.
-        theme-color is the paper the page and the header sit on. */}
+        theme-color is brand navy, matching the hero and the over-hero header. */}
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#f3eee4" />
+    <meta name="theme-color" content="#0A1628" />
 
-    {(comingSoonEnabled || robots) && (
-      <meta name="robots" content={comingSoonEnabled ? 'noindex, follow' : robots} />
-    )}
+    {comingSoonEnabled && <meta name="robots" content="noindex, follow" />}
 
     {/* The blocking gate script itself lives in ComingSoonGate.astro (a
         <script> cannot sit inside this expression: prettier-plugin-astro
@@ -203,27 +198,59 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <meta name="twitter:image" content={ogImageUrl} />
 
     <!--
-      JS marker. Runs synchronously before <body> paints and adds .js to <html>,
-      so CSS can scope the scroll-reveal hidden state to visitors who have
-      JavaScript (without it every [data-reveal] element stays visible). The
-      site has one art-directed theme since the 2026 redesign: there is no dark
-      mode, no theme toggle and no stored theme preference any more.
-      data-astro-rerun re-applies it after a View Transitions swap.
+      Anti-FOUC theme bootstrap. Runs synchronously before <body> paints so
+      the .dark class lands on <html> in time for the first frame; otherwise
+      a visitor who prefers dark would see a flash of light theme.
+
+      Decision order:
+        1. localStorage["ncs-theme"] (the visitor's explicit choice)
+           - "dark" -> force dark
+           - "light" -> force light
+           - "system" (or missing) -> fall through
+        2. window.matchMedia('(prefers-color-scheme: dark)') for system.
+
+      ThemeToggle.tsx writes to the same localStorage key, and Astro's
+      View Transitions ClientRouter preserves <html> attributes across
+      same-origin navigations, so the class survives page changes.
+
+      is:inline keeps this out of the Vite module graph so it's literally
+      the first script the browser executes, with no async delay.
+      data-astro-rerun lets View Transitions re-execute it on swap, which
+      matters if the visitor changes their OS theme on a system-pref tab
+      mid-session and then navigates.
     -->
     <script is:inline data-astro-rerun>
-      document.documentElement.classList.add('js');
+      (function () {
+        // Mark that JS is running so CSS can scope the scroll-reveal hidden
+        // state to .js only. Without JS the class is absent and [data-reveal]
+        // content stays fully visible (see globals.css section 6).
+        document.documentElement.classList.add('js');
+        try {
+          var stored = localStorage.getItem('ncs-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
+          var root = document.documentElement;
+          root.classList.toggle('dark', isDark);
+          root.style.colorScheme = isDark ? 'dark' : 'light';
+        } catch (e) {
+          /* localStorage blocked (private mode / cookies disabled). Fall back
+             to system preference only. */
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', prefersDark);
+          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
+        }
+      })();
     </script>
-    <!-- Font preloads (see the note in the frontmatter). crossorigin is
-         required: without it the preload and the stylesheet's font fetch are
-         different requests and the font downloads twice. -->
-    <link rel="preload" as="font" type="font/woff2" href={bebasWoff2} crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href={newsreaderWoff2} crossorigin />
-    {preloadFonts.includes('italic') && (
-      <link rel="preload" as="font" type="font/woff2" href={newsreaderItalicWoff2} crossorigin />
-    )}
-    {preloadFonts.includes('semibold') && (
-      <link rel="preload" as="font" type="font/woff2" href={newsreaderSemiboldWoff2} crossorigin />
-    )}
+    <!-- Font preloads: Bebas Neue for every heading, Source Sans 3 for
+         every other word on the page. `crossorigin` is required for font
+         preloads: without it, the preload and the eventual CSS font fetch
+         are considered different requests, and the browser would download
+         the font twice. With it, the second fetch hits the preload cache.
+         Both start with the HTML rather than waiting on the stylesheet, so
+         text is laid out in its real metrics from the first paint instead
+         of reflowing when the swap lands. -->
+    <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={sourceSans3Woff2} crossorigin />
 
     <!-- Cloudflare Web Analytics. Component renders the beacon script
          only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
@@ -266,9 +293,11 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     </main>
     <Footer />
 
-    {/* Floating back-to-top button: plain HTML plus a few lines of script, so
-        no framework loads for it. Appears after 600px of scroll. */}
-    <BackToTop />
+    {/* Floating back-to-top affordance. client:idle defers hydration
+        until after critical content; the button starts hidden and only
+        fades in after the visitor scrolls past 600px, so the delay is
+        invisible. */}
+    <BackToTop client:idle />
 
     {comingSoonEnabled && (
       <div class="ncs-overlay" aria-label="Launching soon">
@@ -276,7 +305,20 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       </div>
     )}
 
-    {/* No smooth-scroll library: scrolling is the browser's own (decided 2026-10-04). */}
+    <!--
+      Lenis smooth scroll initializer. The script is a normal client-side
+      module (no is:inline) so Astro bundles it and hashes the URL. Lives
+      at the end of body so Lenis has the document mounted before it
+      attaches its scroll listeners.
+
+      View Transitions reuse loaded modules across same-origin navigations,
+      so the Lenis instance keeps running without re-initializing on every
+      page change. The script itself honors prefers-reduced-motion and
+      becomes a no-op when the user has reduced-motion set.
+    -->
+    <script>
+      import '../scripts/lenis-init';
+    </script>
     <!--
       Progressive enhancement layer. Wires the declarative data-* effects
       (cursor spotlight, count-up numbers, scroll-aware header)
@@ -286,14 +328,6 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     -->
     <script>
       import '../scripts/enhance';
-    </script>
-    <!--
-      Grounds: attaches the ground textures after the load event (so they never
-      delay LCP) and pauses a moving ground while it is off screen. See
-      src/scripts/grounds.ts and DESIGN.md "Grounds".
-    -->
-    <script>
-      import '../scripts/grounds';
     </script>
     <!--
       Mailto graceful fallback. A mailto: link only opens anything if the device
@@ -307,8 +341,8 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     </script>
     <!--
       Scroll-reveal observer. Reveals every [data-reveal] element as it
-      enters the viewport by toggling .is-visible (styled in globals.css,
-      section 8). Re-runs on every View Transitions navigation via the
+      enters the viewport by toggling .is-visible (styled in globals.css
+      section 6). Re-runs on every View Transitions navigation via the
       astro:page-load event, which fires on the initial load too, so the
       listener registered once here covers all pages.
 
@@ -349,7 +383,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <script is:inline>
       console.log(
         '%cNixon Creative Studio',
-        'font: 600 16px ui-sans-serif, system-ui; color: #ae2f1b;',
+        'font: 600 16px ui-sans-serif, system-ui; color: #40AAED;',
       );
       console.log(
         'Hand-built on Astro, Tailwind, and Cloudflare. How it is made: /colophon  ·  Want one like it: /contact',

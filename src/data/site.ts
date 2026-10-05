@@ -78,8 +78,6 @@ export interface Site {
   defaultDescription: string; // Meta description for a page that passes none.
   rssTitle: string;
   rssDescription: string;
-  /** schema.org priceRange for the structured data; empty string leaves it out (optional field). */
-  priceRange: string;
 
   // Derived link targets, so consumers do not repeat the string handling.
   phoneHref: string;
@@ -126,7 +124,6 @@ export function normalizeSite(raw: Raw): Site {
     defaultDescription: must(raw, 'default_description'),
     rssTitle: must(raw, 'rss_title'),
     rssDescription: must(raw, 'rss_description'),
-    priceRange: text(raw.price_range) ?? '',
     phoneHref: phoneHref(phone),
     emailHref: emailHref(email),
   };

@@ -2,10 +2,10 @@
 //
 // The site is a HYBRID. These routes are reached over HTTP at
 // PLAYWRIGHT_BASE_URL (see playwright.config.ts), never from dist/client, so
-// every page sits in one list (all are server-rendered):
+// prerendered and server-rendered pages sit in one list:
 //   - SERVER-RENDERED from EmDash: '/', '/about', '/services', '/work' and every
 //     '/work/<slug>' (plus /rss.xml, which is XML and so is not swept here).
-//   - The route cache serves every page after its first render.
+//   - PRERENDERED: everything else.
 //
 // REDUCED CI SAMPLE. CI runs against the small `ncs-ci` dataset (the `ci`
 // environment in wrangler.jsonc), which holds only the three case studies below,
@@ -29,7 +29,7 @@
 // `/coming-soon` is the standalone gate page (its own HTML document, not
 // BaseLayout) and is always live, so it is swept too.
 //
-// Add a route here when a new page ships.
+// Add a route here when a new page ships, prerendered or not.
 export const caseStudySlugs = [
   'presbyterian-academy',
   'reid-design',
@@ -46,11 +46,6 @@ export const routes = [
   '/',
   '/about',
   '/services',
-  // The four search landing pages (src/lib/landingPage.ts).
-  '/church-websites',
-  '/nonprofit-websites',
-  '/school-websites',
-  '/cincinnati-event-photography',
   '/work',
   ...caseStudySlugs.map((slug) => `/work/${slug}`),
   '/journal',

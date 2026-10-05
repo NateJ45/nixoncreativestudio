@@ -45,11 +45,11 @@ A few standards show up in every project, and they are the reason the sites hold
 ## How this site is built
 
 - **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'server'` with Cloudflare's route cache
-- **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; the design system is `DESIGN.md`, its tokens in `src/styles/globals.css`
-- **React 19** islands only where they earn it: the photo gallery and lightbox, the CopyEmail copy button (not on /contact any more), the work filter (the header, phone menu and footer carry no React)
+- **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
+- **React 19** islands for the interactive pieces: full-screen mobile nav, contact form, photo gallery + lightbox, WebGL hero, theme toggle
 - **EmDash CMS** (D1 and R2 on Cloudflare) for case studies, the journal and the photography set; no Astro content collections
-- **[Motion](https://motion.dev)** + Astro View Transitions (native scrolling, no smooth-scroll library) for soft page-to-page navigation
-- Astro components and native HTML for the interface (the phone menu is a native `<dialog>`), with the **shadcn/ui** Button; React islands only for the photo gallery, the testimonial carousel and a few small widgets
+- **[Motion](https://motion.dev)** + **[Lenis](https://lenis.darkroom.engineering)** smooth scroll + Astro View Transitions for soft page-to-page navigation
+- Component primitives from **Starwind** (zero-JS, Astro-native), **shadcn/ui**, with **Aceternity** and **Magic UI** for motion flourishes
 - **[Cloudflare Pages](https://pages.cloudflare.com)** hosting + Cloudflare Web Analytics (privacy-friendly, no cookies)
 - **ESLint** + **Prettier** + `node --test` unit suites, run in **GitHub Actions** on every push and PR
 
