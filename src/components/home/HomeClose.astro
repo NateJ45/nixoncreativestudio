@@ -6,9 +6,11 @@
    "Let's build a site you won't have to redo." (the line the copy audit kept),
    one sentence on what to send, the button and the email address.
 
-   Ground: paper-contours, still: the survey sheet of the Ohio's bend again,
-   where "Cincinnati" belongs, closing the page the way the hero opened it,
-   with the ink footer below it.
+   Ground: paper-contours, still, with the sheet turned up (the hero's
+   'paper' tokens through ContourLayers): the survey sheet of
+   the Ohio's bend at a weight you can see, where "Cincinnati" belongs,
+   closing the page the way the hero opened it (the river), with the ink
+   footer below it. The headline is set at poster scale, the hero's echo.
 
    Words: the Home page CMS entry (process_cta_title / _sub / _label, the
    fields the old Process Band's call used). The address: getSite(); the
@@ -16,6 +18,7 @@
    binds every mailto link on the page).
    ============================================================================ */
 import Band from '../Band.astro';
+import ContourLayers from './ContourLayers.astro';
 import { buttonVariants } from '../ui/button';
 import { getHomePage } from '../../lib/homePage';
 import { getSite } from '../../data/site';
@@ -27,8 +30,16 @@ const site = await getSite(Astro);
 const heading = splitVoice(process.ctaTitle);
 ---
 
-<Band ground="paper-contours" still id="start" labelledby="close-heading" class="home-close">
-  <div class="close-grid">
+<Band
+  ground="paper-contours"
+  still
+  container={false}
+  id="start"
+  labelledby="close-heading"
+  class="home-close"
+>
+  <ContourLayers variant="paper" label={false} class="close-contours" />
+  <div class="ncs-container close-grid">
     <h2 id="close-heading" class="type-headline">
       {heading.lead} {heading.voice && <span class="voice">{heading.voice}</span>}
     </h2>
@@ -61,16 +72,28 @@ const heading = splitVoice(process.ctaTitle);
 <style>
   .close-grid {
     display: grid;
-    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    grid-template-columns: minmax(0, 8.5fr) minmax(0, 3.5fr);
     gap: 2rem clamp(2rem, 4vw, 4rem);
     align-items: end;
   }
   .close-grid h2 {
-    max-width: 13ch;
-    font-size: clamp(3rem, 1.3rem + 5.4vw, 6.25rem);
+    max-width: 12ch;
+    font-size: clamp(3.4rem, 1rem + 8.4vw, 9.5rem);
+    line-height: 0.86;
   }
-  .close-grid .voice {
-    display: block;
+  /* The turned-up sheet (ContourLayers, the hero's 'paper' tokens, without the river's
+     name, which would sit under the headline) replaces the band's baked one. Every word
+     on it is ink or ink-body: muted grey would fall under AA on a full line. */
+  :global(.grounds-ready .home-close.ground-paper-contours:not(.has-layers)) {
+    background-image: none;
+  }
+  :global(.home-close .contours.close-contours) {
+    --c-pos: 40% 60%;
+    --c-size: max(120%, 1500px) auto;
+  }
+  .close-grid {
+    position: relative;
+    z-index: 1;
   }
   .close-side {
     display: grid;
@@ -103,8 +126,8 @@ const heading = splitVoice(process.ctaTitle);
   }
   .close-more {
     margin: 0;
-    font: 400 0.9375rem/1.9 var(--font-ui);
-    color: var(--muted-foreground);
+    font: 400 1rem/1.9 var(--font-ui);
+    color: var(--foreground);
   }
   .close-more a {
     color: var(--heading);

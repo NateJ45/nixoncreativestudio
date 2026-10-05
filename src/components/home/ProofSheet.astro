@@ -9,8 +9,10 @@
    rhythm instead of one card stamped four times (review of 2026-10-04):
 
      lead   Stone Steps. A strip of film (ink rebate, sprocket rows, the facts
-            on the edge) with two frames stacked, the keeper circled in china
-            marker: the one pick on the sheet. The note sits to the right.
+            on the edge): the course map large and LIVE (LiveClip: the real
+            page moving, a short muted loop over its still), the climbing chart
+            and the records board side by side under it. The note sits to the
+            right. No drawn marker loop (Nathan, 2026-10-04).
      pair   The next two, side by side, as plain prints laid on the wall (a
             paper mat and a shadow, no film, no loop), the second set lower.
             The words sit under each print: the name, one sentence, the fact.
@@ -28,6 +30,7 @@
    (DeferredPicture: Gotcha 14).
    ============================================================================ */
 import DeferredPicture from './DeferredPicture.astro';
+import LiveClip from './LiveClip.astro';
 import type { ImageMetadata } from 'astro';
 import Band from '../Band.astro';
 import { getHomePage } from '../../lib/homePage';
@@ -51,10 +54,6 @@ const asset = (name: string): ImageMetadata => {
   return file.default;
 };
 
-// The pick: a hand-drawn china-marker loop (shared shape with the hero's loop).
-const PICK =
-  'M5 2.6 C 30 0.6, 70 1.4, 98.4 3 C 99.6 32, 99.2 68, 98.2 97 C 66 99.6, 28 99, 1.8 97.6 C 0.6 66, 0.8 30, 1.6 2.2 C 10 1.2, 20 1.6, 30 2.4';
-
 // First job leads; the last of four or more is the wide strip; the ones between pair up.
 const lead = jobs[0];
 const strip = jobs.length >= 4 ? jobs[jobs.length - 1] : undefined;
@@ -71,7 +70,7 @@ const idOf = (job: GatedJob) => `job-${job.study}`;
       <p class="work-sub">{work.sub}</p>
     </header>
 
-    {/* The lead: film, stacked frames, the one pick; the note to the right. */}
+    {/* The lead: film, the live frame large, the others under it; the note to the right. */}
     <article class="job job--lead" aria-labelledby={idOf(lead)}>
       <div class="film">
         <p class="edge" aria-hidden="true">
@@ -81,23 +80,23 @@ const idOf = (job: GatedJob) => `job-${job.study}`;
         </p>
         <div class="frames">
           {lead.frames.map((frame) => (
-            <figure class="frame" data-reveal="fade">
+            <figure class:list={['frame', { 'frame--live': frame.clip }]} data-reveal="fade">
               <div class="frame-print">
-                <DeferredPicture
-                  src={asset(frame.img)}
-                  alt={frame.alt}
-                  widths={[480, 800, 1200, 1600]}
-                  sizes="(max-width: 1080px) 92vw, 60vw"
-                />
-                {frame.pick && (
-                  <svg
-                    class="pick"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <path d={PICK} />
-                  </svg>
+                {frame.clip ? (
+                  <LiveClip
+                    src={asset(frame.img)}
+                    alt={frame.alt}
+                    clip={frame.clip}
+                    widths={[480, 800, 1200, 1600]}
+                    sizes="(max-width: 1080px) 92vw, 64vw"
+                  />
+                ) : (
+                  <DeferredPicture
+                    src={asset(frame.img)}
+                    alt={frame.alt}
+                    widths={[480, 800, 1200]}
+                    sizes="(max-width: 1080px) 46vw, 32vw"
+                  />
                 )}
               </div>
               <figcaption>{frame.caption}</figcaption>
@@ -225,23 +224,24 @@ const idOf = (job: GatedJob) => `job-${job.study}`;
 <style>
   .work-head {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
     gap: 1.5rem 3rem;
     align-items: end;
     margin-bottom: clamp(3rem, 6vw, 5.5rem);
   }
   .work-head h2 {
-    font-size: clamp(2.75rem, 1.4rem + 4.6vw, 5.5rem);
+    font-size: clamp(3.25rem, 1rem + 7.4vw, 8.5rem);
+    line-height: 0.88;
   }
   .work-head .voice {
     display: block;
   }
   .work-sub {
-    max-width: 40ch;
+    max-width: 34ch;
     font-family: var(--font-serif);
-    font-size: var(--text-body);
-    line-height: 1.55;
-    color: var(--muted-foreground);
+    font-size: var(--text-lede);
+    line-height: 1.4;
+    color: var(--foreground);
   }
 
   /* ---- shared words ------------------------------------------------------- */
@@ -319,8 +319,16 @@ const idOf = (job: GatedJob) => `job-${job.study}`;
   .job--lead .job-name {
     margin-bottom: 0.5rem;
   }
+  /* The live frame across the strip, the other two side by side under it. */
   .job--lead .frames {
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .job--lead .frame--live {
+    flex: 0 0 100%;
+  }
+  .job--lead .frame--live figcaption {
+    color: var(--paper);
   }
 
   /* ---- the film (lead and strip only) -------------------------------------- */
@@ -390,25 +398,6 @@ const idOf = (job: GatedJob) => `job-${job.study}`;
     margin-top: 10px;
     font: 500 0.8125rem/1.3 var(--font-ui);
     color: var(--on-ink-muted);
-  }
-  .frame:has(.pick) figcaption {
-    padding-left: 14px;
-  }
-  .pick {
-    position: absolute;
-    inset: -9px;
-    width: calc(100% + 18px);
-    height: calc(100% + 18px);
-    overflow: visible;
-    pointer-events: none;
-  }
-  .pick path {
-    fill: none;
-    stroke: var(--marker-hot);
-    stroke-width: 4.2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
   }
 
   /* ---- the pair: plain prints on the wall ---------------------------------- */
