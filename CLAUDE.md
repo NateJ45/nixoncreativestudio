@@ -17,6 +17,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 - Words, prices, menus, redirects, case studies, journal, photos: the EmDash admin at `/_emdash/admin/` (passkey login), not files. Committed fallback and seed: `cms/content/*.json`; field definitions: `cms/schema/*.mjs`; readers: `src/lib/*.ts`; shared values via `getSite()` in `src/data/site.ts`.
 - Case studies are collection `case_studies` in EmDash (D1, R2, KV), read by `src/lib/caseStudies.ts`. There are no Astro content collections and no `src/content/`; `src/live.config.ts` is the only content config.
 - Cache and headers: `src/worker.ts`, `src/lib/routeCache.ts`, `cachePublicPage()` in `BaseLayout`. `public/_headers` no longer reaches HTML (Gotcha 15).
+- The 2026 redesign is live (rounds 1 and 2); where it stopped, what Nathan has decided and what to try next: `docs/redesign-2026/ROUND-2-HANDOFF.md`. Design system: `DESIGN.md`.
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.
 - Read `docs/claude/strategy-and-audience.md` before any design call (the original strategy docx was deleted; use `PRODUCT.md` and `docs/`).
 - The design system is `DESIGN.md` (palette, type, grounds, components, open decisions). The 2026 redesign lives in `docs/redesign-2026/`; page agents start with its `BUILD-NOTES.md`.
