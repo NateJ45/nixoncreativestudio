@@ -3,11 +3,8 @@
 /* ============================================================================
    HomePrices ("What it costs" on the homepage)
    ============================================================================
-   ONE idea: the floor. The lowest published price is printed as a numeral the
-   size of the band ("$4,000", Bebas, up to 30vw), with the italic "from" and
-   the tier's name beside it, so the first thing a visitor learns here is
-   where a site starts. Under it, the three tiers as a lab price list:
-   hairline-ruled rows on the ink board, not a slab of three cards. Each row is the tier's name and who it
+   The three published tiers as a lab price list: hairline-ruled rows on the
+   ink board, not a slab of three cards. Each row is the tier's name and who it
    is for, the floor in Bebas numerals, and what grows at that tier. The
    tier ticked "Recommended" in the admin shows its badge in place of the who
    line. Under the list: what every build includes, the reassurance line
@@ -26,10 +23,6 @@ import { splitVoice } from '../../lib/homeWork';
 const { pricing } = await getHomePage(Astro);
 const tiers = await getPricingTiers(Astro);
 const heading = splitVoice(pricing.heading);
-// The floor: the cheapest tier (getPricingTiers sorts by the admin's order, so find it).
-const floorTier = tiers.length
-  ? tiers.reduce((a, b) => (b.priceFrom < a.priceFrom ? b : a))
-  : undefined;
 ---
 
 <Band ground="deep" still id="prices" labelledby="home-pricing-heading" class="home-prices">
@@ -39,16 +32,6 @@ const floorTier = tiers.length
     </h2>
     <p class="prices-sub">{pricing.sub}</p>
   </header>
-
-  {floorTier && (
-    <p class="floor">
-      <span class="floor-from">from</span>
-      <span class="floor-figure">{`$${floorTier.priceFrom.toLocaleString('en-US')}`}</span>{' '}
-      <span class="floor-what">
-        for a {floorTier.name} site. <span>{floorTier.who}.</span>
-      </span>
-    </p>
-  )}
 
   <ul class="tiers" role="list">
     {tiers.map((tier) => (
@@ -100,61 +83,17 @@ const floorTier = tiers.length
      cut from the proof sheet's split head, so the bands do not repeat a scaffold. */
   .prices-head {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 1.25rem 3rem;
-    align-items: end;
+    gap: 1.25rem;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
   }
   .prices-head h2 {
     font-size: clamp(2.75rem, 1.4rem + 4.6vw, 5.5rem);
   }
   .prices-sub {
-    max-width: 34ch;
+    max-width: 44ch;
     font-family: var(--font-serif);
     font-size: var(--text-lede);
     line-height: 1.4;
-    color: var(--foreground);
-  }
-
-  /* ---- the floor: the band's one big figure ---------------------------- */
-  .floor {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    column-gap: clamp(1rem, 2.5vw, 2.5rem);
-    align-items: end;
-    margin: clamp(1.5rem, 3vw, 2.5rem) 0 clamp(2.5rem, 5vw, 4.5rem);
-  }
-  .floor-from {
-    grid-column: 1;
-    font: italic 400 clamp(1.75rem, 1rem + 3vw, 4rem) / 1 var(--font-serif);
-    color: var(--marker);
-    margin-bottom: 0.15em;
-    padding-left: 0.08em;
-  }
-  .floor-figure {
-    grid-column: 1;
-    grid-row: 2;
-    margin-left: -0.04em;
-    font: 400 clamp(8rem, 1rem + 27vw, 25rem) / 0.8 var(--font-display);
-    letter-spacing: -0.01em;
-    font-variant-numeric: lining-nums;
-    color: var(--heading);
-  }
-  .floor-what {
-    grid-column: 2;
-    grid-row: 2;
-    align-self: end;
-    max-width: 16ch;
-    padding-bottom: 0.4em;
-    font: 400 clamp(1.5rem, 1rem + 1.6vw, 2.5rem) / 1.15 var(--font-serif);
-    color: var(--heading);
-    text-wrap: balance;
-  }
-  .floor-what span {
-    display: block;
-    margin-top: 0.4em;
-    font-style: italic;
-    font-size: 0.7em;
     color: var(--muted-foreground);
   }
 
@@ -180,7 +119,7 @@ const floorTier = tiers.length
   .tier-who {
     display: block;
     margin-top: 0.45rem;
-    font: italic 400 1.1875rem/1.3 var(--font-serif);
+    font: italic 400 1.0625rem/1.3 var(--font-serif);
     color: var(--muted-foreground);
   }
   .tier-badge {
@@ -197,7 +136,7 @@ const floorTier = tiers.length
     color: var(--muted-foreground);
   }
   .tier-figure {
-    font-size: clamp(2.75rem, 2rem + 2.6vw, 4.25rem);
+    font-size: clamp(3.25rem, 2.2rem + 3.8vw, 5.75rem);
     color: var(--heading);
   }
   .tier--anchor .tier-figure {
@@ -252,7 +191,7 @@ const floorTier = tiers.length
     font-family: var(--font-serif);
     font-size: var(--text-body);
     line-height: 1.55;
-    color: var(--foreground);
+    color: var(--muted-foreground);
   }
   .every-link {
     display: inline-flex;
@@ -263,21 +202,6 @@ const floorTier = tiers.length
     color: var(--heading);
   }
 
-  @media (max-width: 820px) {
-    .prices-head,
-    .floor {
-      grid-template-columns: 1fr;
-    }
-    .floor-figure {
-      font-size: 42vw;
-    }
-    .floor-what {
-      grid-column: 1;
-      grid-row: auto;
-      max-width: 24ch;
-      padding: 0.75rem 0 0;
-    }
-  }
   @media (max-width: 820px) {
     .tier,
     .every {

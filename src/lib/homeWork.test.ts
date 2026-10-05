@@ -1,14 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   REEL,
   REEL_START_ID,
   SHEET,
-  PLACEHOLDER_CLIPS,
   gateReel,
-  reelClips,
   gateSheet,
   splitVoice,
   type StudyGate,
@@ -81,10 +79,9 @@ test('every curated picture exists in src/assets/home', () => {
 });
 
 test('the proof sheet adds to the reel instead of repeating it', () => {
-  // The lead's first frame is the live one (the course map clip), and only the lead moves.
-  const live = SHEET.flatMap((j, i) => j.frames.filter((f) => f.clip).map(() => i));
-  assert.deepEqual(live, [0]);
-  assert.match(SHEET[0].frames[0].clip ?? '', /^\/reel\/stone-steps-50k\/.+\.webm$/);
+  // One china-marker pick on the whole sheet, on the lead job.
+  const picks = SHEET.flatMap((j, i) => j.frames.filter((f) => f.pick).map(() => i));
+  assert.deepEqual(picks, [0]);
   // No sheet picture is a reel picture, and no sheet fact repeats a reel caption.
   const reelIds = new Set(REEL.map((s) => s.id));
   const reelFacts = new Set(REEL.map((s) => s.fact));
@@ -120,39 +117,4 @@ test('splitVoice turns a headline into caps and the italic voice', () => {
     voice: "won't have to redo.",
   });
   assert.deepEqual(splitVoice('What it costs'), { lead: 'What it costs', voice: '' });
-});
-
-test('reelClips: no manifest means the placeholder; a manifest is read and checked', () => {
-  assert.deepEqual(reelClips(undefined), PLACEHOLDER_CLIPS);
-  assert.deepEqual(reelClips({}), {});
-  assert.deepEqual(reelClips(null), {});
-  const clips = reelClips({
-    clips: {
-      'ss-home': {
-        d: {
-          webm: '/reel/home/ss-home-d.webm',
-          poster: '/reel/home/ss-home-d.webp',
-          w: 1600,
-          h: 1000,
-        },
-        m: { webm: 'https://elsewhere.example/x.webm' },
-      },
-      'tm-home': { d: { poster: '/reel/home/tm.webp' } },
-      'frt-home': 'nonsense',
-    },
-  });
-  // A clip must be a same-origin WebM under /reel/; anything else is dropped, so a bad
-  // manifest only means stills.
-  assert.deepEqual(Object.keys(clips), ['ss-home']);
-  assert.equal(clips['ss-home'].d?.webm, '/reel/home/ss-home-d.webm');
-  assert.equal(clips['ss-home'].m, undefined);
-});
-
-test('every placeholder clip names a real reel slide and a file on disk', () => {
-  const ids = new Set(REEL.map((s) => s.id));
-  for (const [id, pair] of Object.entries(PLACEHOLDER_CLIPS)) {
-    assert.ok(ids.has(id), id);
-    for (const c of [pair.d, pair.m])
-      if (c) assert.ok(existsSync(join(process.cwd(), 'public', c.webm)), c.webm);
-  }
 });

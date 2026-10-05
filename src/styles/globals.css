@@ -211,59 +211,6 @@
   line-gap-override: 0%;
 }
 
-/* Second fallbacks, for machines WITHOUT Impact and Georgia: Linux (the CI
-   Lighthouse runner, where the swap from an unmatched serif moved /contact/ by
-   CLS 0.30 and /photography/ by 0.11, 2026-10-04) and ChromeOS. Times New Roman
-   and Arial Narrow are matched here; Liberation Serif and Tinos share Times New
-   Roman's metrics, Liberation Sans Narrow shares Arial Narrow's, so one set of
-   numbers covers all of them. Computed the same way (capsize weighted widths,
-   scaled to agree with the Georgia numbers above); scratch tooling, not in git.
-   A face whose local() names are all missing is skipped, so on Windows and
-   macOS the Georgia/Impact faces above still win. */
-@font-face {
-  font-family: 'Bebas Fallback Narrow';
-  src: local('Arial Narrow'), local('ArialNarrow'), local('Liberation Sans Narrow');
-  size-adjust: 70.8%;
-  ascent-override: 127.12%;
-  descent-override: 42.37%;
-  line-gap-override: 0%;
-}
-@font-face {
-  font-family: 'Newsreader Fallback Times';
-  src:
-    local('Times New Roman'), local('TimesNewRomanPSMT'), local('Liberation Serif'), local('Tinos');
-  font-style: normal;
-  font-weight: 400;
-  size-adjust: 105.06%;
-  ascent-override: 69.96%;
-  descent-override: 25.22%;
-  line-gap-override: 0%;
-}
-@font-face {
-  font-family: 'Newsreader Fallback Times';
-  src:
-    local('Times New Roman Italic'), local('TimesNewRomanPS-ItalicMT'),
-    local('Liberation Serif Italic'), local('Tinos Italic');
-  font-style: italic;
-  font-weight: 400;
-  size-adjust: 97.39%;
-  ascent-override: 75.47%;
-  descent-override: 27.21%;
-  line-gap-override: 0%;
-}
-@font-face {
-  font-family: 'Newsreader Fallback Times';
-  src:
-    local('Times New Roman Bold'), local('TimesNewRomanPS-BoldMT'), local('Liberation Serif Bold'),
-    local('Tinos Bold');
-  font-style: normal;
-  font-weight: 500 700;
-  size-adjust: 103.27%;
-  ascent-override: 71.17%;
-  descent-override: 25.66%;
-  line-gap-override: 0%;
-}
-
 /* ----------------------------------------------------------------------------
    3. Theme tokens (non-colour). Tailwind 4 turns @theme variables into
    utilities: --font-display -> font-display, --text-h2 -> text-h2,
@@ -277,14 +224,9 @@
        serif:   Newsreader. Body copy, ledes, and the italic second voice.
        ui:      the system sans. Nav, buttons, labels, captions, form fields.
                 Zero bytes; the furniture should be legible, not expressive. */
-  --font-display:
-    'Bebas Neue', 'Bebas Fallback', 'Bebas Fallback Narrow', Impact, 'Arial Narrow', sans-serif;
-  --font-serif:
-    'Newsreader', 'Newsreader Fallback', 'Newsreader Fallback Times', Georgia, 'Times New Roman',
-    serif;
-  --font-body:
-    'Newsreader', 'Newsreader Fallback', 'Newsreader Fallback Times', Georgia, 'Times New Roman',
-    serif;
+  --font-display: 'Bebas Neue', 'Bebas Fallback', Impact, 'Arial Narrow', sans-serif;
+  --font-serif: 'Newsreader', 'Newsreader Fallback', Georgia, 'Times New Roman', serif;
+  --font-body: 'Newsreader', 'Newsreader Fallback', Georgia, 'Times New Roman', serif;
   --font-ui:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
@@ -790,13 +732,9 @@
   /* window-light: the sun patch. Desktop: right of centre, high on the wall, so
    the light lands beside the headline. Phone: scaled up so one pane holds the
    headline and the mullions fall outside it. Slides as the sun moves (16 s)
-   and dims as a cloud passes (13 s).
-   Its offsets are FIXED lengths, never a percentage of the band: a % top moves
-   this viewport-sized layer whenever the band's height changes (a web font
-   swapping in, an image arriving), and Chrome then counts the whole hero as
-   shifted (CI measured CLS 0.30 on /contact/ from exactly that, 2026-10-04). */
+   and dims as a cloud passes (13 s). */
   .g-sunw {
-    top: -2.75rem;
+    top: -6%;
     right: -30vw;
     width: min(112vw, 1640px);
     aspect-ratio: 760 / 520;
@@ -817,7 +755,7 @@
     .g-sunw {
       width: 330vw;
       right: -150vw;
-      top: -1.5rem;
+      top: -4%;
     }
   }
 

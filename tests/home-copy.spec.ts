@@ -54,7 +54,7 @@ test.describe('Homepage copy without JavaScript', () => {
     await expect(h1).toHaveCount(1);
     await expect(h1).toHaveText(`${home.hero_heading} ${home.hero_heading_accent}`);
     // The coloured phrase is its own span (two fields, so an edit cannot break the headline).
-    await expect(h1.locator('.voice')).toHaveText(home.hero_heading_accent);
+    await expect(h1.locator('span')).toHaveText(home.hero_heading_accent);
     await expect(page.locator('.hero-positioning')).toHaveText(home.hero_positioning);
     const proof = page.locator('.hero-proof');
     await expect(proof).toContainText(home.hero_proof_before);

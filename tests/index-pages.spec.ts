@@ -152,7 +152,7 @@ test.describe('/photography', () => {
 
   test('the gallery renders the test photo with width-only resizer URLs', async ({ page }) => {
     await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
-    const gallery = page.locator('#events [data-photo-gallery]');
+    const gallery = page.locator('#events .react-photo-album');
     await gallery.scrollIntoViewIfNeeded();
     const img = gallery.locator('img');
     await expect(img).toHaveCount(1);
@@ -182,7 +182,7 @@ test.describe('/photography', () => {
     await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
     await settle(page);
     // The grid hydrates when it scrolls into view (client:visible), so bring it there first.
-    await page.locator('#events [data-photo-gallery]').scrollIntoViewIfNeeded();
+    await page.locator('#events .react-photo-album').scrollIntoViewIfNeeded();
     const photo = page.locator('#events .react-photo-album img');
     await expect(photo).toHaveCount(1);
     // Retry the click until the island has bound it.
@@ -202,18 +202,17 @@ test.describe('/photography', () => {
 // -----------------------------------------------------------------------------
 // The photo gallery under axe, AFTER it has hydrated
 // -----------------------------------------------------------------------------
-// The shared sweep (a11y.spec.ts) audits /photography as it loads, when the
-// gallery is still the server copy (one per layout breakpoint, all but one hidden
-// by a container query; see PhotoGallery.tsx). The island hydrates on scroll
-// (client:visible) and keeps one copy, so this audits the hydrated grid and the
-// viewer, which the sweep never sees. It scrolls the gallery in, waits for the picture, and audits the page,
+// The shared sweep (a11y.spec.ts) audits /photography as it loads, but
+// react-photo-album only lays its rows out once the island hydrates
+// (client:visible, on scroll). Without this test the photo would never be in front
+// of axe. It scrolls the gallery in, waits for the picture, and audits the page,
 // then again with the full-screen viewer open. (One theme since the 2026
 // redesign; this used to run twice, light and dark.)
 test.describe('/photography gallery: no axe violations once rendered', () => {
   {
     test('the hydrated gallery and the open viewer pass axe', async ({ page }) => {
       await page.goto('/photography/', { waitUntil: 'domcontentloaded' });
-      await page.locator('#events [data-photo-gallery]').scrollIntoViewIfNeeded();
+      await page.locator('#events .react-photo-album').scrollIntoViewIfNeeded();
       await expect(page.locator('#events .react-photo-album img')).toHaveCount(1);
       await settle(page);
 

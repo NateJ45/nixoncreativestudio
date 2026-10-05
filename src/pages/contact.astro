@@ -87,13 +87,7 @@ const stepWhen = nextSteps.length === 3 ? ['Today', 'Day 1 to 2', 'After that'] 
 const optionalMark = 'optional';
 ---
 
-{/* The first screen sets the italic voice in the h1, so its font is preloaded
-     with the core files: arriving late, it reflowed the hero (a layout shift). */}
-<BaseLayout
-  title={contactTitle(page.seoTitle, site.studioName)}
-  description={page.seoDescription}
-  preloadFonts={['italic']}
->
+<BaseLayout title={contactTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
   {/* ====================================================================
        Band 1: the calm top. Window-light ground (the one moving ground),
        under the transparent header. The only h1. Nothing here is hidden or
@@ -484,9 +478,7 @@ const optionalMark = 'optional';
     }
     .contact-lede {
       margin: 0;
-      /* 40ch of Newsreader (its zero is 0.5665em), in em so the measure does
-         not change while a fallback font is showing (ch follows the font). */
-      max-width: 22.66em;
+      max-width: 40ch;
     }
     .contact-free {
       margin: 0;
@@ -503,20 +495,6 @@ const optionalMark = 'optional';
       font-family: var(--font-serif);
       font-size: var(--text-body);
       color: var(--muted-foreground);
-    }
-    /* On a phone the two links stack. Side by side they sit right at the
-       wrap point of a 360 to 420 px screen, so the web font swapping in
-       (Newsreader is a touch wider than any fallback) pushed the phone number
-       onto a second line and everything under it down: a layout shift in CI.
-       Stacked, neither font wraps. */
-    @media (max-width: 30rem) {
-      .contact-direct {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .contact-direct > span[aria-hidden='true'] {
-        display: none;
-      }
     }
     .contact-direct a {
       /* Body size, with a 44px touch height that does not change the line. */

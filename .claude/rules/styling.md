@@ -42,7 +42,7 @@ One theme. No dark mode, no toggle, no `.dark` block, no stored preference. `@cu
 Pages are runs of `<Band ground="...">` (`src/components/Band.astro`): `paper` (default), `window-light` (limewash wall and late sun, the hero), `paper-contours` (the Ohio bend, closing bands), `deep` (ink board under a raking lamp, always `.on-ink`). Props: `still`, `underHeader`, `tight`, `flush`, `container`, `as`, `labelledby`, `label`. The classes (`ground ground-window-light` and so on) also work alone on a section: texture without the moving layer.
 
 - One moving ground per page, at the top; `still` on the rest; the footer is always still.
-- Never a deep band under the plain header. The one exception is a page that passes `headerOnInk` to BaseLayout (the home hero, DESIGN.md "Hero ground"): the header then shows its on-ink face until it scrolls.
+- Never a deep band under the header (the header sits on light grounds only).
 - Textures attach after the load event (`html.grounds-ready`, `src/scripts/grounds.ts`) and never sit in the CSS (`astro.config.mjs` keeps `src/assets/grounds/` out of Vite's inlining), so they never delay LCP.
 - Moving layers animate transform and opacity only, pause off screen (`.is-off`) and show a still under reduced motion.
 - Component classes are in `@layer components`, so a utility on the same element wins; a component's scoped `<style>` beats both.

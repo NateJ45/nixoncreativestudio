@@ -137,7 +137,6 @@ const robots = photographyRobots(allPhotos.length);
   title={indexTitle(page.seoTitle, site.studioName)}
   description={page.seoDescription}
   robots={robots}
-  preloadFonts={['italic']}
 >
   {/* ------------------------------------------------------------------
        1. Hero. Plain headline with the italic voice, the intro and the ask.
@@ -313,13 +312,7 @@ const robots = photographyRobots(allPhotos.length);
      sets at h1 size rather than the display size. */
   .hero-title {
     font-size: var(--text-h1);
-    /* In em, not ch: `ch` is measured from whichever font is showing, so the
-       old 14ch was a different width in the fallback. And 14ch (5.6em) sat
-       right on the break of "that matches the": Bebas set it as three lines
-       (Photography / that / matches the), the fallback as two, so the hero
-       jumped a line when Bebas arrived (a layout shift in CI). 6.3em sets
-       "Photography / that matches the" in both fonts, with room either way. */
-    max-width: 6.3em;
+    max-width: 14ch;
   }
   .hero-title .voice {
     display: block;
