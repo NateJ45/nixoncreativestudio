@@ -15,6 +15,10 @@ Read this file early in any session on this repo.
 
 ## Waiting on a human
 
+### Redesign 2026: next session (read `docs/redesign-2026/ROUND-2-HANDOFF.md`)
+
+Round 2 is live and Nathan said "I like some things but it is not there yet". Start by asking him which parts he likes and what still feels boring, then pick from the untried ideas listed there. His `#nathan` tasks (quotes, portrait, photo permissions, Cloudflare toggles, admin edits) are in the vault note.
+
 ### Case study pictures and words held in code (2026 redesign, page-work)
 
 **Blocks:** retiring the interim entries in `src/data/workExtras.ts`.
