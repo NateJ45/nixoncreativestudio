@@ -24,7 +24,7 @@ hourly run, so it is harmless but it is also not checking anything. Verified
 unset 2026-08-27 (`gh variable list` returned nothing; `gh secret list` too).
 
 ```
-gh variable set SITE_URL --body https://www.nixoncreativestudio.com
+gh variable set SITE_URL --body https://nixoncreativestudio.com
 ```
 
 Use the **www** form with **no trailing slash**. The apex 301s to www, and the
@@ -38,7 +38,7 @@ and is unrelated.
 ### 2. Decide what to do about the `--link` comment in `globals.css`
 
 **File:** `src/styles/globals.css`, the `--link` declaration in `:root`
-(and the matching paragraph under "Brand colors" in `CLAUDE.md`).
+(and the matching paragraph under "Brand colors" in `.claude/rules/styling.md`).
 
 The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
 2026-08-27:
@@ -56,7 +56,7 @@ switches to `--secondary` (`#7AC8F0`, 9.8:1 on navy). So this is a documentation
 error, not a bug.
 
 It is left for a human because `globals.css` is a "foundation, edit with care"
-file per `CLAUDE.md`, and because there are two defensible fixes:
+file per `.claude/rules/foundation-files.md`, and because there are two defensible fixes:
 
 - **a)** Correct the comment to say AA on the two paper surfaces only. Zero
   risk, and the token keeps its current value.
