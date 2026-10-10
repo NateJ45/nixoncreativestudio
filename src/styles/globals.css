@@ -28,18 +28,6 @@
    ---------------------------------------------------------------------------- */
 @import 'tailwindcss';
 
-/* Keep committed non-source files out of Tailwind's automatic scan. The scanner
-   skips only gitignored paths, and scripts/.parity/*.html (the committed parity
-   baselines) plus the Markdown docs name utility classes that no longer exist
-   under src/. Each stray class keeps a rule alive in the shipped sheet, and a
-   parity compare can pass because the baselines themselves fed the build.
-   Vault note: gotchas/committed-parity-baselines-feed-tailwind. */
-@source not '../../scripts/.parity';
-@source not '../../docs';
-@source not '../../CLAUDE.md';
-@source not '../../README.md';
-@source not '../../PRODUCT.md';
-
 /* ----------------------------------------------------------------------------
    2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
       Both default to font-display: swap from @fontsource.
@@ -230,19 +218,6 @@
       opacity: 0.5;
     }
   }
-  /* Touch devices: the box grows to 44px (the 1rem icon stays centred and, with
-     the matching negative margins, sits where it did and adds no line height).
-     A real box, not an ::after hit area: ::after is the "Copied" bubble below,
-     and positioning the anchor would move that bubble. */
-  @media (pointer: coarse) {
-    [data-prose] .heading-anchor {
-      width: 2.75rem;
-      height: 2.75rem;
-      margin-block: -0.6rem;
-      margin-left: calc(0.25em - 0.625rem);
-      margin-right: -0.625rem;
-    }
-  }
   /* "Copied" confirmation bubble above the control. Sizes are absolute so they
      stay constant regardless of the heading's font size. */
   [data-prose] .heading-anchor[data-copied]::after {
@@ -400,17 +375,6 @@
 .card-link:hover::after,
 .card-link:focus-visible::after {
   transform: translateX(0.25rem);
-}
-
-/* Touch devices: a standalone card-link is a real 44px-tall row (starter
-   PORTS.md card 82). It is already an inline-flex with align-items:center, so
-   the text stays centred in the taller box. Only <a>: the same class is also a
-   plain <span> inside a card that is itself the link. A real height, not a
-   hit-area ::after, because ::after here is the arrow. */
-@media (pointer: coarse) {
-  a.card-link {
-    min-height: 2.75rem;
-  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -901,7 +865,7 @@
 
    This is a soft gate, not security: the real HTML is in the source
    either way. See BaseLayout's comment and the Coming Soon section
-   in docs/claude/deployment.md for the bypass workflow.
+   in CLAUDE.md for the bypass workflow.
    ---------------------------------------------------------------------- */
 .ncs-overlay {
   display: none;

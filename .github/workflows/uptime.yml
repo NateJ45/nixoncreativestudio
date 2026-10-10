@@ -26,16 +26,17 @@ name: Uptime check
 # that the reference implementation never sees:
 #
 #   https://nixoncreativestudio.com/       -> 301 https://www.nixoncreativestudio.com/
-#   https://www.nixoncreativestudio.com/about -> 301 /about/
+#   https://www.nixoncreativestudio.com/about -> 307 /about/
 #
-# The apex-to-www 301 is a Cloudflare redirect rule; the slashless-to-slash 301
-# is src/worker.ts (every page is server-rendered since CMS-DESIGN PR 2, so the
-# assets binding no longer does it). Both are correct and intentional. So the check follows redirects and asserts the
+# The apex-to-www 301 is a Cloudflare redirect rule; the slashless-to-slash 307
+# is Astro's default trailing-slash behaviour ('ignore' resolving to the
+# directory index that `dist/client/about/index.html` actually is). Both are
+# correct and intentional. So the check follows redirects and asserts the
 # FINAL status, and every path below is written with its trailing slash so the
 # normal case is a single hop.
 #
-# astro.config.mjs `redirects` also declares /now -> /about/#now (301), which is
-# why a bare 200-only assertion is the wrong shape for this site in general.
+# `dist/client/_redirects` also declares /now -> /about/#now (301), which is why
+# a bare 200-only assertion is the wrong shape for this site in general.
 
 on:
   schedule:
@@ -64,7 +65,7 @@ jobs:
           #   /work/             a content-collection index
           #   /work/<slug>/      a collection entry rendered through its template
           #   /journal/          the MDX collection index (a different loader)
-          #   /privacy/          a page with no CMS collection behind it (route cache only)
+          #   /privacy/          a plain static page with no collection behind it
           #   /rss.xml           an endpoint, not a page: proves SSR routes serve
           #   /sitemap-index.xml the @astrojs/sitemap integration output
           for path in "/" "/work/" "/work/second-presbyterian-chicago/" "/journal/" "/privacy/" "/rss.xml" "/sitemap-index.xml"; do

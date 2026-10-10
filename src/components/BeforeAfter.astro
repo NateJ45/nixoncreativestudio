@@ -30,23 +30,15 @@
        afterAlt="The redesigned <Client> site"
      />
 
-   EmDash mode: pass the stored image values as `beforeImage` / `afterImage`
-   instead of `before` / `after`. Same markup either way.
-
    Accessibility: the control is a native range input (keyboard operable,
    labelled). No auto-motion, so there is nothing to gate for reduced motion.
    ============================================================================ */
 
 import { Image } from 'astro:assets';
-import { Image as EmDashImage } from 'emdash/ui';
-import type { ImageValue } from 'emdash';
 
 interface Props {
-  before?: ImageMetadata;
-  after?: ImageMetadata;
-  /** EmDash mode: stored image values (use instead of before / after). */
-  beforeImage?: ImageValue;
-  afterImage?: ImageValue;
+  before: ImageMetadata;
+  after: ImageMetadata;
   beforeAlt: string;
   afterAlt: string;
   beforeLabel?: string;
@@ -56,8 +48,6 @@ interface Props {
 const {
   before,
   after,
-  beforeImage,
-  afterImage,
   beforeAlt,
   afterAlt,
   beforeLabel = 'Before',
@@ -73,53 +63,37 @@ const {
   >
     <!-- Base layer: the AFTER (redesigned) image fills the frame. It shows on
          the RIGHT, wherever the clipped BEFORE layer doesn't cover it. -->
-    {afterImage ? (
-      <EmDashImage
-        image={afterImage}
-        alt={afterAlt}
-        sizes="(min-width: 56rem) 70vw, 100vw"
-        class="block h-auto w-full"
-      />
-    ) : (
-      <Image
-        src={after!}
-        alt={afterAlt}
-        widths={[768, 1024, 1440]}
-        sizes="(min-width: 56rem) 70vw, 100vw"
-        class="block h-auto w-full"
-      />
-    )}
+    <Image
+      src={after}
+      alt={afterAlt}
+      widths={[768, 1024, 1440]}
+      sizes="(min-width: 56rem) 70vw, 100vw"
+      class="block h-auto w-full"
+    />
 
     <!-- Top layer: the BEFORE (previous) image, clipped from the left edge to
          --pos so it occupies the LEFT side. -->
     <div class="ba-before pointer-events-none absolute inset-0" aria-hidden="true">
-      {beforeImage ? (
-        <EmDashImage
-          image={beforeImage}
-          alt=""
-          sizes="(min-width: 56rem) 70vw, 100vw"
-          class="block h-auto w-full"
-        />
-      ) : (
-        <Image
-          src={before!}
-          alt=""
-          widths={[768, 1024, 1440]}
-          sizes="(min-width: 56rem) 70vw, 100vw"
-          class="block h-auto w-full"
-        />
-      )}
+      <Image
+        src={before}
+        alt=""
+        widths={[768, 1024, 1440]}
+        sizes="(min-width: 56rem) 70vw, 100vw"
+        class="block h-auto w-full"
+      />
     </div>
 
     <!-- Corner labels, color-coded. Before (left) is a neutral pill; After
          (right) is the brand-accent pill, marking it as the new site. -->
-    <span class="pointer-events-none absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary/85 px-3 py-1 font-mono text-xs font-semibold tracking-[0.08em] text-primary-foreground uppercase shadow-sm backdrop-blur-sm">
-      <span aria-hidden="true">←</span>
-      {beforeLabel}
+    <span
+      class="pointer-events-none absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary/85 px-3 py-1 font-mono text-xs font-semibold tracking-[0.08em] text-primary-foreground uppercase shadow-sm backdrop-blur-sm"
+    >
+      <span aria-hidden="true">←</span>{beforeLabel}
     </span>
-    <span class="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 font-mono text-xs font-semibold tracking-[0.08em] text-accent-foreground uppercase shadow-sm">
-      {afterLabel}
-      <span aria-hidden="true">→</span>
+    <span
+      class="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 font-mono text-xs font-semibold tracking-[0.08em] text-accent-foreground uppercase shadow-sm"
+    >
+      {afterLabel}<span aria-hidden="true">→</span>
     </span>
 
     <!-- Divider line + handle, positioned at --pos. -->
@@ -129,7 +103,9 @@ const {
       aria-hidden="true"
     >
       <span class="absolute inset-y-0 -ml-px w-0.5 bg-white/90"></span>
-      <span class="absolute top-1/2 -mt-[1.375rem] -ml-[1.375rem] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg text-text shadow-md">
+      <span
+        class="absolute top-1/2 -mt-[1.375rem] -ml-[1.375rem] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg text-text shadow-md"
+      >
         <svg
           viewBox="0 0 24 24"
           width="18"
@@ -139,10 +115,8 @@ const {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
+          ><path d="m15 18-6-6 6-6"></path><path d="m9 6 6 6-6 6"></path></svg
         >
-          <path d="m15 18-6-6 6-6"></path>
-          <path d="m9 6 6 6-6 6"></path>
-        </svg>
       </span>
     </div>
 

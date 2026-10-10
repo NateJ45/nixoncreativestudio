@@ -1,9 +1,7 @@
 ---
 // Safe to edit. Friendly 404. Astro picks this up automatically for any
-// route that doesn't match a real page and answers it with a REAL 404 status
-// (src/worker.ts only rewrites the status to 200 for the literal path /404/, so
-// Lighthouse CI can audit the template). The words are the Not-found page entry
-// in the CMS, with the committed fallback in cms/content/page_not_found.json.
+// route that doesn't match a real page; Cloudflare Pages serves it as
+// the static fallback for unknown paths in production.
 /* ============================================================================
    /404 | Page not found
    ============================================================================
@@ -16,27 +14,19 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { buttonVariants } from '../components/ui/button';
-import { getSite } from '../data/site';
-import { getNotFoundPage, indexTitle } from '../lib/indexPages';
-
-const site = await getSite(Astro);
-// A real unknown URL answers 404 and must never reach the route cache (the layout
-// already skips cachePublicPage for it, and src/worker.ts forces no-store on any non-200),
-// so the read only tags the page when it is rendered as a 200, i.e. for /404/ itself.
-const page = await getNotFoundPage({
-  cache: (Astro.response.status ?? 200) < 400 ? Astro.cache : undefined,
-});
-// The first link is the blue button, the rest are plain links.
-const [primaryLink, ...otherLinks] = page.links;
 ---
 
-<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
+<BaseLayout
+  title="Page not found | Nixon Creative Studio"
+  description="That page wandered off. Here's how to get back on track."
+>
   <section
     class="relative isolate flex min-h-[70vh] items-center overflow-hidden py-2xl"
     aria-labelledby="notfound-heading"
   >
     <div class="ncs-container flex flex-col items-center gap-m text-center">
-      {/* Oversized quiet centerpiece. A low-opacity navy numeral as a backdrop.
+      {
+        /* Oversized quiet centerpiece. A low-opacity navy numeral as a backdrop.
           Decorative: the real "404" meaning is announced in the line below, so
           this is aria-hidden.
 
@@ -46,19 +36,24 @@ const [primaryLink, ...otherLinks] = page.links;
           text-contrast bar; as a real text node axe read it as body copy and
           failed the page (Lighthouse accessibility 0.96 on staging,
           2026-09-06). Generated content keeps the exact same rendering and puts
-          it where decoration belongs. */}
+          it where decoration belongs. */
+      }
       <div
         class="notfound-figure pointer-events-none leading-none select-none"
         aria-hidden="true"
         data-reveal="scale"
       >
-        <span class="notfound-glyph block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"></span>
+        <span
+          class="notfound-glyph block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"
+        ></span>
       </div>
 
-      {/* Quiet mono label above the heading. Lowercase and lightly tracked so
-          it reads as a small status line, not a shouted section eyebrow. */}
+      {
+        /* Quiet mono label above the heading. Lowercase and lightly tracked so
+          it reads as a small status line, not a shouted section eyebrow. */
+      }
       <p class="font-mono text-sm text-text-muted" data-reveal style="--reveal-delay: 80ms">
-        {page.label}
+        Page not found
       </p>
 
       <h1
@@ -67,7 +62,7 @@ const [primaryLink, ...otherLinks] = page.links;
         data-reveal
         style="--reveal-delay: 160ms"
       >
-        {page.heading}
+        That page wandered off.
       </h1>
 
       <p
@@ -75,7 +70,8 @@ const [primaryLink, ...otherLinks] = page.links;
         data-reveal
         style="--reveal-delay: 240ms"
       >
-        {page.body}
+        The link you followed might be old, or the address might be a typo. Nothing's broken on this
+        end. Here are a few places to try instead.
       </p>
 
       <div
@@ -84,18 +80,12 @@ const [primaryLink, ...otherLinks] = page.links;
         style="--reveal-delay: 320ms"
       >
         <span class="inline-block">
-          <a
-            href={primaryLink.href}
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-          >
-            {primaryLink.label}
+          <a href="/" class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}>
+            Back to home
           </a>
         </span>
-        {otherLinks.map((link) => (
-          <a class="card-link" href={link.href}>
-            {link.label}
-          </a>
-        ))}
+        <a class="card-link" href="/work/">See selected work</a>
+        <a class="card-link" href="/contact">Get in touch</a>
       </div>
     </div>
   </section>

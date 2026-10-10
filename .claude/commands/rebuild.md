@@ -41,7 +41,7 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
 **Common build failures and where to look:**
 
 - **Placeholders step fails**: usually a malformed image in `src/assets/case-studies/` or a missing cover for a case study whose .mdx `cover` frontmatter points at a file that doesn't exist. Check the error path.
-- **A page 500s or renders empty content**: the site has no Astro content collections (they were deleted in CMS-DESIGN PR 12); content is read from EmDash at request time. Check the `[cms]` and `[journal]` lines in the log and `docs/EMDASH.md`.
+- **Astro build fails on a content collection entry**: a frontmatter field is missing or the wrong type. Check `src/content.config.ts` for the expected schema.
 - **Type errors in strict mode**: `astro build` does not type-check; `npm run check` does. Any `any` or missing type annotation can surface there even if the dev server and the build were happy.
 
 After a successful build, `dist/` holds the production output. Cloudflare Pages picks this up on the next push to `main` (build command: `npm run build`, output directory: `dist`).

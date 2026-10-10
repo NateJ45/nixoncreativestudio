@@ -13,9 +13,6 @@
    safe: the entrance uses the site reveal system, and the hover lift / zoom
    hint are gated to fine pointers + motion-OK.
 
-   EmDash mode: pass the stored image value as `image` instead of `src`
-   (the rows of a case study's `highlights` field). Same markup either way.
-
    Honesty rule: only ever screenshot a feature that is actually live on the
    site. A captioned screenshot of a feature that does not exist is a
    fabrication and a client-facing liability.
@@ -38,14 +35,10 @@
    ============================================================================ */
 
 import { Image } from 'astro:assets';
-import { Image as EmDashImage } from 'emdash/ui';
-import type { ImageValue } from 'emdash';
 
 interface Props {
   /** Real feature screenshot, imported so Astro optimizes it. */
-  src?: ImageMetadata;
-  /** EmDash mode: the stored image value (use instead of `src`). */
-  image?: ImageValue;
+  src: ImageMetadata;
   alt: string;
   title: string;
   body: string;
@@ -55,28 +48,19 @@ interface Props {
   eyebrow?: string;
 }
 
-const { src, image, alt, title, body, side = 'left', eyebrow } = Astro.props;
+const { src, alt, title, body, side = 'left', eyebrow } = Astro.props;
 ---
 
 <div class="feature-highlight grid items-center gap-l md:grid-cols-2 md:gap-xl" data-reveal>
   <figure class:list={['feature-figure', side === 'right' && 'md:order-2']}>
     <button type="button" class="feature-zoom" data-zoom aria-label={`View ${title} full size`}>
-      {image ? (
-        <EmDashImage
-          image={image}
-          alt={alt}
-          sizes="(min-width: 48rem) 46vw, 92vw"
-          class="block w-full"
-        />
-      ) : (
-        <Image
-          src={src!}
-          alt={alt}
-          widths={[480, 800, 1200, 1440]}
-          sizes="(min-width: 48rem) 46vw, 92vw"
-          class="block w-full"
-        />
-      )}
+      <Image
+        src={src}
+        alt={alt}
+        widths={[480, 800, 1200, 1440]}
+        sizes="(min-width: 48rem) 46vw, 92vw"
+        class="block w-full"
+      />
       <span class="feature-zoom-hint" aria-hidden="true">
         <svg
           viewBox="0 0 24 24"
@@ -88,18 +72,19 @@ const { src, image, alt, title, body, side = 'left', eyebrow } = Astro.props;
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <circle cx="11" cy="11" r="7"></circle>
-          <path d="m21 21-4.3-4.3"></path>
-          <path d="M11 8v6M8 11h6"></path>
+          <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path><path
+            d="M11 8v6M8 11h6"></path>
         </svg>
       </span>
     </button>
   </figure>
 
   <div class:list={['feature-copy', side === 'right' && 'md:order-1']}>
-    {eyebrow && (
-      <p class="mb-xs font-mono text-xs tracking-[0.14em] text-link uppercase">{eyebrow}</p>
-    )}
+    {
+      eyebrow && (
+        <p class="mb-xs font-mono text-xs tracking-[0.14em] text-link uppercase">{eyebrow}</p>
+      )
+    }
     <h3 class="text-heading">{title}</h3>
     <p class="mt-s max-w-[44ch] leading-[1.6] text-text">{body}</p>
   </div>

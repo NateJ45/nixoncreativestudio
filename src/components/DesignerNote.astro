@@ -8,7 +8,7 @@
    section with a personal, signed aside: the human voice behind the work, which
    is a real differentiator for a one-person studio.
 
-   The signature is a visual treatment (the owner name from Site settings in the
+   The signature is a visual treatment (the owner name from site.ts in the
    display face), so the frontmatter only carries the note text. Keep the note
    honest and specific to the project; it was drafted from each study's existing
    "Reflections" prose and honesty-checked before wiring in.
@@ -16,15 +16,13 @@
    Rendered by src/pages/work/[slug].astro. To edit, change `designerNote:` in the
    case study's frontmatter.
    ============================================================================ */
-import { getSite } from '../data/site';
+import { site } from '../data/site';
 
 interface Props {
   /** The note body (1-3 sentences). The signature is added below it. */
   note: string;
 }
 const { note } = Astro.props;
-// The signature name is the owner name in Site settings (CMS, with the fallback).
-const site = await getSite(Astro);
 ---
 
 <aside class="ncs-note" aria-label="A note from the designer" data-reveal>

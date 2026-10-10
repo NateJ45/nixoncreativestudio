@@ -1,0 +1,113 @@
+---
+# Case study: Foundation for Reformed Theology
+# Schema lives in src/content.config.ts. Every field below is validated at
+# build time. Rewrite the prose at will; structural fields (title, client,
+# sector, services, year, published) are what feeds listings and search.
+#
+# Cover image: replace src/assets/case-studies/foundation-for-reformed-theology.png
+# with a real photograph when one is available. The current file is a
+# placeholder gradient.
+title: Foundation for Reformed Theology
+client: Foundation for Reformed Theology
+sector: nonprofit
+services:
+  - Strategy
+  - Web Design
+role: Designer, Developer
+tags:
+  - Nonprofit
+  - Theological Resource
+  - WordPress
+  - Editorial Design
+stack:
+  - WordPress
+  - Bricks Builder
+  - ACF
+  - RankMath
+summary: A resource hub and organizational home for a Reformed theological nonprofit whose audience expects scholarly weight alongside readable, well-organized design.
+cover: ../../assets/case-studies/foundation-for-reformed-theology.png
+year: 2026
+featured: false
+published: 2026-06-01
+liveUrl: https://foundationrt.org
+outcome: 'A scholarly resource library the staff can maintain themselves, with the editorial weight the work deserves.'
+# Add a real client quote here when you have one, then uncomment. Never invent it.
+# testimonial:
+#   quote: ""
+#   name: ""
+#   title: ""
+results:
+  - 'Staff keep the whole site current themselves: new resources, seminar details, and staff changes all happen from the WordPress admin, no developer needed.'
+  - 'An organization with no in-house technical staff can run its own site independently, which was the real goal rather than a nice extra.'
+  - 'The scattered resources are now a real library, sorted into clear collections so a minister finds the right material instead of hunting for it.'
+  - 'The seminar program is explained start to finish in one place, so a prospective member knows exactly what they are joining and has a clear path to apply.'
+designerNote: "The hardest part of this one was knowing when to hold back. Every choice had to clear a single test for me: does it actually read as scholarly, or does it just look like it's trying to? The drop caps and fleurons earned their place because they come from a tradition these readers already recognize as their own, so here they read as at home rather than as decoration."
+---
+
+import SiteShowcase from '../../components/SiteShowcase.astro';
+import BeforeAfter from '../../components/BeforeAfter.astro';
+import beforeShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-before.png';
+import afterShot from '../../assets/case-studies/foundation-for-reformed-theology.png';
+import FeatureHighlight from '../../components/FeatureHighlight.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import libraryShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-library.png';
+import seminarsShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-seminars.png';
+
+<SiteShowcase
+  slug="foundation-for-reformed-theology"
+  alt="The Foundation for Reformed Theology homepage, scrolling top to bottom"
+  href="https://foundationrt.org"
+  label="foundationrt.org"
+/>
+
+## The brief
+
+The Foundation for Reformed Theology was established in memory of Dr. John H. Leith (1919-2002), Calvin scholar and Presbyterian minister, to carry forward his work of equipping clergy and serious students of Reformed theology. The organization runs annual ministerial study seminars and maintains a growing library of theological resources for ordained ministers, seminary students, and church elders.
+
+Their existing digital presence was not keeping pace with the depth and credibility of the work. The resource library had no clear path through it. Seminar information was scattered across pages without a coherent structure. Visually, the site did not read with the authority the organization carries in its field.
+
+<BeforeAfter
+  before={beforeShot}
+  after={afterShot}
+  beforeAlt="The previous Foundation for Reformed Theology website"
+  afterAlt="The redesigned Foundation for Reformed Theology website"
+/>
+
+## The approach
+
+The first decision was platform. For a content-heavy, staff-maintained site where editorial quality matters and developer availability is limited long-term, WordPress was the right call. Bricks Builder gave us design precision without locking the team into an interface that fights them during content updates. ACF handled structured data for the resource library so we could sort and filter materials by topic, date, and format.
+
+The editorial design system was built around legibility and weight. The typographic choices borrowed from academic publishing: burgundy drop caps to open major sections, fleurons as section dividers, and duotone treatment for archival photography. The goal was a site that feels like something the Foundation would be comfortable handing to a visiting scholar without apology.
+
+The content architecture separates the work into three areas: the seminar program (what they run, who teaches, how to apply), the resource library (searchable by topic and format), and the organizational story (history, leadership, and Dr. Leith's legacy). Staff can maintain all three from the WordPress admin without developer help after handoff.
+
+## What we built
+
+<FeatureHighlight
+  src={libraryShot}
+  alt="The resource library on the Foundation for Reformed Theology site"
+  title="A library organized to be used"
+  body="Hundreds of resources sorted into clear collections, bibliographies, Calvin studies, Foundation publications, and recorded lectures, each with a real entry count and latest additions, so a minister finds the right material instead of hunting for it."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={seminarsShot}
+  alt="The seminar program page on the Foundation for Reformed Theology site"
+  title="The seminar program, explained end to end"
+  body="What the study seminars are, who they are for, and how to apply, laid out in one place with a path straight to an inquiry, so a prospective member knows exactly what they are joining."
+  side="right"
+/>
+
+The full build, including the pieces above:
+
+- Seminar program pages with faculty listings, schedule details, and a multi-step application workflow
+- Resource library organized by topic, format, and date with ACF-powered metadata for filtering and surface
+- Editorial design system: burgundy drop caps, fleurons, and duotone archival image treatment throughout
+- Organizational history section drawing on Dr. Leith's correspondence, publications, and public record
+- Staff and board directory
+- Donation and giving page connected to the Foundation's existing giving processor
+- Contact and inquiry form
+- RankMath configuration for theological search terms, calibrated to the audience rather than maximum crawl coverage
+
+<Lightbox />

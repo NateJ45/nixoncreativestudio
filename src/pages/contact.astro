@@ -30,15 +30,10 @@
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getSite } from '../data/site';
+import { site } from '../data/site';
 import { Button } from '../components/ui/button';
 import CopyEmail from '../components/CopyEmail';
 import CtaBanner from '../components/CtaBanner.astro';
-import { contactTitle, getContactPage } from '../lib/contactPage';
-
-// Email, phone, location, the booking link and the form subject all come from
-// Site settings in the CMS (with the committed fallback).
-const site = await getSite(Astro);
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
@@ -50,16 +45,47 @@ const orgTypes = [
   { value: 'other', label: 'Something else' },
 ];
 
-// The page words and the three choice lists (Budget range, Project timeline, How
-// did you hear about us) come from the Contact page entry in the CMS (committed
-// fallback: cms/content/page_contact.json). Each choice's LABEL is also the value
-// the form submits, so the inquiry email reads "Budget: Under $4,000" and not a
-// code. Keep the budget brackets in line with the Pricing tiers (the lowest bracket
-// starts at the lowest tier's price so the form never implies work below it); the
-// timeline list helps triage against the per-quarter project cap, and "heard from"
-// is a cheap signal on which channels bring inquiries in.
-const page = await getContactPage(Astro);
-const { budgets, timelines, heardFrom: heardFromOptions, nextSteps } = page;
+// Budget brackets, small enough that the picker isn't overwhelming.
+// These track the published pricing floors (src/data/pricing.ts, shown on
+// /services): Launch $4,000, Signature $7,000, Flagship $12,000. The lowest
+// bracket starts at the $4,000 floor so the form never implies work below it.
+const budgets = [
+  { value: 'under-4k', label: 'Under $4,000' },
+  { value: '4k-7k', label: '$4,000 to $7,000' },
+  { value: '7k-12k', label: '$7,000 to $12,000' },
+  { value: '12k-plus', label: '$12,000 or more' },
+  { value: 'not-sure', label: 'Not sure yet' },
+];
+
+// Project timeline brackets. Lets Nathan triage against the limited number
+// of projects he takes per quarter without asking for exact dates.
+const timelines = [
+  { value: 'asap', label: 'Right away' },
+  { value: '1-3-months', label: 'In the next 1 to 3 months' },
+  { value: '3-6-months', label: '3 to 6 months from now' },
+  { value: '6-plus', label: 'More than 6 months out' },
+  { value: 'flexible', label: 'Flexible, no fixed deadline' },
+];
+
+// Attribution options. Cheap signal on what marketing channels are
+// working. "Referral" first because that's the most common path for
+// churches, schools, and small businesses in the region.
+const heardFromOptions = [
+  { value: 'referral', label: 'A referral from someone I know' },
+  { value: 'search', label: 'Google or another search engine' },
+  { value: 'social', label: 'Instagram, LinkedIn, or other social' },
+  { value: 'past-client', label: "I've worked with Nathan before" },
+  { value: 'event', label: 'In person, at an event or through a church or school' },
+  { value: 'other', label: 'Somewhere else' },
+];
+
+// What-happens-next, derived from the existing "What to expect" copy so nothing
+// is fabricated. A quiet three-row ledger, not a numbered scaffold.
+const nextSteps = [
+  'You send the form.',
+  'I read it myself and reply within one or two business days.',
+  "If we're a fit, a half-hour call to talk it through.",
+];
 
 // Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
 // time, which is required because the form runs in the browser.
@@ -98,21 +124,24 @@ const legendClass =
   'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 ---
 
-<BaseLayout title={contactTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
+<BaseLayout
+  title="Contact | Nixon Creative Studio"
+  description="Get in touch about a web design, brand, or photography project."
+>
   <!-- ====================================================================
        Masthead. The only h1. Full content width, left-aligned.
        ==================================================================== -->
   <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
     <div class="ncs-container">
       <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
-        {page.heading} <span class="text-link">{page.headingAccent}</span>
+        Start a project, or just <span class="text-link">say hello.</span>
       </h1>
       <p
         class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
         data-reveal
         style="--reveal-delay: 120ms;"
       >
-        {page.intro}
+        The form sends straight to my inbox. If you'd rather email or call, those work just as well.
       </p>
     </div>
   </section>
@@ -162,9 +191,7 @@ const legendClass =
                   <!-- name + email side by side on wider screens. -->
                   <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
                     <div class={fieldClass}>
-                      <label class={labelClass} for="name">
-                        Your name
-                      </label>
+                      <label class={labelClass} for="name">Your name</label>
                       <input
                         class={inputClass}
                         type="text"
@@ -176,9 +203,7 @@ const legendClass =
                     </div>
 
                     <div class={fieldClass}>
-                      <label class={labelClass} for="email">
-                        Email
-                      </label>
+                      <label class={labelClass} for="email">Email</label>
                       <input
                         class={inputClass}
                         type="email"
@@ -228,16 +253,10 @@ const legendClass =
                   <legend class={legendClass}>About the project</legend>
 
                   <div class={fieldClass}>
-                    <label class={labelClass} for="org_type">
-                      Organization type
-                    </label>
+                    <label class={labelClass} for="org_type">Organization type</label>
                     <select class={selectClass} id="org_type" name="org_type" required>
-                      <option value="" disabled selected>
-                        Pick the closest
-                      </option>
-                      {orgTypes.map((opt) => (
-                        <option value={opt.value}>{opt.label}</option>
-                      ))}
+                      <option value="" disabled selected>Pick the closest</option>
+                      {orgTypes.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                     </select>
                   </div>
 
@@ -261,17 +280,10 @@ const legendClass =
                   <!-- budget + timeline side by side on wider screens. -->
                   <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
                     <div class={fieldClass}>
-                      <label class={labelClass} for="budget">
-                        Budget range
-                      </label>
+                      <label class={labelClass} for="budget">Budget range</label>
                       <select class={selectClass} id="budget" name="budget" required>
-                        <option value="" disabled selected>
-                          Pick the closest
-                        </option>
-                        {/* The label is the submitted value (see the top of the file). */}
-                        {budgets.map((label) => (
-                          <option value={label}>{label}</option>
-                        ))}
+                        <option value="" disabled selected>Pick the closest</option>
+                        {budgets.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                       </select>
                     </div>
 
@@ -282,20 +294,14 @@ const legendClass =
                         Project timeline <span class={optionalMark}>(optional)</span>
                       </label>
                       <select class={selectClass} id="timeline" name="timeline">
-                        <option value="" selected>
-                          No preference
-                        </option>
-                        {timelines.map((label) => (
-                          <option value={label}>{label}</option>
-                        ))}
+                        <option value="" selected>No preference</option>
+                        {timelines.map((opt) => <option value={opt.value}>{opt.label}</option>)}
                       </select>
                     </div>
                   </div>
 
                   <div class={fieldClass}>
-                    <label class={labelClass} for="message">
-                      Project description
-                    </label>
+                    <label class={labelClass} for="message">Project description</label>
                     <textarea
                       class={`${inputClass} min-h-32 resize-y`}
                       id="message"
@@ -320,16 +326,17 @@ const legendClass =
                      channels are bringing inquiries in. -->
                   <div class={fieldClass}>
                     <label class={labelClass} for="heard_from">
-                      How did you hear about Nixon Creative Studio?{' '}
-                      <span class={optionalMark}>(optional)</span>
+                      How did you hear about Nixon Creative Studio? <span class={optionalMark}
+                        >(optional)</span
+                      >
                     </label>
                     <select class={selectClass} id="heard_from" name="heard_from">
-                      <option value="" selected>
-                        Pick one if you'd like
-                      </option>
-                      {heardFromOptions.map((label) => (
-                        <option value={label}>{label}</option>
-                      ))}
+                      <option value="" selected>Pick one if you'd like</option>
+                      {
+                        heardFromOptions.map((opt) => (
+                          <option value={opt.value}>{opt.label}</option>
+                        ))
+                      }
                     </select>
                   </div>
                 </fieldset>
@@ -370,19 +377,21 @@ const legendClass =
                   </Button>
                 </span>
 
-                {!formActive && (
-                  <p class="text-[0.85rem] text-text-muted italic">
-                    The Web3Forms access key is missing. Set{' '}
-                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                      PUBLIC_WEB3FORMS_KEY
-                    </code>{' '}
-                    in{' '}
-                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                      .env
-                    </code>{' '}
-                    locally and in Cloudflare Pages settings before launch.
-                  </p>
-                )}
+                {
+                  !formActive && (
+                    <p class="text-[0.85rem] text-text-muted italic">
+                      The Web3Forms access key is missing. Set{' '}
+                      <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                        PUBLIC_WEB3FORMS_KEY
+                      </code>{' '}
+                      in{' '}
+                      <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                        .env
+                      </code>{' '}
+                      locally and in Cloudflare Pages settings before launch.
+                    </p>
+                  )
+                }
               </form>
 
               <!-- Thank-you panel. Starts hidden; the submit handler removes the
@@ -403,10 +412,8 @@ const legendClass =
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    class="h-6 w-6"
+                    class="h-6 w-6"><path d="M20 6 9 17l-5-5"></path></svg
                   >
-                    <path d="M20 6 9 17l-5-5"></path>
-                  </svg>
                 </span>
                 <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
                 <p class="max-w-[56ch] leading-[1.6] text-text">
@@ -425,9 +432,9 @@ const legendClass =
               >
                 <p>
                   Something went wrong on our end. Please try again, or email
-                  <a class="text-link underline underline-offset-2" href={site.emailHref}>
-                    {site.email}
-                  </a>
+                  <a class="text-link underline underline-offset-2" href={site.emailHref}
+                    >{site.email}</a
+                  >
                   directly.
                 </p>
               </div>
@@ -447,7 +454,7 @@ const legendClass =
                   </li>
                   <li>
                     <a
-                      class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+                      class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
                       href={site.phoneHref}
                     >
                       {site.phone}
@@ -461,22 +468,26 @@ const legendClass =
                 <!-- A quiet three-row ledger (the About "currently" tick motif),
                      not a numbered 01/02/03 scaffold. Ordered list, list-none. -->
                 <ol class="flex list-none flex-col border-b border-border p-0">
-                  {nextSteps.map((step) => (
-                    <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
-                      <span
-                        class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
-                        aria-hidden="true"
-                      />
-                      <span>{step}</span>
-                    </li>
-                  ))}
+                  {
+                    nextSteps.map((step) => (
+                      <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
+                        <span
+                          class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
+                          aria-hidden="true"
+                        />
+                        <span>{step}</span>
+                      </li>
+                    ))
+                  }
                 </ol>
               </div>
 
               <div class="flex flex-col gap-s">
                 <h2 class="text-h4 text-heading">Where I am</h2>
                 <p class="leading-[1.6] text-text">
-                  {site.address}. {page.whereText}
+                  {site.address}. In-person work and photography across the greater Cincinnati
+                  region; web design and strategy with clients anywhere, fully remote when that is
+                  easier.
                 </p>
                 <!-- Service-area map: a keyless Google Maps embed centered on
                      the Cincinnati region (the ?output=embed form needs no API
@@ -493,32 +504,33 @@ const legendClass =
                     title="Map of the Greater Cincinnati service area"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
-                    class="block h-48 w-full"
-                  ></iframe>
+                    class="block h-48 w-full"></iframe>
                 </div>
               </div>
 
-              {site.bookingUrl && (
-                /* Book-a-call CTA. Renders only when site.bookingUrl is set
+              {
+                site.bookingUrl && (
+                  /* Book-a-call CTA. Renders only when site.bookingUrl is set
                      (e.g. a Cal.com link). Reads as a lighter-weight option
                      next to "use the form" for warm leads who'd rather skip
                      straight to scheduling. */
-                <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
-                  <h2 class="text-h4 text-heading">Rather book a call?</h2>
-                  <p class="leading-[1.6] text-text">
-                    Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
-                    working conversation.
-                  </p>
-                  <a
-                    class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
-                    href={site.bookingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open my calendar →
-                  </a>
-                </div>
-              )}
+                  <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
+                    <h2 class="text-h4 text-heading">Rather book a call?</h2>
+                    <p class="leading-[1.6] text-text">
+                      Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
+                      working conversation.
+                    </p>
+                    <a
+                      class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2"
+                      href={site.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open my calendar →
+                    </a>
+                  </div>
+                )
+              }
             </aside>
           </div>
         </div>
@@ -527,9 +539,9 @@ const legendClass =
   </section>
 
   <CtaBanner
-    title={page.ctaTitle}
-    sub={page.ctaSub}
-    ctaLabel={page.ctaLabel}
+    title="Rather skip the form?"
+    sub="Email or call me directly. A sentence about your project is enough to get started."
+    ctaLabel="Email me"
     ctaHref={site.emailHref}
   />
 
@@ -635,16 +647,6 @@ const legendClass =
               const el = form!.elements.namedItem(name) as
                 HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
               if (el && typeof data[name] === 'string' && data[name].length > 0) {
-                // A select's options are CMS-editable, and before CMS-DESIGN PR 9 they
-                // held codes ("under-4k"). Restore a saved choice only if an option
-                // with that exact value still exists, so an old draft or a renamed
-                // choice leaves the select on its placeholder instead of blank.
-                if (
-                  el instanceof HTMLSelectElement &&
-                  !Array.from(el.options).some((o) => o.value === data[name])
-                ) {
-                  return;
-                }
                 el.value = data[name];
               }
             });

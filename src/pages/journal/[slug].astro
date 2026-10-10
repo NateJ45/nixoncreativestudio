@@ -1,63 +1,50 @@
 ---
-// Foundation, edit with care. Renders every journal entry from the CMS
-// `posts` collection; layout changes here apply to every entry.
+// Foundation, edit with care. Renders every journal entry from the
+// content collection; layout changes here apply to every entry.
 /* ============================================================================
    /journal/[slug] | Journal Entry Detail
    ============================================================================
-   One server-rendered page per PUBLISHED journal entry (the CMS
-   `posts` collection, Journal in the admin; looked up per request through
-   src/lib/journal.ts). An unknown slug, a draft and an entry that cannot be read
-   all get the site 404, never cached, so a draft is never visible here.
-   Lighter-weight than the case study detail layout: single column, no service
-   badges, no sidebar TOC. The reading progress bar and reading time stamp from
-   the case study toolkit still apply because long journal posts deserve the
-   same QoL.
-
-   The body is Portable Text, turned into HTML by renderJournalBody() in
-   src/lib/journalBody.ts (not by emdash/ui's PortableText, whose stylesheet
-   would load on the homepage too; see that file). h2 and h3 get ids from their
-   text so the heading anchors work as on case studies, and code blocks are
-   plain monospace boxes (the old MDX journal used expressive-code, which
-   Portable Text has no step for). Pictures in the body are not drawn yet.
+   One static page per journal entry, generated at build time. Lighter-
+   weight than the case study detail layout: single column, no service
+   badges, no sidebar TOC. The reading progress bar and reading time
+   stamp from the case study toolkit still apply because long journal
+   posts deserve the same QoL.
 
    The body is treated as an editorial reading surface: a drop-cap on the
    first paragraph, scroll-revealed h2 headings, styled blockquotes and
-   figures, and an end-of-article tag list. The cover wrapper carries a shared
+   figures, and an end-of-article tag list. The cover carries a shared
    transition:name so it morphs from the index card during a View
    Transition. All motion is reduced-motion safe via globals.css.
-
-   OG image: the generated card at /og/journal/<slug>.png (BaseLayout's default
-   for the path). A card exists for every entry published before the last deploy
-   (scripts/generate-og.mjs reads /rss.xml); one published after it shows no card
-   until the next deploy, the same as a new case study.
    ============================================================================ */
 
+import { getCollection, render } from 'astro:content';
+import { Image, getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import ReadingProgress from '../../components/ReadingProgress';
-import EmDashPhoto from '../../components/emdash/EmDashPhoto.astro';
-import { SITE_URL, getSite } from '../../data/site';
-import { formatJournalDate, getJournalEntry } from '../../lib/journal';
-import { renderJournalBody } from '../../lib/journalBody';
-import { mediaUrl } from '../../lib/photos';
+import { readingTime } from '../../lib/readingTime';
+import { site } from '../../data/site';
 
-const site = await getSite(Astro);
-const entry = await getJournalEntry(Astro.params.slug ?? '', { cache: Astro.cache });
-if (!entry) {
-  // Real 404 status, rendered with the site's 404 page, never cached.
-  Astro.cache.set(false);
-  return new Response(null, { status: 404 });
+export async function getStaticPaths() {
+  const all = await getCollection('journal');
+  return all.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
 }
-const { title, summary, publishedAt, updated, cover, tags, minutes } = entry;
 
-const publishedLabel = formatJournalDate(publishedAt, true);
-const updatedLabel = updated ? formatJournalDate(updated, true) : null;
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, summary, published, updated, cover, tags } = entry.data;
 
-// The body as HTML: paragraphs, h2/h3 with ids, quotes, lists, code blocks (src/lib/journalBody.ts).
-const bodyHtml = renderJournalBody(entry.body);
+const minutes = readingTime(entry.body ?? '');
+const fmt = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const publishedLabel = fmt.format(published);
+const updatedLabel = updated ? fmt.format(updated) : null;
 
-// The cover's stored original, on the canonical origin, for the Article's image.
-const coverUrl = cover ? mediaUrl(cover, SITE_URL) : undefined;
+// Use cover as OG image when present; fall back to site default otherwise.
+const ogCover = cover ? await getImage({ src: cover, width: 1200, format: 'jpg' }) : null;
+const ogImage = ogCover ? ogCover.src : undefined;
 
 const schemas = [
   {
@@ -65,19 +52,20 @@ const schemas = [
     '@type': 'Article',
     headline: title,
     description: summary,
-    ...(coverUrl ? { image: coverUrl } : {}),
-    datePublished: publishedAt.toISOString(),
+    ...(ogCover ? { image: new URL(ogCover.src, site.url).toString() } : {}),
+    datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
-    author: { '@id': `${SITE_URL}#organization` },
-    publisher: { '@id': `${SITE_URL}#organization` },
-    ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
+    author: { '@id': `${site.url}#organization` },
+    publisher: { '@id': `${site.url}#organization` },
+    ...(tags ? { keywords: tags.join(', ') } : {}),
   },
 ];
 ---
 
 <BaseLayout
-  title={`${title} | ${site.studioName}`}
+  title={`${title} | Nixon Creative Studio`}
   description={summary}
+  ogImage={ogImage}
   ogType="article"
   schemas={schemas}
 >
@@ -86,67 +74,65 @@ const schemas = [
   <article>
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
       <div class="ncs-container max-w-[64rem]" data-reveal>
-        {/* The animated underline sits on an inner span, not the link: on a touch
-            device the link is a 44px-tall row, and an underline on the link's own
-            box would drop to the bottom of that row, away from the words. */}
         <a
-          class="mb-l inline-flex items-center font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline pointer-coarse:min-h-11"
+          class="link-underline mb-l inline-flex items-center gap-1 font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline"
           href="/journal/"
         >
-          <span class="link-underline inline-flex items-center gap-1">
-            <span aria-hidden="true">&larr;</span>
-            <span>Journal</span>
-          </span>
+          <span aria-hidden="true">&larr;</span>
+          <span>Journal</span>
         </a>
 
-        <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+        <p
+          class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase"
+        >
           <span>{publishedLabel}</span>
           <span aria-hidden="true">·</span>
           <span>{minutes} min read</span>
-          {updatedLabel && updatedLabel !== publishedLabel && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>Updated {updatedLabel}</span>
-            </>
-          )}
+          {
+            updatedLabel && updatedLabel !== publishedLabel && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>Updated {updatedLabel}</span>
+              </>
+            )
+          }
         </p>
 
-        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">
-          {title}
-        </h1>
+        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">{title}</h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
 
-        {tags.length > 0 && (
-          <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
-            {tags.map((tag) => (
-              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
-                {tag}
-              </li>
-            ))}
-          </ul>
-        )}
+        {
+          tags && tags.length > 0 && (
+            <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
+              {tags.map((tag) => (
+                <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )
+        }
 
-        {cover && (
-          <div
-            class="mt-l overflow-hidden rounded-2xl bg-bg-soft"
-            data-reveal="scale"
-            transition:name={`journal-cover-${entry.id}`}
-          >
-            <EmDashPhoto
-              image={cover}
-              alt=""
-              widths={[600, 900, 1200]}
-              sizes="(min-width: 56rem) 64rem, 100vw"
-              class="block h-auto w-full"
-            />
-          </div>
-        )}
+        {
+          cover && (
+            <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal="scale">
+              <Image
+                src={cover}
+                alt=""
+                widths={[600, 900, 1200]}
+                sizes="(min-width: 56rem) 64rem, 100vw"
+                class="block h-auto w-full"
+                transition:name={`journal-cover-${entry.id}`}
+              />
+            </div>
+          )
+        }
       </div>
     </header>
 
     <div class="ncs-container">
       <!-- Editorial reading surface. Prose styling lives in this scoped
-           wrapper so the entry body renders as a designed article:
+           wrapper so the MDX body renders as a designed article:
              - a drop-cap on the very first paragraph
              - generous line-length and rhythm
              - styled blockquotes (the pull-quote pattern) and figures
@@ -155,25 +141,30 @@ const schemas = [
       <div
         data-prose
         class="journal-prose mx-auto max-w-[72ch] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
-        set:html={bodyHtml}
-      />
+      >
+        <Content />
+      </div>
 
-      {/* End-of-article tag list. Mirrors the chips in the header but reads
-          as a footer to the piece, a natural stopping point before the CTA. */}
-      {tags.length > 0 && (
-        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
-          <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
-            Filed under
-          </p>
-          <ul class="flex flex-wrap gap-2" aria-label="Topics">
-            {tags.map((tag) => (
-              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] tracking-[0.06em] text-text uppercase">
-                {tag}
-              </li>
-            ))}
-          </ul>
-        </footer>
-      )}
+      {
+        /* End-of-article tag list. Mirrors the chips in the header but reads
+          as a footer to the piece, a natural stopping point before the CTA. */
+      }
+      {
+        tags && tags.length > 0 && (
+          <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+            <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
+              Filed under
+            </p>
+            <ul class="flex flex-wrap gap-2" aria-label="Topics">
+              {tags.map((tag) => (
+                <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] tracking-[0.06em] text-text uppercase">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </footer>
+        )
+      }
     </div>
   </article>
 
@@ -184,7 +175,7 @@ const schemas = [
   /* ==========================================================================
      Journal prose styling
      ==========================================================================
-     Scoped to .journal-prose so it only dresses the entry body, never the
+     Scoped to .journal-prose so it only dresses the MDX body, never the
      chrome around it. Astro's <style> is component-scoped, so the child
      selectors need :global() to reach the HTML that <Content /> emits.
      ========================================================================== */
@@ -261,7 +252,7 @@ const schemas = [
      centered, larger display-leaning type, set apart from the body rhythm
      by a big decorative opening quote-mark rather than a side rule (the
      left-border treatment is the most common AI-UI tell). Markdown `> ...`
-     and a Portable Text quote both land here. */
+     and MDX <blockquote> both land here. */
   .journal-prose :global(blockquote) {
     position: relative;
     margin: var(--spacing-l, 2rem) auto;
@@ -330,7 +321,7 @@ const schemas = [
     border-top: 1px solid var(--border);
   }
 
-  /* Inline code + code blocks (blocks draw through JournalCode). Light touch so a stray code sample reads
+  /* Inline code + code blocks. Light touch so a stray code sample reads
      cleanly without pulling a full syntax theme into the journal. */
   .journal-prose :global(code) {
     font-family: var(--font-mono);
@@ -342,10 +333,28 @@ const schemas = [
     border-radius: 0.75rem;
     padding: 1rem 1.25rem;
   }
+
+  /* astro-expressive-code blocks. EC renders its own .expressive-code wrapper
+     (containing a .frame and the highlighted <pre>) and brings its own theme,
+     bound to the site's .dark class, so colors are left to EC. What it does NOT
+     do is sit inside this reading column: an EC block ships full-bleed and with
+     no vertical rhythm of its own here. These rules contain it to the same
+     max-width as the prose, give it block margin matching the other blocks, and
+     round its frame to match the cover / pre radius. Works in both themes since
+     it only touches layout, never color. The inner .frame inherits the radius
+     and clips its corners so the rounded edge reads cleanly. */
+  .journal-prose :global(.expressive-code) {
+    margin-top: var(--spacing-m, 1.5rem);
+    margin-bottom: var(--spacing-m, 1.5rem);
+  }
+  .journal-prose :global(.expressive-code .frame) {
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
 </style>
 
 <script>
-  // Scroll-reveal for the body's h2 headings. The Portable Text body renders raw
+  // Scroll-reveal for the body's h2 headings. The MDX body renders raw
   // HTML, so the headings can't carry data-reveal in source. This tags each
   // h2 in the prose wrapper after the DOM is ready, letting the shared
   // reveal observer in BaseLayout.astro fade them in as they scroll into

@@ -1,21 +1,22 @@
 {
-  "//": "Lighthouse CI config TEMPLATE. Do not run it directly: the workflow (.github/workflows/lighthouse.yml) replaces every ${LHCI_BASE_URL} token with the Worker preview URL and writes lighthouserc.generated.json, which is what lhci reads (lhci does not expand environment variables in this file, so the token is substituted by the workflow). Every page is server-rendered on the Worker (CMS-DESIGN PR 2), so none of them exists in dist/client (what staticDistDir used to serve). The audit therefore targets the deployed preview URL. The url list is EXPLICIT on purpose, as before: it covers every distinct template once (one case study stands in for the nine, since they share a layout; /coming-soon is its own standalone template; /404/ is the not-found page, which src/worker.ts answers with status 200 when it is requested by name so Lighthouse accepts it, whereas a real unknown URL answers 404 and Lighthouse refuses to audit a 4xx page) and skips the Google Search Console verification stub (googlebc11aa9bca0fae39.html), which dragged the accessibility gate below 100 when pages were auto-discovered. Accessibility is a hard gate (the site holds 100 and that bar must not regress), as are LCP under 4.5s and CLS under 0.1 (family standard, 2026-09-06); performance / best-practices / SEO scores and total byte weight are warnings so normal CI variance doesn't block a PR while still surfacing drops. The route cache is on (Workers Cache works on workers.dev previews), so the FIRST run against each URL of a fresh preview is a cache MISS (a render with a cold isolate and D1 reads) and the next two are HITs; the median of three therefore measures the cached page, which is what visitors get. If a median is slow, check the Cf-Cache-Status header before blaming the template. Run locally with: LHCI_BASE_URL=<deployed url> node scripts/lhci-config.mjs && npx lhci autorun --config=lighthouserc.generated.json (see CLAUDE.md Gotcha 9: lhci does not complete on Nathan's Windows machine, trust the CI run)",
+  "//": "Lighthouse CI config. Runs against the built static output so dev-server SSR quirks never affect scores. The url list is EXPLICIT on purpose: with staticDistDir alone, lhci auto-discovers pages but caps at maxAutodiscoverUrls (default 5), so it was testing a near-random 5 of 22 pages, including the /404 page and the Google Search Console verification stub (googlebc11aa9bca0fae39.html), which dragged the accessibility gate below 100. Listing the urls disables auto-discovery (lhci still serves staticDistDir and swaps in its own port), so the run covers every distinct template and skips the non-page stub. One case study stands in for all ten since they share a layout; /coming-soon is its own standalone template. Accessibility is a hard gate (the site holds 100 and that bar must not regress), as are LCP under 4.5s and CLS under 0.1 (family standard, 2026-09-06); performance / best-practices / SEO scores and total byte weight are warnings so normal CI variance doesn't block a PR while still surfacing drops. Run locally with: npm run build && npx lhci autorun (see CLAUDE.md Gotcha 9: it does not complete on Nathan's Windows machine, trust the CI run)",
   "ci": {
     "collect": {
+      "staticDistDir": "./dist/client",
       "url": [
-        "${LHCI_BASE_URL}/",
-        "${LHCI_BASE_URL}/about/",
-        "${LHCI_BASE_URL}/services/",
-        "${LHCI_BASE_URL}/work/",
-        "${LHCI_BASE_URL}/work/second-presbyterian-chicago/",
-        "${LHCI_BASE_URL}/journal/",
-        "${LHCI_BASE_URL}/photography/",
-        "${LHCI_BASE_URL}/contact/",
-        "${LHCI_BASE_URL}/colophon/",
-        "${LHCI_BASE_URL}/privacy/",
-        "${LHCI_BASE_URL}/accessibility/",
-        "${LHCI_BASE_URL}/coming-soon/",
-        "${LHCI_BASE_URL}/404/"
+        "http://localhost/index.html",
+        "http://localhost/about/index.html",
+        "http://localhost/services/index.html",
+        "http://localhost/work/index.html",
+        "http://localhost/work/second-presbyterian-chicago/index.html",
+        "http://localhost/journal/index.html",
+        "http://localhost/photography/index.html",
+        "http://localhost/contact/index.html",
+        "http://localhost/colophon/index.html",
+        "http://localhost/privacy/index.html",
+        "http://localhost/accessibility/index.html",
+        "http://localhost/coming-soon/index.html",
+        "http://localhost/404.html"
       ],
       "numberOfRuns": 3,
       "settings": {

@@ -30,9 +30,9 @@ import CloudflareBeacon from './analytics/CloudflareBeacon.astro';
 import GoogleAnalytics from './analytics/GoogleAnalytics.astro';
 
 // PUBLIC_ prefix is required because the script tag runs in the browser.
-// The value is inlined at build time by Vite (PUBLIC_ variables are, even on a
-// server-rendered site), so the env var must be set on the BUILD environment in
-// Cloudflare, not the runtime environment.
+// The value is inlined at build time (this is a prerendered layout), so
+// the env var must be set on the BUILD environment in Cloudflare, not
+// the runtime environment.
 const token = import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN ?? '';
 const hasToken = token.length > 0;
 

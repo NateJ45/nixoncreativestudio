@@ -86,40 +86,39 @@ const baseDelay = 120;
 <div class="terminal" aria-hidden="true" data-reveal="scale">
   <div class="terminal-bar">
     <span class="terminal-dots">
-      <span></span>
-      <span></span>
-      <span></span>
+      <span></span><span></span><span></span>
     </span>
     <span class="terminal-title">{title}</span>
   </div>
 
   <div class="terminal-body">
-    {lines.map((line, i) => (
-      <p
-        class:list={['terminal-line', `is-${line.type}`]}
-        data-reveal
-        style={`--reveal-delay: ${baseDelay + i * step}ms;`}
-      >
-        {line.type === 'cmd' && <span class="terminal-prompt">$ </span>}
-        {line.type === 'ok' && <span class="terminal-check">✓ </span>}
-        {line.type === 'list' ? (
-          <span class="terminal-list">
-            {line.items?.map((item) => (
-              <span class="terminal-plat">{item}</span>
-            ))}
-          </span>
-        ) : (
-          <span>{line.text}</span>
-        )}
-      </p>
-    ))}
+    {
+      lines.map((line, i) => (
+        <p
+          class:list={['terminal-line', `is-${line.type}`]}
+          data-reveal
+          style={`--reveal-delay: ${baseDelay + i * step}ms;`}
+        >
+          {line.type === 'cmd' && <span class="terminal-prompt">$ </span>}
+          {line.type === 'ok' && <span class="terminal-check">✓ </span>}
+          {line.type === 'list' ? (
+            <span class="terminal-list">
+              {line.items?.map((item) => (
+                <span class="terminal-plat">{item}</span>
+              ))}
+            </span>
+          ) : (
+            <span>{line.text}</span>
+          )}
+        </p>
+      ))
+    }
     <p
       class="terminal-line is-cmd"
       data-reveal
       style={`--reveal-delay: ${baseDelay + lines.length * step}ms;`}
     >
-      <span class="terminal-prompt">$ </span>
-      <span class="terminal-cursor"></span>
+      <span class="terminal-prompt">$ </span><span class="terminal-cursor"></span>
     </p>
   </div>
 </div>

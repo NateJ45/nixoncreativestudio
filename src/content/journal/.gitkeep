@@ -1,0 +1,25 @@
+# Journal entries
+
+This folder holds journal posts as .mdx files. The schema lives in
+src/content.config.ts under the `journal` collection.
+
+Each entry needs frontmatter (title, summary, published) plus an MDX body.
+Optional fields: updated, cover (image path), tags, draft.
+
+Example:
+
+    ---
+    title: Why I keep ripping out page builders
+    summary: A short note on the maintenance cost of WYSIWYG stacks for small orgs.
+    published: 2026-04-12
+    tags: [process, opinions]
+    ---
+
+    Prose goes here in MDX...
+
+Drop a file, rebuild, and it appears at /journal/{filename}/ plus the
+/journal index. Posts with `draft: true` are excluded from production
+builds.
+
+This .gitkeep file is here so the empty folder commits cleanly; remove
+once there are real entries.

@@ -4,14 +4,14 @@
    ============================================================================
    Safe to edit. Renders nothing when site.newsletterUrl is empty, so the
    block stays out of the way until Nathan picks an email provider and
-   sets the URL in Site settings (EmDash admin).
+   sets the URL in src/data/site.ts.
 
    Setup:
      1. Pick a provider. Buttondown ($9/mo, no third-party tracking,
         ActivityPub support) is the recommended pick for a small studio
         list. Other options: ConvertKit, Mailchimp, EmailOctopus.
      2. Create a list/newsletter, get the embed/publish URL.
-     3. Paste that URL into "Newsletter sign-up link" in Site settings.
+     3. Set site.newsletterUrl in src/data/site.ts to that URL.
         - Buttondown publish URL works as the form action directly:
           https://buttondown.email/api/emails/embed-subscribe/<username>
         - ConvertKit / Mailchimp use different actions; check provider docs.
@@ -25,11 +25,7 @@
    pattern.
    ============================================================================ */
 
-import { getSite } from '../data/site';
-
-// The sign-up link is the "Newsletter sign-up link" field in Site settings; empty
-// hides the whole block.
-const site = await getSite(Astro);
+import { site } from '../data/site';
 
 interface Props {
   /** Heading override. Defaults to a short studio-voice line. */
@@ -44,41 +40,43 @@ const {
 } = Astro.props;
 ---
 
-{site.newsletterUrl && (
-  <section class="bg-bg-soft py-xl" aria-labelledby="newsletter-heading">
-    <div class="ncs-container">
-      <div class="mx-auto flex max-w-[42rem] flex-col gap-m text-center">
-        <h2 id="newsletter-heading" class="text-h3 text-heading">
-          {heading}
-        </h2>
-        <p class="text-text">{sub}</p>
+{
+  site.newsletterUrl && (
+    <section class="bg-bg-soft py-xl" aria-labelledby="newsletter-heading">
+      <div class="ncs-container">
+        <div class="mx-auto flex max-w-[42rem] flex-col gap-m text-center">
+          <h2 id="newsletter-heading" class="text-h3 text-heading">
+            {heading}
+          </h2>
+          <p class="text-text">{sub}</p>
 
-        <form
-          class="mx-auto flex w-full max-w-[28rem] flex-col gap-s sm:flex-row"
-          action={site.newsletterUrl}
-          method="post"
-          target="_blank"
-        >
-          <label class="sr-only" for="newsletter-email">
-            Email address
-          </label>
-          <input
-            class="flex-1 rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text transition-[border-color,box-shadow] duration-150 focus:border-accent focus:ring-3 focus:ring-accent/25 focus:outline-none"
-            type="email"
-            id="newsletter-email"
-            name="email"
-            placeholder="you@example.com"
-            required
-            autocomplete="email"
-          />
-          <button
-            type="submit"
-            class="rounded-md bg-accent px-4 py-2.5 font-body text-base font-semibold text-accent-foreground transition-colors duration-150 hover:bg-link focus-visible:bg-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          <form
+            class="mx-auto flex w-full max-w-[28rem] flex-col gap-s sm:flex-row"
+            action={site.newsletterUrl}
+            method="post"
+            target="_blank"
           >
-            Subscribe
-          </button>
-        </form>
+            <label class="sr-only" for="newsletter-email">
+              Email address
+            </label>
+            <input
+              class="flex-1 rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text transition-[border-color,box-shadow] duration-150 focus:border-accent focus:ring-3 focus:ring-accent/25 focus:outline-none"
+              type="email"
+              id="newsletter-email"
+              name="email"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            />
+            <button
+              type="submit"
+              class="rounded-md bg-accent px-4 py-2.5 font-body text-base font-semibold text-accent-foreground transition-colors duration-150 hover:bg-link focus-visible:bg-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  </section>
-)}
+    </section>
+  )
+}

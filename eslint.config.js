@@ -16,7 +16,6 @@ export default [
       '.astro/**',
       '.wrangler/**',
       'node_modules/**',
-      '.cms-load-log/**',
       // Generated at build time by scripts/generate-placeholders.mjs.
       'src/lib/coverPlaceholders.json',
     ],
@@ -28,12 +27,12 @@ export default [
   // severity for those virtual paths.
   ...tseslint.configs.recommended.map((cfg) => ({
     ...cfg,
-    files: ['src/**/*.{ts,tsx}', 'plugins/**/*.{ts,tsx}', 'scripts/**/*.mjs'],
+    files: ['src/**/*.{ts,tsx}', 'scripts/**/*.mjs'],
   })),
 
   // ── Rule overrides for TS/mjs (non-Astro virtual paths) ─────────────────
   {
-    files: ['src/**/*.{ts,tsx}', 'plugins/**/*.{ts,tsx}', 'scripts/**/*.mjs'],
+    files: ['src/**/*.{ts,tsx}', 'scripts/**/*.mjs'],
     // Exclude Astro virtual paths — handled in the Astro override below.
     ignores: ['**/*.astro/**'],
     // Re-register the plugin so rule references resolve.

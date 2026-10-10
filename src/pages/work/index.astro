@@ -1,46 +1,46 @@
 ---
-// Safe to edit. Page content is read from the EmDash CMS (collection
-// `case_studies`); add or edit entries in the EmDash admin to grow the list.
-// Server-rendered like every page. The route cache is tagged with the case studies
-// this page read (src/lib/routeCache.ts), so a publish purges it.
+// Safe to edit. Page content is driven from the case-studies content
+// collection; add new MDX files in src/content/case-studies/ to grow the list.
 /* ============================================================================
    /work | Selected Work Index
    ============================================================================
-   Landing for the full case study list. Loads every entry from the EmDash
-   case_studies collection, sorts newest first by project date, and
+   Landing for the full case study list. Loads every entry from the
+   case-studies collection, sorts newest first by published date, and
    renders each as a card linking to /work/{slug}.
 
    This is the only place the full catalogue lives. The homepage Selected
    Work section is a curated subset (featured===true).
    ============================================================================ */
 
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
-import EmDashCover from '../../components/emdash/EmDashCover.astro';
+import CaseStudyCover from '../../components/CaseStudyCover.astro';
 import WorkFilter from '../../components/WorkFilter';
-import { getSite } from '../../data/site';
-import { getCaseStudies } from '../../lib/caseStudies';
-import { getWorkPage, indexTitle } from '../../lib/indexPages';
+import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 
-// The page's words (label, headline, intro, filter message, live-sites heading and
-// text) are the Work page entry in the CMS, with the committed fallback in
-// cms/content/page_work.json. The cards themselves are the case studies.
-const site = await getSite(Astro);
-const page = await getWorkPage(Astro);
-
-// Already sorted newest first by project date.
-const entries = await getCaseStudies(Astro.cache);
+const entries = (await getCollection('case-studies')).sort(
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+);
 
 // Entries that ship a real, public live URL, for the "open any of them" proof
 // wall below the cards. The strongest trust signal a web vendor has is work a
 // visitor can click and inspect in five seconds, so these link straight to the
 // live site (not the case study). Domains are shown as plain text.
-const entriesLive = entries.filter((e) => e.liveUrl);
+const entriesLive = entries.filter((e) => e.data.liveUrl);
 const prettyDomain = (url: string) =>
   url
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/\/+$/, '');
+
+// Pre-baked blur placeholders for every cover. The data was generated
+// by scripts/generate-placeholders.mjs at build time; the lookup here
+// is a synchronous map read.
+const placeholders = new Map<string, string | undefined>();
+for (const entry of entries) {
+  placeholders.set(entry.id, getCoverPlaceholder(entry.id));
+}
 
 // Distinct sectors for the filter chips, in a fixed display order. Year is
 // intentionally not surfaced anywhere on the portfolio (no year filter, no
@@ -51,13 +51,16 @@ const sectorLabels: Record<string, string> = {
   nonprofit: 'Nonprofit',
   'small-business': 'Small Business',
 };
-const presentSectors = Array.from(new Set(entries.map((e) => e.sector)));
+const presentSectors = Array.from(new Set(entries.map((e) => e.data.sector)));
 const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
   .filter((s) => presentSectors.includes(s))
   .map((value) => ({ value, label: sectorLabels[value] }));
 ---
 
-<BaseLayout title={indexTitle(page.seoTitle, site.studioName)} description={page.seoDescription}>
+<BaseLayout
+  title="Selected work | Nixon Creative Studio"
+  description="A list of recent web design, brand, and photography projects from Nixon Creative Studio."
+>
   <section class="py-2xl" aria-labelledby="work-index-heading">
     <div class="ncs-container">
       <!-- Intro block. Rendered as an h1 since this is the work landing.
@@ -65,32 +68,34 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
            plain text kicker plus an honest count of projects, both derived
            from the real entries array so they never drift from the list. -->
       <header class="mb-xl flex flex-col gap-xs">
-        {page.eyebrow && (
-          <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
-            {page.eyebrow}
-          </p>
-        )}
-        <h1 id="work-index-heading" data-reveal>
-          {page.heading}
-        </h1>
+        <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
+          Portfolio
+        </p>
+        <h1 id="work-index-heading" data-reveal>Selected work</h1>
         <p
           data-reveal
           style="--reveal-delay: 90ms"
           class="max-w-[58ch] text-lg leading-[1.5] text-text-muted"
         >
           {entries.length}
-          {entries.length === 1 ? ' project' : ' projects'} {page.intro}
+          {entries.length === 1 ? ' project' : ' projects'} for churches, schools, nonprofits, and small
+          businesses around Cincinnati. Each one started with a conversation about what the organization
+          actually needed.
         </p>
       </header>
 
-      {/* Filter chips. Sector only, client-side. The chips toggle a
+      {
+        /* Filter chips. Sector only, client-side. The chips toggle a
           data-hidden attribute on the cards below; matching CSS in
-          globals.css hides them with display:none. */}
-      {sectors.length > 1 && (
-        <div class="mb-l">
-          <WorkFilter client:load sectors={sectors} />
-        </div>
-      )}
+          globals.css hides them with display:none. */
+      }
+      {
+        sectors.length > 1 && (
+          <div class="mb-l">
+            <WorkFilter client:load sectors={sectors} />
+          </div>
+        )
+      }
 
       <!-- Card grid with an editorial feature row. The newest entry spans the
            full width as a large horizontal card (image + body side by side at
@@ -102,140 +107,152 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
            cover, and morphs that cover into the detail-page hero via the
            shared cover-${id} transition name. -->
       <ul class="grid gap-l md:grid-cols-2 lg:grid-cols-3">
-        {entries.map((entry, i) => {
-          // Pretty sector label for the meta row: kebab-case → Title Case.
-          const sectorLabel = entry.sector
-            .replace(/-/g, ' ')
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-          // The first (newest) entry is the feature card: full-width, horizontal.
-          const isFeature = i === 0;
-          return (
-            <li
-              data-work-card
-              data-sector={entry.sector}
-              class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
-            >
-              {/* Whole card is the link (standard card a11y pattern). Stagger
+        {
+          entries.map((entry, i) => {
+            // Pretty sector label for the meta row: kebab-case → Title Case.
+            const sectorLabel = entry.data.sector
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+            // The first (newest) entry is the feature card: full-width, horizontal.
+            const isFeature = i === 0;
+            return (
+              <li
+                data-work-card
+                data-sector={entry.data.sector}
+                class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
+              >
+                {/* Whole card is the link (standard card a11y pattern). Stagger
                    is capped per row so the cascade stays consistent at any
                    catalogue length. */}
-              <a
-                data-reveal
-                data-spotlight
-                style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
-                class:list={[
-                  'surface-card spotlight-card group hover-lift rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
-                  isFeature
-                    ? 'flex flex-col gap-m md:grid md:grid-cols-2 md:items-center md:gap-l'
-                    : 'flex h-full flex-col gap-m',
-                ]}
-                href={`/work/${entry.id}/`}
-              >
-                {/* Cover. alt="" because the card's h2 carries the same name;
+                <a
+                  data-reveal
+                  data-spotlight
+                  style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
+                  class:list={[
+                    'surface-card spotlight-card group hover-lift rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
+                    isFeature
+                      ? 'flex flex-col gap-m md:grid md:grid-cols-2 md:items-center md:gap-l'
+                      : 'flex h-full flex-col gap-m',
+                  ]}
+                  href={`/work/${entry.id}/`}
+                >
+                  {/* Cover. alt="" because the card's h2 carries the same name;
                      the transition:name wrapper morphs this cover into the
                      detail page's hero during a View Transition. */}
-                <div
-                  transition:name={`cover-${entry.id}`}
-                  class="relative z-10 overflow-hidden rounded-lg"
-                >
-                  <EmDashCover
-                    cover={entry.cover}
-                    alt=""
-                    priority={i === 0}
-                    sizes={
-                      isFeature
-                        ? '(min-width: 64rem) 60vw, 100vw'
-                        : '(min-width: 56rem) 33vw, 100vw'
-                    }
-                    fit="cover"
-                    class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
-                  />
-                </div>
-
-                <div class="relative z-10 flex flex-1 flex-col gap-xs">
-                  <p class="text-xs font-semibold tracking-[0.06em] text-text-muted uppercase">
-                    {sectorLabel}
-                  </p>
-                  <h2
-                    class:list={[
-                      'text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link',
-                      isFeature ? 'text-h2' : 'text-h3',
-                    ]}
+                  <div
+                    transition:name={`cover-${entry.id}`}
+                    class="relative z-10 overflow-hidden rounded-lg"
                   >
-                    {entry.title}
-                  </h2>
-                  {entry.outcome && (
-                    /* Outcome line: the honest one-line result, in --link so
+                    <CaseStudyCover
+                      cover={entry.data.cover}
+                      placeholder={placeholders.get(entry.id)}
+                      alt=""
+                      widths={isFeature ? [600, 900, 1280] : [400, 600, 900]}
+                      sizes={
+                        isFeature
+                          ? '(min-width: 64rem) 60vw, 100vw'
+                          : '(min-width: 56rem) 33vw, 100vw'
+                      }
+                      fit="cover"
+                      class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
+                    />
+                  </div>
+
+                  <div class="relative z-10 flex flex-1 flex-col gap-xs">
+                    <p class="text-xs font-semibold tracking-[0.06em] text-text-muted uppercase">
+                      {sectorLabel}
+                    </p>
+                    <h2
+                      class:list={[
+                        'text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link',
+                        isFeature ? 'text-h2' : 'text-h3',
+                      ]}
+                    >
+                      {entry.data.title}
+                    </h2>
+                    {entry.data.outcome && (
+                      /* Outcome line: the honest one-line result, in --link so
                          the proof-point reads at first scan. */
-                    <p class="leading-[1.4] font-semibold text-link">{entry.outcome}</p>
-                  )}
-                  <p class="leading-[1.5] text-text">{entry.summary}</p>
-                  {entry.stack.length > 0 && (
-                    /* Stack reveal (mono is the right register here: it is a
+                      <p class="leading-[1.4] font-semibold text-link">{entry.data.outcome}</p>
+                    )}
+                    <p class="leading-[1.5] text-text">{entry.data.summary}</p>
+                    {entry.data.stack && entry.data.stack.length > 0 && (
+                      /* Stack reveal (mono is the right register here: it is a
                          genuine technical "inside the build" label). Collapsed
                          until hover/focus; aria-hidden since the detail page
                          carries the same info. */
-                    <p
-                      aria-hidden="true"
-                      class="max-h-0 overflow-hidden font-mono text-[0.75rem] tracking-[0.06em] text-text-muted uppercase opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
-                    >
-                      Built with {entry.stack.join(', ')}
-                    </p>
-                  )}
-                  <span class="card-link mt-auto pt-xs">Read the case study</span>
-                </div>
-              </a>
-            </li>
-          );
-        })}
+                      <p
+                        aria-hidden="true"
+                        class="max-h-0 overflow-hidden font-mono text-[0.75rem] tracking-[0.06em] text-text-muted uppercase opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
+                      >
+                        Built with {entry.data.stack.join(', ')}
+                      </p>
+                    )}
+                    <span class="card-link mt-auto pt-xs">Read the case study</span>
+                  </div>
+                </a>
+              </li>
+            );
+          })
+        }
       </ul>
 
-      {/* "No matches" placeholder. Server-rendered, hidden by default
+      {
+        /* "No matches" placeholder. Server-rendered, hidden by default
           via data-hidden, revealed by WorkFilter when all cards are
           filtered out. Lets visitors know the filter is doing something
           and isn't broken. aria-live="polite" so screen readers hear the
           notice announced when the filter empties the grid (without it the
-          change is silent to assistive tech). */}
+          change is silent to assistive tech). */
+      }
       <p data-work-empty data-hidden aria-live="polite" class="mt-l text-text-muted">
-        {page.emptyFilterMessage}
+        Nothing matches that filter yet. Try clearing one of the chips above.
       </p>
     </div>
   </section>
 
-  {/* "Open any of them" proof wall: every shipped site as a clickable real
+  {
+    /* "Open any of them" proof wall: every shipped site as a clickable real
       domain, linking straight to the live site in a new tab. A different, faster
       affordance than the cards above (which open the case studies). Real domains
-      only, shown as plain text so it never reads as a fabricated badge. */}
-  {entriesLive.length > 1 && (
-    <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
-      <div class="ncs-container">
-        <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-          <h2 id="live-sites-heading">{page.liveHeading}</h2>
-          <p class="text-lg leading-[1.55] text-text-muted">{page.liveBody}</p>
-        </header>
+      only, shown as plain text so it never reads as a fabricated badge. */
+  }
+  {
+    entriesLive.length > 1 && (
+      <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
+        <div class="ncs-container">
+          <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
+            <h2 id="live-sites-heading">Open any of them</h2>
+            <p class="text-lg leading-[1.55] text-text-muted">
+              Every project here is a real, shipped site. Do not take my word for it, click through
+              and look around.
+            </p>
+          </header>
 
-        <ul class="grid gap-x-l sm:grid-cols-2 lg:grid-cols-3">
-          {entriesLive.map((e, i) => (
-            <li data-reveal style={`--reveal-delay: ${Math.min(i, 5) * 60}ms`}>
-              <a
-                href={e.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="group flex items-baseline justify-between gap-s border-b border-border py-s pointer-coarse:min-h-11 pointer-coarse:items-center text-inherit no-underline transition-colors duration-150 hover:border-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <span class="font-display text-h4 leading-[1.1] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {e.client}
-                </span>
-                <span class="inline-flex shrink-0 items-center gap-1 font-mono text-[0.8rem] text-text-muted transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {prettyDomain(e.liveUrl ?? '')}
-                  <span aria-hidden="true">↗</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  )}
+          <ul class="grid gap-x-l sm:grid-cols-2 lg:grid-cols-3">
+            {entriesLive.map((e, i) => (
+              <li data-reveal style={`--reveal-delay: ${Math.min(i, 5) * 60}ms`}>
+                <a
+                  href={e.data.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group flex items-baseline justify-between gap-s border-b border-border py-s text-inherit no-underline transition-colors duration-150 hover:border-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  <span class="font-display text-h4 leading-[1.1] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
+                    {e.data.client}
+                  </span>
+                  <span class="inline-flex shrink-0 items-center gap-1 font-mono text-[0.8rem] text-text-muted transition-colors group-hover:text-link group-focus-visible:text-link">
+                    {prettyDomain(e.data.liveUrl ?? '')}
+                    <span aria-hidden="true">↗</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
 
-  <CtaBanner title={page.ctaTitle} sub={page.ctaSub} />
+  <CtaBanner />
 </BaseLayout>

@@ -56,10 +56,6 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
   const linkClass =
     'transition-colors duration-150 hover:underline hover:underline-offset-2 ' +
     'focus-visible:underline focus-visible:underline-offset-2 ' +
-    // The address is a 25px-tall line of text; on a touch device it becomes a
-    // 44px flex row (the copy button beside it is already 44px, so the row
-    // height does not change).
-    'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center ' +
     (tone === 'dark' ? 'text-link dark:text-secondary' : 'text-link');
 
   const buttonClass =
