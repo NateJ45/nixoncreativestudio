@@ -3,69 +3,44 @@
    ============================================================================
    Foundation, edit with care. Exposes /rss.xml for feed readers.
 
-   Pulls every case study and every PUBLISHED journal entry from the EmDash CMS,
-   sorts them newest first, and renders an Atom-flavored RSS 2.0 document. Each
-   item links back to its detail page on the live site (so readers see the real
-   article when they click, not a stripped-down feed-only view). A draft journal
-   entry is never in the feed.
-
-   scripts/generate-og.mjs reads this feed to learn the slugs and titles it makes
-   OG cards for: /work/<slug>/ links are case studies, /journal/<slug>/ links are
-   journal entries. Keep those two link shapes (CLAUDE.md, gotcha 13).
+   Pulls every case study from the content collection, sorts newest first,
+   and renders an Atom-flavored RSS 2.0 document. Each item links back to
+   its detail page on the live site (so readers see the real article
+   when they click, not a stripped-down feed-only view).
 
    Why .js rather than .ts: Astro's RSS helper expects a CommonJS-friendly
-   export; .js keeps the type juggling out of the way.
-
-   Server-rendered (EmDash content is read at request time) with a short CDN
-   cache, so a published edit reaches feed readers within minutes. The item
-   fields are identical to the old content-collection feed.
+   export; .js keeps the type juggling out of the way. The schema is
+   typed via the content collection import anyway.
    ============================================================================ */
 
 import rss from '@astrojs/rss';
-import { getSite, SITE_URL } from '../data/site';
-import { getCaseStudies } from '../lib/caseStudies';
-import { getJournalEntries } from '../lib/journal';
-import { PAGE_MAX_AGE, PAGE_SWR } from '../lib/routeCache';
+import { getCollection } from 'astro:content';
+import { site } from '../data/site';
+
+// Static endpoint: prerendered at build time, served as a static file.
+// Without this, output:'static' projects with the Cloudflare adapter
+// would treat the endpoint as a function and refuse to prerender it.
+export const prerender = true;
 
 export async function GET(context) {
-  // Already sorted newest first by project date.
-  const entries = await getCaseStudies(context.cache);
-  // Published journal entries (a draft is never returned), newest first. [] today.
-  const journal = await getJournalEntries({ cache: context.cache });
-  // Feed title and description are fields in Site settings (CMS, with the fallback).
-  const site = await getSite(context);
-  // Same lifetime as the pages; the case-study tags set above purge it on publish.
-  context.cache?.set?.({ maxAge: PAGE_MAX_AGE, swr: PAGE_SWR });
+  const entries = (await getCollection('case-studies')).sort(
+    (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+  );
 
-  // Case studies keep their order; journal entries are merged in by date only when
-  // there are any, so a journal-less feed is byte-for-byte what it was before.
-  const items = [
-    ...entries.map((entry) => ({
-      title: entry.title,
-      pubDate: entry.published,
-      description: entry.summary,
+  return rss({
+    title: `${site.studioName} — Case Studies`,
+    description: site.tagline,
+    site: context.site ?? site.url,
+
+    items: entries.map((entry) => ({
+      title: entry.data.title,
+      pubDate: entry.data.published,
+      description: entry.data.summary,
       // categories double as a hint for filtering in some feed readers.
-      categories: [entry.sector, ...entry.services],
+      categories: [entry.data.sector, ...entry.data.services],
       link: `/work/${entry.id}/`,
     })),
-    ...journal.map((post) => ({
-      title: post.title,
-      pubDate: post.publishedAt,
-      description: post.summary,
-      ...(post.tags.length > 0 ? { categories: post.tags } : {}),
-      link: `/journal/${post.id}/`,
-    })),
-  ];
-  if (journal.length > 0) items.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
-
-  const response = await rss({
-    title: site.rssTitle,
-    description: site.rssDescription,
-    site: context.site ?? SITE_URL,
-
-    items,
 
     customData: '<language>en-us</language>',
   });
-  return response;
 }

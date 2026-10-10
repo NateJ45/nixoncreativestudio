@@ -1,11 +1,10 @@
 ---
-// Safe to edit. Reads client names from the EmDash CMS at request time and
-// tags the page's route cache with them (getCaseStudies(Astro.cache)).
+// Safe to edit.
 /* ============================================================================
    ClientMarquee
    ============================================================================
    The client-name ticker that rides the base of the hero. Names are pulled live
-   from the EmDash case_studies collection (newest-first, de-duped), so the marquee
+   from the case-studies collection (newest-first, de-duped), so the marquee
    stays in sync as the portfolio grows. Each name is now a LINK to that client's
    case study, so the ticker doubles as a fast path into the work.
 
@@ -28,18 +27,19 @@
    Used at the bottom of Hero.astro.
    ============================================================================ */
 
-import { getCaseStudies } from '../lib/caseStudies';
+import { getCollection } from 'astro:content';
 
-// Already sorted newest first by project date.
-const studies = await getCaseStudies(Astro.cache);
+const studies = (await getCollection('case-studies')).sort(
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+);
 
 // Distinct clients, newest-first, each linked to its newest case study.
 const seen = new Set<string>();
 const clients: { name: string; slug: string }[] = [];
 for (const s of studies) {
-  if (!seen.has(s.client)) {
-    seen.add(s.client);
-    clients.push({ name: s.client, slug: s.id });
+  if (!seen.has(s.data.client)) {
+    seen.add(s.data.client);
+    clients.push({ name: s.data.client, slug: s.id });
   }
 }
 
@@ -49,17 +49,21 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
 <nav class="client-marquee" aria-label="Recent clients">
   <div class="client-track" data-unit={clients.length}>
     {/* Real, focusable links (the set assistive tech and the keyboard use). */}
-    {clients.map((c) => (
-      <a class={itemClass} href={`/work/${c.slug}/`}>
-        {c.name}
-      </a>
-    ))}
+    {
+      clients.map((c) => (
+        <a class={itemClass} href={`/work/${c.slug}/`}>
+          {c.name}
+        </a>
+      ))
+    }
     {/* Visual duplicate for the seamless loop: hidden from AT + the tab order. */}
-    {clients.map((c) => (
-      <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
-        {c.name}
-      </a>
-    ))}
+    {
+      clients.map((c) => (
+        <a class={itemClass} href={`/work/${c.slug}/`} aria-hidden="true" tabindex="-1">
+          {c.name}
+        </a>
+      ))
+    }
   </div>
 </nav>
 
@@ -95,14 +99,6 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
   }
   :global(.dark) .client-item {
     color: color-mix(in oklab, #ffffff 62%, transparent);
-  }
-  /* Touch devices: each name is a 44px-tall row (the hero reserves 3.25rem for
-     the ticker, so it fits). Gated on pointer:coarse so a mouse desktop keeps
-     the thin ticker. */
-  @media (pointer: coarse) {
-    .client-item {
-      min-height: 2.75rem;
-    }
   }
   .client-item:hover,
   .client-item:focus-visible {

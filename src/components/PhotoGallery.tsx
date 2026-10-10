@@ -45,11 +45,6 @@ export interface GalleryPhoto extends Photo {
   alt?: string;
   title?: string;
   caption?: string;
-  /** Larger source for the full-screen viewer; falls back to `src`. The photography
-      page sends a width-only /_image URL here (no height, see src/lib/photos.ts). */
-  lightboxSrc?: string;
-  /** Alternative sizes for the viewer (the grid's plus the large one). */
-  viewerSrcSet?: { src: string; width: number; height: number }[];
 }
 
 export interface PhotoGalleryProps {
@@ -66,13 +61,12 @@ export interface PhotoGalleryProps {
 // the ref callback. Reduced-motion users get an instant show (the CSS
 // transition is disabled globally in globals.css under the reduce query).
 function renderFadeImage(
-  { alt = '', title, sizes, srcSet }: RenderImageProps,
+  { alt = '', title, sizes }: RenderImageProps,
   { photo, width, height }: RenderImageContext<GalleryPhoto>,
 ) {
   return (
     <img
       src={photo.src}
-      srcSet={srcSet}
       alt={alt}
       title={title}
       sizes={sizes}
@@ -113,12 +107,9 @@ export default function PhotoGallery({ photos, targetRowHeight = 300 }: PhotoGal
 
       <Lightbox
         slides={photos.map((p) => ({
-          src: p.lightboxSrc ?? p.src,
+          src: p.src,
           width: p.width,
           height: p.height,
-          // Alternatives for the viewer (the grid sizes plus the large one), so a small
-          // screen does not download the biggest copy. Also what the thumbnails strip uses.
-          srcSet: p.viewerSrcSet ?? p.srcSet,
           alt: p.alt,
           // Fall back to the photo's alt (its name) when no explicit title is
           // set, so the lightbox always shows a real label above the caption.

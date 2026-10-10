@@ -1,38 +1,28 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
 
 import cloudflare from '@astrojs/cloudflare';
+import expressiveCode from 'astro-expressive-code';
+import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
-import emdash from 'emdash/astro';
-import { cacheCloudflare } from '@astrojs/cloudflare/cache';
-import { d1, r2, sandbox } from '@emdash-cms/cloudflare';
-// The reusable admin help plugin (first-run tour, Help page, dashboard widget, per-screen
-// notes). Its words all come from cms/help/tour.json. See plugins/studio-help/README.md.
-import { studioHelp } from './plugins/studio-help/src/descriptor.ts';
-
-// Read as text and parsed here (not a JSON import) so a JSON typo is reported by
-// studioHelp() with the file name and every problem, not by the bundler.
-const helpContent = JSON.parse(
-  readFileSync(fileURLToPath(new URL('./cms/help/tour.json', import.meta.url)), 'utf8'),
-);
 
 // =============================================================================
 // Astro config
 // =============================================================================
 // `site` is the canonical production URL. Sitemap and OG tags read from it.
 //
-// `output: 'server'`: every page renders on the Worker per request (CMS-DESIGN
-// PR 2). Nothing is prerendered, so no page can show a stale copy of content
-// that lives in EmDash (contact email, legal pages, case studies). Speed comes
-// from the route cache (`cache` below), not from static files.
+// `output: 'static'` prerenders every page to plain HTML at build time. The
+// Cloudflare adapter stays installed so individual pages can opt into server
+// rendering later via `export const prerender = false`, but in the static
+// default it's effectively inert for this site.
 //
-// Integrations:
-//   - (expressive-code and mdx removed in CMS-DESIGN PR 14: both were unused after the journal
-//                 moved into EmDash in PR 12; the journal renders code blocks with JournalCode.astro)
+// Integrations (order matters: expressiveCode must precede mdx):
+//   - expressiveCode : themed code blocks in MDX (journal dev posts). Maps its
+//                      dark theme to the site's .dark class so code follows the
+//                      site theme.
+//   - mdx       : powers the case-studies + journal content collections
 //   - sitemap   : emits sitemap-index.xml and sitemap-0.xml at build time
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
@@ -48,25 +38,17 @@ const helpContent = JSON.parse(
 // =============================================================================
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
-  output: 'server',
-  // Route cache on Cloudflare's Workers Cache. A page opts in by calling
-  // Astro.cache.set(): BaseLayout sets the lifetime for every page that uses
-  // it, and the CMS readers (src/lib/caseStudies.ts) add the tags of the rows
-  // each page rendered. A publish in the EmDash admin purges those tags, so an
-  // edit is live on the next request. The cache is partitioned by Worker
-  // version, so every deploy starts cold. Deliberately NO global `routeRules`
-  // entry (the design sketch had '/[...path]'): that rule also matches
-  // /_emdash/** and would make signed-in admin responses cacheable. See
-  // docs/EMDASH.md, "Route cache".
-  cache: { provider: cacheCloudflare() },
-  // Sessions are ON for the EmDash trial: admin sign-in needs a session driver.
-  // The Cloudflare adapter supplies one (KV binding "SESSION") when `session`
-  // is left unset. The live static site had `session: false`.
-  // NO `redirects` here since CMS-DESIGN PR 13: they live in EmDash Redirects
-  // (cms/content/redirects.json, loaded by `npm run cms:production-load`), so Nathan
-  // can add one in the admin when he renames or retires a page. The two that used to be
-  // here (/now to /about/#now, the retired /work/west-chester-preschool) are rows in
-  // production now; a config redirect would shadow them.
+  output: 'static',
+  // Astro 7's adapter no longer forces server mode; this site never used sessions.
+  session: false,
+  // The standalone /now page was merged into the About page (its Currently
+  // section). Keep old links and bookmarks working with a static redirect.
+  redirects: {
+    '/now': '/about/#now',
+    // A retired case study (2026-10-01). Send any old links or search results
+    // to the work index instead of a 404.
+    '/work/west-chester-preschool': '/work/',
+  },
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport',
@@ -79,105 +61,21 @@ export default defineConfig({
   // site that runtime dependency left every case-study cover stuck on its
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
-  // Astro's image service only resizes images from hosts it has been told to
-  // trust. CMS media is served from the site's own origin (/_emdash/api/media/...),
-  // so list the origins that serve it (the production domain and the ncs-ci Worker).
-  image: {
-    remotePatterns: [
-      { protocol: 'https', hostname: 'nixoncreativestudio.com' },
-      { protocol: 'https', hostname: 'www.nixoncreativestudio.com' },
-      // Every Worker address on this account: ncs-ci, the production
-      // workers.dev URL, and the CI preview aliases (ci-pr-N-..., lh-pr-N-...).
-      // Found 2026-10-02: a host missing from this list is not an error. Astro
-      // silently serves the full-size original instead of a resized WebP, which
-      // made Lighthouse CI measure LCP at 8 to 11 s on pages that are fine when
-      // the host is listed.
-      { protocol: 'https', hostname: '**.nathanjnixon86.workers.dev' },
-    ],
-  },
-  // EmDash trial: keep build-time optimization for the site's own images, and
-  // add the Cloudflare Images binding at runtime so CMS images stored in R2 get
-  // real resized WebP srcsets (EmDash passes them through Astro's image service;
-  // with 'compile' alone every srcset entry pointed at the full-size original).
-  adapter: cloudflare({ imageService: { build: 'compile', runtime: 'cloudflare-binding' } }),
+  adapter: cloudflare({ imageService: 'compile' }),
   integrations: [
-    // @astrojs/sitemap only lists PRERENDERED routes, and since CMS-DESIGN PR 2
-    // nothing is prerendered, so EVERY public page is listed by hand via
-    // customPages. Add a line here when a page ships. Journal entries come from
-    // src/pages/sitemap-posts.xml.ts (a wrapper like the case-studies one, valid
-    // and empty while nothing is published; CMS-DESIGN PR 12). Same set the prerendered sitemap listed before PR 2. The
-    // case studies themselves come from
-    // EmDash's own per-collection sitemap (needs the `seo` support and a
-    // `/work/{slug}/` URL pattern on the case_studies collection), added to the
-    // same sitemap-index.xml via customSitemaps so robots.txt and Search
-    // Console keep pointing at the one URL they already know.
-    sitemap({
-      customPages: [
-        'https://nixoncreativestudio.com/',
-        'https://nixoncreativestudio.com/work/',
-        'https://nixoncreativestudio.com/about/',
-        'https://nixoncreativestudio.com/services/',
-        'https://nixoncreativestudio.com/photography/',
-        'https://nixoncreativestudio.com/journal/',
-        'https://nixoncreativestudio.com/contact/',
-        'https://nixoncreativestudio.com/colophon/',
-        'https://nixoncreativestudio.com/privacy/',
-        'https://nixoncreativestudio.com/accessibility/',
-        'https://nixoncreativestudio.com/coming-soon/',
-      ],
-      customSitemaps: [
-        'https://nixoncreativestudio.com/sitemap-case_studies.xml',
-        'https://nixoncreativestudio.com/sitemap-posts.xml',
-      ],
+    // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
+    // so a code sample flips with the theme toggle instead of prefers-color-scheme.
+    expressiveCode({
+      themes: ['github-dark', 'github-light'],
+      themeCssSelector: (theme) => (theme.name === 'github-dark' ? '.dark' : ':root'),
+      styleOverrides: { borderRadius: '0.5rem' },
     }),
+    mdx(),
+    sitemap(),
     react(),
-    // EmDash CMS trial: D1 for content, R2 for media, admin at /_emdash/admin.
-    emdash({
-      database: d1({ binding: 'DB' }),
-      storage: r2({ binding: 'MEDIA' }),
-      sandboxRunner: sandbox(),
-      // Public HTML is identical for everyone, so the route cache can serve it
-      // to editors too. Editors get an Edit pill that reloads the page with
-      // ?_edit, which is always rendered fresh and never cached.
-      toolbar: 'client',
-      // Admin-only help layer (a trusted plugin: it ships React for the admin screens, so it
-      // cannot be sandboxed; the LOADER binding in wrangler.jsonc is for sandboxed plugins
-      // and is not used by this one). Adds no byte to any public page.
-      plugins: [studioHelp({ content: helpContent })],
-    }),
   ],
 
   vite: {
-    // `astro dev` only (build does not pre-bundle): the dependency optimizer pre-bundles zustand
-    // BEFORE the shim plugin below can rewrite its import, so a clean checkout died with the same
-    // MISSING_EXPORT in dev. Excluding zustand leaves it to the normal transform pipeline, where
-    // the plugin applies. Found 2026-10-03 while testing the admin help plugin locally.
-    optimizeDeps: { exclude: ['zustand', 'zustand/traditional'] },
-    plugins: [
-      tailwindcss(),
-      // EmDash/zustand compatibility (found 2026-10-02, EmDash 1.1.0).
-      // EmDash aliases `use-sync-external-store/shim/with-selector.js` to its
-      // own ESM shim, which only has a NAMED export. zustand (pulled in by
-      // @react-three/fiber for the WebGL hero) does a DEFAULT import of that
-      // file, so the build dies with MISSING_EXPORT. Rewriting zustand's import
-      // to a namespace import of the same shim keeps both sides happy.
-      {
-        name: 'ncs-zustand-sync-store-shim',
-        enforce: 'pre',
-        transform(code, id) {
-          if (!/zustand[\\/]esm[\\/]traditional\.mjs/.test(id)) return null;
-          const shim = fileURLToPath(
-            new URL(
-              './node_modules/emdash/src/astro/integration/shims/use-sync-external-store-with-selector.js',
-              import.meta.url,
-            ),
-          ).replace(/\\/g, '/');
-          return code.replace(
-            /import useSyncExternalStoreExports from 'use-sync-external-store\/shim\/with-selector\.js';/,
-            `import * as useSyncExternalStoreExports from '${shim}';`,
-          );
-        },
-      },
-    ],
+    plugins: [tailwindcss()],
   },
 });

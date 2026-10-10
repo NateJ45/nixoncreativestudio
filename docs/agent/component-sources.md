@@ -97,7 +97,7 @@ For every new component pasted or CLI-installed:
 2. Remap hardcoded color classes using the cheat sheet above.
 3. Decide: static `.astro` vs. React island. Static unless the component has state, event handlers, or needs `useEffect`. When in doubt: static.
 4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). Exception: components above the fold that must be interactive on first paint (MobileNav, ThemeToggle).
-5. For Radix-based dialogs, sheets, or dropdown portals: use `client:only="react"` not `client:load`. See the note in .claude/rules/components.md under "Radix-based primitives need `client:only='react'`".
+5. For Radix-based dialogs, sheets, or dropdown portals: use `client:only="react"` not `client:load`. See the note in CLAUDE.md under "Radix-based primitives need `client:only='react'`".
 6. Verify in both light and dark mode before committing.
 
 Example header comment:
@@ -121,7 +121,7 @@ Files in `src/components/primereact/`:
 - `passthrough.ts` -- baseline Tailwind passthrough for Button, InputText, Dialog.
 - `README.md` -- integration guide, usage example, and link to the community passthrough baseline covering 80+ components.
 
-Installed version: `primereact` v11.2.0 (React 19; v11 is a rewrite, see `src/components/primereact/README.md`).
+Installed version: `primereact` v10.9.8 (React 19 compatible).
 
 ---
 

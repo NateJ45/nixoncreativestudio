@@ -1,61 +1,13 @@
 name: Lighthouse
 
 # Guards the quality bar the studio sells: accessibility must stay at 100, and
-# performance / best-practices / SEO drops surface as warnings. Config +
-# thresholds live in lighthouserc.json (a template).
-#
-# HYBRID SITE: the server-rendered pages (/, /work/, /work/<slug>/, /about/,
-# /services/) read EmDash and do not exist in dist/client, so this audits a
-# deployed Worker VERSION preview, not a static directory. The job builds,
-# uploads the version (.github/actions/preview-version, alias prefix "lh" so it
-# never collides with ci.yml's "ci" alias), fills the preview URL into
-# lighthouserc.generated.json with scripts/lhci-config.mjs, and runs lhci
-# against it. Needs the CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID repo
-# secrets (docs/PENDING.md); without them the audit is SKIPPED with a warning
-# annotation, not failed.
-#
-# ── WHEN IT RUNS (starter PORTS.md card 70) ─────────────────────────────────
-# Lighthouse is the slowest gate (3 passes over every listed URL) and it ran on
-# every PR, including ones that cannot move a score. It is NOT a required status
-# check (only `build` and `test` are), so it is free to be scheduled rather than
-# blocking:
-#
-#   - pull_request, path-filtered to what can move a score (markup, styles,
-#     assets, content fallbacks, CI dataset, config), and audited on a SAMPLE of
-#     URLs, one per distinct template, via --collect.url flags below. The full
-#     list in lighthouserc.json is untouched.
-#   - push to main, same path filter, FULL url list: the post-merge record.
-#   - weekly schedule, FULL url list: catches drift nobody pushed (a font host
-#     change, a dependency bump that landed on a different path).
-#   - workflow_dispatch: a branch tip on demand, full list.
-#
-# A docs-only or workflow-only PR therefore runs no Lighthouse and reports no
-# check, which the dependabot auto-merge workflow treats as green. The workflow
-# `name:` stays `Lighthouse`: dependabot-auto-merge.yml listens for it by name.
+# performance / best-practices / SEO drops surface as warnings. Runs against the
+# built static output. Config + thresholds live in lighthouserc.json.
 
 on:
   push:
     branches: [main]
-    paths: &score-paths
-      - 'src/**'
-      - 'public/**'
-      - 'cms/**'
-      - 'seed/**'
-      - 'scripts/ci-dataset/**'
-      - 'scripts/lhci-config.mjs'
-      - 'lighthouserc.json'
-      - 'astro.config.mjs'
-      - 'wrangler.jsonc'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/lighthouse.yml'
-      - '.github/actions/preview-version/**'
   pull_request:
-    paths: *score-paths
-  schedule:
-    - cron: '17 5 * * 1'
-  # Dispatchable so a branch tip can be re-audited on demand, without pushing
-  # an empty commit.
   workflow_dispatch:
 
 # A newer push to the same branch obsoletes the in-flight run; cancel it
@@ -77,60 +29,15 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm ci
 
       # Same build ci.yml runs. No env needed; every PUBLIC_* variable is
       # optional and the site builds clean without them.
       - name: Build
-        # CLOUDFLARE_ENV=ci selects the 'ci' environment in wrangler.jsonc: the preview
-        # Worker uses the small ncs-ci database and bucket, never production data, so the
-        # required checks do not depend on what production holds.
-        env:
-          CLOUDFLARE_ENV: ci
         run: npm run build
-
-      - name: Upload Worker preview version
-        id: preview
-        uses: ./.github/actions/preview-version
-        with:
-          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          alias-prefix: lh
 
       # Accessibility is a hard gate (minScore 1) in lighthouserc.json;
       # performance / best-practices / SEO are warnings. Reports upload to
       # Google's temporary public LHCI storage (shareable URL in the log).
-      #
-      # On a PR the URL list is overridden with ONE PAGE PER TEMPLATE. Passing
-      # --collect.url replaces the config's list, so the assertions and the
-      # median-of-3 stay exactly as the standard defines them; only the page set
-      # shrinks. The sample: home, about, services, the /work/ listing, one case
-      # study (they share a layout), the journal index, photography, contact,
-      # ONE prose page (privacy stands in for colophon and accessibility, which
-      # all render ProsePage), the standalone coming-soon page, and the 404.
-      - name: Lighthouse CI (sample, pull request)
-        if: steps.preview.outputs.enabled == 'true' && github.event_name == 'pull_request'
-        env:
-          LHCI_BASE_URL: ${{ steps.preview.outputs.url }}
-        run: |
-          node scripts/lhci-config.mjs
-          npx lhci autorun --config=lighthouserc.generated.json \
-            --collect.url="$LHCI_BASE_URL/" \
-            --collect.url="$LHCI_BASE_URL/about/" \
-            --collect.url="$LHCI_BASE_URL/services/" \
-            --collect.url="$LHCI_BASE_URL/work/" \
-            --collect.url="$LHCI_BASE_URL/work/second-presbyterian-chicago/" \
-            --collect.url="$LHCI_BASE_URL/journal/" \
-            --collect.url="$LHCI_BASE_URL/photography/" \
-            --collect.url="$LHCI_BASE_URL/contact/" \
-            --collect.url="$LHCI_BASE_URL/privacy/" \
-            --collect.url="$LHCI_BASE_URL/coming-soon/" \
-            --collect.url="$LHCI_BASE_URL/404/"
-
-      - name: Lighthouse CI (full)
-        if: steps.preview.outputs.enabled == 'true' && github.event_name != 'pull_request'
-        env:
-          LHCI_BASE_URL: ${{ steps.preview.outputs.url }}
-        run: |
-          node scripts/lhci-config.mjs
-          npx lhci autorun --config=lighthouserc.generated.json
+      - name: Lighthouse CI
+        run: npx lhci autorun

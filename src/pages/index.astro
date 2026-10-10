@@ -1,7 +1,4 @@
 ---
-// Foundation, edit with care. Server-rendered because the hero client marquee
-// and Selected Work read case studies from the EmDash CMS (see the note above
-// the template).
 /* ============================================================================
    Homepage
    ============================================================================
@@ -22,14 +19,11 @@
                      /work/{slug} for the long form.
      Pricing Teaser— slim "What it costs" band: the three web-tier floors as a
                      hairline editorial row, routing to /services for the full
-                     pricing. Reads numbers from the CMS pricing tiers (shared
+                     pricing. Reads numbers from src/data/pricing.ts (shared
                      single source of truth with /services).
      Process Band  — single band that combines the four-step process and the
                      inquiry CTA. Closes the page with one strong block instead
                      of three stacked sections.
-
-   The words in all four sections are the CMS "Home page" entry (getHomePage);
-   the layout, section order and link targets stay in the components.
 
    The Footer is rendered by BaseLayout, immediately under the Process Band.
 
@@ -51,21 +45,9 @@ import Hero from '../components/Hero.astro';
 import SelectedWork from '../components/SelectedWork.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
-import { getHomePage, homeTitle } from '../lib/homePage';
-import { getSite } from '../data/site';
-
-// The title and meta description, and every word in the four sections below, come
-// from the CMS "Home page" entry (committed fallback: cms/content/page_home.json).
-// One D1 read per request, shared with the components.
-const home = await getHomePage(Astro);
-const site = await getSite(Astro);
-
-// Server-rendered like every page (CMS-DESIGN PR 2). The hero client marquee and Selected Work read case studies from EmDash (D1) at request time.
-// The route cache is tagged with the case studies this page read (BaseLayout sets
-// the lifetime; see src/lib/routeCache.ts), so a publish purges it.
 ---
 
-<BaseLayout title={homeTitle(home.seoTitle, site.studioName)} description={home.seoDescription}>
+<BaseLayout title="Nixon Creative Studio | Strategy-led design and photography">
   <Hero />
   <SelectedWork />
   <PricingTeaser />

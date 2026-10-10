@@ -697,10 +697,6 @@ Run Lighthouse on the homepage. Targets:
 
 ---
 
-## Optional: admin help for editors
-
-On any EmDash site with non-technical editors, add the `studio-help` plugin (first-run tour, Help page, dashboard widget). See `ADMIN-HELP.md` next to this file; about 10 minutes.
-
 ## You're set
 
 From here, work follows the patterns in `CLAUDE.md`:

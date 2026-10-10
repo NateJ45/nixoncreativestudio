@@ -1,61 +1,13 @@
 {
-  // PRODUCTION. This is the config for the live nixoncreativestudio Worker
-  // (EmDash cutover, 2026-10). Deploying this file replaces the live site, so only
-  // Workers Builds (on a push to main) should run `wrangler deploy` from it. The
-  // trial Worker (ncs-emdash-trial, since deleted) used the previous version of this
-  // file; see git history and docs/LAUNCH-RUNBOOK.md.
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nixoncreativestudio",
-  "main": "./src/worker.ts",
   "compatibility_date": "2026-05-25",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  // The origin the admin passkey is bound to. Visitors land on www (the apex 301s
-  // to it). Changing this after the first sign-in invalidates existing passkeys.
-  "vars": { "EMDASH_SITE_URL": "https://www.nixoncreativestudio.com" },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "ncs-emdash-prod",
-      "database_id": "8eb219bc-082e-44cb-b228-135d5fd7861d",
-    },
-  ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ncs-emdash-media-prod" }],
-  // Astro sessions (EmDash sign-in needs them). The Cloudflare adapter's default
-  // session driver reads a KV binding named SESSION.
-  "kv_namespaces": [{ "binding": "SESSION", "id": "c0ae336adced4b73a503159ca5e932f2" }],
-  "worker_loaders": [{ "binding": "LOADER" }],
-  "triggers": { "crons": ["* * * * *"] },
-  // Smart Placement: run the Worker near the D1 database (ENAM) instead of near the visitor.
-  // A page render makes 11 to 26 sequential D1 reads, and each one paid the edge-to-database
-  // distance. Only cache MISSES run the Worker (the route cache answers hits in front of it),
-  // so hits are unaffected. Measured 2026-10-03 on ncs-ci with cache-busted GETs, 18 requests
-  // each, several runs per setting: average cold render about 815ms without it, about 570ms with it (about 30% faster; run-to-run noise is +-100ms, so one pair of runs proves nothing). Check the header
-  // `Cf-Placement` on a response; it reads `remote-<colo>` once the placement has taken effect.
-  "placement": { "mode": "smart" },
-  "observability": { "enabled": true },
-
-  // CI previews. GitHub Actions builds with CLOUDFLARE_ENV=ci and uploads a
-  // non-promoted version of the ncs-ci Worker, so the Playwright, link-check and
-  // Lighthouse runs read a small dedicated CI database and bucket (a reduced sample
-  // of three case studies, see docs/TESTING.md), never production data.
-  // Bindings and vars are not inherited by an environment, so they are repeated.
-  // Workers Builds (production) does not set CLOUDFLARE_ENV and uses the top level.
-  "env": {
-    "ci": {
-      "name": "ncs-ci",
-      "placement": { "mode": "smart" }, // same as production, see the top-level note
-      "vars": { "EMDASH_SITE_URL": "https://ncs-ci.nathanjnixon86.workers.dev" },
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "ncs-ci",
-          "database_id": "ab647734-85f6-495c-87f5-e959d8ff1fd4",
-        },
-      ],
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ncs-ci-media" }],
-      "kv_namespaces": [{ "binding": "SESSION", "id": "39bc831dbb7142d3891b9afeda2de2a2" }],
-      "worker_loaders": [{ "binding": "LOADER" }],
-      "observability": { "enabled": true },
-    },
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "name": "nixoncreativestudio",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
   },
 }

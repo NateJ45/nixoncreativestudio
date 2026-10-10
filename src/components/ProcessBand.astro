@@ -1,7 +1,6 @@
 ---
-// Safe to edit. The heading, the four steps and the closing CTA copy are content
-// read from the CMS (Pages, "Home page" in the EmDash admin, with a committed
-// fallback in cms/content/page_home.json) through getHomePage(); edit them there.
+// Safe to edit. The four steps and the closing CTA copy below are content;
+// rewrite in place when the process or the offer sharpens.
 /* ============================================================================
    ProcessBand — the four-step "how we work" sequence
    ============================================================================
@@ -25,7 +24,6 @@
    ============================================================================ */
 
 import { buttonVariants } from './ui/button';
-import { getHomePage } from '../lib/homePage';
 
 interface Props {
   /** 'band' = navy band-themed closing band (homepage); 'soft' = bg-soft mid-page section (/services). */
@@ -39,15 +37,34 @@ interface Props {
 const { variant = 'band', showCta = true, headingId = 'process-band-heading' } = Astro.props;
 const isBand = variant === 'band';
 
-// The heading, the four steps (numbers 01 to 04 are counted from order in
-// getHomePage) and the closing CTA copy. The same steps show on the homepage and
-// on /services, so editing them once changes both. The CTA title is specific to
-// audience and intentionally human; the old "Have a project in mind?" was
-// sales-template cliche.
-const { process: processCopy } = await getHomePage(Astro);
-const steps = processCopy.steps;
-const ctaTitle = processCopy.ctaTitle;
-const ctaSub = processCopy.ctaSub;
+const steps = [
+  {
+    num: '01',
+    title: 'Conversation',
+    body: 'We meet for an hour, in person or on video, and talk about what you actually need. No pitch deck, no agency theater. Just a working session that ends with a one-page brief we both agree on.',
+  },
+  {
+    num: '02',
+    title: 'Strategy',
+    body: 'I write the audience map, the page architecture, and the conversion path. You read it, push back, we revise. The strategy doc is the source of truth for every design choice that follows.',
+  },
+  {
+    num: '03',
+    title: 'Design and build',
+    body: 'Components, content, and pages built in the open. Preview links land in your inbox at every milestone so you can react early instead of seeing the whole thing for the first time at launch.',
+  },
+  {
+    num: '04',
+    title: 'Launch and follow-through',
+    body: 'We go live together, then I stay close for the first month to fix anything that surfaces. After that you own the site outright, with documentation and a simple way to reach me when something comes up.',
+  },
+];
+
+// Closing CTA copy. Title is specific to audience and intentionally human;
+// the old "Have a project in mind?" was sales-template cliché.
+const ctaTitle = 'Tell me what you are building.';
+const ctaSub =
+  'I take a small number of projects each quarter. The earlier we talk, the better we can pace it together.';
 ---
 
 <section
@@ -57,10 +74,10 @@ const ctaSub = processCopy.ctaSub;
   <div class="ncs-container relative z-10 flex flex-col gap-2xl">
     <!-- Header. Title carries the weight; no eyebrow, no number. -->
     <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
-      <h2 id={headingId} class="text-heading">
-        {processCopy.heading}
-      </h2>
-      <p class="text-lg leading-[1.55] text-text-muted">{processCopy.sub}</p>
+      <h2 id={headingId} class="text-heading">How we work</h2>
+      <p class="text-lg leading-[1.55] text-text-muted">
+        Four steps, from the first conversation to launch day.
+      </p>
     </header>
 
     <!-- Four process steps as numbered nodes on a single connector line. The
@@ -72,46 +89,50 @@ const ctaSub = processCopy.ctaSub;
            left-to-right on scroll where supported; otherwise fully drawn. -->
       <span class="process-connector hidden lg:block" aria-hidden="true"></span>
 
-      {steps.map((step, index) => (
-        <li
-          class="relative flex flex-col items-start gap-s"
-          data-reveal
-          style={`--reveal-delay: ${index * 110}ms;`}
-        >
-          {/* One numbered node. The badge IS the step number (no second
+      {
+        steps.map((step, index) => (
+          <li
+            class="relative flex flex-col items-start gap-s"
+            data-reveal
+            style={`--reveal-delay: ${index * 110}ms;`}
+          >
+            {/* One numbered node. The badge IS the step number (no second
                ghost numeral). accent-foreground keeps it readable on the
                accent fill in both themes. */}
-          <span class="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent font-mono text-sm text-accent-foreground">
-            {step.num}
-          </span>
-          <h3 class="text-h4 text-heading">{step.title}</h3>
-          <p class="leading-[1.55] text-text-muted">{step.body}</p>
-        </li>
-      ))}
+            <span class="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent font-mono text-sm text-accent-foreground">
+              {step.num}
+            </span>
+            <h3 class="text-h4 text-heading">{step.title}</h3>
+            <p class="leading-[1.55] text-text-muted">{step.body}</p>
+          </li>
+        ))
+      }
     </ol>
 
     <!-- Closing CTA (homepage). Title + sub on the left, button on the right.
          flex-wrap so the button drops below on narrow screens. -->
-    {showCta && (
-      <div
-        class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
-        data-reveal
-      >
-        <div class="flex max-w-[50ch] flex-col gap-s">
-          <p class="font-display text-h3 leading-[1.1] text-heading">{ctaTitle}</p>
-          <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
-        </div>
+    {
+      showCta && (
+        <div
+          class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
+          data-reveal
+        >
+          <div class="flex max-w-[50ch] flex-col gap-s">
+            <p class="font-display text-h3 leading-[1.1] text-heading">{ctaTitle}</p>
+            <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
+          </div>
 
-        <span class="inline-block">
-          <a
-            href="/contact/"
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-          >
-            {processCopy.ctaLabel}
-          </a>
-        </span>
-      </div>
-    )}
+          <span class="inline-block">
+            <a
+              href="/contact"
+              class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+            >
+              Start a project
+            </a>
+          </span>
+        </div>
+      )
+    }
   </div>
 </section>
 

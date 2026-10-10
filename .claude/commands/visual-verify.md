@@ -58,15 +58,13 @@ Run this after any visual change before pushing. If a specific route is passed a
 
    The gate script reads the token, saves it to `localStorage["ncs-preview"]`, and reloads without the query param. After that one visit, every route in that browser session loads the real site. You only need to do this once per session.
 
-5. **Scroll through the page before every full-page capture.** A Playwright `fullPage` shot renders the document without scrolling it, so the IntersectionObserver behind `[data-reveal]` never fires below the first viewport and every revealed band lands in the PNG at opacity 0 (a blank band that looks like a design decision). Before each full-page shutter: scroll to the bottom in viewport-sized steps (for example `for (let y = 0; y < document.body.scrollHeight; y += innerHeight) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 150)); }`), wait a beat, scroll back to the top, and confirm every `<img>` is `complete && naturalWidth > 0`. Any screenshot with a large uniform band is re-taken, never accepted.
-
-6. **Actually look at every screenshot.** Use the Read tool on each PNG. Check:
+5. **Actually look at every screenshot.** Use the Read tool on each PNG. Check:
    - The changed element in all four states.
    - The sections immediately above and below it.
    - Text contrast in both themes.
    - Nothing overflowing or clipping at 375px.
 
-7. **If anything is off**, fix it, re-screenshot the affected state, and verify again. Repeat until clean.
+6. **If anything is off**, fix it, re-screenshot the affected state, and verify again. Repeat until clean.
 
 ---
 

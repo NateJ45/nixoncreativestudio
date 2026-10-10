@@ -1,75 +1,66 @@
 ---
-// Safe to edit. Reads testimonials from the EmDash CMS at request time and
-// tags the page's route cache with them (getCaseStudies(Astro.cache)).
+// Safe to edit.
 /* ============================================================================
    Testimonials
    ============================================================================
-   A "What clients say" band that reads real testimonials from the EmDash
-   case_studies collection (the optional testimonial_quote / testimonial_name /
-   testimonial_title fields) and rotates them in
+   A "What clients say" band that reads real testimonials from the case-studies
+   collection (the optional `testimonial` frontmatter field) and rotates them in
    an Embla carousel (TestimonialCarousel island).
 
    It is collection-driven so quotes stay tied to the client they came from and
-   nothing is fabricated: a case study only contributes a quote when it
-   actually carries one. If no case study has a testimonial, this
+   nothing is fabricated: a case study only contributes a quote when its
+   frontmatter actually carries one. If no case study has a `testimonial`, this
    whole section renders nothing, so it is safe to place anywhere and it lights
    up as real quotes are added.
 
-   To add a testimonial: fill the three testimonial fields on a case study in
-   the EmDash admin, e.g.
+   To add a testimonial: fill the `testimonial` block on a case study's
+   frontmatter, e.g.
 
-     testimonial_quote: "Nathan rebuilt our site and visit-planning got far simpler."
-     testimonial_name:  "Jane Doe"
-     testimonial_title: "Office Administrator, First Presbyterian"
+     testimonial:
+       quote: "Nathan rebuilt our site and visit-planning got far simpler."
+       name: "Jane Doe"
+       title: "Office Administrator, First Presbyterian"
 
    The band uses .band-themed (light in light mode, navy aurora in dark) so it
    reads as a deliberate beat in both themes. Used on /about before the CTA.
    ============================================================================ */
 
+import { getCollection } from 'astro:content';
 import TestimonialCarousel from './TestimonialCarousel';
-import { getCaseStudies } from '../lib/caseStudies';
 
-// The heading and sub come from the About page entry (CMS-DESIGN PR 8) and are
-// passed in by about.astro; these defaults are the same words, so the component
-// still renders correctly anywhere it is used without props.
-interface Props {
-  heading?: string;
-  sub?: string;
-}
-const {
-  heading = 'What clients say',
-  sub = "Real words from the churches, schools, and businesses I've built for.",
-} = Astro.props;
-
-// Already sorted newest first by project date.
-const studies = await getCaseStudies(Astro.cache);
+const studies = await getCollection('case-studies');
 
 const items = studies
-  .filter((s) => s.testimonial)
+  .filter((s) => s.data.testimonial)
+  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
   .map((s) => ({
-    quote: s.testimonial!.quote,
-    name: s.testimonial!.name,
-    title: s.testimonial!.title ?? s.client,
+    quote: s.data.testimonial!.quote,
+    name: s.data.testimonial!.name,
+    title: s.data.testimonial!.title ?? s.data.client,
     href: `/work/${s.id}/`,
     hrefLabel: 'Read the case study',
   }));
 ---
 
-{items.length > 0 && (
-  <section class="band-themed py-2xl" aria-labelledby="testimonials-heading">
-    <div class="ncs-container">
-      <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="testimonials-heading" class="text-heading">
-          {heading}
-        </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">{sub}</p>
-      </header>
+{
+  items.length > 0 && (
+    <section class="band-themed py-2xl" aria-labelledby="testimonials-heading">
+      <div class="ncs-container">
+        <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
+          <h2 id="testimonials-heading" class="text-heading">
+            What clients say
+          </h2>
+          <p class="text-lg leading-[1.55] text-text-muted">
+            Real words from the churches, schools, and businesses I've built for.
+          </p>
+        </header>
 
-      {/* client:visible: the carousel hydrates when scrolled near, so the
+        {/* client:visible: the carousel hydrates when scrolled near, so the
            Embla + autoplay JS never blocks initial load. */}
-      <div data-reveal style="--reveal-delay: 100ms;">
-        <TestimonialCarousel client:visible items={items} />
+        <div data-reveal style="--reveal-delay: 100ms;">
+          <TestimonialCarousel client:visible items={items} />
+        </div>
       </div>
-    </div>
-  </section>
-)}
+    </section>
+  )
+}
