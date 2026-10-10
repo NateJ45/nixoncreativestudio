@@ -42,7 +42,7 @@ loop. CI installs chromium and webkit and runs both projects.
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `routes.ts`              | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                                                                         |
 | `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                             |
-| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; GA4 sends nothing off the production hostname (starter card 58) |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; GA4 sends nothing off the production hostname (starter card 58)                                                                                                     |
 | `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                         |
 | `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                 |
 | `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions) |
@@ -120,8 +120,7 @@ dragged accessibility below 100. The reasoning is written out at the top of
 One case study stands in for all ten, since they share a layout; `/coming-soon`
 is its own standalone template and is listed too.
 
-The workflow runs on pushes to `main` and `staging` and on pull requests, so a
-staging push proves the gate green before anything reaches main.
+The workflow runs on pushes to `main` and on pull requests.
 
 **This gate cannot be run locally on Nathan's Windows machine.** `npx lhci
 autorun` dies during Chrome-profile cleanup with an `EPERM` on its own temp
