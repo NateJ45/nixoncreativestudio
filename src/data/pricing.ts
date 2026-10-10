@@ -94,8 +94,9 @@ export interface AddOn {
   note: string;
 }
 
-// Add to any project. Photography, standalone brand/strategy, and the optional
-// care plan, each with its own honest floor. Used by the /services add-on strip.
+// Add to any project. Photography, standalone brand/strategy, and the care plan
+// (quoted with every build as the expected way to run a site long term), each
+// with its own honest floor. Used by the /services add-on strip.
 export const addOns: AddOn[] = [
   {
     name: 'Photography',
@@ -110,6 +111,6 @@ export const addOns: AddOn[] = [
   {
     name: 'Care plan',
     price: 'from $100/mo',
-    note: 'Optional. Updates, backups, security, and, on the higher tiers, a monthly bucket of small content edits. It does not cover major revisions or new features, which are quoted separately. Skip it and the site is still yours to leave alone for years, with no lock-in.',
+    note: 'Every site I launch is quoted with a care plan, because a site that is left alone slowly stops working: platform updates pile up, domains and certificates expire, and nobody is watching. I handle hosting oversight, platform and dependency updates, backups, security, uptime monitoring, and a monthly bucket of small content edits on the higher tiers. Major revisions and new features are quoted separately. Month to month, with no contract.',
   },
 ];
