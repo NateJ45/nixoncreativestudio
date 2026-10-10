@@ -80,7 +80,7 @@ Run this after any visual change before pushing. If a specific route is passed a
 
 ## Accessibility check (for structural changes)
 
-If the change touches layout, heading hierarchy, or interactive elements, also run `npm test` (axe sweeps in both themes) after the screenshot pass, and a Lighthouse audit through the Chrome DevTools MCP if you need the full report. Accessibility must stay at 100; CI enforces it. Local `lhci` does not complete on this Windows machine (CLAUDE.md Gotcha 9), so read the CI run for the authoritative score. Common regressions:
+If the change touches layout, heading hierarchy, or interactive elements, also run `npm test` (axe sweeps in both themes) after the screenshot pass, and a Lighthouse audit through the Chrome DevTools MCP if you need the full report. Accessibility must stay at 100; CI enforces it. Local `lhci` does not complete on this Windows machine (Gotcha 9 in `docs/claude/gotchas.md`), so read the CI run for the authoritative score. Common regressions:
 
 - `color-contrast`: a new color literal used in a context that doesn't pass. Check both themes.
 - `image-alt`: a missing `alt` attribute on a new `<img>`.
