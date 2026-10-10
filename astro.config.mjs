@@ -71,7 +71,10 @@ export default defineConfig({
       styleOverrides: { borderRadius: '0.5rem' },
     }),
     mdx(),
-    sitemap(),
+    // /coming-soon/ is the pre-launch gate page, not content: it is noindex
+    // (see src/pages/coming-soon.astro), and a sitemap must not list a
+    // noindex page (Search Console flags the mismatch).
+    sitemap({ filter: (page) => !page.includes('/coming-soon') }),
     react(),
   ],
 
