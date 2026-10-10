@@ -218,6 +218,19 @@
       opacity: 0.5;
     }
   }
+  /* Touch devices: the box grows to 44px (the icon stays centred and, with
+     the matching negative margins, sits where it did and adds no line height).
+     A real box, not an ::after hit area: ::after is the "Copied" bubble below,
+     and positioning the anchor would move that bubble. */
+  @media (pointer: coarse) {
+    [data-prose] .heading-anchor {
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-block: -0.625rem;
+      margin-left: calc(0.25em - 0.625rem);
+      margin-right: -0.625rem;
+    }
+  }
   /* "Copied" confirmation bubble above the control. Sizes are absolute so they
      stay constant regardless of the heading's font size. */
   [data-prose] .heading-anchor[data-copied]::after {
@@ -375,6 +388,17 @@
 .card-link:hover::after,
 .card-link:focus-visible::after {
   transform: translateX(0.25rem);
+}
+
+/* Touch devices: a standalone card-link is a real 44px-tall row (starter
+   PORTS.md card 82). It is already an inline-flex with align-items:center, so
+   the text stays centred in the taller box. Only <a>: the same class is also a
+   plain <span> inside a card that is itself the link. A real height, not a
+   hit-area ::after, because ::after here is the arrow. */
+@media (pointer: coarse) {
+  a.card-link {
+    min-height: 2.75rem;
+  }
 }
 
 /* ----------------------------------------------------------------------------

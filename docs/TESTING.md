@@ -136,6 +136,32 @@ because the repo is public and Actions minutes are free there.
 Best-effort only: GitHub's scheduler can be delayed under load. For real
 monitoring, point UptimeRobot's free tier at the homepage.
 
+### Tap-target measurement (`scripts/measure-tap-targets.mjs`)
+
+A `PORTABLE` starter file (PORTS.md card 83). It counts links and buttons whose
+tappable area is under 44px at a phone width, and hit-tests any that rely on a
+stretched `::after` so a grown area that steals taps from a neighbour shows up.
+Not a CI gate (it needs a served site and a browser): it is the manual check to
+run before and after touching links or buttons. `a11y.spec.ts` already runs
+axe's `target-size` rule (the 24px AA floor); this script checks the 44px
+comfort target. Exit code 1 when anything is under 44px or a tap is stolen.
+
+```sh
+npm run build && npm run serve:dist   # in another terminal
+node scripts/measure-tap-targets.mjs http://127.0.0.1:4321 \
+  --paths /,/about/,/services/,/work/,/work/second-presbyterian-chicago/,/journal/,/photography/,/contact/,/colophon/,/privacy/,/accessibility/,/coming-soon/
+```
+
+Use `127.0.0.1`, not `localhost` (http-server may not answer on IPv6), and on
+Git Bash set `MSYS_NO_PATHCONV=1` or the `/` paths turn into Windows paths. The
+route list is `tests/routes.ts`. Content inside a closed `<details>` is skipped;
+pass `--include-closed-details` to count it. Links inside a sentence of body
+text are listed as exempt (WCAG 2.5.8 "Inline") and left out of the total.
+
+Every fix is gated on `pointer: coarse` (the `pointer-coarse:min-h-11` utility
+or a `@media (pointer: coarse)` block), so a mouse desktop keeps its density.
+Last scan (2026-10-09, 390px, all routes): 0 under 44px (298 before the fix).
+
 ---
 
 ## Deliberate absences
