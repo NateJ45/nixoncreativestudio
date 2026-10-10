@@ -100,6 +100,13 @@ const itemClass = 'client-item font-display text-lg uppercase tracking-[0.04em]'
   :global(.dark) .client-item {
     color: color-mix(in oklab, #ffffff 62%, transparent);
   }
+  /* Touch devices: each name is a 44px-tall row. Gated on pointer:coarse so a
+     mouse desktop keeps the thin ticker. */
+  @media (pointer: coarse) {
+    .client-item {
+      min-height: 2.75rem;
+    }
+  }
   .client-item:hover,
   .client-item:focus-visible {
     color: var(--color-heading);
