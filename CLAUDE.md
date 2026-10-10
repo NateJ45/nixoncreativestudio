@@ -6,7 +6,7 @@ This is a one-person project. Nathan is the owner, the designer, the photographe
 
 Reid Design is a separate business entity. Do not conflate it with Nixon Creative Studio.
 
-**Rolled back 2026-10-09.** The EmDash CMS and server rendering (PRs #47 to #105) were rolled back to the static state of 7bca364: every page is prerendered and all content lives in this repo. Kept on top: the $100/mo care plan price (#41), the sync-check resync (#89) and the GA4 hostname guard (#104). The EmDash history stays in git; `main` is the only branch.
+**Rolled back 2026-10-09.** The EmDash CMS and server rendering (PRs #47 to #105) were rolled back to the static state of 7bca364: every page is prerendered and all content lives in this repo. Kept on top: the care plan pricing (#41; since replaced by the four care levels in `src/data/pricing.ts`, which match the client proposals), the sync-check resync (#89) and the GA4 hostname guard (#104). The EmDash history stays in git; `main` is the only branch.
 
 Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, shadcn/ui plus Starwind, React 19 islands. Full list: `docs/claude/stack.md`.
 

@@ -53,6 +53,7 @@ export const webTiers: WebTier[] = [
       'A focused set of core pages, designed around your goals',
       'Content you can keep current yourself',
       'Accessible and fast, set up and handed off',
+      'Year one hosting included',
     ],
     highlighted: false,
   },
@@ -67,6 +68,7 @@ export const webTiers: WebTier[] = [
       'A larger site with deeper content sections',
       'Several content types your team manages itself',
       'Integrations and search-engine work built in',
+      'Year one hosting included',
     ],
     highlighted: true,
     badge: 'Where most projects land',
@@ -82,6 +84,7 @@ export const webTiers: WebTier[] = [
       'Custom interactive tools and features',
       'Advanced and third-party integrations',
       'A headless build for a large, deep site',
+      'Year one hosting included',
     ],
     highlighted: false,
   },
@@ -94,9 +97,9 @@ export interface AddOn {
   note: string;
 }
 
-// Add to any project. Photography, standalone brand/strategy, and the care plan
-// (quoted with every build as the expected way to run a site long term), each
-// with its own honest floor. Used by the /services add-on strip.
+// Add to any project. Photography and standalone brand/strategy, each with its
+// own honest floor. Used by the /services add-on strip. Care after launch has
+// its own list below (carePlans).
 export const addOns: AddOn[] = [
   {
     name: 'Photography',
@@ -108,9 +111,77 @@ export const addOns: AddOn[] = [
     price: '$500 to $2,000',
     note: 'Standalone strategy or brand-identity work for when you need it on its own. Strategy is already built into every website project.',
   },
+];
+
+export interface CarePlan {
+  name: string;
+  /** Display price, e.g. '$49'. */
+  price: string;
+  /** Billing period shown after the price, e.g. '/mo'. */
+  period: string;
+  /** One-line "who it's for". */
+  who: string;
+  /** Included-time line, e.g. '30 minutes of edits each month'. */
+  time: string;
+  features: string[];
+}
+
+// Care after launch. Year one Hosting is included in every web tier (see the
+// tier features above); from year two the client picks a level. These four levels match the client proposals on price and
+// inclusions (First Baptist Auburn, October 2026): change a level here and in
+// the proposal template together. Hosting is the floor every live site needs;
+// the monthly levels add edit time and faster replies. Keep the /services
+// "Do I need a care plan" FAQ answer in step with these numbers.
+export const carePlans: CarePlan[] = [
   {
-    name: 'Care plan',
-    price: 'from $100/mo',
-    note: 'Every site I launch is quoted with a care plan, because a site that is left alone slowly stops working: platform updates pile up, domains and certificates expire, and nobody is watching. I handle hosting oversight, platform and dependency updates, backups, security, uptime monitoring, and a monthly bucket of small content edits on the higher tiers. Major revisions and new features are quoted separately. Month to month, with no contract.',
+    name: 'Hosting',
+    price: '$180',
+    period: '/yr',
+    who: 'For an organization that edits everything itself.',
+    time: 'No edits included; changes at $85 an hour',
+    features: [
+      'Fast, secure hosting',
+      'Uptime monitoring',
+      'Daily backups',
+      'Domain and security renewals handled',
+    ],
+  },
+  {
+    name: 'Light Care',
+    price: '$49',
+    period: '/mo',
+    who: 'For a quick change now and then.',
+    time: '30 minutes of edits each month',
+    features: [
+      'Everything in Hosting',
+      'Software and security updates',
+      'Email replies within 2 business days',
+    ],
+  },
+  {
+    name: 'Care',
+    price: '$99',
+    period: '/mo',
+    who: 'For peace of mind as the site grows.',
+    time: '1 hour of edits and fixes each month',
+    features: [
+      'Everything in Light Care',
+      'A yearly backup restore test',
+      'Annual health report: speed, search, security',
+      'Next business day replies',
+    ],
+  },
+  {
+    name: 'Care+',
+    price: '$149',
+    period: '/mo',
+    who: 'For an organization that wants a web partner.',
+    time: '3 hours of content help each month',
+    features: [
+      'Everything in Care',
+      '2 new pages or features a year',
+      'Quarterly check-in and analytics review',
+      'Same business day replies',
+    ],
   },
 ];
