@@ -53,6 +53,7 @@ export const webTiers: WebTier[] = [
       'A focused set of core pages, designed around your goals',
       'Content you can keep current yourself',
       'Accessible and fast, set up and handed off',
+      'Year one hosting included',
     ],
     highlighted: false,
   },
@@ -67,6 +68,7 @@ export const webTiers: WebTier[] = [
       'A larger site with deeper content sections',
       'Several content types your team manages itself',
       'Integrations and search-engine work built in',
+      'Year one hosting included',
     ],
     highlighted: true,
     badge: 'Where most projects land',
@@ -82,6 +84,7 @@ export const webTiers: WebTier[] = [
       'Custom interactive tools and features',
       'Advanced and third-party integrations',
       'A headless build for a large, deep site',
+      'Year one hosting included',
     ],
     highlighted: false,
   },
@@ -123,7 +126,8 @@ export interface CarePlan {
   features: string[];
 }
 
-// Care after launch. These four levels match the client proposals on price and
+// Care after launch. Year one Hosting is included in every web tier (see the
+// tier features above); from year two the client picks a level. These four levels match the client proposals on price and
 // inclusions (First Baptist Auburn, October 2026): change a level here and in
 // the proposal template together. Hosting is the floor every live site needs;
 // the monthly levels add edit time and faster replies. Keep the /services
