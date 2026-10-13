@@ -12,7 +12,7 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
    npm run build
    ```
 
-   A `prebuild` hook first stops any stale dev server holding `dist/` (`scripts/free-dist.mjs`). Then the build runs `npm run placeholders` (generates `src/lib/coverPlaceholders.json` from case study cover images), `npm run og:pages` (per-page Open Graph cards into `public/og/`), and `astro build` (compiles every page to static HTML in `dist/`). All three must succeed.
+   A `prebuild` hook first stops any stale dev server holding `dist/` (`scripts/free-dist.mjs`). Then the build runs `npm run placeholders` (generates `src/lib/coverPlaceholders.json` from case study cover images), `npm run og:pages` (per-page Open Graph cards into `public/og/`), and `node scripts/with-workerd.mjs astro build` (the Windows workerd shim around `astro build`; compiles every page to static HTML in `dist/`). All three must succeed.
 
 3. **Run tests:**
 
