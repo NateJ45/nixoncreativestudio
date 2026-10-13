@@ -69,21 +69,17 @@ const wrapperStyle = placeholder
 ---
 
 <div class={`relative overflow-hidden bg-bg-soft ${radiusClass} ${className}`} style={wrapperStyle}>
-  {
-    /* The blur layer sits on top of the wrapper bg and is removed once
+  {/* The blur layer sits on top of the wrapper bg and is removed once
       the image loads. Avoids the brief moment where the bg-image source
-      is still visible underneath a partially-loaded WebP. */
-  }
-  {
-    placeholder && (
-      <div
-        aria-hidden="true"
-        data-blur-up-layer
-        class="pointer-events-none absolute inset-0 transition-opacity duration-500"
-        style={`background-image: url("${placeholder}"); background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1);`}
-      />
-    )
-  }
+      is still visible underneath a partially-loaded WebP. */}
+  {placeholder && (
+    <div
+      aria-hidden="true"
+      data-blur-up-layer
+      class="pointer-events-none absolute inset-0 transition-opacity duration-500"
+      style={`background-image: url("${placeholder}"); background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1);`}
+    />
+  )}
 
   <Image
     src={cover}
