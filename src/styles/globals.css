@@ -484,6 +484,17 @@
   }
 }
 
+/* A reveal that starts offset sideways (data-reveal="left|right") sits outside
+   its parent until the observer clears it, and an off-screen box widens the
+   document: on /services at 320px the unrevealed spotlight card ended at 328px,
+   so the page could be panned 8px sideways until it scrolled into view
+   (2026-10-13 audit). `clip` (not `hidden`) cuts the overflow without making
+   <main> a scroll container, so sticky children and focus rings keep working.
+   Nothing inside <main> is meant to extend past the viewport edge. */
+main {
+  overflow-x: clip;
+}
+
 /* ---- Heading emphasis -----------------------------------------------------
    Gradient text (background-clip:text over a gradient) was removed site-wide.
    It is an impeccable absolute ban: decorative, never meaningful, and a top

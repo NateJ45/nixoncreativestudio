@@ -57,6 +57,20 @@ const shotFor = (id: string): ImageMetadata | null => {
   return match ? match[1].default : null;
 };
 
+// The captures are full pages (up to 10824px tall). The card frame shows the top
+// 4:3 and the hover pan travels 62% of the image, so nothing past about four
+// frame-widths down is ever seen. Serve a crop capped at that depth instead of
+// the whole page: the 1440x10824 stone-steps capture was shipping as a 900x6765
+// webp (420 KB) to fill a 346x2601 box on a phone. `fit: cover` + `position: top`
+// makes sharp crop from the top. Captures shorter than the cap are left whole.
+const COVER_MAX_ASPECT = 4;
+const coverCrop = (shot: ImageMetadata, width: number) => ({
+  width,
+  height: Math.round(width * Math.min(shot.height / shot.width, COVER_MAX_ASPECT)),
+  fit: 'cover' as const,
+  position: 'top' as const,
+});
+
 // Mobile site captures ({slug}-mobile.png, the same ones the hero showcase
 // phone uses). On hover a small phone fades in at the card's bottom-right and
 // scrolls the mobile view in step with the desktop, so the card reads as a
@@ -124,8 +138,9 @@ const [primary, ...secondaries] = featured;
                   <Image
                     src={shotFor(primary.id)!}
                     alt=""
-                    widths={[600, 900, 1200]}
-                    sizes="(min-width: 48rem) 60vw, 100vw"
+                    {...coverCrop(shotFor(primary.id)!, 1200)}
+                    widths={[480, 640, 900, 1200]}
+                    sizes="(min-width: 48rem) 60vw, calc(100vw - 4.2rem)"
                     class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
                     loading="lazy"
                   />
@@ -135,8 +150,8 @@ const [primary, ...secondaries] = featured;
                         <Image
                           src={mobileShotFor(primary.id)!}
                           alt=""
-                          widths={[180, 340]}
-                          sizes="200px"
+                          widths={[120, 180, 260]}
+                          sizes="(min-width: 48rem) 130px, 60px"
                           class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
                           loading="lazy"
                         />
@@ -194,8 +209,9 @@ const [primary, ...secondaries] = featured;
                     <Image
                       src={shotFor(entry.id)!}
                       alt=""
-                      widths={[400, 600, 900]}
-                      sizes="(min-width: 48rem) 30vw, 100vw"
+                      {...coverCrop(shotFor(entry.id)!, 900)}
+                      widths={[400, 640, 900]}
+                      sizes="(min-width: 48rem) 30vw, calc(100vw - 4.2rem)"
                       class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
                       loading="lazy"
                     />
@@ -205,8 +221,8 @@ const [primary, ...secondaries] = featured;
                           <Image
                             src={mobileShotFor(entry.id)!}
                             alt=""
-                            widths={[160, 300]}
-                            sizes="170px"
+                            widths={[120, 180]}
+                            sizes="(min-width: 48rem) 85px, 60px"
                             class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
                             loading="lazy"
                           />

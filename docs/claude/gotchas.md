@@ -93,6 +93,22 @@ Every entry below was measured, not assumed.
     reveal gate. Do not "fix" this by animating from `opacity: 0.01`; that
     fakes the metric without the visitor seeing anything sooner.
 
+    The exemption is `main > :first-child [data-reveal]`, so it only works
+    while the first element inside `<main>` is the real content. On the case
+    study pages `<ReadingProgress client:idle />` (an `<astro-island>`) used to
+    sit before the `<article>`; the exemption missed the hero copy and the
+    summary paragraph waited about 900ms for the observer (LCP 6.1 to 6.4s on
+    `/work/mas-monograms/`, 3.5s once the island moved after the article,
+    2026-10-13). Never put a wrapper, island or fixed-position helper ahead of
+    the page's first section.
+
+    The same reveal vocabulary has a width twin: `data-reveal="left|right"`
+    starts 2rem off to the side, and an unrevealed box that far out widens the
+    document (`/services` was 328px wide at a 320px viewport until its
+    spotlight card scrolled in). `main { overflow-x: clip }` in `globals.css`
+    now cuts that; `tests/reflow.spec.ts` measures every route unscrolled and
+    while scrolling, because `settle()` force-reveals everything and hid it.
+
 11. **WebKit drops `box-shadow` on natively rendered form controls, so a
     Tailwind `focus:ring-*` is invisible on a `<select>` in Safari and on iOS.**
     The four selects on `/contact` had no focus ring at all there while every

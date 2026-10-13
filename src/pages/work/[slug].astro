@@ -144,13 +144,6 @@ const schemas = [
   ogType="article"
   schemas={schemas}
 >
-  {
-    /* Reading progress bar pinned to the top of the viewport. Only
-      rendered here, not in BaseLayout, because the rest of the site has
-      mostly short pages where a progress bar would be visual noise. */
-  }
-  <ReadingProgress client:idle />
-
   <article>
     <!-- Hero block. Two-column on >= 56rem (copy left, image right),
          stacked on mobile. Generous padding so the case study feels like
@@ -283,7 +276,7 @@ const schemas = [
             placeholder={coverBlur}
             alt=""
             widths={[640, 960, 1440]}
-            sizes="(min-width: 56rem) 50vw, 100vw"
+            sizes="(min-width: 56rem) 50vw, calc(100vw - 3rem)"
           />
         </div>
       </div>
@@ -475,6 +468,20 @@ const schemas = [
       )
     }
   </article>
+
+  {
+    /* Reading progress bar pinned to the top of the viewport. Only
+      rendered here, not in BaseLayout, because the rest of the site has
+      mostly short pages where a progress bar would be visual noise.
+      It sits AFTER the article on purpose: it is position:fixed, so its place
+      in the DOM does not matter visually, but its <astro-island> wrapper used
+      to be <main>'s first child, which made the first-screen reveal exemption
+      in globals.css (`main > :first-child [data-reveal]`) miss the hero copy.
+      The summary paragraph is the LCP element here and waited about 900ms for
+      the reveal observer (2026-10-13 audit, LCP 6.4s). Keep the article as
+      <main>'s first child. */
+  }
+  <ReadingProgress client:idle />
 
   {
     /* Sticky-TOC scroll-spy. Marks the TOC link for the section currently in
