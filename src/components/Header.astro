@@ -72,9 +72,7 @@ const isActive = (href: string): boolean => {
       href="/"
       transition:name="site-wordmark"
     >
-      <span
-        class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]"
-      >
+      <span class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]">
         {site.studioName}
       </span>
     </a>
@@ -85,24 +83,22 @@ const isActive = (href: string): boolean => {
            and toggle); the MobileNav drawer takes over below md. -->
       <nav aria-label="Primary" class="hidden md:block">
         <ul class="flex items-center gap-m">
-          {
-            navLinks.map(({ label, href }) => (
-              <li>
-                <a
-                  class:list={[
-                    'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
-                    isActive(href)
-                      ? 'is-active text-link'
-                      : 'text-text hover:text-link focus-visible:text-link',
-                  ]}
-                  href={href}
-                  aria-current={isActive(href) ? 'page' : undefined}
-                >
-                  {label}
-                </a>
-              </li>
-            ))
-          }
+          {navLinks.map(({ label, href }) => (
+            <li>
+              <a
+                class:list={[
+                  'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
+                  isActive(href)
+                    ? 'is-active text-link'
+                    : 'text-text hover:text-link focus-visible:text-link',
+                ]}
+                href={href}
+                aria-current={isActive(href) ? 'page' : undefined}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
         </ul>
       </nav>
 
@@ -110,8 +106,10 @@ const isActive = (href: string): boolean => {
            CTA reads as distinct. Inherits the header's text colour (dark on the
            light bar, light over the navy hero) at low opacity, staying subtle in
            every state. Desktop only, alongside the nav + CTA it divides. -->
-      <div class="hidden h-6 w-px self-center bg-current opacity-20 md:block" aria-hidden="true">
-      </div>
+      <div
+        class="hidden h-6 w-px self-center bg-current opacity-20 md:block"
+        aria-hidden="true"
+      ></div>
 
       <!-- Primary CTA, promoted from the old Contact nav link: a prominent brand
            button straight to the inquiry form. Desktop only; the MobileNav drawer

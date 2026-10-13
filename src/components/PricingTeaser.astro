@@ -59,17 +59,15 @@ const includes = [
     <div class="mb-2xl" data-reveal style="--reveal-delay: 80ms;">
       <p class="mb-s font-semibold text-text">Every build includes, whatever the tier:</p>
       <ul class="flex flex-wrap gap-x-l gap-y-2 p-0 leading-[1.4] text-text-muted">
-        {
-          includes.map((item) => (
-            <li class="flex items-center gap-s">
-              <span
-                class="inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                aria-hidden="true"
-              />
-              <span>{item}</span>
-            </li>
-          ))
-        }
+        {includes.map((item) => (
+          <li class="flex items-center gap-s">
+            <span
+              class="inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
+              aria-hidden="true"
+            />
+            <span>{item}</span>
+          </li>
+        ))}
       </ul>
     </div>
 
@@ -79,64 +77,62 @@ const includes = [
          the other two stay quiet on a 1px hairline. Prices count up on scroll,
          with the real number as the static fallback. -->
     <ul class="grid list-none gap-l p-0 md:grid-cols-3">
-      {
-        webTiers.map((tier, index) => (
-          <li
-            class:list={[
-              'pricing-tier flex flex-col gap-s border-t border-border pt-m',
-              tier.highlighted && 'pricing-tier--anchor',
-            ]}
-            data-reveal
-            style={`--reveal-delay: ${index * 110}ms;`}
-          >
-            <h3 class="pricing-name font-display text-h5 text-heading">{tier.name}</h3>
+      {webTiers.map((tier, index) => (
+        <li
+          class:list={[
+            'pricing-tier flex flex-col gap-s border-t border-border pt-m',
+            tier.highlighted && 'pricing-tier--anchor',
+          ]}
+          data-reveal
+          style={`--reveal-delay: ${index * 110}ms;`}
+        >
+          <h3 class="pricing-name font-display text-h5 text-heading">{tier.name}</h3>
 
-            {/* Caption row, present on every tier so the prices below stay aligned
+          {/* Caption row, present on every tier so the prices below stay aligned
               across the three columns. The anchor shows its "where most projects
               land" badge in accent so it reads as the recommendation; the others
               show who the tier is for. */}
-            <p
+          <p
+            class:list={[
+              'text-sm',
+              tier.highlighted ? 'font-semibold text-link' : 'text-text-muted',
+            ]}
+          >
+            {tier.highlighted && tier.badge ? tier.badge : tier.who}
+          </p>
+
+          <p class="flex items-baseline gap-xs">
+            <span class="text-sm font-medium text-text-muted">from</span>
+            <span
               class:list={[
-                'text-sm',
-                tier.highlighted ? 'font-semibold text-link' : 'text-text-muted',
+                'pricing-price font-display text-h2 leading-none',
+                tier.highlighted ? 'text-accent' : 'text-link',
               ]}
             >
-              {tier.highlighted && tier.badge ? tier.badge : tier.who}
-            </p>
-
-            <p class="flex items-baseline gap-xs">
-              <span class="text-sm font-medium text-text-muted">from</span>
-              <span
-                class:list={[
-                  'pricing-price font-display text-h2 leading-none',
-                  tier.highlighted ? 'text-accent' : 'text-link',
-                ]}
-              >
-                $
-                <span data-countup data-countup-to={tier.priceFrom} data-countup-duration="1200">
-                  {tier.priceFrom.toLocaleString()}
-                </span>
-                {tier.priceSuffix}
+              $
+              <span data-countup data-countup-to={tier.priceFrom} data-countup-duration="1200">
+                {tier.priceFrom.toLocaleString()}
               </span>
-            </p>
-            <p class="text-sm text-text-muted">{tier.range}</p>
+              {tier.priceSuffix}
+            </span>
+          </p>
+          <p class="text-sm text-text-muted">{tier.range}</p>
 
-            {/* Scope points: what grows at this tier. The cross-cutting guarantees
+          {/* Scope points: what grows at this tier. The cross-cutting guarantees
               live in the value floor above, so these stay about scale. */}
-            <ul class="mt-xs flex list-none flex-col gap-2 p-0 text-sm leading-[1.45] text-text">
-              {tier.features.map((feature) => (
-                <li class="flex items-start gap-s">
-                  <span
-                    class="mt-[0.4em] inline-block h-[0.35rem] w-[0.35rem] shrink-0 rounded-full bg-accent/70"
-                    aria-hidden="true"
-                  />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))
-      }
+          <ul class="mt-xs flex list-none flex-col gap-2 p-0 text-sm leading-[1.45] text-text">
+            {tier.features.map((feature) => (
+              <li class="flex items-start gap-s">
+                <span
+                  class="mt-[0.4em] inline-block h-[0.35rem] w-[0.35rem] shrink-0 rounded-full bg-accent/70"
+                  aria-hidden="true"
+                />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
     </ul>
 
     <!-- Reassurance + route to the full pricing, add-ons, and justification copy
@@ -147,7 +143,9 @@ const includes = [
         Every number is a starting point. The first conversation is free and ends with an honest
         ballpark, and larger projects can split into monthly payments.
       </p>
-      <a class="card-link text-lg" href="/services/">See full pricing and services</a>
+      <a class="card-link text-lg" href="/services/">
+        See full pricing and services
+      </a>
     </div>
   </div>
 </section>

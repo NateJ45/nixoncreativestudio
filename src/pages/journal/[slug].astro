@@ -74,11 +74,9 @@ const schemas = [
   <article>
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
       <div class="ncs-container max-w-[64rem]" data-reveal>
-        {
-          /* The animated underline sits on an inner span, not the link: on a touch
+        {/* The animated underline sits on an inner span, not the link: on a touch
             device the link is a 44px-tall row, and an underline on the link's own
-            box would drop to the bottom of that row, away from the words. */
-        }
+            box would drop to the bottom of that row, away from the words. */}
         <a
           class="mb-l inline-flex items-center font-mono text-[0.8rem] tracking-[0.1em] text-link uppercase no-underline pointer-coarse:min-h-11"
           href="/journal/"
@@ -89,51 +87,45 @@ const schemas = [
           </span>
         </a>
 
-        <p
-          class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase"
-        >
+        <p class="mb-m flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
           <span>{publishedLabel}</span>
           <span aria-hidden="true">·</span>
           <span>{minutes} min read</span>
-          {
-            updatedLabel && updatedLabel !== publishedLabel && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>Updated {updatedLabel}</span>
-              </>
-            )
-          }
+          {updatedLabel && updatedLabel !== publishedLabel && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>Updated {updatedLabel}</span>
+            </>
+          )}
         </p>
 
-        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">{title}</h1>
+        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">
+          {title}
+        </h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
 
-        {
-          tags && tags.length > 0 && (
-            <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
-              {tags.map((tag) => (
-                <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          )
-        }
+        {tags && tags.length > 0 && (
+          <ul class="mt-l flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((tag) => (
+              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        )}
 
-        {
-          cover && (
-            <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal="scale">
-              <Image
-                src={cover}
-                alt=""
-                widths={[600, 900, 1200]}
-                sizes="(min-width: 56rem) 64rem, 100vw"
-                class="block h-auto w-full"
-                transition:name={`journal-cover-${entry.id}`}
-              />
-            </div>
-          )
-        }
+        {cover && (
+          <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal="scale">
+            <Image
+              src={cover}
+              alt=""
+              widths={[600, 900, 1200]}
+              sizes="(min-width: 56rem) 64rem, 100vw"
+              class="block h-auto w-full"
+              transition:name={`journal-cover-${entry.id}`}
+            />
+          </div>
+        )}
       </div>
     </header>
 
@@ -152,26 +144,22 @@ const schemas = [
         <Content />
       </div>
 
-      {
-        /* End-of-article tag list. Mirrors the chips in the header but reads
-          as a footer to the piece, a natural stopping point before the CTA. */
-      }
-      {
-        tags && tags.length > 0 && (
-          <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
-            <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
-              Filed under
-            </p>
-            <ul class="flex flex-wrap gap-2" aria-label="Topics">
-              {tags.map((tag) => (
-                <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] tracking-[0.06em] text-text uppercase">
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          </footer>
-        )
-      }
+      {/* End-of-article tag list. Mirrors the chips in the header but reads
+          as a footer to the piece, a natural stopping point before the CTA. */}
+      {tags && tags.length > 0 && (
+        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+          <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
+            Filed under
+          </p>
+          <ul class="flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((tag) => (
+              <li class="rounded-full border border-border bg-bg-soft px-3 py-1 font-mono text-[0.72rem] tracking-[0.06em] text-text uppercase">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        </footer>
+      )}
     </div>
   </article>
 
