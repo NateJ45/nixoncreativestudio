@@ -41,6 +41,38 @@ test.describe('Reflow: no horizontal overflow at 320px', () => {
   }
 });
 
+// settle() above force-reveals every [data-reveal] element, which hides one
+// real bug class: a reveal that starts offset sideways (data-reveal="left|right")
+// widens the document until it scrolls into view. /services at 320px was 328px
+// wide in that state (2026-10-13 audit) while this suite stayed green. So this
+// block measures the page as a visitor first sees it: right after load, no
+// settle(), reveals still pending, and again after a slow scroll to the bottom.
+test.describe('Reflow: no horizontal overflow at 320px before reveals run', () => {
+  test.use({ viewport: { width: 320, height: 720 } });
+
+  for (const route of routes) {
+    test(`${route} does not overflow at 320px unscrolled or while scrolling`, async ({ page }) => {
+      await page.goto(route, { waitUntil: 'load' });
+      const initial = await overflowOf(page);
+      expect(
+        initial.docWidth,
+        `${route}: unscrolled, content is ${initial.docWidth}px wide in a ${initial.viewportWidth}px viewport`,
+      ).toBeLessThanOrEqual(initial.viewportWidth);
+
+      // Step down the page so reveals fire one by one, checking each step.
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < height; y += 400) {
+        await page.evaluate((top) => window.scrollTo(0, top), y);
+        const { docWidth, viewportWidth } = await overflowOf(page);
+        expect(
+          docWidth,
+          `${route}: at scrollY ${y}, content is ${docWidth}px wide in a ${viewportWidth}px viewport`,
+        ).toBeLessThanOrEqual(viewportWidth);
+      }
+    });
+  }
+});
+
 test.describe('Reflow: no horizontal overflow at tablet/laptop widths', () => {
   const widths = [1440, 1024, 768];
 

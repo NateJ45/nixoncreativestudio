@@ -46,7 +46,7 @@ loop. CI installs chromium and webkit and runs both projects.
 | `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                         |
 | `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                 |
 | `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions) |
-| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10) and at 1440/1024/768                                                                                                                                                                 |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10), unscrolled and while scrolling (reveals pending), and settled at 320 and 1440/1024/768                                                                                              |
 
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
 own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
