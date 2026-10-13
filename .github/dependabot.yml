@@ -18,7 +18,15 @@ updates:
       day: monday
       time: '07:00'
       timezone: America/New_York
+    # Groups are matched in order, so `formatters` must stay above the
+    # catch-all bundle.
     groups:
+      # A formatter bump can reformat files and fail format:check (starter
+      # PORTS.md card 90). Kept apart so only this small PR goes red, not the
+      # whole bundle; fix it with `npm run format` on the branch and push.
+      formatters:
+        patterns: ['prettier', 'prettier-plugin-*']
+        update-types: ['minor', 'patch']
       minor-and-patch:
         update-types: ['minor', 'patch']
     open-pull-requests-limit: 5
