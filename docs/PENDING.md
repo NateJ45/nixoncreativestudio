@@ -101,20 +101,16 @@ the day either the caret resolves past 4.126 **and** something starts pointing
 wrangler at the generated config. Pin `wrangler` to `~4.94.0` if that day is
 ever in doubt.
 
-### 5. `scripts/with-workerd.mjs` is installed but not wired
+### 5. `scripts/with-workerd.mjs` is wired (done 2026-10-13)
 
-PORTS.md Card 1. Deliberate. The wrapper exists to work around a workerd crash
-that only happens on Astro 7 / `@astrojs/cloudflare` 14, where the prerender is
-routed through `@cloudflare/vite-plugin`. This repo is Astro 6.3.7 / adapter
-13.5.4, the crash does not occur, and the wrapper would be a no-op.
-
-Wire it as part of the Astro 7 upgrade, not before:
-
-```json
-"build": "node scripts/with-workerd.mjs npm run placeholders && ..."
-```
-
-(the exact shape needs thought, because `build` here is a three-command chain).
+PORTS.md Card 1. The wrapper works around a workerd crash that can hit Astro 7 /
+`@astrojs/cloudflare` 14 on Windows, where the prerender runs through
+`@cloudflare/vite-plugin`. `npm run build` now ends with
+`node scripts/with-workerd.mjs astro build`, the same shape presacademy and
+reid-design-site use. It only acts on Windows, and only when wrangler carries
+its own newer workerd; on Linux CI (and on a Windows install where wrangler and
+the plugin share one workerd, as today) it changes nothing. The wrapper copy is
+byte-identical to the starter's.
 
 ---
 

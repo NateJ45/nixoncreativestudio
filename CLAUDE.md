@@ -34,7 +34,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 ## Commands
 
 - `npm run dev` (astro dev). Stop it before `npm run build` (port clash, see `.claude/rules/build-pipeline.md` and Gotcha 6).
-- `npm run build` = `prebuild` (`free-dist`) then `placeholders`, `og:pages`, `astro build`. `npm run check` = `astro check && npm run lint`. `npm run check:full` adds unit tests and the build.
+- `npm run build` = `prebuild` (`free-dist`) then `placeholders`, `og:pages`, `node scripts/with-workerd.mjs astro build` (the Windows workerd shim). `npm run check` = `astro check && npm run lint`. `npm run check:full` adds unit tests and the build.
 - `npm run lint`, `npm run format` / `format:check` (prettier, run it on md files too), `npm run test:unit` (`node --test`, import `.ts` with the extension).
 - `npm test` runs Playwright; its webServer builds and serves `dist/client` on 4321 (`npm run serve:dist`). `npm run test:ui` opens the UI.
 - `npm run check:links` runs linkinator over `dist/client` after a build (the log must say "scanned N links", N in the hundreds).
