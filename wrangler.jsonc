@@ -6,6 +6,10 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
+    // Serve dist/client/404.html (with a 404 status) for any path that has no
+    // file. Without this, Cloudflare answers an unknown URL with an empty body,
+    // so a mistyped or old link showed a blank page instead of src/pages/404.astro.
+    "not_found_handling": "404-page",
   },
   "observability": {
     "enabled": true,
