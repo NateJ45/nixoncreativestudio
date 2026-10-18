@@ -72,11 +72,13 @@ const {
     />
 
     <!-- Top layer: the BEFORE (previous) image, clipped from the left edge to
-         --pos so it occupies the LEFT side. -->
-    <div class="ba-before pointer-events-none absolute inset-0" aria-hidden="true">
+         --pos so it occupies the LEFT side. It carries beforeAlt (it used to be
+         alt="" inside an aria-hidden wrapper, so screen readers only ever heard
+         the after image and the beforeAlt prop went nowhere). -->
+    <div class="ba-before pointer-events-none absolute inset-0">
       <Image
         src={before}
-        alt=""
+        alt={beforeAlt}
         widths={[640, 768, 1024, 1440]}
         sizes="(min-width: 56rem) 70vw, calc(100vw - 3rem)"
         class="block h-auto w-full"

@@ -66,7 +66,7 @@ export default function CopyEmail({ email, className, tone = 'light' }: CopyEmai
     // 36px on a mouse desktop, 44px on any touch device (phone or tablet) where
     // a thumb needs the room. Gating on pointer:coarse, not screen width, covers
     // iPads too. The icon stays size-4; the larger box is invisible until hover.
-    'inline-flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-none ' +
+    'inline-flex h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' +
     (tone === 'dark'
       ? 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link dark:text-primary-foreground/70 dark:hover:bg-white/10 dark:hover:text-secondary dark:focus-visible:bg-white/10 dark:focus-visible:text-secondary'
       : 'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link');

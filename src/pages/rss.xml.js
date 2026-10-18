@@ -28,7 +28,7 @@ export async function GET(context) {
   );
 
   return rss({
-    title: `${site.studioName} — Case Studies`,
+    title: `${site.studioName}: Case Studies`,
     description: site.tagline,
     site: context.site ?? site.url,
 
