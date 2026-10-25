@@ -39,6 +39,9 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
+  // Every page lives at /x/ (canonical and sitemap agree); a slashless internal
+  // link is a 307 on Cloudflare and Search Console reports it (PORTS Card 89).
+  trailingSlash: 'always',
   // Astro 7's adapter no longer forces server mode; this site never used sessions.
   session: false,
   // The standalone /now page was merged into the About page (its Currently

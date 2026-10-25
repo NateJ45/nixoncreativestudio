@@ -99,10 +99,10 @@ export interface MobileNavProps {
 // page we don't have. A missing key just renders the label with no descriptor.
 const DESCRIPTIONS: Record<string, string> = {
   '/work/': 'Selected client projects',
-  '/services': 'What I build, and how',
-  '/about': 'The studio, and me',
+  '/services/': 'What I build, and how',
+  '/about/': 'The studio, and me',
   '/journal/': 'Notes on the work',
-  '/contact': 'Email, phone, or the form',
+  '/contact/': 'Email, phone, or the form',
 };
 
 // Social destinations, driven from site.ts so a network change flows here.
@@ -317,7 +317,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
           {/* Primary conversion action, matching the hero's amber CTA. */}
           <div className="mnav-item relative z-10 mt-l" style={delay(140 + links.length * 55 + 40)}>
             <Button asChild variant="brand" size="cta" className="shine w-full">
-              <a href="/contact" onClick={() => setOpen(false)}>
+              <a href="/contact/" onClick={() => setOpen(false)}>
                 Start a project
               </a>
             </Button>
