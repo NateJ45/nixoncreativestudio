@@ -51,6 +51,7 @@ export default defineConfig({
     // A retired case study (2026-10-01). Send any old links or search results
     // to the work index instead of a 404.
     '/work/west-chester-preschool': '/work/',
+    // /work/cincy-table is a 301 in public/_redirects (a real status code, not a meta refresh).
   },
   prefetch: {
     prefetchAll: true,
