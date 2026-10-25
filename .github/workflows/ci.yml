@@ -127,6 +127,11 @@ jobs:
       - name: Check internal links
         run: npm run check:links
 
+      # Fails on any slashless internal href in the built HTML (a 307 on
+      # Cloudflare, "Page with redirect" in Search Console; PORTS Card 89).
+      - name: Check trailing slashes
+        run: npm run check:slashes
+
   test:
     runs-on: ubuntu-latest
 

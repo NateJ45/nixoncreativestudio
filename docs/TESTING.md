@@ -12,18 +12,19 @@ Registry, not a changelog: when a suite changes, edit the row.
 Brought up to the family test standard on 2026-09-06 (WCP is the reference
 implementation; reid-design-site and mas-monograms carry the same shape).
 
-| Gate       | Command                  | Runs in CI           | Covers                                                                                                                                                      |
-| ---------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type check | `npx astro check`        | `ci.yml` (build job) | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                   |
-| Lint       | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                   |
-| Format     | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                               |
-| Unit tests | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` (see below)                                                                                                                             |
-| Build      | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
-| Link check | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
-| Playwright | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)              |
-| Lighthouse | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs |
-| Parity     | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
-| Uptime     | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
+| Gate        | Command                  | Runs in CI           | Covers                                                                                                                                                      |
+| ----------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type check  | `npx astro check`        | `ci.yml` (build job) | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                   |
+| Lint        | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                   |
+| Format      | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                               |
+| Unit tests  | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` (see below)                                                                                                                             |
+| Build       | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
+| Link check  | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
+| Slash check | `npm run check:slashes`  | `ci.yml` (build job) | Fails on any internal `href` in `dist/client` HTML without a trailing slash (no 307 redirects, PORTS Card 89)                                               |
+| Playwright  | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)              |
+| Lighthouse  | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs |
+| Parity      | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
+| Uptime      | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
 
 `npm run check` is the quick local gate: `astro check && npm run lint`.
 `npm run check:full` adds the unit tests and the build. `npm test` runs the

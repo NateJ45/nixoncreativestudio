@@ -51,6 +51,8 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 ## Security headers
 
+`public/_redirects` holds real 301s for retired URLs with no live equivalent (currently `/work/cincy-table`, both forms, to `/work/`). Astro `redirects` in `astro.config.mjs` only emit a meta-refresh page, so use `_redirects` when Search Console needs a true 301.
+
 `public/_headers` ships with the deploy. Five site-wide headers Cloudflare applies to every route:
 
 - `Strict-Transport-Security` (HSTS, one year, includeSubDomains)

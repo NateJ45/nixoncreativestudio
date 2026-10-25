@@ -39,6 +39,9 @@ import react from '@astrojs/react';
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
   output: 'static',
+  // Every page lives at /x/ (canonical and sitemap agree); a slashless internal
+  // link is a 307 on Cloudflare and Search Console reports it (PORTS Card 89).
+  trailingSlash: 'always',
   // Astro 7's adapter no longer forces server mode; this site never used sessions.
   session: false,
   // The standalone /now page was merged into the About page (its Currently
@@ -48,6 +51,7 @@ export default defineConfig({
     // A retired case study (2026-10-01). Send any old links or search results
     // to the work index instead of a 404.
     '/work/west-chester-preschool': '/work/',
+    // /work/cincy-table is a 301 in public/_redirects (a real status code, not a meta refresh).
   },
   prefetch: {
     prefetchAll: true,
