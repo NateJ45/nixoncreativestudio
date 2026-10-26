@@ -26,6 +26,10 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 | Parity      | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
 | Uptime      | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
 
+The `test` job has `timeout-minutes: 30`, and its browser install runs each attempt under `timeout 360`
+inside a 15-minute step (2026-10-26, starter PORTS card 70): a throttled Ubuntu mirror once held that install
+for an hour across the family, and with no timeout a required check can wait for the 6-hour default.
+
 `npm run check` is the quick local gate: `astro check && npm run lint`.
 `npm run check:full` adds the unit tests and the build. `npm test` runs the
 Playwright suites (it builds and serves `dist/client` itself); `npm run test:ui`
