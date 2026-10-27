@@ -38,14 +38,14 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 - `npm run lint`, `npm run format` / `format:check` (prettier, run it on md files too), `npm run test:unit` (`node --test`, import `.ts` with the extension).
 - `npm test` runs Playwright; its webServer builds and serves `dist/client` on 4321 (`npm run serve:dist`). `npm run test:ui` opens the UI.
 - `npm run check:links` runs linkinator over `dist/client` after a build (the log must say "scanned N links", N in the hundreds).
-- `npm run sync-check`, `npm run free-dist`, `npm run placeholders`, `npm run og` / `og:pages` / `icons` (generators), `npm run parity capture|compare` (not in CI).
+- `npm run font-fallback` (writes `src/styles/font-fallbacks.css`, metric-matched stand-in for Bebas Neue named second in `--font-display`; rerun if the display font changes; reads `brand/brand.config.json`, which exists only for it), `npm run test:scripts` (`scripts/lib/*.test.mjs`, run by `test:unit`), `npm run sync-check`, `npm run free-dist`, `npm run placeholders`, `npm run og` / `og:pages` / `icons` (generators), `npm run parity capture|compare` (not in CI).
 - Lighthouse: never trust a local `lhci autorun` on this Windows machine (Gotcha 9); read the CI run.
 
 ## Branches, CI and deploy
 
 - Production deploys from Cloudflare Workers Builds on a push to `main` (Worker `nixoncreativestudio`, assets from `dist/`). Other branches get a `*-nixoncreativestudio.nathanjnixon86.workers.dev` preview. The apex is canonical; `www` 301s to it.
 - `main` is the only branch. Short-lived branch, open a PR; the `main` ruleset requires PR plus green `build` and `test`. Undo with `git revert` or the Deployments tab rollback.
-- Hard gates: `astro check`, lint (0 errors), `prettier --check`, unit tests, sync-check, link check, Playwright, Lighthouse accessibility = 1, LCP under 4.5s, CLS under 0.1. A format gate that only runs in CI has bitten this studio before: run prettier locally.
+- Hard gates: `astro check`, lint (0 errors), `prettier --check`, unit tests, sync-check, link check, Playwright (including `tests/page-weight.spec.ts`, budgets in `tests/page-weight.config.json`: raise one only with the reason in `_why`), Lighthouse accessibility = 1, LCP under 4.5s, CLS under 0.1. A format gate that only runs in CI has bitten this studio before: run prettier locally.
 - Details: `.claude/rules/testing-ci.md`, `docs/claude/deployment.md`, `docs/TESTING.md`, `docs/PENDING.md` (the open-patch queue; edit registries in the same commit as the thing they track).
 
 ## Never-break rules (each one cost real time)

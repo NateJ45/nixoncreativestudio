@@ -17,6 +17,7 @@
     "og": "node scripts/generate-og-default.mjs",
     "og:pages": "node scripts/generate-og.mjs",
     "icons": "node scripts/generate-icons.mjs",
+    "font-fallback": "node scripts/font-fallback.mjs",
     "free-dist": "node scripts/free-dist.mjs",
     "parity": "node scripts/page-parity.mjs",
     "sync-check": "node scripts/sync-check.mjs",
@@ -28,7 +29,8 @@
     "format:check": "prettier --check .",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts && npm run test:scripts",
+    "test:scripts": "node --test scripts/lib/*.test.mjs",
     "serve:dist": "http-server dist/client -p 4321 -s -c-1 --silent",
     "check:slashes": "node scripts/check-trailing-slash.mjs dist/client",
     "check:links": "linkinator ./dist/client --recurse --skip \"^https?://(?!(localhost|127[.]0[.]0[.]1)[:/])\""

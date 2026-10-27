@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "EXPECTED TO DIFFER PER SITE. The budgets tests/page-weight.spec.ts checks (decoded kilobytes).",
+    "Set 2026-10-27 from what each page weighed (Playwright, chromium) plus about 25%. Route keys match tests/routes.ts (no trailing slash).",
+    "Keys left out fall back to the spec's own numbers. A route that must be heavy gets its own entry under pages, with the reason in _why.",
+    "jsonLd lists the schema.org types a route must carry, e.g. { \"/\": [\"Organization\"] }."
+  ],
+  "defaults": {
+    "maxHtmlKb": 150,
+    "maxInlineCssKb": 35,
+    "maxScriptKb": 430,
+    "maxImagesKb": 500,
+    "maxImageKb": 500,
+    "maxLcpImageKb": 250,
+    "maxFontPreloads": 3,
+    "maxFontKb": 120
+  },
+  "pages": {
+    "/": {
+      "_why": "The hero's WebGL canvas loads three.js and react-three-fiber (1237 KB of scripts, 614 KB of images when measured, 2026-10-27).",
+      "maxScriptKb": 1550,
+      "maxImagesKb": 770
+    },
+    "/contact": {
+      "_why": "The form island loads React and the form libraries (2101 KB of scripts when measured, 2026-10-27).",
+      "maxScriptKb": 2650
+    }
+  },
+  "jsonLd": {
+    "/": ["Person"],
+    "/services": ["Service", "FAQPage"]
+  }
+}
