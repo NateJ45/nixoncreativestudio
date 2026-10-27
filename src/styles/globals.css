@@ -39,6 +39,7 @@
    ---------------------------------------------------------------------------- */
 @import '@fontsource/bebas-neue/latin-400.css';
 @import '@fontsource-variable/source-sans-3';
+@import './font-fallbacks.css';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
@@ -82,7 +83,7 @@
   --color-bg-soft: #f4f7fa; /* Light blue-gray for alternating sections. */
 
   /* Font families. --font-* drives font-display, font-body, font-mono. */
-  --font-display: 'Bebas Neue', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', 'Bebas Neue Fallback', system-ui, sans-serif;
   --font-body: 'Source Sans 3 Variable', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
 
@@ -102,6 +103,9 @@
   --spacing-xl: clamp(3rem, 6vw, 5rem);
   --spacing-2xl: clamp(4rem, 8vw, 7rem);
 
+  /* Figures: lining, as the face draws them. Starter card 188; a face with old-style figures sets lining-nums here. */
+  --figures: normal;
+
   /* Container width cap. --container-content drives a max-w-content utility. */
   --container-content: 82.5rem; /* 1320px outer cap on the main column. */
 }
@@ -115,6 +119,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-variant-numeric: var(--figures);
     @apply font-sans;
   }
 
