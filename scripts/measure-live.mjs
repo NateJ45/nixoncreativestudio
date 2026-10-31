@@ -41,7 +41,22 @@ if (!existsSync(cli)) {
   process.exit(1);
 }
 
+// Lighthouse now and then loses a trace (NO_NAVSTART on 2026-10-31, first run of Stone Steps):
+// a run is retried twice before the site is reported as failed.
 function lighthouseOnce(url) {
+  let last;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return lighthouseAttempt(url);
+    } catch (err) {
+      last = err;
+      console.error(`  attempt ${attempt}/3 failed: ${err.message.slice(0, 160)}`);
+    }
+  }
+  throw last;
+}
+
+function lighthouseAttempt(url) {
   const r = spawnSync(
     process.execPath,
     [
