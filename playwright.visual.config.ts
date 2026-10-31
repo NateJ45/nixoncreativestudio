@@ -35,9 +35,9 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium' }],
   expect: {
+    // Room for the stable-screenshot loop to converge on a slow runner.
+    timeout: 20_000,
     toHaveScreenshot: {
-      // Give the stable-screenshot loop room to converge on a slow runner.
-      timeout: 20_000,
       animations: 'disabled',
       caret: 'hide',
       scale: 'css',
