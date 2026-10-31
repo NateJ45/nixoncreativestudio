@@ -102,6 +102,11 @@ interface Props {
       (Person), case study detail pages (Article + CreativeWork),
       /services (Service + FAQPage). */
   schemas?: Array<Record<string, unknown>>;
+  /** Extra woff2 files to preload on this page only (resolved with ?url).
+      The homepage passes the hero's Bricolage Grotesque file, so inner
+      pages never download it. Keep the total at three or fewer
+      (tests/page-weight.config.json, maxFontPreloads). */
+  preloadFonts?: string[];
 }
 const {
   title,
@@ -109,6 +114,7 @@ const {
   ogImage,
   ogType = 'website',
   schemas = [],
+  preloadFonts = [],
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -243,6 +249,9 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
          of reflowing when the swap lands. -->
     <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={sourceSans3Woff2} crossorigin />
+    {preloadFonts.map((href) => (
+      <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />
+    ))}
 
     <!-- Cloudflare Web Analytics. Component renders the beacon script
          only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
