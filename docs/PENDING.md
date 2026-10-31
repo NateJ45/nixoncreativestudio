@@ -185,6 +185,19 @@ in plan ruling 19. Its copy lives in `src/data/sector-pages.ts`.
   own before it gets one (steps in the header comment of `sector-pages.ts`);
   until then they stay on `/work/?sector=…`.
 
+### 2e. Interaction clips: recorded 2026-10-31 (overhaul 3.5)
+
+Done for four studies, with client permission (plan decision 11): MAS (typing
+initials into the hero's Monogram Studio), FRT (a library search for "lord's
+supper"), Theology Matters (an archive search for "Barmen") and Presbyterian
+Academy (two topic filters in the course catalog). Stone Steps, FBCM, Reid and
+Orangeburg keep their still: Stone Steps' hook is the records board, which
+lists runners by name; FBCM's visit page and Reid's priced band have no
+interaction worth a clip yet; Orangeburg's is a form. If a client changes one
+of these features, re-run `npm run capture:clips -- <slug>` (needs ffmpeg,
+`FFMPEG` env var if it is not on PATH), look at the three check frames, and
+paste the printed `signatureClip` into the study.
+
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)

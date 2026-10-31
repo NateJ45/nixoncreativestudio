@@ -228,6 +228,21 @@ const caseStudies = defineCollection({
       // Alt text for featureShot where it is shown ("The idea" band). Say what
       // the still shows on the live site. Falls back to a generic line.
       featureShotAlt: z.string().optional(),
+      // ---- Interaction clip (package 3.5) --------------------------------
+      // A few seconds of the live site in use, recorded by
+      // `npm run capture:clips` into public/media/. When set, "The idea"
+      // band shows the clip instead of featureShot (featureShot stays as the
+      // still everywhere else).
+      //   src  the base path the script prints, no extension, e.g.
+      //        /media/mas-monograms-studio.c68efbbe (the .mp4, .webm and
+      //        .webp poster share it)
+      //   alt  what the clip shows, for screen readers
+      signatureClip: z
+        .object({
+          src: z.string().regex(/^\/media\/[a-z0-9-]+\.[0-9a-f]{8}$/),
+          alt: z.string().min(1),
+        })
+        .optional(),
       beforeShot: image().optional(),
       mobileShot: image().optional(),
 

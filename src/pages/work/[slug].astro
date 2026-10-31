@@ -18,7 +18,8 @@
         3). transition:name="cover-{id}" ties it to the /work and homepage
         cards for the View Transition.
      3. Specimen: the client's swatches with hex values, and "Set in {face}".
-     3b. The idea (Signature, 2.4b), only where the study has a featureShot.
+     3b. The idea (Signature, 2.4b), only where the study has a featureShot
+        or a signatureClip (3.5: the clip replaces the still there).
      4. Rail (StudyRail): the facts and the chapter list with its gliding
         marker, beside the body: summary, MDX prose, What changed, the
         client's own words (Testimonial), the designer's note.
@@ -118,6 +119,7 @@ const {
   mobileShot,
   featureShot,
   featureShotAlt,
+  signatureClip,
 } = entry.data;
 
 // The full-page homepage captures (src/assets/case-studies/shots/
@@ -297,12 +299,14 @@ const nextShot = next ? homeShot(next.id) : undefined;
     </header>
 
     {/* 3b. "The idea" (Signature, package 2.4b): the hook beside one real
-        still. Only when the study has a featureShot, because the title card
-        already shows the hook and a band of the hook alone would repeat it.
-        Lazy: never in the first viewport. */}
-    {featureShot && hook && (
+        still, or its interaction clip (package 3.5) when it has a
+        signatureClip. Only when the study has one of the two, because the
+        title card already shows the hook and a band of the hook alone would
+        repeat it. Lazy: never in the first viewport. */}
+    {(featureShot || signatureClip) && hook && (
       <Signature
         hook={hook}
+        clip={signatureClip}
         src={featureShot}
         alt={featureShotAlt ?? `A feature on the live ${client} site`}
         url={liveUrl}
