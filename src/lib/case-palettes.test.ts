@@ -11,6 +11,8 @@
 //     ink on paper          >= 4.5:1  (text)
 //     accentInk on accent   >= 4.5:1  (text set on the accent)
 //     accent on paper       >= 3:1    (marks: the 4px rule, swatch edges)
+//     this site's foreground, heading (4.5:1) and focus ring (3:1) on paper,
+//     because the title card sets the site's own text on the client's paper
 //
 //   Dark mode (ruling 8: the title card sits on this site's ink, keeping only
 //   the client's accent and swatches, and no client dark palette is invented)
@@ -39,6 +41,10 @@ import { contrastRatio } from './contrast.ts';
 /** This site's dark ink surface (`--color-primary` navy, the dark-mode card and
     band colour in globals.css). The dark title card sits on it. */
 const INK = '#0a1628';
+
+/** This site's light-mode text roles (globals.css :root), used on the client's
+    paper in the title card and the Up next panel. */
+const SITE = { foreground: '#1a1a1a', heading: '#0a1628', accent: '#3478bd' };
 
 const dir = new URL('../content/case-studies/', import.meta.url);
 
@@ -160,6 +166,15 @@ for (const { slug, palette } of studies) {
     atLeast(slug, 'ink on paper', palette.ink, palette.paper, 4.5);
     atLeast(slug, 'accentInk on accent', palette.accentInk, palette.accent, 4.5);
     atLeast(slug, 'accent mark on paper', palette.accent, palette.paper, 3);
+  });
+
+  // The title card and Up next panel (package 2.4a) set THIS site's text on
+  // the client's paper (client colours never carry text): body, headings and
+  // the NCS-blue focus ring must hold on every client paper.
+  test(`${slug}: this site's text and focus ring on the client's paper`, () => {
+    atLeast(slug, 'site foreground on paper', SITE.foreground, palette.paper, 4.5);
+    atLeast(slug, 'site heading on paper', SITE.heading, palette.paper, 4.5);
+    atLeast(slug, 'site focus ring on paper', SITE.accent, palette.paper, 3);
   });
 
   test(`${slug}: dark mode mark on this site's ink`, () => {

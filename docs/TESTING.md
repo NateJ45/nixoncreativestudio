@@ -98,7 +98,8 @@ stripping, so there is nothing to configure and nothing to install.
 | `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark                                                                                                                                                                                                                                                                                                                                                                                   |
 | `ncs-tokens.test.ts`       | **Added 2026-10-31 (overhaul 1.5).** The site-owned token gate: every pair added since 1.5 (paper, `--line-strong`, `--live`, the `.band-ink` re-scope against both themes' ink) in both themes, plus the type promises: Bricolage is `--font-display` with its fallback in step with `brand.config.json`, Bebas is the wordmark only, no `text-transform` on headings, 300/650/800 weights, forced-colors borders. New pairs go here, never in the PORTABLE `theme-tokens.test.ts` |
-| `case-palettes.test.ts`    | **Added 2026-10-30.** Every case study's `palette`: light text pairs 4.5:1, accent mark 3:1 on paper, a mark at 3:1 on the dark ink, the client's own dark theme where it has one; `order` runs 1..n                                                                                                                                                                                                                                                                                |
+| `case-palettes.test.ts`    | **Added 2026-10-30.** Every case study's `palette`: light text pairs 4.5:1, accent mark 3:1 on paper, a mark at 3:1 on the dark ink, the client's own dark theme where it has one; this site's text and focus ring on each client paper (2.4a); `order` runs 1..n                                                                                                                                                                                                                   |
+| `study.test.ts`            | **Added 2026-10-31 (overhaul 2.4a).** The case-study frame helpers: the Up next loop by `order` (wraps, unordered studies last), the rail facts with `facts` overrides, the dark mark choice and the `--cs-*` palette style                                                                                                                                                                                                                                                         |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
 Card 9). It parses the real hex out of the `@theme`, `:root` and `.dark` blocks,
@@ -157,7 +158,7 @@ including the `/404` page and the Search Console verification stub, which
 dragged accessibility below 100. The reasoning is written out at the top of
 `lighthouserc.json`; read it before touching that list.
 
-One case study stands in for all ten, since they share a layout; `/coming-soon`
+One case study stands in for all of them, since they share a layout; `/coming-soon`
 is its own standalone template and is listed too.
 
 The workflow runs on pushes to `main` and on pull requests.

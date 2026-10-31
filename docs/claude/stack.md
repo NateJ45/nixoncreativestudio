@@ -5,7 +5,7 @@ Full library list, moved out of CLAUDE.md. Read when choosing or wiring a librar
 - Astro 7 with TypeScript in strict mode and `output: 'static'`
 - MDX content collections for case studies and journal entries; JSON-backed collection for the photography catalogue
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
-- React 19 for the /photography gallery only (`PhotoGallery`, `Photo`). Everything else interactive (the mobile nav `<dialog>`, theme toggle, back-to-top, copy-email, reading progress, /work filter chips, the contact form) is `.astro` markup plus small `astro:page-load` scripts (overhaul 1.4). Astro components for everything static
+- React 19 for the /photography gallery only (`PhotoGallery`, `Photo`). Everything else interactive (the mobile nav `<dialog>`, theme toggle, back-to-top, copy-email, /work filter chips, the contact form) is `.astro` markup plus small `astro:page-load` scripts (overhaul 1.4). Astro components for everything static
 - Two shadcn/ui primitives left in `src/components/ui/` (Nova preset, Radix base): `button.tsx` with a Nathan-added `brand` variant and `cta` size for marketing CTAs, (its `asChild` / Radix Slot option went with `radix-ui` in overhaul 1.4). Icons are inlined Lucide SVGs in `ChromeIcon.astro` (`lucide-react` removed in 1.4)
 - Astro View Transitions for page changes. Scrolling is native (Lenis was removed in 2026-10)
 - Removed in the 2026-10 overhaul (package 1.2): Starwind UI, PrimeReact, the Aceternity / Magic UI blocks and the other unused shadcn primitives, `primereact`, `sonner`, `next-themes`, `lenis`, `motion`, `embla-carousel-*`, `@tabler/icons`, `@tabler/icons-react` and `tailwind-variants`

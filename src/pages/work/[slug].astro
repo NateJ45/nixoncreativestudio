@@ -2,62 +2,87 @@
 // Foundation, edit with care. This page renders every case study from the
 // content collection; layout changes here apply to every entry.
 /* ============================================================================
-   /work/[slug] | Case Study Detail Page
+   /work/[slug] | Case Study Detail Page (the case-study frame, overhaul 2.4a)
    ============================================================================
    One static page per case study, generated at build time from the
-   case-studies content collection.
+   case-studies content collection. Adding a new MDX file in
+   src/content/case-studies/ creates its page on the next build.
 
-   Same shape for every entry: reading progress bar, hero block (meta +
-   title + client + summary + service badges + image), MDX body, then
-   next/previous navigation, then the footer's ink closer (a sector-aware
-   closer prop). Adding a new MDX file in
-   src/content/case-studies/ auto-creates its page on the next build.
+   Top to bottom:
+     1. Title card: a band in the client's own paper with a 4px rule in their
+        accent (dark mode: this site's ink with only the client's mark and
+        swatches, ruling 8). Breadcrumb (Work / Sector / Client), the client
+        name as the H1 (the page's one Heft), the hook, the "Visit" button.
+     2. Stage: the live site on a laptop and a phone (FramePair), bleeding
+        wide. It is the LCP: eager, high priority, never data-reveal (ruling
+        3). transition:name="cover-{id}" ties it to the /work and homepage
+        cards for the View Transition.
+     3. Specimen: the client's swatches with hex values, and "Set in {face}".
+     4. Rail (StudyRail): the facts and the chapter list with its gliding
+        marker, beside the body: summary, MDX prose, What changed, the
+        designer's note, the testimonial.
+     5. Up next: the next study by `order`, looping, in that client's palette.
+     6. The footer's ink closer, sector-matched ("Building for a church?").
+   Plus a CSS-only scroll progress bar (ScrollProgress) and print styles.
+
+   The client palette arrives as scoped --cs-* custom properties on the
+   <article> (paletteStyle() in src/lib/study.ts). Each one is read with a
+   site-token fallback, so a study without a palette still renders.
+   src/lib/case-palettes.test.ts checks every pair this page uses.
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
 import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { DEFAULT_CLOSER, SECTOR_PHRASE, type Closer } from '../../lib/closer';
+import { DEFAULT_CLOSER, SECTOR_PHRASE, SECTOR_PLURAL, type Closer } from '../../lib/closer';
 import CaseStudyCover from '../../components/CaseStudyCover.astro';
+import FramePair from '../../components/FramePair.astro';
+import Heft from '../../components/Heft.astro';
+import Specimen from '../../components/Specimen.astro';
+import StudyRail from '../../components/StudyRail.astro';
+import UpNext from '../../components/UpNext.astro';
+import ScrollProgress from '../../components/ScrollProgress.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
-import ReadingProgress from '../../components/ReadingProgress.astro';
-import { readingTime } from '../../lib/readingTime';
+import { buttonVariants } from '../../components/ui/button';
+import { cn } from '../../lib/utils';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
+import { hostOf, nextInLoop, paletteStyle, studyFacts } from '../../lib/study';
 import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
 
-// getStaticPaths now passes neighbors as props (for the next/prev nav at
-// the bottom of each case study). The full sorted list is computed once
-// here; each route gets only its own entry plus the neighbor stubs it
-// needs to render the nav, so we don't ship the whole catalogue per page.
+// Each route gets its own entry plus the one study the Up next panel hands
+// off to (by `order`, wrapping from the last back to the first), trimmed to
+// the fields the panel draws, so a page never carries the whole catalogue.
 export async function getStaticPaths() {
-  const all = (await getCollection('case-studies')).sort(
-    (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
-  );
-  return all.map((entry, i) => {
-    const previous = i < all.length - 1 ? all[i + 1] : undefined;
-    const next = i > 0 ? all[i - 1] : undefined;
-    // Strip neighbors down to just the fields the nav block uses; keeps
-    // props payload small and the page free of incidental data.
-    const trim = (e: typeof entry | undefined) =>
-      e ? { id: e.id, title: e.data.title, summary: e.data.summary } : undefined;
+  const all = await getCollection('case-studies');
+  const loop = all.map((e) => ({ id: e.id, order: e.data.order }));
+  return all.map((entry) => {
+    const n = nextInLoop(loop, entry.id);
+    const next = n ? all.find((e) => e.id === n.id) : undefined;
     return {
       params: { slug: entry.id },
-      props: { entry, previous: trim(previous), next: trim(next) },
+      props: {
+        entry,
+        next: next
+          ? {
+              id: next.id,
+              client: next.data.client,
+              hook: next.data.hook,
+              liveUrl: next.data.liveUrl,
+              palette: next.data.palette,
+            }
+          : undefined,
+      },
     };
   });
 }
 
-const { entry, previous, next } = Astro.props;
+const { entry, next } = Astro.props;
 const { Content, headings } = await render(entry);
 
-// Table-of-contents headings (the body h2s). Both the sticky sidebar TOC and the
-// wide two-column body layout only kick in when there are at least two, so short
-// studies stay single-column and centered.
-const tocHeadings = (headings ?? []).filter((h) => h.depth === 2);
-const hasToc = tocHeadings.length >= 2;
 const {
   title,
   client,
@@ -66,20 +91,37 @@ const {
   summary,
   metaDescription,
   cover,
-  role,
-  tags,
   published,
   updated,
-  stack,
   liveUrl,
   outcome,
   testimonial,
   results,
   designerNote,
+  hook,
+  palette,
+  mobileShot,
 } = entry.data;
 
-// Pretty-printed sector label for the meta row. kebab-case → Title Case.
-const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+// The full-page homepage captures (src/assets/case-studies/shots/
+// {slug}-home.png, written by `npm run capture:study`). They are not a
+// frontmatter field, so they are found by name. The stage uses this study's;
+// the Up next panel uses the next study's.
+const homeShots = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/case-studies/shots/*-home.png',
+  { eager: true },
+);
+const homeShot = (slug: string): ImageMetadata | undefined =>
+  Object.entries(homeShots).find(([path]) => path.endsWith(`/${slug}-home.png`))?.[1].default;
+const desktopShot = homeShot(entry.id);
+
+// Chapters for the rail: the body's H2s (Astro gives each one an id).
+const chapters = (headings ?? [])
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ slug: h.slug, text: h.text }));
+const facts = studyFacts(entry.data);
+const host = liveUrl ? hostOf(liveUrl) : undefined;
+const sectorPlural = SECTOR_PLURAL[sector] ?? sector;
 
 // The footer's ink closer, written for this study's sector: "Building for a
 // church?" on a church study. The pill deep-links to the contact form with
@@ -96,26 +138,14 @@ const closer: Closer = phrase
     }
   : DEFAULT_CLOSER;
 
-// Reading time from the raw MDX body. ~200 wpm rounded up. Renders next
-// to the meta row so visitors know how long the case study is before
-// committing to scroll.
-const minutes = readingTime(entry.body ?? '');
-
 // Note: published / updated dates are intentionally NOT displayed in the UI
 // (the client doesn't want project timing showcased). They stay in the
 // frontmatter and feed sort order, the RSS feed, and the JSON-LD below.
 
-// Resolve the cover through Astro's image pipeline so we can use the
-// optimized URL for both the OG image meta tag and the CreativeWork
-// schema. Width caps the file size; social platforms cap previews at
-// 1200px anyway.
+// Resolve the cover through Astro's image pipeline for the OG image and the
+// CreativeWork schema. Social platforms cap previews at 1200px anyway.
 const ogCover = await getImage({ src: cover, width: 1200, format: 'jpg' });
 const ogCoverUrl = new URL(ogCover.src, site.url).toString();
-
-// Build-time plaiceholder blur preview. Returns undefined when the
-// source file doesn't follow the src/assets/case-studies/{slug}.{ext}
-// convention, in which case CaseStudyCover falls back to its bg-soft
-// solid placeholder.
 const coverBlur = getCoverPlaceholder(entry.id);
 
 // Page title and search description. The title is built from the study name
@@ -127,8 +157,7 @@ const canonical = new URL(`/work/${entry.id}/`, site.url).toString();
 
 // CreativeWork JSON-LD for this case study, one node in the page's @graph
 // (see StructuredData.astro). It names the studio as creator and Nathan as
-// author by @id, and points at the live site when there is one. The
-// breadcrumbs below become a BreadcrumbList (Home / Work / this study).
+// author by @id, and points at the live site when there is one.
 const schemas = [
   {
     '@type': 'CreativeWork',
@@ -148,10 +177,18 @@ const schemas = [
     keywords: services.join(', '),
   },
 ];
+
+// One trail, two renderings: the visible breadcrumb in the title card and the
+// BreadcrumbList JSON-LD (BaseLayout prefixes Home). The sector crumb is the
+// /work index filtered to this sector (/work/?sector=church).
+const sectorPath = `/work/?sector=${sector}`;
 const breadcrumbs = [
   { name: 'Work', path: '/work/' },
-  { name: title, path: `/work/${entry.id}/` },
+  { name: sectorPlural, path: sectorPath },
+  { name: client, path: `/work/${entry.id}/` },
 ];
+
+const nextShot = next ? homeShot(next.id) : undefined;
 ---
 
 <BaseLayout
@@ -163,361 +200,302 @@ const breadcrumbs = [
   breadcrumbs={breadcrumbs}
   closer={closer}
 >
-  <article>
-    <!-- Hero block. Two-column on >= 56rem (copy left, image right),
-         stacked on mobile. Generous padding so the case study feels like
-         its own landing, not a continuation of the previous page. -->
-    <header class="py-2xl">
-      <div class="ncs-container grid grid-cols-1 items-center gap-xl min-[56rem]:grid-cols-2">
-        <div class="flex flex-col gap-m">
-          <!-- Meta stamp: sector + read time. Mono and muted. No year. -->
-          <p class="flex flex-wrap items-center gap-s font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-            <span>{sectorLabel}</span>
-            <span aria-hidden="true">·</span>
-            <span>{minutes} min read</span>
-          </p>
+  <article class="study" style={paletteStyle(palette)}>
+    {/* 1 to 3. The title card: one band holding the title, the stage and the
+        specimen, so the client's palette reads as one block. */}
+    <header class="cs-title">
+      <div class="ncs-container">
+        <nav aria-label="Breadcrumb" class="cs-crumbs">
+          <ol>
+            <li>
+              <a href="/work/">Work</a>
+            </li>
+            <li>
+              <a href={sectorPath}>{sectorPlural}</a>
+            </li>
+            <li aria-current="page">{client}</li>
+          </ol>
+        </nav>
 
-          <h1 class="text-h1-long">{title}</h1>
+        {/* The client name, once, as the H1. All of it is the heavy phrase,
+            so it fills to 800 (the page's one Heft, ruling 9). Never
+            data-reveal. Long names wrap anywhere (ruling 16). */}
+        <h1 class="cs-h1 text-h1-long">
+          <Heft text={client} />
+        </h1>
 
-          <!-- Client line below the title; client and title often differ
-               for ministry or program-level engagements. -->
-          <p class="font-display text-h4 text-heading">{client}</p>
+        <p class="cs-hook">{hook ?? summary}</p>
 
-          <p class="max-w-[56ch] text-lg leading-[1.6] text-text">{summary}</p>
-
-          {/* Outcome callout (optional). The honest, one-line result of the
-              project, lifted out of the body so the proof reads at first scan.
-              Marked as the takeaway by a small label + larger --link type and
-              whitespace, not a side-stripe border (an absolute-ban tell). */}
-          {outcome && (
-            <div class="mt-s max-w-[56ch]">
-              <p class="text-xs font-semibold tracking-[0.12em] text-text-muted uppercase">
-                Outcome
-              </p>
-              <p class="mt-1 text-xl leading-[1.4] font-semibold text-heading">{outcome}</p>
-            </div>
-          )}
-
-          {/* Live site link (optional). For a web design portfolio this is
-              the strongest single trust signal: a click straight to real,
-              working proof. Rendered as a brand-weight link with an external
-              cue; opens in a new tab with rel noopener for safety. */}
-          {liveUrl && (
+        {liveUrl && host && (
+          <p class="cs-visit">
             <a
               href={liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex w-fit items-center gap-2 font-body text-base font-semibold text-link underline underline-offset-4 transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent pointer-coarse:min-h-11"
+              class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'rounded-full')}
             >
-              Visit the live site
-              <span aria-hidden="true">↗</span>
+              Visit {host} <span aria-hidden="true">↗</span>
+              <span class="sr-only">(opens in a new tab)</span>
             </a>
-          )}
+            <span class="cs-visit-url">{liveUrl}</span>
+          </p>
+        )}
 
-          {/* Role line (optional). Tiny mono uppercase, sits below the
-              summary as a credit. Useful when the case study wants to
-              clarify whether Nathan led design, code, photography, or
-              some combination. */}
-          {role && (
-            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">Role:</span> {role}
-            </p>
-          )}
-
-          {/* Stack list (optional). When present, render a tiny tools
-              line so designers and devs evaluating the work can scan
-              what was used. Plain text, no styling flourish. */}
-          {stack && stack.length > 0 && (
-            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">Built with:</span> {stack.join(', ')}
-            </p>
-          )}
-
-          <!-- Service badges. Each rendered as an outlined accent-color
-               pill. flex-wrap so they wrap on narrow screens. -->
-          <ul class="mt-s flex flex-wrap gap-xs" aria-label="Services delivered">
-            {services.map((service) => (
-              <li class="inline-flex items-center rounded-full border border-link px-2.5 py-1 font-body text-[0.8rem] text-link">
-                {service}
-              </li>
-            ))}
-          </ul>
-
-          {/* Tags (optional). The service pills above are the primary scope,
-              so the tags read as quiet supporting metadata: plain muted text,
-              comma-separated, NOT a second row of pills (two near-identical
-              pill rows read as two filter-chip rows). A "Tags:" lead-in mirrors
-              the Role / Built with credit lines above. */}
-          {tags && tags.length > 0 && (
-            <p class="font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-              <span class="text-text">Tags:</span> {tags.join(', ')}
-            </p>
+        {/* The stage. alt describes the pair once; the phone frame's image is
+            alt="" inside FramePair. Eager and high priority: it is the LCP. */}
+        <div class="cs-stage" transition:name={`cover-${entry.id}`}>
+          {desktopShot && mobileShot && liveUrl ? (
+            <FramePair
+              url={liveUrl}
+              desktop={desktopShot}
+              phone={mobileShot}
+              alt={`The ${client} homepage on a laptop and a phone`}
+              lcp
+            />
+          ) : (
+            <CaseStudyCover
+              cover={cover}
+              placeholder={coverBlur}
+              alt=""
+              widths={[640, 960, 1440]}
+              sizes="(min-width: 82.5rem) 78rem, calc(100vw - 3rem)"
+              lcp
+            />
           )}
         </div>
 
-        <!-- Hero image. CaseStudyCover (on Media.astro) paints the image over
-             its blur placeholder, eagerly and with fetchpriority high:
-             this is the page's LCP image, so it never waits on a fade.
-
-             alt="" because the case study's h1 sits just above the image
-             inside the same <header>, so a descriptive alt would make
-             screen readers announce the title twice. For a richer
-             description (e.g. "Photo of the Crestview team in the
-             sanctuary"), add a coverAlt field to the case-studies
-             schema in content.config.ts and thread it through here. -->
-        <div transition:name={`cover-${entry.id}`}>
-          <CaseStudyCover
-            cover={cover}
-            placeholder={coverBlur}
-            alt=""
-            widths={[640, 960, 1440]}
-            sizes="(min-width: 56rem) 50vw, calc(100vw - 3rem)"
-            lcp
-          />
-        </div>
+        {palette && (
+          <div class="cs-specimen">
+            <Specimen swatches={palette.swatches} typeface={palette.typeface} />
+          </div>
+        )}
       </div>
     </header>
 
-    <!-- MDX body + optional TOC sidebar. Two-column at xl (sticky TOC left,
-         content right); single column below. The content column holds the prose,
-         the "what changed" block, AND the designer's note, so they all share one
-         alignment instead of drifting to different centers.
+    {/* 4. The rail beside the body. */}
+    <div class="ncs-container page-grid cs-body">
+      <StudyRail facts={facts} chapters={chapters} />
 
-         Every text block is capped to ONE rem-based measure (max-w-[40rem]) and
-         centered, so headings and paragraphs line up. (The old code capped them
-         in `ch`, which is font-size relative, so the bigger h2s came out wider
-         than the paragraphs and their left edges did not match.) Full-width media
-         (FeatureHighlight, SiteShowcase) still spans the column. The sticky TOC
-         and the h2 scroll targets sit below the ~83px sticky header so neither
-         gets covered.
+      <div class="grid-body">
+        <p class="cs-lede">{summary}</p>
+        {outcome && <p class="cs-outcome">{outcome}</p>}
 
-         The TOC renders only when the body has at least two h2s; short studies
-         stay single column. -->
-    <div class="ncs-container">
-      <div
-        class:list={[
-          'mx-auto grid max-w-[62rem] gap-xl pt-l pb-2xl',
-          hasToc ? 'xl:grid-cols-[14rem_minmax(0,1fr)]' : 'xl:grid-cols-1',
-        ]}
-      >
-        {/* Sticky TOC. Lists every h2 in the MDX body as a jump link. Hidden
-            below xl. top-[6.5rem] clears the sticky header. Native <nav
-            aria-label> so screen readers identify it.
+        {/* MDX prose. Text blocks sit at one rem measure (40rem) so their edges
+            line up; media (FeatureHighlight, SiteShowcase) spans the column.
+            The descendant selectors style the MDX output without leaking
+            site-wide; scroll-mt clears the sticky header on a chapter jump. */}
+        <div
+          data-prose
+          class:list={[
+            'text-[1.0625rem] leading-[1.7] text-text',
+            '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-[6.5rem] [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
+            '[&_h3]:mt-l [&_h3]:mb-s [&_h3]:max-w-[40rem] [&_h3]:font-display [&_h3]:text-h4 [&_h3]:text-heading',
+            '[&_li]:mb-1 [&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5',
+            '[&_ol]:mb-m [&_ol]:max-w-[40rem] [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:text-text',
+            '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
+            '[&_strong]:font-semibold [&_strong]:text-heading',
+            '[&_code]:font-mono [&_code]:text-[0.9em]',
+            '[&_blockquote]:max-w-[40rem] [&_blockquote]:text-text-muted [&_blockquote]:italic',
+            '[&_h2]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem]',
+          ]}
+        >
+          <Content />
+        </div>
 
-            data-case-toc + per-link data-toc-link="<slug>" wire the scroll-spy
-            at the end of <article>: an IntersectionObserver marks the link for
-            the section in view as active. With JS off (or no IntersectionObserver)
-            this stays a plain list of working jump links. */}
-        {hasToc && (
-          <nav aria-label="In this case study" class="hidden xl:block" data-case-toc>
-            <div class="sticky top-[6.5rem] flex flex-col gap-xs">
-              <p class="font-mono text-[0.75rem] tracking-[0.08em] text-text-muted uppercase">
-                In this case study
-              </p>
-              <ul class="flex flex-col gap-xs">
-                {tocHeadings.map((h) => (
-                  <li>
-                    <a
-                      href={`#${h.slug}`}
-                      data-toc-link={h.slug}
-                      class="block text-[0.95rem] leading-[1.4] text-text transition-colors duration-150 hover:text-link focus-visible:text-link aria-[current=true]:font-medium aria-[current=true]:text-link"
-                    >
-                      {h.text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </nav>
+        {/* "What changed" and the signed designer's note, at the prose measure. */}
+        {(results?.length || designerNote) && (
+          <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
+            {results && results.length > 0 && <ResultsBlock changes={results} />}
+            {designerNote && <DesignerNote note={designerNote} />}
+          </div>
         )}
 
-        {/* Content column: prose, then results, then the designer's note, all on
-            one alignment. */}
-        <div class="min-w-0">
-          {/* MDX prose. Text blocks centered at one consistent rem measure so
-              their edges line up; media (FeatureHighlight, SiteShowcase) spans
-              the column. The arbitrary descendant selectors style the MDX output
-              without the typography plugin and without leaking site-wide; the
-              scroll-mt clears the sticky header on a jump-link click. */}
-          <div
-            data-prose
-            class:list={[
-              'text-[1.0625rem] leading-[1.7] text-text',
-              '[&_h2]:mt-l [&_h2]:mb-s [&_h2]:scroll-mt-[6.5rem] [&_h2]:text-h3 [&_h2]:text-heading [&_h2:first-child]:mt-0',
-              // h3 is a quieter subsection head: display face, heading color, one
-              // step smaller (text-h4) and tighter top space than the h2.
-              '[&_h3]:mt-l [&_h3]:mb-s [&_h3]:max-w-[40rem] [&_h3]:font-display [&_h3]:text-h4 [&_h3]:text-heading',
-              '[&_li]:mb-1 [&_p]:mb-m [&_ul]:mb-m [&_ul]:list-disc [&_ul]:pl-5',
-              // Ordered lists mirror the bullet list spacing but number their items.
-              '[&_ol]:mb-m [&_ol]:max-w-[40rem] [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:text-text',
-              '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:underline-offset-4',
-              // Inline emphasis: bold runs lift to the heading color; inline code
-              // drops to the mono face at a slightly smaller size so it reads as code.
-              '[&_strong]:font-semibold [&_strong]:text-heading',
-              '[&_code]:font-mono [&_code]:text-[0.9em]',
-              // Blockquote: italic, muted, held to the body measure. NO side-stripe
-              // border (an absolute-ban tell) — the italic + muted color carries it.
-              '[&_blockquote]:max-w-[40rem] [&_blockquote]:text-text-muted [&_blockquote]:italic',
-              '[&_h2]:max-w-[40rem] [&_p]:max-w-[40rem] [&_ul]:max-w-[40rem]',
-            ]}
-          >
-            <Content />
-          </div>
-
-          {/* "What changed" + the signed designer's note, in the SAME column and
-              at the same measure as the prose, so the body closes in alignment
-              instead of jumping to a different center. */}
-          {(results?.length || designerNote) && (
-            <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
-              {results && results.length > 0 && <ResultsBlock changes={results} />}
-              {designerNote && <DesignerNote note={designerNote} />}
-            </div>
-          )}
-        </div>
+        {/* Testimonial pull-quote (optional). Real client words only, verbatim;
+            renders nothing when the frontmatter has none. Never fabricated. */}
+        {testimonial && (
+          <aside class="mt-2xl border-t border-border pt-2xl" aria-label="Client testimonial">
+            <figure class="max-w-[40rem]">
+              <blockquote class="font-display text-h3 leading-[1.2] text-heading">
+                <p>“{testimonial.quote}”</p>
+              </blockquote>
+              <figcaption class="mt-m font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
+                <span class="text-text">{testimonial.name}</span>
+                {testimonial.title ? ` · ${testimonial.title}` : ''}
+              </figcaption>
+            </figure>
+          </aside>
+        )}
       </div>
     </div>
 
-    {/* Testimonial pull-quote (optional). Real client social proof, set
-        apart from the body as an editorial quote. Renders nothing when the
-        frontmatter has no testimonial, so it is safe to leave off until a
-        real quote is collected. Never fabricated.
-
-        Left-aligned at the same measure (max-w-[40rem]) as the body prose,
-        results, and designer note above, so the page closes in alignment
-        instead of jumping to a centered block. It still reads as a pull-quote
-        through the larger display type, not through centering. */}
-    {testimonial && (
-      <aside class="border-t border-border py-2xl" aria-label="Client testimonial" data-reveal>
-        <figure class="ncs-container max-w-[40rem]">
-          <blockquote class="font-display text-h3 leading-[1.2] text-heading">
-            <p>“{testimonial.quote}”</p>
-          </blockquote>
-          <figcaption class="mt-m font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-            <span class="text-text">{testimonial.name}</span>
-            {testimonial.title ? ` · ${testimonial.title}` : ''}
-          </figcaption>
-        </figure>
-      </aside>
-    )}
-
-    {/* Next / previous case study nav. Sits between the body and the
-        footer's closer so visitors who finished reading have a forward path
-        before hitting the "Start a project" CTA. Hidden entirely when
-        there's only one case study in the catalogue. */}
-    {(previous || next) && (
-      <nav class="border-t border-border py-xl" aria-label="More case studies">
-        <div class="ncs-container grid grid-cols-1 gap-l sm:grid-cols-2">
-          {previous ? (
-            <a
-              href={`/work/${previous.id}/`}
-              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
-                ← Previous case study
-              </span>
-              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {previous.title}
-              </span>
-              <span class="text-[0.95rem] leading-[1.5] text-text-muted">{previous.summary}</span>
-            </a>
-          ) : (
-            <span />
-          )}
-
-          {next ? (
-            <a
-              href={`/work/${next.id}/`}
-              class="group flex flex-col gap-xs rounded-lg p-m text-inherit no-underline transition-colors duration-150 hover:bg-bg-soft focus-visible:bg-bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-right"
-            >
-              <span class="font-mono text-[0.8rem] tracking-[0.06em] text-text-muted uppercase">
-                Next case study →
-              </span>
-              <span class="font-display text-h4 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {next.title}
-              </span>
-              <span class="text-[0.95rem] leading-[1.5] text-text-muted">{next.summary}</span>
-            </a>
-          ) : (
-            <span />
-          )}
-        </div>
-      </nav>
+    {/* 5. Up next, in the next client's palette. */}
+    {next && (
+      <UpNext
+        slug={next.id}
+        client={next.client}
+        hook={next.hook}
+        url={next.liveUrl}
+        shot={nextShot}
+        style={paletteStyle(next.palette)}
+      />
     )}
   </article>
 
-  {/* Reading progress bar pinned to the top of the viewport. Only
-      rendered here, not in BaseLayout, because the rest of the site has
-      mostly short pages where a progress bar would be visual noise.
-      It sits AFTER the article on purpose: it is position:fixed, so its place
-      in the DOM does not matter visually, but its wrapper (an <astro-island>
-      back when it was React) used to be <main>'s first child, which made the first-screen reveal exemption
-      in globals.css (`main > :first-child [data-reveal]`) miss the hero copy.
-      The summary paragraph is the LCP element here and waited about 900ms for
-      the reveal observer (2026-10-13 audit, LCP 6.4s). Keep the article as
-      <main>'s first child. */}
-  <ReadingProgress />
-
-  {/* Sticky-TOC scroll-spy. Marks the TOC link for the section currently in
-      view with aria-current (which the link's aria-[current=true] classes paint
-      as text-link + font-medium). Purely additive: with JS off, no
-      IntersectionObserver, or fewer than two h2s (no TOC rendered), the TOC
-      stays a plain list of working jump links and the prose is unaffected.
-      No motion of its own, so nothing to gate for reduced-motion. */}
-  <script>
-    // Wrapped in astro:page-load so the scroll-spy re-binds after View
-    // Transitions navigations. The dataset flag keeps it from observing twice.
-    function initCaseToc() {
-      const toc = document.querySelector<HTMLElement>('[data-case-toc]');
-      if (!toc || toc.dataset.spyBound || !('IntersectionObserver' in window)) return;
-      toc.dataset.spyBound = 'true';
-
-      // Map each section slug to its TOC link, in document order.
-      const links = new Map<string, HTMLAnchorElement>();
-      toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
-        const id = a.getAttribute('data-toc-link');
-        if (id) links.set(id, a);
-      });
-      if (links.size === 0) return;
-
-      // Track which sections are currently intersecting; the topmost one wins.
-      const visible = new Set<string>();
-
-      const setCurrent = (id: string | null) => {
-        links.forEach((a, key) => {
-          if (key === id) a.setAttribute('aria-current', 'true');
-          else a.removeAttribute('aria-current');
-        });
-      };
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const id = entry.target.id;
-            if (entry.isIntersecting) visible.add(id);
-            else visible.delete(id);
-          }
-          // Pick the visible section nearest the top of the document order.
-          let topId: string | null = null;
-          for (const id of links.keys()) {
-            if (visible.has(id)) {
-              topId = id;
-              break;
-            }
-          }
-          setCurrent(topId);
-        },
-        // Bias the active zone toward the upper portion of the viewport so a
-        // heading is marked current as it reaches reading position.
-        { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
-      );
-
-      // Observe the real h2 heading elements (the MDX output ids match the slugs).
-      links.forEach((_, id) => {
-        const heading = document.getElementById(id);
-        if (heading) observer.observe(heading);
-      });
-    }
-    document.addEventListener('astro:page-load', initCaseToc);
-    initCaseToc();
-  </script>
+  {/* CSS-only reading bar. AFTER the article on purpose: position: fixed, so
+      its DOM place does not show, and the article stays <main>'s first child
+      for the first-screen reveal exemption (Gotcha 10). */}
+  <ScrollProgress />
 </BaseLayout>
+
+<style>
+  /* ---- Title card --------------------------------------------------------
+     Light: the client's paper, their accent as a 4px top rule. Client colours
+     never carry text: the text is this site's own foreground and heading,
+     checked on every client paper in case-palettes.test.ts. Dark (ruling 8):
+     this site's ink with only the client's dark mark as the rule, so no
+     client dark palette is invented. */
+  .cs-title {
+    background-color: var(--cs-paper, var(--paper));
+    color: var(--foreground);
+    border-top: 4px solid var(--cs-accent, var(--accent));
+    padding-block: clamp(2rem, 5vw, 3.5rem) clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  :global(.dark) .cs-title {
+    background-color: var(--ink);
+    color: var(--foreground);
+    border-top-color: var(--cs-mark-dark, var(--accent));
+  }
+
+  .cs-crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .cs-crumbs li {
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  /* The separator is drawn, so screen readers hear only the crumbs. */
+  .cs-crumbs li + li::before {
+    content: '/';
+    opacity: 0.6;
+  }
+
+  .cs-crumbs a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+  }
+
+  .cs-crumbs a:hover,
+  .cs-crumbs a:focus-visible {
+    text-decoration-thickness: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .cs-crumbs a {
+      display: inline-block;
+      padding-block: 0.75rem;
+    }
+  }
+
+  .cs-h1 {
+    margin: 1.5rem 0 0;
+    color: var(--heading);
+  }
+
+  .cs-hook {
+    margin: 1rem 0 0;
+    max-width: 36ch;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 300;
+    line-height: 1.3;
+  }
+
+  .cs-visit {
+    margin: 1.75rem 0 0;
+  }
+
+  /* On paper the button prints as its address (print block below). */
+  .cs-visit-url {
+    display: none;
+  }
+
+  /* ---- Stage: bleeds to the container's full width. Never data-reveal. */
+  .cs-stage {
+    margin-top: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  /* ---- Specimen under the stage, on a hairline in the band's ink. */
+  .cs-specimen {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  }
+
+  /* ---- Rail and body ---------------------------------------------------- */
+  .cs-body {
+    padding-block: var(--space-section);
+  }
+
+  .cs-lede {
+    margin: 0 0 1rem;
+    max-width: 40rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    color: var(--heading);
+  }
+
+  .cs-outcome {
+    margin: 0 0 2.5rem;
+    max-width: 40rem;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 650;
+    line-height: 1.4;
+    color: var(--heading);
+  }
+
+  @media (forced-colors: active) {
+    .cs-title {
+      border-top: 4px solid CanvasText;
+    }
+  }
+
+  /* ---- Print (boards get these forwarded) --------------------------------
+     Ink bands drop out (the footer and its closer), the Up next panel and the
+     chapter list go, and hosts print as full URLs: the Visit button becomes
+     its address, the rail's host fact prints its URL (StudyRail) and the
+     browser frames print theirs (BrowserFrame). Scoped to this page. */
+  @media print {
+    :global(.band-ink) {
+      display: none !important;
+    }
+    .cs-title {
+      border-top: 0;
+      padding-block: 0 1rem;
+    }
+    .cs-visit a {
+      display: none;
+    }
+    .cs-visit-url {
+      display: inline;
+      font-family: var(--font-mono);
+    }
+    .cs-body {
+      padding-block: 1rem;
+    }
+  }
+</style>
