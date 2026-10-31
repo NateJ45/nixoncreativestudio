@@ -60,6 +60,137 @@ test('the close button closes it and focus returns to the menu button', async ({
   await expect(trigger(page)).toBeFocused();
 });
 
+test('a tap on the scrim closes the drawer and focus returns to the menu button', async ({
+  page,
+}) => {
+  await page.goto('/about/');
+  await openMenu(page);
+  // The drawer leaves a strip of scrim on its left at phone width (polled,
+  // because the box is still sliding in straight after the open).
+  await expect
+    .poll(() => dialog(page).evaluate((d) => Math.round(d.getBoundingClientRect().left)))
+    .toBe(390 - 334);
+  await page.mouse.click(20, 400);
+  await expect(dialog(page)).not.toHaveAttribute('open', '');
+  await expect(trigger(page)).toBeFocused();
+  await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('a tap inside the drawer, off any control, leaves it open', async ({ page }) => {
+  await page.goto('/about/');
+  await openMenu(page);
+  await page.waitForTimeout(600);
+  const box = (await dialog(page).boundingBox())!;
+  // The empty space between the links and the bottom block.
+  await page.mouse.click(box.x + box.width - 12, box.y + box.height / 2);
+  await expect(dialog(page)).toHaveAttribute('open', '');
+});
+
+// -----------------------------------------------------------------------------
+// The reveal (overhaul 4.10): the drawer slides in and out, the rows stagger,
+// and nothing on the page behind is ever transformed. Under reduced motion and
+// under Pause motion (html[data-motion-paused]) it is instant.
+// -----------------------------------------------------------------------------
+
+/** Transform and translate on the page around the dialog, which must stay put. */
+const pageTransforms = (page: Page) =>
+  page.evaluate(() =>
+    ['html', 'body', 'header', 'main', 'footer'].map((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return `${sel}: missing`;
+      const cs = getComputedStyle(el);
+      return `${sel}: ${cs.transform} ${cs.translate}`;
+    }),
+  );
+
+/** Running motion on the dialog or anything inside it: every CSS animation,
+ *  and any transition that moves, fades or clips. A button's colour easing on
+ *  focus is not motion, so it does not count. */
+const drawerAnimations = (page: Page) =>
+  page.evaluate(() => {
+    const d = document.querySelector('dialog[data-mnav]');
+    const moving = ['translate', 'transform', 'opacity', 'clip-path', 'display', 'overlay'];
+    return document.getAnimations().filter((a) => {
+      const t = (a.effect as KeyframeEffect | null)?.target;
+      if (a.playState !== 'running' || !t || !(t === d || !!d?.contains(t))) return false;
+      const prop = (a as CSSTransition).transitionProperty;
+      return prop === undefined || moving.includes(prop);
+    }).length;
+  });
+
+const RESTING = ['html', 'body', 'header', 'main', 'footer'].map((s) => `${s}: none none`);
+
+test('the drawer slides in and back out, and the page behind never moves', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  // Record every transition the drawer starts, so a short one cannot finish
+  // between two checks and slip past.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __mnavRuns: string[] };
+    w.__mnavRuns = [];
+    document.addEventListener(
+      'transitionrun',
+      (e) => {
+        const t = e.target as Element;
+        if (t.matches?.('dialog[data-mnav]')) {
+          w.__mnavRuns.push(`${t.hasAttribute('open') ? 'open' : 'closed'} ${e.propertyName}`);
+        }
+      },
+      true,
+    );
+  });
+  const runs = () =>
+    page.evaluate(() => (window as unknown as { __mnavRuns: string[] }).__mnavRuns);
+  await page.goto('/about/');
+  await openMenu(page);
+  await expect.poll(runs, 'the drawer slides in').toContain('open translate');
+  // Mid-entrance, the page behind has not moved.
+  expect(await pageTransforms(page)).toEqual(RESTING);
+  await page.waitForTimeout(1200);
+  expect(
+    await dialog(page).evaluate((d) => getComputedStyle(d).translate),
+    'the drawer rests in place',
+  ).toMatch(/^(none|0px( 0px)?)$/);
+  // Closing animates too: the drawer's translate transition runs after close().
+  await page.keyboard.press('Escape');
+  await expect(dialog(page)).not.toHaveAttribute('open', '');
+  await expect.poll(runs, 'a slide-out transition runs on close').toContain('closed translate');
+  expect(await pageTransforms(page)).toEqual(RESTING);
+  await expect(trigger(page)).toBeFocused();
+});
+
+for (const mode of ['reduced motion', 'Pause motion'] as const) {
+  test(`under ${mode} the drawer opens and closes at once, with no transform anywhere`, async ({
+    page,
+  }) => {
+    if (mode === 'reduced motion') {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+    } else {
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.addInitScript(() => window.localStorage.setItem('ncs-motion', 'paused'));
+    }
+    await page.goto('/about/');
+    if (mode === 'Pause motion') {
+      await expect(page.locator('html')).toHaveAttribute('data-motion-paused', /.*/);
+    }
+    await openMenu(page);
+    // Straight after showModal(): already in place, nothing moving.
+    expect(await drawerAnimations(page)).toBe(0);
+    expect(await dialog(page).evaluate((d) => getComputedStyle(d).translate)).toBe('none');
+    expect(
+      await dialog(page)
+        .locator('.mnav-item')
+        .first()
+        .evaluate((el) => `${getComputedStyle(el).opacity} ${getComputedStyle(el).translate}`),
+    ).toBe('1 none');
+    expect(await pageTransforms(page)).toEqual(RESTING);
+    await page.keyboard.press('Escape');
+    await expect(dialog(page)).not.toHaveAttribute('open', '');
+    expect(await drawerAnimations(page)).toBe(0);
+    expect(await dialog(page).isVisible()).toBe(false);
+    await expect(trigger(page)).toBeFocused();
+  });
+}
+
 test('Tab and Shift+Tab stay inside the open dialog', async ({ page }) => {
   await page.goto('/');
   await openMenu(page);
