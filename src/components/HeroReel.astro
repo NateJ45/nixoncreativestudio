@@ -25,6 +25,12 @@
      switch (WCAG 2.2.2: moving content longer than five seconds needs a way
      to stop it).
 
+   Step into the reel (overhaul 3.1): clicking a card morphs that exact frame
+   into the study's stage on /work/{slug}/ while the rest of the wall lays
+   down flat and fades. The cards carry no view-transition-name in the markup
+   (every card renders twice); src/scripts/reel-morph.ts names the one that
+   was clicked at click time. No morph under reduced motion or Pause motion.
+
    Accessibility: the whole wall is decorative and aria-hidden. The cards are
    mouse-only links to each case study (tabindex -1, so they stay out of the
    tab order); the real navigation is the hero's "See the work" CTA and the
@@ -67,7 +73,13 @@ const size = {
         >
           {[0, 1].map((copy) =>
             cards.map((site) => (
-              <a class="reel-card" href={`/work/${site.slug}/`} tabindex="-1" data-copy={copy}>
+              <a
+                class="reel-card"
+                href={`/work/${site.slug}/`}
+                tabindex="-1"
+                data-copy={copy}
+                data-slug={site.slug}
+              >
                 <span class="reel-frame" style={`width: ${size[col.kind].width}px;`}>
                   <span class="reel-chrome">
                     <span class="reel-dot" />
@@ -280,3 +292,10 @@ const size = {
     }
   }
 </style>
+
+<script>
+  /* Click-time View Transition names for the reel (overhaul 3.1). The
+     listeners live on document and bind once, so they survive page swaps. */
+  import { initReelMorph } from '../scripts/reel-morph';
+  initReelMorph();
+</script>
