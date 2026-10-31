@@ -27,7 +27,7 @@
    .surface-card.
 
    One deliberate full-bleed exception sits at the TAIL of the page, after the
-   ruled column ends: the closing CtaBanner. It is an intentional closing beat,
+   ruled column ends: the footer's ink closer. It is an intentional closing beat,
    not a mid-column slab, so the editorial one-surface read holds through every
    section above it. (The old Testimonials carousel band was retired in the
    2026-10 overhaul; real client quotes return in Phase 2.)
@@ -37,7 +37,6 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Heft from '../components/Heft.astro';
-import CtaBanner from '../components/CtaBanner.astro';
 import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
@@ -194,6 +193,11 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
 <BaseLayout
   title="About Nathan Nixon | Nixon Creative Studio"
   description="I'm Nathan Nixon, the one person behind Nixon Creative Studio in Cincinnati. I plan, design and build every site myself, and shoot the photos when needed."
+  closer={{
+    heading: 'Want to talk about',
+    emphasis: 'a project?',
+    sub: 'The first conversation is free, and the earlier it happens, the easier the work is to schedule.',
+  }}
 >
   <!-- ====================================================================
        Masthead (ABOUT). The page head: who Nathan is, paired with the
@@ -612,10 +616,6 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
   </section>
 
   <!-- Closing CTA: the one deliberate full-bleed break, outside the grid. -->
-  <CtaBanner
-    title="Want to talk about a project?"
-    sub="The first conversation is free, and the earlier it happens, the easier the work is to schedule."
-  />
 
   <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
   <Lightbox />

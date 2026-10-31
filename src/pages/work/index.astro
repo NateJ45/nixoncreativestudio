@@ -13,8 +13,8 @@
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
+import { DEFAULT_CLOSER } from '../../lib/closer';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CtaBanner from '../../components/CtaBanner.astro';
 import CaseStudyCover from '../../components/CaseStudyCover.astro';
 import WorkFilter from '../../components/WorkFilter.astro';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
@@ -60,6 +60,11 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
 <BaseLayout
   title="Case studies | Nixon Creative Studio"
   description={`${entries.length} live client websites I planned, designed and built for churches, schools, nonprofits and small businesses, each with the thinking behind it.`}
+  closer={{
+    heading: 'Want a site like',
+    emphasis: 'these?',
+    sub: DEFAULT_CLOSER.sub,
+  }}
 >
   <section class="py-2xl" aria-labelledby="work-index-heading">
     <div class="ncs-container">
@@ -233,6 +238,4 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
       </div>
     </section>
   )}
-
-  <CtaBanner />
 </BaseLayout>

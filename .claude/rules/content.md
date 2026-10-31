@@ -20,9 +20,9 @@ Every `mailto:` link site-wide has a graceful fallback (`src/scripts/mailto-fall
 
 ## Site navigation (`src/data/nav.ts`, overhaul 1.8)
 
-The header, the mobile menu and the footer read one list. `getNav()` returns Work, Services, About plus the gated pages (header and MobileNav; Contact is left out because the "Start a project" button covers it); `getFooterNav()` adds Contact for the footer's Explore column, which is also the no-JS target of the menu button (`#site-nav`). Every href ends in a slash.
+The header, the mobile menu and the footer read one list. `getNav()` returns Work, Services, About plus the gated pages (header and MobileNav; Contact is left out because the "Start a project" button covers it); `getFooterNav()` adds Contact for the footer's Studio column, which is also the no-JS target of the menu button (`#site-nav`). Every href ends in a slash.
 
-Two links are gated at build time so a link never points at an empty page: **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. To rename, reorder or add a page, edit `BASE` in `nav.ts`, and add a one-line descriptor for its href to `DESCRIPTIONS` in `MobileNav.astro`.
+Two links are gated at build time so a link never points at an empty page: **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. To rename, reorder or add a page, edit `BASE` in `nav.ts`; the header, the mobile menu and the footer follow. The footer's Work column is not in `nav.ts`: it lists every case study straight from the collection, grouped by sector.
 
 ## Content collections
 

@@ -104,10 +104,10 @@ Rules: NCS blue appears only on actions and focus (the CTA pill, links, focus ri
 
 ### Surfaces and primitives
 
-- **`.band-ink`**: the solid navy block every page will end on (the Phase 2 closer) and any other ink section. It re-scopes the text roles for its children in both themes: headings `#fff`, body `#E5E7EB`, links and focus `#40AAED`, meta `#A7B0BE`, and the button to navy on sky. It re-declares the `--color-*` aliases too, so scoped CSS that reads `var(--color-heading)` follows. Never put `text-primary-foreground` or a hex on top of it; the normal tokens just work.
+- **`.band-ink`**: the solid navy block every page ends on (the Footer, with its closer, since package 2.1) and any other ink section. It re-scopes the text roles for its children in both themes: headings `#fff`, body `#E5E7EB`, links and focus `#40AAED`, meta `#A7B0BE`, and the button to navy on sky. It re-declares the `--color-*` aliases too, so scoped CSS that reads `var(--color-heading)` follows. Never put `text-primary-foreground` or a hex on top of it; the normal tokens just work.
 - **`.frame`**: the one treatment for a real artifact (client site, photo, the form): `--radius-frame`, a 1px `--frame-ring` ring and `--shadow-frame`. `BrowserFrame.astro` (1.8) builds on it.
 - **`.hairline`**: a 1px `--line` top rule at a change of surface.
-- **`.band-themed`** (older): a flat band, `bg-bg-soft` in light, navy in dark. Still used by CtaBanner, ProcessBand, the Footer and two inset cards until Phase 2 replaces them.
+- **`.band-themed`** (older): a flat band, `bg-bg-soft` in light, navy in dark. Still used by ProcessBand and two inset cards until Phase 2 replaces them (CtaBanner was deleted and the Footer moved to `.band-ink` in package 2.1).
 - **`.surface-card`** (older): the elevated card. Retired in Phase 2 ("only real artifacts get a frame").
 - **Forced colors**: `@media (forced-colors: active)` gives `.frame`, `.surface-card`, `.band-ink`, `.band-themed` and `.hairline` a real border or outline, because forced-colors mode drops shadows and backgrounds. A new surface that relies on a shadow or background for its edge joins that list. `tests/forced-colors.spec.ts` checks one route.
 
@@ -154,7 +154,7 @@ Deliberately small since package 1.2 (the aurora, grain, shine, spotlight, float
 
 **Loops and Pause motion.** Anything that repeats opts in with `data-motion="loop"` on itself or a wrapper (the reel stage, the ticker, the footer and About status dots, the terminal cursor, the SiteShowcase zoom, the 404 numeral, the Coming Soon background). One rule in section 6 sets `animation-play-state: paused` on a loop while it is off screen (`data-motion-offscreen`, set by `motion.ts`), while the tab is hidden (`html[data-motion-hidden]`) and while the visitor has paused motion (`html[data-motion-paused]`). A script-driven loop asks `loopMayRun(el)` from `motion.ts` on every tick (the hero ticker is the pattern). An untagged loop ignores the pause and slips past `tests/motion-pause.spec.ts` (which checks every tagged loop on every route), so always tag it. A loading spinner (the contact form's) is not a loop.
 
-The Pause motion state is persisted in `localStorage["ncs-motion"]` (`"paused"` or absent) and applied before first paint by the BaseLayout bootstrap (and the standalone `/coming-soon` page), next to the theme bootstrap, so a visitor who paused never sees a frame of motion. Any `<button data-motion-toggle aria-pressed>` sets and reflects it; today that is the footer switch and the hero's Pause button.
+The Pause motion state is persisted in `localStorage["ncs-motion"]` (`"paused"` or absent) and applied before first paint by the BaseLayout bootstrap (and the standalone `/coming-soon` page), next to the theme bootstrap, so a visitor who paused never sees a frame of motion. Any `<button data-motion-toggle aria-pressed>` sets and reflects it; today that is `MotionToggle.astro` (in the footer's utility row and the mobile menu) and the hero's Pause button.
 
 Also:
 

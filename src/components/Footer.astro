@@ -1,313 +1,260 @@
 ---
-// Foundation, edit with care. The "Currently" blurb in the script section
-// is content that's safe to edit by hand whenever the season changes.
+// Foundation, edit with care. The "Currently" blurb below is content that is
+// safe to edit by hand whenever the season changes.
 /* ============================================================================
-   Site Footer
+   Site Footer (overhaul package 2.1)
    ============================================================================
-   Bottom of every page. Mirrors the structure of the WordPress build's
-   footer so the content model carries over without surprises.
+   Bottom of every page, and the page's last word. The whole footer is a
+   .band-ink block, navy in BOTH themes (Nathan's decision 4), so every page
+   ends on ink. .band-ink re-scopes the text roles to light-on-navy values
+   that hold AA in both themes (src/lib/ncs-tokens.test.ts), so everything in
+   here uses the normal tokens (text-heading, text-link, text-text-muted).
 
-   Top row: three columns (Contact, Connect, Currently).
-   Bottom row: copyright on the left, privacy link in the middle, tagline
-   on the right, separated from the top row by a hairline divider.
+   1. The closer. One static H2 (300 lead, <b> at 800, never Heft) with an
+      optional line, then the email and the CTA pill. Each page sets it with
+      BaseLayout's `closer` prop (src/lib/closer.ts has the shape and the
+      default). This replaced the old CtaBanner.
+   2. A hairline, then four columns:
+        Work       every case study, computed from the collection and grouped
+                   by sector, so a new study shows up here on its own.
+        Studio     the gated site nav from src/data/nav.ts. id="site-nav": the
+                   mobile menu button links here, so the menu works with no
+                   JavaScript (CLAUDE.md never-break rule 8). Keep the id.
+        Contact    email (with copy), phone, Cincinnati, social, from site.ts.
+        Currently  the booking dot (when site.bookingOpen) and the blurb.
+   3. The utility row: copyright, Colophon, Privacy, Accessibility, and the
+      Pause motion switch.
 
-   Contact details, social URLs, studio name, and tagline come from
-   src/data/site.ts so a rebrand or contact change flows here without
-   editing this file.
+   The old ghost wordmark is gone, and nothing here fades in on scroll: on a
+   short page the footer is in the first viewport, and it should simply be
+   there.
    ============================================================================ */
 
-// Year stamp on the copyright. Recomputed at build time so it stays
-// accurate without manual edits each January.
-const year = new Date().getFullYear();
-
+import { getCollection } from 'astro:content';
 import { getFooterNav } from '../data/nav';
 import { site } from '../data/site';
+import { DEFAULT_CLOSER, SECTOR_PLURAL, type Closer } from '../lib/closer';
 import CopyEmail from './CopyEmail.astro';
+import MotionToggle from './MotionToggle.astro';
 import { buttonVariants } from './ui/button';
+import { cn } from '@/lib/utils';
 
-// Footer site nav: the header's list plus Contact, from src/data/nav.ts, so the
-// two never drift (Journal and Photography are gated there). This is a quiet
-// repeat of the menu for visitors who reach the bottom of a page and want to
-// know where to go next, rather than scrolling back up to the header.
+interface Props {
+  /** The page's closer. Leave it out for the default. */
+  closer?: Closer;
+}
+
+const { closer = DEFAULT_CLOSER } = Astro.props;
+const {
+  heading,
+  emphasis,
+  sub,
+  href = '/contact/',
+  label = 'Start a project',
+  cta = true,
+} = closer;
+
+// Year stamp on the copyright, recomputed at build time.
+const year = new Date().getFullYear();
+
+// Studio column: the header's list plus Contact, gated in src/data/nav.ts.
 const navLinks = await getFooterNav();
 
-// Social links rendered as a list. Driving this from site.social keeps
-// labels in one place; add a network there and add a row here.
+// Work column: every case study in loop order (the `order` field, which the
+// /work page also follows), grouped by sector. Groups appear in the order
+// their first study does, so nothing here is typed in by hand.
+const studies = (await getCollection('case-studies')).sort(
+  (a, b) => (a.data.order ?? 99) - (b.data.order ?? 99),
+);
+const groups = new Map<string, { label: string; studies: typeof studies }>();
+for (const study of studies) {
+  const key = study.data.sector;
+  if (!groups.has(key)) groups.set(key, { label: SECTOR_PLURAL[key] ?? key, studies: [] });
+  groups.get(key)!.studies.push(study);
+}
+
 const social = [
   { label: 'Instagram', href: site.social.instagram },
   { label: 'LinkedIn', href: site.social.linkedin },
 ];
 
-// "Currently" blurb. Short, present-tense, swappable per season. Lives
-// here rather than in site.ts because it's marketing copy, not contact
-// info, and Nathan updates it often.
+// "Currently" blurb. Short, present-tense, swappable per season.
 const currently =
   'Booking small business and nonprofit web projects for the season ahead, with a few photography days mixed in.';
 
-// All anchor tags inside the footer share the same styling: an accent blue at
-// rest, underline appearing on hover/focus as the cue. The token is theme-aware
-// because the footer is now light in light mode and navy in dark: --link
-// (#2A6FB0, AA on the light footer) by default, switching to the brighter sky
-// --secondary over the navy footer in dark mode (--link is too dark to clear AA
-// on navy; --secondary is 9.7:1 there). Pulled into a const so each <a> applies
-// the same set without copy-paste drift.
-// On a touch device the links become 44px-tall flex rows so they're a
-// comfortable tap target (at rest they render ~16-22px tall, fine for a mouse
-// but cramped for a thumb). Gating on pointer:coarse, not screen width, means
-// phones AND touch tablets (iPads) both get the larger target, while a
-// mouse-driven desktop keeps the footer's tuned compact density.
+// Every text link in the columns. On a touch device each becomes a 44px row
+// (pointer:coarse, so phones and tablets both get it while a mouse keeps the
+// compact desktop density).
 const linkClass =
-  'text-link dark:text-secondary no-underline transition-colors duration-150 ' +
+  'text-link no-underline transition-colors duration-150 ' +
   'hover:underline hover:underline-offset-2 ' +
   'focus-visible:underline focus-visible:underline-offset-2 ' +
   'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:items-center';
 
-// Section heading style inside each column. The h2 elements take the h5 size
-// and weight (650) so they read as labels, not section titles. text-heading is theme-aware
-// (navy on the light footer, near-white on the navy footer in dark mode), so
-// the label stays readable in both themes.
-const headingClass = 'text-h5 text-heading mb-s';
+// Column headings: h2s at the h6 size so they read as labels.
+const headingClass = 'text-h6 text-heading mb-s';
 ---
 
-<!--
-  Full-bleed footer; the inner column uses .ncs-container to align with the
-  rest of the content above. .band-themed makes it theme-aware: flat bg-soft in
-  light mode, flat navy in dark mode, matching
-  the CtaBanner / ProcessBand above it so they read as one continuous field.
-  In dark mode this is still the page's darkest band. A faint accent seam line
-  at the very top joins it to a dark band above (dark mode only).
-  transition:name="site-footer" keeps it still between pages (a static View
-  Transition group, globals.css section 6).
--->
-<footer
-  class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground"
-  transition:name="site-footer"
->
-  <div class="ncs-container relative z-10">
-    <!-- Top section: three columns side by side on desktop, stacked on mobile.
-         auto-fit + minmax(16rem,1fr) means columns collapse to one as soon as
-         a column would be thinner than 16rem, with no media query needed. -->
-    <div class="mb-2xl">
-      <div class="grid [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))] gap-l">
-        <!-- Column 1: Explore. A quiet repeat of the primary nav so a visitor
-             at the bottom of a page has the site map without scrolling back up.
-             A real <nav> landmark (distinct aria-label) so assistive tech can
-             jump to it. id="site-nav" is also the target of the mobile menu
-             button, so the menu works without JavaScript (MobileNav.astro). -->
-        <nav id="site-nav" aria-label="Site pages" data-reveal style="--reveal-delay: 0ms;">
-          <h2 class={headingClass}>Explore</h2>
-          <ul class="flex flex-col gap-xs">
-            {navLinks.map(({ label, href }) => (
-              <li>
-                <a class={linkClass} href={href}>
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+<footer class="band-ink site-footer" transition:name="site-footer">
+  <div class="ncs-container">
+    {/* 1. The closer. */}
+    <section class="closer pt-section pb-xl" aria-labelledby="closer-title">
+      <h2 id="closer-title" class="closer-title max-w-[20ch] text-heading">
+        {heading}
+        {emphasis && (
+          <>
+            {' '}
+            <b>{emphasis}</b>
+          </>
+        )}
+      </h2>
+      {sub && <p class="mt-m max-w-[52ch] text-lg leading-[1.5] text-text">{sub}</p>}
+      <div class="mt-l flex flex-wrap items-center gap-x-l gap-y-m">
+        {cta && (
+          <a
+            href={href}
+            class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'rounded-full')}
+          >
+            {label}
+          </a>
+        )}
+        <a href={site.emailHref} class="closer-email text-link">
+          {site.email}
+        </a>
+      </div>
+    </section>
 
-        <!-- Column 2: Contact -->
-        <div data-reveal style="--reveal-delay: 90ms;">
-          <h2 class={headingClass}>Contact</h2>
-          <ul class="flex flex-col gap-xs">
-            <!-- CopyEmail renders the address as a mailto link plus a
-                 small copy-to-clipboard button. The link still works
-                 normally; the button is the convenience layer. -->
+    {/* 2. Hairline, then the columns: one on phones, two from sm, four from
+        lg, with Contact widest so the email and its copy button fit. */}
+    <div class="hairline grid gap-l pt-xl pb-xl sm:grid-cols-2 lg:grid-cols-[1.1fr_0.7fr_1.3fr_1fr]">
+      <nav aria-label="Case studies">
+        <h2 class={headingClass}>Work</h2>
+        <div class="flex flex-col gap-m">
+          {[...groups.values()].map((group) => (
+            <div>
+              <h3 class="footer-sector mb-xs font-mono text-xs tracking-[0.08em] text-text-muted uppercase">
+                {group.label}
+              </h3>
+              <ul class="flex flex-col gap-xs">
+                {group.studies.map((study) => (
+                  <li>
+                    <a class={linkClass} href={`/work/${study.id}/`}>
+                      {study.data.client}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      <nav id="site-nav" aria-label="Site pages">
+        <h2 class={headingClass}>Studio</h2>
+        <ul class="flex flex-col gap-xs">
+          {navLinks.map(({ label, href }) => (
             <li>
-              <CopyEmail email={site.email} tone="dark" />
-            </li>
-            <li>
-              <a class={linkClass} href={site.phoneHref}>
-                {site.phone}
+              <a class={linkClass} href={href}>
+                {label}
               </a>
             </li>
-            <li>{site.address}</li>
-          </ul>
-        </div>
+          ))}
+        </ul>
+      </nav>
 
-        <!-- Column 3: Connect -->
-        <div data-reveal style="--reveal-delay: 180ms;">
-          <h2 class={headingClass}>Connect</h2>
-          <ul class="flex flex-col gap-xs">
-            {social.map(({ label, href }) => (
-              <li>
-                {/* rel="noopener" on external links is a small security
-                     default that also stops the new tab from poking at
-                     window.opener. */}
-                <a class={linkClass} href={href} target="_blank" rel="noopener noreferrer">
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div>
+        <h2 class={headingClass}>Contact</h2>
+        <ul class="flex flex-col gap-xs">
+          <li>
+            <CopyEmail email={site.email} tone="ink" />
+          </li>
+          <li>
+            <a class={linkClass} href={site.phoneHref}>
+              {site.phone}
+            </a>
+          </li>
+          <li class="text-text">{site.address}</li>
+          {social.map(({ label, href }) => (
+            <li>
+              <a class={linkClass} href={href} target="_blank" rel="noopener noreferrer">
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-        <!-- Column 4: Currently. Status chip + blurb, linking to the Currently
-             section on /about, where the full snapshot now lives (the standalone
-             /now page was merged into About). -->
-        <div data-reveal style="--reveal-delay: 270ms;">
-          <h2 class={headingClass}>Currently</h2>
+      <div>
+        <h2 class={headingClass}>Currently</h2>
+        {site.bookingOpen && (
           <a
             href="/about/#now"
-            class="group mb-s inline-flex items-center gap-s rounded-full border border-border px-3 py-1.5 text-sm text-text-muted no-underline transition-colors duration-150 hover:border-heading/40 dark:border-white/15 dark:text-primary-foreground/90 dark:hover:border-white/30 pointer-coarse:min-h-11"
+            class="booking-chip mb-s inline-flex items-center gap-s rounded-pill border border-line-strong px-3 py-1.5 text-sm text-text no-underline transition-colors duration-150 hover:border-text pointer-coarse:min-h-11"
           >
             <span class="relative flex h-2 w-2" aria-hidden="true" data-motion="loop">
-              <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
-              <span class="relative inline-flex h-2 w-2 rounded-full bg-tertiary"></span>
+              <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-75" />
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-live" />
             </span>
             <span>Booking projects</span>
-            <span
-              aria-hidden="true"
-              class="transition-transform duration-150 group-hover:translate-x-0.5"
-            >
-              →
-            </span>
+            <span aria-hidden="true">→</span>
           </a>
-          <p class="leading-[1.5] text-text-muted dark:text-primary-foreground/75">{currently}</p>
-
-          <!-- Booking CTA. The status pill above links to the availability
-               snapshot on /about; this is the action: a clear brand button
-               straight to the contact form. -->
-          <a
-            href="/contact/"
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'mt-m' })}
-          >
-            Start a project
-          </a>
-        </div>
+        )}
+        <p class="leading-[1.5] text-text-muted">{currently}</p>
       </div>
     </div>
 
-    <!-- Bottom row: the meta line (copyright + the utility links, joined by
-         hairline middots so the links read as one continuous group instead of
-         floating in the middle of the bar) sits on the left, the studio
-         tagline on the right. Stacks on narrow screens. -->
-    <div class="flex flex-col gap-s border-t border-border pt-m text-sm text-text-muted sm:flex-row sm:items-center sm:justify-between sm:gap-m dark:border-white/10 dark:text-primary-foreground/60">
+    {/* 3. Utility row. */}
+    <div class="hairline flex flex-col items-start gap-s pt-m pb-l text-sm text-text-muted sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-m">
       <div class="flex flex-wrap items-center gap-x-m gap-y-1">
         <small>
           © {year} {site.studioName}
         </small>
         <nav
           aria-label="Legal and accessibility"
-          class="flex flex-wrap items-center gap-x-s gap-y-1"
+          class="flex flex-wrap items-center gap-x-m gap-y-1"
         >
           <a class={linkClass} href="/colophon/">
             Colophon
           </a>
-          <span aria-hidden="true" class="text-text-muted/50 dark:text-primary-foreground/30">
-            ·
-          </span>
           <a class={linkClass} href="/privacy/">
             Privacy
           </a>
-          <span aria-hidden="true" class="text-text-muted/50 dark:text-primary-foreground/30">
-            ·
-          </span>
           <a class={linkClass} href="/accessibility/">
             Accessibility
           </a>
         </nav>
-        <!-- Pause motion (WCAG 2.2.2). One switch for the whole site: it stops
-             every looping animation (the hero reel and ticker, the status dot,
-             the terminal cursor), skips the page transitions and the heading
-             weight animation, and is remembered on this device. The hero's own
-             Pause button sets the same state. src/scripts/motion.ts wires it;
-             without JavaScript it is hidden, since there is nothing to pause
-             that CSS alone would not already stop under reduced motion. -->
-        <button
-          type="button"
-          class="motion-toggle text-link dark:text-secondary"
-          aria-pressed="false"
-          data-motion-toggle
-        >
-          <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
-            <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
-            <rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect>
-          </svg>
-          <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"></path>
-          </svg>
-          <span>Pause motion</span>
-        </button>
       </div>
-      <small class="text-text-muted sm:text-right dark:text-primary-foreground/55">
-        {site.tagline}
-      </small>
+      <MotionToggle />
     </div>
   </div>
 </footer>
 
 <style>
-  /* Accent seam: a soft glow line at the very top of the footer so it joins a
-     dark band above into one continuous field. Dark mode only: in light mode the footer and the
-     band above are both the light surface, already continuous, so an accent line
-     would read as a stray rule. */
-  :global(.dark) .footer-seam::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in oklab, var(--color-secondary) 55%, transparent),
-      transparent
-    );
-    z-index: 1;
+  /* The closer's H2 takes the global h2 size and weight (300, <b> at 800);
+     this only keeps a long heading from crowding the pill. */
+  .closer-title {
+    text-wrap: balance;
   }
 
-  /* The Pause motion switch. A real 44px target on every device (it sits in
-     the compact utility row, but it is a control people hunt for). The text
-     is the link colour, which clears AA on both footer surfaces; the pressed
-     state swaps the icon and fills the pill, so it is never colour alone. */
-  .motion-toggle {
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding-inline: 0.875rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: transparent;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  :global(.js) .motion-toggle {
+  /* The closer email: a link-coloured line beside the pill, 44px tall so it
+     is a real tap target, and allowed to wrap at 320px. */
+  .closer-email {
     display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
   }
-  :global(.dark) .motion-toggle {
-    border-color: color-mix(in oklab, white 15%, transparent);
-  }
-  .motion-toggle:hover {
+  .closer-email:hover,
+  .closer-email:focus-visible {
     text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .motion-toggle:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-  .motion-toggle[aria-pressed='true'] {
-    border-color: currentColor;
-  }
-  .motion-toggle svg {
-    width: 0.75rem;
-    height: 0.75rem;
-    fill: currentColor;
-  }
-  .motion-toggle .icon-play,
-  .motion-toggle[aria-pressed='true'] .icon-pause {
-    display: none;
-  }
-  .motion-toggle[aria-pressed='true'] .icon-play {
-    display: block;
+    text-underline-offset: 3px;
   }
 
-  /* Availability status dot pulse. Honors reduced motion, and holds still under
-     Pause motion (data-motion="loop" on its wrapper). */
+  /* Booking dot pulse. Honours reduced motion, and holds still under Pause
+     motion (data-motion="loop" on its wrapper). */
   @media (prefers-reduced-motion: no-preference) {
     .status-ping {
       animation: status-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;

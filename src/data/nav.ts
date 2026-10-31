@@ -9,7 +9,7 @@
      getNav()         Work, Services, About, then the gated pages. The desktop
                       header and the mobile menu (MobileNav) show this. Contact
                       is not in it: the "Start a project" button covers it.
-     getFooterNav()   the same list plus Contact, for the footer's Explore
+     getFooterNav()   the same list plus Contact, for the footer's Studio
                       column (also the no-JS target of the mobile menu button).
 
    Every href ends in a slash: the site builds with trailingSlash 'always',
@@ -26,8 +26,8 @@
                    checklist is at the top of src/pages/photography.astro) and
                    the link appears on the next build.
 
-   To rename, reorder or add a page, edit BASE below. MobileNav keeps a short
-   descriptor per href (its DESCRIPTIONS map); add one there for a new page.
+   To rename, reorder or add a page, edit BASE below; the header, the mobile
+   menu and the footer all follow.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
@@ -73,7 +73,7 @@ export async function getNav(): Promise<NavLink[]> {
   ];
 }
 
-/** The footer's Explore column: the primary nav plus Contact. */
+/** The footer's Studio column: the primary nav plus Contact. */
 export async function getFooterNav(): Promise<NavLink[]> {
   return [...(await getNav()), CONTACT];
 }

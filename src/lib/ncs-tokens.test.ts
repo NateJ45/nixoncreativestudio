@@ -138,6 +138,64 @@ for (const [mode, block] of [
   checkPairs(`${mode} .band-ink`, [INK], [block, LIGHT], INK_NON_TEXT, AA_NON_TEXT);
 }
 
+// ---------------------------------------------------------------------------
+// The footer (overhaul package 2.1). The whole footer is a .band-ink block in
+// BOTH themes: the closer H2 and its line, the column links, the muted
+// sector labels, blurb and utility row, the Pause motion switch (link-coloured
+// text on a --line-strong edge) and the amber booking dot. The text roles come
+// from the .band-ink re-scope; --live is not re-scoped, so the dot is the
+// active theme's amber on ink, held to 3:1 as a non-text mark.
+// ---------------------------------------------------------------------------
+
+const FOOTER_TEXT: Pair[] = [
+  ['heading', 'ink', 'the closer H2 and the column headings'],
+  ['foreground', 'ink', 'the closer line and the address'],
+  ['link', 'ink', 'footer links, the closer email and the Pause motion label'],
+  ['muted-foreground', 'ink', 'sector labels, the Currently blurb and the utility row'],
+];
+const FOOTER_NON_TEXT: Pair[] = [
+  ['live', 'ink', 'the amber booking dot'],
+  ['line-strong', 'ink', 'the Pause motion and booking chip edges'],
+  ['ring', 'ink', 'focus rings in the footer'],
+];
+
+for (const [mode, block] of [
+  ['light', LIGHT],
+  ['dark', DARK],
+] as const) {
+  checkPairs(`${mode} footer`, [INK, block, LIGHT], [block, LIGHT], FOOTER_TEXT, AA_BODY_TEXT);
+  checkPairs(`${mode} footer`, [INK, block, LIGHT], [block, LIGHT], FOOTER_NON_TEXT, AA_NON_TEXT);
+}
+
+// The mobile menu sheet sits on --paper (light paper, ink navy in dark), with
+// the page's own text roles; its booking dot is --live on paper.
+for (const [mode, blocks] of [
+  ['light', [LIGHT]],
+  ['dark', [DARK, LIGHT]],
+] as const) {
+  checkPairs(
+    `${mode} mobile sheet`,
+    [...blocks],
+    [...blocks],
+    [
+      ['heading', 'paper', 'the big nav links'],
+      ['link', 'paper', 'the email'],
+      ['muted-foreground', 'paper', 'the booking line'],
+    ],
+    AA_BODY_TEXT,
+  );
+  checkPairs(
+    `${mode} mobile sheet`,
+    [...blocks],
+    [...blocks],
+    [
+      ['live', 'paper', 'the amber booking dot'],
+      ['line-strong', 'paper', 'the Pause motion edge'],
+    ],
+    AA_NON_TEXT,
+  );
+}
+
 test('.band-ink: the button text clears AA on the re-scoped accent', () => {
   const ratio = contrastRatio(hex('accent-foreground', INK), hex('accent', INK));
   assert.ok(ratio >= AA_BODY_TEXT, `accent-foreground on accent inside .band-ink is ${ratio}:1`);

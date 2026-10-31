@@ -18,7 +18,7 @@ Moved out of CLAUDE.md. Loads when source, scripts, public assets or config are 
 - Text content inside `src/pages/*.astro` (everything outside the frontmatter, between the tags)
 - MDX files in `src/content/case-studies/`, `src/content/journal/`, and JSON files in `src/content/photos/`
 - Images in `src/assets/case-studies/`, `src/assets/photography/`, `src/assets/brand/` (regen blur via `npm run placeholders` after adding a case study cover during dev)
-- `src/data/site.ts` (contact info, social URLs, tagline, bookingUrl, newsletterUrl)
+- `src/data/site.ts` (contact info, social URLs, tagline, bookingOpen, bookingUrl, newsletterUrl)
 - Copy strings and `href` values in component files
 - Tailwind utility classes on existing components, when content needs different visual weight
 - The "Currently" blurb in `Footer.astro` (seasonal copy)
