@@ -19,7 +19,7 @@ import '../styles/starwind.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
-import BackToTop from '../components/BackToTop';
+import BackToTop from '../components/BackToTop.astro';
 import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
 import ComingSoonGate from '../components/ComingSoonGate.astro';
@@ -212,7 +212,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
            - "system" (or missing) -> fall through
         2. window.matchMedia('(prefers-color-scheme: dark)') for system.
 
-      ThemeToggle.tsx writes to the same localStorage key, and Astro's
+      ThemeToggle.astro (src/scripts/theme-toggle.ts) writes to the same localStorage key, and Astro's
       View Transitions ClientRouter preserves <html> attributes across
       same-origin navigations, so the class survives page changes.
 
@@ -304,11 +304,9 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     </main>
     <Footer />
 
-    {/* Floating back-to-top affordance. client:idle defers hydration
-        until after critical content; the button starts hidden and only
-        fades in after the visitor scrolls past 600px, so the delay is
-        invisible. */}
-    <BackToTop client:idle />
+    {/* Floating back-to-top button: hidden (and inert) until the visitor
+        scrolls past 600px. Plain markup plus a small script, no React. */}
+    <BackToTop />
 
     {comingSoonEnabled && (
       <div class="ncs-overlay" aria-label="Launching soon">

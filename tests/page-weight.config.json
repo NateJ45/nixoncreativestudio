@@ -3,12 +3,13 @@
     "EXPECTED TO DIFFER PER SITE. The budgets tests/page-weight.spec.ts checks (decoded kilobytes).",
     "Set 2026-10-27 from what each page weighed (Playwright, chromium) plus about 25%. Route keys match tests/routes.ts (no trailing slash).",
     "Keys left out fall back to the spec's own numbers. A route that must be heavy gets its own entry under pages, with the reason in _why.",
-    "jsonLd lists the schema.org types a route must carry, e.g. { \"/\": [\"Organization\"] }."
+    "jsonLd lists the schema.org types a route must carry, e.g. { \"/\": [\"Organization\"] }.",
+    "maxScriptKb lowered from 430 to 120 by overhaul 1.4 (2026-10-30): the React chrome islands became small .astro scripts, so every route except /photography ships no React. Measured after: about 37 KB of scripts per route (19 KB once 1.2 removes Lenis), against about 342 KB before. The margin leaves room for the overhaul's own scripts (1.7's motion switch and the like) without hiding a framework creeping back. The /contact override (2650 KB) went the same day: its 2101 KB was React plus the form libraries, and /contact now weighs what every other page does. The Google Maps iframe there is lazy and below the fold, so it is not counted unless scrolled to."
   ],
   "defaults": {
     "maxHtmlKb": 150,
     "maxInlineCssKb": 35,
-    "maxScriptKb": 430,
+    "maxScriptKb": 120,
     "maxImagesKb": 500,
     "maxImageKb": 500,
     "maxLcpImageKb": 250,
@@ -19,10 +20,6 @@
     "/": {
       "_why": "The hero reel shows real client sites as images (about 13 small WebP captures, 2026-10-30). The WebGL hero and its 1237 KB of three.js were removed the same day, so scripts fall back to the default budget.",
       "maxImagesKb": 770
-    },
-    "/contact": {
-      "_why": "The form island loads React and the form libraries (2101 KB of scripts when measured, 2026-10-27).",
-      "maxScriptKb": 2650
     },
     "/work/stone-steps-50k": {
       "_why": "The sample case study changed from Second Presbyterian (retired 2026-10-30) to Stone Steps, the lead study: its site showcase, three feature shots and before/after slider weighed 875 KB of images when measured. Slimming case-study media is on the overhaul plan; lower this when that lands. Its full-length homepage capture (1440x10824) is one 504 KB WebP, hence the per-image allowance.",
