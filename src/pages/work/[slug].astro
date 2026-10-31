@@ -68,6 +68,8 @@ import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
 import { sectorPagePath } from '../../data/sector-pages';
+import liveScores from '../../data/live-scores.json';
+import { liveScoreFact, type LiveScore } from '../../lib/live-scores';
 
 // Each route gets its own entry plus the one study the Up next panel hands
 // off to (by `order`, wrapping from the last back to the first), trimmed to
@@ -143,6 +145,8 @@ const cmsProblem = cmsShotProblem(entry.data);
 if (cmsProblem) throw new Error(`src/content/case-studies/${entry.id}.mdx: ${cmsProblem}`);
 
 const facts = studyFacts(entry.data);
+// Package 4.7: the dated live-score line; undefined (so nothing renders) with no entry or a stale one.
+const liveScore = liveScoreFact((liveScores.scores as Record<string, LiveScore>)[entry.id]);
 const host = liveUrl ? hostOf(liveUrl) : undefined;
 const sectorPlural = SECTOR_PLURAL[sector] ?? sector;
 
@@ -315,7 +319,7 @@ const nextShot = next ? homeShot(next.id) : undefined;
 
     {/* 4. The rail beside the body. */}
     <div class="ncs-container page-grid cs-body">
-      <StudyRail facts={facts} chapters={chapters} />
+      <StudyRail facts={facts} chapters={chapters} liveScore={liveScore} />
 
       <div class="grid-body">
         <p class="cs-lede">{summary}</p>
