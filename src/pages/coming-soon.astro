@@ -36,9 +36,19 @@ const description = `${site.studioName} is a small studio in ${site.address}: we
     <title>{title}</title>
 
     <!-- Theme bootstrap. Same logic as BaseLayout so dark / light is
-         consistent if a visitor has a theme preference. -->
+         consistent if a visitor has a theme preference. It also applies the
+         visitor's Pause motion choice (src/scripts/motion.ts), which holds
+         the drifting background still. -->
     <script is:inline>
       (function () {
+        try {
+          document.documentElement.toggleAttribute(
+            'data-motion-paused',
+            localStorage.getItem('ncs-motion') === 'paused',
+          );
+        } catch (_e) {
+          /* Storage blocked: motion follows the system setting only. */
+        }
         try {
           var stored = localStorage.getItem('ncs-theme');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;

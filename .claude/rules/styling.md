@@ -49,7 +49,7 @@ Headings use `text-wrap: balance`. Every heading wraps long words (`overflow-wra
 - h3 and below sit at 650.
 - Headings are never coloured, capitalised or gradient for emphasis. No `text-link` or `text-tertiary` spans inside a heading, no `uppercase`, no `background-clip: text`. Copy is sentence case exactly as written; the base heading rule has no `text-transform`.
 - A card heading that is itself a link may change colour on hover or focus (a link state, not emphasis).
-- One weight animation (Heft) per page, on the H1, arrives in package 1.7. H2s stay static at 300/800.
+- One weight animation per page, on the H1's heavy phrase: wrap it in `<Heft text="..." />` (`src/components/Heft.astro`, package 1.7), which renders the `<b>`. H2s stay static at 300/800.
 
 ### Metric-matched fallbacks
 
@@ -136,13 +136,28 @@ Three-state toggle (light / dark / system), persisted to `localStorage["ncs-them
 
 ## Motion
 
-Deliberately small since package 1.2 (the aurora, grain, shine, spotlight, float, hover-lift, mesh and dot-grid layers, their keyframes, the left / right / scale / blur reveal variants and Lenis were retired; do not bring them back). Package 1.7 builds the motion system on the tokens below; every effect stays WCAG AA and reduced-motion safe.
+Deliberately small since package 1.2 (the aurora, grain, shine, spotlight, float, hover-lift, mesh and dot-grid layers, their keyframes, the left / right / scale / blur reveal variants and Lenis were retired; do not bring them back). Package 1.7 (2026-10-31) built the system: `globals.css` section 6, `src/scripts/motion.ts` and `src/components/Heft.astro`. Every effect stays WCAG AA and reduced-motion safe, and `globals.css` is frozen after 1.7, so new motion lives in scoped styles and uses the vocabulary below.
 
-**Tokens** (`:root`): durations `--dur-instant` 120ms, `--dur-quick` 200ms, `--dur-settle` 420ms, `--dur-scene` 640ms, `--dur-heft` 1500ms; easings `--ease-settle` (entrances), `--ease-glide` (state to state, the hero's heft curve), `--ease-exit` (leaving). Use these, never a new literal.
+**Tokens** (`:root`): durations `--dur-instant` 120ms, `--dur-quick` 200ms, `--dur-settle` 420ms, `--dur-scene` 640ms, `--dur-heft` 1500ms; easings `--ease-settle` (entrances), `--ease-glide` (state to state, the heft curve), `--ease-exit` (leaving). Use these, never a new literal. Rise distance is 8px; stagger is 70ms, capped at 6 steps.
 
-Today's vocabulary:
+**Four verbs, and nothing else moves:**
 
-- `data-reveal` for a scroll-in fade and rise (`data-reveal="fade"` for no travel); stagger with `style="--reveal-delay: 120ms"`. Never on first-viewport media or an H1 (ruling 3; `tests/first-viewport.spec.ts`). The hidden state is scoped to `.js`, so without JS everything is visible.
+- **Settle** (entrances). Two variants only:
+  - `data-reveal`: fades in and rises 8px.
+  - `data-reveal="frame"`: a clip-path unveil from the bottom, for media (a framed site or photo). No opacity change.
+  - `data-reveal-group` on a parent steps its children's reveals 70ms apart (CSS `:nth-child`, capped at 6 steps). Use it instead of inline delays; the old `style="--reveal-delay: …"` still works in the fallback but is legacy.
+  - The default is scroll-driven CSS (`animation-timeline: view()`, inside `@supports` and `prefers-reduced-motion: no-preference`), so a reveal needs no script and can never stick half way. Where that is unsupported, `motion.ts` adds `.is-visible` with an IntersectionObserver and a transition plays. The finished state is always what the markup renders, and the hidden state is gated on `.js`, so without JS everything is visible.
+  - **Never on first-viewport content** (ruling 3): no `data-reveal` on an H1, on first-viewport media, or on anything else in the first screen. `tests/first-viewport.spec.ts` checks H1s and media; a `!important` backstop in section 6 shows anything tagged in `<main>`'s first block regardless.
+- **Glide** (state to state): page transitions. The ClientRouter's View Transition fades the old page out (`--dur-quick`, `--ease-exit`) and settles the new one 8px up (`--dur-settle`, `--ease-settle`). The header and footer are static groups (`transition:name="site-header"` / `"site-footer"`, no animation), and the wordmark keeps `transition:name="site-wordmark"`. Every `::view-transition-*` animation is `none` under reduced motion and while `html[data-motion-paused]` is set.
+- **Heft** (the weight signature): `Heft.astro`, one per page, on the H1's heavy phrase only (ruling 9). H2s stay static 300/800. See `components.md`.
+- **Drift**: the hero reel only.
+
+**Loops and Pause motion.** Anything that repeats opts in with `data-motion="loop"` on itself or a wrapper (the reel stage, the ticker, the footer and About status dots, the terminal cursor, the SiteShowcase zoom, the 404 numeral, the Coming Soon background). One rule in section 6 sets `animation-play-state: paused` on a loop while it is off screen (`data-motion-offscreen`, set by `motion.ts`), while the tab is hidden (`html[data-motion-hidden]`) and while the visitor has paused motion (`html[data-motion-paused]`). A script-driven loop asks `loopMayRun(el)` from `motion.ts` on every tick (the hero ticker is the pattern). An untagged loop ignores the pause and slips past `tests/motion-pause.spec.ts` (which checks every tagged loop on every route), so always tag it. A loading spinner (the contact form's) is not a loop.
+
+The Pause motion state is persisted in `localStorage["ncs-motion"]` (`"paused"` or absent) and applied before first paint by the BaseLayout bootstrap (and the standalone `/coming-soon` page), next to the theme bootstrap, so a visitor who paused never sees a frame of motion. Any `<button data-motion-toggle aria-pressed>` sets and reflects it; today that is the footer switch and the hero's Pause button.
+
+Also:
+
 - `data-countup data-countup-to="10"`: always render the real final value as static text.
 - `.link-underline` for the grow-from-the-left underline on hover and focus.
 - `src/scripts/enhance.ts` (every `astro:page-load`) powers count-ups, the header's `data-scrolled` state and the `[data-prose]` heading anchors. Page scripts register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions.

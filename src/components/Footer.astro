@@ -86,8 +86,13 @@ const headingClass = 'text-h5 text-heading mb-s';
   the CtaBanner / ProcessBand above it so they read as one continuous field.
   In dark mode this is still the page's darkest band. A faint accent seam line
   at the very top joins it to a dark band above (dark mode only).
+  transition:name="site-footer" keeps it still between pages (a static View
+  Transition group, globals.css section 6).
 -->
-<footer class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground">
+<footer
+  class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground"
+  transition:name="site-footer"
+>
   <div class="ncs-container relative z-10">
     <!-- Top section: three columns side by side on desktop, stacked on mobile.
          auto-fit + minmax(16rem,1fr) means columns collapse to one as soon as
@@ -157,7 +162,7 @@ const headingClass = 'text-h5 text-heading mb-s';
             href="/about/#now"
             class="group mb-s inline-flex items-center gap-s rounded-full border border-border px-3 py-1.5 text-sm text-text-muted no-underline transition-colors duration-150 hover:border-heading/40 dark:border-white/15 dark:text-primary-foreground/90 dark:hover:border-white/30 pointer-coarse:min-h-11"
           >
-            <span class="relative flex h-2 w-2" aria-hidden="true">
+            <span class="relative flex h-2 w-2" aria-hidden="true" data-motion="loop">
               <span class="status-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
               <span class="relative inline-flex h-2 w-2 rounded-full bg-tertiary"></span>
             </span>
@@ -213,6 +218,28 @@ const headingClass = 'text-h5 text-heading mb-s';
             Accessibility
           </a>
         </nav>
+        <!-- Pause motion (WCAG 2.2.2). One switch for the whole site: it stops
+             every looping animation (the hero reel and ticker, the status dot,
+             the terminal cursor), skips the page transitions and the heading
+             weight animation, and is remembered on this device. The hero's own
+             Pause button sets the same state. src/scripts/motion.ts wires it;
+             without JavaScript it is hidden, since there is nothing to pause
+             that CSS alone would not already stop under reduced motion. -->
+        <button
+          type="button"
+          class="motion-toggle text-link dark:text-secondary"
+          aria-pressed="false"
+          data-motion-toggle
+        >
+          <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
+            <rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect>
+          </svg>
+          <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"></path>
+          </svg>
+          <span>Pause motion</span>
+        </button>
       </div>
       <small class="text-text-muted sm:text-right dark:text-primary-foreground/55">
         {site.tagline}
@@ -242,7 +269,55 @@ const headingClass = 'text-h5 text-heading mb-s';
     z-index: 1;
   }
 
-  /* Availability status dot pulse. Honors reduced motion. */
+  /* The Pause motion switch. A real 44px target on every device (it sits in
+     the compact utility row, but it is a control people hunt for). The text
+     is the link colour, which clears AA on both footer surfaces; the pressed
+     state swaps the icon and fills the pill, so it is never colour alone. */
+  .motion-toggle {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-inline: 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  :global(.js) .motion-toggle {
+    display: inline-flex;
+  }
+  :global(.dark) .motion-toggle {
+    border-color: color-mix(in oklab, white 15%, transparent);
+  }
+  .motion-toggle:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .motion-toggle:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .motion-toggle[aria-pressed='true'] {
+    border-color: currentColor;
+  }
+  .motion-toggle svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    fill: currentColor;
+  }
+  .motion-toggle .icon-play,
+  .motion-toggle[aria-pressed='true'] .icon-pause {
+    display: none;
+  }
+  .motion-toggle[aria-pressed='true'] .icon-play {
+    display: block;
+  }
+
+  /* Availability status dot pulse. Honors reduced motion, and holds still under
+     Pause motion (data-motion="loop" on its wrapper). */
   @media (prefers-reduced-motion: no-preference) {
     .status-ping {
       animation: status-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;

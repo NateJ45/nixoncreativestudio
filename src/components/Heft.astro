@@ -1,0 +1,130 @@
+---
+// Safe to edit (timing props); the reserve grid is load-bearing, see below.
+/* ============================================================================
+   Heft: the weight signature (overhaul package 1.7)
+   ============================================================================
+   The heavy phrase of a page's H1 fills from a hairline 200 to a heavy 800,
+   once, as the page loads. One Heft per page, on the H1 only (plan ruling 9);
+   H2s stay static at 300/800. The 404 runs it in reverse (800 to 200), so
+   "lost its weight" really does.
+
+   Usage, inside an H1 whose lead is the light 300:
+     <h1>A one-person studio for <Heft text="organizations that take their work seriously." /></h1>
+     <h1>This page <Heft text="lost its weight." reverse /></h1>
+
+   How it stays still on the page (CLS 0):
+     Each word is a one-cell inline grid holding two copies of itself: an
+     invisible, aria-hidden copy fixed at 800 (the heaviest, widest weight;
+     500 in reverse, see the style block), which sets the cell's size from the
+     first frame, and the visible copy on top, whose weight animates. The growing (or shrinking) letters never
+     push anything, and the line breaks never change mid-animation.
+
+   What animates: font-weight only (Bricolage is a variable font, so this is
+   the wght axis). Never opacity, so a first-viewport H1 is a clean LCP.
+
+   Timing: --dur-heft (1500ms) on --ease-glide, starting after `delay`, each
+   word 90ms after the one before, capped at 5 steps. So a long phrase still
+   finishes inside 2.5s (150 + 450 + 1500 = 2100ms at the defaults).
+
+   When it does NOT animate, it simply renders its end state, statically:
+     - under prefers-reduced-motion: reduce,
+     - without JavaScript (the animation is gated on the .js class),
+     - while the visitor has paused motion (html[data-motion-paused]).
+   The end state is 800 normally and 200 for `reverse` (ruling 9: the 404
+   under reduce shows its end state).
+   ============================================================================ */
+
+interface Props {
+  /** The heavy phrase. Split on spaces into words. */
+  text: string;
+  /** Run 800 to 200 instead of 200 to 800 (the 404). */
+  reverse?: boolean;
+  /** Milliseconds before the first word starts. */
+  delay?: number;
+  /** Milliseconds per word. Defaults to --dur-heft. */
+  duration?: number;
+  /** A CSS easing. Defaults to --ease-glide. */
+  ease?: string;
+}
+
+const { text, reverse = false, delay = 150, duration, ease } = Astro.props;
+const words = text.trim().split(/\s+/);
+
+// Inline custom properties for the root; per-word delays below.
+const rootStyle = [
+  duration ? `--heft-duration: ${duration}ms;` : '',
+  ease ? `--heft-ease: ${ease};` : '',
+].join(' ');
+---
+
+<b class:list={['heft', reverse && 'heft--reverse']} style={rootStyle || undefined}>
+  {words.map((word, i) => (
+    <>
+      <span class="heft-word">
+        <span class="heft-reserve" aria-hidden="true">
+          {word}
+        </span>
+        <span class="heft-ink" style={`--heft-delay: ${delay + Math.min(i, 5) * 90}ms;`}>
+          {word}
+        </span>
+      </span>
+      {i < words.length - 1 && ' '}
+    </>
+  ))}
+</b>
+
+<style>
+  .heft {
+    font-weight: 800;
+  }
+  .heft-word {
+    display: inline-grid;
+  }
+  .heft-reserve,
+  .heft-ink {
+    grid-area: 1 / 1;
+    font-weight: 800;
+  }
+  .heft-reserve {
+    visibility: hidden;
+  }
+  /* Reverse lives at its light end state for good, so an 800-wide cell would
+     leave a visible gap after every word once it has drained (measured on the
+     404 at 1440: 10 to 33px against a 17px space). Its reserve sits at 500
+     instead: the gaps at rest halve, and at the heavy start each word spills a
+     few pixels into the space after it (never into the next word). The cell
+     size is still fixed from the first frame, so CLS stays 0. */
+  .heft--reverse .heft-reserve {
+    font-weight: 500;
+  }
+  .heft--reverse .heft-ink {
+    justify-self: start;
+    font-weight: 200;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js:not([data-motion-paused])) .heft-ink {
+      animation: heft-fill var(--heft-duration, var(--dur-heft)) var(--heft-ease, var(--ease-glide))
+        var(--heft-delay, 150ms) both;
+    }
+    :global(.js:not([data-motion-paused])) .heft--reverse .heft-ink {
+      animation-name: heft-drain;
+    }
+  }
+  @keyframes heft-fill {
+    from {
+      font-weight: 200;
+    }
+    to {
+      font-weight: 800;
+    }
+  }
+  @keyframes heft-drain {
+    from {
+      font-weight: 800;
+    }
+    to {
+      font-weight: 200;
+    }
+  }
+</style>

@@ -36,6 +36,7 @@
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Heft from '../components/Heft.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
@@ -210,19 +211,15 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
 
         <!-- Track: oversized h1 breakout, then intro | portrait split. -->
         <div class="min-w-0">
-          <h1 id="about-hero-heading" class="max-w-[20ch]" data-reveal>
-            A one-person studio for <b>organizations that take their work seriously.</b>
+          <h1 id="about-hero-heading" class="max-w-[20ch]">
+            A one-person studio for <Heft text="organizations that take their work seriously." />
           </h1>
 
           <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
                rail collapses at, so the portrait never goes side-by-side before the
                rail is beside it (no awkward mid-range two-column-before-the-rail). -->
           <div class="mt-l grid items-start gap-xl lg:grid-cols-[1.4fr_1fr]">
-            <p
-              class="max-w-[58ch] text-lg leading-[1.6] text-text"
-              data-reveal
-              style="--reveal-delay: 120ms;"
-            >
+            <p class="max-w-[58ch] text-lg leading-[1.6] text-text">
               I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with
               small businesses, nonprofits, churches, and schools, in person around the region and
               anywhere for web work. I do the strategy, the design, the photography, and the code,
@@ -232,11 +229,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
             <!-- Portrait. The headshot fills the original 4:5 frame (the square
                  source is center-cropped via object-cover); the amber glow behind
                  and the ring/shadow are kept from the placeholder treatment. -->
-            <div
-              class="relative isolate w-full max-w-[18rem]"
-              data-reveal
-              style="--reveal-delay: 120ms;"
-            >
+            <div class="relative isolate w-full max-w-[18rem]">
               <div
                 class="absolute -right-4 -bottom-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
                 aria-hidden="true"
@@ -476,7 +469,11 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
             Now
           </p>
           <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text">
-            <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+            <span
+              class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0"
+              aria-hidden="true"
+              data-motion="loop"
+            >
               <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
               <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
             </span>

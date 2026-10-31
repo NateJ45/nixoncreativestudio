@@ -19,12 +19,11 @@
 
    Motion rules:
    - Reduced motion: no drift at all, the wall is a still image.
-   - Off-screen or tab hidden: the script below adds .is-paused, which stops
-     the animation (CSS animations on transform are cheap, but no point
-     running them when nobody can see them).
-   - The Pause button in Hero.astro toggles data-paused on the hero, which
-     stops this wall and the ticker (WCAG 2.2.2: moving content longer than
-     five seconds needs a way to stop it).
+   - The stage is data-motion="loop" (src/scripts/motion.ts and globals.css
+     section 6), so it holds still off-screen, in a hidden tab, and while the
+     visitor has paused motion with the hero's Pause button or the footer
+     switch (WCAG 2.2.2: moving content longer than five seconds needs a way
+     to stop it).
 
    Accessibility: the whole wall is decorative and aria-hidden. The cards are
    mouse-only links to each case study (tabindex -1, so they stay out of the
@@ -56,7 +55,7 @@ const size = {
 };
 ---
 
-<div class="reel-stage" aria-hidden="true">
+<div class="reel-stage" aria-hidden="true" data-motion="loop">
   <div class="reel-plane">
     {reelColumns.map((col, colIndex) => {
       const cards = col.slugs.map((slug) => siteBySlug.get(slug)!).filter(Boolean);
@@ -144,11 +143,6 @@ const size = {
     }
     .reel-col.is-down {
       animation-name: reel-down;
-    }
-    /* Stopped: off-screen, tab hidden, or the visitor pressed Pause. */
-    :global(.reel-stage.is-paused) .reel-col,
-    :global([data-paused]) .reel-col {
-      animation-play-state: paused;
     }
     /* Mouse users can stop a column to look at a card. */
     @media (hover: hover) {
@@ -286,21 +280,3 @@ const size = {
     }
   }
 </style>
-
-<script>
-  /* Pause the wall when it is off-screen or the tab is hidden. Registered on
-     astro:page-load (View Transitions) with a re-bind guard on the element. */
-  function initReel(): void {
-    const stage = document.querySelector<HTMLElement>('.reel-stage');
-    if (!stage || stage.dataset.reelBound) return;
-    stage.dataset.reelBound = '1';
-    let onScreen = true;
-    const sync = () => stage.classList.toggle('is-paused', !onScreen || document.hidden);
-    new IntersectionObserver(([entry]) => {
-      onScreen = entry.isIntersecting;
-      sync();
-    }).observe(stage);
-    document.addEventListener('visibilitychange', sync);
-  }
-  document.addEventListener('astro:page-load', initReel);
-</script>
