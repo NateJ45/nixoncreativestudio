@@ -70,6 +70,20 @@ Option (a) is the recommendation. Whichever is chosen, add the navy pair to
 `src/lib/theme-tokens.test.ts` afterwards so the claim is machine-checked from
 then on.
 
+### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
+
+Two content fixes are waiting on Nathan's sign-off and will ship as their own PR:
+
+- **First Baptist Muncie:** the study still carries Wix-era copy. It needs the
+  real rebuild facts before it is rewritten.
+- **Reid Design:** the study describes a Budget Calculator, a style quiz and a
+  before/after slider. Remove any of those that are not live on the site today.
+
+Package 1.3 only changed the pronouns in those studies ("we" to "I"); the claims
+themselves are untouched. A capacity line ("I take a small number of projects
+each quarter") was removed site-wide because nothing sources it; put it back
+only if Nathan confirms it.
+
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)
