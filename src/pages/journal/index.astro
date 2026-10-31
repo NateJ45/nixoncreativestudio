@@ -10,15 +10,15 @@
    Two paths share this page:
      1. Empty state. The live state today, because the collection has no
         entries yet. Instead of a bare sentence, it ships an intentional,
-        on-brand "first dispatch is coming" card: an animated aurora mesh
-        over navy, the studio mark, and two onward links so the page never
+        on-brand "first dispatch is coming" card: a flat themed band,
+        the studio mark, and two onward links so the page never
         reads as broken.
      2. Populated list. A featured lead card (the newest entry, given the
         most weight) followed by a reveal-staggered grid of the rest. Each
         card shows its cover thumbnail when present, the date, a reading-time
         stamp, and tag chips.
 
-   All motion (reveal, spotlight, aurora, hover-lift) is reduced-motion
+   All motion (the scroll reveal) is reduced-motion
    safe via the shared design system in globals.css.
    ============================================================================ */
 
@@ -71,10 +71,7 @@ for (const entry of all) {
              A designed "first dispatch is coming" card on the theme-aware band
              surface (light in light mode, navy in dark), not a bare line, so
              the page reads as intentional. */
-        <div
-          class="band-themed hover-lift rounded-2xl border border-border p-xl sm:p-2xl"
-          data-reveal="scale"
-        >
+        <div class="band-themed rounded-2xl border border-border p-xl sm:p-2xl" data-reveal>
           <div class="relative z-10 flex max-w-[58ch] flex-col gap-m">
             {/* Studio mark. The wordmark initials set in the display face,
                  echoing the header lockup. Decorative here, so aria-hidden. */}
@@ -101,13 +98,10 @@ for (const entry of all) {
 
             <div class="mt-xs flex flex-wrap items-center gap-s">
               {/* Primary CTA routed through the shared button recipe (brand /
-                   cta / shine) so it matches the real site button instead of a
+                   cta) so it matches the real site button instead of a
                    hand-rolled lookalike that can drift. */}
               <span class="inline-block">
-                <a
-                  class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-                  href="/work/"
-                >
+                <a class={buttonVariants({ variant: 'brand', size: 'cta' })} href="/work/">
                   See selected work
                 </a>
               </span>
@@ -127,9 +121,8 @@ for (const entry of all) {
                other. The whole card is a single <a> so the click target
                covers art and body together. */}
           <a
-            class="group spotlight-card hover-lift relative isolate grid overflow-hidden rounded-2xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent md:grid-cols-2"
+            class="group relative isolate grid overflow-hidden rounded-2xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent md:grid-cols-2"
             href={`/journal/${lead.id}/`}
-            data-spotlight
             data-reveal
           >
             {lead.data.cover && (
@@ -188,9 +181,8 @@ for (const entry of all) {
               {rest.map((entry, i) => (
                 <li data-reveal style={`--reveal-delay: ${i * 90}ms`}>
                   <a
-                    class="group spotlight-card hover-lift relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                    class="group relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                     href={`/journal/${entry.id}/`}
-                    data-spotlight
                   >
                     {entry.data.cover && (
                       <div class="relative z-10 aspect-[16/9] overflow-hidden bg-bg">

@@ -81,13 +81,11 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
 
 <!--
   Full-bleed footer; the inner column uses .ncs-container to align with the
-  rest of the content above. .band-themed makes it theme-aware: a light surface
-  with a soft brand glow in light mode, the navy aurora in dark mode, matching
+  rest of the content above. .band-themed makes it theme-aware: flat bg-soft in
+  light mode, flat navy in dark mode, matching
   the CtaBanner / ProcessBand above it so they read as one continuous field.
   In dark mode this is still the page's darkest band. A faint accent seam line
-  at the very top joins it to a dark band above (dark mode only). An oversized
-  wordmark sits behind the bottom row as a brand graphic. The glow is the
-  band-themed ::before; no separate aurora child is needed.
+  at the very top joins it to a dark band above (dark mode only).
 -->
 <footer class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground">
   <div class="ncs-container relative z-10">
@@ -178,7 +176,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
                straight to the contact form. -->
           <a
             href="/contact/"
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine mt-m' })}
+            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'mt-m' })}
           >
             Start a project
           </a>
@@ -221,26 +219,11 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
       </small>
     </div>
   </div>
-
-  <!-- Oversized brand wordmark, bottom-anchored as a graphic. Decorative, so
-       aria-hidden. translate-y-[20%] pushes the all-caps glyphs down by Bebas's
-       ~0.2em descent so the LETTER bottoms sit right on the footer's bottom edge;
-       the empty descent space below is clipped by overflow-hidden, so no glyph is
-       lost. Static, not drifting: any vertical motion would lift it off the edge. -->
-  <div
-    class="pointer-events-none absolute inset-x-0 bottom-0 z-0 overflow-hidden select-none"
-    aria-hidden="true"
-  >
-    <span class="footer-watermark block translate-y-[20%] text-center font-display [font-size:12.5vw] leading-none tracking-[0.02em] whitespace-nowrap text-heading/[0.06] uppercase dark:text-primary-foreground/5">
-      {site.studioName}
-    </span>
-  </div>
 </footer>
 
 <style>
   /* Accent seam: a soft glow line at the very top of the footer so it joins a
-     dark band above into one continuous field. Uses ::after because .band-themed
-     owns ::before (the glow). Dark mode only: in light mode the footer and the
+     dark band above into one continuous field. Dark mode only: in light mode the footer and the
      band above are both the light surface, already continuous, so an accent line
      would read as a stray rule. */
   :global(.dark) .footer-seam::after {

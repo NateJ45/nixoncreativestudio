@@ -1,5 +1,7 @@
 # Component sources
 
+> **Updated 2026-10 (overhaul package 1.2):** Starwind, PrimeReact, the Magic UI / Aceternity blocks (marquee, animated-beam, bento-grid, spotlight), `SectionHeading.astro` and every shadcn primitive except `button.tsx` were deleted from this repo (`sheet.tsx`, `radix-ui` and `lucide-react` followed in package 1.4). The overhaul prefers plain `.astro` components with native HTML. The catalogue below is kept as a sourcing reference only: nothing it lists as "already installed" is still installed, and adding any of it is a new dependency that needs Nathan's go-ahead.
+
 Where to find UI components for the NCS portfolio site, and the order to reach for them. Every source listed here is free unless marked otherwise, and every CLI-installed component lands inside the repo's semantic token system so brand colors propagate without extra wiring.
 
 ---
@@ -8,7 +10,7 @@ Where to find UI components for the NCS portfolio site, and the order to reach f
 
 When you need a new UI element, work down this list and stop at the first option that fits:
 
-1. **Existing components in `src/components/`** that already match this site's design. Check here first. Re-using `SectionHeading.astro`, `CaseStudyCover.astro`, or the Button `brand` variant is faster than reaching for anything external.
+1. **Existing components in `src/components/`** that already match this site's design. Check here first. Re-using `CaseStudyCover.astro` or the Button `brand` variant is faster than reaching for anything external.
 2. **shadcn/ui primitives** in `src/components/ui/` (already installed), or a new one via the CLI. Best for interactive React-based UI: dialogs, sheets, dropdowns, inputs, badges.
 3. **Starwind UI** for Astro-native primitives. Accordion, dialog, dropdown, and tabs are already installed in `src/components/starwind/`. Use Starwind when the component can be 100% static Astro with zero React dependency.
 4. **Magic UI or Aceternity** for motion flourishes. Marquee, animated-beam, bento-grid, and spotlight are already in `src/components/ui/`. Browse [magicui.design](https://magicui.design) for the full Magic UI catalog; browse [ui.aceternity.com](https://ui.aceternity.com) for Aceternity blocks.
@@ -96,8 +98,8 @@ For every new component pasted or CLI-installed:
 1. Note the source URL and any non-obvious token substitutions in a comment at the top of the file.
 2. Remap hardcoded color classes using the cheat sheet above.
 3. Decide: static `.astro` vs. React island. Static unless the component has state, event handlers, or needs `useEffect`. When in doubt: static.
-4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). Exception: components above the fold that must be interactive on first paint (MobileNav, ThemeToggle).
-5. For Radix-based dialogs, sheets, or dropdown portals: use `client:only="react"` not `client:load`. See the note in `.claude/rules/components.md` under "Radix-based primitives need `client:only='react'`".
+4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). The site chrome (MobileNav, ThemeToggle and the rest) is no longer React at all: write a small `astro:page-load` script first.
+5. For a dialog or sheet, use a native `<dialog>` with `showModal()` (see `MobileNav.astro` and `Lightbox.astro`), not a Radix portal.
 6. Verify in both light and dark mode before committing.
 
 Example header comment:

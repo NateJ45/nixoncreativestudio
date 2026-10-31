@@ -14,14 +14,11 @@ Moved out of CLAUDE.md. Loads when components or layouts are touched.
 When building UI, reach for components in this order:
 
 1. Existing components in `src/components/` that already match this site's design
-2. shadcn/ui primitives in `src/components/ui/` (radix-nova style, plus the `@fulldev` registry)
-3. Starwind UI in `src/components/starwind/` for Astro-native, zero-JS primitives (accordion, dialog, dropdown, tabs) where no React state is needed
-4. Aceternity UI for motion-rich blocks (hero, bento, parallax)
-5. Magic UI for smaller flourishes (marquee, animated text)
-6. PrimeReact (`src/components/primereact/`) only for heavy, behavior-rich widgets with no lighter equivalent (data tables, file upload, complex pickers)
-7. Custom build only if nothing above fits
+2. A plain `.astro` component with native HTML (`<details>`, `<dialog>`, a real `<a>` or `<button>`) and a small `astro:page-load` script when it needs behaviour
+3. The one remaining shadcn/ui primitive, `src/components/ui/button.tsx` (mostly used through `buttonVariants()` on an `<a>`)
+4. Custom build otherwise. Ask Nathan before adding a dependency.
 
-For where to pull each of these from (free sources, the shadcn CLI commands, the token-remap cheat sheet), see `docs/agent/component-sources.md`.
+The 2026-10 overhaul (package 1.2) deleted Starwind, PrimeReact, the unused shadcn primitives and the Aceternity / Magic UI blocks (bento grid, spotlight, marquee, animated beam), along with SectionHeading, ClientLogos, PressMentions and the Embla testimonial carousel. They are in git history if one is ever needed; do not re-add them for decoration. `docs/agent/component-sources.md` is the old sourcing guide, kept for reference.
 
 File naming:
 
@@ -32,25 +29,25 @@ File naming:
 
 `src/components/ui/button.tsx` extends the shadcn defaults with two project-specific options for marketing CTAs:
 
-- `variant="brand"` paints the button in `bg-accent` (NCS blue) with a subtle hover lift. Used on the Hero, Footer, and Header "Start a project" CTAs, the CtaBanner action, the MobileNav drawer CTA, and the contact form submit.
+- `variant="brand"` paints the button in `bg-accent` (NCS blue) with a subtle hover lift. Used on the Hero, Footer, and Header "Start a project" CTAs, the CtaBanner action, the MobileNav panel CTA, and the contact form submit.
 - `size="cta"` bumps padding and font weight to the marketing-button proportions. Pair it with `variant="brand"` for the standard recipe. The desktop header's "Start a project" CTA (which replaced the Contact nav link) uses this recipe but wraps it in `cn()` to dial the padding down so it fits the bar: note that `buttonVariants()` called directly does NOT run `twMerge`, so a padding override only takes effect through `cn()`.
 
 All other shadcn variants and sizes are unmodified, so future `npx shadcn add` commands don't fight with these extensions.
 
-### Radix-based primitives need `client:only="react"`
+### The site chrome ships no React (overhaul 1.4)
 
-shadcn primitives that wrap Radix's Dialog (Sheet, Dialog, DropdownMenu with portal positioning) don't SSR cleanly inside Astro: the portal hook calls during server render throw "Invalid hook call" and blank the page. When a new component leans on those, hydrate it with `client:only="react"` instead of `client:load`. The trade-off is a brief moment before React mounts with no element visible; for components hidden above sm or below the fold, the delay is invisible. `MobileNav.tsx` is the existing example.
+The theme toggle, mobile nav, back-to-top, copy email, reading progress and /work filter are `.astro` markup plus small scripts that register on `astro:page-load` with a `data-bound` guard (CLAUDE.md never-break rule 7). React loads on /photography only (`PhotoGallery`), and `tests/no-react.spec.ts` fails if an `<astro-island>` or React chunk shows up anywhere else. Radix and `lucide-react` are gone: the chrome icons are inlined Lucide SVGs in `ChromeIcon.astro`, and `Button` has no `asChild` (style a link with `buttonVariants()` instead, through `cn()` when a class overrides a variant). Each control works or hides itself without JavaScript: the toggle, copy button and filter chips are hidden under `html:not(.js)`, and the menu button is a plain link to the footer nav.
 
 ### Studio components reference
 
 Beyond the homepage-section components (Hero, HeroReel, SelectedWork, PricingTeaser, ProcessBand) and the Header / Footer, these reusable components live in `src/components/`. `ProcessBand` is reused on `/services` in its soft, no-CTA variant (`variant="soft" showCta={false}`); `CtaBanner` is the tail-of-page inquiry block on `/about`, `/photography`, and `/services`.
 
-- `BackToTop.tsx`: floating button bottom-right, rendered once in BaseLayout. Fades in after 600px scroll, honors `prefers-reduced-motion`.
-- `ReadingProgress.tsx`: thin top bar that fills as the visitor scrolls. Rendered only on case study and journal detail pages.
-- `CopyEmail.tsx`: mailto link plus a one-click copy-to-clipboard button with sr-live "Copied" status. Footer Contact column + Contact page sidebar.
-- `ThemeToggle.tsx`: light / dark / system cycle. Header (desktop) + the mobile nav panel.
-- `MobileNav.tsx`: the small-viewport navigation: a full-screen panel (a shadcn Sheet underneath, so focus-trap, Escape, scroll-lock, and dialog ARIA all stay intact). Oversized Bebas nav links, each with a short honest descriptor, hairline-divided like an editorial index, with a staggered entrance on open. Theme-aware like the rest of the site: a light surface with dark type, NCS-blue links, and a soft brand glow (`.bg-mesh-soft`) in light mode; navy with white type, sky links, and the drifting `.bg-aurora` in dark. The brand-blue "Start a project" CTA and the theme toggle carry across both themes. Below the nav sits a "Get in touch" block (email, phone, inline Instagram / LinkedIn glyphs, and the theme toggle). The active route shows in NCS blue (light) / amber (dark) with a persistent arrow. Below md (768px); `client:only="react"`. Its nav list no longer includes Contact, which is promoted to the desktop header's "Start a project" CTA; the drawer's own CTA covers it on mobile.
-- `Testimonials.astro` + `TestimonialCarousel.tsx`: a "What clients say" carousel on /about. The `.astro` wrapper is collection-driven: it reads the `testimonial` field from case studies (so quotes stay tied to the client and nothing is fabricated) and renders nothing until at least one case study carries a real quote. The `.tsx` island is the Embla carousel: keyboard arrows, prev/next/dot controls, a Pause/Play toggle (SC 2.2.2), autoplay that is off under reduced motion and pauses on hover/focus, and `inert` on off-screen slides. To populate it, fill a case study's `testimonial:` frontmatter.
+- `BackToTop.astro`: floating button bottom-right, rendered once in BaseLayout. Fades in after 600px scroll (and is `inert` until then), honors `prefers-reduced-motion`.
+- `ReadingProgress.astro`: thin top bar that fills as the visitor scrolls (a `--progress` custom property). Rendered only on case study and journal detail pages, after the article (Gotcha 10).
+- `CopyEmail.astro`: mailto link plus a one-click copy-to-clipboard button with sr-live "Copied" status. Footer Contact column + Contact page sidebar.
+- `ThemeToggle.astro` (behaviour in `src/scripts/theme-toggle.ts`): light / dark / system cycle. Header (desktop) + the mobile nav panel.
+- `ChromeIcon.astro`: the inlined Lucide SVGs the chrome uses (sun, moon, monitor, menu, x, arrow-up, copy, check).
+- `MobileNav.astro` (behaviour in `src/scripts/mobile-nav.ts`): the small-viewport navigation, below md (768px). The menu button is a real link to the footer nav (`#site-nav`), so it works without JavaScript (overhaul ruling 5); the script upgrades it to a full-screen native `<dialog>` opened with `showModal()` (inert background, Escape), adds a Tab wrap, returns focus to the button on close, locks page scroll, and closes on `astro:before-swap` so a navigation never carries an open modal. Oversized Bebas nav links, each with a short honest descriptor, hairline-divided like an editorial index, with a staggered entrance on open. A light surface with dark type and NCS-blue links in light mode; navy with white type and sky links in dark. The "Start a project" CTA and a "Get in touch" block (email, phone, Instagram / LinkedIn glyphs, theme toggle) carry across both. The active route shows in NCS blue (light) / amber (dark) with a persistent arrow. Contact is not in its nav list; the CTA covers it. Tested by `tests/mobile-nav.spec.ts`.
 - `HeroReel.astro`: the tilted wall of real client sites behind the homepage hero (five columns, desktop and phone captures, each column drifting at its own speed via a two-copy CSS loop that moves by exactly -50%). Data in `src/data/reel.ts`, captures in `src/assets/reel/` (re-shoot with `node scripts/capture-reel.mjs`). Decorative and `aria-hidden`; cards are mouse-only links to `/work/{slug}/`. Respects reduced motion, pauses off-screen and in hidden tabs, and stops when the hero carries `data-paused` (the hero's Pause button). Full behaviour in `.claude/rules/homepage-and-pages.md`.
 - `CaseStudyCover.astro`: wraps Astro `<Image />` with a plaiceholder blur preview painted as the wrapper bg, fades the real image in on load. Used by /work index cards (`fit="cover"`) and /work/[slug] hero (`fit="natural"`).
 - `SiteShowcase.astro`: animated "live site" frame embedded inside case study MDX. Renders a browser-chrome window whose full-page screenshot auto-scrolls (or slow-zooms with `variant="zoom"`), pausing on hover, and links to the live site. Reduced-motion safe (the scroll freezes to a static frame). Import it plus the screenshot at the top of a case study `.mdx` and place `<SiteShowcase src={shot} alt="..." href="..." label="..." />`. Full-page screenshots live in `src/assets/case-studies/shots/{slug}-home.png` (captured with Playwright at 1440px wide; re-shoot with `npm run capture:study <slug>`). Covers in `src/assets/case-studies/{slug}.png` are real hero screenshots of the same sites.
@@ -59,20 +56,21 @@ Beyond the homepage-section components (Hero, HeroReel, SelectedWork, PricingTea
 - `Lightbox.astro`: click-to-zoom for any `[data-zoom]` trigger; render it once per page (every case study carrying FeatureHighlights renders it once at the end). On click it clones the trigger's `<img>` into a native `<dialog>` at full size (`sizes="95vw"` pulls the largest srcset entry, so the zoom is crisp); `showModal()` gives the focus trap, Escape-to-close, the `::backdrop`, and focus return to the trigger for free. Built with DOM methods (no `innerHTML`), reduced-motion safe.
 - `ResultsBlock.astro` and `DesignerNote.astro`: case-study detail blocks rendered from the `results` and `designerNote` frontmatter (a "What changed" list and a signed note from Nathan). Both render nothing when the field is absent; never invent an outcome.
 - `Terminal.astro` and `LighthouseScore.astro`: the small dark panels in the About story column; their `lines` and `scores` arrays are the content.
-- `WorkFilter.tsx`: sector + year chip filters on /work index. Filters server-rendered cards by toggling a `data-hidden` attribute (no card re-render).
+- `WorkFilter.astro`: sector chip filters on /work index. Filters server-rendered cards by toggling a `data-hidden` attribute (no card re-render).
 - `ComingSoon.astro`: the standalone "launching soon" view. Used by `/coming-soon/` directly and by BaseLayout's site-wide gate when `PUBLIC_COMING_SOON=true`.
 - `StructuredData.astro`: emits one JSON-LD `@graph` per page, built by `src/lib/schema.ts`: the studio (ProfessionalService + LocalBusiness), WebSite, Person (Nathan) and the page's WebPage on every page, a BreadcrumbList when BaseLayout gets `breadcrumbs`, plus the page's own nodes from the `schemas` prop (CreativeWork on case studies, Article on journal entries, Service + Offer + FAQPage on /services). See `.claude/rules/content.md`.
-- `SectionHeading.astro`: reusable section header (optional number, title, optional sub paragraph). `num` is optional on purpose; pass it only when the section is genuinely a numbered sequence. The homepage sections stopped using it; `/services` and any future inner page that wants a clean numbered or unnumbered title still can. **Always pass `headingId`** when the parent `<section>` carries `aria-labelledby`; without it, the reference points at nothing.
 - `Photo.tsx`: generic `<img>` wrapper with fade-in. Used by `PhotoGallery` on the photography page (and available for any future image-on-content-page use).
 - `PhotoGallery.tsx`: react-photo-album justified grid + yet-another-react-lightbox. Used by the /photography per-category galleries.
-- `Newsletter.astro`, `ClientLogos.astro`, `PressMentions.astro`: scaffolds that render nothing until configured. See `docs/claude/setup-checklist.md`.
+- `Newsletter.astro`: a scaffold that renders nothing until configured. See `docs/claude/setup-checklist.md`.
+
+Testimonials: the old Embla carousel (`Testimonials.astro` + `TestimonialCarousel.tsx`) was deleted in package 1.2. The real quotes return in Phase 2 as a static block on each case study and one on the homepage; build nothing for them before then.
 
 ## Code conventions
 
 - TypeScript strict mode. No `any`.
 - Comment generously, especially in components that future-Nathan might edit by hand.
 - At the top of each component file, add a header comment marking it `// Safe to edit` or `// Foundation, edit with care`.
-- Astro components for static content. React islands only where interactivity is required (lightbox, animated hero, scroll-triggered effects).
+- Astro components for static content. Interactivity is a small `astro:page-load` script first; a React island only for something as heavy as the photo gallery.
 - Prefer Astro's built-in `<Image />` and `<Picture />` components over plain `<img>` tags.
 - Tailwind utility classes inline. Pull into `@apply` only when a pattern repeats four or more times.
 - Use `clsx` or `class-variance-authority` for conditional classes once components get state-dependent styling.

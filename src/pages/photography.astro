@@ -80,7 +80,7 @@ const categories = CATEGORY_ORDER.map((id) => {
 }).filter((c) => c.photos.length > 0);
 
 // Hero background: a featured photo if one is flagged, else the newest photo,
-// else nothing (the aurora carries the hero in the in-progress state).
+// else nothing (the flat navy section carries the hero in the in-progress state).
 const heroImage = (allPhotos.find((p) => p.data.featured) ?? allPhotos[0])?.data.image;
 
 const [leadCategory, ...restCategories] = categories;
@@ -92,7 +92,7 @@ const [leadCategory, ...restCategories] = categories;
 >
   <!-- ----------------------------------------------------------------------
        Hero. When a real photo exists it fills the surface behind a navy
-       scrim; until then a navy aurora carries it (no placeholder image). The
+       scrim; until then the flat navy surface carries it (no placeholder image). The
        headline accent is a solid amber phrase (no gradient text). data-hero-dark
        makes the sticky header go transparent over it.
        ---------------------------------------------------------------------- -->
@@ -113,9 +113,7 @@ const [leadCategory, ...restCategories] = categories;
           widths={[768, 1280, 1920]}
           sizes="100vw"
         />
-      ) : (
-        <div class="bg-aurora grain absolute inset-0" />
-      )}
+      ) : null}
       <!-- Vertical scrim so the bottom-anchored copy always reads. -->
       <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90"></div>
     </div>
@@ -159,9 +157,8 @@ const [leadCategory, ...restCategories] = categories;
           <ul class="grid gap-l lg:grid-cols-2 lg:grid-rows-2">
             <li class="lg:row-span-2" data-reveal>
               <a
-                class="spotlight-card group hover-lift relative block h-full min-h-[20rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                class="group relative block h-full min-h-[20rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                 href={`#${leadCategory.id}`}
-                data-spotlight
               >
                 <Image
                   src={leadCategory.cover}
@@ -189,9 +186,8 @@ const [leadCategory, ...restCategories] = categories;
             {restCategories.map((category, i) => (
               <li data-reveal style={`--reveal-delay: ${120 * (i + 1)}ms;`}>
                 <a
-                  class="spotlight-card group hover-lift relative block h-full min-h-[14rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                  class="group relative block h-full min-h-[14rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                   href={`#${category.id}`}
-                  data-spotlight
                 >
                   <Image
                     src={category.cover}
@@ -246,7 +242,7 @@ const [leadCategory, ...restCategories] = categories;
 
       {/* Where the photos come from. A branded region note rather than a raw
            third-party map embed (which shipped as a blank tile box). */}
-      <section class="bg-mesh-soft py-2xl" aria-labelledby="photo-area-heading">
+      <section class="py-2xl" aria-labelledby="photo-area-heading">
         <div class="ncs-container">
           <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">
             <h2 id="photo-area-heading" class="text-heading">

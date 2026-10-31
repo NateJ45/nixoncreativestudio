@@ -10,12 +10,6 @@
    ============================================================================ */
 
 import '../styles/globals.css';
-// Starwind UI supplementary CSS. Imported AFTER globals.css so globals owns
-// the :root / .dark semantic tokens and the @custom-variant dark rule, and
-// this file only adds the accordion keyframes plus @theme inline mappings for
-// the Starwind-only tokens (--outline and the status colors). See the file
-// header in starwind.css for the split.
-import '../styles/starwind.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Analytics from '../components/Analytics.astro';
@@ -315,22 +309,8 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     )}
 
     <!--
-      Lenis smooth scroll initializer. The script is a normal client-side
-      module (no is:inline) so Astro bundles it and hashes the URL. Lives
-      at the end of body so Lenis has the document mounted before it
-      attaches its scroll listeners.
-
-      View Transitions reuse loaded modules across same-origin navigations,
-      so the Lenis instance keeps running without re-initializing on every
-      page change. The script itself honors prefers-reduced-motion and
-      becomes a no-op when the user has reduced-motion set.
-    -->
-    <script>
-      import '../scripts/lenis-init';
-    </script>
-    <!--
       Progressive enhancement layer. Wires the declarative data-* effects
-      (cursor spotlight, count-up numbers, scroll-aware header)
+      (count-up numbers, scroll-aware header)
       on every page including View Transitions navigations. Everything it does
       is optional polish: the page is fully functional without it, and each
       effect self-disables under prefers-reduced-motion or coarse pointers.

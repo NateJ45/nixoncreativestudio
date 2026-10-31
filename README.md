@@ -45,10 +45,10 @@ A few standards show up in every project, and they are the reason the sites hold
 
 - **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'static'`
 - **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
-- **React 19** islands for the interactive pieces: full-screen mobile nav, contact form, photo gallery + lightbox, theme toggle
+- **React 19** for the photo gallery + lightbox only; the mobile nav (a native `<dialog>`), theme toggle and contact form are plain Astro plus small scripts
 - **MDX content collections** for case studies; a JSON-backed collection for the photography set
-- **[Motion](https://motion.dev)** + **[Lenis](https://lenis.darkroom.engineering)** smooth scroll + Astro View Transitions for soft page-to-page navigation
-- Component primitives from **Starwind** (zero-JS, Astro-native), **shadcn/ui**, with **Aceternity** and **Magic UI** for motion flourishes
+- Astro View Transitions for soft page-to-page navigation, with native scrolling
+- Plain Astro components with native HTML, plus the shadcn/ui Button
 - **[Cloudflare Pages](https://pages.cloudflare.com)** hosting + Cloudflare Web Analytics (privacy-friendly, no cookies)
 - **ESLint** + **Prettier** + `node --test` unit suites, run in **GitHub Actions** on every push and PR
 
