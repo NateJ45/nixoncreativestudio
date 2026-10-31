@@ -8,8 +8,8 @@
    as a slow reel of shipped work. Hovering a column (mouse only) stops it and
    lifts the card under the cursor to show that site's one standout feature.
 
-   Content lives in src/data/reel.ts (which sites, which columns, the feature
-   lines). Images live in src/assets/reel/ and are re-shot from the live sites
+   Content lives in src/data/reel.ts (which sites, which columns; the feature
+   lines are each study's `hook`). Images live in src/assets/reel/ and are re-shot from the live sites
    with `node scripts/capture-reel.mjs`.
 
    How the loop works: each column renders its cards twice, then a CSS
@@ -34,7 +34,7 @@
 
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import { reelSites, reelColumns } from '../data/reel';
+import { getReelSites, reelColumns } from '../data/reel';
 
 // Pull in every capture in src/assets/reel/ once, keyed by file name, so a
 // column can ask for "{slug}-desktop" without a long list of imports.
@@ -46,6 +46,7 @@ const capture = (slug: string, kind: 'desktop' | 'phone'): ImageMetadata => {
   if (!file) throw new Error(`HeroReel: missing src/assets/reel/${slug}-${kind}.jpg`);
   return file.default;
 };
+const reelSites = await getReelSites();
 const siteBySlug = new Map(reelSites.map((s) => [s.slug, s]));
 
 // Card sizes in CSS pixels. The captures are exactly 2x these.
