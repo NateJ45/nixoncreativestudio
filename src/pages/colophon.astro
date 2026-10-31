@@ -17,14 +17,22 @@
      - "Last updated" is the build date, so it never goes stale.
 
    Layout: DocumentLayout (overhaul 2.9), shared with /privacy and
-   /accessibility. The live measurement ledger, the weight slider and the
-   grid inspector arrive in overhaul package 3.4; the component check page
-   stays at /colophon/parts/.
+   /accessibility. The live parts (overhaul package 3.4) are components in
+   src/components/colophon/: the weight slider under Typography, the token
+   chips under Color, the grid inspector under The grid and the live
+   measurement ledger under Performance. They make no network calls, and the
+   ledger's privacy line ("These numbers stay in your browser") must stay
+   true with Google Analytics on. The component check page stays at
+   /colophon/parts/.
    ============================================================================ */
 
 import DocumentLayout from '../layouts/DocumentLayout.astro';
 import pkg from '../../package.json';
 import weight from '../../tests/page-weight.config.json';
+import LiveColophon from '../components/colophon/LiveColophon.astro';
+import WeightSlider from '../components/colophon/WeightSlider.astro';
+import TokenChips from '../components/colophon/TokenChips.astro';
+import GridInspector from '../components/colophon/GridInspector.astro';
 
 // "^7.4.2" -> "7". The major version is the part a reader cares about.
 const major = (range: string | undefined) => range?.replace(/^[^\d]*/, '').split('.')[0] ?? '';
@@ -44,6 +52,8 @@ const lastBuilt = new Intl.DateTimeFormat('en-US', {
 const sections = [
   { id: 'built-with', label: 'Built with' },
   { id: 'typography', label: 'Typography' },
+  { id: 'color', label: 'Color' },
+  { id: 'grid', label: 'The grid' },
   { id: 'accessibility', label: 'Accessibility' },
   { id: 'performance', label: 'Performance' },
   { id: 'screenshots', label: 'Screenshots' },
@@ -80,6 +90,27 @@ const sections = [
     Source Sans 3. The wordmark at the top is Bebas Neue. All three are self-hosted, so nothing
     loads from a third party.
   </p>
+  <p>
+    Weight is how the site says what matters: a light lead and a heavy phrase. Drag the slider to
+    see Bricolage move through its whole range, from 200 to 800.
+  </p>
+  <WeightSlider />
+
+  <h2 id="color">Color</h2>
+  <p>
+    White, a pale paper and a deep navy ink, split by thin hairlines. Blue is kept for things you
+    can click, and amber means live. These are the tokens the site is painted with, read from this
+    page as you look at it, so they change when you switch between light and dark.
+  </p>
+  <TokenChips />
+
+  <h2 id="grid">The grid</h2>
+  <p>
+    Every page sits on one 12-column grid. Labels hang in the first three columns, running text
+    takes columns 4 to 10 so a line never gets too long to read, and wider things run to 12. Turn
+    the grid on to see it over this page; links under it still work.
+  </p>
+  <GridInspector />
 
   <h2 id="accessibility">Accessibility</h2>
   <p>
@@ -93,6 +124,8 @@ const sections = [
     Every page is static HTML, images are optimized at build time, and the fonts ship with the site,
     so it stays fast on a phone and a slow connection.
   </p>
+  <p>Here is this page, measured as it loaded for you:</p>
+  <LiveColophon />
   <p>
     A test fails the build if a page ships more than {maxScriptKb} KB of script or {maxImagesKb} KB
     of images. The few pages that show more client work, like the homepage, have their own
@@ -110,5 +143,9 @@ const sections = [
     Two analytics tools: Cloudflare's, which sets no cookies, and Google Analytics, with its
     advertising features left off. No advertising trackers. The <a href="/privacy/">privacy page</a>{' '}
     lists everything the site collects.
+  </p>
+  <p>
+    The measurements in the Performance section are read by a small script in your browser. It makes
+    no network request and stores nothing, so these numbers stay in your browser.
   </p>
 </DocumentLayout>

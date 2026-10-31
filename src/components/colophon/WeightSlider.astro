@@ -1,0 +1,106 @@
+---
+// Safe to edit.
+/* ============================================================================
+   WeightSlider: drag Bricolage through its weights (overhaul package 3.4)
+   ============================================================================
+   The hero's "pull their weight." set in Bricolage Grotesque Variable, with a
+   native range input (200 to 800, the font's whole axis) that sets its
+   weight. The weight is what the site uses for emphasis, so this is the
+   colophon's way of showing the type working.
+
+   A native <input type="range"> with a <label>, so the arrow keys, Home, End
+   and Page Up/Down work and a screen reader announces the value; the
+   <output> repeats the number in mono. It only moves when the visitor moves
+   it, so there is nothing to stand down under reduced motion or Pause motion.
+   Without JavaScript the control is hidden and the phrase sits at 800.
+   ============================================================================ */
+
+const MIN = 200;
+const MAX = 800;
+const START = 800;
+---
+
+<div class="weight" data-weight-slider>
+  <p class="weight-sample" data-weight-sample aria-hidden="true" style={`--w: ${START}`}>
+    pull their weight.
+  </p>
+  <div class="weight-control">
+    <label for="weight-range">Weight</label>
+    <input
+      id="weight-range"
+      type="range"
+      min={MIN}
+      max={MAX}
+      step="10"
+      value={START}
+      data-weight-input
+    />
+    <output for="weight-range" data-weight-output>
+      {START}
+    </output>
+  </div>
+</div>
+
+<script>
+  function initWeightSlider() {
+    const root = document.querySelector<HTMLElement>('[data-weight-slider]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = 'true';
+    const input = root.querySelector<HTMLInputElement>('[data-weight-input]');
+    const sample = root.querySelector<HTMLElement>('[data-weight-sample]');
+    const output = root.querySelector<HTMLOutputElement>('[data-weight-output]');
+    if (!input || !sample || !output) return;
+    const apply = () => {
+      sample.style.setProperty('--w', input.value);
+      output.value = input.value;
+    };
+    input.addEventListener('input', apply);
+    apply();
+  }
+
+  document.addEventListener('astro:page-load', initWeightSlider);
+  initWeightSlider();
+</script>
+
+<style>
+  .weight {
+    margin-bottom: var(--spacing-m);
+    padding-block: var(--spacing-m);
+    border-block: 1px solid var(--line);
+  }
+  .weight p.weight-sample {
+    margin-bottom: var(--spacing-s);
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-weight: var(--w, 800);
+    color: var(--color-heading);
+    overflow-wrap: anywhere;
+  }
+  .weight-control {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .weight-control label,
+  .weight-control output {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+  }
+  .weight-control output {
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+  .weight-control input {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    accent-color: var(--accent);
+  }
+  :global(html:not(.js)) .weight-control {
+    display: none;
+  }
+</style>
