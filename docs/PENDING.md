@@ -82,7 +82,7 @@ then on.
 
 ### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
 
-These content fixes are waiting on Nathan's sign-off and will ship as their own PR:
+Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is still open:
 
 - **First Baptist Muncie: done (overhaul 2.4d, 2026-10-31).** Nathan signed
   off the FBCM part ("FBCM is astro now"). The study now describes the Astro +
@@ -98,8 +98,13 @@ These content fixes are waiting on Nathan's sign-off and will ship as their own 
 - **First Presbyterian Orangeburg:** its `hook` ("Book the building through one
   form, not an inbox") is a draft written from the designer note (1.6). Edit or
   approve it.
-- **Reid Design:** the study describes a Budget Calculator, a style quiz and a
-  before/after slider. Remove any of those that are not live on the site today.
+- **Reid Design: done (overhaul 2.4f, 2026-10-31).** Nathan approved the
+  removal ("Yes, remove them"). The study no longer mentions a Budget
+  Calculator, a style quiz or before/after sliders, and the designer note about
+  the slider is gone. That day on reiddesignllc.com, `/budget-calculator/` and
+  `/style-quiz/` answered 404, `/quiz/` and `/calculator/` redirected to
+  /services/, and `/portfolio/` redirected home (the portfolio is switched
+  off in Reid's CMS). The README's Reid row was corrected in the same PR.
 
 ### 2b. Ungate /photography (added 2026-10-31, overhaul 2.8)
 
