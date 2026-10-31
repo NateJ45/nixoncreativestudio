@@ -27,6 +27,17 @@ BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
 errors. Google shows no FAQ rich result for this kind of site, which is fine.
 Then resubmit the sitemap in Search Console. Delete this item when done.
 
+### 0b. After the cut-over: mark `generate_lead` as a GA4 key event (added 2026-10-31, overhaul 4.1)
+
+The site now sends `generate_lead`, `contact_click`, `book_call_click`,
+`visit_client_site`, `pricing_view` and `cta_click` (`src/lib/track.ts`). Once
+`redesign` is live, open GA4 (property 532519109) > Admin > Events, wait for
+`generate_lead` to appear after a real or test inquiry, and mark it as a key
+event so it counts as a conversion. Optionally register `cta_location`,
+`link_domain`, `method`, `cta_id` and `pricing_variant` as event-scoped custom
+dimensions (Admin > Custom definitions) so they show in reports. Delete this
+item when done.
+
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).
