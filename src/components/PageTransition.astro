@@ -1,0 +1,147 @@
+---
+/* ============================================================================
+   PageTransition (overhaul 4.11, plan Part A decision 12)
+   ============================================================================
+   The page-to-page motion. Renders Astro's ClientRouter, which wires
+   same-origin link clicks into the browser's View Transitions API, and owns
+   the overlap that plays on every router navigation:
+
+   - Forward (a link click): the incoming page slides up from the bottom of
+     the viewport over the outgoing one, which recedes a little (scale 0.96,
+     dimmed). No blur, no glow, no shadow.
+   - Back (history back): the reverse. The outgoing page slides down and away,
+     and the page underneath comes forward from the same receded state.
+
+   What moves is the `root` snapshot, which holds the main content and
+   nothing else: the header ("site-header", with "site-wordmark" inside it)
+   and the footer ("site-footer") carry their own view-transition-names, so
+   they are lifted out of root and stay put (the static rules in globals.css
+   section 6). The header group is raised above every other group, so content
+   slides under it. <main> itself is not named: a named element is captured
+   at its full height, so a scrolled page would jump to its top, whereas
+   root is the viewport exactly as the visitor left it.
+
+   Named content (the case-study covers, "cover-{slug}", and the homepage reel
+   morph, "hero-reel", from src/scripts/reel-morph.ts) paints above root, so
+   the slide never covers a morph. A name held on only one side of the
+   navigation (a cover on the page being left, say) would otherwise hang in
+   place over the incoming page, so a one-sided snapshot (:only-child) takes
+   the same overlap as root and travels with its page.
+
+   Scope: only while the ClientRouter has set html[data-astro-transition]
+   ("forward" or "back") for the length of a navigation. The theme reveal
+   (html.theme-reveal, ThemeToggle.astro) and the /work filter reflow
+   (html[data-work-reflow], WorkFilter.astro) start their own same-document
+   transitions without that attribute, so they keep their own rules.
+
+   Never under prefers-reduced-motion or html[data-motion-paused]: the new
+   page simply appears (globals.css also stops every ::view-transition
+   animation in both cases).
+
+   is:global because the ::view-transition pseudo-elements hang off <html>,
+   outside any component scope; globals.css is frozen (ruling 10), so the
+   overlap lives here and overrides the older fade-and-settle "glide" rules
+   for root that are still in globals.css section 6.
+   ============================================================================ */
+import { ClientRouter } from 'astro:transitions';
+---
+
+<ClientRouter />
+
+<style is:global>
+  @media (prefers-reduced-motion: no-preference) {
+    /* Header (and the wordmark inside it) above every other group: the
+       incoming page and any cover morph pass under the bar, as on a scroll. */
+    html[data-astro-transition]:not(.theme-reveal):not([data-motion-paused])::view-transition-group(
+        site-header
+      ),
+    html[data-astro-transition]:not(.theme-reveal):not([data-motion-paused])::view-transition-group(
+        site-wordmark
+      ) {
+      z-index: 2;
+    }
+
+    /* Both pages are opaque, so the UA's plus-lighter crossfade blend would
+       brighten the overlap. Normal compositing, and the pages stacked. */
+    html[data-astro-transition]:not(.theme-reveal):not([data-motion-paused])::view-transition-old(
+        root
+      ),
+    html[data-astro-transition]:not(.theme-reveal):not([data-motion-paused])::view-transition-new(
+        root
+      ),
+    html[data-astro-transition]:not(.theme-reveal):not([data-motion-paused])::view-transition-old(
+        *
+      ):only-child,
+    html[data-astro-transition]:not(.theme-reveal):not([data-motion-paused])::view-transition-new(
+        *
+      ):only-child {
+      mix-blend-mode: normal;
+    }
+
+    /* Forward: the new page slides up over the old, which recedes. */
+    html[data-astro-transition='forward']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-old(root),
+    html[data-astro-transition='forward']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-old(*):only-child {
+      z-index: 0;
+      animation: ncs-vt-recede var(--dur-scene) var(--ease-settle) both;
+    }
+    html[data-astro-transition='forward']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-new(root),
+    html[data-astro-transition='forward']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-new(*):only-child {
+      z-index: 1;
+      animation: ncs-vt-rise var(--dur-scene) var(--ease-settle) both;
+    }
+
+    /* Back: the old page slides down and away, uncovering the new one as it
+       comes forward from the receded state. */
+    html[data-astro-transition='back']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-old(root),
+    html[data-astro-transition='back']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-old(*):only-child {
+      z-index: 1;
+      animation: ncs-vt-sink var(--dur-settle) var(--ease-exit) both;
+    }
+    html[data-astro-transition='back']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-new(root),
+    html[data-astro-transition='back']:not(.theme-reveal):not(
+        [data-motion-paused]
+      )::view-transition-new(*):only-child {
+      z-index: 0;
+      animation: ncs-vt-return var(--dur-scene) var(--ease-settle) both;
+    }
+  }
+
+  /* 100vh, not 100%: a one-sided cover is shorter than the viewport, and it
+     has to travel as far as the page it belongs to. */
+  @keyframes ncs-vt-rise {
+    from {
+      transform: translateY(100vh);
+    }
+  }
+  @keyframes ncs-vt-sink {
+    to {
+      transform: translateY(100vh);
+    }
+  }
+  @keyframes ncs-vt-recede {
+    to {
+      transform: scale(0.96);
+      filter: brightness(0.8);
+    }
+  }
+  @keyframes ncs-vt-return {
+    from {
+      transform: scale(0.96);
+      filter: brightness(0.8);
+    }
+  }
+</style>
