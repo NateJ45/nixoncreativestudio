@@ -44,6 +44,21 @@ All optional in the schema, but every live study carries `hook`, `order` and `pa
 
 Testimonial fields are not part of this set; Phase 2 widens `testimonial` to a list.
 
+### Study body shape (overhaul 2.4c)
+
+Every study body runs in the same order, and its H2s are the rail's chapter list:
+
+1. `<Signature>` once, with `hook={frontmatter.hook}`, an `emphasis` phrase from the hook, and a real still of the feature the hook names (`src`, `alt`, `url={frontmatter.liveUrl}`). No still when no capture shows that feature: the band is then the hook alone.
+2. `## The brief`: prose.
+3. `## Decisions`: one to three `<Decision title easy did>`, "the easy version" against "what I did", taken only from the study's own approach text and designer note, with any supporting prose after them.
+4. `## What I built`: `<FeatureHighlight>` rows (real, live features only), then "The full build" list.
+5. `## Before and after`: `<BeforeAfter>`, only where `beforeShot` exists. `beforePlatform` / `afterPlatform` only where the study already names the old platform.
+6. `## Walk the homepage`: `<SiteShowcase>`.
+7. `<ResultsBlock items={[...]} />`: "What changed". A row is a plain sentence, or `{ figure, text, source }` set at display size; a figure without a real `source` is not allowed (`src/lib/case-results.test.ts`). The ledger lives in the body now, so a study does not also set frontmatter `results:` (the test fails on both; the template would print the ledger twice).
+8. `<Lightbox />` when the page has a zoomable screenshot.
+
+Comments in an MDX body get mangled by prettier (`{/* */}` becomes `{/_ _/}`), so notes about a study go in the frontmatter's YAML comments.
+
 To add a new case study: drop an `.mdx` file in `src/content/case-studies/`, fill in the frontmatter, drop the cover image at `src/assets/case-studies/{slug}.{png|jpg|jpeg|webp}` (basename must match the .mdx filename for plaiceholder lookup), write the body prose underneath. The next build creates the page at `/work/{filename}/`, includes it in the /work index, generates the blur preview, and adds the entry to `/rss.xml`.
 
 ### Retire or add a study: checklist
@@ -56,7 +71,7 @@ Never hard-code the number of studies anywhere; compute it from the collection. 
 4. **OG card**: `npm run og:pages` writes `public/og/work/{slug}.png`; delete it on retire.
 5. **Redirects**: on retire, add `/work/{slug}` and `/work/{slug}/` 301s to `/work/` in `public/_redirects`.
 6. **Routes**: `tests/routes.ts` lists one sample study (Stone Steps); change it only if that study is the one retiring.
-7. **Gates**: `npm run test:unit` (palette contrast and order), then build and `npm run check:links`.
+7. **Gates**: `npm run test:unit` (palette contrast and order, sourced figures), then build and `npm run check:links`.
 
 **`journal`**: short-form essays and process notes as MDX files in `src/content/journal/`. Each page at `/journal/{slug}/` is auto-generated. Required frontmatter: `title`, `summary` (max 200 chars), `published` (date). Optional: `updated` (date), `cover` (image path), `tags` (string array), `draft` (boolean; drafts render in dev but are filtered out of production builds). The /journal index renders newest-first; drafts are skipped in production. Lighter-weight than case studies: no service badges, no sidebar TOC, but still gets ReadingProgress + reading-time stamps.
 

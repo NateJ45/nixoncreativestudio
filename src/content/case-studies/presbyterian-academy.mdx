@@ -37,12 +37,6 @@ outcome: 'A credible front door for a brand-new school: clear catalog, real facu
 #   quote: ""
 #   name: ""
 #   title: ""
-results:
-  - 'A brand-new school now has a credible front door, with a clear catalog, real faculty, and honest pricing, ready for its first enrollment cycle.'
-  - 'An interested visitor can size up the fit, then take a clear next step through the express-interest form or an intro call.'
-  - 'Full faculty profiles and a course catalog now do the credibility work a brand-new institution cannot lean on history for.'
-  - 'The Academy team can update courses, faculty, terms, and enrollment status from a dashboard without involving a developer.'
-  - 'Pricing tiers and the scholarship process are published up front, with no "contact for pricing" hedging.'
 designerNote: 'The hardest call on this one was pricing. Everybody told me to bury the numbers and make people call, but this audience is weighing a semester-long commitment, and they respect being given straight answers. Putting the tiers and the scholarship process out in the open drew the people who were actually ready to think about enrolling, which is worth far more than the leads you lose by showing the numbers early.'
 hook: 'A term catalog, laid out like one'
 order: 3
@@ -64,36 +58,61 @@ palette:
     - '#A87C3E'
     - '#7A2A2C'
 mobileShot: ../../assets/case-studies/shots/presbyterian-academy-mobile.png
+# The rail's fact row (overhaul 2.4c), filled from the fields above.
+facts:
+  sector: School
+  year: '2026'
+  role: Designer, Developer
+  stack:
+    - Astro
+    - Sanity
+    - Tailwind
+    - Cloudflare Workers
+  host: presbyterianacademy.org
 ---
 
+import Signature from '../../components/Signature.astro';
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
 import catalogShot from '../../assets/case-studies/shots/presbyterian-academy-feature-catalog.png';
 import facultyShot from '../../assets/case-studies/shots/presbyterian-academy-feature-faculty.png';
 
-<SiteShowcase
-  slug="presbyterian-academy"
-  alt="The Presbyterian Academy homepage, scrolling top to bottom"
-  href="https://www.presbyterianacademy.org"
-  label="presbyterianacademy.org"
+<Signature
+  hook={frontmatter.hook}
+  emphasis="laid out like one"
+  src={catalogShot}
+  alt="The Presbyterian Academy course catalog"
+  url={frontmatter.liveUrl}
 />
 
 ## The brief
 
 The Presbyterian Academy is a Reformed lay formation school launched in 2026 by the Presbytery of Cincinnati. The mission is adult theological education in cohort form: semester-length in-person courses for people who want to study Reformed theology seriously but are not pursuing ordination. There is nothing quite like it in the region.
 
-They came to me with the name, the faculty, and a start date. The site needed to do three things before the first enrollment cycle closed: explain what the Academy is, establish that it is serious, and convert interested visitors into enrolled students or at minimum a scheduled intro call.
+They came to me with the name, the faculty, and a start date. The site needed to do three things before the first enrollment cycle closed: explain what the Academy is, establish that it is serious, and turn interested visitors into enrolled students, or at least a scheduled intro call.
 
-## The approach
+## Decisions
 
-Brand-new organizations have a trust problem that established ones do not. There is no press coverage to cite, no multi-year alumni network to quote, and no decades of institutional history to point to. The site had to build credibility from what actually existed: a compelling faculty roster, specific course descriptions, and pricing that did not hedge.
+<Decision
+  title="The prices, in the open"
+  easy="Bury the numbers and make people call."
+  did="Publish the pricing tiers and the scholarship process up front. This audience is weighing a semester-long commitment, and they respect being given straight answers."
+/>
 
-I organized the architecture around three conversion questions in sequence. What is this? Is it for me? How do I start? Every page answers at least one of those. The homepage handles the first. The course catalog and faculty directory handle the second. The enrollment and contact pages handle the third.
+<Decision
+  title="Text-forward, like the school"
+  easy="Hero photography of empty lecture halls."
+  did="What I called bookish minimalism: warm near-white paper, near-black ink, deep forest green anchoring the palette, and brass hairlines as dividers, with Fraunces for display and Source Sans 3 for body. The design is text-forward because the product is text-forward."
+/>
 
-For the visual language, I landed on what I called bookish minimalism: warm near-white paper tones, near-black ink, deep forest green anchoring the palette, and brass hairlines as structural dividers. Display type in Fraunces paired with Source Sans 3 for body. No hero photography of empty lecture halls; the design is text-forward because the product is text-forward.
+A brand-new school has a trust problem an established one does not. There is no press coverage to cite, no alumni network to quote, and no decades of history to point to. The site had to build credibility from what actually existed: a strong faculty roster, specific course descriptions, and pricing that did not hedge.
 
-The CMS runs on Sanity so the Academy team can update courses, faculty, terms, and enrollment status from a dashboard without involving a developer.
+I organized the site around three questions, in order. What is this? Is it for me? How do I start? Every page answers at least one of them. The homepage handles the first. The course catalog and faculty directory handle the second. The enrollment and contact pages handle the third.
+
+The CMS runs on Sanity, so the Academy team can update courses, faculty, terms, and enrollment status from a dashboard without involving a developer.
 
 ## What I built
 
@@ -125,5 +144,24 @@ The full build, including the pieces above:
 - Homepage with a six-image Ken Burns slideshow hero that sets an academic, bookish tone without requiring event photography
 - Enrollment status live in the site header so every page shows whether the current term is open or closed
 - Full Sanity CMS for courses, faculty, terms, testimonials, and configuration
+
+## Walk the homepage
+
+<SiteShowcase
+  slug="presbyterian-academy"
+  alt="The Presbyterian Academy homepage, scrolling top to bottom"
+  href="https://www.presbyterianacademy.org"
+  label="presbyterianacademy.org"
+/>
+
+<ResultsBlock
+  items={[
+    'A brand-new school now has a credible front door, with a clear catalog, real faculty, and honest pricing, ready for its first enrollment cycle.',
+    'An interested visitor can size up the fit, then take a clear next step through the express-interest form or an intro call.',
+    'Full faculty profiles and a course catalog now do the credibility work a brand-new institution cannot lean on history for.',
+    'The Academy team can update courses, faculty, terms, and enrollment status from a dashboard without involving a developer.',
+    'Pricing tiers and the scholarship process are published up front, with no "contact for pricing" hedging.',
+  ]}
+/>
 
 <Lightbox />

@@ -8,6 +8,9 @@
 # with a real photo when one is available. Current file is a placeholder.
 #
 # NOTE: Verify the year — this may be from 2022 or 2023. Check with Nathan.
+# Overhaul 2.4c: FBCM facts wait on Nathan (docs/PENDING.md 2a), so this study
+# was only reordered and restyled; no claim was added. The Signature band has
+# no still, because the feature shots are Wix-era and the site is rebuilt.
 title: First Baptist Church Muncie
 client: First Baptist Church Muncie
 sector: church
@@ -36,10 +39,6 @@ outcome: 'Active children, youth, and adult ministries each given a clear home o
 #   quote: ""
 #   name: ""
 #   title: ""
-results:
-  - "Children, youth, and adult ministries each have a clear home of their own, written for that group's specific needs."
-  - "The children's and youth newsletters now have their own communication channel instead of competing with general church announcements for attention."
-  - 'ChurchCenter runs the operational layer (calendar, giving, resources) that would otherwise need custom development to maintain.'
 designerNote: "Splitting the children's and youth newsletters apart looked like a tiny structural call, but it was the right one. A children's update that mixes in adult education news is one nobody reads closely. Giving each program its own voice made every newsletter shorter, more targeted, and more likely to be opened by the family it was written for."
 hook: 'Every ministry given a home of its own'
 order: 7
@@ -58,20 +57,27 @@ palette:
     - '#39251E'
     - '#17151F'
 mobileShot: ../../assets/case-studies/shots/first-baptist-muncie-mobile.png
+# The rail's fact row (overhaul 2.4c), filled from the fields above.
+facts:
+  sector: Church
+  year: '2023'
+  role: Designer, Developer
+  stack:
+    - Wix
+    - ChurchCenter
+  host: fbcmuncie.org
 ---
 
+import Signature from '../../components/Signature.astro';
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
 import ministriesShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-ministries.png';
 import architectureShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-architecture.png';
 
-<SiteShowcase
-  slug="first-baptist-muncie"
-  alt="The First Baptist Church Muncie homepage, scrolling top to bottom"
-  href="https://www.fbcmuncie.org"
-  label="fbcmuncie.org"
-/>
+<Signature hook={frontmatter.hook} emphasis="a home of its own" />
 
 ## The brief
 
@@ -79,13 +85,21 @@ First Baptist Church in Muncie, Indiana is an active, multigenerational congrega
 
 The church had a lot going on: regular worship, children and youth ministries with their own communication cadences, an adult education program, outreach initiatives, a historic building with notable architecture, and an active giving program. The challenge was that none of it was organized for someone who arrived at the site for the first time and did not know where to look.
 
-## The approach
+## Decisions
 
-A congregation this size with this much programming needs clear ministry-lane navigation. Lumping children, youth, and adult ministry together under one broad "Ministry" header works only if each sub-section has enough depth to be useful. I built it so each program area has its own page with the information specific to that group, not a paragraph that links somewhere else.
+<Decision
+  title="A page for every ministry"
+  easy="Lump children, youth, and adult ministry together under one broad Ministry header."
+  did="Give each program area its own page with the information specific to that group, not a paragraph that links somewhere else."
+/>
 
-For the operational backbone, ChurchCenter handles the event calendar, online giving, and resource distribution. This is the right call for a congregation that was already using Planning Center for internal coordination. The website links into ChurchCenter cleanly so members go to one familiar platform for events and giving, while the website itself stays focused on the discovery and information side.
+<Decision
+  title="Separate newsletters for children and youth"
+  easy="One all-church newsletter for everyone."
+  did="A separate newsletter for children and one for youth. Family ministry moves at a different pace than general congregational communication, and a parent of a second grader does not need to read the adult education schedule to find the children's ministry update."
+/>
 
-I built a separate newsletter structure for children and youth rather than a single all-church newsletter. Family ministry moves at a different pace than general congregational communication. A parent of a second grader does not need to read the adult education schedule to find the children's ministry update they are looking for. Separating those publications meant each one could be written for its actual audience rather than a catch-all.
+For the operational backbone, ChurchCenter handles the event calendar, online giving, and resource distribution. That was the right call for a congregation already using Planning Center for internal coordination. The website links into ChurchCenter cleanly, so members go to one familiar platform for events and giving, while the website itself stays focused on discovery and information.
 
 The church's building is a notable one, and the Building section reflects that. Architecture information, accessibility details, and a weddings page sit alongside the facility reservation system for organizations wanting to use the space.
 
@@ -118,5 +132,22 @@ The full build, including the pieces above:
 - ChurchCenter integration for event calendar, online giving, and resource access
 - Building section covering architecture, accessibility information, a weddings page, and a facility reservation system
 - Contact page and links to Facebook, Instagram, Threads, and YouTube
+
+## Walk the homepage
+
+<SiteShowcase
+  slug="first-baptist-muncie"
+  alt="The First Baptist Church Muncie homepage, scrolling top to bottom"
+  href="https://www.fbcmuncie.org"
+  label="fbcmuncie.org"
+/>
+
+<ResultsBlock
+  items={[
+    "Children, youth, and adult ministries each have a clear home of their own, written for that group's specific needs.",
+    "The children's and youth newsletters now have their own communication channel instead of competing with general church announcements for attention.",
+    'ChurchCenter runs the operational layer (calendar, giving, resources) that would otherwise need custom development to maintain.',
+  ]}
+/>
 
 <Lightbox />
