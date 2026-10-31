@@ -1,0 +1,620 @@
+---
+// Safe to edit. Every price comes from src/data/pricing.ts and every site from
+// the case-studies collection; the questions and their answers are the only
+// copy authored here.
+/* ============================================================================
+   SizeUp: "Size up your project" on /services (overhaul package 3.3)
+   ============================================================================
+   Four radio questions (organization type, roughly how big, any custom
+   features, photos or not) point at the matching published tier and its
+   range, show two live sites from the visitor's sector, and hand the answers
+   to /contact with "Send this to Nathan".
+
+   It works without JavaScript, by design:
+
+     The form    a plain GET form to /contact/. The radios carry the names
+                 /contact already reads (package 2.7): `org_type` and
+                 `service`, plus a hidden `from=services`. Each tier panel's
+                 own submit button is `name="tier" value="{tier}"`, so the
+                 button you press sends the tier. `size` and `features` go
+                 along too; /contact ignores them.
+     The result  every tier panel is prerendered, and CSS :has() shows the
+                 one the answers point at (inside @supports selector(:has())).
+                 Without :has() every tier stays listed, each with its own
+                 send button, which is the fallback the plan asks for.
+     The script  tiny and optional: it copies the answers onto the footer
+                 closer's pill (so "Not sure which tier fits?" carries them
+                 too) and reads the result out to screen readers through a
+                 polite status line. Nothing else depends on it.
+
+   The tier is the larger of the two scope answers: size and features each
+   point at Launch, Signature or Flagship, and the bigger one wins. Org type
+   and photos never move the tier; photos add the photography add-on line.
+
+   Public-safe rule (plan Part B, section D): no client is ever tied to a
+   tier or a price. The sites are matched by SECTOR only, never by size, and
+   they sit in their own block, apart from the tier panel.
+   ============================================================================ */
+
+import { getCollection } from 'astro:content';
+import Section from './Section.astro';
+import { webTiers, addOns } from '../data/pricing';
+import { money } from '../lib/money';
+import { addOnNamed } from '../lib/schema';
+import { SECTOR_PLURAL } from '../lib/closer';
+import { buttonVariants } from './ui/button';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  tone?: 'white' | 'paper';
+}
+const { tone = 'paper' } = Astro.props;
+
+const [launch, signature, flagship] = webTiers;
+const photography = addOnNamed(addOns, 'Photography');
+
+// Organization type. Same values as the /contact select and the
+// case-studies `sector` field, so ?org_type lines up on the other side.
+const orgTypes = [
+  { value: 'church', label: 'Church' },
+  { value: 'school', label: 'School' },
+  { value: 'nonprofit', label: 'Nonprofit' },
+  { value: 'small-business', label: 'Small business' },
+  { value: 'other', label: 'Something else' },
+];
+
+// Size and features. Each answer points at a tier by index into webTiers
+// (0 Launch, 1 Signature, 2 Flagship). The words follow each tier's own
+// description in pricing.ts; no page counts, since those are not published.
+const sizes = [
+  { value: 'focused', label: 'A handful of pages: the essentials, done well', tier: 0 },
+  {
+    value: 'larger',
+    label: 'A larger site, with deeper sections and several kinds of content',
+    tier: 1,
+  },
+  { value: 'deep', label: 'A large, deep site with a lot to organize', tier: 2 },
+];
+const features = [
+  { value: 'none', label: 'No, pages and content are enough', tier: 0 },
+  { value: 'integrations', label: 'Some integrations with tools I already use', tier: 1 },
+  {
+    value: 'custom',
+    label: 'Custom tools, interactive features or advanced integrations',
+    tier: 2,
+  },
+];
+
+// Photos. The value goes to /contact's `service` field, which its brief card
+// reads back as "Interested in web design and photography".
+const photos = [
+  { value: 'web-design', label: 'I have photos to use' },
+  { value: 'web-design-and-photography', label: 'I will need photos taken' },
+];
+
+const tierKey = (name: string) => name.toLowerCase();
+
+// The rail's one fact, counted from the questions themselves.
+const questionCount = [orgTypes, sizes, features, photos].length;
+
+// Live sites by sector, in `order` (the same loop /work uses). Up to two per
+// sector; a sector with none, "Something else" and no answer yet all get the
+// first two overall.
+const studies = (await getCollection('case-studies'))
+  .filter((s) => s.data.liveUrl)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+const host = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+const anyTwo = studies.slice(0, 2);
+const sets = [
+  { key: 'any', heading: 'A few sites I have built', items: anyTwo },
+  ...orgTypes.map((o) => {
+    const own = studies.filter((s) => s.data.sector === o.value).slice(0, 2);
+    return own.length > 0
+      ? {
+          key: o.value,
+          heading: `Sites I have built for ${(SECTOR_PLURAL[o.value] ?? o.label).toLowerCase()}`,
+          items: own,
+        }
+      : { key: o.value, heading: 'A few sites I have built', items: anyTwo };
+  }),
+];
+---
+
+<Section rail="Size up" railMeta={`${questionCount} questions`} tone={tone} labelledby="size-up">
+  <h2 id="size-up" class="su-heading">
+    Size up your <b>project</b>
+  </h2>
+  <p class="su-lede">
+    Four quick questions and I will show you which tier it most likely lands in, with the range from
+    the prices above. Then send it to me and the form starts half filled in.
+  </p>
+
+  <form class="su" action="/contact/" method="get" data-size-up>
+    <input type="hidden" name="from" value="services" />
+
+    <div class="su-questions">
+      <fieldset class="su-q">
+        <legend class="su-legend">
+          <span class="su-num">1</span> What kind of organization?
+        </legend>
+        <div class="su-chips">
+          {orgTypes.map((o) => (
+            <label class="su-chip">
+              <input type="radio" name="org_type" value={o.value} id={`su-org-${o.value}`} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="su-q">
+        <legend class="su-legend">
+          <span class="su-num">2</span> Roughly how big is the site?
+        </legend>
+        <div class="su-rows">
+          {sizes.map((o) => (
+            <label class="su-chip su-row">
+              <input type="radio" name="size" value={o.value} id={`su-size-${o.value}`} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="su-q">
+        <legend class="su-legend">
+          <span class="su-num">3</span> Any custom features?
+        </legend>
+        <div class="su-rows">
+          {features.map((o) => (
+            <label class="su-chip su-row">
+              <input type="radio" name="features" value={o.value} id={`su-feat-${o.value}`} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="su-q">
+        <legend class="su-legend">
+          <span class="su-num">4</span> Photos?
+        </legend>
+        <div class="su-chips">
+          {photos.map((o) => (
+            <label class="su-chip">
+              <input type="radio" name="service" value={o.value} id={`su-photo-${o.value}`} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="su-result">
+      <p class="su-label">Where it lands</p>
+
+      <p class="su-wait">
+        Answer questions 2 and 3 and the tier that fits shows here, with its range.
+      </p>
+
+      {webTiers.map((tier) => (
+        <div class="su-tier" data-tier={tierKey(tier.name)}>
+          <h3 class="su-tier-name">{tier.name}</h3>
+          <p class="su-price">
+            <span class="su-from">from</span>
+            <span class="su-amount">
+              {money(tier.priceFrom)}
+              {tier.priceSuffix}
+            </span>
+          </p>
+          <p class="su-range">{tier.range}</p>
+          <p class="su-note">{tier.note}</p>
+          <p class="su-photo-add">
+            Need photos taken? Photography is {photography.price}, shot for the site by me.
+          </p>
+          <button
+            type="submit"
+            name="tier"
+            value={tierKey(tier.name)}
+            class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'su-send rounded-full')}
+          >
+            Send this to Nathan<span class="sr-only">, with {tier.name}</span>
+          </button>
+        </div>
+      ))}
+
+      <p class="su-small">
+        A starting point, not a quote. The first conversation is free and ends with an honest
+        ballpark.
+      </p>
+
+      <div class="su-sites">
+        {sets.map((set) => (
+          <div class="su-set" data-set={set.key}>
+            <p class="su-label">{set.heading}</p>
+            <ul class="su-site-list" role="list">
+              {set.items.map((s) => (
+                <li>
+                  <a href={`/work/${s.id}/`}>{s.data.client}</a>
+                  <a
+                    class="su-host"
+                    href={s.data.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {host(s.data.liveUrl!)}
+                    <span aria-hidden="true">↗</span>
+                    <span class="sr-only">(opens in a new tab)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <p class="su-small">Picked by sector, never by size or budget.</p>
+      </div>
+
+      {/* Filled by the script only, so screen readers hear the result. */}
+      <p class="sr-only" role="status" data-size-up-status></p>
+    </div>
+  </form>
+</Section>
+
+<script>
+  // Optional polish on top of the no-JS form (see the header comment): copy
+  // the answers onto the footer closer's pill, and read the result out to
+  // screen readers. Which tier is showing is decided by CSS alone; this only
+  // asks which panel is visible, so the rule lives in one place.
+  function bind() {
+    const form = document.querySelector<HTMLFormElement>('form[data-size-up]');
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+    const status = form.querySelector<HTMLElement>('[data-size-up-status]');
+    const pill = document.querySelector<HTMLAnchorElement>('.closer a[href^="/contact/"]');
+
+    form.addEventListener('change', () => {
+      const shown = Array.from(form.querySelectorAll<HTMLElement>('[data-tier]')).find(
+        (el) => getComputedStyle(el).display !== 'none',
+      );
+      const answered = Boolean(
+        form.querySelector('[name="size"]:checked') &&
+        form.querySelector('[name="features"]:checked'),
+      );
+      const tier = answered ? shown?.dataset.tier : undefined;
+
+      const params = new URLSearchParams({ from: 'services' });
+      for (const name of ['org_type', 'service']) {
+        const picked = form.querySelector<HTMLInputElement>(`[name="${name}"]:checked`);
+        if (picked) params.set(name, picked.value);
+      }
+      if (tier) params.set('tier', tier);
+      if (pill) pill.href = `/contact/?${params.toString()}`;
+
+      if (status && tier && shown) {
+        const name = shown.querySelector('.su-tier-name')?.textContent ?? '';
+        const range = shown.querySelector('.su-range')?.textContent ?? '';
+        status.textContent = `Where it lands: ${name}. ${range}.`;
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', bind);
+</script>
+
+<style>
+  .su-heading {
+    margin-bottom: 1.5rem;
+  }
+  .su-lede {
+    max-width: 58ch;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    color: var(--muted-foreground);
+  }
+
+  /* Questions beside the result from lg; stacked, result last, below it. */
+  .su {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 64rem) {
+    .su {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: clamp(2rem, 4vw, 4rem);
+      align-items: start;
+    }
+    /* The result sticks below the header and the /services sub-nav (their
+       heights are set on <html> by services.astro; fallbacks for anywhere
+       else). */
+    .su-result {
+      position: sticky;
+      top: calc(
+        var(--svc-header-h, var(--svc-header-fallback, 6rem)) + var(--svc-subnav-h, 3rem) + 1.5rem
+      );
+    }
+  }
+
+  .su-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    min-width: 0;
+  }
+  .su-q {
+    min-width: 0;
+    margin: 0;
+    padding: 1.25rem 0 0;
+    border: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .su-legend {
+    float: left; /* so the legend sits inside the ruled top, not on it */
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-h5, 1.25rem);
+    font-weight: 650;
+    line-height: 1.3;
+    color: var(--heading);
+  }
+  .su-legend + * {
+    clear: both;
+  }
+  .su-num {
+    margin-right: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+
+  .su-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .su-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* The /contact budget chip, so the two forms read as one: a real radio
+     drawn as a small ring; checked fills it and the edge goes heavy, so
+     shape and weight carry the state, not colour alone. */
+  .su-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.95rem;
+    line-height: 1.35;
+    cursor: pointer;
+    transition: border-color var(--dur-quick) var(--ease-glide);
+  }
+  .su-row {
+    display: flex;
+    border-radius: 0.75rem;
+  }
+  .su-chip:hover {
+    border-color: var(--color-heading);
+  }
+  .su-chip input {
+    appearance: none;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--color-bg);
+  }
+  .su-chip input:checked {
+    border-color: var(--color-heading);
+    background: radial-gradient(circle, var(--color-heading) 0 40%, var(--color-bg) 45%);
+  }
+  .su-chip input:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  .su-chip:has(input:checked) {
+    border-color: var(--color-heading);
+    box-shadow: inset 0 0 0 1px var(--color-heading);
+    font-weight: 600;
+  }
+
+  /* ---- The result ---------------------------------------------------------- */
+  .su-result {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+    padding-top: 1.25rem;
+    border-top: 2px solid var(--color-accent);
+  }
+  .su-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .su-wait {
+    line-height: 1.55;
+    color: var(--color-text);
+  }
+
+  .su-tier {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .su-tier-name {
+    font-size: var(--text-h4);
+  }
+  .su-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .su-from {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  .su-amount {
+    font-family: var(--font-display);
+    font-size: var(--text-h2);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--heading);
+    font-variant-numeric: tabular-nums;
+  }
+  .su-range {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .su-note {
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .su-photo-add {
+    line-height: 1.55;
+    color: var(--color-text);
+  }
+  .su-send {
+    align-self: flex-start;
+    margin-top: 0.75rem;
+  }
+  .su-small {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  .su-sites {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  .su-set {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .su-site-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .su-site-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .su-site-list a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    color: var(--color-link);
+    overflow-wrap: anywhere;
+  }
+  .su-site-list a:first-child {
+    font-weight: 650;
+    color: var(--heading);
+  }
+  .su-host {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+  }
+
+  /* ---- Which panel shows ---------------------------------------------------
+     Without :has() (the fallback): no prompt, every tier listed with its own
+     send button, and only the "any" set of sites. With :has(): the prompt
+     until size and features are both answered, then the one tier the larger
+     answer points at; the sector's sites once a type is picked; the photo
+     line only when photos are needed. */
+  .su-wait,
+  .su-set:not([data-set='any']) {
+    display: none;
+  }
+
+  @supports selector(:has(*)) {
+    .su-wait {
+      display: block;
+    }
+    .su-tier,
+    .su-photo-add {
+      display: none;
+    }
+    .su:has([name='size']:checked):has([name='features']:checked) .su-wait {
+      display: none;
+    }
+
+    /* Launch: both answers point at Launch. */
+    .su:has(#su-size-focused:checked):has(#su-feat-none:checked) [data-tier='launch'] {
+      display: flex;
+    }
+    /* Flagship: either answer points at Flagship. */
+    .su:has([name='size']:checked):has([name='features']:checked):has(
+        #su-size-deep:checked,
+        #su-feat-custom:checked
+      )
+      [data-tier='flagship'] {
+      display: flex;
+    }
+    /* Signature: either points at Signature, and neither at Flagship. */
+    .su:has([name='size']:checked):has([name='features']:checked):has(
+        #su-size-larger:checked,
+        #su-feat-integrations:checked
+      ):not(:has(#su-size-deep:checked, #su-feat-custom:checked))
+      [data-tier='signature'] {
+      display: flex;
+    }
+
+    .su:has(#su-photo-web-design-and-photography:checked) .su-photo-add {
+      display: block;
+    }
+
+    .su:has([name='org_type']:checked) .su-set[data-set='any'] {
+      display: none;
+    }
+    .su:has(#su-org-church:checked) [data-set='church'],
+    .su:has(#su-org-school:checked) [data-set='school'],
+    .su:has(#su-org-nonprofit:checked) [data-set='nonprofit'],
+    .su:has(#su-org-small-business:checked) [data-set='small-business'],
+    .su:has(#su-org-other:checked) [data-set='other'] {
+      display: flex;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .su-chip {
+      transition: none;
+    }
+  }
+  :global(html[data-motion-paused]) .su-chip {
+    transition: none;
+  }
+
+  @media (forced-colors: active) {
+    .su-chip input:checked {
+      background: CanvasText;
+    }
+  }
+</style>

@@ -16,7 +16,7 @@ import { test, expect, type Page } from '@playwright/test';
 // Chromium only (the WebKit project's testMatch leaves it out).
 // =============================================================================
 
-const anchors = ['web-design', 'photography', 'pricing', 'care', 'faq'];
+const anchors = ['web-design', 'photography', 'pricing', 'size-up', 'care', 'faq'];
 
 /** Where the heading sits against the bottom of the two sticky bars. */
 async function clearance(page: Page, id: string) {
