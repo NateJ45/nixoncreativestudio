@@ -82,51 +82,53 @@ const { src, alt, class: className = '' } = Astro.props;
       clip, whether it shows the poster or the moving video. */}
   <div class="clip-label" role="img" aria-label={alt}></div>
   <button type="button" class="clip-toggle" aria-pressed="false" data-clip-toggle hidden>
-    <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+    <svg class="clip-pause" viewBox="0 0 16 16" aria-hidden="true">
       <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
       <rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect>
     </svg>
-    <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+    <svg class="clip-play" viewBox="0 0 16 16" aria-hidden="true">
       <path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"></path>
     </svg>
     <span class="sr-only">Pause clip</span>
   </button>
 </div>
 
-<style>
+<style is:global>
+  /* Global, not scoped, on purpose: Astro ships a component's CSS on every
+     page that imports it, so every case study carries these rules even
+     without a clip, and the scoped attribute on each selector nearly doubled
+     them (the Stone Steps page sits right at its 150 KB HTML budget). Every
+     selector starts with .clip, so nothing leaks. */
   .clip {
     position: relative;
     aspect-ratio: 16 / 10;
     overflow: hidden;
     background: var(--color-background);
   }
-  .clip-video,
-  .clip-poster,
+  .clip > video,
+  .clip > img,
   .clip-label {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-  }
-  .clip-video,
-  .clip-poster {
     object-fit: cover;
     object-position: top;
   }
   /* The poster sits on top until the video is really playing, then steps
-     aside. No fade: it is a swap, so it is the same under every setting. */
-  .clip.is-playing .clip-poster {
+     aside. No fade: it is a swap, the same under every setting. */
+  .clip.is-playing > img {
     visibility: hidden;
   }
-
-  /* The clip's own Pause button, bottom right inside the frame. Solid page
-     surface with a heading-coloured icon (the same pair as body text) and a
-     line-strong edge, so it reads over any frame of any client's site. */
-  .clip-toggle {
+  /* The clip's own Pause button, bottom right inside the frame: the page
+     surface with a heading-coloured icon (the body text pair) and a
+     line-strong edge, so it reads over any frame of any client's site.
+     44px on touch. */
+  .clip > button {
     position: absolute;
     right: 0.75rem;
     bottom: 0.75rem;
-    display: inline-grid;
+    display: grid;
     place-items: center;
     width: 2.25rem;
     height: 2.25rem;
@@ -136,51 +138,45 @@ const { src, alt, class: className = '' } = Astro.props;
     background: var(--color-background);
     cursor: pointer;
   }
-  .clip-toggle[hidden] {
-    display: none;
-  }
-  .clip-toggle:focus-visible {
+  .clip > button:focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
-  .clip-toggle svg {
+  .clip svg {
     width: 0.85rem;
-    height: 0.85rem;
     fill: currentColor;
   }
-  .clip-toggle .icon-play,
-  .clip-toggle[aria-pressed='true'] .icon-pause {
+  .clip [aria-pressed='true'] .clip-pause,
+  .clip [aria-pressed='false'] .clip-play {
     display: none;
   }
-  .clip-toggle[aria-pressed='true'] .icon-play {
-    display: block;
-  }
   @media (pointer: coarse) {
-    .clip-toggle {
+    .clip > button {
       width: 2.75rem;
       height: 2.75rem;
     }
   }
-  /* Poster only: no button, because nothing moves. The script never plays
-     the video in these states either; this is the belt to its braces. */
-  @media (prefers-reduced-motion: reduce) {
-    .clip-toggle {
-      display: none;
-    }
-    .clip-poster {
-      visibility: visible !important;
-    }
-  }
-  :global(html[data-motion-paused]) .clip-toggle {
+  /* Poster only, and no button, because nothing moves: reduced motion,
+     Pause motion, print. The script never plays the video in the first two
+     either; this is the belt to its braces. */
+  .clip > button[hidden],
+  html[data-motion-paused] .clip > button {
     display: none;
   }
-  :global(html[data-motion-paused]) .clip-poster {
-    visibility: visible !important;
+  html[data-motion-paused] .clip > img {
+    visibility: visible;
   }
-
+  @media (prefers-reduced-motion: reduce) {
+    .clip > button {
+      display: none;
+    }
+    .clip.clip > img {
+      visibility: visible;
+    }
+  }
   @media print {
-    .clip-video,
-    .clip-toggle {
+    .clip > video,
+    .clip > button {
       display: none;
     }
   }
