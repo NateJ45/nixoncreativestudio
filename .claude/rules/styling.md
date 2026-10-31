@@ -17,12 +17,12 @@ The idea the system serves: the site is a reel of real client websites, and it u
 
 Three faces, all self-hosted, latin subset only, `font-display: swap`:
 
-| Face                         | Token / utility                    | Used for                                                                               | Preloaded |
-| ---------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------- | --------- |
-| Bricolage Grotesque Variable | `--font-display`, `font-display`   | every heading (h1 to h6) and the display utilities                                     | yes       |
-| Source Sans 3 Variable       | `--font-body`, `font-body`         | body, UI, buttons, forms                                                               | yes       |
-| Bebas Neue 400               | `--font-wordmark`, `font-wordmark` | the header wordmark "NIXON CREATIVE STUDIO" (and the journal "NCS" mark), nothing else | no        |
-| System mono                  | `--font-mono`, `font-mono`         | metadata only (rail labels, hosts, dates, sector)                                      | no file   |
+| Face                         | Token / utility                    | Used for                                                                                | Preloaded |
+| ---------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- | --------- |
+| Bricolage Grotesque Variable | `--font-display`, `font-display`   | every heading (h1 to h6) and the display utilities                                      | yes       |
+| Source Sans 3 Variable       | `--font-body`, `font-body`         | body, UI, buttons, forms                                                                | yes       |
+| Bebas Neue 400               | `--font-wordmark`, `font-wordmark` | the header wordmark "NIXON CREATIVE STUDIO" and the /coming-soon wordmark, nothing else | no        |
+| System mono                  | `--font-mono`, `font-mono`         | metadata only (rail labels, hosts, dates, sector)                                       | no file   |
 
 Bebas stays for the wordmark by Nathan's decision (2026-10-30). Never use `font-wordmark` on a heading. OG cards and the favicon keep their Bebas mark (generated separately, see `build-pipeline.md`).
 
@@ -154,7 +154,7 @@ Deliberately small since package 1.2 (the aurora, grain, shine, spotlight, float
 
 A scrub is not a loop: the case-study "Walk the homepage" (`SiteShowcase.astro`, 2.4b) moves only with page scroll, on a scroll-driven timeline inside `@supports` and `prefers-reduced-motion: no-preference`, and stands down to a plain scroll box under `html[data-motion-paused]`.
 
-**Loops and Pause motion.** Anything that repeats opts in with `data-motion="loop"` on itself or a wrapper (the reel stage, the ticker, the footer and About status dots, the terminal cursor, the 404 numeral, the Coming Soon background). One rule in section 6 sets `animation-play-state: paused` on a loop while it is off screen (`data-motion-offscreen`, set by `motion.ts`), while the tab is hidden (`html[data-motion-hidden]`) and while the visitor has paused motion (`html[data-motion-paused]`). A script-driven loop asks `loopMayRun(el)` from `motion.ts` on every tick (the hero ticker is the pattern). An untagged loop ignores the pause and slips past `tests/motion-pause.spec.ts` (which checks every tagged loop on every route), so always tag it. A loading spinner (the contact form's) is not a loop.
+**Loops and Pause motion.** Anything that repeats opts in with `data-motion="loop"` on itself or a wrapper (the reel stage, the ticker, the footer and About status dots, the terminal cursor; the 404 numeral and the Coming Soon background are gone since 2.9). One rule in section 6 sets `animation-play-state: paused` on a loop while it is off screen (`data-motion-offscreen`, set by `motion.ts`), while the tab is hidden (`html[data-motion-hidden]`) and while the visitor has paused motion (`html[data-motion-paused]`). A script-driven loop asks `loopMayRun(el)` from `motion.ts` on every tick (the hero ticker is the pattern). An untagged loop ignores the pause and slips past `tests/motion-pause.spec.ts` (which checks every tagged loop on every route), so always tag it. A loading spinner (the contact form's) is not a loop.
 
 The Pause motion state is persisted in `localStorage["ncs-motion"]` (`"paused"` or absent) and applied before first paint by the BaseLayout bootstrap (and the standalone `/coming-soon` page), next to the theme bootstrap, so a visitor who paused never sees a frame of motion. Any `<button data-motion-toggle aria-pressed>` sets and reflects it; today that is `MotionToggle.astro` (in the footer's utility row and the mobile menu) and the hero's Pause button.
 

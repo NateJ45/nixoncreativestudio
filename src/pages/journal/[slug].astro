@@ -12,9 +12,11 @@
 
    The body is treated as an editorial reading surface: a drop-cap on the
    first paragraph, scroll-revealed h2 headings, styled blockquotes and
-   figures, and an end-of-article tag list. The cover carries a shared
-   transition:name so it morphs from the index card during a View
-   Transition. All motion is reduced-motion safe via globals.css.
+   figures, and an end-of-article tag list, all in a 40rem measure
+   (overhaul 2.9). The cover keeps its transition:name for a later morph
+   (the index is a plain dated list since 2.9 and shows no covers). The
+   header holds the H1, so it never takes data-reveal (ruling 3). All
+   motion is reduced-motion safe via globals.css.
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
@@ -81,7 +83,7 @@ const breadcrumbs = [
 >
   <article>
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
-      <div class="ncs-container max-w-[64rem]" data-reveal>
+      <div class="ncs-container max-w-[64rem]">
         {/* The animated underline sits on an inner span, not the link: on a touch
             device the link is a 44px-tall row, and an underline on the link's own
             box would drop to the bottom of that row, away from the words. */}
@@ -147,7 +149,7 @@ const breadcrumbs = [
            below, which tags each one with data-reveal after mount. -->
       <div
         data-prose
-        class="journal-prose mx-auto max-w-[72ch] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
+        class="journal-prose mx-auto max-w-[40rem] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
       >
         <Content />
       </div>
@@ -155,7 +157,7 @@ const breadcrumbs = [
       {/* End-of-article tag list. Mirrors the chips in the header but reads
           as a footer to the piece, a natural stopping point before the CTA. */}
       {tags && tags.length > 0 && (
-        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+        <footer class="mx-auto mt-l max-w-[40rem] border-t border-border pt-l" data-reveal>
           <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
             Filed under
           </p>

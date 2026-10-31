@@ -8,8 +8,8 @@
    Renders the ComingSoon component as the entire body. Uses its own
    minimal HTML doc rather than BaseLayout because the goal is full
    isolation from the WIP nav and footer: visitors should see one
-   focused page with the wordmark, a short pitch, and direct contact
-   options.
+   focused page: the wordmark, one line, the email and a still of the
+   reel wall (overhaul 2.9).
 
    When PUBLIC_COMING_SOON=true is set at build time, every other route
    on the site also renders this same component (see BaseLayout). To
@@ -37,8 +37,9 @@ const description = `${site.studioName} is a small studio in ${site.address}: we
 
     <!-- Theme bootstrap. Same logic as BaseLayout so dark / light is
          consistent if a visitor has a theme preference. It also applies the
-         visitor's Pause motion choice (src/scripts/motion.ts), which holds
-         the drifting background still. -->
+         visitor's Pause motion choice (src/scripts/motion.ts); the page
+         itself has no motion since overhaul 2.9, so this only keeps the
+         stored choice in step with the rest of the site. -->
     <script is:inline>
       (function () {
         try {
