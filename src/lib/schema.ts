@@ -12,6 +12,7 @@
      website (WebSite, publisher -> studio)          <- every page
      person  (Nathan, worksFor -> studio)            <- every page
      webpage (WebPage, isPartOf -> website)          <- every page
+             (CollectionPage on the sector pages: pageType)
      breadcrumb (BreadcrumbList)                     <- nested pages only
      ...extra nodes the page passes in (CreativeWork, Service, FAQPage)
 
@@ -127,16 +128,27 @@ export interface GraphInput {
   breadcrumbs?: Crumb[];
   /** Page-specific nodes (CreativeWork, Service, FAQPage...). */
   extra?: Node[];
+  /** The page node's type: 'WebPage' by default, 'CollectionPage' for a page
+      that gathers other pages (the sector pages, overhaul 4.2). */
+  pageType?: 'WebPage' | 'CollectionPage';
   /** The lowest web tier price, for the studio's priceRange. */
   lowestPrice: number;
 }
 
 /** The whole page graph, ready for JSON.stringify. */
 export function buildGraph(input: GraphInput): Node {
-  const { url, title, description, breadcrumbs = [], extra = [], lowestPrice } = input;
+  const {
+    url,
+    title,
+    description,
+    breadcrumbs = [],
+    extra = [],
+    lowestPrice,
+    pageType = 'WebPage',
+  } = input;
   const p = pageIds(url);
   const webpage: Node = {
-    '@type': 'WebPage',
+    '@type': pageType,
     '@id': p.webpage,
     url,
     name: title,

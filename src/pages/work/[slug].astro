@@ -55,6 +55,7 @@ import { hostOf, nextInLoop, paletteStyle, studyFacts } from '../../lib/study';
 import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
+import { sectorPagePath } from '../../data/sector-pages';
 
 // Each route gets its own entry plus the one study the Up next panel hands
 // off to (by `order`, wrapping from the last back to the first), trimmed to
@@ -185,8 +186,9 @@ const schemas = [
 
 // One trail, two renderings: the visible breadcrumb in the title card and the
 // BreadcrumbList JSON-LD (BaseLayout prefixes Home). The sector crumb is the
-// /work index filtered to this sector (/work/?sector=church).
-const sectorPath = `/work/?sector=${sector}`;
+// sector's own page where it has one (/churches/, overhaul 4.2), else the
+// /work index filtered to this sector (/work/?sector=school).
+const sectorPath = sectorPagePath(sector) ?? `/work/?sector=${sector}`;
 const breadcrumbs = [
   { name: 'Work', path: '/work/' },
   { name: sectorPlural, path: sectorPath },

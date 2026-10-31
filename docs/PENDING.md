@@ -145,6 +145,19 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
   `src/lib/case-testimonials.test.ts`, which fails on a quote in any other
   study.
 
+### 2c. The /churches/ copy, and the next sector pages (added 2026-10-31, overhaul 4.2)
+
+/churches/ shipped with today's church studies (First Baptist Muncie and First
+Presbyterian Orangeburg) on Nathan's go-ahead, ahead of the four-study floor
+in plan ruling 19. Its copy lives in `src/data/sector-pages.ts`.
+
+- **Nathan to read the copy**: the H1, lede and four points were drafted from
+  the two church studies and /services, and the quote picked is Kendall
+  Ellis's (FBCM). Edit them in `sector-pages.ts`.
+- **Nonprofits, schools, small business**: no page yet. Each needs copy of its
+  own before it gets one (steps in the header comment of `sector-pages.ts`);
+  until then they stay on `/work/?sector=…`.
+
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)

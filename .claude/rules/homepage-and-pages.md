@@ -51,6 +51,12 @@ On a fine pointer from md up, a pinned `BrowserFrame` sits on the right (sticky)
 
 Images on /work measured 159 KB at 1440 and 89 KB at 390 after a full scroll (2026-10-31; the budget is 500 KB). The page ends on the closer; there is no "Open any of them" band and no card grid any more.
 
+## Sector pages: /churches/ (overhaul package 4.2)
+
+One template, `src/pages/[sector].astro`, whose `getStaticPaths` emits only the sectors listed in `SECTOR_PAGES` (`src/data/sector-pages.ts`, which also holds each page's copy). Today that is `/churches/` alone, shipped with the two church studies on Nathan's go-ahead (plan decision 11, overriding the four-study floor in ruling 19). Every other sector stays on `/work/?sector=…` until it has copy of its own; the steps to add one are in the header comment of `sector-pages.ts`.
+
+Order: the head (rail "Churches · {n} sites", H1 "Church websites, starting with **the first Sunday.**" with its Heft, the lede; no `data-reveal`), "What a church site **has to do**" (paper, four ruled H3 points), the studies (white, each a `BrowserFrame` of `shots/{slug}-home.png` cropped 16:10 from the top, lazy, beside the client name linking the study, the hook, the outcome, year and stack in mono, "Read the case study" and the live host), one client quote (paper, `Testimonial.astro`, verbatim; the one named in `SECTOR_PAGES`, else the sector's first), `PricingTeaser`, then the ink closer "Building for a **church?**" with its pill on `/contact/?from=churches&org_type=church`. Every count and study comes from the collection; the build fails if a listed sector has no studies. `/work/?sector=church` and each church study's breadcrumb link here. `tests/sector-page.spec.ts`.
+
 ## /services architecture
 
 Its job is to size the project and start it (overhaul package 2.5). `src/pages/services.astro`, in this order, every band a `Section.astro` with a rail, surfaces alternating:
