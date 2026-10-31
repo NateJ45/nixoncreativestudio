@@ -1,171 +1,165 @@
 ---
-// Safe to edit. The four steps and the closing CTA copy below are content;
-// rewrite in place when the process or the offer sharpens.
+// Safe to edit. The four steps below are content; rewrite them in place when
+// the process sharpens.
 /* ============================================================================
-   ProcessBand: the four-step "how I work" sequence
+   ProcessBand: "How I work" as a weighted timeline (overhaul package 2.2)
    ============================================================================
-   ONE component, two placements, so the process reads identically everywhere:
+   The four steps hang off one vertical rule, top to bottom, with no numerals:
+   the order is carried by the line itself. Each step title is static weight
+   emphasis, a 300 lead with its key word in <b> at 800 (never Heft; the one
+   weight animation per page is the H1, ruling 9).
 
-     - Homepage close:  <ProcessBand />
-         The navy band-themed closing band with the inquiry CTA folded in
-         (variant 'band', showCta true). Ends the page on one decisive block.
+   The rule fills from the top as the band scrolls through the viewport
+   (scroll-driven CSS, only where supported, only with motion allowed and not
+   under Pause motion). Everywhere else it is simply drawn in full, which is
+   also what the markup renders.
 
-     - /services mid-page:  <ProcessBand variant="soft" showCta={false} headingId="process-heading" />
-         The same numbered connector-rail steps on the soft surface, no CTA.
+   It has no CTA of its own any more: every page ends on the footer's ink
+   closer, and the home sets its closer to this band's old line ("Tell me what
+   you are building.") in src/pages/index.astro.
 
-   Both render the same treatment: four numbered nodes on a single connector
-   line that draws across on scroll. The four step numbers are the ONE
-   deliberately numbered sequence on the site (the process is genuinely
-   ordered); the section itself carries no number.
+   Used on the home (tone paper) and on /services mid-page (headingId
+   "process-heading", which the services sub-nav links to).
 
-   This replaces the old separate Process.astro, which used a different
-   (detached top-rule + bare-numeral) treatment and made the process look like
-   two different things across a two-click journey.
+   Props:
+     tone       the Section surface ('white' | 'paper')
+     headingId  id on the H2
    ============================================================================ */
 
-import { buttonVariants } from './ui/button';
+import Section from './Section.astro';
 
 interface Props {
-  /** 'band' = navy band-themed closing band (homepage); 'soft' = bg-soft mid-page section (/services). */
-  variant?: 'band' | 'soft';
-  /** Render the closing inquiry CTA tail. Defaults on (the homepage close). */
-  showCta?: boolean;
-  /** id on the <h2> so a parent section's aria-labelledby resolves. */
+  tone?: 'white' | 'paper';
   headingId?: string;
 }
 
-const { variant = 'band', showCta = true, headingId = 'process-band-heading' } = Astro.props;
-const isBand = variant === 'band';
+const { tone = 'paper', headingId = 'process-band-heading' } = Astro.props;
 
+// lead (300) + key (800). Bodies are the studio's existing process copy.
 const steps = [
   {
-    num: '01',
-    title: 'Conversation',
+    lead: 'Start with a',
+    key: 'conversation',
     body: 'It starts with an hour together, in person or on video, talking about what you actually need. No pitch deck, no agency theater. Just a working session that ends with a one-page brief you sign off on.',
   },
   {
-    num: '02',
-    title: 'Strategy',
+    lead: 'Then the',
+    key: 'strategy',
     body: 'I write the audience map, the page architecture, and the conversion path. You read it and push back, and I revise. The strategy doc is the source of truth for every design choice that follows.',
   },
   {
-    num: '03',
-    title: 'Design and build',
+    lead: 'Then I',
+    key: 'design and build',
     body: 'Components, content, and pages built in the open. Preview links land in your inbox at every milestone so you can react early instead of seeing the whole thing for the first time at launch.',
   },
   {
-    num: '04',
-    title: 'Launch and follow-through',
+    lead: 'Launch, and',
+    key: 'follow-through',
     body: 'I launch the site with you, then stay close for the first month to fix anything that surfaces. After that you own the site outright, with documentation and a simple way to reach me when something comes up.',
   },
 ];
-
-// Closing CTA copy. Title is specific to audience and intentionally human;
-// the old "Have a project in mind?" was sales-template cliché.
-const ctaTitle = 'Tell me what you are building.';
-const ctaSub =
-  'The first conversation is free and ends with an honest ballpark, so you know where you stand before anything is signed.';
 ---
 
-<section
-  class:list={['process-band py-2xl', isBand ? 'band-themed process-band--closing' : 'bg-bg-soft']}
-  aria-labelledby={headingId}
->
-  <div class="ncs-container relative z-10 flex flex-col gap-2xl">
-    <!-- Header. Title carries the weight; no eyebrow, no number. -->
-    <header class="flex max-w-[60ch] flex-col gap-xs" data-reveal>
-      <h2 id={headingId} class="text-heading">
-        How I work
-      </h2>
-      <p class="text-lg leading-[1.55] text-text-muted">
-        Four steps, from the first conversation to launch day.
-      </p>
-    </header>
+<Section rail="Process" railMeta={`${steps.length} steps`} tone={tone} labelledby={headingId}>
+  <h2 id={headingId} class="pb-heading">
+    How I <b>work</b>
+  </h2>
 
-    <!-- Four process steps as numbered nodes on a single connector line. The
-         one connector (drawn across on scroll at lg) carries the "ordered
-         sequence" meaning. Grid: 1 col on mobile, 2 at sm, 4 across at lg
-         where the connector lives. -->
-    <ol class="process-steps relative grid list-none gap-l p-0 sm:grid-cols-2 lg:grid-cols-4">
-      <!-- Single connector rail behind the number nodes (lg row only). Draws
-           left-to-right on scroll where supported; otherwise fully drawn. -->
-      <span class="process-connector hidden lg:block" aria-hidden="true"></span>
-
-      {steps.map((step, index) => (
-        <li
-          class="relative flex flex-col items-start gap-s"
-          data-reveal
-          style={`--reveal-delay: ${index * 110}ms;`}
-        >
-          {/* One numbered node. The badge IS the step number (no second
-               ghost numeral). accent-foreground keeps it readable on the
-               accent fill in both themes. */}
-          <span class="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent font-mono text-sm text-accent-foreground">
-            {step.num}
-          </span>
-          <h3 class="text-h4 text-heading">{step.title}</h3>
-          <p class="leading-[1.55] text-text-muted">{step.body}</p>
-        </li>
-      ))}
-    </ol>
-
-    <!-- Closing CTA (homepage). Title + sub on the left, button on the right.
-         flex-wrap so the button drops below on narrow screens. -->
-    {showCta && (
-      <div
-        class="mt-l flex flex-wrap items-center justify-between gap-l border-t border-border pt-2xl"
-        data-reveal
-      >
-        <div class="flex max-w-[50ch] flex-col gap-s">
-          <p class="font-display text-h3 leading-[1.1] text-heading">{ctaTitle}</p>
-          <p class="text-lg leading-[1.55] text-text-muted">{ctaSub}</p>
-        </div>
-
-        <span class="inline-block">
-          <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-            Start a project
-          </a>
-        </span>
-      </div>
-    )}
-  </div>
-</section>
+  <ol class="pb-steps" role="list">
+    {steps.map((step) => (
+      <li class="pb-step">
+        <h3 class="pb-title">
+          {step.lead} <b>{step.key}</b>
+        </h3>
+        <p class="pb-body">{step.body}</p>
+      </li>
+    ))}
+  </ol>
+</Section>
 
 <style>
-  /* Single connector rail behind the number nodes. Sits at the vertical
-     centre of the h-9 (2.25rem) badges and reads as one timeline through the
-     ordered steps. */
-  .process-connector {
-    position: absolute;
-    top: 1.125rem;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
-    transform: scaleX(1);
-    transform-origin: left;
-    z-index: 0;
+  .pb-heading {
+    margin-bottom: 3rem;
   }
 
-  /* Draw the rail across as the section scrolls into view. Progressive
-     enhancement: only where scroll-timeline is supported and motion is
-     allowed; otherwise the rail is simply fully drawn from first paint. */
+  .pb-steps {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    max-width: 44rem;
+    margin: 0;
+    padding: 0 0 0 clamp(1.5rem, 4vw, 3rem);
+    list-style: none;
+  }
+
+  /* The timeline: a 1px --line-strong rule (::before) with a 2px
+     heading-coloured fill on top of it (::after). Pseudo-elements, so the <ol>
+     holds only <li>s. Decorative; the list order carries the meaning. */
+  .pb-steps::before,
+  .pb-steps::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0;
+    width: 1px;
+    background: var(--line-strong);
+  }
+  .pb-steps::after {
+    left: -0.5px;
+    width: 2px;
+    background: var(--heading);
+    transform-origin: top;
+  }
+
+  /* A short tick ties each step to the rule. */
+  .pb-step {
+    position: relative;
+  }
+  .pb-step::before {
+    content: '';
+    position: absolute;
+    top: 0.85rem;
+    left: calc(-1 * clamp(1.5rem, 4vw, 3rem));
+    width: clamp(0.75rem, 2vw, 1.5rem);
+    height: 2px;
+    background: var(--heading);
+  }
+
+  /* h3 normally sits at 650; here the title is a 300 lead with an 800 key
+     word, the same weight grammar as the H2s. */
+  .pb-title {
+    font-size: var(--text-h3);
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+  }
+  .pb-title b {
+    font-weight: 800;
+  }
+
+  .pb-body {
+    color: var(--muted-foreground);
+    line-height: 1.6;
+  }
+
+  /* Scroll fill: progressive enhancement. Without support, under reduced
+     motion or Pause motion the fill is simply drawn in full. */
   @media (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
-      .process-connector {
-        transform: scaleX(0);
-        animation: connector-draw linear both;
+      :global(html:not([data-motion-paused])) .pb-steps::after {
+        animation: pb-fill linear both;
         animation-timeline: view();
-        animation-range: entry 10% cover 35%;
+        animation-range: entry 30% cover 70%;
       }
     }
   }
-  @keyframes connector-draw {
+  @keyframes pb-fill {
     from {
-      transform: scaleX(0);
+      transform: scaleY(0);
     }
     to {
-      transform: scaleX(1);
+      transform: scaleY(1);
     }
   }
 </style>

@@ -21,7 +21,7 @@
 export interface WebTier {
   /** Tier name shown on both surfaces. */
   name: string;
-  /** Numeric floor. Drives the services countup and both price displays. */
+  /** Numeric floor. Drives both price displays (static text, no count-up). */
   priceFrom: number;
   /** Trailing glyph after the price, e.g. '+'. */
   priceSuffix: string;

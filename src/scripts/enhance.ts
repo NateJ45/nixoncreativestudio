@@ -6,10 +6,6 @@
    degrades safely, so the page works with this script absent or blocked.
 
    Attributes:
-     [data-countup]    animates a number up to data-countup-to when it scrolls
-                       into view. Optional data-countup-prefix / -suffix /
-                       -duration. Under reduced motion the final value is set
-                       immediately.
      [data-header]     toggles data-scrolled on itself once the page scrolls,
                        driving the sticky frosted-header treatment.
      [data-prose]      marks a long-form content container (case study /
@@ -20,59 +16,10 @@
    each View Transitions navigation, so freshly swapped DOM gets wired too.
    Per-element guards keep it idempotent; the window-level scroll listener is
    registered exactly once.
+
+   The count-up ([data-countup]) was removed in overhaul package 2.2: prices
+   and numbers are plain static text now.
    ============================================================================ */
-
-const prefersReduced = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/* ---- Count-up ------------------------------------------------------------- */
-function formatCount(el: HTMLElement, value: number): string {
-  const prefix = el.dataset.countupPrefix ?? '';
-  const suffix = el.dataset.countupSuffix ?? '';
-  return prefix + Math.round(value).toLocaleString() + suffix;
-}
-
-function runCount(el: HTMLElement, to: number): void {
-  const duration = Number(el.dataset.countupDuration) || 1400;
-  const start = performance.now();
-  const tick = (now: number) => {
-    const p = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
-    el.textContent = formatCount(el, to * eased);
-    if (p < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
-function initCountUp(): void {
-  const els = Array.from(
-    document.querySelectorAll<HTMLElement>('[data-countup]:not([data-countup-bound])'),
-  );
-  if (!els.length) return;
-
-  if (prefersReduced() || !('IntersectionObserver' in window)) {
-    els.forEach((el) => {
-      el.dataset.countupBound = 'true';
-      const to = Number(el.dataset.countupTo ?? '0');
-      if (Number.isFinite(to)) el.textContent = formatCount(el, to);
-    });
-    return;
-  }
-
-  const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const el = entry.target as HTMLElement;
-        el.dataset.countupBound = 'true';
-        io.unobserve(el);
-        const to = Number(el.dataset.countupTo ?? '0');
-        if (Number.isFinite(to)) runCount(el, to);
-      });
-    },
-    { threshold: 0.6 },
-  );
-  els.forEach((el) => io.observe(el));
-}
 
 /* ---- Scroll-aware header --------------------------------------------------
    The header element is replaced on each View Transitions navigation, so the
@@ -193,7 +140,6 @@ function initHeadingAnchors(): void {
 
 /* ---- Boot ----------------------------------------------------------------- */
 function enhance(): void {
-  initCountUp();
   initHeader();
   initHeadingAnchors();
 }

@@ -58,7 +58,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 4. **Contact and identity strings come from `src/data/site.ts`**, never hardcoded in `.astro` files.
 5. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA in both themes and goes in the site-owned `src/lib/ncs-tokens.test.ts` (never the PORTABLE `theme-tokens.test.ts`). Heading emphasis is weight only (300 lead, `<b>` at 800), never a coloured span, capitals or gradient text. Accessibility stays at Lighthouse 100.
 6. **Template-expression comments are `{/* */}`**, never `<!-- -->` (breaks lint and format, Gotcha 1). A conditional `<script>` goes in its own component.
-7. **Page enhancement scripts** register on `astro:page-load` with a dataset re-bind guard; always render the real final value of a `data-countup` number as static text.
+7. **Page enhancement scripts** register on `astro:page-load` with a dataset re-bind guard. Numbers and prices are plain static text (the count-up was removed in overhaul 2.2).
 8. **The mobile nav works without JavaScript**: the menu button is a link to the footer nav (`#site-nav`), upgraded to a native `<dialog>` by `src/scripts/mobile-nav.ts`. Keep that id, and keep React to the /photography gallery (`tests/no-react.spec.ts`).
 9. **Never fabricate** a testimonial, result, metric or feature screenshot. Only real, live, attributed proof goes on the site.
 10. **Every `mailto:` keeps its fallback** (`src/scripts/mailto-fallback.ts`); a click that does nothing on a machine with no mail client is expected.
