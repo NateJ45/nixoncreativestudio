@@ -35,19 +35,23 @@
      url       the live site's address (required; the host is shown, the
                full URL is printed)
      variant   'desktop' | 'phone'
+     label     optional bar text in place of the bare host, for a frame that
+               shows a page deeper in the site, e.g. "stonesteps50k.com/studio"
+               (WhatYouEdit, 3.6). The full url still prints on paper.
      class     extra classes on the outer frame (width, placement)
    ============================================================================ */
 
 interface Props {
   url: string;
   variant?: 'desktop' | 'phone';
+  label?: string;
   class?: string;
 }
 
-const { url, variant = 'desktop', class: className = '' } = Astro.props;
+const { url, variant = 'desktop', label, class: className = '' } = Astro.props;
 
 // The host as people say it: no protocol, no "www.", no trailing slash.
-const host = new URL(url).hostname.replace(/^www\./, '');
+const host = label ?? new URL(url).hostname.replace(/^www\./, '');
 ---
 
 <div class:list={['browser-frame frame', className]} data-variant={variant}>
