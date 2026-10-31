@@ -71,7 +71,7 @@ document without the theme bootstrap, so the dark sweep skips it.
 
 First run (2026-09-06) found one real bug: `/about` was 342px wide at 320px
 because the Terminal's nowrap window title set the min-content of its grid
-item. Fixed with `min-w-0` on the item.
+item. Fixed with `min-w-0` on the item (the Terminal itself was deleted in overhaul 2.6).
 
 ### Copy lint (`npm run test:copy`, `tests/unit/copy-rules.test.mjs`)
 

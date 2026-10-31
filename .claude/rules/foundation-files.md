@@ -22,7 +22,7 @@ Moved out of CLAUDE.md. Loads when source, scripts, public assets or config are 
 - Copy strings and `href` values in component files
 - Tailwind utility classes on existing components, when content needs different visual weight
 - The "Currently" blurb in `Footer.astro` (seasonal copy)
-- The four arrays in the Currently section of `src/pages/about.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date: rewrite quarterly (this is the old /now snapshot, merged into About)
+- The four Currently arrays in the frontmatter of `src/pages/about.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date: rewrite quarterly and bump the date, which drives the "Updated N weeks ago" rail and the "Last updated" line (this is the old /now snapshot, merged into About). The `photos` array beside them holds the contact sheet's captions and alt text
 - Heading / sub copy on `Newsletter.astro` via props
 - Brand colors / tagline / wordmark in `scripts/generate-og-default.mjs` (re-run `npm run og` after editing)
 
