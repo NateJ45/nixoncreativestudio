@@ -91,9 +91,9 @@ const caseStudies = defineCollection({
       // Project year. Number, not string, so listings can sort numerically.
       year: z.number().int(),
 
-      // Featured flag. When true, the homepage Selected Work section can
-      // pull this entry to the top. Defaults to false so new entries are
-      // off the homepage until explicitly promoted.
+      // Featured flag. Unused since overhaul 2.2: the home's Selected work
+      // now shows the three lowest `order` values instead. Kept so existing
+      // frontmatter still validates.
       featured: z.boolean().default(false),
 
       // Publish date. Drives ordering on the work index (newest first).

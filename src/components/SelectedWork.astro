@@ -1,369 +1,240 @@
 ---
-// Safe to edit. Now collection-driven: this component reads real case
-// studies from the content collection instead of the old hardcoded
-// placeholder array. To control what shows here, set `featured: true` in a
-// case study's frontmatter. The three most recently published featured
-// entries appear, newest as the large primary card.
+// Safe to edit. Collection-driven: which studies show here is set by each
+// case study's `order` frontmatter (the three lowest), not by a list in this
+// file.
 /* ============================================================================
-   Selected Work (Act 2 of the three-act homepage)
+   Selected work (overhaul package 2.2)
    ============================================================================
-   Three featured case studies, asymmetric. The first project sits at full
-   container width as a hero card with a two-column layout (image left,
-   body right at desktop, stacked on mobile). The other two sit beneath
-   in a 50/50 grid as medium cards, each stacked image-then-body.
+   The home's proof of craft: three client sites, each a FramePair (the desktop
+   capture with the phone hanging off its corner), alternating sides down the
+   page. Beside each pair:
 
-   Differentiation matters here: at the old three-equal-cards layout the
-   visitor pattern-matched every project to the previous one. The new
-   asymmetric layout puts the strongest piece up front and lets the eye
-   travel through the work instead of scanning a feature row.
+     H2      static 300 lead + the client's name at 800 (never Heft; the one
+             weight animation per page is the hero H1, ruling 9). The name is
+             the link to the case study.
+     hook    the study's one-line `hook` from its frontmatter
+     meta    mono: sector and year
+     host ↗  the live site, in a new tab
 
-   Each case study card is a single <a> wrapping image + body so the click
-   target covers everything. The list is an <ol> because curation order
-   matters: the first featured entry is the leading recommendation, not
-   an interchangeable tile in a grid.
+   Peek: hovering a study, or tabbing to its links, pans the desktop frame
+   down the real homepage capture (FramePair's `peek`, CSS only, still under
+   reduced motion and Pause motion). The frame itself is also a mouse-only
+   link to the study (tabindex -1, aria-hidden), the same pattern as the hero
+   reel's cards, so a keyboard user meets one link per study, not two.
 
-   Data source: getCollection('case-studies'), filtered to featured===true,
-   sorted newest-first, capped at three. Covers come through CaseStudyCover
-   (real optimized images + blur placeholders), and the highlighted line
-   under each title is the case study's `outcome` field when present.
+   Ends with "All {n} sites" to /work/, n counted from the collection.
+
+   Data: getCollection('case-studies') sorted by `order` (the same order /work
+   and the Up next loop use), first three. Captures are the full-page
+   shots/{slug}-home.png and {slug}-mobile.png; a study missing either is
+   skipped rather than shown with a hole.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import CaseStudyCover from './CaseStudyCover.astro';
-import { getCoverPlaceholder } from '../lib/coverPlaceholder';
+import Section from './Section.astro';
+import FramePair from './FramePair.astro';
+import { SECTOR_PHRASE } from '../lib/closer';
 
-// Pull the featured case studies, newest first, and take the top three to
-// fill the one-primary + two-secondary layout. If fewer than three are
-// flagged featured, the layout still renders with whatever exists.
-const allStudies = await getCollection('case-studies');
-const featured = allStudies
-  .filter((entry) => entry.data.featured)
-  .sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf())
+const studies = await getCollection('case-studies');
+const total = studies.length;
+
+const shots = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/case-studies/shots/*-{home,mobile}.png',
+  { eager: true },
+);
+const shot = (id: string, kind: 'home' | 'mobile'): ImageMetadata | undefined =>
+  Object.entries(shots).find(([path]) => path.endsWith(`/${id}-${kind}.png`))?.[1].default;
+
+const byOrder = [...studies].sort(
+  (a, b) => (a.data.order ?? Number.MAX_SAFE_INTEGER) - (b.data.order ?? Number.MAX_SAFE_INTEGER),
+);
+
+const selected = byOrder
+  .map((entry) => ({
+    entry,
+    desktop: shot(entry.id, 'home'),
+    phone: shot(entry.id, 'mobile'),
+  }))
+  .filter(
+    (s): s is { entry: (typeof studies)[number]; desktop: ImageMetadata; phone: ImageMetadata } =>
+      Boolean(s.desktop && s.phone && s.entry.data.liveUrl),
+  )
   .slice(0, 3);
 
-// Full-page site captures (the same {slug}-home.png that drive the case-study
-// SiteShowcase). These power the hover-scroll: on hover the card image pans
-// down the live page, then eases back to the top on hover-off. Every case study
-// has one; if a future featured entry is missing its capture, the card falls
-// back to the static CaseStudyCover below.
-const shotModules = import.meta.glob<{ default: ImageMetadata }>(
-  '../assets/case-studies/shots/*-home.png',
-  { eager: true },
-);
-const shotFor = (id: string): ImageMetadata | null => {
-  const match = Object.entries(shotModules).find(([path]) => path.endsWith(`/${id}-home.png`));
-  return match ? match[1].default : null;
-};
-
-// The captures are full pages (up to 10824px tall). The card frame shows the top
-// 4:3 and the hover pan travels 62% of the image, so nothing past about four
-// frame-widths down is ever seen. Serve a crop capped at that depth instead of
-// the whole page: the 1440x10824 stone-steps capture was shipping as a 900x6765
-// webp (420 KB) to fill a 346x2601 box on a phone. `fit: cover` + `position: top`
-// makes sharp crop from the top. Captures shorter than the cap are left whole.
-const COVER_MAX_ASPECT = 4;
-const coverCrop = (shot: ImageMetadata, width: number) => ({
-  width,
-  height: Math.round(width * Math.min(shot.height / shot.width, COVER_MAX_ASPECT)),
-  fit: 'cover' as const,
-  position: 'top' as const,
-});
-
-// Mobile site captures ({slug}-mobile.png, the same ones the hero showcase
-// phone uses). On hover a small phone fades in at the card's bottom-right and
-// scrolls the mobile view in step with the desktop, so the card reads as a
-// responsive build. Skipped gracefully for any slug without a mobile capture.
-const mobileShotModules = import.meta.glob<{ default: ImageMetadata }>(
-  '../assets/case-studies/shots/*-mobile.png',
-  { eager: true },
-);
-const mobileShotFor = (id: string): ImageMetadata | null => {
-  const match = Object.entries(mobileShotModules).find(([path]) =>
-    path.endsWith(`/${id}-mobile.png`),
-  );
-  return match ? match[1].default : null;
-};
-
-// Pretty sector label for the meta row: kebab-case → Title Case.
+// "Small Business" style label for the mono meta row.
 const sectorLabel = (sector: string) =>
   sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-const [primary, ...secondaries] = featured;
+const host = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+
+// "A nonprofit site for", "An ... site for": the article follows the sector.
+const lead = (sector: string) => {
+  const phrase = SECTOR_PHRASE[sector] ?? sector.replace(/-/g, ' ');
+  return `${/^[aeiou]/i.test(phrase) ? 'An' : 'A'} ${phrase} site for`;
+};
 ---
 
-{primary && (
-  <section class="py-2xl" aria-labelledby="selected-work-heading">
-    <div class="ncs-container">
-      {/* Section header. No mono-uppercase eyebrow, no numbered scaffold:
-         the title carries its own weight, and the sub paragraph does the
-         explanatory work that an eyebrow would otherwise pretend to do. */}
-      <header class="mb-xl flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="selected-work-heading">Selected work</h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          A few recent projects. Each one started with a conversation about what the organization
-          actually needed, not which template to pick.
-        </p>
-      </header>
-
-      {/* Asymmetric card list. The grid is built with named template areas
-         so the visual layout reads cleanly in CSS even though the list is
-         a flat <ol> of three items. Single-column on mobile; primary spans
-         the full width on desktop while secondaries split the row below. */}
-      <ol class="grid list-none gap-l p-0 [grid-template-areas:'primary'_'secondary-a'_'secondary-b'] md:grid-cols-2 md:[grid-template-areas:'primary_primary'_'secondary-a_secondary-b']">
-        {/* Primary card. Hero-sized: 4:3 image at the desktop width of the
-           image column, generous body column with a heading at h2 sizing
-           that's noticeably larger than the secondaries. */}
-        <li class="[grid-area:primary]" data-reveal>
+{selected.length > 0 && (
+  <Section rail="Selected work" railMeta={`${total} studies`} label="Selected work">
+    <ol class="sw-list" role="list">
+      {selected.map(({ entry, desktop, phone }, i) => (
+        <li class:list={['sw-study', i % 2 === 1 && 'sw-study--flip']} data-peek-trigger>
           <a
-            class="relative work-card surface-card group grid grid-cols-1 items-center gap-l rounded-xl p-s text-inherit no-underline md:grid-cols-[1.15fr_1fr]"
-            href={`/work/${primary.id}/`}
+            class="sw-frame"
+            href={`/work/${entry.id}/`}
+            tabindex="-1"
+            aria-hidden="true"
+            transition:name={`cover-${entry.id}`}
           >
-            {/* Hover-scroll cover: the full-page capture sits top-aligned in a
-               4:3 frame and pans down the page on hover (CSS below), easing back
-               on hover-off. The cover's blur preview is painted as the frame bg
-               so there is no flash before the capture loads. alt="" because the
-               heading names the project. transition:name morphs to the
-               /work/[slug] hero on navigation. Falls back to the static cover if
-               a capture is ever missing. */}
-            {shotFor(primary.id) ? (
-              <div
-                class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
-                transition:name={`cover-${primary.id}`}
-                style={`background-image:url('${getCoverPlaceholder(primary.id)}');background-size:cover;background-position:top center;`}
-              >
-                <Image
-                  src={shotFor(primary.id)!}
-                  alt=""
-                  {...coverCrop(shotFor(primary.id)!, 1200)}
-                  widths={[480, 640, 900, 1200]}
-                  sizes="(min-width: 48rem) 60vw, calc(100vw - 4.2rem)"
-                  class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
-                  loading="lazy"
-                />
-                {mobileShotFor(primary.id) && (
-                  <div class="work-phone" aria-hidden="true">
-                    <div class="work-phone-screen">
-                      <Image
-                        src={mobileShotFor(primary.id)!}
-                        alt=""
-                        widths={[120, 180, 260]}
-                        sizes="(min-width: 48rem) 130px, 60px"
-                        class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
-                        loading="lazy"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div class="relative z-10" transition:name={`cover-${primary.id}`}>
-                <CaseStudyCover
-                  cover={primary.data.cover}
-                  placeholder={getCoverPlaceholder(primary.id)}
-                  alt=""
-                  widths={[600, 900, 1200]}
-                  sizes="(min-width: 48rem) 60vw, 100vw"
-                  fit="cover"
-                  class="work-cover aspect-[4/3] w-full rounded-lg"
-                />
-              </div>
-            )}
-
-            <div class="relative z-10 flex flex-col gap-s">
-              <p class="text-sm font-semibold text-text-muted">
-                {sectorLabel(primary.data.sector)}
-              </p>
-              <h3 class="text-h2 leading-[1.05] text-heading">{primary.data.title}</h3>
-              {primary.data.outcome && (
-                <p class="text-lg leading-[1.35] font-semibold text-heading">
-                  {primary.data.outcome}
-                </p>
-              )}
-              <p class="leading-[1.55] text-text">{primary.data.summary}</p>
-              <span class="card-link mt-xs">Read the case study</span>
-            </div>
+            <FramePair
+              url={entry.data.liveUrl!}
+              desktop={desktop}
+              phone={phone}
+              alt=""
+              peek
+              sizes="(min-width: 82.5rem) 31rem, (min-width: 64rem) 38vw, (min-width: 48rem) 50vw, 80vw"
+              phoneSizes="(min-width: 64rem) 9rem, (min-width: 48rem) 14vw, 24vw"
+            />
           </a>
-        </li>
 
-        {secondaries.map((entry, index) => (
-          <li
-            class={index === 0 ? '[grid-area:secondary-a]' : '[grid-area:secondary-b]'}
-            data-reveal
-            style={`--reveal-delay: ${120 + index * 120}ms;`}
-          >
-            <a
-              class="relative work-card surface-card group flex flex-col gap-m rounded-xl p-s text-inherit no-underline"
-              href={`/work/${entry.id}/`}
-            >
-              {shotFor(entry.id) ? (
-                <div
-                  class="work-cover relative z-10 aspect-[4/3] w-full overflow-hidden rounded-lg"
-                  transition:name={`cover-${entry.id}`}
-                  style={`background-image:url('${getCoverPlaceholder(entry.id)}');background-size:cover;background-position:top center;`}
-                >
-                  <Image
-                    src={shotFor(entry.id)!}
-                    alt=""
-                    {...coverCrop(shotFor(entry.id)!, 900)}
-                    widths={[400, 640, 900]}
-                    sizes="(min-width: 48rem) 30vw, calc(100vw - 4.2rem)"
-                    class="work-scroll absolute inset-x-0 top-0 h-auto w-full"
-                    loading="lazy"
-                  />
-                  {mobileShotFor(entry.id) && (
-                    <div class="work-phone" aria-hidden="true">
-                      <div class="work-phone-screen">
-                        <Image
-                          src={mobileShotFor(entry.id)!}
-                          alt=""
-                          widths={[120, 180]}
-                          sizes="(min-width: 48rem) 85px, 60px"
-                          class="work-phone-scroll absolute inset-x-0 top-0 h-auto w-full"
-                          loading="lazy"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div class="relative z-10" transition:name={`cover-${entry.id}`}>
-                  <CaseStudyCover
-                    cover={entry.data.cover}
-                    placeholder={getCoverPlaceholder(entry.id)}
-                    alt=""
-                    widths={[400, 600, 900]}
-                    sizes="(min-width: 48rem) 30vw, 100vw"
-                    fit="cover"
-                    class="work-cover aspect-[4/3] w-full rounded-lg"
-                  />
-                </div>
-              )}
-
-              <div class="relative z-10 flex flex-col gap-xs">
-                <p class="text-sm font-semibold text-text-muted">
-                  {sectorLabel(entry.data.sector)}
-                </p>
-                <h3 class="text-heading">{entry.data.title}</h3>
-                {entry.data.outcome && (
-                  <p class="leading-[1.4] font-semibold text-heading">{entry.data.outcome}</p>
-                )}
-                <p class="leading-[1.55] text-text">{entry.data.summary}</p>
-                <span class="card-link mt-xs">Read the case study</span>
-              </div>
+          <div class="sw-copy">
+            <h2 class="sw-title">
+              <a href={`/work/${entry.id}/`}>
+                {lead(entry.data.sector)} <b>{entry.data.client}</b>
+              </a>
+            </h2>
+            {entry.data.hook && <p class="sw-hook">{entry.data.hook}</p>}
+            <p class="sw-meta">
+              <span>{sectorLabel(entry.data.sector)}</span>
+              <span aria-hidden="true">·</span>
+              <span>{entry.data.year}</span>
+            </p>
+            <a class="sw-host" href={entry.data.liveUrl} target="_blank" rel="noopener noreferrer">
+              {host(entry.data.liveUrl!)}
+              <span aria-hidden="true">↗</span>
+              <span class="sr-only">(opens in a new tab)</span>
             </a>
-          </li>
-        ))}
-      </ol>
+          </div>
+        </li>
+      ))}
+    </ol>
 
-      {/* Tail link so the section opens onto the full catalogue instead of
-         dead-ending after three featured projects. */}
-      <div class="mt-xl flex justify-center" data-reveal style="--reveal-delay: 200ms;">
-        <a class="card-link text-lg" href="/work/">
-          Explore more projects
-        </a>
-      </div>
-    </div>
-  </section>
+    <p class="sw-all">
+      <a href="/work/">
+        All {total} sites <span aria-hidden="true">→</span>
+      </a>
+    </p>
+  </Section>
 )}
 
 <style>
-  /* ----------------------------------------------------------------------
-     Card hover. The card lifts on hover/focus, and the cover (a full-page site
-     capture) slowly pans down the page, easing back to the top on hover-off.
-     Reduced motion strips both so the page stays calm for visitors who need it.
-     ---------------------------------------------------------------------- */
-  .work-card {
-    transition: transform 200ms ease;
+  .sw-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-section);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  /* The cover scale lives on the image wrapper. overflow-hidden keeps the
-     scaled image inside its rounded corners. */
-  .work-cover {
-    overflow: hidden;
+  /* Stacked on small screens: frame, then copy. From md the pair takes about
+     seven twelfths and the copy the rest, swapping sides every other study. */
+  .sw-study {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
   }
 
-  /* Hover-scroll: the full-page capture pans down the live page on hover, then
-     eases back to the top when the pointer leaves. The short base transition is
-     the graceful reset; the long hover transition is the slow scroll. Pure CSS,
-     gated to motion-OK so reduced-motion visitors get a still top-of-page frame.
-     -62% is a safe share for these tall captures (never scrolls past the end). */
-  .work-scroll {
-    transition: transform 0.8s ease;
-    will-change: transform;
-  }
-
-  /* A small phone that fades in at the card's bottom-right on hover and scrolls
-     the mobile capture in step with the desktop, so the card reads as a
-     responsive build. The phone's dark bg shows through the screen inset as the
-     bezel. Padded off the corner (right/bottom %). */
-  .work-phone {
-    position: absolute;
-    right: 5%;
-    bottom: 6%;
-    z-index: 2;
-    width: 21%;
-    aspect-ratio: 9 / 19.5;
-    border-radius: 0.7rem;
-    background: #0b0e14;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.75);
-    opacity: 0;
-    transform: translateY(12px) scale(0.96);
-    transition:
-      opacity 0.45s ease,
-      transform 0.45s ease;
-  }
-  .work-phone-screen {
-    position: absolute;
-    inset: 0.28rem;
-    overflow: hidden;
-    border-radius: 0.45rem;
-    background: #ffffff;
-  }
-  .work-phone-scroll {
-    transition: transform 0.8s ease;
-    will-change: transform;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .work-card:hover .work-scroll {
-      transform: translateY(-62%);
-      transition: transform 7s ease-out;
+  @media (min-width: 48rem) {
+    .sw-study {
+      grid-template-columns: 7fr 5fr;
+      gap: clamp(2rem, 4vw, 4rem);
     }
-    .work-card:hover .work-phone {
-      opacity: 1;
-      transform: translateY(0) scale(1);
+    .sw-study--flip {
+      grid-template-columns: 5fr 7fr;
     }
-    .work-card:hover .work-phone-scroll {
-      transform: translateY(-58%);
-      transition: transform 7s ease-out;
+    .sw-study--flip .sw-frame {
+      order: 2;
     }
   }
 
-  .work-card:hover,
-  .work-card:focus-visible {
-    transform: translateY(-0.25rem);
+  .sw-frame {
+    display: block;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
   }
 
-  .work-card:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 0.5rem;
+  .sw-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .work-card,
-    .work-cover,
-    .work-scroll,
-    .work-card:hover,
-    .work-card:focus-visible {
-      transform: none;
-      transition: none;
-    }
-    /* The hover phone is a motion flourish; keep it out under reduced motion. */
-    .work-phone {
-      display: none;
-    }
+  /* h2 is 300 with <b> at 800 (globals.css section 4). The link takes the
+     heading's colour; the underline comes in on hover and focus. */
+  .sw-title {
+    overflow-wrap: anywhere;
+  }
+  .sw-title a {
+    color: var(--heading);
+    text-decoration: none;
+  }
+  .sw-title a:hover,
+  .sw-title a:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+  }
+
+  .sw-hook {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: var(--color-text);
+    max-width: 32ch;
+  }
+
+  .sw-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .sw-host {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-link);
+  }
+
+  .sw-all {
+    margin-top: var(--space-section);
+    font-size: 1.25rem;
+  }
+  .sw-all a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    color: var(--color-link);
+    font-weight: 650;
+  }
+  .sw-all a span {
+    transition: transform var(--dur-quick) var(--ease-glide);
+  }
+  .sw-all a:hover span,
+  .sw-all a:focus-visible span {
+    transform: translateX(0.25rem);
   }
 </style>

@@ -18,6 +18,7 @@
         3). transition:name="cover-{id}" ties it to the /work and homepage
         cards for the View Transition.
      3. Specimen: the client's swatches with hex values, and "Set in {face}".
+     3b. The idea (Signature, 2.4b), only where the study has a featureShot.
      4. Rail (StudyRail): the facts and the chapter list with its gliding
         marker, beside the body: summary, MDX prose, What changed, the
         designer's note, the testimonial.
@@ -43,6 +44,7 @@ import Specimen from '../../components/Specimen.astro';
 import StudyRail from '../../components/StudyRail.astro';
 import UpNext from '../../components/UpNext.astro';
 import ScrollProgress from '../../components/ScrollProgress.astro';
+import Signature from '../../components/Signature.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
 import { buttonVariants } from '../../components/ui/button';
@@ -101,6 +103,7 @@ const {
   hook,
   palette,
   mobileShot,
+  featureShot,
 } = entry.data;
 
 // The full-page homepage captures (src/assets/case-studies/shots/
@@ -272,6 +275,19 @@ const nextShot = next ? homeShot(next.id) : undefined;
       </div>
     </header>
 
+    {/* 3b. "The idea" (Signature, package 2.4b): the hook beside one real
+        still. Only when the study has a featureShot, because the title card
+        already shows the hook and a band of the hook alone would repeat it.
+        Lazy: never in the first viewport. */}
+    {featureShot && hook && (
+      <Signature
+        hook={hook}
+        src={featureShot}
+        alt={`A feature on the live ${client} site`}
+        url={liveUrl}
+      />
+    )}
+
     {/* 4. The rail beside the body. */}
     <div class="ncs-container page-grid cs-body">
       <StudyRail facts={facts} chapters={chapters} />
@@ -302,9 +318,10 @@ const nextShot = next ? homeShot(next.id) : undefined;
           <Content />
         </div>
 
-        {/* "What changed" and the signed designer's note, at the prose measure. */}
+        {/* "What changed" (the ruled ledger) and the signed designer's note. Each
+            draws its own top rule and measure (package 2.4b). */}
         {(results?.length || designerNote) && (
-          <div class="mt-2xl flex max-w-[40rem] flex-col gap-2xl border-t border-border pt-2xl">
+          <div class="mt-2xl flex flex-col gap-2xl">
             {results && results.length > 0 && <ResultsBlock changes={results} />}
             {designerNote && <DesignerNote note={designerNote} />}
           </div>
