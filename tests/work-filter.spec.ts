@@ -32,7 +32,9 @@ test('the H1 counts every study and every row links to its case study', async ({
   await page.goto('/work/');
   const n = await rows(page).count();
   expect(n).toBeGreaterThan(1);
-  await expect(page.locator('h1')).toHaveText(
+  // The accessible name, because Heft keeps an aria-hidden reserve copy of
+  // each heavy word in the DOM (so the text content says every word twice).
+  await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName(
     new RegExp(`^${n} sites,\\s+all (live today|shipped)\\.$`),
   );
   // The case-study link and the host link are siblings, never nested.
