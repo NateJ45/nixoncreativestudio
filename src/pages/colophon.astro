@@ -6,93 +6,109 @@
    /colophon | How this site is made
    ============================================================================
    The classic designer's "house" page: a plain, honest account of the stack,
-   the type, and the standards behind the site. It is the home for the
-   technical-craft signal (peers read the stack and nod; non-technical visitors
-   read "accessible, fast, private, photographed by Nathan" in plain language
-   and feel reassured). It deliberately reads quiet and factual, not boastful.
+   the type, and the standards behind the site. Peers read the stack and nod;
+   everyone else reads "accessible, fast, private" in plain language. It reads
+   quiet and factual, not boastful.
 
-   The "Last built" stamp is generated at build time, so it never goes stale.
+   Tied to the code, so it cannot drift:
+     - the Astro and Tailwind versions come from package.json,
+     - the page-weight limits come from tests/page-weight.config.json (the
+       same file the build's page-weight test reads),
+     - "Last updated" is the build date, so it never goes stale.
+
+   Layout: DocumentLayout (overhaul 2.9), shared with /privacy and
+   /accessibility. The live measurement ledger, the weight slider and the
+   grid inspector arrive in overhaul package 3.4; the component check page
+   stays at /colophon/parts/.
    ============================================================================ */
 
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { site } from '../data/site';
-import { buttonVariants } from '../components/ui/button';
+import DocumentLayout from '../layouts/DocumentLayout.astro';
+import pkg from '../../package.json';
+import weight from '../../tests/page-weight.config.json';
 
-// Build-time stamp. This is about the SITE (when it was last deployed), not
-// about any project's timing, so it is fine to show.
-const lastBuilt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
-  new Date(),
-);
+// "^7.4.2" -> "7". The major version is the part a reader cares about.
+const major = (range: string | undefined) => range?.replace(/^[^\d]*/, '').split('.')[0] ?? '';
+const astroMajor = major(pkg.dependencies.astro);
+const tailwindMajor = major(pkg.dependencies.tailwindcss);
 
-// The honest account, as label + detail rows. Keep every claim verifiable.
-const rows = [
-  {
-    label: 'Built with',
-    body: 'Custom-coded in Astro with TypeScript, styled with Tailwind CSS, and deployed to Cloudflare. No page builder, no stock template, no lock-in.',
-  },
-  {
-    label: 'Typography',
-    body: 'Headings are set in Bricolage Grotesque, light with a heavy phrase, and everything else in Source Sans 3. The wordmark at the top is Bebas Neue. All three are self-hosted, so nothing loads from a third party.',
-  },
-  {
-    label: 'Accessibility',
-    body: 'Built toward WCAG AA and checked automatically on every deploy. In plain terms: it works with a keyboard, with a screen reader, and in light or dark. There is a fuller statement on the accessibility page.',
-  },
-  {
-    label: 'Performance',
-    body: 'Every page is static HTML, images are optimized at build time, and the fonts ship with the site, so it stays fast on a phone and a slow connection.',
-  },
-  {
-    label: 'Photography',
-    body: 'Every photograph on the site was shot by Nathan.',
-  },
-  {
-    label: 'Privacy',
-    body: 'Privacy-friendly analytics, no advertising trackers, and nothing following you from page to page.',
-  },
-  {
-    label: 'Last built',
-    body: lastBuilt,
-  },
+const { maxScriptKb, maxImagesKb } = weight.defaults;
+
+// Build-time stamp. This is about the SITE (when it was last built), not any
+// project's timing, so it is fine to show.
+const lastBuilt = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+}).format(new Date());
+
+const sections = [
+  { id: 'built-with', label: 'Built with' },
+  { id: 'typography', label: 'Typography' },
+  { id: 'accessibility', label: 'Accessibility' },
+  { id: 'performance', label: 'Performance' },
+  { id: 'screenshots', label: 'Screenshots' },
+  { id: 'privacy', label: 'Privacy' },
 ];
 ---
 
-<BaseLayout
+<DocumentLayout
   title="Colophon: how this site is built | Nixon Creative Studio"
   description="How I built this site: the framework, the hosting, the typefaces, and the accessibility, speed and privacy standards I hold it to before anything ships."
+  tag="Colophon"
+  lead="How this site is"
+  heavy="made."
+  updated={lastBuilt}
+  sections={sections}
+  headingId="colophon-heading"
+  closer={{ heading: 'Want a site built', emphasis: 'the same way?' }}
 >
-  <section class="py-2xl" aria-labelledby="colophon-heading">
-    <div class="ncs-container flex flex-col gap-l">
-      <header class="flex max-w-[60ch] flex-col gap-xs">
-        <h1 id="colophon-heading">Colophon</h1>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          How this site is made, and the standards behind it. Custom-built, so the same care that
-          goes into client work goes into my own.
-        </p>
-      </header>
+  <p slot="intro">
+    How this site is made, and the standards behind it. Custom-built, so the same care that goes
+    into client work goes into my own.
+  </p>
 
-      <!-- Ruled label/detail list, matching the /about principles pattern so the
-           page reads as authored rather than scaffolded. -->
-      <dl class="mt-l flex flex-col">
-        {rows.map((row) => (
-          <div class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l">
-            <dt class="font-mono text-[0.8rem] tracking-[0.08em] text-text-muted uppercase">
-              {row.label}
-            </dt>
-            <dd class="max-w-[60ch] leading-[1.7] text-text">{row.body}</dd>
-          </div>
-        ))}
-      </dl>
+  <h2 id="built-with">Built with</h2>
+  <p>
+    Custom-coded in Astro {astroMajor} with TypeScript, styled with Tailwind CSS {tailwindMajor},
+    and deployed to Cloudflare. Every page is built ahead of time as plain HTML, and the case
+    studies are text files that live with the code. No page builder, no stock template, no lock-in.
+  </p>
 
-      <!-- Quiet close, funnels onward like the rest of the site. -->
-      <div class="mt-l flex flex-wrap items-center gap-m border-t border-border pt-2xl" data-reveal>
-        <a href="/contact/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-          Start a project
-        </a>
-        <a class="card-link text-lg" href="/work/">
-          See the work
-        </a>
-      </div>
-    </div>
-  </section>
-</BaseLayout>
+  <h2 id="typography">Typography</h2>
+  <p>
+    Headings are set in Bricolage Grotesque, light with a heavy phrase, and everything else in
+    Source Sans 3. The wordmark at the top is Bebas Neue. All three are self-hosted, so nothing
+    loads from a third party.
+  </p>
+
+  <h2 id="accessibility">Accessibility</h2>
+  <p>
+    Built toward WCAG AA and checked automatically on every deploy. In plain terms: it works with a
+    keyboard, with a screen reader, and in light or dark. There is a fuller statement on the{' '}
+    <a href="/accessibility/">accessibility page</a>.
+  </p>
+
+  <h2 id="performance">Performance</h2>
+  <p>
+    Every page is static HTML, images are optimized at build time, and the fonts ship with the site,
+    so it stays fast on a phone and a slow connection.
+  </p>
+  <p>
+    A test fails the build if a page ships more than {maxScriptKb} KB of script or {maxImagesKb} KB
+    of images. The few pages that show more client work, like the homepage, have their own
+    written-down limit instead.
+  </p>
+
+  <h2 id="screenshots">Screenshots</h2>
+  <p>
+    Every client site shown here is a real, live site. The screenshots are captured from the live
+    pages by a script that lives with the code, not mocked up.
+  </p>
+
+  <h2 id="privacy">Privacy</h2>
+  <p>
+    Two analytics tools: Cloudflare's, which sets no cookies, and Google Analytics, with its
+    advertising features left off. No advertising trackers. The <a href="/privacy/">privacy page</a>{' '}
+    lists everything the site collects.
+  </p>
+</DocumentLayout>

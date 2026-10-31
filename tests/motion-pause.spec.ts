@@ -6,7 +6,7 @@ import { routes } from './routes';
 // =============================================================================
 // WCAG 2.2.2 (Pause, Stop, Hide). Since overhaul package 1.7 every looping
 // animation opts in with data-motion="loop" (the hero reel and ticker, the
-// footer status dot, the About status dot, the 404 numeral, ...), and one
+// footer status dot, the About status dot, ...), and one
 // site-wide Pause motion state stops them all: html[data-motion-paused], set by
 // any [data-motion-toggle] button (the footer switch, the hero's Pause button),
 // remembered in localStorage["ncs-motion"] and applied before first paint by

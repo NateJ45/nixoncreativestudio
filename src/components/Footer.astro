@@ -230,6 +230,15 @@ const headingClass = 'text-h6 text-heading mb-s';
 </footer>
 
 <style>
+  /* In dark mode --paper and --ink are the same navy, so a paper section
+     would run straight into the closer with no edge. A 1px hairline on top
+     of the footer marks the change (overhaul 2.9). .band-ink re-scopes
+     --line to its own navy hairline. Light mode keeps its look: white or
+     paper against ink is already a clear edge. */
+  :global(.dark) .site-footer {
+    border-top: 1px solid var(--line);
+  }
+
   /* The closer's H2 takes the global h2 size and weight (300, <b> at 800);
      this only keeps a long heading from crowding the pill. */
   .closer-title {

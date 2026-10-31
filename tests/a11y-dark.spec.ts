@@ -28,10 +28,10 @@ async function forceDark(page: Parameters<typeof settle>[0]) {
   }, THEME_STORAGE_KEY);
 }
 
-// /coming-soon is a standalone HTML document without BaseLayout, so it has no
-// theme bootstrap and no dark mode: it renders the same either way and the
-// light sweep already covers it.
-const darkRoutes = routes.filter((route) => route !== '/coming-soon');
+// /coming-soon is a standalone HTML document without BaseLayout, but it runs
+// the same theme bootstrap and has its own dark tokens (ComingSoon.astro), so
+// it is swept here too (overhaul 2.9).
+const darkRoutes = routes;
 
 test.describe('Accessibility (dark mode): no axe violations', () => {
   for (const route of darkRoutes) {

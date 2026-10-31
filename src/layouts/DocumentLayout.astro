@@ -1,0 +1,286 @@
+---
+// Safe to edit (styles); the props are shared by three pages, see below.
+/* ============================================================================
+   DocumentLayout: the shell for the site's plain documents (overhaul 2.9)
+   ============================================================================
+   /colophon, /privacy and /accessibility are documents, not marketing pages,
+   so they share one quiet shape on the 12-column .page-grid:
+
+     a mono page tag, the H1 (a 300 lead with ONE Heft on the heavy phrase,
+     ruling 9), an intro (the `intro` slot) and a "Last updated" line,
+     all in columns 4 to 10 from lg;
+
+     the body (the default slot) in the one prose measure, columns 4 to 10
+     (.grid-prose, about 68ch), with the "On this page" list beside it in the
+     rail, columns 1 to 3, sticky below the header. Below lg the list is left
+     out: the page is short and its headings are the index.
+
+   Each page passes `sections` ({ id, label }) and gives each <h2> in its body
+   the matching id, so the list and the headings come from one array. The
+   script at the bottom marks the section in view with aria-current; it only
+   adds to working anchor links, so without JS nothing is lost.
+
+   Body styling lives here (scoped to .doc-prose), so a page writes plain
+   <h2>, <p>, <ul>, <a> and <code>. The body takes [data-prose], which gives
+   its headings the shared anchor links (src/scripts/enhance.ts).
+
+   Usage:
+     <DocumentLayout title="..." description="..." tag="Privacy notice"
+       lead="What this site" heavy="collects." updated="October 18, 2026"
+       sections={sections}>
+       <p slot="intro">Short version: ...</p>
+       <h2 id="contact-form">Contact form</h2>
+       <p>...</p>
+     </DocumentLayout>
+   ============================================================================ */
+
+import BaseLayout from './BaseLayout.astro';
+import Heft from '../components/Heft.astro';
+import type { Closer } from '../lib/closer';
+
+export interface DocSection {
+  /** The id on the section's <h2>. */
+  id: string;
+  /** The text in the "On this page" list. */
+  label: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  /** The mono page tag above the H1, e.g. "Privacy notice". */
+  tag: string;
+  /** The H1's light lead, at 300. */
+  lead: string;
+  /** The H1's heavy phrase, filled by Heft. */
+  heavy: string;
+  /** "Last updated" text, e.g. "October 18, 2026". */
+  updated: string;
+  /** The body's sections, in order, for the "On this page" list. */
+  sections: DocSection[];
+  /** The footer closer. Leave it out for the default. */
+  closer?: Closer;
+  /** The id of the H1 (the section is labelled by it). */
+  headingId?: string;
+}
+
+const {
+  title,
+  description,
+  tag,
+  lead,
+  heavy,
+  updated,
+  sections,
+  closer,
+  headingId = 'doc-heading',
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description} closer={closer}>
+  <section class="doc py-section" aria-labelledby={headingId}>
+    <div class="ncs-container page-grid">
+      <header class="doc-head grid-prose">
+        <p class="doc-tag">{tag}</p>
+        <h1 id={headingId}>
+          {lead} <Heft text={heavy} />
+        </h1>
+        <div class="doc-intro">
+          <slot name="intro" />
+        </div>
+        <p class="doc-updated">Last updated {updated}</p>
+      </header>
+
+      <nav class="doc-toc grid-rail" aria-label="On this page" data-doc-toc>
+        <p class="doc-toc-title">On this page</p>
+        <ul>
+          {sections.map((s) => (
+            <li>
+              <a href={`#${s.id}`} data-toc-link={s.id}>
+                {s.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="doc-prose grid-prose" data-prose>
+        <slot />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Scroll-spy for the "On this page" list. Re-binds after a View
+  // Transitions navigation (the footer links are the usual way in); the
+  // dataset flag keeps it from observing twice. It moves nothing, so there
+  // is nothing to gate for reduced motion.
+  function initDocToc() {
+    const toc = document.querySelector<HTMLElement>('[data-doc-toc]');
+    if (!toc || toc.dataset.spyBound || !('IntersectionObserver' in window)) return;
+    toc.dataset.spyBound = 'true';
+
+    const links = new Map<string, HTMLAnchorElement>();
+    toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((a) => {
+      const id = a.dataset.tocLink;
+      if (id) links.set(id, a);
+    });
+    if (links.size === 0) return;
+
+    // The topmost visible heading, in document order, is the current one.
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+        const current = [...links.keys()].find((id) => visible.has(id)) ?? null;
+        if (!current) return; // between headings: keep the last one marked
+        links.forEach((a, id) => {
+          if (id === current) a.setAttribute('aria-current', 'true');
+          else a.removeAttribute('aria-current');
+        });
+      },
+      // The active zone sits in the upper part of the viewport, where a
+      // heading reaches reading position.
+      { rootMargin: '-15% 0px -65% 0px', threshold: 0 },
+    );
+    links.forEach((_, id) => {
+      const heading = document.getElementById(id);
+      if (heading) observer.observe(heading);
+    });
+  }
+  document.addEventListener('astro:page-load', initDocToc);
+  initDocToc();
+</script>
+
+<style>
+  /* ---- Head ------------------------------------------------------------ */
+  .doc-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    padding-bottom: var(--spacing-l);
+  }
+  .doc-tag,
+  .doc-updated,
+  .doc-toc-title {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--muted-foreground);
+  }
+  .doc-intro :global(p) {
+    max-width: 60ch;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+
+  .doc-intro :global(a) {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+  }
+  .doc-intro :global(a:hover),
+  .doc-intro :global(a:focus-visible) {
+    text-underline-offset: 4px;
+  }
+
+  /* ---- On this page (lg and up) ---------------------------------------- */
+  .doc-toc {
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    .doc-toc {
+      display: block;
+      align-self: start;
+      position: sticky;
+      top: 6rem;
+      padding-top: var(--spacing-l);
+      border-top: 1px solid var(--line);
+    }
+  }
+  .doc-toc ul {
+    margin-top: var(--spacing-s);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--line);
+  }
+  .doc-toc a {
+    display: block;
+    margin-left: -1px;
+    padding: 0.3rem 0 0.3rem 1rem;
+    border-left: 2px solid transparent;
+    font-size: 0.95rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    transition: color var(--dur-quick) var(--ease-glide);
+  }
+  .doc-toc a:hover,
+  .doc-toc a:focus-visible {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  /* The current section: a heavier weight and a rule, never colour alone. */
+  .doc-toc a[aria-current='true'] {
+    border-left-color: var(--color-link);
+    color: var(--color-link);
+    font-weight: 650;
+  }
+
+  /* ---- Body: one measure ----------------------------------------------- */
+  .doc-prose {
+    padding-top: var(--spacing-l);
+    border-top: 1px solid var(--line);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-text);
+  }
+  /* In-document headings read at h3 size (the page's H1 is the title);
+     scroll-margin keeps an anchored heading clear of the sticky header. */
+  .doc-prose :global(h2) {
+    margin: var(--spacing-xl) 0 var(--spacing-s);
+    font-size: clamp(1.375rem, 2vw, 1.75rem);
+    line-height: 1.15;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    scroll-margin-top: 6rem;
+  }
+  .doc-prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .doc-prose :global(p),
+  .doc-prose :global(ul),
+  .doc-prose :global(dl) {
+    margin-bottom: var(--spacing-m);
+  }
+  .doc-prose :global(ul) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  .doc-prose :global(li::marker) {
+    color: var(--muted-foreground);
+  }
+  .doc-prose :global(a) {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: text-underline-offset var(--dur-quick) var(--ease-glide);
+  }
+  .doc-prose :global(a:hover),
+  .doc-prose :global(a:focus-visible) {
+    text-underline-offset: 4px;
+  }
+  .doc-prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+</style>
