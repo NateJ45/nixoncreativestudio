@@ -78,7 +78,11 @@ export default defineConfig({
     // /coming-soon/ is the pre-launch gate page, not content: it is noindex
     // (see src/pages/coming-soon.astro), and a sitemap must not list a
     // noindex page (Search Console flags the mismatch).
-    sitemap({ filter: (page) => !page.includes('/coming-soon') }),
+    // Out of the sitemap: the Coming Soon gate and the noindex parts page
+    // (/colophon/parts/, the check page for the shared components).
+    sitemap({
+      filter: (page) => !page.includes('/coming-soon') && !page.includes('/colophon/parts'),
+    }),
     react(),
   ],
 

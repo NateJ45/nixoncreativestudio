@@ -20,26 +20,16 @@
 // accurate without manual edits each January.
 const year = new Date().getFullYear();
 
-import { getCollection } from 'astro:content';
+import { getFooterNav } from '../data/nav';
 import { site } from '../data/site';
 import CopyEmail from './CopyEmail.astro';
 import { buttonVariants } from './ui/button';
 
-// Footer site nav, mirroring the header's primary nav so the two never drift.
-// Journal appears only once the journal has a published entry, exactly as in
-// Header.astro (same visibility filter: drafts hidden in production). This is a
-// quiet repeat of the menu for visitors who reach the bottom of a page and want
-// to know where to go next, rather than scrolling back up to the header.
-const journalCount = (
-  await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
-).length;
-const navLinks = [
-  { label: 'Work', href: '/work/' },
-  { label: 'Services', href: '/services/' },
-  { label: 'About', href: '/about/' },
-  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
-  { label: 'Contact', href: '/contact/' },
-];
+// Footer site nav: the header's list plus Contact, from src/data/nav.ts, so the
+// two never drift (Journal and Photography are gated there). This is a quiet
+// repeat of the menu for visitors who reach the bottom of a page and want to
+// know where to go next, rather than scrolling back up to the header.
+const navLinks = await getFooterNav();
 
 // Social links rendered as a list. Driving this from site.social keeps
 // labels in one place; add a network there and add a row here.

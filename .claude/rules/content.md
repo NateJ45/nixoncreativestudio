@@ -18,6 +18,12 @@ Edit `src/data/site.ts` when contact info, social URLs, or the studio name chang
 
 Every `mailto:` link site-wide has a graceful fallback (`src/scripts/mailto-fallback.ts`, wired in BaseLayout). A `mailto:` only opens something if the device has a mail app registered for it; on a desktop without one the click is a silent dead-end. The script lets the click proceed (so visitors who do have a mail app still get their composer), then checks whether focus left the page; if nothing opened, it copies the address and shows a confirmation toast (`.ncs-toast` in globals.css). It never blocks or delays the real `mailto:`. This is why an email click "doing nothing" on a machine with no mail client is expected behavior, not a broken link.
 
+## Site navigation (`src/data/nav.ts`, overhaul 1.8)
+
+The header, the mobile menu and the footer read one list. `getNav()` returns Work, Services, About plus the gated pages (header and MobileNav; Contact is left out because the "Start a project" button covers it); `getFooterNav()` adds Contact for the footer's Explore column, which is also the no-JS target of the menu button (`#site-nav`). Every href ends in a slash.
+
+Two links are gated at build time so a link never points at an empty page: **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. To rename, reorder or add a page, edit `BASE` in `nav.ts`, and add a one-line descriptor for its href to `DESCRIPTIONS` in `MobileNav.astro`.
+
 ## Content collections
 
 Three collections live in `src/content/` with schemas declared in `src/content.config.ts`.
@@ -64,26 +70,27 @@ Site copy, pages, components and case-study MDX alike, is first person singular:
 
 Static routes generated at build time:
 
-| Path               | Source                                                                                     |
-| ------------------ | ------------------------------------------------------------------------------------------ |
-| `/`                | `src/pages/index.astro` (homepage: hero reel, selected work, pricing teaser, process band) |
-| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)       |
-| `/services/`       | `src/pages/services.astro`                                                                 |
-| `/work/`           | `src/pages/work/index.astro` (with filter chips)                                           |
-| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                             |
-| `/photography/`    | `src/pages/photography.astro`                                                              |
-| `/journal/`        | `src/pages/journal/index.astro`                                                            |
-| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                               |
-| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                              |
-| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                         |
-| `/privacy/`        | `src/pages/privacy.astro`                                                                  |
-| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                  |
-| `/now`             | redirects to `/about/#now` (the page was merged into About)                                |
-| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                    |
-| `/404`             | `src/pages/404.astro` (custom not-found)                                                   |
-| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                 |
-| `/llms.txt`        | `src/pages/llms.txt.ts` (plain-text studio summary for AI tools, prerendered)              |
-| `/robots.txt`      | `public/robots.txt` (allows everything; names the AI crawlers explicitly)                  |
+| Path               | Source                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `/`                | `src/pages/index.astro` (homepage: hero reel, selected work, pricing teaser, process band)                   |
+| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)                         |
+| `/services/`       | `src/pages/services.astro`                                                                                   |
+| `/work/`           | `src/pages/work/index.astro` (with filter chips)                                                             |
+| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                               |
+| `/photography/`    | `src/pages/photography.astro`                                                                                |
+| `/journal/`        | `src/pages/journal/index.astro`                                                                              |
+| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                                 |
+| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                                |
+| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                           |
+| `/colophon/parts/` | `src/pages/colophon/parts.astro` (noindex check page for the shared components, not in the sitemap or menus) |
+| `/privacy/`        | `src/pages/privacy.astro`                                                                                    |
+| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                                    |
+| `/now`             | redirects to `/about/#now` (the page was merged into About)                                                  |
+| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                      |
+| `/404`             | `src/pages/404.astro` (custom not-found)                                                                     |
+| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                   |
+| `/llms.txt`        | `src/pages/llms.txt.ts` (plain-text studio summary for AI tools, prerendered)                                |
+| `/robots.txt`      | `public/robots.txt` (allows everything; names the AI crawlers explicitly)                                    |
 
 ## Metadata and structured data (overhaul 1.9, 2026-10-30)
 
