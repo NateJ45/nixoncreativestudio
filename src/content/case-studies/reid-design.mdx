@@ -4,15 +4,13 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Overhaul 2.4f (2026-10-31): refreshed against the live site
+# Overhaul 2.4f (2026-10-31): rewritten against the live site
 # (reiddesignllc.com home, /services/, /e-design/, /contact/, /process/).
-# The Budget Calculator, Style Quiz and before/after slider claims are
-# UNTOUCHED on purpose: removing them waits on Nathan's sign-off
-# (docs/PENDING.md 2a). On 2026-10-31 /budget-calculator/ and /style-quiz/
-# answered 404 and /portfolio/ redirected home, so those claims (and the
-# What changed rows built on them) are the ones to settle. Everything else
-# was rewritten to what the live site shows. The featureShot is the posted
-# prices band the hook names.
+# The Budget Calculator, Style Quiz and before/after portfolio claims were
+# removed on Nathan's say-so (2026-10-31, docs/PENDING.md 2a): that day
+# /budget-calculator/ and /style-quiz/ answered 404 and /portfolio/
+# redirected home. The designer note was about the slider, so it went too.
+# The featureShot is the posted prices band the hook names.
 title: Reid Design
 client: Reid Design
 sector: small-business
@@ -22,8 +20,8 @@ services:
 role: Designer, Developer
 tags:
   - Interior Design
-  - Portfolio
-  - Before and After
+  - Posted Pricing
+  - Headless CMS
   - Lead Generation
 stack:
   - Astro
@@ -46,7 +44,6 @@ outcome: 'Shows how Staci works and what it costs, so a visitor arrives at the f
 #     name: ""
 #     title: ""
 #     date: YYYY-MM-DD
-designerNote: 'The detail I keep coming back to is the before/after slider. Finished rooms always photograph well, but until you can see the starting point, you cannot tell whether the change is something that could happen in your own house.'
 hook: 'The plan and the price before anything is ordered'
 order: 5
 # Palette source: reid-design-site DESIGN.md and globals.css, unchanged on
@@ -97,15 +94,9 @@ The brief had two parts. First, show how Staci works and what it costs, so the p
 ## Decisions
 
 <Decision
-  title="Before and after, not just finished rooms"
-  easy="A gallery of finished rooms."
-  did="Build the portfolio on before/after pairs, because seeing the starting point is what makes the transformation land, with filter chips by room type and style so someone looking for a farmhouse kitchen goes straight to those projects."
-/>
-
-<Decision
   title="Answer the price question early"
   easy="Leave cost for the first call."
-  did="A Budget Calculator that lets visitors build their own scope estimate. It is not a quote; it is a self-qualification tool. Someone who walks through a full primary suite renovation and sees a range they can stomach is a much warmer lead than someone who calls cold with no idea what to expect."
+  did="Post every price: the in-home consultation, E-Design, full room design, styling and sourcing, with design fees kept separate from what a client spends on furniture. Someone who has already seen the numbers arrives at the first call ready to talk about the room."
 />
 
 <Decision
@@ -114,9 +105,9 @@ The brief had two parts. First, show how Staci works and what it costs, so the p
   did="A concept room on the home page: one empty living room fills in as you scroll, and each piece is tied to a tag that says why it is there. It shows what Staci notices and how she plans, before anyone books."
 />
 
-Interior design clients almost always have two blockers early on: they do not know what things cost, and they do not know whether their taste matches what the designer actually does. I built around both. The Style Quiz does on the creative side what the calculator does for price: it identifies a visitor's design archetype and primes both the client and Staci for a more productive first call.
+Interior design clients almost always have two blockers early on: they do not know what things cost, and they do not know whether their taste matches what the designer actually does. I built around both. The prices are on the page, and the contact form asks which rooms and which paint-chip styles feel like home, from Transitional to Japandi, so Staci starts the first conversation already knowing the brief.
 
-Every price is posted, from the in-home consultation to E-Design and full room design, with design fees kept separate from what a client spends on furniture. The site is built on Astro and Sanity, so Staci can change a price, a page or a photo herself, without touching a line of code.
+The site is built on Astro and Sanity, so Staci can change a price, a page or a photo herself, without touching a line of code.
 
 ## What I built
 
@@ -138,9 +129,6 @@ Every price is posted, from the in-home consultation to E-Design and full room d
 
 The full build, including the pieces above:
 
-- Portfolio with before/after comparison sliders and Room x Style filter chips so visitors can find relevant work fast
-- Budget Calculator with room type, scope, and add-on selectors that outputs an estimated project range
-- Style Quiz that identifies a visitor's design archetype and primes them for the consultation call
 - Home page that leads with Staci, her Google rating and real reviews from Google and Facebook, then the four-step process with honest time estimates
 - The concept room, a scroll-built living room annotated with why each piece is there
 - Services page with every price posted, plus notes for builders and realtors and the service area
@@ -160,9 +148,8 @@ The full build, including the pieces above:
 
 <ResultsBlock
   items={[
-    'By the time someone books a consultation, the site has already walked them through scope and style, so the first call starts from shared understanding instead of square one.',
-    'Before/after sliders turned the portfolio from an aspirational gallery into something persuasive, so visitors can see whether a transformation could happen in their own house.',
-    'The Budget Calculator lets homeowners self-qualify on price by building their own scope estimate before they ever call.',
+    'By the time someone books a consultation, they have seen how Staci works, what each service costs and what is in the plan, so the first call starts from shared understanding instead of square one.',
+    'The concept room shows how Staci thinks about a space, piece by piece, before anyone pays for a visit.',
     'Every service price is on the site, so a visitor knows what working with Staci costs before they reach out.',
     'Staci can change prices, pages and photos herself in Sanity, without touching a line of code.',
   ]}
