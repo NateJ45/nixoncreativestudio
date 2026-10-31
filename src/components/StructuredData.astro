@@ -34,9 +34,11 @@ interface Props {
   breadcrumbs?: Crumb[];
   /** Page-specific nodes appended to the graph. */
   extra?: Node[];
+  /** The page node's type (WebPage unless the page says otherwise). */
+  pageType?: 'WebPage' | 'CollectionPage';
 }
 
-const { url, title, description, breadcrumbs = [], extra = [] } = Astro.props;
+const { url, title, description, breadcrumbs = [], extra = [], pageType } = Astro.props;
 
 const graph = buildGraph({
   url,
@@ -44,6 +46,7 @@ const graph = buildGraph({
   description,
   breadcrumbs,
   extra,
+  pageType,
   lowestPrice: Math.min(...webTiers.map((t) => t.priceFrom)),
 });
 ---

@@ -18,6 +18,9 @@
 // like any page, so axe in both themes, reflow at 320 and first-viewport cover
 // every part.
 //
+// /churches is the first sector page (overhaul 4.2, src/pages/[sector].astro);
+// add each new sector page from src/data/sector-pages.ts here too.
+//
 // Add a route here when a new PRERENDERED page ships.
 export const routes = [
   '/',
@@ -26,6 +29,7 @@ export const routes = [
   '/work',
   '/work/stone-steps-50k',
   '/work/first-presbyterian-orangeburg',
+  '/churches',
   '/journal',
   '/photography',
   '/contact',
