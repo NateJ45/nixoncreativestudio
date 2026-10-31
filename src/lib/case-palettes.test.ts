@@ -200,3 +200,47 @@ for (const { slug, palette } of studies) {
     });
   }
 }
+
+// -----------------------------------------------------------------------------
+// The /work row tint (overhaul package 2.3)
+// -----------------------------------------------------------------------------
+// In light mode, hovering or focusing a /work row paints it in the client's
+// palette.paper while the row's text keeps THIS site's colours: the heading
+// (client name and "Case study"), the body (the hook), the muted meta (sector
+// and year) and the link (the live host). Each must clear 4.5:1 on every
+// client's paper. In dark mode the row sits on --ink, whose pairs
+// ncs-tokens.test.ts already covers, with the dark mark checked above.
+
+/** The light theme's hex tokens, read from the top-level `:root {` block. */
+function lightTokens(): Record<string, string> {
+  const css = readFileSync(new URL('../styles/globals.css', import.meta.url), 'utf8');
+  const open = css.indexOf('\n:root {');
+  assert.ok(open !== -1, 'globals.css has no top-level ":root {" block');
+  let depth = 0;
+  let end = open;
+  for (let i = open; i < css.length; i++) {
+    if (css[i] === '{') depth++;
+    else if (css[i] === '}' && --depth === 0) {
+      end = i;
+      break;
+    }
+  }
+  const tokens: Record<string, string> = {};
+  for (const m of css.slice(open, end).matchAll(/--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;/g)) {
+    tokens[m[1]] = m[2];
+  }
+  return tokens;
+}
+
+const LIGHT = lightTokens();
+const ROW_TEXT = ['heading', 'foreground', 'muted-foreground', 'link'] as const;
+
+for (const { slug, palette } of studies) {
+  if (!palette) continue;
+  test(`${slug}: /work row text on the client's paper (light mode)`, () => {
+    for (const role of ROW_TEXT) {
+      assert.ok(LIGHT[role], `globals.css :root has no hex --${role}`);
+      atLeast(slug, `--${role} on palette.paper`, LIGHT[role], palette.paper, 4.5);
+    }
+  });
+}
