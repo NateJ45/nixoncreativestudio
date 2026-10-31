@@ -120,6 +120,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The copy lint (tests/unit/copy-rules.test.mjs) reads the BUILT HTML in
+      # dist/client, so it runs here, after the build, not with the unit tests
+      # above. Site copy is first person singular: it fails on "we", "our" or
+      # "us" in rendered body text (blockquotes and data-copy-ignore skipped).
+      - name: Copy lint (first person singular)
+        run: npm run test:copy
+
       # linkinator over dist/client. The site is fully static (output:
       # 'static', no page opts out with prerender = false), so every route is
       # in dist/client and nothing needs skipping beyond off-site URLs. The

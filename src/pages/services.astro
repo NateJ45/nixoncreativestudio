@@ -56,7 +56,7 @@ const services = [
   {
     title: 'Strategy',
     lede: 'The planning work that decides what the site is for, who it serves, and how it earns its keep.',
-    body: 'Strategy always comes first. Without it, design becomes decoration. We start with a working session, then I write a short brief that the rest of the project follows.',
+    body: 'Strategy always comes first. Without it, design becomes decoration. It starts with a working session together, then I write a short brief that the rest of the project follows.',
     priceFrom: 1500, // standalone floor; included free inside every build
     // No screenshot for strategy (it is planning work, not a screen). A
     // labelled placeholder panel stands in until a real artifact (a sitemap or
@@ -83,10 +83,10 @@ const services = [
     placeholderIcon: null,
     points: [
       'A custom design built to your brand, not a stock template',
-      'Self-hosted typography and imagery',
-      'Mobile-first responsive layouts',
-      'WCAG-aware accessibility from day one',
-      'Deployed to Cloudflare, auto-rebuild on every commit',
+      'Fast pages, with fonts and images served from your own site',
+      'Layouts that work on every phone, tablet and desktop',
+      'Accessible from the first screen, checked against WCAG AA',
+      'Hosting set up for you, with year one included',
     ],
   },
   {
@@ -138,7 +138,7 @@ const whyItCosts = [
   },
   {
     title: 'Accessible by default',
-    body: 'Every page meets WCAG AA and scores 100 for accessibility. Most budget builds fail this badly. For a church, school, or nonprofit it is both the right thing to do and real legal cover, included, not an upsell.',
+    body: 'Every page is built to WCAG AA and checked until it scores 100 for accessibility in Lighthouse. Plenty of budget builds never get checked at all. For a church, school, or nonprofit it is the right thing to do and it lowers your legal risk, and it is included, not an upsell.',
   },
   {
     title: 'Cheap is expensive later',
@@ -149,7 +149,7 @@ const whyItCosts = [
 const faq = [
   {
     q: 'What does it cost?',
-    a: 'Websites start at $4,000 for a focused Launch site. Most projects land between $7,000 and $11,000, and builds with real custom functionality start around $12,000. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before either of us is committed, and larger projects can be split into monthly payments so the budget is about cash flow, not one big wall.',
+    a: 'Websites start at $4,000 for a focused Launch site. Most projects land between $7,000 and $11,000, and builds with real custom functionality start around $12,000. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before anyone is committed, and larger projects can be split into monthly payments so the budget is about cash flow, not one big wall.',
   },
   {
     q: 'What if I have been quoted less somewhere else?',
@@ -165,7 +165,7 @@ const faq = [
   },
   {
     q: 'Can you work with my existing brand?',
-    a: 'Yes. If you already have a logo, palette, and type system, we use it. If you do not, brand work can be folded into the strategy phase or scoped separately.',
+    a: 'Yes. If you already have a logo, palette, and type system, I use it. If you do not, brand work can be folded into the strategy phase or scoped separately.',
   },
   {
     q: 'Where are you based, and do you work with clients outside Cincinnati?',
@@ -174,8 +174,9 @@ const faq = [
 ];
 
 // JSON-LD schemas for /services: Service (one per offering) and FAQPage.
-// FAQPage does the most work here. Google will surface FAQ
-// answers directly in search results for matching queries.
+// FAQPage describes the questions and answers for search engines and AI
+// answer tools. Google no longer shows FAQ rich results for most sites (2023),
+// so treat it as clean structured data, not a promised search feature.
 const schemas = [
   ...services.map((service) => ({
     '@context': 'https://schema.org',
