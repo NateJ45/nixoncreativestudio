@@ -6,8 +6,8 @@ import { test, expect } from '@playwright/test';
 // Forced-colors mode throws away box-shadows and background colours. On this
 // site that would erase the rings around framed artifacts, the hairlines at a
 // change of surface, and the edge of a navy band. globals.css answers with a
-// `@media (forced-colors: active)` block that gives .frame, .surface-card,
-// .band-ink, .band-themed and .hairline a real border or outline, which the
+// `@media (forced-colors: active)` block that gives .frame, .band-ink
+// and .hairline a real border or outline, which the
 // browser keeps (in a system colour). This checks one route, as the overhaul
 // plan asks. No page renders .band-ink or .frame yet (Phase 2 and package 1.8
 // add them), so the test drops one of each into /about and reads what the
