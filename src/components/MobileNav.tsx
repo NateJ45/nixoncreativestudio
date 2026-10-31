@@ -8,8 +8,7 @@
    scroll-lock, and the dialog ARIA all come for free).
 
    Theme-aware to match the rest of the site: a light surface with dark type,
-   NCS-blue links, and a soft brand glow in light mode; navy with white type,
-   sky links, and the drifting aurora in dark. Either way it reads as a "big
+   NCS-blue links in light mode; navy with white type and sky links in dark. Either way it reads as a "big
    moment" brand surface, far more like a design studio's menu than the default
    side-drawer. The brand-blue CTA and the theme toggle carry across both.
 
@@ -211,26 +210,6 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
         `}</style>
 
         <div className="mnav-shell relative isolate flex min-h-full flex-col">
-          {/* Atmosphere, theme-aware: a soft static brand glow in light mode, the
-              drifting navy aurora in dark. Decorative; the aurora freezes under
-              reduced motion via the global rule, the light glow is static. */}
-          <div
-            className="bg-mesh-soft pointer-events-none absolute inset-0 dark:hidden"
-            aria-hidden="true"
-          ></div>
-          {/* overflow-hidden clips the aurora's ::before, which is drawn at
-              inset:-25% so its blurred blobs sit off the edges. Without the clip
-              that bleed extends ~25% below the panel and, because SheetContent
-              is overflow-y-auto, becomes phantom scroll into empty space (a
-              dark-mode-only bug, since the light-mode .bg-mesh-soft glow is
-              inset:0 and can't bleed). Every other .bg-aurora host clips the
-              same way: .band-themed self-clips, the photography hero clips on
-              its section. */}
-          <div
-            className="bg-aurora pointer-events-none absolute inset-0 hidden overflow-hidden opacity-60 dark:block"
-            aria-hidden="true"
-          ></div>
-
           {/* Top bar: wordmark (doubles as the dialog's accessible name) + close. */}
           <div className="relative z-10 flex items-center justify-between gap-m">
             <SheetTitle className="font-display text-2xl tracking-[0.02em] text-heading">
@@ -316,7 +295,7 @@ export default function MobileNav({ links, studioName }: MobileNavProps) {
 
           {/* Primary conversion action, matching the hero's amber CTA. */}
           <div className="mnav-item relative z-10 mt-l" style={delay(140 + links.length * 55 + 40)}>
-            <Button asChild variant="brand" size="cta" className="shine w-full">
+            <Button asChild variant="brand" size="cta" className="w-full">
               <a href="/contact/" onClick={() => setOpen(false)}>
                 Start a project
               </a>

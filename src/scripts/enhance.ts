@@ -6,9 +6,6 @@
    degrades safely, so the page works with this script absent or blocked.
 
    Attributes:
-     [data-spotlight]  sets --mx / --my (px, relative to the element) on
-                       pointer move so a CSS radial glow can track the cursor.
-                       See .spotlight-card in globals.css.
      [data-countup]    animates a number up to data-countup-to when it scrolls
                        into view. Optional data-countup-prefix / -suffix /
                        -duration. Under reduced motion the final value is set
@@ -26,23 +23,6 @@
    ============================================================================ */
 
 const prefersReduced = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-const finePointer = (): boolean => window.matchMedia('(pointer: fine)').matches;
-
-/* ---- Spotlight ------------------------------------------------------------ */
-function initSpotlight(): void {
-  if (prefersReduced() || !finePointer()) return;
-  document
-    .querySelectorAll<HTMLElement>('[data-spotlight]:not([data-spotlight-bound])')
-    .forEach((el) => {
-      el.dataset.spotlightBound = 'true';
-      el.addEventListener('pointermove', (event) => {
-        const rect = el.getBoundingClientRect();
-        el.style.setProperty('--mx', `${event.clientX - rect.left}px`);
-        el.style.setProperty('--my', `${event.clientY - rect.top}px`);
-      });
-    });
-}
 
 /* ---- Count-up ------------------------------------------------------------- */
 function formatCount(el: HTMLElement, value: number): string {
@@ -213,7 +193,6 @@ function initHeadingAnchors(): void {
 
 /* ---- Boot ----------------------------------------------------------------- */
 function enhance(): void {
-  initSpotlight();
   initCountUp();
   initHeader();
   initHeadingAnchors();

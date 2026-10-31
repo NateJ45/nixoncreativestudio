@@ -27,7 +27,7 @@ import react from '@astrojs/react';
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
 //                 loads the beacon with `defer`)
-//   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
+//   - react     : enables React islands (shadcn/ui, photo lightbox,
 //                 the WebGL hero)
 //
 // prefetch: links preload as they enter the viewport, so navigation feels

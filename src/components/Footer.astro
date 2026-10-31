@@ -81,13 +81,12 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
 
 <!--
   Full-bleed footer; the inner column uses .ncs-container to align with the
-  rest of the content above. .band-themed makes it theme-aware: a light surface
-  with a soft brand glow in light mode, the navy aurora in dark mode, matching
+  rest of the content above. .band-themed makes it theme-aware: flat bg-soft in
+  light mode, flat navy in dark mode, matching
   the CtaBanner / ProcessBand above it so they read as one continuous field.
   In dark mode this is still the page's darkest band. A faint accent seam line
   at the very top joins it to a dark band above (dark mode only). An oversized
-  wordmark sits behind the bottom row as a brand graphic. The glow is the
-  band-themed ::before; no separate aurora child is needed.
+  wordmark sits behind the bottom row as a brand graphic.
 -->
 <footer class="footer-seam band-themed relative isolate overflow-hidden py-2xl text-text dark:text-primary-foreground">
   <div class="ncs-container relative z-10">
@@ -177,7 +176,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
                straight to the contact form. -->
           <a
             href="/contact/"
-            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine mt-m' })}
+            class={buttonVariants({ variant: 'brand', size: 'cta', className: 'mt-m' })}
           >
             Start a project
           </a>
@@ -238,8 +237,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
 
 <style>
   /* Accent seam: a soft glow line at the very top of the footer so it joins a
-     dark band above into one continuous field. Uses ::after because .band-themed
-     owns ::before (the glow). Dark mode only: in light mode the footer and the
+     dark band above into one continuous field. Dark mode only: in light mode the footer and the
      band above are both the light surface, already continuous, so an accent line
      would read as a stray rule. */
   :global(.dark) .footer-seam::after {

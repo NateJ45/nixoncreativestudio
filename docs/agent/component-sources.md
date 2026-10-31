@@ -1,5 +1,7 @@
 # Component sources
 
+> **Updated 2026-10 (overhaul package 1.2):** Starwind, PrimeReact, the Magic UI / Aceternity blocks (marquee, animated-beam, bento-grid, spotlight), `SectionHeading.astro` and every shadcn primitive except `button.tsx` and `sheet.tsx` were deleted from this repo. The overhaul prefers plain `.astro` components with native HTML. The catalogue below is kept as a sourcing reference only: nothing it lists as "already installed" is still installed, and adding any of it is a new dependency that needs Nathan's go-ahead.
+
 Where to find UI components for the NCS portfolio site, and the order to reach for them. Every source listed here is free unless marked otherwise, and every CLI-installed component lands inside the repo's semantic token system so brand colors propagate without extra wiring.
 
 ---
@@ -8,7 +10,7 @@ Where to find UI components for the NCS portfolio site, and the order to reach f
 
 When you need a new UI element, work down this list and stop at the first option that fits:
 
-1. **Existing components in `src/components/`** that already match this site's design. Check here first. Re-using `SectionHeading.astro`, `CaseStudyCover.astro`, or the Button `brand` variant is faster than reaching for anything external.
+1. **Existing components in `src/components/`** that already match this site's design. Check here first. Re-using `CaseStudyCover.astro` or the Button `brand` variant is faster than reaching for anything external.
 2. **shadcn/ui primitives** in `src/components/ui/` (already installed), or a new one via the CLI. Best for interactive React-based UI: dialogs, sheets, dropdowns, inputs, badges.
 3. **Starwind UI** for Astro-native primitives. Accordion, dialog, dropdown, and tabs are already installed in `src/components/starwind/`. Use Starwind when the component can be 100% static Astro with zero React dependency.
 4. **Magic UI or Aceternity** for motion flourishes. Marquee, animated-beam, bento-grid, and spotlight are already in `src/components/ui/`. Browse [magicui.design](https://magicui.design) for the full Magic UI catalog; browse [ui.aceternity.com](https://ui.aceternity.com) for Aceternity blocks.

@@ -329,7 +329,7 @@
      0s creates no transition at all; the delay matters because a staggered
      delay alone creates one. `transitionend` no longer fires under reduce
      (nothing in src/ listens for it). Animations keep 0.01ms so
-     `animationend` still fires (Radix/Starwind wait on it).
+     `animationend` still fires (Radix waits on it).
      tests/reduced-motion.spec.ts holds this on the webkit-iphone project. */
   @media (prefers-reduced-motion: reduce) {
     html {
@@ -417,24 +417,27 @@
 }
 
 /* ----------------------------------------------------------------------------
-   6. Motion + effects system  [revamp]
+   6. Motion + effects system
    ----------------------------------------------------------------------------
-   The site's animation layer: scroll-reveal, animated backgrounds, hover
-   micro-interactions, and the keyframes shared across components.
+   Deliberately small since the 2026-10 overhaul (package 1.2): one scroll
+   reveal, one static themed band, the elevated card surface and the animated
+   underline link. The old decorative layer (aurora, grain, shine sweep, cursor
+   spotlight, float loop, hover lift, mesh and dot-grid washes, and their
+   keyframes) was retired as AI-portfolio tells and dead weight.
 
-   Accessibility: every looping or scroll-triggered animation here is gated
-   behind `prefers-reduced-motion: no-preference`. The global reduced-motion
-   block in section 4 already neutralizes transitions/animations for everyone
-   who opts out, and the reveal init script in BaseLayout force-shows every
-   [data-reveal] element immediately under reduced motion, so no content ever
-   depends on motion to become visible.
+   Accessibility: the reveal is gated behind `prefers-reduced-motion:
+   no-preference`. The global reduced-motion block in section 4 neutralizes
+   transitions/animations for everyone who opts out, and the reveal init
+   script in BaseLayout force-shows every [data-reveal] element immediately
+   under reduced motion, so no content ever depends on motion to become
+   visible.
    ---------------------------------------------------------------------------- */
 
 /* ---- Scroll reveal --------------------------------------------------------
    Tag any element with data-reveal. The global IntersectionObserver in
-   BaseLayout adds .is-visible the first time it scrolls into view. Variants
-   change the entrance vector; --reveal-delay (inline style) staggers
-   siblings, e.g. style="--reveal-delay: 120ms". */
+   BaseLayout adds .is-visible the first time it scrolls into view. One
+   variant, data-reveal="fade", drops the upward travel; --reveal-delay
+   (inline style) staggers siblings, e.g. style="--reveal-delay: 120ms". */
 /* The hidden-until-revealed state is scoped to .js (added to <html> by the
    anti-FOUC script in BaseLayout before first paint). Without JavaScript the
    class is absent, so [data-reveal] elements keep their default opacity:1 and
@@ -446,29 +449,15 @@
     transform: translateY(1.75rem);
     transition:
       opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      filter 0.7s ease;
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--reveal-delay, 0ms);
   }
   .js [data-reveal='fade'] {
     transform: none;
   }
-  .js [data-reveal='scale'] {
-    transform: scale(0.93);
-  }
-  .js [data-reveal='left'] {
-    transform: translateX(-2rem);
-  }
-  .js [data-reveal='right'] {
-    transform: translateX(2rem);
-  }
-  .js [data-reveal='blur'] {
-    filter: blur(14px);
-  }
   .js [data-reveal].is-visible {
     opacity: 1;
     transform: none;
-    filter: none;
   }
 
   /* First screen: no reveal gate.
@@ -485,17 +474,15 @@
   .js main > [data-reveal]:first-child {
     opacity: 1;
     transform: none;
-    filter: none;
   }
 }
 
-/* A reveal that starts offset sideways (data-reveal="left|right") sits outside
-   its parent until the observer clears it, and an off-screen box widens the
-   document: on /services at 320px the unrevealed spotlight card ended at 328px,
-   so the page could be panned 8px sideways until it scrolled into view
-   (2026-10-13 audit). `clip` (not `hidden`) cuts the overflow without making
-   <main> a scroll container, so sticky children and focus rings keep working.
-   Nothing inside <main> is meant to extend past the viewport edge. */
+/* Nothing inside <main> is meant to extend past the viewport edge. The
+   sideways reveals that once did (an unrevealed card ended at 328px on a 320px
+   /services, 2026-10-13 audit) are gone, but this stays as a guard against a
+   stray wide child panning the page sideways. `clip` (not `hidden`) cuts the
+   overflow without making <main> a scroll container, so sticky children and
+   focus rings keep working. */
 main {
   overflow-x: clip;
 }
@@ -508,63 +495,14 @@ main {
    (text-link) on light surfaces. If you ever want a colored accent phrase,
    wrap it in a solid token span, never a clipped gradient. */
 
-/* ---- Aurora / mesh background ---------------------------------------------
-   Drifting layered radial gradients for dark surfaces (hero, CTA bands). The
-   host element needs position + isolate; the gradient paints in ::before at
-   z-0, so foreground content should sit at z-10. Pair with .grain. */
-.bg-aurora::before {
-  content: '';
-  position: absolute;
-  inset: -25%;
-  z-index: 0;
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 60%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 50%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 30%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .bg-aurora::before {
-    animation: aurora-drift 20s ease-in-out infinite alternate;
-  }
-}
-
-/* ---- Film grain -----------------------------------------------------------
-   Subtle fractal-noise overlay via an inline SVG. Host needs position;
-   sits above the aurora (z-1) but below content (z-10). */
-.grain::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.32;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 /* ---- Theme-aware band -----------------------------------------------------
-   A closing/process band that reads LIGHT in light mode and navy in dark mode,
-   each with its own decorative glow. Lets light mode stay genuinely light while
-   dark mode keeps the navy aurora. Host needs nothing extra; the decoration
-   lives in ::before at z-(-1) so content sits naturally above it. Use
-   theme-aware text tokens on top (text-heading, text-text-muted, text-link),
-   not text-primary-foreground. Used by CtaBanner, ProcessBand, the Hero (under
-   its light-tuned WebGL flow) and the Footer, so light mode reads bright and
-   airy end to end while dark mode stays immersive navy. */
+   A flat closing/process band: bg-soft in light mode, navy in dark mode. No
+   glow and no animation since the 2026-10 overhaul (the drifting aurora
+   ::before was retired). Use theme-aware text tokens on top (text-heading,
+   text-text-muted, text-link), not text-primary-foreground. Used by CtaBanner,
+   ProcessBand, the Footer and two inset cards (journal empty state,
+   photography). position + isolation + overflow stay so existing hosts keep
+   their stacking and clipping. */
 .band-themed {
   position: relative;
   isolation: isolate;
@@ -574,78 +512,14 @@ main {
 .dark .band-themed {
   background-color: var(--color-primary);
 }
-.band-themed::before {
-  content: '';
-  position: absolute;
-  inset: -25%;
-  z-index: -1;
-  pointer-events: none;
-  /* Light mode: a confident accent/sky/amber glow over the light surface.
-     Raised from the original 10-12% so the band actually reads as a designed
-     surface in light mode instead of flat bg-soft (the third amber stop adds
-     warmth without tipping past AA on the text that sits over it). */
-  background:
-    radial-gradient(
-      46% 56% at 18% 14%,
-      color-mix(in oklab, var(--color-accent) 22%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 84% 24%,
-      color-mix(in oklab, var(--color-secondary) 16%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      50% 54% at 64% 92%,
-      color-mix(in oklab, var(--color-tertiary) 10%, transparent),
-      transparent 72%
-    );
-}
-.dark .band-themed::before {
-  /* Dark mode: the full navy aurora. */
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 55%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 45%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 28%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .band-themed::before {
-    animation: aurora-drift 22s ease-in-out infinite alternate;
-  }
-}
-
-/* ---- Hover micro-interactions --------------------------------------------- */
-.hover-lift {
-  transition:
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.3s ease;
-}
-.hover-lift:hover,
-.hover-lift:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--color-primary) 55%, transparent);
-}
 
 /* ---- Elevated card surface -------------------------------------------------
    Add .surface-card to a card so it reads as lifted in BOTH themes: a tinted
    card surface, a soft layered shadow, a 1px top highlight, and a border. This
-   is the fix for "light mode cards dissolve into the page" — light mode has no
+   is the fix for "light mode cards dissolve into the page": light mode has no
    color-step for elevation, so the shadow + highlight do the work the dark-mode
-   navy-on-near-black step does for free. Compose with data-spotlight for the
-   cursor glow and .hover-lift for the rise. */
+   navy-on-near-black step does for free. Due for review in package 1.8 and
+   Phase 2. */
 .surface-card {
   background-color: var(--card);
   border: 1px solid var(--color-border);
@@ -657,124 +531,6 @@ main {
 .surface-card:hover,
 .surface-card:focus-within {
   box-shadow: var(--shadow-card-hover), var(--card-highlight);
-}
-
-/* ---- Quiet texture / atmosphere washes (static, light + dark) --------------
-   .bg-dotgrid lays a faint dot grid that fades out toward the content via a
-   radial mask, so a section gains texture instead of reading as blank paper.
-   .bg-mesh-soft drops a low-opacity brand glow behind a light section, the
-   light-mode counterpart to the dark aurora. Both are decorative (z-index:-1
-   inside an isolated stacking context), carry no text, and are fully static so
-   there is nothing to gate for reduced motion. Host content sits naturally on
-   top; no z-10 needed because the decoration is below the local stack. */
-.bg-dotgrid {
-  position: relative;
-  isolation: isolate;
-}
-.bg-dotgrid::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(
-    color-mix(in oklab, var(--color-heading) 9%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-  mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-  opacity: 0.55;
-}
-.bg-mesh-soft {
-  position: relative;
-  isolation: isolate;
-}
-.bg-mesh-soft::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      42% 52% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 7%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      40% 48% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 6%, transparent),
-      transparent 70%
-    );
-}
-.dark .bg-mesh-soft::before {
-  background:
-    radial-gradient(
-      44% 54% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 12%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 10%, transparent),
-      transparent 72%
-    );
-}
-
-/* Shine sweep: add .shine to a position:relative, overflow:hidden element
-   (e.g. a button) and a light band sweeps across it on hover. */
-.shine {
-  position: relative;
-  overflow: hidden;
-}
-.shine::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40%;
-  height: 100%;
-  transform: translateX(-150%) skewX(-18deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .shine:hover::after,
-  .shine:focus-visible::after {
-    animation: shine-sweep 0.85s ease;
-  }
-}
-
-/* Cursor-following spotlight. Add .spotlight-card to a card; it sets its own
-   position:relative so the glow's ::before is always positioned against the
-   card (without it, a card that forgot `relative` anchors the glow to the
-   nearest positioned ancestor, which floats it off outside the card). The
-   enhancement script sets --mx/--my on pointer move so a soft brand glow tracks
-   the cursor. The glow sits above the surface but is pointer-transparent and
-   low-alpha so content stays legible. Give inner content `relative z-10` if a
-   card's text ever needs to sit above the glow explicitly. */
-.spotlight-card {
-  position: relative;
-}
-.spotlight-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-  background: radial-gradient(
-    16rem 16rem at var(--mx, 50%) var(--my, 50%),
-    color-mix(in oklab, var(--color-accent) 18%, transparent),
-    transparent 60%
-  );
-}
-.spotlight-card:hover::before,
-.spotlight-card:focus-within::before {
-  opacity: 1;
 }
 
 /* Animated underline link. Grows from the left on hover/focus. */
@@ -797,57 +553,6 @@ main {
 .link-underline:hover::after,
 .link-underline:focus-visible::after {
   transform: scaleX(1);
-}
-
-/* Soft float loop for decorative accents. */
-@media (prefers-reduced-motion: no-preference) {
-  .float-slow {
-    animation: float-slow 7s ease-in-out infinite;
-  }
-}
-
-/* ---- Shared keyframes ----------------------------------------------------- */
-@keyframes aurora-drift {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-  100% {
-    transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14);
-  }
-}
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-@keyframes shine-sweep {
-  to {
-    transform: translateX(320%) skewX(-18deg);
-  }
-}
-@keyframes scroll-cue {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0.5rem);
-    opacity: 0.15;
-  }
-}
-@keyframes pop-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -1184,25 +889,9 @@ html.ncs-gated .ncs-overlay {
   --sidebar-border: rgba(0, 0, 0, 0.08);
   --sidebar-ring: #3478bd; /* matches the live --ring (AA accent) */
 
-  /* --------------------------------------------------------------------
-     Starwind UI extra semantic tokens.
-     Not part of shadcn's default set. Consumed by the vendored Starwind
-     primitives (accordion / dialog / dropdown / tabs) and any Starwind
-     component added later (button / alert / badge). Harmonized to the NCS
-     palette: --outline tracks --ring (NCS blue); the status colors are the
-     conventional soft-surface + deep-foreground pairs. starwind.css maps
-     each of these onto a bg-* / text-* / border-* utility via @theme inline. */
-  --primary-accent: #16243b; /* lifted navy for primary hover states */
-  --secondary-accent: #2a6fb0; /* deeper NCS blue for active/pressed secondary */
-  --info: #93c5fd; /* soft blue */
-  --info-foreground: #1e3a5f; /* deep blue text on info surfaces */
-  --success: #86efac; /* soft green */
-  --success-foreground: #14532d; /* deep green text on success surfaces */
-  --warning: #fde68a; /* soft amber */
-  --warning-foreground: #713f12; /* deep amber text on warning surfaces */
-  --error: oklch(0.577 0.245 27.325); /* matches --destructive */
-  --error-foreground: #ffffff;
-  --outline: #3478bd; /* matches --ring (NCS blue) */
+  /* --outline tracks --ring. Left over from the retired Starwind kit (removed
+     2026-10); kept because src/lib/theme-tokens.test.ts still asserts it. */
+  --outline: #3478bd;
 }
 
 /* ----------------------------------------------------------------------------
@@ -1300,16 +989,6 @@ html.ncs-gated .ncs-overlay {
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #40aaed; /* matches the live dark --ring */
 
-  /* Starwind UI extra semantic tokens — dark mode variants. */
-  --primary-accent: #1e3a5f; /* lifted navy for dark primary hover */
-  --secondary-accent: #7ac8f0; /* lighter sky for dark active secondary */
-  --info: #93c5fd;
-  --info-foreground: #1e3a5f;
-  --success: #86efac;
-  --success-foreground: #14532d;
-  --warning: #fde68a;
-  --warning-foreground: #713f12;
-  --error: oklch(0.704 0.191 22.216); /* matches dark --destructive */
-  --error-foreground: #ffffff;
-  --outline: #40aaed; /* matches dark --ring */
+  /* Dark --outline, tracks the dark --ring (see the light block). */
+  --outline: #40aaed;
 }

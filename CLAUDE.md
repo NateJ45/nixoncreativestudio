@@ -8,7 +8,7 @@ Reid Design is a separate business entity. Do not conflate it with Nixon Creativ
 
 **Rolled back 2026-10-09.** The EmDash CMS and server rendering (PRs #47 to #105) were rolled back to the static state of 7bca364: every page is prerendered and all content lives in this repo. Kept on top: the care plan pricing (#41; since replaced by the four care levels in `src/data/pricing.ts`, which match the client proposals), the sync-check resync (#89) and the GA4 hostname guard (#104). The EmDash history stays in git; `main` is the only branch.
 
-Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, shadcn/ui plus Starwind, React 19 islands. Full list: `docs/claude/stack.md`.
+Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, React 19 islands (shadcn Button and Sheet are the last two shadcn primitives). Full list: `docs/claude/stack.md`.
 
 ## How this file is organised
 
@@ -90,7 +90,7 @@ Reference docs, read when needed (`docs/claude/`):
 - `working-style.md`: full communication-style text.
 - `strategy-and-audience.md`: read before any design or copy call (points at `NCS-Website-Strategy.docx` in the sibling `Nixon Creative Studio Website` folder).
 
-Existing docs: `docs/PENDING.md`, `docs/TESTING.md`, `docs/agent/component-sources.md` (where to pull components from), `docs/stack-template/` (new-site runbook), `PRODUCT.md`, `src/components/primereact/README.md`. Slash commands: `.claude/commands/rebuild.md`, `.claude/commands/visual-verify.md`.
+Existing docs: `docs/PENDING.md`, `docs/TESTING.md`, `docs/agent/component-sources.md` (where to pull components from), `docs/stack-template/` (new-site runbook), `PRODUCT.md`. Slash commands: `.claude/commands/rebuild.md`, `.claude/commands/visual-verify.md`.
 
 ## Gotcha index (full text: `docs/claude/gotchas.md`)
 
