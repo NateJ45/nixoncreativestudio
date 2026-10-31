@@ -17,6 +17,16 @@ Read this file early in any session on this repo.
 
 - **The `test` job is pinned to ubuntu-24.04 (2026-10-30).** `ubuntu-latest` moved to 26.04, where Playwright's WebKit will not launch, so every `[webkit-iphone]` test failed. `ci.yml` now says `runs-on: ubuntu-24.04` on that job only. Unpin it once a Playwright release supports 26.04 (try it on a branch first). Starter PORTS.md card and vault gotcha `playwright-webkit-ubuntu-26-04`.
 
+### 0. After the cut-over: Rich Results test (added 2026-10-30, overhaul 1.9)
+
+Once `redesign` is live on `main`, run Google's Rich Results test
+(https://search.google.com/test/rich-results) and the Schema Markup Validator
+(https://validator.schema.org) on `/`, `/services/` and one case study. The
+JSON-LD is one `@graph` per page (studio, WebSite, Person, WebPage, plus
+BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
+errors. Google shows no FAQ rich result for this kind of site, which is fine.
+Then resubmit the sitemap in Search Console. Delete this item when done.
+
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).
@@ -70,6 +80,27 @@ Option (a) is the recommendation. Whichever is chosen, add the navy pair to
 `src/lib/theme-tokens.test.ts` afterwards so the claim is machine-checked from
 then on.
 
+### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
+
+These content fixes are waiting on Nathan's sign-off and will ship as their own PR:
+
+- **First Baptist Muncie:** the study still carries Wix-era copy. It needs the
+  real rebuild facts before it is rewritten. Since overhaul 1.6 its cover,
+  full-page and mobile captures show the new site (re-shot 2026-10-30), so
+  the Wix-era copy and the two Wix-era feature shots
+  (`shots/first-baptist-muncie-feature-*.png`) now sit next to captures of a
+  different site until that rewrite lands.
+- **First Presbyterian Orangeburg:** its `hook` ("Book the building through one
+  form, not an inbox") is a draft written from the designer note (1.6). Edit or
+  approve it.
+- **Reid Design:** the study describes a Budget Calculator, a style quiz and a
+  before/after slider. Remove any of those that are not live on the site today.
+
+Package 1.3 only changed the pronouns in those studies ("we" to "I"); the claims
+themselves are untouched. A capacity line ("I take a small number of projects
+each quarter") was removed site-wide because nothing sources it; put it back
+only if Nathan confirms it.
+
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)
@@ -113,6 +144,18 @@ reid-design-site use. It only acts on Windows, and only when wrangler carries
 its own newer workerd; on Linux CI (and on a Windows install where wrangler and
 the plugin share one workerd, as today) it changes nothing. The wrapper copy is
 byte-identical to the starter's.
+
+### 6. Case-study covers start invisible (found 2026-10-30)
+
+`tests/first-viewport.spec.ts` found that `CaseStudyCover.astro` renders its
+`<img>` with `opacity-0` (not gated on `.js`) and fades it in from a script on
+load. The `/work` cards and the case-study hero, which is the LCP image, start
+at opacity 0, and with JavaScript off they never show at all. Never-break rule 3
+in CLAUDE.md forbids it. The spec marks `/work` and `/work/stone-steps-50k` as
+`test.fixme` until overhaul package 1.8 replaces the wrapper with `Media.astro`
+(or 1.2 rewrites it while removing plaiceholder). Fix: drop the fade and let the
+image paint over its blur placeholder, then delete the `KNOWN` entries in the
+spec.
 
 ---
 

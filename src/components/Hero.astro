@@ -27,14 +27,17 @@
    ticker cycling, and the headline is heavy from the start.
 
    Content is hardcoded here on purpose. The hero is bespoke. The ticker and
-   the wall read their sites and feature lines from src/data/reel.ts.
+   the wall read their sites from src/data/reel.ts, and each feature line is
+   that case study's `hook` frontmatter (joined on by getReelSites()).
    ============================================================================ */
 
 import '@fontsource-variable/bricolage-grotesque/wght.css';
 import { buttonVariants } from './ui/button';
 import { cn } from '../lib/utils';
 import HeroReel from './HeroReel.astro';
-import { reelSites } from '../data/reel';
+import { getReelSites } from '../data/reel';
+
+const reelSites = await getReelSites();
 
 // "I build websites that" stays light; the three words after it gain weight.
 const statementLead = 'I build websites that';

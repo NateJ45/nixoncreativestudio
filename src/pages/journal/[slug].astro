@@ -24,6 +24,7 @@ import CtaBanner from '../../components/CtaBanner.astro';
 import ReadingProgress from '../../components/ReadingProgress';
 import { readingTime } from '../../lib/readingTime';
 import { site } from '../../data/site';
+import { ids, pageIds } from '../../lib/schema';
 
 export async function getStaticPaths() {
   const all = await getCollection('journal');
@@ -46,19 +47,28 @@ const updatedLabel = updated ? fmt.format(updated) : null;
 const ogCover = cover ? await getImage({ src: cover, width: 1200, format: 'jpg' }) : null;
 const ogImage = ogCover ? ogCover.src : undefined;
 
+// Article JSON-LD, one node in the page's @graph (see StructuredData.astro):
+// written by Nathan, published by the studio, both by @id. The breadcrumbs
+// become a BreadcrumbList (Home / Journal / this entry).
+const canonical = new URL(`/journal/${entry.id}/`, site.url).toString();
 const schemas = [
   {
-    '@context': 'https://schema.org',
     '@type': 'Article',
+    '@id': pageIds(canonical).article,
+    mainEntityOfPage: { '@id': pageIds(canonical).webpage },
     headline: title,
     description: summary,
     ...(ogCover ? { image: new URL(ogCover.src, site.url).toString() } : {}),
     datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
-    author: { '@id': `${site.url}#organization` },
-    publisher: { '@id': `${site.url}#organization` },
+    author: { '@id': ids.person },
+    publisher: { '@id': ids.studio },
     ...(tags ? { keywords: tags.join(', ') } : {}),
   },
+];
+const breadcrumbs = [
+  { name: 'Journal', path: '/journal/' },
+  { name: title, path: `/journal/${entry.id}/` },
 ];
 ---
 
@@ -68,6 +78,7 @@ const schemas = [
   ogImage={ogImage}
   ogType="article"
   schemas={schemas}
+  breadcrumbs={breadcrumbs}
 >
   <ReadingProgress client:idle />
 

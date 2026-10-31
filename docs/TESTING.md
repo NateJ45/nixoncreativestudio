@@ -12,19 +12,20 @@ Registry, not a changelog: when a suite changes, edit the row.
 Brought up to the family test standard on 2026-09-06 (WCP is the reference
 implementation; reid-design-site and mas-monograms carry the same shape).
 
-| Gate        | Command                  | Runs in CI           | Covers                                                                                                                                                      |
-| ----------- | ------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type check  | `npx astro check`        | `ci.yml` (build job) | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                   |
-| Lint        | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                   |
-| Format      | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                               |
-| Unit tests  | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` plus `scripts/lib/*.test.mjs` (see below)                                                                                               |
-| Build       | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
-| Link check  | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
-| Slash check | `npm run check:slashes`  | `ci.yml` (build job) | Fails on any internal `href` in `dist/client` HTML without a trailing slash (no 307 redirects, PORTS Card 89)                                               |
-| Playwright  | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, on chromium and a WebKit iPhone (see below)              |
-| Lighthouse  | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs |
-| Parity      | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                            |
-| Uptime      | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                 |
+| Gate        | Command                  | Runs in CI           | Covers                                                                                                                                                                                                           |
+| ----------- | ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type check  | `npx astro check`        | `ci.yml` (build job) | TypeScript across `.astro`, `.ts`, `.tsx`                                                                                                                                                                        |
+| Lint        | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                                                                        |
+| Format      | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                                                                                    |
+| Unit tests  | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` plus `scripts/lib/*.test.mjs` (see below)                                                                                                                                                    |
+| Copy lint   | `npm run test:copy`      | `ci.yml` (build job) | After the build: no "we", "our" or "us" in rendered body text of any page in `dist/client` (site copy is first person singular; see below)                                                                       |
+| Build       | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                                                                                 |
+| Link check  | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                                                                              |
+| Slash check | `npm run check:slashes`  | `ci.yml` (build job) | Fails on any internal `href` in `dist/client` HTML without a trailing slash (no 307 redirects, PORTS Card 89)                                                                                                    |
+| Playwright  | `npm test`               | `ci.yml` (test job)  | smoke, axe light, axe dark + focus indicators, reduced-motion settle, reflow at 320/768/1024/1440, first-viewport, hero pause, CLS under 0.05, metadata and JSON-LD, on chromium and a WebKit iPhone (see below) |
+| Lighthouse  | `npx lhci autorun`       | `lighthouse.yml`     | Accessibility (hard gate at 100), LCP under 4.5s and CLS under 0.1 (hard gates), performance / best-practices / SEO / byte weight as warnings, over 13 URLs                                                      |
+| Parity      | `npm run parity compare` | **no** (by design)   | Rendered-HTML drift against a committed baseline                                                                                                                                                                 |
+| Uptime      | -                        | `uptime.yml`, hourly | The live site's key routes still return 200                                                                                                                                                                      |
 
 The `test` job has `timeout-minutes: 30`, and its browser install runs each attempt under `timeout 360`
 inside a 15-minute step (2026-10-26, starter PORTS card 70): a throttled Ubuntu mirror once held that install
@@ -43,36 +44,56 @@ server on 4321 is reused, so `npm run build && npm run serve:dist` in one
 terminal and `npx playwright test --project=chromium` in another is the fast
 loop. CI installs chromium and webkit and runs both projects.
 
-| File                     | Covers                                                                                                                                                                                                                                    |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `routes.ts`              | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                                                                                |
-| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                    |
-| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; GA4 sends nothing off the production hostname (starter card 58)                                                                                                            |
-| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                |
-| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                        |
-| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)        |
-| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10), unscrolled and while scrolling (reveals pending), and settled at 320 and 1440/1024/768                                                                                                     |
-| `page-weight.spec.ts`    | Per route: HTML, inline CSS, scripts, images, LCP image, preloaded fonts and JSON-LD against `page-weight.config.json` (PORTABLE spec, starter card 197; budgets are this site's own, measured 2026-10-27 plus about 25%). Chromium only. |
+| File                     | Covers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `routes.ts`              | The route list every sweep iterates: every prerendered page plus one case study standing in for the `/work/[slug]` template. Add a route when a page ships                                                                                                                                                                                                                                                                                                                              |
+| `helpers.ts`             | `settle()`: fonts ready, transitions killed, every `[data-reveal]` forced visible, so axe and the reflow measure see the finished page                                                                                                                                                                                                                                                                                                                                                  |
+| `smoke.spec.ts`          | Every route returns 200 and its title carries the studio name; GA4 sends nothing off the production hostname (starter card 58)                                                                                                                                                                                                                                                                                                                                                          |
+| `a11y.spec.ts`           | axe-core default rule set (WCAG 2.x A/AA + best practices + `target-size`) on every route, zero violations                                                                                                                                                                                                                                                                                                                                                                              |
+| `a11y-dark.spec.ts`      | The same sweep with `localStorage["ncs-theme"] = "dark"` seeded before the anti-FOUC bootstrap runs, plus a check that every `/contact` field shows a focus indicator in dark mode                                                                                                                                                                                                                                                                                                      |
+| `reduced-motion.spec.ts` | PORTABLE (starter PORTS.md card 61, 2026-09-30). With `reducedMotion: 'reduce'`, every route has no `running` animation 2.5s after load. Catches WebKit stranding 0.01ms transitions (globals.css reset now uses `0s` transitions)                                                                                                                                                                                                                                                      |
+| `reflow.spec.ts`         | No horizontal overflow at 320px (WCAG 1.4.10), unscrolled and while scrolling (reveals pending), and settled at 320 and 1440/1024/768                                                                                                                                                                                                                                                                                                                                                   |
+| `page-weight.spec.ts`    | Per route: HTML, inline CSS, scripts, images, LCP image, preloaded fonts and JSON-LD against `page-weight.config.json` (PORTABLE spec, starter card 197; budgets are this site's own, measured 2026-10-27 plus about 25%). Chromium only.                                                                                                                                                                                                                                               |
+| `first-viewport.spec.ts` | Overhaul ruling 3 (2026-10-30). Every route at 1440 and 320, straight after load with no settle: each visible H1, image, picture, video, canvas, iframe and hero-reel card touching the first viewport, and every ancestor, has computed `opacity: 1` and `clip-path: none`. Exempts the hero ticker's inactive lines. `/work` and the case study are `test.fixme` until 1.8 (`docs/PENDING.md` item 6). Chromium only                                                                  |
+| `motion-pause.spec.ts`   | WCAG 2.2.2. The hero's Pause button stops the reel's CSS animations (`document.getAnimations()` play state) and the ticker (fake clock), flips `aria-pressed` and the label, and Play resumes both. A `test.fixme` holds the site-wide `html[data-motion-paused]` case for overhaul package 1.7. Chromium only                                                                                                                                                                          |
+| `metadata.spec.ts`       | Overhaul 1.9. Every route plus every case study linked from `/work/`: title at most 64 characters (aim 60) and description 110 to 160, none shared; every JSON-LD graph parses, defines each `@id` once and every `{ "@id" }` reference resolves, with no ratings or reviews; case studies carry CreativeWork and BreadcrumbList; each /services offer price appears on the page; `/llms.txt` is `text/plain` and lists every study; `/robots.txt` names the AI crawlers. Chromium only |
+| `cls.spec.ts`            | Every route at 1440 and 390: a buffered `layout-shift` observer (skipping `hadRecentInput`), the page scrolled to the bottom and settled, largest session window under 0.05 (tighter than Lighthouse's 0.1, and covers shifts while scrolling). Chromium only (the API is Chromium-only)                                                                                                                                                                                                |
 
 The webkit-iphone project runs smoke, both axe sweeps and reduced-motion; reflow drives its
-own viewport widths, so it is chromium-only. `/coming-soon` is a standalone
+own viewport widths, so it is chromium-only, and so are page-weight, first-viewport, motion-pause, metadata and cls
+(the config's `testMatch` for webkit-iphone simply does not list them). `/coming-soon` is a standalone
 document without the theme bootstrap, so the dark sweep skips it.
 
 First run (2026-09-06) found one real bug: `/about` was 342px wide at 320px
 because the Terminal's nowrap window title set the min-content of its grid
 item. Fixed with `min-w-0` on the item.
 
+### Copy lint (`npm run test:copy`, `tests/unit/copy-rules.test.mjs`)
+
+Added 2026-10-30 (overhaul package 1.3). Nathan is one person, so site copy
+says "I", never "we", "our" or "us" about the studio. The test reads the
+built HTML in `dist/client`, so it runs after `npm run build` (in CI it is the
+step right after the build, not part of `test:unit`, which runs before it). It
+checks rendered body text only and skips `<head>`, `<script>`, `<style>`,
+`<svg>`, comments, attribute values (so `aria-label` and `alt`), every
+`<blockquote>` (client quotes stay verbatim), and any element marked
+`data-copy-ignore` with everything inside it. Use `data-copy-ignore` only for
+text that is honestly someone else's "we" (a quoted client, Nathan's family in
+the /about story) and leave a comment beside it saying why. A failure lists
+the page and the sentence.
+
 ### Unit tests (`node --experimental-strip-types --test src/lib/*.test.ts`)
 
 Node's built-in runner, no framework. TypeScript runs through Node's type
 stripping, so there is nothing to configure and nothing to install.
 
-| File                       | Covers                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling       |
-| `readingTime.test.ts`      | Journal reading-time estimation                                                                   |
-| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                             |
-| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark |
+| File                       | Covers                                                                                                                                                                                               |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling                                                                                                          |
+| `readingTime.test.ts`      | Journal reading-time estimation                                                                                                                                                                      |
+| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                                                                                                                                |
+| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark                                                                                                    |
+| `case-palettes.test.ts`    | **Added 2026-10-30.** Every case study's `palette`: light text pairs 4.5:1, accent mark 3:1 on paper, a mark at 3:1 on the dark ink, the client's own dark theme where it has one; `order` runs 1..n |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
 Card 9). It parses the real hex out of the `@theme`, `:root` and `.dark` blocks,
@@ -88,6 +109,14 @@ accessibility category runs) audits the resting DOM and has **no rule** for
 focus-indicator or custom-border contrast, and it only ever sees one theme per
 run. The accessibility score can sit at 100 while a focus ring is invisible.
 That is not hypothetical - it shipped that way in the WCP repo.
+
+`case-palettes.test.ts` reads each study's MDX frontmatter straight off disk
+(a small YAML reader for the plain forms the files use), so it needs no Astro
+runtime. The pairs and the reason for each are in its header comment. When a
+real client accent fails on this site's dark ink, the fix is a `markDark`
+picked from the client's own swatches (the test checks it is one), never a
+changed client colour. It was proved to bite by removing MAS Monograms'
+`markDark` (its indigo is 1.92:1 on ink).
 
 ### Parity harness (`npm run parity`)
 

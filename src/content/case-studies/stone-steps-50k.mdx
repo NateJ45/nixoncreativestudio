@@ -33,6 +33,7 @@ stack:
   - MapLibre GL
   - RunSignUp API
 summary: "A rebuild for Cincinnati's longest-running ultramarathon: every result since 2003, records calculated from them, and a 3D map of the course measured from a real run."
+metaDescription: "My rebuild of Cincinnati's longest-running ultramarathon site: every result since 2003, records worked out from them, and a 3D course map from a real run."
 cover: ../../assets/case-studies/stone-steps-50k.png
 year: 2026
 featured: true
@@ -50,6 +51,28 @@ results:
   - 'The climbing figure now has a measurement behind it: about 5,200 feet, taken from USGS LiDAR along the race director’s own recorded run of the course.'
   - 'After each race the site updates itself. Results, records, and runner pages are live the next morning, and nobody has to touch anything.'
 designerNote: 'I built the first Stone Steps site in 2024, so this was a rebuild of my own work, and the old records tables are what convinced me it was worth doing. They had been kept by hand, and over the years they had quietly started to disagree with each other. The map is the part people notice first, but the part I spent the most care on is the results archive: recovering the early years from archived pages, fixing what the recovery got wrong, and checking every year against its source before a single record was calculated from it.'
+hook: 'Records calculated from every finish since 2003'
+order: 1
+# Palette source: stonesteps-50k src/styles/globals.css (:root and .dark).
+palette:
+  paper: '#FBF6EA'
+  ink: '#1A1712'
+  accent: '#A83C26'
+  accentInk: '#FFEBBB'
+  dark:
+    paper: '#1A1712'
+    ink: '#FFEBBB'
+    accent: '#B8462F'
+    accentInk: '#FFEBBB'
+  typeface: 'Staatliches / Archivo'
+  swatches:
+    - '#FBF6EA'
+    - '#1A1712'
+    - '#A83C26'
+    - '#2E5738'
+    - '#FFEBBB'
+mobileShot: ../../assets/case-studies/shots/stone-steps-50k-mobile.png
+beforeShot: ../../assets/case-studies/shots/stone-steps-50k-before.png
 ---
 
 import SiteShowcase from '../../components/SiteShowcase.astro';
@@ -124,7 +147,7 @@ The race logo is a hand-painted trail sign in cream and gold, so that is where t
 
 Race details live in a Sanity Studio that Dave can edit himself, with a checklist for rolling the site over to a new year. After each race, a nightly job pulls the new results from RunSignUp, and by the next morning the results page, the records, the runner pages, and the edition count are all up to date. The contact form delivers straight to the race director's inbox, and the whole site moved onto Cloudflare along with its domain. Every change is checked against a perfect Lighthouse accessibility score, and the check fails if it drops.
 
-## What we built
+## What I built
 
 <FeatureHighlight
   src={boardShot}

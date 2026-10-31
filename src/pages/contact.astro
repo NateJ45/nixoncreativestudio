@@ -31,6 +31,8 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
+import { webTiers } from '../data/pricing';
+import { money } from '../lib/money';
 import { Button } from '../components/ui/button';
 import CopyEmail from '../components/CopyEmail';
 import CtaBanner from '../components/CtaBanner.astro';
@@ -45,15 +47,18 @@ const orgTypes = [
   { value: 'other', label: 'Something else' },
 ];
 
-// Budget brackets, small enough that the picker isn't overwhelming.
-// These track the published pricing floors (src/data/pricing.ts, shown on
-// /services): Launch $4,000, Signature $7,000, Flagship $12,000. The lowest
-// bracket starts at the $4,000 floor so the form never implies work below it.
+// Budget brackets, small enough that the picker isn't overwhelming. The
+// labels are built from the three web tier floors in src/data/pricing.ts
+// (Launch, Signature, Flagship, as shown on /services), so a price change
+// there moves the brackets too. The lowest bracket ends at the first floor so
+// the form never implies work below it. The `value`s are what the form
+// submits, so they stay fixed even if the numbers move.
+const [launchFloor, signatureFloor, flagshipFloor] = webTiers.map((t) => money(t.priceFrom));
 const budgets = [
-  { value: 'under-4k', label: 'Under $4,000' },
-  { value: '4k-7k', label: '$4,000 to $7,000' },
-  { value: '7k-12k', label: '$7,000 to $12,000' },
-  { value: '12k-plus', label: '$12,000 or more' },
+  { value: 'under-4k', label: `Under ${launchFloor}` },
+  { value: '4k-7k', label: `${launchFloor} to ${signatureFloor}` },
+  { value: '7k-12k', label: `${signatureFloor} to ${flagshipFloor}` },
+  { value: '12k-plus', label: `${flagshipFloor} or more` },
   { value: 'not-sure', label: 'Not sure yet' },
 ];
 
@@ -84,7 +89,7 @@ const heardFromOptions = [
 const nextSteps = [
   'You send the form.',
   'I read it myself and reply within one or two business days.',
-  "If we're a fit, a half-hour call to talk it through.",
+  'If it looks like a fit, a half-hour call to talk it through.',
 ];
 
 // Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
@@ -125,8 +130,8 @@ const legendClass =
 ---
 
 <BaseLayout
-  title="Contact | Nixon Creative Studio"
-  description="Get in touch about a web design, brand or photography project. Tell me what you are planning and what you need."
+  title="Start a project | Nixon Creative Studio"
+  description="Tell me about your website, brand or photography project. I read every message myself and reply within one or two business days, with honest next steps."
 >
   <!-- ====================================================================
        Masthead. The only h1. Full content width, left-aligned.
@@ -446,7 +451,7 @@ const legendClass =
                 role="alert"
               >
                 <p>
-                  Something went wrong on our end. Please try again, or email
+                  Something went wrong on my end. Please try again, or email
                   <a class="text-link underline underline-offset-2" href={site.emailHref}>
                     {site.email}
                   </a>

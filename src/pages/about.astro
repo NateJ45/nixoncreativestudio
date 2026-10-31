@@ -41,7 +41,6 @@ import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { Image } from 'astro:assets';
-import { site } from '../data/site';
 
 // Headshot for the masthead portrait frame, and the personal snapshots for the
 // "Outside the studio" gallery. All resized into src/assets at build-friendly
@@ -90,7 +89,7 @@ const photos = [
 const principles = [
   {
     title: 'Strategy before pixels',
-    body: 'Every project starts with a working session and a one-page brief we both agree on. Design choices follow from there, not from whichever template looks freshest.',
+    body: 'Every project starts with a working session and a one-page brief you sign off on. Design choices follow from there, not from whichever template looks freshest.',
   },
   {
     title: 'The right platform for the job',
@@ -138,7 +137,7 @@ const freshness = freshnessLabel(lastUpdated);
 // keep any private client generic rather than named.
 const workingOn = [
   "Finishing the Presbyterian Academy website ahead of the school's first term.",
-  'Buying our first house, here in Cincinnati.',
+  "Buying my family's first house, here in Cincinnati.",
 ];
 
 // Capacity signals. status drives the chip color and the readable label, so
@@ -187,26 +186,13 @@ const railGrid =
   'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
 const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 
-// JSON-LD schemas specific to the About page: Person for the studio owner,
-// linked back to the Organization defined site-wide.
-const schemas = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    '@id': `${site.url}/about/#person`,
-    name: site.ownerName,
-    jobTitle: 'Founder, Designer, Developer, Photographer',
-    worksFor: { '@id': `${site.url}#organization` },
-    url: `${site.url}/about/`,
-    sameAs: [site.social.instagram, site.social.linkedin],
-  },
-];
+// No page-specific JSON-LD here: Nathan's Person node is in the site-wide
+// @graph on every page (src/lib/schema.ts), linked to the studio by @id.
 ---
 
 <BaseLayout
-  title="About | Nixon Creative Studio"
-  description="About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio."
-  schemas={schemas}
+  title="About Nathan Nixon | Nixon Creative Studio"
+  description="I'm Nathan Nixon, the one person behind Nixon Creative Studio in Cincinnati. I plan, design and build every site myself, and shoot the photos when needed."
 >
   <!-- ====================================================================
        Masthead (ABOUT). The page head: who Nathan is, paired with the
@@ -344,10 +330,14 @@ const schemas = [
               </p>
               <p>
                 Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a
-                US citizen in 2022, and these days we're raising two kids and buying our first house
-                here. When I'm away from a screen I'm usually out on a long run, chasing landscapes
-                with a camera, deep in an ambitious Lego build with the kids, or a few episodes into
-                a history drama.
+                U.S. citizen in 2022, and these days
+                {/* Family "we", not the studio: exempt from the copy lint (tests/unit/copy-rules.test.mjs). */}
+                <span data-copy-ignore>
+                  we're raising two kids and buying our first house here.
+                </span>{' '}
+                When I'm away from a screen I'm usually out on a long run, chasing landscapes with a
+                camera, deep in an ambitious Lego build with the kids, or a few episodes into a
+                history drama.
               </p>
             </div>
 
@@ -628,7 +618,7 @@ const schemas = [
   <!-- Closing CTA: the one deliberate full-bleed break, outside the grid. -->
   <CtaBanner
     title="Want to talk about a project?"
-    sub="I take on a small number of projects each quarter. The earlier we talk, the easier it is to schedule the work."
+    sub="The first conversation is free, and the earlier it happens, the easier the work is to schedule."
   />
 
   <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
