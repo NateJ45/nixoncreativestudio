@@ -61,9 +61,15 @@ const caseStudies = defineCollection({
       // angles like 'Plan Your Visit', 'Brand refresh', 'Fundraising'.
       tags: z.array(z.string()).optional(),
 
-      // One-sentence pitch shown on listing cards and meta descriptions.
-      // Capped so it stays inside title tags and og:description.
+      // One-sentence pitch shown on listing cards (and the meta description
+      // when metaDescription is absent).
       summary: z.string().max(200),
+
+      // The search-result description for the study page (<meta name=
+      // "description">, og:description and the CreativeWork description).
+      // Written for a buyer, in first person, 120 to 160 characters so search
+      // results show it whole. Optional: without it the page uses `summary`.
+      metaDescription: z.string().min(120).max(160).optional(),
 
       // Optional longer-form description for the case study detail page,
       // a step bigger than the one-sentence summary. Caps at 500 chars

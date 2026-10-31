@@ -17,7 +17,8 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 ## Where things live
 
 - Case studies and journal entries: MDX in `src/content/case-studies/` and `src/content/journal/`, schemas in `src/content.config.ts`. Covers at `src/assets/case-studies/{slug}.png` (basename must match the slug).
-- Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts`.
+- Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts` (the one place a price lives; pages, FAQ, JSON-LD and `/llms.txt` read it).
+- Page titles, meta descriptions and JSON-LD: `.claude/rules/content.md` ("Metadata and structured data").
 - Pages: `src/pages/`; the shared shell (theme bootstrap, header, footer, meta, analytics, Coming Soon gate): `src/layouts/BaseLayout.astro`.
 - Brand tokens, theme and motion vocabulary: `src/styles/globals.css`. Security headers: `public/_headers`.
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.

@@ -31,6 +31,11 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
 import PhotoGallery from '../components/PhotoGallery';
+import { addOns } from '../data/pricing';
+import { addOnNamed } from '../lib/schema';
+
+// The photography price quoted in the meta description, from pricing.ts.
+const photography = addOnNamed(addOns, 'Photography');
 
 // Stable category titles + intros. This is copy, not content, so it lives
 // here; the photos themselves come from the collection.
@@ -82,8 +87,8 @@ const [leadCategory, ...restCategories] = categories;
 ---
 
 <BaseLayout
-  title="Photography | Nixon Creative Studio"
-  description="Events, portraits, and environmental photography for organizations in the Cincinnati region."
+  title="Photography in Cincinnati | Nixon Creative Studio"
+  description={`Headshots, events and environmental photos across the Cincinnati region, shot by the person who designs your website. Photography starts ${photography.price}.`}
 >
   <!-- ----------------------------------------------------------------------
        Hero. When a real photo exists it fills the surface behind a navy

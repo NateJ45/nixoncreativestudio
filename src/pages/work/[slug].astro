@@ -24,6 +24,8 @@ import ReadingProgress from '../../components/ReadingProgress';
 import { readingTime } from '../../lib/readingTime';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 import { site } from '../../data/site';
+import { studyTitle } from '../../lib/seo';
+import { ids, pageIds } from '../../lib/schema';
 
 // getStaticPaths now passes neighbors as props (for the next/prev nav at
 // the bottom of each case study). The full sorted list is computed once
@@ -61,6 +63,7 @@ const {
   sector,
   services,
   summary,
+  metaDescription,
   cover,
   role,
   tags,
@@ -116,33 +119,49 @@ const ogCoverUrl = new URL(ogCover.src, site.url).toString();
 // solid placeholder.
 const coverBlur = getCoverPlaceholder(entry.id);
 
-// Article + CreativeWork JSON-LD for this case study. CreativeWork is
-// the more general type that fits portfolio entries; Article gives
-// search engines a date / headline / image they can show in rich
-// results. Both reference the studio Organization via @id.
+// Page title and search description. The title is built from the study name
+// and sector to fit about 60 characters (src/lib/seo.ts); the description is
+// the study's own metaDescription, written for search results, or its summary.
+const pageTitle = studyTitle(title, sector, site.studioName);
+const pageDescription = metaDescription ?? summary;
+const canonical = new URL(`/work/${entry.id}/`, site.url).toString();
+
+// CreativeWork JSON-LD for this case study, one node in the page's @graph
+// (see StructuredData.astro). It names the studio as creator and Nathan as
+// author by @id, and points at the live site when there is one. The
+// breadcrumbs below become a BreadcrumbList (Home / Work / this study).
 const schemas = [
   {
-    '@context': 'https://schema.org',
-    '@type': ['Article', 'CreativeWork'],
+    '@type': 'CreativeWork',
+    '@id': pageIds(canonical).work,
+    name: title,
     headline: title,
-    description: summary,
+    description: pageDescription,
     image: ogCoverUrl,
+    url: canonical,
+    mainEntityOfPage: { '@id': pageIds(canonical).webpage },
     datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
-    author: { '@id': `${site.url}#organization` },
-    publisher: { '@id': `${site.url}#organization` },
-    about: client,
+    creator: { '@id': ids.studio },
+    author: { '@id': ids.person },
+    publisher: { '@id': ids.studio },
+    about: { '@type': 'Organization', name: client, ...(liveUrl ? { url: liveUrl } : {}) },
     keywords: services.join(', '),
   },
+];
+const breadcrumbs = [
+  { name: 'Work', path: '/work/' },
+  { name: title, path: `/work/${entry.id}/` },
 ];
 ---
 
 <BaseLayout
-  title={`${title} | Nixon Creative Studio`}
-  description={summary}
+  title={pageTitle}
+  description={pageDescription}
   ogImage={ogCover.src}
   ogType="article"
   schemas={schemas}
+  breadcrumbs={breadcrumbs}
 >
   <article>
     <!-- Hero block. Two-column on >= 56rem (copy left, image right),
