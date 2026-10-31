@@ -21,13 +21,14 @@ import ComingSoonGate from '../components/ComingSoonGate.astro';
 import { site } from '../data/site';
 import type { Crumb, Node } from '../lib/schema';
 
-// Astro View Transitions. Wires same-origin link clicks into the browser's
-// View Transitions API instead of a hard reload. Same-origin navigation only;
-// external links work as normal. The transition itself is the quiet "glide"
-// in globals.css section 6: the old page fades, the new one settles 8px, and
-// the header and footer stay put. None of it runs under reduced motion or
-// while the visitor has paused motion.
-import { ClientRouter } from 'astro:transitions';
+// Astro View Transitions. PageTransition renders the ClientRouter, which
+// wires same-origin link clicks into the browser's View Transitions API
+// instead of a hard reload (same-origin only; external links work as normal),
+// and owns the overlap (overhaul 4.11): the new page slides up over the old
+// one, which recedes a little, and history back reverses it. The header and
+// footer stay put. None of it runs under reduced motion or while the visitor
+// has paused motion. Details in the component header.
+import PageTransition from '../components/PageTransition.astro';
 
 // Resolve the Bricolage Grotesque woff2 file through Vite's URL pipeline. The
 // ?url query asks Vite to copy the file into the build output and hand us the
@@ -294,9 +295,10 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
          deploy without the token simply emits nothing. -->
     <Analytics />
 
-    <!-- Astro View Transitions. Renders in <head> so the client router
-         is in place before the first navigation. -->
-    <ClientRouter />
+    <!-- Astro View Transitions (the ClientRouter plus the overlap page
+         transition). Renders in <head> so the client router is in place
+         before the first navigation. -->
+    <PageTransition />
 
     <!-- schema.org JSON-LD: one connected @graph per page (the studio,
          the WebSite, Nathan, this WebPage, breadcrumbs on nested pages,

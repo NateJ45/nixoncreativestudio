@@ -30,9 +30,10 @@ Moved out of CLAUDE.md. Loads when source, scripts, public assets or config are 
 
 - `src/styles/globals.css` (FROZEN after overhaul packages 1.5 and 1.7, plan ruling 10: page CSS goes in scoped styles. Tailwind 4 `@theme` blocks for the type scale, fonts and brand tokens, the surface roles and motion tokens, `.band-ink`, `.page-grid`, `.frame`, `.hairline`, the forced-colors block, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the leftover `--outline` token in `:root` / `.dark` that `theme-tokens.test.ts` still asserts)
 - `src/content.config.ts` (schemas for case-studies, journal, and photos collections)
-- `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
+- `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter (rendered by `PageTransition.astro` since 4.11), Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
 - `src/components/ui/` shadcn primitives, now only `button.tsx` (the custom `brand` variant and `cta` size are the Nathan-edits; `asChild` went with Radix in package 1.4)
 - React islands (the future /photography gallery; rendered nowhere while the page is gated): `Photo.tsx`, `PhotoGallery.tsx`
+- `PageTransition.astro` (the ClientRouter and the page-to-page View Transition rules)
 - Site chrome with scripts: `MobileNav.astro` + `src/scripts/mobile-nav.ts`, `ThemeToggle.astro` + `src/scripts/theme-toggle.ts`, `BackToTop.astro`, `CopyEmail.astro`, `WorkFilter.astro`, `ChromeIcon.astro`
 - Astro wrappers: `CaseStudyCover.astro`, `ComingSoon.astro`, `StructuredData.astro`
 - Shared primitives (overhaul 1.8): `Section.astro`, `BrowserFrame.astro`, `FramePair.astro`, `Media.astro`. Check `/colophon/parts/` after changing one. `src/data/nav.ts` is safe to edit (labels, order, gates)
