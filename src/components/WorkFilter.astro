@@ -28,19 +28,26 @@
    The rows it filters are any [data-work-row][data-sector] on the page; it
    toggles the global [data-hidden] attribute on them, so nothing re-renders.
 
+   Sector pages (overhaul 4.2): when the filter lands on a sector that has
+   its own page (/churches/ today, src/data/sector-pages.ts), a line under the
+   count links to it. It ships hidden and only the script shows it, since
+   without JS every row shows and no sector is "on".
+
    Props:
      sectors  the sectors that have studies, in display order, with counts
      total    how many studies there are (computed by the page)
      phrases  sector -> how it reads in a sentence ("small business")
+     pages    sector -> its sector page, for the sectors that have one
    ============================================================================ */
 
 interface Props {
   sectors: Array<{ value: string; label: string; count: number }>;
   total: number;
   phrases: Record<string, string>;
+  pages?: Record<string, string>;
 }
 
-const { sectors, total, phrases } = Astro.props;
+const { sectors, total, phrases, pages = {} } = Astro.props;
 
 const tabs = [{ value: 'all', label: 'All', count: total }, ...sectors];
 const hrefFor = (value: string) => (value === 'all' ? '/work/' : `/work/?sector=${value}`);
@@ -67,6 +74,13 @@ const hrefFor = (value: string) => (value === 'all' ? '/work/' : `/work/?sector=
   <p class="work-count" data-work-count aria-live="polite">
     Showing all {total} sites.
   </p>
+  {Object.entries(pages).map(([sector, href]) => (
+    <p class="work-sector-page" data-sector-page={sector} hidden>
+      <a href={href}>
+        More on the {phrases[sector] ?? sector} sites I build <span aria-hidden="true">→</span>
+      </a>
+    </p>
+  ))}
 </div>
 
 <style>
@@ -132,6 +146,20 @@ const hrefFor = (value: string) => (value === 'all' ? '/work/' : `/work/?sector=
     }
   }
 
+  .work-sector-page {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.9375rem;
+  }
+  .work-sector-page a {
+    color: var(--link);
+    text-underline-offset: 0.3em;
+  }
+  .work-sector-page a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
   .work-count {
     margin: 0;
     font-family: var(--font-mono);
@@ -205,6 +233,7 @@ const hrefFor = (value: string) => (value === 'all' ? '/work/' : `/work/?sector=
         const phrases = JSON.parse(filter.dataset.phrases ?? '{}') as Record<string, string>;
         const links = [...filter.querySelectorAll<HTMLAnchorElement>('[data-sector-link]')];
         const live = filter.querySelector<HTMLElement>('[data-work-count]');
+        const sectorPages = [...filter.querySelectorAll<HTMLElement>('[data-sector-page]')];
         const rows = [...document.querySelectorAll<HTMLElement>('[data-work-row][data-sector]')];
 
         /** Show one sector (or all). Returns the sector actually applied. */
@@ -217,6 +246,8 @@ const hrefFor = (value: string) => (value === 'all' ? '/work/' : `/work/?sector=
           rows.forEach((row) =>
             row.toggleAttribute('data-hidden', sector !== 'all' && row.dataset.sector !== sector),
           );
+          // The sector's own page, if it has one, shows only while it is on.
+          sectorPages.forEach((p) => (p.hidden = p.dataset.sectorPage !== sector));
           links.forEach((link) => {
             if (link.dataset.sectorLink === sector) link.setAttribute('aria-current', 'true');
             else link.removeAttribute('aria-current');

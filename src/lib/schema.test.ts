@@ -125,3 +125,21 @@ test('addOnNamed fails loudly on a renamed add-on', () => {
   assert.throws(() => addOnNamed(addOns, 'Not a real add-on'));
   assert.equal(addOnNamed(addOns, 'Photography').name, 'Photography');
 });
+
+test('a sector page is a CollectionPage with its breadcrumb, and other pages stay WebPage', () => {
+  const page = `${site.url}/churches/`;
+  const g = buildGraph({
+    url: page,
+    title: 't',
+    description: 'd',
+    breadcrumbs: [{ name: 'Churches', path: '/churches/' }],
+    pageType: 'CollectionPage',
+    lowestPrice: 1,
+  });
+  const webpage = (g['@graph'] as Node[]).find((n) => n['@id'] === `${page}#webpage`);
+  assert.equal(webpage?.['@type'], 'CollectionPage');
+  assert.deepEqual(webpage?.breadcrumb, { '@id': `${page}#breadcrumb` });
+  const plain = buildGraph({ url: `${site.url}/`, title: 't', description: 'd', lowestPrice: 1 });
+  const home = (plain['@graph'] as Node[]).find((n) => n['@id'] === `${site.url}/#webpage`);
+  assert.equal(home?.['@type'], 'WebPage');
+});
