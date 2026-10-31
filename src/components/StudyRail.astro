@@ -32,13 +32,16 @@
    ============================================================================ */
 
 import type { Fact } from '../lib/study';
+import type { LiveScoreFact } from '../lib/live-scores';
 
 interface Props {
   facts: Fact[];
   chapters: Array<{ slug: string; text: string }>;
+  /** Package 4.7: the dated live-score line; nothing renders when absent. */
+  liveScore?: LiveScoreFact;
 }
 
-const { facts, chapters } = Astro.props;
+const { facts, chapters, liveScore } = Astro.props;
 ---
 
 <aside class="grid-rail study-rail" aria-label="About this project">
@@ -58,6 +61,17 @@ const { facts, chapters } = Astro.props;
         </dd>
       </div>
     ))}
+    {liveScore && (
+      <div class="rail-fact rail-live">
+        <dt>Measured live</dt>
+        <dd>
+          {liveScore.scores}
+          <span class="rail-live-date">
+            Mobile, measured <time datetime={liveScore.iso}>{liveScore.date}</time>
+          </span>
+        </dd>
+      </div>
+    )}
   </dl>
 
   {chapters.length >= 2 && (
@@ -128,6 +142,18 @@ const { facts, chapters } = Astro.props;
     margin: 0;
     overflow-wrap: anywhere;
     color: var(--heading);
+  }
+
+  /* Package 4.7: the measured-live fact spans the whole facts grid, date on its own line. */
+  .rail-live {
+    grid-column: 1 / -1;
+  }
+
+  .rail-live-date {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
   }
 
   /* The full URL is for paper only (print block below). */
