@@ -48,6 +48,13 @@ interface Props {
 
 const { links, studioName } = Astro.props;
 
+// The email may break only after the "@" in a narrow drawer, so it reads
+// "nathan@" / "nixoncreativestudio.com" and never splits the domain.
+// Built as one string so no whitespace can creep in around the <wbr>. The
+// address is a constant from site.ts, not visitor input.
+const [emailUser, emailDomain] = site.email.split('@');
+const emailHtml = `${emailUser}@<wbr>${emailDomain}`;
+
 // Active route, worked out at build time (each page renders its own header).
 const path = Astro.url.pathname.replace(/\/+$/, '');
 const isActive = (href: string): boolean => {
@@ -86,7 +93,7 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
     <div class="flex items-center justify-between gap-m">
       <h2
         id="mnav-title"
-        class="font-wordmark text-xl font-normal tracking-[0.02em] text-heading sm:text-2xl"
+        class="font-wordmark text-xl font-normal tracking-[0.02em] whitespace-nowrap text-heading sm:text-2xl"
       >
         {studioName}
       </h2>
@@ -138,9 +145,7 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
 
       {/* The email from site.ts. A plain mailto, so the site-wide fallback
           (src/scripts/mailto-fallback.ts) copies it when no mail app opens. */}
-      <a href={site.emailHref} class="mnav-email text-link">
-        {site.email}
-      </a>
+      <a href={site.emailHref} class="mnav-email text-link" set:html={emailHtml} />
 
       {site.bookingOpen && (
         <p class="flex items-center gap-s text-sm text-text-muted">
@@ -193,8 +198,17 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
   .mnav-shell {
     padding-top: calc(var(--spacing-m) + env(safe-area-inset-top));
     padding-bottom: calc(var(--spacing-l) + env(safe-area-inset-bottom));
-    padding-left: calc(var(--spacing-l) + env(safe-area-inset-left));
-    padding-right: calc(var(--spacing-l) + env(safe-area-inset-right));
+    padding-left: calc(var(--spacing-m) + env(safe-area-inset-left));
+    padding-right: calc(var(--spacing-m) + env(safe-area-inset-right));
+  }
+  /* From sm the drawer is wide enough for the roomier side padding. Below it
+     the slimmer padding keeps the wordmark on one line beside Close and the
+     email domain whole. */
+  @media (min-width: 40rem) {
+    .mnav-shell {
+      padding-left: calc(var(--spacing-l) + env(safe-area-inset-left));
+      padding-right: calc(var(--spacing-l) + env(safe-area-inset-right));
+    }
   }
 
   /* The big links. Bricolage 300; the current page 800. Hover and focus
@@ -233,7 +247,6 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
     width: fit-content;
     max-width: 100%;
     text-decoration: none;
-    overflow-wrap: anywhere;
   }
   .mnav-email:hover {
     text-decoration: underline;
