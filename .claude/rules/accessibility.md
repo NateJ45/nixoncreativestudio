@@ -46,6 +46,13 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 - `--link` (`#2A6FB0` light, `#40AAED` dark): accent-toned body text (card-link arrows, Process / Services step numbers, prose anchors). Darker than `--accent` in light so body-size text clears AA.
 - `--secondary` (`#40AAED`): decorative gradients and Footer body links sitting on the navy footer.
 - `--muted-foreground` (`#5F6573` light, `#9CA3AF` dark): meta and supporting text on bg-soft surfaces.
+- Surface roles (overhaul 1.5): `--paper`, `--ink` / `--ink-raised`, `--line` (decorative), `--line-strong` (3:1, for any hairline that must be seen), `--frame-ring` (decorative) and `--live` (amber, darkened to `#A85D00` in light mode so "Live" can be text). `.band-ink` re-scopes headings, body, links, meta and focus to light-on-navy values that hold AA in both themes.
+
+Every pair added since overhaul 1.5 is asserted in `src/lib/ncs-tokens.test.ts` (site-owned); `src/lib/theme-tokens.test.ts` is PORTABLE and keeps the older pairs. A new token pair goes in `ncs-tokens.test.ts`, in both themes.
+
+**Heading emphasis is weight, not colour.** A heavy phrase in a heading is a `<b>` (800 against a 300 lead). Colour alone never marks emphasis, so a reader who cannot see the blue loses nothing, and headings stay in the heading colour.
+
+**Forced colors.** Windows High Contrast drops shadows and background colours. `globals.css` gives `.frame`, `.surface-card`, `.band-ink`, `.band-themed` and `.hairline` a real border or outline under `@media (forced-colors: active)`; `tests/forced-colors.spec.ts` checks one route. A new surface whose edge is only a shadow or a background joins that list.
 
 New tokens or hex literals must clear WCAG AA against every surface they appear on (4.5:1 body text, 3:1 large text and UI components). Run the math in both modes before introducing one.
 

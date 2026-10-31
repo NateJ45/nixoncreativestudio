@@ -138,8 +138,8 @@ const legendClass =
        ==================================================================== -->
   <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
     <div class="ncs-container">
-      <h1 id="contact-hero-heading" class="max-w-[22ch] leading-[0.95]" data-reveal>
-        Start a project, or just <span class="text-link">say hello.</span>
+      <h1 id="contact-hero-heading" class="max-w-[22ch]" data-reveal>
+        Start a project, or just <b>say hello.</b>
       </h1>
       <p
         class="mt-m max-w-[60ch] text-lg leading-[1.6] text-text"
@@ -512,18 +512,31 @@ const legendClass =
                      key). Unlike the old OpenStreetMap embed this loads Google's
                      scripts, so it does add Google as a third party on this page;
                      that's the trade for the Google Maps look. Change the q=
-                     place or z= zoom to reframe. loading="lazy" keeps it off the
-                     critical path. -->
+                     place or z= zoom to reframe.
+
+                     The iframe is created only when the box is about to scroll
+                     into view (the script at the end of this page), not by
+                     loading="lazy": Chrome starts a lazy iframe up to 1250px
+                     early, so Google's 1.7 MB of map script loaded with the page
+                     once the new type made the column shorter (overhaul 1.5).
+                     Without JavaScript the box holds a plain link to the map. -->
                 <!-- bg-bg-soft fills the wrapper so the iframe doesn't flash a
                      white panel in dark mode before Google's map tiles load. -->
                 <div class="mt-s overflow-hidden rounded-md border border-border bg-bg-soft focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-                  <iframe
-                    src="https://maps.google.com/maps?q=Cincinnati,+OH&z=9&output=embed"
-                    title="Map of the Greater Cincinnati service area"
-                    loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"
-                    class="block h-48 w-full"
-                  ></iframe>
+                  <div
+                    class="grid h-48 w-full place-items-center px-m text-center"
+                    data-map-src="https://maps.google.com/maps?q=Cincinnati,+OH&z=9&output=embed"
+                    data-map-title="Map of the Greater Cincinnati service area"
+                  >
+                    <a
+                      class="text-link underline underline-offset-2"
+                      href="https://maps.google.com/maps?q=Cincinnati,+OH&z=9"
+                      rel="noopener"
+                      target="_blank"
+                    >
+                      Open the Cincinnati service area in Google Maps
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -611,6 +624,35 @@ const legendClass =
        loses specificity against class-based display rules.
        ---------------------------------------------------------------------- -->
   <script>
+    // Service-area map: swap the placeholder link for the Google iframe once
+    // the box is within 200px of the viewport. Re-binds after a View
+    // Transitions navigation; the dataset guard keeps it from binding twice.
+    function initServiceMap() {
+      const box = document.querySelector<HTMLElement>('[data-map-src]');
+      if (!box || box.dataset.mapBound) return;
+      box.dataset.mapBound = 'true';
+      const load = () => {
+        const frame = document.createElement('iframe');
+        frame.src = box.dataset.mapSrc ?? '';
+        frame.title = box.dataset.mapTitle ?? 'Map';
+        frame.referrerPolicy = 'no-referrer-when-downgrade';
+        frame.className = 'block h-48 w-full';
+        box.replaceWith(frame);
+      };
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            io.disconnect();
+            load();
+          }
+        },
+        { rootMargin: '200px 0px' },
+      );
+      io.observe(box);
+    }
+    initServiceMap();
+    document.addEventListener('astro:page-load', initServiceMap);
+
     // Wrapped in astro:page-load so the form's JS layer (honeypot, draft
     // save/restore, thank-you/error swap) re-binds after a
     // View Transitions navigation, not just on a hard load. The dataset guard

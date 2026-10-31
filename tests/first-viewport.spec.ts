@@ -38,6 +38,8 @@ const EXEMPT = '.ticker-item:not(.is-active)';
 const KNOWN: Record<string, string> = {
   '/work': 'CaseStudyCover fade-in, fixed by package 1.8 (Media.astro)',
   '/work/stone-steps-50k': 'CaseStudyCover fade-in, fixed by package 1.8 (Media.astro)',
+  '/work/first-presbyterian-orangeburg':
+    'CaseStudyCover fade-in, fixed by package 1.8 (Media.astro)',
 };
 
 const widths = [

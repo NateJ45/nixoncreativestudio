@@ -80,7 +80,7 @@ function initCountUp(): void {
    stale node. The listener itself is registered once via a window flag.
 
    Two states:
-     data-scrolled  : the page has scrolled past 8px (frost + condense).
+     data-scrolled  : the page has scrolled past 8px (frost and lift; the height stays fixed).
      data-over-hero : a [data-hero-dark] element exists AND still covers the
                       bar (its bottom is below the header height). Drives the
                       header's over-hero treatment, which takes the hero's own

@@ -9,6 +9,10 @@
 // does. `/coming-soon` is the standalone gate page (its own HTML document, not
 // BaseLayout) and is always live, so it is swept too.
 //
+// First Presbyterian Church of Orangeburg is swept as well (overhaul ruling 16):
+// its title is the longest client name, so it holds the 320px reflow guard on
+// the case-study H1 (--text-h1-long, overflow-wrap: anywhere).
+//
 // Add a route here when a new PRERENDERED page ships.
 export const routes = [
   '/',
@@ -16,6 +20,7 @@ export const routes = [
   '/services',
   '/work',
   '/work/stone-steps-50k',
+  '/work/first-presbyterian-orangeburg',
   '/journal',
   '/photography',
   '/contact',

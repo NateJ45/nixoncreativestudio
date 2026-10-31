@@ -111,7 +111,7 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
   <div class="mnav-shell relative isolate flex min-h-full flex-col">
     {/* Top bar: wordmark (the dialog's accessible name) and close. */}
     <div class="relative z-10 flex items-center justify-between gap-m">
-      <h2 id="mnav-title" class="font-display text-2xl tracking-[0.02em] text-heading">
+      <h2 id="mnav-title" class="font-wordmark text-2xl font-normal tracking-[0.02em] text-heading">
         {studioName}
       </h2>
       <p id="mnav-desc" class="sr-only">
@@ -159,10 +159,8 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
             <span class="flex flex-col gap-0.5">
               <span
                 class:list={[
-                  'font-display text-4xl leading-[0.95] tracking-[0.01em] transition-colors duration-150 group-hover:text-link group-focus-visible:text-link dark:group-hover:text-secondary dark:group-focus-visible:text-secondary',
-                  active
-                    ? 'text-link dark:text-tertiary'
-                    : 'text-heading dark:text-primary-foreground',
+                  'font-display text-4xl leading-none font-light tracking-[-0.03em] transition-colors duration-150 group-hover:text-link group-focus-visible:text-link dark:group-hover:text-secondary dark:group-focus-visible:text-secondary',
+                  active ? 'text-link dark:text-link' : 'text-heading dark:text-primary-foreground',
                 ]}
               >
                 {label}
@@ -180,7 +178,7 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
               class:list={[
                 'text-2xl transition-all duration-200',
                 active
-                  ? 'translate-x-0 text-link opacity-100 dark:text-tertiary'
+                  ? 'translate-x-0 text-link opacity-100 dark:text-link'
                   : '-translate-x-2 text-link opacity-0 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 dark:text-secondary',
               ]}
             >
