@@ -4,12 +4,13 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/reid-design.png
-# with a real photograph when one is available. The current file is a
-# placeholder gradient.
-# Overhaul 2.4c: which Reid features are live waits on Nathan (docs/PENDING.md
-# 2a), so this study was only reordered and restyled; no feature claim was
-# added. No featureShot: no current capture shows the calculator.
+# Overhaul 2.4f (2026-10-31): rewritten against the live site
+# (reiddesignllc.com home, /services/, /e-design/, /contact/, /process/).
+# The Budget Calculator, Style Quiz and before/after portfolio claims were
+# removed on Nathan's say-so (2026-10-31, docs/PENDING.md 2a): that day
+# /budget-calculator/ and /style-quiz/ answered 404 and /portfolio/
+# redirected home. The designer note was about the slider, so it went too.
+# The featureShot is the posted prices band the hook names.
 title: Reid Design
 client: Reid Design
 sector: small-business
@@ -19,22 +20,22 @@ services:
 role: Designer, Developer
 tags:
   - Interior Design
-  - Portfolio
-  - Before and After
+  - Posted Pricing
+  - Headless CMS
   - Lead Generation
 stack:
   - Astro
   - Sanity
   - Tailwind
   - Cloudflare Workers
-summary: A portfolio and booking site for an Indianapolis interior designer that turns browsers into qualified consultation requests before they ever pick up the phone.
-metaDescription: 'A portfolio and consultation site for Reid Design, an Indianapolis interior designer, that shows the work first and makes it simple to ask about a project.'
+summary: A site for an Indianapolis-area interior designer that shows how she works, posts every price, and makes it simple to ask about a room.
+metaDescription: 'A site for Reid Design, an Indianapolis-area interior designer, that shows the plan and the price up front and makes it simple to ask about a room.'
 cover: ../../assets/case-studies/reid-design.png
 year: 2026
 featured: true
 published: 2026-05-15
 liveUrl: https://www.reiddesignllc.com
-outcome: 'Turns browsers into qualified consultation requests before they ever pick up the phone.'
+outcome: 'Shows how Staci works and what it costs, so a visitor arrives at the first call already knowing the plan.'
 # No client quote yet. Add a real one here when it arrives (see
 # docs/PENDING.md), as a list item with quote, name, title and date.
 # Never invent it.
@@ -43,10 +44,10 @@ outcome: 'Turns browsers into qualified consultation requests before they ever p
 #     name: ""
 #     title: ""
 #     date: YYYY-MM-DD
-designerNote: 'The detail I keep coming back to is the before/after slider. Finished rooms always photograph well, but until you can see the starting point, you cannot tell whether the change is something that could happen in your own house.'
 hook: 'The plan and the price before anything is ordered'
 order: 5
-# Palette source: reid-design-site DESIGN.md and globals.css; accent is Walnut, the .r-accent default on light grounds; light only.
+# Palette source: reid-design-site DESIGN.md and globals.css, unchanged on
+# 2026-10-31; accent is Walnut, the .r-accent default on light grounds; light only.
 palette:
   paper: '#F7F3EE'
   ink: '#231E1B'
@@ -59,6 +60,9 @@ palette:
     - '#9C7661'
     - '#80604F'
     - '#E2CFBD'
+# The Signature band's still: the posted prices on the live home page.
+featureShot: ../../assets/case-studies/shots/reid-design-feature-prices.png
+featureShotAlt: 'The Start where you are band on reiddesignllc.com: every way to work with Staci, each with its price posted'
 mobileShot: ../../assets/case-studies/shots/reid-design-mobile.png
 # The rail's fact row (overhaul 2.4c), filled from the fields above.
 facts:
@@ -76,43 +80,62 @@ facts:
 import Decision from '../../components/Decision.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
+import FeatureHighlight from '../../components/FeatureHighlight.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import pricesShot from '../../assets/case-studies/shots/reid-design-feature-prices.png';
+import roomShot from '../../assets/case-studies/shots/reid-design-feature-room.png';
 
 ## The brief
 
-Staci Perkins runs Reid Design out of Plainfield, Indiana, serving homeowners across the Greater Indianapolis suburbs with everything from a single consultation hour to full-service room transformations. The work is strong. The existing online presence was not.
+Staci Perkins runs Reid Design out of Plainfield, Indiana, serving homeowners across the Greater Indianapolis suburbs with everything from a single consultation hour to full room design and styling.
 
-The brief had two parts. First, make the portfolio work as a sales tool, not just a gallery of nice rooms. Second, build something Staci can keep updated herself as new projects finish. Her ideal outcome was a site that does real qualification work before a lead ever calls her.
+The brief had two parts. First, show how Staci works and what it costs, so the people who reach out already know what to expect. Second, build something Staci can keep updated herself. Her ideal outcome was a site that does real qualification work before a lead ever calls her.
 
 ## Decisions
 
 <Decision
-  title="Before and after, not just finished rooms"
-  easy="A gallery of finished rooms."
-  did="Build the portfolio on before/after pairs, because seeing the starting point is what makes the transformation land, with filter chips by room type and style so someone looking for a farmhouse kitchen goes straight to those projects."
+  title="Answer the price question early"
+  easy="Leave cost for the first call."
+  did="Post every price: the in-home consultation, E-Design, full room design, styling and sourcing, with design fees kept separate from what a client spends on furniture. Someone who has already seen the numbers arrives at the first call ready to talk about the room."
 />
 
 <Decision
-  title="Answer the price question early"
-  easy="Leave cost for the first call."
-  did="A Budget Calculator that lets visitors build their own scope estimate. It is not a quote; it is a self-qualification tool. Someone who walks through a full primary suite renovation and sees a range they can stomach is a much warmer lead than someone who calls cold with no idea what to expect."
+  title="Show the thinking, not just the result"
+  easy="A carousel of pretty rooms on the home page."
+  did="A concept room on the home page: one empty living room fills in as you scroll, and each piece is tied to a tag that says why it is there. It shows what Staci notices and how she plans, before anyone books."
 />
 
-Interior design clients almost always have two blockers early on: they do not know what things cost, and they do not know whether their taste matches what the designer actually does. I built around both. The Style Quiz does on the creative side what the calculator does for price: it identifies a visitor's design archetype and primes both the client and Staci for a more productive first call.
+Interior design clients almost always have two blockers early on: they do not know what things cost, and they do not know whether their taste matches what the designer actually does. I built around both. The prices are on the page, and the contact form asks which rooms and which paint-chip styles feel like home, from Transitional to Japandi, so Staci starts the first conversation already knowing the brief.
 
-I chose Astro and Sanity so Staci can add new projects, publish journal posts, and update press coverage without touching a line of code.
+The site is built on Astro and Sanity, so Staci can change a price, a page or a photo herself, without touching a line of code.
 
 ## What I built
 
-- Portfolio with before/after comparison sliders and Room x Style filter chips so visitors can find relevant work fast
-- Budget Calculator with room type, scope, and add-on selectors that outputs an estimated project range
-- Style Quiz that identifies a visitor's design archetype and primes them for the consultation call
-- E-design service page for productized remote design, built with a toggleable coming-soon state while Staci prepares the offering
-- Lead magnet download hub with email capture for guides and planning resources
-- Affiliate shop ("Shop My Favorites") organized by room type with FTC disclosure built into the page design
-- Journal with seven custom content block types covering project walkthroughs, product roundups, and process breakdowns
-- Press coverage strip for earned media and magazine features
-- Resources hub that ties the quiz, calculator, and guides together in one place so visitors can self-serve before reaching out
-- Full Sanity CMS for portfolio projects, journal posts, press entries, and site-wide configuration
+<FeatureHighlight
+  src={pricesShot}
+  alt="The services band on the Reid Design home page, with a price on every way to work together"
+  title="Every price, posted"
+  body="Most interior designers do not publish their prices. Staci does, on the home page and the services page, so a visitor knows what to expect before they ever pick up the phone."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={roomShot}
+  alt="The concept room on the Reid Design home page, a living room filling in with tagged pieces"
+  title="One room, built as you scroll"
+  body="The concept room starts empty and fills in step by step, each piece pinned to a sample tag that explains the choice, closing on the finished room and what the plan includes."
+  side="right"
+/>
+
+The full build, including the pieces above:
+
+- Home page that leads with Staci, her Google rating and real reviews from Google and Facebook, then the four-step process with honest time estimates
+- The concept room, a scroll-built living room annotated with why each piece is there
+- Services page with every price posted, plus notes for builders and realtors and the service area
+- E-Design page for clients outside the drive radius: the same process, delivered online
+- Contact page with an optional room and style picker drawn as paint chips, and a link to book a free call first
+- A visual system taken from an interior designer's working day: paint chips, sample tags, fabric swatches and a tape measure
+- Full Sanity CMS for pages, services, photos and site-wide settings
 
 ## Walk the homepage
 
@@ -125,10 +148,11 @@ I chose Astro and Sanity so Staci can add new projects, publish journal posts, a
 
 <ResultsBlock
   items={[
-    'By the time someone books a consultation, the site has already walked them through scope and style, so the first call starts from shared understanding instead of square one.',
-    'Before/after sliders turned the portfolio from an aspirational gallery into something persuasive, so visitors can see whether a transformation could happen in their own house.',
-    'The Budget Calculator lets homeowners self-qualify on price by building their own scope estimate before they ever call.',
-    'Staci can add new projects, publish journal posts, and update press coverage herself without touching a line of code.',
-    'Filter chips let visitors sort by room type and style, so someone after a farmhouse kitchen goes straight to relevant work instead of scrolling past projects that do not apply.',
+    'By the time someone books a consultation, they have seen how Staci works, what each service costs and what is in the plan, so the first call starts from shared understanding instead of square one.',
+    'The concept room shows how Staci thinks about a space, piece by piece, before anyone pays for a visit.',
+    'Every service price is on the site, so a visitor knows what working with Staci costs before they reach out.',
+    'Staci can change prices, pages and photos herself in Sanity, without touching a line of code.',
   ]}
 />
+
+<Lightbox />
