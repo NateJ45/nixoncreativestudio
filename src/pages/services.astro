@@ -1,50 +1,72 @@
 ---
-// Safe to edit. The services, tiers, and faq arrays below hold every word
-// of user-facing copy on this page.
+// Safe to edit. The arrays in this frontmatter (webPoints, strategyPoints,
+// photoPoints, whyOnePerson, faq) hold the page's own copy. Prices come from
+// src/data/pricing.ts only.
 /* ============================================================================
-   /services | Services
+   /services | What I do, and what it costs (overhaul package 2.5)
    ============================================================================
-   Seven-block stack:
-     1. Hero (positioning statement, solid-token headline)
-     2. Three service chapters as elevated, alternating surface-cards
-     3. Process recap (reuses the homepage Process component)
-     4. "What a website costs" band: three web tiers (Launch / Signature /
-        Flagship) + an "add to any project" strip (photography, brand) + the
-        four care-after-launch levels
-     5. "Why it costs what it costs" justification block
-     6. FAQ (native <details>/<summary>, JS-free, smooth grid-row open/close)
-     7. CTA banner
+   Its job: size the project and start it. Section order IS the IA:
 
-   The process steps reuse ProcessBand (the home's weighted timeline, package
-   2.2), so the four steps read identically across the site.
+     Hero              H1 "What I do, and what it costs." (Heft on the
+                       heavy phrase, the page's one weight animation). White,
+                       no hairline (the header has its own edge).
+     On this page      a sticky sub-nav under the header: Web design,
+                       Photography, Pricing, Care, FAQ. `scroll-padding-top`
+                       on <html> (set below, only while this nav is on the
+                       page) keeps every anchored heading, and every focused
+                       element, clear of the header and the nav
+                       (WCAG 2.4.11, focus not obscured).
+     Web design        one real capture in a BrowserFrame, the buyer-language
+                       points, then strategy as "what's included", set as
+                       type (no placeholder tile, no image). Paper.
+     Recently shipped  two studies the home does NOT show (the home takes the
+                       three lowest `order`), as small FramePairs. White.
+     Photography       copy, points, the price from pricing.ts and a link to
+                       /contact/?service=photography (the /photography page
+                       is gated). No image: the photos in src/assets/about are
+                       of Nathan, not by him, so none of them is proof of the
+                       service. Paper.
+     Pricing           PricingTeaser variant "full": ruled tiers, each
+                       linking /contact/?tier=..., add-ons in <details>.
+                       White. ("Size up your project", overhaul 3.3, goes
+                       straight after this band when it is built.)
+     Care              the four care levels, ruled the same way. Paper.
+     How I work        ProcessBand, the same timeline as the home. White.
+     Why one person    #why (the /about page links here). Paper.
+     FAQ               native <details>, with the FAQPage JSON-LD built from
+                       the same array, so the structured data is the visible
+                       text word for word. White.
+     Ink closer        the footer (BaseLayout), set by the `closer` prop.
 
-   Motion vocabulary used here (all reduced-motion safe, defined globally):
-     data-reveal                              scroll fade+rise
+   Surfaces alternate white and paper, so each hairline marks a real change,
+   and the page ends on ink.
 
-   PRICING LIVES IN src/data/pricing.ts: the `tiers`, `addOns` and
-   `carePlans` arrays are imported below and shared with the homepage
-   PricingTeaser and /llms.txt, so they never drift. The FAQ answers and the
-   JSON-LD offers read the same values (money() and dollars() in
-   src/lib/money.ts), so a price changes in pricing.ts and nowhere else.
+   PRICING LIVES IN src/data/pricing.ts. The tiers, add-ons and care levels
+   render from it, and the FAQ answers and the JSON-LD offers read the same
+   values (money() and dollars() in src/lib/money.ts), so a price changes in
+   pricing.ts and nowhere else. tests/metadata.spec.ts checks every JSON-LD
+   price is on the page.
    ============================================================================ */
 
+import { getCollection } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import Heft from '../components/Heft.astro';
+import BrowserFrame from '../components/BrowserFrame.astro';
+import FramePair from '../components/FramePair.astro';
+import Media from '../components/Media.astro';
+import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
-import SelectedWork from '../components/SelectedWork.astro';
-import { Image } from 'astro:assets';
-// Real proof for the Web design service: a shipped client site, shown at full
-// strength. Swap this import for any other case-study cover to feature a
-// different project.
-import webDesignShot from '../assets/case-studies/first-baptist-muncie.png';
 import { site } from '../data/site';
-// Tiers + add-ons come from the shared single source of truth (also used by
-// the homepage PricingTeaser), so the numbers can never drift between pages.
 import { webTiers as tiers, addOns, carePlans } from '../data/pricing';
 import { dollars, money } from '../lib/money';
 import { addOnNamed, addOnOffer, careOffers, ids, tierOffers } from '../lib/schema';
+import type { Closer } from '../lib/closer';
 
-// The prices the FAQ answers and the meta description quote, read from
-// pricing.ts so the prose can never disagree with the price cards.
+// ---------------------------------------------------------------------------
+// Prices the copy quotes, read from pricing.ts so prose never disagrees with
+// the ruled tiers.
 const launch = tiers[0];
 const signature = tiers.find((t) => t.highlighted) ?? tiers[1];
 const flagship = tiers[tiers.length - 1];
@@ -54,90 +76,75 @@ const [hourlyRate] = dollars(hosting.time);
 const photography = addOnNamed(addOns, 'Photography');
 const brandStrategy = addOnNamed(addOns, 'Brand & strategy');
 
-// The three services are parallel offerings a client picks from, not an
-// ordered sequence (you can buy photography without strategy), so they carry
-// no 01/02/03 numerals. Numbered markers live only on the genuinely-ordered
-// Process band. Strategy is listed first because most projects start there.
-const services = [
-  {
-    title: 'Strategy',
-    lede: 'The planning work that decides what the site is for, who it serves, and how it earns its keep.',
-    body: 'Strategy always comes first. Without it, design becomes decoration. It starts with a working session together, then I write a short brief that the rest of the project follows.',
-    // Priced as the "Brand & strategy" add-on in pricing.ts (the only strategy
-    // price shown on the page); it is already part of every website project.
-    slug: 'strategy',
-    // No screenshot for strategy (it is planning work, not a screen). A
-    // labelled placeholder panel stands in until a real artifact (a sitemap or
-    // brief) is dropped here; see Web design below for the real-image pattern.
-    image: null,
-    imageAlt: '',
-    placeholderIcon: 'strategy',
-    points: [
-      'A working session, then back-and-forth until the plan is right',
-      'Audience map and conversion path',
-      'Content inventory of what you already have',
-      'A one-page brief the rest of the project follows',
-    ],
-  },
-  {
-    title: 'Web design',
-    lede: 'Modern, accessible, fast websites built on the platform that fits you, from a custom-coded site to Squarespace or WordPress, and set up so your team can actually run it.',
-    body: 'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.',
-    // Priced by the three web tiers in pricing.ts (the band below).
-    slug: 'web-design',
-    // Real shipped site, shown at full strength (research: show the work, do
-    // not fade it behind text). Swap webDesignShot above to feature another.
-    image: webDesignShot,
-    imageAlt: 'The First Baptist Church Muncie website, designed and built by the studio',
-    placeholderIcon: null,
-    points: [
-      'A custom design built to your brand, not a stock template',
-      'Fast pages, with fonts and images served from your own site',
-      'Layouts that work on every phone, tablet and desktop',
-      'Accessible from the first screen, checked against WCAG AA',
-      'Hosting set up for you, with year one included',
-    ],
-  },
-  {
-    title: 'Photography',
-    lede: 'Headshots, event coverage, and environmental photography shot for your website by the same person who designed it.',
-    body: 'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.',
-    // Priced by the Photography add-on in pricing.ts.
-    slug: 'photography',
-    // Placeholder until a real photo is dropped in. Replace with:
-    //   import photoShot from '../assets/photography/<file>.jpg';
-    // then set image: photoShot and a real imageAlt.
-    image: null,
-    imageAlt: '',
-    placeholderIcon: 'photography',
-    points: [
-      'On-site Sunday or weekday coverage',
-      'Headshots for team and staff',
-      'Environmental photography of your space',
-      'Edited, web-optimized images delivered with the website',
-    ],
-  },
+// ---------------------------------------------------------------------------
+// Studies. The home's Selected work takes the three lowest `order`; this page
+// never repeats them. Of the rest (newest year first, then `order`), the first
+// with a capture is the Web design frame and the next two are "Recently
+// shipped". All of it is computed, so retiring or adding a study needs no
+// edit here.
+const studies = await getCollection('case-studies');
+const shots = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/case-studies/shots/*-{home,mobile}.png',
+  { eager: true },
+);
+const shot = (id: string, kind: 'home' | 'mobile'): ImageMetadata | undefined =>
+  Object.entries(shots).find(([path]) => path.endsWith(`/${id}-${kind}.png`))?.[1].default;
+
+const byOrder = [...studies].sort(
+  (a, b) => (a.data.order ?? Number.MAX_SAFE_INTEGER) - (b.data.order ?? Number.MAX_SAFE_INTEGER),
+);
+const notOnHome = byOrder
+  .slice(3)
+  .sort((a, b) => b.data.year - a.data.year)
+  .map((entry) => ({ entry, desktop: shot(entry.id, 'home'), phone: shot(entry.id, 'mobile') }))
+  .filter(
+    (s): s is { entry: (typeof studies)[number]; desktop: ImageMetadata; phone: ImageMetadata } =>
+      Boolean(s.desktop && s.phone && s.entry.data.liveUrl),
+  );
+const webShot = notOnHome[0];
+const recent = notOnHome.slice(1, 3);
+
+const host = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+
+// ---------------------------------------------------------------------------
+// Copy.
+const webLede =
+  'Modern, accessible, fast websites built on the platform that fits you, from a custom-coded site to Squarespace or WordPress, and set up so your team can actually run it.';
+const webBody =
+  'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.';
+const webPoints = [
+  'A custom design built to your brand, not a stock template',
+  'Fast pages, with fonts and images served from your own site',
+  'Layouts that work on every phone, tablet and desktop',
+  'Accessible from the first screen, checked against WCAG AA',
+  'Hosting set up for you, with year one included',
 ];
 
-// Placeholder glyphs for the services without a real image yet (Strategy,
-// Photography). Inner SVG markup, drawn into the placeholder panel; they match
-// the hero three-service flow icons so the page reads as one set.
-const placeholderIcons: Record<string, string> = {
-  strategy:
-    '<circle cx="12" cy="12" r="9" /><polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5" />',
-  photography:
-    '<path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13" r="3.2" />',
-};
+// Strategy is not a separate service any more: it is the front of every web
+// project and already in the price, so it reads as "what's included".
+const strategyBody =
+  'Strategy always comes first. Without it, design becomes decoration. It starts with a working session together, then I write a short brief that the rest of the project follows.';
+const strategyPoints = [
+  'A working session, then back-and-forth until the plan is right',
+  'Audience map and conversion path',
+  'Content inventory of what you already have',
+  'A one-page brief the rest of the project follows',
+];
 
-// `tiers` (the three web design tiers: Launch / Signature / Flagship) and
-// `addOns` (photography, brand, care) are imported above from
-// src/data/pricing.ts, the single source shared with the homepage teaser.
-// Edit any price there, not here.
+const photoLede =
+  'Headshots, event coverage, and environmental photography shot for your website by the same person who designed it.';
+const photoBody =
+  'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.';
+const photoPoints = [
+  'On-site Sunday or weekday coverage',
+  'Headshots for team and staff',
+  'Environmental photography of your space',
+  'Edited, web-optimized images delivered with the website',
+];
 
-// "Why it costs what it costs." The honest justification block: what the price
-// buys and what a cheaper quote usually leaves out. Each point is tied to how
-// the studio actually works, so it reads as true rather than as a sales pitch.
-const whyItCosts = [
+// Why one person (#why). The old "Why it costs what it costs" points, which
+// are all, at heart, about the studio being one person.
+const whyOnePerson = [
   {
     title: 'One person, no handoffs',
     body: 'The person who plans your site designs it, builds it, and shoots the photos. No agency markup, and nothing lost in translation between a strategist, a designer, and a developer who never quite talk to each other.',
@@ -148,7 +155,7 @@ const whyItCosts = [
   },
   {
     title: 'Accessible by default',
-    body: 'Every page is built to WCAG AA and checked until it scores 100 for accessibility in Lighthouse. Plenty of budget builds never get checked at all. For a church, school, or nonprofit it is the right thing to do and it lowers your legal risk, and it is included, not an upsell.',
+    body: 'Every page is built to WCAG AA and checked until it scores 100 for accessibility in Lighthouse. Plenty of budget builds never get checked at all. For a church, school, or nonprofit it is the right thing to do, and it is included, not an upsell.',
   },
   {
     title: 'Cheap is expensive later',
@@ -183,40 +190,59 @@ const faq = [
   },
 ];
 
-// JSON-LD for /services, added to the site-wide @graph: one Service per
-// offering, each with Offers read from pricing.ts (the same values the price
-// cards print, so the structured data can never quote a different price), a
-// Service for care after launch, and the FAQPage. Google no longer shows FAQ
-// rich results for most sites (2023), so the FAQPage is clean structured data
-// for search engines and AI answer tools, not a promised search feature.
-const serviceOffers: Record<string, Record<string, unknown>[]> = {
-  strategy: [addOnOffer(brandStrategy)],
-  'web-design': tierOffers(tiers),
-  photography: [addOnOffer(photography)],
+// The sticky sub-nav. Each href is the id of a section's H2.
+const onThisPage = [
+  { label: 'Web design', href: '#web-design' },
+  { label: 'Photography', href: '#photography' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'Care', href: '#care' },
+  { label: 'FAQ', href: '#faq' },
+];
+
+// The ink closer. "Aware of the tier": the page has just priced three tiers,
+// so the closer answers the question it leaves ("which one am I?"). Package
+// 3.3's "Size up your project" will prefill the pill's link with the tier a
+// visitor lands on; until then it tells /contact the visitor came from here.
+const closer: Closer = {
+  heading: 'Not sure which tier',
+  emphasis: 'fits?',
+  sub: 'Tell me what you are building and I will tell you honestly where it lands. The first conversation is free, and it ends with a ballpark before anything is signed.',
+  href: '/contact/?from=services',
 };
+
+// ---------------------------------------------------------------------------
+// JSON-LD for /services, added to the site-wide @graph: a Service per
+// offering with Offers read from pricing.ts (the same values the page prints;
+// tests/metadata.spec.ts checks each one is on the page), a Service for care
+// after launch, and the FAQPage, built from the same `faq` array the page
+// renders. FAQPage is plain structured data for search engines and AI answer
+// tools; Google stopped showing FAQ rich results for most sites in 2023, so it
+// promises no search feature.
+const studio = (id: string, name: string, description: string, regional = false) => ({
+  '@type': 'Service',
+  '@id': `${site.url}/services/#${id}`,
+  name,
+  description,
+  provider: { '@id': ids.studio },
+  // Photography needs me on site, so it stays regional; the rest serves
+  // clients anywhere.
+  areaServed: regional
+    ? 'Greater Cincinnati region'
+    : ['Greater Cincinnati region', 'United States'],
+});
 const schemas = [
-  ...services.map((service) => ({
-    '@type': 'Service',
-    '@id': `${site.url}/services/#${service.slug}`,
-    name: service.title,
-    description: service.body,
-    provider: { '@id': ids.studio },
-    // Photography needs me on site, so it stays regional; strategy, web design,
-    // and brand work serve clients anywhere (region + country).
-    areaServed:
-      service.slug === 'photography'
-        ? 'Greater Cincinnati region'
-        : ['Greater Cincinnati region', 'United States'],
-    offers: serviceOffers[service.slug],
-  })),
+  { ...studio('strategy', 'Strategy', strategyBody), offers: [addOnOffer(brandStrategy)] },
+  { ...studio('web-design', 'Web design', webBody), offers: tierOffers(tiers) },
   {
-    '@type': 'Service',
-    '@id': `${site.url}/services/#care`,
-    name: 'Care after launch',
-    description:
+    ...studio('photography', 'Photography', photoBody, true),
+    offers: [addOnOffer(photography)],
+  },
+  {
+    ...studio(
+      'care',
+      'Care after launch',
       'Hosting, updates and monthly edit time for a site after launch. Year one hosting is included in every build.',
-    provider: { '@id': ids.studio },
-    areaServed: ['Greater Cincinnati region', 'United States'],
+    ),
     offers: careOffers(carePlans),
   },
   {
@@ -225,10 +251,7 @@ const schemas = [
     mainEntity: faq.map(({ q, a }) => ({
       '@type': 'Question',
       name: q,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: a,
-      },
+      acceptedAnswer: { '@type': 'Answer', text: a },
     })),
   },
 ];
@@ -238,725 +261,747 @@ const schemas = [
   title="Services and pricing | Nixon Creative Studio"
   description={`Strategy, web design and photography, with prices on the page: websites from ${money(launch.priceFrom)}, care from ${hosting.price} a year, photography ${photography.price}.`}
   schemas={schemas}
-  closer={{
-    heading: 'Ready to scope',
-    emphasis: 'a project?',
-    sub: 'The first conversation is free and lands at an honest ballpark by the end. Email is fastest, but a phone call works too.',
-  }}
+  closer={closer}
 >
-  <!-- ----------------------------------------------------------------------
-       Hero. Two columns at lg+: the positioning headline + sub on the left, an
-       animated "three-service flow" on the right (Strategy -> Web design ->
-       Photography, the order the copy names), so the empty right half now carries
-       a visual that illustrates the sentence. Single column below lg, where the
-       flow is hidden (it only earns its place beside the copy at lg+) and the
-       hero tightens to just the headline + sub. The headline uses its own clamp (smaller than
-       the global h1) so the long title sits comfortably and never runs off the
-       bottom on short or mobile screens. The flow is decorative (aria-hidden);
-       the headline carries the real content and the solid heading color (no
-       gradient text).
-       ---------------------------------------------------------------------- -->
-  <section class="py-xl lg:py-2xl" aria-labelledby="services-hero-heading">
-    <div class="ncs-container">
-      <div class="grid items-center gap-xl lg:grid-cols-[1.05fr_0.95fr]">
-        <div class="flex flex-col gap-m">
-          <h1 id="services-hero-heading" class="services-headline">
-            Strategy, web design, and photography for organizations that care about the long run.
-          </h1>
-          <p class="max-w-[52ch] text-lg leading-[1.6] text-text">
-            Most projects use all three services, in that order. Some use one or two. The first
-            conversation always ends with an honest scope, not a sales pitch.
-          </p>
-        </div>
-
-        <!-- Three-service flow. Decorative reinforcement of the headline
-             (aria-hidden), and the right half of the two-column hero. It only
-             earns its place beside the copy at lg+, so it is hidden below lg
-             rather than stacked under the copy on mobile (where it just repeated
-             the headline and pushed the page down). -->
-        <div class="services-flow hidden lg:block" aria-hidden="true">
-          <div class="relative flow-card surface-card rounded-2xl">
-            <ol class="flow-track relative z-10">
-              <li class="flow-step" style="--i: 0;">
-                <span class="flow-marker">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <polygon points="15.5 8.5 13 13 8.5 15.5 11 11 15.5 8.5"></polygon>
-                  </svg>
-                </span>
-                <span class="flow-text">
-                  <span class="flow-name">Strategy</span>
-                  <span class="flow-desc">Goals, audience, scope</span>
-                </span>
-              </li>
-
-              <li class="flow-step" style="--i: 1;">
-                <span class="flow-marker">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                    <path d="M3 9h18"></path>
-                    <path d="M6 6.5h.01"></path>
-                  </svg>
-                </span>
-                <span class="flow-text">
-                  <span class="flow-name">Web design</span>
-                  <span class="flow-desc">Designed, built, yours</span>
-                </span>
-              </li>
-
-              <li class="flow-step" style="--i: 2;">
-                <span class="flow-marker">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"></path>
-                    <circle cx="12" cy="13" r="3.2"></circle>
-                  </svg>
-                </span>
-                <span class="flow-text">
-                  <span class="flow-name">Photography</span>
-                  <span class="flow-desc">Shot for the site</span>
-                </span>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ----------------------------------------------------------------------
-       Service offerings. Each is its own elevated surface-card with a
-       staggered scroll-reveal.
-       These are parallel services (not an ordered sequence), so the list is
-       a <ul> and carries no numerals.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-label="Service details">
-    <div class="ncs-container">
-      <ul class="flex list-none flex-col gap-l p-0">
-        {services.map((service, index) => {
-          // The proof visual sits left for even services, right for odd, so the
-          // run reads as a guided tour rather than a stack. On mobile the copy
-          // leads and the visual follows (DOM order: copy first, visual second).
-          const visualLeft = index % 2 === 0;
-          return (
-            <li class="surface-card group relative isolate overflow-hidden rounded-2xl p-l md:p-xl">
-              <div class="relative z-10 grid grid-cols-1 items-center gap-l md:grid-cols-2 md:gap-xl">
-                {/* Copy: title, lede, body, and the what's-included list. No
-                   sequence numeral: these are parallel offerings, not steps. */}
-                <div class:list={['flex flex-col gap-m', visualLeft ? 'md:order-2' : 'md:order-1']}>
-                  <div class="flex flex-col gap-s">
-                    <h2 class="text-heading">{service.title}</h2>
-                    <p class="max-w-[48ch] text-[1.0625rem] leading-[1.55] font-medium text-text">
-                      {service.lede}
-                    </p>
-                    <p class="max-w-[52ch] leading-[1.7] text-text-muted">{service.body}</p>
-                  </div>
-
-                  {/* What's included, as a checked list. The dot glyph is
-                     decorative; the text carries the meaning. */}
-                  <div class="flex flex-col gap-s">
-                    <p class="text-sm font-semibold tracking-[0.12em] text-text-muted uppercase">
-                      What's included
-                    </p>
-                    <ul class="flex flex-col gap-2 leading-[1.5] text-text">
-                      {service.points.map((point) => (
-                        <li class="flex items-start gap-s">
-                          <span
-                            class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                            aria-hidden="true"
-                          />
-                          <span>{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Proof visual: a real shipped site for Web design; a labelled
-                   placeholder panel for the services without an image yet. Drop
-                   a real <Image> in (set `image` on the service) and it inherits
-                   the same frame. */}
-                <div class:list={[visualLeft ? 'md:order-1' : 'md:order-2']}>
-                  {service.image ? (
-                    <div class="services-shot-frame">
-                      <Image
-                        src={service.image}
-                        alt={service.imageAlt}
-                        widths={[400, 640, 900]}
-                        sizes="(min-width: 768px) 42vw, 90vw"
-                        class="services-shot-img"
-                      />
-                    </div>
-                  ) : (
-                    <div class="services-shot-frame services-shot-placeholder" aria-hidden="true">
-                      <svg
-                        class="services-shot-ph-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.4"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        set:html={
-                          service.placeholderIcon ? placeholderIcons[service.placeholderIcon] : ''
-                        }
-                      />
-                      <span class="services-shot-ph-label">{service.title}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  </section>
-
-  <!-- Process recap. The same ProcessBand timeline as the home, so the four
-       steps read identically across the site. -->
-  <ProcessBand tone="paper" headingId="process-heading" />
-
-  <!-- ----------------------------------------------------------------------
-       What a website costs. Three web tiers (Launch / Signature / Flagship),
-       each publishing an honest "from" floor plus the typical range, then a
-       lighter "add to any project" strip for photography and brand, then the
-       four care levels. Numbers live in the `tiers`, `addOns` and `carePlans`
-       arrays; the FAQ must agree.
-       The floor counts up on scroll, but the static text is always the real
-       number so no-JS visitors and crawlers see the true figure.
-       ---------------------------------------------------------------------- -->
-  <section class="bg-bg-soft py-2xl" aria-labelledby="services-pricing-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex max-w-[62ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-pricing-heading" class="text-heading">
-          What a website costs
-        </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          A starting point, not a fixed menu. Every build is custom and comes with a content system
-          you can run yourself, so the tiers differ in scope and how much functionality you need,
-          not whether the work is custom. The free first conversation ends with an honest ballpark,
-          and larger projects can be split into monthly payments.
-        </p>
-      </header>
-
-      <ul class="grid list-none [grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))] gap-l p-0">
-        {tiers.map((tier, index) => (
-          <li
-            class:list={[
-              'tier-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
-              tier.highlighted && 'tier-card--featured',
-            ]}
-            data-reveal
-            style={`--reveal-delay: ${index * 110}ms;`}
-          >
-            {tier.badge && (
-              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold tracking-[0.1em] text-accent-foreground uppercase">
-                {tier.badge}
-              </span>
-            )}
-
-            <div class="relative z-10 flex flex-col gap-m">
-              <h3 class="text-h4 text-heading">{tier.name}</h3>
-
-              {/* Price line: the floor as plain text, with the typical range
-                   stated underneath so the "from" is honest. */}
-              <div class="flex flex-col gap-1">
-                <p class="flex items-baseline gap-xs">
-                  <span class="text-sm font-medium text-text-muted">from</span>
-                  <span class="font-display text-h2 leading-none text-heading">
-                    ${tier.priceFrom.toLocaleString()}
-                    {tier.priceSuffix}
-                  </span>
-                </p>
-                <p class="text-sm text-text-muted">{tier.range}</p>
-              </div>
-
-              <p class="leading-[1.6] text-text-muted">{tier.note}</p>
-
-              <ul class="mt-xs flex flex-col gap-2 leading-[1.5] text-text">
-                {tier.features.map((feature) => (
-                  <li class="flex items-start gap-s">
-                    <span
-                      class="mt-[0.35em] inline-block h-[0.45rem] w-[0.45rem] shrink-0 rounded-full bg-accent"
-                      aria-hidden="true"
-                    />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <p class="mt-l max-w-[60ch] text-sm leading-[1.6] text-text-muted" data-reveal>
-        Strategy is the front of every project, not a line item. The price above already includes
-        the session and the brief. Year one hosting is included too.
+  <div class="svc">
+    <!-- Hero. The H1 is the page's one Heft; no data-reveal in the first
+         viewport (ruling 3). -->
+    <Section
+      rail="Services"
+      railMeta={`From ${money(launch.priceFrom)}`}
+      hairline={false}
+      labelledby="services-heading"
+    >
+      <h1 id="services-heading" class="svc-h1">
+        What I do, and <Heft text="what it costs." />
+      </h1>
+      <p class="svc-lede">
+        Websites for churches, schools, nonprofits and small businesses, with photography shot for
+        the site. Every price is on this page, and the first conversation ends with an honest scope,
+        not a sales pitch.
       </p>
+    </Section>
 
-      <!-- Add to any project: photography and standalone brand.
-           Lighter cards than the tiers above; these attach to a build. -->
-      <div class="mt-2xl" data-reveal>
-        <h3 class="text-h5 text-heading">Add to any project</h3>
-        <ul class="mt-m grid list-none [grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))] gap-m p-0">
-          {addOns.map((addOn, index) => (
-            <li
-              class="surface-card flex flex-col gap-xs rounded-xl p-m"
-              data-reveal
-              style={`--reveal-delay: ${index * 90}ms;`}
-            >
-              <h4 class="text-h5 text-heading">{addOn.name}</h4>
-              <p class="font-display text-xl leading-none font-semibold text-heading">
-                {addOn.price}
-              </p>
-              <p class="text-sm leading-[1.6] text-text-muted">{addOn.note}</p>
+    <!-- On this page. Sticky under the header for the rest of the page (its
+         containing block is .svc). Below md it scrolls sideways inside itself
+         rather than wrapping, so it stays one short bar. -->
+    <nav class="svc-subnav" aria-label="On this page">
+      <div class="ncs-container svc-subnav-inner">
+        <p class="svc-subnav-label" aria-hidden="true">
+          On this page
+        </p>
+        <ul class="svc-subnav-list" role="list">
+          {onThisPage.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
             </li>
           ))}
         </ul>
       </div>
+    </nav>
 
-      <!-- Care after launch: the four levels from src/data/pricing.ts
-           (carePlans), matching the client proposals. Hosting is the floor;
-           the monthly levels add edit time. -->
-      <div class="mt-2xl" data-reveal>
-        <h3 class="text-h5 text-heading">Care after launch</h3>
-        <p class="mt-xs max-w-[62ch] leading-[1.6] text-text-muted">
-          A website is not something you print once. Hosting, security, domains, and certificates
-          keep moving, so every site I launch is quoted with care. Year one hosting is included in
-          every build. After that, Hosting is the part every live site needs, and the monthly levels
-          add edit time for when you would rather not do it yourself.
-        </p>
-        <ul class="mt-m grid list-none [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))] gap-m p-0">
-          {carePlans.map((plan, index) => (
-            <li
-              class="surface-card flex flex-col gap-xs rounded-xl p-m"
-              data-reveal
-              style={`--reveal-delay: ${index * 90}ms;`}
-            >
-              <h4 class="text-h5 text-heading">{plan.name}</h4>
-              <p class="font-display text-xl leading-none font-semibold text-heading">
-                {plan.price}
-                <span class="text-sm text-text-muted">{plan.period}</span>
-              </p>
-              <p class="text-sm leading-[1.6] text-text-muted">{plan.who}</p>
-              <p class="text-sm font-semibold text-text">{plan.time}</p>
-              <ul class="mt-xs flex flex-col gap-1 text-sm leading-[1.5] text-text">
-                {plan.features.map((feature) => (
-                  <li class="flex items-start gap-s">
-                    <span
-                      class="mt-[0.45em] inline-block h-[0.35rem] w-[0.35rem] shrink-0 rounded-full bg-accent"
-                      aria-hidden="true"
-                    />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </li>
+    <!-- Web design: one real capture, the buyer points, then strategy as type. -->
+    <Section
+      rail="Web design"
+      railMeta={`${studies.length} studies`}
+      tone="paper"
+      labelledby="web-design"
+    >
+      <h2 id="web-design" class="svc-h2">
+        Web <b>design</b>
+      </h2>
+
+      <div class="svc-web">
+        <div class="svc-web-copy">
+          <p class="svc-lede">{webLede}</p>
+          <p class="svc-body">{webBody}</p>
+          <ul class="svc-points" role="list">
+            {webPoints.map((point) => (
+              <li>{point}</li>
+            ))}
+          </ul>
+        </div>
+        {webShot && (
+          <figure class="svc-web-shot">
+            <BrowserFrame url={webShot.entry.data.liveUrl!}>
+              <Media
+                src={webShot.desktop}
+                alt={`The ${webShot.entry.data.client} homepage, designed and built by me`}
+                ratio="16 / 10"
+                position="top"
+                widths={[480, 720, 960]}
+                sizes="(min-width: 82.5rem) 34rem, (min-width: 48rem) 45vw, calc(100vw - 2rem)"
+              />
+            </BrowserFrame>
+            <figcaption>
+              <a href={`/work/${webShot.entry.id}/`}>{webShot.entry.data.client}</a>
+              <span aria-hidden="true">·</span>
+              <span>{webShot.entry.data.year}</span>
+            </figcaption>
+          </figure>
+        )}
+      </div>
+
+      <div class="svc-strategy" id="strategy">
+        <h3 class="svc-h3">
+          What's included: <b>strategy</b>, first
+        </h3>
+        <p class="svc-body">{strategyBody}</p>
+        <ol class="svc-type-list" role="list">
+          {strategyPoints.map((point) => (
+            <li>{point}</li>
           ))}
-        </ul>
-        <p class="mt-m max-w-[62ch] text-sm leading-[1.6] text-text-muted">
-          Unused hours do not roll over. Anything beyond your plan is quoted in writing first.
-          Change or cancel with 30 days notice.
+        </ol>
+        <p class="svc-small">
+          Strategy is the front of every project, not a line item. The prices below already include
+          the session and the brief, and year one hosting too.
         </p>
       </div>
-    </div>
-  </section>
+    </Section>
 
-  <!-- ----------------------------------------------------------------------
-       Why it costs what it costs. The honest justification block that follows
-       the price immediately, so the "someone quoted me less" objection is
-       answered the moment it forms. Two-column hairline-ruled list, not cards.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-why-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-why-heading" class="text-heading">
-          Why it costs what it costs
+    <!-- Recently shipped: two studies the home does not show. -->
+    {recent.length > 0 && (
+      <Section
+        rail="Recently shipped"
+        railMeta={`${recent.length} of ${studies.length}`}
+        labelledby="recent-heading"
+      >
+        <h2 id="recent-heading" class="svc-h2">
+          Recently <b>shipped</b>
         </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          Plenty of people will quote you less. Here is what the price actually buys, and what a
-          cheaper one usually leaves out.
-        </p>
-      </header>
+        <ul class="svc-recent" role="list">
+          {recent.map(({ entry, desktop, phone }) => (
+            <li class="svc-recent-item">
+              <FramePair
+                url={entry.data.liveUrl!}
+                desktop={desktop}
+                phone={phone}
+                alt={`The ${entry.data.client} homepage on a laptop and a phone`}
+                sizes="(min-width: 82.5rem) 26rem, (min-width: 48rem) 34vw, 80vw"
+                phoneSizes="(min-width: 48rem) 9vw, 22vw"
+              />
+              <h3 class="svc-recent-title">
+                <a href={`/work/${entry.id}/`}>{entry.data.client}</a>
+              </h3>
+              {entry.data.hook && <p class="svc-body">{entry.data.hook}</p>}
+              <a
+                class="svc-host"
+                href={entry.data.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {host(entry.data.liveUrl!)}
+                <span aria-hidden="true">↗</span>
+                <span class="sr-only">(opens in a new tab)</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </Section>
+    )}
 
-      <ul class="grid list-none gap-l p-0 md:grid-cols-2">
-        {whyItCosts.map((point, index) => (
-          <li
-            class="flex flex-col gap-xs border-t border-border pt-m"
-            data-reveal
-            style={`--reveal-delay: ${index * 90}ms;`}
-          >
-            <h3 class="text-h5 text-heading">{point.title}</h3>
-            <p class="max-w-[52ch] leading-[1.7] text-text-muted">{point.body}</p>
+    <!-- Photography. No image on purpose (see the header comment). -->
+    <Section rail="Photography" railMeta="Cincinnati region" tone="paper" labelledby="photography">
+      <h2 id="photography" class="svc-h2">
+        Photos shot <b>for the site</b>
+      </h2>
+      <div class="svc-photo">
+        <div>
+          <p class="svc-lede">{photoLede}</p>
+          <p class="svc-body">{photoBody}</p>
+        </div>
+        <div>
+          <ul class="svc-points" role="list">
+            {photoPoints.map((point) => (
+              <li>{point}</li>
+            ))}
+          </ul>
+          <p class="svc-price">
+            <span class="svc-price-amount">{photography.price}</span>
+          </p>
+          <p class="svc-small">{photography.note}</p>
+          <a class="svc-arrow" href="/contact/?service=photography">
+            Ask about photography <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </Section>
+
+    <!-- Pricing: the shared ruled tiers. "Size up your project" (3.3) goes
+         straight after this, before Care. -->
+    <PricingTeaser variant="full" tone="white" headingId="pricing" />
+
+    <!-- Care after launch, ruled like the tiers. -->
+    <Section rail="Care" railMeta={`From ${hosting.price} a year`} tone="paper" labelledby="care">
+      <h2 id="care" class="svc-h2">
+        Care after <b>launch</b>
+      </h2>
+      <p class="svc-body svc-measure">
+        A website is not something you print once. Hosting, security, domains, and certificates keep
+        moving, so every site I launch is quoted with care. Year one hosting is included in every
+        build. After that, Hosting is the part every live site needs, and the monthly levels add
+        edit time for when you would rather not do it yourself.
+      </p>
+      <ul class="svc-care" role="list">
+        {carePlans.map((plan) => (
+          <li class="svc-care-plan">
+            <h3 class="svc-care-name">{plan.name}</h3>
+            <p class="svc-care-who">{plan.who}</p>
+            <p class="svc-price">
+              <span class="svc-price-amount">{plan.price}</span>
+              <span class="svc-price-period">{plan.period}</span>
+            </p>
+            <p class="svc-care-time">{plan.time}</p>
+            <ul class="svc-care-features">
+              {plan.features.map((feature) => (
+                <li>{feature}</li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
+      <p class="svc-small svc-measure">
+        Unused hours do not roll over. Anything beyond your plan is quoted in writing first. Change
+        or cancel with 30 days notice.
+      </p>
+    </Section>
 
-      <!-- Quiet, honest note on tooling. Addresses the modern-tools / AI
-           question head-on and reframes it to judgment + accountability, so it
-           reads as a trust signal rather than a confession. -->
-      <p class="mt-l max-w-[60ch] leading-[1.7] text-text-muted" data-reveal>
+    <ProcessBand tone="white" headingId="process-heading" />
+
+    <!-- Why one person. /about links to #why. -->
+    <Section rail="Why one person" railMeta="No handoffs" tone="paper" labelledby="why">
+      <h2 id="why" class="svc-h2">
+        Why <b>one person</b>
+      </h2>
+      <p class="svc-body svc-measure">
+        Plenty of people will quote you less. Here is what the price actually buys, and what a
+        cheaper one usually leaves out.
+      </p>
+      <ul class="svc-why" role="list">
+        {whyOnePerson.map((point) => (
+          <li>
+            <h3 class="svc-why-title">{point.title}</h3>
+            <p class="svc-body">{point.body}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="svc-body svc-measure svc-why-tools">
         I build with modern tools, including AI-assisted workflows, the same way I use frameworks
         and a camera. They help one person do the work of a team. The strategy, the design, and the
         accountability stay mine, start to finish.
       </p>
-    </div>
-  </section>
+    </Section>
 
-  <!-- ----------------------------------------------------------------------
-       FAQ. Native <details>/<summary> for accessible, JS-free disclosure.
-       The answer wrapper animates open and closed with a CSS grid trick:
-       grid-template-rows goes from 0fr (collapsed) to 1fr (open), which
-       transitions smoothly without needing a fixed pixel height. The "+"
-       marker rotates to "x" via the group-open: variant. The whole row
-       still works with keyboard and screen readers because it is a real
-       <details> element.
-       ---------------------------------------------------------------------- -->
-  <section class="py-2xl" aria-labelledby="services-faq-heading">
-    <div class="ncs-container">
-      <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-        <h2 id="services-faq-heading" class="text-heading">
-          Common questions
-        </h2>
-        <p class="text-lg leading-[1.55] text-text-muted">
-          The things people ask before the first call.
-        </p>
-      </header>
-
-      <div class="flex flex-col border-t border-border">
-        {faq.map((item, index) => (
-          /* `group` lets the summary's open-state pseudo and the answer
-               wrapper both react via group-open:. */
-          <details
-            class="faq-item group border-b border-border"
-            data-reveal
-            style={`--reveal-delay: ${index * 70}ms;`}
-          >
-            {/* list-none drops the default disclosure triangle. The webkit
-                 marker pseudo hides the Safari version. The "+" rotates to an
-                 "x" when open; the rotation plus the smooth panel are two
-                 non-color cues, so state is never signalled by color alone. */}
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-m py-m font-body text-lg font-semibold text-heading transition-colors duration-200 after:font-mono after:text-xl after:leading-none after:text-accent after:transition-transform after:duration-300 after:content-['+'] group-open:after:rotate-[135deg] hover:text-link [&::-webkit-details-marker]:hidden">
-              {item.q}
-            </summary>
-            {/* Animated reveal: the grid row scales from 0fr to 1fr. The
-                 inner div needs overflow-hidden so the clipped content does
-                 not spill while the row is collapsing. */}
-            <div class="faq-answer grid">
-              <div class="overflow-hidden">
-                <p class="max-w-[64ch] pb-m leading-[1.7] text-text">{item.a}</p>
+    <!-- FAQ. Native <details>; the FAQPage JSON-LD is built from the same
+         array, so it always equals this text. -->
+    <Section rail="FAQ" railMeta={`${faq.length} questions`} labelledby="faq">
+      <h2 id="faq" class="svc-h2">
+        Common <b>questions</b>
+      </h2>
+      <div class="svc-faq">
+        {faq.map((item) => (
+          <details class="svc-faq-item">
+            <summary>{item.q}</summary>
+            <div class="svc-faq-answer">
+              <div>
+                <p>{item.a}</p>
               </div>
             </div>
           </details>
         ))}
       </div>
-    </div>
-  </section>
-
-  <!-- Recent work proof strip. Reuses the homepage Selected Work block
-       (collection-driven, featured===true), so the services page proves the
-       work with real shipped sites right before it asks for the inquiry. -->
-  <SelectedWork />
+    </Section>
+  </div>
 </BaseLayout>
 
+<script>
+  // The sub-nav sticks right under the header, whose height changes with the
+  // viewport (and the wordmark's font). This measures it and hands the number
+  // to CSS (--svc-header-h on <html>), which positions the nav and sets
+  // scroll-padding-top. Without JavaScript the CSS fallbacks are used, which
+  // match the header's measured heights closely. Re-binds on every
+  // astro:page-load (View Transitions) and is a no-op on other pages.
+  let observer: ResizeObserver | undefined;
+
+  function measure() {
+    observer?.disconnect();
+    observer = undefined;
+    const nav = document.querySelector<HTMLElement>('.svc-subnav');
+    const header = document.querySelector<HTMLElement>('[data-header]');
+    const root = document.documentElement;
+    if (!nav || !header) {
+      root.style.removeProperty('--svc-header-h');
+      return;
+    }
+    const write = () =>
+      root.style.setProperty(
+        '--svc-header-h',
+        `${Math.ceil(header.getBoundingClientRect().height)}px`,
+      );
+    write();
+    observer = new ResizeObserver(write);
+    observer.observe(header);
+  }
+
+  document.addEventListener('astro:page-load', measure);
+</script>
+
 <style>
-  /* ----------------------------------------------------------------------
-     Services hero headline. A controlled clamp, smaller than the global h1, so
-     the long title sits comfortably in the two-column layout and never runs off
-     the bottom on short or mobile screens. text-wrap: balance evens the lines.
-     ---------------------------------------------------------------------- */
-  .services-headline {
-    font-size: clamp(2rem, 4.4vw, 3.4rem);
-    text-wrap: balance;
-  }
-
-  /* ----------------------------------------------------------------------
-     Three-service card (hero right column). The three services in the order the
-     copy names them (Strategy -> Web design -> Photography), held in one
-     elevated card with a connecting rail and ringed icon markers. Built on the
-     site's card vocabulary (.surface-card depth), so it reads as a deliberate, premium panel rather than a
-     floaty diagram. Decorative (aria-hidden); the headline carries the real
-     content. No background glow and no looping animation: the depth and the accent
-     edge are the polish.
-     ---------------------------------------------------------------------- */
-  .services-flow {
-    position: relative;
-  }
-  .flow-card {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    padding: clamp(1.5rem, 3.2vw, 2.4rem);
-  }
-  /* A thin accent rule along the top edge, clipped by the card's overflow, as a
-     quiet "designed" cue (the same motif as the pricing tier cards). */
-  .flow-card::after {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 3px;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(
-      to right,
-      var(--color-accent),
-      color-mix(in oklab, var(--color-secondary) 90%, transparent)
+  /* ---- Sticky geometry ----------------------------------------------------
+     --svc-header-h: the header's height, measured by the script above.
+     --svc-header-fallback: the same without JS. The header's padding is
+     fluid, measured at 77px up to 640px wide, 79 at 768, 88 at 1024 and 95
+     from 1280; this line runs a pixel or so above it, so the nav never
+     tucks under the header.
+     --svc-subnav-h: the sub-nav's own height, fixed here so it is known.
+     scroll-padding-top on <html>, only while the sub-nav is on the page, puts
+     an anchored heading (and any element brought into view by focus) below
+     both bars with a little air (WCAG 2.4.11). */
+  :global(html:has(.svc-subnav)) {
+    --svc-header-fallback: clamp(4.875rem, calc(3.75rem + 2.8125vw), 6rem);
+    --svc-subnav-h: 3rem;
+    scroll-padding-top: calc(
+      var(--svc-header-h, var(--svc-header-fallback)) + var(--svc-subnav-h) + 1.25rem
     );
-    opacity: 0.85;
   }
 
-  .flow-track {
-    --marker: 2.9rem;
-    --flow-gap: clamp(1.75rem, 3.4vw, 3rem);
-    --rail: color-mix(in oklab, var(--color-heading) 16%, transparent);
-    position: relative;
-    list-style: none;
+  .svc-subnav {
+    position: sticky;
+    top: var(--svc-header-h, var(--svc-header-fallback));
+    z-index: 40;
+    height: var(--svc-subnav-h);
+    background-color: color-mix(in oklab, var(--background) 94%, transparent);
+    border-block: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .svc-subnav-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+  }
+  .svc-subnav-label {
+    display: none;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  @media (min-width: 48rem) {
+    .svc-subnav-label {
+      display: block;
+    }
+  }
+  /* One row. On a narrow phone it scrolls sideways inside itself (its links
+     are focusable, so a keyboard reaches every one). */
+  .svc-subnav-list {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem 1.25rem;
+    height: 100%;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--flow-gap);
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
-  :global(.dark) .flow-track {
-    --rail: color-mix(in oklab, #ffffff 18%, transparent);
+  .svc-subnav-list::-webkit-scrollbar {
+    display: none;
   }
-
-  .flow-step {
-    position: relative;
-    display: grid;
-    grid-template-columns: var(--marker) 1fr;
-    align-items: start;
-    gap: 1.1rem;
-  }
-
-  /* The connecting rail: a static line from each marker's centre down to the
-     next, so the three read as one ordered sequence. */
-  .flow-step:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: calc(var(--marker) / 2);
-    transform: translateX(-50%);
-    top: calc(var(--marker) / 2);
-    height: calc(100% + var(--flow-gap));
-    width: 2px;
-    border-radius: 2px;
-    background: var(--rail);
-  }
-
-  .flow-marker {
-    position: relative;
-    z-index: 1;
-    width: var(--marker);
-    height: var(--marker);
+  .svc-subnav-list a {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    border: 1.5px solid var(--rail);
-    background: var(--card);
-    color: var(--color-link);
-    transition:
-      color 0.3s ease,
-      border-color 0.3s ease;
+    min-height: 2.75rem;
+    white-space: nowrap;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--heading);
+    text-decoration: none;
   }
-  .flow-marker svg {
-    width: 1.35rem;
-    height: 1.35rem;
+  .svc-subnav-list a:hover,
+  .svc-subnav-list a:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
   }
 
-  .flow-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    padding-top: 0.15rem;
+  /* The rails stick too (Section.astro, lg up, at top: 7rem). Here they
+     would slide under the sub-nav, so they stick just below it instead. */
+  @media (min-width: 64rem) {
+    .svc :global(.section-rail) {
+      top: calc(
+        var(--svc-header-h, var(--svc-header-fallback)) + var(--svc-subnav-h, 3rem) + 1.5rem
+      );
+    }
   }
-  .flow-name {
-    font-family: var(--font-display);
-    font-size: clamp(1.375rem, 2vw, 1.75rem);
+
+  /* ---- Type --------------------------------------------------------------- */
+  .svc-h1 {
+    max-width: 18ch;
+  }
+  .svc-h2 {
+    margin-bottom: 2rem;
+  }
+  .svc-h3 {
+    font-size: var(--text-h3);
+    font-weight: 300;
+  }
+  .svc-lede {
+    max-width: 52ch;
+    margin-top: 1.5rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+  .svc-h2 + .svc-web .svc-lede,
+  .svc-photo .svc-lede {
+    margin-top: 0;
+  }
+  .svc-body {
+    max-width: 60ch;
+    line-height: 1.7;
+    color: var(--muted-foreground);
+  }
+  .svc-measure {
+    max-width: 62ch;
+  }
+  .svc-small {
+    max-width: 60ch;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--muted-foreground);
+  }
+
+  /* Points: plain hairline rows, no dots or checks. */
+  .svc-points {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .svc-points li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.45;
+    color: var(--color-text);
+  }
+
+  .svc-arrow,
+  .svc-host {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    min-height: 2.75rem;
+    color: var(--color-link);
+  }
+  .svc-arrow {
     font-weight: 650;
+  }
+  .svc-arrow span {
+    transition: transform var(--dur-quick) var(--ease-glide);
+  }
+  .svc-arrow:hover span,
+  .svc-arrow:focus-visible span {
+    transform: translateX(0.25rem);
+  }
+  .svc-host {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+
+  /* Prices: Bricolage 300, the same voice as the ruled tiers. */
+  .svc-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+  }
+  .svc-price-amount {
+    font-family: var(--font-display);
+    font-size: var(--text-h3);
+    font-weight: 300;
     line-height: 1.1;
     letter-spacing: -0.02em;
-    color: var(--color-heading);
+    color: var(--heading);
+    font-variant-numeric: tabular-nums;
   }
-  .flow-desc {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    color: var(--color-text-muted);
+  .svc-price-period {
+    font-size: 0.9375rem;
+    color: var(--muted-foreground);
   }
 
-  /* ----------------------------------------------------------------------
-     Service proof visuals. Each offering carries a framed visual: a real
-     shipped-site screenshot for Web design, and a labelled placeholder panel
-     for the services without a real image yet (Strategy, Photography). One
-     frame treatment for all, so the run reads as a system; swap a placeholder
-     for a real <Image> and it inherits the same frame. The framed-artifact
-     shadow is the shared --shadow-frame token (same as SiteShowcase).
-     ---------------------------------------------------------------------- */
-  .services-shot-frame {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    border-radius: 0.9rem;
-    border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-frame);
-    background: var(--color-bg-soft);
+  /* ---- Web design ---------------------------------------------------------- */
+  .svc-web {
+    display: grid;
+    gap: 2.5rem;
+    align-items: start;
   }
-  .services-shot-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top; /* show the site header, not a mid-page crop */
-    display: block;
-  }
-  /* Placeholder panel: a faint brand dot texture plus the service glyph and
-     name, so an un-filled slot reads as a deliberate panel, not a broken
-     image. Decorative (aria-hidden); the service <h2> carries the name to AT. */
-  .services-shot-placeholder {
+  .svc-web-copy {
     display: flex;
     flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+  @media (min-width: 48rem) {
+    .svc-web {
+      grid-template-columns: 5fr 6fr;
+      gap: clamp(2rem, 4vw, 4rem);
+    }
+  }
+  .svc-web-shot {
+    min-width: 0;
+    margin: 0;
+  }
+  .svc-web-shot figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .svc-web-shot figcaption a {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    background-color: var(--color-bg-soft);
-    background-image: radial-gradient(
-      color-mix(in oklab, var(--color-heading) 12%, transparent) 1px,
-      transparent 1px
-    );
-    background-size: 18px 18px;
+    min-height: 1.5rem;
     color: var(--color-link);
   }
-  .services-shot-ph-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    opacity: 0.9;
+
+  /* Strategy, set as type: the four points as large, light lines on
+     hairlines, in place of the old dot-grid tile. */
+  .svc-strategy {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: var(--space-section);
+    padding-top: 2rem;
+    border-top: 1px solid var(--line-strong);
   }
-  .services-shot-ph-label {
+  .svc-type-list {
+    margin: 0.5rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  .svc-type-list li {
+    padding: 0.875rem 0;
+    border-bottom: 1px solid var(--line);
     font-family: var(--font-display);
-    font-size: 1.375rem;
+    font-size: var(--text-h3);
+    font-weight: 300;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--heading);
+  }
+
+  /* ---- Recently shipped ---------------------------------------------------- */
+  .svc-recent {
+    display: grid;
+    gap: 4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .svc-recent {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(2rem, 4vw, 4rem);
+    }
+  }
+  .svc-recent-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .svc-recent-title {
+    margin-top: 1.25rem;
+    font-size: var(--text-h4);
+    overflow-wrap: anywhere;
+  }
+  .svc-recent-title a {
+    color: var(--heading);
+    text-decoration: none;
+  }
+  .svc-recent-title a:hover,
+  .svc-recent-title a:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+  }
+
+  /* ---- Photography --------------------------------------------------------- */
+  .svc-photo {
+    display: grid;
+    gap: 2.5rem;
+  }
+  .svc-photo > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+  @media (min-width: 48rem) {
+    .svc-photo {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(2rem, 4vw, 4rem);
+    }
+  }
+
+  /* ---- Care: ruled like PricingTeaser's tiers ------------------------------ */
+  .svc-care {
+    display: grid;
+    gap: 2.5rem;
+    margin: 3rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 40rem) {
+    .svc-care {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.5rem clamp(1.5rem, 3vw, 2.5rem);
+    }
+  }
+  @media (min-width: 80rem) {
+    .svc-care {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .svc-care-plan {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line-strong);
+  }
+  .svc-care-name {
+    font-size: var(--text-h4);
+  }
+  .svc-care-who {
+    font-size: 0.9375rem;
+    color: var(--muted-foreground);
+  }
+  .svc-care-plan .svc-price {
+    margin-top: 0.5rem;
+  }
+  .svc-care-time {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .svc-care-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0.25rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  /* ---- Why one person ------------------------------------------------------ */
+  .svc-why {
+    display: grid;
+    gap: 2rem;
+    margin: 2.5rem 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .svc-why {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.5rem clamp(2rem, 4vw, 4rem);
+    }
+  }
+  .svc-why li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .svc-why-title {
+    font-size: var(--text-h4);
+  }
+
+  /* ---- FAQ -----------------------------------------------------------------
+     Native <details>, so it opens with the keyboard and without JS. The answer
+     row grows from 0fr to 1fr (no fixed height needed); the + turns to x. */
+  .svc-faq {
+    border-top: 1px solid var(--line-strong);
+  }
+  .svc-faq-item {
+    border-bottom: 1px solid var(--line);
+  }
+  .svc-faq-item summary {
+    position: relative;
+    display: block;
+    min-height: 2.75rem;
+    padding: 1.125rem 2.5rem 1.125rem 0;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: var(--text-h5);
     font-weight: 650;
-    letter-spacing: -0.02em;
-    color: var(--color-text-muted);
+    line-height: 1.35;
+    color: var(--heading);
   }
-
-  /* ----------------------------------------------------------------------
-     Pricing tier cards. Built on .surface-card (real depth in both themes)
-     and the price count-up. Added here:
-       - a top accent rule as a shared highlight motif (full on the featured
-         tier, drawing in on hover for the others),
-       - a soft accent-glow bloom + warmed border + deeper shadow on hover, so
-         the card reads as rising. The rise is shadow-based, not transform-based:
-         these <li>s carry data-reveal, whose .is-visible sets transform:none on
-         the same element and would cancel a transform lift.
-       - the featured (Signature) tier carries an always-on accent glow and an
-         accent border so the recommended option draws the eye at rest.
-     Transitions are disabled by the global reduced-motion rule; every rest
-     state is complete and legible without motion. Decorative only (text and
-     contrast untouched), and a top-edge rule, never a side stripe. */
-  .tier-card {
-    transition:
-      box-shadow 0.32s ease,
-      border-color 0.3s ease;
+  .svc-faq-item summary::-webkit-details-marker {
+    display: none;
   }
-
-  /* Top accent rule on the top edge, clipped to the rounded corners by the
-     card's own overflow-hidden. Faint and slightly short at rest, drawing to
-     full width + full opacity on hover/focus. */
-  .tier-card::after {
-    content: '';
+  .svc-faq-item summary::after {
+    content: '+';
     position: absolute;
-    inset: 0 0 auto 0;
-    height: 3px;
-    z-index: 4;
-    background: var(--color-accent);
-    opacity: 0.3;
-    transform: scaleX(0.88);
-    transform-origin: center;
-    transition:
-      opacity 0.3s ease,
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: none;
+    right: 0.25rem;
+    top: 1.05rem;
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: transform var(--dur-quick) var(--ease-glide);
   }
-
-  .tier-card:hover,
-  .tier-card:focus-within {
-    box-shadow:
-      var(--shadow-card-hover),
-      var(--card-highlight),
-      0 26px 52px -28px color-mix(in oklab, var(--color-accent) 60%, transparent);
-    border-color: color-mix(in oklab, var(--color-accent) 45%, var(--color-border));
+  .svc-faq-item[open] summary::after {
+    transform: rotate(45deg);
   }
-  .tier-card:hover::after,
-  .tier-card:focus-within::after {
-    opacity: 1;
-    transform: scaleX(1);
+  .svc-faq-item summary:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
-
-  /* Featured (Signature): accent border, the top rule already at full, and a
-     soft always-on accent glow layered over the surface-card shadow. */
-  .tier-card--featured {
-    border-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-border));
-    box-shadow:
-      var(--shadow-card),
-      var(--card-highlight),
-      0 20px 46px -30px color-mix(in oklab, var(--color-accent) 60%, transparent);
-  }
-  .tier-card--featured::after {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-  .tier-card--featured:hover,
-  .tier-card--featured:focus-within {
-    box-shadow:
-      var(--shadow-card-hover),
-      var(--card-highlight),
-      0 30px 58px -26px color-mix(in oklab, var(--color-accent) 68%, transparent);
-  }
-
-  /* FAQ smooth open/close, JS-free.
-     The answer wrapper is a CSS grid whose single row animates from 0fr
-     (height collapsed to nothing) to 1fr (full natural height). Animating
-     grid-template-rows transitions cleanly between the two without us ever
-     knowing the pixel height, which is what makes a content-driven panel
-     animate at all. The inner overflow-hidden div clips the text while the
-     row is mid-transition. */
-  .faq-answer {
+  .svc-faq-answer {
+    display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows 300ms ease;
   }
-
-  .faq-item[open] .faq-answer {
+  .svc-faq-item[open] .svc-faq-answer {
     grid-template-rows: 1fr;
   }
+  .svc-faq-answer > div {
+    overflow: hidden;
+  }
+  .svc-faq-answer p {
+    max-width: 64ch;
+    padding-bottom: 1.25rem;
+    line-height: 1.7;
+    color: var(--color-text);
+  }
 
-  /* Respect reduced-motion: the panel still opens and closes, just instantly,
-     matching the global motion policy. */
   @media (prefers-reduced-motion: reduce) {
-    .faq-answer {
+    .svc-arrow span,
+    .svc-faq-item summary::after,
+    .svc-faq-answer {
       transition: none;
+    }
+  }
+  :global(html[data-motion-paused]) .svc-faq-answer {
+    transition: none;
+  }
+
+  @media (forced-colors: active) {
+    .svc-subnav {
+      border-color: CanvasText;
     }
   }
 </style>
