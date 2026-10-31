@@ -27,6 +27,17 @@ BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
 errors. Google shows no FAQ rich result for this kind of site, which is fine.
 Then resubmit the sitemap in Search Console. Delete this item when done.
 
+### 0b. After the cut-over: mark `generate_lead` as a GA4 key event (added 2026-10-31, overhaul 4.1)
+
+The site now sends `generate_lead`, `contact_click`, `book_call_click`,
+`visit_client_site`, `pricing_view` and `cta_click` (`src/lib/track.ts`). Once
+`redesign` is live, open GA4 (property 532519109) > Admin > Events, wait for
+`generate_lead` to appear after a real or test inquiry, and mark it as a key
+event so it counts as a conversion. Optionally register `cta_location`,
+`link_domain`, `method`, `cta_id` and `pricing_variant` as event-scoped custom
+dimensions (Admin > Custom definitions) so they show in reports. Delete this
+item when done.
+
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).
@@ -82,7 +93,7 @@ then on.
 
 ### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
 
-These content fixes are waiting on Nathan's sign-off and will ship as their own PR:
+Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is still open:
 
 - **First Baptist Muncie: done (overhaul 2.4d, 2026-10-31).** Nathan signed
   off the FBCM part ("FBCM is astro now"). The study now describes the Astro +
@@ -98,8 +109,13 @@ These content fixes are waiting on Nathan's sign-off and will ship as their own 
 - **First Presbyterian Orangeburg:** its `hook` ("Book the building through one
   form, not an inbox") is a draft written from the designer note (1.6). Edit or
   approve it.
-- **Reid Design:** the study describes a Budget Calculator, a style quiz and a
-  before/after slider. Remove any of those that are not live on the site today.
+- **Reid Design: done (overhaul 2.4f, 2026-10-31).** Nathan approved the
+  removal ("Yes, remove them"). The study no longer mentions a Budget
+  Calculator, a style quiz or before/after sliders, and the designer note about
+  the slider is gone. That day on reiddesignllc.com, `/budget-calculator/` and
+  `/style-quiz/` answered 404, `/quiz/` and `/calculator/` redirected to
+  /services/, and `/portfolio/` redirected home (the portfolio is switched
+  off in Reid's CMS). The README's Reid row was corrected in the same PR.
 
 ### 2b. Ungate /photography (added 2026-10-31, overhaul 2.8)
 
