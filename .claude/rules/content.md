@@ -80,7 +80,7 @@ Static routes generated at build time:
 | `/photography/`    | `src/pages/photography.astro`                                                                                |
 | `/journal/`        | `src/pages/journal/index.astro`                                                                              |
 | `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                                 |
-| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                                |
+| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry; prefill params in `homepage-and-pages.md`)                     |
 | `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                           |
 | `/colophon/parts/` | `src/pages/colophon/parts.astro` (noindex check page for the shared components, not in the sitemap or menus) |
 | `/privacy/`        | `src/pages/privacy.astro`                                                                                    |
