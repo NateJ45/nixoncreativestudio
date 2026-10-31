@@ -13,7 +13,7 @@
        Pages without a [data-hero-dark] element never get this state, so their
        header is the frosted bar from the first paint.
      - data-scrolled  : the page has scrolled past 8px; the bar frosts and
-       condenses. When both are present, over-hero wins (holds the hero
+       lifts (its height never changes, see below). When both are present, over-hero wins (holds the hero
        treatment while the hero is still behind it).
 
    All three visual states live in the scoped <style> block below rather than
@@ -159,14 +159,15 @@ const isActive = (href: string): boolean => {
     transition:
       background-color 0.3s ease,
       box-shadow 0.3s ease,
-      padding 0.3s ease,
       border-color 0.3s ease;
   }
 
-  /* Scrolled: frost deepens, the bar condenses and lifts. */
+  /* Scrolled: frost deepens and the bar lifts. It no longer condenses: the
+     header is in flow (sticky), so shrinking its padding moved the whole page
+     up while the visitor scrolled, which read as layout shift (up to 0.054 on
+     / at 1440 in tests/cls.spec.ts, overhaul package 1.5). Only paint
+     properties change here. */
   .ncs-header[data-scrolled] {
-    padding-top: calc(0.75rem + env(safe-area-inset-top));
-    padding-bottom: 0.75rem;
     background-color: color-mix(in oklab, var(--color-bg) 90%, transparent);
     box-shadow: 0 10px 30px -18px rgba(10, 22, 40, 0.45);
     backdrop-filter: blur(12px);
