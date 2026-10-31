@@ -9,6 +9,8 @@
 # (shots/mas-monograms-before.png) is the old Squarespace home, captured live
 # while masmonograms.squarespace.com was still up. The rest of the shots are
 # the new site; recapture them if it changes.
+# Overhaul 2.4c: no featureShot yet, because none of the current captures
+# shows the initials preview the hook describes. Add one once it is captured.
 title: MAS Monograms
 client: MAS Monograms
 sector: small-business
@@ -39,12 +41,6 @@ outcome: 'A Squarespace studio site rebuilt on a faster platform Mary Ann owns, 
 #   quote: ""
 #   name: ""
 #   title: ""
-results:
-  - 'Mary Ann owns her site now, built on Astro and hosted on Cloudflare, with no monthly Squarespace bill for the platform underneath it.'
-  - "The rebuilt site loads faster than the Squarespace template it replaced, served as static pages from Cloudflare's edge."
-  - 'The homepage and shop lead with real photos of her finished work instead of clip-art category icons.'
-  - 'A custom quote form captures the font, placement, size, thread colors, and reference photos up front, more than the old form could ask, so requests arrive ready to price.'
-  - 'Content lives in Sanity now, so a light gallery or pricing edit is a quick update instead of a fight with a page builder.'
 designerNote: 'I built the first MAS Monograms site on Squarespace, and it did its job. Rebuilding it on Astro and Sanity was about giving Mary Ann something faster that she truly owns, and a design that finally puts her real work first. The quote-first flow stayed, because for handmade embroidery it is still the honest way to set a price.'
 hook: 'Try your own initials right in the hero'
 order: 2
@@ -65,8 +61,21 @@ palette:
     - '#0F1B2D'
 mobileShot: ../../assets/case-studies/shots/mas-monograms-mobile.png
 beforeShot: ../../assets/case-studies/shots/mas-monograms-before.png
+# The rail's fact row (overhaul 2.4c), filled from the fields above.
+facts:
+  sector: Small business
+  year: '2026'
+  role: Designer, Developer
+  stack:
+    - Astro
+    - Sanity
+    - Tailwind
+    - Cloudflare
+  host: mas-monograms.com
 ---
 
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import BeforeAfter from '../../components/BeforeAfter.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
@@ -77,37 +86,35 @@ import shopShot from '../../assets/case-studies/shots/mas-monograms-feature-shop
 import quoteShot from '../../assets/case-studies/shots/mas-monograms-feature-quote.png';
 import galleryShot from '../../assets/case-studies/shots/mas-monograms-feature-gallery.png';
 
-<SiteShowcase
-  slug="mas-monograms"
-  alt="The MAS Monograms homepage, scrolling top to bottom"
-  href="https://mas-monograms.com"
-  label="mas-monograms.com"
-/>
-
 ## The brief
 
-MAS Monograms is a home-based custom embroidery studio run by Mary Ann Stone in St. Matthews, South Carolina. Every piece is made to order: the font, thread color, placement, and stitch count all change from one customer to the next, and each of those choices moves the price. The first site I built for her lived on Squarespace and worked around that reality with a quote-first flow, educate first, quote second, collect payment third.
+MAS Monograms is a home-based custom embroidery studio run by Mary Ann Stone in St. Matthews, South Carolina. Every piece is made to order: the font, thread color, placement, and stitch count all change from one customer to the next, and each of those choices moves the price. The first site I built for her lived on Squarespace and worked around that reality with a quote-first flow: educate first, quote second, collect payment third.
 
 That site did its job. What it could not do was keep up with where the studio was headed. Mary Ann was paying a monthly platform fee for a site she did not really own. The template put clip-art category icons where her actual finished work should have been. The built-in form could only ask so much, so quotes still needed a round of back-and-forth. And the whole thing was slower than it needed to be.
 
 She wanted to keep the quote-first strategy, because it fits handmade work, and move everything else onto something faster, more custom, and hers.
 
-<BeforeAfter
-  before={beforeShot}
-  after={afterShot}
-  beforeAlt="The previous Squarespace MAS Monograms site"
-  afterAlt="The redesigned MAS Monograms homepage"
+## Decisions
+
+<Decision
+  title="Keep the strategy, rebuild the foundation"
+  easy="Stay on Squarespace, and keep paying a monthly fee for a site she did not really own."
+  did="Keep the quote-first flow, because for handmade embroidery it is still the honest way to set a price, and rebuild everything under it on Astro, Sanity and Cloudflare: fast static pages that belong to Mary Ann outright."
 />
 
-## The approach
+<Decision
+  title="Lead with proof"
+  easy="Keep the template's clip-art category icons."
+  did="Use real photographs of Mary Ann's finished pieces in the category grid, the hero, the shop and the Style Gallery, so a customer sees the quality of the stitching before reading a word."
+/>
 
-I kept the strategy and rebuilt the foundation. The new site runs on Astro, with content in Sanity and hosting on Cloudflare, so it ships as fast static pages and belongs to Mary Ann outright, with no monthly platform rent.
-
-The redesign leads with proof. Where the old category grid used small clip-art icons, the new one uses real photographs of Mary Ann's finished pieces, so a customer browsing tote bags or baby gifts sees the actual quality of the stitching before they read a word. That same real work carries the hero, the shop, and the Style Gallery.
+<Decision
+  title="A quote form that asks enough"
+  easy="Keep the built-in form, and settle the details in a round of back-and-forth."
+  did="Ask for the font, placement, size, thread colors, and reference photos up front, so a request arrives ready to price."
+/>
 
 Content lives in Sanity, split the way a one-person studio actually works. I handle the structure and the heavier changes, and Mary Ann can make the light edits herself, adding a piece to the gallery or nudging a price, without wrestling a page builder or waiting on a template.
-
-The quote-first flow stayed, and the form that ends it got a real upgrade.
 
 ## What I built
 
@@ -144,7 +151,37 @@ The full build, including the pieces above:
 - Custom quote form covering item, ownership, personalization, monogram style, placement, size, thread colors, font, timeline, and reference photo uploads
 - Font and Lettering Guide and a Thread Color Chart, so customers reach the form already fluent in the options
 - Pricing page and a four-step How It Works: browse, request, quote, stitch
-- About page telling Mary Ann's story as a maker, positioning the studio as a personal craft operation, not a fulfillment warehouse
+- About page telling Mary Ann's story as a maker, a personal craft operation rather than a fulfillment warehouse
 - Privacy, terms, and accessibility pages, matching the professional footing of the rest of the site
+
+## Before and after
+
+<BeforeAfter
+  before={beforeShot}
+  after={afterShot}
+  beforeAlt="The previous Squarespace MAS Monograms site"
+  afterAlt="The redesigned MAS Monograms homepage"
+  beforePlatform="Squarespace"
+  afterPlatform="Astro"
+/>
+
+## Walk the homepage
+
+<SiteShowcase
+  slug="mas-monograms"
+  alt="The MAS Monograms homepage, scrolling top to bottom"
+  href="https://mas-monograms.com"
+  label="mas-monograms.com"
+/>
+
+<ResultsBlock
+  items={[
+    'Mary Ann owns her site now, built on Astro and hosted on Cloudflare, with no monthly Squarespace bill for the platform underneath it.',
+    "The rebuilt site loads faster than the Squarespace template it replaced, served as static pages from Cloudflare's edge.",
+    'The homepage and shop lead with real photos of her finished work instead of clip-art category icons.',
+    'A custom quote form captures the font, placement, size, thread colors, and reference photos up front, more than the old form could ask, so requests arrive ready to price.',
+    'Content lives in Sanity now, so a light gallery or pricing edit is a quick update instead of a fight with a page builder.',
+  ]}
+/>
 
 <Lightbox />
