@@ -92,6 +92,13 @@ for (const vp of viewports) {
           await loadAllImages(page);
           await settle(page);
 
+          // Warm-up capture, thrown away. On the Linux runner the first full-page raster
+          // of a large photographic image differed speckle-wise from the next one
+          // (/work/first-presbyterian-orangeburg, 2026-10-31, 9% of pixels), so
+          // "two consecutive stable screenshots" never happened inside 5s.
+          await page.screenshot({ fullPage: true });
+          await page.waitForTimeout(500);
+
           const slug = route === '/' ? 'home' : route.slice(1).replace(/\//g, '-');
           await expect(page).toHaveScreenshot(`${slug}-${vp.name}-${theme}.png`, {
             fullPage: true,
