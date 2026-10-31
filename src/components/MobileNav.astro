@@ -15,12 +15,16 @@
      page scroll, and closes the sheet on astro:before-swap so a View
      Transitions navigation never carries an open modal onto the next page.
 
-   The look (overhaul package 2.1): a full-screen sheet on paper, which is the
-   light paper surface in light mode and ink navy in dark (--paper is navy in
-   the dark theme). The links are big Bricolage at weight 300; the current
-   page is at 800, the weight being the cue (plus aria-current). No weight
-   ripple on open (ruling 9). The bottom holds the pill CTA, the email, the
-   theme toggle, the Pause motion switch, and the amber "Booking projects"
+   The look (overhaul package 2.1, drawer since 4.10): a drawer on paper that
+   slides in from the right edge over a navy scrim, leaving a strip of scrim
+   on the left on a phone (a tap there closes it, like Escape). Paper is the
+   light surface in light mode and ink navy in dark (--paper is navy in the
+   dark theme), so a hairline marks the drawer's edge. Only the drawer moves:
+   the page behind never shifts or transforms (that would break the sticky
+   rail and View Transitions). The links are big Bricolage at weight 300; the
+   current page is at 800, the weight being the cue (plus aria-current). No
+   weight ripple on open (ruling 9). The bottom holds the pill CTA, the email,
+   the theme toggle, the Pause motion switch, and the amber "Booking projects"
    dot when site.bookingOpen is true. Every control is a 44px target.
 
    Rendered inside Header.astro, which passes the same nav list the desktop
@@ -52,8 +56,8 @@ const isActive = (href: string): boolean => {
   return path === h || path.startsWith(`${h}/`);
 };
 
-// Stagger for the entrance: 70ms a row (the motion system's step), capped at
-// six steps so a long list never trails.
+// Stagger for the entrance: rows follow the drawer in 70ms apart (the motion
+// system's step), capped at six steps so a long list never trails.
 const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
 ---
 
@@ -80,7 +84,10 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
   <div class="mnav-shell flex min-h-full flex-col">
     {/* Top bar: the Bebas wordmark (the dialog's accessible name) and close. */}
     <div class="flex items-center justify-between gap-m">
-      <h2 id="mnav-title" class="font-wordmark text-2xl font-normal tracking-[0.02em] text-heading">
+      <h2
+        id="mnav-title"
+        class="font-wordmark text-xl font-normal tracking-[0.02em] text-heading sm:text-2xl"
+      >
         {studioName}
       </h2>
       <p id="mnav-desc" class="sr-only">
@@ -151,22 +158,29 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
 </dialog>
 
 <style>
-  /* Full-screen modal. The UA dialog box (centred, max size, border) is reset
-     so the sheet fills the viewport. */
+  /* The drawer: pinned to the right edge, full height. The UA dialog box
+     (centred, max size, border) is reset. It stops 3.5rem short of the left
+     edge on a phone so a strip of scrim stays visible to tap, and caps at
+     26rem on a tablet. The hairline on its open edge is --line-strong because
+     in dark mode the drawer and the page are the same navy. */
   .mnav-dialog {
     position: fixed;
-    inset: 0;
-    width: 100%;
-    max-width: 100%;
+    inset: 0 0 0 auto;
+    width: min(100% - 3.5rem, 26rem);
+    max-width: none;
     height: 100%;
     max-height: 100%;
     margin: 0;
     border: 0;
+    border-inline-start: 1px solid var(--line-strong);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+  /* The scrim: ink at 55%, so the page dims but stays recognisable behind. A
+     tap on it closes the drawer (src/scripts/mobile-nav.ts). Nothing on the
+     page itself moves or transforms. */
   .mnav-dialog::backdrop {
-    background: transparent;
+    background: color-mix(in srgb, var(--ink) 55%, transparent);
   }
   /* The page behind does not scroll while the sheet is open. */
   :global(html:has(dialog[data-mnav][open])) {
@@ -235,34 +249,77 @@ const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
     background: var(--color-live);
   }
 
-  /* Entrance: the sheet fades in and the rows settle up 8px, a step apart.
-     The hidden start sits inside no-preference, and Pause motion skips it, so
-     with either one everything shows at once. */
-  @keyframes mnav-panel-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
+  /* Motion (overhaul 4.10). Opening: the drawer slides in from the right
+     edge (--dur-settle on --ease-settle) while the scrim fades up, and the
+     rows settle in from 8px to the right, 70ms apart. Closing: the drawer
+     slides back out and the scrim fades (--dur-quick on --ease-exit). Only
+     the drawer moves; weight never animates here (ruling 9).
+
+     It is all CSS transitions on the dialog's own [open] state:
+     @starting-style gives the first frame after showModal(), and
+     `display` / `overlay` with allow-discrete keep the dialog in the top
+     layer until the close has played. A browser without those features
+     simply opens and closes at once.
+
+     Every rule sits inside no-preference and skips html[data-motion-paused],
+     so under reduced motion or Pause motion the drawer is just there, and
+     gone, with no slide and no stagger. */
   @keyframes mnav-in {
     from {
       opacity: 0;
-      transform: translateY(8px);
+      translate: 8px 0;
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      translate: 0 0;
     }
   }
   @media (prefers-reduced-motion: no-preference) {
-    :global(html:not([data-motion-paused])) .mnav-dialog[open] {
-      animation: mnav-panel-in var(--dur-quick) var(--ease-settle) both;
+    /* Closed (and closing): off to the right, timed for the exit. */
+    :global(html:not([data-motion-paused])) .mnav-dialog {
+      translate: 100% 0;
+      transition:
+        translate var(--dur-quick) var(--ease-exit),
+        display var(--dur-quick) allow-discrete,
+        overlay var(--dur-quick) allow-discrete;
     }
+    :global(html:not([data-motion-paused])) .mnav-dialog::backdrop {
+      opacity: 0;
+      transition:
+        opacity var(--dur-quick) var(--ease-exit),
+        display var(--dur-quick) allow-discrete,
+        overlay var(--dur-quick) allow-discrete;
+    }
+    /* Open: in place, timed for the entrance. */
+    :global(html:not([data-motion-paused])) .mnav-dialog[open] {
+      translate: 0 0;
+      transition:
+        translate var(--dur-settle) var(--ease-settle),
+        display var(--dur-settle) allow-discrete,
+        overlay var(--dur-settle) allow-discrete;
+    }
+    :global(html:not([data-motion-paused])) .mnav-dialog[open]::backdrop {
+      opacity: 1;
+      transition:
+        opacity var(--dur-settle) var(--ease-settle),
+        display var(--dur-settle) allow-discrete,
+        overlay var(--dur-settle) allow-discrete;
+    }
+    /* The rows replay each time the drawer opens (display none to block
+       restarts an animation). */
     :global(html:not([data-motion-paused])) .mnav-item {
       animation: mnav-in var(--dur-settle) var(--ease-settle) both;
       animation-delay: var(--mnav-delay, 0ms);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @starting-style {
+      :global(html:not([data-motion-paused])) .mnav-dialog[open] {
+        translate: 100% 0;
+      }
+      :global(html:not([data-motion-paused])) .mnav-dialog[open]::backdrop {
+        opacity: 0;
+      }
     }
   }
 </style>
