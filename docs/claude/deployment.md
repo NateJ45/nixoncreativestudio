@@ -7,7 +7,7 @@ Moved out of CLAUDE.md. Read when changing deploys, env vars, the Coming Soon ga
 - Build command: `npm run build`. Output directory: `dist`.
 - Unknown URLs: `wrangler.jsonc` sets `assets.not_found_handling: "404-page"`, so a path with no file gets `dist/client/404.html` (from `src/pages/404.astro`) with a 404 status. Without it Cloudflare answers with an empty body, which is what the live site did until 2026-10-18.
 - `output: 'static'` in `astro.config.mjs` prerenders every page to HTML at build time. The `@astrojs/cloudflare` adapter is installed but inert for static pages. To opt a single page into server rendering, add `export const prerender = false` in that page's frontmatter.
-- The adapter is configured with `imageService: 'compile'` so `<Image />` is optimized at build time into static `dist/_astro/*.webp` files. Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
+- The adapter is configured with `imageService: 'compile'` so `<Image />` and `<Picture />` are optimized at build time into static `dist/_astro/*.avif` and `*.webp` files (AVIF settings: `image.service.config` in `astro.config.mjs`, overhaul 4.4). Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
 
 ## Environment variables
 
@@ -15,7 +15,7 @@ Set in the Cloudflare dashboard → **Settings → Variables and Secrets** (the 
 
 - `PUBLIC_WEB3FORMS_KEY`: contact form access key from [web3forms.com](https://web3forms.com/). Without it the contact form falls back to a no-op action and shows an inline notice.
 - `PUBLIC_CF_ANALYTICS_TOKEN`: Cloudflare Web Analytics token from dash.cloudflare.com → Analytics & Logs → Web Analytics. Without it the analytics beacon doesn't render.
-- `PUBLIC_GA_ID`: the GA4 web data stream Measurement ID (`G-...`) for property 532519109. Without it no GA4 script renders. The property went dark in 2026-06 because the Astro rebuild shipped without the tag; restored 2026-09-04. The tag skips automated browsers (WebDriver, Lighthouse, PageSpeed, GTmetrix; starter PORTS card 96), so our own test sweeps never count as visitors.
+- `PUBLIC_GA_ID`: the GA4 web data stream Measurement ID (`G-...`) for property 532519109. Without it no GA4 script renders. The property went dark in 2026-06 because the Astro rebuild shipped without the tag; restored 2026-09-04. The tag skips automated browsers (WebDriver, Lighthouse, PageSpeed, GTmetrix; starter PORTS card 96), so our own test sweeps never count as visitors. Site events (overhaul 4.1) come from `src/lib/track.ts` and only fire when that tag defined `gtag`; mark `generate_lead` as a key event in the GA4 admin (Admin > Events) so it counts as a conversion.
 - `PUBLIC_COMING_SOON`: set to the literal string `true` to gate the entire site behind the coming-soon page (see below). Unset, or any other value, takes the site live.
 - `PUBLIC_PREVIEW_TOKEN`: random secret string used by the gate's inline script to recognize your bypass. Required for the bypass to work; pick something long and unguessable. The token is inlined into shipped HTML at build time, so anyone viewing source can see it: a soft gate, not security.
 

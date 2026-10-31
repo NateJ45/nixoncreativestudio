@@ -1,0 +1,200 @@
+---
+// Safe to edit. Every line on this page must stay TRUE, like the colophon.
+/* ============================================================================
+   /colophon/parts/ | The parts page (overhaul package 1.8)
+   ============================================================================
+   One page that renders every shared building block (Section, BrowserFrame,
+   FramePair, Media, and the nav from src/data/nav.ts), plus the case-study
+   body parts from package 2.4b (Signature, Decision, ResultsBlock), with
+   real content: the
+   Stone Steps 50K captures and live URL, and facts computed from the
+   case-study collection. It exists so the gates can check the parts in one
+   place: it is in tests/routes.ts, so axe (light and dark), the 320px reflow
+   sweep, first-viewport, smoke and metadata all run on it.
+
+   It is not a page for visitors: noindex, left out of the sitemap
+   (astro.config.mjs), and not linked from the menus. No fake content here
+   either; when a part needs an example, use a real capture or a real fact.
+
+   When a part changes, look at this page at 1440 and 320 in both themes.
+   ============================================================================ */
+
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/Section.astro';
+import BrowserFrame from '../../components/BrowserFrame.astro';
+import FramePair from '../../components/FramePair.astro';
+import Media from '../../components/Media.astro';
+import { BODY_SIZES } from '../../lib/picture';
+import Signature from '../../components/Signature.astro';
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
+import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
+import { getNav, getFooterNav, MIN_PHOTOS } from '../../data/nav';
+
+import desktopShot from '../../assets/case-studies/shots/stone-steps-50k-home.png';
+import phoneShot from '../../assets/case-studies/shots/stone-steps-50k-mobile.png';
+import elevationShot from '../../assets/case-studies/shots/stone-steps-50k-feature-elevation.png';
+
+// The sample study: Stone Steps 50K, the same one the tests use.
+const SLUG = 'stone-steps-50k';
+const study = await getEntry('case-studies', SLUG);
+if (!study?.data.liveUrl) {
+  throw new Error(`/colophon/parts/ needs the ${SLUG} case study and its liveUrl.`);
+}
+const { title, liveUrl, cover, hook } = study.data;
+
+// Real facts for the rails, computed so they never go stale.
+const studies = await getCollection('case-studies');
+const studyCount = studies.length;
+const photoCount = (await getCollection('photos')).length;
+const nav = await getNav();
+const footerNav = await getFooterNav();
+---
+
+<BaseLayout
+  title="Parts: the site's building blocks | Nixon Creative Studio"
+  description="The shared parts this site is built from, sections, browser frames and images, shown with a real client site so I can check them in both themes."
+  ogImage="/og/colophon.png"
+  noindex
+>
+  <Section rail="Parts" railMeta="Not in the menus" hairline={false} labelledby="parts-heading">
+    <h1 id="parts-heading">
+      The parts this site is <b>built from.</b>
+    </h1>
+    <p class="mt-m max-w-[40rem] text-lg leading-[1.55] text-text-muted">
+      Every shared building block on one page, with a real client site in the frames, so I can check
+      them in light and dark and at every width before they go on a real page.
+    </p>
+  </Section>
+
+  <Section
+    tone="paper"
+    rail="Section"
+    railMeta={`${studyCount} case studies`}
+    labelledby="parts-section"
+  >
+    <h2 id="parts-section">
+      A section on <b>paper.</b>
+    </h2>
+    <p class="mt-s max-w-[40rem] leading-[1.7] text-text">
+      Each band of a page is a Section: white, paper or ink, with a hairline where the surface
+      changes. The label on the left is the rail. It holds one real fact, worked out from the site's
+      own content, and it sticks under the header on a wide screen.
+    </p>
+  </Section>
+
+  <Section rail="Browser frame" railMeta={new URL(liveUrl).hostname} labelledby="parts-frame">
+    <h2 id="parts-frame">
+      One frame for <b>client work.</b>
+    </h2>
+    <p class="mt-s mb-l max-w-[40rem] leading-[1.7] text-text">
+      {title}, as it is live today. The bar shows the real address and prints it in full on paper.
+    </p>
+    <BrowserFrame url={liveUrl}>
+      <Media
+        src={desktopShot}
+        alt={`The ${title} homepage`}
+        ratio="16 / 10"
+        position="top"
+        widths={[480, 800, 1200]}
+        sizes={BODY_SIZES}
+      />
+    </BrowserFrame>
+  </Section>
+
+  <Section tone="paper" rail="Frame pair" railMeta="Desktop and phone" labelledby="parts-pair">
+    <h2 id="parts-pair">
+      The same site on <b>two screens.</b>
+    </h2>
+    {hook && <p class="mt-s mb-l max-w-[40rem] leading-[1.7] text-text">{hook}.</p>}
+    <FramePair
+      url={liveUrl}
+      desktop={desktopShot}
+      phone={phoneShot}
+      alt={`The ${title} homepage on a laptop and a phone`}
+      sizes="(min-width: 82.5rem) 832px, (min-width: 64rem) calc(65.4vw - 31px), calc(88vw - 42px)"
+      phoneSizes="(min-width: 82.5rem) 246px, (min-width: 64rem) calc(19.3vw - 9px), calc(26vw - 12px)"
+    />
+  </Section>
+
+  <Section rail="Media" railMeta="Lazy by default" prose labelledby="parts-media">
+    <h2 id="parts-media">
+      An image that is <b>never hidden.</b>
+    </h2>
+    <p class="mt-s mb-l leading-[1.7] text-text">
+      The case-study cover in a fixed 4:3 box. The blur sits behind the image, so the image shows
+      the moment it arrives, with or without JavaScript.
+    </p>
+    <Media
+      src={cover}
+      alt={`The top of the ${title} homepage`}
+      ratio="4 / 3"
+      placeholder={getCoverPlaceholder(SLUG)}
+      widths={[400, 640, 900]}
+      sizes="(min-width: 589px) 541px, calc(100vw - 3rem)"
+      class="rounded-frame"
+    />
+  </Section>
+
+  {/* The case-study body parts (2.4b). Every word below is taken from the
+      Stone Steps study's own MDX, which sources its numbers. */}
+  <Signature
+    hook={hook}
+    src={elevationShot}
+    alt="The elevation chart on stonesteps50k.com: seven loops of steep climbs, measured from USGS LiDAR"
+    url={liveUrl}
+    tone="paper"
+    id="parts-signature"
+  />
+
+  <Section rail="Decision" railMeta="One to three per study" labelledby="parts-decision">
+    <h2 id="parts-decision">
+      The easy version, and <b>what I did.</b>
+    </h2>
+    <Decision
+      title="Records from the results"
+      easy="Carry the hand-typed records tables over to the new site."
+      did="Calculate every record from the results instead, so a record and the finish behind it are the same entry."
+    />
+    <Decision
+      title="A look taken from the race's own sign"
+      easy="A near-black and blaze orange scheme that looks like a trail race."
+      did="Sample the palette from the race's hand-painted trail sign, because the first draft did not look like this race."
+    />
+  </Section>
+
+  <Section tone="paper" rail="Results" railMeta="Sourced or plain" prose label="Results ledger">
+    <ResultsBlock
+      id="parts-results"
+      items={[
+        {
+          figure: '2,188',
+          text: 'finishes on file, every edition since 2003',
+          source: "RunSignUp and the race's archived results pages",
+        },
+        'After each race the site updates itself. Results, records, and runner pages are live the next morning.',
+      ]}
+    />
+  </Section>
+
+  <Section tone="ink" rail="Navigation" railMeta={`${nav.length} links`} labelledby="parts-nav">
+    <h2 id="parts-nav">
+      The menu, from <b>one list.</b>
+    </h2>
+    <p class="mt-s max-w-[40rem] leading-[1.7]">
+      The header, the mobile menu and the footer all read src/data/nav.ts. Journal joins once an
+      entry is published; Photography joins at {MIN_PHOTOS} photographs (there are {photoCount}{' '}
+      today).
+    </p>
+    <ul class="mt-m flex flex-wrap gap-x-l gap-y-s font-mono text-sm">
+      {footerNav.map(({ label, href }) => (
+        <li>
+          <a class="text-link underline underline-offset-4" href={href}>
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </Section>
+</BaseLayout>

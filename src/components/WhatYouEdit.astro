@@ -1,0 +1,97 @@
+---
+// Safe to edit.
+/* ============================================================================
+   WhatYouEdit: the "What you edit" band (overhaul package 3.6)
+   ============================================================================
+   A CMS that works well is part of what I sell, so a study built on one shows
+   the editing screen: the site's own Sanity Studio or wp-admin, with a real
+   page or post open. The screenshot is the study's `cmsShot`, shot by Nathan
+   with `npm run capture:cms` (he signs in himself; the script hides avatars,
+   user menus, email addresses and admin nags before it shoots).
+
+   Renders NOTHING without a screenshot: pass the result of cmsSection() from
+   src/lib/study.ts, which is null when the study has no `cmsShot`.
+
+   Layout: a Section band (rail "What you edit" plus the editor's name, e.g.
+   "Sanity Studio", when the study sets `cmsName`), one short heading line,
+   then the screenshot in a BrowserFrame whose bar shows the editor's address
+   (cmsFrame(): cmsUrl, else the live site plus /studio or /wp-admin). Lazy: the band
+   is far below the first viewport. The capture is 1440x900, so the 16:10 box
+   matches it and nothing is cropped.
+
+   Usage (in the study template):
+     <WhatYouEdit cms={cmsSection(entry.data)} frame={cmsFrame(entry.data)} />
+
+   Props:
+     cms   { src, alt, name? } or null (null renders nothing)
+     frame { url, label } from cmsFrame(): the editor's address, shown in the
+           bar as e.g. "stonesteps50k.com/studio"; without it the shot sits in
+           the plain .frame
+     id    the heading id (default "what-you-edit-heading")
+   ============================================================================ */
+
+import type { ImageMetadata } from 'astro';
+import Section from './Section.astro';
+import BrowserFrame from './BrowserFrame.astro';
+import Media from './Media.astro';
+import { BODY_SIZES } from '../lib/picture';
+
+interface Props {
+  cms: { src: ImageMetadata; alt: string; name?: string } | null;
+  frame?: { url: string; label: string };
+  id?: string;
+}
+
+const { cms, frame, id = 'what-you-edit-heading' } = Astro.props;
+
+const media = {
+  widths: [640, 960, 1440],
+  // The body column: 9 of 12 columns of the 82.5rem container from lg up.
+  sizes: BODY_SIZES,
+};
+---
+
+{cms && (
+  <Section rail="What you edit" railMeta={cms.name} tone="paper" labelledby={id}>
+    <div class="cms-edit" data-what-you-edit>
+      <h2 id={id} class="cms-edit-heading">
+        The site's own editor, <b>as the staff see it.</b>
+      </h2>
+      {frame ? (
+        <BrowserFrame url={frame.url} label={frame.label}>
+          <Media
+            src={cms.src}
+            alt={cms.alt}
+            ratio="16 / 10"
+            position="top"
+            widths={media.widths}
+            sizes={media.sizes}
+          />
+        </BrowserFrame>
+      ) : (
+        <div class="frame">
+          <Media
+            src={cms.src}
+            alt={cms.alt}
+            ratio="16 / 10"
+            position="top"
+            widths={media.widths}
+            sizes={media.sizes}
+          />
+        </div>
+      )}
+    </div>
+  </Section>
+)}
+
+<style>
+  .cms-edit {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .cms-edit-heading {
+    margin: 0;
+    max-width: 22ch;
+  }
+</style>

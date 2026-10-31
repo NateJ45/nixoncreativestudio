@@ -19,18 +19,31 @@ Things that still need configuration before / during the public launch. Everythi
 
 ## Component scaffolds waiting on content
 
-- [ ] **`ClientLogos.astro`**: populate the `logos` array once you have written permission from each client to display their logo. Drop the SVGs in `src/assets/clients/`. Render `<ClientLogos />` on Home or About when ready.
-- [ ] **`PressMentions.astro`**: populate the `press` array when media / podcast / award coverage happens. Render on About when there's at least one entry.
-
 ## Real content to ship
 
 - [ ] **Optional hero photograph** at `src/assets/brand/hero.jpg`. No longer a content gate: the hero ships complete today with the domain-warp WebGL flow plus the device-pairing portfolio showcase. To use a real photo instead, drop it at that path and uncomment the `<Image />` import + tag in `Hero.astro`; it layers over the WebGL / `.band-themed` glow (there is no `.hero-placeholder` div anymore). Pick something that telegraphs Cincinnati and audience: a church sanctuary at golden hour, a nonprofit at work, a Cincinnati storefront.
-- [ ] **Real attributed testimonials** filled into a case study's `testimonial:` frontmatter. That renders a pull-quote on the case study page and populates the /about carousel (`Testimonials.astro` + `TestimonialCarousel.tsx`), which shows nothing until at least one real quote exists. The homepage carries no standalone testimonials band; quotes live where the context lives. Never fabricate one.
+- [ ] **Real attributed testimonials** for Presbyterian Academy, MAS Monograms and Reid Design (`docs/PENDING.md` item 2b). Six real quotes from five clients are live in their studies' `testimonials:` frontmatter (rendered by `Testimonial.astro` after the results ledger), and the homepage shows one of them. There is no testimonials band of cards; quotes live where the context lives. Never fabricate one.
 - [ ] Drop a **real headshot** in `src/assets/brand/` for the `/about` page and swap the gradient placeholder div in `about.astro` for an Astro `<Image />`.
-- [x] **Real cover images** for the case studies in `src/assets/case-studies/{slug}.png`. Done: each is a real hero screenshot of the live site (captured with Playwright). Full-page screenshots also live in `src/assets/case-studies/shots/{slug}-home.png` and drive the animated `SiteShowcase` inside each study. Re-capture if a client redesigns their site.
+- [x] **Real cover images** for the case studies in `src/assets/case-studies/{slug}.png`. Done: each is a real hero screenshot of the live site (captured with Playwright). Full-page screenshots also live in `src/assets/case-studies/shots/{slug}-home.png` and drive the animated `SiteShowcase` inside each study. Re-capture if a client redesigns their site with `npm run capture:study <slug>` (writes the cover, `-home` and `-mobile` files; feature and before shots are cropped by hand and left alone). Presbyterian Academy was re-captured 2026-10-30.
 - [ ] **Before/after sliders** on the remaining redesign case studies via `BeforeAfter.astro`. Done on the Foundation for Reformed Theology, MAS Monograms and Stone Steps 50K. Each other one needs a real "before" screenshot saved when the project started (not the Wayback Machine, whose archives of these sites render broken). Drop it at `src/assets/case-studies/shots/{slug}-before.png` and follow the usage block in the component.
 - [ ] Additional **case studies** in `src/content/case-studies/`. For each, drop a matching cover at `src/assets/case-studies/{slug}.{ext}` so plaiceholder picks it up.
 - [ ] First **journal entry** in `src/content/journal/` (the page renders an empty-state until then).
+
+- [ ] **CMS screens** for the "What you edit" band on the seven CMS studies (`docs/PENDING.md` item 2c). Steps below.
+
+## Capturing CMS screens
+
+Each study I built on a CMS shows its editor ("What you edit", `WhatYouEdit.astro`, package 3.6). The band stays hidden until the study has a `cmsShot`.
+
+1. In PowerShell, from the repo: `npm run capture:cms` for all seven, or `npm run capture:cms -- --only stone-steps-50k` for one.
+2. A Chrome window opens on a profile kept outside the repo (`$env:LOCALAPPDATA
+cs-cms-capture-profile`; change it with `--profile <folder>` or `$env:NCS_CMS_PROFILE`). When the terminal says "Sign in to <site> in the window, then press Enter here", sign in yourself in that window and press Enter. The script never types or keeps a password; the profile remembers the sign-in for next time.
+3. It opens a real document (the Home page form in each Sanity Studio; the newest article on Theology Matters and the newest Resource on FRT in wp-admin), hides avatars, user menus, email addresses, notices and update badges, and saves `src/assets/case-studies/shots/{slug}-cms.png` at 1440x900.
+4. Look at every file: no names, emails, drafts you would not show, or half-loaded panes.
+5. Add to the study's frontmatter, for example:
+   `cmsShot: ../../assets/case-studies/shots/stone-steps-50k-cms.png`, `cmsShotAlt: The Home page open in Sanity Studio`, `cmsName: Sanity Studio`. The build fails if `cmsShotAlt` is missing.
+
+The admin URLs live in the `SITES` list at the top of `scripts/capture-cms.mjs`, with where each one came from.
 
 ## Recurring upkeep
 

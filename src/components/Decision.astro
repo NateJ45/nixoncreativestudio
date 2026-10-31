@@ -1,0 +1,126 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Decision: "The easy version" against "What I did" (overhaul package 2.4b)
+   ============================================================================
+   One design decision from a case study, as a ruled pair: the obvious way to
+   do it on the left, what I actually did (and why) on the right. Each study
+   carries one to three of them (plan Part B, /work/{slug}/ item 8), between
+   the brief and "What I built".
+
+   The words come from the study itself: its designerNote and approach prose.
+   Never write a Decision the study's own text does not support, and never
+   put a figure in one that the study does not source (CLAUDE.md never-break
+   rule 9).
+
+   Weight is the emphasis, as everywhere: the easy version is body text in
+   the muted colour, what I did is the heading colour. No colour, icon or
+   strike-through marks the "wrong" side; the labels say it.
+
+   Usage in a case study .mdx (2.4c places them):
+
+     import Decision from '../../components/Decision.astro';
+
+     <Decision
+       title="Records from the results"
+       easy="Carry the hand-typed records tables over to the new site."
+       did="Calculate every record from the results, so a record and the finish behind it are the same entry."
+     />
+
+   Props:
+     title   a short name for the decision (an h3 by default)
+     easy    the easy version, one or two sentences
+     did     what I did, one to three sentences
+     level   heading level for the title, 3 (default) or 4
+   ============================================================================ */
+
+interface Props {
+  title: string;
+  easy: string;
+  did: string;
+  level?: 3 | 4;
+}
+
+const { title, easy, did, level = 3 } = Astro.props;
+const Heading = level === 4 ? 'h4' : 'h3';
+---
+
+<div class="decision" data-reveal>
+  <Heading class="decision-title">{title}</Heading>
+  <dl class="decision-pair">
+    <div class="decision-side decision-easy">
+      <dt class="decision-label">The easy version</dt>
+      <dd class="decision-text">{easy}</dd>
+    </div>
+    <div class="decision-side decision-did">
+      <dt class="decision-label">What I did</dt>
+      <dd class="decision-text">{did}</dd>
+    </div>
+  </dl>
+</div>
+
+<style>
+  .decision {
+    margin-block: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-strong);
+  }
+  .decision-title {
+    margin: 0 0 1rem;
+    color: var(--heading);
+  }
+
+  /* Stacked on a phone; side by side from md, with a hairline between. */
+  .decision-pair {
+    display: grid;
+    gap: 1.25rem;
+    margin: 0;
+  }
+  @media (min-width: 48rem) {
+    .decision-pair {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0;
+    }
+    .decision-easy {
+      padding-right: 1.5rem;
+    }
+    .decision-did {
+      padding-left: 1.5rem;
+      border-left: 1px solid var(--line);
+    }
+  }
+
+  .decision-side {
+    min-width: 0;
+  }
+  .decision-label {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .decision-did .decision-label {
+    color: var(--heading);
+  }
+  .decision-text {
+    margin: 0;
+    line-height: 1.6;
+  }
+  .decision-easy .decision-text {
+    color: var(--muted-foreground);
+  }
+  .decision-did .decision-text {
+    font-size: 1.125rem;
+    color: var(--heading);
+  }
+
+  @media (forced-colors: active) {
+    .decision,
+    .decision-did {
+      border-color: CanvasText;
+    }
+  }
+</style>

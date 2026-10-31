@@ -1,0 +1,166 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Signature: "The idea" band (overhaul package 2.4b)
+   ============================================================================
+   The one idea a case study is built around: the study's `hook` set large,
+   beside one real media slot. Plan Part B, /work/{slug}/ item 6. 2.4a places
+   it on the template (after the Specimen strip, before the Brief).
+
+   The media slot is a still (the study's `featureShot`, or one of its
+   existing feature screenshots) or, since package 3.5, an interaction clip
+   (`clip`, from the study's `signatureClip`): a few silent seconds of the
+   live site in use, through Clip.astro. A clip replaces the still here; it
+   never sits beside it. Under reduced motion and Pause motion the clip is
+   its poster, so the band always has a picture.
+
+   Only a real, live screen goes in the slot (CLAUDE.md never-break rule 9).
+   With a `url` the still sits in a BrowserFrame showing that host; without
+   one it sits in the plain .frame. With no `src` the band is the hook alone.
+
+   Layout: a Section band (rail "The idea" in columns 1 to 3 from lg). Inside
+   the body, the hook takes 5 columns and the still 7 from lg; below lg they
+   stack, hook first. The still is lazy (this band is never in the first
+   viewport) in a fixed 16:10 box, cropped from the top at build time.
+
+   Usage (in a template; the props come from the study's frontmatter):
+
+     import Signature from '../../components/Signature.astro';
+
+     <Signature
+       hook={entry.data.hook}
+       src={entry.data.featureShot}
+       alt="The course records board on stonesteps50k.com"
+       url={entry.data.liveUrl}
+     />
+
+   Props:
+     hook      the study's hook (required; the band renders nothing without it)
+     emphasis  a phrase inside the hook to set at 800 (weight as emphasis)
+     clip      { src, alt } from the study's signatureClip, optional; wins over src
+     src       the still (ImageMetadata), optional
+     alt       its alt text (required with src)
+     url       the live site, for the frame's host bar
+     rail      the rail label, "The idea" by default
+     tone      the Section surface, 'white' (default) or 'paper'
+     id        the heading id
+   ============================================================================ */
+
+import type { ImageMetadata } from 'astro';
+import Section from './Section.astro';
+import BrowserFrame from './BrowserFrame.astro';
+import Media from './Media.astro';
+import Clip from './Clip.astro';
+
+interface Props {
+  hook?: string;
+  clip?: { src: string; alt: string };
+  emphasis?: string;
+  src?: ImageMetadata;
+  alt?: string;
+  url?: string;
+  rail?: string;
+  tone?: 'white' | 'paper';
+  id?: string;
+}
+
+const {
+  hook,
+  emphasis,
+  clip,
+  src,
+  alt = '',
+  url,
+  rail = 'The idea',
+  tone = 'white',
+  id = 'signature-heading',
+} = Astro.props;
+
+// Split the hook around the emphasis phrase, when it is really in there.
+const at = hook && emphasis ? hook.indexOf(emphasis) : -1;
+const parts =
+  hook && emphasis && at >= 0
+    ? { before: hook.slice(0, at), bold: emphasis, after: hook.slice(at + emphasis.length) }
+    : null;
+
+const media = {
+  widths: [480, 800, 1200],
+  sizes: '(min-width: 82.5rem) 499px, (min-width: 64rem) calc(41.3vw - 46px), calc(100vw - 3rem)',
+};
+---
+
+{hook && (
+  <Section rail={rail} tone={tone} labelledby={id}>
+    <div class:list={['signature', (src || clip) && 'has-media']}>
+      <h2 id={id} class="signature-hook">
+        {parts ? (
+          <>
+            {parts.before}
+            <b>{parts.bold}</b>
+            {parts.after}
+          </>
+        ) : (
+          hook
+        )}
+      </h2>
+      {clip &&
+        (url ? (
+          <BrowserFrame url={url} class="signature-media">
+            <Clip src={clip.src} alt={clip.alt} />
+          </BrowserFrame>
+        ) : (
+          <div class="signature-media frame">
+            <Clip src={clip.src} alt={clip.alt} />
+          </div>
+        ))}
+      {!clip &&
+        src &&
+        (url ? (
+          <BrowserFrame url={url} class="signature-media">
+            <Media
+              src={src}
+              alt={alt}
+              ratio="16 / 10"
+              position="top"
+              widths={media.widths}
+              sizes={media.sizes}
+            />
+          </BrowserFrame>
+        ) : (
+          <div class="signature-media frame">
+            <Media
+              src={src}
+              alt={alt}
+              ratio="16 / 10"
+              position="top"
+              widths={media.widths}
+              sizes={media.sizes}
+            />
+          </div>
+        ))}
+    </div>
+  </Section>
+)}
+
+<style>
+  .signature {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+  /* Inside the 9-column body: hook in 4, still in 5 (about 5/12 and 7/12 of
+     the page with the rail). */
+  @media (min-width: 64rem) {
+    .signature.has-media {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+      gap: 3rem;
+    }
+  }
+  .signature-hook {
+    margin: 0;
+    max-width: 18ch;
+  }
+  .signature :global(.signature-media) {
+    min-width: 0;
+  }
+</style>

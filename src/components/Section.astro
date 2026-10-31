@@ -1,0 +1,131 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   Section: one band of a page on the 12-column grid (overhaul package 1.8)
+   ============================================================================
+   Every Phase 2 page is built from these. A Section is a full-width band on
+   one of three surfaces, with a 1px --line hairline on its top edge (the
+   change of surface), --space-section top and bottom, and the .page-grid
+   inside the .ncs-container:
+
+     columns 1 to 3    the rail: a mono label plus one real fact (optional)
+     columns 4 to 12   the body (the default slot)
+     columns 4 to 10   the body instead, when `prose` is set (running text,
+                       about 68ch)
+
+   Below lg (64rem) the rail collapses to a single line above the body
+   ("WORK · 8 STUDIES"). From lg up it sits in its own column and sticks
+   below the header while the section scrolls past.
+
+   Props:
+     rail       the rail label, e.g. "Selected work". Mono, uppercase via CSS
+                (the text itself stays sentence case for screen readers).
+     railMeta   ONE real fact beside the label, e.g. "8 studies". Compute it
+                from data, never type a number that can go stale, and never
+                invent one (CLAUDE.md never-break rule 9).
+     tone       'white' (default) | 'paper' | 'ink'. Ink uses .band-ink, which
+                re-scopes headings, text, links and meta to light-on-navy.
+     prose      body in columns 4 to 10 instead of 4 to 12
+     hairline   the top hairline; true by default. Turn it off for the first
+                band under the header, which has its own edge.
+     id         id on the <section>
+     labelledby id of the heading that names the section (preferred)
+     label      aria-label, for a section with no visible heading
+     class      extra classes on the <section>
+
+   Every section needs an accessible name (.claude/rules/accessibility.md):
+   pass `labelledby` (with a heading carrying that id) or `label`.
+   ============================================================================ */
+
+interface Props {
+  rail?: string;
+  railMeta?: string;
+  tone?: 'white' | 'paper' | 'ink';
+  prose?: boolean;
+  hairline?: boolean;
+  id?: string;
+  labelledby?: string;
+  label?: string;
+  class?: string;
+}
+
+const {
+  rail,
+  railMeta,
+  tone = 'white',
+  prose = false,
+  hairline = true,
+  id,
+  labelledby,
+  label,
+  class: className = '',
+} = Astro.props;
+
+const toneClass = tone === 'ink' ? 'band-ink' : tone === 'paper' ? 'bg-paper' : 'bg-background';
+---
+
+<section
+  id={id}
+  aria-labelledby={labelledby}
+  aria-label={label}
+  class:list={['ncs-section py-section', toneClass, hairline && 'hairline', className]}
+  data-tone={tone}
+>
+  <div class="ncs-container page-grid">
+    {rail && (
+      <p class="grid-rail section-rail">
+        <span class="section-rail-label">{rail}</span>
+        {railMeta && (
+          <>
+            <span class="section-rail-sep" aria-hidden="true">
+              ·
+            </span>
+            <span class="section-rail-meta">{railMeta}</span>
+          </>
+        )}
+      </p>
+    )}
+    <div class={prose ? 'grid-prose' : 'grid-body'}>
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The rail: mono metadata, 0.75rem uppercase at 0.12em tracking, in the
+     muted role (which .band-ink re-scopes on ink). One line below lg. */
+  .section-rail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.5rem;
+    margin-bottom: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .section-rail-label {
+    color: var(--heading);
+  }
+
+  /* lg and up: label over fact in the rail column, sticky under the header.
+     align-self: start keeps the grid item its own height, so sticky has room
+     to travel. */
+  @media (min-width: 64rem) {
+    .section-rail {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+      flex-direction: column;
+      gap: 0.375rem;
+      margin-bottom: 0;
+    }
+    .section-rail-sep {
+      display: none;
+    }
+  }
+</style>

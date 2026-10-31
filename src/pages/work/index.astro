@@ -2,247 +2,571 @@
 // Safe to edit. Page content is driven from the case-studies content
 // collection; add new MDX files in src/content/case-studies/ to grow the list.
 /* ============================================================================
-   /work | Selected Work Index
+   /work: the index (overhaul package 2.3)
    ============================================================================
-   Landing for the full case study list. Loads every entry from the
-   case-studies collection, sorts newest first by published date, and
-   renders each as a card linking to /work/{slug}.
+   Its job is "find one like mine, then open it". From the top:
 
-   This is the only place the full catalogue lives. The homepage Selected
-   Work section is a curated subset (featured===true).
+   1. The H1, "{n} sites, all live today." n is the size of the collection,
+      and "all live today" is only said when every study has a liveUrl; if one
+      ever goes dark the line becomes "all shipped." on its own. The heavy
+      phrase is this page's one Heft (ruling 9).
+   2. WorkFilter: mono sector tabs driven by ?sector= in the URL, plus the
+      aria-live line that says what is showing. Without JS every row shows.
+   3. One ruled <ol>, in the `order` frontmatter field (Stone Steps, order 1,
+      gets a larger first row). Each row is the client name in Bricolage, the
+      hook, sector and year in mono, and two links that are siblings, never
+      nested: the case study (the whole row, through a stretched ::after) and
+      the live host with an arrow, which sits above the stretch.
+   4. On a fine pointer from md up: hovering or focusing a row tints it in the
+      client's own paper colour (light mode; in dark the row stays on ink with
+      a rule in the client's dark mark, ruling 8), and the pinned preview frame
+      on the right shows that site's full-page capture and pans down it once,
+      for at most 6s, stopping when the pointer or focus leaves. Captures are
+      fetched only when a row is first hovered, so they cost nothing at load.
+   5. On touch, or below md: no preview frame; each row carries a 16:10
+      thumbnail of the site's cover instead (lazy, except the first).
+
+   The page ends on the footer closer ("Don't see your kind of organization?"),
+   whose pill carries ?from=work into the contact form.
+
+   Contrast: the light-mode tint is the client's paper behind this site's own
+   heading, body, muted and link colours; src/lib/case-palettes.test.ts checks
+   every one of those pairs for every study. The dark rule uses the same mark
+   colour the title card does (markDark, else dark.accent, else accent), which
+   that test already checks against ink.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { DEFAULT_CLOSER, SECTOR_PHRASE, SECTOR_PLURAL } from '../../lib/closer';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CtaBanner from '../../components/CtaBanner.astro';
-import CaseStudyCover from '../../components/CaseStudyCover.astro';
-import WorkFilter from '../../components/WorkFilter';
+import WorkFilter from '../../components/WorkFilter.astro';
+import Heft from '../../components/Heft.astro';
+import Media from '../../components/Media.astro';
+import BrowserFrame from '../../components/BrowserFrame.astro';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
+import { sectorPagePath } from '../../data/sector-pages';
 
+// Study order: the `order` field (1 = first). A study without one sorts last,
+// newest first among those, so a new draft never jumps the queue.
 const entries = (await getCollection('case-studies')).sort(
-  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+  (a, b) =>
+    (a.data.order ?? Number.MAX_SAFE_INTEGER) - (b.data.order ?? Number.MAX_SAFE_INTEGER) ||
+    b.data.published.valueOf() - a.data.published.valueOf(),
+);
+const n = entries.length;
+const allLive = entries.every((e) => Boolean(e.data.liveUrl));
+const heavy = allLive ? 'all live today.' : 'all shipped.';
+
+// Sector tabs: only sectors that have a study, in a fixed order, with counts.
+const SECTOR_ORDER = ['church', 'school', 'nonprofit', 'small-business'] as const;
+const sectors = SECTOR_ORDER.map((value) => ({
+  value,
+  label: SECTOR_PLURAL[value] ?? value,
+  count: entries.filter((e) => e.data.sector === value).length,
+})).filter((s) => s.count > 0);
+
+// Sectors with a page of their own (/churches/): WorkFilter links to it while
+// that sector's tab is on.
+const sectorPages = Object.fromEntries(
+  sectors.flatMap((s) => {
+    const path = sectorPagePath(s.value);
+    return path ? [[s.value, path]] : [];
+  }),
 );
 
-// Entries that ship a real, public live URL, for the "open any of them" proof
-// wall below the cards. The strongest trust signal a web vendor has is work a
-// visitor can click and inspect in five seconds, so these link straight to the
-// live site (not the case study). Domains are shown as plain text.
-const entriesLive = entries.filter((e) => e.data.liveUrl);
-const prettyDomain = (url: string) =>
-  url
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/+$/, '');
-
-// Pre-baked blur placeholders for every cover. The data was generated
-// by scripts/generate-placeholders.mjs at build time; the lookup here
-// is a synchronous map read.
-const placeholders = new Map<string, string | undefined>();
-for (const entry of entries) {
-  placeholders.set(entry.id, getCoverPlaceholder(entry.id));
-}
-
-// Distinct sectors for the filter chips, in a fixed display order. Year is
-// intentionally not surfaced anywhere on the portfolio (no year filter, no
-// year on cards), so clients can't read project timing or count per year.
-const sectorLabels: Record<string, string> = {
-  church: 'Church',
-  school: 'School',
-  nonprofit: 'Nonprofit',
-  'small-business': 'Small Business',
+// The sector as one word on a row ("Small business").
+const sectorName = (sector: string) => {
+  const phrase = SECTOR_PHRASE[sector] ?? sector.replace(/-/g, ' ');
+  return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 };
-const presentSectors = Array.from(new Set(entries.map((e) => e.data.sector)));
-const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
-  .filter((s) => presentSectors.includes(s))
-  .map((value) => ({ value, label: sectorLabels[value] }));
+
+// The host as people say it: no protocol, no "www.", no trailing slash.
+const hostOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+
+// Full-page captures for the preview pan (shots/{slug}-home.png, 1440 wide and
+// up to 10824 tall). Cropped from the top to 2.4x the width, which is plenty
+// to pan through in 6s, and served as WebP at three widths. Only URLs go into
+// the page; the browser fetches a capture when its row is first hovered.
+const homeShots = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/case-studies/shots/*-home.png',
+  { eager: true },
+);
+const shotFor = (id: string): ImageMetadata | undefined =>
+  Object.entries(homeShots).find(([path]) => path.endsWith(`/${id}-home.png`))?.[1].default;
+
+const PREVIEW_DEPTH = 2.4; // capture height as a multiple of its width
+const PREVIEW_WIDTHS = [480, 720, 1040];
+// The preview column: 5 of 12 columns from md, 4 of 12 from lg.
+const PREVIEW_SIZES = '(min-width: 64rem) 34vw, 40vw';
+
+const rows = await Promise.all(
+  entries.map(async (entry, i) => {
+    const shot = shotFor(entry.id) ?? entry.data.cover;
+    const width = Math.min(Math.max(...PREVIEW_WIDTHS), shot.width);
+    const height = Math.round(width * Math.min(shot.height / shot.width, PREVIEW_DEPTH));
+    const preview = await getImage({
+      src: shot,
+      width,
+      height,
+      widths: PREVIEW_WIDTHS.filter((w) => w <= shot.width),
+      fit: 'cover',
+      position: 'top',
+      format: 'webp',
+    });
+    const palette = entry.data.palette;
+    const markDark = palette ? (palette.markDark ?? palette.dark?.accent ?? palette.accent) : '';
+    return {
+      entry,
+      first: i === 0,
+      host: entry.data.liveUrl ? hostOf(entry.data.liveUrl) : '',
+      sector: entry.data.facts?.sector ?? sectorName(entry.data.sector),
+      year: entry.data.facts?.year ?? String(entry.data.year),
+      preview: {
+        src: preview.src,
+        srcset: preview.srcSet.attribute,
+        ratio: `${width} / ${height}`,
+      },
+      style: palette
+        ? `--row-paper: ${palette.paper}; --row-mark: ${palette.accent}; --row-mark-dark: ${markDark};`
+        : undefined,
+    };
+  }),
+);
+
+// The preview frame starts on the first study's capture, at rest.
+const lead = rows[0];
 ---
 
 <BaseLayout
-  title="Selected work | Nixon Creative Studio"
-  description="A list of recent web design, brand, and photography projects from Nixon Creative Studio."
+  title="Case studies | Nixon Creative Studio"
+  description={`${n} live client websites I planned, designed and built for churches, schools, nonprofits and small businesses, each with the thinking behind it.`}
+  closer={{
+    heading: "Don't see your kind of",
+    emphasis: 'organization?',
+    sub: DEFAULT_CLOSER.sub,
+    href: '/contact/?from=work',
+  }}
 >
-  <section class="py-2xl" aria-labelledby="work-index-heading">
-    <div class="ncs-container">
-      <!-- Intro block. Rendered as an h1 since this is the work landing.
-           The old decorative "01" mono eyebrow is gone; in its place a
-           plain text kicker plus an honest count of projects, both derived
-           from the real entries array so they never drift from the list. -->
-      <header class="mb-xl flex flex-col gap-xs">
-        <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
-          Portfolio
-        </p>
-        <h1 id="work-index-heading" data-reveal>
-          Selected work
+  <section class="work-index py-section" aria-labelledby="work-index-heading">
+    <div class="ncs-container page-grid">
+      {/* The H1 and filter span the full width. This band does not use
+          Section.astro: the list and the pinned preview need the whole
+          12 columns, not Section's body columns 4 to 12. */}
+      <header class="work-head">
+        <h1 id="work-index-heading">
+          {n} sites, <Heft text={heavy} />
         </h1>
-        <p
-          data-reveal
-          style="--reveal-delay: 90ms"
-          class="max-w-[58ch] text-lg leading-[1.5] text-text-muted"
-        >
-          {entries.length}
-          {entries.length === 1 ? ' project' : ' projects'} for churches, schools, nonprofits, and
-          small businesses around Cincinnati. Each one started with a conversation about what the
-          organization actually needed.
+        <p class="work-lede">
+          Churches, schools, nonprofits and small businesses. Each one started with a conversation
+          about what the organization actually needed.
         </p>
+        {sectors.length > 1 && (
+          <WorkFilter sectors={sectors} total={n} phrases={SECTOR_PHRASE} pages={sectorPages} />
+        )}
       </header>
 
-      {/* Filter chips. Sector only, client-side. The chips toggle a
-          data-hidden attribute on the cards below; matching CSS in
-          globals.css hides them with display:none. */}
-      {sectors.length > 1 && (
-        <div class="mb-l">
-          <WorkFilter client:load sectors={sectors} />
-        </div>
-      )}
-
-      <!-- Card grid with an editorial feature row. The newest entry spans the
-           full width as a large horizontal card (image + body side by side at
-           md), then the rest fall into a 2/3-up grid. This breaks the
-           identical-card-grid look so the page reads as curated, not generated,
-           while staying a single <ul> the sector filter can hide/show.
-           Each card is an elevated .surface-card (real depth in light mode),
-           lifts on hover, lights a cursor-following glow, gently zooms its
-           cover, and morphs that cover into the detail-page hero via the
-           shared cover-${id} transition name. -->
-      <ul class="grid gap-l md:grid-cols-2 lg:grid-cols-3">
-        {entries.map((entry, i) => {
-          // Pretty sector label for the meta row: kebab-case → Title Case.
-          const sectorLabel = entry.data.sector
-            .replace(/-/g, ' ')
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-          // The first (newest) entry is the feature card: full-width, horizontal.
-          const isFeature = i === 0;
+      <ol class="work-list" data-work-list>
+        {rows.map((row) => {
+          const { entry } = row;
           return (
             <li
-              data-work-card
+              class:list={['work-row', row.first && 'work-row--lead']}
+              data-work-row
               data-sector={entry.data.sector}
-              class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
+              data-slug={entry.id}
+              data-host={row.host}
+              data-preview-src={row.preview.src}
+              data-preview-srcset={row.preview.srcset}
+              data-preview-ratio={row.preview.ratio}
+              style={row.style}
             >
-              {/* Whole card is the link (standard card a11y pattern). Stagger
-                   is capped per row so the cascade stays consistent at any
-                   catalogue length. */}
-              <a
-                data-reveal
-                data-spotlight
-                style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
-                class:list={[
-                  'surface-card spotlight-card group hover-lift rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
-                  isFeature
-                    ? 'flex flex-col gap-m md:grid md:grid-cols-2 md:items-center md:gap-l'
-                    : 'flex h-full flex-col gap-m',
-                ]}
-                href={`/work/${entry.id}/`}
-              >
-                {/* Cover. alt="" because the card's h2 carries the same name;
-                     the transition:name wrapper morphs this cover into the
-                     detail page's hero during a View Transition. */}
-                <div
-                  transition:name={`cover-${entry.id}`}
-                  class="relative z-10 overflow-hidden rounded-lg"
-                >
-                  <CaseStudyCover
-                    cover={entry.data.cover}
-                    placeholder={placeholders.get(entry.id)}
-                    alt=""
-                    widths={isFeature ? [600, 900, 1280] : [400, 600, 900]}
-                    sizes={
-                      isFeature
-                        ? '(min-width: 64rem) 60vw, 100vw'
-                        : '(min-width: 56rem) 33vw, 100vw'
-                    }
-                    fit="cover"
-                    class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
-                  />
-                </div>
-
-                <div class="relative z-10 flex flex-1 flex-col gap-xs">
-                  <p class="text-xs font-semibold tracking-[0.06em] text-text-muted uppercase">
-                    {sectorLabel}
-                  </p>
-                  <h2
-                    class:list={[
-                      'text-heading transition-colors duration-200 group-hover:text-link group-focus-visible:text-link',
-                      isFeature ? 'text-h2' : 'text-h3',
-                    ]}
-                  >
-                    {entry.data.title}
-                  </h2>
-                  {entry.data.outcome && (
-                    /* Outcome line: the honest one-line result, in --link so
-                         the proof-point reads at first scan. */
-                    <p class="leading-[1.4] font-semibold text-link">{entry.data.outcome}</p>
-                  )}
-                  <p class="leading-[1.5] text-text">{entry.data.summary}</p>
-                  {entry.data.stack && entry.data.stack.length > 0 && (
-                    /* Stack reveal (mono is the right register here: it is a
-                         genuine technical "inside the build" label). Collapsed
-                         until hover/focus; aria-hidden since the detail page
-                         carries the same info. */
-                    <p
-                      aria-hidden="true"
-                      class="max-h-0 overflow-hidden font-mono text-[0.75rem] tracking-[0.06em] text-text-muted uppercase opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-xs group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mt-xs group-focus-visible:max-h-12 group-focus-visible:opacity-100"
+              <div class="work-row-text">
+                <h2 class="work-name">
+                  <a class="work-link" href={`/work/${entry.id}/`}>
+                    {entry.data.client}
+                    <span class="sr-only">, case study</span>
+                  </a>
+                </h2>
+                {entry.data.hook && <p class="work-hook">{entry.data.hook}</p>}
+                <p class="work-meta">
+                  <span>{row.sector}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{row.year}</span>
+                </p>
+                <p class="work-actions">
+                  <span class="work-cta" aria-hidden="true">
+                    Case study <span class="work-arrow">→</span>
+                  </span>
+                  {entry.data.liveUrl && (
+                    <a
+                      class="work-host"
+                      href={entry.data.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      Built with {entry.data.stack.join(', ')}
-                    </p>
+                      {row.host}
+                      <span aria-hidden="true">↗</span>
+                      <span class="sr-only">(live site, opens in a new tab)</span>
+                    </a>
                   )}
-                  <span class="card-link mt-auto pt-xs">Read the case study</span>
-                </div>
-              </a>
+                </p>
+              </div>
+              {/* Touch and small screens only (hidden on a fine pointer from
+                  md, where the preview frame does this job, so the lazy image
+                  is never fetched there). alt="" because the name beside it
+                  says the same thing. */}
+              <div class="work-thumb">
+                <Media
+                  src={entry.data.cover}
+                  alt=""
+                  ratio="16 / 10"
+                  position="top"
+                  widths={row.first ? [360, 560, 720, 960] : [360, 560, 720]}
+                  sizes={
+                    row.first
+                      ? '(min-width: 48rem) 50vw, calc(100vw - 2rem)'
+                      : '(min-width: 48rem) 38vw, calc(100vw - 2rem)'
+                  }
+                  lcp={row.first}
+                  placeholder={getCoverPlaceholder(entry.id)}
+                  class="work-thumb-media"
+                />
+              </div>
             </li>
           );
         })}
-      </ul>
+      </ol>
 
-      {/* "No matches" placeholder. Server-rendered, hidden by default
-          via data-hidden, revealed by WorkFilter when all cards are
-          filtered out. Lets visitors know the filter is doing something
-          and isn't broken. aria-live="polite" so screen readers hear the
-          notice announced when the filter empties the grid (without it the
-          change is silent to assistive tech). */}
-      <p data-work-empty data-hidden aria-live="polite" class="mt-l text-text-muted">
-        Nothing matches that filter yet. Try clearing one of the chips above.
-      </p>
+      {/* The pinned preview. Decorative (aria-hidden): every row already
+          names its site and links to it. Shown only on a fine pointer from md
+          up; starts on the lead study's capture, lazily loaded, so it costs
+          nothing on a phone, where it is display: none. */}
+      {lead && lead.host && (
+        <aside class="work-preview" aria-hidden="true" data-work-preview>
+          <BrowserFrame url={lead.entry.data.liveUrl ?? ''} class="work-preview-frame">
+            <div class="work-preview-screen">
+              <img
+                class="work-preview-img"
+                src={lead.preview.src}
+                srcset={lead.preview.srcset}
+                sizes={PREVIEW_SIZES}
+                style={`aspect-ratio: ${lead.preview.ratio}`}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                data-preview-img
+              />
+            </div>
+          </BrowserFrame>
+        </aside>
+      )}
     </div>
   </section>
-
-  {/* "Open any of them" proof wall: every shipped site as a clickable real
-      domain, linking straight to the live site in a new tab. A different, faster
-      affordance than the cards above (which open the case studies). Real domains
-      only, shown as plain text so it never reads as a fabricated badge. */}
-  {entriesLive.length > 1 && (
-    <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
-      <div class="ncs-container">
-        <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
-          <h2 id="live-sites-heading">Open any of them</h2>
-          <p class="text-lg leading-[1.55] text-text-muted">
-            Every project here is a real, shipped site. Do not take my word for it, click through
-            and look around.
-          </p>
-        </header>
-
-        <ul class="grid gap-x-l sm:grid-cols-2 lg:grid-cols-3">
-          {entriesLive.map((e, i) => (
-            <li data-reveal style={`--reveal-delay: ${Math.min(i, 5) * 60}ms`}>
-              <a
-                href={e.data.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="group flex items-baseline justify-between gap-s border-b border-border py-s text-inherit no-underline transition-colors duration-150 hover:border-link focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent pointer-coarse:min-h-11 pointer-coarse:items-center"
-              >
-                <span class="font-display text-h4 leading-[1.1] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {e.data.client}
-                </span>
-                <span class="inline-flex shrink-0 items-center gap-1 font-mono text-[0.8rem] text-text-muted transition-colors group-hover:text-link group-focus-visible:text-link">
-                  {prettyDomain(e.data.liveUrl ?? '')}
-                  <span aria-hidden="true">↗</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  )}
-
-  <CtaBanner />
 </BaseLayout>
+
+<style>
+  .work-head {
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+  .work-head h1 {
+    max-width: 16ch;
+  }
+  .work-lede {
+    max-width: 52ch;
+    margin: 1.25rem 0 2rem;
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+
+  /* ---- The ruled list ---------------------------------------------------- */
+  .work-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .work-row {
+    position: relative;
+    display: grid;
+    gap: 1.25rem;
+    padding: 1.75rem 0.75rem;
+    border-bottom: 1px solid var(--line);
+    /* The client mark: a 4px rule on the left, shown on hover and focus. */
+    box-shadow: inset 0 0 0 transparent;
+    transition:
+      background-color var(--dur-quick) var(--ease-glide),
+      box-shadow var(--dur-quick) var(--ease-glide);
+  }
+
+  .work-name {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+  .work-row--lead {
+    padding-block: 2.5rem;
+  }
+  .work-row--lead .work-name {
+    font-size: clamp(2.5rem, 7vw, 6rem);
+  }
+
+  /* The whole row is the case-study link: a stretched ::after covers the
+     <li>. The host link sits above it (z-index), so the two are siblings
+     with their own targets and never nest. */
+  .work-link {
+    color: var(--heading);
+    text-decoration: none;
+  }
+  .work-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .work-link:focus-visible {
+    outline: none;
+  }
+  .work-link:focus-visible::after {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  .work-hook {
+    margin: 0.75rem 0 0;
+    max-width: 44ch;
+    font-size: 1.125rem;
+    line-height: 1.45;
+    color: var(--foreground);
+  }
+  .work-row--lead .work-hook {
+    font-size: 1.25rem;
+  }
+
+  .work-meta,
+  .work-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.6rem;
+    margin: 0.75rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .work-actions {
+    gap: 0.25rem 1.5rem;
+    margin-top: 1rem;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .work-cta {
+    color: var(--heading);
+  }
+  .work-arrow {
+    display: inline-block;
+    transition: transform var(--dur-quick) var(--ease-glide);
+  }
+  .work-host {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.3em;
+  }
+  .work-host:hover,
+  .work-host:focus-visible {
+    text-decoration-color: currentColor;
+  }
+  .work-host:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  @media (pointer: coarse) {
+    .work-host {
+      min-height: 44px;
+      align-items: center;
+    }
+  }
+
+  /* ---- Thumbnails (touch, or below md) ----------------------------------- */
+  .work-thumb :global(.work-thumb-media) {
+    border-radius: var(--radius-frame);
+    box-shadow: 0 0 0 1px var(--frame-ring);
+  }
+  @media (min-width: 48rem) {
+    .work-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 38%);
+      align-items: center;
+      gap: 2rem;
+    }
+    .work-row--lead {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 50%);
+    }
+  }
+
+  /* ---- The preview frame (fine pointer, md and up) ----------------------- */
+  .work-preview {
+    display: none;
+  }
+
+  @media (min-width: 48rem) and (hover: hover) and (pointer: fine) {
+    .work-list {
+      grid-column: 1 / 8;
+    }
+    .work-preview {
+      display: block;
+      grid-column: 8 / 13;
+      align-self: start;
+      position: sticky;
+      top: 7rem;
+    }
+    .work-row,
+    .work-row--lead {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .work-thumb {
+      display: none;
+    }
+
+    /* Hover and focus: the client's paper behind this site's own text, and
+       the client's accent as a 4px rule on the left. */
+    .work-row:hover,
+    .work-row:focus-within {
+      background-color: var(--row-paper, var(--paper));
+      box-shadow: inset 4px 0 0 var(--row-mark, var(--line-strong));
+    }
+    .work-row:hover .work-arrow,
+    .work-row:focus-within .work-arrow {
+      transform: translateX(4px);
+    }
+    /* Dark mode never borrows a client's light paper (ruling 8): the row sits
+       on ink with the client's dark mark as the rule. */
+    :global(.dark) .work-row:hover,
+    :global(.dark) .work-row:focus-within {
+      background-color: var(--ink);
+      box-shadow: inset 4px 0 0 var(--row-mark-dark, var(--line-strong));
+    }
+  }
+  @media (min-width: 64rem) and (hover: hover) and (pointer: fine) {
+    .work-list {
+      grid-column: 1 / 9;
+    }
+    .work-preview {
+      grid-column: 9 / 13;
+    }
+  }
+
+  .work-preview-screen {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background-color: var(--paper);
+  }
+  .work-preview-img {
+    position: absolute;
+    inset: 0 0 auto;
+    display: block;
+    width: 100%;
+    height: auto;
+    will-change: transform;
+  }
+
+  @media (forced-colors: active) {
+    .work-row:hover,
+    .work-row:focus-within {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+</style>
+
+<script>
+  import { isMotionPaused, prefersReducedMotion } from '../../scripts/motion';
+
+  // The longest a pan may run (Part B: capped at 6s).
+  const PAN_MS = 6000;
+
+  function initWorkPreview(): void {
+    const preview = document.querySelector<HTMLElement>('[data-work-preview]:not([data-bound])');
+    if (!preview) return;
+    preview.dataset.bound = 'true';
+    const img = preview.querySelector<HTMLImageElement>('[data-preview-img]');
+    const screen = img?.parentElement;
+    const host = preview.querySelector<HTMLElement>('.bf-host');
+    if (!img || !screen) return;
+
+    // Only worth wiring where the frame is actually shown.
+    const fine = window.matchMedia('(min-width: 48rem) and (hover: hover) and (pointer: fine)');
+    let current: HTMLElement | null = null;
+    let pan: Animation | null = null;
+
+    function startPan(): void {
+      pan?.cancel();
+      pan = null;
+      if (prefersReducedMotion() || isMotionPaused()) return;
+      const travel = img!.offsetHeight - screen!.clientHeight;
+      if (travel <= 0) return;
+      pan = img!.animate(
+        [{ transform: 'translateY(0)' }, { transform: `translateY(-${travel}px)` }],
+        {
+          duration: PAN_MS,
+          easing: 'cubic-bezier(0.45, 0, 0.55, 1)',
+          fill: 'forwards',
+        },
+      );
+    }
+
+    function show(row: HTMLElement): void {
+      if (!fine.matches) return;
+      if (row === current) {
+        // Back on the same row: carry on from where the pan stopped.
+        if (pan && pan.playState === 'paused') pan.play();
+        return;
+      }
+      current = row;
+      pan?.cancel();
+      pan = null;
+      const src = row.dataset.previewSrc ?? '';
+      if (img!.getAttribute('src') !== src) {
+        img!.style.aspectRatio = row.dataset.previewRatio ?? '';
+        img!.srcset = row.dataset.previewSrcset ?? '';
+        img!.src = src;
+      }
+      if (host) host.textContent = row.dataset.host ?? '';
+      // Pan once the capture has its pixels (it may still be on the wire).
+      if (img!.complete && img!.naturalHeight > 0) startPan();
+      else img!.addEventListener('load', () => current === row && startPan(), { once: true });
+    }
+
+    function stop(): void {
+      // "Stops on leave": the pan holds where it is, it does not snap back.
+      if (pan && pan.playState === 'running') pan.pause();
+    }
+
+    document.querySelectorAll<HTMLElement>('[data-work-row]').forEach((row) => {
+      row.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'mouse') show(row);
+      });
+      row.addEventListener('pointerleave', stop);
+      row.addEventListener('focusin', () => show(row));
+      row.addEventListener('focusout', (e) => {
+        if (!row.contains(e.relatedTarget as Node | null)) stop();
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initWorkPreview);
+</script>

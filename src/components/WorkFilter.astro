@@ -1,0 +1,299 @@
+---
+// Safe to edit.
+/* ============================================================================
+   WorkFilter: the sector tabs on /work (overhaul package 2.3)
+   ============================================================================
+   A row of mono text tabs ("All 8 · Churches 2 · ...") over the /work index,
+   plus the aria-live line that says what is showing. The state lives in the
+   URL as `?sector=church`, so a filtered view is a link anyone can share.
+
+   Without JavaScript: the tabs are plain links and every row shows. A static
+   site cannot render a different page per query string, so /work/?sector=church
+   is the same HTML as /work/; the full list is the honest no-JS answer.
+
+   With JavaScript (the script below, bound on astro:page-load with a
+   data-bound guard):
+     - on load it reads ?sector= and filters the rows to match;
+     - a tab click filters in place and updates the URL with
+       history.replaceState (no new history entry, and the ClientRouter's own
+       history.state is kept);
+     - the change is a same-document View Transition: each row gets a
+       view-transition-name for the length of the transition only, so rows
+       that stay slide into place and the others fade. Skipped under
+       prefers-reduced-motion and while motion is paused
+       (html[data-motion-paused]), where the list simply updates;
+     - an unknown ?sector= value, or a sector with no studies, falls back to
+       "all" and the live line says so (Part A, the critic's missing list).
+
+   The rows it filters are any [data-work-row][data-sector] on the page; it
+   toggles the global [data-hidden] attribute on them, so nothing re-renders.
+
+   Sector pages (overhaul 4.2): when the filter lands on a sector that has
+   its own page (/churches/ today, src/data/sector-pages.ts), a line under the
+   count links to it. It ships hidden and only the script shows it, since
+   without JS every row shows and no sector is "on".
+
+   Props:
+     sectors  the sectors that have studies, in display order, with counts
+     total    how many studies there are (computed by the page)
+     phrases  sector -> how it reads in a sentence ("small business")
+     pages    sector -> its sector page, for the sectors that have one
+   ============================================================================ */
+
+interface Props {
+  sectors: Array<{ value: string; label: string; count: number }>;
+  total: number;
+  phrases: Record<string, string>;
+  pages?: Record<string, string>;
+}
+
+const { sectors, total, phrases, pages = {} } = Astro.props;
+
+const tabs = [{ value: 'all', label: 'All', count: total }, ...sectors];
+const hrefFor = (value: string) => (value === 'all' ? '/work/' : `/work/?sector=${value}`);
+---
+
+<div class="work-filter" data-work-filter data-total={total} data-phrases={JSON.stringify(phrases)}>
+  <nav aria-label="Filter case studies by sector">
+    <ul class="work-tabs">
+      {tabs.map((t) => (
+        <li>
+          <a
+            class="work-tab"
+            href={hrefFor(t.value)}
+            data-sector-link={t.value}
+            aria-current={t.value === 'all' ? 'true' : undefined}
+          >
+            {t.label}
+            <span class="work-tab-count">{t.count}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+  <p class="work-count" data-work-count aria-live="polite">
+    Showing all {total} sites.
+  </p>
+  {Object.entries(pages).map(([sector, href]) => (
+    <p class="work-sector-page" data-sector-page={sector} hidden>
+      <a href={href}>
+        More on the {phrases[sector] ?? sector} sites I build <span aria-hidden="true">→</span>
+      </a>
+    </p>
+  ))}
+</div>
+
+<style>
+  .work-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 2rem;
+  }
+
+  .work-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Mono metadata voice. The active tab is underlined (2px, the link colour),
+     never boxed or filled; colour alone never carries the state, the
+     underline does. */
+  .work-tab {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding-block: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    text-underline-offset: 0.45em;
+    text-decoration-thickness: 2px;
+    transition: color var(--dur-instant) var(--ease-glide);
+  }
+  .work-tab:hover {
+    color: var(--heading);
+    text-decoration-line: underline;
+    text-decoration-color: var(--line-strong);
+  }
+  .work-tab[aria-current] {
+    color: var(--heading);
+    text-decoration-line: underline;
+    text-decoration-color: var(--link);
+  }
+  .work-tab:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .work-tab-count {
+    font-size: 0.6875rem;
+  }
+
+  /* 44px touch targets on phones and tablets; a mouse keeps the density. */
+  @media (pointer: coarse) {
+    .work-tab {
+      min-height: 44px;
+      align-items: center;
+    }
+  }
+
+  .work-sector-page {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.9375rem;
+  }
+  .work-sector-page a {
+    color: var(--link);
+    text-underline-offset: 0.3em;
+  }
+  .work-sector-page a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .work-count {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--muted-foreground);
+  }
+</style>
+
+<!-- Same-document View Transition styling, only while a filter change runs
+     (html[data-work-reflow], set by the script below). is:global because the
+     ::view-transition pseudo-elements hang off <html>, outside any component
+     scope; globals.css is frozen (ruling 10), so it lives here. The page itself
+     does not fade (the ClientRouter's root fade is for page changes): only the
+     rows move, on the settle timing. -->
+<style is:global>
+  html[data-work-reflow]::view-transition-old(root) {
+    animation: none;
+    opacity: 0;
+  }
+  html[data-work-reflow]::view-transition-new(root) {
+    animation: none;
+  }
+  html[data-work-reflow]::view-transition-group(*) {
+    animation-duration: var(--dur-settle);
+    animation-timing-function: var(--ease-glide);
+  }
+  html[data-work-reflow]::view-transition-old(*),
+  html[data-work-reflow]::view-transition-new(*) {
+    animation-duration: var(--dur-quick);
+  }
+</style>
+
+<script>
+  import { isMotionPaused, prefersReducedMotion } from '../scripts/motion';
+
+  /** "1 church site", "3 small business sites". */
+  function sitesPhrase(n: number, phrase: string): string {
+    return `${n} ${phrase} site${n === 1 ? '' : 's'}`;
+  }
+
+  /** Run a DOM update, as a same-document View Transition when motion is on. */
+  function withTransition(rows: HTMLElement[], update: () => void): void {
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> };
+    };
+    if (!doc.startViewTransition || prefersReducedMotion() || isMotionPaused()) {
+      update();
+      return;
+    }
+    // Names only for the length of the transition, so the ClientRouter's page
+    // transitions never pick the rows out of the page snapshot.
+    rows.forEach((row) => {
+      row.style.viewTransitionName = `work-row-${row.dataset.slug ?? ''}`;
+    });
+    const root = document.documentElement;
+    root.setAttribute('data-work-reflow', '');
+    const done = () => {
+      rows.forEach((row) => (row.style.viewTransitionName = ''));
+      root.removeAttribute('data-work-reflow');
+    };
+    doc.startViewTransition(update).finished.then(done, done);
+  }
+
+  function initWorkFilter(): void {
+    document
+      .querySelectorAll<HTMLElement>('[data-work-filter]:not([data-bound])')
+      .forEach((filter) => {
+        filter.dataset.bound = 'true';
+        const total = Number(filter.dataset.total ?? 0);
+        const phrases = JSON.parse(filter.dataset.phrases ?? '{}') as Record<string, string>;
+        const links = [...filter.querySelectorAll<HTMLAnchorElement>('[data-sector-link]')];
+        const live = filter.querySelector<HTMLElement>('[data-work-count]');
+        const sectorPages = [...filter.querySelectorAll<HTMLElement>('[data-sector-page]')];
+        const rows = [...document.querySelectorAll<HTMLElement>('[data-work-row][data-sector]')];
+
+        /** Show one sector (or all). Returns the sector actually applied. */
+        function apply(requested: string | null): string {
+          const wanted = requested?.trim().toLowerCase() || 'all';
+          const matches = rows.filter((r) => r.dataset.sector === wanted);
+          // Unknown value, or a real sector with nothing in it yet: show all.
+          const sector = wanted !== 'all' && matches.length > 0 ? wanted : 'all';
+
+          rows.forEach((row) =>
+            row.toggleAttribute('data-hidden', sector !== 'all' && row.dataset.sector !== sector),
+          );
+          // The sector's own page, if it has one, shows only while it is on.
+          sectorPages.forEach((p) => (p.hidden = p.dataset.sectorPage !== sector));
+          links.forEach((link) => {
+            if (link.dataset.sectorLink === sector) link.setAttribute('aria-current', 'true');
+            else link.removeAttribute('aria-current');
+          });
+
+          if (live) {
+            if (sector !== 'all') {
+              live.textContent = `Showing ${sitesPhrase(matches.length, phrases[sector] ?? sector)}.`;
+            } else if (wanted !== 'all' && phrases[wanted]) {
+              live.textContent = `No ${phrases[wanted]} sites yet, so here are all ${total}.`;
+            } else if (wanted !== 'all') {
+              live.textContent = `That sector has no sites yet, so here are all ${total}.`;
+            } else {
+              live.textContent = `Showing all ${total} sites.`;
+            }
+          }
+          return sector;
+        }
+
+        /** Keep the address bar in step without adding a history entry. */
+        function syncUrl(sector: string): void {
+          const url = new URL(window.location.href);
+          if (sector === 'all') url.searchParams.delete('sector');
+          else url.searchParams.set('sector', sector);
+          if (url.href !== window.location.href) {
+            history.replaceState(history.state, '', url);
+          }
+        }
+
+        // Deep link: /work/?sector=church filters on load. An unknown value
+        // falls back to all; the URL is cleaned so it stays shareable.
+        const initial = new URL(window.location.href).searchParams.get('sector');
+        if (initial !== null) syncUrl(apply(initial));
+
+        links.forEach((link) =>
+          link.addEventListener('click', (event) => {
+            // Let modified clicks (new tab, new window) behave as links.
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (event.button !== 0) return;
+            event.preventDefault();
+            const value = link.dataset.sectorLink ?? 'all';
+            withTransition(rows, () => syncUrl(apply(value)));
+          }),
+        );
+      });
+  }
+
+  document.addEventListener('astro:page-load', initWorkFilter);
+</script>

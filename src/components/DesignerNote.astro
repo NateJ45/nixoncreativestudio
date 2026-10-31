@@ -1,68 +1,84 @@
 ---
 // Safe to edit.
 /* ============================================================================
-   DesignerNote
+   DesignerNote (restyled in overhaul 2.4b)
    ============================================================================
-   A short, signed note from Nathan reflecting on a case study, rendered from the
-   `designerNote` frontmatter string. It replaces the old prose "Reflections"
-   section with a personal, signed aside: the human voice behind the work, which
-   is a real differentiator for a one-person studio.
+   A short, signed note from Nathan reflecting on a case study, rendered from
+   the `designerNote` frontmatter string: the human voice behind the work,
+   which is a real difference for a one-person studio.
 
-   The signature is a visual treatment (the owner name from site.ts in the
-   display face), so the frontmatter only carries the note text. Keep the note
-   honest and specific to the project; it was drafted from each study's existing
-   "Reflections" prose and honesty-checked before wiring in.
+   2.4b look: no italics, no side stripe. A mono label on a strong top rule,
+   the note set large and light (300) in the heading colour, and the owner's
+   name from site.ts at 650 as the signature. It reads as signed through type
+   alone, like the rest of the system (weight is the emphasis).
 
-   Rendered by src/pages/work/[slug].astro. To edit, change `designerNote:` in the
-   case study's frontmatter.
+   Keep the note honest and specific to the project; it was drafted from each
+   study's existing "Reflections" prose. 2.4c draws the Decisions from it, so
+   a study may later pass a shorter note.
+
+   Props:
+     note    the note body (1 to 3 sentences); the signature is added below
+     label   the small label above it, "A note from the designer" by default
+
+   Rendered by src/pages/work/[slug].astro. To edit, change `designerNote:` in
+   the case study's frontmatter.
    ============================================================================ */
 import { site } from '../data/site';
 
 interface Props {
   /** The note body (1-3 sentences). The signature is added below it. */
   note: string;
+  /** The label above the note. */
+  label?: string;
 }
-const { note } = Astro.props;
+const { note, label = 'A note from the designer' } = Astro.props;
 ---
 
-<aside class="ncs-note" aria-label="A note from the designer" data-reveal>
-  <p class="ncs-note-eyebrow">A note from the designer</p>
+<aside class="ncs-note" aria-label={label} data-reveal>
+  <p class="ncs-note-label">{label}</p>
   <p class="ncs-note-body">{note}</p>
   <p class="ncs-note-sign">{site.ownerName}</p>
 </aside>
 
 <style>
-  /* No side-tab border (a known AI tell). The note reads as signed through type
-     alone: a quiet mono eyebrow, an editorial italic body, and the owner name
-     set in the display face like a signature. The parent container in
-     [slug].astro already supplies the separating top rule. */
   .ncs-note {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
-    max-width: 60ch;
+    gap: 1rem;
+    max-width: 40rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-strong);
   }
-  .ncs-note-eyebrow {
+  .ncs-note-label {
     margin: 0;
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-muted-foreground);
+    letter-spacing: 0.12em;
+    color: var(--muted-foreground);
   }
   .ncs-note-body {
     margin: 0;
-    font-size: 1.3rem;
-    line-height: 1.5;
-    color: var(--color-heading);
-    font-style: italic;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+    font-weight: 300;
+    line-height: 1.45;
+    letter-spacing: -0.01em;
+    color: var(--heading);
   }
   .ncs-note-sign {
-    margin: 0.25rem 0 0;
+    margin: 0;
     font-family: var(--font-display);
-    font-size: 1.75rem;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    color: var(--color-heading);
+    font-size: 1.125rem;
+    font-weight: 650;
+    line-height: 1.2;
+    color: var(--heading);
+  }
+
+  @media (forced-colors: active) {
+    .ncs-note {
+      border-top-color: CanvasText;
+    }
   }
 </style>

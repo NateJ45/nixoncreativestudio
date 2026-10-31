@@ -1,0 +1,64 @@
+---
+// Safe to edit.
+/* ============================================================================
+   ScrollProgress: the reading bar on long pages (overhaul package 2.4a)
+   ============================================================================
+   A 3px accent bar fixed to the top of the viewport that fills left to right
+   as the visitor scrolls. Used on the case-study and journal-entry templates
+   (plan ruling 6). It replaced ReadingProgress.astro, which needed a scroll
+   listener: this one is pure CSS, a scroll-driven animation
+   (animation-timeline: scroll()), so it ships no JavaScript at all.
+
+   Where it shows:
+     - only where the browser supports scroll-driven animations (@supports),
+     - and only under prefers-reduced-motion: no-preference.
+   Everywhere else it stays hidden (display: none), which is the honest
+   fallback: no bar at all rather than a bar that never moves.
+
+   Decorative, so aria-hidden. Render it AFTER the page's <article>: it is
+   position: fixed, so its DOM place does not show, but as <main>'s first
+   child it would make the first-screen reveal exemption miss the page header
+   (docs/claude/gotchas.md, Gotcha 10).
+   ============================================================================ */
+---
+
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<style>
+  .scroll-progress {
+    display: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .scroll-progress {
+        display: block;
+        position: fixed;
+        inset-inline: 0;
+        top: 0;
+        z-index: 50;
+        height: 3px;
+        pointer-events: none;
+        /* A flat accent fill (gradients and glows were retired in 2.1). */
+        background-color: var(--color-accent);
+        transform-origin: 0 50%;
+        /* scaleX is cheap: a width change would relayout every frame. */
+        transform: scaleX(0);
+        animation: ncs-scroll-progress linear both;
+        animation-timeline: scroll(root block);
+      }
+    }
+  }
+
+  @keyframes ncs-scroll-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @media print {
+    .scroll-progress {
+      display: none;
+    }
+  }
+</style>

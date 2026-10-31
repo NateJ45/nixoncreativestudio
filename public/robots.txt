@@ -1,14 +1,28 @@
 # =============================================================================
 # robots.txt for nixoncreativestudio.com
 # =============================================================================
-# Tells crawlers what they can and can't index. We let everything in: this
-# is a public marketing site, there's no admin area or private content to
-# protect.
+# Tells crawlers what they can and can't index. Everything is open: this is a
+# public marketing site, with no admin area or private content to protect.
+#
+# AI crawlers are named and allowed on purpose (Nathan's decision, 2026-10-30:
+# "allow AI"). Being readable by AI search and answer tools is how a small
+# studio shows up when someone asks one for a web designer. They are allowed
+# by the catch-all too; naming them makes the choice explicit, and a crawler
+# that finds its own group reads only that group. /llms.txt is the plain-text
+# summary written for them.
 #
 # The Sitemap line gives crawlers a direct pointer to the index file the
-# @astrojs/sitemap integration emits at build time. Cleaner than waiting
-# for them to discover URLs one by one.
+# @astrojs/sitemap integration emits at build time.
 # =============================================================================
+
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: CCBot
+Allow: /
 
 User-agent: *
 Allow: /

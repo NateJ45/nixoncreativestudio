@@ -8,8 +8,8 @@
    as a slow reel of shipped work. Hovering a column (mouse only) stops it and
    lifts the card under the cursor to show that site's one standout feature.
 
-   Content lives in src/data/reel.ts (which sites, which columns, the feature
-   lines). Images live in src/assets/reel/ and are re-shot from the live sites
+   Content lives in src/data/reel.ts (which sites, which columns; the feature
+   lines are each study's `hook`). Images live in src/assets/reel/ and are re-shot from the live sites
    with `node scripts/capture-reel.mjs`.
 
    How the loop works: each column renders its cards twice, then a CSS
@@ -19,12 +19,17 @@
 
    Motion rules:
    - Reduced motion: no drift at all, the wall is a still image.
-   - Off-screen or tab hidden: the script below adds .is-paused, which stops
-     the animation (CSS animations on transform are cheap, but no point
-     running them when nobody can see them).
-   - The Pause button in Hero.astro toggles data-paused on the hero, which
-     stops this wall and the ticker (WCAG 2.2.2: moving content longer than
-     five seconds needs a way to stop it).
+   - The stage is data-motion="loop" (src/scripts/motion.ts and globals.css
+     section 6), so it holds still off-screen, in a hidden tab, and while the
+     visitor has paused motion with the hero's Pause button or the footer
+     switch (WCAG 2.2.2: moving content longer than five seconds needs a way
+     to stop it).
+
+   Step into the reel (overhaul 3.1): clicking a card morphs that exact frame
+   into the study's stage on /work/{slug}/ while the rest of the wall lays
+   down flat and fades. The cards carry no view-transition-name in the markup
+   (every card renders twice); src/scripts/reel-morph.ts names the one that
+   was clicked at click time. No morph under reduced motion or Pause motion.
 
    Accessibility: the whole wall is decorative and aria-hidden. The cards are
    mouse-only links to each case study (tabindex -1, so they stay out of the
@@ -34,7 +39,7 @@
 
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import { reelSites, reelColumns } from '../data/reel';
+import { getReelSites, reelColumns } from '../data/reel';
 
 // Pull in every capture in src/assets/reel/ once, keyed by file name, so a
 // column can ask for "{slug}-desktop" without a long list of imports.
@@ -46,6 +51,7 @@ const capture = (slug: string, kind: 'desktop' | 'phone'): ImageMetadata => {
   if (!file) throw new Error(`HeroReel: missing src/assets/reel/${slug}-${kind}.jpg`);
   return file.default;
 };
+const reelSites = await getReelSites();
 const siteBySlug = new Map(reelSites.map((s) => [s.slug, s]));
 
 // Card sizes in CSS pixels. The captures are exactly 2x these.
@@ -55,7 +61,7 @@ const size = {
 };
 ---
 
-<div class="reel-stage" aria-hidden="true">
+<div class="reel-stage" aria-hidden="true" data-motion="loop">
   <div class="reel-plane">
     {reelColumns.map((col, colIndex) => {
       const cards = col.slugs.map((slug) => siteBySlug.get(slug)!).filter(Boolean);
@@ -67,7 +73,13 @@ const size = {
         >
           {[0, 1].map((copy) =>
             cards.map((site) => (
-              <a class="reel-card" href={`/work/${site.slug}/`} tabindex="-1" data-copy={copy}>
+              <a
+                class="reel-card"
+                href={`/work/${site.slug}/`}
+                tabindex="-1"
+                data-copy={copy}
+                data-slug={site.slug}
+              >
                 <span class="reel-frame" style={`width: ${size[col.kind].width}px;`}>
                   <span class="reel-chrome">
                     <span class="reel-dot" />
@@ -143,11 +155,6 @@ const size = {
     }
     .reel-col.is-down {
       animation-name: reel-down;
-    }
-    /* Stopped: off-screen, tab hidden, or the visitor pressed Pause. */
-    :global(.reel-stage.is-paused) .reel-col,
-    :global([data-paused]) .reel-col {
-      animation-play-state: paused;
     }
     /* Mouse users can stop a column to look at a card. */
     @media (hover: hover) {
@@ -287,19 +294,8 @@ const size = {
 </style>
 
 <script>
-  /* Pause the wall when it is off-screen or the tab is hidden. Registered on
-     astro:page-load (View Transitions) with a re-bind guard on the element. */
-  function initReel(): void {
-    const stage = document.querySelector<HTMLElement>('.reel-stage');
-    if (!stage || stage.dataset.reelBound) return;
-    stage.dataset.reelBound = '1';
-    let onScreen = true;
-    const sync = () => stage.classList.toggle('is-paused', !onScreen || document.hidden);
-    new IntersectionObserver(([entry]) => {
-      onScreen = entry.isIntersecting;
-      sync();
-    }).observe(stage);
-    document.addEventListener('visibilitychange', sync);
-  }
-  document.addEventListener('astro:page-load', initReel);
+  /* Click-time View Transition names for the reel (overhaul 3.1). The
+     listeners live on document and bind once, so they survive page swaps. */
+  import { initReelMorph } from '../scripts/reel-morph';
+  initReelMorph();
 </script>

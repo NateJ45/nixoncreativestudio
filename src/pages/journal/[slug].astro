@@ -6,24 +6,27 @@
    ============================================================================
    One static page per journal entry, generated at build time. Lighter-
    weight than the case study detail layout: single column, no service
-   badges, no sidebar TOC. The reading progress bar and reading time
+   badges, no sidebar TOC. The CSS reading bar (ScrollProgress) and reading time
    stamp from the case study toolkit still apply because long journal
    posts deserve the same QoL.
 
    The body is treated as an editorial reading surface: a drop-cap on the
    first paragraph, scroll-revealed h2 headings, styled blockquotes and
-   figures, and an end-of-article tag list. The cover carries a shared
-   transition:name so it morphs from the index card during a View
-   Transition. All motion is reduced-motion safe via globals.css.
+   figures, and an end-of-article tag list, all in a 40rem measure
+   (overhaul 2.9). The cover keeps its transition:name for a later morph
+   (the index is a plain dated list since 2.9 and shows no covers). The
+   header holds the H1, so it never takes data-reveal (ruling 3). All
+   motion is reduced-motion safe via globals.css.
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
-import { Image, getImage } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
+import { ladder, PICTURE } from '../../lib/picture';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CtaBanner from '../../components/CtaBanner.astro';
-import ReadingProgress from '../../components/ReadingProgress';
+import ScrollProgress from '../../components/ScrollProgress.astro';
 import { readingTime } from '../../lib/readingTime';
 import { site } from '../../data/site';
+import { ids, pageIds } from '../../lib/schema';
 
 export async function getStaticPaths() {
   const all = await getCollection('journal');
@@ -46,19 +49,28 @@ const updatedLabel = updated ? fmt.format(updated) : null;
 const ogCover = cover ? await getImage({ src: cover, width: 1200, format: 'jpg' }) : null;
 const ogImage = ogCover ? ogCover.src : undefined;
 
+// Article JSON-LD, one node in the page's @graph (see StructuredData.astro):
+// written by Nathan, published by the studio, both by @id. The breadcrumbs
+// become a BreadcrumbList (Home / Journal / this entry).
+const canonical = new URL(`/journal/${entry.id}/`, site.url).toString();
 const schemas = [
   {
-    '@context': 'https://schema.org',
     '@type': 'Article',
+    '@id': pageIds(canonical).article,
+    mainEntityOfPage: { '@id': pageIds(canonical).webpage },
     headline: title,
     description: summary,
     ...(ogCover ? { image: new URL(ogCover.src, site.url).toString() } : {}),
     datePublished: published.toISOString(),
     ...(updated ? { dateModified: updated.toISOString() } : {}),
-    author: { '@id': `${site.url}#organization` },
-    publisher: { '@id': `${site.url}#organization` },
+    author: { '@id': ids.person },
+    publisher: { '@id': ids.studio },
     ...(tags ? { keywords: tags.join(', ') } : {}),
   },
+];
+const breadcrumbs = [
+  { name: 'Journal', path: '/journal/' },
+  { name: title, path: `/journal/${entry.id}/` },
 ];
 ---
 
@@ -68,12 +80,11 @@ const schemas = [
   ogImage={ogImage}
   ogType="article"
   schemas={schemas}
+  breadcrumbs={breadcrumbs}
 >
-  <ReadingProgress client:idle />
-
   <article>
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
-      <div class="ncs-container max-w-[64rem]" data-reveal>
+      <div class="ncs-container max-w-[64rem]">
         {/* The animated underline sits on an inner span, not the link: on a touch
             device the link is a 44px-tall row, and an underline on the link's own
             box would drop to the bottom of that row, away from the words. */}
@@ -99,7 +110,7 @@ const schemas = [
           )}
         </p>
 
-        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch] leading-[0.95]">
+        <h1 id="journal-entry-heading" class="mb-m max-w-[28ch]">
           {title}
         </h1>
         <p class="max-w-[60ch] text-lg leading-[1.6] text-text">{summary}</p>
@@ -115,14 +126,15 @@ const schemas = [
         )}
 
         {cover && (
-          <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal="scale">
-            <Image
+          <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal>
+            <Picture
               src={cover}
               alt=""
-              widths={[600, 900, 1200]}
+              widths={ladder([600, 900, 1200])}
               sizes="(min-width: 56rem) 64rem, 100vw"
               class="block h-auto w-full"
               transition:name={`journal-cover-${entry.id}`}
+              {...PICTURE}
             />
           </div>
         )}
@@ -139,7 +151,7 @@ const schemas = [
            below, which tags each one with data-reveal after mount. -->
       <div
         data-prose
-        class="journal-prose mx-auto max-w-[72ch] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
+        class="journal-prose mx-auto max-w-[40rem] pt-l pb-2xl text-[1.0625rem] leading-[1.8] text-text"
       >
         <Content />
       </div>
@@ -147,7 +159,7 @@ const schemas = [
       {/* End-of-article tag list. Mirrors the chips in the header but reads
           as a footer to the piece, a natural stopping point before the CTA. */}
       {tags && tags.length > 0 && (
-        <footer class="mx-auto mt-l max-w-[72ch] border-t border-border pt-l" data-reveal>
+        <footer class="mx-auto mt-l max-w-[40rem] border-t border-border pt-l" data-reveal>
           <p class="mb-s font-mono text-[0.75rem] tracking-[0.12em] text-text-muted uppercase">
             Filed under
           </p>
@@ -163,7 +175,11 @@ const schemas = [
     </div>
   </article>
 
-  <CtaBanner />
+  {/* Reading bar (CSS only, ScrollProgress). AFTER the article on purpose: it is position:fixed,
+      so its DOM place does not show, but as <main>'s first child it would make
+      the first-screen reveal exemption (`main > :first-child [data-reveal]`)
+      miss the entry header (docs/claude/gotchas.md, Gotcha 10). */}
+  <ScrollProgress />
 </BaseLayout>
 
 <style>

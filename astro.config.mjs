@@ -7,6 +7,17 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import { readdirSync } from 'node:fs';
+import { photographyOpen } from './src/data/photography-gate.ts';
+
+// The /photography gate (overhaul 2.8). The sitemap filter runs before the
+// content layer exists, so count the photos collection's JSON files here, the
+// same files its glob loader reads. The rule itself lives in
+// src/data/photography-gate.ts, shared with the nav and the page's noindex.
+const photoFiles = readdirSync(new URL('./src/content/photos/', import.meta.url), {
+  recursive: true,
+}).filter((name) => String(name).endsWith('.json')).length;
+const photographyIsOpen = photographyOpen(photoFiles);
 
 // =============================================================================
 // Astro config
@@ -27,8 +38,9 @@ import react from '@astrojs/react';
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
 //                 loads the beacon with `defer`)
-//   - react     : enables React islands (shadcn/ui, photo lightbox, motion,
-//                 the WebGL hero)
+//   - react     : enables React islands. Since overhaul 2.8 no page renders
+//                 one: PhotoGallery waits, unused, for package 4.6 and the
+//                 first real photos. Kept installed so that is a one-line change.
 //
 // prefetch: links preload as they enter the viewport, so navigation feels
 // instant and pairs with the View Transitions router.
@@ -66,6 +78,21 @@ export default defineConfig({
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
   adapter: cloudflare({ imageService: 'compile' }),
+  // Encoder settings for that build-time Sharp service (overhaul 4.4). Media.astro
+  // and the other <Picture> calls emit AVIF with a WebP fallback. Sharp's AVIF
+  // default (quality 50) visibly smears fine photographic detail (aerial maps,
+  // the about photos) next to the WebP, so AVIF runs at 60: side by side at 2x
+  // zoom it matches the WebP, and the files still come out about 30% smaller.
+  // Effort 3, not Sharp's default 4: on the site's screenshots 4 takes about three
+  // times as long for files only 2% smaller, and every CI build encodes from cold.
+  // WebP keeps Sharp's default (80). A component that passes its own `quality`
+  // (the hero reel's 68) overrides both.
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+      config: { avif: { quality: 60, effort: 3 } },
+    },
+  },
   integrations: [
     // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
     // so a code sample flips with the theme toggle instead of prefers-color-scheme.
@@ -78,7 +105,15 @@ export default defineConfig({
     // /coming-soon/ is the pre-launch gate page, not content: it is noindex
     // (see src/pages/coming-soon.astro), and a sitemap must not list a
     // noindex page (Search Console flags the mismatch).
-    sitemap({ filter: (page) => !page.includes('/coming-soon') }),
+    // Out of the sitemap: the Coming Soon gate, the noindex parts page
+    // (/colophon/parts/, the check page for the shared components) and,
+    // while its gate is closed, the noindex /photography/ page.
+    sitemap({
+      filter: (page) =>
+        !page.includes('/coming-soon') &&
+        !page.includes('/colophon/parts') &&
+        (photographyIsOpen || !page.includes('/photography')),
+    }),
     react(),
   ],
 

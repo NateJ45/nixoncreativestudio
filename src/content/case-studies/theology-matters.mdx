@@ -4,8 +4,11 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/theology-matters.png
-# with a real photo when one is available. Current file is a placeholder.
+# Rewritten in overhaul 2.4e (2026-10-31) around the site as it is today.
+# Every claim comes from the live site (theologymatters.com, read
+# 2026-10-31) or the client repo's docs (docs/claude/staff-proofing.md,
+# back-issues.md, search-engine.md, inline-asks.md). Staff-side features are
+# described in words only: admin screenshots are package 3.6.
 title: Theology Matters
 client: Theology Matters
 sector: nonprofit
@@ -19,37 +22,169 @@ tags:
   - WordPress
   - Editorial Design
   - Audio
+  - CMS
 stack:
   - WordPress
   - Bricks Builder
   - ACF
   - ElevenLabs
-  - RankMath
-summary: A full rebuild of a Reformed theological journal, replacing a dated theme with an architecture built for a quarterly journal, an annual conference, and a growing institute.
+  - Neon CRM
+  - Cloudflare
+summary: A Reformed quarterly rebuilt as a real publication, with every issue since 1995 online and read aloud, an admin the staff run themselves, and sign-ups that feed their supporter database.
+metaDescription: 'Theology Matters: every issue since 1995 online, searchable and read aloud, an admin the staff run alone, and sign-up forms that feed their supporter database.'
 cover: ../../assets/case-studies/theology-matters.png
 year: 2026
 featured: false
 published: 2026-05-01
 liveUrl: https://theologymatters.com
-outcome: 'A quarterly journal, annual conference, and growing institute, all self-publishable, with audio on every article.'
-# Add a real client quote here when you have one, then uncomment. Never invent it.
-# testimonial:
-#   quote: ""
-#   name: ""
-#   title: ""
-results:
-  - 'The editorial team can now publish a new journal edition, add a speaker page, and update the conference schedule straight from WordPress, with no developer involved.'
-  - 'Every article carries a professional audio version that goes live automatically, including the entire back catalog, not just new pieces.'
-  - 'More than a decade of published content is now searchable and sortable in one real archive.'
-  - 'The quarterly journal, annual conference, and growing institute all run from one self-publishable site.'
+outcome: 'Thirty years of the journal online and searchable, audio on every essay, an admin the staff run on their own, and sign-ups that reach their mailing list.'
+# Real client words, copied verbatim from their email (vault note
+# projects/ncs-testimonials.md). Never edit or paraphrase a quote.
+testimonials:
+  - quote: "Nathan Nixon transformed our website from a slow, clunky station wagon to a fast, beautiful sports car. Without compromising the integrity of our message, he's made it more attractive. Exceedingly competent and easy to work with, he has helped enormously to advance our mission."
+    name: 'Richard E. Burnett, Ph.D.'
+    title: 'Executive Director and Managing Editor, Theology Matters'
+    date: 2025-02-28
 designerNote: "The ElevenLabs call is the one I'm happiest about. By wiring the audio generation in at the template level instead of recording and uploading piece by piece, every article in the archive picked up an audio version the moment the site launched, so anyone who would rather listen than read can do that across the whole back catalog."
+cmsShot: ../../assets/case-studies/shots/theology-matters-cms.png
+cmsShotAlt: 'The WordPress dashboard I built for Theology Matters, with tasks like adding an article and a list of scheduled articles'
+cmsName: 'WordPress'
+hook: 'Every issue since 1995, online, searchable and read aloud'
+order: 6
+# Palette source: Theology Matters Website DESIGN.md (--tm-* tokens), checked
+# against the live :root on 2026-10-31 (unchanged); light only, markDark is
+# its cream, the colour it sets on navy.
+palette:
+  paper: '#F6F1E7'
+  ink: '#1C1A17'
+  accent: '#7A1F2B'
+  accentInk: '#F6F1E7'
+  markDark: '#F6F1E7'
+  typeface: 'Newsreader / IBM Plex Sans'
+  swatches:
+    - '#F6F1E7'
+    - '#7A1F2B'
+    - '#14253F'
+    - '#1C1A17'
+# The Signature band's still: the feature the hook names (the journal
+# archive, captured 2026-10-31 from theologymatters.com/journal/).
+featureShot: ../../assets/case-studies/shots/theology-matters-feature-archive.png
+featureShotAlt: 'The theologymatters.com journal archive: a search box, a strip of years, and the 2026 issues as season-coloured covers with their articles listed underneath'
+# The interaction clip for "The idea" band (overhaul 3.5): recorded from the
+# live site with `npm run capture:clips` on 2026-10-31. It replaces the
+# featureShot in that band only; re-run the script and paste the new src after
+# the client changes this feature.
+signatureClip:
+  src: /media/theology-matters-archive.ff3703b5
+  alt: 'Searching the Theology Matters archive for "Barmen": the results list the articles and issues since 1995 that mention it'
+mobileShot: ../../assets/case-studies/shots/theology-matters-mobile.png
+# The rail's fact row, filled from the fields above.
+facts:
+  sector: Nonprofit
+  year: '2026'
+  role: Designer, Developer
+  stack:
+    - WordPress
+    - Bricks Builder
+    - ACF
+    - ElevenLabs
+    - Neon CRM
+    - Cloudflare
+  host: theologymatters.com
 ---
 
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
-import audioShot from '../../assets/case-studies/shots/theology-matters-feature-audio.png';
 import archiveShot from '../../assets/case-studies/shots/theology-matters-feature-archive.png';
+import audioShot from '../../assets/case-studies/shots/theology-matters-feature-audio.png';
+import printShot from '../../assets/case-studies/shots/theology-matters-feature-print.png';
+
+## The brief
+
+Theology Matters is a Reformed and Presbyterian journal edited by Dr. Richard E. Burnett. It has been mailed free, four times a year, to anyone who asks since the mid-1990s, and it also runs an annual theology conference and an institute for theological education. The content is serious: several authors an issue, three decades of back issues, conference lectures, and a course of study for working ministers.
+
+The old site sat on a dated theme. Changing it meant editing code, so adding an issue, a speaker or a faculty listing waited on a developer, and most of the back catalogue lived only inside the issue PDFs. The rebuild had to make the whole journal readable and findable, let a small staff run it themselves, and turn readers who want the journal into names on the mailing list.
+
+The new site went live in spring 2026, and I have kept building on it since: a full redesign of every page, the back issues brought online as real articles, a rebuilt admin for the staff, and new sign-up forms.
+
+## Decisions
+
+<Decision
+  title="Audio at the template level"
+  easy="Record and upload an audio version piece by piece."
+  did="Wire ElevenLabs in at the template level. Every essay, back issues included, carries a Listen to this essay player with no production work for the editors."
+/>
+
+<Decision
+  title="An admin built around the jobs"
+  easy="Hand over the stock WordPress admin and a written manual."
+  did="Stay on WordPress, which the staff already knew, and reshape the admin around what they actually do: prepare an issue, add a writer, change the conference programme. Guided forms, a checklist before anything publishes, undo on every edit, and a Site Guide with short videos for each job."
+/>
+
+<Decision
+  title="Sign-ups that land where the office works"
+  easy="Leave sign-ups in a forms plugin's inbox for someone to copy across by hand."
+  did="Build the newsletter, print edition and stop-or-move forms into the theme, check each one for spam, and send it straight into Neon CRM, the supporter database the office already sends its email from."
+/>
+
+The look comes from academic press publishing: cream paper, oxblood and navy, Newsreader for reading. Each issue gets a cover in its season's colour, so a run of issues reads like a shelf. Articles carry a contents list, footnotes, drop caps, Scripture references that show the verse on hover (RefTagger), and scholarly metadata so search engines index them as journal articles.
+
+## What I built
+
+<FeatureHighlight
+  src={archiveShot}
+  alt="The Theology Matters journal archive with season-coloured issue covers"
+  title="Every issue since 1995, on one shelf"
+  body="The journal archive shows each year's issues as covers with their articles underneath. Three hundred back-issue articles that only ever existed inside the issue PDFs are now full pages with their own authors, issue and date, so the whole run of the journal can be read and searched."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={audioShot}
+  alt="A Theology Matters essay with its Listen to this essay player and Cite and Reading buttons"
+  title="Read it, hear it, cite it"
+  body="Every essay has an audio version from ElevenLabs, a Cite button, text size controls, a contents list that follows along, and footnotes that open in place. A reader can listen in the car and cite the same piece in a paper."
+  side="right"
+/>
+
+<FeatureHighlight
+  src={printShot}
+  alt="The Theology Matters print edition sign-up form"
+  title="Asking for the journal takes one form"
+  body="The print sign-up asks for an address and a few questions about the reader's ministry, then sends a confirmation email before anything is mailed. A short form handles moves, extra copies and stopping, and a newsletter sign-up sits on the home page and between article paragraphs."
+  side="left"
+/>
+
+The full build, including the pieces above:
+
+**For readers**
+
+- A redesign of every page: a nameplate header with the current issue, season-coloured issue covers, typeset articles with drop caps and small caps, and section photographs
+- Every issue since 1995 online, with the back issues turned from PDFs into full articles
+- Search across every article, author and issue, including the full text of the issue PDFs, with phrase search, Scripture references ("Rom 8" finds Romans 8), suggestions as you type and "Did you mean"
+- Topics and authors indexes with an A to Z strip, and author pages across each writer's work
+- Audio on every essay, a Cite button, text size, footnotes in place, and a contents list that tracks the section you are reading
+- Print edition sign-up with a confirmation email, a stop-or-move form, and a newsletter sign-up on the home page
+- Small Give, Newsletter and Institute panels between article paragraphs, so the ask sits where readers already are
+- An Institute page and a Conference page with lectures, speakers and workshops
+- Scholarly structured data on every article and Google Scholar metadata, so the essays are indexed as journal articles
+
+**For the staff**
+
+- A Home screen in the admin: task buttons, what needs a look, what is scheduled, and recent changes with an Undo link
+- Prepare an issue: pick the season, the PDF, the articles and a release time, and the site publishes the whole issue at that moment
+- Start an article from a Word file, footnotes included, and add a new writer from the article screen
+- A Before you publish checklist beside every article, which also warns when another article already uses the same picture
+- Undo and redo on every edit screen, a daily summary of changes, and no way to delete anything permanently by accident
+- The Institute and Conference pages edited through plain fields instead of a page builder
+- Private preview links for drafts, and a Share this article box with ready-made posts for social media and the newsletter
+- Form messages screened for spam and passed to Neon CRM, with anything unclear set aside for a person
+- A Site Guide with step-by-step recipes and short captioned videos for each job
+
+## Walk the homepage
 
 <SiteShowcase
   slug="theology-matters"
@@ -58,54 +193,22 @@ import archiveShot from '../../assets/case-studies/shots/theology-matters-featur
   label="theologymatters.com"
 />
 
-## The brief
-
-Theology Matters is a Reformed and Presbyterian publication run by Dr. Richard E. Burnett. It produces a free quarterly journal, runs an annual theology conference, and operates an institute for theological education. The content operation is serious: multiple authors per issue, a growing article archive, conference sessions with individual speaker pages, and a journal edition system that needed to work like a real publication database rather than a simple blog.
-
-The site they had was built on a dated Frames Framework theme. Updating it required editing raw PHP and CSS. The editorial team had no path to add a new journal edition, update a faculty listing, or create a conference page without developer involvement. The rebuild needed to make all of that self-service without sacrificing the editorial weight the publication had earned.
-
-## The approach
-
-WordPress was the right platform for this kind of content operation. The editorial team already knew it, the archive needed real taxonomy management, and the publishing cadence (quarterly issues plus recurring conference prep) did not call for a headless CMS with a separate Studio interface.
-
-We built with Bricks Builder for precise visual control and used ACF Pro to structure the seven content types the site actually has: articles, journal editions, conference sessions, speakers, courses, faculty, and board references. Each type has its own fields, its own archive template, and its own relationships to the others. An article knows which edition it belongs to, which authors contributed, and which conference sessions it relates to. That structure makes the archive genuinely useful for readers doing research, not just browsing.
-
-For audio, we wired in ElevenLabs Audio Native at the template level. Every article now has a professional-sounding audio version without any production overhead on the editorial side. The publication does not think about audio; it just exists on every piece.
-
-The editorial design system took its cues from academic press publishing: a cream and oxblood palette, Newsreader serif type, article tables of contents with scroll-spy tracking, drop caps, reading-time estimates, and Google Scholar citation metadata so the articles are properly indexed for academic search.
-
-## What we built
-
-<FeatureHighlight
-  src={audioShot}
-  alt="A Theology Matters article with its audio player"
-  title="Every article, read aloud"
-  body="An audio version sits on every piece, generated at the template level with ElevenLabs, so the whole back catalogue can be listened to, with no production overhead for the editors."
-  side="left"
+<ResultsBlock
+  items={[
+    {
+      figure: '458',
+      text: 'essays to read online, from every issue of the journal since 1995',
+      source: 'The journal archive on theologymatters.com, read 31 October 2026',
+    },
+    {
+      figure: '300',
+      text: 'back-issue articles that existed only inside the issue PDFs, now full pages with their own authors and issue',
+      source: 'The back-issue import log kept with the site code',
+    },
+    'The staff publish an issue, add a writer, and update the Institute and Conference pages themselves, with a guide and a video for each job.',
+    'Print, newsletter and stop-or-move requests go straight into the supporter database the office already emails from, with a confirmation for the reader.',
+    'Every essay in the archive has an audio version, the back issues included.',
+  ]}
 />
-
-<FeatureHighlight
-  src={archiveShot}
-  alt="The Theology Matters article archive"
-  title="A real publication archive"
-  body="More than a hundred articles, sortable and filterable by topic and author, structured so a reader can research the catalogue instead of just scrolling a blog."
-  side="right"
-/>
-
-The full build, including the pieces above:
-
-- Fourteen page and post templates covering the full content architecture
-- Seven custom post types with ACF field groups: articles, journal editions, conference sessions, speakers, courses, faculty, board references
-- Journal edition taxonomy so each issue can be browsed as a distinct publication entity with PDF download
-- Article archive with sort, filter, and pagination across the full back catalog
-- Author archive pages with topic filtering across each author's body of work
-- Multi-author article support with co-author attribution built into the template
-- Conference section with session listings, speaker pages, and recap pages for past events
-- ElevenLabs Audio Native wired at the template level so audio appears on every article automatically
-- RefTagger integration for Scripture citation tooltips, so biblical references in prose expand to the full verse text on hover
-- Article table of contents with scroll-spy so readers can jump within long pieces
-- Google Scholar metadata on every article for proper academic indexing
-- RankMath SEO configuration tuned to theological search terms
-- 73-section custom CSS architecture with BEM naming for reliable long-term maintenance
 
 <Lightbox />

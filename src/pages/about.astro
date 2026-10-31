@@ -1,53 +1,44 @@
 ---
-// Safe to edit. The story prose, the principles array, and the Currently arrays
+// Safe to edit. The story prose, the photos array and the Currently arrays
 // hold all of the user-facing copy on this page.
 /* ============================================================================
-   /about | About Nathan Nixon  [editorial-grid revamp]
+   /about | About Nathan Nixon  (overhaul package 2.6)
    ============================================================================
-   One page-wide editorial grid, reused by every section, so the whole page
-   reads as a single ruled document with ONE dead-straight left axis:
+   The page's job is trust in the person. Six beats, top to bottom:
 
-     [ 13rem marker rail ] [ content track ]
+     1. Head: the real headshot and the H1. The headshot is the page's LCP,
+        so it is eager (Media's `lcp`), never revealed, and drawn big enough
+        to out-size the H1 at every width (it sits first on a phone, on the
+        right from lg). The H1 keeps its Heft (package 1.7) and its wording
+        until Nathan picks a new one.
+     2. In short: the one-line thesis plus a few plain facts. The rail's site
+        count is counted from the case-studies collection, never typed.
+     3. The longer story (prose).
+     4. Outside the studio: a contact sheet of the five real photos in
+        src/assets/about with their captions. Each frame is a real <button>
+        for the shared Lightbox, which opens the whole, uncropped photo.
+     5. Currently (#now): the old /now snapshot. Rewrite its arrays about once
+        a quarter and bump `lastUpdated`.
+     6. One line pointing at the "why it costs what it costs" block on
+        /services.
 
-   - The LEFT rail is a quiet mono WORD label (ABOUT / IN SHORT / STORY /
-     PRACTICE / NOW) plus a little real meta where it helps (the location stamp,
-     the Currently freshness + last-updated). The labels are decorative
-     (aria-hidden), never headings, so the heading tree stays clean. Below lg the
-     rail collapses and its label sits as a small kicker above each heading.
-   - The RIGHT track holds every heading and all real content on one left edge.
-     Running prose is capped to a readable measure; the h1, the thesis quote, the
-     Terminal, and the principle bodies break out to the full track width, so no
-     row leaves a lonely text ribbon in a wide field and nothing is centered.
+   Then the footer's ink closer (BaseLayout `closer`).
 
-   Section rhythm is one token (py) plus a single border-t hairline opening every
-   section after the masthead, so the page is one continuous ruled column instead
-   of a stack of slabs. The page is mostly ONE surface in both themes: the ruled
-   editorial column carries no full-bleed background bands mid-page (the old
-   bg-mesh-soft seam is gone). The inset surface changes are the single Currently
-   .surface-card and, near the foot, the Testimonials band.
-
-   Two deliberate full-bleed exceptions sit at the TAIL of the page, after the
-   ruled column ends: the Testimonials .band-themed band (the .band-themed surface
-   is owned by Testimonials.astro itself, not set here) and the closing CtaBanner.
-   Both are intentional closing beats, not mid-column slabs, so the editorial
-   one-surface read holds through every section above them.
-
-   Motion: the existing data-reveal / spotlight vocabulary only, reduced-motion
-   safe. No scroll-spy, no sticky positioning, no new JS.
+   Every band after the head is a Section (rail, railMeta, tone). The head is
+   its own page-grid band, because Section always puts its body in columns 4
+   to 12, which leaves the H1 too narrow and the headshot too small to be the
+   LCP. CSS is scoped to this page; globals.css is frozen (ruling 10).
    ============================================================================ */
 
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import CtaBanner from '../components/CtaBanner.astro';
-import Testimonials from '../components/Testimonials.astro';
-import Terminal from '../components/Terminal.astro';
-import LighthouseScore from '../components/LighthouseScore.astro';
+import Heft from '../components/Heft.astro';
+import Section from '../components/Section.astro';
+import Media from '../components/Media.astro';
 import Lightbox from '../components/Lightbox.astro';
-import { Image } from 'astro:assets';
-import { site } from '../data/site';
+import { Picture } from 'astro:assets';
+import { ladder, PICTURE } from '../lib/picture';
 
-// Headshot for the masthead portrait frame, and the personal snapshots for the
-// "Outside the studio" gallery. All resized into src/assets at build-friendly
-// sizes from the originals.
 import headshot from '../assets/brand/headshot.jpg';
 import familyPhoto from '../assets/about/family.jpg';
 import runningPhoto from '../assets/about/running.jpg';
@@ -55,10 +46,12 @@ import exploringPhoto from '../assets/about/exploring.jpg';
 import weddingPhoto from '../assets/about/wedding.jpg';
 import portraitBwPhoto from '../assets/about/portrait-bw.jpg';
 
-// "Outside the studio" gallery. Real, lightly captioned snapshots of the life
-// behind the one-person studio. Captions are honest and deliberately generic
-// (no names), so nothing presumes more than the photo shows. Each photo is a
-// click / keyboard zoom trigger for the shared Lightbox at the foot of the page.
+// Counted, never typed (CLAUDE.md never-break rule 9).
+const siteCount = (await getCollection('case-studies')).length;
+
+// "Outside the studio" contact sheet. Real snapshots with honest, generic
+// captions (no names), so nothing presumes more than the photo shows. The
+// frames crop to one shape on the sheet; the Lightbox shows the whole photo.
 const photos = [
   {
     src: familyPhoto,
@@ -87,31 +80,13 @@ const photos = [
   },
 ];
 
-// Three working principles. Keep these honest; they should describe how
-// I actually work, not how I wish I worked.
-const principles = [
-  {
-    title: 'Strategy before pixels',
-    body: 'Every project starts with a working session and a one-page brief we both agree on. Design choices follow from there, not from whichever template looks freshest.',
-  },
-  {
-    title: 'The right platform for the job',
-    body: 'Some clients are best served by a custom-coded site, others by Squarespace or WordPress. I pick what fits your budget and the people who will maintain it, then set it up so the next volunteer or staff member can keep it running after I hand it over.',
-  },
-  {
-    title: 'Cincinnati base, clients anywhere',
-    body: 'Based in Cincinnati, so local clients meet in person and get on-site photography. Web design and strategy go wherever the client is, fully remote when that is easier. Short distance when it helps, no distance when it does not.',
-  },
-];
-
 // "Currently" content, merged in from the old standalone /now page (a Derek
 // Sivers-style snapshot). Rewrite these arrays about once a quarter; the
-// freshness pill and the "last updated" stamp keep the section honest.
+// freshness line and the "last updated" stamp keep the section honest.
 const lastUpdated = '2026-10-01'; // bump whenever the arrays below change
 
 // Parse the ISO day as LOCAL midnight. A bare 'YYYY-MM-DD' parses as UTC, so in
-// a timezone behind UTC both the label and the freshness would read a day early
-// (e.g. "yesterday" / the prior date). The T00:00:00 suffix forces local time.
+// a timezone behind UTC both the label and the freshness would read a day early.
 const lastUpdatedDate = new Date(`${lastUpdated}T00:00:00`);
 const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
   month: 'long',
@@ -119,7 +94,7 @@ const lastUpdatedLabel = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 }).format(lastUpdatedDate);
 
-// Relative freshness for the status pill: today / N days / N weeks / N months.
+// Relative freshness for the rail: today / N days / N weeks / N months.
 // If it ever reads "8 months ago," that is the nudge to rewrite the arrays.
 function freshnessLabel(iso: string): string {
   const days = Math.max(
@@ -140,11 +115,11 @@ const freshness = freshnessLabel(lastUpdated);
 // keep any private client generic rather than named.
 const workingOn = [
   "Finishing the Presbyterian Academy website ahead of the school's first term.",
-  'Buying our first house, here in Cincinnati.',
+  "Buying my family's first house, here in Cincinnati.",
 ];
 
-// Capacity signals. status drives the chip color and the readable label, so
-// availability never reads on color alone. open -> green, limited -> amber.
+// Capacity signals. status drives the chip colour and the readable word, so
+// availability never reads on colour alone.
 const booking = [
   {
     status: 'open' as const,
@@ -159,16 +134,11 @@ const booking = [
       'A few shoot days each month, fit around the web work, for portraits, families, events, and the brand photography that pairs with a new site.',
   },
 ];
+// Tailwind palette utilities, as before the overhaul: 700 shades on light, 300
+// on dark, both clear AA small text on this page's surfaces.
 const statusMeta = {
-  // Status text must clear AA (4.5:1, it is text-xs small text) on the now-sheet
-  // .surface-card in BOTH themes. The brand amber (--tertiary) only passes on the
-  // navy heroes, not on light, so "limited" uses amber-700 on light, mirroring the
-  // emerald pattern. In dark mode the shades are lifted to amber-300 / emerald-300:
-  // lighter shades on the dark navy card give more headroom over the 4.5:1 line
-  // than the -400s, so the small chip text stays comfortably legible. The dot color
-  // stays brand and is decorative; the readable word carries the meaning, never color.
-  open: { word: 'Open', dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
-  limited: { word: 'Limited', dot: 'bg-tertiary', text: 'text-amber-700 dark:text-amber-300' },
+  open: { word: 'Open', text: 'text-emerald-700 dark:text-emerald-300' },
+  limited: { word: 'Limited', text: 'text-amber-700 dark:text-amber-300' },
 };
 
 // Books / longer-form pieces, and skills I'm sharpening.
@@ -183,472 +153,469 @@ const learning = [
   'Going deeper on Astro, the framework this very site runs on',
 ];
 
-// Reused layout tokens. railGrid is the page's one asymmetric grid; railLabel is
-// the quiet mono word-label in the left rail.
-const railGrid =
-  'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
-const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
-
-// JSON-LD schemas specific to the About page: Person for the studio owner,
-// linked back to the Organization defined site-wide.
-const schemas = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    '@id': `${site.url}/about/#person`,
-    name: site.ownerName,
-    jobTitle: 'Founder, Designer, Developer, Photographer',
-    worksFor: { '@id': `${site.url}#organization` },
-    url: `${site.url}/about/`,
-    sameAs: [site.social.instagram, site.social.linkedin],
-  },
-];
+// No page-specific JSON-LD here: Nathan's Person node is in the site-wide
+// @graph on every page (src/lib/schema.ts), linked to the studio by @id.
 ---
 
 <BaseLayout
-  title="About | Nixon Creative Studio"
-  description="About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio."
-  schemas={schemas}
+  title="About Nathan Nixon | Nixon Creative Studio"
+  description="I'm Nathan Nixon, the one person behind Nixon Creative Studio in Cincinnati. I plan, design and build every site myself, and shoot the photos when needed."
+  closer={{
+    heading: 'Want to talk about',
+    emphasis: 'a project?',
+    sub: 'The first conversation is free, and the earlier it happens, the easier the work is to schedule.',
+  }}
 >
-  <!-- ====================================================================
-       Masthead (ABOUT). The page head: who Nathan is, paired with the
-       portrait placeholder. Establishes the rail + track spine on the first
-       screen. No top hairline (it opens the page).
-       ==================================================================== -->
-  <section class="pt-2xl pb-2xl" aria-labelledby="about-hero-heading">
-    <div class="ncs-container">
-      <div class={railGrid}>
-        <!-- Rail: decorative word-label + a quiet location stamp. -->
-        <div class="flex flex-col gap-2" aria-hidden="true">
-          <p class={railLabel}>About</p>
-          <p class="font-mono text-[0.8rem] text-text-muted">Cincinnati, OH</p>
-        </div>
+  <!-- 1. Head. Nothing here takes data-reveal (ruling 3): the H1 and the
+       headshot paint on load at full opacity. -->
+  <section class="about-head" aria-labelledby="about-heading">
+    <div class="ncs-container page-grid">
+      <div class="about-head-text">
+        <p class="about-kicker">
+          <span class="about-kicker-label">About</span>
+          <span aria-hidden="true">·</span>
+          <span>Cincinnati, Ohio</span>
+        </p>
+        <h1 id="about-heading">
+          A one-person studio for <Heft text="organizations that take their work seriously." />
+        </h1>
+        <p class="about-intro">
+          I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with
+          small businesses, nonprofits, churches, and schools, in person around the region and
+          anywhere for web work. I do the strategy, the design, the photography, and the code, so
+          the person you meet on day one is the same person who hands you the finished site.
+        </p>
+      </div>
+      <div class="about-head-photo">
+        <Media
+          src={headshot}
+          alt="Nathan Nixon, smiling outdoors"
+          ratio="4 / 5"
+          widths={[320, 480, 640, 800, 1200]}
+          sizes="(min-width: 82.5rem) 620px, (min-width: 64rem) calc(48.4vw - 21px), (min-width: 27rem) 384px, calc(100vw - 3rem)"
+          lcp
+          class="frame"
+        />
+      </div>
+    </div>
+  </section>
 
-        <!-- Track: oversized h1 breakout, then intro | portrait split. -->
-        <div class="min-w-0">
-          <h1 id="about-hero-heading" class="max-w-[20ch] leading-[0.95]" data-reveal>
-            A one-person studio for{' '}
-            <span class="text-link">organizations that take their work seriously.</span>
-          </h1>
+  <!-- 2. In short. -->
+  <Section rail="In short" railMeta={`${siteCount} client sites`} label="In short">
+    <p class="about-thesis">
+      One person on every project, start to finish: strategy, design, photography, and code. I work
+      with <a href="/work/">churches, schools, nonprofits, and small businesses</a> around
+      Cincinnati in person, and anywhere for web work.
+    </p>
+    <dl class="about-facts" data-reveal-group>
+      <div data-reveal>
+        <dt>Based in</dt>
+        <dd>Cincinnati, Ohio</dd>
+      </div>
+      <div data-reveal>
+        <dt>Building websites since</dt>
+        <dd>2020</dd>
+      </div>
+      <div data-reveal>
+        <dt>On every project</dt>
+        <dd>Strategy, design, photography and code</dd>
+      </div>
+      <div data-reveal>
+        <dt>Case studies</dt>
+        <dd>
+          <a href="/work/">{siteCount} sites on the work page</a>
+        </dd>
+      </div>
+    </dl>
+  </Section>
 
-          <!-- Intro | portrait split fires at lg (64rem), the same breakpoint the
-               rail collapses at, so the portrait never goes side-by-side before the
-               rail is beside it (no awkward mid-range two-column-before-the-rail). -->
-          <div class="mt-l grid items-start gap-xl lg:grid-cols-[1.4fr_1fr]">
-            <p
-              class="max-w-[58ch] text-lg leading-[1.6] text-text"
-              data-reveal="right"
-              style="--reveal-delay: 120ms;"
-            >
-              I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with
-              small businesses, nonprofits, churches, and schools, in person around the region and
-              anywhere for web work. I do the strategy, the design, the photography, and the code,
-              so the person you meet on day one is the same person who hands you the finished site.
-            </p>
+  <!-- 3. The longer story. -->
+  <Section rail="Story" railMeta="Edinburgh to Cincinnati" prose labelledby="about-story-heading">
+    <h2 id="about-story-heading">
+      The longer <b>story</b>
+    </h2>
+    <div class="about-story" data-reveal>
+      <p>
+        I came to this work through a camera. For years I photographed portraits, families,
+        weddings, the events people most want to remember, and the part I loved was helping someone
+        show up at their best. When the shoots dried up in 2020, I started building websites for a
+        few of those same clients, and it turned out to be the same job in a new medium: work out
+        what someone is really trying to say, then make it clear. Web design is the studio's main
+        work now, but the photographer's eye stayed, and most projects still end up with real
+        photography in them.
+      </p>
+      <p>
+        Before any of that I studied mechanical engineering at the University of Edinburgh, back
+        home in Scotland. The degree did not make me a designer, but it taught me to take a thing
+        apart, understand why each piece is there, and put it back together so it holds. That is how
+        I approach a website too: structure first, surface second, and built so the person who
+        inherits it can actually keep it running.
+      </p>
+      <p>
+        I also do plenty of this work as a volunteer. I'm on the media team at Crestview
+        Presbyterian Church, where I run the weekly livestream, plan and buy the equipment upgrades,
+        and shoot the photo and video the church uses for its website and its socials.
+      </p>
+      <p>
+        Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a U.S.
+        citizen in 2022, and these days{' '}
+        {/* Family "we", not the studio: exempt from the copy lint (tests/unit/copy-rules.test.mjs). */}
+        <span data-copy-ignore>we're raising two kids and buying our first house here.</span> When
+        I'm away from a screen I'm usually out on a long run, chasing landscapes with a camera, deep
+        in an ambitious Lego build with the kids, or a few episodes into a history drama.
+      </p>
+    </div>
+  </Section>
 
-            <!-- Portrait. The headshot fills the original 4:5 frame (the square
-                 source is center-cropped via object-cover); the amber glow behind
-                 and the ring/shadow are kept from the placeholder treatment. -->
-            <div
-              class="relative isolate w-full max-w-[18rem]"
-              data-reveal="scale"
-              style="--reveal-delay: 120ms;"
-            >
-              <div
-                class="absolute -right-4 -bottom-4 -z-10 h-2/3 w-2/3 rounded-lg bg-tertiary/30 blur-2xl"
-                aria-hidden="true"
-              ></div>
-              <Image
-                src={headshot}
-                alt="Nathan Nixon, smiling outdoors"
-                widths={[288, 432, 576, 864]}
-                sizes="(min-width: 64rem) 18rem, 60vw"
-                loading="eager"
-                class="aspect-[4/5] w-full rounded-xl border border-border object-cover shadow-lg ring-1 ring-black/5"
+  <!-- 4. Outside the studio: the contact sheet. Frames crop to 4:5 with
+       object-fit (the full srcset stays on the <img>), so the Lightbox clone
+       shows the whole photo. -->
+  <Section
+    tone="paper"
+    rail="Outside the studio"
+    railMeta={`${photos.length} frames`}
+    labelledby="about-outside-heading"
+  >
+    <h2 id="about-outside-heading">
+      Outside the <b>studio</b>
+    </h2>
+    <p class="about-lede">
+      A few snapshots from the rest of life around Cincinnati: family, the trails, and the
+      occasional turn in front of the camera.
+    </p>
+    <ol class="contact-sheet" role="list" data-reveal-group>
+      {photos.map((photo, index) => (
+        <li data-reveal>
+          <figure>
+            <button type="button" class="sheet-frame" data-zoom title="View larger">
+              <Picture
+                src={photo.src}
+                alt={photo.alt}
+                widths={ladder([240, 360, 480, 720, 1200, 1600])}
+                sizes="(min-width: 82.5rem) 164px, (min-width: 64rem) calc(12.7vw - 5px), (min-width: 48rem) calc(31.5vw - 15px), calc(49vw - 26px)"
+                class="sheet-img"
+                {...PICTURE}
               />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+            </button>
+            <figcaption>
+              <span class="sheet-num" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              {photo.caption}
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ol>
+  </Section>
 
-  <!-- ====================================================================
-       Thesis (IN SHORT). The studio's one-line thesis, promoted from a stray
-       centered sentence to a left-aligned breakout pull-quote on the shared
-       axis. This is the only home for this line.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-label="In short">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <div class="flex flex-col gap-3" aria-hidden="true">
-          <p class={railLabel}>In short</p>
-          <span class="h-px w-12 bg-tertiary"></span>
-        </div>
+  <!-- 5. Currently. id="now" so the /now redirect and the footer link land
+       here. -->
+  <Section id="now" rail="Now" railMeta={freshness} labelledby="about-currently-heading">
+    <h2 id="about-currently-heading">Currently</h2>
+    <p class="about-lede">
+      A present-tense snapshot of the studio: current work, what I'm reading, and what I'm trying to
+      get sharper on. Rewritten every couple of months.
+    </p>
+    <p class="now-stamp">
+      <span class="now-dot-wrap" aria-hidden="true" data-motion="loop">
+        <span class="now-dot bg-emerald-500"></span>
+      </span>
+      Last updated {lastUpdatedLabel}.
+    </p>
 
-        <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal="blur">
-          One person on every project, start to finish: strategy, design, photography, and code. I
-          work with{' '}
-          <span class="text-link">churches, schools, nonprofits, and small businesses</span>
-          around Cincinnati in person, and anywhere for web work.
-        </p>
-      </div>
-    </div>
-  </section>
+    <div class="now-sheet">
+      <div class="now-col">
+        <section aria-labelledby="now-working">
+          <h3 id="now-working">Working on</h3>
+          <ul class="now-list" data-reveal-group>
+            {workingOn.map((item) => (
+              <li data-reveal>{item}</li>
+            ))}
+          </ul>
+        </section>
 
-  <!-- ====================================================================
-       Story + Terminal (STORY). The why behind a one-person studio, with
-       "plain code under the hood" SHOWN via the Terminal as a wide figure
-       beside the prose.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-labelledby="about-story-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">
-          Story
-        </p>
-
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-story-heading">The longer story</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              From behind the camera to the web, and why one person handles all of it.
-            </p>
-          </header>
-
-          <div class="mt-l grid gap-xl lg:grid-cols-2">
-            <div
-              class="flex max-w-[60ch] flex-col gap-m text-[1.0625rem] leading-[1.7] text-text"
-              data-reveal
-              style="--reveal-delay: 120ms;"
-            >
-              <p>
-                I came to this work through a camera. For years I photographed portraits, families,
-                weddings, the events people most want to remember, and the part I loved was helping
-                someone show up at their best. When the shoots dried up in 2020, I started building
-                websites for a few of those same clients, and it turned out to be the same job in a
-                new medium: work out what someone is really trying to say, then make it clear. Web
-                design is the studio's main work now, but the photographer's eye stayed, and most
-                projects still end up with real photography in them.
-              </p>
-              <p>
-                Before any of that I studied mechanical engineering at the University of Edinburgh,
-                back home in Scotland. The degree did not make me a designer, but it taught me to
-                take a thing apart, understand why each piece is there, and put it back together so
-                it holds. That is how I approach a website too: structure first, surface second, and
-                built so the person who inherits it can actually keep it running.
-              </p>
-              <p>
-                I also do plenty of this work as a volunteer. I'm on the media team at Crestview
-                Presbyterian Church, where I run the weekly livestream, plan and buy the equipment
-                upgrades, and shoot the photo and video the church uses for its website and its
-                socials.
-              </p>
-              <p>
-                Personally, I moved from Scotland to Cincinnati in 2017 to be with my wife, became a
-                US citizen in 2022, and these days we're raising two kids and buying our first house
-                here. When I'm away from a screen I'm usually out on a long run, chasing landscapes
-                with a camera, deep in an ambitious Lego build with the kids, or a few episodes into
-                a history drama.
-              </p>
-            </div>
-
-            <!-- "Plain code under the hood," shown rather than told. The terminal
-                 and the Lighthouse panel pair as one column that rides alongside
-                 the story on desktop (lg:sticky), so the column never leaves a
-                 gap below it. The grid is stretch (no items-start) so this cell
-                 is as tall as the prose, giving the sticky element room to travel.
-                 Both are decorative for assistive tech (each carries its own
-                 sr-only summary).
-                 min-w-0 matters: the terminal's window title is nowrap, so
-                 without it this grid item's min-content (~318px) sets the
-                 mobile column width and the page scrolls sideways at 320px
-                 (WCAG 1.4.10, caught by tests/reflow.spec.ts). With it the
-                 column stays at the container width and the title ellipsizes
-                 the way Terminal.astro's own CSS intends. -->
-            <div class="w-full min-w-0">
-              <div
-                class="flex flex-col gap-m lg:sticky lg:top-24"
-                data-reveal="scale"
-                style="--reveal-delay: 200ms;"
-              >
-                <Terminal />
-                <LighthouseScore />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ====================================================================
-       Outside the studio (OUTSIDE). Real snapshots of the life behind the
-       one-person studio, picking up the "when I'm not at a screen" line that
-       closes the Story. A CSS-columns masonry so every photo keeps its real
-       aspect ratio (no uniform-grid cropping across the mix of portraits and
-       landscapes); each photo is a keyboard- and click-operable zoom trigger
-       (a real <button>) for the shared Lightbox rendered at the foot of the page.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-labelledby="about-outside-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">
-          Outside
-        </p>
-
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-outside-heading">Outside the studio</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A few snapshots from the rest of life around Cincinnati: family, the trails, and the
-              occasional turn in front of the camera.
-            </p>
-          </header>
-
-          <ul class="mt-l columns-2 gap-m lg:columns-3 [&>li]:mb-m [&>li]:break-inside-avoid">
-            {photos.map((photo, index) => (
-              <li data-reveal style={`--reveal-delay: ${(index % 3) * 80}ms;`}>
-                <figure>
-                  <button
-                    type="button"
-                    data-zoom
-                    title="View larger"
-                    class="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  >
-                    <Image
-                      src={photo.src}
-                      alt={photo.alt}
-                      widths={[320, 560, 840, 1200, 1600]}
-                      sizes="(min-width: 64rem) 280px, (min-width: 40rem) 45vw, 90vw"
-                      class="block w-full transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                  </button>
-                  <figcaption class="mt-xs font-mono text-xs tracking-[0.06em] text-text-muted uppercase">
-                    {photo.caption}
-                  </figcaption>
-                </figure>
+        <section aria-labelledby="now-booking">
+          <h3 id="now-booking">Booking</h3>
+          <ul class="now-list" data-reveal-group>
+            {booking.map((slot) => (
+              <li data-reveal>
+                <span class:list={['now-status', statusMeta[slot.status].text]}>
+                  <span class="now-status-dot" aria-hidden="true" />
+                  {statusMeta[slot.status].word}
+                </span>
+                <span class="now-label">{slot.label}</span>
+                <span class="now-detail">{slot.detail}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       </div>
-    </div>
-  </section>
 
-  <!-- ====================================================================
-       How I work (PRACTICE). Three principles as an authored manifesto: a
-       hairline-ruled list (not a card grid), the body running to the track
-       edge so text finally reaches the right margin. No section background.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-labelledby="about-how-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <p class={railLabel} aria-hidden="true">
-          Practice
-        </p>
-
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-how-heading">How I work</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              Three principles that hold across every project, big or small.
-            </p>
-          </header>
-
-          <ul class="mt-l flex flex-col">
-            {principles.map((principle, index) => (
-              <li
-                class="grid gap-s border-t border-border py-l md:grid-cols-[1fr_2fr] md:gap-l"
-                data-reveal
-                style={`--reveal-delay: ${index * 100}ms;`}
-              >
-                <h3 class="text-h4 text-heading">{principle.title}</h3>
-                <p class="leading-[1.7] text-text">{principle.body}</p>
+      <div class="now-col">
+        <section aria-labelledby="now-reading">
+          <h3 id="now-reading">Reading</h3>
+          <ul class="now-list" data-reveal-group>
+            {reading.map((book) => (
+              <li data-reveal>
+                <span class="now-label">
+                  {book.title}
+                  {book.note && <span class="now-note">({book.note})</span>}
+                </span>
+                <span class="now-detail now-muted">{book.author}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
+
+        <section aria-labelledby="now-learning">
+          <h3 id="now-learning">Learning</h3>
+          <ul class="now-list" data-reveal-group>
+            {learning.map((item) => (
+              <li data-reveal>{item}</li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
-  </section>
+  </Section>
 
-  <!-- ====================================================================
-       Currently (NOW). The present-tense snapshot, calmed from four loose
-       carded sub-sections into one dated now-sheet. The freshness pill +
-       last-updated stamp move into the rail; the body is a single
-       .surface-card ledger (the only inset card on the page). id="now" +
-       scroll-mt so the /now redirect and footer link still land here.
-       ==================================================================== -->
-  <section id="now" class="scroll-mt-2xl pb-2xl" aria-labelledby="about-currently-heading">
-    <div class="ncs-container">
-      <div class={`${railGrid} border-t border-border pt-2xl`}>
-        <!-- Rail: word-label (decorative) + the real freshness meta. -->
-        <div class="flex flex-col gap-s">
-          <p class={railLabel} aria-hidden="true">
-            Now
-          </p>
-          <p class="inline-flex w-fit items-center gap-s rounded-full border border-border bg-bg-soft px-3 py-1 text-sm font-medium text-text">
-            <span class="now-pulse relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
-              <span class="now-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-500/70"></span>
-              <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-            </span>
-            <span>{freshness}</span>
-          </p>
-          <p class="font-mono text-[0.8rem] text-text-muted italic">
-            Last updated {lastUpdatedLabel}.
-          </p>
-        </div>
+  <!-- 6. One line to the practical side, on /services. -->
+  <Section rail="How I work" prose label="How I work" class="about-next">
+    <p class="about-next-line">
+      The practical side, how I run a project and why it costs what it costs, is on{' '}
+      <a href="/services/#why">the services page</a>.
+    </p>
+  </Section>
 
-        <div class="min-w-0">
-          <header class="max-w-[60ch]" data-reveal>
-            <h2 id="about-currently-heading">Currently</h2>
-            <p class="mt-xs text-lg leading-[1.55] text-text-muted">
-              A present-tense snapshot of the studio: current work, what I'm reading, and what I'm
-              trying to get sharper on. Rewritten every couple of months.
-            </p>
-          </header>
-
-          <!-- One now-sheet: the page's single inset card. Two-column ledger at
-               md; stacks to one column below. -->
-          <div
-            class="surface-card mt-l rounded-xl p-l md:p-xl"
-            data-reveal
-            style="--reveal-delay: 120ms;"
-          >
-            <div class="grid gap-xl md:grid-cols-2 md:gap-2xl">
-              <!-- Left: Working on, then Booking. -->
-              <div class="flex flex-col gap-l">
-                <section aria-labelledby="now-working">
-                  <h3 id="now-working" class="text-h5 text-heading">
-                    Working on
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {workingOn.map((item, index) => (
-                      <li
-                        class="flex items-start gap-s border-t border-border py-s"
-                        data-reveal="left"
-                        style={`--reveal-delay: ${index * 90}ms;`}
-                      >
-                        <span
-                          class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 bg-tertiary"
-                          aria-hidden="true"
-                        />
-                        <span class="leading-[1.55] text-text">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-
-                <section aria-labelledby="now-booking">
-                  <h3 id="now-booking" class="text-h5 text-heading">
-                    Booking
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {booking.map((slot, index) => {
-                      const meta = statusMeta[slot.status];
-                      return (
-                        <li
-                          class="border-t border-border py-s"
-                          data-reveal
-                          style={`--reveal-delay: ${index * 90}ms;`}
-                        >
-                          <span
-                            class:list={[
-                              'inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.06em] uppercase',
-                              meta.text,
-                            ]}
-                          >
-                            <span
-                              class:list={['h-2 w-2 rounded-full', meta.dot]}
-                              aria-hidden="true"
-                            />
-                            {meta.word}
-                          </span>
-                          <span class="ml-2 align-middle font-display text-h5 text-heading">
-                            {slot.label}
-                          </span>
-                          <p class="mt-1 leading-[1.55] text-text">{slot.detail}</p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              </div>
-
-              <!-- Right: Reading, then Learning. -->
-              <div class="flex flex-col gap-l">
-                <section aria-labelledby="now-reading">
-                  <h3 id="now-reading" class="text-h5 text-heading">
-                    Reading
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {reading.map((book, index) => (
-                      <li
-                        class="border-t border-border py-s"
-                        data-reveal="right"
-                        style={`--reveal-delay: ${index * 90}ms;`}
-                      >
-                        <span class="font-display text-h5 leading-tight text-heading">
-                          {book.title}
-                          {book.note && (
-                            <span class="ml-2 align-middle text-xs font-medium tracking-[0.06em] text-link uppercase">
-                              ({book.note})
-                            </span>
-                          )}
-                        </span>
-                        <span class="block text-sm text-text-muted">{book.author}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-
-                <section aria-labelledby="now-learning">
-                  <h3 id="now-learning" class="text-h5 text-heading">
-                    Learning
-                  </h3>
-                  <ul class="mt-s flex flex-col">
-                    {learning.map((item, index) => (
-                      <li
-                        class="border-t border-border py-s leading-[1.55] text-text"
-                        data-reveal="right"
-                        style={`--reveal-delay: ${index * 90}ms;`}
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Client testimonials. Renders only when a case study carries a real
-       `testimonial` in its frontmatter; otherwise this is silent (no empty
-       block, no fabricated quote). This is the first of the two deliberate
-       full-bleed beats at the tail of the page (after the ruled column ends):
-       its .band-themed surface is set inside Testimonials.astro, not here. -->
-  <Testimonials />
-
-  <!-- Closing CTA: the second deliberate full-bleed break, outside the grid. -->
-  <CtaBanner
-    title="Want to talk about a project?"
-    sub="I take on a small number of projects each quarter. The earlier we talk, the easier it is to schedule the work."
-  />
-
-  <!-- Click / keyboard zoom for the Outside-the-studio photos. Rendered once. -->
+  <!-- Click / keyboard zoom for the contact sheet. Rendered once. -->
   <Lightbox />
 </BaseLayout>
 
 <style>
-  /* Freshness-pill pulse: an expanding, fading ring behind the solid dot (now in
-     the Currently rail). The label text carries the meaning, so this is
-     reinforcement only; disabled under reduced motion. */
-  .now-pulse-ring {
+  /* ---- 1. Head ------------------------------------------------------------
+     Below lg: one column, headshot first (visual order only; the H1 stays
+     first in the DOM) so the photo is the biggest thing on a phone's first
+     screen. From lg: text in columns 1 to 6, headshot in 7 to 12. */
+  .about-head {
+    padding-block: clamp(2rem, 5vw, 4rem) var(--space-section);
+  }
+  .about-head .page-grid {
+    row-gap: 2rem;
+    align-items: start;
+  }
+  .about-head-photo {
+    order: -1;
+    width: 100%;
+    max-width: 24rem;
+  }
+  .about-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .about-kicker-label {
+    color: var(--heading);
+  }
+  .about-head h1 {
+    max-width: 16ch;
+    /* The long-title step (2.25rem floor): "organizations" at 800 needs about
+       300px at the 2.75rem floor, more than a 320px screen has, and would
+       break mid-word. Same size as the page H1 from about 860px up. */
+    font-size: var(--text-h1-long);
+  }
+  .about-intro {
+    max-width: 58ch;
+    margin-top: 1.75rem;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--foreground);
+  }
+  @media (min-width: 64rem) {
+    .about-head .page-grid {
+      align-items: center;
+    }
+    .about-head-text {
+      grid-column: 1 / 7;
+    }
+    .about-head-photo {
+      order: 0;
+      grid-column: 7 / 13;
+      max-width: none;
+    }
+  }
+
+  /* ---- 2. In short -------------------------------------------------------- */
+  .about-thesis {
+    max-width: 40ch;
+    font-family: var(--font-display);
+    font-size: var(--text-h4);
+    font-weight: 300;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--heading);
+  }
+  .about-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 0 var(--grid-gutter);
+    margin-top: 2.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-facts > div {
+    padding-block: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .about-facts dt {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .about-facts dd {
+    margin: 0.375rem 0 0;
+    color: var(--heading);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+  }
+
+  /* ---- 3. Story ----------------------------------------------------------- */
+  .about-story {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--foreground);
+  }
+
+  /* ---- Shared lede under an H2 ------------------------------------------- */
+  .about-lede {
+    max-width: 60ch;
+    margin-top: 0.75rem;
+    font-size: 1.125rem;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  /* ---- 4. Contact sheet ---------------------------------------------------
+     Uniform 4:5 frames with a mono frame number, like a proof sheet. Two
+     across on a phone, three from md, all five in one strip from lg. */
+  .contact-sheet {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem var(--grid-gutter);
+    margin: 2.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .contact-sheet {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .contact-sheet {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+  .sheet-frame {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-frame);
+    box-shadow:
+      0 0 0 1px var(--frame-ring),
+      var(--shadow-frame);
+    overflow: hidden;
+    background: var(--background);
+    cursor: zoom-in;
+  }
+  .sheet-frame:focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 3px;
+  }
+  .sheet-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    transition: transform var(--dur-settle, 0.4s) var(--ease-glide, ease);
+  }
+  .sheet-frame:hover .sheet-img {
+    transform: scale(1.03);
+  }
+  figcaption {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .sheet-num {
+    color: var(--heading);
+  }
+  @media (forced-colors: active) {
+    .sheet-frame {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet-img {
+      transition: none;
+    }
+    .sheet-frame:hover .sheet-img {
+      transform: none;
+    }
+  }
+
+  /* ---- 5. Currently ------------------------------------------------------- */
+  :global(#now) {
+    scroll-margin-top: 5rem;
+  }
+  .now-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+  }
+  /* The loop tag sits on a wrapper: the global Pause rule reaches the pseudo-
+     elements of a loop's descendants, not of the tagged element itself. */
+  .now-dot-wrap {
+    display: inline-flex;
+  }
+  .now-dot {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 9999px;
+  }
+  .now-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
     animation: now-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
   @keyframes now-ping {
@@ -663,8 +630,89 @@ const schemas = [
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .now-pulse-ring {
+    .now-dot::after {
       animation: none;
     }
+  }
+
+  .now-sheet {
+    display: grid;
+    gap: 2.5rem var(--grid-gutter);
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 48rem) {
+    .now-sheet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .now-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .now-col h3 {
+    font-size: var(--text-h5);
+  }
+  .now-list {
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .now-list > li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-block: 0.875rem;
+    border-top: 1px solid var(--line);
+    line-height: 1.55;
+    color: var(--foreground);
+  }
+  .now-label {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 650;
+    line-height: 1.3;
+    color: var(--heading);
+  }
+  .now-note {
+    margin-left: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .now-muted {
+    font-size: 0.9375rem;
+    color: var(--muted-foreground);
+  }
+
+  /* Status word plus a decorative dot; the word carries the meaning. */
+  .now-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .now-status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: currentColor;
+  }
+
+  /* ---- 6. The one line to /services --------------------------------------- */
+  :global(.ncs-section.about-next) {
+    padding-block: clamp(3rem, 6vw, 5rem);
+  }
+  .about-next-line {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--foreground);
   }
 </style>

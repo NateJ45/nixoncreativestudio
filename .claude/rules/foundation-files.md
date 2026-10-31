@@ -7,7 +7,6 @@ paths:
   - 'package.json'
   - 'tsconfig.json'
   - 'components.json'
-  - 'starwind.config.json'
 ---
 
 # Safe to edit by hand vs foundation files
@@ -19,31 +18,27 @@ Moved out of CLAUDE.md. Loads when source, scripts, public assets or config are 
 - Text content inside `src/pages/*.astro` (everything outside the frontmatter, between the tags)
 - MDX files in `src/content/case-studies/`, `src/content/journal/`, and JSON files in `src/content/photos/`
 - Images in `src/assets/case-studies/`, `src/assets/photography/`, `src/assets/brand/` (regen blur via `npm run placeholders` after adding a case study cover during dev)
-- `src/data/site.ts` (contact info, social URLs, tagline, bookingUrl, newsletterUrl)
+- `src/data/site.ts` (contact info, social URLs, tagline, bookingOpen, bookingUrl, newsletterUrl)
 - Copy strings and `href` values in component files
 - Tailwind utility classes on existing components, when content needs different visual weight
 - The "Currently" blurb in `Footer.astro` (seasonal copy)
-- The four arrays in the Currently section of `src/pages/about.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date: rewrite quarterly (this is the old /now snapshot, merged into About)
-- The `press` array in `PressMentions.astro` (populate when press happens)
-- The `logos` array in `ClientLogos.astro` (populate once you have client permissions)
+- The four Currently arrays in the frontmatter of `src/pages/about.astro` (workingOn, booking, reading, learning) plus the `lastUpdated` date: rewrite quarterly and bump the date, which drives the "Updated N weeks ago" rail and the "Last updated" line (this is the old /now snapshot, merged into About). The `photos` array beside them holds the contact sheet's captions and alt text
 - Heading / sub copy on `Newsletter.astro` via props
 - Brand colors / tagline / wordmark in `scripts/generate-og-default.mjs` (re-run `npm run og` after editing)
 
 ## Foundation, edit with care (route through a planned Claude session)
 
-- `src/styles/globals.css` (Tailwind 4 `@theme` blocks for brand tokens, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the Starwind extra semantic tokens `--outline` + status colors in `:root` / `.dark`)
-- `src/styles/starwind.css` (Starwind accordion keyframes + `@theme inline` mappings for its extra tokens; imported in BaseLayout right after globals.css)
+- `src/styles/globals.css` (FROZEN after overhaul packages 1.5 and 1.7, plan ruling 10: page CSS goes in scoped styles. Tailwind 4 `@theme` blocks for the type scale, fonts and brand tokens, the surface roles and motion tokens, `.band-ink`, `.page-grid`, `.frame`, `.hairline`, the forced-colors block, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the leftover `--outline` token in `:root` / `.dark` that `theme-tokens.test.ts` still asserts)
 - `src/content.config.ts` (schemas for case-studies, journal, and photos collections)
-- `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter, Lenis script tag, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
-- `src/components/ui/` shadcn primitives (installed via shadcn CLI; the custom `brand` variant and `cta` size in `button.tsx` are the only Nathan-edits)
-- `src/components/starwind/` Starwind Astro-native primitives + `starwind.config.json` (vendored as a unit with `src/styles/starwind.css`)
-- `src/components/primereact/` PrimeReact escape hatch (passthrough + island + README)
-- Aceternity / Magic UI components, which sit with the shadcn primitives in `src/components/ui/` (`bento-grid.tsx`, `spotlight.tsx`, `marquee.tsx`, `animated-beam.tsx`)
-- React islands: `Photo.tsx`, `PhotoGallery.tsx`, `MobileNav.tsx`, `ThemeToggle.tsx`, `TestimonialCarousel.tsx`, `BackToTop.tsx`, `ReadingProgress.tsx`, `CopyEmail.tsx`, `WorkFilter.tsx`
-- Astro wrappers: `CaseStudyCover.astro`, `ComingSoon.astro`, `StructuredData.astro`, `SectionHeading.astro`
+- `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter (rendered by `PageTransition.astro` since 4.11), Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
+- `src/components/ui/` shadcn primitives, now only `button.tsx` (the custom `brand` variant and `cta` size are the Nathan-edits; `asChild` went with Radix in package 1.4)
+- React islands (the future /photography gallery; rendered nowhere while the page is gated): `Photo.tsx`, `PhotoGallery.tsx`
+- `PageTransition.astro` (the ClientRouter and the page-to-page View Transition rules)
+- Site chrome with scripts: `MobileNav.astro` + `src/scripts/mobile-nav.ts`, `ThemeToggle.astro` + `src/scripts/theme-toggle.ts`, `BackToTop.astro`, `CopyEmail.astro`, `WorkFilter.astro`, `ChromeIcon.astro`
+- Astro wrappers: `CaseStudyCover.astro`, `ComingSoon.astro`, `StructuredData.astro`
+- Shared primitives (overhaul 1.8): `Section.astro`, `BrowserFrame.astro`, `FramePair.astro`, `Media.astro`. Check `/colophon/parts/` after changing one. `src/data/nav.ts` is safe to edit (labels, order, gates)
 - `src/lib/coverPlaceholder.ts` + `src/lib/coverPlaceholders.json` (the JSON is regenerated by the build script; don't edit by hand)
 - `src/lib/readingTime.ts`
-- `src/scripts/lenis-init.ts` (smooth scroll setup)
 - `scripts/generate-placeholders.mjs`, `scripts/generate-og-default.mjs`, `scripts/generate-icons.mjs`
 - `astro.config.mjs`, `package.json`, `tsconfig.json`, `components.json`, `eslint.config.js`, `.prettierrc`, `.prettierignore`, `playwright.config.ts`, `lighthouserc.json`, `.github/workflows/ci.yml`, `.github/workflows/lighthouse.yml`
 - `ComingSoonGate.astro` and `src/components/analytics/` (the inline script tags BaseLayout and Analytics render conditionally)

@@ -1,0 +1,264 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Clip: a short, silent interaction clip from a client's live site
+   (overhaul package 3.5)
+   ============================================================================
+   A few seconds of someone using the real site (typing initials into the MAS
+   Monogram Studio, searching the FRT library), recorded by
+   `npm run capture:clips` into public/media/ as an MP4, a WebM and a WebP
+   poster that share one base name. Pass that base and Clip adds the
+   extensions.
+
+   The promises it keeps:
+     - Nothing downloads until the clip is near the screen. The <video> has
+       preload="none" and no autoplay attribute, and the poster is a lazy
+       <img> on top of it (a video's own poster attribute would load at once,
+       wherever the clip sits on the page). tests/media-weight.spec.ts checks
+       that no more than 50 KB of video arrives before the clip is in view.
+     - It plays only while it is on screen and the tab is visible, muted,
+       inline and looping. There is no audio track in the files at all.
+     - It has its own Pause button (WCAG 2.2.2), and the site-wide Pause
+       motion switch stops it too.
+     - Under prefers-reduced-motion, under html[data-motion-paused], and
+       without JavaScript, it is the poster and nothing else: the video never
+       loads and the button is hidden, because there is nothing to pause.
+     - The label says what the clip shows (role="img" with aria-label), since
+       a silent clip needs no captions but does need a description.
+
+   The box is a fixed 16:10 (the recording size, 1280 x 800), so it never
+   shifts the layout when the video arrives.
+
+   Usage:
+
+     import Clip from './Clip.astro';
+
+     <Clip
+       src="/media/mas-monograms-studio.c68efbbe"
+       alt="Typing the initials JRN into the Monogram Studio, and the hoop stitching them"
+     />
+
+   Props:
+     src    the base path, without an extension (required)
+     alt    what the clip shows (required)
+     class  extra classes on the outer box
+   ============================================================================ */
+
+interface Props {
+  src: string;
+  alt: string;
+  class?: string;
+}
+
+const { src, alt, class: className = '' } = Astro.props;
+---
+
+<div class:list={['clip', className]} data-clip data-motion="loop">
+  <video
+    class="clip-video"
+    muted
+    playsinline
+    loop
+    preload="none"
+    width="1280"
+    height="800"
+    aria-hidden="true"
+    tabindex="-1"
+    disablepictureinpicture
+  >
+    <source src={`${src}.webm`} type="video/webm" />
+    <source src={`${src}.mp4`} type="video/mp4" />
+  </video>
+  <img
+    class="clip-poster"
+    src={`${src}.webp`}
+    alt=""
+    width="1280"
+    height="800"
+    loading="lazy"
+    decoding="async"
+  />
+  {/* The description for assistive tech: one labelled image for the whole
+      clip, whether it shows the poster or the moving video. */}
+  <div class="clip-label" role="img" aria-label={alt}></div>
+  <button type="button" class="clip-toggle" aria-pressed="false" data-clip-toggle hidden>
+    <svg class="clip-pause" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
+      <rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect>
+    </svg>
+    <svg class="clip-play" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"></path>
+    </svg>
+    <span class="sr-only">Pause clip</span>
+  </button>
+</div>
+
+<style is:global>
+  /* Global, not scoped, on purpose: Astro ships a component's CSS on every
+     page that imports it, so every case study carries these rules even
+     without a clip, and the scoped attribute on each selector nearly doubled
+     them (the Stone Steps page sits right at its 150 KB HTML budget). Every
+     selector starts with .clip, so nothing leaks. */
+  .clip {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-background);
+  }
+  .clip > video,
+  .clip > img,
+  .clip-label {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  /* The poster sits on top until the video is really playing, then steps
+     aside. No fade: it is a swap, the same under every setting. */
+  .clip.is-playing > img {
+    visibility: hidden;
+  }
+  /* The clip's own Pause button, bottom right inside the frame: the page
+     surface with a heading-coloured icon (the body text pair) and a
+     line-strong edge, so it reads over any frame of any client's site.
+     44px on touch. */
+  .clip > button {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    color: var(--color-heading);
+    background: var(--color-background);
+    cursor: pointer;
+  }
+  .clip > button:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  .clip svg {
+    width: 0.85rem;
+    fill: currentColor;
+  }
+  .clip [aria-pressed='true'] .clip-pause,
+  .clip [aria-pressed='false'] .clip-play {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .clip > button {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+  /* Poster only, and no button, because nothing moves: reduced motion,
+     Pause motion, print. The script never plays the video in the first two
+     either; this is the belt to its braces. */
+  .clip > button[hidden],
+  html[data-motion-paused] .clip > button {
+    display: none;
+  }
+  html[data-motion-paused] .clip > img {
+    visibility: visible;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .clip > button {
+      display: none;
+    }
+    .clip.clip > img {
+      visibility: visible;
+    }
+  }
+  @media print {
+    .clip > video,
+    .clip > button {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { MOTION_EVENT, isMotionPaused, prefersReducedMotion } from '../scripts/motion';
+
+  /* Each clip plays while ALL of these hold: it is near the screen, the tab
+     is visible, the visitor has not asked for reduced motion or pressed the
+     site-wide Pause motion, and has not pressed this clip's own Pause. The
+     first play() is what makes the browser fetch the video (preload="none"),
+     so a clip nobody scrolls to costs nothing but its lazy poster. */
+  type ClipState = { el: HTMLElement; video: HTMLVideoElement; near: boolean; held: boolean };
+  const clips = new Set<ClipState>();
+  let observer: IntersectionObserver | null = null;
+
+  const motionAllowed = () => !prefersReducedMotion() && !isMotionPaused();
+
+  function update(c: ClipState): void {
+    const toggle = c.el.querySelector<HTMLButtonElement>('[data-clip-toggle]');
+    if (toggle) toggle.hidden = !motionAllowed();
+    const run = c.near && !c.held && motionAllowed() && !document.hidden;
+    if (run) {
+      if (c.video.paused) c.video.play().catch(() => undefined);
+    } else if (!c.video.paused) {
+      c.video.pause();
+    }
+    // Reduced motion or Pause motion: back to the poster, not a frozen frame.
+    if (!motionAllowed()) c.el.classList.remove('is-playing');
+  }
+
+  function updateAll(): void {
+    clips.forEach(update);
+  }
+
+  function init(): void {
+    // Drop clips from the previous page (ClientRouter swaps the body).
+    clips.forEach((c) => {
+      if (!c.el.isConnected) clips.delete(c);
+    });
+    if (!('IntersectionObserver' in window)) return;
+    observer ??= new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          clips.forEach((c) => {
+            if (c.el === entry.target) {
+              c.near = entry.isIntersecting;
+              update(c);
+            }
+          });
+        });
+      },
+      // "Near" is within a fifth of a screen, so the first frames are ready
+      // as it scrolls in without fetching clips far down the page.
+      { rootMargin: '20% 0px' },
+    );
+    document.querySelectorAll<HTMLElement>('[data-clip]:not([data-clip-bound])').forEach((el) => {
+      const video = el.querySelector('video');
+      if (!video) return;
+      el.dataset.clipBound = 'true';
+      const c: ClipState = { el, video, near: false, held: false };
+      clips.add(c);
+      // A play() that resolves after the visitor paused motion must not hide
+      // the poster again.
+      video.addEventListener('playing', () => {
+        if (motionAllowed()) el.classList.add('is-playing');
+      });
+      const toggle = el.querySelector<HTMLButtonElement>('[data-clip-toggle]');
+      toggle?.addEventListener('click', () => {
+        c.held = !c.held;
+        toggle.setAttribute('aria-pressed', String(c.held));
+        update(c);
+      });
+      observer!.observe(el);
+      update(c);
+    });
+  }
+
+  document.addEventListener('astro:page-load', init);
+  // Window-level listeners, added once.
+  document.addEventListener(MOTION_EVENT, updateAll);
+  document.addEventListener('visibilitychange', updateAll);
+  window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', updateAll);
+</script>

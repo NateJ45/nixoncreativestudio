@@ -1,12 +1,11 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Slot } from 'radix-ui';
 
 import { cn } from '@/lib/utils';
 
 // shadcn Button. The `brand` variant and `cta` size below are Nathan-added
 // extensions that match the existing marketing CTAs on the site (Hero
-// "Start a project", CtaBanner action, contact form submit). All other
+// "Start a project", the footer closer pill, contact form submit). All other
 // variants and sizes are the unmodified shadcn primitives, useful for
 // any UI controls Nathan adds later via shadcn add.
 const buttonVariants = cva(
@@ -24,14 +23,14 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
-        // brand: filled NCS-blue button. On hover/focus it lifts and casts a
-        // brand-colored glow so the hover reads clearly in BOTH themes (in dark
-        // mode --accent and --link are the same value, so the old darken was a
-        // no-op and the hover looked dead; the lift + glow are the real cue). It
-        // still darkens to bg-link in light mode. The glow is a shadow, so it
-        // never touches text contrast (stays WCAG AA).
+        // brand: filled NCS-blue button (the pill, with rounded-full). On hover
+        // and focus it lifts 2px, which reads in BOTH themes (in dark mode
+        // --accent and --link are the same value, so the darken alone would be
+        // a no-op); it still darkens to bg-link in light mode, and focus adds
+        // the ring. The brand-coloured glow it used to cast went in package 2.1
+        // (gradients and glows are retired, plan Part B section 1).
         brand:
-          'bg-accent text-accent-foreground hover:-translate-y-0.5 hover:bg-link hover:shadow-lg hover:shadow-accent/45 focus-visible:-translate-y-0.5 focus-visible:bg-link focus-visible:shadow-lg focus-visible:shadow-accent/45 disabled:hover:translate-y-0 disabled:hover:bg-accent disabled:hover:shadow-none',
+          'bg-accent text-accent-foreground hover:-translate-y-0.5 hover:bg-link focus-visible:-translate-y-0.5 focus-visible:bg-link disabled:hover:translate-y-0 disabled:hover:bg-accent',
       },
       size: {
         default:
@@ -46,7 +45,7 @@ const buttonVariants = cva(
           'size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg',
         'icon-lg': 'size-9',
         // cta: the bigger marketing-button size used in Hero and
-        // CtaBanner. h-auto + py-3.5 lets the height grow with line
+        // the footer closer. h-auto + py-3.5 lets the height grow with line
         // wrapping; the text-base font-semibold matches the original
         // inline classes Phase 1b carried.
         cta: 'h-auto gap-2 px-6 py-3.5 text-base font-semibold',
@@ -59,20 +58,17 @@ const buttonVariants = cva(
   },
 );
 
+// The shadcn asChild / Radix Slot option was removed in overhaul 1.4 (its
+// only user, the React MobileNav, became MobileNav.astro). To style a link as
+// a button, call buttonVariants() on the <a> instead, as the headers do.
 function Button({
   className,
   variant = 'default',
   size = 'default',
-  asChild = false,
   ...props
-}: React.ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
-  const Comp = asChild ? Slot.Root : 'button';
-
+}: React.ComponentProps<'button'> & VariantProps<typeof buttonVariants>) {
   return (
-    <Comp
+    <button
       data-slot="button"
       data-variant={variant}
       data-size={size}

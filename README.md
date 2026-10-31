@@ -22,11 +22,11 @@ Three things, usually in this order:
 
 Each of these is a full case study in its own repository. Together they are a fair picture of the range: an interior designer, a custom-embroidery studio, a historic city church, and a new theological school.
 
-| Project                      | What it is                                                                                                                                  | Case study                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **Reid Design LLC**          | Marketing site for an Indiana interior design studio: portfolio with before/after sliders, a style-archetype quiz, and a budget calculator. | [reid-design-site](https://github.com/NateJ45/reid-design-site) |
-| **MAS Monograms**            | A home-based custom embroidery studio. A quote-request pipeline instead of a cart, since every piece is priced by hand.                     | [mas-monograms](https://github.com/NateJ45/mas-monograms)       |
-| **The Presbyterian Academy** | A new Reformed lay-formation school: course catalog, faculty, terms, and tuition, with a bookish editorial identity.                        | [presacademy](https://github.com/NateJ45/presacademy)           |
+| Project                      | What it is                                                                                                                                                        | Case study                                                      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Reid Design LLC**          | Marketing site for an Indiana interior design studio: posted prices, a scroll-built concept room, E-Design, and a consultation form with a room and style picker. | [reid-design-site](https://github.com/NateJ45/reid-design-site) |
+| **MAS Monograms**            | A home-based custom embroidery studio. A quote-request pipeline instead of a cart, since every piece is priced by hand.                                           | [mas-monograms](https://github.com/NateJ45/mas-monograms)       |
+| **The Presbyterian Academy** | A new Reformed lay-formation school: course catalog, faculty, terms, and tuition, with a bookish editorial identity.                                              | [presacademy](https://github.com/NateJ45/presacademy)           |
 
 The client sites share a foundation I maintain as an open starter: **[ncs-astro-sanity-starter](https://github.com/NateJ45/ncs-astro-sanity-starter)** (small-business marketing sites) and **[ncs-church-starter](https://github.com/NateJ45/ncs-church-starter)** (churches). It is why a polished, production-grade site is an afternoon of setup instead of a month.
 
@@ -45,10 +45,10 @@ A few standards show up in every project, and they are the reason the sites hold
 
 - **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'static'`
 - **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
-- **React 19** islands for the interactive pieces: full-screen mobile nav, contact form, photo gallery + lightbox, theme toggle
+- **React 19** for the photo gallery + lightbox only (unused until the gallery opens); the mobile nav (a native `<dialog>`), theme toggle and contact form are plain Astro plus small scripts
 - **MDX content collections** for case studies; a JSON-backed collection for the photography set
-- **[Motion](https://motion.dev)** + **[Lenis](https://lenis.darkroom.engineering)** smooth scroll + Astro View Transitions for soft page-to-page navigation
-- Component primitives from **Starwind** (zero-JS, Astro-native), **shadcn/ui**, with **Aceternity** and **Magic UI** for motion flourishes
+- Astro View Transitions for soft page-to-page navigation, with native scrolling
+- Plain Astro components with native HTML, plus the shadcn/ui Button
 - **[Cloudflare Pages](https://pages.cloudflare.com)** hosting + Cloudflare Web Analytics (privacy-friendly, no cookies)
 - **ESLint** + **Prettier** + `node --test` unit suites, run in **GitHub Actions** on every push and PR
 
