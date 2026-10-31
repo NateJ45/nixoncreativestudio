@@ -231,6 +231,29 @@ const caseStudies = defineCollection({
       beforeShot: image().optional(),
       mobileShot: image().optional(),
 
+      // ---- "What you edit" (package 3.6) --------------------------------
+      // A screenshot of the site's own editor (Sanity Studio or wp-admin)
+      // with a real page or post open, because a CMS that works well is part
+      // of what I sell. Shot by Nathan with `npm run capture:cms` (he signs
+      // in himself) to shots/{slug}-cms.png. Without cmsShot the study page
+      // shows no "What you edit" band.
+      //   cmsShot     the 1440x900 capture, relative to the .mdx like `cover`
+      //   cmsShotAlt  required when cmsShot is set: what the screen shows,
+      //               e.g. 'The Home page open in Sanity Studio'
+      //   cmsName     the editor's name for the band's rail, e.g.
+      //               'Sanity Studio' or 'WordPress'
+      //   cmsUrl      optional: the editor's address for the frame's bar. Without
+      //               it the frame shows liveUrl plus /studio (Sanity Studio) or
+      //               /wp-admin (WordPress), from cmsFrame() in src/lib/study.ts
+      // The pairing rule is cmsShotProblem() in src/lib/study.ts (tested):
+      // /work/[slug].astro throws on it, so a cmsShot without its alt text
+      // fails the build. (Not a superRefine here, which would re-indent
+      // this whole schema and collide with every other edit to it.)
+      cmsShot: image().optional(),
+      cmsShotAlt: z.string().optional(),
+      cmsName: z.string().optional(),
+      cmsUrl: z.string().url().optional(),
+
       // Short facts for the study's fact row. Every key is optional; when a
       // key is missing, the page falls back to the matching top-level field
       // (sector, year, role, stack, and the host from liveUrl). Use it only

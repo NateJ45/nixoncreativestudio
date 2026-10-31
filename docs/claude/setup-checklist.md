@@ -29,6 +29,22 @@ Things that still need configuration before / during the public launch. Everythi
 - [ ] Additional **case studies** in `src/content/case-studies/`. For each, drop a matching cover at `src/assets/case-studies/{slug}.{ext}` so plaiceholder picks it up.
 - [ ] First **journal entry** in `src/content/journal/` (the page renders an empty-state until then).
 
+- [ ] **CMS screens** for the "What you edit" band on the seven CMS studies (`docs/PENDING.md` item 2c). Steps below.
+
+## Capturing CMS screens
+
+Each study I built on a CMS shows its editor ("What you edit", `WhatYouEdit.astro`, package 3.6). The band stays hidden until the study has a `cmsShot`.
+
+1. In PowerShell, from the repo: `npm run capture:cms` for all seven, or `npm run capture:cms -- --only stone-steps-50k` for one.
+2. A Chrome window opens on a profile kept outside the repo (`$env:LOCALAPPDATA
+cs-cms-capture-profile`; change it with `--profile <folder>` or `$env:NCS_CMS_PROFILE`). When the terminal says "Sign in to <site> in the window, then press Enter here", sign in yourself in that window and press Enter. The script never types or keeps a password; the profile remembers the sign-in for next time.
+3. It opens a real document (the Home page form in each Sanity Studio; the newest article on Theology Matters and the newest Resource on FRT in wp-admin), hides avatars, user menus, email addresses, notices and update badges, and saves `src/assets/case-studies/shots/{slug}-cms.png` at 1440x900.
+4. Look at every file: no names, emails, drafts you would not show, or half-loaded panes.
+5. Add to the study's frontmatter, for example:
+   `cmsShot: ../../assets/case-studies/shots/stone-steps-50k-cms.png`, `cmsShotAlt: The Home page open in Sanity Studio`, `cmsName: Sanity Studio`. The build fails if `cmsShotAlt` is missing.
+
+The admin URLs live in the `SITES` list at the top of `scripts/capture-cms.mjs`, with where each one came from.
+
 ## Recurring upkeep
 
 - [ ] Refresh the four arrays + `lastUpdated` in the Currently section of `src/pages/about.astro` about once a quarter.
