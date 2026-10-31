@@ -61,9 +61,9 @@ async function recordTransitions(page: Page) {
   });
 }
 
-/** Load the homepage, then follow the header's Work link as a soft navigation. */
-async function goToWork(page: Page) {
-  await page.goto('/', { waitUntil: 'load' });
+/** Load a page (the homepage by default), then follow the header's Work link as a soft navigation. */
+async function goToWork(page: Page, from = '/') {
+  await page.goto(from, { waitUntil: 'load' });
   await page.evaluate(() => {
     [...document.querySelectorAll<HTMLAnchorElement>('header a[href="/work/"]')]
       .find((a) => a.getClientRects().length > 0)!
@@ -162,5 +162,15 @@ test.describe('overlap page transition', () => {
     expect(reveal.direction).toBeNull();
     expect(named(reveal, '::view-transition-new(root)')).toContain('theme-reveal');
     expect(reveal.animations.filter((a) => a.name.startsWith('ncs-vt-'))).toEqual([]);
+  });
+
+  test('a sector page (/churches/) runs the same overlap', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await recordTransitions(page);
+    await goToWork(page, '/churches/');
+    const [forward] = await calls(page, 1);
+    expect(forward.direction).toBe('forward');
+    expect(named(forward, '::view-transition-new(root)')).toContain('ncs-vt-rise');
+    expect(named(forward, '::view-transition-old(root)')).toContain('ncs-vt-recede');
   });
 });

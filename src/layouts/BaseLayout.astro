@@ -107,6 +107,9 @@ interface Props {
   /** Breadcrumb trail after Home, for nested pages (case studies, journal
       entries). Becomes a BreadcrumbList in the JSON-LD. */
   breadcrumbs?: Crumb[];
+  /** The JSON-LD page type: WebPage unless set. The sector pages
+      (src/pages/[sector].astro) are a CollectionPage. */
+  pageType?: 'WebPage' | 'CollectionPage';
   /** Extra woff2 files to preload on this page only (resolved with ?url).
       Bricolage and Source Sans are always preloaded, so a page may add at
       most one more. Keep the total at three or fewer
@@ -130,6 +133,7 @@ const {
   ogType = 'website',
   schemas = [],
   breadcrumbs = [],
+  pageType,
   preloadFonts = [],
   noindex = false,
   closer,
@@ -305,6 +309,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       description={description}
       breadcrumbs={breadcrumbs}
       extra={schemas}
+      pageType={pageType}
     />
   </head>
   <body>

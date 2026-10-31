@@ -46,6 +46,7 @@ import Heft from '../../components/Heft.astro';
 import Media from '../../components/Media.astro';
 import BrowserFrame from '../../components/BrowserFrame.astro';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
+import { sectorPagePath } from '../../data/sector-pages';
 
 // Study order: the `order` field (1 = first). A study without one sorts last,
 // newest first among those, so a new draft never jumps the queue.
@@ -65,6 +66,15 @@ const sectors = SECTOR_ORDER.map((value) => ({
   label: SECTOR_PLURAL[value] ?? value,
   count: entries.filter((e) => e.data.sector === value).length,
 })).filter((s) => s.count > 0);
+
+// Sectors with a page of their own (/churches/): WorkFilter links to it while
+// that sector's tab is on.
+const sectorPages = Object.fromEntries(
+  sectors.flatMap((s) => {
+    const path = sectorPagePath(s.value);
+    return path ? [[s.value, path]] : [];
+  }),
+);
 
 // The sector as one word on a row ("Small business").
 const sectorName = (sector: string) => {
@@ -152,7 +162,9 @@ const lead = rows[0];
           Churches, schools, nonprofits and small businesses. Each one started with a conversation
           about what the organization actually needed.
         </p>
-        {sectors.length > 1 && <WorkFilter sectors={sectors} total={n} phrases={SECTOR_PHRASE} />}
+        {sectors.length > 1 && (
+          <WorkFilter sectors={sectors} total={n} phrases={SECTOR_PHRASE} pages={sectorPages} />
+        )}
       </header>
 
       <ol class="work-list" data-work-list>
