@@ -72,6 +72,45 @@ const { class: className } = Astro.props;
   }
 </style>
 
+<!-- Circular theme reveal (overhaul 4.5), only while html.theme-reveal is set
+     by src/scripts/theme-toggle.ts for the length of one theme swap. is:global
+     because the ::view-transition pseudo-elements hang off <html>, outside any
+     component scope; globals.css is frozen (ruling 10), so it lives here.
+     - The old page stays put underneath; the new theme grows over it in a
+       circle from the button (--reveal-x/-y), out past the farthest corner
+       (--reveal-r). mix-blend-mode normal stops the UA's plus-lighter blend
+       brightening the overlap.
+     - Every view-transition-name is dropped for the swap, so the header, the
+       footer, the wordmark and the case-study covers are part of the one root
+       snapshot and are revealed with the rest instead of snapping or fading.
+       Page navigations never carry the class, so their names are untouched.
+     - The script never starts this transition under reduced motion or Pause
+       motion, and globals.css stops every ::view-transition animation in both
+       cases anyway. -->
+<style is:global>
+  html.theme-reveal * {
+    view-transition-name: none !important;
+  }
+  html.theme-reveal::view-transition-old(root),
+  html.theme-reveal::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
+  html.theme-reveal::view-transition-old(root) {
+    animation: none;
+  }
+  html.theme-reveal::view-transition-new(root) {
+    animation: theme-reveal var(--dur-scene) var(--ease-settle) both;
+  }
+  @keyframes theme-reveal {
+    from {
+      clip-path: circle(0 at var(--reveal-x, 50%) var(--reveal-y, 0));
+    }
+    to {
+      clip-path: circle(var(--reveal-r, 150vmax) at var(--reveal-x, 50%) var(--reveal-y, 0));
+    }
+  }
+</style>
+
 <script>
   import { initThemeToggles } from '../scripts/theme-toggle';
   document.addEventListener('astro:page-load', initThemeToggles);
