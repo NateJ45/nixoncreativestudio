@@ -28,6 +28,10 @@
    Feature shots ({slug}-feature-*.png) and before shots are NOT touched: each
    one frames a specific part of a page and is cropped by hand.
 
+   Small fixed widgets (chat bubbles, back-to-top) and fixed cards in the
+   lower part of the window (a slide-in "Give a gift" prompt, a cookie bar)
+   are hidden before each shot; a sticky header at the top stays.
+
    Look at every file before committing: a cookie banner, a chat bubble or a
    half-loaded hero is easy to miss. Never commit a capture of a page that is
    not the client's live, public site (CLAUDE.md never-break rule 9).
@@ -143,13 +147,18 @@ for (const slug of slugs) {
       await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
       // Hide small floating widgets (chat bubbles, back-to-top buttons):
       // they are not the client's page, and on a full-page capture they
-      // land in the middle of the content.
+      // land in the middle of the content. Slide-in cards that sit in the
+      // lower part of the window (a "Give a gift" prompt, a cookie bar) go
+      // too: they open on a timer, so they cover whatever the shot lands on.
+      // A sticky header lives at the top of the window and stays.
       await page.evaluate(() => {
         for (const el of document.querySelectorAll('body *')) {
           const pos = getComputedStyle(el).position;
           if (pos !== 'fixed') continue;
           const r = el.getBoundingClientRect();
-          if (r.width && r.width < 120 && r.height < 120) el.style.visibility = 'hidden';
+          const small = r.width && r.width < 120 && r.height < 120;
+          const lowCard = r.height && r.top > window.innerHeight * 0.4;
+          if (small || lowCard) el.style.visibility = 'hidden';
         }
       });
       await page.waitForTimeout(1500);
