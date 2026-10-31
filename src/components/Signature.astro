@@ -7,9 +7,12 @@
    beside one real media slot. Plan Part B, /work/{slug}/ item 6. 2.4a places
    it on the template (after the Specimen strip, before the Brief).
 
-   The media slot is a STILL for now: the study's `featureShot`, or one of its
-   existing feature screenshots. Recorded clips come later (plan 3.5) and will
-   replace the still here, not sit beside it. No video in this component.
+   The media slot is a still (the study's `featureShot`, or one of its
+   existing feature screenshots) or, since package 3.5, an interaction clip
+   (`clip`, from the study's `signatureClip`): a few silent seconds of the
+   live site in use, through Clip.astro. A clip replaces the still here; it
+   never sits beside it. Under reduced motion and Pause motion the clip is
+   its poster, so the band always has a picture.
 
    Only a real, live screen goes in the slot (CLAUDE.md never-break rule 9).
    With a `url` the still sits in a BrowserFrame showing that host; without
@@ -34,6 +37,7 @@
    Props:
      hook      the study's hook (required; the band renders nothing without it)
      emphasis  a phrase inside the hook to set at 800 (weight as emphasis)
+     clip      { src, alt } from the study's signatureClip, optional; wins over src
      src       the still (ImageMetadata), optional
      alt       its alt text (required with src)
      url       the live site, for the frame's host bar
@@ -46,9 +50,11 @@ import type { ImageMetadata } from 'astro';
 import Section from './Section.astro';
 import BrowserFrame from './BrowserFrame.astro';
 import Media from './Media.astro';
+import Clip from './Clip.astro';
 
 interface Props {
   hook?: string;
+  clip?: { src: string; alt: string };
   emphasis?: string;
   src?: ImageMetadata;
   alt?: string;
@@ -61,6 +67,7 @@ interface Props {
 const {
   hook,
   emphasis,
+  clip,
   src,
   alt = '',
   url,
@@ -84,7 +91,7 @@ const media = {
 
 {hook && (
   <Section rail={rail} tone={tone} labelledby={id}>
-    <div class:list={['signature', src && 'has-media']}>
+    <div class:list={['signature', (src || clip) && 'has-media']}>
       <h2 id={id} class="signature-hook">
         {parts ? (
           <>
@@ -96,7 +103,18 @@ const media = {
           hook
         )}
       </h2>
-      {src &&
+      {clip &&
+        (url ? (
+          <BrowserFrame url={url} class="signature-media">
+            <Clip src={clip.src} alt={clip.alt} />
+          </BrowserFrame>
+        ) : (
+          <div class="signature-media frame">
+            <Clip src={clip.src} alt={clip.alt} />
+          </div>
+        ))}
+      {!clip &&
+        src &&
         (url ? (
           <BrowserFrame url={url} class="signature-media">
             <Media
