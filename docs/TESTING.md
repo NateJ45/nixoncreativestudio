@@ -86,12 +86,13 @@ the page and the sentence.
 Node's built-in runner, no framework. TypeScript runs through Node's type
 stripping, so there is nothing to configure and nothing to install.
 
-| File                       | Covers                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling       |
-| `readingTime.test.ts`      | Journal reading-time estimation                                                                   |
-| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                             |
-| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark |
+| File                       | Covers                                                                                                                                                                                               |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utils.test.ts`            | `cn()` class merging: clsx syntax forms, tailwind-merge conflict resolution, falsy handling                                                                                                          |
+| `readingTime.test.ts`      | Journal reading-time estimation                                                                                                                                                                      |
+| `coverPlaceholder.test.ts` | The generated blur-placeholder lookup                                                                                                                                                                |
+| `theme-tokens.test.ts`     | **Added 2026-08-27.** WCAG contrast of every rendered token pair in `globals.css`, light and dark                                                                                                    |
+| `case-palettes.test.ts`    | **Added 2026-10-30.** Every case study's `palette`: light text pairs 4.5:1, accent mark 3:1 on paper, a mark at 3:1 on the dark ink, the client's own dark theme where it has one; `order` runs 1..n |
 
 `theme-tokens.test.ts` is the application of `src/lib/contrast.ts` (PORTS.md
 Card 9). It parses the real hex out of the `@theme`, `:root` and `.dark` blocks,
@@ -107,6 +108,14 @@ accessibility category runs) audits the resting DOM and has **no rule** for
 focus-indicator or custom-border contrast, and it only ever sees one theme per
 run. The accessibility score can sit at 100 while a focus ring is invisible.
 That is not hypothetical - it shipped that way in the WCP repo.
+
+`case-palettes.test.ts` reads each study's MDX frontmatter straight off disk
+(a small YAML reader for the plain forms the files use), so it needs no Astro
+runtime. The pairs and the reason for each are in its header comment. When a
+real client accent fails on this site's dark ink, the fix is a `markDark`
+picked from the client's own swatches (the test checks it is one), never a
+changed client colour. It was proved to bite by removing MAS Monograms'
+`markDark` (its indigo is 1.92:1 on ink).
 
 ### Parity harness (`npm run parity`)
 

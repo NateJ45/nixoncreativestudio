@@ -17,6 +17,10 @@
      src/assets/case-studies/shots/{slug}-mobile.png  560 wide      top 4000px of the page
 
    Reduced motion is on while shooting, so entrance animations are finished.
+   Add --wix for a Wix site (Orangeburg): its hero video only shows with
+   motion allowed, and its map only paints in a real tall viewport:
+           node scripts/capture-case-study.mjs first-presbyterian-orangeburg --wix
+   The mobile shape sends a phone user agent, so Wix serves its phone layout.
    Lazy images are forced to eager (data-src and data-srcset swapped in too)
    and the script waits until every image reports complete, which is what
    kept the June 2026 re-capture from coming out half blank.
@@ -35,7 +39,14 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const slugs = process.argv.slice(2);
+// --wix is for Wix sites (Orangeburg). It does two things a normal site must
+// not get: it shoots with motion allowed (Wix hides its hero video under
+// reduced motion, leaving a flat grey box), and it shoots the phone shape
+// with a viewport as tall as the capture instead of fullPage (a phone-mode
+// full-page shot leaves Wix's embedded map blank). A normal site keeps
+// fullPage, because a tall viewport would stretch a 100vh hero to 4000px.
+const wix = process.argv.includes('--wix');
+const slugs = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 if (!slugs.length) {
   console.error('Name at least one case study slug, e.g. presbyterian-academy');
   process.exit(1);
@@ -59,6 +70,9 @@ const shapes = [
   },
   {
     kind: 'mobile',
+    // A phone user agent, so hosts that pick a layout by device (Wix) serve
+    // their phone layout instead of the 980px desktop page.
+    phone: true,
     viewport: { width: 560, height: 900 },
     fullPage: true,
     maxHeight: 4000,
@@ -81,15 +95,29 @@ for (const slug of slugs) {
   for (const shape of shapes) {
     const context = await browser.newContext({
       viewport: shape.viewport,
-      deviceScaleFactor: 1,
-      reducedMotion: 'reduce',
+      // The phone shape renders at 2x and is resized back to its viewport
+      // width below, so a host that lays out at 320 (Wix) still comes out
+      // sharp at 560 wide.
+      deviceScaleFactor: shape.phone ? 2 : 1,
+      reducedMotion: wix ? 'no-preference' : 'reduce',
+      ...(shape.phone && {
+        isMobile: true,
+        hasTouch: true,
+        userAgent:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+      }),
     });
     const page = await context.newPage();
     try {
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
+      // Wait for the load event, then give the network up to 15s to go quiet.
+      // Some hosts (Wix) keep a connection open forever, so a hard
+      // 'networkidle' wait would time out on them every time.
+      await page.goto(url, { waitUntil: 'load', timeout: 60_000 });
+      await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
       // Force every lazy image to load now, then walk the page slowly so
       // IntersectionObserver reveals fire, then wait for every image.
       await page.evaluate(async () => {
+        for (const frame of document.querySelectorAll('iframe')) frame.loading = 'eager';
         for (const img of document.querySelectorAll('img')) {
           img.loading = 'eager';
           if (img.dataset.src) img.src = img.dataset.src;
@@ -99,14 +127,47 @@ for (const slug of slugs) {
           window.scrollTo(0, y);
           await new Promise((r) => setTimeout(r, 150));
         }
+        // Embedded maps start drawing only once they are on screen, so stop
+        // at each iframe long enough for it to paint.
+        for (const frame of document.querySelectorAll('iframe')) {
+          frame.scrollIntoView({ block: 'center' });
+          await new Promise((r) => setTimeout(r, 2500));
+        }
         window.scrollTo(0, 0);
         const deadline = Date.now() + 15_000;
         while (Date.now() < deadline && [...document.images].some((i) => !i.complete)) {
           await new Promise((r) => setTimeout(r, 200));
         }
       });
+      // Embedded maps and videos are lazy iframes; give them time to load.
+      await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+      // Hide small floating widgets (chat bubbles, back-to-top buttons):
+      // they are not the client's page, and on a full-page capture they
+      // land in the middle of the content.
+      await page.evaluate(() => {
+        for (const el of document.querySelectorAll('body *')) {
+          const pos = getComputedStyle(el).position;
+          if (pos !== 'fixed') continue;
+          const r = el.getBoundingClientRect();
+          if (r.width && r.width < 120 && r.height < 120) el.style.visibility = 'hidden';
+        }
+      });
       await page.waitForTimeout(1500);
-      let shot = await page.screenshot({ fullPage: shape.fullPage });
+      // --wix: grow the real phone viewport to the capture height instead of
+      // using fullPage, so the embedded map paints (see the note at the top).
+      const tall = wix && shape.phone;
+      if (tall) {
+        const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.setViewportSize({
+          width: shape.viewport.width,
+          height: Math.min(pageHeight, shape.maxHeight),
+        });
+        await page.waitForTimeout(3000);
+      }
+      let shot = await page.screenshot({ fullPage: shape.fullPage && !tall });
+      if (shape.phone) {
+        shot = await sharp(shot).resize({ width: shape.viewport.width }).toBuffer();
+      }
       if (shape.maxHeight) {
         const { width, height } = await sharp(shot).metadata();
         if (height > shape.maxHeight) {

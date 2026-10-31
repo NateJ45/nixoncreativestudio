@@ -54,7 +54,11 @@ for (const site of todo) {
     });
     const page = await context.newPage();
     try {
-      await page.goto(site.url, { waitUntil: 'networkidle', timeout: 60_000 });
+      // Wait for the load event, then give the network up to 15s to go quiet.
+      // Some hosts (Wix) keep a connection open forever, so a hard
+      // 'networkidle' wait would time out on them every time.
+      await page.goto(site.url, { waitUntil: 'load', timeout: 60_000 });
+      await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
       // Walk the page so lazy images and reveal-on-scroll sections load.
       await page.evaluate(async () => {
         for (let y = 0; y < document.body.scrollHeight; y += 500) {
