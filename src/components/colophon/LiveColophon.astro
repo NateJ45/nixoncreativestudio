@@ -1,0 +1,275 @@
+---
+// Safe to edit. Every number here is measured in the visitor's browser or
+// read from the code at build time; never type a number in by hand.
+/* ============================================================================
+   LiveColophon: the page measures itself (overhaul package 3.4, signature E)
+   ============================================================================
+   A small ledger on /colophon: what this very page weighed and how it
+   loaded, measured in the visitor's browser just now, beside the budgets the
+   build holds every page to.
+
+   Where the numbers come from:
+     - "This page" is read in the browser from the Resource Timing and
+       Navigation Timing entries (sizes, request count) and from
+       PerformanceObserver (LCP, CLS). Nothing is fetched to measure it, and
+       the script makes no network call of any kind: the numbers stay in the
+       browser (Part A ruling 7; tests/colophon.spec.ts checks it). Google
+       Analytics still records the page view on this page like any other, so
+       the wording never says "nothing is sent anywhere".
+     - "Budget" comes from tests/page-weight.config.json at build time, the
+       same file tests/page-weight.spec.ts reads (this page's own entry if it
+       has one, else the defaults), and the CLS limit from tests/cls.spec.ts.
+
+   Sizes are decoded kilobytes, like the page-weight test. A cross-origin file
+   that does not send Timing-Allow-Origin reports 0 bytes; it still counts as
+   a request. A metric the browser does not report (Safari has no LCP or CLS
+   entries) reads "not reported by this browser". There is no count-up: the
+   number is written once it is known, and nothing here moves, so there is
+   nothing to stand down under reduced motion or Pause motion.
+
+   Without JavaScript the table still shows the budgets, and a note says there
+   is nothing to measure.
+   ============================================================================ */
+
+import weight from '../../../tests/page-weight.config.json';
+
+const pages = weight.pages as Record<string, Partial<typeof weight.defaults>>;
+const budget = { ...weight.defaults, ...(pages['/colophon'] ?? {}) };
+
+// The CLS limit tests/cls.spec.ts holds every route to (the overhaul target).
+const CLS_LIMIT = 0.05;
+
+type Row = { key: string; label: string; budget: string };
+const rows: Row[] = [
+  { key: 'transferred', label: 'Transferred', budget: 'none set' },
+  { key: 'requests', label: 'Requests', budget: 'none set' },
+  { key: 'html', label: 'HTML', budget: `${budget.maxHtmlKb} KB` },
+  { key: 'js', label: 'JavaScript files', budget: `${budget.maxScriptKb} KB` },
+  { key: 'images', label: 'Images', budget: `${budget.maxImagesKb} KB` },
+  { key: 'fonts', label: 'Fonts', budget: `${budget.maxFontKb} KB` },
+  { key: 'lcp', label: 'Largest paint (LCP)', budget: 'none set' },
+  { key: 'cls', label: 'Layout shift (CLS)', budget: `under ${CLS_LIMIT}` },
+];
+---
+
+<div class="live" data-live-colophon data-state="waiting">
+  <p class="live-line">
+    <span class="live-dot" aria-hidden="true"></span>
+    Measured just now, in your browser. These numbers stay in your browser.
+  </p>
+  <table class="live-table">
+    <caption class="sr-only">This page, measured in your browser, beside its budget</caption>
+    <colgroup>
+      <col class="live-col-label" />
+      <col class="live-col-value" />
+      <col class="live-col-budget" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th scope="col">Measure</th>
+        <th scope="col">This page</th>
+        <th scope="col">Budget</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr>
+          <th scope="row">{r.label}</th>
+          <td data-metric={r.key}>
+            <span class="live-pending">not measured</span>
+          </td>
+          <td class="live-budget">{r.budget}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p class="live-note live-note--nojs">
+    JavaScript is off, so there is nothing to measure here. The budgets still hold: the build checks
+    them before anything ships.
+  </p>
+  <p class="live-note live-note--js">
+    Sizes are as decoded by your browser. A second visit transfers less, because the browser keeps
+    what it already has.
+  </p>
+</div>
+
+<script>
+  // Reads only what the browser already recorded about this page. No fetch,
+  // no beacon, no storage: the numbers never leave this tab.
+  const KB = 1024;
+  const NOT_REPORTED = 'not reported by this browser';
+
+  function kb(bytes: number): string {
+    const v = bytes / KB;
+    return `${v < 10 ? v.toFixed(1) : Math.round(v)} KB`;
+  }
+
+  function ms(v: number): string {
+    return v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`;
+  }
+
+  function supports(type: string): boolean {
+    const list = (PerformanceObserver as unknown as { supportedEntryTypes?: string[] })
+      .supportedEntryTypes;
+    return Array.isArray(list) && list.includes(type);
+  }
+
+  function initLiveColophon() {
+    const root = document.querySelector<HTMLElement>('[data-live-colophon]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = 'true';
+
+    const cell = (key: string) => root.querySelector<HTMLElement>(`[data-metric="${key}"]`);
+    const write = (key: string, text: string) => {
+      const el = cell(key);
+      if (el && el.textContent !== text) el.textContent = text;
+    };
+
+    const fontFile = /\.(woff2?|ttf|otf)(\?|$)/i;
+    const scriptFile = /\.m?js(\?|$)/i;
+    const imageFile = /\.(png|jpe?g|webp|avif|gif|svg)(\?|$)/i;
+
+    function sizes() {
+      const nav = performance.getEntriesByType('navigation')[0] as
+        PerformanceNavigationTiming | undefined;
+      const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+      let transferred = nav?.transferSize ?? 0;
+      let js = 0;
+      let images = 0;
+      let fonts = 0;
+      for (const r of resources) {
+        transferred += r.transferSize;
+        const size = r.decodedBodySize;
+        if (r.initiatorType === 'script' || scriptFile.test(r.name)) js += size;
+        else if (fontFile.test(r.name)) fonts += size;
+        else if (r.initiatorType === 'img' || imageFile.test(r.name)) images += size;
+      }
+      write('transferred', kb(transferred));
+      write('requests', String(resources.length + 1));
+      write('html', nav ? kb(nav.decodedBodySize) : NOT_REPORTED);
+      write('js', kb(js));
+      write('images', kb(images));
+      write('fonts', kb(fonts));
+    }
+
+    // LCP: the latest candidate is the answer (it settles on first input).
+    if (supports('largest-contentful-paint')) {
+      new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const last = entries[entries.length - 1];
+        if (last) write('lcp', ms(last.startTime));
+      }).observe({ type: 'largest-contentful-paint', buffered: true });
+    } else {
+      write('lcp', NOT_REPORTED);
+    }
+
+    // CLS: the sum of shifts not caused by input. It starts at 0 and only
+    // changes if something on the page moves.
+    if (supports('layout-shift')) {
+      let cls = 0;
+      write('cls', '0.000');
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as (PerformanceEntry & {
+          value: number;
+          hadRecentInput: boolean;
+        })[]) {
+          if (!e.hadRecentInput) cls += e.value;
+        }
+        write('cls', cls.toFixed(3));
+      }).observe({ type: 'layout-shift', buffered: true });
+    } else {
+      write('cls', NOT_REPORTED);
+    }
+
+    // Sizes: once now, again when late files (lazy images) finish.
+    sizes();
+    if (supports('resource')) {
+      new PerformanceObserver(() => sizes()).observe({ type: 'resource' });
+    }
+    root.dataset.state = 'measured';
+  }
+
+  document.addEventListener('astro:page-load', initLiveColophon);
+  initLiveColophon();
+</script>
+
+<style>
+  .live {
+    margin-bottom: var(--spacing-m);
+  }
+  .live p.live-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: var(--spacing-s);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  .live-dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--live);
+    transform: translateY(-0.05rem);
+  }
+  .live-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  .live-col-label {
+    width: 42%;
+  }
+  .live-col-value,
+  .live-col-budget {
+    width: 29%;
+  }
+  .live-table th,
+  .live-table td {
+    padding: 0.55rem 0.5rem 0.55rem 0;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+  .live-table thead th {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    border-bottom-color: var(--line-strong);
+  }
+  .live-table tbody th {
+    font-weight: 400;
+  }
+  .live-table td {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .live-table td[data-metric] {
+    font-weight: 650;
+  }
+  .live-pending,
+  .live-budget {
+    color: var(--muted-foreground);
+  }
+  .live-table td.live-budget {
+    font-weight: 400;
+  }
+  .live p.live-note {
+    margin-top: var(--spacing-s);
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+  }
+  /* One note or the other, by whether scripts run. */
+  :global(html.js) .live-note--nojs,
+  :global(html:not(.js)) .live-note--js {
+    display: none;
+  }
+</style>

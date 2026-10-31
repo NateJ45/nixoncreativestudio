@@ -1,0 +1,139 @@
+---
+// Safe to edit. Add a token here only if it exists in src/styles/globals.css.
+/* ============================================================================
+   TokenChips: the surface and colour tokens, live (overhaul package 3.4)
+   ============================================================================
+   One chip per token: a swatch painted with the token itself, its name in
+   mono and the value it resolves to right now. Flip the theme and the
+   swatches and values change with it, because the script reads the value
+   back from the page with getComputedStyle whenever <html> changes class
+   (the theme bootstrap and ThemeToggle toggle `.dark` there).
+
+   The swatch carries a --line-strong edge so a swatch that matches the page
+   (paper on paper, ink on ink in dark mode) still shows. Without JavaScript
+   the swatches still paint; the value line reads "your theme".
+   ============================================================================ */
+
+const tokens = [
+  { name: '--paper', role: 'alternate surface' },
+  { name: '--ink', role: 'the navy band' },
+  { name: '--line', role: 'hairline' },
+  { name: '--line-strong', role: 'a hairline that must be seen' },
+  { name: '--accent', role: 'buttons and focus' },
+  { name: '--link', role: 'links' },
+  { name: '--live', role: 'live, and nothing else' },
+  { name: '--heading', role: 'headings' },
+];
+---
+
+<ul class="chips" data-token-chips role="list">
+  {tokens.map((t) => (
+    <li class="chip">
+      <span class="chip-swatch" style={`background: var(${t.name})`} aria-hidden="true" />
+      <span class="chip-text">
+        <code class="chip-name">{t.name}</code>
+        <span class="chip-role">{t.role}</span>
+        <span class="chip-value" data-token={t.name}>
+          your theme
+        </span>
+      </span>
+    </li>
+  ))}
+</ul>
+
+<script>
+  // Hex for an rgb()/rgba() string; anything else (a colour-mix, a keyword)
+  // is shown as the browser gives it.
+  function toHex(value: string): string {
+    const m = value.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!m) return value;
+    return (
+      '#' +
+      [m[1], m[2], m[3]]
+        .map((n) => Number(n).toString(16).padStart(2, '0'))
+        .join('')
+        .toUpperCase()
+    );
+  }
+
+  function initTokenChips() {
+    const root = document.querySelector<HTMLElement>('[data-token-chips]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = 'true';
+    const cells = [...root.querySelectorAll<HTMLElement>('[data-token]')];
+
+    // A custom property resolves to whatever text it was given, so read the
+    // colour through a swatch's computed background instead.
+    const read = () => {
+      for (const cell of cells) {
+        const swatch = cell.closest('.chip')?.querySelector<HTMLElement>('.chip-swatch');
+        if (!swatch) continue;
+        const value = toHex(getComputedStyle(swatch).backgroundColor);
+        if (cell.textContent !== value) cell.textContent = value;
+      }
+    };
+    read();
+
+    // The theme lives in <html>'s class. Stop watching when the page goes.
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('astro:before-swap', () => observer.disconnect(), { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initTokenChips);
+  initTokenChips();
+</script>
+
+<style>
+  .chips[data-token-chips] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: var(--spacing-s);
+    margin-bottom: var(--spacing-m);
+    padding: 0;
+    list-style: none;
+  }
+  .chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-frame);
+  }
+  .chip-swatch {
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+  }
+  .chip-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.35;
+  }
+  .chip-name,
+  .chip-value {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    overflow-wrap: anywhere;
+  }
+  .chip-name {
+    color: var(--color-heading);
+  }
+  .chip-role {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  .chip-value {
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (forced-colors: active) {
+    .chip-swatch {
+      forced-color-adjust: none;
+    }
+  }
+</style>
