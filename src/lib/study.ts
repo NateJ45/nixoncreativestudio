@@ -11,6 +11,8 @@
                    from `facts` where set, else the study's own fields
      paletteStyle  the client's palette as scoped --cs-* custom properties
      darkMark      the client colour used for marks on this site's dark ink
+     cmsShotProblem / cmsSection  the "What you edit" CMS screenshot (3.6):
+                   the schema check and the band's props, or null without one
 
    Nothing here invents a value: every fact and colour comes from the study's
    frontmatter, and a missing field simply drops out.
@@ -128,4 +130,35 @@ export function paletteStyle(p: StudyPalette | undefined): string | undefined {
     `--cs-accent-ink: ${p.accentInk}`,
     `--cs-mark-dark: ${darkMark(p)}`,
   ].join('; ');
+}
+
+/** The "What you edit" fields from src/content.config.ts (package 3.6). */
+export interface CmsShotSource<Img = unknown> {
+  cmsShot?: Img;
+  cmsShotAlt?: string;
+  cmsName?: string;
+}
+
+/**
+ * Why a study's CMS fields do not fit together, or undefined when they do.
+ * The study page (/work/[slug].astro) throws on it, so a `cmsShot` without its alt
+ * text fails the build instead of shipping an unlabelled screenshot.
+ */
+export function cmsShotProblem(d: CmsShotSource): string | undefined {
+  if (d.cmsShot && !d.cmsShotAlt?.trim()) {
+    return 'cmsShotAlt is required when cmsShot is set: say what the editor screen shows.';
+  }
+  return undefined;
+}
+
+/**
+ * What the "What you edit" band needs, or null when the study has no CMS
+ * screenshot (the band then renders nothing). `name` is the editor's name for
+ * the rail, e.g. "Sanity Studio", left out when the study does not set it.
+ */
+export function cmsSection<Img>(
+  d: CmsShotSource<Img>,
+): { src: Img; alt: string; name?: string } | null {
+  if (!d.cmsShot || !d.cmsShotAlt?.trim()) return null;
+  return { src: d.cmsShot, alt: d.cmsShotAlt.trim(), name: d.cmsName?.trim() || undefined };
 }

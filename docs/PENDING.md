@@ -145,6 +145,16 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
   `src/lib/case-testimonials.test.ts`, which fails on a quote in any other
   study.
 
+### 2c. Capture the CMS screens (added 2026-10-31, overhaul 3.6)
+
+The "What you edit" band is built and shows nothing until a study has a
+`cmsShot`. Nathan runs `npm run capture:cms` (or `-- --only <slug>`), signs in
+to each site in the window when asked, looks at every
+`src/assets/case-studies/shots/{slug}-cms.png`, then adds `cmsShot`,
+`cmsShotAlt` and `cmsName` to the seven CMS studies (Sanity: MAS,
+Presbyterian Academy, Reid, Stone Steps, FBCM; WordPress: Theology Matters,
+FRT). Steps in `docs/claude/setup-checklist.md`, "Capturing CMS screens".
+
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)

@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { darkMark, hostOf, nextInLoop, paletteStyle, studyFacts } from './study.ts';
+import {
+  cmsSection,
+  cmsShotProblem,
+  darkMark,
+  hostOf,
+  nextInLoop,
+  paletteStyle,
+  studyFacts,
+} from './study.ts';
 
 const palette = {
   paper: '#FBF6EA',
@@ -75,4 +83,33 @@ test('paletteStyle writes scoped custom properties, or nothing without a palette
   assert.match(style, /--cs-paper: #FBF6EA/);
   assert.match(style, /--cs-mark-dark: #A83C26/);
   assert.equal(paletteStyle(undefined), undefined);
+});
+
+// "What you edit" (package 3.6). A stand-in object plays the image, since the
+// helpers never look inside it.
+const shot = { src: '/fake-cms.png', width: 1440, height: 900 };
+
+test('cmsSection is null without a cmsShot, so the band renders nothing', () => {
+  assert.equal(cmsSection({}), null);
+  assert.equal(cmsSection({ cmsName: 'Sanity Studio' }), null);
+  assert.equal(cmsSection({ cmsShotAlt: 'The Home page in Sanity Studio' }), null);
+});
+
+test('cmsSection passes the shot, the alt and the editor name through', () => {
+  assert.deepEqual(
+    cmsSection({ cmsShot: shot, cmsShotAlt: ' The Home page form ', cmsName: 'Sanity Studio' }),
+    { src: shot, alt: 'The Home page form', name: 'Sanity Studio' },
+  );
+  assert.deepEqual(cmsSection({ cmsShot: shot, cmsShotAlt: 'A post in WordPress' }), {
+    src: shot,
+    alt: 'A post in WordPress',
+    name: undefined,
+  });
+});
+
+test('cmsShotProblem requires alt text whenever a cmsShot is set', () => {
+  assert.equal(cmsShotProblem({}), undefined);
+  assert.equal(cmsShotProblem({ cmsShot: shot, cmsShotAlt: 'The Home page form' }), undefined);
+  assert.match(cmsShotProblem({ cmsShot: shot }) ?? '', /cmsShotAlt is required/);
+  assert.match(cmsShotProblem({ cmsShot: shot, cmsShotAlt: '   ' }) ?? '', /cmsShotAlt/);
 });

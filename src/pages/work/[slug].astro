@@ -22,6 +22,8 @@
      4. Rail (StudyRail): the facts and the chapter list with its gliding
         marker, beside the body: summary, MDX prose, What changed, the
         client's own words (Testimonial), the designer's note.
+     4b. What you edit (WhatYouEdit, 3.6), only where the study has a cmsShot:
+        the site's own editor with a real page open.
      5. Up next: the next study by `order`, looping, in that client's palette.
      6. The footer's ink closer, sector-matched ("Building for a church?").
    Plus a CSS-only scroll progress bar (ScrollProgress) and print styles.
@@ -48,10 +50,18 @@ import Signature from '../../components/Signature.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
 import Testimonial from '../../components/Testimonial.astro';
+import WhatYouEdit from '../../components/WhatYouEdit.astro';
 import { buttonVariants } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
-import { hostOf, nextInLoop, paletteStyle, studyFacts } from '../../lib/study';
+import {
+  cmsSection,
+  cmsShotProblem,
+  hostOf,
+  nextInLoop,
+  paletteStyle,
+  studyFacts,
+} from '../../lib/study';
 import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
@@ -124,6 +134,10 @@ const desktopShot = homeShot(entry.id);
 const chapters = (headings ?? [])
   .filter((h) => h.depth === 2)
   .map((h) => ({ slug: h.slug, text: h.text }));
+// "What you edit" (3.6): a cmsShot without its alt text fails the build here.
+const cmsProblem = cmsShotProblem(entry.data);
+if (cmsProblem) throw new Error(`src/content/case-studies/${entry.id}.mdx: ${cmsProblem}`);
+
 const facts = studyFacts(entry.data);
 const host = liveUrl ? hostOf(liveUrl) : undefined;
 const sectorPlural = SECTOR_PLURAL[sector] ?? sector;
@@ -336,6 +350,11 @@ const nextShot = next ? homeShot(next.id) : undefined;
         )}
       </div>
     </div>
+
+    {/* 4b. "What you edit" (package 3.6): the site's own editor (Sanity Studio
+        or wp-admin) with a real page open, after the body and its "What I
+        built" chapter. Renders nothing for a study without a cmsShot. */}
+    <WhatYouEdit cms={cmsSection(entry.data)} url={liveUrl} />
 
     {/* 5. Up next, in the next client's palette. */}
     {next && (
