@@ -7,6 +7,17 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import { readdirSync } from 'node:fs';
+import { photographyOpen } from './src/data/photography-gate.ts';
+
+// The /photography gate (overhaul 2.8). The sitemap filter runs before the
+// content layer exists, so count the photos collection's JSON files here, the
+// same files its glob loader reads. The rule itself lives in
+// src/data/photography-gate.ts, shared with the nav and the page's noindex.
+const photoFiles = readdirSync(new URL('./src/content/photos/', import.meta.url), {
+  recursive: true,
+}).filter((name) => String(name).endsWith('.json')).length;
+const photographyIsOpen = photographyOpen(photoFiles);
 
 // =============================================================================
 // Astro config
@@ -27,8 +38,9 @@ import react from '@astrojs/react';
 //   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
 //                 than the one small beacon it isolated; Analytics.astro now
 //                 loads the beacon with `defer`)
-//   - react     : enables React islands; since overhaul 1.4 only the
-//                 /photography gallery and lightbox use it
+//   - react     : enables React islands. Since overhaul 2.8 no page renders
+//                 one: PhotoGallery waits, unused, for package 4.6 and the
+//                 first real photos. Kept installed so that is a one-line change.
 //
 // prefetch: links preload as they enter the viewport, so navigation feels
 // instant and pairs with the View Transitions router.
@@ -78,10 +90,14 @@ export default defineConfig({
     // /coming-soon/ is the pre-launch gate page, not content: it is noindex
     // (see src/pages/coming-soon.astro), and a sitemap must not list a
     // noindex page (Search Console flags the mismatch).
-    // Out of the sitemap: the Coming Soon gate and the noindex parts page
-    // (/colophon/parts/, the check page for the shared components).
+    // Out of the sitemap: the Coming Soon gate, the noindex parts page
+    // (/colophon/parts/, the check page for the shared components) and,
+    // while its gate is closed, the noindex /photography/ page.
     sitemap({
-      filter: (page) => !page.includes('/coming-soon') && !page.includes('/colophon/parts'),
+      filter: (page) =>
+        !page.includes('/coming-soon') &&
+        !page.includes('/colophon/parts') &&
+        (photographyIsOpen || !page.includes('/photography')),
     }),
     react(),
   ],

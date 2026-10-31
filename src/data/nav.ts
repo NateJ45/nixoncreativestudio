@@ -22,24 +22,27 @@
                    and shown in `npm run dev`.
      Photography   only when the photos collection holds MIN_PHOTOS or more
                    real photographs. Today it holds none, so the link is off
-                   (the page still builds at /photography/). Add photos (the
-                   checklist is at the top of src/pages/photography.astro) and
-                   the link appears on the next build.
+                   (the page still builds at /photography/, noindex and out
+                   of the sitemap). The rule lives in
+                   src/data/photography-gate.ts, which the page and the
+                   sitemap filter in astro.config.mjs read too, so the three
+                   never disagree. Ungating: docs/PENDING.md.
 
    To rename, reorder or add a page, edit BASE below; the header, the mobile
    menu and the footer all follow.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
+import { MIN_PHOTOS, photographyOpen } from './photography-gate';
+
+// Re-exported so /colophon/parts/ can keep importing it from here.
+export { MIN_PHOTOS };
 
 export interface NavLink {
   label: string;
   /** Root-relative, always with a trailing slash. */
   href: string;
 }
-
-/** Photography joins the nav once the gallery has this many real photos. */
-export const MIN_PHOTOS = 6;
 
 const BASE: NavLink[] = [
   { label: 'Work', href: '/work/' },
@@ -59,7 +62,8 @@ async function journalCount(): Promise<number> {
   return entries.length;
 }
 
-async function photoCount(): Promise<number> {
+/** Real photographs in the photos collection (src/content/photos/*.json). */
+export async function photoCount(): Promise<number> {
   return (await getCollection('photos')).length;
 }
 
@@ -68,7 +72,7 @@ export async function getNav(): Promise<NavLink[]> {
   const [journal, photos] = await Promise.all([journalCount(), photoCount()]);
   return [
     ...BASE,
-    ...(photos >= MIN_PHOTOS ? [PHOTOGRAPHY] : []),
+    ...(photographyOpen(photos) ? [PHOTOGRAPHY] : []),
     ...(journal > 0 ? [JOURNAL] : []),
   ];
 }

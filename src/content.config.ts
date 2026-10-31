@@ -274,7 +274,7 @@ const photos = defineCollection({
 
       // The image file itself. image() runs the asset through Astro's
       // optimization pipeline. The path in JSON is relative to the
-      // entry's location: e.g. '../../assets/photography/events-01.jpg'.
+      // entry's location: e.g. '../../assets/photography/<name>.jpg'.
       image: image(),
 
       // Optional caption shown in the lightbox.

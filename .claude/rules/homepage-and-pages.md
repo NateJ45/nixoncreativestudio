@@ -26,9 +26,22 @@ Services, photography, and testimonials each live elsewhere, not on the homepage
 - **Photography** has its own `/photography` page; on the homepage the work itself is carried above the fold by the hero reel, not by a four-up photo tile strip.
 - **Testimonials** belong inside individual case study pages where the quote has earned context. The home gets exactly one real quote, in the In their words band above; never a "what people say" band of three equal cards.
 
-`ProcessBand` is one component used in two placements, so the four steps read identically across the site: the home (`tone="white"`) and `/services` mid-page (`headingId="process-heading"`). The old standalone `Process.astro` was deleted in favor of this. Every page ends on the footer's ink closer: one static H2 (300 lead, `<b>` at 800, never Heft), an optional line, the email and the CTA pill, set per page through `BaseLayout`'s `closer` prop (`src/lib/closer.ts`: `heading`, `emphasis`, `sub`, `href`, `label`, `cta`). A page that passes nothing gets the default ("Let's build a site **you won't have to redo.**"). Today: the home ("Tell me what you are **building.**"), /about, /photography and /services have their own, /work has "Don't see your kind of **organization?**" with its pill on `/contact/?from=work`; each case study has a sector one ("Building for a **church?**") whose pill links to `/contact/?from={slug}&org_type={sector}`; /contact has a quiet one with no pill (`cta: false`), since a pill there would link to the page itself. The old `CtaBanner` component was deleted in package 2.1.
+`ProcessBand` is one component used in two placements, so the four steps read identically across the site: the home (`tone="white"`, below the quote band) and `/services` mid-page (`tone="white"`, `headingId="process-heading"`). The old standalone `Process.astro` was deleted in favor of this. Every page ends on the footer's ink closer: one static H2 (300 lead, `<b>` at 800, never Heft), an optional line, the email and the CTA pill, set per page through `BaseLayout`'s `closer` prop (`src/lib/closer.ts`: `heading`, `emphasis`, `sub`, `href`, `label`, `cta`). A page that passes nothing gets the default ("Let's build a site **you won't have to redo.**"). Today: the home ("Tell me what you are **building.**"), /about, /photography and /services have their own, /work has "Don't see your kind of **organization?**" with its pill on `/contact/?from=work`; each case study has a sector one ("Building for a **church?**") whose pill links to `/contact/?from={slug}&org_type={sector}`; /contact has a quiet one with no pill (`cta: false`), since a pill there would link to the page itself. The old `CtaBanner` component was deleted in package 2.1.
 
 Don't reorder these sections. The hero no longer depends on any single content gate: the reel of real client sites fills it today, so it ships complete.
+
+## /about (overhaul package 2.6)
+
+The page's job is trust in the person. Order, in `src/pages/about.astro`:
+
+1. **Head**: the real headshot (`src/assets/brand/headshot.jpg`, through `Media.astro` with `lcp`, 4:5) and the H1 with its Heft. The headshot is the page's LCP at every width, so it is never revealed: on a phone it sits above the H1 (visual order only; the H1 stays first in the DOM), and from lg the text takes columns 1 to 6 and the photo 7 to 12. This band is its own `.page-grid` rather than a `Section`, because Section's body starts at column 4, which leaves the photo too small to out-size the H1. The H1 uses `--text-h1-long` so "organizations" at 800 fits 320px. The H1 wording is Nathan's to pick (plan section 7); keep it until he does.
+2. **In short** (`Section`, white): the thesis line and four plain facts. The rail's "{n} client sites" and the case-study fact are counted from the collection.
+3. **The longer story** (`Section`, prose). The family "we" sits behind `data-copy-ignore`.
+4. **Outside the studio** (`Section`, paper): a contact sheet of the five real photos in `src/assets/about` (the `photos` array: `src`, `caption`, `alt`), numbered 01 to 05 in mono, each a `[data-zoom]` button for the one `Lightbox`.
+5. **Currently** (`Section id="now"`, white): the old /now snapshot. The rail shows the freshness ("Updated 4 weeks ago"), the body the "Last updated" date with a `data-motion="loop"` dot.
+6. **How I work**: one line linking `/services/#why` (the "why it costs what it costs" block). The old "How I work" principles list was a repeat of /services and is gone.
+
+Then the footer's ink closer ("Want to talk about **a project?**"). Deleted in 2.6: `Terminal.astro` and `LighthouseScore.astro` (the colophon carries the real numbers). Scoped CSS only.
 
 ## /work (package 2.3)
 
@@ -37,3 +50,31 @@ Don't reorder these sections. The hero no longer depends on any single content g
 On a fine pointer from md up, a pinned `BrowserFrame` sits on the right (sticky). Hovering or focusing a row tints it in the client's `palette.paper` with a 4px rule in `palette.accent` (light mode; `case-palettes.test.ts` checks this site's heading, body, muted and link colours on every client paper), or keeps it on ink with the client's dark mark as the rule (dark mode, ruling 8). The frame swaps to that site's full-page capture (`shots/{slug}-home.png`, cropped from the top to 2.4x its width with `getImage`, WebP at 480/720/1040) and pans down it once with the Web Animations API, 6s at most, pausing when the pointer or focus leaves. No pan under reduced motion or Pause motion. Captures are fetched only on first hover; the frame starts on the lead study's capture, lazy, so a phone never downloads it. On touch or below md the frame is hidden and each row carries a 16:10 `Media` thumbnail of the cover (lazy, except the first, which is `lcp`).
 
 Images on /work measured 159 KB at 1440 and 89 KB at 390 after a full scroll (2026-10-31; the budget is 500 KB). The page ends on the closer; there is no "Open any of them" band and no card grid any more.
+
+## /services architecture
+
+Its job is to size the project and start it (overhaul package 2.5). `src/pages/services.astro`, in this order, every band a `Section.astro` with a rail, surfaces alternating:
+
+1. **Hero** (white, no hairline): H1 "What I do, and **what it costs.**" with `Heft` on the heavy phrase, and one line under it.
+2. **On this page**: a sticky sub-nav (Web design, Photography, Pricing, Care, FAQ) under the header, linking to each section's H2 id. `scroll-padding-top` on `<html>` (only while the sub-nav is on the page) keeps an anchored heading and any focused element below both bars (WCAG 2.4.11). A small script measures the header into `--svc-header-h`; without JS a fluid fallback runs a pixel or so above the header's real height. On a phone the links scroll sideways inside the bar, whose right edge fades out (a mask) to hint that more follow. Section rails stick below the sub-nav on this page. `tests/services.spec.ts` tabs to each link at 1440, 768 and 320, with and without JS.
+3. **Web design** (paper, `#web-design`): one real capture in a `BrowserFrame` (the newest study the home does not show), the buyer-language points, then strategy as "what's included", set as type (no tile, no image; its JSON-LD Service keeps `#strategy`).
+4. **Recently shipped** (white): the next two studies the home does not show (the home takes the three lowest `order`; the rest are sorted newest `year` first, then `order`), as small `FramePair`s with the hook and live host. All computed from the collection.
+5. **Photography** (paper, `#photography`): copy, points, the price and note from `pricing.ts`, and "Ask about photography" to `/contact/?service=photography` (the /photography page is gated). No image: the photos in `src/assets/about` are of Nathan, not by him.
+6. **Pricing** (white, `#pricing`): `PricingTeaser variant="full"`. Package 3.3's "Size up your project" goes straight after it.
+7. **Care** (paper, `#care`): the four care levels from `pricing.ts`, ruled the same way as the tiers.
+8. **How I work** (white): `ProcessBand`.
+9. **Why one person** (paper, `#why`): four ruled points and the note on tools.
+10. **FAQ** (white, `#faq`): native `<details>`; the FAQPage JSON-LD is built from the same array, so it equals the visible text (checked in `tests/services.spec.ts`).
+11. **Ink closer**: "Not sure which tier **fits?**", pill to `/contact/?from=services`.
+
+Every price on the page, in the FAQ and in the JSON-LD comes from `src/data/pricing.ts`; `tests/metadata.spec.ts` checks each JSON-LD price is visible (the add-on prices sit in the `<details>` summary, so they stay visible while it is closed).
+
+## /contact (overhaul package 2.7)
+
+Its job is a qualified inquiry in under two minutes. The H1 keeps its Heft; the reply promise is the one the page already made ("one or two business days"), and any new timing waits on Nathan.
+
+- **Form** (plain HTML posting to Web3Forms, works without JS, in the shared `.frame`). Required: name, email, organization type, "What are you hoping to build?". Optional in view: budget chips (real radios) whose labels read from the tier floors in `src/data/pricing.ts`. Optional in a closed `<details>` "A few optional details": organization name, phone, current website, timeline, how you heard. The selects keep the Gotcha 11 outline ring.
+- **Prefill** (script, `astro:page-load`): `?org_type=` picks the select, `?tier=launch|signature|flagship` picks the chip that starts at that tier's floor, `?service=` and `?from=` are carried. Four hidden fields go to Web3Forms: `from`, `tier`, `service` and `origin_org_type` (the org type the link named; the visible select is `org_type`). Only slug-shaped values are used, and a prefill never overrides a restored draft. Link here as `/contact/?from={page or slug}&org_type={sector}`, `/contact/?tier={tier}` or `/contact/?service=photography`.
+- **Sidebar order**: What happens next, then "What I'll read" (a brief card that assembles from the fields; a plain summary for screen readers, `aria-live="off"`, hidden without JS since only the script fills it), then Direct (CopyEmail and the phone from `site.ts`), then Where I am (`ContactMap`, see `components.md`). "Rather book a call?" renders only when `site.bookingUrl` is set.
+- **Success**: with JS, a fetch submit swaps the form for the success panel, focus moves to its heading, and it links two studies from the visitor's sector (padded with the next studies by `order` when a sector has fewer). Without JS, Web3Forms redirects to `/contact/?sent=1#sent` and CSS `:target` shows the same panel with the first two studies.
+- No CtaBanner; the page ends on the footer's quiet closer with no pill. /privacy names the form fields, the hidden origin fields and the local draft, and says the map is no longer a Google embed.
