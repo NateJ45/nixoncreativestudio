@@ -42,7 +42,8 @@
    mono label above the title), tone ('paper' | 'white', new in 2.4b).
    ============================================================================ */
 
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
+import { ladder, PICTURE } from '../lib/picture';
 
 interface Props {
   /** Real feature screenshot, imported so Astro optimizes it. */
@@ -70,13 +71,14 @@ const surface = tone ?? (side === 'left' ? 'paper' : 'white');
       data-zoom
       aria-label={`View ${title} full size`}
     >
-      <Image
+      <Picture
         src={src}
         alt={alt}
-        widths={[480, 640, 800, 1200]}
-        sizes="(min-width: 64rem) 30rem, (min-width: 48rem) 55vw, calc(100vw - 4.5rem)"
+        widths={ladder([480, 640, 800, 1200])}
+        sizes="(min-width: 82.5rem) 501px, (min-width: 64rem) calc(43vw - 66px), (min-width: 48rem) calc(54.7vw - 40px), calc(100vw - 4.5rem)"
         loading="lazy"
         decoding="async"
+        {...PICTURE}
       />
       <span class="feature-zoom-hint" aria-hidden="true">
         <svg

@@ -20,7 +20,8 @@
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
-import { Image, getImage } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
+import { ladder, PICTURE } from '../../lib/picture';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ScrollProgress from '../../components/ScrollProgress.astro';
 import { readingTime } from '../../lib/readingTime';
@@ -126,13 +127,14 @@ const breadcrumbs = [
 
         {cover && (
           <div class="mt-l overflow-hidden rounded-2xl bg-bg-soft" data-reveal>
-            <Image
+            <Picture
               src={cover}
               alt=""
-              widths={[600, 900, 1200]}
+              widths={ladder([600, 900, 1200])}
               sizes="(min-width: 56rem) 64rem, 100vw"
               class="block h-auto w-full"
               transition:name={`journal-cover-${entry.id}`}
+              {...PICTURE}
             />
           </div>
         )}

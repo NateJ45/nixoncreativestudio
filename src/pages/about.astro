@@ -36,7 +36,8 @@ import Heft from '../components/Heft.astro';
 import Section from '../components/Section.astro';
 import Media from '../components/Media.astro';
 import Lightbox from '../components/Lightbox.astro';
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
+import { ladder, PICTURE } from '../lib/picture';
 
 import headshot from '../assets/brand/headshot.jpg';
 import familyPhoto from '../assets/about/family.jpg';
@@ -191,7 +192,7 @@ const learning = [
           alt="Nathan Nixon, smiling outdoors"
           ratio="4 / 5"
           widths={[320, 480, 640, 800, 1200]}
-          sizes="(min-width: 80rem) 36rem, (min-width: 64rem) 45vw, (min-width: 48rem) 24rem, calc(100vw - 3rem)"
+          sizes="(min-width: 82.5rem) 620px, (min-width: 64rem) calc(48.4vw - 21px), (min-width: 27rem) 384px, calc(100vw - 3rem)"
           lcp
           class="frame"
         />
@@ -287,12 +288,13 @@ const learning = [
         <li data-reveal>
           <figure>
             <button type="button" class="sheet-frame" data-zoom title="View larger">
-              <Image
+              <Picture
                 src={photo.src}
                 alt={photo.alt}
-                widths={[240, 360, 480, 720, 1200, 1600]}
-                sizes="(min-width: 64rem) 12rem, (min-width: 48rem) 30vw, 45vw"
+                widths={ladder([240, 360, 480, 720, 1200, 1600])}
+                sizes="(min-width: 82.5rem) 164px, (min-width: 64rem) calc(12.7vw - 5px), (min-width: 48rem) calc(31.5vw - 15px), calc(49vw - 26px)"
                 class="sheet-img"
+                {...PICTURE}
               />
             </button>
             <figcaption>
