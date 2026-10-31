@@ -36,7 +36,7 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 
 **Interactive elements.**
 
-- Icon-only buttons and links require `aria-label`. Lucide SVG icons carry no accessible name on their own; the label lives on the wrapper. See `MobileNav.tsx`, `ThemeToggle.tsx` for the pattern.
+- Icon-only buttons and links require `aria-label`. The inlined Lucide SVGs (`ChromeIcon.astro`) are `aria-hidden` and carry no accessible name; the label lives on the wrapper. See `MobileNav.astro`, `ThemeToggle.astro` for the pattern. A modal is a native `<dialog>` opened with `showModal()` (MobileNav, Lightbox), never a hand-rolled overlay.
 - Hover and focus states must not be color-only. Pair color changes with underline, motion, or icon swap.
 - Stick to native interactive elements (`<button>`, `<a>`, `<details>`, `<summary>`) whenever possible. Custom controls take real work to make accessible.
 

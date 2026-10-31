@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Slot } from 'radix-ui';
 
 import { cn } from '@/lib/utils';
 
@@ -59,20 +58,17 @@ const buttonVariants = cva(
   },
 );
 
+// The shadcn asChild / Radix Slot option was removed in overhaul 1.4 (its
+// only user, the React MobileNav, became MobileNav.astro). To style a link as
+// a button, call buttonVariants() on the <a> instead, as the headers do.
 function Button({
   className,
   variant = 'default',
   size = 'default',
-  asChild = false,
   ...props
-}: React.ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
-  const Comp = asChild ? Slot.Root : 'button';
-
+}: React.ComponentProps<'button'> & VariantProps<typeof buttonVariants>) {
   return (
-    <Comp
+    <button
       data-slot="button"
       data-variant={variant}
       data-size={size}

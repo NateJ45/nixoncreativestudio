@@ -48,7 +48,7 @@ Run this after any visual change before pushing. If a specific route is passed a
    location.reload();
    ```
 
-   The key is `ncs-theme` (defined in `ThemeToggle.tsx` and the anti-FOUC script in `BaseLayout.astro`). After reload, the page reflects the chosen mode without flash.
+   The key is `ncs-theme` (defined in `src/scripts/theme-toggle.ts`, which drives `ThemeToggle.astro`, and the anti-FOUC script in `BaseLayout.astro`). After reload, the page reflects the chosen mode without flash.
 
 4. **If the site is behind the coming-soon gate** (`PUBLIC_COMING_SOON=true` in `.env`), bypass it once per browser session:
 

@@ -22,7 +22,7 @@ const year = new Date().getFullYear();
 
 import { getCollection } from 'astro:content';
 import { site } from '../data/site';
-import CopyEmail from './CopyEmail';
+import CopyEmail from './CopyEmail.astro';
 import { buttonVariants } from './ui/button';
 
 // Footer site nav, mirroring the header's primary nav so the two never drift.
@@ -97,8 +97,9 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
         <!-- Column 1: Explore. A quiet repeat of the primary nav so a visitor
              at the bottom of a page has the site map without scrolling back up.
              A real <nav> landmark (distinct aria-label) so assistive tech can
-             jump to it. -->
-        <nav aria-label="Site pages" data-reveal style="--reveal-delay: 0ms;">
+             jump to it. id="site-nav" is also the target of the mobile menu
+             button, so the menu works without JavaScript (MobileNav.astro). -->
+        <nav id="site-nav" aria-label="Site pages" data-reveal style="--reveal-delay: 0ms;">
           <h2 class={headingClass}>Explore</h2>
           <ul class="flex flex-col gap-xs">
             {navLinks.map(({ label, href }) => (
@@ -119,7 +120,7 @@ const headingClass = 'font-display text-xl tracking-[0.02em] text-heading mb-s';
                  small copy-to-clipboard button. The link still works
                  normally; the button is the convenience layer. -->
             <li>
-              <CopyEmail client:visible email={site.email} tone="dark" />
+              <CopyEmail email={site.email} tone="dark" />
             </li>
             <li>
               <a class={linkClass} href={site.phoneHref}>

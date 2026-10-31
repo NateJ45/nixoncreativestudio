@@ -1,0 +1,78 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   ThemeToggle
+   ============================================================================
+   Cycles the site theme through three states: light -> dark -> system.
+   "System" follows the OS preference, and while it is chosen the page flips
+   live when the OS switches between day and night themes.
+
+   Persistence: localStorage["ncs-theme"] = "light" | "dark" | "system". The
+   anti-FOUC bootstrap in BaseLayout.astro reads the same key before first
+   paint, so a choice survives reloads with no flash. Do not rename the key.
+
+   No React: the button is plain markup with all three icons inlined, and the
+   script below shows the right one and wires the click. Without JavaScript the
+   button is hidden (a control that does nothing is worse than none) and the
+   system theme still applies through the bootstrap.
+
+   Used by Header.astro (desktop, compact 32px) and MobileNav.astro (inside the
+   panel, `class="size-11"` for a 44px touch target).
+   ============================================================================ */
+
+import ChromeIcon from './ChromeIcon.astro';
+import { buttonVariants } from './ui/button';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  /** Extra classes, e.g. size-11 for the touch-sized copy in the mobile nav. */
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  data-theme-choice="system"
+  aria-label="Toggle theme"
+  title="Toggle theme"
+  class={cn(
+    buttonVariants({ variant: 'ghost', size: 'icon' }),
+    'theme-toggle text-text hover:text-accent',
+    className,
+  )}
+>
+  {/* One icon per state; CSS shows the one matching data-theme-choice. The
+      sun doubles as the placeholder before the script reads storage. */}
+  <ChromeIcon name="sun" class="theme-icon theme-icon-light size-5" />
+  <ChromeIcon name="moon" class="theme-icon theme-icon-dark size-5" />
+  <ChromeIcon name="monitor" class="theme-icon theme-icon-system size-5" />
+</button>
+
+<style>
+  /* Without JS the toggle cannot do anything, so it is not shown. The .js
+     class is set on <html> by the BaseLayout bootstrap before first paint. */
+  :global(html:not(.js)) .theme-toggle {
+    display: none;
+  }
+
+  /* The icons are child-component SVGs, so they are reached with :global. */
+  .theme-toggle :global(.theme-icon) {
+    display: none;
+  }
+  /* Until the script marks the button bound, show the sun (the old island's
+     placeholder), then the icon for the stored choice. */
+  .theme-toggle:not([data-bound]) :global(.theme-icon-light),
+  .theme-toggle[data-bound][data-theme-choice='light'] :global(.theme-icon-light),
+  .theme-toggle[data-bound][data-theme-choice='dark'] :global(.theme-icon-dark),
+  .theme-toggle[data-bound][data-theme-choice='system'] :global(.theme-icon-system) {
+    display: block;
+  }
+</style>
+
+<script>
+  import { initThemeToggles } from '../scripts/theme-toggle';
+  document.addEventListener('astro:page-load', initThemeToggles);
+</script>

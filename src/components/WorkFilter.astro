@@ -1,0 +1,83 @@
+---
+// Safe to edit.
+/* ============================================================================
+   WorkFilter
+   ============================================================================
+   Sector chips for the /work index. A click toggles a `data-hidden` attribute
+   on the server-rendered cards ([data-work-card data-sector="..."]) so CSS
+   hides the ones that do not match, and shows the "no results" notice
+   ([data-work-empty]) when nothing does. The cards are never re-rendered, so
+   their Astro image markup stays as built.
+
+   Year is deliberately not a filter: the studio does not surface project
+   timing or how many projects happened per year.
+
+   No React: the script below wires the chips on astro:page-load (data-bound
+   guard). Without JavaScript the chips could not do anything, so the row is
+   hidden and every card shows.
+   ============================================================================ */
+
+interface Props {
+  /** Distinct sector values across all case studies, in display order. */
+  sectors: Array<{ value: string; label: string }>;
+}
+
+const { sectors } = Astro.props;
+
+// The coarse-pointer padding brings the chips to the 44px touch target on
+// phones and tablets while a mouse keeps the compact density.
+const chipClass =
+  'work-chip inline-flex items-center rounded-full border px-3 py-1 font-body text-[0.85rem] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 pointer-coarse:min-h-11 pointer-coarse:py-2.5 pointer-coarse:px-4 border-border bg-bg text-text hover:bg-bg-soft aria-pressed:border-link aria-pressed:bg-link aria-pressed:text-accent-foreground aria-pressed:hover:bg-link';
+
+const chips = [{ value: 'all', label: 'All' }, ...sectors];
+---
+
+<fieldset class="work-filter flex flex-wrap items-center gap-xs" data-work-filter>
+  <legend class="sr-only">Filter by sector</legend>
+  <span class="font-mono text-[0.75rem] tracking-[0.08em] text-text-muted uppercase">Sector</span>
+  {chips.map((s) => (
+    <button
+      type="button"
+      class={chipClass}
+      data-sector-value={s.value}
+      aria-pressed={s.value === 'all' ? 'true' : 'false'}
+    >
+      {s.label}
+    </button>
+  ))}
+</fieldset>
+
+<style>
+  :global(html:not(.js)) .work-filter {
+    display: none;
+  }
+</style>
+
+<script>
+  function apply(sector: string): void {
+    let visible = 0;
+    document.querySelectorAll<HTMLElement>('[data-work-card]').forEach((card) => {
+      const match = sector === 'all' || (card.getAttribute('data-sector') ?? '') === sector;
+      card.toggleAttribute('data-hidden', !match);
+      if (match) visible += 1;
+    });
+    document.querySelector('[data-work-empty]')?.toggleAttribute('data-hidden', visible !== 0);
+  }
+
+  function initWorkFilter(): void {
+    document
+      .querySelectorAll<HTMLElement>('[data-work-filter]:not([data-bound])')
+      .forEach((filter) => {
+        filter.dataset.bound = 'true';
+        const chips = [...filter.querySelectorAll<HTMLButtonElement>('[data-sector-value]')];
+        chips.forEach((chip) =>
+          chip.addEventListener('click', () => {
+            const sector = chip.dataset.sectorValue ?? 'all';
+            chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+            apply(sector);
+          }),
+        );
+      });
+  }
+  document.addEventListener('astro:page-load', initWorkFilter);
+</script>

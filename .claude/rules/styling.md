@@ -55,7 +55,7 @@ Three-state toggle (light / dark / system), persisted to `localStorage["ncs-them
 The wiring, in order of execution:
 
 1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint. Reads `localStorage["ncs-theme"]` and `prefers-color-scheme`, applies the `.dark` class on `<html>` plus an inline `color-scheme` style so native widgets (scrollbars, form controls) follow. No flash of the wrong theme on initial paint or after View Transitions.
-2. **`ThemeToggle.tsx`** (React island in the Header and the mobile nav panel) cycles light → dark → system on click, writes to the same localStorage key, and re-binds the matchMedia listener whenever the chosen theme changes.
+2. **`ThemeToggle.astro`** (in the Header and the mobile nav panel; behaviour in `src/scripts/theme-toggle.ts`) cycles light → dark → system on click and writes to the same localStorage key. One matchMedia listener, registered once per tab, re-applies the theme when the OS flips while the choice is system. Without JavaScript the button is hidden and the system theme still applies.
 3. **`globals.css`** defines color tokens for both modes. `:root` carries light; `.dark` carries the overrides. Brand `--accent` and `--secondary` keep their visual identity in both modes; only the surface and text tokens flip. See Brand colors above for the exact token responsibilities.
 
 `--primary` (navy) deliberately stays navy in dark mode so the default Button and the navy bands stay on-brand. The Footer, Process Band, and CtaBanner are theme-aware via `.band-themed` (flat `bg-bg-soft` in light mode, flat navy in dark). `--accent-foreground` flips to navy in dark mode so white text on the brightened sky-blue accent doesn't fail contrast.

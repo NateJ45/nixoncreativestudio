@@ -21,7 +21,7 @@ import { getCollection, render } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
-import ReadingProgress from '../../components/ReadingProgress';
+import ReadingProgress from '../../components/ReadingProgress.astro';
 import { readingTime } from '../../lib/readingTime';
 import { site } from '../../data/site';
 import { ids, pageIds } from '../../lib/schema';
@@ -80,8 +80,6 @@ const breadcrumbs = [
   schemas={schemas}
   breadcrumbs={breadcrumbs}
 >
-  <ReadingProgress client:idle />
-
   <article>
     <header class="py-2xl" aria-labelledby="journal-entry-heading">
       <div class="ncs-container max-w-[64rem]" data-reveal>
@@ -173,6 +171,12 @@ const breadcrumbs = [
       )}
     </div>
   </article>
+
+  {/* Reading progress bar. AFTER the article on purpose: it is position:fixed,
+      so its DOM place does not show, but as <main>'s first child it would make
+      the first-screen reveal exemption (`main > :first-child [data-reveal]`)
+      miss the entry header (docs/claude/gotchas.md, Gotcha 10). */}
+  <ReadingProgress />
 
   <CtaBanner />
 </BaseLayout>
