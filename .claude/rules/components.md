@@ -14,14 +14,11 @@ Moved out of CLAUDE.md. Loads when components or layouts are touched.
 When building UI, reach for components in this order:
 
 1. Existing components in `src/components/` that already match this site's design
-2. shadcn/ui primitives in `src/components/ui/` (radix-nova style, plus the `@fulldev` registry)
-3. Starwind UI in `src/components/starwind/` for Astro-native, zero-JS primitives (accordion, dialog, dropdown, tabs) where no React state is needed
-4. Aceternity UI for motion-rich blocks (hero, bento, parallax)
-5. Magic UI for smaller flourishes (marquee, animated text)
-6. PrimeReact (`src/components/primereact/`) only for heavy, behavior-rich widgets with no lighter equivalent (data tables, file upload, complex pickers)
-7. Custom build only if nothing above fits
+2. A plain `.astro` component with native HTML (`<details>`, `<dialog>`, a real `<a>` or `<button>`) and a small `astro:page-load` script when it needs behaviour
+3. The two remaining shadcn/ui primitives in `src/components/ui/` (`button.tsx`, and `sheet.tsx` until package 1.4 replaces MobileNav with a native `<dialog>`)
+4. Custom build otherwise. Ask Nathan before adding a dependency.
 
-For where to pull each of these from (free sources, the shadcn CLI commands, the token-remap cheat sheet), see `docs/agent/component-sources.md`.
+The 2026-10 overhaul (package 1.2) deleted Starwind, PrimeReact, the unused shadcn primitives and the Aceternity / Magic UI blocks (bento grid, spotlight, marquee, animated beam), along with SectionHeading, ClientLogos, PressMentions and the Embla testimonial carousel. They are in git history if one is ever needed; do not re-add them for decoration. `docs/agent/component-sources.md` is the old sourcing guide, kept for reference.
 
 File naming:
 
@@ -49,8 +46,7 @@ Beyond the homepage-section components (Hero, HeroReel, SelectedWork, PricingTea
 - `ReadingProgress.tsx`: thin top bar that fills as the visitor scrolls. Rendered only on case study and journal detail pages.
 - `CopyEmail.tsx`: mailto link plus a one-click copy-to-clipboard button with sr-live "Copied" status. Footer Contact column + Contact page sidebar.
 - `ThemeToggle.tsx`: light / dark / system cycle. Header (desktop) + the mobile nav panel.
-- `MobileNav.tsx`: the small-viewport navigation: a full-screen panel (a shadcn Sheet underneath, so focus-trap, Escape, scroll-lock, and dialog ARIA all stay intact). Oversized Bebas nav links, each with a short honest descriptor, hairline-divided like an editorial index, with a staggered entrance on open. Theme-aware like the rest of the site: a light surface with dark type, NCS-blue links, and a soft brand glow (`.bg-mesh-soft`) in light mode; navy with white type, sky links, and the drifting `.bg-aurora` in dark. The brand-blue "Start a project" CTA and the theme toggle carry across both themes. Below the nav sits a "Get in touch" block (email, phone, inline Instagram / LinkedIn glyphs, and the theme toggle). The active route shows in NCS blue (light) / amber (dark) with a persistent arrow. Below md (768px); `client:only="react"`. Its nav list no longer includes Contact, which is promoted to the desktop header's "Start a project" CTA; the drawer's own CTA covers it on mobile.
-- `Testimonials.astro` + `TestimonialCarousel.tsx`: a "What clients say" carousel on /about. The `.astro` wrapper is collection-driven: it reads the `testimonial` field from case studies (so quotes stay tied to the client and nothing is fabricated) and renders nothing until at least one case study carries a real quote. The `.tsx` island is the Embla carousel: keyboard arrows, prev/next/dot controls, a Pause/Play toggle (SC 2.2.2), autoplay that is off under reduced motion and pauses on hover/focus, and `inert` on off-screen slides. To populate it, fill a case study's `testimonial:` frontmatter.
+- `MobileNav.tsx`: the small-viewport navigation: a full-screen panel (a shadcn Sheet underneath, so focus-trap, Escape, scroll-lock, and dialog ARIA all stay intact). Oversized Bebas nav links, each with a short honest descriptor, hairline-divided like an editorial index, with a staggered entrance on open. Theme-aware like the rest of the site: a light surface with dark type and NCS-blue links in light mode; navy with white type and sky links in dark. The brand-blue "Start a project" CTA and the theme toggle carry across both themes. Below the nav sits a "Get in touch" block (email, phone, inline Instagram / LinkedIn glyphs, and the theme toggle). The active route shows in NCS blue (light) / amber (dark) with a persistent arrow. Below md (768px); `client:only="react"`. Its nav list no longer includes Contact, which is promoted to the desktop header's "Start a project" CTA; the drawer's own CTA covers it on mobile.
 - `HeroReel.astro`: the tilted wall of real client sites behind the homepage hero (five columns, desktop and phone captures, each column drifting at its own speed via a two-copy CSS loop that moves by exactly -50%). Data in `src/data/reel.ts`, captures in `src/assets/reel/` (re-shoot with `node scripts/capture-reel.mjs`). Decorative and `aria-hidden`; cards are mouse-only links to `/work/{slug}/`. Respects reduced motion, pauses off-screen and in hidden tabs, and stops when the hero carries `data-paused` (the hero's Pause button). Full behaviour in `.claude/rules/homepage-and-pages.md`.
 - `CaseStudyCover.astro`: wraps Astro `<Image />` with a plaiceholder blur preview painted as the wrapper bg, fades the real image in on load. Used by /work index cards (`fit="cover"`) and /work/[slug] hero (`fit="natural"`).
 - `SiteShowcase.astro`: animated "live site" frame embedded inside case study MDX. Renders a browser-chrome window whose full-page screenshot auto-scrolls (or slow-zooms with `variant="zoom"`), pausing on hover, and links to the live site. Reduced-motion safe (the scroll freezes to a static frame). Import it plus the screenshot at the top of a case study `.mdx` and place `<SiteShowcase src={shot} alt="..." href="..." label="..." />`. Full-page screenshots live in `src/assets/case-studies/shots/{slug}-home.png` (captured with Playwright at 1440px wide; re-shoot with `npm run capture:study <slug>`). Covers in `src/assets/case-studies/{slug}.png` are real hero screenshots of the same sites.
@@ -62,10 +58,11 @@ Beyond the homepage-section components (Hero, HeroReel, SelectedWork, PricingTea
 - `WorkFilter.tsx`: sector + year chip filters on /work index. Filters server-rendered cards by toggling a `data-hidden` attribute (no card re-render).
 - `ComingSoon.astro`: the standalone "launching soon" view. Used by `/coming-soon/` directly and by BaseLayout's site-wide gate when `PUBLIC_COMING_SOON=true`.
 - `StructuredData.astro`: emits one JSON-LD `@graph` per page, built by `src/lib/schema.ts`: the studio (ProfessionalService + LocalBusiness), WebSite, Person (Nathan) and the page's WebPage on every page, a BreadcrumbList when BaseLayout gets `breadcrumbs`, plus the page's own nodes from the `schemas` prop (CreativeWork on case studies, Article on journal entries, Service + Offer + FAQPage on /services). See `.claude/rules/content.md`.
-- `SectionHeading.astro`: reusable section header (optional number, title, optional sub paragraph). `num` is optional on purpose; pass it only when the section is genuinely a numbered sequence. The homepage sections stopped using it; `/services` and any future inner page that wants a clean numbered or unnumbered title still can. **Always pass `headingId`** when the parent `<section>` carries `aria-labelledby`; without it, the reference points at nothing.
 - `Photo.tsx`: generic `<img>` wrapper with fade-in. Used by `PhotoGallery` on the photography page (and available for any future image-on-content-page use).
 - `PhotoGallery.tsx`: react-photo-album justified grid + yet-another-react-lightbox. Used by the /photography per-category galleries.
-- `Newsletter.astro`, `ClientLogos.astro`, `PressMentions.astro`: scaffolds that render nothing until configured. See `docs/claude/setup-checklist.md`.
+- `Newsletter.astro`: a scaffold that renders nothing until configured. See `docs/claude/setup-checklist.md`.
+
+Testimonials: the old Embla carousel (`Testimonials.astro` + `TestimonialCarousel.tsx`) was deleted in package 1.2. The real quotes return in Phase 2 as a static block on each case study and one on the homepage; build nothing for them before then.
 
 ## Code conventions
 

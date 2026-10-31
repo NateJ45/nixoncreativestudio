@@ -101,7 +101,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
            identical-card-grid look so the page reads as curated, not generated,
            while staying a single <ul> the sector filter can hide/show.
            Each card is an elevated .surface-card (real depth in light mode),
-           lifts on hover, lights a cursor-following glow, gently zooms its
+           gently zooms its
            cover, and morphs that cover into the detail-page hero via the
            shared cover-${id} transition name. -->
       <ul class="grid gap-l md:grid-cols-2 lg:grid-cols-3">
@@ -123,10 +123,9 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
                    catalogue length. */}
               <a
                 data-reveal
-                data-spotlight
                 style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
                 class:list={[
-                  'surface-card spotlight-card group hover-lift rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
+                  'relative surface-card group rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
                   isFeature
                     ? 'flex flex-col gap-m md:grid md:grid-cols-2 md:items-center md:gap-l'
                     : 'flex h-full flex-col gap-m',
@@ -210,7 +209,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
       affordance than the cards above (which open the case studies). Real domains
       only, shown as plain text so it never reads as a fabricated badge. */}
   {entriesLive.length > 1 && (
-    <section class="bg-mesh-soft bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
+    <section class="bg-bg-soft py-2xl" aria-labelledby="live-sites-heading">
       <div class="ncs-container">
         <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
           <h2 id="live-sites-heading">Open any of them</h2>

@@ -30,8 +30,7 @@ export default function BackToTop() {
   const [visible, setVisible] = useState<boolean>(false);
 
   useEffect(() => {
-    // Use scroll position from documentElement (works under Lenis, which
-    // proxies scroll but keeps document.scrollTop in sync).
+    // Read the native scroll position (no scroll library on the page).
     const onScroll = () => setVisible(window.scrollY > SHOW_AFTER_PX);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });

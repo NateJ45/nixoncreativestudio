@@ -24,21 +24,19 @@
    of a stack of slabs. The page is mostly ONE surface in both themes: the ruled
    editorial column carries no full-bleed background bands mid-page (the old
    bg-mesh-soft seam is gone). The inset surface changes are the single Currently
-   .surface-card and, near the foot, the Testimonials band.
+   .surface-card.
 
-   Two deliberate full-bleed exceptions sit at the TAIL of the page, after the
-   ruled column ends: the Testimonials .band-themed band (the .band-themed surface
-   is owned by Testimonials.astro itself, not set here) and the closing CtaBanner.
-   Both are intentional closing beats, not mid-column slabs, so the editorial
-   one-surface read holds through every section above them.
+   One deliberate full-bleed exception sits at the TAIL of the page, after the
+   ruled column ends: the closing CtaBanner. It is an intentional closing beat,
+   not a mid-column slab, so the editorial one-surface read holds through every
+   section above it. (The old Testimonials carousel band was retired in the
+   2026-10 overhaul; real client quotes return in Phase 2.)
 
-   Motion: the existing data-reveal / spotlight vocabulary only, reduced-motion
-   safe. No scroll-spy, no sticky positioning, no new JS.
+   Motion: the base data-reveal only, reduced-motion safe. No scroll-spy, no sticky positioning, no new JS.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CtaBanner from '../components/CtaBanner.astro';
-import Testimonials from '../components/Testimonials.astro';
 import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
@@ -223,7 +221,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
           <div class="mt-l grid items-start gap-xl lg:grid-cols-[1.4fr_1fr]">
             <p
               class="max-w-[58ch] text-lg leading-[1.6] text-text"
-              data-reveal="right"
+              data-reveal
               style="--reveal-delay: 120ms;"
             >
               I'm Nathan Nixon. I run Nixon Creative Studio out of Cincinnati, Ohio, and I work with
@@ -237,7 +235,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
                  and the ring/shadow are kept from the placeholder treatment. -->
             <div
               class="relative isolate w-full max-w-[18rem]"
-              data-reveal="scale"
+              data-reveal
               style="--reveal-delay: 120ms;"
             >
               <div
@@ -272,7 +270,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
           <span class="h-px w-12 bg-tertiary"></span>
         </div>
 
-        <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal="blur">
+        <p class="max-w-[52ch] text-h4 leading-[1.3] text-heading" data-reveal>
           One person on every project, start to finish: strategy, design, photography, and code. I
           work with{' '}
           <span class="text-link">churches, schools, nonprofits, and small businesses</span>
@@ -359,7 +357,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
             <div class="w-full min-w-0">
               <div
                 class="flex flex-col gap-m lg:sticky lg:top-24"
-                data-reveal="scale"
+                data-reveal
                 style="--reveal-delay: 200ms;"
               >
                 <Terminal />
@@ -517,7 +515,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
                     {workingOn.map((item, index) => (
                       <li
                         class="flex items-start gap-s border-t border-border py-s"
-                        data-reveal="left"
+                        data-reveal
                         style={`--reveal-delay: ${index * 90}ms;`}
                       >
                         <span
@@ -576,7 +574,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
                     {reading.map((book, index) => (
                       <li
                         class="border-t border-border py-s"
-                        data-reveal="right"
+                        data-reveal
                         style={`--reveal-delay: ${index * 90}ms;`}
                       >
                         <span class="font-display text-h5 leading-tight text-heading">
@@ -601,7 +599,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
                     {learning.map((item, index) => (
                       <li
                         class="border-t border-border py-s leading-[1.55] text-text"
-                        data-reveal="right"
+                        data-reveal
                         style={`--reveal-delay: ${index * 90}ms;`}
                       >
                         {item}
@@ -617,14 +615,7 @@ const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted
     </div>
   </section>
 
-  <!-- Client testimonials. Renders only when a case study carries a real
-       `testimonial` in its frontmatter; otherwise this is silent (no empty
-       block, no fabricated quote). This is the first of the two deliberate
-       full-bleed beats at the tail of the page (after the ruled column ends):
-       its .band-themed surface is set inside Testimonials.astro, not here. -->
-  <Testimonials />
-
-  <!-- Closing CTA: the second deliberate full-bleed break, outside the grid. -->
+  <!-- Closing CTA: the one deliberate full-bleed break, outside the grid. -->
   <CtaBanner
     title="Want to talk about a project?"
     sub="The first conversation is free, and the earlier it happens, the easier the work is to schedule."

@@ -30,8 +30,8 @@ export default defineConfig({
   },
   // Chromium runs everything. A real WebKit iPhone profile runs the
   // viewport-agnostic suites (smoke, both axe sweeps, reduced-motion): Safari's engine finds
-  // layout and JS issues Chromium never will, and the WebGL hero, Lenis and
-  // Embla islands are exactly the kind of client code that behaves differently
+  // layout and JS issues Chromium never will, and the WebGL hero and the
+  // React islands are exactly the kind of client code that behaves differently
   // there. reflow.spec.ts drives its own explicit viewport widths
   // (320/768/1024/1440), which fights device emulation, so it is chromium-only.
   projects: [

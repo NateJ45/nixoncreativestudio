@@ -6,7 +6,7 @@
    ============================================================================
    Seven-block stack:
      1. Hero (positioning statement, solid-token headline)
-     2. Three service chapters as elevated, alternating spotlight-cards
+     2. Three service chapters as elevated, alternating surface-cards
      3. Process recap (reuses the homepage Process component)
      4. "What a website costs" band: three web tiers (Launch / Signature /
         Flagship) + an "add to any project" strip (photography, brand) + the
@@ -19,9 +19,7 @@
    soft, no-CTA variant, so the four steps read identically across the site.
 
    Motion vocabulary used here (all reduced-motion safe, defined globally):
-     data-reveal / data-reveal="left|right"  scroll fade+rise
-     spotlight-card + data-spotlight          cursor-following glow on a card
-     hover-lift                               lift on hover
+     data-reveal                              scroll fade+rise
      data-countup                             number animates up when in view
 
    PRICING LIVES IN src/data/pricing.ts: the `tiers`, `addOns` and
@@ -288,7 +286,7 @@ const schemas = [
           data-reveal="fade"
           style="--reveal-delay: 300ms;"
         >
-          <div class="flow-card surface-card spotlight-card hover-lift rounded-2xl" data-spotlight>
+          <div class="relative flow-card surface-card rounded-2xl">
             <ol class="flow-track relative z-10">
               <li class="flow-step" style="--i: 0;">
                 <span class="flow-marker">
@@ -361,13 +359,12 @@ const schemas = [
   </section>
 
   <!-- ----------------------------------------------------------------------
-       Service offerings. Each is its own elevated spotlight-card with a
-       cursor-following glow, a hover lift, and a staggered scroll-reveal.
+       Service offerings. Each is its own elevated surface-card with a
+       staggered scroll-reveal.
        These are parallel services (not an ordered sequence), so the list is
-       a <ul> and carries no numerals. The cards alternate reveal direction
-       (left / right / left) so they arrive with a little choreography.
+       a <ul> and carries no numerals.
        ---------------------------------------------------------------------- -->
-  <section class="bg-dotgrid py-2xl" aria-label="Service details">
+  <section class="py-2xl" aria-label="Service details">
     <div class="ncs-container">
       <ul class="flex list-none flex-col gap-l p-0">
         {services.map((service, index) => {
@@ -377,9 +374,8 @@ const schemas = [
           const visualLeft = index % 2 === 0;
           return (
             <li
-              class="surface-card spotlight-card hover-lift group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
-              data-spotlight
-              data-reveal={visualLeft ? 'left' : 'right'}
+              class="surface-card group relative isolate overflow-hidden rounded-2xl p-l md:p-xl"
+              data-reveal
               style={`--reveal-delay: ${index * 90}ms;`}
             >
               <div class="relative z-10 grid grid-cols-1 items-center gap-l md:grid-cols-2 md:gap-xl">
@@ -487,15 +483,14 @@ const schemas = [
         {tiers.map((tier, index) => (
           <li
             class:list={[
-              'tier-card spotlight-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
+              'tier-card surface-card relative isolate flex flex-col gap-m overflow-hidden rounded-2xl p-l',
               tier.highlighted && 'tier-card--featured',
             ]}
-            data-spotlight
             data-reveal
             style={`--reveal-delay: ${index * 110}ms;`}
           >
             {tier.badge && (
-              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold tracking-[0.1em] text-primary-foreground uppercase">
+              <span class="inline-flex w-fit items-center rounded-full bg-accent px-s py-[0.2rem] text-xs font-semibold tracking-[0.1em] text-accent-foreground uppercase">
                 {tier.badge}
               </span>
             )}
@@ -617,7 +612,7 @@ const schemas = [
        the price immediately, so the "someone quoted me less" objection is
        answered the moment it forms. Two-column hairline-ruled list, not cards.
        ---------------------------------------------------------------------- -->
-  <section class="bg-dotgrid py-2xl" aria-labelledby="services-why-heading">
+  <section class="py-2xl" aria-labelledby="services-why-heading">
     <div class="ncs-container">
       <header class="mb-l flex max-w-[60ch] flex-col gap-xs" data-reveal>
         <h2 id="services-why-heading" class="text-heading">
@@ -729,11 +724,10 @@ const schemas = [
      Three-service card (hero right column). The three services in the order the
      copy names them (Strategy -> Web design -> Photography), held in one
      elevated card with a connecting rail and ringed icon markers. Built on the
-     site's card vocabulary (.surface-card depth + .spotlight-card cursor glow +
-     .hover-lift), so it reads as a deliberate, premium panel rather than a
+     site's card vocabulary (.surface-card depth), so it reads as a deliberate, premium panel rather than a
      floaty diagram. Decorative (aria-hidden); the headline carries the real
-     content. No background glow and no looping animation: the depth, the accent
-     edge, and the cursor glow are the polish.
+     content. No background glow and no looping animation: the depth and the accent
+     edge are the polish.
      ---------------------------------------------------------------------- */
   .services-flow {
     position: relative;
@@ -745,8 +739,7 @@ const schemas = [
     padding: clamp(1.5rem, 3.2vw, 2.4rem);
   }
   /* A thin accent rule along the top edge, clipped by the card's overflow, as a
-     quiet "designed" cue (the same motif as the pricing tier cards). ::after is
-     free here: .spotlight-card's glow uses ::before. */
+     quiet "designed" cue (the same motif as the pricing tier cards). */
   .flow-card::after {
     content: '';
     position: absolute;
@@ -894,8 +887,8 @@ const schemas = [
   }
 
   /* ----------------------------------------------------------------------
-     Pricing tier cards. Built on .surface-card (real depth in both themes),
-     .spotlight-card (cursor glow), and the price count-up. Added here:
+     Pricing tier cards. Built on .surface-card (real depth in both themes)
+     and the price count-up. Added here:
        - a top accent rule as a shared highlight motif (full on the featured
          tier, drawing in on hover for the others),
        - a soft accent-glow bloom + warmed border + deeper shadow on hover, so
