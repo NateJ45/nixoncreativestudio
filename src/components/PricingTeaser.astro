@@ -17,9 +17,14 @@
      teaser (default)  the home. Name, who it is for (or the badge), the
                        floor and the typical range, then a reassurance line
                        and a link to /services.
-     full              /services (package 2.5 moves it over). Adds each
-                       tier's paragraph and scope points, and drops the
-                       link to /services, which would point at itself.
+     full              /services (package 2.5). Adds each tier's paragraph
+                       and scope points, a "Start with {tier}" link to
+                       /contact/?tier={name} under each tier, and the
+                       add-ons (photography, brand and strategy) folded into
+                       a native <details>. Its summary line carries the
+                       add-on prices, so they stay visible (and match the
+                       JSON-LD offers) while it is closed. It drops the link
+                       to /services, which would point at itself.
 
    Props:
      variant    'teaser' | 'full'
@@ -28,7 +33,7 @@
    ============================================================================ */
 
 import Section from './Section.astro';
-import { webTiers } from '../data/pricing';
+import { webTiers, addOns } from '../data/pricing';
 import { money } from '../lib/money';
 
 interface Props {
@@ -50,11 +55,15 @@ const includes = [
 ];
 
 const lowest = Math.min(...webTiers.map((t) => t.priceFrom));
+
+// /contact/?tier=signature: the lower-case tier name, so the form can preselect
+// the matching budget once it reads the parameter.
+const tierHref = (name: string) => `/contact/?tier=${encodeURIComponent(name.toLowerCase())}`;
 ---
 
 <Section rail="Pricing" railMeta={`From ${money(lowest)}`} tone={tone} labelledby={headingId}>
   <h2 id={headingId} class="pt-heading">
-    What it <b>costs</b>
+    {full ? 'What a website' : 'What it'} <b>costs</b>
   </h2>
 
   <p class="pt-includes">
@@ -94,11 +103,43 @@ const lowest = Math.min(...webTiers.map((t) => t.priceFrom));
                 <li>{feature}</li>
               ))}
             </ul>
+            <a class="pt-start" href={tierHref(tier.name)}>
+              Start with {tier.name} <span aria-hidden="true">→</span>
+            </a>
           </>
         )}
       </li>
     ))}
   </ul>
+
+  {full && (
+    <details class="pt-addons">
+      <summary>
+        <span class="pt-addons-lead">Add to any project:</span>
+        {addOns.map((addOn, i) => (
+          <>
+            <span class="pt-addon-sum">
+              {addOn.name} {addOn.price}
+            </span>
+            {i < addOns.length - 1 && (
+              <span class="pt-dot" aria-hidden="true">
+                ·
+              </span>
+            )}
+          </>
+        ))}
+      </summary>
+      <ul class="pt-addon-list">
+        {addOns.map((addOn) => (
+          <li>
+            <h3 class="pt-addon-name">{addOn.name}</h3>
+            <p class="pt-addon-price">{addOn.price}</p>
+            <p class="pt-addon-note">{addOn.note}</p>
+          </li>
+        ))}
+      </ul>
+    </details>
+  )}
 
   <p class="pt-reassure">
     Every number is a starting point. The first conversation is free and ends with an honest
@@ -217,6 +258,120 @@ const lowest = Math.min(...webTiers.map((t) => t.priceFrom));
     margin: 0.5rem 0 0;
     padding-left: 1.1rem;
     line-height: 1.45;
+  }
+
+  /* Full variant: the tier's link to /contact, pinned to the foot of the
+     column (margin-top: auto) so the three line up whatever their copy. */
+  .pt-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    min-height: 2.75rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    color: var(--color-link);
+    font-weight: 650;
+  }
+  .pt-start span {
+    transition: transform var(--dur-quick) var(--ease-glide);
+  }
+  .pt-start:hover span,
+  .pt-start:focus-visible span {
+    transform: translateX(0.25rem);
+  }
+
+  /* Full variant: the add-ons, ruled like the tiers, folded into a native
+     <details>. The summary is the whole line (name and price for each), with
+     a + that turns to x when open, so the state never rests on colour. */
+  .pt-addons {
+    margin-top: 3rem;
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+  }
+  .pt-addons summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.625rem;
+    min-height: 2.75rem;
+    padding: 1rem 2rem 1rem 0;
+    position: relative;
+    cursor: pointer;
+    list-style: none;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .pt-addons summary::-webkit-details-marker {
+    display: none;
+  }
+  .pt-addons summary::after {
+    content: '+';
+    position: absolute;
+    right: 0.25rem;
+    top: 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--heading);
+    transition: transform var(--dur-quick) var(--ease-glide);
+  }
+  .pt-addons[open] summary::after {
+    transform: rotate(45deg);
+  }
+  .pt-addons-lead {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .pt-addon-sum {
+    color: var(--color-text);
+  }
+  .pt-addons summary:hover .pt-addons-lead {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .pt-addon-list {
+    display: grid;
+    gap: 2rem;
+    margin: 0;
+    padding: 0.5rem 0 2rem;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .pt-addon-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(1.5rem, 3vw, 2.5rem);
+    }
+  }
+  .pt-addon-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .pt-addon-name {
+    font-size: var(--text-h5, 1.25rem);
+  }
+  .pt-addon-price {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--heading);
+  }
+  .pt-addon-note {
+    max-width: 52ch;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pt-start span,
+    .pt-addons summary::after {
+      transition: none;
+    }
   }
 
   .pt-reassure {
