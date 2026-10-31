@@ -30,6 +30,10 @@ To add a new case study: drop an `.mdx` file in `src/content/case-studies/`, fil
 
 **`photos`**: JSON entries in `src/content/photos/`. Required fields: `title`, `image` (path), `category` (one of `events`, `portraits`, `environments`), `year`. Optional: `caption`, `location`, `featured`. Photography page wiring to read from this collection is planned. The `src/content/photos/` directory does not exist in git yet; create it with the first entry.
 
+### Voice
+
+Site copy, pages, components and case-study MDX alike, is first person singular: "I", never "we", "our" or "us" about the studio. `npm run test:copy` enforces it on the built site (see `docs/TESTING.md`). A client's own words go in a `<blockquote>`, or behind `data-copy-ignore` with a comment, and stay verbatim. Do not claim capacity or scarcity ("a small number of projects each quarter") unless Nathan has confirmed it.
+
 ### Routes summary
 
 Static routes generated at build time:

@@ -18,6 +18,7 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 | Lint        | `npm run lint`           | `ci.yml` (build job) | ESLint over `src` and `scripts`. A hard gate since 2026-09-06 (see below)                                                                                   |
 | Format      | `npm run format:check`   | `ci.yml` (build job) | `prettier --check .` with the family `.prettierrc` (astro + tailwind plugins)                                                                               |
 | Unit tests  | `npm run test:unit`      | `ci.yml` (build job) | `src/lib/*.test.ts` plus `scripts/lib/*.test.mjs` (see below)                                                                                               |
+| Copy lint   | `npm run test:copy`      | `ci.yml` (build job) | After the build: no "we", "our" or "us" in rendered body text of any page in `dist/client` (site copy is first person singular; see below)                  |
 | Build       | `npm run build`          | `ci.yml` (build job) | The whole site compiles and prerenders; every content-collection entry resolves; image and OG generation succeed                                            |
 | Link check  | `npm run check:links`    | `ci.yml` (build job) | linkinator over `dist/client`: every internal link resolves (300+ links; off-site URLs are skipped)                                                         |
 | Slash check | `npm run check:slashes`  | `ci.yml` (build job) | Fails on any internal `href` in `dist/client` HTML without a trailing slash (no 307 redirects, PORTS Card 89)                                               |
@@ -61,6 +62,20 @@ document without the theme bootstrap, so the dark sweep skips it.
 First run (2026-09-06) found one real bug: `/about` was 342px wide at 320px
 because the Terminal's nowrap window title set the min-content of its grid
 item. Fixed with `min-w-0` on the item.
+
+### Copy lint (`npm run test:copy`, `tests/unit/copy-rules.test.mjs`)
+
+Added 2026-10-30 (overhaul package 1.3). Nathan is one person, so site copy
+says "I", never "we", "our" or "us" about the studio. The test reads the
+built HTML in `dist/client`, so it runs after `npm run build` (in CI it is the
+step right after the build, not part of `test:unit`, which runs before it). It
+checks rendered body text only and skips `<head>`, `<script>`, `<style>`,
+`<svg>`, comments, attribute values (so `aria-label` and `alt`), every
+`<blockquote>` (client quotes stay verbatim), and any element marked
+`data-copy-ignore` with everything inside it. Use `data-copy-ignore` only for
+text that is honestly someone else's "we" (a quoted client, Nathan's family in
+the /about story) and leave a comment beside it saying why. A failure lists
+the page and the sentence.
 
 ### Unit tests (`node --experimental-strip-types --test src/lib/*.test.ts`)
 
