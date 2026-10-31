@@ -1,0 +1,185 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   FramePair: one client site on two screens (overhaul package 1.8)
+   ============================================================================
+   A desktop BrowserFrame with a phone BrowserFrame overlapping its lower
+   right corner, both showing the same live site. It says "this is a real,
+   responsive build" in one picture, the same pairing as the hero reel.
+
+   Layout: the pair is one relative box. The desktop frame takes 88% of the
+   width; the phone takes 26% and sits on the bottom-right corner, so it
+   overlaps the desktop by about a seventh of its width at every size. All
+   sizes are percentages of the box, so nothing can push a 320px page sideways
+   (tests/reflow.spec.ts sweeps the check page, /colophon/parts/).
+
+   Captures: pass the full-page captures as they are
+   (src/assets/case-studies/shots/{slug}-home.png and {slug}-mobile.png).
+   Media crops each one at build time to its box, from the top, so the
+   10,000px-tall originals are never shipped whole.
+
+   Props:
+     url        the live site (shown as the host in both bars)
+     desktop    the desktop capture (ImageMetadata)
+     phone      the phone capture (ImageMetadata)
+     alt        describes what the pair shows, e.g. "The Stone Steps 50K
+                homepage on a laptop and a phone". Read once, on the desktop
+                image; the phone image is alt="" so it is not read twice.
+     lcp        true only when the pair is the page's LCP element
+     sizes      the desktop image's real rendered width (defaults to the wide
+                case-study stage; pass a smaller one for a narrower column)
+     phoneSizes the same for the phone image
+     peek       the "peek" (package 2.2, the home's Selected work): the
+                desktop screen holds a taller crop of the capture (up to
+                PEEK_MAX_ASPECT times its width) and pans down it while an
+                ancestor marked [data-peek-trigger] is hovered or holds focus,
+                so a keyboard user tabbing to the study's link sees it too.
+                CSS only: one transform transition, eased back on leave. Under
+                reduced motion or Pause motion (html[data-motion-paused]) the
+                frame stays still on the top of the page.
+     class      extra classes on the outer box
+   ============================================================================ */
+
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+import { ladder, PICTURE } from '../lib/picture';
+import BrowserFrame from './BrowserFrame.astro';
+import Media from './Media.astro';
+
+interface Props {
+  url: string;
+  desktop: ImageMetadata;
+  phone: ImageMetadata;
+  alt: string;
+  lcp?: boolean;
+  sizes?: string;
+  phoneSizes?: string;
+  peek?: boolean;
+  class?: string;
+}
+
+const {
+  url,
+  desktop,
+  phone,
+  alt,
+  lcp = false,
+  sizes = '(min-width: 82.5rem) 1119px, calc(88vw - 42px)',
+  phoneSizes = '(min-width: 82.5rem) 331px, calc(26vw - 12px)',
+  peek = false,
+  class: className = '',
+} = Astro.props;
+
+// Peek crop: the top of the capture, at most PEEK_MAX_ASPECT widths tall, so a
+// 10,000px page is never shipped whole for a pan nobody follows to the end.
+// The 16:10 screen shows the top 0.625 of a width; the pan travels the rest,
+// as a share of the crop's own height (translateY percentages are of the
+// element itself): 1 - 0.625 / aspect.
+const PEEK_MAX_ASPECT = 2.5;
+const SCREEN_ASPECT = 10 / 16;
+const peekWidths = [400, 640, 960];
+const peekAspect = Math.min(desktop.height / desktop.width, PEEK_MAX_ASPECT);
+const peekWidth = Math.min(Math.max(...peekWidths), desktop.width);
+const peekCrop = {
+  width: peekWidth,
+  height: Math.round(peekWidth * peekAspect),
+  fit: 'cover' as const,
+  position: 'top' as const,
+};
+const peekTo = `${(-(1 - SCREEN_ASPECT / peekAspect) * 100).toFixed(2)}%`;
+---
+
+<div class:list={['frame-pair', className]}>
+  <BrowserFrame url={url} class="fp-desktop">
+    {peek ? (
+      <div class="fp-peek" style={`--peek-to: ${peekTo}`}>
+        <Picture
+          src={desktop}
+          alt={alt}
+          widths={ladder(peekWidths.filter((w) => w <= peekWidth))}
+          sizes={sizes}
+          {...peekCrop}
+          loading={lcp ? 'eager' : 'lazy'}
+          fetchpriority={lcp ? 'high' : undefined}
+          decoding="async"
+          class="fp-peek-img"
+          {...PICTURE}
+        />
+      </div>
+    ) : (
+      <Media
+        src={desktop}
+        alt={alt}
+        ratio="16 / 10"
+        position="top"
+        widths={[480, 800, 1200]}
+        sizes={sizes}
+        lcp={lcp}
+      />
+    )}
+  </BrowserFrame>
+  <BrowserFrame url={url} variant="phone" class="fp-phone">
+    <Media
+      src={phone}
+      alt=""
+      ratio="9 / 17"
+      position="top"
+      widths={[160, 240, 360]}
+      sizes={phoneSizes}
+    />
+  </BrowserFrame>
+</div>
+
+<style>
+  .frame-pair {
+    position: relative;
+    /* Room on the right and below for the phone to hang off the desktop. */
+    padding-right: 12%;
+    padding-bottom: 10%;
+  }
+
+  .frame-pair :global(.fp-desktop) {
+    width: 100%;
+  }
+
+  .frame-pair :global(.fp-phone) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 26%;
+    z-index: 1;
+  }
+
+  /* Peek: a 16:10 window on the top of a taller crop. The paper shows until
+     the image lands; the image is never hidden while it loads. */
+  .fp-peek {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background-color: var(--paper);
+  }
+
+  .fp-peek :global(.fp-peek-img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform: translateY(0);
+    /* Leaving: back to the top of the page at scene pace. */
+    transition: transform var(--dur-scene) var(--ease-exit);
+  }
+
+  /* Hover or focus anywhere in the trigger pans down the page. A long, even
+     glide (6s, the cap the plan sets for a pan) so it reads as scrolling, not
+     as a jump. Never under reduced motion, never while motion is paused. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not([data-motion-paused]) [data-peek-trigger]:hover)
+      .fp-peek
+      :global(.fp-peek-img),
+    :global(html:not([data-motion-paused]) [data-peek-trigger]:focus-within)
+      .fp-peek
+      :global(.fp-peek-img) {
+      transform: translateY(var(--peek-to));
+      transition: transform 6s var(--ease-glide);
+    }
+  }
+</style>

@@ -102,11 +102,12 @@ Every entry below was measured, not assumed.
     2026-10-13). Never put a wrapper, island or fixed-position helper ahead of
     the page's first section.
 
-    The same reveal vocabulary has a width twin: `data-reveal="left|right"`
-    starts 2rem off to the side, and an unrevealed box that far out widens the
-    document (`/services` was 328px wide at a 320px viewport until its
-    spotlight card scrolled in). `main { overflow-x: clip }` in `globals.css`
-    now cuts that; `tests/reflow.spec.ts` measures every route unscrolled and
+    The reveal vocabulary once had a width twin: `data-reveal="left|right"`
+    started 2rem off to the side, and an unrevealed box that far out widened the
+    document (`/services` was 328px wide at a 320px viewport until its card
+    scrolled in). The sideways variants were retired in 2026-10 (overhaul
+    package 1.2), and `main { overflow-x: clip }` in `globals.css` stays as a
+    guard; `tests/reflow.spec.ts` measures every route unscrolled and
     while scrolling, because `settle()` force-reveals everything and hid it.
 
 11. **WebKit drops `box-shadow` on natively rendered form controls, so a

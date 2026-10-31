@@ -17,6 +17,27 @@ Read this file early in any session on this repo.
 
 - **The `test` job is pinned to ubuntu-24.04 (2026-10-30).** `ubuntu-latest` moved to 26.04, where Playwright's WebKit will not launch, so every `[webkit-iphone]` test failed. `ci.yml` now says `runs-on: ubuntu-24.04` on that job only. Unpin it once a Playwright release supports 26.04 (try it on a branch first). Starter PORTS.md card and vault gotcha `playwright-webkit-ubuntu-26-04`.
 
+### 0. After the cut-over: Rich Results test (added 2026-10-30, overhaul 1.9)
+
+Once `redesign` is live on `main`, run Google's Rich Results test
+(https://search.google.com/test/rich-results) and the Schema Markup Validator
+(https://validator.schema.org) on `/`, `/services/` and one case study. The
+JSON-LD is one `@graph` per page (studio, WebSite, Person, WebPage, plus
+BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
+errors. Google shows no FAQ rich result for this kind of site, which is fine.
+Then resubmit the sitemap in Search Console. Delete this item when done.
+
+### 0b. After the cut-over: mark `generate_lead` as a GA4 key event (added 2026-10-31, overhaul 4.1)
+
+The site now sends `generate_lead`, `contact_click`, `book_call_click`,
+`visit_client_site`, `pricing_view` and `cta_click` (`src/lib/track.ts`). Once
+`redesign` is live, open GA4 (property 532519109) > Admin > Events, wait for
+`generate_lead` to appear after a real or test inquiry, and mark it as a key
+event so it counts as a conversion. Optionally register `cta_location`,
+`link_domain`, `method`, `cta_id` and `pricing_variant` as event-scoped custom
+dimensions (Admin > Custom definitions) so they show in reports. Delete this
+item when done.
+
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).
@@ -52,10 +73,10 @@ The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
 | `#2A6FB0` on `#0A1628` | **3.45:1** | **fail**             |
 
 The third claim is wrong. It is **not** a live accessibility defect: the pair
-is not rendered anywhere. In light mode the Footer is a light `.band-themed`
-surface, and the navy Footer is a dark-mode-only state where the link colour
-switches to `--secondary` (`#7AC8F0`, 9.8:1 on navy). So this is a documentation
-error, not a bug.
+is not rendered anywhere. Since overhaul 2.1 the Footer is a `.band-ink` block
+in both themes, and `.band-ink` re-scopes `--link` to sky `#40AAED` (asserted in
+`src/lib/ncs-tokens.test.ts`), so no link on navy uses `#2A6FB0`. So this is a
+documentation error, not a bug.
 
 It is left for a human because `globals.css` is a "foundation, edit with care"
 file per `.claude/rules/foundation-files.md`, and because there are two defensible fixes:
@@ -69,6 +90,113 @@ file per `.claude/rules/foundation-files.md`, and because there are two defensib
 Option (a) is the recommendation. Whichever is chosen, add the navy pair to
 `src/lib/theme-tokens.test.ts` afterwards so the claim is machine-checked from
 then on.
+
+### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
+
+Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is still open:
+
+- **First Baptist Muncie: done (overhaul 2.4d, 2026-10-31).** Nathan signed
+  off the FBCM part ("FBCM is astro now"). The study now describes the Astro +
+  Sanity + Cloudflare Workers rebuild, live on www.fbcmuncie.org since
+  2026-10-19, from the fbcm repo's docs and the live site. The Wix-era feature
+  shots are gone; the new ones are crops of the live /visit, /history and
+  /architecture pages, and the Wix home page (captured 2026-06-21) is the
+  `beforeShot`. Two things for Nathan to read: the line "I had built the
+  church's earlier website on Wix" (taken from the old study and the two
+  testimonials, which are now labelled as written about the Wix site), and
+  the designer note, kept word for word from the Wix-era study (the children's
+  and youth newsletters are still separate pages on the live site).
+- **First Presbyterian Orangeburg:** its `hook` ("Book the building through one
+  form, not an inbox") is a draft written from the designer note (1.6). Edit or
+  approve it.
+- **Reid Design: done (overhaul 2.4f, 2026-10-31).** Nathan approved the
+  removal ("Yes, remove them"). The study no longer mentions a Budget
+  Calculator, a style quiz or before/after sliders, and the designer note about
+  the slider is gone. That day on reiddesignllc.com, `/budget-calculator/` and
+  `/style-quiz/` answered 404, `/quiz/` and `/calculator/` redirected to
+  /services/, and `/portfolio/` redirected home (the portfolio is switched
+  off in Reid's CMS). The README's Reid row was corrected in the same PR.
+
+### 2b. Ungate /photography (added 2026-10-31, overhaul 2.8)
+
+/photography/ is gated: noindex, out of the sitemap, the menus and `/llms.txt`,
+showing one photo and "ask for samples". It needs **6 to 20 real photos of
+Nathan's own work, with permission from the people and places in them**. Then:
+
+1. Optimize each into `src/assets/photography/<name>.jpg` and add a
+   `src/content/photos/<name>.json` entry (fields in `src/content.config.ts`).
+2. Build the gallery (package 4.6: contact sheet, loupe, lightbox). Add
+   `/photography` to `GALLERY_ROUTES` in `tests/no-react.spec.ts` if it uses
+   the `PhotoGallery` React island.
+3. At 6 photos (`MIN_PHOTOS` in `src/data/photography-gate.ts`) the nav link,
+   the sitemap entry, the `/llms.txt` line and indexing all switch on by
+   themselves on the next build; `tests/photography-gate.spec.ts` follows.
+4. Swap the gate page's photo: today it is the black-and-white portrait from
+   About (`src/assets/about/portrait-bw.jpg`), captioned as a portrait of
+   Nathan, because no photo in the repo is a confirmed frame of his client work.
+   Nathan can pick one of his own frames for it now, before the gallery is ready.
+
+Package 1.3 only changed the pronouns in those studies ("we" to "I"); the claims
+themselves are untouched. A capacity line ("I take a small number of projects
+each quarter") was removed site-wide because nothing sources it; put it back
+only if Nathan confirms it.
+
+### 2b. Testimonials still missing (added 2026-10-31, testimonials package)
+
+Five studies carry their client's own words (`testimonials` frontmatter,
+rendered by `Testimonial.astro`): Theology Matters, Foundation for Reformed
+Theology, Stone Steps 50K, First Baptist Muncie (two) and First Presbyterian
+Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
+
+- **Still missing: Presbyterian Academy, MAS Monograms, Reid Design.** Those
+  studies show no quote until a real one arrives. The ask is Nathan's to send
+  (a short three-question email; it can be drafted for him, never sent for
+  him).
+- **Stone Steps:** David Corfman's quote is about the earlier refresh, and the
+  study says so under it. A fresh quote about the 2026 rebuild would replace
+  it.
+- When a quote arrives: record it verbatim in the vault note
+  `projects/ncs-testimonials.md` first, then add it to the study's frontmatter
+  (`quote`, `name`, `title`, `date`) and the slug to `WITH_QUOTES` in
+  `src/lib/case-testimonials.test.ts`, which fails on a quote in any other
+  study.
+
+### 2c. CMS screens: captured 2026-10-31 (overhaul 3.6)
+
+Done. All seven CMS studies have `cmsShot`, `cmsShotAlt` and `cmsName`
+(Sanity: MAS, Presbyterian Academy, Reid, Stone Steps, FBCM; WordPress:
+Theology Matters, FRT). They show each site's custom home screen rather than a
+document form, captured from Nathan's own signed-in Chrome at 1440 wide. Before
+each shot, anything private was hidden or blurred: staff names in FBCM's Fix-it
+list, and the donor, readership, search-term and warning panels on the TM and
+FRT dashboards. Re-shoot with the same care, either that way or with
+`npm run capture:cms` (steps in `docs/claude/setup-checklist.md`).
+
+### 2d. The /churches/ copy, and the next sector pages (added 2026-10-31, overhaul 4.2)
+
+/churches/ shipped with today's church studies (First Baptist Muncie and First
+Presbyterian Orangeburg) on Nathan's go-ahead, ahead of the four-study floor
+in plan ruling 19. Its copy lives in `src/data/sector-pages.ts`.
+
+- **Nathan to read the copy**: the H1, lede and four points were drafted from
+  the two church studies and /services, and the quote picked is Kendall
+  Ellis's (FBCM). Edit them in `sector-pages.ts`.
+- **Nonprofits, schools, small business**: no page yet. Each needs copy of its
+  own before it gets one (steps in the header comment of `sector-pages.ts`);
+  until then they stay on `/work/?sector=…`.
+
+### 2e. Interaction clips: recorded 2026-10-31 (overhaul 3.5)
+
+Done for four studies, with client permission (plan decision 11): MAS (typing
+initials into the hero's Monogram Studio), FRT (a library search for "lord's
+supper"), Theology Matters (an archive search for "Barmen") and Presbyterian
+Academy (two topic filters in the course catalog). Stone Steps, FBCM, Reid and
+Orangeburg keep their still: Stone Steps' hook is the records board, which
+lists runners by name; FBCM's visit page and Reid's priced band have no
+interaction worth a clip yet; Orangeburg's is a form. If a client changes one
+of these features, re-run `npm run capture:clips -- <slug>` (needs ffmpeg,
+`FFMPEG` env var if it is not on PATH), look at the three check frames, and
+paste the printed `signatureClip` into the study.
 
 ---
 

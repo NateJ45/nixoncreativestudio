@@ -4,9 +4,13 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/presbyterian-academy.png
-# with a real photograph when one is available. The current file is a
-# placeholder gradient.
+# Overhaul 2.4f (2026-10-31): rewritten against the live site after the
+# "Term Issue" redesign. Much of the school's live text (faculty, letters,
+# rates, term dates) is still placeholder seed in the client's CMS, so this
+# study describes what the site does and never repeats a name, price, date
+# or credential from it. Features were checked on presbyterianacademy.org
+# that day (home, /courses/, a course page, /get-started/) and in the client
+# repo (src/components/CourseFinder.tsx, src/pages/api/contact.ts).
 title: The Presbyterian Academy
 client: The Presbyterian Academy
 sector: school
@@ -24,32 +28,141 @@ stack:
   - Sanity
   - Tailwind
   - Cloudflare Workers
-summary: A launch site for a brand-new Reformed lay formation school that needed to explain what it is, who it's for, and how to enroll, all before the first cohort began.
+summary: A site for a new Reformed lay formation school, laid out like a printed term catalog, that explains what the Academy is, who it is for and how to start.
+metaDescription: 'The Presbyterian Academy site I designed like a printed term catalog: course covers, a three-question course finder, open pricing and an easy first step.'
 cover: ../../assets/case-studies/presbyterian-academy.png
 year: 2026
 featured: true
 published: 2026-06-15
 liveUrl: https://www.presbyterianacademy.org
-outcome: 'A credible front door for a brand-new school: clear catalog, real faculty, honest pricing.'
-# Add a real client quote here when you have one, then uncomment. Never invent it.
-# testimonial:
-#   quote: ""
-#   name: ""
-#   title: ""
-results:
-  - 'A brand-new school now has a credible front door, with a clear catalog, real faculty, and honest pricing, ready for its first enrollment cycle.'
-  - 'An interested visitor can size up the fit, then take a clear next step through the express-interest form or an intro call.'
-  - 'Full faculty profiles and a course catalog now do the credibility work a brand-new institution cannot lean on history for.'
-  - 'The Academy team can update courses, faculty, terms, and enrollment status from a dashboard without involving a developer.'
-  - 'Pricing tiers and the scholarship process are published up front, with no "contact us for pricing" hedging.'
-designerNote: 'The hardest call on this one was pricing. Everybody told me to bury the numbers and make people call, but this audience is weighing a semester-long commitment, and they respect being given straight answers. Putting the tiers and the scholarship process out in the open drew the people who were actually ready to think about enrolling, which is worth far more than the leads you lose by showing the numbers early.'
+outcome: 'A new school with a front door that reads like its own catalog: clear courses, the people teaching them and an easy first step.'
+# No client quote yet. Add a real one here when it arrives (see
+# docs/PENDING.md), as a list item with quote, name, title and date.
+# Never invent it.
+# testimonials:
+#   - quote: ""
+#     name: ""
+#     title: ""
+#     date: YYYY-MM-DD
+designerNote: 'The hardest call on this one was pricing. Everybody told me to bury the numbers and make people call, but this audience is weighing a semester-long commitment, and they respect being given straight answers. So the rates and the scholarship note sit right in the issue, next to the courses they pay for.'
+cmsShot: ../../assets/case-studies/shots/presbyterian-academy-cms.png
+cmsShotAlt: 'The Sanity Studio home screen I built for The Presbyterian Academy, with tasks like opening a new term or adding a course'
+cmsName: 'Sanity Studio'
+hook: 'A term catalog, laid out like one'
+order: 3
+# Palette source: presacademy src/styles/globals.css (:root and .dark), unchanged
+# by the Term Issue redesign; the dark accent is decoration only, CTAs stay
+# #33503F. The Term Issue added IBM Plex Mono for course codes.
+palette:
+  paper: '#FAF8F4'
+  ink: '#1F1B18'
+  accent: '#33503F'
+  accentInk: '#FFFFFF'
+  dark:
+    paper: '#1E1A17'
+    ink: '#F1EAD9'
+    accent: '#74A98A'
+  typeface: 'Fraunces / Source Sans 3 / IBM Plex Mono'
+  swatches:
+    - '#FAF8F4'
+    - '#33503F'
+    - '#2A4233'
+    - '#A87C3E'
+    - '#7A2A2C'
+# The Signature band's still: the feature the hook names.
+featureShot: ../../assets/case-studies/shots/presbyterian-academy-feature-catalog.png
+featureShotAlt: 'The course catalog on presbyterianacademy.org: generated course covers, each with its course code, topic, teacher and the question the course asks'
+# The interaction clip for "The idea" band (overhaul 3.5): recorded from the
+# live site with `npm run capture:clips` on 2026-10-31. It replaces the
+# featureShot in that band only; re-run the script and paste the new src after
+# the client changes this feature.
+signatureClip:
+  src: /media/presbyterian-academy-catalog.cc1650d1
+  alt: 'Filtering the course catalog on presbyterianacademy.org by topic: ticking Reformed Theology and then Church History narrows the ten course covers to the four that match'
+mobileShot: ../../assets/case-studies/shots/presbyterian-academy-mobile.png
+# The rail's fact row (overhaul 2.4c), filled from the fields above.
+facts:
+  sector: School
+  year: '2026'
+  role: Designer, Developer
+  stack:
+    - Astro
+    - Sanity
+    - Tailwind
+    - Cloudflare Workers
+  host: presbyterianacademy.org
 ---
 
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
 import catalogShot from '../../assets/case-studies/shots/presbyterian-academy-feature-catalog.png';
-import facultyShot from '../../assets/case-studies/shots/presbyterian-academy-feature-faculty.png';
+import finderShot from '../../assets/case-studies/shots/presbyterian-academy-feature-finder.png';
+
+## The brief
+
+The Presbyterian Academy is a Reformed lay formation school, made possible by the Presbytery of Cincinnati. Its courses are in person and in cohorts, for elders, teachers, small-group leaders and anyone who wants to study Reformed theology seriously without pursuing ordination.
+
+A new school has a trust problem an established one does not. There is no alumni network to quote and no long history to point to. The site had to build credibility from what the Academy does have, its courses and the people teaching them, and it had to answer three questions in order: What is this? Is it for me? How do I start?
+
+## Decisions
+
+<Decision
+  title="Design it like the thing it is"
+  easy="A generic school template with hero photography of empty lecture halls."
+  did="I designed the site as a printed term catalog, the Term Issue: a cover for the term, a contents page, course codes, contributors, letters and rates, set in Fraunces, Source Sans 3 and IBM Plex Mono on warm paper with a deep forest green. The school is text-forward, so the site is too."
+/>
+
+<Decision
+  title="The prices, in the open"
+  easy="Bury the numbers and make people call."
+  did="Publish the rates and the scholarship note right in the issue. This audience is weighing a semester-long commitment, and they respect being given straight answers."
+/>
+
+<Decision
+  title="Help people pick a first course"
+  easy="A list of courses and a contact form, and leave the choosing to the visitor."
+  did="A course finder styled as a reply card: three quick questions about what you do at church, what you want most and how much you can take on, and it suggests one place to start."
+/>
+
+Every course gets a generated cover instead of stock photography: its code, its topic, its teacher and the one question the course is trying to answer. The covers are drawn from fields in the CMS, so a new course looks finished the moment it is published.
+
+The CMS runs on Sanity, built into the site at `/studio`, so the Academy team can update courses, faculty, terms and enrollment status, including marking a course open or waitlisted, without involving a developer.
+
+## What I built
+
+<FeatureHighlight
+  src={catalogShot}
+  alt="The Presbyterian Academy course catalog, with a generated cover for each course"
+  title="A catalog that answers 'is it for me?'"
+  body="Each course shows its code, topic, teacher, term, sessions and enrollment status at a glance, with the question it asks and what week one covers, and the catalog filters by topic or teacher. A visitor can size up the fit without emailing to ask."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={finderShot}
+  alt="The reply-card course finder on the Presbyterian Academy home page"
+  title="Three questions, one course"
+  body="The finder asks three things and suggests a single course to begin with, with its teacher and rate, and a button to express interest in it."
+  side="right"
+/>
+
+The full build, including the pieces above:
+
+- Home page laid out as the term's issue: a cover with the term and its first class, a note before you browse, contents, the courses, contributors, letters, rates, a free trial evening, group enrollment and a look at the next issue
+- A slim bar across the top of every page with the current term's dates and an invitation to visit a class free
+- Course catalog with filters by topic and teacher, and a page per course with an at-a-glance table, the sessions, who it is for and a syllabus
+- Faculty directory with a profile for every teacher
+- Rates and need-based scholarship information, presented without "contact for pricing" hedging
+- A course finder that suggests one place to start
+- Request-information and express-interest forms that post to the site's own endpoint on Cloudflare, checked by Turnstile, with every submission stored before the Academy is emailed
+- A back-cover footer with the Academy's details and an A to Z index of the site
+- Light and dark themes
+- Full Sanity CMS for courses, faculty, terms, events and site settings
+
+## Walk the homepage
 
 <SiteShowcase
   slug="presbyterian-academy"
@@ -58,51 +171,14 @@ import facultyShot from '../../assets/case-studies/shots/presbyterian-academy-fe
   label="presbyterianacademy.org"
 />
 
-## The brief
-
-The Presbyterian Academy is a Reformed lay formation school launched in 2026 by the Presbytery of Cincinnati. The mission is adult theological education in cohort form: semester-length in-person courses for people who want to study Reformed theology seriously but are not pursuing ordination. There is nothing quite like it in the region.
-
-They came to us with the name, the faculty, and a start date. The site needed to do three things before the first enrollment cycle closed: explain what the Academy is, establish that it is serious, and convert interested visitors into enrolled students or at minimum a scheduled intro call.
-
-## The approach
-
-Brand-new organizations have a trust problem that established ones do not. There is no press coverage to cite, no multi-year alumni network to quote, and no decades of institutional history to point to. The site had to build credibility from what actually existed: a compelling faculty roster, specific course descriptions, and pricing that did not hedge.
-
-We organized the architecture around three conversion questions in sequence. What is this? Is it for me? How do I start? Every page answers at least one of those. The homepage handles the first. The course catalog and faculty directory handle the second. The enrollment and contact pages handle the third.
-
-For the visual language, we landed on what we called bookish minimalism: warm near-white paper tones, near-black ink, deep forest green anchoring the palette, and brass hairlines as structural dividers. Display type in Fraunces paired with Source Sans 3 for body. No hero photography of empty lecture halls; the design is text-forward because the product is text-forward.
-
-The CMS runs on Sanity so the Academy team can update courses, faculty, terms, and enrollment status from a dashboard without involving a developer.
-
-## What we built
-
-<FeatureHighlight
-  src={catalogShot}
-  alt="The Presbyterian Academy course catalog"
-  title="A catalog that answers 'is it for me?'"
-  body="Every course shows its topic, teacher, term, and price at a glance, with an open or waitlist status, so a visitor can size up the fit without emailing to ask."
-  side="left"
+<ResultsBlock
+  items={[
+    'A new school has a front door that reads like its own term catalog: what the Academy is, every course and the people teaching it.',
+    'An interested visitor can size up the fit, get a suggested first course, then take a clear next step through a form, a free intro or a free class visit.',
+    'Every course has a cover and a page of its own, generated from the CMS, so a new course looks finished the day it is published.',
+    'The Academy team can update courses, faculty, terms and enrollment status from the Studio without involving a developer.',
+    'Rates and the scholarship note are published up front, with no "contact for pricing" hedging.',
+  ]}
 />
-
-<FeatureHighlight
-  src={facultyShot}
-  alt="The Presbyterian Academy faculty directory"
-  title="Credibility from the people teaching"
-  body="A full profile for every teacher, each an ordained minister or credentialed scholar, does the trust-building a brand-new school cannot lean on history for."
-  side="right"
-/>
-
-The full build, including the pieces above:
-
-- Course catalog with individual course pages, including a sticky enrollment-action aside on desktop so the sign-up path stays visible while visitors read the course description
-- Faculty directory with full biographical profiles, written to establish the weight of the teaching roster
-- Term listings showing enrollment periods with open/closed status and upcoming dates
-- Pricing tiers and need-based scholarship information, presented without "contact us for pricing" hedging, because the audience making a semester-long commitment deserves straight numbers
-- Testimonials section seeded from early cohort participants
-- Express interest form connected to Web3Forms for visitors who are ready to raise their hand
-- Calendly integration for intro call scheduling alongside the form
-- Homepage with a six-image Ken Burns slideshow hero that sets an academic, bookish tone without requiring event photography
-- Enrollment status live in the site header so every page shows whether the current term is open or closed
-- Full Sanity CMS for courses, faculty, terms, testimonials, and configuration
 
 <Lightbox />

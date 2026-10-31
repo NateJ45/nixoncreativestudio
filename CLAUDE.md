@@ -8,7 +8,7 @@ Reid Design is a separate business entity. Do not conflate it with Nixon Creativ
 
 **Rolled back 2026-10-09.** The EmDash CMS and server rendering (PRs #47 to #105) were rolled back to the static state of 7bca364: every page is prerendered and all content lives in this repo. Kept on top: the care plan pricing (#41; since replaced by the four care levels in `src/data/pricing.ts`, which match the client proposals), the sync-check resync (#89) and the GA4 hostname guard (#104). The EmDash history stays in git; `main` is the only branch.
 
-Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, shadcn/ui plus Starwind, React 19 islands. Full list: `docs/claude/stack.md`.
+Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, React 19 installed for the /photography gallery but rendered on no page while that page is gated (the site chrome is `.astro` plus small scripts; shadcn Button is the last shadcn primitive, no Radix). Full list: `docs/claude/stack.md`.
 
 ## How this file is organised
 
@@ -17,9 +17,10 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 ## Where things live
 
 - Case studies and journal entries: MDX in `src/content/case-studies/` and `src/content/journal/`, schemas in `src/content.config.ts`. Covers at `src/assets/case-studies/{slug}.png` (basename must match the slug).
-- Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts`.
+- Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts` (the one place a price lives; pages, FAQ, JSON-LD and `/llms.txt` read it).
+- Page titles, meta descriptions and JSON-LD: `.claude/rules/content.md` ("Metadata and structured data").
 - Pages: `src/pages/`; the shared shell (theme bootstrap, header, footer, meta, analytics, Coming Soon gate): `src/layouts/BaseLayout.astro`.
-- Brand tokens, theme and motion vocabulary: `src/styles/globals.css`. Security headers: `public/_headers`.
+- Type scale, brand and surface tokens, grid, theme and motion tokens: `src/styles/globals.css` (frozen after overhaul packages 1.5 and 1.7; rules in `.claude/rules/styling.md`). Security headers: `public/_headers`.
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.
 - Read the strategy doc (`docs/claude/strategy-and-audience.md`) before any design call.
 
@@ -37,15 +38,17 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 - `npm run build` = `prebuild` (`free-dist`) then `placeholders`, `og:pages`, `node scripts/with-workerd.mjs astro build` (the Windows workerd shim). `npm run check` = `astro check && npm run lint`. `npm run check:full` adds unit tests and the build.
 - `npm run lint`, `npm run format` / `format:check` (prettier, run it on md files too), `npm run test:unit` (`node --test`, import `.ts` with the extension).
 - `npm test` runs Playwright; its webServer builds and serves `dist/client` on 4321 (`npm run serve:dist`). `npm run test:ui` opens the UI.
+- `npm run test:copy` (after a build) is the copy lint: built pages may not say "we", "our" or "us" in body text, because site copy is first person singular (`tests/unit/copy-rules.test.mjs`; `<blockquote>` and `data-copy-ignore` are skipped).
 - `npm run check:links` runs linkinator over `dist/client` after a build (the log must say "scanned N links", N in the hundreds).
-- `npm run font-fallback` (writes `src/styles/font-fallbacks.css`, metric-matched stand-in for Bebas Neue named second in `--font-display`; rerun if the display font changes; reads `brand/brand.config.json`, which exists only for it), `npm run test:scripts` (`scripts/lib/*.test.mjs`, run by `test:unit`), `npm run sync-check`, `npm run free-dist`, `npm run placeholders`, `npm run og` / `og:pages` / `icons` (generators), `npm run parity capture|compare` (not in CI).
+- `npm run font-fallback` (writes `src/styles/font-fallbacks.css`, the metric-matched stand-in for Bricolage Grotesque named second in `--font-display`; reads `brand/brand.config.json`, which exists only for it; Bricolage needs `--file`, command in `.claude/rules/styling.md`; the Bebas wordmark's fallback is `src/styles/wordmark-fallback.css`), `npm run test:scripts` (`scripts/lib/*.test.mjs`, run by `test:unit`), `npm run sync-check`, `npm run free-dist`, `npm run placeholders`, `npm run og` / `og:pages` / `icons` (generators), `npm run parity capture|compare` (not in CI), `npm run capture:study <slug>` (re-shoots a case study's cover, full-page and mobile captures from its `liveUrl`; add `--wix` for a Wix site such as Orangeburg; look at every file before committing), `npm run capture:cms` (local only: shoots each CMS study's editor to `shots/{slug}-cms.png` for the "What you edit" band; Nathan signs in in the headed window, see `docs/claude/setup-checklist.md`), `npm run capture:clips -- <slug>` (local only, needs ffmpeg: records the silent interaction clip for a study's "The idea" band from its live site into `public/media/`, prints the `signatureClip` frontmatter and three check frames; look at every frame before committing), `node scripts/build-course-line.mjs` (local only: regenerates `src/data/stone-steps-course.ts` for the Stone Steps course line from the sibling stonesteps-50k repo; commit the output).
+- `node scripts/measure-live.mjs` (overhaul 4.7, CI only: the `live-scores.yml` workflow runs it monthly or by hand and opens a PR with `src/data/live-scores.json`; never run it for committed numbers from this PC, and never hand-edit the JSON).
 - Lighthouse: never trust a local `lhci autorun` on this Windows machine (Gotcha 9); read the CI run.
 
 ## Branches, CI and deploy
 
 - Production deploys from Cloudflare Workers Builds on a push to `main` (Worker `nixoncreativestudio`, assets from `dist/`). Other branches get a `*-nixoncreativestudio.nathanjnixon86.workers.dev` preview. The apex is canonical; `www` 301s to it.
 - `main` is the only branch. Short-lived branch, open a PR; the `main` ruleset requires PR plus green `build` and `test`. Undo with `git revert` or the Deployments tab rollback.
-- Hard gates: `astro check`, lint (0 errors), `prettier --check`, unit tests, sync-check, link check, Playwright (including `tests/page-weight.spec.ts`, budgets in `tests/page-weight.config.json`: raise one only with the reason in `_why`), Lighthouse accessibility = 1, LCP under 4.5s, CLS under 0.1. A format gate that only runs in CI has bitten this studio before: run prettier locally.
+- Hard gates: `astro check`, lint (0 errors), `prettier --check`, unit tests, sync-check, copy lint (`test:copy`), link check, Playwright (including `tests/page-weight.spec.ts`, budgets in `tests/page-weight.config.json`: raise one only with the reason in `_why`), Lighthouse accessibility = 1, LCP under 4.5s, CLS under 0.1. A format gate that only runs in CI has bitten this studio before: run prettier locally.
 - Details: `.claude/rules/testing-ci.md`, `docs/claude/deployment.md`, `docs/TESTING.md`, `docs/PENDING.md` (the open-patch queue; edit registries in the same commit as the thing they track).
 
 ## Never-break rules (each one cost real time)
@@ -54,10 +57,10 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 2. **Keep `imageService: 'compile'`** on the Cloudflare adapter: the runtime image service needs a binding this static deploy does not have, and covers stuck on their blur placeholder in production (`docs/claude/deployment.md`).
 3. **Nothing in the first viewport may start at opacity 0** (kills LCP, Gotcha 10). Reveals below the fold only, gated on `.js`.
 4. **Contact and identity strings come from `src/data/site.ts`**, never hardcoded in `.astro` files.
-5. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA in both themes and goes in `src/lib/theme-tokens.test.ts`. Heading emphasis is a solid token span, never gradient text. Accessibility stays at Lighthouse 100.
+5. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA in both themes and goes in the site-owned `src/lib/ncs-tokens.test.ts` (never the PORTABLE `theme-tokens.test.ts`). Heading emphasis is weight only (300 lead, `<b>` at 800), never a coloured span, capitals or gradient text. Accessibility stays at Lighthouse 100.
 6. **Template-expression comments are `{/* */}`**, never `<!-- -->` (breaks lint and format, Gotcha 1). A conditional `<script>` goes in its own component.
-7. **Page enhancement scripts** register on `astro:page-load` with a dataset re-bind guard; always render the real final value of a `data-countup` number as static text.
-8. **Radix-portal primitives hydrate with `client:only="react"`** (Sheet, Dialog, portalled DropdownMenu), or the page blanks on "Invalid hook call".
+7. **Page enhancement scripts** register on `astro:page-load` with a dataset re-bind guard. Numbers and prices are plain static text (the count-up was removed in overhaul 2.2).
+8. **The mobile nav works without JavaScript**: the menu button is a link to the footer nav (`#site-nav`), upgraded to a native `<dialog>` by `src/scripts/mobile-nav.ts`. Keep that id, and keep React off every page (`tests/no-react.spec.ts`; the /photography gallery may bring it back in package 4.6).
 9. **Never fabricate** a testimonial, result, metric or feature screenshot. Only real, live, attributed proof goes on the site.
 10. **Every `mailto:` keeps its fallback** (`src/scripts/mailto-fallback.ts`); a click that does nothing on a machine with no mail client is expected.
 11. **Keep the docs TRUE**: a new route updates `tests/routes.ts`; Colophon and Privacy text are tied to the code and hosting.
@@ -74,8 +77,8 @@ Path-scoped rules (load automatically when you touch matching files):
 
 - `.claude/rules/homepage-and-pages.md`: homepage section order and what each section does (`src/pages`, `src/components`).
 - `.claude/rules/content.md`: site data, `mailto` fallback, the three collections and their frontmatter, routes table (`src/content`, `src/data`, `src/pages`).
-- `.claude/rules/styling.md`: brand colors, shadcn mapping, theme system, motion vocabulary, typography.
-- `.claude/rules/components.md`: component order of preference, Button variants, `client:only`, studio components, code conventions, images.
+- `.claude/rules/styling.md`: type (Bricolage headings, Bebas wordmark only, weight as emphasis), brand and surface tokens, `.band-ink`, `.page-grid`, shadcn mapping, theme system, motion tokens.
+- `.claude/rules/components.md`: component order of preference, Button variants, no-JS chrome, studio components, code conventions, images.
 - `.claude/rules/accessibility.md`: AA target, required patterns, token contrast, before-merging checks.
 - `.claude/rules/build-pipeline.md`: `npm run build` chain, placeholders, OG cards, icons.
 - `.claude/rules/testing-ci.md`: every test suite, lint and format, CI, Lighthouse, uptime and Dependabot workflows, parity harness, sync-check.
@@ -90,7 +93,7 @@ Reference docs, read when needed (`docs/claude/`):
 - `working-style.md`: full communication-style text.
 - `strategy-and-audience.md`: read before any design or copy call (points at `NCS-Website-Strategy.docx` in the sibling `Nixon Creative Studio Website` folder).
 
-Existing docs: `docs/PENDING.md`, `docs/TESTING.md`, `docs/agent/component-sources.md` (where to pull components from), `docs/stack-template/` (new-site runbook), `PRODUCT.md`, `src/components/primereact/README.md`. Slash commands: `.claude/commands/rebuild.md`, `.claude/commands/visual-verify.md`.
+Existing docs: `docs/PENDING.md`, `docs/TESTING.md`, `docs/agent/component-sources.md` (where to pull components from), `docs/stack-template/` (new-site runbook), `PRODUCT.md`. Slash commands: `.claude/commands/rebuild.md`, `.claude/commands/visual-verify.md`.
 
 ## Gotcha index (full text: `docs/claude/gotchas.md`)
 

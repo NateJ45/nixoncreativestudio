@@ -4,10 +4,26 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/first-baptist-muncie.png
-# with a real photo when one is available. Current file is a placeholder.
+# This study covers the 2026 rebuild (Astro + Sanity + Cloudflare Workers),
+# live on www.fbcmuncie.org since 2026-10-19 (overhaul 2.4d, Nathan's sign-off
+# 2026-10-31: "FBCM is astro now"). The earlier site was the Wix site I built
+# for the church. The two testimonials (March 2025) were written during the
+# Wix relaunch; Nathan confirmed 2026-10-31 they apply to the new site too.
 #
-# NOTE: Verify the year — this may be from 2022 or 2023. Check with Nathan.
+# Sources for every claim in the prose: the fbcm repo (README.md, PRODUCT.md,
+# DESIGN.md, src/styles/globals.css) and the live site itself (/, /visit,
+# /ministries, /kids-corner, /youth-news, /history, /architecture, /blog,
+# /events, /wedding), read 2026-10-31. Check there before changing one.
+#
+# Captures: the cover, shots/*-home.png and shots/*-mobile.png come from
+# `npm run capture:study first-baptist-muncie` (2026-10-31). The three
+# shots/*-feature-*.png files are hand crops of the live /visit, /history and
+# /architecture pages at 1440 x 900 (2026-10-31). shots/*-before.png is the
+# Wix home page, captured 2026-06-21 while Wix was still live (it was the
+# cover until overhaul 1.6). It cannot be re-captured, so never delete it.
+#
+# `published` stays 2023-11-01 and `order` stays 7, so the study keeps its
+# place in the /work order (Nathan's decision 9, 2026-10-30: keep the order).
 title: First Baptist Church Muncie
 client: First Baptist Church Muncie
 sector: church
@@ -17,36 +33,160 @@ services:
 role: Designer, Developer
 tags:
   - Church
-  - Wix
-  - ChurchCenter
-  - Multi-ministry
+  - Sanity
+  - Content Migration
+  - Historic Building
 stack:
-  - Wix
-  - ChurchCenter
-summary: A full church website for a multigenerational Baptist congregation in Indiana that organized active children, youth, and adult ministries under one clear digital roof.
+  - Astro
+  - Sanity
+  - Cloudflare Workers
+  - Cloudflare R2
+  - Pagefind
+summary: 'A rebuild for a historic Baptist church in Muncie, Indiana: from Wix to Astro and Sanity, with every old post kept at its address and pages the staff can edit themselves.'
+metaDescription: "How I rebuilt First Baptist Church Muncie's Wix site on Astro and Sanity: a clear first Sunday, its history and building, and pages the staff edit."
 cover: ../../assets/case-studies/first-baptist-muncie.png
-year: 2023
+year: 2026
 featured: false
 published: 2023-11-01
+updated: 2026-10-19
 liveUrl: https://www.fbcmuncie.org
-outcome: 'Active children, youth, and adult ministries each given a clear home of their own.'
-# Add a real client quote here when you have one, then uncomment. Never invent it.
-# testimonial:
-#   quote: ""
-#   name: ""
-#   title: ""
-results:
-  - "Children, youth, and adult ministries each have a clear home of their own, written for that group's specific needs."
-  - "The children's and youth newsletters now have their own communication channel instead of competing with general church announcements for attention."
-  - 'ChurchCenter runs the operational layer (calendar, giving, resources) that would otherwise need custom development to maintain.'
+outcome: "The church's pages, posts and photos in one place the staff can edit, live on fbcmuncie.org since October 2026."
+# Real client words, copied verbatim from their email (vault note
+# projects/ncs-testimonials.md). Never edit or paraphrase a quote.
+testimonials:
+  - quote: "Nathan helped our website go from concepts and ideas to reality. We came to him with ideas: a scrollable time-line for church history, incorporation of our photos of church events with a consistent color scheme, embedded PDFs of our church quarterly — and he made it all happen. Nathan was responsive, resourceful, and reliable. If you're looking for someone to help you design a website, church or otherwise, you won't regret working with him."
+    name: 'Jonathan Balmer'
+    title: 'Co-Pastor, First Baptist Church Muncie'
+    date: 2025-03-09
+  - quote: "The idea of recreating our church's website felt daunting and overwhelming to me. But Nathan made navigating the process as easy and stress-free as possible. He communicates clearly, works fast, and has a high attention to detail. Much to my surprise, Nathan actually made the website relaunch a fun and exciting time for our church!"
+    name: 'Kendall Ellis, M.Div., MSW'
+    title: 'Co-Pastor, First Baptist Church (Muncie)'
+    date: 2025-03-12
 designerNote: "Splitting the children's and youth newsletters apart looked like a tiny structural call, but it was the right one. A children's update that mixes in adult education news is one nobody reads closely. Giving each program its own voice made every newsletter shorter, more targeted, and more likely to be opened by the family it was written for."
+cmsShot: ../../assets/case-studies/shots/first-baptist-muncie-cms.png
+cmsShotAlt: 'The Sanity Studio home screen I built for First Baptist Church Muncie, with tasks like writing a blog post or changing the service time'
+cmsName: 'Sanity Studio'
+hook: 'A first Sunday laid out in order, from the front door to worship'
+order: 7
+# Palette source: fbcm src/styles/globals.css on main (--color-bg, --foreground,
+# --color-indigo, --color-gold, --color-brown) and DESIGN.md, checked against
+# the live site's computed styles 2026-10-31. Light only since 2026-09-24, so
+# no `dark`; markDark is its Gold. Typeface: Castoro Titling (headings),
+# Castoro (body) and Sofia Sans Semi Condensed (labels), all three loaded live.
+palette:
+  paper: '#F4EFE6'
+  ink: '#17151F'
+  accent: '#292854'
+  accentInk: '#F4EFE6'
+  markDark: '#D59B29'
+  typeface: 'Castoro Titling / Castoro / Sofia Sans Semi Condensed'
+  swatches:
+    - '#F4EFE6'
+    - '#292854'
+    - '#D59B29'
+    - '#39251E'
+    - '#17151F'
+# The Signature band's still: the feature the hook names (the /visit page).
+featureShot: ../../assets/case-studies/shots/first-baptist-muncie-feature-visit.png
+featureShotAlt: 'The Plan a visit page on fbcmuncie.org: "How the morning runs", numbered steps from check-in to Sunday school, each in an arched photo frame with its room number'
+mobileShot: ../../assets/case-studies/shots/first-baptist-muncie-mobile.png
+beforeShot: ../../assets/case-studies/shots/first-baptist-muncie-before.png
+# The rail's fact row (overhaul 2.4c), filled from the fields above.
+facts:
+  sector: Church
+  year: '2026'
+  role: Designer, Developer
+  stack:
+    - Astro
+    - Sanity
+    - Cloudflare Workers
+    - Cloudflare R2
+    - Pagefind
+  host: fbcmuncie.org
 ---
 
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
+import BeforeAfter from '../../components/BeforeAfter.astro';
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
-import ministriesShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-ministries.png';
-import architectureShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-architecture.png';
+import historyShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-history.png';
+import buildingShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-building.png';
+import beforeShot from '../../assets/case-studies/shots/first-baptist-muncie-before.png';
+import afterShot from '../../assets/case-studies/first-baptist-muncie.png';
+
+## The brief
+
+First Baptist Church Muncie was founded in 1859 and meets at 309 East Adams Street, in a Late Gothic Revival building completed in 1929 and on the National Register of Historic Places since 1988. I had built the church's earlier website on Wix. This time the job was a full rebuild onto Astro, Sanity and Cloudflare Workers.
+
+The new site had a few jobs, in order. Make a first visit easy. Help people find the church's people and ministries. Keep the church's history and every one of its blog posts. And let the staff edit the pages themselves, without a site builder in the way.
+
+## Decisions
+
+<Decision
+  title="Open on this Sunday"
+  easy="Open the home page on a welcome line and a row of buttons, the way the old site did."
+  did="Open on this Sunday itself: the date, the sermon title and its passage, the service time, the address and a Watch live link, with What to Expect right below."
+/>
+
+<Decision
+  title="Keep every old address"
+  easy="Start the blog fresh, or bring across only the recent posts."
+  did="Move all 142 blog posts into Sanity at their original /post/ addresses, along with the staff, the ministries, the photo library and the core pages."
+/>
+
+<Decision
+  title="Let the building be the identity"
+  easy="A clean, generic church template."
+  did="Draw the look from the church itself: the lancet window and the Adams Street door as photo frames, line glyphs from the sanctuary, and the five logo colours as accents on warm paper and ink."
+/>
+
+The content lives in Sanity, and the Studio is built into the site at /studio. An editor picks a page, sees it as visitors will, and changes the words or the sections right there, with a live preview of the draft before it goes out.
+
+## What I built
+
+<FeatureHighlight
+  src={historyShot}
+  alt="The Our History page on fbcmuncie.org: 1859 to 2026, with archive photographs in arched frames and a bar of era dates to jump between"
+  title="The church's history, era by era"
+  body="The story runs from the founding in 1859 to today in named eras, with a bar of dates that jumps straight to each one and the church's own archive photographs."
+  side="left"
+/>
+
+<FeatureHighlight
+  src={buildingShot}
+  alt="Four things to look for on the Our Building page: the tower, the stained glass, the nave and the entry arch, each in an arched frame"
+  title="The 1929 building, given its own page"
+  body="The architecture page covers the building's designers, its Indiana limestone and how it was built, then points out four things to look for when you visit."
+  side="right"
+/>
+
+The full build, including the pieces above:
+
+- A home page that opens on this Sunday, with a slideshow of up to twelve photographs of the church that holds still for anyone who prefers reduced motion
+- A Plan a visit page that walks through the morning in order, from check-in to Sunday school, the donut hour and worship, with room numbers
+- A Ministries page for children, youth and adults, plus the children's newsletter (The Kid's Corner) and the youth newsletter (The Moose's Message) as pages of their own
+- The church's history from 1859 to today, and an architecture page for the building
+- A blog of sermon previews, news and longer pieces from the pastors, filterable by category and by Bible passage
+- A What's On page of events, classes and gatherings, and a weddings page
+- The church's PDFs fetched from Sanity once and served from Cloudflare R2
+- An in-site search that loads only when someone opens it
+- Sanity Studio built in at /studio, where every page is made of sections the staff can add, reorder or remove
+- Type checks, linting, link checks, Playwright with axe accessibility runs, and Lighthouse on every change
+
+## Before and after
+
+<BeforeAfter
+  before={beforeShot}
+  after={afterShot}
+  beforeAlt="The earlier First Baptist Church Muncie home page on Wix"
+  afterAlt="The rebuilt First Baptist Church Muncie home page"
+  beforePlatform="Wix"
+  afterPlatform="Astro"
+/>
+
+## Walk the homepage
 
 <SiteShowcase
   slug="first-baptist-muncie"
@@ -55,50 +195,12 @@ import architectureShot from '../../assets/case-studies/shots/first-baptist-munc
   label="fbcmuncie.org"
 />
 
-## The brief
-
-First Baptist Church in Muncie, Indiana is an active, multigenerational congregation at 309 East Adams Street. Sunday worship draws families with young children, teenagers in their own active youth program, and adults across a wide age range, all with different information needs and different reasons for visiting the website.
-
-The church had a lot going on: regular worship, children and youth ministries with their own communication cadences, an adult education program, outreach initiatives, a historic building with notable architecture, and an active giving program. The challenge was that none of it was organized for someone who arrived at the site for the first time and did not know where to look.
-
-## The approach
-
-A congregation this size with this much programming needs clear ministry-lane navigation. Lumping children, youth, and adult ministry together under one broad "Ministry" header works only if each sub-section has enough depth to be useful. We built it so each program area has its own page with the information specific to that group, not a paragraph that links somewhere else.
-
-For the operational backbone, ChurchCenter handles the event calendar, online giving, and resource distribution. This is the right call for a congregation that was already using Planning Center for internal coordination. The website links into ChurchCenter cleanly so members go to one familiar platform for events and giving, while the website itself stays focused on the discovery and information side.
-
-We built a separate newsletter structure for children and youth rather than a single all-church newsletter. Family ministry moves at a different pace than general congregational communication. A parent of a second grader does not need to read the adult education schedule to find the children's ministry update they are looking for. Separating those publications meant each one could be written for its actual audience rather than a catch-all.
-
-The church's building is a notable one, and the Building section reflects that. Architecture information, accessibility details, and a weddings page sit alongside the facility reservation system for organizations wanting to use the space.
-
-## What we built
-
-<FeatureHighlight
-  src={ministriesShot}
-  alt="The children's ministry page on the First Baptist Muncie site"
-  title="A clear home for every ministry"
-  body="Children, youth, adult, and outreach each get their own page written for that group, so a parent finds the children's ministry without wading through the adult education schedule."
-  side="left"
+<ResultsBlock
+  items={[
+    "Every one of the church's blog posts kept its original address, so an old link still lands on the right post.",
+    'The staff edit the pages themselves in Sanity Studio, with a live preview, instead of working inside a site builder.',
+    'A first-time visitor can see the time, the place and how the morning runs before they arrive.',
+  ]}
 />
-
-<FeatureHighlight
-  src={architectureShot}
-  alt="The architecture page covering First Baptist Muncie's historic building"
-  title="The historic building, given its due"
-  body="The congregation's Gothic Revival building, on the National Register, gets a real section, architecture, accessibility, weddings, and a facility reservation system, alongside the ministry pages."
-  side="right"
-/>
-
-The full build, including the pieces above:
-
-- Worship information page with Sunday service times and online viewing option via YouTube livestream
-- Full About section covering beliefs, Baptist heritage, membership path, church history, and pastor biographies
-- Ministry section with dedicated pages for worship, children, youth, adult programs, and outreach
-- Children's newsletter and youth newsletter as separate publications with their own content cadences
-- Sermon archive accessible through ChurchCenter, with podcast versions on Spotify and YouTube
-- Church app information page for members who prefer mobile-first access
-- ChurchCenter integration for event calendar, online giving, and resource access
-- Building section covering architecture, accessibility information, a weddings page, and a facility reservation system
-- Contact page and links to Facebook, Instagram, Threads, and YouTube
 
 <Lightbox />

@@ -18,6 +18,10 @@ const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './tests',
+  // tests/unit holds node --test suites (npm run test:copy), not Playwright specs.
+  // Visual baselines (overhaul 4.3) are Linux-only: visual.yml runs them through
+  // playwright.visual.config.ts, never `npm test`.
+  testIgnore: ['**/unit/**', '**/visual.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -28,8 +32,8 @@ export default defineConfig({
   },
   // Chromium runs everything. A real WebKit iPhone profile runs the
   // viewport-agnostic suites (smoke, both axe sweeps, reduced-motion): Safari's engine finds
-  // layout and JS issues Chromium never will, and the WebGL hero, Lenis and
-  // Embla islands are exactly the kind of client code that behaves differently
+  // layout and JS issues Chromium never will, and the WebGL hero and the
+  // React islands are exactly the kind of client code that behaves differently
   // there. reflow.spec.ts drives its own explicit viewport widths
   // (320/768/1024/1440), which fights device emulation, so it is chromium-only.
   projects: [
@@ -46,6 +50,8 @@ export default defineConfig({
     command: 'npm run build && npm run serve:dist',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    // A cold build encodes every image as AVIF and WebP (overhaul 4.4): about two
+    // minutes on a CI runner before the image cache is warm, so allow five.
+    timeout: 300_000,
   },
 });

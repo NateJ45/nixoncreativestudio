@@ -1,85 +1,176 @@
 ---
 // Safe to edit.
 /* ============================================================================
-   ResultsBlock
+   ResultsBlock: "What changed", a ruled ledger (restyled in overhaul 2.4b)
    ============================================================================
-   A scannable "What changed" outcomes list for a case study, rendered from the
-   `results` frontmatter array. It replaces the old prose "The result" section:
-   a busy reader (a board member, a pastor, a shop owner) gets the real outcomes
-   at a glance instead of mining a paragraph.
+   The outcomes of a case study as a ledger: one hairline-ruled row per
+   change. Two kinds of row, and the difference is the source:
 
-   HONESTY: only list changes the case study's own prose supports. Never invent a
-   metric or an outcome. These lines were drafted from each study's existing
-   "The result" / outcome copy and honesty-checked before they were wired in.
+   1. A plain sentence (a string). Set as body text on its own ruled line.
+      This is every row today: `results:` in the study's frontmatter is a
+      list of short, real outcomes drafted from the study's own prose.
 
-   Rendered by src/pages/work/[slug].astro (outside the prose container, so it
-   carries its own clean styling). To edit the points, edit `results:` in the
-   case study's frontmatter.
+   2. A sourced figure ({ figure, text, source }). Only a figure that names
+      where it came from is set at display size, with the source in mono
+      under it. A figure without a `source` is shown as a plain sentence
+      instead ("figure text"), never at display size, so a number can only
+      look like a headline once someone can check it.
+
+   HONESTY (CLAUDE.md never-break rule 9): never invent a metric or an
+   outcome. A figure here must come from the study's own sourced prose, the
+   client note, or the client's repo, and `source` says which in words a
+   reader can follow ("RunSignUp and the race's archived results pages").
+
+   Props:
+     changes  the original prop: a list of plain sentences (still works)
+     items    the new prop: sentences and sourced figures, in order
+     title    the heading, "What changed" by default
+     id       the heading id (for aria-labelledby and chapter anchors)
+
+   Rendered by src/pages/work/[slug].astro from `results:`. Renders nothing
+   when there is nothing to show.
    ============================================================================ */
+
+/** One row of the ledger: a sentence, or a figure that names its source. */
+export type ResultItem =
+  | string
+  | {
+      /** The number as it should read, e.g. "2,188". */
+      figure: string;
+      /** What the number counts, e.g. "finishes, 2003 to 2025". */
+      text: string;
+      /** Where it comes from. Without it, the row is a plain sentence. */
+      source?: string;
+    };
+
 interface Props {
-  /** The "what changed" lines, each a short real outcome. */
-  changes: string[];
+  /** The "what changed" lines, each a short real outcome (original prop). */
+  changes?: string[];
+  /** Sentences and sourced figures, in order (2.4b). Shown after `changes`. */
+  items?: ResultItem[];
   /** Section heading; defaults to "What changed". */
   title?: string;
+  /** Heading id. Change it if two ledgers ever share a page. */
+  id?: string;
 }
-const { changes, title = 'What changed' } = Astro.props;
+
+const { changes = [], items = [], title = 'What changed', id = 'ncs-results-title' } = Astro.props;
+
+// One list, normalised: a figure only stays a figure when it has a source.
+type Row =
+  | { kind: 'sentence'; text: string }
+  | { kind: 'figure'; figure: string; text: string; source: string };
+const rows: Row[] = [...changes, ...items].map((item) => {
+  if (typeof item === 'string') return { kind: 'sentence', text: item };
+  const source = item.source?.trim();
+  return source
+    ? { kind: 'figure', figure: item.figure, text: item.text, source }
+    : { kind: 'sentence', text: `${item.figure} ${item.text}` };
+});
+const figures = rows.filter((r) => r.kind === 'figure');
+const sentences = rows.filter((r) => r.kind === 'sentence');
 ---
 
-<section class="ncs-results" aria-labelledby="ncs-results-title" data-reveal>
-  <h2 id="ncs-results-title">{title}</h2>
-  <ul class="ncs-results-list" role="list">
-    {changes.map((change) => (
-      <li>
-        {/* Checkmark marks an achieved change. Decorative; the text carries it. */}
-        <svg
-          viewBox="0 0 24 24"
-          width="22"
-          height="22"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-        <span>{change}</span>
-      </li>
-    ))}
-  </ul>
-</section>
+{rows.length > 0 && (
+  <section class="ncs-results" aria-labelledby={id} data-reveal>
+    <h2 id={id}>{title}</h2>
+
+    {/* Sourced figures first, in a row of their own at display size. */}
+    {figures.length > 0 && (
+      <dl class="ncs-results-figures">
+        {figures.map(
+          (row) =>
+            row.kind === 'figure' && (
+              <div class="ncs-results-figure">
+                <dt class="ncs-results-number">{row.figure}</dt>
+                <dd class="ncs-results-label">{row.text}</dd>
+                <dd class="ncs-results-source">Source: {row.source}</dd>
+              </div>
+            ),
+        )}
+      </dl>
+    )}
+
+    {/* Then the plain sentences, each on its own ruled line. */}
+    {sentences.length > 0 && (
+      <ul class="ncs-results-list" role="list">
+        {sentences.map((row) => row.kind === 'sentence' && <li>{row.text}</li>)}
+      </ul>
+    )}
+  </section>
+)}
 
 <style>
   .ncs-results {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
   }
   .ncs-results h2 {
-    font-size: var(--text-h3, 1.75rem);
-    color: var(--color-heading);
     margin: 0;
   }
+
+  /* The figures: a ruled row of up to three, each a big light number with
+     its label and source under it. Weight carries it, never colour. */
+  .ncs-results-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    margin: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .ncs-results-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 1.25rem 1.25rem 1.25rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ncs-results-number {
+    font-family: var(--font-display);
+    font-size: var(--text-h2);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--heading);
+  }
+  .ncs-results-label {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--foreground);
+  }
+  .ncs-results-source {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--muted-foreground);
+  }
+
+  /* The sentences: no checkmarks, no bullets, just rules. The top rule is
+     the strong one (the ledger's head), the rest are quiet hairlines. */
   .ncs-results-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
+    border-top: 1px solid var(--line-strong);
   }
   .ncs-results-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    line-height: 1.55;
-    color: var(--color-text);
+    margin: 0;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--line);
     font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--foreground);
   }
-  .ncs-results-list svg {
-    flex: none;
-    margin-top: 0.15rem;
-    color: var(--color-link);
+
+  @media (forced-colors: active) {
+    .ncs-results-figures,
+    .ncs-results-list,
+    .ncs-results-figure,
+    .ncs-results-list li {
+      border-color: CanvasText;
+    }
   }
 </style>

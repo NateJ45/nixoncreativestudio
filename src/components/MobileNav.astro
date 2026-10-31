@@ -1,0 +1,343 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   MobileNav
+   ============================================================================
+   The small-viewport navigation, below md (768px). Works without JavaScript
+   (overhaul ruling 5):
+
+   - The menu button is a real link to #site-nav, the Studio nav in the
+     footer. With no JS a tap jumps there, so every page stays reachable.
+   - The script upgrades it: a click opens the full-screen sheet below, a
+     native <dialog> shown with showModal(). The browser gives the modal its
+     inert background and Escape to close; the script adds a Tab wrap so focus
+     never leaves the sheet, returns focus to the menu button on close, locks
+     page scroll, and closes the sheet on astro:before-swap so a View
+     Transitions navigation never carries an open modal onto the next page.
+
+   The look (overhaul package 2.1, drawer since 4.10): a drawer on paper that
+   slides in from the right edge over a navy scrim, leaving a strip of scrim
+   on the left on a phone (a tap there closes it, like Escape). Paper is the
+   light surface in light mode and ink navy in dark (--paper is navy in the
+   dark theme), so a hairline marks the drawer's edge. Only the drawer moves:
+   the page behind never shifts or transforms (that would break the sticky
+   rail and View Transitions). The links are big Bricolage at weight 300; the
+   current page is at 800, the weight being the cue (plus aria-current). No
+   weight ripple on open (ruling 9). The bottom holds the pill CTA, the email,
+   the theme toggle, the Pause motion switch, and the amber "Booking projects"
+   dot when site.bookingOpen is true. Every control is a 44px target.
+
+   Rendered inside Header.astro, which passes the same nav list the desktop
+   header shows (src/data/nav.ts), so the two never drift.
+   ============================================================================ */
+
+import ChromeIcon from './ChromeIcon.astro';
+import MotionToggle from './MotionToggle.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { buttonVariants } from './ui/button';
+import { site } from '../data/site';
+import type { NavLink } from '../data/nav';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  /** The primary nav from src/data/nav.ts (getNav), passed down by Header. */
+  links: NavLink[];
+  /** The dialog's accessible name, shown as the wordmark in its top bar. */
+  studioName: string;
+}
+
+const { links, studioName } = Astro.props;
+
+// The email may break only after the "@" in a narrow drawer, so it reads
+// "nathan@" / "nixoncreativestudio.com" and never splits the domain.
+// Built as one string so no whitespace can creep in around the <wbr>. The
+// address is a constant from site.ts, not visitor input.
+const [emailUser, emailDomain] = site.email.split('@');
+const emailHtml = `${emailUser}@<wbr>${emailDomain}`;
+
+// Active route, worked out at build time (each page renders its own header).
+const path = Astro.url.pathname.replace(/\/+$/, '');
+const isActive = (href: string): boolean => {
+  const h = href.replace(/\/+$/, '');
+  if (h === '') return path === '';
+  return path === h || path.startsWith(`${h}/`);
+};
+
+// Stagger for the entrance: rows follow the drawer in 70ms apart (the motion
+// system's step), capped at six steps so a long list never trails.
+const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
+---
+
+{/* The trigger. A plain link to the footer nav until the script upgrades it. */}
+<a
+  href="#site-nav"
+  data-mnav-open
+  aria-label="Open menu"
+  class={cn(
+    buttonVariants({ variant: 'ghost', size: 'icon-lg' }),
+    'mobile-trigger size-11 text-heading',
+  )}
+>
+  <ChromeIcon name="menu" class="size-6" />
+</a>
+
+<dialog
+  id="mobile-nav"
+  data-mnav
+  aria-labelledby="mnav-title"
+  aria-describedby="mnav-desc"
+  class="mnav-dialog bg-paper p-0 text-text"
+>
+  <div class="mnav-shell flex min-h-full flex-col">
+    {/* Top bar: the Bebas wordmark (the dialog's accessible name) and close. */}
+    <div class="flex items-center justify-between gap-m">
+      <h2
+        id="mnav-title"
+        class="font-wordmark text-xl font-normal tracking-[0.02em] whitespace-nowrap text-heading sm:text-2xl"
+      >
+        {studioName}
+      </h2>
+      <p id="mnav-desc" class="sr-only">
+        Site navigation, contact details, and display options.
+      </p>
+      <button
+        type="button"
+        data-mnav-close
+        aria-label="Close menu"
+        class={cn(
+          buttonVariants({ variant: 'ghost', size: 'icon-lg' }),
+          'size-11 text-heading hover:text-link',
+        )}
+      >
+        <ChromeIcon name="x" class="size-6" />
+      </button>
+    </div>
+
+    {/* The links: big and light, the current page heavy. */}
+    <nav aria-label="Mobile primary" class="mt-l">
+      <ul class="flex flex-col">
+        {links.map(({ label, href }, i) => {
+          const active = isActive(href);
+          return (
+            <li class="mnav-item" style={delay(i + 1)}>
+              <a
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                class:list={['mnav-link font-display text-heading', { 'is-active': active }]}
+              >
+                {label}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+
+    {/* The bottom block. mt-auto pins it to the foot of the sheet when the
+        links are shorter than the viewport. */}
+    <div class="mnav-item mt-auto flex flex-col gap-s pt-l" style={delay(links.length + 1)}>
+      <a
+        href="/contact/"
+        class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'w-full rounded-full')}
+      >
+        Start a project
+      </a>
+
+      {/* The email from site.ts. A plain mailto, so the site-wide fallback
+          (src/scripts/mailto-fallback.ts) copies it when no mail app opens. */}
+      <a href={site.emailHref} class="mnav-email text-link" set:html={emailHtml} />
+
+      {site.bookingOpen && (
+        <p class="flex items-center gap-s text-sm text-text-muted">
+          <span class="mnav-live" aria-hidden="true" />
+          Booking projects
+        </p>
+      )}
+
+      <div class="flex flex-wrap items-center justify-between gap-s border-t border-line pt-s">
+        <MotionToggle />
+        <ThemeToggle class="size-11" />
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  /* The drawer: pinned to the right edge, full height. The UA dialog box
+     (centred, max size, border) is reset. It stops 3.5rem short of the left
+     edge on a phone so a strip of scrim stays visible to tap, and caps at
+     26rem on a tablet. The hairline on its open edge is --line-strong because
+     in dark mode the drawer and the page are the same navy. */
+  .mnav-dialog {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(100% - 3.5rem, 26rem);
+    max-width: none;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border: 0;
+    border-inline-start: 1px solid var(--line-strong);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* The scrim: ink at 55%, so the page dims but stays recognisable behind. A
+     tap on it closes the drawer (src/scripts/mobile-nav.ts). Nothing on the
+     page itself moves or transforms. */
+  .mnav-dialog::backdrop {
+    background: color-mix(in srgb, var(--ink) 55%, transparent);
+  }
+  /* The page behind does not scroll while the sheet is open. */
+  :global(html:has(dialog[data-mnav][open])) {
+    overflow: hidden;
+  }
+
+  /* Padding carries the safe-area insets so the wordmark and close button
+     clear the notch and the bottom block clears the home indicator under
+     viewport-fit=cover. env() is 0 elsewhere. */
+  .mnav-shell {
+    padding-top: calc(var(--spacing-m) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--spacing-l) + env(safe-area-inset-bottom));
+    padding-left: calc(var(--spacing-m) + env(safe-area-inset-left));
+    padding-right: calc(var(--spacing-m) + env(safe-area-inset-right));
+  }
+  /* From sm the drawer is wide enough for the roomier side padding. Below it
+     the slimmer padding keeps the wordmark on one line beside Close and the
+     email domain whole. */
+  @media (min-width: 40rem) {
+    .mnav-shell {
+      padding-left: calc(var(--spacing-l) + env(safe-area-inset-left));
+      padding-right: calc(var(--spacing-l) + env(safe-area-inset-right));
+    }
+  }
+
+  /* The big links. Bricolage 300; the current page 800. Hover and focus
+     draw an underline, so the cue is never colour alone. */
+  .mnav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: 0.2rem;
+    font-size: clamp(2.5rem, 11vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    text-decoration: none;
+  }
+  .mnav-link.is-active {
+    font-weight: 800;
+  }
+  .mnav-link:hover,
+  .mnav-link:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+  }
+  .mnav-link:focus-visible,
+  .mnav-email:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  .mnav-email {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    width: fit-content;
+    max-width: 100%;
+    text-decoration: none;
+  }
+  .mnav-email:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* The amber "Booking projects" dot. Amber means live and nothing else. */
+  .mnav-live {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-live);
+  }
+
+  /* Motion (overhaul 4.10). Opening: the drawer slides in from the right
+     edge (--dur-settle on --ease-settle) while the scrim fades up, and the
+     rows settle in from 8px to the right, 70ms apart. Closing: the drawer
+     slides back out and the scrim fades (--dur-quick on --ease-exit). Only
+     the drawer moves; weight never animates here (ruling 9).
+
+     It is all CSS transitions on the dialog's own [open] state:
+     @starting-style gives the first frame after showModal(), and
+     `display` / `overlay` with allow-discrete keep the dialog in the top
+     layer until the close has played. A browser without those features
+     simply opens and closes at once.
+
+     Every rule sits inside no-preference and skips html[data-motion-paused],
+     so under reduced motion or Pause motion the drawer is just there, and
+     gone, with no slide and no stagger. */
+  @keyframes mnav-in {
+    from {
+      opacity: 0;
+      translate: 8px 0;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    /* Closed (and closing): off to the right, timed for the exit. */
+    :global(html:not([data-motion-paused])) .mnav-dialog {
+      translate: 100% 0;
+      transition:
+        translate var(--dur-quick) var(--ease-exit),
+        display var(--dur-quick) allow-discrete,
+        overlay var(--dur-quick) allow-discrete;
+    }
+    :global(html:not([data-motion-paused])) .mnav-dialog::backdrop {
+      opacity: 0;
+      transition:
+        opacity var(--dur-quick) var(--ease-exit),
+        display var(--dur-quick) allow-discrete,
+        overlay var(--dur-quick) allow-discrete;
+    }
+    /* Open: in place, timed for the entrance. */
+    :global(html:not([data-motion-paused])) .mnav-dialog[open] {
+      translate: 0 0;
+      transition:
+        translate var(--dur-settle) var(--ease-settle),
+        display var(--dur-settle) allow-discrete,
+        overlay var(--dur-settle) allow-discrete;
+    }
+    :global(html:not([data-motion-paused])) .mnav-dialog[open]::backdrop {
+      opacity: 1;
+      transition:
+        opacity var(--dur-settle) var(--ease-settle),
+        display var(--dur-settle) allow-discrete,
+        overlay var(--dur-settle) allow-discrete;
+    }
+    /* The rows replay each time the drawer opens (display none to block
+       restarts an animation). */
+    :global(html:not([data-motion-paused])) .mnav-item {
+      animation: mnav-in var(--dur-settle) var(--ease-settle) both;
+      animation-delay: var(--mnav-delay, 0ms);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @starting-style {
+      :global(html:not([data-motion-paused])) .mnav-dialog[open] {
+        translate: 100% 0;
+      }
+      :global(html:not([data-motion-paused])) .mnav-dialog[open]::backdrop {
+        opacity: 0;
+      }
+    }
+  }
+</style>
+
+<script>
+  import { initMobileNav } from '../scripts/mobile-nav';
+  document.addEventListener('astro:page-load', initMobileNav);
+</script>

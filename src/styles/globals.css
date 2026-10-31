@@ -18,9 +18,16 @@
    Order of contents below:
      1. Tailwind core import
      2. Webfont imports
-     3. @theme: brand tokens for utility wiring
+     3. @theme: brand tokens for utility wiring (type scale, fonts, radii)
      4. Base styles (body, headings, motion respect, list resets)
      5. Site-wide utility classes (.ncs-container, .card-link)
+     5b. Surfaces and grid (.band-ink, .page-grid, .frame, .hairline,
+         forced-colors borders)
+     6. Motion system (loops, reveals, view transitions; tokens in :root)
+
+   FROZEN after overhaul packages 1.5 and 1.7 (plan ruling 10). Page and
+   component CSS goes in scoped <style> blocks; only shared tokens and
+   primitives belong here.
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
@@ -29,17 +36,50 @@
 @import 'tailwindcss';
 
 /* ----------------------------------------------------------------------------
-   2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
-      Both default to font-display: swap from @fontsource.
+   2. Webfonts. Three faces, all self-hosted, all font-display: swap.
+      - Bricolage Grotesque Variable (wght 200 to 800): every heading and the
+        display utilities. Preloaded in BaseLayout.
+      - Source Sans 3 Variable: body, UI, buttons, forms. Preloaded.
+      - Bebas Neue 400: the header wordmark ONLY (Nathan's decision 1,
+        2026-10-30). Not preloaded: the wordmark is never the LCP element, and
+        its metric fallback keeps the swap from moving anything.
 
-      Bebas is imported as the LATIN subset only (not the full 400.css, which
-      ships @font-face blocks for latin-ext, cyrillic, greek, etc.). The site
-      is English, so the extra subsets were dead weight in a render-blocking
-      stylesheet, and the latin woff2 is the exact file BaseLayout preloads.
+      Every face is the LATIN subset only. The site is English, and the full
+      @fontsource stylesheets ship @font-face blocks for latin-ext, cyrillic,
+      greek and vietnamese that were dead weight in a render-blocking
+      stylesheet. Bebas has a per-subset stylesheet; the two variable packages
+      do not, so their latin @font-face is written out below by hand, pointing
+      at the exact woff2 files BaseLayout preloads (same URL, one fetch).
    ---------------------------------------------------------------------------- */
 @import '@fontsource/bebas-neue/latin-400.css';
-@import '@fontsource-variable/source-sans-3';
 @import './font-fallbacks.css';
+@import './wordmark-fallback.css';
+
+/* Copied from @fontsource-variable/source-sans-3/index.css (latin block). */
+@font-face {
+  font-family: 'Source Sans 3 Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Copied from @fontsource-variable/bricolage-grotesque/wght.css (latin block). */
+@font-face {
+  font-family: 'Bricolage Grotesque Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
@@ -82,18 +122,69 @@
   --color-bg: #ffffff; /* Default page background. */
   --color-bg-soft: #f4f7fa; /* Light blue-gray for alternating sections. */
 
-  /* Font families. --font-* drives font-display, font-body, font-mono. */
-  --font-display: 'Bebas Neue', 'Bebas Neue Fallback', system-ui, sans-serif;
+  /* Font families. --font-* drives font-display, font-body, font-mono,
+     font-wordmark. The display stack names the metric-matched fallback
+     second (src/styles/font-fallbacks.css, written by `npm run
+     font-fallback` from brand/brand.config.json; keep the two in step). */
+  --font-display:
+    'Bricolage Grotesque Variable', 'Bricolage Grotesque Variable Fallback', system-ui, sans-serif;
   --font-body: 'Source Sans 3 Variable', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
+  /* The header wordmark, and nothing else (Nathan's decision 1). Never use
+     font-wordmark for a heading. */
+  --font-wordmark: 'Bebas Neue', 'Bebas Neue Fallback', system-ui, sans-serif;
 
-  /* Heading sizes (fluid clamp). --text-h1 etc. drive text-h1 utilities. */
+  /* Type scale (fluid clamp). Each size carries its own line-height,
+     tracking and weight, so `text-h3` on a <p> or <span> looks like an h3
+     without extra classes. A utility such as `font-semibold` or
+     `leading-[1.1]` still overrides the paired value.
+
+     Weight is the emphasis: display, h1 and h2 sit at 300 and a <b> or
+     <strong> inside them goes to 800 (section 4). h3 and below sit at 650.
+     Headings never use colour, capitals or gradient for emphasis.
+
+     --text-display: the homepage hero statement only.
+     --text-h1-long: the case-study title card, where a client name can run
+       long ("First Presbyterian Church of Orangeburg"). Same curve as h1 with
+       a 2.25rem floor (plan ruling 16), plus overflow-wrap: anywhere on h1. */
+  --text-display: clamp(3rem, min(6.2vw, 10.5vh), 6.25rem);
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.045em;
+  --text-display--font-weight: 300;
+  --text-h1: clamp(2.75rem, 5.2vw, 4.75rem);
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: -0.035em;
+  --text-h1--font-weight: 300;
+  --text-h1-long: clamp(2.25rem, 5.2vw, 4.75rem);
+  --text-h1-long--line-height: 1;
+  --text-h1-long--letter-spacing: -0.035em;
+  --text-h1-long--font-weight: 300;
+  --text-h2: clamp(2rem, 3.4vw, 3.25rem);
+  --text-h2--line-height: 1.05;
+  --text-h2--letter-spacing: -0.03em;
+  --text-h2--font-weight: 300;
+  --text-h3: clamp(1.375rem, 2vw, 1.75rem);
+  --text-h3--line-height: 1.15;
+  --text-h3--letter-spacing: -0.02em;
+  --text-h3--font-weight: 650;
+  --text-h4: clamp(1.1875rem, 1.6vw, 1.375rem);
+  --text-h4--line-height: 1.2;
+  --text-h4--letter-spacing: -0.015em;
+  --text-h4--font-weight: 650;
+  --text-h5: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  --text-h5--line-height: 1.25;
+  --text-h5--letter-spacing: -0.01em;
+  --text-h5--font-weight: 650;
   --text-h6: 1rem;
-  --text-h5: clamp(1.125rem, 1.5vw, 1.25rem);
-  --text-h4: clamp(1.25rem, 2vw, 1.5rem);
-  --text-h3: clamp(1.5rem, 2.5vw, 2rem);
-  --text-h2: clamp(2rem, 4vw, 3rem);
-  --text-h1: clamp(2.5rem, 6vw, 5rem);
+  --text-h6--line-height: 1.3;
+  --text-h6--letter-spacing: 0;
+  --text-h6--font-weight: 650;
+
+  /* Radii for the new surfaces. rounded-frame is the one radius for a
+     framed client site, photo or form; rounded-pill for the CTA pill and
+     small status chips. */
+  --radius-frame: 10px;
+  --radius-pill: 999px;
 
   /* Fluid spacing scale. --spacing-* drives p-xs, gap-m, m-l, etc. */
   --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
@@ -169,12 +260,6 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background-color: color-mix(in oklab, var(--color-accent) 68%, transparent);
-  }
-
-  /* Numbers that animate or change should not jiggle as digit widths vary. */
-  [data-countup] {
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum';
   }
 
   /* Copy-link controls that enhance.ts appends to long-form headings
@@ -255,10 +340,10 @@
     pointer-events: none;
   }
 
-  /* All headings inherit the display face and brand color by default.
-     --color-heading is aliased to the shadcn --heading token (see @theme
-     inline below), so this flips automatically between navy in light
-     mode and near-white in dark mode. */
+  /* All headings take the display face (Bricolage) and the heading colour.
+     They read var(--heading) directly, not the --color-heading alias, so a
+     surface that re-scopes --heading (.band-ink) recolours its headings.
+     Sentence case as written: no text-transform anywhere on a heading. */
   h1,
   h2,
   h3,
@@ -266,40 +351,58 @@
   h5,
   h6 {
     font-family: var(--font-display);
-    font-weight: 400;
-    color: var(--color-heading);
+    color: var(--heading);
     text-wrap: balance;
+    /* Long words wrap instead of pushing the page sideways at 320px. */
+    overflow-wrap: break-word;
   }
 
   h1 {
     font-size: var(--text-h1);
-    line-height: 0.95;
-    letter-spacing: -0.01em;
+    line-height: var(--text-h1--line-height);
+    letter-spacing: var(--text-h1--letter-spacing);
+    font-weight: var(--text-h1--font-weight);
+    /* The 320px guard for long client names (plan ruling 16). `anywhere`
+       also lets the min-content width shrink, so a long title cannot widen
+       its column. */
+    overflow-wrap: anywhere;
   }
-
   h2 {
     font-size: var(--text-h2);
-    line-height: 1;
-    letter-spacing: -0.005em;
+    line-height: var(--text-h2--line-height);
+    letter-spacing: var(--text-h2--letter-spacing);
+    font-weight: var(--text-h2--font-weight);
   }
-
   h3 {
     font-size: var(--text-h3);
-    line-height: 1.05;
+    line-height: var(--text-h3--line-height);
+    letter-spacing: var(--text-h3--letter-spacing);
+    font-weight: var(--text-h3--font-weight);
   }
   h4 {
     font-size: var(--text-h4);
-    line-height: 1.1;
+    line-height: var(--text-h4--line-height);
+    letter-spacing: var(--text-h4--letter-spacing);
+    font-weight: var(--text-h4--font-weight);
   }
   h5 {
     font-size: var(--text-h5);
-    line-height: 1.1;
+    line-height: var(--text-h5--line-height);
+    letter-spacing: var(--text-h5--letter-spacing);
+    font-weight: var(--text-h5--font-weight);
   }
   h6 {
     font-size: var(--text-h6);
-    line-height: 1.1;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    line-height: var(--text-h6--line-height);
+    font-weight: var(--text-h6--font-weight);
+  }
+
+  /* Weight is the emphasis. Inside a light (300) heading, <b> and <strong>
+     carry the heavy phrase at 800: "A one-person studio for <b>organizations
+     that take their work seriously.</b>" Inside an h3 or smaller (650) they
+     still step up to 800. */
+  :is(h1, h2, h3, h4, h5, h6, .text-display, .text-h1, .text-h1-long, .text-h2) :is(b, strong) {
+    font-weight: 800;
   }
 
   /* Lists used as nav menus or layout groups shouldn't carry bullets by
@@ -329,7 +432,7 @@
      0s creates no transition at all; the delay matters because a staggered
      delay alone creates one. `transitionend` no longer fires under reduce
      (nothing in src/ listens for it). Animations keep 0.01ms so
-     `animationend` still fires (Radix/Starwind wait on it).
+     `animationend` still fires (Radix waits on it).
      tests/reduced-motion.spec.ts holds this on the webkit-iphone project. */
   @media (prefers-reduced-motion: reduce) {
     html {
@@ -417,365 +520,328 @@
 }
 
 /* ----------------------------------------------------------------------------
-   6. Motion + effects system  [revamp]
-   ----------------------------------------------------------------------------
-   The site's animation layer: scroll-reveal, animated backgrounds, hover
-   micro-interactions, and the keyframes shared across components.
-
-   Accessibility: every looping or scroll-triggered animation here is gated
-   behind `prefers-reduced-motion: no-preference`. The global reduced-motion
-   block in section 4 already neutralizes transitions/animations for everyone
-   who opts out, and the reveal init script in BaseLayout force-shows every
-   [data-reveal] element immediately under reduced motion, so no content ever
-   depends on motion to become visible.
+   5b. Surfaces and grid (overhaul package 1.5).
+   The page is built from three surfaces: white (--background), paper
+   (--paper) and ink (--ink), separated by 1px hairlines (--line). Only real
+   artifacts (client sites, photos, the form) get a frame. The role tokens
+   themselves are in :root / .dark at the bottom of this file.
    ---------------------------------------------------------------------------- */
 
-/* ---- Scroll reveal --------------------------------------------------------
-   Tag any element with data-reveal. The global IntersectionObserver in
-   BaseLayout adds .is-visible the first time it scrolls into view. Variants
-   change the entrance vector; --reveal-delay (inline style) staggers
-   siblings, e.g. style="--reveal-delay: 120ms". */
-/* The hidden-until-revealed state is scoped to .js (added to <html> by the
-   anti-FOUC script in BaseLayout before first paint). Without JavaScript the
-   class is absent, so [data-reveal] elements keep their default opacity:1 and
-   are fully visible: nothing depends on JS to be seen. With JS, the observer
-   in BaseLayout adds .is-visible as each element scrolls into view. */
-@media (prefers-reduced-motion: no-preference) {
-  .js [data-reveal] {
-    opacity: 0;
-    transform: translateY(1.75rem);
-    transition:
-      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      filter 0.7s ease;
-    transition-delay: var(--reveal-delay, 0ms);
-  }
-  .js [data-reveal='fade'] {
-    transform: none;
-  }
-  .js [data-reveal='scale'] {
-    transform: scale(0.93);
-  }
-  .js [data-reveal='left'] {
-    transform: translateX(-2rem);
-  }
-  .js [data-reveal='right'] {
-    transform: translateX(2rem);
-  }
-  .js [data-reveal='blur'] {
-    filter: blur(14px);
-  }
-  .js [data-reveal].is-visible {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
+/* ---- Ink band --------------------------------------------------------------
+   The solid navy block every page ends on (the closer, built in Phase 2), and
+   any other ink section. Navy in BOTH themes, so it re-scopes the text roles
+   to light-on-navy values that hold AA in both (src/lib/ncs-tokens.test.ts):
+   headings #fff, body #e5e7eb, links and focus sky #40aaed, meta #a7b0be,
+   and the button flips to navy-on-sky as it does in dark mode.
 
-  /* First screen: no reveal gate.
-     A [data-reveal] element starts at opacity 0 under .js and only clears once
-     the observer above has run and its 0.7s transition has played. Chrome does
-     not count a zero-opacity element as a contentful paint, so gating the top
-     of the page on that script is what pushed Largest Contentful Paint out past
-     the 4.5s budget: on /contact the h1 painted 1.65s after first paint and
-     Lighthouse read LCP at 5.8s, and /404 failed the same way (staging,
-     2026-09-06). Everything in the first block of <main> therefore renders
-     immediately; only content further down still reveals on scroll. The
-     observer still tags them .is-visible, which changes nothing. */
-  .js main > :first-child [data-reveal],
-  .js main > [data-reveal]:first-child {
-    opacity: 1;
-    transform: none;
-    filter: none;
+   The --color-* aliases are re-declared too. Tailwind utilities read the
+   role variable directly (@theme inline), but scoped component CSS often
+   reads var(--color-heading) and friends, and a custom property that points
+   at another one is resolved where it is declared (:root), not where it is
+   used. Re-declaring them here makes both routes pick up the ink values. */
+.band-ink {
+  --heading: #ffffff;
+  --foreground: #e5e7eb;
+  --link: #40aaed;
+  --muted-foreground: #a7b0be;
+  --accent: #40aaed;
+  --accent-foreground: #0a1628;
+  --ring: #40aaed;
+  --line: #1f3049;
+  --line-strong: #5b6b84;
+  --border: rgba(255, 255, 255, 0.12);
+  --color-heading: var(--heading);
+  --color-text: var(--foreground);
+  --color-foreground: var(--foreground);
+  --color-link: var(--link);
+  --color-text-muted: var(--muted-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-border: var(--border);
+  background-color: var(--ink);
+  color: var(--foreground);
+}
+
+/* ---- Page grid -------------------------------------------------------------
+   One 12-column grid. Children span the full width on small screens; from
+   lg (64rem) up:
+     .grid-rail   columns 1 to 3   the mono label rail (Section.astro, 1.8)
+     .grid-body   columns 4 to 12  section body
+     .grid-prose  columns 4 to 10  running text, capped at about 68ch (40rem)
+     .grid-wide   columns 1 to 12  wide media
+     .grid-full   full bleed       media that runs edge to edge
+   Section rhythm is --space-section (py-section). */
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+}
+.page-grid > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.page-grid > .grid-prose {
+  max-width: 68ch;
+}
+.page-grid > .grid-full {
+  /* Bleeds to the viewport edges from a centred container. <main> clips
+     overflow-x, so the scrollbar's width never causes a sideways scroll. */
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+@media (min-width: 64rem) {
+  .page-grid > .grid-rail {
+    grid-column: 1 / 4;
+  }
+  .page-grid > .grid-body {
+    grid-column: 4 / 13;
+  }
+  .page-grid > .grid-prose {
+    grid-column: 4 / 11;
   }
 }
 
-/* A reveal that starts offset sideways (data-reveal="left|right") sits outside
-   its parent until the observer clears it, and an off-screen box widens the
-   document: on /services at 320px the unrevealed spotlight card ended at 328px,
-   so the page could be panned 8px sideways until it scrolled into view
-   (2026-10-13 audit). `clip` (not `hidden`) cuts the overflow without making
-   <main> a scroll container, so sticky children and focus rings keep working.
-   Nothing inside <main> is meant to extend past the viewport edge. */
+/* ---- Frame and hairline ----------------------------------------------------
+   .frame: the one treatment for a real artifact (a client site, a photo, the
+   form): 10px radius, a 1px ring and the frame shadow. BrowserFrame.astro
+   (package 1.8) builds on it.
+   .hairline: the 1px rule at a change of surface. */
+.frame {
+  border-radius: var(--radius-frame);
+  box-shadow:
+    0 0 0 1px var(--frame-ring),
+    var(--shadow-frame);
+  overflow: hidden;
+}
+.hairline {
+  border-top: 1px solid var(--line);
+}
+
+/* ---- Forced colors (Windows High Contrast) --------------------------------
+   Forced-colors mode drops box-shadows and background colours, which would
+   erase every ring, frame and surface change on the site. Real borders and
+   outlines survive (in a system colour), so each of those gets one here.
+   tests/forced-colors.spec.ts checks one route. */
+@media (forced-colors: active) {
+  .frame {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+  .band-ink,
+  .hairline {
+    border-top: 1px solid CanvasText;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   6. Motion system (overhaul package 1.7)
+   ----------------------------------------------------------------------------
+   Four verbs, and nothing else moves:
+     Settle  entrances: [data-reveal] and [data-reveal="frame"] (below).
+     Glide   state to state: view transitions between pages (below).
+     Heft    the one weight animation per page, on the H1 (Heft.astro).
+     Drift   the hero reel only (HeroReel.astro), a data-motion="loop".
+
+   src/scripts/motion.ts is the controller: it marks loops that are off screen,
+   the hidden tab, and the visitor's Pause motion choice, which the BaseLayout
+   bootstrap applies to <html> as data-motion-paused before first paint.
+
+   Accessibility: everything here is gated on prefers-reduced-motion:
+   no-preference, and the global reduced-motion block in section 4 shortens
+   whatever is left. Reveals are gated on .js too, so without JavaScript every
+   [data-reveal] element is simply there. The finished state of every reveal is
+   what the markup renders.
+   ---------------------------------------------------------------------------- */
+
+/* ---- Loops ------------------------------------------------------------------
+   Anything that repeats opts in with data-motion="loop" on its own element or
+   a wrapper. It holds still (on whatever frame it reached) while it is off
+   screen, while the tab is hidden, or while the visitor has paused motion.
+   tests/motion-pause.spec.ts checks every loop stops under the pause. */
+:root[data-motion-paused] [data-motion='loop'],
+:root[data-motion-paused] [data-motion='loop'] *,
+:root[data-motion-paused] [data-motion='loop'] *::before,
+:root[data-motion-paused] [data-motion='loop'] *::after,
+:root[data-motion-hidden] [data-motion='loop'],
+:root[data-motion-hidden] [data-motion='loop'] *,
+[data-motion='loop'][data-motion-offscreen],
+[data-motion='loop'][data-motion-offscreen] *,
+[data-motion='loop'][data-motion-offscreen] *::before,
+[data-motion='loop'][data-motion-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
+/* ---- Settle: scroll reveals ---------------------------------------------------
+   Two variants, and a group:
+     data-reveal          fades in and rises 8px.
+     data-reveal="frame"  a clip-path unveil from the bottom, for media (a
+                          framed site or photo). No opacity change.
+     data-reveal-group    on a parent: its children's reveals step 70ms apart,
+                          capped at 6 steps (the 7th child onwards shares the
+                          last step).
+   Never on first-viewport media or an H1 (ruling 3, tests/first-viewport).
+
+   Where the browser supports scroll-driven animations, the reveal is tied to
+   the element entering the viewport (animation-timeline: view()), so it needs
+   no script and can never be left stuck half way. Elsewhere, motion.ts adds
+   .is-visible with an IntersectionObserver and a transition plays instead. */
+[data-reveal-group] > :nth-child(2) {
+  --reveal-i: 1;
+}
+[data-reveal-group] > :nth-child(3) {
+  --reveal-i: 2;
+}
+[data-reveal-group] > :nth-child(4) {
+  --reveal-i: 3;
+}
+[data-reveal-group] > :nth-child(5) {
+  --reveal-i: 4;
+}
+[data-reveal-group] > :nth-child(n + 6) {
+  --reveal-i: 5;
+}
+
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes frame-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Fallback: the IntersectionObserver in motion.ts adds .is-visible and a
+     transition plays. The group step and any legacy inline --reveal-delay
+     add up. */
+  @supports not (animation-timeline: view()) {
+    .js [data-reveal] {
+      transition:
+        opacity var(--dur-scene) var(--ease-settle),
+        transform var(--dur-scene) var(--ease-settle),
+        clip-path var(--dur-scene) var(--ease-settle);
+      transition-delay: calc(var(--reveal-i, 0) * 70ms + var(--reveal-delay, 0ms));
+    }
+    .js [data-reveal]:not([data-reveal='frame']):not(.is-visible) {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    .js [data-reveal='frame']:not(.is-visible) {
+      clip-path: inset(0 0 100% 0);
+    }
+  }
+
+  /* Default: scroll-driven. The range starts a little later for each group
+     step, which reads as the same 70ms stagger while scrolling. */
+  @supports (animation-timeline: view()) {
+    .js [data-reveal] {
+      animation: settle-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--reveal-i, 0) * 6%) entry calc(60% + var(--reveal-i, 0) * 6%);
+    }
+    .js [data-reveal='frame'] {
+      animation-name: frame-in;
+    }
+    /* Already on screen when the page loaded (motion.ts): shown in full. */
+    .js [data-reveal].is-visible {
+      animation: none;
+    }
+  }
+
+  /* Backstop for ruling 3: anything tagged in the first block of <main> shows
+     at once, whatever the markup says. First-viewport content should not carry
+     data-reveal at all (tests/first-viewport.spec.ts); this only catches a
+     slip, so a forgotten attribute can never hide the top of a page. */
+  .js main > :first-child [data-reveal],
+  .js main > [data-reveal]:first-child {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}
+
+/* ---- Glide: view transitions between pages ------------------------------------
+   The ClientRouter (BaseLayout) swaps pages inside a View Transition. The
+   grammar is quiet: the old page fades out quickly and the new one settles 8px
+   up into place. The header and the footer are their own static groups
+   (transition:name="site-header" / "site-footer"), so they never fade or slide
+   between pages; the wordmark keeps its own "site-wordmark" group. */
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-fade-out var(--dur-quick) var(--ease-exit) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-settle-in var(--dur-settle) var(--ease-settle) both;
+  }
+}
+/* Static chrome: no morph, no crossfade. The old snapshot is hidden and the
+   new one is shown as is. */
+::view-transition-group(site-header),
+::view-transition-group(site-footer),
+::view-transition-new(site-header),
+::view-transition-new(site-footer) {
+  animation: none !important;
+}
+::view-transition-old(site-header),
+::view-transition-old(site-footer) {
+  animation: none !important;
+  opacity: 0;
+}
+/* No transition animates at all under reduced motion or while the visitor has
+   paused motion (Part A, "missing" list): the new page simply appears. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-image-pair(*) {
+    animation: none !important;
+  }
+}
+:root[data-motion-paused]::view-transition-group(*),
+:root[data-motion-paused]::view-transition-old(*),
+:root[data-motion-paused]::view-transition-new(*),
+:root[data-motion-paused]::view-transition-image-pair(*) {
+  animation: none !important;
+}
+
+/* Nothing inside <main> is meant to extend past the viewport edge. The
+   sideways reveals that once did (an unrevealed card ended at 328px on a 320px
+   /services, 2026-10-13 audit) are gone, but this stays as a guard against a
+   stray wide child panning the page sideways. `clip` (not `hidden`) cuts the
+   overflow without making <main> a scroll container, so sticky children and
+   focus rings keep working. */
 main {
   overflow-x: clip;
 }
 
 /* ---- Heading emphasis -----------------------------------------------------
-   Gradient text (background-clip:text over a gradient) was removed site-wide.
-   It is an impeccable absolute ban: decorative, never meaningful, and a top
-   AI-portfolio tell. Heading emphasis is now carried by a solid brand token
-   plus weight/size: amber (text-tertiary) on dark/navy heroes, NCS blue
-   (text-link) on light surfaces. If you ever want a colored accent phrase,
-   wrap it in a solid token span, never a clipped gradient. */
-
-/* ---- Aurora / mesh background ---------------------------------------------
-   Drifting layered radial gradients for dark surfaces (hero, CTA bands). The
-   host element needs position + isolate; the gradient paints in ::before at
-   z-0, so foreground content should sit at z-10. Pair with .grain. */
-.bg-aurora::before {
-  content: '';
-  position: absolute;
-  inset: -25%;
-  z-index: 0;
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 60%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 50%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 30%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .bg-aurora::before {
-    animation: aurora-drift 20s ease-in-out infinite alternate;
-  }
-}
-
-/* ---- Film grain -----------------------------------------------------------
-   Subtle fractal-noise overlay via an inline SVG. Host needs position;
-   sits above the aurora (z-1) but below content (z-10). */
-.grain::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.32;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* ---- Theme-aware band -----------------------------------------------------
-   A closing/process band that reads LIGHT in light mode and navy in dark mode,
-   each with its own decorative glow. Lets light mode stay genuinely light while
-   dark mode keeps the navy aurora. Host needs nothing extra; the decoration
-   lives in ::before at z-(-1) so content sits naturally above it. Use
-   theme-aware text tokens on top (text-heading, text-text-muted, text-link),
-   not text-primary-foreground. Used by CtaBanner, ProcessBand, the Hero (under
-   its light-tuned WebGL flow) and the Footer, so light mode reads bright and
-   airy end to end while dark mode stays immersive navy. */
-.band-themed {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background-color: var(--color-bg-soft);
-}
-.dark .band-themed {
-  background-color: var(--color-primary);
-}
-.band-themed::before {
-  content: '';
-  position: absolute;
-  inset: -25%;
-  z-index: -1;
-  pointer-events: none;
-  /* Light mode: a confident accent/sky/amber glow over the light surface.
-     Raised from the original 10-12% so the band actually reads as a designed
-     surface in light mode instead of flat bg-soft (the third amber stop adds
-     warmth without tipping past AA on the text that sits over it). */
-  background:
-    radial-gradient(
-      46% 56% at 18% 14%,
-      color-mix(in oklab, var(--color-accent) 22%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 84% 24%,
-      color-mix(in oklab, var(--color-secondary) 16%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      50% 54% at 64% 92%,
-      color-mix(in oklab, var(--color-tertiary) 10%, transparent),
-      transparent 72%
-    );
-}
-.dark .band-themed::before {
-  /* Dark mode: the full navy aurora. */
-  background:
-    radial-gradient(
-      38% 48% at 18% 22%,
-      color-mix(in oklab, var(--color-accent) 55%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      36% 44% at 82% 26%,
-      color-mix(in oklab, var(--color-secondary) 45%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      48% 52% at 62% 86%,
-      color-mix(in oklab, var(--color-tertiary) 28%, transparent),
-      transparent 70%
-    );
-  filter: blur(10px);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .band-themed::before {
-    animation: aurora-drift 22s ease-in-out infinite alternate;
-  }
-}
-
-/* ---- Hover micro-interactions --------------------------------------------- */
-.hover-lift {
-  transition:
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.3s ease;
-}
-.hover-lift:hover,
-.hover-lift:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--color-primary) 55%, transparent);
-}
-
-/* ---- Elevated card surface -------------------------------------------------
-   Add .surface-card to a card so it reads as lifted in BOTH themes: a tinted
-   card surface, a soft layered shadow, a 1px top highlight, and a border. This
-   is the fix for "light mode cards dissolve into the page" — light mode has no
-   color-step for elevation, so the shadow + highlight do the work the dark-mode
-   navy-on-near-black step does for free. Compose with data-spotlight for the
-   cursor glow and .hover-lift for the rise. */
-.surface-card {
-  background-color: var(--card);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-card), var(--card-highlight);
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.surface-card:hover,
-.surface-card:focus-within {
-  box-shadow: var(--shadow-card-hover), var(--card-highlight);
-}
-
-/* ---- Quiet texture / atmosphere washes (static, light + dark) --------------
-   .bg-dotgrid lays a faint dot grid that fades out toward the content via a
-   radial mask, so a section gains texture instead of reading as blank paper.
-   .bg-mesh-soft drops a low-opacity brand glow behind a light section, the
-   light-mode counterpart to the dark aurora. Both are decorative (z-index:-1
-   inside an isolated stacking context), carry no text, and are fully static so
-   there is nothing to gate for reduced motion. Host content sits naturally on
-   top; no z-10 needed because the decoration is below the local stack. */
-.bg-dotgrid {
-  position: relative;
-  isolation: isolate;
-}
-.bg-dotgrid::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(
-    color-mix(in oklab, var(--color-heading) 9%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-  mask-image: radial-gradient(125% 95% at 50% 0%, #000 28%, transparent 78%);
-  opacity: 0.55;
-}
-.bg-mesh-soft {
-  position: relative;
-  isolation: isolate;
-}
-.bg-mesh-soft::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      42% 52% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 7%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      40% 48% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 6%, transparent),
-      transparent 70%
-    );
-}
-.dark .bg-mesh-soft::before {
-  background:
-    radial-gradient(
-      44% 54% at 10% 0%,
-      color-mix(in oklab, var(--color-accent) 12%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      42% 50% at 94% 6%,
-      color-mix(in oklab, var(--color-secondary) 10%, transparent),
-      transparent 72%
-    );
-}
-
-/* Shine sweep: add .shine to a position:relative, overflow:hidden element
-   (e.g. a button) and a light band sweeps across it on hover. */
-.shine {
-  position: relative;
-  overflow: hidden;
-}
-.shine::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40%;
-  height: 100%;
-  transform: translateX(-150%) skewX(-18deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .shine:hover::after,
-  .shine:focus-visible::after {
-    animation: shine-sweep 0.85s ease;
-  }
-}
-
-/* Cursor-following spotlight. Add .spotlight-card to a card; it sets its own
-   position:relative so the glow's ::before is always positioned against the
-   card (without it, a card that forgot `relative` anchors the glow to the
-   nearest positioned ancestor, which floats it off outside the card). The
-   enhancement script sets --mx/--my on pointer move so a soft brand glow tracks
-   the cursor. The glow sits above the surface but is pointer-transparent and
-   low-alpha so content stays legible. Give inner content `relative z-10` if a
-   card's text ever needs to sit above the glow explicitly. */
-.spotlight-card {
-  position: relative;
-}
-.spotlight-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-  background: radial-gradient(
-    16rem 16rem at var(--mx, 50%) var(--my, 50%),
-    color-mix(in oklab, var(--color-accent) 18%, transparent),
-    transparent 60%
-  );
-}
-.spotlight-card:hover::before,
-.spotlight-card:focus-within::before {
-  opacity: 1;
-}
+   Weight only, since overhaul package 1.5: a light (300) lead and a <b> at
+   800 (section 4). Never a coloured span, never capitals, never gradient
+   text (background-clip:text was removed site-wide as an AI-portfolio
+   tell). The amber and blue accent spans that used to sit in the /about,
+   /contact and /photography H1s are now <b>. */
 
 /* Animated underline link. Grows from the left on hover/focus. */
 .link-underline {
@@ -797,57 +863,6 @@ main {
 .link-underline:hover::after,
 .link-underline:focus-visible::after {
   transform: scaleX(1);
-}
-
-/* Soft float loop for decorative accents. */
-@media (prefers-reduced-motion: no-preference) {
-  .float-slow {
-    animation: float-slow 7s ease-in-out infinite;
-  }
-}
-
-/* ---- Shared keyframes ----------------------------------------------------- */
-@keyframes aurora-drift {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-  100% {
-    transform: translate3d(2%, -3%, 0) rotate(8deg) scale(1.14);
-  }
-}
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-@keyframes shine-sweep {
-  to {
-    transform: translateX(320%) skewX(-18deg);
-  }
-}
-@keyframes scroll-cue {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0.5rem);
-    opacity: 0.15;
-  }
-}
-@keyframes pop-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -1016,7 +1031,19 @@ html.ncs-gated .ncs-overlay {
   --color-heading: var(--heading);
   --color-link: var(--link);
 
-  /* font-heading utility points at the display face (Bebas Neue), the real
+  /* Surface role tokens (package 1.5): bg-paper, bg-ink, bg-ink-raised,
+     border-line, border-line-strong, ring-frame-ring, text-live. */
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-raised: var(--ink-raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-frame-ring: var(--frame-ring);
+  --color-live: var(--live);
+  /* py-section, gap-section: the section rhythm. */
+  --spacing-section: var(--space-section);
+
+  /* font-heading utility points at the display face (Bricolage), the real
      heading font. font-sans tracks the body face so the utility and the
      base body style agree (the unused Geist webfont was removed). */
   --font-heading: var(--font-display);
@@ -1184,25 +1211,48 @@ html.ncs-gated .ncs-overlay {
   --sidebar-border: rgba(0, 0, 0, 0.08);
   --sidebar-ring: #3478bd; /* matches the live --ring (AA accent) */
 
-  /* --------------------------------------------------------------------
-     Starwind UI extra semantic tokens.
-     Not part of shadcn's default set. Consumed by the vendored Starwind
-     primitives (accordion / dialog / dropdown / tabs) and any Starwind
-     component added later (button / alert / badge). Harmonized to the NCS
-     palette: --outline tracks --ring (NCS blue); the status colors are the
-     conventional soft-surface + deep-foreground pairs. starwind.css maps
-     each of these onto a bg-* / text-* / border-* utility via @theme inline. */
-  --primary-accent: #16243b; /* lifted navy for primary hover states */
-  --secondary-accent: #2a6fb0; /* deeper NCS blue for active/pressed secondary */
-  --info: #93c5fd; /* soft blue */
-  --info-foreground: #1e3a5f; /* deep blue text on info surfaces */
-  --success: #86efac; /* soft green */
-  --success-foreground: #14532d; /* deep green text on success surfaces */
-  --warning: #fde68a; /* soft amber */
-  --warning-foreground: #713f12; /* deep amber text on warning surfaces */
-  --error: oklch(0.577 0.245 27.325); /* matches --destructive */
-  --error-foreground: #ffffff;
-  --outline: #3478bd; /* matches --ring (NCS blue) */
+  /* --outline tracks --ring. Left over from the retired Starwind kit (removed
+     2026-10); kept because src/lib/theme-tokens.test.ts still asserts it. */
+  --outline: #3478bd;
+
+  /* ---- Surface roles (overhaul package 1.5) --------------------------------
+     Existing brand values in new roles, not a rebrand. Every rendered pair
+     is asserted in src/lib/ncs-tokens.test.ts.
+       --paper        the alternate section surface (the old bg-soft value)
+       --ink          the solid navy band (.band-ink); navy in both themes
+       --ink-raised   a raised panel inside an ink band
+       --line         decorative 1px hairline at a change of surface
+       --line-strong  a hairline that must be seen (3:1): frame dots, control edges
+       --frame-ring   the 1px ring around a framed artifact (decorative)
+       --live         amber, meaning "live now" and nothing else. Darkened in
+                      light mode so it reads as text (4.5:1) on white and paper.
+     NCS blue (--accent, --link, --ring) is for actions, links, focus and the
+     active nav item only. */
+  --paper: #f4f7fa;
+  --ink: #0a1628;
+  --ink-raised: #0f1e33;
+  --line: #dde3ea;
+  --line-strong: #7d8797;
+  --frame-ring: #d3dae3;
+  --live: #a85d00;
+
+  /* Layout rhythm. */
+  --space-section: clamp(5rem, 10vw, 9rem);
+  --grid-gutter: clamp(1rem, 2.5vw, 2rem);
+
+  /* ---- Motion tokens (package 1.5; the system is section 6, package 1.7) --
+     Durations and easings only. Settle is for entrances, Glide for state to
+     state (and the hero's heft curve), Exit for things leaving, Heft for the
+     one weight animation per page. Reduced motion is handled globally in
+     section 4. */
+  --dur-instant: 120ms;
+  --dur-quick: 200ms;
+  --dur-settle: 420ms;
+  --dur-scene: 640ms;
+  --dur-heft: 1500ms;
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-glide: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-exit: cubic-bezier(0.55, 0, 1, 0.45);
 }
 
 /* ----------------------------------------------------------------------------
@@ -1300,16 +1350,18 @@ html.ncs-gated .ncs-overlay {
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #40aaed; /* matches the live dark --ring */
 
-  /* Starwind UI extra semantic tokens — dark mode variants. */
-  --primary-accent: #1e3a5f; /* lifted navy for dark primary hover */
-  --secondary-accent: #7ac8f0; /* lighter sky for dark active secondary */
-  --info: #93c5fd;
-  --info-foreground: #1e3a5f;
-  --success: #86efac;
-  --success-foreground: #14532d;
-  --warning: #fde68a;
-  --warning-foreground: #713f12;
-  --error: oklch(0.704 0.191 22.216); /* matches dark --destructive */
-  --error-foreground: #ffffff;
-  --outline: #40aaed; /* matches dark --ring */
+  /* Dark --outline, tracks the dark --ring (see the light block). */
+  --outline: #40aaed;
+
+  /* Surface roles, dark (see the :root block for what each one is for).
+     Paper is brand navy, a visible step up from the near-black page. Ink
+     stays navy too: in dark mode the ink band is marked off by its hairline
+     rather than a colour step. */
+  --paper: #0a1628;
+  --ink: #0a1628;
+  --ink-raised: #0f1e33;
+  --line: #1a2a40;
+  --line-strong: #5b6b84;
+  --frame-ring: #22324a;
+  --live: #ffa334;
 }

@@ -1,0 +1,326 @@
+---
+// Safe to edit.
+/* ============================================================================
+   StudyRail: a case study's facts and chapters (overhaul package 2.4a)
+   ============================================================================
+   The left rail of /work/[slug] (grid columns 1 to 3 from lg). Two parts:
+
+     Facts      sector, year, role, stack and host, as a <dl>. The template
+                builds them with studyFacts() in src/lib/study.ts, from the
+                study's `facts` where set, else its own frontmatter. The host
+                prints as the full URL on paper (boards get these forwarded).
+     Chapters   one jump link per H2 in the MDX body, with ONE 2px marker
+                beside the list that glides to the chapter you are reading.
+
+   It replaced five meta treatments on the old page (the sector and read-time
+   stamp, the client line, the role and stack lines, the service pills, the
+   tags line) and the 14rem table-of-contents column.
+
+   Layout: from lg the rail sticks under the header while the body scrolls.
+   Below lg the facts sit as a compact two-column list above the body and the
+   chapter list is left out (the headings are right there in the text).
+
+   The marker (script below): a once-per-frame scroll check marks the chapter in
+   view with aria-current="location" and moves the marker with a transform
+   (--dur-settle on --ease-glide; instant under reduced motion, which zeroes
+   transitions site-wide). Without JavaScript the list is plain working jump
+   links and the marker never shows.
+
+   Props:
+     facts      [{ label, value, url? }]
+     chapters   [{ slug, text }] (the body's depth-2 headings)
+   ============================================================================ */
+
+import type { Fact } from '../lib/study';
+import type { LiveScoreFact } from '../lib/live-scores';
+
+interface Props {
+  facts: Fact[];
+  chapters: Array<{ slug: string; text: string }>;
+  /** Package 4.7: the dated live-score line; nothing renders when absent. */
+  liveScore?: LiveScoreFact;
+}
+
+const { facts, chapters, liveScore } = Astro.props;
+---
+
+<aside class="grid-rail study-rail" aria-label="About this project">
+  <dl class="rail-facts">
+    {facts.map((f) => (
+      <div class="rail-fact">
+        <dt>{f.label}</dt>
+        <dd>
+          {f.url ? (
+            <>
+              <span class="rail-host">{f.value}</span>
+              <span class="rail-url">{f.url}</span>
+            </>
+          ) : (
+            f.value
+          )}
+        </dd>
+      </div>
+    ))}
+    {liveScore && (
+      <div class="rail-fact rail-live">
+        <dt>Measured live</dt>
+        <dd>
+          {liveScore.scores}
+          <span class="rail-live-date">
+            Mobile, measured <time datetime={liveScore.iso}>{liveScore.date}</time>
+          </span>
+        </dd>
+      </div>
+    )}
+  </dl>
+
+  {chapters.length >= 2 && (
+    <nav class="rail-chapters" aria-label="Chapters" data-study-chapters>
+      <p class="rail-chapters-label">Chapters</p>
+      <div class="rail-chapters-track">
+        <span class="rail-marker" aria-hidden="true" />
+        <ol>
+          {chapters.map((c) => (
+            <li>
+              <a href={`#${c.slug}`} data-chapter={c.slug}>
+                {c.text}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </nav>
+  )}
+</aside>
+
+<style>
+  .study-rail {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  @media (min-width: 64rem) {
+    .study-rail {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+  }
+
+  .rail-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin: 0 0 2.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .rail-facts {
+      grid-template-columns: minmax(0, 1fr);
+      margin: 0;
+    }
+  }
+
+  .rail-fact {
+    min-width: 0;
+  }
+
+  dt,
+  .rail-chapters-label {
+    margin: 0 0 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--heading);
+  }
+
+  /* Package 4.7: the measured-live fact spans the whole facts grid, date on its own line. */
+  .rail-live {
+    grid-column: 1 / -1;
+  }
+
+  .rail-live-date {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+  }
+
+  /* The full URL is for paper only (print block below). */
+  .rail-url {
+    display: none;
+  }
+
+  .rail-chapters {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .rail-chapters {
+      display: block;
+    }
+  }
+
+  .rail-chapters-track {
+    position: relative;
+    /* The hairline the marker rides on. */
+    border-left: 1px solid var(--line);
+  }
+
+  .rail-chapters ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rail-chapters a {
+    display: block;
+    padding: 0.375rem 0 0.375rem 1rem;
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .rail-chapters a:hover,
+  .rail-chapters a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* The chapter in view: heavier, never a colour change alone. */
+  .rail-chapters a[aria-current] {
+    color: var(--heading);
+    font-weight: 650;
+  }
+
+  /* One 2px marker that glides between chapters. Hidden until the script has
+     placed it (data-ready), so it never sits on the wrong line. */
+  .rail-marker {
+    position: absolute;
+    left: -1.5px;
+    top: 0;
+    width: 2px;
+    height: var(--marker-h, 0px);
+    background-color: var(--heading);
+    transform: translateY(var(--marker-y, 0px));
+    opacity: 0;
+    transition:
+      transform var(--dur-settle) var(--ease-glide),
+      height var(--dur-settle) var(--ease-glide);
+  }
+
+  [data-study-chapters][data-ready] .rail-marker {
+    opacity: 1;
+  }
+
+  /* Pause motion (the footer switch) stops the glide too: the marker jumps. */
+  :global(html[data-motion-paused]) .rail-marker {
+    transition: none;
+  }
+
+  @media (forced-colors: active) {
+    .rail-marker {
+      background-color: CanvasText;
+    }
+  }
+
+  @media print {
+    .rail-chapters {
+      display: none;
+    }
+    .rail-host {
+      display: none;
+    }
+    .rail-url {
+      display: inline;
+    }
+  }
+</style>
+
+<script>
+  // Scroll-spy for the chapter list. Registers on astro:page-load so it
+  // re-binds after a View Transitions navigation; the dataset flag stops it
+  // binding twice on the same page, and the listeners are dropped before the
+  // next page swaps in.
+  function initChapters(): void {
+    const nav = document.querySelector<HTMLElement>('[data-study-chapters]');
+    if (!nav || nav.dataset.spyBound) return;
+    nav.dataset.spyBound = 'true';
+
+    const marker = nav.querySelector<HTMLElement>('.rail-marker');
+    const links: Array<{ a: HTMLAnchorElement; heading: HTMLElement }> = [];
+    nav.querySelectorAll<HTMLAnchorElement>('[data-chapter]').forEach((a) => {
+      const heading = a.dataset.chapter ? document.getElementById(a.dataset.chapter) : null;
+      if (heading) links.push({ a, heading });
+    });
+    if (!marker || links.length === 0) return;
+
+    let current: HTMLAnchorElement | null = null;
+
+    // Move the marker beside a link. Measured from the track, so it follows
+    // the link even when a long chapter name wraps to two lines.
+    const place = (a: HTMLAnchorElement) => {
+      marker.style.setProperty('--marker-y', `${a.offsetTop}px`);
+      marker.style.setProperty('--marker-h', `${a.offsetHeight}px`);
+    };
+
+    // The current chapter is the last one whose heading has reached the top
+    // third of the viewport. Above the first chapter, none is current and the
+    // marker hides. Measured on scroll (once per frame), so a jump straight
+    // to the end of the page lands on the right chapter too.
+    const update = () => {
+      const line = window.innerHeight * 0.33;
+      let next: HTMLAnchorElement | null = null;
+      for (const { a, heading } of links) {
+        if (heading.getBoundingClientRect().top <= line) next = a;
+      }
+      if (next === current) return;
+      current = next;
+      for (const { a } of links) {
+        if (a === next) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      }
+      if (next) {
+        place(next);
+        nav.dataset.ready = '';
+      } else {
+        delete nav.dataset.ready;
+      }
+    };
+
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        update();
+      });
+    };
+    // A wrapped chapter name changes height on resize; keep the marker on it.
+    const onResize = () => {
+      if (current) place(current);
+      onScroll();
+    };
+
+    const controller = new AbortController();
+    window.addEventListener('scroll', onScroll, { passive: true, signal: controller.signal });
+    window.addEventListener('resize', onResize, { signal: controller.signal });
+    document.addEventListener('astro:before-swap', () => controller.abort(), {
+      once: true,
+      signal: controller.signal,
+    });
+    update();
+  }
+
+  document.addEventListener('astro:page-load', initChapters);
+  initChapters();
+</script>

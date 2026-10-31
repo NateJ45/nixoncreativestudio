@@ -1,0 +1,377 @@
+---
+// Safe to edit. The copy comes from src/data/sector-pages.ts; the studies,
+// counts and the quote come from the case-studies collection.
+/* ============================================================================
+   Sector pages: /churches/ (overhaul package 4.2)
+   ============================================================================
+   One template for every sector page. getStaticPaths emits only the sectors
+   in SECTOR_PAGES (src/data/sector-pages.ts), which today is churches alone;
+   the comment at the top of that file says how to add nonprofits, schools or
+   small business once each has copy of its own. Every other sector stays on
+   /work/?sector=….
+
+   From the top:
+
+   1. The head: rail "{label} · {n} sites", the H1 with its one Heft (ruling
+      9), and the lede. Nothing in it takes data-reveal (ruling 3).
+   2. The points: what a site for this sector has to do, as ruled H3s in two
+      columns from md.
+   3. The studies in this sector, in the /work `order`: each one a
+      BrowserFrame of the live home page (shots/{slug}-home.png cropped to
+      16:10 from the top, else the cover), then the client name linking to
+      the study, the hook, the outcome, the year and stack in mono, and the
+      live host. All lazy: the frames sit below the fold at every width.
+   4. One client's own words (Testimonial.astro, verbatim, in a
+      <blockquote>), picked in SECTOR_PAGES and falling back to the first
+      quote on any study in the sector, or nothing.
+   5. PricingTeaser, the home's ruled tiers (every price from pricing.ts).
+   6. The ink closer, "Building for a church?", whose pill opens /contact
+      with ?from={path}&org_type={sector} so the form preselects the type.
+
+   Nothing here types a count: n is the number of studies in the sector, and
+   the description's {n} is filled from it. JSON-LD: the page node is a
+   CollectionPage with a Home > {label} BreadcrumbList, plus an ItemList of
+   the study URLs (src/lib/schema.ts).
+   ============================================================================ */
+
+import type { GetStaticPaths, ImageMetadata } from 'astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import Heft from '../components/Heft.astro';
+import BrowserFrame from '../components/BrowserFrame.astro';
+import Media from '../components/Media.astro';
+import Testimonial from '../components/Testimonial.astro';
+import PricingTeaser from '../components/PricingTeaser.astro';
+import { SECTOR_PAGES, type SectorPage } from '../data/sector-pages';
+import { DEFAULT_CLOSER, SECTOR_PHRASE } from '../lib/closer';
+import { site } from '../data/site';
+import { getCoverPlaceholder } from '../lib/coverPlaceholder';
+
+export const getStaticPaths = (() =>
+  SECTOR_PAGES.map((page) => ({
+    params: { sector: page.path },
+    props: { page },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  page: SectorPage;
+}
+const { page } = Astro.props;
+
+// The studies in this sector, in the /work order (`order`, then newest).
+const studies = (await getCollection('case-studies'))
+  .filter((e) => e.data.sector === page.sector)
+  .sort(
+    (a, b) =>
+      (a.data.order ?? Number.MAX_SAFE_INTEGER) - (b.data.order ?? Number.MAX_SAFE_INTEGER) ||
+      b.data.published.valueOf() - a.data.published.valueOf(),
+  );
+const n = studies.length;
+if (n === 0) {
+  throw new Error(
+    `Sector page /${page.path}/ has no ${page.sector} studies. Take it out of SECTOR_PAGES.`,
+  );
+}
+
+// The live home page capture for each frame (the same files /work pans).
+const homeShots = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/case-studies/shots/*-home.png',
+  { eager: true },
+);
+const shotFor = (entry: CollectionEntry<'case-studies'>): ImageMetadata =>
+  Object.entries(homeShots).find(([path]) => path.endsWith(`/${entry.id}-home.png`))?.[1].default ??
+  entry.data.cover;
+
+const hostOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+
+// The quote: the one named in SECTOR_PAGES if it is still on that study,
+// else the first quote on any study in the sector, else none.
+const allQuotes = studies.flatMap((e) =>
+  (e.data.testimonials ?? []).map((t) => ({ quote: t, study: e })),
+);
+const picked =
+  allQuotes.find((q) => q.study.id === page.quote?.study && q.quote.name === page.quote?.name) ??
+  allQuotes[0];
+
+const title = `${page.title} | ${site.studioName}`;
+const description = page.description.replace('{n}', String(n));
+const path = `/${page.path}/`;
+const canonical = new URL(path, site.url).toString();
+const phrase = SECTOR_PHRASE[page.sector] ?? page.sector;
+
+// The studies as an ItemList, by URL only: the CreativeWork nodes live on
+// the study pages, and a reference here would point off this page's graph.
+const schemas = [
+  {
+    '@type': 'ItemList',
+    '@id': `${canonical}#studies`,
+    name: `${page.label}: case studies`,
+    numberOfItems: n,
+    itemListElement: studies.map((e, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(`/work/${e.id}/`, site.url).toString(),
+      name: e.data.client,
+    })),
+  },
+];
+const live = studies.filter((e) => Boolean(e.data.liveUrl)).length;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  breadcrumbs={[{ name: page.label, path }]}
+  pageType="CollectionPage"
+  schemas={schemas}
+  closer={{
+    heading: 'Building for a',
+    emphasis: `${phrase}?`,
+    sub: DEFAULT_CLOSER.sub,
+    href: `/contact/?from=${page.path}&org_type=${page.sector}`,
+  }}
+>
+  {/* 1. The head. The H1 is the page's one Heft; no data-reveal here. */}
+  <Section
+    rail={page.label}
+    railMeta={`${n} ${n === 1 ? 'site' : 'sites'}`}
+    hairline={false}
+    labelledby="sector-heading"
+  >
+    <h1 id="sector-heading" class="sector-h1">
+      {page.h1.lead} <Heft text={page.h1.heavy} />
+    </h1>
+    <p class="sector-lede">{page.lede}</p>
+  </Section>
+
+  {/* 2. What a site for this sector has to do. */}
+  <Section rail="The job" tone="paper" labelledby="sector-points">
+    <h2 id="sector-points" class="sector-h2">
+      {page.pointsHeading.lead} <b>{page.pointsHeading.heavy}</b>
+    </h2>
+    <ul class="sector-points" role="list">
+      {page.points.map((point) => (
+        <li class="sector-point">
+          <h3 class="sector-h3">{point.title}</h3>
+          <p>{point.body}</p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  {/* 3. The studies, each in a frame of its live home page. */}
+  <Section
+    rail="The work"
+    railMeta={live === n ? `${n} live` : `${n} sites`}
+    labelledby="sector-work"
+  >
+    <h2 id="sector-work" class="sector-h2">
+      {page.label} I have <b>built for</b>
+    </h2>
+    <ol class="sector-studies" role="list">
+      {studies.map((entry) => {
+        const { client, hook, summary, outcome, liveUrl, year, facts, stack } = entry.data;
+        const stackLine = (facts?.stack ?? stack ?? []).join(', ');
+        return (
+          <li class="sector-study">
+            {liveUrl ? (
+              <BrowserFrame url={liveUrl} class="sector-frame">
+                <Media
+                  src={shotFor(entry)}
+                  alt=""
+                  ratio="16 / 10"
+                  position="top"
+                  widths={[480, 720, 960]}
+                  sizes="(min-width: 82.5rem) 38rem, (min-width: 64rem) 45vw, calc(100vw - 2rem)"
+                  placeholder={getCoverPlaceholder(entry.id)}
+                />
+              </BrowserFrame>
+            ) : (
+              <Media
+                src={entry.data.cover}
+                alt=""
+                ratio="16 / 10"
+                position="top"
+                widths={[480, 720, 960]}
+                sizes="(min-width: 82.5rem) 38rem, (min-width: 64rem) 45vw, calc(100vw - 2rem)"
+                placeholder={getCoverPlaceholder(entry.id)}
+                class="sector-frame"
+              />
+            )}
+            <div class="sector-study-text">
+              <h3 class="sector-study-name">
+                <a href={`/work/${entry.id}/`}>
+                  {client}
+                  <span class="sr-only">, case study</span>
+                </a>
+              </h3>
+              <p class="sector-hook">{hook ?? summary}</p>
+              {outcome && <p class="sector-outcome">{outcome}</p>}
+              <p class="sector-meta">
+                <span>{facts?.year ?? year}</span>
+                {stackLine && <span aria-hidden="true">·</span>}
+                {stackLine && <span>{stackLine}</span>}
+              </p>
+              <p class="sector-links">
+                <a href={`/work/${entry.id}/`}>
+                  Read the case study<span class="sr-only">: {client}</span>
+                  <span aria-hidden="true">→</span>
+                </a>
+                {liveUrl && (
+                  <a href={liveUrl} target="_blank" rel="noopener noreferrer">
+                    {hostOf(liveUrl)}
+                    <span aria-hidden="true">↗</span>
+                    <span class="sr-only">(live site, opens in a new tab)</span>
+                  </a>
+                )}
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  </Section>
+
+  {/* 4. One client's own words, verbatim. */}
+  {picked && (
+    <Section rail="In their words" tone="paper" label="In their words">
+      <Testimonial
+        testimonials={[picked.quote]}
+        labelled={false}
+        study={{ slug: picked.study.id, client: picked.study.data.client }}
+      />
+    </Section>
+  )}
+
+  {/* 5. What it costs. */}
+  <PricingTeaser />
+</BaseLayout>
+
+<style>
+  .sector-h1 {
+    max-width: 18ch;
+  }
+  .sector-lede {
+    max-width: 58ch;
+    margin: 1.5rem 0 0;
+    font-size: 1.1875rem;
+    line-height: 1.55;
+    color: var(--foreground);
+  }
+  .sector-h2 {
+    margin: 0 0 2.5rem;
+  }
+
+  /* ---- The points: ruled H3s, two columns from md ----------------------- */
+  .sector-points {
+    display: grid;
+    gap: 2rem 3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .sector-points {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .sector-point {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line-strong);
+  }
+  .sector-h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.375rem;
+  }
+  .sector-point p {
+    margin: 0;
+    max-width: 52ch;
+    line-height: 1.6;
+  }
+
+  /* ---- The studies ------------------------------------------------------- */
+  .sector-studies {
+    display: grid;
+    gap: clamp(3rem, 6vw, 5rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sector-study {
+    display: grid;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  @media (min-width: 64rem) {
+    .sector-study {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: 3rem;
+    }
+  }
+  .sector-study-name {
+    margin: 0;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+  .sector-study-name a {
+    color: var(--heading);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: 2px;
+  }
+  .sector-study-name a:hover,
+  .sector-study-name a:focus-visible {
+    text-decoration-color: currentColor;
+  }
+  .sector-hook {
+    margin: 0.85rem 0 0;
+    font-size: 1.1875rem;
+    line-height: 1.45;
+    color: var(--foreground);
+  }
+  .sector-outcome {
+    margin: 0.75rem 0 0;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .sector-meta,
+  .sector-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.6rem;
+    margin: 1rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .sector-links {
+    gap: 0.5rem 1.5rem;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .sector-links a {
+    color: var(--link);
+    text-underline-offset: 0.3em;
+  }
+  .sector-links a:focus-visible,
+  .sector-study-name a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  @media (pointer: coarse) {
+    .sector-links a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+</style>

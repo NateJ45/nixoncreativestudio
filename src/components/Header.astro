@@ -13,44 +13,40 @@
        Pages without a [data-hero-dark] element never get this state, so their
        header is the frosted bar from the first paint.
      - data-scrolled  : the page has scrolled past 8px; the bar frosts and
-       condenses. When both are present, over-hero wins (holds the hero
+       lifts (its height never changes, see below). When both are present, over-hero wins (holds the hero
        treatment while the hero is still behind it).
 
    All three visual states live in the scoped <style> block below rather than
    in Tailwind data-variant utilities, so the precedence between them is
    controlled by source order instead of specificity guesswork.
 
+   Overhaul package 2.1: the wordmark stays Bebas Neue (Nathan's decision 1).
+   Nav links never change weight (ruling 9); the active one is marked with a
+   2px accent underline plus aria-current. The CTA is the hero's pill. Below md
+   a compact "Start a project" pill sits beside the menu button (not on
+   /contact, where it would link to itself). The bar's height never changes:
+   every state below is paint only (tests/cls.spec.ts).
+
    The nav carries no 01-06 numerals: it is a flat set of destinations, not an
    ordered sequence, so numbered markers (which live only on the genuinely
    ordered Process band) would be decorative scaffolding here.
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
+import { getNav } from '../data/nav';
 import { site } from '../data/site';
-import MobileNav from './MobileNav';
-import ThemeToggle from './ThemeToggle';
+import MobileNav from './MobileNav.astro';
+import ThemeToggle from './ThemeToggle.astro';
 import { buttonVariants } from './ui/button';
 import { cn } from '@/lib/utils';
 
-// Hide the Journal nav link until the journal has something to show. Uses the
-// SAME visibility filter as the journal index (drafts hidden in production,
-// visible in dev), so the link appears exactly when the page has real content.
-// While the collection is empty the link is omitted from both the desktop nav
-// and the mobile drawer (they share this array).
-const journalCount = (
-  await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
-).length;
-
-// The nav model lives in the script so it's easy to reorder, rename, or extend
-// without hunting through markup. MobileNav consumes the same array. Contact is
-// NOT in this list: it is promoted to the "Start a project" CTA button (desktop
-// header below, and the drawer's own CTA on mobile), both pointing at /contact.
-const navLinks = [
-  { label: 'Work', href: '/work/' },
-  { label: 'Services', href: '/services/' },
-  { label: 'About', href: '/about/' },
-  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
-];
+// The nav model lives in src/data/nav.ts so the header, the mobile menu and
+// the footer share one list. Journal and Photography are gated there at build
+// time (Journal once an entry is published, Photography once the gallery has
+// real photos), so a link never points at an empty page. MobileNav consumes
+// the same array. Contact is NOT in this list: it is promoted to the "Start a
+// project" CTA button (desktop header below, and the drawer's own CTA on
+// mobile), both pointing at /contact.
+const navLinks = await getNav();
 
 // Active-route detection so the current section is marked in the nav. Treats a
 // link as active when the path matches it or sits beneath it (e.g. /work/foo).
@@ -60,11 +56,17 @@ const isActive = (href: string): boolean => {
   if (h === '') return path === '';
   return path === h || path.startsWith(`${h}/`);
 };
+
+// The compact mobile CTA is pointless on the page it links to.
+const onContact = path === '/contact';
 ---
 
-<header data-header class="ncs-header sticky top-0 z-50">
+<!-- transition:name="site-header" makes the bar a static View Transition
+     group: it never fades or slides between pages (globals.css section 6). -->
+<header data-header class="ncs-header sticky top-0 z-50" transition:name="site-header">
   <div class="ncs-container flex items-center justify-between gap-m">
-    <!-- Wordmark: the studio name, set in the display face. The text flips with
+    <!-- Wordmark: the studio name, set in Bebas Neue (font-wordmark), the one
+         place Bebas is used. The text flips with
          theme and goes white over the dark hero. transition:name morphs it
          across View Transitions navigations. -->
     <a
@@ -72,7 +74,7 @@ const isActive = (href: string): boolean => {
       href="/"
       transition:name="site-wordmark"
     >
-      <span class="wordmark-text link-underline font-display text-2xl leading-none tracking-[0.02em]">
+      <span class="wordmark-text link-underline font-wordmark text-xl leading-none whitespace-nowrap sm:text-2xl tracking-[0.02em]">
         {site.studioName}
       </span>
     </a>
@@ -89,7 +91,7 @@ const isActive = (href: string): boolean => {
                 class:list={[
                   'nav-link link-underline font-body text-base no-underline transition-colors duration-150',
                   isActive(href)
-                    ? 'is-active text-link'
+                    ? 'is-active text-heading'
                     : 'text-text hover:text-link focus-visible:text-link',
                 ]}
                 href={href}
@@ -118,26 +120,38 @@ const isActive = (href: string): boolean => {
       <div class="hidden md:block">
         <a
           href="/contact/"
-          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'shine px-5 py-2.5')}
+          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'rounded-full px-5 py-2.5')}
         >
           Start a project
         </a>
       </div>
 
-      <!-- Theme toggle. Desktop only; the MobileNav drawer carries its own.
-           client:idle, not client:load: hydrating it at load pulled React onto
-           the critical path on every page for a control nobody touches in the
-           first second, and it is hidden below md where the score is measured. -->
+      <!-- Theme toggle. Desktop only; the MobileNav panel carries its own.
+           Plain markup plus a small script (no React); hidden without JS. -->
       <div class="hidden md:block">
-        <ThemeToggle client:idle />
+        <ThemeToggle />
       </div>
 
-      <!-- Mobile drawer. Hidden at >= md. The component server-renders only its
-           trigger button and mounts the Radix Sheet after hydration (the portal
-           does not SSR cleanly), which is what lets this be client:idle instead
-           of client:only: React no longer downloads inside the LCP window. -->
+      <!-- Mobile nav. Hidden at >= md. The menu button is a link to the footer
+           nav (#site-nav) that a small script upgrades to a native <dialog>
+           panel, so it works with or without JavaScript and ships no React. -->
+      {/* Compact CTA below md: the same pill, smaller, 44px tall so it is a
+          comfortable tap. Hidden below 380px, where the wordmark and the menu
+          button fill the bar; the open menu carries the full pill there. */}
+      {!onContact && (
+        <a
+          href="/contact/"
+          class={cn(
+            buttonVariants({ variant: 'brand' }),
+            'header-compact-cta min-h-11 rounded-full px-3.5 text-sm font-semibold md:hidden',
+          )}
+        >
+          Start a project
+        </a>
+      )}
+
       <div class="md:hidden">
-        <MobileNav client:idle links={navLinks} studioName={site.studioName} />
+        <MobileNav links={navLinks} studioName={site.studioName} />
       </div>
     </div>
   </div>
@@ -161,14 +175,15 @@ const isActive = (href: string): boolean => {
     transition:
       background-color 0.3s ease,
       box-shadow 0.3s ease,
-      padding 0.3s ease,
       border-color 0.3s ease;
   }
 
-  /* Scrolled: frost deepens, the bar condenses and lifts. */
+  /* Scrolled: frost deepens and the bar lifts. It no longer condenses: the
+     header is in flow (sticky), so shrinking its padding moved the whole page
+     up while the visitor scrolled, which read as layout shift (up to 0.054 on
+     / at 1440 in tests/cls.spec.ts, overhaul package 1.5). Only paint
+     properties change here. */
   .ncs-header[data-scrolled] {
-    padding-top: calc(0.75rem + env(safe-area-inset-top));
-    padding-bottom: 0.75rem;
     background-color: color-mix(in oklab, var(--color-bg) 90%, transparent);
     box-shadow: 0 10px 30px -18px rgba(10, 22, 40, 0.45);
     backdrop-filter: blur(12px);
@@ -194,7 +209,7 @@ const isActive = (href: string): boolean => {
   /* Over the navy hero (dark mode) the wordmark + nav flip to white. In light
      mode the default dark heading / nav-link colours already read cleanly on the
      light hero surface, so no override is needed. The theme toggle + mobile
-     hamburger are React islands that set their own icon colour via a text-*
+     hamburger are child components that set their own icon colour via a text-*
      class; reach them with :global + a hook class so they flip white too. */
   :global(.dark) .ncs-header[data-over-hero] .wordmark-text,
   :global(.dark) .ncs-header[data-over-hero] .nav-link {
@@ -211,10 +226,21 @@ const isActive = (href: string): boolean => {
     transition: color 0.2s ease;
   }
 
-  /* Active nav item keeps its underline drawn (the .link-underline base hides
-     it until hover). Paired with text-link + aria-current for a non-color cue. */
+  /* Active nav item: its underline stays drawn, 2px in the accent (the
+     .link-underline base draws it in currentColor and hides it until hover).
+     The weight never changes (ruling 9), so nothing in the bar reflows. */
   .nav-link.is-active::after {
     transform: scaleX(1);
+    background: var(--color-accent);
+  }
+
+  /* The compact CTA needs the room the wordmark leaves: wordmark, pill and
+     menu button need about 380px, so on narrower phones (320, the 375px
+     iPhone SE and mini) it goes and the open menu carries the full pill. */
+  @media (max-width: 379.98px) {
+    .header-compact-cta {
+      display: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

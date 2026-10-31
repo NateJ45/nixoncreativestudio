@@ -1,0 +1,78 @@
+name: Live scores
+
+# Overhaul package 4.7. Measures the live home pages of the studio's own client
+# sites with Lighthouse (mobile, default throttling, median of 3 runs) and opens a
+# PR with the updated src/data/live-scores.json. The case-study rail reads that
+# file at build and hides any entry older than 120 days, so this runs monthly.
+#
+# Runs on ubuntu-latest on purpose: numbers measured on Nathan's Windows PC are
+# not trustworthy (docs/claude/gotchas.md, Gotcha 9). Not a required check, never
+# touches ci.yml, and has no path filter anywhere.
+#
+# A PR opened with GITHUB_TOKEN does not trigger the pull_request workflows, and
+# neither does an empty commit pushed with it. workflow_dispatch is the exception
+# GitHub allows, so the last step dispatches ci.yml and lighthouse.yml on the new
+# branch; their `build`, `test` and `lighthouse` check runs report on the PR's head
+# commit under the names the ruleset requires. (Needs "Allow GitHub Actions to
+# create and approve pull requests" under Settings > Actions > General.)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:17 UTC on the 1st of each month.
+    - cron: '17 6 1 * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: live-scores
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Lighthouse comes with @lhci/cli (already a devDependency); Chrome is
+      # preinstalled on ubuntu-latest.
+      - name: Measure the live sites
+        run: node scripts/measure-live.mjs
+
+      - name: Open a PR with the new scores
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- src/data/live-scores.json; then
+            echo "No change to src/data/live-scores.json; nothing to propose."
+            exit 0
+          fi
+          branch="live-scores/$(date -u +%Y-%m-%d-%H%M)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add src/data/live-scores.json
+          git commit -m "Live scores: re-measure the client sites ($(date -u +%Y-%m-%d))"
+          git push -u origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Live scores: $(date -u +%Y-%m-%d)" \
+            --body "Monthly Lighthouse re-measure of the live client sites (mobile, median of 3 runs), written by scripts/measure-live.mjs. Only src/data/live-scores.json changes."
+          # The token's own pushes start no pull_request runs, so dispatch the
+          # required workflows on the branch by hand.
+          gh workflow run ci.yml --ref "$branch"
+          gh workflow run lighthouse.yml --ref "$branch"

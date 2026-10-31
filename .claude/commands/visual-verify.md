@@ -48,7 +48,7 @@ Run this after any visual change before pushing. If a specific route is passed a
    location.reload();
    ```
 
-   The key is `ncs-theme` (defined in `ThemeToggle.tsx` and the anti-FOUC script in `BaseLayout.astro`). After reload, the page reflects the chosen mode without flash.
+   The key is `ncs-theme` (defined in `src/scripts/theme-toggle.ts`, which drives `ThemeToggle.astro`, and the anti-FOUC script in `BaseLayout.astro`). After reload, the page reflects the chosen mode without flash.
 
 4. **If the site is behind the coming-soon gate** (`PUBLIC_COMING_SOON=true` in `.env`), bypass it once per browser session:
 
@@ -74,7 +74,7 @@ Run this after any visual change before pushing. If a specific route is passed a
 - **Mobile nav:** at 375px, the desktop nav should be hidden and the mobile hamburger visible. Tap the hamburger and confirm the drawer opens cleanly.
 - **Theme toggle:** clicking it in the header cycles light, dark, system. Confirm the page repaints without flash.
 - **Photography page:** the justified grid should fill its container without overflow. The lightbox should open on photo click (click a photo, confirm the overlay appears).
-- **Work filter chips** on `/work`: toggling a sector chip should hide/show cards without a page reload.
+- **Work sector tabs** on `/work`: a tab hides and shows rows without a reload and rewrites `?sector=` in the URL; `/work/?sector=church` filters on load.
 
 ---
 

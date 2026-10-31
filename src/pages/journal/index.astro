@@ -2,34 +2,27 @@
 // Safe to edit. The page wiring is foundation; the copy at the top is
 // safe to swap when positioning changes.
 /* ============================================================================
-   /journal | Journal Index
+   /journal | Journal index (restyled in overhaul 2.9)
    ============================================================================
-   Listing for the journal collection. Sorts newest first, filters out
-   drafts in production builds, and renders a card per entry.
+   Listing for the journal collection, newest first, with drafts left out of
+   production builds (the same filter src/data/nav.ts uses to gate the
+   Journal link, so the link appears with the first published entry).
 
-   Two paths share this page:
-     1. Empty state. The live state today, because the collection has no
-        entries yet. Instead of a bare sentence, it ships an intentional,
-        on-brand "first dispatch is coming" card: an animated aurora mesh
-        over navy, the studio mark, and two onward links so the page never
-        reads as broken.
-     2. Populated list. A featured lead card (the newest entry, given the
-        most weight) followed by a reveal-staggered grid of the rest. Each
-        card shows its cover thumbnail when present, the date, a reading-time
-        stamp, and tag chips.
+   A dated hairline list, not cards: each entry is one row in the prose
+   measure (columns 4 to 10, about 40rem) with its date and reading time in
+   mono, the title as a link, and the one-line summary. Rows are ruled by a
+   1px --line hairline. No cover images on the index: the entry page has
+   them.
 
-   All motion (reveal, spotlight, aurora, hover-lift) is reduced-motion
-   safe via the shared design system in globals.css.
+   Empty state (the live state today, nothing published): one plain line
+   and two onward links, in the same measure. No card.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CtaBanner from '../../components/CtaBanner.astro';
-import { buttonVariants } from '../../components/ui/button';
 import { readingTime } from '../../lib/readingTime';
 
-const all = (
+const entries = (
   await getCollection('journal', ({ data }) =>
     // Drop drafts in production. import.meta.env.PROD is true on `astro build`,
     // false on `astro dev`, so drafts stay visible locally.
@@ -37,206 +30,104 @@ const all = (
   )
 ).sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
 
-// Split the newest entry off the front: it becomes the featured lead card,
-// the rest fill the grid below. Slicing an array of length 0 or 1 is safe,
-// so this works for the empty and single-entry cases too.
-const [lead, ...rest] = all;
-
 const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-// Reading-time stamp per entry, computed once here so both the lead card and
-// the grid cards can read it without recomputing.
-const minutesById = new Map<string, number>();
-for (const entry of all) {
-  minutesById.set(entry.id, readingTime(entry.body ?? ''));
-}
 ---
 
 <BaseLayout
   title="Journal | Nixon Creative Studio"
-  description="Short essays, process notes and field reports from Nixon Creative Studio, on web design, brand work and photography."
+  description="Short essays, process notes and field reports from Nixon Creative Studio, on web design, brand work and photography for the organizations I work with."
 >
-  <section class="py-2xl" aria-labelledby="journal-heading">
-    <div class="ncs-container">
-      <header class="mb-xl flex flex-col gap-xs" data-reveal>
+  <section class="py-section" aria-labelledby="journal-heading">
+    <div class="ncs-container page-grid">
+      <header class="journal-head grid-prose">
         <h1 id="journal-heading">Journal</h1>
-        <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">
+        <p class="text-lg leading-[1.5] text-text-muted">
           Short notes from the studio: process, opinions, the occasional field report. Updated
           whenever there's something worth writing down.
         </p>
       </header>
 
-      {all.length === 0 ? (
-        /* Empty-state. The live state until the first entry publishes.
-             A designed "first dispatch is coming" card on the theme-aware band
-             surface (light in light mode, navy in dark), not a bare line, so
-             the page reads as intentional. */
-        <div
-          class="band-themed hover-lift rounded-2xl border border-border p-xl sm:p-2xl"
-          data-reveal="scale"
-        >
-          <div class="relative z-10 flex max-w-[58ch] flex-col gap-m">
-            {/* Studio mark. The wordmark initials set in the display face,
-                 echoing the header lockup. Decorative here, so aria-hidden. */}
-            <span
-              class="font-display text-h3 leading-none tracking-wide text-link"
-              aria-hidden="true"
-            >
-              NCS
-            </span>
-
-            {/* Lead-in line, deliberately NOT a tracked-uppercase eyebrow:
-                 a classic mono eyebrow stacked right over the heading is the
-                 loudest section-scaffold tell. Sentence-case, in the link tone,
-                 reads as a warm intro instead. */}
-            <p class="text-base font-semibold text-link">First dispatch is coming.</p>
-
-            <h2 class="text-h2 text-heading">The first entry is being drafted.</h2>
-
-            <p class="text-lg leading-[1.6] text-text-muted">
-              This is where I'll write down how the studio works: the thinking behind a build, notes
-              from a shoot, the small decisions that add up. Nothing's published yet. While you
-              wait, two good places to land.
-            </p>
-
-            <div class="mt-xs flex flex-wrap items-center gap-s">
-              {/* Primary CTA routed through the shared button recipe (brand /
-                   cta / shine) so it matches the real site button instead of a
-                   hand-rolled lookalike that can drift. */}
-              <span class="inline-block">
-                <a
-                  class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
-                  href="/work/"
-                >
-                  See selected work
-                </a>
-              </span>
-              <a
-                class="link-underline inline-flex items-center px-1 py-2.5 font-semibold text-link no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                href="/contact/"
-              >
-                Say hello
-              </a>
-            </div>
-          </div>
+      {entries.length === 0 ? (
+        <div class="journal-empty grid-prose">
+          <p class="text-lg leading-[1.6] text-text">
+            Nothing's published yet. This is where I'll write down how the studio works: the
+            thinking behind a build, notes from a shoot, the small decisions that add up. Until
+            then, the <a href="/work/">case studies</a> show the work, and you can always{' '}
+            <a href="/contact/">say hello</a>.
+          </p>
         </div>
       ) : (
-        <div class="flex flex-col gap-2xl">
-          {/* Featured lead card. The newest entry, given full width and the
-               most visual weight: cover on one side at desktop, copy on the
-               other. The whole card is a single <a> so the click target
-               covers art and body together. */}
-          <a
-            class="group spotlight-card hover-lift relative isolate grid overflow-hidden rounded-2xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent md:grid-cols-2"
-            href={`/journal/${lead.id}/`}
-            data-spotlight
-            data-reveal
-          >
-            {lead.data.cover && (
-              <div class="relative z-10 overflow-hidden bg-bg max-md:aspect-[16/9] md:order-2">
-                <Image
-                  src={lead.data.cover}
-                  alt=""
-                  widths={[600, 900, 1200]}
-                  sizes="(min-width: 48rem) 50vw, 100vw"
-                  class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                  transition:name={`journal-cover-${lead.id}`}
-                />
-              </div>
-            )}
-
-            <div class="relative z-10 flex flex-col gap-s p-l sm:p-xl md:order-1 md:justify-center">
-              {/* Meta row. The "Latest" status reads as a filled badge sitting
-                   inline with the date / reading-time, not as a tracked-uppercase
-                   eyebrow stacked over the title (that doubled the eyebrow count
-                   on the card). The date + reading time stay a genuine mono meta
-                   line. */}
-              <p class="flex flex-wrap items-center gap-s font-mono text-[0.8rem] tracking-[0.05em] text-text-muted uppercase">
-                <span class="rounded-full bg-accent px-2.5 py-0.5 font-semibold tracking-[0.08em] text-accent-foreground">
-                  Latest
-                </span>
-                <span>{fmt.format(lead.data.published)}</span>
+        <ol class="journal-list grid-prose">
+          {entries.map((entry) => (
+            <li class="journal-row">
+              <p class="journal-meta">
+                <time datetime={entry.data.published.toISOString().slice(0, 10)}>
+                  {fmt.format(entry.data.published)}
+                </time>
                 <span aria-hidden="true">·</span>
-                <span>{minutesById.get(lead.id)} min read</span>
+                <span>{readingTime(entry.body ?? '')} min read</span>
               </p>
-              {/* Lead title at display scale (text-h1), a clear step above the
-                   grid cards (text-h3), so the newest entry carries real weight
-                   beyond the badge alone. Tighter leading suits the larger size. */}
-              <h2 class="text-h1 leading-[0.95] text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                {lead.data.title}
+              <h2 class="journal-title text-h3">
+                <a href={`/journal/${entry.id}/`}>{entry.data.title}</a>
               </h2>
-              <p class="max-w-[60ch] text-lg leading-[1.55] text-text">{lead.data.summary}</p>
-
-              {lead.data.tags && lead.data.tags.length > 0 && (
-                <ul class="mt-xs flex flex-wrap gap-2" aria-label="Topics">
-                  {lead.data.tags.map((tag) => (
-                    <li class="rounded-full border border-border bg-bg px-3 py-1 font-mono text-[0.7rem] tracking-[0.06em] text-text-muted uppercase">
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <span class="card-link mt-xs">Read on</span>
-            </div>
-          </a>
-
-          {/* The rest of the entries, reveal-staggered in a grid. Hidden
-              entirely when there's only the lead entry. */}
-          {rest.length > 0 && (
-            <ul class="grid [grid-template-columns:repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-l">
-              {rest.map((entry, i) => (
-                <li data-reveal style={`--reveal-delay: ${i * 90}ms`}>
-                  <a
-                    class="group spotlight-card hover-lift relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-border bg-bg-soft text-inherit no-underline transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                    href={`/journal/${entry.id}/`}
-                    data-spotlight
-                  >
-                    {entry.data.cover && (
-                      <div class="relative z-10 aspect-[16/9] overflow-hidden bg-bg">
-                        <Image
-                          src={entry.data.cover}
-                          alt=""
-                          widths={[400, 600, 900]}
-                          sizes="(min-width: 60rem) 33vw, (min-width: 40rem) 50vw, 100vw"
-                          class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus-visible:scale-[1.03]"
-                          transition:name={`journal-cover-${entry.id}`}
-                        />
-                      </div>
-                    )}
-
-                    <div class="relative z-10 flex flex-1 flex-col gap-s p-l">
-                      <p class="flex flex-wrap items-center gap-s font-mono text-[0.78rem] tracking-[0.05em] text-text-muted uppercase">
-                        <span>{fmt.format(entry.data.published)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{minutesById.get(entry.id)} min read</span>
-                      </p>
-                      <h2 class="text-h3 text-heading transition-colors group-hover:text-link group-focus-visible:text-link">
-                        {entry.data.title}
-                      </h2>
-                      <p class="leading-[1.5] text-text">{entry.data.summary}</p>
-
-                      {entry.data.tags && entry.data.tags.length > 0 && (
-                        <ul class="flex flex-wrap gap-2" aria-label="Topics">
-                          {entry.data.tags.map((tag) => (
-                            <li class="rounded-full border border-border bg-bg px-2.5 py-0.5 font-mono text-[0.68rem] tracking-[0.06em] text-text-muted uppercase">
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      <span class="card-link mt-auto pt-xs">Read on</span>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+              <p class="leading-[1.55] text-text">{entry.data.summary}</p>
+            </li>
+          ))}
+        </ol>
       )}
     </div>
   </section>
-
-  <CtaBanner />
 </BaseLayout>
+
+<style>
+  .journal-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    padding-bottom: var(--spacing-l);
+  }
+
+  /* One measure for the list and the empty line: about 40rem. */
+  .journal-list,
+  .journal-empty {
+    max-width: 40rem;
+    border-top: 1px solid var(--line);
+  }
+  .journal-empty {
+    padding-top: var(--spacing-l);
+  }
+  .journal-empty a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .journal-empty a:hover,
+  .journal-empty a:focus-visible {
+    text-underline-offset: 4px;
+  }
+
+  .journal-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    padding-block: var(--spacing-l);
+    border-bottom: 1px solid var(--line);
+  }
+  .journal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+  }
+  .journal-title a {
+    color: var(--color-heading);
+    text-decoration: none;
+  }
+  .journal-title a:hover,
+  .journal-title a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+</style>

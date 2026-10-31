@@ -1,0 +1,117 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   ThemeToggle
+   ============================================================================
+   Cycles the site theme through three states: light -> dark -> system.
+   "System" follows the OS preference, and while it is chosen the page flips
+   live when the OS switches between day and night themes.
+
+   Persistence: localStorage["ncs-theme"] = "light" | "dark" | "system". The
+   anti-FOUC bootstrap in BaseLayout.astro reads the same key before first
+   paint, so a choice survives reloads with no flash. Do not rename the key.
+
+   No React: the button is plain markup with all three icons inlined, and the
+   script below shows the right one and wires the click. Without JavaScript the
+   button is hidden (a control that does nothing is worse than none) and the
+   system theme still applies through the bootstrap.
+
+   Used by Header.astro (desktop, compact 32px) and MobileNav.astro (inside the
+   panel, `class="size-11"` for a 44px touch target).
+   ============================================================================ */
+
+import ChromeIcon from './ChromeIcon.astro';
+import { buttonVariants } from './ui/button';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  /** Extra classes, e.g. size-11 for the touch-sized copy in the mobile nav. */
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  data-theme-choice="system"
+  aria-label="Toggle theme"
+  title="Toggle theme"
+  class={cn(
+    buttonVariants({ variant: 'ghost', size: 'icon' }),
+    'theme-toggle text-text hover:text-accent',
+    className,
+  )}
+>
+  {/* One icon per state; CSS shows the one matching data-theme-choice. The
+      sun doubles as the placeholder before the script reads storage. */}
+  <ChromeIcon name="sun" class="theme-icon theme-icon-light size-5" />
+  <ChromeIcon name="moon" class="theme-icon theme-icon-dark size-5" />
+  <ChromeIcon name="monitor" class="theme-icon theme-icon-system size-5" />
+</button>
+
+<style>
+  /* Without JS the toggle cannot do anything, so it is not shown. The .js
+     class is set on <html> by the BaseLayout bootstrap before first paint. */
+  :global(html:not(.js)) .theme-toggle {
+    display: none;
+  }
+
+  /* The icons are child-component SVGs, so they are reached with :global. */
+  .theme-toggle :global(.theme-icon) {
+    display: none;
+  }
+  /* Until the script marks the button bound, show the sun (the old island's
+     placeholder), then the icon for the stored choice. */
+  .theme-toggle:not([data-bound]) :global(.theme-icon-light),
+  .theme-toggle[data-bound][data-theme-choice='light'] :global(.theme-icon-light),
+  .theme-toggle[data-bound][data-theme-choice='dark'] :global(.theme-icon-dark),
+  .theme-toggle[data-bound][data-theme-choice='system'] :global(.theme-icon-system) {
+    display: block;
+  }
+</style>
+
+<!-- Circular theme reveal (overhaul 4.5), only while html.theme-reveal is set
+     by src/scripts/theme-toggle.ts for the length of one theme swap. is:global
+     because the ::view-transition pseudo-elements hang off <html>, outside any
+     component scope; globals.css is frozen (ruling 10), so it lives here.
+     - The old page stays put underneath; the new theme grows over it in a
+       circle from the button (--reveal-x/-y), out past the farthest corner
+       (--reveal-r). mix-blend-mode normal stops the UA's plus-lighter blend
+       brightening the overlap.
+     - Every view-transition-name is dropped for the swap, so the header, the
+       footer, the wordmark and the case-study covers are part of the one root
+       snapshot and are revealed with the rest instead of snapping or fading.
+       Page navigations never carry the class, so their names are untouched.
+     - The script never starts this transition under reduced motion or Pause
+       motion, and globals.css stops every ::view-transition animation in both
+       cases anyway. -->
+<style is:global>
+  html.theme-reveal * {
+    view-transition-name: none !important;
+  }
+  html.theme-reveal::view-transition-old(root),
+  html.theme-reveal::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
+  html.theme-reveal::view-transition-old(root) {
+    animation: none;
+  }
+  html.theme-reveal::view-transition-new(root) {
+    animation: theme-reveal var(--dur-scene) var(--ease-settle) both;
+  }
+  @keyframes theme-reveal {
+    from {
+      clip-path: circle(0 at var(--reveal-x, 50%) var(--reveal-y, 0));
+    }
+    to {
+      clip-path: circle(var(--reveal-r, 150vmax) at var(--reveal-x, 50%) var(--reveal-y, 0));
+    }
+  }
+</style>
+
+<script>
+  import { initThemeToggles } from '../scripts/theme-toggle';
+  document.addEventListener('astro:page-load', initThemeToggles);
+</script>

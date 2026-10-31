@@ -1,22 +1,27 @@
 /* ============================================================================
    Pricing | Single source of truth for studio pricing
    ============================================================================
-   Both the /services page (full tier cards + the "add to any project" strip)
-   and the homepage PricingTeaser read their numbers from here, so the two can
+   The /services page (tier cards, the "add to any project" strip, the care
+   levels, the FAQ answers and the JSON-LD offers), the homepage PricingTeaser,
+   the /contact budget brackets, the /photography and /services meta
+   descriptions and /llms.txt all read their numbers from here, so they can
    never drift apart. Change a price once, in this file, and every surface
    updates on the next build. Same single-source pattern as src/data/site.ts.
+   Prose that quotes a price reads it with money() or, from a display string
+   like 'from $900', dollars() (src/lib/money.ts).
 
    The numbers reflect the 2026 market for an agency-grade solo studio:
    Launch from $4,000, Signature from $7,000 (where most projects land),
    Flagship from $12,000, plus the add-ons. If a number changes here, also
-   update the matching /services FAQ answer (the FAQ is prose, so it can't
-   import these values) and the strategy doc.
+   update the strategy doc (outside this repo). Keep the dollar amounts in the
+   display strings (price, range, time) written as '$1,234': the JSON-LD and
+   the FAQ read them back out of those strings.
    ============================================================================ */
 
 export interface WebTier {
   /** Tier name shown on both surfaces. */
   name: string;
-  /** Numeric floor. Drives the services countup and both price displays. */
+  /** Numeric floor. Drives both price displays (static text, no count-up). */
   priceFrom: number;
   /** Trailing glyph after the price, e.g. '+'. */
   priceSuffix: string;

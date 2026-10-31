@@ -15,6 +15,10 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+// A six-digit hex colour, e.g. '#a83c26'. Palettes stay plain hex so the
+// contrast test (src/lib/case-palettes.test.ts) can measure them directly.
+const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a six-digit hex colour like #a83c26');
+
 /* ----------------------------------------------------------------------------
    case-studies
    ----------------------------------------------------------------------------
@@ -61,9 +65,15 @@ const caseStudies = defineCollection({
       // angles like 'Plan Your Visit', 'Brand refresh', 'Fundraising'.
       tags: z.array(z.string()).optional(),
 
-      // One-sentence pitch shown on listing cards and meta descriptions.
-      // Capped so it stays inside title tags and og:description.
+      // One-sentence pitch shown on listing cards (and the meta description
+      // when metaDescription is absent).
       summary: z.string().max(200),
+
+      // The search-result description for the study page (<meta name=
+      // "description">, og:description and the CreativeWork description).
+      // Written for a buyer, in first person, 120 to 160 characters so search
+      // results show it whole. Optional: without it the page uses `summary`.
+      metaDescription: z.string().min(120).max(160).optional(),
 
       // Optional longer-form description for the case study detail page,
       // a step bigger than the one-sentence summary. Caps at 500 chars
@@ -81,9 +91,9 @@ const caseStudies = defineCollection({
       // Project year. Number, not string, so listings can sort numerically.
       year: z.number().int(),
 
-      // Featured flag. When true, the homepage Selected Work section can
-      // pull this entry to the top. Defaults to false so new entries are
-      // off the homepage until explicitly promoted.
+      // Featured flag. Unused since overhaul 2.2: the home's Selected work
+      // now shows the three lowest `order` values instead. Kept so existing
+      // frontmatter still validates.
       featured: z.boolean().default(false),
 
       // Publish date. Drives ordering on the work index (newest first).
@@ -100,7 +110,7 @@ const caseStudies = defineCollection({
       stack: z.array(z.string()).optional(),
 
       // Optional URL to the live, shipped site. When present, the case study
-      // card and detail page render a prominent "Visit the live site" link.
+      // card and detail page link to it (the "Visit {domain}" button on the study).
       // For a web design portfolio this is the single strongest trust signal:
       // it lets a prospect click straight through to real, working proof.
       // Leave it off for work that is no longer live or not yours to link.
@@ -115,18 +125,31 @@ const caseStudies = defineCollection({
       // sets the price before a customer spends a dollar.'
       outcome: z.string().max(160).optional(),
 
-      // Optional client testimonial. Renders as a pull-quote on the detail
-      // page when present; renders nothing when absent, so it is safe to leave
-      // off until a real quote is collected. Never fabricate this: it is
-      // social proof, and an invented quote on a live client-facing portfolio
-      // is both dishonest and a liability. quote + name are required when the
-      // object is present; title (role / organization) is optional.
-      testimonial: z
-        .object({
-          quote: z.string(),
-          name: z.string(),
-          title: z.string().optional(),
-        })
+      // Optional client testimonials, as a list (First Baptist Muncie has two).
+      // Each renders through Testimonial.astro after the study's results
+      // ledger; a study without the field shows nothing. The homepage shows
+      // one of them (src/pages/index.astro). Never fabricate one (CLAUDE.md
+      // never-break rule 9): every quote is copied character for character
+      // from the client's own email, recorded in the vault note
+      // projects/ncs-testimonials.md, including the client's own punctuation.
+      //   quote    the client's words, verbatim, without quote marks
+      //   name     their name as they signed it (credentials included)
+      //   title    their role and organisation as they signed it
+      //   date     the day they wrote it (YYYY-MM-DD), the permission date
+      //   context  optional: one plain line that frames the quote honestly,
+      //            for example when it is about an earlier version of the site
+      // src/lib/case-testimonials.test.ts checks the shape and which studies
+      // carry one.
+      testimonials: z
+        .array(
+          z.object({
+            quote: z.string().min(1),
+            name: z.string().min(1),
+            title: z.string().min(1),
+            date: z.date(),
+            context: z.string().optional(),
+          }),
+        )
         .optional(),
 
       // Optional "what changed" results list. Each entry is a short, real outcome
@@ -140,6 +163,126 @@ const caseStudies = defineCollection({
       // page. Specific to the project and honest; the signature is added by the
       // component.
       designerNote: z.string().optional(),
+
+      // ---- Overhaul content model (package 1.6) -------------------------
+      // The fields below feed the redesigned reel, /work rows, title card,
+      // Specimen strip and Up next loop. All optional so a new study builds
+      // before it is fully dressed. Every value is copied from the client's
+      // own shipped site; never invent one.
+
+      // One line about the live site, in Nathan's plain voice. The homepage
+      // hero reel shows it on hover and in the "Now showing" ticker
+      // (src/data/reel.ts reads it from here), and the title card uses it
+      // under the client name. Keep it TRUE: a real thing on the live site.
+      hook: z.string().max(90).optional(),
+
+      // Position in the study loop (1 = first). Matches the /work order, and
+      // the Up next panel hands off to order + 1, wrapping at the end. Unique
+      // per study; case-palettes.test.ts checks the set runs 1..n with no gaps.
+      order: z.number().int().positive().optional(),
+
+      // The client's colours and typeface, copied from the client repo's
+      // shipped tokens (or sampled with getComputedStyle from the live site
+      // when there is no repo). Used only for surfaces, rules, swatches and
+      // non-text marks on this site, never for our body text.
+      //   paper      the client's page ground
+      //   ink        the client's body text colour (>= 4.5:1 on paper)
+      //   accent     the client's accent, used for rules and marks (>= 3:1 on paper)
+      //   accentInk  the text colour the client sets on accent (>= 4.5:1)
+      //   markDark   optional: the swatch used for marks on this site's dark
+      //              ink surface when `accent` is under 3:1 there. Always one
+      //              of the client's own colours, never a tint made up here.
+      //   dark       optional: ONLY where the client site really ships a dark
+      //              theme (ruling 8: never invent one). accentInk is optional
+      //              because some dark themes use the accent for decoration only.
+      //   typeface   the client's real heading and body faces, e.g.
+      //              'Fraunces / Source Sans 3' (heading first)
+      //   swatches   the client's main colours, in display order
+      // src/lib/case-palettes.test.ts checks every pair in both modes.
+      palette: z
+        .object({
+          paper: hex,
+          ink: hex,
+          accent: hex,
+          accentInk: hex,
+          markDark: hex.optional(),
+          dark: z
+            .object({
+              paper: hex,
+              ink: hex,
+              accent: hex,
+              accentInk: hex.optional(),
+            })
+            .optional(),
+          typeface: z.string(),
+          swatches: z.array(hex).min(2).max(6),
+        })
+        .optional(),
+
+      // Specific captures for the redesigned study page. Paths are relative
+      // to the .mdx file, like `cover`. featureShot frames one feature,
+      // beforeShot is the site before the project (only where one was
+      // captured while the old site was live), mobileShot is the phone-width
+      // capture written by `npm run capture:study`.
+      featureShot: image().optional(),
+      // Alt text for featureShot where it is shown ("The idea" band). Say what
+      // the still shows on the live site. Falls back to a generic line.
+      featureShotAlt: z.string().optional(),
+      // ---- Interaction clip (package 3.5) --------------------------------
+      // A few seconds of the live site in use, recorded by
+      // `npm run capture:clips` into public/media/. When set, "The idea"
+      // band shows the clip instead of featureShot (featureShot stays as the
+      // still everywhere else).
+      //   src  the base path the script prints, no extension, e.g.
+      //        /media/mas-monograms-studio.c68efbbe (the .mp4, .webm and
+      //        .webp poster share it)
+      //   alt  what the clip shows, for screen readers
+      signatureClip: z
+        .object({
+          src: z.string().regex(/^\/media\/[a-z0-9-]+\.[0-9a-f]{8}$/),
+          alt: z.string().min(1),
+        })
+        .optional(),
+      beforeShot: image().optional(),
+      mobileShot: image().optional(),
+
+      // ---- "What you edit" (package 3.6) --------------------------------
+      // A screenshot of the site's own editor (Sanity Studio or wp-admin)
+      // with a real page or post open, because a CMS that works well is part
+      // of what I sell. Shot by Nathan with `npm run capture:cms` (he signs
+      // in himself) to shots/{slug}-cms.png. Without cmsShot the study page
+      // shows no "What you edit" band.
+      //   cmsShot     the 1440x900 capture, relative to the .mdx like `cover`
+      //   cmsShotAlt  required when cmsShot is set: what the screen shows,
+      //               e.g. 'The Home page open in Sanity Studio'
+      //   cmsName     the editor's name for the band's rail, e.g.
+      //               'Sanity Studio' or 'WordPress'
+      //   cmsUrl      optional: the editor's address for the frame's bar. Without
+      //               it the frame shows liveUrl plus /studio (Sanity Studio) or
+      //               /wp-admin (WordPress), from cmsFrame() in src/lib/study.ts
+      // The pairing rule is cmsShotProblem() in src/lib/study.ts (tested):
+      // /work/[slug].astro throws on it, so a cmsShot without its alt text
+      // fails the build. (Not a superRefine here, which would re-indent
+      // this whole schema and collide with every other edit to it.)
+      cmsShot: image().optional(),
+      cmsShotAlt: z.string().optional(),
+      cmsName: z.string().optional(),
+      cmsUrl: z.string().url().optional(),
+
+      // Short facts for the study's fact row. Every key is optional; when a
+      // key is missing, the page falls back to the matching top-level field
+      // (sector, year, role, stack, and the host from liveUrl). Use it only
+      // when the fact row should read differently from those fields, for
+      // example year: '2024, rebuilt 2026'.
+      facts: z
+        .object({
+          sector: z.string().optional(),
+          year: z.string().optional(),
+          role: z.string().optional(),
+          stack: z.array(z.string()).optional(),
+          host: z.string().optional(),
+        })
+        .optional(),
     }),
 });
 
@@ -169,7 +312,7 @@ const photos = defineCollection({
 
       // The image file itself. image() runs the asset through Astro's
       // optimization pipeline. The path in JSON is relative to the
-      // entry's location: e.g. '../../assets/photography/events-01.jpg'.
+      // entry's location: e.g. '../../assets/photography/<name>.jpg'.
       image: image(),
 
       // Optional caption shown in the lightbox.

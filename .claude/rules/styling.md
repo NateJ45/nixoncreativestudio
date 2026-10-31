@@ -7,86 +7,159 @@ paths:
   - 'src/pages/**'
 ---
 
-# Styling: brand colors, theme, motion, typography
+# Styling: type, tokens, surfaces, grid, theme, motion
 
-Moved out of CLAUDE.md. Loads when styles, components, layouts, scripts or pages are touched.
+Loads when styles, components, layouts, scripts or pages are touched. The type and token layer was rebuilt in overhaul package 1.5 (2026-10-31). `src/styles/globals.css` is **frozen** after packages 1.5 and 1.7 (plan ruling 10): page and component CSS goes in scoped `<style>` blocks, and only shared tokens and primitives live in `globals.css`.
 
-## Brand colors
+The idea the system serves: the site is a reel of real client websites, and it uses **weight as its emphasis**. Surfaces are white, paper and ink separated by hairlines. Blue is kept for things you can click.
 
-Declared in the `@theme` block inside `src/styles/globals.css`. Reference via utility classes (`bg-primary`, `text-accent`, `border-secondary`) rather than hardcoded hex anywhere in component code.
+## Type
 
-| Role                                     | Hex       |
-| ---------------------------------------- | --------- |
-| Primary (dark navy)                      | `#0A1628` |
-| Accent (NCS blue)                        | `#3478BD` |
-| Link (deeper NCS blue, accent body text) | `#2A6FB0` |
-| Secondary (sky blue)                     | `#40AAED` |
-| Tertiary (amber)                         | `#FFA334` |
-| Heading                                  | `#0A1628` |
-| Base text                                | `#1A1A1A` |
-| Section background (ultra light)         | `#F4F7FA` |
-| Muted text                               | `#5F6573` |
-| White                                    | `#FFFFFF` |
+Three faces, all self-hosted, latin subset only, `font-display: swap`:
 
-The accent and muted-text values are shifted slightly darker from their
-original brand swatches (`#3B82C4` and `#6B7280`) so white-on-accent and
-muted-on-soft-bg both clear WCAG AA 4.5:1. The shifts are small enough
-to be visually unchanged in normal use. `--link` is a dedicated darker
-NCS blue used for accent-toned body text (Footer rest links, card-link
-arrows, Process / Services step numbers, prose anchors) so the brand
-`--accent` can keep its vibrancy for buttons, focus rings, and large
-CTAs where the white foreground carries the contrast.
+| Face                         | Token / utility                    | Used for                                                                                | Preloaded |
+| ---------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- | --------- |
+| Bricolage Grotesque Variable | `--font-display`, `font-display`   | every heading (h1 to h6) and the display utilities                                      | yes       |
+| Source Sans 3 Variable       | `--font-body`, `font-body`         | body, UI, buttons, forms                                                                | yes       |
+| Bebas Neue 400               | `--font-wordmark`, `font-wordmark` | the header wordmark "NIXON CREATIVE STUDIO" and the /coming-soon wordmark, nothing else | no        |
+| System mono                  | `--font-mono`, `font-mono`         | metadata only (rail labels, hosts, dates, sector)                                       | no file   |
+
+Bebas stays for the wordmark by Nathan's decision (2026-10-30). Never use `font-wordmark` on a heading. OG cards and the favicon keep their Bebas mark (generated separately, see `build-pipeline.md`).
+
+The two variable faces are declared by hand in `globals.css` section 2 (the latin `@font-face` copied from `@fontsource-variable/*`), because those packages have no per-subset stylesheet and the full one ships cyrillic, greek and vietnamese blocks. Bebas uses `@fontsource/bebas-neue/latin-400.css`. `BaseLayout.astro` preloads Bricolage (41 KB) and Source Sans (29 KB): 2 of the 3 preloads `tests/page-weight.config.json` allows, each under `maxFontKb` 120. Bebas is not preloaded: the wordmark is never the LCP element.
+
+### Scale
+
+Tokens in the `@theme` block. Each size carries its own line-height, tracking and weight (Tailwind 4's `--text-x--line-height` and friends), so `text-h3` on a `<p>` looks like an h3 with no extra classes; `font-*` and `leading-*` utilities still override.
+
+| Token                      | Size                                       | Leading | Tracking | Weight | Where                                    |
+| -------------------------- | ------------------------------------------ | ------- | -------- | ------ | ---------------------------------------- |
+| `--text-display`           | `clamp(3rem, min(6.2vw, 10.5vh), 6.25rem)` | 0.95    | -0.045em | 300    | the homepage hero statement only         |
+| `--text-h1`                | `clamp(2.75rem, 5.2vw, 4.75rem)`           | 1       | -0.035em | 300    | page H1s                                 |
+| `--text-h1-long`           | `clamp(2.25rem, 5.2vw, 4.75rem)`           | 1       | -0.035em | 300    | the case-study title (long client names) |
+| `--text-h2`                | `clamp(2rem, 3.4vw, 3.25rem)`              | 1.05    | -0.03em  | 300    | section titles                           |
+| `--text-h3`                | `clamp(1.375rem, 2vw, 1.75rem)`            | 1.15    | -0.02em  | 650    | subsections                              |
+| `--text-h4` to `--text-h6` | about 1.375rem down to 1rem                | 1.2-1.3 | small    | 650    | labels, card titles                      |
+
+Headings use `text-wrap: balance`. Every heading wraps long words (`overflow-wrap: break-word`), and h1 uses `overflow-wrap: anywhere` so a long client name can never push a 320px page sideways (plan ruling 16; `tests/reflow.spec.ts` sweeps `/work/first-presbyterian-orangeburg`, the longest title).
+
+### Weight is the emphasis
+
+- h1 and h2 sit at 300. Put the heavy phrase in `<b>` (or `<strong>`), which goes to 800: `A one-person studio for <b>organizations that take their work seriously.</b>`
+- h3 and below sit at 650.
+- Headings are never coloured, capitalised or gradient for emphasis. No `text-link` or `text-tertiary` spans inside a heading, no `uppercase`, no `background-clip: text`. Copy is sentence case exactly as written; the base heading rule has no `text-transform`.
+- A card heading that is itself a link may change colour on hover or focus (a link state, not emphasis).
+- One weight animation per page, on the H1's heavy phrase: wrap it in `<Heft text="..." />` (`src/components/Heft.astro`, package 1.7), which renders the `<b>`. H2s stay static at 300/800.
+
+### Metric-matched fallbacks
+
+While Bricolage loads, headings draw in `'Bricolage Grotesque Variable Fallback'` (Arial scaled to Bricolage's letter width, ascent and descent), named second in `--font-display`, so a title breaks where the real one will and nothing jumps when the font lands. It is written by the PORTABLE `npm run font-fallback`, driven by `brand/brand.config.json` (edit the config, never the script). The variable package ships woff2 only, which the script cannot read, so it runs with `--file` pointed at the static twin's latin-400 `.woff` (same font, not a dependency):
+
+```powershell
+npm pack @fontsource/bricolage-grotesque@5.3.0 --pack-destination $env:TEMP
+tar -xzf "$env:TEMP\fontsource-bricolage-grotesque-5.3.0.tgz" -C $env:TEMP
+node scripts/font-fallback.mjs --file "$env:TEMP\package\files\bricolage-grotesque-latin-400-normal.woff"
+```
+
+Then set the `Source:` line in `src/styles/font-fallbacks.css` back to the package name (the script prints the temp path). The Bebas wordmark has its own fallback in `src/styles/wordmark-fallback.css` (regenerate command in its header), kept apart because the script rewrites `font-fallbacks.css`. `src/lib/ncs-tokens.test.ts` fails if `--font-display`, the config and the fallback face drift apart.
+
+## Color and surfaces
+
+### Brand values
+
+Declared once in `globals.css` (`@theme` literals for reference, `:root` / `.dark` for the live values). Components use utilities (`bg-paper`, `text-link`, `border-line`), never hex.
+
+| Role                              | Light     | Dark      |
+| --------------------------------- | --------- | --------- |
+| Primary (dark navy)               | `#0A1628` | `#0A1628` |
+| Accent (NCS blue: buttons, focus) | `#3478BD` | `#40AAED` |
+| Link (accent-toned text)          | `#2A6FB0` | `#40AAED` |
+| Secondary (sky blue)              | `#40AAED` | `#7AC8F0` |
+| Tertiary (amber)                  | `#FFA334` | `#FFA334` |
+| Heading                           | `#0A1628` | `#F4F7FA` |
+| Base text                         | `#1A1A1A` | `#E5E7EB` |
+| Background (white surface)        | `#FFFFFF` | `#050B16` |
+| Muted text                        | `#5F6573` | `#9CA3AF` |
+
+The accent and muted values sit a hair darker than the original swatches (`#3B82C4`, `#6B7280`) so they clear AA; `--link` is the darker NCS blue for body-size accent text so `--accent` keeps its vibrancy on buttons and focus rings.
+
+### Surface roles (package 1.5)
+
+Existing brand values in new roles, in `:root` / `.dark`, with utilities from the `@theme inline` block:
+
+| Token            | Utility                | Light     | Dark      | Meaning                                                       |
+| ---------------- | ---------------------- | --------- | --------- | ------------------------------------------------------------- |
+| `--paper`        | `bg-paper`             | `#F4F7FA` | `#0A1628` | the alternate section surface                                 |
+| `--ink`          | `bg-ink`               | `#0A1628` | `#0A1628` | the solid navy band (`.band-ink`), navy in both themes        |
+| `--ink-raised`   | `bg-ink-raised`        | `#0F1E33` | `#0F1E33` | a raised panel inside an ink band                             |
+| `--line`         | `border-line`          | `#DDE3EA` | `#1A2A40` | decorative 1px hairline at a change of surface                |
+| `--line-strong`  | `border-line-strong`   | `#7D8797` | `#5B6B84` | a hairline that must be seen (3:1): frame dots, control edges |
+| `--frame-ring`   | `ring-frame-ring`      | `#D3DAE3` | `#22324A` | the 1px ring around a framed artifact                         |
+| `--live`         | `text-live`, `bg-live` | `#A85D00` | `#FFA334` | amber means "live now" and nothing else (AA as text in light) |
+| `--shadow-frame` | (var)                  | soft navy | deep      | the frame shadow                                              |
+| `--radius-frame` | `rounded-frame`        | 10px      | 10px      | the one radius for a framed site, photo or form               |
+| `--radius-pill`  | `rounded-pill`         | 999px     | 999px     | the CTA pill, status chips                                    |
+
+Rules: NCS blue appears only on actions and focus (the CTA pill, links, focus rings, the active nav item). Sky is the dark-mode link colour. Amber means live. Client colours never carry text (Phase 2).
+
+### Surfaces and primitives
+
+- **`.band-ink`**: the solid navy block every page ends on (the Footer, with its closer, since package 2.1) and any other ink section. It re-scopes the text roles for its children in both themes: headings `#fff`, body `#E5E7EB`, links and focus `#40AAED`, meta `#A7B0BE`, and the button to navy on sky. It re-declares the `--color-*` aliases too, so scoped CSS that reads `var(--color-heading)` follows. Never put `text-primary-foreground` or a hex on top of it; the normal tokens just work.
+- **`.frame`**: the one treatment for a real artifact (client site, photo, the form): `--radius-frame`, a 1px `--frame-ring` ring and `--shadow-frame`. `BrowserFrame.astro` (1.8) builds on it.
+- **`.hairline`**: a 1px `--line` top rule at a change of surface.
+- **Retired:** `.band-themed` and `.surface-card` were deleted from `globals.css` in package 4.9 (nothing rendered them after Phase 2). Do not bring them back: real artifacts get `.frame`, everything else sits on a `Section` surface.
+- **Forced colors**: `@media (forced-colors: active)` gives `.frame`, `.band-ink` and `.hairline` a real border or outline, because forced-colors mode drops shadows and backgrounds. A new surface that relies on a shadow or background for its edge joins that list. `tests/forced-colors.spec.ts` checks one route.
 
 ### shadcn token mapping (foundation, do not change casually)
 
-shadcn's CLI defines its own `@theme inline` block that points `--color-primary`, `--color-secondary`, `--color-accent`, `--color-background`, `--color-foreground` at semantic tokens (`--primary`, `--secondary`, etc.) declared further down in `:root`. Without intervention, `bg-primary` would produce shadcn's default grayscale.
+shadcn's `@theme inline` block points `--color-primary`, `--color-accent`, `--color-background` and friends at semantic tokens (`--primary`, `--accent`) declared in `:root`. The `:root` block overrides shadcn's defaults with the brand values, so `bg-primary` is navy and `bg-accent` is NCS blue everywhere, including the Button's focus ring (`--ring`). If a primitive looks off-brand, the fix is in that `:root` block, not the primitive.
 
-The `:root` block in `globals.css` overrides shadcn's defaults so `--primary` is brand navy, `--accent` is NCS blue, `--secondary` is sky blue, and so on. This means:
+### Contrast tests
 
-- `bg-primary` on a marketing surface and shadcn's Button default variant both produce brand navy.
-- `bg-accent` produces NCS blue everywhere, including shadcn primitives' focus rings (`--ring` is also pointed at NCS blue).
+- `src/lib/theme-tokens.test.ts` (PORTABLE, never edit) asserts the older shadcn pairs in both themes. Keep every token it parses (`--outline` included).
+- `src/lib/ncs-tokens.test.ts` (site-owned) asserts every pair added since 1.5: paper, ink, `.band-ink`, `--line-strong`, `--live`, plus the font and forced-colors promises above. **A new rendered pair goes here**, in both themes.
 
-If a new shadcn primitive ever looks "off-brand," the fix is almost always in that `:root` block, not in the primitive's source.
+## Grid and rhythm
+
+- **`.page-grid`**: 12 columns with a `--grid-gutter` gap. Children span all 12 on small screens. From lg (64rem): `.grid-rail` columns 1 to 3 (the mono label rail; `Section.astro` in 1.8 makes it sticky), `.grid-body` 4 to 12, `.grid-prose` 4 to 10 capped at 68ch (about 40rem), `.grid-wide` 1 to 12, `.grid-full` bleeds to the viewport edges.
+- **`--space-section`** (`clamp(5rem, 10vw, 9rem)`, utility `py-section`) is the section rhythm; it replaces the mixed `py-xl` / `py-2xl` as pages move over in Phase 2.
+- `.ncs-container` caps the content at 82.5rem with safe-area side padding.
 
 ## Theme system
 
-Three-state toggle (light / dark / system), persisted to `localStorage["ncs-theme"]`. System is the default for first-time visitors; while set to System, the page listens to `matchMedia('(prefers-color-scheme: dark)')` and flips live when the OS changes.
+Three-state toggle (light / dark / system), persisted to `localStorage["ncs-theme"]`. System is the default; while set to System the page follows `prefers-color-scheme` live.
 
-The wiring, in order of execution:
+1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint: reads the stored choice and `prefers-color-scheme`, applies `.dark` on `<html>` plus an inline `color-scheme`.
+2. **`ThemeToggle.astro`** (in the Header and the mobile nav panel; behaviour in `src/scripts/theme-toggle.ts`) cycles light, dark, system on click and writes the same key. A click that changes the visible theme reveals it in a circle from the button (package 4.5, a same-document View Transition scoped by `html.theme-reveal`, `--dur-scene` on `--ease-settle`); it swaps instantly under reduced motion, Pause motion or no View Transitions support. One matchMedia listener, registered once per tab, re-applies the theme when the OS flips while the choice is system. Without JavaScript the button is hidden and the system theme still applies.
+3. **`globals.css`**: `:root` carries light, `.dark` the overrides. `--primary` stays navy in dark mode so the default Button and navy bands stay on-brand; `--accent-foreground` flips to navy because white on the brightened sky accent fails contrast.
 
-1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint. Reads `localStorage["ncs-theme"]` and `prefers-color-scheme`, applies the `.dark` class on `<html>` plus an inline `color-scheme` style so native widgets (scrollbars, form controls) follow. No flash of the wrong theme on initial paint or after View Transitions.
-2. **`ThemeToggle.tsx`** (React island in the Header and the mobile nav panel) cycles light → dark → system on click, writes to the same localStorage key, and re-binds the matchMedia listener whenever the chosen theme changes.
-3. **`globals.css`** defines color tokens for both modes. `:root` carries light; `.dark` carries the overrides. Brand `--accent` and `--secondary` keep their visual identity in both modes; only the surface and text tokens flip. See Brand colors above for the exact token responsibilities.
+## Motion
 
-`--primary` (navy) deliberately stays navy in dark mode so the default Button and the navy aurora bands stay on-brand. The Hero, Footer, Process Band, and CtaBanner are all theme-aware via `.band-themed` (light surface + soft brand glow in light mode, navy aurora in dark), so light mode reads bright and airy from top to bottom while dark mode stays one immersive navy field. `--accent-foreground` flips to navy in dark mode so white text on the brightened sky-blue accent doesn't fail contrast.
+Deliberately small since package 1.2 (the aurora, grain, shine, spotlight, float, hover-lift, mesh and dot-grid layers, their keyframes, the left / right / scale / blur reveal variants and Lenis were retired; do not bring them back). Package 1.7 (2026-10-31) built the system: `globals.css` section 6, `src/scripts/motion.ts` and `src/components/Heft.astro`. Every effect stays WCAG AA and reduced-motion safe, and `globals.css` is frozen after 1.7, so new motion lives in scoped styles and uses the vocabulary below.
 
-## Motion and effects system
+**Tokens** (`:root`): durations `--dur-instant` 120ms, `--dur-quick` 200ms, `--dur-settle` 420ms, `--dur-scene` 640ms, `--dur-heft` 1500ms; easings `--ease-settle` (entrances), `--ease-glide` (state to state, the heft curve), `--ease-exit` (leaving). Use these, never a new literal. Rise distance is 8px; stagger is 70ms, capped at 6 steps.
 
-The site runs a deliberately animation-rich, polished design. The homepage and inner pages lean into scroll motion, animated backgrounds, and hover micro-interactions on purpose. The one hard constraint: every effect must stay WCAG AA and reduced-motion safe, which the system below handles automatically.
+**Four verbs, and nothing else moves:**
 
-The motion layer is two files plus a vocabulary of declarative classes and `data-*` attributes, all defined once in `src/styles/globals.css` (section 6) and wired in `src/layouts/BaseLayout.astro`:
+- **Settle** (entrances). Two variants only:
+  - `data-reveal`: fades in and rises 8px.
+  - `data-reveal="frame"`: a clip-path unveil from the bottom, for media (a framed site or photo). No opacity change.
+  - `data-reveal-group` on a parent steps its children's reveals 70ms apart (CSS `:nth-child`, capped at 6 steps). Use it instead of inline delays; the old `style="--reveal-delay: …"` still works in the fallback but is legacy.
+  - The default is scroll-driven CSS (`animation-timeline: view()`, inside `@supports` and `prefers-reduced-motion: no-preference`), so a reveal needs no script. One catch: a block on screen at load (straddling the fold, or above it after a mid-page reload) would sit part-faded until a scroll, which also fails Lighthouse colour contrast, so `motion.ts` marks those `.is-visible` and they show in full (`tests/first-viewport.spec.ts` checks it at 412 and 1440). Where scroll-driven CSS is unsupported, `motion.ts` adds `.is-visible` with an IntersectionObserver and a transition plays. The finished state is always what the markup renders, and the hidden state is gated on `.js`, so without JS everything is visible.
+  - **Never on first-viewport content** (ruling 3): no `data-reveal` on an H1, on first-viewport media, or on anything else in the first screen. `tests/first-viewport.spec.ts` checks H1s and media; a `!important` backstop in section 6 shows anything tagged in `<main>`'s first block regardless.
+- **Glide** (state to state): page transitions. Since package 4.11 the ClientRouter's View Transition is an overlap, owned by `src/components/PageTransition.astro` (which renders the ClientRouter and holds the rules in a `<style is:global>`, because `globals.css` is frozen; its older fade-and-settle root rules in section 6 are overridden). Forward, the new page slides up from the bottom of the viewport (`ncs-vt-rise`, `--dur-scene`, `--ease-settle`) over the old one, which recedes to scale 0.96 and dims (`ncs-vt-recede`, no blur, no glow); history back reverses it, the old page sliding down (`ncs-vt-sink`, `--dur-settle`, `--ease-exit`) off the new one coming forward (`ncs-vt-return`). The rules key on `html[data-astro-transition]` (set by the router for a navigation only), so the theme reveal and the /work reflow keep theirs. What moves is the `root` snapshot, which holds the main content: the header and footer are static groups (`transition:name="site-header"` / `"site-footer"`, no animation; the header group sits above every other, so content slides under it), and the wordmark keeps `transition:name="site-wordmark"`. `<main>` is not named (a named element is captured at full height, so a scrolled page would jump). Covers (`cover-{slug}`) and the reel morph paint above root; a name held on only one side travels with its page (`:only-child`). Every `::view-transition-*` animation is `none` under reduced motion and while `html[data-motion-paused]` is set. `tests/page-transition.spec.ts`.
+- **Heft** (the weight signature): `Heft.astro`, one per page, on the H1's heavy phrase only (ruling 9). H2s stay static 300/800. See `components.md`.
+- **Drift**: the hero reel only.
 
-- **`src/scripts/enhance.ts`** (imported in BaseLayout, runs on every `astro:page-load`) powers `[data-spotlight]` (sets `--mx`/`--my` for a cursor-tracking glow), `[data-countup]` (animates a number up to `data-countup-to` when scrolled into view; optional `-suffix`/`-prefix`/`-duration`), and `[data-header]` (toggles `data-scrolled` for the sticky frosted header). (The old `[data-magnetic]` cursor-follow button pull was removed.)
-- **The reveal observer** (inline `<script>` at the end of BaseLayout, also on `astro:page-load`) adds `.is-visible` to `[data-reveal]` elements as they enter the viewport.
+A scrub is not a loop: the case-study "Walk the homepage" (`SiteShowcase.astro`, 2.4b) moves only with page scroll, on a scroll-driven timeline inside `@supports` and `prefers-reduced-motion: no-preference`, and stands down to a plain scroll box under `html[data-motion-paused]`.
 
-Vocabulary (use these; don't reinvent):
+**Loops and Pause motion.** Anything that repeats opts in with `data-motion="loop"` on itself or a wrapper (the reel stage, the ticker, the footer and About status dots; the 404 numeral and the Coming Soon background are gone since 2.9). One rule in section 6 sets `animation-play-state: paused` on a loop while it is off screen (`data-motion-offscreen`, set by `motion.ts`), while the tab is hidden (`html[data-motion-hidden]`) and while the visitor has paused motion (`html[data-motion-paused]`). A script-driven loop asks `loopMayRun(el)` from `motion.ts` on every tick (the hero ticker is the pattern). An untagged loop ignores the pause and slips past `tests/motion-pause.spec.ts` (which checks every tagged loop on every route), so always tag it. A loading spinner (the contact form's) is not a loop.
 
-- `data-reveal` (+ variants `fade` / `scale` / `left` / `right` / `blur`) for scroll-in reveals; stagger siblings with inline `style="--reveal-delay: 120ms"`.
-- `.spotlight-card` + `data-spotlight` on a `position:relative` card for a cursor glow (put inner content in `relative z-10`).
-- add `.shine` (or `className="shine"` on the shadcn Button) to a CTA for a hover light sweep. (There is no cursor-follow "magnetic" pull anymore; it was removed site-wide.)
-- `data-countup data-countup-to="10"` for count-ups. **Always render the real final value as the span's static text** so no-JS visitors and crawlers see the true number; `enhance.ts` animates from 0 up to it.
-- **Heading emphasis: solid tokens, never gradient text.** Gradient text (`background-clip:text` over a gradient) was removed site-wide; it is an impeccable absolute-ban tell. The old `.text-gradient` / `.text-gradient-bright` utilities are deleted. For an accent phrase, wrap it in a solid token span: `text-tertiary` (amber, AA on the navy/dark heroes) or `text-link` (NCS blue, AA on light surfaces). Carry the rest of the emphasis with Bebas Neue weight and size.
-- `.surface-card` for an elevated card in **both** themes (tinted card surface + soft layered shadow + 1px top highlight + border, all from the `--shadow-card` / `--card-highlight` tokens). This is how light mode gets real depth (light has no color-step for elevation the way dark does). Compose with `data-spotlight` + `.hover-lift`. Used by /work cards, homepage Selected Work, /services offerings. The framed-artifact shadow (SiteShowcase, BeforeAfter) is the shared `--shadow-frame` token.
-- `.bg-dotgrid` (faint masked dot grid) and `.bg-mesh-soft` (low-opacity brand glow) give a light section quiet atmosphere without copying the dark aurora. Static, decorative (`z-index:-1` inside an isolated context), no reduced-motion concern.
-- `.bg-aurora` (+ `.grain`) on a `position:relative isolate` dark band for a drifting brand mesh (content at `relative z-10`); `.hover-lift`, `.link-underline` for smaller touches.
-- `.band-themed` for a closing/process band that should read **light in light mode** (soft accent glow on `bg-bg-soft`) and **navy aurora in dark mode**. It sets the surface + decorative glow per theme via `::before`; put theme-aware text tokens on top (`text-heading`, `text-text-muted`, `text-link`), never `text-primary-foreground`. Used by CtaBanner, ProcessBand, the Journal empty-state card, the About portrait frame, and now the Hero (under its light-tuned WebGL flow) and the Footer, so light mode reads bright and airy end to end while dark mode stays immersive navy. The Footer keeps its own top accent line via `.footer-seam::after` (dark mode only), since `.band-themed` owns `::before`.
+The Pause motion state is persisted in `localStorage["ncs-motion"]` (`"paused"` or absent) and applied before first paint by the BaseLayout bootstrap (and the standalone `/coming-soon` page), next to the theme bootstrap, so a visitor who paused never sees a frame of motion. Any `<button data-motion-toggle aria-pressed>` sets and reflects it; today that is `MotionToggle.astro` (in the footer's utility row and the mobile menu) and the hero's Pause button.
 
-**No-JS robustness:** the reveal hidden state is scoped to `.js` (added to `<html>` by the anti-FOUC script before first paint), so without JS every `[data-reveal]` element stays fully visible. Any new always-hidden-until-JS pattern must follow the same `.js` gating. Page-level enhancement scripts (contact form, privacy scroll-spy, journal heading tagger) must register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions navigations.
+Also:
 
-## Typography
-
-- Headings (h1 through h6): Bebas Neue, weight 400. Self-hosted via `@fontsource/bebas-neue`.
-- Body, UI, buttons: Source Sans 3 (variable font). Self-hosted via `@fontsource-variable/source-sans-3`.
-- Labels and section numbers: `ui-monospace, 'SF Mono', monospace` (system, no file).
-
-Font families are declared in the `@theme` block in `src/styles/globals.css` as `--font-display`, `--font-body`, `--font-mono`, which Tailwind exposes automatically as `font-display`, `font-body`, `font-mono` utility classes. Bebas Neue gets a `<link rel="preload">` hint in `BaseLayout.astro` because the hero headline is almost always the LCP element.
+- No count-ups: numbers and prices are static text (the `data-countup` handler was removed in package 2.2 and its leftover CSS rule in package 4.9).
+- `.link-underline` for the grow-from-the-left underline on hover and focus.
+- `src/scripts/enhance.ts` (every `astro:page-load`) powers the header's `data-scrolled` state and the `[data-prose]` heading anchors. Page scripts register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions.
+- The global reduced-motion block zeroes transitions (duration and delay `0s`, starter card 61) and shortens animations to 0.01ms.

@@ -1,0 +1,139 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  cmsFrame,
+  cmsSection,
+  cmsShotProblem,
+  darkMark,
+  hostOf,
+  nextInLoop,
+  paletteStyle,
+  studyFacts,
+} from './study.ts';
+
+const palette = {
+  paper: '#FBF6EA',
+  ink: '#1A1712',
+  accent: '#A83C26',
+  accentInk: '#FFEBBB',
+  typeface: 'Staatliches / Archivo',
+  swatches: ['#FBF6EA', '#A83C26'],
+};
+
+test('nextInLoop follows order and wraps from the last study to the first', () => {
+  const studies = [
+    { id: 'c', order: 3 },
+    { id: 'a', order: 1 },
+    { id: 'b', order: 2 },
+  ];
+  assert.equal(nextInLoop(studies, 'a')?.id, 'b');
+  assert.equal(nextInLoop(studies, 'b')?.id, 'c');
+  assert.equal(nextInLoop(studies, 'c')?.id, 'a');
+});
+
+test('nextInLoop puts studies with no order last and returns nothing for one study', () => {
+  const studies = [{ id: 'new' }, { id: 'a', order: 1 }];
+  assert.equal(nextInLoop(studies, 'a')?.id, 'new');
+  assert.equal(nextInLoop(studies, 'new')?.id, 'a');
+  assert.equal(nextInLoop([{ id: 'solo', order: 1 }], 'solo'), undefined);
+});
+
+test('studyFacts reads the study fields and lets facts override them', () => {
+  const base = {
+    sector: 'small-business',
+    year: 2026,
+    role: 'Designer, Developer',
+    stack: ['Astro', 'Sanity'],
+    liveUrl: 'https://www.example.org/',
+  };
+  assert.deepEqual(studyFacts(base), [
+    { label: 'Sector', value: 'Small business' },
+    { label: 'Year', value: '2026' },
+    { label: 'Role', value: 'Designer, Developer' },
+    { label: 'Stack', value: 'Astro, Sanity' },
+    { label: 'Host', value: 'example.org', url: 'https://www.example.org/' },
+  ]);
+  const overridden = studyFacts({ ...base, facts: { year: '2024, rebuilt 2026', host: 'x.org' } });
+  assert.equal(overridden[1].value, '2024, rebuilt 2026');
+  assert.equal(overridden[4].value, 'x.org');
+});
+
+test('studyFacts drops facts with no value', () => {
+  const facts = studyFacts({ sector: 'church', year: 2023 });
+  assert.deepEqual(
+    facts.map((f) => f.label),
+    ['Sector', 'Year'],
+  );
+});
+
+test('hostOf strips the protocol and www', () => {
+  assert.equal(hostOf('https://www.fbcmuncie.org'), 'fbcmuncie.org');
+});
+
+test('darkMark prefers markDark, then the dark accent, then the accent', () => {
+  assert.equal(darkMark({ ...palette, markDark: '#D59B29' }), '#D59B29');
+  assert.equal(
+    darkMark({ ...palette, dark: { paper: '#000000', ink: '#ffffff', accent: '#B8462F' } }),
+    '#B8462F',
+  );
+  assert.equal(darkMark(palette), '#A83C26');
+});
+
+test('paletteStyle writes scoped custom properties, or nothing without a palette', () => {
+  const style = paletteStyle(palette) ?? '';
+  assert.match(style, /--cs-paper: #FBF6EA/);
+  assert.match(style, /--cs-mark-dark: #A83C26/);
+  assert.equal(paletteStyle(undefined), undefined);
+});
+
+// "What you edit" (package 3.6). A stand-in object plays the image, since the
+// helpers never look inside it.
+const shot = { src: '/fake-cms.png', width: 1440, height: 900 };
+
+test('cmsSection is null without a cmsShot, so the band renders nothing', () => {
+  assert.equal(cmsSection({}), null);
+  assert.equal(cmsSection({ cmsName: 'Sanity Studio' }), null);
+  assert.equal(cmsSection({ cmsShotAlt: 'The Home page in Sanity Studio' }), null);
+});
+
+test('cmsSection passes the shot, the alt and the editor name through', () => {
+  assert.deepEqual(
+    cmsSection({ cmsShot: shot, cmsShotAlt: ' The Home page form ', cmsName: 'Sanity Studio' }),
+    { src: shot, alt: 'The Home page form', name: 'Sanity Studio' },
+  );
+  assert.deepEqual(cmsSection({ cmsShot: shot, cmsShotAlt: 'A post in WordPress' }), {
+    src: shot,
+    alt: 'A post in WordPress',
+    name: undefined,
+  });
+});
+
+test('cmsShotProblem requires alt text whenever a cmsShot is set', () => {
+  assert.equal(cmsShotProblem({}), undefined);
+  assert.equal(cmsShotProblem({ cmsShot: shot, cmsShotAlt: 'The Home page form' }), undefined);
+  assert.match(cmsShotProblem({ cmsShot: shot }) ?? '', /cmsShotAlt is required/);
+  assert.match(cmsShotProblem({ cmsShot: shot, cmsShotAlt: '   ' }) ?? '', /cmsShotAlt/);
+});
+
+test('cmsFrame shows the editor address, not the public site', () => {
+  assert.deepEqual(cmsFrame({ liveUrl: 'https://stonesteps50k.com', cmsName: 'Sanity Studio' }), {
+    url: 'https://stonesteps50k.com/studio/',
+    label: 'stonesteps50k.com/studio',
+  });
+  assert.deepEqual(cmsFrame({ liveUrl: 'https://theologymatters.com', cmsName: 'WordPress' }), {
+    url: 'https://theologymatters.com/wp-admin/',
+    label: 'theologymatters.com/wp-admin',
+  });
+  assert.deepEqual(
+    cmsFrame({
+      liveUrl: 'https://www.fbcmuncie.org',
+      cmsUrl: 'https://www.fbcmuncie.org/studio/#/x',
+    }),
+    { url: 'https://www.fbcmuncie.org/studio/', label: 'fbcmuncie.org/studio' },
+  );
+  assert.deepEqual(cmsFrame({ liveUrl: 'https://example.org' }), {
+    url: 'https://example.org/',
+    label: 'example.org',
+  });
+  assert.equal(cmsFrame({}), undefined);
+});

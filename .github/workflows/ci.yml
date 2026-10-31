@@ -37,6 +37,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Astro's optimized-image cache (overhaul 4.4). Every image is encoded as AVIF
+      # and WebP at build time, and a cold encode takes about two minutes on a
+      # runner (8 seconds when it was WebP alone). Astro keys each cached file by a
+      # hash of its transform and the source's content hash, so a restored entry is
+      # only ever reused for the exact same image; an edited image simply misses.
+      # Restored after npm ci, which would wipe node_modules/.astro. The key moves
+      # with the assets and the encoder config; restore-keys fall back to the
+      # newest cache so only the changed images are encoded again.
+      - name: Restore the optimized-image cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.astro/assets
+          key: astro-images-${{ hashFiles('src/assets/**', 'src/content/**', 'astro.config.mjs', 'package-lock.json') }}
+          restore-keys: astro-images-
+
       # PORTS.md card 36. Every file here marked "PORTABLE: canonical copy" is
       # diffed against ncs-astro-sanity-starter, the library of record. Both
       # repos are public, so the checkout needs no token. CRLF is normalized to
@@ -120,6 +135,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The copy lint (tests/unit/copy-rules.test.mjs) reads the BUILT HTML in
+      # dist/client, so it runs here, after the build, not with the unit tests
+      # above. Site copy is first person singular: it fails on "we", "our" or
+      # "us" in rendered body text (blockquotes and data-copy-ignore skipped).
+      - name: Copy lint (first person singular)
+        run: npm run test:copy
+
       # linkinator over dist/client. The site is fully static (output:
       # 'static', no page opts out with prerender = false), so every route is
       # in dist/client and nothing needs skipping beyond off-site URLs. The
@@ -149,6 +171,21 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Astro's optimized-image cache (overhaul 4.4). Every image is encoded as AVIF
+      # and WebP at build time, and a cold encode takes about two minutes on a
+      # runner (8 seconds when it was WebP alone). Astro keys each cached file by a
+      # hash of its transform and the source's content hash, so a restored entry is
+      # only ever reused for the exact same image; an edited image simply misses.
+      # Restored after npm ci, which would wipe node_modules/.astro. The key moves
+      # with the assets and the encoder config; restore-keys fall back to the
+      # newest cache so only the changed images are encoded again.
+      - name: Restore the optimized-image cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.astro/assets
+          key: astro-images-${{ hashFiles('src/assets/**', 'src/content/**', 'astro.config.mjs', 'package-lock.json') }}
+          restore-keys: astro-images-
 
       # Both projects in playwright.config.ts: chromium (desktop) AND
       # webkit-iphone (iPhone 14). Installing only chromium makes every webkit
