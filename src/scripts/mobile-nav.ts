@@ -11,8 +11,8 @@
    What the native <dialog> already gives us through showModal(): the rest of
    the page goes inert, Escape closes it, and focus moves inside. On top of
    that this adds: a Tab wrap so focus cycles within the panel instead of
-   leaving for the browser chrome, focus back on the menu button after a
-   close, and a close on astro:before-swap so a navigation never carries an
+   leaving for the browser chrome, a close on a tap on the scrim, focus back
+   on the menu button after a close, and a close on astro:before-swap so a navigation never carries an
    open modal (or its scroll lock) onto the next page.
    ============================================================================ */
 
@@ -71,6 +71,21 @@ export function initMobileNav(): void {
       return;
     }
     trigger.focus();
+  });
+
+  // A tap on the scrim closes the drawer, like Escape (overhaul 4.10). A click
+  // on the ::backdrop reaches the dialog itself as the target, so check the
+  // point falls outside the drawer's box; the drawer's own padding is inside
+  // .mnav-shell, so a click on the drawer never targets the dialog bare.
+  dialog.addEventListener('click', (event) => {
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    const inside =
+      event.clientX >= box.left &&
+      event.clientX <= box.right &&
+      event.clientY >= box.top &&
+      event.clientY <= box.bottom;
+    if (!inside) dialog.close();
   });
 
   // A link inside the panel closes it straight away (the next page loads
