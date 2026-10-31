@@ -1,0 +1,539 @@
+---
+// Safe to edit.
+/* ============================================================================
+   CourseLine: the Stone Steps course, drawn and scrubbable (overhaul 3.2)
+   ============================================================================
+   Two small drawings of the same real trace, side by side:
+
+     - the route plan (the course seen from above, all seven loops), and
+     - the elevation profile (feet against miles, a hairline at each loop).
+
+   The data is src/data/stone-steps-course.ts, about 600 real points of David
+   Corfman's recorded run with elevation from USGS 1-meter LiDAR. It is made
+   LOCALLY by scripts/build-course-line.mjs from the stonesteps-50k repo and
+   committed, because CI cannot read a sibling repo. Nothing here invents a
+   number: every figure on screen is read from that file.
+
+   How it behaves:
+
+   1. The draw (scroll-driven). With motion allowed, Pause motion off and
+      `animation-timeline` supported, both lines draw together as the figure
+      scrolls into view (stroke-dashoffset on a named view timeline). Page
+      scroll is the only input: no timer, no loop.
+      Under `prefers-reduced-motion: reduce`, under `html[data-motion-paused]`,
+      or without support, the lines are simply drawn in full. Nothing waits.
+
+   2. The scrub. A native range input (0.1 mi steps, so the arrow keys move a
+      tenth of a mile; Page Up and Page Down, Home and End work too) moves a
+      marker along both drawings and reads out mile, loop, elevation and
+      grade. The readout is the input's aria-valuetext, so a screen reader
+      hears it on every step, and it is shown beside the input as well.
+      Pointer: drag (or, with a mouse, hover) across the profile to scrub.
+      Marker updates are instant, so there is nothing to reduce.
+
+   Without JavaScript the scrub control stays hidden (it would do nothing)
+   and the two drawings render in full with their caption.
+
+   Colours: the lines are the client's accent (--cs-accent; --cs-mark-dark in
+   dark mode), the same marks the title card uses, so the pairs are already
+   checked by src/lib/case-palettes.test.ts. No text is set in a client
+   colour. Hairlines and the cursor use the site's --line / --line-strong.
+
+   Weight: the study page has a 150 KB HTML budget, so the drawings use
+   whole-number coordinates in large viewBoxes, written as relative steps
+   ("l12 -3"), and the script reads its positions back out of the same two
+   paths instead of shipping a second copy of the points. The only extra data
+   is one grade per point and the point where each loop starts.
+
+   Usage (only in the Stone Steps study; the data is that course):
+
+     import CourseLine from '../../components/CourseLine.astro';
+     <CourseLine />
+   ============================================================================ */
+
+import {
+  courseBounds,
+  courseElevation,
+  courseLoops,
+  courseMiles,
+  coursePoints,
+} from '../data/stone-steps-course';
+
+interface Props {
+  /** Optional id prefix, in case the figure ever appears twice on a page. */
+  id?: string;
+}
+
+const { id = 'course' } = Astro.props;
+
+// ---- The route plan: lon/lat to a flat drawing ----------------------------
+// An equirectangular projection is plenty for a park a mile and a half
+// across: shrink longitude by cos(latitude) so a mile east is as long as a
+// mile north, then fit the box to PLAN_W wide with a small margin.
+const PLAN_W = 3000;
+const PAD = 80;
+const midLat = ((courseBounds.north + courseBounds.south) / 2) * (Math.PI / 180);
+const spanX = (courseBounds.east - courseBounds.west) * Math.cos(midLat);
+const spanY = courseBounds.north - courseBounds.south;
+const planScale = (PLAN_W - PAD * 2) / spanX;
+const PLAN_H = Math.round(spanY * planScale + PAD * 2);
+const px = (lon: number) =>
+  Math.round(PAD + (lon - courseBounds.west) * Math.cos(midLat) * planScale);
+const py = (lat: number) => Math.round(PAD + (courseBounds.north - lat) * planScale);
+
+// ---- The profile: miles across, feet up ------------------------------------
+// About 5 units per foot, so the script gets each point's elevation back from
+// its y exactly (to the foot) by inverting ey().
+const PROF_W = 6000;
+const PROF_H = 2000;
+const TOP = 100;
+const BOTTOM = 100;
+const ex = (mile: number) => Math.round((mile / courseMiles) * PROF_W);
+const span = courseElevation.highFt - courseElevation.lowFt;
+const ey = (ft: number) =>
+  Math.round(TOP + (1 - (ft - courseElevation.lowFt) / span) * (PROF_H - TOP - BOTTOM));
+
+/** Absolute integer points to "M x y l dx dy l dx dy ..." */
+const toPath = (pts: Array<[number, number]>) =>
+  pts
+    .map(([x, y], i) => (i ? `l${x - pts[i - 1][0]} ${y - pts[i - 1][1]}` : `M${x} ${y}`))
+    .join('');
+
+const planPoints = coursePoints.map((p) => [px(p[0]), py(p[1])] as [number, number]);
+const profilePoints = coursePoints.map((p) => [ex(p[3]), ey(p[2])] as [number, number]);
+const planPath = toPath(planPoints);
+const profilePath = toPath(profilePoints);
+
+// Loop boundaries on the profile (skip loop 1, which starts at mile 0), and
+// the index of the first kept point of each loop, for the readout.
+const dividers = courseLoops.slice(1).map((l) => ex(l.startMile));
+const loopCount = courseLoops.length;
+const loopStarts = courseLoops.map((l) => coursePoints.findIndex((p) => p[5] === l.loop));
+const grades = coursePoints.map((p) => p[4]).join(' ');
+
+// The control's range: whole tenths of a mile that lie on the trace.
+const maxMile = Math.floor(courseMiles * 10) / 10;
+const fmtFt = (n: number) => n.toLocaleString('en-US');
+
+const planLabelId = `${id}-plan-label`;
+const profileLabelId = `${id}-profile-label`;
+const inputId = `${id}-scrub`;
+---
+
+<figure
+  class="course"
+  data-course
+  data-total={courseMiles}
+  data-low={courseElevation.lowFt}
+  data-high={courseElevation.highFt}
+  data-prof={`${PROF_W} ${PROF_H} ${TOP} ${BOTTOM}`}
+  data-loop-starts={loopStarts.join(' ')}
+  data-grades={grades}
+>
+  <div class="course-drawings">
+    <svg
+      class="course-plan"
+      viewBox={`0 0 ${PLAN_W} ${PLAN_H}`}
+      role="img"
+      aria-labelledby={planLabelId}
+    >
+      <title id={planLabelId}>
+        The Stone Steps course from above: {loopCount} loops through Mt. Airy Forest
+      </title>
+      <path class="course-line course-draw" d={planPath} pathLength="1" data-plan-path></path>
+      <circle
+        class="course-dot"
+        data-plan-dot
+        cx={planPoints[0][0]}
+        cy={planPoints[0][1]}
+        r="70"
+      ></circle>
+    </svg>
+
+    <div class="course-profile-wrap">
+      <svg
+        class="course-profile"
+        viewBox={`0 0 ${PROF_W} ${PROF_H}`}
+        preserveAspectRatio="none"
+        role="img"
+        aria-labelledby={profileLabelId}
+        data-profile
+      >
+        <title id={profileLabelId}>
+          Elevation along the course: {fmtFt(courseElevation.lowFt)} to {
+            fmtFt(courseElevation.highFt)
+          } feet over {courseMiles} miles, {loopCount} loops
+        </title>
+        {dividers.map((x) => (
+          <line class="course-divider" x1={x} x2={x} y1="0" y2={PROF_H} />
+        ))}
+        <path
+          class="course-line course-draw"
+          d={profilePath}
+          pathLength="1"
+          data-profile-path
+        ></path>
+        <line
+          class="course-cursor"
+          data-cursor
+          x1={profilePoints[0][0]}
+          x2={profilePoints[0][0]}
+          y1="0"
+          y2={PROF_H}
+        ></line>
+      </svg>
+      {/* The profile dot sits in HTML over the stretched SVG, so it stays round
+          whatever shape the profile box takes. */}
+      <span
+        class="course-profile-dot"
+        data-profile-dot
+        aria-hidden="true"
+        style={`left: ${(profilePoints[0][0] / PROF_W) * 100}%; top: ${(profilePoints[0][1] / PROF_H) * 100}%`}
+      ></span>
+      <div class="course-axis" aria-hidden="true">
+        <span>Mile 0</span>
+        <span>
+          {fmtFt(courseElevation.highFt)} ft high, {fmtFt(courseElevation.lowFt)} ft low
+        </span>
+        <span>{courseMiles}</span>
+      </div>
+    </div>
+  </div>
+
+  {/* Hidden until the script below binds it: without JS it would do nothing. */}
+  <div class="course-scrub" data-scrub hidden>
+    <label for={inputId} class="course-scrub-label">
+      Walk the course, a tenth of a mile at a time
+    </label>
+    <input
+      id={inputId}
+      class="course-range"
+      type="range"
+      min="0"
+      max={maxMile}
+      step="0.1"
+      value="0"
+      data-range
+    />
+    <output for={inputId} class="course-readout" data-readout></output>
+  </div>
+
+  <figcaption class="course-caption">
+    {loopCount} loops, {courseMiles} miles as recorded on David's own run of the course, between{' '}
+    {fmtFt(courseElevation.lowFt)} and {fmtFt(courseElevation.highFt)} feet. Elevation from USGS
+    1-meter LiDAR.
+  </figcaption>
+</figure>
+
+<style>
+  .course {
+    margin-block: var(--spacing-l, 2.5rem);
+    /* The client's mark colour, light then dark. A study without a palette
+       falls back to the site accent. */
+    --course-mark: var(--cs-accent, var(--accent));
+  }
+  :global(.dark) .course {
+    --course-mark: var(--cs-mark-dark, var(--accent));
+  }
+
+  .course-drawings {
+    display: grid;
+    gap: 1.25rem;
+    align-items: center;
+  }
+  @media (min-width: 40rem) {
+    .course-drawings {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+  }
+
+  .course-plan,
+  .course-profile {
+    display: block;
+    width: 100%;
+    overflow: visible;
+  }
+  .course-plan {
+    height: auto;
+    max-width: 18rem;
+    margin-inline: auto;
+  }
+
+  .course-profile-wrap {
+    position: relative;
+  }
+  .course-profile {
+    height: 10rem;
+    /* Dragging across the profile scrubs; a vertical swipe still scrolls. */
+    touch-action: pan-y;
+    cursor: ew-resize;
+  }
+
+  .course-line {
+    fill: none;
+    stroke: var(--course-mark);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .course-divider {
+    stroke: var(--line);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .course-cursor {
+    stroke: var(--line-strong);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .course-dot {
+    fill: var(--course-mark);
+    stroke: var(--background);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+  .course-profile-dot {
+    position: absolute;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin: -0.375rem 0 0 -0.375rem;
+    border-radius: 50%;
+    background: var(--course-mark);
+    box-shadow: 0 0 0 2px var(--background);
+    pointer-events: none;
+  }
+
+  .course-axis {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+
+  .course-scrub {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+  .course-scrub[hidden] {
+    display: none;
+  }
+  .course-scrub-label {
+    font-size: 0.9375rem;
+    color: var(--heading);
+  }
+  .course-range {
+    width: 100%;
+    min-height: 44px;
+    accent-color: var(--accent);
+  }
+  .course-range:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .course-readout {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--foreground);
+    min-height: 1.5em;
+  }
+
+  .course-caption {
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--muted-foreground);
+    max-width: 40rem;
+  }
+
+  /* ---- The draw ----------------------------------------------------------
+     Only with motion allowed, Pause motion off and scroll-driven CSS. The
+     timeline is named on the figure so both lines share it and draw
+     together. Everywhere else the lines are simply drawn in full. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      :global(html:not([data-motion-paused])) .course {
+        view-timeline-name: --ncs-course;
+        view-timeline-axis: block;
+      }
+      :global(html:not([data-motion-paused])) .course-draw {
+        stroke-dasharray: 1;
+        animation: ncs-course-draw linear both;
+        animation-timeline: --ncs-course;
+        animation-range: entry 10% cover 50%;
+      }
+    }
+  }
+
+  @keyframes ncs-course-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .course-line {
+      stroke: CanvasText;
+    }
+    .course-dot {
+      fill: Highlight;
+    }
+    .course-profile-dot {
+      background: Highlight;
+    }
+  }
+
+  @media print {
+    .course-scrub {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  /* The scrub: bound on every astro:page-load, once per figure (data-bound).
+     Positions come back out of the two drawn paths, so the page carries the
+     points once. Kept point i has a plan position, a profile position (whose
+     x is its mile and whose y is its elevation), a grade and a loop. */
+
+  interface Pt {
+    planX: number;
+    planY: number;
+    profX: number;
+    profY: number;
+    mile: number;
+    ft: number;
+    grade: number;
+    loop: number;
+  }
+
+  /** "M x y l dx dy l dx dy ..." back to absolute [x, y] pairs. */
+  function readPath(d: string): Array<[number, number]> {
+    const out: Array<[number, number]> = [];
+    let x = 0;
+    let y = 0;
+    for (const part of d.slice(1).split('l')) {
+      const [a, b] = part.trim().split(/\s+/).map(Number);
+      x += a;
+      y += b;
+      out.push([x, y]);
+    }
+    return out;
+  }
+
+  function bind(fig: HTMLElement) {
+    const planD = fig.querySelector('[data-plan-path]')?.getAttribute('d');
+    const profD = fig.querySelector('[data-profile-path]')?.getAttribute('d');
+    const scrub = fig.querySelector<HTMLElement>('[data-scrub]');
+    const range = fig.querySelector<HTMLInputElement>('[data-range]');
+    const readout = fig.querySelector<HTMLOutputElement>('[data-readout]');
+    const planDot = fig.querySelector<SVGCircleElement>('[data-plan-dot]');
+    const profile = fig.querySelector<SVGSVGElement>('[data-profile]');
+    const cursor = fig.querySelector<SVGLineElement>('[data-cursor]');
+    const profileDot = fig.querySelector<HTMLElement>('[data-profile-dot]');
+    if (!planD || !profD || !scrub || !range || !readout || !planDot || !profile) return;
+    if (!cursor || !profileDot) return;
+
+    const total = Number(fig.dataset.total);
+    const low = Number(fig.dataset.low);
+    const high = Number(fig.dataset.high);
+    const [W, H, TOP, BOTTOM] = (fig.dataset.prof ?? '').split(' ').map(Number);
+    const loopStarts = (fig.dataset.loopStarts ?? '0').split(' ').map(Number);
+    const grades = (fig.dataset.grades ?? '').split(' ').map(Number);
+    const plan = readPath(planD);
+    const prof = readPath(profD);
+    if (plan.length !== prof.length || prof.length !== grades.length) return;
+
+    const points: Pt[] = prof.map(([profX, profY], i) => ({
+      planX: plan[i][0],
+      planY: plan[i][1],
+      profX,
+      profY,
+      mile: (profX / W) * total,
+      // Inverts the component's ey(): exact to the foot at this scale.
+      ft: Math.round(low + (1 - (profY - TOP) / (H - TOP - BOTTOM)) * (high - low)),
+      grade: grades[i],
+      loop: loopStarts.filter((start) => start <= i).length,
+    }));
+    const loops = loopStarts.length;
+
+    // The kept point nearest a mile (the points are in mile order).
+    const nearest = (mile: number): Pt => {
+      let lo = 0;
+      let hi = points.length - 1;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (points[mid].mile < mile) lo = mid;
+        else hi = mid;
+      }
+      return Math.abs(points[lo].mile - mile) <= Math.abs(points[hi].mile - mile)
+        ? points[lo]
+        : points[hi];
+    };
+
+    const describe = (mile: number, p: Pt, spoken: boolean) => {
+      const ft = p.ft.toLocaleString('en-US');
+      const g = p.grade;
+      const grade =
+        Math.abs(g) < 0.5
+          ? 'level'
+          : spoken
+            ? `${Math.abs(g).toFixed(0)} percent ${g > 0 ? 'climb' : 'descent'}`
+            : `${g > 0 ? '+' : '−'}${Math.abs(g).toFixed(0)}% grade`;
+      return spoken
+        ? `Mile ${mile.toFixed(1)}, loop ${p.loop} of ${loops}, ${ft} feet, ${grade}`
+        : `Mile ${mile.toFixed(1)} · loop ${p.loop} of ${loops} · ${ft} ft · ${grade}`;
+    };
+
+    const show = (mile: number) => {
+      const p = nearest(mile);
+      planDot.setAttribute('cx', String(p.planX));
+      planDot.setAttribute('cy', String(p.planY));
+      cursor.setAttribute('x1', String(p.profX));
+      cursor.setAttribute('x2', String(p.profX));
+      profileDot.style.left = `${(p.profX / W) * 100}%`;
+      profileDot.style.top = `${(p.profY / H) * 100}%`;
+      readout.textContent = describe(mile, p, false);
+      range.setAttribute('aria-valuetext', describe(mile, p, true));
+    };
+
+    range.addEventListener('input', () => show(Number(range.value)));
+
+    // Pointer scrubbing on the profile: drag (any pointer) or hover (mouse).
+    const fromPointer = (e: PointerEvent) => {
+      const box = profile.getBoundingClientRect();
+      const t = Math.min(1, Math.max(0, (e.clientX - box.left) / box.width));
+      const step = Math.round(t * total * 10) / 10;
+      range.value = String(Math.min(step, Number(range.max)));
+      show(Number(range.value));
+    };
+    profile.addEventListener('pointerdown', (e) => {
+      profile.setPointerCapture(e.pointerId);
+      fromPointer(e);
+    });
+    profile.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' || e.buttons) fromPointer(e);
+    });
+
+    scrub.hidden = false;
+    show(Number(range.value));
+  }
+
+  function init() {
+    document.querySelectorAll<HTMLElement>('[data-course]:not([data-bound])').forEach((fig) => {
+      fig.dataset.bound = 'true';
+      bind(fig);
+    });
+  }
+
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -28,14 +28,18 @@
                        service. Paper.
      Pricing           PricingTeaser variant "full": ruled tiers, each
                        linking /contact/?tier=..., add-ons in <details>.
-                       White. ("Size up your project", overhaul 3.3, goes
-                       straight after this band when it is built.)
-     Care              the four care levels, ruled the same way. Paper.
-     How I work        ProcessBand, the same timeline as the home. White.
-     Why one person    #why (the /about page links here). Paper.
+                       White.
+     Size up           SizeUp (overhaul 3.3, #size-up): four radio questions
+                       point at a tier and its range from pricing.ts, two
+                       live sites from the visitor's sector, and "Send this
+                       to Nathan", a plain GET form to /contact/ that works
+                       without JavaScript. Paper.
+     Care              the four care levels, ruled the same way. White.
+     How I work        ProcessBand, the same timeline as the home. Paper.
+     Why one person    #why (the /about page links here). White.
      FAQ               native <details>, with the FAQPage JSON-LD built from
                        the same array, so the structured data is the visible
-                       text word for word. White.
+                       text word for word. Paper.
      Ink closer        the footer (BaseLayout), set by the `closer` prop.
 
    Surfaces alternate white and paper, so each hairline marks a real change,
@@ -58,6 +62,7 @@ import FramePair from '../components/FramePair.astro';
 import Media from '../components/Media.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
+import SizeUp from '../components/SizeUp.astro';
 import { site } from '../data/site';
 import { webTiers as tiers, addOns, carePlans } from '../data/pricing';
 import { dollars, money } from '../lib/money';
@@ -195,14 +200,16 @@ const onThisPage = [
   { label: 'Web design', href: '#web-design' },
   { label: 'Photography', href: '#photography' },
   { label: 'Pricing', href: '#pricing' },
+  { label: 'Size up', href: '#size-up' },
   { label: 'Care', href: '#care' },
   { label: 'FAQ', href: '#faq' },
 ];
 
 // The ink closer. "Aware of the tier": the page has just priced three tiers,
-// so the closer answers the question it leaves ("which one am I?"). Package
-// 3.3's "Size up your project" will prefill the pill's link with the tier a
-// visitor lands on; until then it tells /contact the visitor came from here.
+// so the closer answers the question it leaves ("which one am I?"). The pill
+// tells /contact the visitor came from here; once someone answers "Size up
+// your project" (SizeUp.astro, package 3.3), its script adds their tier, org
+// type and photo answer to this link too.
 const closer: Closer = {
   heading: 'Not sure which tier',
   emphasis: 'fits?',
@@ -427,12 +434,12 @@ const schemas = [
       </div>
     </Section>
 
-    <!-- Pricing: the shared ruled tiers. "Size up your project" (3.3) goes
-         straight after this, before Care. -->
+    <!-- Pricing: the shared ruled tiers, then "Size up your project" (3.3). -->
     <PricingTeaser variant="full" tone="white" headingId="pricing" />
+    <SizeUp tone="paper" />
 
     <!-- Care after launch, ruled like the tiers. -->
-    <Section rail="Care" railMeta={`From ${hosting.price} a year`} tone="paper" labelledby="care">
+    <Section rail="Care" railMeta={`From ${hosting.price} a year`} tone="white" labelledby="care">
       <h2 id="care" class="svc-h2">
         Care after <b>launch</b>
       </h2>
@@ -466,10 +473,10 @@ const schemas = [
       </p>
     </Section>
 
-    <ProcessBand tone="white" headingId="process-heading" />
+    <ProcessBand tone="paper" headingId="process-heading" />
 
     <!-- Why one person. /about links to #why. -->
-    <Section rail="Why one person" railMeta="No handoffs" tone="paper" labelledby="why">
+    <Section rail="Why one person" railMeta="No handoffs" labelledby="why">
       <h2 id="why" class="svc-h2">
         Why <b>one person</b>
       </h2>
@@ -494,7 +501,7 @@ const schemas = [
 
     <!-- FAQ. Native <details>; the FAQPage JSON-LD is built from the same
          array, so it always equals this text. -->
-    <Section rail="FAQ" railMeta={`${faq.length} questions`} labelledby="faq">
+    <Section rail="FAQ" railMeta={`${faq.length} questions`} tone="paper" labelledby="faq">
       <h2 id="faq" class="svc-h2">
         Common <b>questions</b>
       </h2>
