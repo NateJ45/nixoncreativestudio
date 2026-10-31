@@ -4,7 +4,7 @@ import { settle } from './helpers';
 
 // =============================================================================
 // Visual baselines (overhaul 4.3). Every route in tests/routes.ts, at 1440 and
-// 390, in light and dark: 12 routes x 2 x 2 = 48 full-page screenshots.
+// 390, in light and dark: routes x 2 x 2 full-page screenshots.
 //
 // NOT in `npm test` (playwright.config.ts ignores this file) and NOT in ci.yml.
 // Run through playwright.visual.config.ts, in practice only by
@@ -50,19 +50,24 @@ async function loadAllImages(page: Page): Promise<void> {
     }
     window.scrollTo(0, 0);
   });
-  await page.evaluate(() =>
-    Promise.all(
-      Array.from(document.images).map((img) =>
-        img.complete && img.naturalWidth > 0
-          ? undefined
-          : new Promise<void>((resolve) => {
-              img.addEventListener('load', () => resolve(), { once: true });
-              img.addEventListener('error', () => resolve(), { once: true });
-              setTimeout(resolve, 5000);
-            }),
+  // Make every image eager, wait for it to load AND decode (a lazy, async-decoded
+  // image can report complete before its pixels paint, so two consecutive shots
+  // differ: seen on /churches at 1440 dark, 2026-10-31), then two frames to paint.
+  await page.evaluate(async () => {
+    const imgs = Array.from(document.images);
+    imgs.forEach((img) => {
+      img.loading = 'eager';
+    });
+    await Promise.all(
+      imgs.map((img) =>
+        Promise.race([
+          img.decode().catch(() => undefined),
+          new Promise<void>((resolve) => setTimeout(resolve, 8000)),
+        ]),
       ),
-    ),
-  );
+    );
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  });
 }
 
 for (const vp of viewports) {
