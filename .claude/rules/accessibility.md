@@ -44,7 +44,7 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 
 - `--accent` (`#3478BD` light, `#40AAED` dark): buttons, focus rings, large CTAs. Paired with white text in light mode, navy in dark.
 - `--link` (`#2A6FB0` light, `#40AAED` dark): accent-toned body text (card-link arrows, Process / Services step numbers, prose anchors). Darker than `--accent` in light so body-size text clears AA.
-- `--secondary` (`#40AAED`): decorative gradients and Footer body links sitting on the navy footer.
+- `--secondary` (`#40AAED`): the old sky accent. The navy footer no longer uses it: since overhaul 2.1 the footer is `.band-ink`, which re-scopes `--link` to sky.
 - `--muted-foreground` (`#5F6573` light, `#9CA3AF` dark): meta and supporting text on bg-soft surfaces.
 - Surface roles (overhaul 1.5): `--paper`, `--ink` / `--ink-raised`, `--line` (decorative), `--line-strong` (3:1, for any hairline that must be seen), `--frame-ring` (decorative) and `--live` (amber, darkened to `#A85D00` in light mode so "Live" can be text). `.band-ink` re-scopes headings, body, links, meta and focus to light-on-navy values that hold AA in both themes.
 
