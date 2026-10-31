@@ -68,3 +68,13 @@ Its job is to size the project and start it (overhaul package 2.5). `src/pages/s
 11. **Ink closer**: "Not sure which tier **fits?**", pill to `/contact/?from=services`.
 
 Every price on the page, in the FAQ and in the JSON-LD comes from `src/data/pricing.ts`; `tests/metadata.spec.ts` checks each JSON-LD price is visible (the add-on prices sit in the `<details>` summary, so they stay visible while it is closed).
+
+## /contact (overhaul package 2.7)
+
+Its job is a qualified inquiry in under two minutes. The H1 keeps its Heft; the reply promise is the one the page already made ("one or two business days"), and any new timing waits on Nathan.
+
+- **Form** (plain HTML posting to Web3Forms, works without JS, in the shared `.frame`). Required: name, email, organization type, "What are you hoping to build?". Optional in view: budget chips (real radios) whose labels read from the tier floors in `src/data/pricing.ts`. Optional in a closed `<details>` "A few optional details": organization name, phone, current website, timeline, how you heard. The selects keep the Gotcha 11 outline ring.
+- **Prefill** (script, `astro:page-load`): `?org_type=` picks the select, `?tier=launch|signature|flagship` picks the chip that starts at that tier's floor, `?service=` and `?from=` are carried. Four hidden fields go to Web3Forms: `from`, `tier`, `service` and `origin_org_type` (the org type the link named; the visible select is `org_type`). Only slug-shaped values are used, and a prefill never overrides a restored draft. Link here as `/contact/?from={page or slug}&org_type={sector}`, `/contact/?tier={tier}` or `/contact/?service=photography`.
+- **Sidebar order**: What happens next, then "What I'll read" (a brief card that assembles from the fields; a plain summary for screen readers, `aria-live="off"`, hidden without JS since only the script fills it), then Direct (CopyEmail and the phone from `site.ts`), then Where I am (`ContactMap`, see `components.md`). "Rather book a call?" renders only when `site.bookingUrl` is set.
+- **Success**: with JS, a fetch submit swaps the form for the success panel, focus moves to its heading, and it links two studies from the visitor's sector (padded with the next studies by `order` when a sector has fewer). Without JS, Web3Forms redirects to `/contact/?sent=1#sent` and CSS `:target` shows the same panel with the first two studies.
+- No CtaBanner; the page ends on the footer's quiet closer with no pill. /privacy names the form fields, the hidden origin fields and the local draft, and says the map is no longer a Google embed.

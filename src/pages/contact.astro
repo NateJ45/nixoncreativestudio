@@ -1,44 +1,75 @@
 ---
 // Foundation, edit with care. The form structure, the Web3Forms wiring, and the
 // inline enhancement script are the production inquiry pipeline; touch only with
-// intent. The layout shell around them is on the shared editorial grid.
+// intent. Copy and the sidebar text are safe to edit.
 /* ============================================================================
-   /contact | Contact
+   /contact | Contact (rebuilt in overhaul package 2.7, 2026-10-31)
    ============================================================================
-   Form-driven inquiry page. Posts to Web3Forms.
+   The job: a qualified inquiry in under two minutes. Posts to Web3Forms.
 
-   Layout: a full-width masthead (h1 + intro) over a two-column body, the form in
-   a surface-card on the left beside a ways-to-reach-me sidebar on the right. The
-   form spans the full content width so it stays roomy with no empty side column.
-   The old bg-bg-soft band is dissolved, so the page is one seamless surface and
-   dark mode is a single navy sheet; depth comes from the form's surface-card, and
-   the page closes on the footer's quiet ink closer (no pill: it would link here).
+   Layout: the masthead (the only H1, with its Heft) over a two-column body.
+   Left, the form in the shared .frame (the form is a real artifact, so it gets
+   the frame; nothing else here does). Right, the sidebar, in this order:
+     1. What happens next (three plain steps).
+     2. What I'll read: a brief that assembles from the fields as you type.
+        It stays readable by screen readers as a plain summary (ruling 17)
+        but is not a live region (aria-live="off"), so it never talks over
+        the field you are typing in. Hidden without JavaScript, since only the
+        script can fill it.
+     3. Direct: email (CopyEmail) and phone, both from site.ts.
+     4. Where I am: ContactMap, a static inline SVG sketch and the clock line
+        ("It's 4:12 pm in Cincinnati.", or "Cincinnati (Eastern time)" without
+        JS). The old Google Maps iframe is gone, so this page makes no
+        third-party map request at all.
+     5. "Rather book a call?", only when site.bookingUrl is set.
+   The page ends on the footer's quiet ink closer (no pill, it would link
+   here); never add a closing CTA band.
 
-   The form keeps real labels, native input types, required attributes, a hidden
-   honeypot, the three Web3Forms hidden inputs, and the inline enhancement script
-   (draft save/restore, ?org_type preselect, honeypot, fetch submit,
-   thank-you/error swap). Fields are grouped into three labeled fieldsets, with two
-   short field pairs side by side. Every field name, id, label/for, required, and
-   autocomplete routes to Web3Forms.
+   The form, field by field:
+     Required: name, email, org_type (select), message ("What are you hoping
+     to build?").
+     Optional, in view: budget, as radio chips whose labels read from the web
+     tier floors in src/data/pricing.ts.
+     Optional, in a closed <details> "A few optional details": organization,
+     phone, current_website, timeline, heard_from.
+     Hidden: access_key, subject, from_name and redirect (Web3Forms), the
+     botcheck honeypot, and four origin fields the script fills from the URL:
+     from (the page or study that sent the visitor), tier, service and
+     origin_org_type (the org type the link carried; the visible select is
+     org_type itself, so the hidden copy takes another name rather than send
+     two org_type values).
 
-   Spam protection is the hidden honeypot field (botcheck) alone. The optional
-   hCaptcha widget was removed. To bring it back: restore the .h-captcha div, the
-   js.hcaptcha.com/1/api.js script tag, the captcha gate in the submit handler,
-   and turn hCaptcha back on in the Web3Forms dashboard.
+   Without JavaScript: the form posts natively (no novalidate in the markup,
+   so the browser checks the required fields; the script turns validation
+   over to itself with form.noValidate). Web3Forms then redirects to
+   /contact/?sent=1#sent, and the success panel shows through CSS :target.
+   With JavaScript: fetch submit, the same success panel, focus on its
+   heading, and two studies from the visitor's sector.
 
-   Even without JavaScript the form submits natively to Web3Forms.
+   Prefill (script, astro:page-load): ?org_type picks the select, ?tier picks
+   the matching budget chip and fills `tier`, ?service fills `service`, ?from
+   fills `from`. Values are checked against a slug pattern before use, and a
+   prefill never overrides a restored draft.
+
+   Spam protection is the hidden honeypot field (botcheck) alone. To bring
+   hCaptcha back: restore the .h-captcha div, the js.hcaptcha.com/1/api.js
+   script tag, a captcha gate in the submit handler, and turn hCaptcha back on
+   in the Web3Forms dashboard (and name it in /privacy).
    ============================================================================ */
 
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Heft from '../components/Heft.astro';
+import ContactMap from '../components/ContactMap.astro';
+import CopyEmail from '../components/CopyEmail.astro';
+import { Button } from '../components/ui/button';
 import { site } from '../data/site';
 import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
-import { Button } from '../components/ui/button';
-import CopyEmail from '../components/CopyEmail.astro';
 
-// Organization type options. Match the sectors used in the case-studies
-// schema so the data we collect lines up with how we describe the work.
+// Organization type options. Same keys as the case-studies `sector` field, so
+// ?org_type from a study's closer lines up and the success panel can pick
+// studies from the same sector.
 const orgTypes = [
   { value: 'church', label: 'Church' },
   { value: 'school', label: 'School' },
@@ -47,12 +78,11 @@ const orgTypes = [
   { value: 'other', label: 'Something else' },
 ];
 
-// Budget brackets, small enough that the picker isn't overwhelming. The
-// labels are built from the three web tier floors in src/data/pricing.ts
-// (Launch, Signature, Flagship, as shown on /services), so a price change
-// there moves the brackets too. The lowest bracket ends at the first floor so
-// the form never implies work below it. The `value`s are what the form
-// submits, so they stay fixed even if the numbers move.
+// Budget chips. The labels are built from the three web tier floors in
+// src/data/pricing.ts (Launch, Signature, Flagship, as on /services), so a
+// price change there moves the chips too. The lowest bracket ends at the
+// first floor so the form never implies work below it. The `value`s are what
+// the form submits, so they stay fixed even if the numbers move.
 const [launchFloor, signatureFloor, flagshipFloor] = webTiers.map((t) => money(t.priceFrom));
 const budgets = [
   { value: 'under-4k', label: `Under ${launchFloor}` },
@@ -62,8 +92,14 @@ const budgets = [
   { value: 'not-sure', label: 'Not sure yet' },
 ];
 
-// Project timeline brackets. Lets Nathan triage against the limited number
-// of projects he takes per quarter without asking for exact dates.
+// ?tier=<name> picks the chip that starts at that tier's floor: Launch is the
+// second chip, Signature the third, Flagship the fourth. Built from the tier
+// names so a renamed tier keeps working.
+const tierBudget: Record<string, string> = Object.fromEntries(
+  webTiers.map((t, i) => [t.name.toLowerCase(), budgets[i + 1]?.value ?? '']),
+);
+
+// Project timeline brackets (optional detail).
 const timelines = [
   { value: 'asap', label: 'Right away' },
   { value: '1-3-months', label: 'In the next 1 to 3 months' },
@@ -72,9 +108,8 @@ const timelines = [
   { value: 'flexible', label: 'Flexible, no fixed deadline' },
 ];
 
-// Attribution options. Cheap signal on what marketing channels are
-// working. "Referral" first because that's the most common path for
-// churches, schools, and small businesses in the region.
+// Attribution options (optional detail). Referral first: the most common path
+// for churches, schools and small businesses in the region.
 const heardFromOptions = [
   { value: 'referral', label: 'A referral from someone I know' },
   { value: 'search', label: 'Google or another search engine' },
@@ -84,49 +119,66 @@ const heardFromOptions = [
   { value: 'other', label: 'Somewhere else' },
 ];
 
-// What-happens-next, derived from the existing "What to expect" copy so nothing
-// is fabricated. A quiet three-row ledger, not a numbered scaffold.
+// What happens next. The reply line is the promise this page already made;
+// do not change the timing without Nathan (open question in the plan).
 const nextSteps = [
   'You send the form.',
   'I read it myself and reply within one or two business days.',
   'If it looks like a fit, a half-hour call to talk it through.',
 ];
 
-// Web3Forms access key. PUBLIC_ prefix exposes it to the client at build
-// time, which is required because the form runs in the browser.
+// Case studies, for two things: the brief card names the study a visitor came
+// from (?from=<slug>), and the success panel links two studies from the
+// visitor's sector. Ordered by `order`, the same loop /work and Up next use.
+const studies = (await getCollection('case-studies')).sort(
+  (a, b) => (a.data.order ?? 99) - (b.data.order ?? 99),
+);
+const studyNames: Record<string, string> = Object.fromEntries(
+  studies.map((s) => [s.id, s.data.client]),
+);
+// Two studies per sector, padded with the next studies in order when a
+// sector has fewer than two. `any` is the default (no sector, or "other").
+const pickTwo = (sector?: string) => {
+  const own = sector ? studies.filter((s) => s.data.sector === sector) : [];
+  const rest = studies.filter((s) => !own.includes(s));
+  return [...own, ...rest].slice(0, 2);
+};
+const successSets = [
+  { key: 'any', items: pickTwo() },
+  ...orgTypes
+    .filter((o) => studies.some((s) => s.data.sector === o.value))
+    .map((o) => ({ key: o.value, items: pickTwo(o.value) })),
+];
+
+// Web3Forms access key. The PUBLIC_ prefix exposes it to the client at build
+// time, which the browser-side form needs.
 const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
 const formActive = web3formsKey.length > 0;
 
-// Shared class strings for the form. Pulled into consts because each
-// input/select/textarea repeats the same base styling.
+// Where Web3Forms sends a no-JS visitor after a successful post. The #sent
+// fragment is what shows the success panel without a script (CSS :target).
+const redirectUrl = `${site.url}/contact/?sent=1#sent`;
+
+// Shared class strings for the form.
 const fieldClass = 'flex flex-col gap-xs';
 const labelClass = 'font-body text-[0.95rem] font-semibold text-heading';
-// Suffix span styling for "(optional)" markers. Lower weight + muted
-// color so the label still reads as "<field name>" with optional as
-// supporting text rather than competing with it. Required fields stay
-// unmarked because required is the default expectation.
+// "(optional)" suffix: lower weight and muted, so the label still reads as
+// the field name first. Required fields stay unmarked.
 const optionalMark = 'ml-1 font-normal text-text-muted';
 const inputClass =
   'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
   'transition-[border-color,box-shadow] duration-150 ' +
   'focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/25';
-// A <select> keeps the same box, but draws its focus ring as an OUTLINE rather
-// than the box-shadow ring above. WebKit paints natively-rendered form controls
-// itself and drops box-shadow on them, so on Safari and iOS the ring simply did
-// not exist on the four selects while every text field had one, on the same
-// classes (caught by the webkit-iphone run of tests/a11y-dark.spec.ts,
-// 2026-09-06). An outline paints on native controls in every engine and follows
-// the border radius, so the indicator looks the same and is actually there.
+// Gotcha 11: a <select> draws its focus ring as an OUTLINE, not the
+// box-shadow ring above. WebKit paints native form controls itself and drops
+// box-shadow on them, so on Safari and iOS the ring did not exist on the
+// selects (caught by the webkit-iphone run of tests/a11y-dark.spec.ts,
+// 2026-09-06). An outline paints on native controls in every engine.
 const selectClass =
   'rounded-md border border-input bg-bg px-3 py-2.5 font-body text-base text-text ' +
   'transition-[border-color,outline-color] duration-150 ' +
   'focus:border-accent focus:outline-3 focus:outline-offset-0 focus:outline-accent/25';
-// Borderless fieldset reset so the groups don't break the grid or add chrome;
-// fieldsets after the first open with a hairline. The legend is styled mono +
-// uppercase so the form reads as a short, sectioned document.
-const fieldsetClass = 'm-0 flex min-w-0 flex-col gap-m border-0 p-0';
-const legendClass =
-  'mb-xs block w-full font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
+const sideHeading = 'text-h4 text-heading';
 ---
 
 <BaseLayout
@@ -139,10 +191,8 @@ const legendClass =
     cta: false,
   }}
 >
-  <!-- ====================================================================
-       Masthead. The only h1. Full content width, left-aligned.
-       ==================================================================== -->
-  <section class="pt-2xl pb-2xl" aria-labelledby="contact-hero-heading">
+  <!-- Masthead. The only h1, with the page's one Heft. -->
+  <section class="pt-2xl pb-xl" aria-labelledby="contact-hero-heading">
     <div class="ncs-container">
       <h1 id="contact-hero-heading" class="max-w-[22ch]">
         Start a project, or just <Heft text="say hello." />
@@ -153,98 +203,132 @@ const legendClass =
     </div>
   </section>
 
-  <!-- ====================================================================
-       The inquiry. The form in a surface-card beside the ways-to-reach-me
-       sidebar, spanning the full content width so the form is roomy and there
-       is no empty left column. The old bg-bg-soft band is gone, so the page is
-       one seamless surface.
-       ==================================================================== -->
-  <section class="pb-2xl" aria-label="Inquiry form and ways to reach me">
+  <!-- The inquiry: the form beside the sidebar. -->
+  <section class="pb-section" aria-label="Inquiry form and ways to reach me">
     <div class="ncs-container">
-      <div class="border-t border-border pt-2xl">
-        <div class="min-w-0">
-          <div class="grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
-            <!-- Three-state container. Form is shown by default; the thanks and
-                 error blocks below start with the .hidden Tailwind utility class
-                 and the inline script toggles it via classList. -->
-            <div>
-              <form
-                class="surface-card flex flex-col gap-l rounded-xl p-l"
-                method="post"
-                action="https://api.web3forms.com/submit"
-                novalidate
-                data-contact-form
-              >
-                <!--
-                Web3Forms hidden fields:
-                  - access_key: routes the submission to Nathan's inbox.
-                  - subject: sets the email subject so inquiries are obvious.
-                  - from_name: sets the visible sender name.
-                The form posts natively to the same endpoint if JS is disabled,
-                so submissions always reach Web3Forms.
-              -->
-                <input type="hidden" name="access_key" value={web3formsKey} />
-                <input
-                  type="hidden"
-                  name="subject"
-                  value={`New project inquiry from ${site.domain}`}
-                />
-                <input type="hidden" name="from_name" value={`${site.studioName} website`} />
+      <div class="hairline pt-xl">
+        <div class="grid grid-cols-1 gap-xl min-[56rem]:grid-cols-[1.4fr_1fr]">
+          <!-- data-state is "form" (default) or "sent". The CSS at the end
+               hides the form and shows the success panel when it is "sent",
+               or when #sent is the URL target (the no-JS redirect). -->
+          <div class="contact-inquiry min-w-0" data-contact data-state="form">
+            <form
+              class="frame flex flex-col gap-l bg-bg p-l max-[30rem]:p-m"
+              method="post"
+              action="https://api.web3forms.com/submit"
+              data-contact-form
+              data-tier-budget={JSON.stringify(tierBudget)}
+            >
+              <!-- Web3Forms fields. access_key routes the post to Nathan's
+                   inbox, subject and from_name label the email, redirect is
+                   where a no-JS visitor lands after sending. -->
+              <input type="hidden" name="access_key" value={web3formsKey} />
+              <input
+                type="hidden"
+                name="subject"
+                value={`New project inquiry from ${site.domain}`}
+              />
+              <input type="hidden" name="from_name" value={`${site.studioName} website`} />
+              <input type="hidden" name="redirect" value={redirectUrl} />
 
-                <!-- Fieldset 1: about you. -->
-                <fieldset class={fieldsetClass}>
-                  <legend class={legendClass}>About you</legend>
+              <!-- Origin fields. Empty unless the script finds them in the
+                   URL (?from, ?tier, ?service, ?org_type). They tell Nathan
+                   which page or price brought the visitor here. -->
+              <input type="hidden" name="from" value="" data-origin="from" />
+              <input type="hidden" name="tier" value="" data-origin="tier" />
+              <input type="hidden" name="service" value="" data-origin="service" />
+              <input type="hidden" name="origin_org_type" value="" data-origin="org_type" />
 
-                  <!-- name + email side by side on wider screens. -->
-                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="name">
-                        Your name
-                      </label>
-                      <input
-                        class={inputClass}
-                        type="text"
-                        id="name"
-                        name="name"
-                        required
-                        autocomplete="name"
-                      />
-                    </div>
+              <!-- name + email side by side on wider screens. -->
+              <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
+                <div class={fieldClass}>
+                  <label class={labelClass} for="name">
+                    Your name
+                  </label>
+                  <input
+                    class={inputClass}
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    autocomplete="name"
+                  />
+                </div>
+                <div class={fieldClass}>
+                  <label class={labelClass} for="email">
+                    Email
+                  </label>
+                  <input
+                    class={inputClass}
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                  />
+                </div>
+              </div>
 
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="email">
-                        Email
-                      </label>
-                      <input
-                        class={inputClass}
-                        type="email"
-                        id="email"
-                        name="email"
-                        required
-                        autocomplete="email"
-                      />
-                    </div>
-                  </div>
+              <div class={fieldClass}>
+                <label class={labelClass} for="org_type">
+                  Organization type
+                </label>
+                <select class={selectClass} id="org_type" name="org_type" required>
+                  <option value="" disabled selected>
+                    Pick the closest
+                  </option>
+                  {orgTypes.map((opt) => (
+                    <option value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
 
-                  <!-- Phone: optional. type="tel" lets mobile browsers pop the
-                     numeric keypad; autocomplete="tel" lets the OS / password
-                     manager pre-fill. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="phone">
-                      Phone <span class={optionalMark}>(optional)</span>
+              <div class={fieldClass}>
+                <label class={labelClass} for="message">
+                  What are you hoping to build?
+                </label>
+                <textarea
+                  class={`${inputClass} min-h-32 resize-y`}
+                  id="message"
+                  name="message"
+                  required
+                  minlength="30"
+                  rows="6"
+                  aria-describedby="message-hint"
+                  placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
+                ></textarea>
+                <p id="message-hint" class="mt-xs text-[0.85rem] text-text-muted">
+                  At least a few sentences, please. The more you share, the better I can scope the
+                  first conversation.
+                </p>
+              </div>
+
+              <!-- Budget: optional radio chips. A fieldset + legend names the
+                   group; each chip is a real radio inside its label, so the
+                   whole chip is the click target and arrow keys move between
+                   them. -->
+              <fieldset class="m-0 min-w-0 border-0 p-0">
+                <legend class={`${labelClass} mb-s`}>
+                  Budget range <span class={optionalMark}>(optional)</span>
+                </legend>
+                <div class="flex flex-wrap gap-xs">
+                  {budgets.map((opt) => (
+                    <label class="budget-chip">
+                      <input type="radio" name="budget" value={opt.value} />
+                      <span>{opt.label}</span>
                     </label>
-                    <input
-                      class={inputClass}
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      autocomplete="tel"
-                      inputmode="tel"
-                    />
-                  </div>
+                  ))}
+                </div>
+              </fieldset>
 
-                  <!-- Organization name: optional. Lets Nathan look the org up
-                     before the first reply. -->
+              <!-- The optional details, closed by default so the form reads
+                   as four questions. The script opens it when a restored
+                   draft has something in here. -->
+              <details class="optional-details" data-optional-details>
+                <summary class="font-body text-[0.95rem] font-semibold text-heading">
+                  A few optional details
+                </summary>
+                <div class="flex flex-col gap-m pt-m">
                   <div class={fieldClass}>
                     <label class={labelClass} for="organization">
                       Organization name <span class={optionalMark}>(optional)</span>
@@ -257,105 +341,54 @@ const legendClass =
                       autocomplete="organization"
                     />
                   </div>
-                </fieldset>
 
-                <!-- Fieldset 2: about the project. Opens with a hairline. -->
-                <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
-                  <legend class={legendClass}>About the project</legend>
+                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
+                    <div class={fieldClass}>
+                      <label class={labelClass} for="phone">
+                        Phone <span class={optionalMark}>(optional)</span>
+                      </label>
+                      <input
+                        class={inputClass}
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        autocomplete="tel"
+                        inputmode="tel"
+                      />
+                    </div>
+                    <div class={fieldClass}>
+                      <label class={labelClass} for="current_website">
+                        Current website <span class={optionalMark}>(optional)</span>
+                      </label>
+                      <input
+                        class={inputClass}
+                        type="url"
+                        id="current_website"
+                        name="current_website"
+                        autocomplete="url"
+                        inputmode="url"
+                        placeholder="https://"
+                      />
+                    </div>
+                  </div>
 
                   <div class={fieldClass}>
-                    <label class={labelClass} for="org_type">
-                      Organization type
+                    <label class={labelClass} for="timeline">
+                      Project timeline <span class={optionalMark}>(optional)</span>
                     </label>
-                    <select class={selectClass} id="org_type" name="org_type" required>
-                      <option value="" disabled selected>
-                        Pick the closest
+                    <select class={selectClass} id="timeline" name="timeline">
+                      <option value="" selected>
+                        No preference
                       </option>
-                      {orgTypes.map((opt) => (
+                      {timelines.map((opt) => (
                         <option value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   </div>
 
-                  <!-- Current website: optional. URL input gives mobile keyboard
-                     the dot/slash keys. Placeholder hints at expected format. -->
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="current_website">
-                      Current website <span class={optionalMark}>(optional)</span>
-                    </label>
-                    <input
-                      class={inputClass}
-                      type="url"
-                      id="current_website"
-                      name="current_website"
-                      autocomplete="url"
-                      inputmode="url"
-                      placeholder="https://"
-                    />
-                  </div>
-
-                  <!-- budget + timeline side by side on wider screens. -->
-                  <div class="grid grid-cols-1 gap-m sm:grid-cols-2">
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="budget">
-                        Budget range
-                      </label>
-                      <select class={selectClass} id="budget" name="budget" required>
-                        <option value="" disabled selected>
-                          Pick the closest
-                        </option>
-                        {budgets.map((opt) => (
-                          <option value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <!-- Timeline: optional. Helps triage against Nathan's
-                       per-quarter project cap without asking for exact dates. -->
-                    <div class={fieldClass}>
-                      <label class={labelClass} for="timeline">
-                        Project timeline <span class={optionalMark}>(optional)</span>
-                      </label>
-                      <select class={selectClass} id="timeline" name="timeline">
-                        <option value="" selected>
-                          No preference
-                        </option>
-                        {timelines.map((opt) => (
-                          <option value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class={fieldClass}>
-                    <label class={labelClass} for="message">
-                      Project description
-                    </label>
-                    <textarea
-                      class={`${inputClass} min-h-32 resize-y`}
-                      id="message"
-                      name="message"
-                      required
-                      minlength="30"
-                      rows="6"
-                      placeholder="A few sentences about what you're trying to do and roughly when you'd like to launch."
-                    ></textarea>
-                    <p class="mt-xs text-[0.85rem] text-text-muted">
-                      At least a few sentences, please. The more you share, the better I can scope
-                      the first conversation.
-                    </p>
-                  </div>
-                </fieldset>
-
-                <!-- Fieldset 3: one more thing. Opens with a hairline. -->
-                <fieldset class={`${fieldsetClass} border-t border-border pt-l`}>
-                  <legend class={legendClass}>One more thing</legend>
-
-                  <!-- Attribution: optional. Cheap signal on what marketing
-                     channels are bringing inquiries in. -->
                   <div class={fieldClass}>
                     <label class={labelClass} for="heard_from">
-                      How did you hear about Nixon Creative Studio?{' '}
+                      How did you hear about {site.studioName}?{' '}
                       <span class={optionalMark}>(optional)</span>
                     </label>
                     <select class={selectClass} id="heard_from" name="heard_from">
@@ -367,488 +400,628 @@ const legendClass =
                       ))}
                     </select>
                   </div>
-                </fieldset>
-
-                <!-- Honeypot. sr-only is Tailwind's equivalent of the old
-                   .visually-hidden utility. Hidden from sighted users and
-                   screen readers; bots tend to fill every field, so the
-                   script discards submissions where this is non-empty. -->
-                <div class="sr-only" aria-hidden="true">
-                  <label for="botcheck">Leave this field empty</label>
-                  <input
-                    type="text"
-                    id="botcheck"
-                    name="botcheck"
-                    tabindex="-1"
-                    autocomplete="off"
-                  />
                 </div>
+              </details>
 
-                <!-- Submit. Shared shadcn Button (brand variant + cta size)
-                   matches the Hero and closer CTAs. self-start keeps it
-                   at content width inside the flex-column form layout. -->
-                <span class="inline-block self-start">
-                  <Button type="submit" variant="brand" size="cta" data-contact-submit>
-                    <!-- Inline spinner. Hidden until the submit handler adds the
-                       .is-spinning class to the button; a CSS border-spinner
-                       that's static under prefers-reduced-motion (see the style
-                       block at the end of the page). aria-hidden because the
-                       label text already announces the "Sending..." state. -->
-                    <span class="contact-spinner" aria-hidden="true"></span>
-                    <span data-contact-submit-label>Send</span>
-                  </Button>
-                </span>
+              <!-- Honeypot. Hidden from sighted users and screen readers;
+                   bots tend to fill every field, so a filled one is dropped. -->
+              <div class="sr-only" aria-hidden="true">
+                <label for="botcheck">Leave this field empty</label>
+                <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
+              </div>
 
-                {!formActive && (
-                  <p class="text-[0.85rem] text-text-muted italic">
-                    The Web3Forms access key is missing. Set{' '}
-                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                      PUBLIC_WEB3FORMS_KEY
-                    </code>{' '}
-                    in{' '}
-                    <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
-                      .env
-                    </code>{' '}
-                    locally and in Cloudflare Pages settings before launch.
-                  </p>
-                )}
-              </form>
+              <!-- Submit: the shared brand Button. -->
+              <span class="inline-block self-start">
+                <Button type="submit" variant="brand" size="cta" data-contact-submit>
+                  <span class="contact-spinner" aria-hidden="true"></span>
+                  <span data-contact-submit-label>Send</span>
+                </Button>
+              </span>
 
-              <!-- Thank-you panel. Starts hidden; the submit handler removes the
-                 hidden class on success. Same outer card surface as the form so
-                 the swap reads as a state change in the same container. -->
-              <div
-                class="hidden animate-in flex-col items-start gap-s rounded-xl border border-accent/30 bg-bg p-l shadow-[0_24px_60px_-32px_rgba(10,22,40,0.5)] duration-500 zoom-in-95 fade-in"
-                data-contact-thanks
-              >
-                <span
-                  class="flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent"
-                  aria-hidden="true"
+              {!formActive && (
+                <p class="text-[0.85rem] text-text-muted italic">
+                  The Web3Forms access key is missing. Set{' '}
+                  <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                    PUBLIC_WEB3FORMS_KEY
+                  </code>{' '}
+                  in{' '}
+                  <code class="rounded-sm bg-bg-soft px-1 py-0.5 font-mono text-[0.85em] not-italic">
+                    .env
+                  </code>{' '}
+                  locally and in Cloudflare settings before launch.
+                </p>
+              )}
+            </form>
+
+            <!-- Success panel. Shown when data-state="sent" (the script) or
+                 when #sent is the URL target (the no-JS redirect). The heading
+                 takes focus after a script submit. -->
+            <div id="sent" class="contact-sent frame flex-col gap-m bg-bg p-l" data-contact-thanks>
+              <h2 class="text-h3 text-heading" tabindex="-1" data-contact-thanks-heading>
+                Thanks, your message is in.
+              </h2>
+              <p class="max-w-[56ch] leading-[1.6] text-text">
+                If you don't hear back, check your spam folder for a reply from {site.domain}, then
+                try the email address on this page.
+              </p>
+              <h3 class="text-h5 text-heading">What happens next</h3>
+              <ol class="steps">
+                {nextSteps.slice(1).map((step) => (
+                  <li>{step}</li>
+                ))}
+              </ol>
+              <h3 class="text-h5 text-heading">While you wait, two sites I built</h3>
+              {successSets.map((set) => (
+                <ul
+                  class="flex flex-col gap-xs"
+                  data-success-studies={set.key}
+                  hidden={set.key !== 'any'}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="h-6 w-6"
-                  >
-                    <path d="M20 6 9 17l-5-5"></path>
-                  </svg>
-                </span>
-                <h2 class="text-h3 text-heading">Thanks, your message is in.</h2>
-                <p class="max-w-[56ch] leading-[1.6] text-text">
-                  I'll be in touch within one or two business days. If you don't hear back, check
-                  your spam folder for a reply from {site.domain}, then try the email link on the
-                  right.
-                </p>
-              </div>
-
-              <!-- Error panel. Same hidden-class pattern. Amber band signals
-                 something went wrong without screaming red. -->
-              <div
-                class="mt-m hidden animate-in rounded-lg border border-tertiary/45 [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] p-m text-text duration-300 fade-in slide-in-from-top-1"
-                data-contact-error
-                role="alert"
-              >
-                <p>
-                  Something went wrong on my end. Please try again, or email
-                  <a class="text-link underline underline-offset-2" href={site.emailHref}>
-                    {site.email}
-                  </a>
-                  directly.
-                </p>
-              </div>
-            </div>
-
-            <!-- --------------------------------------------------------------
-                 Sidebar. Direct contact details + what-happens-next + where.
-                 Sits in the track beside the form (stacks under it on narrow
-                 screens). The email and phone are also in the footer.
-                 -------------------------------------------------------------- -->
-            <aside class="flex flex-col gap-l">
-              <div class="flex flex-col gap-s">
-                <h2 class="text-h4 text-heading">Direct</h2>
-                <ul class="flex flex-col gap-xs">
-                  <li>
-                    <CopyEmail email={site.email} />
-                  </li>
-                  <li>
-                    <a
-                      class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
-                      href={site.phoneHref}
-                    >
-                      {site.phone}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="flex flex-col gap-s">
-                <h2 class="text-h4 text-heading">What happens next</h2>
-                <!-- A quiet three-row ledger (the About "currently" tick motif),
-                     not a numbered 01/02/03 scaffold. Ordered list, list-none. -->
-                <ol class="flex list-none flex-col border-b border-border p-0">
-                  {nextSteps.map((step) => (
-                    <li class="flex items-start gap-s border-t border-border py-s leading-[1.5] text-text">
-                      <span
-                        class="mt-[0.6em] h-[2px] w-4 shrink-0 bg-tertiary"
-                        aria-hidden="true"
-                      />
-                      <span>{step}</span>
+                  {set.items.map((s) => (
+                    <li>
+                      <a
+                        class="text-link underline underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+                        href={`/work/${s.id}/`}
+                      >
+                        {s.data.client}
+                      </a>
                     </li>
                   ))}
-                </ol>
-              </div>
+                </ul>
+              ))}
+            </div>
 
-              <div class="flex flex-col gap-s">
-                <h2 class="text-h4 text-heading">Where I am</h2>
-                <p class="leading-[1.6] text-text">
-                  {site.address}. In-person work and photography across the greater Cincinnati
-                  region; web design and strategy with clients anywhere, fully remote when that is
-                  easier.
-                </p>
-                <!-- Service-area map: a keyless Google Maps embed centered on
-                     the Cincinnati region (the ?output=embed form needs no API
-                     key). Unlike the old OpenStreetMap embed this loads Google's
-                     scripts, so it does add Google as a third party on this page;
-                     that's the trade for the Google Maps look. Change the q=
-                     place or z= zoom to reframe.
-
-                     The iframe is created only when the box is about to scroll
-                     into view (the script at the end of this page), not by
-                     loading="lazy": Chrome starts a lazy iframe up to 1250px
-                     early, so Google's 1.7 MB of map script loaded with the page
-                     once the new type made the column shorter (overhaul 1.5).
-                     Without JavaScript the box holds a plain link to the map. -->
-                <!-- bg-bg-soft fills the wrapper so the iframe doesn't flash a
-                     white panel in dark mode before Google's map tiles load. -->
-                <div class="mt-s overflow-hidden rounded-md border border-border bg-bg-soft focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-                  <div
-                    class="grid h-48 w-full place-items-center px-m text-center"
-                    data-map-src="https://maps.google.com/maps?q=Cincinnati,+OH&z=9&output=embed"
-                    data-map-title="Map of the Greater Cincinnati service area"
-                  >
-                    <a
-                      class="text-link underline underline-offset-2"
-                      href="https://maps.google.com/maps?q=Cincinnati,+OH&z=9"
-                      rel="noopener"
-                      target="_blank"
-                    >
-                      Open the Cincinnati service area in Google Maps
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {site.bookingUrl && (
-                /* Book-a-call CTA. Renders only when site.bookingUrl is set
-                     (e.g. a Cal.com link). Reads as a lighter-weight option
-                     next to "use the form" for warm leads who'd rather skip
-                     straight to scheduling. */
-                <div class="flex flex-col gap-s rounded-lg border border-border bg-bg p-m">
-                  <h2 class="text-h4 text-heading">Rather book a call?</h2>
-                  <p class="leading-[1.6] text-text">
-                    Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
-                    working conversation.
-                  </p>
-                  <a
-                    class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
-                    href={site.bookingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open my calendar →
-                  </a>
-                </div>
-              )}
-            </aside>
+            <!-- Error panel. Amber band: something went wrong, without red. -->
+            <div
+              class="mt-m hidden rounded-lg border border-tertiary/45 [background-color:color-mix(in_srgb,var(--color-tertiary)_14%,var(--color-bg))] p-m text-text"
+              data-contact-error
+              role="alert"
+            >
+              <p>
+                Something went wrong on my end. Please try again, or email
+                <a class="text-link underline underline-offset-2" href={site.emailHref}>
+                  {site.email}
+                </a>
+                directly.
+              </p>
+            </div>
           </div>
+
+          <!-- Sidebar. Stacks under the form on narrow screens. -->
+          <aside
+            class="flex min-w-0 flex-col gap-xl"
+            aria-label="What happens next and how to reach me"
+          >
+            <div class="flex flex-col gap-s">
+              <h2 class={sideHeading}>What happens next</h2>
+              <ol class="steps">
+                {nextSteps.map((step) => (
+                  <li>{step}</li>
+                ))}
+              </ol>
+            </div>
+
+            <!-- The brief card. Filled by the script from the form fields as
+                 the visitor types. A plain summary for screen readers too
+                 (ruling 17): no aria-hidden, but aria-live="off" so it is
+                 read when reached, not announced on every keystroke. -->
+            <div
+              class="brief-card flex flex-col gap-s rounded-frame border border-line bg-paper p-m"
+              data-brief
+              data-studies={JSON.stringify(studyNames)}
+              data-org-labels={JSON.stringify(
+                Object.fromEntries(orgTypes.map((o) => [o.value, o.label])),
+              )}
+              data-budget-labels={JSON.stringify(
+                Object.fromEntries(budgets.map((b) => [b.value, b.label])),
+              )}
+            >
+              <h2 class={sideHeading}>What I'll read</h2>
+              <p class="text-[0.95rem] leading-[1.5] text-text-muted" data-brief-empty>
+                As you fill in the form, a short version of it shows up here.
+              </p>
+              <dl class="brief-list" aria-live="off" data-brief-list></dl>
+            </div>
+
+            <div class="flex flex-col gap-s">
+              <h2 class={sideHeading}>Direct</h2>
+              <ul class="flex flex-col gap-xs">
+                <li>
+                  <CopyEmail email={site.email} />
+                </li>
+                <li>
+                  <a
+                    class="text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+                    href={site.phoneHref}
+                  >
+                    {site.phone}
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="flex flex-col gap-s">
+              <h2 class={sideHeading}>Where I am</h2>
+              <p class="leading-[1.6] text-text">
+                {site.address}. In-person work and photography across the greater Cincinnati region;
+                web design and strategy with clients anywhere, fully remote when that is easier.
+              </p>
+              <ContactMap />
+            </div>
+
+            {site.bookingUrl && (
+              <div class="flex flex-col gap-s rounded-frame border border-line p-m">
+                <h2 class={sideHeading}>Rather book a call?</h2>
+                <p class="leading-[1.6] text-text">
+                  Pick a 30-minute slot on my calendar. No commitment, no sales pitch, just a
+                  working conversation.
+                </p>
+                <a
+                  class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+                  href={site.bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open my calendar →
+                </a>
+              </div>
+            )}
+          </aside>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ----------------------------------------------------------------------
-       Submit-button spinner. Scoped Astro styles. The spinner is collapsed
-       (display:none) until the submit handler adds .is-spinning to the button,
-       at which point a small border-ring shows inline before the "Sending..."
-       label, picking up the button's existing flex gap. It uses currentColor
-       so it reads as white on the brand button. Under prefers-reduced-motion
-       the ring shows but does not rotate, so the state is still legible without
-       animation.
-       ---------------------------------------------------------------------- -->
   <style>
+    /* ---- Success and form states --------------------------------------- */
+    .contact-sent {
+      display: none;
+    }
+    [data-contact][data-state='sent'] .contact-sent,
+    .contact-sent:target {
+      display: flex;
+    }
+    [data-contact][data-state='sent'] form,
+    [data-contact]:has(.contact-sent:target) form {
+      display: none;
+    }
+    .contact-sent [data-contact-thanks-heading]:focus {
+      outline: none;
+    }
+    .contact-sent [data-contact-thanks-heading]:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 4px;
+    }
+
+    /* ---- The three-step ledger (sidebar and success panel) ------------- */
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .steps li {
+      display: flex;
+      gap: var(--spacing-s, 0.75rem);
+      align-items: flex-start;
+      border-top: 1px solid var(--line);
+      padding-block: 0.75rem;
+      line-height: 1.5;
+      color: var(--color-text);
+    }
+    .steps li::before {
+      content: '';
+      flex-shrink: 0;
+      width: 1rem;
+      height: 2px;
+      margin-top: 0.7em;
+      background: var(--line-strong);
+    }
+
+    /* ---- Budget chips --------------------------------------------------- */
+    .budget-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 2.75rem;
+      padding: 0.5rem 0.875rem;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-pill);
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: border-color var(--dur-quick) var(--ease-glide);
+    }
+    .budget-chip:hover {
+      border-color: var(--color-heading);
+    }
+    /* A real radio, drawn as a small ring so the chip stays quiet. Checked
+       fills it and the chip's edge goes heavy: shape and weight, not colour
+       alone, carry the state. */
+    .budget-chip input {
+      appearance: none;
+      flex-shrink: 0;
+      width: 1rem;
+      height: 1rem;
+      margin: 0;
+      border: 1.5px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--color-bg);
+    }
+    .budget-chip input:checked {
+      border-color: var(--color-heading);
+      background: radial-gradient(circle, var(--color-heading) 0 40%, var(--color-bg) 45%);
+    }
+    .budget-chip input:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
+    }
+    .budget-chip:has(input:checked) {
+      border-color: var(--color-heading);
+      box-shadow: inset 0 0 0 1px var(--color-heading);
+      font-weight: 600;
+    }
+    @media (forced-colors: active) {
+      .budget-chip input:checked {
+        background: CanvasText;
+      }
+    }
+
+    /* ---- Optional details ---------------------------------------------- */
+    .optional-details {
+      border-top: 1px solid var(--line);
+      padding-top: 1rem;
+    }
+    .optional-details summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 2.75rem;
+      cursor: pointer;
+      list-style: none;
+    }
+    .optional-details summary::-webkit-details-marker {
+      display: none;
+    }
+    /* A plus that turns into a minus when open. */
+    .optional-details summary::before {
+      content: '+';
+      display: inline-grid;
+      place-items: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+    .optional-details[open] summary::before {
+      content: '\2212';
+    }
+    .optional-details summary:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+
+    /* ---- Brief card ----------------------------------------------------- */
+    /* Only the script can fill it, so without JS it is not shown at all. */
+    :global(html:not(.js)) .brief-card {
+      display: none;
+    }
+    .brief-list:empty {
+      display: none;
+    }
+    .brief-list {
+      display: grid;
+      grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+      gap: 0.375rem 1rem;
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .brief-list :global(dt) {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding-top: 0.15em;
+      color: var(--color-text-muted);
+    }
+    .brief-list :global(dd) {
+      margin: 0;
+      color: var(--color-text);
+      overflow-wrap: anywhere;
+    }
+
+    /* ---- Submit spinner ------------------------------------------------ */
+    /* Collapsed until the submit handler adds .is-spinning to the button. Not
+       a loop in the Pause motion sense (it only runs while sending); static
+       under reduced motion so the state still reads. */
     .contact-spinner {
       display: none;
       width: 1em;
       height: 1em;
       border-radius: 9999px;
-      /* Faint full ring with one brighter arc so the rotation reads. */
       border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
       border-top-color: currentColor;
-      /* Optical alignment with the cap-height of the adjacent label text. */
       flex-shrink: 0;
     }
-
-    /* Shown only while submitting. */
-    [data-contact-submit].is-spinning .contact-spinner {
+    :global([data-contact-submit].is-spinning) .contact-spinner {
       display: inline-block;
       animation: contact-spin 0.7s linear infinite;
     }
-
     @keyframes contact-spin {
       to {
         transform: rotate(360deg);
       }
     }
-
-    /* Reduced motion: keep the ring visible as a static state cue, no spin. */
     @media (prefers-reduced-motion: reduce) {
-      [data-contact-submit].is-spinning .contact-spinner {
+      :global([data-contact-submit].is-spinning) .contact-spinner {
         animation: none;
       }
     }
   </style>
 
-  <!-- ----------------------------------------------------------------------
-       Submit handler. Posts via fetch, swaps form for thank-you panel on
-       success, shows inline error on failure. Switched from the `hidden`
-       HTML attribute to the .hidden Tailwind class because the attribute
-       loses specificity against class-based display rules.
-       ---------------------------------------------------------------------- -->
   <script>
-    // Service-area map: swap the placeholder link for the Google iframe once
-    // the box is within 200px of the viewport. Re-binds after a View
-    // Transitions navigation; the dataset guard keeps it from binding twice.
-    function initServiceMap() {
-      const box = document.querySelector<HTMLElement>('[data-map-src]');
-      if (!box || box.dataset.mapBound) return;
-      box.dataset.mapBound = 'true';
-      const load = () => {
-        const frame = document.createElement('iframe');
-        frame.src = box.dataset.mapSrc ?? '';
-        frame.title = box.dataset.mapTitle ?? 'Map';
-        frame.referrerPolicy = 'no-referrer-when-downgrade';
-        frame.className = 'block h-48 w-full';
-        box.replaceWith(frame);
-      };
-      const io = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) {
-            io.disconnect();
-            load();
-          }
-        },
-        { rootMargin: '200px 0px' },
-      );
-      io.observe(box);
-    }
-    initServiceMap();
-    document.addEventListener('astro:page-load', initServiceMap);
+    // The form's enhancement layer: validation, draft save and restore, URL
+    // prefill, the brief card, fetch submit and the success panel. Bound on
+    // astro:page-load with a dataset guard (never-break rule 7), so it
+    // survives View Transitions and never binds twice. The form works without
+    // any of this.
 
-    // Wrapped in astro:page-load so the form's JS layer (honeypot, draft
-    // save/restore, thank-you/error swap) re-binds after a
-    // View Transitions navigation, not just on a hard load. The dataset guard
-    // keeps it from binding twice to the same form instance.
-    function initContactForm() {
-      const form = document.querySelector('[data-contact-form]') as HTMLFormElement | null;
-      const thanks = document.querySelector('[data-contact-thanks]') as HTMLElement | null;
-      const errorEl = document.querySelector('[data-contact-error]') as HTMLElement | null;
-      const submit = document.querySelector('[data-contact-submit]') as HTMLButtonElement | null;
-      const label = document.querySelector('[data-contact-submit-label]') as HTMLElement | null;
+    type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-      if (form && form.dataset.enhanced) return;
-      if (form) form.dataset.enhanced = 'true';
+    const DRAFT_KEY = 'ncs-contact-draft';
+    // Fields saved to the draft. Hidden Web3Forms fields, the origin fields
+    // and the honeypot are never saved.
+    const PERSISTED = [
+      'name',
+      'email',
+      'organization',
+      'org_type',
+      'message',
+      'budget',
+      'phone',
+      'current_website',
+      'timeline',
+      'heard_from',
+    ];
+    const OPTIONAL_DETAIL_FIELDS = [
+      'organization',
+      'phone',
+      'current_website',
+      'timeline',
+      'heard_from',
+    ];
+    // URL values are only used when they look like a slug.
+    const SLUG = /^[a-z0-9][a-z0-9-]{0,60}$/;
 
-      if (form && thanks && errorEl && submit && label) {
-        const originalLabel = label.textContent ?? 'Send';
-
-        /* ---- Draft auto-save ----------------------------------------------
-         If a visitor types a long message then accidentally navigates away
-         or refreshes, we want their draft to come back. localStorage save
-         on every input (with a tiny debounce), restore on mount, clear
-         after a successful submit. The honeypot field is never saved.
-
-         Skipped under private browsing / blocked storage; both blocks are
-         wrapped in try/catch so a SecurityError doesn't break the form.
-      --------------------------------------------------------------------- */
-
-        const DRAFT_KEY = 'ncs-contact-draft';
-
-        // Fields we persist. The hidden Web3Forms admin fields and the
-        // honeypot are intentionally excluded.
-        const persistedNames = [
-          'name',
-          'email',
-          'phone',
-          'organization',
-          'org_type',
-          'current_website',
-          'budget',
-          'timeline',
-          'message',
-          'heard_from',
-        ];
-
-        function restoreDraft(): void {
-          try {
-            const raw = localStorage.getItem(DRAFT_KEY);
-            if (!raw) return;
-            const data = JSON.parse(raw) as Record<string, string>;
-            persistedNames.forEach((name) => {
-              const el = form!.elements.namedItem(name) as
-                HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-              if (el && typeof data[name] === 'string' && data[name].length > 0) {
-                el.value = data[name];
-              }
-            });
-          } catch {
-            /* swallow */
-          }
-        }
-
-        function saveDraft(): void {
-          try {
-            const out: Record<string, string> = {};
-            persistedNames.forEach((name) => {
-              const el = form!.elements.namedItem(name) as
-                HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-              if (el && el.value) out[name] = el.value;
-            });
-            if (Object.keys(out).length === 0) {
-              localStorage.removeItem(DRAFT_KEY);
-              return;
-            }
-            localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
-          } catch {
-            /* swallow */
-          }
-        }
-
-        function clearDraft(): void {
-          try {
-            localStorage.removeItem(DRAFT_KEY);
-          } catch {
-            /* swallow */
-          }
-        }
-
-        // Tiny debounce so typing in the textarea doesn't write to storage
-        // on every keystroke.
-        let saveTimer: number | undefined;
-        function scheduleSave(): void {
-          if (saveTimer) window.clearTimeout(saveTimer);
-          saveTimer = window.setTimeout(saveDraft, 250);
-        }
-
-        restoreDraft();
-
-        // Context-aware preselect. A case study's closing CTA links here as
-        // /contact?org_type=<sector>, so a visitor arriving from a church study
-        // lands with "Church" already chosen. Only applied when the field is still
-        // empty, so it never overrides a restored draft; the param is then stripped
-        // from the URL so a refresh doesn't re-apply it. Convenience only: the form
-        // works identically without it.
-        try {
-          const params = new URLSearchParams(window.location.search);
-          const wanted = params.get('org_type');
-          if (wanted) {
-            const orgSelect = form.elements.namedItem('org_type') as HTMLSelectElement | null;
-            if (
-              orgSelect &&
-              !orgSelect.value &&
-              Array.from(orgSelect.options).some((o) => o.value === wanted)
-            ) {
-              orgSelect.value = wanted;
-              scheduleSave();
-            }
-            params.delete('org_type');
-            const qs = params.toString();
-            window.history.replaceState(
-              null,
-              '',
-              window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
-            );
-          }
-        } catch {
-          /* URL / select access guarded; the preselect is never required */
-        }
-
-        form.addEventListener('input', scheduleSave);
-        form.addEventListener('change', scheduleSave);
-
-        // Helpers that toggle visibility via the Tailwind .hidden class. The
-        // thanks panel needs `flex` when shown because it's a flex column.
-        const show = (el: HTMLElement, displayClass = 'flex') => {
-          el.classList.remove('hidden');
-          if (displayClass) el.classList.add(displayClass);
-        };
-        const hide = (el: HTMLElement, displayClass = 'flex') => {
-          if (displayClass) el.classList.remove(displayClass);
-          el.classList.add('hidden');
-        };
-
-        form.addEventListener('submit', async (event) => {
-          // Native validation first. The form carries `novalidate`, so the
-          // browser won't bubble its own messages on submit; we ask for them
-          // explicitly. checkValidity() returns false if any required/min-length
-          // field is invalid, and reportValidity() focuses the first offender and
-          // shows its native message. Bail before the honeypot/fetch flow so a
-          // blank or too-short field never silently submits and waits on a
-          // server reject.
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            form.reportValidity();
-            return;
-          }
-
-          // Honeypot. Real users never fill this; bots usually do. Pretend
-          // the submit worked but silently drop the request.
-          const honeypot = (form.elements.namedItem('botcheck') as HTMLInputElement | null)?.value;
-          if (honeypot) {
-            event.preventDefault();
-            hide(form);
-            show(thanks);
-            clearDraft();
-            return;
-          }
-
-          event.preventDefault();
-
-          hide(errorEl, 'block');
-          submit.disabled = true;
-          submit.classList.add('is-spinning');
-          label.textContent = 'Sending...';
-
-          try {
-            const data = new FormData(form);
-            const response = await fetch(form.action, {
-              method: 'POST',
-              body: data,
-              headers: { Accept: 'application/json' },
-            });
-
-            if (response.ok) {
-              hide(form);
-              show(thanks);
-              clearDraft();
-              thanks.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-              show(errorEl, 'block');
-            }
-          } catch (_err) {
-            show(errorEl, 'block');
-          } finally {
-            submit.disabled = false;
-            submit.classList.remove('is-spinning');
-            label.textContent = originalLabel;
-          }
-        });
+    function parseJson(raw: string | undefined): Record<string, string> {
+      try {
+        return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+      } catch {
+        return {};
       }
     }
-    document.addEventListener('astro:page-load', initContactForm);
+
+    function initContactForm() {
+      const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+      const wrap = document.querySelector<HTMLElement>('[data-contact]');
+      const errorEl = document.querySelector<HTMLElement>('[data-contact-error]');
+      const submit = document.querySelector<HTMLButtonElement>('[data-contact-submit]');
+      const label = document.querySelector<HTMLElement>('[data-contact-submit-label]');
+      const heading = document.querySelector<HTMLElement>('[data-contact-thanks-heading]');
+      const details = document.querySelector<HTMLDetailsElement>('[data-optional-details]');
+      const brief = document.querySelector<HTMLElement>('[data-brief]');
+      if (!form || !wrap || !errorEl || !submit || !label || !heading) return;
+      if (form.dataset.enhanced) return;
+      form.dataset.enhanced = 'true';
+
+      // The script validates on submit itself (below), so the browser's own
+      // bubbles stand down. Without JS this line never runs and the browser
+      // checks the required fields natively.
+      form.noValidate = true;
+
+      const field = (name: string) => form.elements.namedItem(name) as Field | RadioNodeList | null;
+      const valueOf = (name: string) => field(name)?.value ?? '';
+      const setValue = (name: string, value: string) => {
+        const el = field(name);
+        if (el) el.value = value;
+      };
+
+      /* ---- Draft save and restore ------------------------------------- */
+      function restoreDraft() {
+        try {
+          const data = parseJson(localStorage.getItem(DRAFT_KEY) ?? undefined);
+          PERSISTED.forEach((name) => {
+            if (typeof data[name] === 'string' && data[name]) setValue(name, data[name]);
+          });
+        } catch {
+          /* storage blocked: nothing to restore */
+        }
+      }
+      function saveDraft() {
+        try {
+          const out: Record<string, string> = {};
+          PERSISTED.forEach((name) => {
+            const v = valueOf(name);
+            if (v) out[name] = v;
+          });
+          if (Object.keys(out).length === 0) localStorage.removeItem(DRAFT_KEY);
+          else localStorage.setItem(DRAFT_KEY, JSON.stringify(out));
+        } catch {
+          /* storage blocked */
+        }
+      }
+      function clearDraft() {
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+        } catch {
+          /* storage blocked */
+        }
+      }
+      let saveTimer: number | undefined;
+      const scheduleSave = () => {
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(saveDraft, 250);
+      };
+
+      restoreDraft();
+      // A restored draft with something in the optional details opens them,
+      // so nothing the visitor typed is tucked out of sight.
+      if (details && OPTIONAL_DETAIL_FIELDS.some((n) => valueOf(n))) details.open = true;
+
+      /* ---- Prefill from the URL ----------------------------------------- */
+      // ?org_type (a study's closer), ?tier (a price on /services), ?service
+      // (photography, brand) and ?from (the page that sent the visitor).
+      // A prefill never overrides a restored draft.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const get = (key: string) => {
+          const v = (params.get(key) ?? '').trim().toLowerCase();
+          return SLUG.test(v) ? v : '';
+        };
+        const from = get('from');
+        const tier = get('tier');
+        const service = get('service');
+        const orgType = get('org_type');
+        if (from) setValue('from', from);
+        if (tier) setValue('tier', tier);
+        if (service) setValue('service', service);
+        if (orgType) setValue('origin_org_type', orgType);
+
+        const orgSelect = field('org_type') as HTMLSelectElement | null;
+        if (
+          orgType &&
+          orgSelect &&
+          !orgSelect.value &&
+          Array.from(orgSelect.options).some((o) => o.value === orgType)
+        ) {
+          orgSelect.value = orgType;
+        }
+        const tierBudget = parseJson(form.dataset.tierBudget);
+        if (tier && tierBudget[tier] && !valueOf('budget')) setValue('budget', tierBudget[tier]);
+      } catch {
+        /* the prefill is a convenience, never required */
+      }
+
+      /* ---- The brief card ------------------------------------------------ */
+      const studies = parseJson(brief?.dataset.studies);
+      const orgLabels = parseJson(brief?.dataset.orgLabels);
+      const budgetLabels = parseJson(brief?.dataset.budgetLabels);
+      const list = brief?.querySelector<HTMLElement>('[data-brief-list]');
+      const empty = brief?.querySelector<HTMLElement>('[data-brief-empty]');
+
+      function renderBrief() {
+        if (!list || !empty) return;
+        const name = valueOf('name').trim();
+        const org = valueOf('organization').trim();
+        const type = orgLabels[valueOf('org_type')] ?? '';
+        const budget = budgetLabels[valueOf('budget')] ?? '';
+        const message = valueOf('message').trim().replace(/\s+/g, ' ');
+        const from = valueOf('from');
+        const service = valueOf('service');
+        const rows: [string, string][] = [];
+        if (name) rows.push(['From', org ? `${name}, ${org}` : name]);
+        else if (org) rows.push(['From', org]);
+        if (type) rows.push(['Kind', type]);
+        if (service) rows.push(['Interested in', service.replace(/-/g, ' ')]);
+        if (message) {
+          rows.push(['Building', message.length > 160 ? `${message.slice(0, 157)}...` : message]);
+        }
+        if (budget) rows.push(['Budget', budget]);
+        if (from) {
+          rows.push(['Came from', studies[from] ? `The ${studies[from]} study` : `/${from}/`]);
+        }
+        // Built with DOM methods and textContent only: whatever the visitor
+        // types is shown as text, never parsed as markup.
+        list.replaceChildren(
+          ...rows.flatMap(([term, desc]) => {
+            const dt = document.createElement('dt');
+            dt.textContent = term;
+            const dd = document.createElement('dd');
+            dd.textContent = desc;
+            return [dt, dd];
+          }),
+        );
+        empty.hidden = rows.length > 0;
+      }
+      renderBrief();
+
+      form.addEventListener('input', () => {
+        scheduleSave();
+        renderBrief();
+      });
+      form.addEventListener('change', () => {
+        scheduleSave();
+        renderBrief();
+      });
+
+      /* ---- Success ------------------------------------------------------- */
+      function showSuccess() {
+        // Two studies from the visitor's sector (or the first two in order).
+        const sector = valueOf('org_type') || valueOf('origin_org_type');
+        const sets = document.querySelectorAll<HTMLElement>('[data-success-studies]');
+        const match = Array.from(sets).some((s) => s.dataset.successStudies === sector)
+          ? sector
+          : 'any';
+        sets.forEach((s) => (s.hidden = s.dataset.successStudies !== match));
+        wrap!.dataset.state = 'sent';
+        heading!.focus();
+        heading!.scrollIntoView({ block: 'start' });
+      }
+      // Back from the no-JS redirect with the script running after all (or a
+      // reload of it): the :target CSS shows the panel; move focus to it.
+      if (window.location.hash === '#sent') {
+        wrap.dataset.state = 'sent';
+        heading.focus();
+      }
+
+      /* ---- Submit -------------------------------------------------------- */
+      const originalLabel = label.textContent ?? 'Send';
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        // Native validation, asked for explicitly: focuses the first field
+        // that is missing or too short and shows the browser's message.
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+        // Honeypot: real people never fill it. Pretend it worked.
+        if (valueOf('botcheck')) {
+          clearDraft();
+          showSuccess();
+          return;
+        }
+
+        errorEl.classList.add('hidden');
+        submit.disabled = true;
+        submit.classList.add('is-spinning');
+        label.textContent = 'Sending...';
+        try {
+          const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { Accept: 'application/json' },
+          });
+          if (response.ok) {
+            clearDraft();
+            showSuccess();
+          } else {
+            errorEl.classList.remove('hidden');
+          }
+        } catch {
+          errorEl.classList.remove('hidden');
+        } finally {
+          submit.disabled = false;
+          submit.classList.remove('is-spinning');
+          label.textContent = originalLabel;
+        }
+      });
+    }
+
     initContactForm();
+    document.addEventListener('astro:page-load', initContactForm);
   </script>
 </BaseLayout>

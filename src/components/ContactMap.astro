@@ -1,0 +1,154 @@
+---
+// Safe to edit (drawing and copy). Used only by /contact.
+/* ============================================================================
+   ContactMap: "Where I am" on /contact (overhaul package 2.7)
+   ============================================================================
+   A small hand-drawn sketch of Cincinnati on the Ohio River, with the greater
+   Cincinnati service area circled, plus a clock line under it.
+
+   Why a drawing and not a map: the page used to embed Google Maps, which
+   loaded about 1.7 MB of Google's script and let Google set cookies the
+   moment a visitor scrolled to it. A sketch says the same thing (I am in
+   Cincinnati, I work around it in person and anywhere online) with no third
+   party, no tiles and no request at all. Every colour is a site token, so it
+   follows the theme.
+
+   The clock: without JavaScript the line reads "Cincinnati (Eastern time)".
+   The script below rewrites it to "It's 4:12 pm in Cincinnati." from the
+   visitor's clock, converted to America/New_York, and keeps it current once a
+   minute. Not a live region: a ticking announcement would be noise.
+   ============================================================================ */
+
+import { site } from '../data/site';
+
+// "Cincinnati, OH" becomes "Cincinnati" for the sentences below.
+const city = site.address.split(',')[0];
+---
+
+<figure class="contact-map flex flex-col gap-s">
+  <svg
+    class="contact-map__svg block h-auto w-full rounded-frame border border-line"
+    viewBox="0 0 320 180"
+    role="img"
+    aria-label={`Sketch map: ${city} on the Ohio River, with the greater ${city} area I work in person circled around it.`}
+  >
+    <rect width="320" height="180" class="contact-map__ground"></rect>
+    {/* A quiet survey grid, every 40 units. */}
+    <g class="contact-map__grid">
+      {[40, 80, 120, 160, 200, 240, 280].map((x) => (
+        <line x1={x} y1="0" x2={x} y2="180" />
+      ))}
+      {[40, 80, 120, 160].map((y) => (
+        <line x1="0" y1={y} x2="320" y2={y} />
+      ))}
+    </g>
+    {/* The service area: a dashed ring around the city. */}
+    <circle class="contact-map__area" cx="168" cy="82" r="62"></circle>
+    {/* The Ohio River, roughly as it bends past the city. */}
+    <path
+      class="contact-map__river"
+      d="M-4 118 C 40 112, 70 132, 108 124 S 150 98, 176 104 S 226 132, 258 120 S 300 96, 324 104"
+    ></path>
+    <text class="contact-map__note" x="246" y="146">
+      Ohio River
+    </text>
+    {/* The city. */}
+    <circle class="contact-map__ring" cx="168" cy="82" r="10"></circle>
+    <circle class="contact-map__dot" cx="168" cy="82" r="4.5"></circle>
+    <text class="contact-map__label" x="184" y="78">
+      {city}
+    </text>
+  </svg>
+  <figcaption class="font-mono text-sm text-text-muted">
+    <span data-contact-clock data-city={city}>
+      {city} (Eastern time)
+    </span>
+  </figcaption>
+</figure>
+
+<style>
+  .contact-map__ground {
+    fill: var(--paper);
+  }
+  .contact-map__grid line {
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  .contact-map__area {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 1.25;
+    stroke-dasharray: 4 5;
+  }
+  .contact-map__river {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .contact-map__ring {
+    fill: none;
+    stroke: var(--color-heading);
+    stroke-width: 1.25;
+  }
+  .contact-map__dot {
+    fill: var(--color-heading);
+  }
+  .contact-map__label,
+  .contact-map__note {
+    font-family: var(--font-mono);
+  }
+  .contact-map__label {
+    fill: var(--color-heading);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .contact-map__note {
+    fill: var(--color-text-muted);
+    font-size: 10px;
+  }
+</style>
+
+<script>
+  // Fill the clock line. Rebinds on every astro:page-load (View Transitions),
+  // and clears the minute timer before the page swaps out so timers never pile
+  // up across navigations.
+  let clockTimer: number | undefined;
+
+  function renderClock(el: HTMLElement) {
+    try {
+      const time = new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: 'America/New_York',
+      })
+        .format(new Date())
+        .replace(/\s?AM$/i, ' am')
+        .replace(/\s?PM$/i, ' pm');
+      el.textContent = `It's ${time} in ${el.dataset.city ?? 'Cincinnati'}.`;
+    } catch {
+      /* Old engine without timeZone support: keep the static line. */
+    }
+  }
+
+  function initClock() {
+    const el = document.querySelector<HTMLElement>('[data-contact-clock]');
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = 'true';
+    renderClock(el);
+    // Line the updates up with the turn of each minute.
+    const msToNextMinute = 60_000 - (Date.now() % 60_000);
+    window.clearInterval(clockTimer);
+    clockTimer = window.setTimeout(() => {
+      renderClock(el);
+      clockTimer = window.setInterval(() => renderClock(el), 60_000);
+    }, msToNextMinute);
+  }
+
+  initClock();
+  document.addEventListener('astro:page-load', initClock);
+  document.addEventListener('astro:before-swap', () => {
+    window.clearTimeout(clockTimer);
+    window.clearInterval(clockTimer);
+  });
+</script>
