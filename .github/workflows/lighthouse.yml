@@ -31,6 +31,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Astro's optimized-image cache (overhaul 4.4). Every image is encoded as AVIF
+      # and WebP at build time, and a cold encode takes about two minutes on a
+      # runner (8 seconds when it was WebP alone). Astro keys each cached file by a
+      # hash of its transform and the source's content hash, so a restored entry is
+      # only ever reused for the exact same image; an edited image simply misses.
+      # Restored after npm ci, which would wipe node_modules/.astro. The key moves
+      # with the assets and the encoder config; restore-keys fall back to the
+      # newest cache so only the changed images are encoded again.
+      - name: Restore the optimized-image cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.astro/assets
+          key: astro-images-${{ hashFiles('src/assets/**', 'src/content/**', 'astro.config.mjs', 'package-lock.json') }}
+          restore-keys: astro-images-
+
       # Same build ci.yml runs. No env needed; every PUBLIC_* variable is
       # optional and the site builds clean without them.
       - name: Build
