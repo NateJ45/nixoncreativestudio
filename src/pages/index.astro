@@ -1,53 +1,58 @@
 ---
 /* ============================================================================
-   Homepage
+   Homepage (overhaul package 2.2)
    ============================================================================
-   Homepage architecture (replaces the previous eight-section frame).
-   Section order is the IA, not decoration:
+   Its job: proof of craft, then fit, then price. Section order IS the IA:
 
-     Hero          — "The Reel": the headline, one positioning line and two
-                     CTAs on the left; a tilted wall of real client sites
-                     drifting in columns on the right (HeroReel). Light in light
-                     mode, navy in dark. Studio wordmark lives in the header.
-     Selected Work — three featured case studies, asymmetric (one large + two
-                     medium). Real client names, real outcomes, real links into
-                     /work/{slug} for the long form.
-     Pricing Teaser— slim "What it costs" band: the three web-tier floors as a
-                     hairline editorial row, routing to /services for the full
-                     pricing. Reads numbers from src/data/pricing.ts (shared
-                     single source of truth with /services).
-     Process Band  — single band that combines the four-step process and the
-                     inquiry CTA. Closes the page with one strong block instead
-                     of three stacked sections.
+     Hero           "The Reel" (Hero.astro + HeroReel.astro). Not changed
+                    by 2.2.
+     Selected work  three client sites (the lowest `order`) as FramePairs,
+                    alternating sides, with the peek on hover and focus, then
+                    "All {n} sites" to /work/. White.
+     Who I build for  SectorIndex: one hairline row per sector with its count,
+                    each linking /work/?sector={key}. Paper.
+     (testimonial)  one real quote goes here; see the comment in the markup.
+     What it costs  PricingTeaser, variant "teaser": the ruled tiers from
+                    src/data/pricing.ts. White.
+     How I work     ProcessBand, the weighted timeline. Paper.
+     Ink closer     the footer (BaseLayout), set by the `closer` prop below.
 
-   The Footer is rendered by BaseLayout, immediately under the Process Band.
-
-   Services, PhotoStrip, and Testimonials are no longer separate homepage
-   sections; each was re-homed where it belongs:
-     - Services        → /services and /about already carry the offering copy.
-     - PhotoStrip      → /photography is the dedicated photography surface; the
-                         homepage carries the work via the hero showcase, not a
-                         photo tile strip.
-     - Testimonials    → embedded inside individual case study pages, and the
-                         /about carousel, where the quote has earned context.
-
-   Architecture decision documented in PRODUCT.md and CLAUDE.md — refresh those
-   if the section frame ever needs to shift.
+   Surfaces alternate white and paper so each hairline marks a real change,
+   and the page always ends on ink. Details: .claude/rules/homepage-and-pages.md.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
 import SelectedWork from '../components/SelectedWork.astro';
+import SectorIndex from '../components/SectorIndex.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
+import type { Closer } from '../lib/closer';
+
+// The home's last word. ProcessBand used to close the page with this line and
+// its own button; the footer's ink closer carries it now, with the same
+// promise under it.
+const closer: Closer = {
+  heading: 'Tell me what you are',
+  emphasis: 'building.',
+  sub: 'The first conversation is free and ends with an honest ballpark, so you know where you stand before anything is signed.',
+};
 ---
 
 <BaseLayout
   title="Nixon Creative Studio | Cincinnati websites and photography"
   description="I design and build fast, accessible websites for churches, schools, nonprofits and small businesses. Based in Cincinnati, working with clients anywhere."
+  closer={closer}
 >
   <Hero />
   <SelectedWork />
-  <PricingTeaser />
-  <ProcessBand />
+  <SectorIndex tone="paper" />
+  {/* TESTIMONIAL SLOT (the testimonials package fills it): one real quote,
+       verbatim, from _vault/projects/ncs-testimonials.md, goes HERE, between
+       "Who I build for" and "What it costs". Nothing renders here until then.
+       Never a made-up or paraphrased quote (CLAUDE.md never-break rule 9).
+       Keep the surfaces alternating: if the quote band is white, swap
+       PricingTeaser to tone="paper" and ProcessBand to tone="white". */}
+  <PricingTeaser variant="teaser" tone="white" />
+  <ProcessBand tone="paper" />
 </BaseLayout>
