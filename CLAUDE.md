@@ -8,7 +8,7 @@ Reid Design is a separate business entity. Do not conflate it with Nixon Creativ
 
 **Rolled back 2026-10-09.** The EmDash CMS and server rendering (PRs #47 to #105) were rolled back to the static state of 7bca364: every page is prerendered and all content lives in this repo. Kept on top: the care plan pricing (#41; since replaced by the four care levels in `src/data/pricing.ts`, which match the client proposals), the sync-check resync (#89) and the GA4 hostname guard (#104). The EmDash history stays in git; `main` is the only branch.
 
-Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, React 19 islands (shadcn Button and Sheet are the last two shadcn primitives). Full list: `docs/claude/stack.md`.
+Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, Tailwind 4, React 19 only for the /photography gallery (the site chrome is `.astro` plus small scripts; shadcn Button is the last shadcn primitive, no Radix). Full list: `docs/claude/stack.md`.
 
 ## How this file is organised
 
@@ -59,7 +59,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 5. **Colors come from tokens** (`bg-primary`, `text-link`), never hex in components. Every new pair clears WCAG AA in both themes and goes in the site-owned `src/lib/ncs-tokens.test.ts` (never the PORTABLE `theme-tokens.test.ts`). Heading emphasis is weight only (300 lead, `<b>` at 800), never a coloured span, capitals or gradient text. Accessibility stays at Lighthouse 100.
 6. **Template-expression comments are `{/* */}`**, never `<!-- -->` (breaks lint and format, Gotcha 1). A conditional `<script>` goes in its own component.
 7. **Page enhancement scripts** register on `astro:page-load` with a dataset re-bind guard; always render the real final value of a `data-countup` number as static text.
-8. **Radix-portal primitives hydrate with `client:only="react"`** (Sheet, Dialog, portalled DropdownMenu), or the page blanks on "Invalid hook call".
+8. **The mobile nav works without JavaScript**: the menu button is a link to the footer nav (`#site-nav`), upgraded to a native `<dialog>` by `src/scripts/mobile-nav.ts`. Keep that id, and keep React to the /photography gallery (`tests/no-react.spec.ts`).
 9. **Never fabricate** a testimonial, result, metric or feature screenshot. Only real, live, attributed proof goes on the site.
 10. **Every `mailto:` keeps its fallback** (`src/scripts/mailto-fallback.ts`); a click that does nothing on a machine with no mail client is expected.
 11. **Keep the docs TRUE**: a new route updates `tests/routes.ts`; Colophon and Privacy text are tied to the code and hosting.
@@ -77,7 +77,7 @@ Path-scoped rules (load automatically when you touch matching files):
 - `.claude/rules/homepage-and-pages.md`: homepage section order and what each section does (`src/pages`, `src/components`).
 - `.claude/rules/content.md`: site data, `mailto` fallback, the three collections and their frontmatter, routes table (`src/content`, `src/data`, `src/pages`).
 - `.claude/rules/styling.md`: type (Bricolage headings, Bebas wordmark only, weight as emphasis), brand and surface tokens, `.band-ink`, `.page-grid`, shadcn mapping, theme system, motion tokens.
-- `.claude/rules/components.md`: component order of preference, Button variants, `client:only`, studio components, code conventions, images.
+- `.claude/rules/components.md`: component order of preference, Button variants, no-JS chrome, studio components, code conventions, images.
 - `.claude/rules/accessibility.md`: AA target, required patterns, token contrast, before-merging checks.
 - `.claude/rules/build-pipeline.md`: `npm run build` chain, placeholders, OG cards, icons.
 - `.claude/rules/testing-ci.md`: every test suite, lint and format, CI, Lighthouse, uptime and Dependabot workflows, parity harness, sync-check.

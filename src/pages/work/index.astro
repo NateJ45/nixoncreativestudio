@@ -16,7 +16,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CtaBanner from '../../components/CtaBanner.astro';
 import CaseStudyCover from '../../components/CaseStudyCover.astro';
-import WorkFilter from '../../components/WorkFilter';
+import WorkFilter from '../../components/WorkFilter.astro';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 
 const entries = (await getCollection('case-studies')).sort(
@@ -91,7 +91,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
           globals.css hides them with display:none. */}
       {sectors.length > 1 && (
         <div class="mb-l">
-          <WorkFilter client:load sectors={sectors} />
+          <WorkFilter sectors={sectors} />
         </div>
       )}
 

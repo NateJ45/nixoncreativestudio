@@ -1,0 +1,117 @@
+---
+// Safe to edit.
+/* ============================================================================
+   CopyEmail
+   ============================================================================
+   An email address that doubles as a "copy to clipboard" control. The mailto
+   link stays the main way in; the small button beside it copies the address,
+   and its icon swaps to a check mark for 2 seconds while a screen-reader-only
+   status line says "Copied".
+
+   Used in Footer.astro (tone="dark") and the /contact sidebar.
+
+   No React: the script below wires every [data-copy-email] on the page on
+   astro:page-load (data-bound guard). Without JavaScript the copy button is
+   hidden and the mailto link (with its fallback, src/scripts/mailto-fallback.ts)
+   does the job. If the Clipboard API is blocked the click does nothing and
+   the link beside it still works.
+   ============================================================================ */
+
+import ChromeIcon from './ChromeIcon.astro';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  /** Address shown and copied. Pass site.email (never a literal). */
+  email: string;
+  /** Extra classes on the wrapper, for spacing. */
+  class?: string;
+  /** Surface. 'dark' is the theme-aware footer: --link on the light footer,
+      sky --secondary over the navy footer in dark mode (--link fails AA on
+      navy). 'light' (default, the /contact sidebar) keeps --link. */
+  tone?: 'light' | 'dark';
+}
+
+const { email, class: className, tone = 'light' } = Astro.props;
+
+const linkClass = cn(
+  'transition-colors duration-150 hover:underline hover:underline-offset-2',
+  'focus-visible:underline focus-visible:underline-offset-2',
+  // A 25px line of text on a mouse; a 44px row on touch devices.
+  'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center',
+  tone === 'dark' ? 'text-link dark:text-secondary' : 'text-link',
+);
+
+const buttonClass = cn(
+  // 36px with a mouse, 44px on any touch device (gated on pointer, not width,
+  // so tablets are covered). The icon stays size-4.
+  'copy-email-button inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent pointer-coarse:h-11 pointer-coarse:w-11',
+  'text-text-muted hover:bg-bg-soft hover:text-link focus-visible:bg-bg-soft focus-visible:text-link',
+  tone === 'dark' &&
+    'dark:text-primary-foreground/70 dark:hover:bg-white/10 dark:hover:text-secondary dark:focus-visible:bg-white/10 dark:focus-visible:text-secondary',
+);
+---
+
+<span class={cn('inline-flex items-center gap-xs', className)} data-copy-email={email}>
+  <a href={`mailto:${email}`} class={linkClass}>
+    {email}
+  </a>
+  <button
+    type="button"
+    data-copy-email-button
+    aria-label="Copy email address"
+    title="Copy email address"
+    class={buttonClass}
+  >
+    <ChromeIcon name="copy" class="copy-icon size-4" />
+    <ChromeIcon name="check" class="check-icon size-4" />
+  </button>
+  {/* Announces the copy without stealing focus. */}
+  <span role="status" aria-live="polite" class="sr-only" data-copy-email-status></span>
+</span>
+
+<style>
+  :global(html:not(.js)) .copy-email-button {
+    display: none;
+  }
+  /* The icons are child-component SVGs, so they are reached with :global. */
+  .copy-email-button :global(.check-icon),
+  .copy-email-button[data-copied] :global(.copy-icon) {
+    display: none;
+  }
+  .copy-email-button[data-copied] :global(.check-icon) {
+    display: block;
+  }
+</style>
+
+<script>
+  function initCopyEmail(): void {
+    document
+      .querySelectorAll<HTMLElement>('[data-copy-email]:not([data-bound])')
+      .forEach((wrap) => {
+        wrap.dataset.bound = 'true';
+        const button = wrap.querySelector<HTMLButtonElement>('[data-copy-email-button]');
+        const status = wrap.querySelector<HTMLElement>('[data-copy-email-status]');
+        const email = wrap.dataset.copyEmail ?? '';
+        let timer: number | undefined;
+        button?.addEventListener('click', async (event) => {
+          event.preventDefault();
+          try {
+            await navigator.clipboard.writeText(email);
+          } catch {
+            return; // Clipboard blocked; the mailto link beside it still works.
+          }
+          const set = (copied: boolean) => {
+            button.toggleAttribute('data-copied', copied);
+            const label = copied ? 'Email copied to clipboard' : 'Copy email address';
+            button.setAttribute('aria-label', label);
+            button.title = copied ? 'Copied' : 'Copy email address';
+            if (status) status.textContent = copied ? 'Copied' : '';
+          };
+          set(true);
+          window.clearTimeout(timer);
+          timer = window.setTimeout(() => set(false), 2000);
+        });
+      });
+  }
+  document.addEventListener('astro:page-load', initCopyEmail);
+</script>

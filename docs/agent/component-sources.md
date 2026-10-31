@@ -1,6 +1,6 @@
 # Component sources
 
-> **Updated 2026-10 (overhaul package 1.2):** Starwind, PrimeReact, the Magic UI / Aceternity blocks (marquee, animated-beam, bento-grid, spotlight), `SectionHeading.astro` and every shadcn primitive except `button.tsx` and `sheet.tsx` were deleted from this repo. The overhaul prefers plain `.astro` components with native HTML. The catalogue below is kept as a sourcing reference only: nothing it lists as "already installed" is still installed, and adding any of it is a new dependency that needs Nathan's go-ahead.
+> **Updated 2026-10 (overhaul package 1.2):** Starwind, PrimeReact, the Magic UI / Aceternity blocks (marquee, animated-beam, bento-grid, spotlight), `SectionHeading.astro` and every shadcn primitive except `button.tsx` were deleted from this repo (`sheet.tsx`, `radix-ui` and `lucide-react` followed in package 1.4). The overhaul prefers plain `.astro` components with native HTML. The catalogue below is kept as a sourcing reference only: nothing it lists as "already installed" is still installed, and adding any of it is a new dependency that needs Nathan's go-ahead.
 
 Where to find UI components for the NCS portfolio site, and the order to reach for them. Every source listed here is free unless marked otherwise, and every CLI-installed component lands inside the repo's semantic token system so brand colors propagate without extra wiring.
 
@@ -98,8 +98,8 @@ For every new component pasted or CLI-installed:
 1. Note the source URL and any non-obvious token substitutions in a comment at the top of the file.
 2. Remap hardcoded color classes using the cheat sheet above.
 3. Decide: static `.astro` vs. React island. Static unless the component has state, event handlers, or needs `useEffect`. When in doubt: static.
-4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). Exception: components above the fold that must be interactive on first paint (MobileNav, ThemeToggle).
-5. For Radix-based dialogs, sheets, or dropdown portals: use `client:only="react"` not `client:load`. See the note in `.claude/rules/components.md` under "Radix-based primitives need `client:only='react'`".
+4. If it's a React island, prefer `client:visible` (hydrates on scroll) over `client:load` (hydrates immediately). The site chrome (MobileNav, ThemeToggle and the rest) is no longer React at all: write a small `astro:page-load` script first.
+5. For a dialog or sheet, use a native `<dialog>` with `showModal()` (see `MobileNav.astro` and `Lightbox.astro`), not a Radix portal.
 6. Verify in both light and dark mode before committing.
 
 Example header comment:

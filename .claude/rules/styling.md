@@ -131,7 +131,7 @@ shadcn's `@theme inline` block points `--color-primary`, `--color-accent`, `--co
 Three-state toggle (light / dark / system), persisted to `localStorage["ncs-theme"]`. System is the default; while set to System the page follows `prefers-color-scheme` live.
 
 1. **Anti-FOUC script in `BaseLayout.astro`** runs inline in `<head>` before first paint: reads the stored choice and `prefers-color-scheme`, applies `.dark` on `<html>` plus an inline `color-scheme`.
-2. **The theme toggle** (Header and the mobile nav) cycles light, dark, system, writes the same key, and re-binds the media listener.
+2. **`ThemeToggle.astro`** (in the Header and the mobile nav panel; behaviour in `src/scripts/theme-toggle.ts`) cycles light, dark, system on click and writes the same key. One matchMedia listener, registered once per tab, re-applies the theme when the OS flips while the choice is system. Without JavaScript the button is hidden and the system theme still applies.
 3. **`globals.css`**: `:root` carries light, `.dark` the overrides. `--primary` stays navy in dark mode so the default Button and navy bands stay on-brand; `--accent-foreground` flips to navy because white on the brightened sky accent fails contrast.
 
 ## Motion

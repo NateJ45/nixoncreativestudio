@@ -16,7 +16,8 @@ import { settle } from './helpers';
 // CLASS on <html> plus an inline color-scheme; it does NOT set a data-theme
 // attribute. So dark mode is forced by seeding that key BEFORE the page's
 // inline bootstrap runs, via addInitScript, exactly the way a remembered
-// preference applies on a real visit. ThemeToggle.tsx writes the same key.
+// preference applies on a real visit. src/scripts/theme-toggle.ts (ThemeToggle.astro)
+// writes the same key.
 // =============================================================================
 
 const THEME_STORAGE_KEY = 'ncs-theme';
