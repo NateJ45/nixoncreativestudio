@@ -27,7 +27,7 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 | Live scores | `node scripts/measure-live.mjs` | `live-scores.yml` (monthly, by hand) | Not a gate. Re-measures the five Astro + Sanity + Cloudflare client sites with Lighthouse (mobile, median of 3) and opens a PR with `src/data/live-scores.json`; `src/lib/live-scores.test.ts` proves nothing shows without an entry or after 120 days |
 | Parity      | `npm run parity compare`        | **no** (by design)                   | Rendered-HTML drift against a committed baseline                                                                                                                                                                                                       |
 | Uptime      | -                               | `uptime.yml`, hourly                 | The live site's key routes still return 200                                                                                                                                                                                                            |
-| Visual      | `gh workflow run visual.yml`    | **no** (manual `visual.yml`)         | 48 Linux full-page baselines: every route, 1440 and 390, light and dark, motion frozen                                                                                                                                                                 |
+| Visual      | `gh workflow run visual.yml`    | **no** (manual `visual.yml`)         | Linux full-page baselines (routes x 2 x 2): every route, 1440 and 390, light and dark, motion frozen                                                                                                                                                   |
 
 The `test` job has `timeout-minutes: 30`, and its browser install runs each attempt under `timeout 360`
 inside a 15-minute step (2026-10-26, starter PORTS card 70): a throttled Ubuntu mirror once held that install
@@ -94,7 +94,7 @@ item. Fixed with `min-w-0` on the item (the Terminal itself was deleted in overh
 
 ### Visual baselines (`playwright.visual.config.ts`, `tests/visual.spec.ts`, `.github/workflows/visual.yml`)
 
-Overhaul 4.3. Full-page screenshots of every route in `tests/routes.ts` at 1440 and 390, light and dark (12 x 2 x 2 = 48), compared with Linux PNGs committed in `tests/visual.spec.ts-snapshots/`. **Not in `npm test`, not in `ci.yml`, not a required check**: `playwright.config.ts` ignores the spec, and the workflow is `workflow_dispatch` only, so it can never block a PR.
+Overhaul 4.3. Full-page screenshots of every route in `tests/routes.ts` at 1440 and 390, light and dark (routes x 2 x 2; 60 with 15 routes), compared with Linux PNGs committed in `tests/visual.spec.ts-snapshots/`. **Not in `npm test`, not in `ci.yml`, not a required check**: `playwright.config.ts` ignores the spec, and the workflow is `workflow_dispatch` only, so it can never block a PR.
 
 - Frozen for repeatability: reduced motion, `localStorage["ncs-motion"]="paused"` (so `html[data-motion-paused]`), `settle()`, Playwright `animations: 'disabled'`. Clips and the hero reel therefore show posters. Lazy images are scrolled in first.
 - Masked: `[data-contact-clock]`, `[data-live-colophon]`, `.doc-updated`, `.now-stamp` and any `<time>`. New dynamic text (a date, a counter) needs a selector in `MASKED` in the spec.
