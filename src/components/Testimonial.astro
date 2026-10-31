@@ -1,0 +1,187 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Testimonial: a client's own words (overhaul, testimonials package)
+   ============================================================================
+   One or more real client quotes from a case study's `testimonials`
+   frontmatter, set as type alone: a mono label on a strong top rule, each
+   quote in Bricolage at 300 and a generous size, then the client's name at
+   650 and their role as they signed it. No quote-mark graphics, no cards, no
+   stars, no carousel. Weight is the only emphasis, and only a client's own
+   emphasis would ever be bold (none of the current quotes has any).
+
+   HONESTY (CLAUDE.md never-break rule 9): every quote is the client's own
+   words, copied character for character from their email (the vault note
+   projects/ncs-testimonials.md), punctuation included. Never trim, fix or
+   paraphrase one here; the component prints exactly what the frontmatter
+   holds. A study without quotes renders nothing.
+
+   Markup: <figure> > <blockquote> (the quote) + <figcaption> (<cite> name,
+   then the title). The copy lint (tests/unit/copy-rules.test.mjs) skips
+   <blockquote>, so a client's "we" and "our" stay as they wrote them. The
+   attribution sits outside the blockquote, as the HTML spec asks.
+
+   Used in two places:
+     src/pages/work/[slug].astro  every quote on the study, after the results
+                                  ledger, under the label "In their words"
+     src/pages/index.astro        one quote in the homepage slot, with a link
+                                  to its study (pass `study`)
+
+   Props:
+     testimonials  the list from the study's frontmatter (one or more)
+     label         the mono label above the quotes, "In their words" by default
+     study         optional { slug, client }: adds "Read the {client} study"
+     labelled      false to drop the label and its rule (the homepage band
+                   has its rail and hairline)
+   ============================================================================ */
+
+interface Quote {
+  quote: string;
+  name: string;
+  title: string;
+  date: Date;
+  context?: string;
+}
+
+interface Props {
+  testimonials: Quote[];
+  label?: string;
+  study?: { slug: string; client: string };
+  labelled?: boolean;
+}
+
+const { testimonials, label = 'In their words', study, labelled = true } = Astro.props;
+---
+
+{testimonials.length > 0 && (
+  <aside class:list={['ncs-quotes', !labelled && 'ncs-quotes-bare']} aria-label={label} data-reveal>
+    {labelled && <p class="ncs-quotes-label">{label}</p>}
+    {testimonials.map((t) => (
+      <figure class="ncs-quote">
+        <blockquote class="ncs-quote-body">
+          <p>{t.quote}</p>
+        </blockquote>
+        <figcaption class="ncs-quote-by">
+          <cite class="ncs-quote-name">{t.name}</cite>
+          <span class="ncs-quote-title">{t.title}</span>
+          {t.context && <span class="ncs-quote-context">{t.context}</span>}
+        </figcaption>
+      </figure>
+    ))}
+    {study && (
+      <p class="ncs-quotes-more">
+        <a href={`/work/${study.slug}/`}>
+          Read the {study.client} study <span aria-hidden="true">→</span>
+        </a>
+      </p>
+    )}
+  </aside>
+)}
+
+<style>
+  .ncs-quotes {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    max-width: 46rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  /* Same label as DesignerNote, so the two signed blocks read as a pair. */
+  .ncs-quotes-label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-foreground);
+  }
+
+  .ncs-quote {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin: 0;
+  }
+
+  .ncs-quote-body {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 1rem + 1.4vw, 2rem);
+    font-weight: 300;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--heading);
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+
+  .ncs-quote-body p {
+    margin: 0;
+  }
+
+  /* A client's own bold, if a quote ever has one. */
+  .ncs-quote-body :global(b) {
+    font-weight: 800;
+  }
+
+  .ncs-quote-by {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .ncs-quote-name {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 650;
+    line-height: 1.3;
+    color: var(--heading);
+  }
+
+  .ncs-quote-title {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+
+  .ncs-quote-context {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    color: var(--muted-foreground);
+  }
+
+  .ncs-quotes-more {
+    margin: 0;
+  }
+
+  .ncs-quotes-more a {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+
+  .ncs-quotes-more a:hover,
+  .ncs-quotes-more a:focus-visible {
+    text-decoration-thickness: 2px;
+  }
+
+  /* Unlabelled (the homepage band): the Section rail is the label and its
+     hairline the edge, so no second rule. */
+  .ncs-quotes-bare {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  @media (forced-colors: active) {
+    .ncs-quotes {
+      border-top-color: CanvasText;
+    }
+  }
+</style>

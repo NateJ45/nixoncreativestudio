@@ -21,7 +21,7 @@
      3b. The idea (Signature, 2.4b), only where the study has a featureShot.
      4. Rail (StudyRail): the facts and the chapter list with its gliding
         marker, beside the body: summary, MDX prose, What changed, the
-        designer's note, the testimonial.
+        client's own words (Testimonial), the designer's note.
      5. Up next: the next study by `order`, looping, in that client's palette.
      6. The footer's ink closer, sector-matched ("Building for a church?").
    Plus a CSS-only scroll progress bar (ScrollProgress) and print styles.
@@ -47,6 +47,7 @@ import ScrollProgress from '../../components/ScrollProgress.astro';
 import Signature from '../../components/Signature.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
+import Testimonial from '../../components/Testimonial.astro';
 import { buttonVariants } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
@@ -97,13 +98,14 @@ const {
   updated,
   liveUrl,
   outcome,
-  testimonial,
+  testimonials,
   results,
   designerNote,
   hook,
   palette,
   mobileShot,
   featureShot,
+  featureShotAlt,
 } = entry.data;
 
 // The full-page homepage captures (src/assets/case-studies/shots/
@@ -283,7 +285,7 @@ const nextShot = next ? homeShot(next.id) : undefined;
       <Signature
         hook={hook}
         src={featureShot}
-        alt={`A feature on the live ${client} site`}
+        alt={featureShotAlt ?? `A feature on the live ${client} site`}
         url={liveUrl}
       />
     )}
@@ -320,27 +322,17 @@ const nextShot = next ? homeShot(next.id) : undefined;
 
         {/* "What changed" (the ruled ledger) and the signed designer's note. Each
             draws its own top rule and measure (package 2.4b). */}
-        {(results?.length || designerNote) && (
+        {/* Then, in order: a frontmatter "What changed" list (most studies
+            close their MDX on a ResultsBlock instead), the client's own words
+            (Testimonial, right after the ledger, real and verbatim from the
+            `testimonials` frontmatter, nothing when there are none) and the
+            signed designer's note. Each draws its own top rule and measure. */}
+        {(results?.length || testimonials?.length || designerNote) && (
           <div class="mt-2xl flex flex-col gap-2xl">
             {results && results.length > 0 && <ResultsBlock changes={results} />}
+            {testimonials && testimonials.length > 0 && <Testimonial testimonials={testimonials} />}
             {designerNote && <DesignerNote note={designerNote} />}
           </div>
-        )}
-
-        {/* Testimonial pull-quote (optional). Real client words only, verbatim;
-            renders nothing when the frontmatter has none. Never fabricated. */}
-        {testimonial && (
-          <aside class="mt-2xl border-t border-border pt-2xl" aria-label="Client testimonial">
-            <figure class="max-w-[40rem]">
-              <blockquote class="font-display text-h3 leading-[1.2] text-heading">
-                <p>“{testimonial.quote}”</p>
-              </blockquote>
-              <figcaption class="mt-m font-mono text-[0.85rem] tracking-[0.06em] text-text-muted uppercase">
-                <span class="text-text">{testimonial.name}</span>
-                {testimonial.title ? ` · ${testimonial.title}` : ''}
-              </figcaption>
-            </figure>
-          </aside>
         )}
       </div>
     </div>

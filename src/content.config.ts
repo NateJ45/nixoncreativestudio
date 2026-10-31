@@ -125,18 +125,31 @@ const caseStudies = defineCollection({
       // sets the price before a customer spends a dollar.'
       outcome: z.string().max(160).optional(),
 
-      // Optional client testimonial. Renders as a pull-quote on the detail
-      // page when present; renders nothing when absent, so it is safe to leave
-      // off until a real quote is collected. Never fabricate this: it is
-      // social proof, and an invented quote on a live client-facing portfolio
-      // is both dishonest and a liability. quote + name are required when the
-      // object is present; title (role / organization) is optional.
-      testimonial: z
-        .object({
-          quote: z.string(),
-          name: z.string(),
-          title: z.string().optional(),
-        })
+      // Optional client testimonials, as a list (First Baptist Muncie has two).
+      // Each renders through Testimonial.astro after the study's results
+      // ledger; a study without the field shows nothing. The homepage shows
+      // one of them (src/pages/index.astro). Never fabricate one (CLAUDE.md
+      // never-break rule 9): every quote is copied character for character
+      // from the client's own email, recorded in the vault note
+      // projects/ncs-testimonials.md, including the client's own punctuation.
+      //   quote    the client's words, verbatim, without quote marks
+      //   name     their name as they signed it (credentials included)
+      //   title    their role and organisation as they signed it
+      //   date     the day they wrote it (YYYY-MM-DD), the permission date
+      //   context  optional: one plain line that frames the quote honestly,
+      //            for example when it is about an earlier version of the site
+      // src/lib/case-testimonials.test.ts checks the shape and which studies
+      // carry one.
+      testimonials: z
+        .array(
+          z.object({
+            quote: z.string().min(1),
+            name: z.string().min(1),
+            title: z.string().min(1),
+            date: z.date(),
+            context: z.string().optional(),
+          }),
+        )
         .optional(),
 
       // Optional "what changed" results list. Each entry is a short, real outcome
@@ -212,6 +225,9 @@ const caseStudies = defineCollection({
       // captured while the old site was live), mobileShot is the phone-width
       // capture written by `npm run capture:study`.
       featureShot: image().optional(),
+      // Alt text for featureShot where it is shown ("The idea" band). Say what
+      // the still shows on the live site. Falls back to a generic line.
+      featureShotAlt: z.string().optional(),
       beforeShot: image().optional(),
       mobileShot: image().optional(),
 

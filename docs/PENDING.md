@@ -101,6 +101,26 @@ themselves are untouched. A capacity line ("I take a small number of projects
 each quarter") was removed site-wide because nothing sources it; put it back
 only if Nathan confirms it.
 
+### 2b. Testimonials still missing (added 2026-10-31, testimonials package)
+
+Five studies carry their client's own words (`testimonials` frontmatter,
+rendered by `Testimonial.astro`): Theology Matters, Foundation for Reformed
+Theology, Stone Steps 50K, First Baptist Muncie (two) and First Presbyterian
+Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
+
+- **Still missing: Presbyterian Academy, MAS Monograms, Reid Design.** Those
+  studies show no quote until a real one arrives. The ask is Nathan's to send
+  (a short three-question email; it can be drafted for him, never sent for
+  him).
+- **Stone Steps:** David Corfman's quote is about the earlier refresh, and the
+  study says so under it. A fresh quote about the 2026 rebuild would replace
+  it.
+- When a quote arrives: record it verbatim in the vault note
+  `projects/ncs-testimonials.md` first, then add it to the study's frontmatter
+  (`quote`, `name`, `title`, `date`) and the slug to `WITH_QUOTES` in
+  `src/lib/case-testimonials.test.ts`, which fails on a quote in any other
+  study.
+
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)
