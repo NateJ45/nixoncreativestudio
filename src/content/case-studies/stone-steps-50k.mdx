@@ -9,7 +9,9 @@
 # (Bricks) site built in 2024. Its screenshots are kept as the "before"
 # images: shots/stone-steps-50k-before*.png, captured June 2026 while the
 # WordPress site was still live. They cannot be re-captured, so never delete
-# them. The "after" images were captured from the live site on 2026-09-23.
+# them. The cover, the full-page and phone captures and the records board
+# (feature-board) were re-shot from the live site on 2026-10-31 (overhaul
+# 2.4g); the other "after" and feature images date from 2026-09-23.
 #
 # Every number in the prose is sourced in the client note
 # (_vault/clients/stone-steps-50k.md) or the stonesteps-50k repo. Check
@@ -39,7 +41,7 @@ year: 2026
 featured: true
 published: 2026-09-18
 liveUrl: https://stonesteps50k.com
-outcome: 'Twenty-three years of results in one place, with records the site calculates itself, so a record can never disagree with the finish behind it.'
+outcome: 'Twenty-four years of results in one place, with records the site calculates itself, so a record can never disagree with the finish behind it.'
 # Real client words, copied verbatim from their email (vault note
 # projects/ncs-testimonials.md). Never edit or paraphrase a quote.
 testimonials:
@@ -181,20 +183,21 @@ Course records are names stamped onto a bark board, and each year's results page
   src={weatherShot}
   alt="The race-day weather chart: a temperature bar for every race morning from 2003 to 2025, with rainy years marked"
   title="What the weather has done"
-  body="Every race morning since 2003 as a temperature range, with rain on the day and rain the night before marked. It replaces the live forecast widget from the first version with something only this race has, and it adds each new year on its own."
+  body="Every race morning since 2003 as a temperature range, with rain on the day and rain the night before marked. Under it, a what-to-pack note reads the same record: the usual start temperature, how much it warms up by the afternoon, and how many years the steps were wet. It replaces the live forecast widget from the first version with something only this race has, and it adds each new year on its own."
   side="left"
 />
 
-The site keeps itself current. Race details live in a Sanity Studio that Dave can edit himself, with a checklist for rolling the site over to a new year. After each race, a nightly job pulls the new results from RunSignUp, and by the next morning the results page, the records, the runner pages, and the edition count are all up to date. The contact form delivers straight to the race director's inbox, and the whole site moved onto Cloudflare along with its domain. Every change is checked against a perfect Lighthouse accessibility score, and the check fails if it drops.
+The site keeps itself current. Race details live in a Sanity Studio that Dave can edit himself, with a checklist for rolling the site over to a new year. After each race, a nightly job pulls the new results from RunSignUp, and by the next morning the results page, the records, the runner pages, and the edition count are all up to date. If he doesn't want to wait for the night, there is a "Fetch the latest results" button on the Studio's home screen, and a correction from the timer rebuilds the site by itself. Trekkers who take the optional early start are marked in the results, so they never land on an awards list by mistake. The contact form delivers straight to the race director's inbox, and the whole site moved onto Cloudflare along with its domain. Every change is checked against a perfect Lighthouse accessibility score, and the check fails if it drops.
 
 The full build:
 
-- Homepage with the race date, a countdown to the gun, both distances with their fees and start times, and registration through RunSignUp
+- Homepage with the race date, a countdown to the gun, both distances with their fees and start times, a race-morning timetable, and registration through RunSignUp
+- A course preview on the homepage: pick the long or short loop and run your cursor along its profile
 - Interactive 3D course map with a flyover, satellite and topo views, a steepness view, and an elevation scrubber
-- A results page for every year from 2003 to 2025, plus a page for each runner showing every finish on file
+- A results page for every year from 2003 to 2026, plus a page for each runner showing every finish on file
 - All-time records and top-ten lists for both distances, calculated from the results
-- Historical race-day weather for every edition
-- Parking and directions to the start, and a contact form that goes straight to the race director
+- Historical race-day weather for every edition, with what to pack going by the record
+- Parking and directions to the start, a travel map with hotels downtown and near the airport, the common questions answered, and a contact form that goes straight to the race director
 - A Sanity Studio for the race director, with automatic results imports after each race
 
 ## Before and after
@@ -220,8 +223,8 @@ The full build:
 <ResultsBlock
   items={[
     {
-      figure: '2,188',
-      text: 'finishes on file, every edition from 2003 to 2025, each with its own results page',
+      figure: '2,345',
+      text: 'finishes on file across 24 runnings, every edition from 2003 to 2026, each with its own results page',
       source:
         "RunSignUp's public API and the race's archived results pages, checked year by year against their sources",
     },
