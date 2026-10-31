@@ -132,7 +132,8 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
                 ]}
                 href={`/work/${entry.id}/`}
               >
-                {/* Cover. alt="" because the card's h2 carries the same name;
+                {/* Cover. alt="" because the card's h2 carries the same name; the
+                     first (feature) card is the likely LCP image, so it loads eagerly;
                      the transition:name wrapper morphs this cover into the
                      detail page's hero during a View Transition. */}
                 <div
@@ -150,6 +151,7 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
                         : '(min-width: 56rem) 33vw, 100vw'
                     }
                     fit="cover"
+                    lcp={isFeature}
                     class="aspect-[4/3] w-full transition-transform duration-500 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]"
                   />
                 </div>

@@ -13,6 +13,11 @@
 // its title is the longest client name, so it holds the 320px reflow guard on
 // the case-study H1 (--text-h1-long, overflow-wrap: anywhere).
 //
+// /colophon/parts is the noindex check page for the shared components
+// (Section, BrowserFrame, FramePair, Media; overhaul package 1.8). It is swept
+// like any page, so axe in both themes, reflow at 320 and first-viewport cover
+// every part.
+//
 // Add a route here when a new PRERENDERED page ships.
 export const routes = [
   '/',
@@ -25,6 +30,7 @@ export const routes = [
   '/photography',
   '/contact',
   '/colophon',
+  '/colophon/parts',
   '/privacy',
   '/accessibility',
   '/coming-soon',
