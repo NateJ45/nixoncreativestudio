@@ -95,6 +95,14 @@ These content fixes are waiting on Nathan's sign-off and will ship as their own 
   approve it.
 - **Reid Design:** the study describes a Budget Calculator, a style quiz and a
   before/after slider. Remove any of those that are not live on the site today.
+  Overhaul 2.4f (2026-10-31) refreshed the rest of the study and left these
+  claims word for word: the Decisions on the portfolio and the calculator, the
+  Style Quiz paragraph, the three matching "full build" lines, the first three
+  "What changed" rows and the designer note. That day on reiddesignllc.com,
+  `/budget-calculator/` and `/style-quiz/` answered 404, `/quiz/` and
+  `/calculator/` redirected to /services/, and `/portfolio/` redirected home
+  (the portfolio is switched off in Reid's CMS), so none of the three is
+  visible to a visitor today.
 
 ### 2b. Ungate /photography (added 2026-10-31, overhaul 2.8)
 
