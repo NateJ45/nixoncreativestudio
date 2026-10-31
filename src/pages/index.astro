@@ -11,10 +11,12 @@
                     "All {n} sites" to /work/. White.
      Who I build for  SectorIndex: one hairline row per sector with its count,
                     each linking /work/?sector={key}. Paper.
-     (testimonial)  one real quote goes here; see the comment in the markup.
+     In their words one real client quote (Testimonial.astro), verbatim from
+                    the study's `testimonials` frontmatter, with a link to
+                    that study. White.
      What it costs  PricingTeaser, variant "teaser": the ruled tiers from
-                    src/data/pricing.ts. White.
-     How I work     ProcessBand, the weighted timeline. Paper.
+                    src/data/pricing.ts. Paper.
+     How I work     ProcessBand, the weighted timeline. White.
      Ink closer     the footer (BaseLayout), set by the `closer` prop below.
 
    Surfaces alternate white and paper so each hairline marks a real change,
@@ -27,7 +29,22 @@ import SelectedWork from '../components/SelectedWork.astro';
 import SectorIndex from '../components/SectorIndex.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
+import Section from '../components/Section.astro';
+import Testimonial from '../components/Testimonial.astro';
+import { getEntry } from 'astro:content';
 import type { Closer } from '../lib/closer';
+
+// The one quote on the home (testimonials package). Richard Burnett on
+// Theology Matters: the site is live, the quote is about the site as it is
+// today, and it names the thing this studio sells (speed without losing the
+// message). The three Selected work studies have no quote about their
+// current site (Stone Steps' is about the earlier refresh), so it comes from
+// the rest of the collection. To change it, point QUOTE_FROM at another
+// study with `testimonials`; the first one is shown. Nothing renders if the
+// study or its quotes are missing.
+const QUOTE_FROM = 'theology-matters';
+const quoteStudy = await getEntry('case-studies', QUOTE_FROM);
+const homeQuote = quoteStudy?.data.testimonials?.[0];
 
 // The home's last word. ProcessBand used to close the page with this line and
 // its own button; the footer's ink closer carries it now, with the same
@@ -47,12 +64,22 @@ const closer: Closer = {
   <Hero />
   <SelectedWork />
   <SectorIndex tone="paper" />
-  {/* TESTIMONIAL SLOT (the testimonials package fills it): one real quote,
-       verbatim, from _vault/projects/ncs-testimonials.md, goes HERE, between
-       "Who I build for" and "What it costs". Nothing renders here until then.
-       Never a made-up or paraphrased quote (CLAUDE.md never-break rule 9).
-       Keep the surfaces alternating: if the quote band is white, swap
-       PricingTeaser to tone="paper" and ProcessBand to tone="white". */}
-  <PricingTeaser variant="teaser" tone="white" />
-  <ProcessBand tone="paper" />
+  {/* One real client quote, verbatim, between "Who I build for" and "What it
+       costs" (never a made-up or paraphrased one, CLAUDE.md never-break rule
+       9). White, so the tones below it swap to keep the surfaces alternating. */}
+  {quoteStudy && homeQuote && (
+    <Section
+      rail="In their words"
+      railMeta={quoteStudy.data.client}
+      label="A client in their words"
+    >
+      <Testimonial
+        testimonials={[homeQuote]}
+        labelled={false}
+        study={{ slug: quoteStudy.id, client: quoteStudy.data.client }}
+      />
+    </Section>
+  )}
+  <PricingTeaser variant="teaser" tone="paper" />
+  <ProcessBand tone="white" />
 </BaseLayout>
