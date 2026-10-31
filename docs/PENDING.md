@@ -62,10 +62,10 @@ The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
 | `#2A6FB0` on `#0A1628` | **3.45:1** | **fail**             |
 
 The third claim is wrong. It is **not** a live accessibility defect: the pair
-is not rendered anywhere. In light mode the Footer is a light `.band-themed`
-surface, and the navy Footer is a dark-mode-only state where the link colour
-switches to `--secondary` (`#7AC8F0`, 9.8:1 on navy). So this is a documentation
-error, not a bug.
+is not rendered anywhere. Since overhaul 2.1 the Footer is a `.band-ink` block
+in both themes, and `.band-ink` re-scopes `--link` to sky `#40AAED` (asserted in
+`src/lib/ncs-tokens.test.ts`), so no link on navy uses `#2A6FB0`. So this is a
+documentation error, not a bug.
 
 It is left for a human because `globals.css` is a "foundation, edit with care"
 file per `.claude/rules/foundation-files.md`, and because there are two defensible fixes:

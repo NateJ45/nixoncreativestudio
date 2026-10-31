@@ -9,14 +9,15 @@
 
    Same shape for every entry: reading progress bar, hero block (meta +
    title + client + summary + service badges + image), MDX body, then
-   next/previous navigation + CtaBanner. Adding a new MDX file in
+   next/previous navigation, then the footer's ink closer (a sector-aware
+   closer prop). Adding a new MDX file in
    src/content/case-studies/ auto-creates its page on the next build.
    ============================================================================ */
 
 import { getCollection, render } from 'astro:content';
 import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CtaBanner from '../../components/CtaBanner.astro';
+import { DEFAULT_CLOSER, SECTOR_PHRASE, type Closer } from '../../lib/closer';
 import CaseStudyCover from '../../components/CaseStudyCover.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
 import DesignerNote from '../../components/DesignerNote.astro';
@@ -80,22 +81,20 @@ const {
 // Pretty-printed sector label for the meta row. kebab-case → Title Case.
 const sectorLabel = sector.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-// Sector-aware copy for the closing CTA, plus a deep link that preselects the
-// matching Organization type on the contact form (/contact?org_type=<sector>).
-// So a visitor finishing a church study sees "your church" and lands on the form
-// with "Church" already chosen. Keyed by the schema's four sectors.
-const sectorCopy: Record<string, { phrase: string; plural: string }> = {
-  church: { phrase: 'church', plural: 'churches' },
-  school: { phrase: 'school', plural: 'schools' },
-  nonprofit: { phrase: 'nonprofit', plural: 'nonprofits' },
-  'small-business': { phrase: 'small business', plural: 'small businesses' },
-};
-const sc = sectorCopy[sector];
-const ctaTitle = sc ? `Web work for ${sc.plural}, start to finish.` : undefined;
-const ctaSub = sc
-  ? `Building for a ${sc.phrase}? The first conversation is free and ends with an honest ballpark, so you know where you stand before anything is signed.`
-  : undefined;
-const ctaHref = sc ? `/contact/?org_type=${sector}` : undefined;
+// The footer's ink closer, written for this study's sector: "Building for a
+// church?" on a church study. The pill deep-links to the contact form with
+// the study and the matching Organization type (/contact/?from=<slug>&
+// org_type=<sector>), so the visitor lands with "Church" already chosen. A
+// sector with no phrase falls back to the site default.
+const phrase = SECTOR_PHRASE[sector];
+const closer: Closer = phrase
+  ? {
+      heading: 'Building for a',
+      emphasis: `${phrase}?`,
+      sub: DEFAULT_CLOSER.sub,
+      href: `/contact/?from=${entry.id}&org_type=${sector}`,
+    }
+  : DEFAULT_CLOSER;
 
 // Reading time from the raw MDX body. ~200 wpm rounded up. Renders next
 // to the meta row so visitors know how long the case study is before
@@ -162,6 +161,7 @@ const breadcrumbs = [
   ogType="article"
   schemas={schemas}
   breadcrumbs={breadcrumbs}
+  closer={closer}
 >
   <article>
     <!-- Hero block. Two-column on >= 56rem (copy left, image right),
@@ -401,7 +401,7 @@ const breadcrumbs = [
     )}
 
     {/* Next / previous case study nav. Sits between the body and the
-        CtaBanner so visitors who finished reading have a forward path
+        footer's closer so visitors who finished reading have a forward path
         before hitting the "Start a project" CTA. Hidden entirely when
         there's only one case study in the catalogue. */}
     {(previous || next) && (
@@ -520,5 +520,4 @@ const breadcrumbs = [
     document.addEventListener('astro:page-load', initCaseToc);
     initCaseToc();
   </script>
-  <CtaBanner title={ctaTitle} sub={ctaSub} ctaHref={ctaHref} />
 </BaseLayout>

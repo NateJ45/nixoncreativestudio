@@ -9,9 +9,16 @@
    pages in a V8 isolate with no node built-ins (no node:crypto, no node:fs), so
    astro-og-canvas / canvaskit can't run as a route here. This runs out of
    process before `astro build` (same pattern as generate-placeholders.mjs and
-   generate-og-default.mjs), using opentype.js to draw Bebas Neue glyph outlines
-   as SVG paths and sharp to rasterize, so the result is the real brand typeface
-   on any build host.
+   generate-og-default.mjs), using opentype.js to draw glyph outlines as SVG
+   paths and sharp to rasterize, so the result is the real brand type on any
+   build host.
+
+   Two faces (overhaul package 2.1, ruling 11): the studio mark stays Bebas
+   Neue, as in the header wordmark, and each card's TITLE (the page or study
+   name) is Bricolage Grotesque at 800, the site's display face, in sentence
+   case. Bricolage's npm package ships woff2 only, which opentype.js cannot
+   read, so the static 800 weight is kept as a .woff in brand/fonts/ (from
+   @fontsource/bricolage-grotesque 5.3.0, SIL OFL, licence beside it).
 
    Output (committed, like og-default.png and the placeholder JSON):
      public/og/<page>.png            e.g. public/og/index.png, /og/work.png
@@ -62,6 +69,58 @@ function loadFont(p) {
 }
 const font = loadFont(fontPath);
 
+// Title face: Bricolage Grotesque 800 (see the header). Sentence case, as
+// written; never uppercased.
+const titleFont = loadFont(
+  resolve(projectRoot, 'brand/fonts/bricolage-grotesque-latin-800-normal.woff'),
+);
+const TITLE_CAP = titleFont.tables.os2.sCapHeight / titleFont.unitsPerEm;
+// Laid out glyph by glyph (cmap, advance, pair kerning) rather than through
+// font.getPath(): opentype.js's text shaper throws on one of Bricolage's
+// contextual substitution lookups (GSUB type 6, format 2), and the titles are
+// plain latin that need no substitution.
+function glyphsT(text) {
+  return Array.from(text, (ch) => titleFont.charToGlyph(ch));
+}
+function advanceT(text, size) {
+  const scale = size / titleFont.unitsPerEm;
+  const glyphs = glyphsT(text);
+  let x = 0;
+  glyphs.forEach((g, i) => {
+    x += g.advanceWidth;
+    if (i < glyphs.length - 1) x += titleFont.getKerningValue(g, glyphs[i + 1]);
+  });
+  return x * scale;
+}
+// Path data written out here rather than with opentype.js's toPathData(),
+// which (in 2.0.0) prints "NaN" for some coordinates once a glyph is offset
+// along the line, and librsvg then drops the rest of the path.
+const fmt = (n) => (Math.round(n * 100) / 100).toString();
+function glyphPathData(path) {
+  return path.commands
+    .map((c) => {
+      if (c.type === 'M' || c.type === 'L') return `${c.type}${fmt(c.x)} ${fmt(c.y)}`;
+      if (c.type === 'Q') return `Q${fmt(c.x1)} ${fmt(c.y1)} ${fmt(c.x)} ${fmt(c.y)}`;
+      if (c.type === 'C')
+        return `C${fmt(c.x1)} ${fmt(c.y1)} ${fmt(c.x2)} ${fmt(c.y2)} ${fmt(c.x)} ${fmt(c.y)}`;
+      return 'Z';
+    })
+    .join('');
+}
+function pathT(text, size) {
+  const scale = size / titleFont.unitsPerEm;
+  const glyphs = glyphsT(text);
+  let x = 0;
+  let d = '';
+  glyphs.forEach((g, i) => {
+    const glyphPath = glyphPathData(g.getPath(x * scale, 0, size));
+    if (glyphPath) d += `<path d="${glyphPath}" />`;
+    x += g.advanceWidth;
+    if (i < glyphs.length - 1) x += titleFont.getKerningValue(g, glyphs[i + 1]);
+  });
+  return d;
+}
+
 // Bebas Neue is an all-caps display face; render titles uppercased so wrapping
 // math matches what actually paints.
 const up = (s) => s.toUpperCase();
@@ -69,17 +128,17 @@ function advance(text, size) {
   return font.getAdvanceWidth(up(text), size);
 }
 function pathData(text, size) {
-  return font.getPath(up(text), 0, 0, size).toPathData(2);
+  return glyphPathData(font.getPath(up(text), 0, 0, size));
 }
 
 // Greedy word-wrap to fit maxWidth at the given size.
-function wrap(text, size, maxWidth) {
+function wrap(text, size, maxWidth, measure = advance) {
   const words = text.split(/\s+/).filter(Boolean);
   const lines = [];
   let cur = '';
   for (const w of words) {
     const trial = cur ? `${cur} ${w}` : w;
-    if (cur && advance(trial, size) > maxWidth) {
+    if (cur && measure(trial, size) > maxWidth) {
       lines.push(cur);
       cur = w;
     } else {
@@ -99,10 +158,9 @@ function fitSize(text, target, start, min) {
 }
 
 // --- Card builder ----------------------------------------------------------
-// Brand-forward navy card: the studio name is the hero, the tagline sits under
-// it in amber, and the page name is a small muted label below. The whole lockup
-// is centered and vertically balanced. (Bebas is all-caps; everything renders
-// uppercased.)
+// Brand-forward navy card: the Bebas studio name is the hero, the Bebas tagline
+// sits under it in amber, and the page title closes the lockup in Bricolage
+// 800. The whole lockup is centered and vertically balanced.
 function buildSvg(pageLabel) {
   const cap = 0.8; // Bebas cap height as a fraction of em, for the vertical math.
 
@@ -110,7 +168,8 @@ function buildSvg(pageLabel) {
   // a clear second, the page label is a quiet third.
   const wSize = fitSize(STUDIO, WIDTH - 128, 150, 90);
   const tSize = fitSize(TAGLINE, WIDTH - 360, 56, 30);
-  const lSize = fitSize(pageLabel, WIDTH - 360, 30, 20);
+  let lSize = 56;
+  while (lSize > 30 && advanceT(pageLabel, lSize) > WIDTH - 240) lSize -= 2;
 
   const barH = 6;
   const gapBar = 34; // accent bar -> studio name
@@ -119,7 +178,7 @@ function buildSvg(pageLabel) {
 
   const wH = wSize * cap;
   const tH = tSize * cap;
-  const lH = lSize * cap;
+  const lH = lSize * TITLE_CAP;
   const total = barH + gapBar + wH + gapWord + tH + gapTag + lH;
 
   const centerX = (text, size) => (WIDTH - advance(text, size)) / 2;
@@ -138,7 +197,8 @@ function buildSvg(pageLabel) {
   top = tBaseline + gapTag;
 
   const lBaseline = top + lH;
-  const labelPath = `<g transform="translate(${centerX(pageLabel, lSize)}, ${lBaseline})" fill="${COLORS.muted}"><path d="${pathData(pageLabel, lSize)}" /></g>`;
+  const labelX = (WIDTH - advanceT(pageLabel, lSize)) / 2;
+  const labelPath = `<g transform="translate(${labelX}, ${lBaseline})" fill="${COLORS.fg}">${pathT(pageLabel, lSize)}</g>`;
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
@@ -173,13 +233,14 @@ function buildCoverOverlay(title) {
 
   // The case study title stays the hero (the work itself is the trust signal).
   // Greedy shrink-to-fit at up to 3 lines.
-  let size = 88;
-  let lines = wrap(title, size, maxWidth);
-  while (lines.length > 3 && size > 50) {
+  // Bricolage 800, sentence case. Tight leading, as the site's headings.
+  let size = 80;
+  let lines = wrap(title, size, maxWidth, advanceT);
+  while (lines.length > 3 && size > 48) {
     size -= 8;
-    lines = wrap(title, size, maxWidth);
+    lines = wrap(title, size, maxWidth, advanceT);
   }
-  const lineHeight = size * 1.0;
+  const lineHeight = size * 1.05;
 
   // Brand sign-off under the title: the studio name larger than before (amber)
   // with the tagline beneath it. Anchored bottom-left, built upward so the
@@ -193,12 +254,12 @@ function buildCoverOverlay(title) {
   const studioTop = studioBaseline - studioSize * cap;
   const lastBaseline = studioTop - 34;
   const firstBaseline = lastBaseline - (lines.length - 1) * lineHeight;
-  const barY = firstBaseline - size * cap - 28;
+  const barY = firstBaseline - size * TITLE_CAP - 28;
 
   const titlePaths = lines
     .map((line, i) => {
       const baseline = firstBaseline + i * lineHeight;
-      return `<g transform="translate(${PAD}, ${baseline})" fill="${COLORS.fg}"><path d="${pathData(line, size)}" /></g>`;
+      return `<g transform="translate(${PAD}, ${baseline})" fill="${COLORS.fg}">${pathT(line, size)}</g>`;
     })
     .join('\n  ');
   const studioPath = `<g transform="translate(${PAD}, ${studioBaseline})" fill="${COLORS.amber}"><path d="${pathData(STUDIO, studioSize)}" /></g>`;

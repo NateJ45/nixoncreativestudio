@@ -12,7 +12,7 @@
    form spans the full content width so it stays roomy with no empty side column.
    The old bg-bg-soft band is dissolved, so the page is one seamless surface and
    dark mode is a single navy sheet; depth comes from the form's surface-card, and
-   the page closes on the shared band-themed CtaBanner.
+   the page closes on the footer's quiet ink closer (no pill: it would link here).
 
    The form keeps real labels, native input types, required attributes, a hidden
    honeypot, the three Web3Forms hidden inputs, and the inline enhancement script
@@ -36,7 +36,6 @@ import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
 import { Button } from '../components/ui/button';
 import CopyEmail from '../components/CopyEmail.astro';
-import CtaBanner from '../components/CtaBanner.astro';
 
 // Organization type options. Match the sectors used in the case-studies
 // schema so the data we collect lines up with how we describe the work.
@@ -133,6 +132,12 @@ const legendClass =
 <BaseLayout
   title="Start a project | Nixon Creative Studio"
   description="Tell me about your website, brand or photography project. I read every message myself and reply within one or two business days, with honest next steps."
+  closer={{
+    heading: 'Rather skip the form?',
+    emphasis: 'Just email me.',
+    sub: 'A sentence about your project is enough to get started.',
+    cta: false,
+  }}
 >
   <!-- ====================================================================
        Masthead. The only h1. Full content width, left-aligned.
@@ -380,7 +385,7 @@ const legendClass =
                 </div>
 
                 <!-- Submit. Shared shadcn Button (brand variant + cta size)
-                   matches the Hero and CtaBanner CTAs. self-start keeps it
+                   matches the Hero and closer CTAs. self-start keeps it
                    at content width inside the flex-column form layout. -->
                 <span class="inline-block self-start">
                   <Button type="submit" variant="brand" size="cta" data-contact-submit>
@@ -564,13 +569,6 @@ const legendClass =
       </div>
     </div>
   </section>
-
-  <CtaBanner
-    title="Rather skip the form?"
-    sub="Email or call me directly. A sentence about your project is enough to get started."
-    ctaLabel="Email me"
-    ctaHref={site.emailHref}
-  />
 
   <!-- ----------------------------------------------------------------------
        Submit-button spinner. Scoped Astro styles. The spinner is collapsed

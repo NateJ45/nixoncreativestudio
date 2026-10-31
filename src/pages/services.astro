@@ -31,7 +31,6 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProcessBand from '../components/ProcessBand.astro';
-import CtaBanner from '../components/CtaBanner.astro';
 import SelectedWork from '../components/SelectedWork.astro';
 import { Image } from 'astro:assets';
 // Real proof for the Web design service: a shipped client site, shown at full
@@ -240,6 +239,11 @@ const schemas = [
   title="Services and pricing | Nixon Creative Studio"
   description={`Strategy, web design and photography, with prices on the page: websites from ${money(launch.priceFrom)}, care from ${hosting.price} a year, photography ${photography.price}.`}
   schemas={schemas}
+  closer={{
+    heading: 'Ready to scope',
+    emphasis: 'a project?',
+    sub: 'The first conversation is free and lands at an honest ballpark by the end. Email is fastest, but a phone call works too.',
+  }}
 >
   <!-- ----------------------------------------------------------------------
        Hero. Two columns at lg+: the positioning headline + sub on the left, an
@@ -686,11 +690,6 @@ const schemas = [
        (collection-driven, featured===true), so the services page proves the
        work with real shipped sites right before it asks for the inquiry. -->
   <SelectedWork />
-
-  <CtaBanner
-    title="Ready to scope a project?"
-    sub="The first conversation is free and lands at an honest ballpark by the end. Email is fastest, but a phone call works too."
-  />
 </BaseLayout>
 
 <style>

@@ -12,6 +12,7 @@
 import '../styles/globals.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import type { Closer } from '../lib/closer';
 import Analytics from '../components/Analytics.astro';
 import BackToTop from '../components/BackToTop.astro';
 import StructuredData from '../components/StructuredData.astro';
@@ -114,6 +115,12 @@ interface Props {
       exist for checking, not visiting, like /colophon/parts/. Pair it with
       the sitemap filter in astro.config.mjs. */
   noindex?: boolean;
+  /** The ink closer that opens the footer: the page's last word (overhaul
+      2.1, replaces CtaBanner). A static H2 (heading at 300, emphasis in a
+      <b> at 800), an optional sub line, and the pill (href and label, or
+      cta: false for none). Leave it out for the site default in
+      src/lib/closer.ts. */
+  closer?: Closer;
 }
 const {
   title,
@@ -124,6 +131,7 @@ const {
   breadcrumbs = [],
   preloadFonts = [],
   noindex = false,
+  closer,
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -321,7 +329,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    <Footer />
+    <Footer closer={closer} />
 
     {/* Floating back-to-top button: hidden (and inert) until the visitor
         scrolls past 600px. Plain markup plus a small script, no React. */}

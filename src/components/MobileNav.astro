@@ -6,27 +6,29 @@
    The small-viewport navigation, below md (768px). Works without JavaScript
    (overhaul ruling 5):
 
-   - The menu button is a real link to #site-nav, the "Site pages" nav in the
+   - The menu button is a real link to #site-nav, the Studio nav in the
      footer. With no JS a tap jumps there, so every page stays reachable.
-   - The script upgrades it: a click opens the full-screen panel below, a
+   - The script upgrades it: a click opens the full-screen sheet below, a
      native <dialog> shown with showModal(). The browser gives the modal its
      inert background and Escape to close; the script adds a Tab wrap so focus
-     never leaves the panel, returns focus to the menu button on close, locks
-     page scroll, and closes the panel on astro:before-swap so a View
+     never leaves the sheet, returns focus to the menu button on close, locks
+     page scroll, and closes the sheet on astro:before-swap so a View
      Transitions navigation never carries an open modal onto the next page.
 
-   The look is today's: a light surface with dark type and NCS-blue links in
-   light mode, navy with white type and sky links in dark. Big display-face
-   labels each carry a short, honest descriptor, hairline-divided like an
-   editorial index, cascading in on open. No 01-06 numbering: that marker is
-   reserved for the genuinely ordered Process band.
+   The look (overhaul package 2.1): a full-screen sheet on paper, which is the
+   light paper surface in light mode and ink navy in dark (--paper is navy in
+   the dark theme). The links are big Bricolage at weight 300; the current
+   page is at 800, the weight being the cue (plus aria-current). No weight
+   ripple on open (ruling 9). The bottom holds the pill CTA, the email, the
+   theme toggle, the Pause motion switch, and the amber "Booking projects"
+   dot when site.bookingOpen is true. Every control is a 44px target.
 
-   Rendered inside Header.astro. The links come from Header so the desktop nav
-   and this panel never drift. Descriptors live in DESCRIPTIONS below; a link
-   with no entry renders just its label.
+   Rendered inside Header.astro, which passes the same nav list the desktop
+   header shows (src/data/nav.ts), so the two never drift.
    ============================================================================ */
 
 import ChromeIcon from './ChromeIcon.astro';
+import MotionToggle from './MotionToggle.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { buttonVariants } from './ui/button';
 import { site } from '../data/site';
@@ -42,16 +44,6 @@ interface Props {
 
 const { links, studioName } = Astro.props;
 
-// Short descriptor under each big label, keyed by the exact href in src/data/nav.ts.
-const DESCRIPTIONS: Record<string, string> = {
-  '/work/': 'Selected client projects',
-  '/services/': 'What I build, and how',
-  '/about/': 'The studio, and me',
-  '/journal/': 'Notes on the work',
-  '/photography/': 'Events, portraits and places',
-  '/contact/': 'Email, phone, or the form',
-};
-
 // Active route, worked out at build time (each page renders its own header).
 const path = Astro.url.pathname.replace(/\/+$/, '');
 const isActive = (href: string): boolean => {
@@ -60,35 +52,9 @@ const isActive = (href: string): boolean => {
   return path === h || path.startsWith(`${h}/`);
 };
 
-// Social glyphs: the classic Feather stroke marks (Lucide dropped its brand
-// icons), drawn in currentColor so they take the link colour.
-const socials = [
-  {
-    label: 'Instagram',
-    href: site.social.instagram,
-    svg: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
-  },
-  {
-    label: 'LinkedIn',
-    href: site.social.linkedin,
-    svg: '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
-  },
-];
-
-// Shared focus ring for the custom links inside the panel, visible on either
-// surface: an NCS-blue ring on a light offset in light mode, sky on navy in dark.
-const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 ' +
-  'focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-soft ' +
-  'dark:focus-visible:ring-secondary dark:focus-visible:ring-offset-primary';
-
-const contactLink = cn(
-  'inline-flex min-h-11 w-fit items-center rounded-sm text-link no-underline transition-colors duration-150 hover:underline hover:underline-offset-2 dark:text-secondary',
-  focusRing,
-);
-
-// Stagger: each row animates in a beat after the previous one.
-const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
+// Stagger for the entrance: 70ms a row (the motion system's step), capped at
+// six steps so a long list never trails.
+const delay = (i: number) => `--mnav-delay: ${Math.min(i, 6) * 70}ms;`;
 ---
 
 {/* The trigger. A plain link to the footer nav until the script upgrades it. */}
@@ -109,16 +75,16 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
   data-mnav
   aria-labelledby="mnav-title"
   aria-describedby="mnav-desc"
-  class="mnav-dialog bg-bg-soft p-0 text-sm text-text dark:bg-primary dark:text-primary-foreground"
+  class="mnav-dialog bg-paper p-0 text-text"
 >
-  <div class="mnav-shell relative isolate flex min-h-full flex-col">
-    {/* Top bar: wordmark (the dialog's accessible name) and close. */}
-    <div class="relative z-10 flex items-center justify-between gap-m">
+  <div class="mnav-shell flex min-h-full flex-col">
+    {/* Top bar: the Bebas wordmark (the dialog's accessible name) and close. */}
+    <div class="flex items-center justify-between gap-m">
       <h2 id="mnav-title" class="font-wordmark text-2xl font-normal tracking-[0.02em] text-heading">
         {studioName}
       </h2>
       <p id="mnav-desc" class="sr-only">
-        Site navigation, contact details, and theme options.
+        Site navigation, contact details, and display options.
       </p>
       <button
         type="button"
@@ -126,127 +92,59 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
         aria-label="Close menu"
         class={cn(
           buttonVariants({ variant: 'ghost', size: 'icon-lg' }),
-          'size-11 text-heading hover:text-link dark:text-primary-foreground dark:hover:text-secondary',
+          'size-11 text-heading hover:text-link',
         )}
       >
         <ChromeIcon name="x" class="size-6" />
       </button>
     </div>
 
-    {/* Positioning line, echoing the hero so the brand voice carries in. */}
-    <p
-      class="mnav-item relative z-10 mt-m max-w-[34ch] font-body text-base leading-[1.5] text-text-muted dark:text-primary-foreground/70"
-      style={delay(60)}
-    >
-      For churches, schools, nonprofits, and small businesses, wherever you are.
-    </p>
-
-    {/* Big editorial nav. Hairline dividers give the flat list structure. */}
-    <nav
-      aria-label="Mobile primary"
-      class="relative z-10 mt-l flex flex-col divide-y divide-border border-y border-border dark:divide-white/10 dark:border-white/10"
-    >
-      {links.map(({ label, href }, i) => {
-        const active = isActive(href);
-        const desc = DESCRIPTIONS[href];
-        return (
-          <a
-            href={href}
-            aria-current={active ? 'page' : undefined}
-            class={cn(
-              'mnav-item group flex items-center justify-between gap-m rounded-md py-4 no-underline',
-              focusRing,
-            )}
-            style={delay(140 + i * 55)}
-          >
-            <span class="flex flex-col gap-0.5">
-              <span
-                class:list={[
-                  'font-display text-4xl leading-none font-light tracking-[-0.03em] transition-colors duration-150 group-hover:text-link group-focus-visible:text-link dark:group-hover:text-secondary dark:group-focus-visible:text-secondary',
-                  active ? 'text-link dark:text-link' : 'text-heading dark:text-primary-foreground',
-                ]}
+    {/* The links: big and light, the current page heavy. */}
+    <nav aria-label="Mobile primary" class="mt-l">
+      <ul class="flex flex-col">
+        {links.map(({ label, href }, i) => {
+          const active = isActive(href);
+          return (
+            <li class="mnav-item" style={delay(i + 1)}>
+              <a
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                class:list={['mnav-link font-display text-heading', { 'is-active': active }]}
               >
                 {label}
-              </span>
-              {desc && (
-                <span class="font-body text-sm text-text-muted dark:text-primary-foreground/65">
-                  {desc}
-                </span>
-              )}
-            </span>
-            {/* The arrow is the non-colour hover and focus cue: it slides in
-                  from the left. On the active row it stays put. */}
-            <span
-              aria-hidden="true"
-              class:list={[
-                'text-2xl transition-all duration-200',
-                active
-                  ? 'translate-x-0 text-link opacity-100 dark:text-link'
-                  : '-translate-x-2 text-link opacity-0 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 dark:text-secondary',
-              ]}
-            >
-              &rarr;
-            </span>
-          </a>
-        );
-      })}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
     </nav>
 
-    {/* Primary conversion action, matching the hero CTA. */}
-    <div class="mnav-item relative z-10 mt-l" style={delay(140 + links.length * 55 + 40)}>
-      <a href="/contact/" class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'w-full')}>
+    {/* The bottom block. mt-auto pins it to the foot of the sheet when the
+        links are shorter than the viewport. */}
+    <div class="mnav-item mt-auto flex flex-col gap-s pt-l" style={delay(links.length + 1)}>
+      <a
+        href="/contact/"
+        class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'w-full rounded-full')}
+      >
         Start a project
       </a>
-    </div>
 
-    {/* Get in touch: direct contact, socials and the theme toggle. mt-auto pins
-        it to the bottom when the menu is shorter than the viewport. */}
-    <div class="mnav-item relative z-10 mt-auto pt-l" style={delay(140 + links.length * 55 + 100)}>
-      <p class="font-mono text-xs tracking-[0.18em] text-text-muted uppercase dark:text-primary-foreground/60">
-        Get in touch
-      </p>
-      <div class="mt-s flex flex-col gap-1">
-        <a href={site.emailHref} class={contactLink}>
-          {site.email}
-        </a>
-        <a href={site.phoneHref} class={contactLink}>
-          {site.phone}
-        </a>
-      </div>
+      {/* The email from site.ts. A plain mailto, so the site-wide fallback
+          (src/scripts/mailto-fallback.ts) copies it when no mail app opens. */}
+      <a href={site.emailHref} class="mnav-email text-link">
+        {site.email}
+      </a>
 
-      <div class="mt-m flex items-center justify-between">
-        <div class="flex items-center gap-xs">
-          {socials.map(({ label, href, svg }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={label}
-              class={cn(
-                'inline-flex h-11 w-11 items-center justify-center rounded-md text-text-muted transition-colors duration-150 hover:bg-heading/5 hover:text-heading dark:text-primary-foreground/70 dark:hover:bg-white/10 dark:hover:text-primary-foreground',
-                focusRing,
-              )}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="size-5"
-                aria-hidden="true"
-                set:html={svg}
-              />
-            </a>
-          ))}
-        </div>
+      {site.bookingOpen && (
+        <p class="flex items-center gap-s text-sm text-text-muted">
+          <span class="mnav-live" aria-hidden="true" />
+          Booking projects
+        </p>
+      )}
 
-        {/* Theme toggle. It paints itself text-text, which would vanish on navy,
-            so dark mode forces the icon white (sky on hover). */}
-        <div class="dark:[&_.theme-toggle]:text-primary-foreground dark:[&_.theme-toggle:hover]:text-secondary">
-          <ThemeToggle class="size-11" />
-        </div>
+      <div class="flex flex-wrap items-center justify-between gap-s border-t border-line pt-s">
+        <MotionToggle />
+        <ThemeToggle class="size-11" />
       </div>
     </div>
   </div>
@@ -254,7 +152,7 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
 
 <style>
   /* Full-screen modal. The UA dialog box (centred, max size, border) is reset
-     so the panel fills the viewport like the old Sheet did. */
+     so the sheet fills the viewport. */
   .mnav-dialog {
     position: fixed;
     inset: 0;
@@ -270,38 +168,88 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
   .mnav-dialog::backdrop {
     background: transparent;
   }
-  /* The page behind does not scroll while the panel is open. */
+  /* The page behind does not scroll while the sheet is open. */
   :global(html:has(dialog[data-mnav][open])) {
     overflow: hidden;
   }
 
-  /* Panel padding carries the safe-area insets so the wordmark and close
-     button clear the notch and the contact block clears the home indicator
-     under viewport-fit=cover. env() is 0 elsewhere. */
+  /* Padding carries the safe-area insets so the wordmark and close button
+     clear the notch and the bottom block clears the home indicator under
+     viewport-fit=cover. env() is 0 elsewhere. */
   .mnav-shell {
-    padding-top: calc(var(--spacing-l) + env(safe-area-inset-top));
+    padding-top: calc(var(--spacing-m) + env(safe-area-inset-top));
     padding-bottom: calc(var(--spacing-l) + env(safe-area-inset-bottom));
     padding-left: calc(var(--spacing-l) + env(safe-area-inset-left));
     padding-right: calc(var(--spacing-l) + env(safe-area-inset-right));
   }
 
-  /* Entrance: the panel slides in from the right as it fades (the old Sheet's
-     200ms), and the rows cascade. The opacity:0 starts sit inside the
-     no-preference query, so with reduced motion everything shows at once. */
+  /* The big links. Bricolage 300; the current page 800. Hover and focus
+     draw an underline, so the cue is never colour alone. */
+  .mnav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-block: 0.2rem;
+    font-size: clamp(2.5rem, 11vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    text-decoration: none;
+  }
+  .mnav-link.is-active {
+    font-weight: 800;
+  }
+  .mnav-link:hover,
+  .mnav-link:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+  }
+  .mnav-link:focus-visible,
+  .mnav-email:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  .mnav-email {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    width: fit-content;
+    max-width: 100%;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .mnav-email:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* The amber "Booking projects" dot. Amber means live and nothing else. */
+  .mnav-live {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-live);
+  }
+
+  /* Entrance: the sheet fades in and the rows settle up 8px, a step apart.
+     The hidden start sits inside no-preference, and Pause motion skips it, so
+     with either one everything shows at once. */
   @keyframes mnav-panel-in {
     from {
       opacity: 0;
-      transform: translateX(2.5rem);
     }
     to {
       opacity: 1;
-      transform: translateX(0);
     }
   }
   @keyframes mnav-in {
     from {
       opacity: 0;
-      transform: translateY(14px);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
@@ -309,12 +257,11 @@ const delay = (ms: number) => `--mnav-delay: ${ms}ms;`;
     }
   }
   @media (prefers-reduced-motion: no-preference) {
-    .mnav-dialog[open] {
-      animation: mnav-panel-in 0.2s ease-in-out both;
+    :global(html:not([data-motion-paused])) .mnav-dialog[open] {
+      animation: mnav-panel-in var(--dur-quick) var(--ease-settle) both;
     }
-    .mnav-item {
-      opacity: 0;
-      animation: mnav-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    :global(html:not([data-motion-paused])) .mnav-item {
+      animation: mnav-in var(--dur-settle) var(--ease-settle) both;
       animation-delay: var(--mnav-delay, 0ms);
     }
   }

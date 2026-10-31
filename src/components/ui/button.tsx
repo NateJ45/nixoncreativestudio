@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 // shadcn Button. The `brand` variant and `cta` size below are Nathan-added
 // extensions that match the existing marketing CTAs on the site (Hero
-// "Start a project", CtaBanner action, contact form submit). All other
+// "Start a project", the footer closer pill, contact form submit). All other
 // variants and sizes are the unmodified shadcn primitives, useful for
 // any UI controls Nathan adds later via shadcn add.
 const buttonVariants = cva(
@@ -45,7 +45,7 @@ const buttonVariants = cva(
           'size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg',
         'icon-lg': 'size-9',
         // cta: the bigger marketing-button size used in Hero and
-        // CtaBanner. h-auto + py-3.5 lets the height grow with line
+        // the footer closer. h-auto + py-3.5 lets the height grow with line
         // wrapping; the text-base font-semibold matches the original
         // inline classes Phase 1b carried.
         cta: 'h-auto gap-2 px-6 py-3.5 text-base font-semibold',

@@ -1,0 +1,81 @@
+---
+/* ============================================================================
+   MotionToggle
+   ============================================================================
+   Safe to edit.
+
+   The site-wide "Pause motion" switch (WCAG 2.2.2). One state for the whole
+   site: it stops every looping animation (the hero reel and ticker, the
+   booking dot), skips the page transitions and the heading weight animation,
+   and is remembered on this device. src/scripts/motion.ts wires every
+   [data-motion-toggle] button on the page (click flips the state,
+   aria-pressed mirrors it), so the footer's copy, the mobile menu's copy and
+   the hero's own Pause button always agree.
+
+   Rendered in the footer's utility row and at the bottom of the mobile menu
+   (overhaul package 2.1). Without JavaScript it is hidden: there is nothing
+   to pause that CSS alone would not already stop under reduced motion.
+
+   Colours are role tokens, so it reads right on white, paper and inside
+   .band-ink (which re-scopes --color-link and --color-line-strong).
+   ============================================================================ */
+---
+
+<button type="button" class="motion-toggle" aria-pressed="false" data-motion-toggle>
+  <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+    <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
+    <rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect>
+  </svg>
+  <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"></path>
+  </svg>
+  <span>Pause motion</span>
+</button>
+
+<style>
+  /* A real 44px target on every device. The text is the link colour, which
+     clears AA on every surface it sits on; the pressed state swaps the icon
+     and solidifies the edge, so it is never colour alone. The edge is
+     --line-strong, the hairline that must be seen (3:1). */
+  .motion-toggle {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-inline: 0.875rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-link);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  :global(.js) .motion-toggle {
+    display: inline-flex;
+  }
+  .motion-toggle:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .motion-toggle:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  .motion-toggle[aria-pressed='true'] {
+    border-color: currentColor;
+  }
+  .motion-toggle svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    fill: currentColor;
+  }
+  .motion-toggle .icon-play,
+  .motion-toggle[aria-pressed='true'] .icon-pause {
+    display: none;
+  }
+  .motion-toggle[aria-pressed='true'] .icon-play {
+    display: block;
+  }
+</style>

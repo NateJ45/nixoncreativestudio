@@ -30,7 +30,6 @@ import Heft from '../components/Heft.astro';
 import { Image } from 'astro:assets';
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import CtaBanner from '../components/CtaBanner.astro';
 import PhotoGallery from '../components/PhotoGallery';
 import { addOns } from '../data/pricing';
 import { addOnNamed } from '../lib/schema';
@@ -90,6 +89,11 @@ const [leadCategory, ...restCategories] = categories;
 <BaseLayout
   title="Photography in Cincinnati | Nixon Creative Studio"
   description={`Headshots, events and environmental photos across the Cincinnati region, shot by the person who designs your website. Photography starts ${photography.price}.`}
+  closer={{
+    heading: 'Need photography',
+    emphasis: 'for your project?',
+    sub: 'Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own.',
+  }}
 >
   <!-- ----------------------------------------------------------------------
        Hero. When a real photo exists it fills the surface behind a navy
@@ -274,9 +278,4 @@ const [leadCategory, ...restCategories] = categories;
       </div>
     </section>
   )}
-
-  <CtaBanner
-    title="Need photography for your project?"
-    sub="Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own."
-  />
 </BaseLayout>

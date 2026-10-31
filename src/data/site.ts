@@ -51,6 +51,11 @@ interface SiteData {
   // Marketing
   tagline: string; // One-line studio positioning.
 
+  // Availability. true shows the amber "Booking projects" dot in the footer's
+  // Currently column and the mobile menu; false hides both. Flip it when the
+  // calendar is full, rather than editing the components.
+  bookingOpen: boolean;
+
   // External scheduling. Empty string disables the "Book a call" CTAs.
   // Plug in a Cal.com / Calendly URL when ready — every "Book a call"
   // link on the site reads from this one value.
@@ -100,6 +105,9 @@ export const site: SiteData = {
 
   tagline:
     'Modern websites for small businesses, nonprofits, churches, and schools. Based in Cincinnati, working with clients anywhere.',
+
+  // Booking new projects right now? Drives the amber status dot (see above).
+  bookingOpen: true,
 
   // External scheduling URL. Leave empty to hide the "Book a call" CTAs
   // site-wide; paste a Cal.com or Calendly link to enable them. Cal.com
