@@ -43,7 +43,6 @@ import Terminal from '../components/Terminal.astro';
 import LighthouseScore from '../components/LighthouseScore.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { Image } from 'astro:assets';
-import { site } from '../data/site';
 
 // Headshot for the masthead portrait frame, and the personal snapshots for the
 // "Outside the studio" gallery. All resized into src/assets at build-friendly
@@ -189,26 +188,13 @@ const railGrid =
   'grid grid-cols-1 gap-x-[clamp(2rem,5vw,4rem)] gap-y-3 lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start';
 const railLabel = 'font-mono text-sm uppercase tracking-[0.08em] text-text-muted';
 
-// JSON-LD schemas specific to the About page: Person for the studio owner,
-// linked back to the Organization defined site-wide.
-const schemas = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    '@id': `${site.url}/about/#person`,
-    name: site.ownerName,
-    jobTitle: 'Founder, Designer, Developer, Photographer',
-    worksFor: { '@id': `${site.url}#organization` },
-    url: `${site.url}/about/`,
-    sameAs: [site.social.instagram, site.social.linkedin],
-  },
-];
+// No page-specific JSON-LD here: Nathan's Person node is in the site-wide
+// @graph on every page (src/lib/schema.ts), linked to the studio by @id.
 ---
 
 <BaseLayout
-  title="About | Nixon Creative Studio"
-  description="About Nathan Nixon, sole owner of Nixon Creative Studio in Cincinnati, Ohio."
-  schemas={schemas}
+  title="About Nathan Nixon | Nixon Creative Studio"
+  description="I'm Nathan Nixon, the one person behind Nixon Creative Studio in Cincinnati. I plan, design and build every site myself, and shoot the photos when needed."
 >
   <!-- ====================================================================
        Masthead (ABOUT). The page head: who Nathan is, paired with the

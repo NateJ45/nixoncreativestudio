@@ -17,6 +17,16 @@ Read this file early in any session on this repo.
 
 - **The `test` job is pinned to ubuntu-24.04 (2026-10-30).** `ubuntu-latest` moved to 26.04, where Playwright's WebKit will not launch, so every `[webkit-iphone]` test failed. `ci.yml` now says `runs-on: ubuntu-24.04` on that job only. Unpin it once a Playwright release supports 26.04 (try it on a branch first). Starter PORTS.md card and vault gotcha `playwright-webkit-ubuntu-26-04`.
 
+### 0. After the cut-over: Rich Results test (added 2026-10-30, overhaul 1.9)
+
+Once `redesign` is live on `main`, run Google's Rich Results test
+(https://search.google.com/test/rich-results) and the Schema Markup Validator
+(https://validator.schema.org) on `/`, `/services/` and one case study. The
+JSON-LD is one `@graph` per page (studio, WebSite, Person, WebPage, plus
+BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
+errors. Google shows no FAQ rich result for this kind of site, which is fine.
+Then resubmit the sitemap in Search Console. Delete this item when done.
+
 ### 1. Set the `SITE_URL` repo variable
 
 **Blocks:** `.github/workflows/uptime.yml` (installed 2026-08-27, schedule ON).

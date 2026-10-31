@@ -24,6 +24,7 @@ import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
 import ComingSoonGate from '../components/ComingSoonGate.astro';
 import { site } from '../data/site';
+import type { Crumb, Node } from '../lib/schema';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
 // View Transitions API for a smooth fade between pages instead of a hard
@@ -97,11 +98,14 @@ interface Props {
       "article" so platforms that treat articles specially (search,
       readers) render them correctly. */
   ogType?: 'website' | 'article';
-  /** Page-specific schema.org JSON-LD blocks. Layered on top of the
-      site-wide Organization schema by StructuredData. Used by About
-      (Person), case study detail pages (Article + CreativeWork),
-      /services (Service + FAQPage). */
-  schemas?: Array<Record<string, unknown>>;
+  /** Page-specific schema.org nodes, added to the site-wide @graph that
+      StructuredData prints (studio, WebSite, Person, WebPage). Used by case
+      study pages (CreativeWork), journal entries (Article) and /services
+      (Service + FAQPage). */
+  schemas?: Node[];
+  /** Breadcrumb trail after Home, for nested pages (case studies, journal
+      entries). Becomes a BreadcrumbList in the JSON-LD. */
+  breadcrumbs?: Crumb[];
   /** Extra woff2 files to preload on this page only (resolved with ?url).
       The homepage passes the hero's Bricolage Grotesque file, so inner
       pages never download it. Keep the total at three or fewer
@@ -114,6 +118,7 @@ const {
   ogImage,
   ogType = 'website',
   schemas = [],
+  breadcrumbs = [],
   preloadFonts = [],
 } = Astro.props;
 
@@ -262,11 +267,16 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
          is in place before the first navigation. -->
     <ClientRouter />
 
-    <!-- schema.org JSON-LD. Always emits the studio's Organization /
-         LocalBusiness blocks; pages can layer in per-page schemas
-         (Article for case studies, Service for /services, etc.) via
-         the schemas prop. -->
-    <StructuredData extra={schemas} />
+    <!-- schema.org JSON-LD: one connected @graph per page (the studio,
+         the WebSite, Nathan, this WebPage, breadcrumbs on nested pages,
+         plus anything the page passes in schemas). See StructuredData. -->
+    <StructuredData
+      url={canonical}
+      title={title}
+      description={description}
+      breadcrumbs={breadcrumbs}
+      extra={schemas}
+    />
   </head>
   <body>
     <!--
