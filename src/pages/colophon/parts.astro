@@ -25,6 +25,7 @@ import Section from '../../components/Section.astro';
 import BrowserFrame from '../../components/BrowserFrame.astro';
 import FramePair from '../../components/FramePair.astro';
 import Media from '../../components/Media.astro';
+import { BODY_SIZES } from '../../lib/picture';
 import Signature from '../../components/Signature.astro';
 import Decision from '../../components/Decision.astro';
 import ResultsBlock from '../../components/ResultsBlock.astro';
@@ -97,7 +98,7 @@ const footerNav = await getFooterNav();
         ratio="16 / 10"
         position="top"
         widths={[480, 800, 1200]}
-        sizes="(min-width: 82.5rem) 58rem, (min-width: 64rem) 70vw, calc(100vw - 2rem)"
+        sizes={BODY_SIZES}
       />
     </BrowserFrame>
   </Section>
@@ -112,6 +113,8 @@ const footerNav = await getFooterNav();
       desktop={desktopShot}
       phone={phoneShot}
       alt={`The ${title} homepage on a laptop and a phone`}
+      sizes="(min-width: 82.5rem) 832px, (min-width: 64rem) calc(65.4vw - 31px), calc(88vw - 42px)"
+      phoneSizes="(min-width: 82.5rem) 246px, (min-width: 64rem) calc(19.3vw - 9px), calc(26vw - 12px)"
     />
   </Section>
 
@@ -129,7 +132,7 @@ const footerNav = await getFooterNav();
       ratio="4 / 3"
       placeholder={getCoverPlaceholder(SLUG)}
       widths={[400, 640, 900]}
-      sizes="(min-width: 64rem) 40rem, calc(100vw - 2rem)"
+      sizes="(min-width: 589px) 541px, calc(100vw - 3rem)"
       class="rounded-frame"
     />
   </Section>

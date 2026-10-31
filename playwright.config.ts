@@ -48,6 +48,8 @@ export default defineConfig({
     command: 'npm run build && npm run serve:dist',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    // A cold build encodes every image as AVIF and WebP (overhaul 4.4): about two
+    // minutes on a CI runner before the image cache is warm, so allow five.
+    timeout: 300_000,
   },
 });

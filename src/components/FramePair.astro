@@ -41,7 +41,8 @@
    ============================================================================ */
 
 import type { ImageMetadata } from 'astro';
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
+import { ladder, PICTURE } from '../lib/picture';
 import BrowserFrame from './BrowserFrame.astro';
 import Media from './Media.astro';
 
@@ -63,8 +64,8 @@ const {
   phone,
   alt,
   lcp = false,
-  sizes = '(min-width: 82.5rem) 60rem, (min-width: 64rem) 66vw, 80vw',
-  phoneSizes = '(min-width: 82.5rem) 18rem, (min-width: 64rem) 20vw, 26vw',
+  sizes = '(min-width: 82.5rem) 1119px, calc(88vw - 42px)',
+  phoneSizes = '(min-width: 82.5rem) 331px, calc(26vw - 12px)',
   peek = false,
   class: className = '',
 } = Astro.props;
@@ -92,16 +93,17 @@ const peekTo = `${(-(1 - SCREEN_ASPECT / peekAspect) * 100).toFixed(2)}%`;
   <BrowserFrame url={url} class="fp-desktop">
     {peek ? (
       <div class="fp-peek" style={`--peek-to: ${peekTo}`}>
-        <Image
+        <Picture
           src={desktop}
           alt={alt}
-          widths={peekWidths.filter((w) => w <= peekWidth)}
+          widths={ladder(peekWidths.filter((w) => w <= peekWidth))}
           sizes={sizes}
           {...peekCrop}
           loading={lcp ? 'eager' : 'lazy'}
           fetchpriority={lcp ? 'high' : undefined}
           decoding="async"
           class="fp-peek-img"
+          {...PICTURE}
         />
       </div>
     ) : (
