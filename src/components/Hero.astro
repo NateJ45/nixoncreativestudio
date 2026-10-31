@@ -10,21 +10,23 @@
 
    The one orchestrated moment: "pull their weight." starts in a hairline
    weight and fills out to heavy as the page loads, so the words literally
-   gain weight. Each of those three words sits in a small grid that also holds
-   an invisible heavy copy of itself, so the space is reserved at full weight
-   from the first frame and the growing letters never push anything around
-   (no layout shift, and the line breaks never change mid-animation). The
-   headline is visible from the first frame: only its weight animates, never
-   its opacity, so it stays a clean LCP element.
+   gain weight. That is Heft.astro, the site's weight signature (one per page,
+   on the H1): it reserves each word's full-weight width from the first frame,
+   so nothing shifts, and only weight animates, never opacity, so the headline
+   stays a clean LCP element. The hero keeps its own slightly longer timing
+   (1.8s from 350ms) and curve, passed in as props.
 
    The hero surface follows the theme like the header expects: the light
    bg-soft surface in light mode, navy in dark (the header's data-over-hero
    state paints the same two colours, so bar and hero read as one block).
 
    Motion that runs longer than five seconds (the reel and the ticker) has a
-   Pause button (WCAG 2.2.2). It sets data-paused on the section; the reel's
-   CSS and the ticker script both respect it. Reduced motion: no drift, no
-   ticker cycling, and the headline is heavy from the start.
+   Pause button (WCAG 2.2.2). It is a [data-motion-toggle]: it sets the
+   site-wide Pause motion state (html[data-motion-paused], remembered on this
+   device, the same as the footer switch), and src/scripts/motion.ts keeps its
+   aria-pressed in step. The reel and the ticker are data-motion="loop", so
+   they also hold still off-screen and in a hidden tab. Reduced motion: no
+   drift, no ticker cycling, and the headline is heavy from the start.
 
    Content is hardcoded here on purpose. The hero is bespoke. The ticker and
    the wall read their sites from src/data/reel.ts, and each feature line is
@@ -34,13 +36,14 @@
 import { buttonVariants } from './ui/button';
 import { cn } from '../lib/utils';
 import HeroReel from './HeroReel.astro';
+import Heft from './Heft.astro';
 import { getReelSites } from '../data/reel';
 
 const reelSites = await getReelSites();
 
 // "I build websites that" stays light; the three words after it gain weight.
 const statementLead = 'I build websites that';
-const heavyWords = ['pull', 'their', 'weight.'];
+const heavyPhrase = 'pull their weight.';
 ---
 
 <section
@@ -55,19 +58,12 @@ const heavyWords = ['pull', 'their', 'weight.'];
     <div class="hero-copy pointer-events-auto flex max-w-[38rem] flex-col gap-l">
       <h1 id="hero-statement" class="hero-headline text-heading">
         {statementLead}{' '}
-        {heavyWords.map((word, i) => (
-          <>
-            <span class="heft-word">
-              <span class="heft-reserve" aria-hidden="true">
-                {word}
-              </span>
-              <span class="heft" style={`--heft-delay: ${350 + i * 90}ms;`}>
-                {word}
-              </span>
-            </span>
-            {i < heavyWords.length - 1 && ' '}
-          </>
-        ))}
+        <Heft
+          text={heavyPhrase}
+          delay={350}
+          duration={1800}
+          ease="cubic-bezier(0.65, 0, 0.25, 1)"
+        />
       </h1>
 
       <p class="hero-sub max-w-[30rem] text-lg leading-[1.55] text-text sm:text-xl">
@@ -104,7 +100,11 @@ const heavyWords = ['pull', 'their', 'weight.'];
         <span class="ticker-label hidden shrink-0 font-mono lg:inline text-xs tracking-[0.12em] text-text-muted uppercase">
           Now showing
         </span>
-        <div class="ticker-window relative hidden min-w-0 flex-1 lg:block" aria-hidden="true">
+        <div
+          class="ticker-window relative hidden min-w-0 flex-1 lg:block"
+          aria-hidden="true"
+          data-motion="loop"
+        >
           {reelSites.map((site, i) => (
             <p class:list={['ticker-item', i === 0 && 'is-active']}>
               <strong class="font-semibold text-heading">{site.name}</strong>
@@ -116,8 +116,9 @@ const heavyWords = ['pull', 'their', 'weight.'];
           type="button"
           class="hero-pause shrink-0"
           aria-pressed="false"
-          aria-label="Pause the moving work reel"
+          aria-label="Pause motion"
           data-hero-pause
+          data-motion-toggle
         >
           <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
             <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
@@ -144,7 +145,7 @@ const heavyWords = ['pull', 'their', 'weight.'];
      Headline. Bricolage Grotesque, the site's display face (loaded and
      preloaded globally), at the --text-display size from globals.css. Light
      weight for the lead-in, heavy for the three words that "pull their
-     weight". The heft animation moves to Heft.astro in package 1.7.
+     weight" (Heft.astro).
      ---------------------------------------------------------------------- */
   .hero-headline {
     font-family: var(--font-display);
@@ -153,33 +154,6 @@ const heavyWords = ['pull', 'their', 'weight.'];
     line-height: var(--text-display--line-height);
     letter-spacing: var(--text-display--letter-spacing);
     text-wrap: balance;
-  }
-
-  /* Each heavy word is a one-cell grid holding an invisible heavy copy (which
-     sets the cell's size) and the visible animating copy on top of it. */
-  .heft-word {
-    display: inline-grid;
-  }
-  .heft-reserve,
-  .heft {
-    grid-area: 1 / 1;
-    font-weight: 800;
-  }
-  .heft-reserve {
-    visibility: hidden;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .heft {
-      animation: heft 1.8s cubic-bezier(0.65, 0, 0.25, 1) var(--heft-delay, 350ms) both;
-    }
-  }
-  @keyframes heft {
-    from {
-      font-weight: 200;
-    }
-    to {
-      font-weight: 800;
-    }
   }
 
   /* "one person" links to About: underline on hover and focus. */
@@ -294,33 +268,27 @@ const heavyWords = ['pull', 'their', 'weight.'];
 </style>
 
 <script>
-  /* The ticker and the Pause button. Registered on astro:page-load (View
-     Transitions) with a re-bind guard on the section. */
+  /* The "Now showing" ticker. Registered on astro:page-load (View
+     Transitions) with a re-bind guard on the section. The Pause button needs
+     no code here: it is a [data-motion-toggle], wired by motion.ts. */
+  import { loopMayRun } from '../scripts/motion';
+
   function initHero(): void {
     const hero = document.querySelector<HTMLElement>('[data-hero-reel]');
     if (!hero || hero.dataset.heroBound) return;
     hero.dataset.heroBound = '1';
 
-    const pause = hero.querySelector<HTMLButtonElement>('[data-hero-pause]');
-    pause?.addEventListener('click', () => {
-      const paused = pause.getAttribute('aria-pressed') !== 'true';
-      pause.setAttribute('aria-pressed', String(paused));
-      pause.setAttribute(
-        'aria-label',
-        paused ? 'Play the moving work reel' : 'Pause the moving work reel',
-      );
-      hero.toggleAttribute('data-paused', paused);
-    });
-
-    // Cycle the ticker every few seconds, unless motion is reduced, the
-    // visitor paused it, or the tab is hidden.
+    // Cycle the ticker every few seconds, but only while loopMayRun() says
+    // so: not under reduced motion, not paused, not off-screen, not in a
+    // hidden tab. It checks on every tick, so a pause holds the current line.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ticker = hero.querySelector<HTMLElement>('.ticker-window');
     const items = hero.querySelectorAll<HTMLElement>('.ticker-item');
-    if (items.length < 2) return;
+    if (!ticker || items.length < 2) return;
     let active = 0;
     const timer = window.setInterval(() => {
       if (!document.body.contains(hero)) return window.clearInterval(timer);
-      if (hero.hasAttribute('data-paused') || document.hidden) return;
+      if (!loopMayRun(ticker)) return;
       items[active].classList.remove('is-active');
       active = (active + 1) % items.length;
       items[active].classList.add('is-active');

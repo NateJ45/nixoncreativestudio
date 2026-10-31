@@ -21,8 +21,11 @@ import { site } from '../data/site';
 import type { Crumb, Node } from '../lib/schema';
 
 // Astro View Transitions. Wires same-origin link clicks into the browser's
-// View Transitions API for a smooth fade between pages instead of a hard
-// reload. Same-origin navigation only; external links work as normal.
+// View Transitions API instead of a hard reload. Same-origin navigation only;
+// external links work as normal. The transition itself is the quiet "glide"
+// in globals.css section 6: the old page fades, the new one settles 8px, and
+// the header and footer stay put. None of it runs under reduced motion or
+// while the visitor has paused motion.
 import { ClientRouter } from 'astro:transitions';
 
 // Resolve the Bricolage Grotesque woff2 file through Vite's URL pipeline. The
@@ -206,7 +209,11 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       the .dark class lands on <html> in time for the first frame; otherwise
       a visitor who prefers dark would see a flash of light theme.
 
-      Decision order:
+      The same script applies the visitor's Pause motion choice
+      (html[data-motion-paused], localStorage["ncs-motion"]), for the same
+      reason: it has to be in place before the first frame.
+
+      Decision order for the theme:
         1. localStorage["ncs-theme"] (the visitor's explicit choice)
            - "dark" -> force dark
            - "light" -> force light
@@ -229,6 +236,17 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
         // state to .js only. Without JS the class is absent and [data-reveal]
         // content stays fully visible (see globals.css section 6).
         document.documentElement.classList.add('js');
+        // Pause motion (src/scripts/motion.ts, overhaul 1.7). A visitor who
+        // pressed Pause motion keeps it on every page and every visit, and the
+        // attribute lands here, before first paint, so not one frame moves.
+        try {
+          document.documentElement.toggleAttribute(
+            'data-motion-paused',
+            localStorage.getItem('ncs-motion') === 'paused',
+          );
+        } catch (_e) {
+          /* Storage blocked: motion follows the system setting only. */
+        }
         try {
           var stored = localStorage.getItem('ncs-theme');
           var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -336,43 +354,13 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       import '../scripts/mailto-fallback';
     </script>
     <!--
-      Scroll-reveal observer. Reveals every [data-reveal] element as it
-      enters the viewport by toggling .is-visible (styled in globals.css
-      section 6). Re-runs on every View Transitions navigation via the
-      astro:page-load event, which fires on the initial load too, so the
-      listener registered once here covers all pages.
-
-      Accessibility: when the visitor prefers reduced motion (or the browser
-      lacks IntersectionObserver), every tagged element is shown immediately,
-      so nothing depends on motion to appear.
+      Motion controller (overhaul 1.7). Pauses data-motion="loop" elements off
+      screen, in a hidden tab and under Pause motion, wires every
+      [data-motion-toggle] button, and runs the IntersectionObserver reveal
+      fallback where scroll-driven CSS is not supported. See the file header.
     -->
     <script>
-      function initReveal() {
-        const els = Array.from(document.querySelectorAll('[data-reveal]:not(.is-visible)'));
-        if (!els.length) return;
-
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduce || !('IntersectionObserver' in window)) {
-          els.forEach((el) => el.classList.add('is-visible'));
-          return;
-        }
-
-        const io = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                io.unobserve(entry.target);
-              }
-            });
-          },
-          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
-        );
-
-        els.forEach((el) => io.observe(el));
-      }
-
-      document.addEventListener('astro:page-load', initReveal);
+      import '../scripts/motion';
     </script>
     <!-- A quiet hello in the console for anyone who opens dev tools. Honest:
          the real stack, with pointers to the colophon and contact. -->

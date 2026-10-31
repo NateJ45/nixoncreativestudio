@@ -68,17 +68,9 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
            plain text kicker plus an honest count of projects, both derived
            from the real entries array so they never drift from the list. -->
       <header class="mb-xl flex flex-col gap-xs">
-        <p data-reveal="fade" class="font-mono text-sm tracking-[0.12em] text-link uppercase">
-          Portfolio
-        </p>
-        <h1 id="work-index-heading" data-reveal>
-          Selected work
-        </h1>
-        <p
-          data-reveal
-          style="--reveal-delay: 90ms"
-          class="max-w-[58ch] text-lg leading-[1.5] text-text-muted"
-        >
+        <p class="font-mono text-sm tracking-[0.12em] text-link uppercase">Portfolio</p>
+        <h1 id="work-index-heading">Selected work</h1>
+        <p class="max-w-[58ch] text-lg leading-[1.5] text-text-muted">
           {entries.length}
           {entries.length === 1 ? ' project' : ' projects'} for churches, schools, nonprofits, and
           small businesses around Cincinnati. Each one started with a conversation about what the
@@ -118,12 +110,9 @@ const sectors = (['church', 'school', 'nonprofit', 'small-business'] as const)
               data-sector={entry.data.sector}
               class={isFeature ? 'md:col-span-2 lg:col-span-3' : ''}
             >
-              {/* Whole card is the link (standard card a11y pattern). Stagger
-                   is capped per row so the cascade stays consistent at any
-                   catalogue length. */}
+              {/* Whole card is the link (standard card a11y pattern). No reveal:
+                   the grid starts in the first viewport (ruling 3). */}
               <a
-                data-reveal
-                style={`--reveal-delay: ${Math.min(i, 5) * 80}ms`}
                 class:list={[
                   'relative surface-card group rounded-xl p-s text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent',
                   isFeature

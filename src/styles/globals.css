@@ -23,7 +23,7 @@
      5. Site-wide utility classes (.ncs-container, .card-link)
      5b. Surfaces and grid (.band-ink, .page-grid, .frame, .hairline,
          forced-colors borders)
-     6. Motion + effects (tokens live in :root; 1.7 builds on them)
+     6. Motion system (loops, reveals, view transitions; tokens in :root)
 
    FROZEN after overhaul packages 1.5 and 1.7 (plan ruling 10). Page and
    component CSS goes in scoped <style> blocks; only shared tokens and
@@ -646,64 +646,192 @@
 }
 
 /* ----------------------------------------------------------------------------
-   6. Motion + effects system
+   6. Motion system (overhaul package 1.7)
    ----------------------------------------------------------------------------
-   Deliberately small since the 2026-10 overhaul (package 1.2): one scroll
-   reveal, one static themed band, the elevated card surface and the animated
-   underline link. The old decorative layer (aurora, grain, shine sweep, cursor
-   spotlight, float loop, hover lift, mesh and dot-grid washes, and their
-   keyframes) was retired as AI-portfolio tells and dead weight.
+   Four verbs, and nothing else moves:
+     Settle  entrances: [data-reveal] and [data-reveal="frame"] (below).
+     Glide   state to state: view transitions between pages (below).
+     Heft    the one weight animation per page, on the H1 (Heft.astro).
+     Drift   the hero reel only (HeroReel.astro), a data-motion="loop".
 
-   Accessibility: the reveal is gated behind `prefers-reduced-motion:
-   no-preference`. The global reduced-motion block in section 4 neutralizes
-   transitions/animations for everyone who opts out, and the reveal init
-   script in BaseLayout force-shows every [data-reveal] element immediately
-   under reduced motion, so no content ever depends on motion to become
-   visible.
+   src/scripts/motion.ts is the controller: it marks loops that are off screen,
+   the hidden tab, and the visitor's Pause motion choice, which the BaseLayout
+   bootstrap applies to <html> as data-motion-paused before first paint.
+
+   Accessibility: everything here is gated on prefers-reduced-motion:
+   no-preference, and the global reduced-motion block in section 4 shortens
+   whatever is left. Reveals are gated on .js too, so without JavaScript every
+   [data-reveal] element is simply there. The finished state of every reveal is
+   what the markup renders.
    ---------------------------------------------------------------------------- */
 
-/* ---- Scroll reveal --------------------------------------------------------
-   Tag any element with data-reveal. The global IntersectionObserver in
-   BaseLayout adds .is-visible the first time it scrolls into view. One
-   variant, data-reveal="fade", drops the upward travel; --reveal-delay
-   (inline style) staggers siblings, e.g. style="--reveal-delay: 120ms". */
-/* The hidden-until-revealed state is scoped to .js (added to <html> by the
-   anti-FOUC script in BaseLayout before first paint). Without JavaScript the
-   class is absent, so [data-reveal] elements keep their default opacity:1 and
-   are fully visible: nothing depends on JS to be seen. With JS, the observer
-   in BaseLayout adds .is-visible as each element scrolls into view. */
-@media (prefers-reduced-motion: no-preference) {
-  .js [data-reveal] {
+/* ---- Loops ------------------------------------------------------------------
+   Anything that repeats opts in with data-motion="loop" on its own element or
+   a wrapper. It holds still (on whatever frame it reached) while it is off
+   screen, while the tab is hidden, or while the visitor has paused motion.
+   tests/motion-pause.spec.ts checks every loop stops under the pause. */
+:root[data-motion-paused] [data-motion='loop'],
+:root[data-motion-paused] [data-motion='loop'] *,
+:root[data-motion-paused] [data-motion='loop'] *::before,
+:root[data-motion-paused] [data-motion='loop'] *::after,
+:root[data-motion-hidden] [data-motion='loop'],
+:root[data-motion-hidden] [data-motion='loop'] *,
+[data-motion='loop'][data-motion-offscreen],
+[data-motion='loop'][data-motion-offscreen] *,
+[data-motion='loop'][data-motion-offscreen] *::before,
+[data-motion='loop'][data-motion-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
+/* ---- Settle: scroll reveals ---------------------------------------------------
+   Two variants, and a group:
+     data-reveal          fades in and rises 8px.
+     data-reveal="frame"  a clip-path unveil from the bottom, for media (a
+                          framed site or photo). No opacity change.
+     data-reveal-group    on a parent: its children's reveals step 70ms apart,
+                          capped at 6 steps (the 7th child onwards shares the
+                          last step).
+   Never on first-viewport media or an H1 (ruling 3, tests/first-viewport).
+
+   Where the browser supports scroll-driven animations, the reveal is tied to
+   the element entering the viewport (animation-timeline: view()), so it needs
+   no script and can never be left stuck half way. Elsewhere, motion.ts adds
+   .is-visible with an IntersectionObserver and a transition plays instead. */
+[data-reveal-group] > :nth-child(2) {
+  --reveal-i: 1;
+}
+[data-reveal-group] > :nth-child(3) {
+  --reveal-i: 2;
+}
+[data-reveal-group] > :nth-child(4) {
+  --reveal-i: 3;
+}
+[data-reveal-group] > :nth-child(5) {
+  --reveal-i: 4;
+}
+[data-reveal-group] > :nth-child(n + 6) {
+  --reveal-i: 5;
+}
+
+@keyframes settle-in {
+  from {
     opacity: 0;
-    transform: translateY(1.75rem);
-    transition:
-      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-    transition-delay: var(--reveal-delay, 0ms);
+    transform: translateY(8px);
   }
-  .js [data-reveal='fade'] {
-    transform: none;
+}
+@keyframes frame-in {
+  from {
+    clip-path: inset(0 0 100% 0);
   }
-  .js [data-reveal].is-visible {
-    opacity: 1;
-    transform: none;
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Fallback: the IntersectionObserver in motion.ts adds .is-visible and a
+     transition plays. The group step and any legacy inline --reveal-delay
+     add up. */
+  @supports not (animation-timeline: view()) {
+    .js [data-reveal] {
+      transition:
+        opacity var(--dur-scene) var(--ease-settle),
+        transform var(--dur-scene) var(--ease-settle),
+        clip-path var(--dur-scene) var(--ease-settle);
+      transition-delay: calc(var(--reveal-i, 0) * 70ms + var(--reveal-delay, 0ms));
+    }
+    .js [data-reveal]:not([data-reveal='frame']):not(.is-visible) {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    .js [data-reveal='frame']:not(.is-visible) {
+      clip-path: inset(0 0 100% 0);
+    }
   }
 
-  /* First screen: no reveal gate.
-     A [data-reveal] element starts at opacity 0 under .js and only clears once
-     the observer above has run and its 0.7s transition has played. Chrome does
-     not count a zero-opacity element as a contentful paint, so gating the top
-     of the page on that script is what pushed Largest Contentful Paint out past
-     the 4.5s budget: on /contact the h1 painted 1.65s after first paint and
-     Lighthouse read LCP at 5.8s, and /404 failed the same way (staging,
-     2026-09-06). Everything in the first block of <main> therefore renders
-     immediately; only content further down still reveals on scroll. The
-     observer still tags them .is-visible, which changes nothing. */
+  /* Default: scroll-driven. The range starts a little later for each group
+     step, which reads as the same 70ms stagger while scrolling. */
+  @supports (animation-timeline: view()) {
+    .js [data-reveal] {
+      animation: settle-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--reveal-i, 0) * 6%) entry calc(60% + var(--reveal-i, 0) * 6%);
+    }
+    .js [data-reveal='frame'] {
+      animation-name: frame-in;
+    }
+    /* Already on screen when the page loaded (motion.ts): shown in full. */
+    .js [data-reveal].is-visible {
+      animation: none;
+    }
+  }
+
+  /* Backstop for ruling 3: anything tagged in the first block of <main> shows
+     at once, whatever the markup says. First-viewport content should not carry
+     data-reveal at all (tests/first-viewport.spec.ts); this only catches a
+     slip, so a forgotten attribute can never hide the top of a page. */
   .js main > :first-child [data-reveal],
   .js main > [data-reveal]:first-child {
-    opacity: 1;
-    transform: none;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
   }
+}
+
+/* ---- Glide: view transitions between pages ------------------------------------
+   The ClientRouter (BaseLayout) swaps pages inside a View Transition. The
+   grammar is quiet: the old page fades out quickly and the new one settles 8px
+   up into place. The header and the footer are their own static groups
+   (transition:name="site-header" / "site-footer"), so they never fade or slide
+   between pages; the wordmark keeps its own "site-wordmark" group. */
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-fade-out var(--dur-quick) var(--ease-exit) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-settle-in var(--dur-settle) var(--ease-settle) both;
+  }
+}
+/* Static chrome: no morph, no crossfade. The old snapshot is hidden and the
+   new one is shown as is. */
+::view-transition-group(site-header),
+::view-transition-group(site-footer),
+::view-transition-new(site-header),
+::view-transition-new(site-footer) {
+  animation: none !important;
+}
+::view-transition-old(site-header),
+::view-transition-old(site-footer) {
+  animation: none !important;
+  opacity: 0;
+}
+/* No transition animates at all under reduced motion or while the visitor has
+   paused motion (Part A, "missing" list): the new page simply appears. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-image-pair(*) {
+    animation: none !important;
+  }
+}
+:root[data-motion-paused]::view-transition-group(*),
+:root[data-motion-paused]::view-transition-old(*),
+:root[data-motion-paused]::view-transition-new(*),
+:root[data-motion-paused]::view-transition-image-pair(*) {
+  animation: none !important;
 }
 
 /* Nothing inside <main> is meant to extend past the viewport edge. The
@@ -1158,7 +1286,7 @@ html.ncs-gated .ncs-overlay {
   --space-section: clamp(5rem, 10vw, 9rem);
   --grid-gutter: clamp(1rem, 2.5vw, 2rem);
 
-  /* ---- Motion tokens (package 1.5; the system itself is package 1.7) ------
+  /* ---- Motion tokens (package 1.5; the system is section 6, package 1.7) --
      Durations and easings only. Settle is for entrances, Glide for state to
      state (and the hero's heft curve), Exit for things leaving, Heft for the
      one weight animation per page. Reduced motion is handled globally in

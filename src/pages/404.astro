@@ -6,19 +6,25 @@
    /404 | Page not found
    ============================================================================
    Hero-style single column, centered. An oversized low-opacity navy "404"
-   anchors the page as a quiet centerpiece, the warm "that page wandered off"
+   anchors the page as a quiet centerpiece, the "this page lost its weight"
    copy sits below, and the same helpful links carry visitors back into the site.
-   The whole block reveals in on load. The "404" floats gently (and the
-   float pauses under prefers-reduced-motion via the local @media rule).
+   The H1 runs Heft in reverse (overhaul 1.7, ruling 9): "lost its weight."
+   starts heavy and drains to a hairline 200 once on load. Under reduced
+   motion, without JS or under Pause motion it simply shows that end state.
+   The whole block is the first viewport, so nothing here takes data-reveal
+   (ruling 3). The "404" floats gently: a data-motion="loop", so it holds
+   still off-screen and under Pause motion, and the local @media rule stops
+   it under prefers-reduced-motion.
    ============================================================================ */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { buttonVariants } from '../components/ui/button';
+import Heft from '../components/Heft.astro';
 ---
 
 <BaseLayout
   title="Page not found | Nixon Creative Studio"
-  description="That page wandered off. Head back to the homepage, look through my case studies, or tell me what you were looking for and I'll point you to it."
+  description="This page lost its weight. Head back to the homepage, look through my case studies, or tell me what you were looking for and I'll point you to it."
 >
   <section
     class="relative isolate flex min-h-[70vh] items-center overflow-hidden py-2xl"
@@ -39,35 +45,25 @@ import { buttonVariants } from '../components/ui/button';
       <div
         class="notfound-figure pointer-events-none leading-none select-none"
         aria-hidden="true"
-        data-reveal
+        data-motion="loop"
       >
         <span class="notfound-glyph block font-display text-[clamp(7rem,28vw,18rem)] leading-[0.85] tracking-tight text-heading/10 dark:text-heading/20"></span>
       </div>
 
       {/* Quiet mono label above the heading. Lowercase and lightly tracked so
           it reads as a small status line, not a shouted section eyebrow. */}
-      <p class="font-mono text-sm text-text-muted" data-reveal style="--reveal-delay: 80ms">
-        Page not found
-      </p>
+      <p class="font-mono text-sm text-text-muted">Page not found</p>
 
-      <h1 id="notfound-heading" class="max-w-[18ch]" data-reveal style="--reveal-delay: 160ms">
-        That page wandered off.
+      <h1 id="notfound-heading" class="max-w-[18ch]">
+        This page <Heft text="lost its weight." reverse />
       </h1>
 
-      <p
-        class="max-w-[50ch] text-lg leading-[1.6] text-text"
-        data-reveal
-        style="--reveal-delay: 240ms"
-      >
+      <p class="max-w-[50ch] text-lg leading-[1.6] text-text">
         The link you followed might be old, or the address might be a typo. Nothing's broken on this
         end. Here are a few places to try instead.
       </p>
 
-      <div
-        class="mt-s flex flex-wrap items-center justify-center gap-m"
-        data-reveal
-        style="--reveal-delay: 320ms"
-      >
+      <div class="mt-s flex flex-wrap items-center justify-center gap-m">
         <span class="inline-block">
           <a href="/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
             Back to home
@@ -93,9 +89,9 @@ import { buttonVariants } from '../components/ui/button';
     content: '404';
   }
 
-  /* Gentle drift for the oversized 404. The reveal vocabulary handles the
-     entrance; this keeps it quietly alive afterward. Paused for visitors who
-     prefer reduced motion. */
+  /* Gentle drift for the oversized 404, which keeps the page quietly alive.
+     Off for visitors who prefer reduced motion, and held still under Pause
+     motion (data-motion="loop" on the figure). */
   .notfound-figure {
     animation: notfound-float 7s ease-in-out infinite;
     will-change: transform;
