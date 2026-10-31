@@ -611,6 +611,17 @@ const schemas = [
   .svc-subnav-list::-webkit-scrollbar {
     display: none;
   }
+  /* Below md the row is wider than the screen, so its right edge fades out
+     to say "more this way". The end padding lets the last link scroll fully
+     clear of the fade. A mask, not an overlay, so it follows the bar's
+     surface in both themes and never sits on top of a link. */
+  @media (max-width: 47.99rem) {
+    .svc-subnav-list {
+      padding-right: 2.5rem;
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    }
+  }
   .svc-subnav-list a {
     display: inline-flex;
     align-items: center;
