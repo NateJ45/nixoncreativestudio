@@ -32,7 +32,7 @@ Moved out of CLAUDE.md. Loads when source, scripts, public assets or config are 
 - `src/content.config.ts` (schemas for case-studies, journal, and photos collections)
 - `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
 - `src/components/ui/` shadcn primitives, now only `button.tsx` (the custom `brand` variant and `cta` size are the Nathan-edits; `asChild` went with Radix in package 1.4)
-- React islands (the /photography gallery only): `Photo.tsx`, `PhotoGallery.tsx`
+- React islands (the future /photography gallery; rendered nowhere while the page is gated): `Photo.tsx`, `PhotoGallery.tsx`
 - Site chrome with scripts: `MobileNav.astro` + `src/scripts/mobile-nav.ts`, `ThemeToggle.astro` + `src/scripts/theme-toggle.ts`, `BackToTop.astro`, `ReadingProgress.astro`, `CopyEmail.astro`, `WorkFilter.astro`, `ChromeIcon.astro`
 - Astro wrappers: `CaseStudyCover.astro`, `ComingSoon.astro`, `StructuredData.astro`
 - Shared primitives (overhaul 1.8): `Section.astro`, `BrowserFrame.astro`, `FramePair.astro`, `Media.astro`. Check `/colophon/parts/` after changing one. `src/data/nav.ts` is safe to edit (labels, order, gates)

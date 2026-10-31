@@ -96,6 +96,25 @@ These content fixes are waiting on Nathan's sign-off and will ship as their own 
 - **Reid Design:** the study describes a Budget Calculator, a style quiz and a
   before/after slider. Remove any of those that are not live on the site today.
 
+### 2b. Ungate /photography (added 2026-10-31, overhaul 2.8)
+
+/photography/ is gated: noindex, out of the sitemap, the menus and `/llms.txt`,
+showing one photo and "ask for samples". It needs **6 to 20 real photos of
+Nathan's own work, with permission from the people and places in them**. Then:
+
+1. Optimize each into `src/assets/photography/<name>.jpg` and add a
+   `src/content/photos/<name>.json` entry (fields in `src/content.config.ts`).
+2. Build the gallery (package 4.6: contact sheet, loupe, lightbox). Add
+   `/photography` to `GALLERY_ROUTES` in `tests/no-react.spec.ts` if it uses
+   the `PhotoGallery` React island.
+3. At 6 photos (`MIN_PHOTOS` in `src/data/photography-gate.ts`) the nav link,
+   the sitemap entry, the `/llms.txt` line and indexing all switch on by
+   themselves on the next build; `tests/photography-gate.spec.ts` follows.
+4. Swap the gate page's photo: today it is the black-and-white portrait from
+   About (`src/assets/about/portrait-bw.jpg`), captioned as a portrait of
+   Nathan, because no photo in the repo is a confirmed frame of his client work.
+   Nathan can pick one of his own frames for it now, before the gallery is ready.
+
 Package 1.3 only changed the pronouns in those studies ("we" to "I"); the claims
 themselves are untouched. A capacity line ("I take a small number of projects
 each quarter") was removed site-wide because nothing sources it; put it back

@@ -24,6 +24,8 @@ The header, the mobile menu and the footer read one list. `getNav()` returns Wor
 
 Two links are gated at build time so a link never points at an empty page: **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. To rename, reorder or add a page, edit `BASE` in `nav.ts`; the header, the mobile menu and the footer follow. The footer's Work column is not in `nav.ts`: it lists every case study straight from the collection, grouped by sector.
 
+**The /photography gate (overhaul 2.8).** One rule, `photographyOpen(count)` in `src/data/photography-gate.ts` (`MIN_PHOTOS` lives there too; `nav.ts` re-exports it), decides four things together: the nav link (`nav.ts`), the page's robots `noindex` (BaseLayout's `noindex` prop in `src/pages/photography.astro`), the sitemap filter in `astro.config.mjs` (which counts the JSON files in `src/content/photos/` itself, because the content layer does not exist yet when the config runs), and the Photography line in `/llms.txt`. While it is closed the page still builds at `/photography/`: one real photo, the line "I photograph events, portraits and places across Cincinnati. The gallery is being assembled; ask for samples.", and a pill to `/contact/?service=photography`. Never put placeholder images on it. `tests/photography-gate.spec.ts` checks all of this against the real photo count. Ungating is in `docs/PENDING.md`.
+
 ## Content collections
 
 Three collections live in `src/content/` with schemas declared in `src/content.config.ts`.
@@ -60,7 +62,7 @@ Never hard-code the number of studies anywhere; compute it from the collection. 
 
 **`journal`**: short-form essays and process notes as MDX files in `src/content/journal/`. Each page at `/journal/{slug}/` is auto-generated. Required frontmatter: `title`, `summary` (max 200 chars), `published` (date). Optional: `updated` (date), `cover` (image path), `tags` (string array), `draft` (boolean; drafts render in dev but are filtered out of production builds). The /journal index renders newest-first; drafts are skipped in production. Lighter-weight than case studies: no service badges, no sidebar TOC, but still gets ReadingProgress + reading-time stamps.
 
-**`photos`**: JSON entries in `src/content/photos/`. Required fields: `title`, `image` (path), `category` (one of `events`, `portraits`, `environments`), `year`. Optional: `caption`, `location`, `featured`. Photography page wiring to read from this collection is planned. The `src/content/photos/` directory does not exist in git yet; create it with the first entry.
+**`photos`**: JSON entries in `src/content/photos/`. Required fields: `title`, `image` (path), `category` (one of `events`, `portraits`, `environments`), `year`. Optional: `caption`, `location`, `featured`. The directory holds only a `.gitkeep` today, so the collection is empty and /photography is gated (above). Each entry's image goes in `src/assets/photography/` (also empty: the gradient placeholder files were deleted in overhaul 2.8). The gallery that reads this collection comes back in package 4.6.
 
 ### Voice
 
@@ -77,7 +79,7 @@ Static routes generated at build time:
 | `/services/`       | `src/pages/services.astro`                                                                                   |
 | `/work/`           | `src/pages/work/index.astro` (sector tabs, `?sector=`)                                                       |
 | `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                               |
-| `/photography/`    | `src/pages/photography.astro`                                                                                |
+| `/photography/`    | `src/pages/photography.astro` (gated: noindex, not in the sitemap or menus until 6 real photos)              |
 | `/journal/`        | `src/pages/journal/index.astro`                                                                              |
 | `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                                 |
 | `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                                |
