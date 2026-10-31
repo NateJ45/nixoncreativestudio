@@ -1,0 +1,94 @@
+---
+// Safe to edit.
+/* ============================================================================
+   Specimen: a client's colours and typeface (overhaul package 2.4a)
+   ============================================================================
+   The strip under a case study's stage: the client's own swatches, each with
+   its hex value in mono, then "Set in {typeface}". Nathan's decision 6
+   (2026-10-30): show each client's swatches and typeface name on their study.
+
+   Every value comes from the study's `palette` frontmatter (copied from the
+   client's shipped tokens, never invented). The template renders this inside
+   the title card on the client's paper (light) or this site's ink (dark); the
+   text is always this site's own foreground (client colours never carry
+   text), checked on every client paper by src/lib/case-palettes.test.ts.
+
+   Swatch chips are decorative: the hex beside each one carries the
+   information, so the chip itself is aria-hidden. Each chip has a hairline
+   edge, because a swatch the same colour as the band would otherwise vanish.
+
+   Props:
+     swatches   hex values, in the client's display order
+     typeface   e.g. 'Fraunces / Source Sans 3' (heading face first)
+   ============================================================================ */
+
+interface Props {
+  swatches: string[];
+  typeface: string;
+}
+
+const { swatches, typeface } = Astro.props;
+---
+
+<div class="specimen">
+  <ul class="specimen-swatches" aria-label="Client colours">
+    {swatches.map((hex) => (
+      <li class="specimen-swatch">
+        <span class="specimen-chip" style={`background-color: ${hex};`} aria-hidden="true" />
+        <span class="specimen-hex">{hex.toUpperCase()}</span>
+      </li>
+    ))}
+  </ul>
+  <p class="specimen-type">Set in {typeface}</p>
+</div>
+
+<style>
+  .specimen {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+  }
+
+  .specimen-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .specimen-swatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .specimen-chip {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: none;
+    border-radius: 999px;
+    /* The edge: the band's text colour at low strength, so a swatch that
+       matches the band still reads as a disc. */
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent);
+  }
+
+  .specimen-type {
+    margin: 0;
+  }
+
+  @media (forced-colors: active) {
+    .specimen-chip {
+      forced-color-adjust: none;
+      border: 1px solid CanvasText;
+    }
+  }
+</style>
