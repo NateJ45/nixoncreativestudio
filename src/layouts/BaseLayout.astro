@@ -375,6 +375,17 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <script>
       import '../scripts/motion';
     </script>
+    <!--
+      GA4 events (overhaul 4.1). One delegated click listener for [data-cta]
+      and mailto: links, plus a once-per-page pricing_view. Calls window.gtag
+      only when the PORTABLE GoogleAnalytics tag defined it, so dev, CI and
+      previews send nothing. Event list and the no-personal-data rule: the
+      header of src/lib/track.ts. /privacy names every event.
+    -->
+    <script>
+      import { initTracking } from '../lib/track';
+      document.addEventListener('astro:page-load', initTracking);
+    </script>
     <!-- A quiet hello in the console for anyone who opens dev tools. Honest:
          the real stack, with pointers to the colophon and contact. -->
     <script is:inline>
