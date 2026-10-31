@@ -110,7 +110,7 @@ const caseStudies = defineCollection({
       stack: z.array(z.string()).optional(),
 
       // Optional URL to the live, shipped site. When present, the case study
-      // card and detail page render a prominent "Visit the live site" link.
+      // card and detail page link to it (the "Visit {domain}" button on the study).
       // For a web design portfolio this is the single strongest trust signal:
       // it lets a prospect click straight through to real, working proof.
       // Leave it off for work that is no longer live or not yours to link.
