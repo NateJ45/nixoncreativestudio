@@ -27,6 +27,7 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 | Live scores | `node scripts/measure-live.mjs` | `live-scores.yml` (monthly, by hand) | Not a gate. Re-measures the five Astro + Sanity + Cloudflare client sites with Lighthouse (mobile, median of 3) and opens a PR with `src/data/live-scores.json`; `src/lib/live-scores.test.ts` proves nothing shows without an entry or after 120 days |
 | Parity      | `npm run parity compare`        | **no** (by design)                   | Rendered-HTML drift against a committed baseline                                                                                                                                                                                                       |
 | Uptime      | -                               | `uptime.yml`, hourly                 | The live site's key routes still return 200                                                                                                                                                                                                            |
+| Visual      | `gh workflow run visual.yml`    | **no** (manual `visual.yml`)         | 48 Linux full-page baselines: every route, 1440 and 390, light and dark, motion frozen                                                                                                                                                                 |
 
 The `test` job has `timeout-minutes: 30`, and its browser install runs each attempt under `timeout 360`
 inside a 15-minute step (2026-10-26, starter PORTS card 70): a throttled Ubuntu mirror once held that install
@@ -90,6 +91,16 @@ document, but it runs the same theme bootstrap and has its own dark tokens, so t
 First run (2026-09-06) found one real bug: `/about` was 342px wide at 320px
 because the Terminal's nowrap window title set the min-content of its grid
 item. Fixed with `min-w-0` on the item (the Terminal itself was deleted in overhaul 2.6).
+
+### Visual baselines (`playwright.visual.config.ts`, `tests/visual.spec.ts`, `.github/workflows/visual.yml`)
+
+Overhaul 4.3. Full-page screenshots of every route in `tests/routes.ts` at 1440 and 390, light and dark (12 x 2 x 2 = 48), compared with Linux PNGs committed in `tests/visual.spec.ts-snapshots/`. **Not in `npm test`, not in `ci.yml`, not a required check**: `playwright.config.ts` ignores the spec, and the workflow is `workflow_dispatch` only, so it can never block a PR.
+
+- Frozen for repeatability: reduced motion, `localStorage["ncs-motion"]="paused"` (so `html[data-motion-paused]`), `settle()`, Playwright `animations: 'disabled'`. Clips and the hero reel therefore show posters. Lazy images are scrolled in first.
+- Masked: `[data-contact-clock]`, `[data-live-colophon]`, `.doc-updated`, `.now-stamp` and any `<time>`. New dynamic text (a date, a counter) needs a selector in `MASKED` in the spec.
+- Linux only, because Windows and macOS draw the same fonts differently (see the vault gotcha on metric-fallback fonts needing Linux twins). Snapshot names carry the platform; local runs write `*-win32.png`, which `.gitignore` keeps out. Never commit baselines made on a PC.
+- To compare: Actions tab, "Visual baselines", Run workflow (or `gh workflow run visual.yml`). A failure uploads diffs in the `visual-report` artifact.
+- To regenerate after an intended visual change: `gh workflow run visual.yml --ref <branch> -f update=true`. It pushes `visual-baselines/<run id>` and opens a PR into that branch. Review the PNG diff, then **push an empty commit to that branch** (`git commit --allow-empty -m "ci: run checks"`), because a push made with the workflow token starts no CI. Merge when `build`, `test` and `lighthouse` are green.
 
 ### Copy lint (`npm run test:copy`, `tests/unit/copy-rules.test.mjs`)
 

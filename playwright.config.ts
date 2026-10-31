@@ -19,7 +19,9 @@ const baseURL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: './tests',
   // tests/unit holds node --test suites (npm run test:copy), not Playwright specs.
-  testIgnore: '**/unit/**',
+  // Visual baselines (overhaul 4.3) are Linux-only: visual.yml runs them through
+  // playwright.visual.config.ts, never `npm test`.
+  testIgnore: ['**/unit/**', '**/visual.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
