@@ -262,12 +262,6 @@
     background-color: color-mix(in oklab, var(--color-accent) 68%, transparent);
   }
 
-  /* Numbers that animate or change should not jiggle as digit widths vary. */
-  [data-countup] {
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum';
-  }
-
   /* Copy-link controls that enhance.ts appends to long-form headings
      (case studies, journal). Hidden until the heading is hovered or the
      control is focused; faintly visible on touch (no hover). Rules are scoped
@@ -633,13 +627,11 @@
    outlines survive (in a system colour), so each of those gets one here.
    tests/forced-colors.spec.ts checks one route. */
 @media (forced-colors: active) {
-  .frame,
-  .surface-card {
+  .frame {
     outline: 1px solid CanvasText;
     outline-offset: -1px;
   }
   .band-ink,
-  .band-themed,
   .hairline {
     border-top: 1px solid CanvasText;
   }
@@ -850,44 +842,6 @@ main {
    text (background-clip:text was removed site-wide as an AI-portfolio
    tell). The amber and blue accent spans that used to sit in the /about,
    /contact and /photography H1s are now <b>. */
-
-/* ---- Theme-aware band -----------------------------------------------------
-   A flat closing/process band: bg-soft in light mode, navy in dark mode. No
-   glow and no animation since the 2026-10 overhaul (the drifting aurora
-   ::before was retired). Use theme-aware text tokens on top (text-heading,
-   text-text-muted, text-link), not text-primary-foreground. Used by CtaBanner,
-   ProcessBand, the Footer and two inset cards (journal empty state,
-   photography). position + isolation + overflow stay so existing hosts keep
-   their stacking and clipping. */
-.band-themed {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background-color: var(--color-bg-soft);
-}
-.dark .band-themed {
-  background-color: var(--color-primary);
-}
-
-/* ---- Elevated card surface -------------------------------------------------
-   Add .surface-card to a card so it reads as lifted in BOTH themes: a tinted
-   card surface, a soft layered shadow, a 1px top highlight, and a border. This
-   is the fix for "light mode cards dissolve into the page": light mode has no
-   color-step for elevation, so the shadow + highlight do the work the dark-mode
-   navy-on-near-black step does for free. Due for review in package 1.8 and
-   Phase 2. */
-.surface-card {
-  background-color: var(--card);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-card), var(--card-highlight);
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.surface-card:hover,
-.surface-card:focus-within {
-  box-shadow: var(--shadow-card-hover), var(--card-highlight);
-}
 
 /* Animated underline link. Grows from the left on hover/focus. */
 .link-underline {

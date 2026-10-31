@@ -107,9 +107,8 @@ Rules: NCS blue appears only on actions and focus (the CTA pill, links, focus ri
 - **`.band-ink`**: the solid navy block every page ends on (the Footer, with its closer, since package 2.1) and any other ink section. It re-scopes the text roles for its children in both themes: headings `#fff`, body `#E5E7EB`, links and focus `#40AAED`, meta `#A7B0BE`, and the button to navy on sky. It re-declares the `--color-*` aliases too, so scoped CSS that reads `var(--color-heading)` follows. Never put `text-primary-foreground` or a hex on top of it; the normal tokens just work.
 - **`.frame`**: the one treatment for a real artifact (client site, photo, the form): `--radius-frame`, a 1px `--frame-ring` ring and `--shadow-frame`. `BrowserFrame.astro` (1.8) builds on it.
 - **`.hairline`**: a 1px `--line` top rule at a change of surface.
-- **`.band-themed`** (older): a flat band, `bg-bg-soft` in light, navy in dark. Still used by two inset cards until Phase 2 replaces them (CtaBanner was deleted and the Footer moved to `.band-ink` in package 2.1; ProcessBand moved to a `Section` in 2.2).
-- **`.surface-card`** (older): the elevated card. Retired in Phase 2 ("only real artifacts get a frame").
-- **Forced colors**: `@media (forced-colors: active)` gives `.frame`, `.surface-card`, `.band-ink`, `.band-themed` and `.hairline` a real border or outline, because forced-colors mode drops shadows and backgrounds. A new surface that relies on a shadow or background for its edge joins that list. `tests/forced-colors.spec.ts` checks one route.
+- **Retired:** `.band-themed` and `.surface-card` were deleted from `globals.css` in package 4.9 (nothing rendered them after Phase 2). Do not bring them back: real artifacts get `.frame`, everything else sits on a `Section` surface.
+- **Forced colors**: `@media (forced-colors: active)` gives `.frame`, `.band-ink` and `.hairline` a real border or outline, because forced-colors mode drops shadows and backgrounds. A new surface that relies on a shadow or background for its edge joins that list. `tests/forced-colors.spec.ts` checks one route.
 
 ### shadcn token mapping (foundation, do not change casually)
 
@@ -160,7 +159,7 @@ The Pause motion state is persisted in `localStorage["ncs-motion"]` (`"paused"` 
 
 Also:
 
-- No count-ups: numbers and prices are static text (the `data-countup` handler was removed in package 2.2; the leftover `[data-countup]` tabular-nums rule in frozen `globals.css` is dead and can go when globals next opens).
+- No count-ups: numbers and prices are static text (the `data-countup` handler was removed in package 2.2 and its leftover CSS rule in package 4.9).
 - `.link-underline` for the grow-from-the-left underline on hover and focus.
 - `src/scripts/enhance.ts` (every `astro:page-load`) powers the header's `data-scrolled` state and the `[data-prose]` heading anchors. Page scripts register on `astro:page-load` with a dataset re-bind guard so they survive View Transitions.
 - The global reduced-motion block zeroes transitions (duration and delay `0s`, starter card 61) and shortens animations to 0.01ms.

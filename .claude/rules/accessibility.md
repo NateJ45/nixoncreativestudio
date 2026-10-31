@@ -52,7 +52,7 @@ Every pair added since overhaul 1.5 is asserted in `src/lib/ncs-tokens.test.ts` 
 
 **Heading emphasis is weight, not colour.** A heavy phrase in a heading is a `<b>` (800 against a 300 lead). Colour alone never marks emphasis, so a reader who cannot see the blue loses nothing, and headings stay in the heading colour.
 
-**Forced colors.** Windows High Contrast drops shadows and background colours. `globals.css` gives `.frame`, `.surface-card`, `.band-ink`, `.band-themed` and `.hairline` a real border or outline under `@media (forced-colors: active)`; `tests/forced-colors.spec.ts` checks one route. A new surface whose edge is only a shadow or a background joins that list.
+**Forced colors.** Windows High Contrast drops shadows and background colours. `globals.css` gives `.frame`, `.band-ink` and `.hairline` a real border or outline under `@media (forced-colors: active)`; `tests/forced-colors.spec.ts` checks one route. A new surface whose edge is only a shadow or a background joins that list.
 
 New tokens or hex literals must clear WCAG AA against every surface they appear on (4.5:1 body text, 3:1 large text and UI components). Run the math in both modes before introducing one.
 
