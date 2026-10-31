@@ -15,7 +15,7 @@ export const routes = [
   '/about',
   '/services',
   '/work',
-  '/work/second-presbyterian-chicago',
+  '/work/stone-steps-50k',
   '/journal',
   '/photography',
   '/contact',

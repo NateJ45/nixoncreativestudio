@@ -68,7 +68,7 @@ jobs:
           #   /privacy/          a plain static page with no collection behind it
           #   /rss.xml           an endpoint, not a page: proves SSR routes serve
           #   /sitemap-index.xml the @astrojs/sitemap integration output
-          for path in "/" "/work/" "/work/second-presbyterian-chicago/" "/journal/" "/privacy/" "/rss.xml" "/sitemap-index.xml"; do
+          for path in "/" "/work/" "/work/stone-steps-50k/" "/journal/" "/privacy/" "/rss.xml" "/sitemap-index.xml"; do
             code=$(curl -sSL -o /dev/null -w "%{http_code}" --max-time 25 "${base}${path}")
             echo "${code}  ${base}${path}"
             if [ "$code" != "200" ]; then fail=1; fi

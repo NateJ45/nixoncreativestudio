@@ -155,7 +155,7 @@ comfort target. Exit code 1 when anything is under 44px or a tap is stolen.
 ```sh
 npm run build && npm run serve:dist   # in another terminal
 node scripts/measure-tap-targets.mjs http://127.0.0.1:4321 \
-  --paths /,/about/,/services/,/work/,/work/second-presbyterian-chicago/,/journal/,/photography/,/contact/,/colophon/,/privacy/,/accessibility/,/coming-soon/
+  --paths /,/about/,/services/,/work/,/work/stone-steps-50k/,/journal/,/photography/,/contact/,/colophon/,/privacy/,/accessibility/,/coming-soon/
 ```
 
 Use `127.0.0.1`, not `localhost` (http-server may not answer on IPv6), and on
