@@ -14,18 +14,19 @@
 
    Layout: a Section band (rail "What you edit" plus the editor's name, e.g.
    "Sanity Studio", when the study sets `cmsName`), one short heading line,
-   then the screenshot in a BrowserFrame showing the live site's host (every
-   studio and wp-admin here sits on the client's own domain). Lazy: the band
+   then the screenshot in a BrowserFrame whose bar shows the editor's address
+   (cmsFrame(): cmsUrl, else the live site plus /studio or /wp-admin). Lazy: the band
    is far below the first viewport. The capture is 1440x900, so the 16:10 box
    matches it and nothing is cropped.
 
    Usage (in the study template):
-     <WhatYouEdit cms={cmsSection(entry.data)} url={entry.data.liveUrl} />
+     <WhatYouEdit cms={cmsSection(entry.data)} frame={cmsFrame(entry.data)} />
 
    Props:
      cms   { src, alt, name? } or null (null renders nothing)
-     url   the live site, for the frame's host bar; without it the shot sits
-           in the plain .frame
+     frame { url, label } from cmsFrame(): the editor's address, shown in the
+           bar as e.g. "stonesteps50k.com/studio"; without it the shot sits in
+           the plain .frame
      id    the heading id (default "what-you-edit-heading")
    ============================================================================ */
 
@@ -36,11 +37,11 @@ import Media from './Media.astro';
 
 interface Props {
   cms: { src: ImageMetadata; alt: string; name?: string } | null;
-  url?: string;
+  frame?: { url: string; label: string };
   id?: string;
 }
 
-const { cms, url, id = 'what-you-edit-heading' } = Astro.props;
+const { cms, frame, id = 'what-you-edit-heading' } = Astro.props;
 
 const media = {
   widths: [640, 960, 1440],
@@ -55,8 +56,8 @@ const media = {
       <h2 id={id} class="cms-edit-heading">
         The site's own editor, <b>as the staff see it.</b>
       </h2>
-      {url ? (
-        <BrowserFrame url={url}>
+      {frame ? (
+        <BrowserFrame url={frame.url} label={frame.label}>
           <Media
             src={cms.src}
             alt={cms.alt}

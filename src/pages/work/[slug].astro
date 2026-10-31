@@ -55,6 +55,7 @@ import { buttonVariants } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 import {
+  cmsFrame,
   cmsSection,
   cmsShotProblem,
   hostOf,
@@ -354,7 +355,7 @@ const nextShot = next ? homeShot(next.id) : undefined;
     {/* 4b. "What you edit" (package 3.6): the site's own editor (Sanity Studio
         or wp-admin) with a real page open, after the body and its "What I
         built" chapter. Renders nothing for a study without a cmsShot. */}
-    <WhatYouEdit cms={cmsSection(entry.data)} url={liveUrl} />
+    <WhatYouEdit cms={cmsSection(entry.data)} frame={cmsFrame(entry.data)} />
 
     {/* 5. Up next, in the next client's palette. */}
     {next && (

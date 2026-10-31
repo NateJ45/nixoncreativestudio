@@ -242,6 +242,9 @@ const caseStudies = defineCollection({
       //               e.g. 'The Home page open in Sanity Studio'
       //   cmsName     the editor's name for the band's rail, e.g.
       //               'Sanity Studio' or 'WordPress'
+      //   cmsUrl      optional: the editor's address for the frame's bar. Without
+      //               it the frame shows liveUrl plus /studio (Sanity Studio) or
+      //               /wp-admin (WordPress), from cmsFrame() in src/lib/study.ts
       // The pairing rule is cmsShotProblem() in src/lib/study.ts (tested):
       // /work/[slug].astro throws on it, so a cmsShot without its alt text
       // fails the build. (Not a superRefine here, which would re-indent
@@ -249,6 +252,7 @@ const caseStudies = defineCollection({
       cmsShot: image().optional(),
       cmsShotAlt: z.string().optional(),
       cmsName: z.string().optional(),
+      cmsUrl: z.string().url().optional(),
 
       // Short facts for the study's fact row. Every key is optional; when a
       // key is missing, the page falls back to the matching top-level field

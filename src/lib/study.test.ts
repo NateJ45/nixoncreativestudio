@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  cmsFrame,
   cmsSection,
   cmsShotProblem,
   darkMark,
@@ -112,4 +113,27 @@ test('cmsShotProblem requires alt text whenever a cmsShot is set', () => {
   assert.equal(cmsShotProblem({ cmsShot: shot, cmsShotAlt: 'The Home page form' }), undefined);
   assert.match(cmsShotProblem({ cmsShot: shot }) ?? '', /cmsShotAlt is required/);
   assert.match(cmsShotProblem({ cmsShot: shot, cmsShotAlt: '   ' }) ?? '', /cmsShotAlt/);
+});
+
+test('cmsFrame shows the editor address, not the public site', () => {
+  assert.deepEqual(cmsFrame({ liveUrl: 'https://stonesteps50k.com', cmsName: 'Sanity Studio' }), {
+    url: 'https://stonesteps50k.com/studio/',
+    label: 'stonesteps50k.com/studio',
+  });
+  assert.deepEqual(cmsFrame({ liveUrl: 'https://theologymatters.com', cmsName: 'WordPress' }), {
+    url: 'https://theologymatters.com/wp-admin/',
+    label: 'theologymatters.com/wp-admin',
+  });
+  assert.deepEqual(
+    cmsFrame({
+      liveUrl: 'https://www.fbcmuncie.org',
+      cmsUrl: 'https://www.fbcmuncie.org/studio/#/x',
+    }),
+    { url: 'https://www.fbcmuncie.org/studio/', label: 'fbcmuncie.org/studio' },
+  );
+  assert.deepEqual(cmsFrame({ liveUrl: 'https://example.org' }), {
+    url: 'https://example.org/',
+    label: 'example.org',
+  });
+  assert.equal(cmsFrame({}), undefined);
 });

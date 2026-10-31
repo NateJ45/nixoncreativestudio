@@ -11,8 +11,9 @@
                    from `facts` where set, else the study's own fields
      paletteStyle  the client's palette as scoped --cs-* custom properties
      darkMark      the client colour used for marks on this site's dark ink
-     cmsShotProblem / cmsSection  the "What you edit" CMS screenshot (3.6):
-                   the schema check and the band's props, or null without one
+     cmsShotProblem / cmsSection / cmsFrame  the "What you edit" CMS
+                   screenshot (3.6): the alt check, the band's props, the
+                   editor address its frame shows
 
    Nothing here invents a value: every fact and colour comes from the study's
    frontmatter, and a missing field simply drops out.
@@ -161,4 +162,34 @@ export function cmsSection<Img>(
 ): { src: Img; alt: string; name?: string } | null {
   if (!d.cmsShot || !d.cmsShotAlt?.trim()) return null;
   return { src: d.cmsShot, alt: d.cmsShotAlt.trim(), name: d.cmsName?.trim() || undefined };
+}
+
+/** Where each editor lives on a client's own site, by `cmsName`. */
+const CMS_PATHS: Record<string, string> = {
+  'sanity studio': '/studio/',
+  wordpress: '/wp-admin/',
+};
+
+/**
+ * The address the "What you edit" frame shows: the editor, not the public
+ * site. `cmsUrl` wins when the study sets it; otherwise the live site plus the
+ * editor's usual path for `cmsName` (Sanity Studio at /studio, WordPress at
+ * /wp-admin, the same places scripts/capture-cms.mjs opens). Returns the full
+ * url (printed on paper) and the bar label ("stonesteps50k.com/studio"), or
+ * undefined when there is no address to show.
+ */
+export function cmsFrame(d: {
+  liveUrl?: string;
+  cmsName?: string;
+  cmsUrl?: string;
+}): { url: string; label: string } | undefined {
+  let url = d.cmsUrl;
+  if (!url && d.liveUrl) {
+    const path = CMS_PATHS[d.cmsName?.trim().toLowerCase() ?? ''];
+    url = path ? new URL(path, d.liveUrl).href : d.liveUrl;
+  }
+  if (!url) return undefined;
+  const u = new URL(url);
+  const label = `${u.hostname.replace(/^www\./, '')}${u.pathname.replace(/\/+$/, '')}`;
+  return { url: `${u.origin}${u.pathname}`, label };
 }
