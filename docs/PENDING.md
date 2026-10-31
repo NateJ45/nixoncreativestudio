@@ -84,12 +84,17 @@ then on.
 
 These content fixes are waiting on Nathan's sign-off and will ship as their own PR:
 
-- **First Baptist Muncie:** the study still carries Wix-era copy. It needs the
-  real rebuild facts before it is rewritten. Since overhaul 1.6 its cover,
-  full-page and mobile captures show the new site (re-shot 2026-10-30), so
-  the Wix-era copy and the two Wix-era feature shots
-  (`shots/first-baptist-muncie-feature-*.png`) now sit next to captures of a
-  different site until that rewrite lands.
+- **First Baptist Muncie: done (overhaul 2.4d, 2026-10-31).** Nathan signed
+  off the FBCM part ("FBCM is astro now"). The study now describes the Astro +
+  Sanity + Cloudflare Workers rebuild, live on www.fbcmuncie.org since
+  2026-10-19, from the fbcm repo's docs and the live site. The Wix-era feature
+  shots are gone; the new ones are crops of the live /visit, /history and
+  /architecture pages, and the Wix home page (captured 2026-06-21) is the
+  `beforeShot`. Two things for Nathan to read: the line "I had built the
+  church's earlier website on Wix" (taken from the old study and the two
+  testimonials, which are now labelled as written about the Wix site), and
+  the designer note, kept word for word from the Wix-era study (the children's
+  and youth newsletters are still separate pages on the live site).
 - **First Presbyterian Orangeburg:** its `hook` ("Book the building through one
   form, not an inbox") is a draft written from the designer note (1.6). Edit or
   approve it.
