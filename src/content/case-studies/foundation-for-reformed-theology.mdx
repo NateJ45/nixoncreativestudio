@@ -4,9 +4,12 @@
 # build time. Rewrite the prose at will; structural fields (title, client,
 # sector, services, year, published) are what feeds listings and search.
 #
-# Cover image: replace src/assets/case-studies/foundation-for-reformed-theology.png
-# with a real photograph when one is available. The current file is a
-# placeholder gradient.
+# Rewritten in overhaul 2.4e (2026-10-31) around the redesigned site that
+# went live in October 2026. Every claim comes from the live site
+# (foundationrt.org, read 2026-10-31) or the client repo's docs
+# (docs/changelog.md, docs/architecture.md). Staff-side features are
+# described in words only: admin screenshots are package 3.6. The designer
+# note dropped "fleurons", which the redesign no longer uses.
 title: Foundation for Reformed Theology
 client: Foundation for Reformed Theology
 sector: nonprofit
@@ -19,19 +22,21 @@ tags:
   - Theological Resource
   - WordPress
   - Editorial Design
+  - CMS
 stack:
   - WordPress
-  - Bricks Builder
+  - Custom theme
   - ACF
   - RankMath
-summary: A resource hub and organizational home for a Reformed theological nonprofit whose audience expects scholarly weight alongside readable, well-organized design.
-metaDescription: 'A resource library for the Foundation for Reformed Theology, built so the staff can keep it current themselves and the scholarship gets the weight it deserves.'
+  - Cloudflare
+summary: A Reformed theological library and seminar program, rebuilt library first. Readers search the full text of the collection, and the staff keep it current from an admin made for them.
+metaDescription: 'The Foundation for Reformed Theology, rebuilt library first: search that reads the full text, recordings with transcripts, and an admin the staff run alone.'
 cover: ../../assets/case-studies/foundation-for-reformed-theology.png
 year: 2026
 featured: false
 published: 2026-06-01
 liveUrl: https://foundationrt.org
-outcome: 'A scholarly resource library the staff can maintain themselves, with the editorial weight the work deserves.'
+outcome: 'A library ministers can search down to the full text, recordings with transcripts, and an admin the staff keep current without a developer.'
 # Real client words, copied verbatim from their email (vault note
 # projects/ncs-testimonials.md). Never edit or paraphrase a quote.
 testimonials:
@@ -39,38 +44,43 @@ testimonials:
     name: 'Tim Meredith'
     title: 'President, TechEagles (techeagles.com)'
     date: 2025-03-03
-designerNote: "The hardest part of this one was knowing when to hold back. Every choice had to clear a single test for me: does it actually read as scholarly, or does it just look like it's trying to? The drop caps and fleurons earned their place because they come from a tradition these readers already recognize as their own, so here they read as at home rather than as decoration."
-hook: 'A scholarly library the staff maintain themselves'
+designerNote: "The hardest part of this one was knowing when to hold back. Every choice had to clear a single test for me: does it actually read as scholarly, or does it just look like it's trying to? The drop caps earned their place because they come from a tradition these readers already recognize as their own, so here they read as at home rather than as decoration."
+hook: 'A library you can search down to the full text'
 order: 4
-# Palette source: Foundation For Reformed Theology Website DESIGN.md (--frt-* tokens, .frt-btn); light only, markDark is its Gold.
+# Palette source: the live v2 theme's :root and html[data-palette="warm"]
+# tokens on foundationrt.org (read 2026-10-31; the redesign replaced the
+# --frt-* tokens in DESIGN.md). paper is the warm --surface, accent the
+# --navy, markDark its --gold, swatches add --burgundy and --navy-deep.
 palette:
-  paper: '#F8F5F0'
-  ink: '#1C1A17'
-  accent: '#8B1A1A'
-  accentInk: '#F5F1E8'
-  markDark: '#C9A84C'
-  typeface: 'Fraunces / Source Serif 4'
+  paper: '#F7F3EC'
+  ink: '#161A22'
+  accent: '#1C2B4A'
+  accentInk: '#FFFFFF'
+  markDark: '#B8923A'
+  typeface: 'Source Serif 4 / Hanken Grotesk'
   swatches:
-    - '#F8F5F0'
-    - '#2C3E6B'
+    - '#F7F3EC'
+    - '#1C2B4A'
+    - '#B8923A'
     - '#8B1A1A'
-    - '#C9A84C'
-    - '#1E2A3A'
-# The Signature band's still (overhaul 2.4c): the feature the hook names.
+    - '#121C33'
+# The Signature band's still: the feature the hook names (library search,
+# captured 2026-10-31 from foundationrt.org/?s=lord%27s+supper).
 featureShot: ../../assets/case-studies/shots/foundation-for-reformed-theology-feature-library.png
-featureShotAlt: 'Collection cards in the foundationrt.org library, each with its entry count and latest additions'
+featureShotAlt: 'Search results for "lord''s supper" on foundationrt.org, with counts per collection, topic filters, highlighted matches and a Cite link on each result'
 mobileShot: ../../assets/case-studies/shots/foundation-for-reformed-theology-mobile.png
 beforeShot: ../../assets/case-studies/shots/foundation-for-reformed-theology-before.png
-# The rail's fact row (overhaul 2.4c), filled from the fields above.
+# The rail's fact row, filled from the fields above.
 facts:
   sector: Nonprofit
   year: '2026'
   role: Designer, Developer
   stack:
     - WordPress
-    - Bricks Builder
+    - Custom theme
     - ACF
     - RankMath
+    - Cloudflare
   host: foundationrt.org
 ---
 
@@ -83,60 +93,87 @@ import afterShot from '../../assets/case-studies/foundation-for-reformed-theolog
 import FeatureHighlight from '../../components/FeatureHighlight.astro';
 import Lightbox from '../../components/Lightbox.astro';
 import libraryShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-library.png';
+import recordingsShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-recordings.png';
 import seminarsShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-seminars.png';
 
 ## The brief
 
-The Foundation for Reformed Theology was established in memory of Dr. John H. Leith (1919-2002), Calvin scholar and Presbyterian minister, to carry forward his work of equipping clergy and serious students of Reformed theology. The organization runs annual ministerial study seminars and maintains a growing library of theological resources for ordained ministers, seminary students, and church elders.
+The Foundation for Reformed Theology was established in memory of Dr. John H. Leith (1919 to 2002), Calvin scholar and Presbyterian minister, to carry forward his work of equipping ministers and serious students of Reformed theology. It gathers small groups of pastors for week-long study seminars, year after year, and keeps a library of bibliographies, Calvin Studies papers, publications and Dr. Leith's own recorded lectures.
 
-Their existing site was not keeping pace with the depth and credibility of the work. The resource library had no clear path through it. Seminar information was scattered across pages without a coherent structure. Visually, the site did not read with the authority the organization carries in its field.
+I first rebuilt the site in spring 2026, then redesigned it from the ground up in October 2026 around the thing visitors come for: the library. The goals were the same both times. A minister should find the right paper or lecture in seconds, a prospective member should understand the seminars at a glance, and a staff with no technical help should be able to keep all of it current.
 
 ## Decisions
 
 <Decision
-  title="Knowing when to hold back"
-  easy="Pile on the trappings of scholarship so the site looks the part."
-  did="Hold every choice to one test: does it actually read as scholarly, or does it just look like it's trying to? The burgundy drop caps and fleurons stayed because they come from a tradition these readers already recognize as their own."
+  title="The library comes first"
+  easy="A brochure home page, with the library tucked away in a menu."
+  did="Put the library search at the top of the home page, with a Search in choice for each collection, real counts, suggestions as you type, and a search that reads the full text of the papers, not just their titles."
 />
 
 <Decision
-  title="Three areas, each with a clear path"
-  easy="Keep the library and the seminar details spread across pages, the way they were."
-  did="Separate the work into three areas: the seminar program (what they run, who teaches, how to apply), the resource library (searchable by topic and format), and the organizational story (history, leadership, and Dr. Leith's legacy). Staff maintain all three from the WordPress admin."
+  title="Knowing when to hold back"
+  easy="Pile on the trappings of scholarship so the site looks the part."
+  did="Hold every choice to one test: does it actually read as scholarly, or does it just look like it's trying to? Navy, warm paper and a gold rule, Source Serif for reading, drop caps on the long texts, and nothing that only decorates."
 />
 
-For a content-heavy, staff-maintained site where editorial quality matters and developer time is limited long-term, WordPress was the right platform. Bricks Builder gave me design precision without locking the team into an interface that fights them during content updates. ACF handled structured data for the resource library, so the team can sort and filter materials by topic, date, and format.
+<Decision
+  title="An admin made for the people who use it"
+  easy="Hand the staff the stock WordPress screens, with every field showing at once."
+  did="Start every new resource with one question, What are you adding?, then show only that kind's fields, fill in the file size or running time from the upload, and check the entry before it publishes. Seminars get a guided form in five steps."
+/>
 
-The design borrows from academic publishing: burgundy drop caps to open major sections, fleurons as section dividers, and a duotone treatment for archival photography. The goal was a site the Foundation would be comfortable handing to a visiting scholar without apology.
+The redesign renders every page from a theme I wrote for it, with the library's records kept as structured fields so each resource knows its collection, author, topics, year and format. That structure is what lets the search filter by topic and person, the collections show live counts, and each paper describe itself to search engines as a scholarly article or a recording.
 
 ## What I built
 
 <FeatureHighlight
   src={libraryShot}
-  alt="The resource library on the Foundation for Reformed Theology site"
-  title="A library organized to be used"
-  body="Hundreds of resources sorted into clear collections, bibliographies, Calvin studies, Foundation publications, and recorded lectures, each with a real entry count and latest additions, so a minister finds the right material instead of hunting for it."
+  alt="Search results on the Foundation for Reformed Theology site"
+  title="Search that reads the papers"
+  body="The library search looks through the full text of the documents, handles phrases in quotation marks, and narrows by collection, topic and person. Each result shows where the words matched and has a Cite link ready to copy."
   side="left"
 />
 
 <FeatureHighlight
-  src={seminarsShot}
-  alt="The seminar program page on the Foundation for Reformed Theology site"
-  title="The seminar program, explained end to end"
-  body="What the study seminars are, who they are for, and how to apply, laid out in one place with a path straight to an inquiry, so a prospective member knows exactly what they are joining."
+  src={recordingsShot}
+  alt="A Dr. John H. Leith lecture page with its audio player and transcript"
+  title="Dr. Leith's lectures, to hear and to read"
+  body="Every recording plays on its own page with skip controls, speed, keyboard shortcuts and a download, and the full transcript sits underneath with a contents list, so a lecture from 1968 can be read, searched and quoted."
   side="right"
+/>
+
+<FeatureHighlight
+  src={seminarsShot}
+  alt="The Our Seminars page on the Foundation for Reformed Theology site"
+  title="The seminars, explained at a glance"
+  body="Who the seminars are for, how often they meet, what they read and which expenses are covered, laid out on one page with seminar photographs and a path straight to an inquiry."
+  side="left"
 />
 
 The full build, including the pieces above:
 
-- Seminar program pages with faculty listings, schedule details, and a multi-step application workflow
-- Resource library organized by topic, format, and date with ACF-powered metadata for filtering
-- Editorial design system: burgundy drop caps, fleurons, and duotone archival image treatment throughout
-- Organizational history section drawing on Dr. Leith's correspondence, publications, and public record
-- Staff and board directory
-- Donation and giving page connected to the Foundation's existing giving processor
-- Contact and inquiry form
-- RankMath configuration for theological search terms, calibrated to the audience rather than maximum crawl coverage
+**For readers**
+
+- A library-first redesign of every page: navy and warm paper, Source Serif 4 and Hanken Grotesk, framed seminar photographs, and a home page that opens on the search
+- Five collections (bibliographies, John Calvin Studies, Foundation publications, sermons and lectures, worship leadership), each with its own page, live counts and latest additions
+- Full-text search with suggestions, collection scope, topic and person filters, and a Cite link on each result
+- Authors and topics indexes from A to Z
+- Resource pages with the whole text on the page, a running head that shows the section you are reading, three text sizes and a copy link for each section
+- An audio archive of Dr. Leith's sermons and lectures with series and decade filters, a player on every recording and a full transcript underneath
+- Seminar pages, testimonials from participants with their full letters, and a path to an inquiry on every seminar page
+- The history of the Foundation and of Dr. Leith, and the officers and directors
+- A mailing list link on every page and a small giving card, so the two asks are always one tap away
+- Scholarly structured data on each resource and share images drawn for each one
+
+**For the staff**
+
+- A Home screen in the admin with task buttons, what needs a look, recent changes with an Undo link, and what readers searched for and did not find
+- Add a resource by answering What are you adding?, with only the fields that kind needs, an upload box that fills in the details, topic tick-boxes and a Before you publish list
+- A five-step guided form for seminars, with leader-name suggestions and the year and status filled in automatically
+- Undo and redo on every screen, a daily email of what changed, warnings for a duplicate file or title, and no way to delete anything permanently by accident
+- Contact form messages with a spam check, reply buttons and the pages a visitor read before writing
+- A Site Guide with step-by-step recipes and captioned tutorial videos for each job
+- The admin itself in the Foundation's navy and gold, with plain names and a menu grouped by task
 
 ## Before and after
 
@@ -158,10 +195,19 @@ The full build, including the pieces above:
 
 <ResultsBlock
   items={[
-    'Staff keep the whole site current themselves: new resources, seminar details, and staff changes all happen from the WordPress admin, no developer needed.',
-    'An organization with no in-house technical staff can run its own site independently, which was the real goal rather than a nice extra.',
-    'The scattered resources are now a real library, sorted into clear collections so a minister finds the right material instead of hunting for it.',
-    'The seminar program is explained start to finish in one place, so a prospective member knows exactly what they are joining and has a clear path to apply.',
+    {
+      figure: '195',
+      text: 'documents in the library whose full text the search reads, across 216 resources',
+      source: 'The search line on the foundationrt.org home page, read 31 October 2026',
+    },
+    {
+      figure: '37',
+      text: 'recordings of Dr. Leith, each with a player and a full transcript on its page',
+      source: 'foundationrt.org Sermons & Lectures, every recording page checked 31 October 2026',
+    },
+    'The staff add resources, seminars and testimonials themselves, with guided forms, undo, and a video for each job.',
+    'A minister can go from the home page to the right paper, lecture or bibliography in one search.',
+    'The seminar program reads clearly on one page, with a direct path to an inquiry.',
   ]}
 />
 
