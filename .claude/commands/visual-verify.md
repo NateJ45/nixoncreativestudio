@@ -74,7 +74,7 @@ Run this after any visual change before pushing. If a specific route is passed a
 - **Mobile nav:** at 375px, the desktop nav should be hidden and the mobile hamburger visible. Tap the hamburger and confirm the drawer opens cleanly.
 - **Theme toggle:** clicking it in the header cycles light, dark, system. Confirm the page repaints without flash.
 - **Photography page:** the justified grid should fill its container without overflow. The lightbox should open on photo click (click a photo, confirm the overlay appears).
-- **Work filter chips** on `/work`: toggling a sector chip should hide/show cards without a page reload.
+- **Work sector tabs** on `/work`: a tab hides and shows rows without a reload and rewrites `?sector=` in the URL; `/work/?sector=church` filters on load.
 
 ---
 
