@@ -30,22 +30,25 @@ import ChromeIcon from './ChromeIcon.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { buttonVariants } from './ui/button';
 import { site } from '../data/site';
+import type { NavLink } from '../data/nav';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  links: { label: string; href: string }[];
+  /** The primary nav from src/data/nav.ts (getNav), passed down by Header. */
+  links: NavLink[];
   /** The dialog's accessible name, shown as the wordmark in its top bar. */
   studioName: string;
 }
 
 const { links, studioName } = Astro.props;
 
-// Short descriptor under each big label, keyed by the exact href from Header.
+// Short descriptor under each big label, keyed by the exact href in src/data/nav.ts.
 const DESCRIPTIONS: Record<string, string> = {
   '/work/': 'Selected client projects',
   '/services/': 'What I build, and how',
   '/about/': 'The studio, and me',
   '/journal/': 'Notes on the work',
+  '/photography/': 'Events, portraits and places',
   '/contact/': 'Email, phone, or the form',
 };
 

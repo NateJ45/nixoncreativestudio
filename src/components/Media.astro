@@ -1,0 +1,161 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   Media: the one way a raster image goes on the page (overhaul package 1.8)
+   ============================================================================
+   A fixed aspect-ratio box with Astro's <Image /> filling it. Three promises:
+
+   1. The box has its size before the image arrives, so nothing shifts (CLS).
+      `ratio` sets it ("16 / 10", "4 / 3"); leave it off and the box takes the
+      image's own shape.
+   2. The image is lazy by default. Pass `lcp` for the one image that is the
+      page's Largest Contentful Paint (the case-study cover): it becomes
+      loading="eager" with fetchpriority="high". One per page, at most.
+   3. The image is never hidden while it loads. No opacity 0, no clip-path, no
+      fade-in script (CLAUDE.md never-break rule 3, overhaul ruling 3). It
+      paints the moment its bytes land, with or without JavaScript. The
+      optional blur `placeholder` is only a background UNDER the image, so it
+      shows through until the image covers it and can never hide it.
+
+   When `ratio` is set, the served file is cropped to it at build time
+   (fit: cover, at `position`), so a tall full-page capture is never shipped
+   whole into a short box. `position: 'top'` keeps the top of a site capture.
+
+   Usage:
+     import Media from './Media.astro';
+     import shot from '../assets/case-studies/stone-steps-50k.png';
+
+     <Media src={shot} alt="" ratio="16 / 10" widths={[480, 800, 1200]}
+            sizes="(min-width: 64rem) 50vw, calc(100vw - 2rem)" />
+
+   Props:
+     src          ImageMetadata (an imported asset or a collection image())
+     alt          required; "" when a heading beside it names the same thing
+     widths       srcset widths, smallest first
+     sizes        the real rendered width, so a phone picks a small candidate
+     ratio        CSS aspect-ratio for the box; omitted = the image's own
+     position     crop anchor when `ratio` is set: 'center' (default) | 'top'
+     lcp          eager + fetchpriority high, for the page's LCP image only
+     placeholder  base64 data URL painted (blurred) behind the image
+     class        extra classes on the box (radius, hover scale, sizing)
+   ============================================================================ */
+
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  widths: number[];
+  sizes: string;
+  ratio?: string;
+  position?: 'center' | 'top';
+  lcp?: boolean;
+  placeholder?: string;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  widths,
+  sizes,
+  ratio,
+  position = 'center',
+  lcp = false,
+  placeholder,
+  class: className = '',
+} = Astro.props;
+
+// "16 / 10" -> 1.6. Anything unparseable falls back to the image's own shape.
+const parseRatio = (value: string): number | null => {
+  const [w, h] = value.split('/').map((part) => parseFloat(part));
+  if (!w) return null;
+  const r = h ? w / h : w;
+  return Number.isFinite(r) && r > 0 ? r : null;
+};
+const ratioNum = ratio ? parseRatio(ratio) : null;
+
+// Build-time crop: only when the box's shape differs from the image's, so an
+// image already the right shape is never re-cropped. The crop width is the
+// largest srcset step (never wider than the source); Astro scales the other
+// widths to the same shape.
+const naturalRatio = src.width / src.height;
+const crop =
+  ratioNum && Math.abs(ratioNum - naturalRatio) > 0.01
+    ? (() => {
+        const width = Math.min(Math.max(...widths), src.width);
+        return {
+          width,
+          height: Math.round(width / ratioNum),
+          fit: 'cover' as const,
+          position,
+        };
+      })()
+    : {};
+
+const boxRatio = ratio && ratioNum ? ratio : `${src.width} / ${src.height}`;
+const style = [
+  `aspect-ratio: ${boxRatio}`,
+  placeholder ? `--media-placeholder: url("${placeholder}")` : '',
+]
+  .filter(Boolean)
+  .join('; ');
+---
+
+<div
+  class:list={['media', placeholder && 'has-placeholder', className]}
+  style={style}
+  data-lcp={lcp ? '' : undefined}
+>
+  <Image
+    src={src}
+    alt={alt}
+    widths={widths}
+    sizes={sizes}
+    {...crop}
+    loading={lcp ? 'eager' : 'lazy'}
+    fetchpriority={lcp ? 'high' : undefined}
+    decoding="async"
+    class="media-img"
+  />
+</div>
+
+<style>
+  /* The box. Paper shows until the image (or the blur) covers it. */
+  .media {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--paper);
+  }
+
+  /* Blur placeholder: a pseudo-element BEHIND the image (z-index 0 vs 1).
+     It is blurred and scaled up a touch so the blur's soft edge stays outside
+     the box. It never sits on top of the image. */
+  .media.has-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: var(--media-placeholder);
+    background-size: cover;
+    background-position: center;
+    filter: blur(20px);
+    transform: scale(1.1);
+  }
+
+  /* The image fills the box. :global so the rule never depends on how the
+     <Image /> component forwards this component's scope class; the scoped
+     .media parent keeps it local anyway. The served file is already cropped
+     to the box's shape, so object-fit only mops up rounding. */
+  .media :global(.media-img) {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+</style>

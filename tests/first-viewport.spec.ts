@@ -26,21 +26,10 @@ const CHECKED = 'h1, img, picture, video, canvas, iframe, .reel-stage, .reel-car
 const EXEMPT = '.ticker-item:not(.is-active)';
 
 // Known failures, one line each, with the package that fixes them. Remove the
-// entry when that package lands; the test then runs for real.
-//
-// CaseStudyCover.astro renders its <img> with `opacity-0` (not gated on .js)
-// and a script fades it in on load. So the /work cards and the case-study hero
-// (the LCP image) start invisible, and stay invisible with JavaScript off.
-// Found by this spec on 2026-10-30. The fix is to drop the fade and let the
-// image paint over its blur placeholder. CaseStudyCover is being reworked by
-// 1.2 (plaiceholder removal) and replaced by 1.8's Media.astro (`lcp` prop),
-// so the fix lands there rather than here.
-const KNOWN: Record<string, string> = {
-  '/work': 'CaseStudyCover fade-in, fixed by package 1.8 (Media.astro)',
-  '/work/stone-steps-50k': 'CaseStudyCover fade-in, fixed by package 1.8 (Media.astro)',
-  '/work/first-presbyterian-orangeburg':
-    'CaseStudyCover fade-in, fixed by package 1.8 (Media.astro)',
-};
+// entry when that package lands; the test then runs for real. Empty since
+// package 1.8 (2026-10-31) rebuilt CaseStudyCover on Media.astro, which never
+// starts an image hidden.
+const KNOWN: Record<string, string> = {};
 
 const widths = [
   { width: 1440, height: 900 },
@@ -111,5 +100,18 @@ for (const viewport of widths) {
         ).toEqual([]);
       });
     }
+  });
+}
+
+// The case-study cover is the page's Largest Contentful Paint, so it must not
+// wait in the lazy queue (overhaul package 1.8, Media.astro's `lcp` prop). One
+// eager, high-priority image per study page, and it is the cover.
+for (const route of routes.filter((r) => r.startsWith('/work/'))) {
+  test(`${route}: the cover (LCP image) loads eagerly with high priority`, async ({ page }) => {
+    await page.goto(route, { waitUntil: 'domcontentloaded' });
+    const lcp = page.locator('.media[data-lcp] img');
+    await expect(lcp).toHaveCount(1);
+    await expect(lcp).toHaveAttribute('loading', 'eager');
+    await expect(lcp).toHaveAttribute('fetchpriority', 'high');
   });
 }

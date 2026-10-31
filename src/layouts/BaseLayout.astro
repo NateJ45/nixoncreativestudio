@@ -110,6 +110,10 @@ interface Props {
       most one more. Keep the total at three or fewer
       (tests/page-weight.config.json, maxFontPreloads). */
   preloadFonts?: string[];
+  /** Keep this page out of search results (robots noindex). For pages that
+      exist for checking, not visiting, like /colophon/parts/. Pair it with
+      the sitemap filter in astro.config.mjs. */
+  noindex?: boolean;
 }
 const {
   title,
@@ -119,6 +123,7 @@ const {
   schemas = [],
   breadcrumbs = [],
   preloadFonts = [],
+  noindex = false,
 } = Astro.props;
 
 // Build a canonical URL for the current page so og:url and JSON-LD have
@@ -167,7 +172,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0A1628" />
 
-    {comingSoonEnabled && <meta name="robots" content="noindex, follow" />}
+    {(comingSoonEnabled || noindex) && <meta name="robots" content="noindex, follow" />}
 
     {/* The blocking gate script itself lives in ComingSoonGate.astro (a
         <script> cannot sit inside this expression: prettier-plugin-astro

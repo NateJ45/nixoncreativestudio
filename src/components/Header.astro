@@ -25,32 +25,21 @@
    ordered Process band) would be decorative scaffolding here.
    ============================================================================ */
 
-import { getCollection } from 'astro:content';
+import { getNav } from '../data/nav';
 import { site } from '../data/site';
 import MobileNav from './MobileNav.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { buttonVariants } from './ui/button';
 import { cn } from '@/lib/utils';
 
-// Hide the Journal nav link until the journal has something to show. Uses the
-// SAME visibility filter as the journal index (drafts hidden in production,
-// visible in dev), so the link appears exactly when the page has real content.
-// While the collection is empty the link is omitted from both the desktop nav
-// and the mobile drawer (they share this array).
-const journalCount = (
-  await getCollection('journal', ({ data }) => (import.meta.env.PROD ? data.draft !== true : true))
-).length;
-
-// The nav model lives in the script so it's easy to reorder, rename, or extend
-// without hunting through markup. MobileNav consumes the same array. Contact is
-// NOT in this list: it is promoted to the "Start a project" CTA button (desktop
-// header below, and the drawer's own CTA on mobile), both pointing at /contact.
-const navLinks = [
-  { label: 'Work', href: '/work/' },
-  { label: 'Services', href: '/services/' },
-  { label: 'About', href: '/about/' },
-  ...(journalCount > 0 ? [{ label: 'Journal', href: '/journal/' }] : []),
-];
+// The nav model lives in src/data/nav.ts so the header, the mobile menu and
+// the footer share one list. Journal and Photography are gated there at build
+// time (Journal once an entry is published, Photography once the gallery has
+// real photos), so a link never points at an empty page. MobileNav consumes
+// the same array. Contact is NOT in this list: it is promoted to the "Start a
+// project" CTA button (desktop header below, and the drawer's own CTA on
+// mobile), both pointing at /contact.
+const navLinks = await getNav();
 
 // Active-route detection so the current section is marked in the nav. Treats a
 // link as active when the path matches it or sits beneath it (e.g. /work/foo).

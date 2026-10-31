@@ -255,9 +255,9 @@ const breadcrumbs = [
           )}
         </div>
 
-        <!-- Hero image. CaseStudyCover wraps Astro <Image /> with a
-             plaiceholder blur preview painted as the wrapper's bg, then
-             fades the full image in once it loads.
+        <!-- Hero image. CaseStudyCover (on Media.astro) paints the image over
+             its blur placeholder, eagerly and with fetchpriority high:
+             this is the page's LCP image, so it never waits on a fade.
 
              alt="" because the case study's h1 sits just above the image
              inside the same <header>, so a descriptive alt would make
@@ -272,6 +272,7 @@ const breadcrumbs = [
             alt=""
             widths={[640, 960, 1440]}
             sizes="(min-width: 56rem) 50vw, calc(100vw - 3rem)"
+            lcp
           />
         </div>
       </div>

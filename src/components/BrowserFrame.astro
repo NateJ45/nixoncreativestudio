@@ -1,0 +1,152 @@
+---
+// Foundation, edit with care.
+/* ============================================================================
+   BrowserFrame: the one frame for a real client site (overhaul package 1.8)
+   ============================================================================
+   Only real artifacts get a frame (overhaul Part B, "One frame for client
+   work"). This is that frame for a client website: a 28px paper bar with the
+   site's real host in mono, and the capture underneath, inside the shared
+   .frame treatment from globals.css (--radius-frame, a 1px --frame-ring ring
+   and --shadow-frame).
+
+   The bar keeps three dots because they tie every frame to the hero reel's
+   cards, but they are drawn in --line-strong and are never red, amber or
+   green (no macOS traffic lights). They are decorative (aria-hidden).
+
+   Variants:
+     desktop (default)  bar with the dots on the left, host beside them
+     phone              the same bar without dots, host centred. No fake
+                        bezel, notch or rounded glass: the screen is the frame.
+                        Its width comes from the parent (FramePair sizes it).
+
+   Print (case studies get forwarded to boards): the bar prints the full URL
+   in place of the bare host, so a reader on paper can type it in.
+
+   Forced colors: .frame already gets a CanvasText outline (globals.css). The
+   bar's bottom edge is a real border, which forced colours keep, and the dots
+   get a border so they do not vanish with their background.
+
+   Usage:
+     <BrowserFrame url="https://stonesteps50k.com">
+       <Media src={shot} alt="" ratio="16 / 10" position="top" ... />
+     </BrowserFrame>
+
+   Props:
+     url       the live site's address (required; the host is shown, the
+               full URL is printed)
+     variant   'desktop' | 'phone'
+     class     extra classes on the outer frame (width, placement)
+   ============================================================================ */
+
+interface Props {
+  url: string;
+  variant?: 'desktop' | 'phone';
+  class?: string;
+}
+
+const { url, variant = 'desktop', class: className = '' } = Astro.props;
+
+// The host as people say it: no protocol, no "www.", no trailing slash.
+const host = new URL(url).hostname.replace(/^www\./, '');
+---
+
+<div class:list={['browser-frame frame', className]} data-variant={variant}>
+  <div class="bf-bar">
+    {variant === 'desktop' && (
+      <span class="bf-dots" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
+    )}
+    <span class="bf-host">{host}</span>
+    <span class="bf-url">{url}</span>
+  </div>
+  <div class="bf-screen">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .browser-frame {
+    /* .frame (globals.css) gives the radius, ring, shadow and overflow clip. */
+    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bf-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: 28px;
+    flex: none;
+    padding-inline: 0.75rem;
+    background-color: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+
+  [data-variant='phone'] .bf-bar {
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+
+  .bf-dots {
+    display: inline-flex;
+    gap: 6px;
+    flex: none;
+  }
+  .bf-dots > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background-color: var(--line-strong);
+  }
+
+  /* Mono metadata. Muted text on paper clears AA in both themes
+     (src/lib/ncs-tokens.test.ts). */
+  .bf-host,
+  .bf-url {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--muted-foreground);
+  }
+
+  /* The full URL is for paper only. */
+  .bf-url {
+    display: none;
+  }
+
+  .bf-screen {
+    position: relative;
+    min-width: 0;
+  }
+
+  @media (forced-colors: active) {
+    .bf-dots > span {
+      border: 1px solid CanvasText;
+    }
+  }
+
+  @media print {
+    .bf-host {
+      display: none;
+    }
+    .bf-url {
+      display: inline;
+      overflow: visible;
+      white-space: normal;
+    }
+    .browser-frame {
+      /* The print sheet sets every colour to black, so currentColor is black
+         ink; the shadow ring is gone on paper and this edge replaces it. */
+      border: 1px solid currentColor;
+    }
+  }
+</style>

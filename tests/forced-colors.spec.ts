@@ -43,3 +43,15 @@ test('forced colors: the ink band and the frame keep a visible edge', async ({ p
   await page.emulateMedia({ forcedColors: 'active' });
   expect(await edgeOf(page)).toEqual({ band: '1px', frame: 'solid' });
 });
+
+// The real thing (overhaul 1.8): the BrowserFrame on the parts page keeps its
+// outline, its bar keeps its bottom border, and its dots keep a border, so a
+// framed client site still reads as a frame in Windows High Contrast.
+test('forced colors: BrowserFrame keeps its edges on /colophon/parts/', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/colophon/parts/');
+  const frame = page.locator('.browser-frame').first();
+  await expect(frame).toHaveCSS('outline-style', 'solid');
+  await expect(frame.locator('.bf-bar')).toHaveCSS('border-bottom-style', 'solid');
+  await expect(frame.locator('.bf-dots > span').first()).toHaveCSS('border-top-width', '1px');
+});
