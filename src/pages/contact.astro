@@ -559,6 +559,7 @@ const sideHeading = 'text-h4 text-heading';
                 <a
                   class="text-link transition-colors duration-150 hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
                   href={site.bookingUrl}
+                  data-cta="book_call_click"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -769,6 +770,8 @@ const sideHeading = 'text-h4 text-heading';
     // astro:page-load with a dataset guard (never-break rule 7), so it
     // survives View Transitions and never binds twice. The form works without
     // any of this.
+
+    import { track } from '../lib/track';
 
     type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
@@ -1007,6 +1010,10 @@ const sideHeading = 'text-h4 text-heading';
           });
           if (response.ok) {
             clearDraft();
+            // GA4 key event (overhaul 4.1). Only fixed labels, never a field
+            // value. A no-op when gtag is absent. The honeypot path above
+            // deliberately sends nothing.
+            track('generate_lead', { form: 'contact' });
             showSuccess();
           } else {
             errorEl.classList.remove('hidden');
