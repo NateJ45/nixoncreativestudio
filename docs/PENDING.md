@@ -82,10 +82,17 @@ then on.
 
 ### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
 
-Two content fixes are waiting on Nathan's sign-off and will ship as their own PR:
+These content fixes are waiting on Nathan's sign-off and will ship as their own PR:
 
 - **First Baptist Muncie:** the study still carries Wix-era copy. It needs the
-  real rebuild facts before it is rewritten.
+  real rebuild facts before it is rewritten. Since overhaul 1.6 its cover,
+  full-page and mobile captures show the new site (re-shot 2026-10-30), so
+  the Wix-era copy and the two Wix-era feature shots
+  (`shots/first-baptist-muncie-feature-*.png`) now sit next to captures of a
+  different site until that rewrite lands.
+- **First Presbyterian Orangeburg:** its `hook` ("Book the building through one
+  form, not an inbox") is a draft written from the designer note (1.6). Edit or
+  approve it.
 - **Reid Design:** the study describes a Budget Calculator, a style quiz and a
   before/after slider. Remove any of those that are not live on the site today.
 

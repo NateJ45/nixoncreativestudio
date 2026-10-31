@@ -18,7 +18,7 @@
    ============================================================================ */
 
 import type { APIRoute } from 'astro';
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import { site } from '../data/site';
 import { addOns, carePlans, webTiers } from '../data/pricing';
 import { money } from '../lib/money';
@@ -26,19 +26,14 @@ import { money } from '../lib/money';
 // Static endpoint: written to dist as a plain file at build time.
 export const prerender = true;
 
-// `hook` and `order` arrive with the overhaul content model (package 1.6).
-// Read them loosely so this file builds before and after that lands.
-type Study = CollectionEntry<'case-studies'>;
-const extra = (e: Study) => e.data as Study['data'] & { hook?: string; order?: number };
-
 export const GET: APIRoute = async () => {
-  // Same order as /work: the study's `order` when every study has one,
-  // otherwise newest first by publish date.
+  // The study loop order (`order`, which matches /work) when every study has
+  // one, otherwise newest first by publish date.
   const all = await getCollection('case-studies');
-  const ordered = all.every((e) => typeof extra(e).order === 'number');
+  const ordered = all.every((e) => typeof e.data.order === 'number');
   const studies = all.sort((a, b) =>
     ordered
-      ? (extra(a).order ?? 0) - (extra(b).order ?? 0)
+      ? (a.data.order ?? 0) - (b.data.order ?? 0)
       : b.data.published.valueOf() - a.data.published.valueOf(),
   );
 
@@ -69,8 +64,9 @@ export const GET: APIRoute = async () => {
     `## Case studies (${studies.length})`,
     '',
     ...studies.map((s) => {
-      const hook = extra(s).hook;
-      return `- [${s.data.title}](${url(`/work/${s.id}/`)}): ${hook ? `${hook} ` : ''}${s.data.summary}`;
+      // The hook (one line about the live site) leads, then the summary.
+      const hook = s.data.hook ? `${s.data.hook.replace(/[.!?]$/, '')}. ` : '';
+      return `- [${s.data.title}](${url(`/work/${s.id}/`)}): ${hook}${s.data.summary}`;
     }),
     '',
     '## Pages',
