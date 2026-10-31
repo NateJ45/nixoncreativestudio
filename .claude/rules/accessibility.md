@@ -26,7 +26,7 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 
 **Heading hierarchy.** One `<h1>` per page (usually inside the hero). Don't skip levels. Section headings are `<h2>`; subsections inside them are `<h3>`. Heading text describes the content, not its position ("How we work", not "Section 5").
 
-**Forms.** Every input gets an associated `<label for="...">`. Use native input types (`email`, `tel`, `url`) and `autocomplete` hints so browsers and password managers help. Required fields get `required`. Error containers get `role="alert"`. The contact form is the working reference pattern.
+**Forms.** Every input gets an associated `<label for="...">`. Use native input types (`email`, `tel`, `url`) and `autocomplete` hints so browsers and password managers help. Required fields get `required`. Error containers get `role="alert"`. The contact form is the working reference pattern: it posts without JavaScript (browser validation on; the script sets `noValidate` and validates itself), groups the budget chips in a `<fieldset>` with real radios, and its "What I'll read" brief card is a plain summary screen readers can reach (`aria-live="off"`, never `aria-hidden`, ruling 17) so it never talks over the field being typed in. After a script submit, focus moves to the success heading.
 
 **Images.**
 

@@ -5,7 +5,7 @@
    handles three jobs:
 
    1. Loops. Anything that repeats (the hero reel, the ticker, the footer's
-      status dot, the terminal cursor) opts in with data-motion="loop". A loop
+      status dot, the About status dot) opts in with data-motion="loop". A loop
       may only run when ALL of these hold:
         - it is on screen (an IntersectionObserver sets data-motion-offscreen
           on the element while it is out of view),

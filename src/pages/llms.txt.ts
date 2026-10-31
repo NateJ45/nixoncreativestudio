@@ -22,6 +22,7 @@ import { getCollection } from 'astro:content';
 import { site } from '../data/site';
 import { addOns, carePlans, webTiers } from '../data/pricing';
 import { money } from '../lib/money';
+import { photographyOpen } from '../data/photography-gate';
 
 // Static endpoint: written to dist as a plain file at build time.
 export const prerender = true;
@@ -30,6 +31,9 @@ export const GET: APIRoute = async () => {
   // The study loop order (`order`, which matches /work) when every study has
   // one, otherwise newest first by publish date.
   const all = await getCollection('case-studies');
+  // /photography/ is listed only once its gate opens (overhaul 2.8): while it
+  // is noindex and out of the sitemap, it stays out of this list too.
+  const photographyListed = photographyOpen((await getCollection('photos')).length);
   const ordered = all.every((e) => typeof e.data.order === 'number');
   const studies = all.sort((a, b) =>
     ordered
@@ -74,7 +78,7 @@ export const GET: APIRoute = async () => {
     `- [About ${site.ownerName}](${url('/about/')})`,
     `- [Services and pricing](${url('/services/')})`,
     `- [All case studies](${url('/work/')})`,
-    `- [Photography](${url('/photography/')})`,
+    ...(photographyListed ? [`- [Photography](${url('/photography/')})`] : []),
     `- [Contact](${url('/contact/')})`,
     `- [How this site is built](${url('/colophon/')})`,
     `- [Accessibility statement](${url('/accessibility/')})`,

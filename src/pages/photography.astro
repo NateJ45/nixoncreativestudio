@@ -1,281 +1,139 @@
 ---
-// Foundation, edit with care.
+// Safe to edit (copy). The gate itself lives in src/data/photography-gate.ts.
 /* ============================================================================
-   /photography | Photography  [collection-driven]
+   /photography | Photography  [gated, overhaul package 2.8]
    ============================================================================
-   Image-heavy showcase, driven entirely by the `photos` content collection
-   (src/content/photos/*.json). To add work: drop a JSON entry plus its image
-   (see src/content.config.ts for the fields) and it appears here automatically,
-   grouped into its category (events / portraits / environments).
+   The gallery is not ready, so this page says so plainly: one real photo, one
+   honest line, and a way to ask for samples. No placeholder images, no empty
+   category cards (a photographer's page full of blank gradients was the worst
+   possible tell, and those gradient files are gone from the repo).
 
-   Until real photos exist, the page does NOT ship placeholder rectangles (a
-   photographer's page full of blank gradients is the worst possible tell).
-   Instead it shows an honest "in progress" state and points visitors to the
-   work pages, where the photography already appears in context.
+   The gate. Until the `photos` collection (src/content/photos/*.json) holds
+   MIN_PHOTOS real photographs, this page is:
+     - noindex (BaseLayout's `noindex` prop, below),
+     - out of the sitemap (the filter in astro.config.mjs),
+     - out of the header, mobile menu and footer (src/data/nav.ts).
+   All three read photographyOpen() from src/data/photography-gate.ts, so they
+   open together. tests/photography-gate.spec.ts checks the closed state.
 
-   Drop-in checklist for a real shoot:
-     1. Put the optimized image in src/assets/photography/<name>.jpg
+   The gallery comes back in package 4.6 (a contact sheet with a loupe and a
+   lightbox). The React island for it, src/components/PhotoGallery.tsx, is
+   still in the repo but rendered nowhere. When the photos arrive:
+     1. Put each optimized image in src/assets/photography/<name>.jpg
      2. Add src/content/photos/<name>.json:
         { "title": "...", "image": "../../assets/photography/<name>.jpg",
           "category": "events", "year": 2026, "caption": "...",
           "location": "...", "featured": true }
-     3. Rebuild. The hero uses a featured photo; categories with photos render
-        their own gallery section.
+     3. Build the gallery (4.6), then ungate: docs/PENDING.md has the steps.
 
-   All motion below is reduced-motion safe (handled globally in globals.css).
+   The photo. No photo in the repo is yet a confirmed frame of Nathan's own
+   client work, so this is the black-and-white portrait from the About page,
+   captioned for what it is. Swap in one of Nathan's own frames once he picks
+   one (and change the caption to match).
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
-import Heft from '../components/Heft.astro';
-import { Image } from 'astro:assets';
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-import PhotoGallery from '../components/PhotoGallery';
+import Heft from '../components/Heft.astro';
+import Media from '../components/Media.astro';
+import { buttonVariants } from '../components/ui/button';
+import { cn } from '@/lib/utils';
+import { photographyOpen } from '../data/photography-gate';
 import { addOns } from '../data/pricing';
 import { addOnNamed } from '../lib/schema';
+import portrait from '../assets/about/portrait-bw.jpg';
 
 // The photography price quoted in the meta description, from pricing.ts.
 const photography = addOnNamed(addOns, 'Photography');
 
-// Stable category titles + intros. This is copy, not content, so it lives
-// here; the photos themselves come from the collection.
-const CATEGORY_META: Record<string, { title: string; body: string }> = {
-  events: {
-    title: 'Events',
-    body: 'Sunday mornings, school assemblies, fundraisers, ribbon cuttings. Coverage that tells the story without making the room perform for the camera.',
-  },
-  portraits: {
-    title: 'Portraits',
-    body: 'Team headshots, staff portraits, leadership pages. Comfortable lighting, consistent treatment, edited for web so the file size stays sane.',
-  },
-  environments: {
-    title: 'Environments',
-    body: 'Lobbies, classrooms, sanctuaries, storefronts. The spaces visitors actually walk into, photographed in the light they actually see.',
-  },
-};
-const CATEGORY_ORDER = ['events', 'portraits', 'environments'] as const;
+// Closed until the collection holds enough real photos (see the header note).
+const open = photographyOpen((await getCollection('photos')).length);
 
-const allPhotos = await getCollection('photos');
-const hasPhotos = allPhotos.length > 0;
-
-// Group into non-empty categories, newest year first. cover drives the bento
-// card thumbnail; photos drives the gallery for that category.
-const categories = CATEGORY_ORDER.map((id) => {
-  const entries = allPhotos
-    .filter((p) => p.data.category === id)
-    .sort((a, b) => b.data.year - a.data.year);
-  return {
-    id,
-    title: CATEGORY_META[id].title,
-    body: CATEGORY_META[id].body,
-    cover: entries[0]?.data.image,
-    photos: entries.map((p) => ({
-      src: p.data.image.src,
-      width: p.data.image.width,
-      height: p.data.image.height,
-      alt: p.data.title,
-      caption: p.data.caption ?? p.data.title,
-    })),
-  };
-}).filter((c) => c.photos.length > 0);
-
-// Hero background: a featured photo if one is flagged, else the newest photo,
-// else nothing (the flat navy section carries the hero in the in-progress state).
-const heroImage = (allPhotos.find((p) => p.data.featured) ?? allPhotos[0])?.data.image;
-
-const [leadCategory, ...restCategories] = categories;
+// Where every "ask" on this page goes: the contact form, preset to photography.
+const contactHref = '/contact/?service=photography';
 ---
 
 <BaseLayout
   title="Photography in Cincinnati | Nixon Creative Studio"
   description={`Headshots, events and environmental photos across the Cincinnati region, shot by the person who designs your website. Photography starts ${photography.price}.`}
+  noindex={!open}
   closer={{
     heading: 'Need photography',
     emphasis: 'for your project?',
     sub: 'Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own.',
+    href: contactHref,
+    label: 'Ask for samples',
   }}
 >
-  <!-- ----------------------------------------------------------------------
-       Hero. When a real photo exists it fills the surface behind a navy
-       scrim; until then the flat navy surface carries it (no placeholder image). The
-       headline accent is a solid amber phrase (no gradient text). data-hero-dark
-       makes the sticky header go transparent over it.
-       ---------------------------------------------------------------------- -->
-  <section
-    class="relative isolate flex flex-col justify-end overflow-hidden bg-primary text-primary-foreground"
-    aria-labelledby="photography-hero-heading"
-    style="min-height: clamp(30rem, 78vh, 46rem);"
-    data-hero-dark
-  >
-    <div class="absolute inset-0 -z-10" aria-hidden="true">
-      {heroImage ? (
-        <Image
-          src={heroImage}
-          alt=""
-          class="h-full w-full object-cover"
-          loading="eager"
-          decoding="async"
-          widths={[768, 1280, 1920]}
-          sizes="100vw"
+  <section class="photo-gate py-section" aria-labelledby="photography-heading">
+    <div class="ncs-container page-grid">
+      <div class="photo-gate__copy">
+        <h1 id="photography-heading">
+          Photography that matches the <Heft text="website it lives on." />
+        </h1>
+        <p class="photo-gate__lede">
+          I photograph events, portraits and places across Cincinnati. The gallery is being
+          assembled; ask for samples.
+        </p>
+        <a
+          href={contactHref}
+          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'rounded-full')}
+        >
+          Ask for samples
+        </a>
+      </div>
+
+      {/* First-viewport media: no data-reveal (ruling 3). lcp makes it eager
+          with fetchpriority high, since at desktop widths it is the LCP. */}
+      <figure class="photo-gate__photo">
+        <Media
+          src={portrait}
+          alt="A black-and-white studio portrait of Nathan looking off to the side."
+          ratio="5 / 4"
+          widths={[480, 800, 1200]}
+          sizes="(min-width: 64rem) 45vw, calc(100vw - 2rem)"
+          lcp
+          class="frame"
         />
-      ) : null}
-      <!-- Vertical scrim so the bottom-anchored copy always reads. -->
-      <div class="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/45 to-primary/90"></div>
-    </div>
-
-    <!-- Foreground copy cluster, anchored to the bottom of the frame. Opens
-         straight on the headline (no tracked-uppercase eyebrow); the Cincinnati
-         base reads in the lede below. -->
-    <div class="ncs-container relative z-10 py-2xl">
-      <h1
-        id="photography-hero-heading"
-        class="mb-m max-w-[20ch] text-primary-foreground"
-        style="text-wrap: balance;"
-      >
-        Photography that matches the <Heft text="website it lives on." />
-      </h1>
-
-      <p class="max-w-[58ch] text-lg leading-[1.6] text-primary-foreground/90">
-        Events, portraits, and environments for organizations across the Cincinnati region. Most of
-        these photos came from the same projects as the web work. Same person designed the site and
-        showed up with the camera, so the photos and the site look like one piece of work.
-      </p>
+        <figcaption>Me, from the other side of the lens.</figcaption>
+      </figure>
     </div>
   </section>
-
-  {hasPhotos && leadCategory ? (
-    <>
-      {/* ------------------------------------------------------------------
-           Category overview. Asymmetric spotlight cards: the lead category
-           fills a tall feature card, the rest stack beside it. Each shows its
-           newest photo behind the label and a small count, then jumps to that
-           category's gallery. The full blurb lives on the gallery section header
-           below, so it isn't repeated here.
-           ------------------------------------------------------------------ */}
-      <section class="bg-bg-soft py-2xl" aria-label="Browse photography by category">
-        <div class="ncs-container">
-          <ul class="grid gap-l lg:grid-cols-2 lg:grid-rows-2">
-            <li class="lg:row-span-2" data-reveal>
-              <a
-                class="group relative block h-full min-h-[20rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                href={`#${leadCategory.id}`}
-              >
-                <Image
-                  src={leadCategory.cover}
-                  alt=""
-                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                  loading="lazy"
-                  decoding="async"
-                  widths={[480, 768, 1024]}
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                />
-                <div
-                  class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10"
-                  aria-hidden="true"
-                />
-                <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
-                  <h2 class="text-h3 text-primary-foreground">{leadCategory.title}</h2>
-                  <p class="font-mono text-sm text-primary-foreground/80">
-                    {leadCategory.photos.length}{' '}
-                    {leadCategory.photos.length === 1 ? 'photo' : 'photos'}
-                  </p>
-                </div>
-              </a>
-            </li>
-
-            {restCategories.map((category, i) => (
-              <li data-reveal style={`--reveal-delay: ${120 * (i + 1)}ms;`}>
-                <a
-                  class="group relative block h-full min-h-[14rem] overflow-hidden rounded-lg text-inherit no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                  href={`#${category.id}`}
-                >
-                  <Image
-                    src={category.cover}
-                    alt=""
-                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    loading="lazy"
-                    decoding="async"
-                    widths={[480, 768]}
-                    sizes="(min-width: 1024px) 25vw, 100vw"
-                  />
-                  <div
-                    class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-primary/10"
-                    aria-hidden="true"
-                  />
-                  <div class="relative z-10 flex h-full flex-col justify-end gap-xs p-l text-primary-foreground">
-                    <h2 class="text-h3 text-primary-foreground">{category.title}</h2>
-                    <p class="font-mono text-sm text-primary-foreground/80">
-                      {category.photos.length} {category.photos.length === 1 ? 'photo' : 'photos'}
-                    </p>
-                  </div>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------------
-           Gallery sections, one per non-empty category. PhotoGallery runs
-           react-photo-album (justified grid) + yet-another-react-lightbox.
-           ------------------------------------------------------------------ */}
-      {categories.map((category) => (
-        <section
-          class="scroll-mt-2xl py-2xl"
-          id={category.id}
-          aria-labelledby={`${category.id}-heading`}
-        >
-          <div class="ncs-container">
-            <header class="mb-l flex flex-col gap-s" data-reveal>
-              <h2 id={`${category.id}-heading`} class="text-heading">
-                {category.title}
-              </h2>
-              <p class="max-w-[56ch] text-lg leading-[1.5] text-text-muted">{category.body}</p>
-            </header>
-            <div data-reveal style="--reveal-delay: 120ms;">
-              {/* client:visible so each gallery hydrates only as it scrolls into view */}
-              <PhotoGallery client:visible photos={category.photos} />
-            </div>
-          </div>
-        </section>
-      ))}
-
-      {/* Where the photos come from. A branded region note rather than a raw
-           third-party map embed (which shipped as a blank tile box). */}
-      <section class="py-2xl" aria-labelledby="photo-area-heading">
-        <div class="ncs-container">
-          <div class="surface-card mx-auto max-w-[52ch] rounded-2xl p-l text-center">
-            <h2 id="photo-area-heading" class="text-heading">
-              Where these photos come from
-            </h2>
-            <p class="mt-s leading-[1.6] text-text-muted">
-              Almost everything here was shot within an hour of downtown Cincinnati: the city
-              itself, the northern suburbs, and the towns around them.
-            </p>
-          </div>
-        </div>
-      </section>
-    </>
-  ) : (
-    /* In-progress state. No placeholder galleries; an honest note plus a
-         route to the work pages where the photography already lives. */
-    <section class="py-2xl" aria-label="Photography portfolio status">
-      <div class="ncs-container">
-        <div class="band-themed mx-auto max-w-[60ch] rounded-2xl p-xl text-center">
-          <p class="text-sm font-semibold tracking-[0.12em] text-link uppercase">In progress</p>
-          <h2 class="mt-s text-heading max-sm:text-[1.75rem]">
-            The photography portfolio is coming together.
-          </h2>
-          <p class="mt-s leading-[1.6] text-text-muted">
-            I'm pulling the strongest frames from recent church, school, and small-business
-            projects. In the meantime, the work pages show the photography in context, paired with
-            the sites it was shot for.
-          </p>
-          <a class="card-link mt-m inline-flex" href="/work/">
-            See the work
-          </a>
-        </div>
-      </div>
-    </section>
-  )}
 </BaseLayout>
+
+<style>
+  /* Two columns from lg: the copy on 1 to 6, the photo on 7 to 12. Below lg
+     both span the full width (.page-grid's default) and stack. */
+  .photo-gate .page-grid {
+    row-gap: clamp(2.5rem, 6vw, 3.5rem);
+    align-items: center;
+  }
+  .photo-gate__copy h1 {
+    max-width: 14ch;
+    text-wrap: balance;
+  }
+  .photo-gate__lede {
+    max-width: 44ch;
+    margin: 1.25rem 0 2rem;
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .photo-gate__photo {
+    margin: 0;
+  }
+  .photo-gate__photo figcaption {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  @media (min-width: 64rem) {
+    .photo-gate__copy {
+      grid-column: 1 / span 6;
+    }
+    .photo-gate__photo {
+      grid-column: 7 / span 6;
+    }
+  }
+</style>
