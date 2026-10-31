@@ -37,11 +37,6 @@ outcome: 'A scholarly resource library the staff can maintain themselves, with t
 #   quote: ""
 #   name: ""
 #   title: ""
-results:
-  - 'Staff keep the whole site current themselves: new resources, seminar details, and staff changes all happen from the WordPress admin, no developer needed.'
-  - 'An organization with no in-house technical staff can run its own site independently, which was the real goal rather than a nice extra.'
-  - 'The scattered resources are now a real library, sorted into clear collections so a minister finds the right material instead of hunting for it.'
-  - 'The seminar program is explained start to finish in one place, so a prospective member knows exactly what they are joining and has a clear path to apply.'
 designerNote: "The hardest part of this one was knowing when to hold back. Every choice had to clear a single test for me: does it actually read as scholarly, or does it just look like it's trying to? The drop caps and fleurons earned their place because they come from a tradition these readers already recognize as their own, so here they read as at home rather than as decoration."
 hook: 'A scholarly library the staff maintain themselves'
 order: 4
@@ -59,10 +54,25 @@ palette:
     - '#8B1A1A'
     - '#C9A84C'
     - '#1E2A3A'
+# The Signature band's still (overhaul 2.4c): the feature the hook names.
+featureShot: ../../assets/case-studies/shots/foundation-for-reformed-theology-feature-library.png
 mobileShot: ../../assets/case-studies/shots/foundation-for-reformed-theology-mobile.png
 beforeShot: ../../assets/case-studies/shots/foundation-for-reformed-theology-before.png
+# The rail's fact row (overhaul 2.4c), filled from the fields above.
+facts:
+  sector: Nonprofit
+  year: '2026'
+  role: Designer, Developer
+  stack:
+    - WordPress
+    - Bricks Builder
+    - ACF
+    - RankMath
+  host: foundationrt.org
 ---
 
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import BeforeAfter from '../../components/BeforeAfter.astro';
 import beforeShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-before.png';
@@ -72,33 +82,29 @@ import Lightbox from '../../components/Lightbox.astro';
 import libraryShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-library.png';
 import seminarsShot from '../../assets/case-studies/shots/foundation-for-reformed-theology-feature-seminars.png';
 
-<SiteShowcase
-  slug="foundation-for-reformed-theology"
-  alt="The Foundation for Reformed Theology homepage, scrolling top to bottom"
-  href="https://foundationrt.org"
-  label="foundationrt.org"
-/>
-
 ## The brief
 
 The Foundation for Reformed Theology was established in memory of Dr. John H. Leith (1919-2002), Calvin scholar and Presbyterian minister, to carry forward his work of equipping clergy and serious students of Reformed theology. The organization runs annual ministerial study seminars and maintains a growing library of theological resources for ordained ministers, seminary students, and church elders.
 
-Their existing digital presence was not keeping pace with the depth and credibility of the work. The resource library had no clear path through it. Seminar information was scattered across pages without a coherent structure. Visually, the site did not read with the authority the organization carries in its field.
+Their existing site was not keeping pace with the depth and credibility of the work. The resource library had no clear path through it. Seminar information was scattered across pages without a coherent structure. Visually, the site did not read with the authority the organization carries in its field.
 
-<BeforeAfter
-  before={beforeShot}
-  after={afterShot}
-  beforeAlt="The previous Foundation for Reformed Theology website"
-  afterAlt="The redesigned Foundation for Reformed Theology website"
+## Decisions
+
+<Decision
+  title="Knowing when to hold back"
+  easy="Pile on the trappings of scholarship so the site looks the part."
+  did="Hold every choice to one test: does it actually read as scholarly, or does it just look like it's trying to? The burgundy drop caps and fleurons stayed because they come from a tradition these readers already recognize as their own."
 />
 
-## The approach
+<Decision
+  title="Three areas, each with a clear path"
+  easy="Keep the library and the seminar details spread across pages, the way they were."
+  did="Separate the work into three areas: the seminar program (what they run, who teaches, how to apply), the resource library (searchable by topic and format), and the organizational story (history, leadership, and Dr. Leith's legacy). Staff maintain all three from the WordPress admin."
+/>
 
-The first decision was platform. For a content-heavy, staff-maintained site where editorial quality matters and developer availability is limited long-term, WordPress was the right call. Bricks Builder gave me design precision without locking the team into an interface that fights them during content updates. ACF handled structured data for the resource library so the team could sort and filter materials by topic, date, and format.
+For a content-heavy, staff-maintained site where editorial quality matters and developer time is limited long-term, WordPress was the right platform. Bricks Builder gave me design precision without locking the team into an interface that fights them during content updates. ACF handled structured data for the resource library, so the team can sort and filter materials by topic, date, and format.
 
-The editorial design system was built around legibility and weight. The typographic choices borrowed from academic publishing: burgundy drop caps to open major sections, fleurons as section dividers, and duotone treatment for archival photography. The goal was a site that feels like something the Foundation would be comfortable handing to a visiting scholar without apology.
-
-The content architecture separates the work into three areas: the seminar program (what they run, who teaches, how to apply), the resource library (searchable by topic and format), and the organizational story (history, leadership, and Dr. Leith's legacy). Staff can maintain all three from the WordPress admin without developer help after handoff.
+The design borrows from academic publishing: burgundy drop caps to open major sections, fleurons as section dividers, and a duotone treatment for archival photography. The goal was a site the Foundation would be comfortable handing to a visiting scholar without apology.
 
 ## What I built
 
@@ -121,12 +127,39 @@ The content architecture separates the work into three areas: the seminar progra
 The full build, including the pieces above:
 
 - Seminar program pages with faculty listings, schedule details, and a multi-step application workflow
-- Resource library organized by topic, format, and date with ACF-powered metadata for filtering and surface
+- Resource library organized by topic, format, and date with ACF-powered metadata for filtering
 - Editorial design system: burgundy drop caps, fleurons, and duotone archival image treatment throughout
 - Organizational history section drawing on Dr. Leith's correspondence, publications, and public record
 - Staff and board directory
 - Donation and giving page connected to the Foundation's existing giving processor
 - Contact and inquiry form
 - RankMath configuration for theological search terms, calibrated to the audience rather than maximum crawl coverage
+
+## Before and after
+
+<BeforeAfter
+  before={beforeShot}
+  after={afterShot}
+  beforeAlt="The previous Foundation for Reformed Theology website"
+  afterAlt="The redesigned Foundation for Reformed Theology website"
+/>
+
+## Walk the homepage
+
+<SiteShowcase
+  slug="foundation-for-reformed-theology"
+  alt="The Foundation for Reformed Theology homepage, scrolling top to bottom"
+  href="https://foundationrt.org"
+  label="foundationrt.org"
+/>
+
+<ResultsBlock
+  items={[
+    'Staff keep the whole site current themselves: new resources, seminar details, and staff changes all happen from the WordPress admin, no developer needed.',
+    'An organization with no in-house technical staff can run its own site independently, which was the real goal rather than a nice extra.',
+    'The scattered resources are now a real library, sorted into clear collections so a minister finds the right material instead of hunting for it.',
+    'The seminar program is explained start to finish in one place, so a prospective member knows exactly what they are joining and has a clear path to apply.',
+  ]}
+/>
 
 <Lightbox />

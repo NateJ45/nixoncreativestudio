@@ -3,7 +3,7 @@
 // pages belong here. This site is fully static (output: 'static', nothing opts
 // out with prerender = false), so that is every page it has.
 //
-// One case study stands in for all ten (`/work/[slug]` share one template),
+// One case study stands in for all of them (`/work/[slug]` share one template),
 // the same choice lighthouserc.json makes. `/journal/[slug]` builds no pages
 // until the first entry lands in src/content/journal; add one here when it
 // does. `/coming-soon` is the standalone gate page (its own HTML document, not
