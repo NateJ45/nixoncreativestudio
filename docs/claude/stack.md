@@ -5,7 +5,7 @@ Full library list, moved out of CLAUDE.md. Read when choosing or wiring a librar
 - Astro 7 with TypeScript in strict mode and `output: 'static'`
 - MDX content collections for case studies and journal entries; JSON-backed collection for the photography catalogue
 - Tailwind 4 via `@tailwindcss/vite`. Brand tokens declared in `@theme` blocks inside `src/styles/globals.css`. There is no `tailwind.config.mjs` file
-- React 19 islands for anything interactive: full-screen mobile nav panel, contact form handler, photo lightbox, theme toggle, WebGL hero canvas, testimonials carousel, back-to-top, copy-email, /work filter chips. Astro components for everything static
+- React 19 islands for anything interactive: full-screen mobile nav panel, contact form handler, photo lightbox, theme toggle, testimonials carousel, back-to-top, copy-email, /work filter chips. Astro components for everything static
 - shadcn/ui primitives in `src/components/ui/` (Nova preset, Radix base). Includes a Nathan-added `brand` variant and `cta` size on Button for marketing CTAs. `components.json` also wires the `@fulldev` registry for more free shadcn-compatible components
 - Aceternity UI for motion-rich blocks (bento-grid, spotlight)
 - Magic UI for smaller flourishes (marquee, animated-beam)
@@ -20,7 +20,7 @@ Full library list, moved out of CLAUDE.md. Read when choosing or wiring a librar
 - `astro-expressive-code` for themed code blocks in MDX (journal dev posts); its dark theme is tied to the site's `.dark` class. Must sit before `mdx()` in the integrations array
 - `Analytics.astro` loads the Cloudflare Web Analytics beacon as a plain `<script defer>` (Partytown was removed 2026-09-04: its sandbox cost more main-thread time than the 7KB beacon) and, when `PUBLIC_GA_ID` is set, the GA4 gtag after the `load` event. The two script tags live in `src/components/analytics/` (`CloudflareBeacon.astro`, `GoogleAnalytics.astro`); `Analytics.astro` reads the env and wraps each in its condition
 - Astro `prefetch` enabled (`prefetchAll`, viewport strategy) so links preload as they enter the viewport, pairing with the View Transitions router
-- `three` + `@react-three/fiber` for the optional WebGL hero background (`HeroCanvas.tsx`), guarded behind WebGL support + reduced-motion with the CSS aurora as the fallback
+- `@fontsource-variable/bricolage-grotesque` for the homepage hero headline only (variable weight, so "pull their weight." can animate from light to heavy). Preloaded on the homepage only, through BaseLayout's `preloadFonts` prop. (The WebGL hero and its `three` / `@react-three/fiber` dependencies were removed on 2026-10-30.)
 - `embla-carousel-react` + `embla-carousel-autoplay` for the client-testimonials carousel (`TestimonialCarousel.tsx`)
 - `@lhci/cli` (dev-only) for Lighthouse CI; see `.claude/rules/testing-ci.md`
 - Dark / light / system theme system: `ThemeToggle.tsx` React island + anti-FOUC bootstrap script in BaseLayout, persisted to `localStorage["ncs-theme"]`

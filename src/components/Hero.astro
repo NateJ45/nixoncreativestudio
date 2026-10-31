@@ -1,181 +1,91 @@
 ---
 // Safe to edit.
 /* ============================================================================
-   Hero (Act 1 of the homepage)  [revamp]
+   Hero (Act 1 of the homepage): "The Reel"
    ============================================================================
-   A tall, kinetic opening, sized with a clamp (not the full 100svh) so it does
-   not leave a big empty navy band above and below the content on large screens.
-   The layout is LAYERED, not a two-column split: a right-weighted "scene" of
-   real shipped client sites
-   (HeroShowcase) sits BEHIND an oversized headline. A left-strong scrim keeps
-   the headline + CTAs fully legible even where the screenshots sit under them,
-   while the far-right images stay crisp. Below lg the desktop scene is hidden;
-   the single phone showcase becomes a faded, oversized backdrop that the copy
-   sits OVER (the .hero-mobile-scene layer), so the hero fills the screen instead
-   of stacking the copy above a separate device block.
+   Left: the headline, one line of positioning, two CTAs and a "Now showing"
+   ticker. Right: HeroReel, a tilted wall of real client sites drifting in
+   columns (desktop and phone captures mixed). Below lg the wall drops under
+   the copy as a tilted band.
 
-   Why layered instead of side-by-side: a strict right column made the cascade
-   either clip at the viewport edge or leave dead space. As a scene behind the
-   text, held to the site's content width (.ncs-container) so its right edge
-   lines up with the header nav, it reads as one composed image without bleeding
-   into the page margins.
+   The one orchestrated moment: "pull their weight." starts in a hairline
+   weight and fills out to heavy as the page loads, so the words literally
+   gain weight. Each of those three words sits in a small grid that also holds
+   an invisible heavy copy of itself, so the space is reserved at full weight
+   from the first frame and the growing letters never push anything around
+   (no layout shift, and the line breaks never change mid-animation). The
+   headline is visible from the first frame: only its weight animates, never
+   its opacity, so it stays a clean LCP element.
 
-   Stacking (the section is `isolate`, so these z-indexes are local):
-     z-0  background: band-themed glow + WebGL flow (left-weighted in light mode)
-     z-1  showcase scene (desktop: right-weighted, contained; mobile: faded backdrop)
-     z-2  scrim (dark mode only) + bottom floor
-     z-10 copy + marquee
+   The hero surface follows the theme like the header expects: the light
+   bg-soft surface in light mode, navy in dark (the header's data-over-hero
+   state paints the same two colours, so bar and hero read as one block).
 
-   The copy container is click-through (pointer-events-none) so the showcase
-   behind it stays hoverable on the right; the copy column re-enables pointer
-   events for its own links.
+   Motion that runs longer than five seconds (the reel and the ticker) has a
+   Pause button (WCAG 2.2.2). It sets data-paused on the section; the reel's
+   CSS and the ticker script both respect it. Reduced motion: no drift, no
+   ticker cycling, and the headline is heavy from the start.
 
-   Legibility over the images comes from three things together: the left-strong
-   scrim, a soft text-shadow on the headline, and the densest part of the
-   cascade sitting to the right, away from the headline's core.
-
-   To swap in a real Nathan-shot hero photo as the background: drop it at
-   src/assets/brand/hero.jpg and uncomment the <Image /> import + tag below; it
-   layers over the aurora/WebGL.
-
-   Content is hardcoded here on purpose. The hero is bespoke.
+   Content is hardcoded here on purpose. The hero is bespoke. The ticker and
+   the wall read their sites and feature lines from src/data/reel.ts.
    ============================================================================ */
 
+import '@fontsource-variable/bricolage-grotesque/wght.css';
 import { buttonVariants } from './ui/button';
-import HeroCanvas from './HeroCanvas';
-import HeroShowcase from './HeroShowcase.astro';
-import ClientMarquee from './ClientMarquee.astro';
-// import { Image } from 'astro:assets';
-// import heroPhoto from '../assets/brand/hero.jpg';
+import { cn } from '../lib/utils';
+import HeroReel from './HeroReel.astro';
+import { reelSites } from '../data/reel';
 
-// Headline statement. The trailing phrase is lifted into a solid amber span.
-const statementLead = 'I make websites that';
-const statementAccent = 'pull their weight.';
-
-// One short positioning line that names audience and reach. "wherever you are"
-// signals that web clients are not limited to the region; the Cincinnati base is
-// stated in the differentiator line below.
-const positioning = 'For churches, schools, nonprofits, and small businesses, wherever you are.';
+// "I build websites that" stays light; the three words after it gain weight.
+const statementLead = 'I build websites that';
+const heavyWords = ['pull', 'their', 'weight.'];
 ---
 
 <section
-  class="hero band-themed relative isolate flex flex-col overflow-hidden"
-  style="--hero-marquee-h: 3.25rem; min-height: clamp(39rem, 72svh, 49rem);"
+  class="hero relative isolate overflow-hidden bg-bg-soft dark:bg-primary"
   aria-labelledby="hero-statement"
   data-hero-dark
+  data-hero-reel
 >
-  <!-- ====================================================================
-       z-0 Background: animated aurora + grain (paints immediately, SSR) with
-       the WebGL brand-cloud flow layered over it once hydrated. Real photo
-       slot is commented until src/assets/brand/hero.jpg lands.
-       ==================================================================== -->
-  <div class="absolute inset-0 z-0" aria-hidden="true">
-    <!--
-    <Image src={heroPhoto} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
-    -->
-    <div class="grain absolute inset-0"></div>
-    <!-- client:media, not client:idle or client:only. The wrapper renders null
-         until its own effect decides to load the shader, so it SSRs as nothing;
-         client:only fetched React at page load on phones, where the shader is
-         never used. client:idle still did: the island hydrated everywhere and
-         then decided to do nothing below 1024px, and that React work landed in
-         the homepage's LCP window (Lighthouse mobile read LCP at 4.6s on
-         staging, 2026-09-06, with the whole gap coming from script). The media
-         query is the same 1024px gate the component checks internally, so on a
-         phone the island never hydrates at all, and a desktop-width resize
-         still brings it in. -->
-    <HeroCanvas client:media="(min-width: 1024px)" />
-  </div>
+  <HeroReel />
 
-  <!-- ====================================================================
-       z-1 Showcase scene. A right-weighted layer of real client sites behind
-       the headline, held inside the site's content width (.ncs-container) so
-       its right edge lines up with the header nav and it never bleeds into the
-       outer margins (those show the WebGL flow). Hidden below lg (mobile leads
-       with the headline alone). The wrapper is pointer-events-none so the copy
-       stays usable; the showcase itself re-enables them for hover/explore.
-       ==================================================================== -->
-  <div
-    class="hero-scene pointer-events-none absolute inset-x-0 top-0 z-[1] hidden lg:block"
-    data-reveal="fade"
-    style="--reveal-delay: 320ms;"
-  >
-    <div class="ncs-container relative h-full">
-      <div class="hero-scene-inner pointer-events-auto absolute inset-y-0 right-0 flex items-center">
-        <HeroShowcase />
-      </div>
-    </div>
-  </div>
-
-  <!-- ====================================================================
-       z-1 Mobile phone backdrop. On phones the desktop two-device scene is
-       hidden; instead the single phone showcase becomes a faded, oversized
-       backdrop that the copy sits OVER, so the hero fills the screen instead of
-       stacking the copy above a separate device block. Absolute and behind the
-       copy, reduced opacity, anchored to the lower-right and bleeding off the
-       edges; hidden at lg where the full scene takes over. It is inset above the
-       marquee so the device never crosses the client names.
-       ==================================================================== -->
-  <div class="hero-mobile-scene pointer-events-none absolute z-[1] lg:hidden" aria-hidden="true">
-    <HeroShowcase variant="phone" />
-  </div>
-
-  <!-- ====================================================================
-       z-2 Scrim. Left-only now: it fades to transparent before the device
-       scene begins, so it keeps the headline legible over the navy/WebGL
-       background WITHOUT dimming the screenshots (which used to sit under the
-       text and no longer do). Plus a faint bottom darken to anchor the scroll
-       cue. Both click-through.
-       ==================================================================== -->
-  <div class="hero-scrim pointer-events-none absolute inset-0 z-[2]" aria-hidden="true"></div>
-  <div class="hero-floor pointer-events-none absolute inset-0 z-[2]" aria-hidden="true"></div>
-
-  <!-- ====================================================================
-       z-10 Foreground copy. The container is pointer-events-none so the scene
-       behind it stays hoverable on the right; the copy column re-enables
-       pointer events for its links.
-       ==================================================================== -->
-  <div class="ncs-container pointer-events-none relative z-10 flex flex-1 flex-col justify-center gap-l py-l">
-    <div class="hero-copy pointer-events-auto flex max-w-[46rem] flex-col gap-m">
-      <h1 id="hero-statement" class="hero-headline hero-anim text-heading">
-        {statementLead} <span class="text-link dark:text-tertiary">{statementAccent}</span>
+  <div class="hero-wrap ncs-container pointer-events-none relative z-10 flex flex-col justify-center">
+    <div class="hero-copy pointer-events-auto flex max-w-[38rem] flex-col gap-l">
+      <h1 id="hero-statement" class="hero-headline text-heading">
+        {statementLead}{' '}
+        {heavyWords.map((word, i) => (
+          <>
+            <span class="heft-word">
+              <span class="heft-reserve" aria-hidden="true">
+                {word}
+              </span>
+              <span class="heft" style={`--heft-delay: ${350 + i * 90}ms;`}>
+                {word}
+              </span>
+            </span>
+            {i < heavyWords.length - 1 && ' '}
+          </>
+        ))}
       </h1>
 
-      <p
-        class="hero-sub hero-anim max-w-[32ch] text-xl leading-[1.45] text-text sm:text-2xl"
-        style="--enter-delay: 120ms;"
-      >
-        {positioning}
-      </p>
-
-      <!-- The differentiator, folded up from the retired proof band: Cincinnati
-           base + one person does the whole job. "one person" is lifted into sky
-           (AA on navy). Base here, "wherever you are" reach in the line above. -->
-      <p
-        class="hero-proof hero-anim max-w-[42ch] text-base leading-[1.5] font-medium text-text-muted sm:text-lg"
-        style="--enter-delay: 220ms;"
-      >
-        Based in Cincinnati. Every site designed, built, and photographed by
+      <p class="hero-sub max-w-[30rem] text-lg leading-[1.55] text-text sm:text-xl">
+        For churches, schools, nonprofits and small businesses, wherever you are. Designed, built
+        and photographed by{' '}
         <a href="/about/" class="hero-person font-semibold text-link">
           one person
-        </a>
-        , start to finish.
+        </a>{' '}
+        in Cincinnati, start to finish.
       </p>
 
-      <div class="hero-anim flex flex-wrap items-center gap-m" style="--enter-delay: 320ms;">
-        <!-- Brand CTA as a styled <a>. buttonVariants is applied directly rather
-             than via <Button asChild>, which does NOT merge its classes onto a
-             slotted <a> during Astro SSR (the link rendered bare, no fill/hover).
-             Simple hover (brand fill + lift + shine sweep); no cursor-tracking. -->
+      <div class="flex flex-wrap items-center gap-m">
         <a
           href="/contact/"
-          class={buttonVariants({ variant: 'brand', size: 'cta', className: 'shine' })}
+          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'shine rounded-full')}
         >
           Start a project
         </a>
-
         <a
-          class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-text no-underline pointer-coarse:min-h-11"
+          class="hero-secondary inline-flex items-center gap-s font-body text-lg font-semibold text-heading no-underline pointer-coarse:min-h-11"
           href="/work/"
         >
           <span>See the work</span>
@@ -184,312 +94,235 @@ const positioning = 'For churches, schools, nonprofits, and small businesses, wh
           </span>
         </a>
       </div>
-    </div>
-  </div>
 
-  <!-- ====================================================================
-       z-10 Client marquee. A thin, full-width ticker pinned to the base of the
-       hero (in flow, after the copy, so it lands at the bottom of the flex
-       column). Light client names on the navy, edge-faded, auto-scrolling. The
-       device scene above is inset by --hero-marquee-h so it never crosses these
-       names. Replaces the old scroll cue, which would have collided with it.
-       ==================================================================== -->
-  <div class="hero-marquee relative z-10 mt-auto">
-    <ClientMarquee />
+      <!-- "Now showing": one site's standout feature at a time. Decorative,
+           so hidden from assistive tech; the same lines live on each case
+           study. The lines show on desktop; the Pause button shows everywhere. -->
+      <div class="hero-ticker flex max-w-[30rem] items-center gap-m border-t pt-m">
+        <span class="ticker-label hidden shrink-0 font-mono lg:inline text-xs tracking-[0.12em] text-text-muted uppercase">
+          Now showing
+        </span>
+        <div class="ticker-window relative hidden min-w-0 flex-1 lg:block" aria-hidden="true">
+          {reelSites.map((site, i) => (
+            <p class:list={['ticker-item', i === 0 && 'is-active']}>
+              <strong class="font-semibold text-heading">{site.name}</strong>
+              <span class="block text-text-muted">{site.feature}</span>
+            </p>
+          ))}
+        </div>
+        <button
+          type="button"
+          class="hero-pause shrink-0"
+          aria-pressed="false"
+          aria-label="Pause the moving work reel"
+          data-hero-pause
+        >
+          <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="3.5" y="2.5" width="3" height="11" rx="1"></rect>
+            <rect x="9.5" y="2.5" width="3" height="11" rx="1"></rect>
+          </svg>
+          <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </section>
 
 <style>
+  /* Tall enough for the wall to read as a scene, capped so big screens do
+     not get an empty band. The copy sits in the vertical middle. */
+  .hero-wrap {
+    min-height: clamp(38rem, 86svh, 54rem);
+    padding-block: 4rem;
+  }
+
   /* ----------------------------------------------------------------------
-     Hero headline. Deliberately oversized (well past the global h1 clamp):
-     this is the showpiece and the LCP element. min(vw, vh) so it scales to
-     viewport WIDTH on tall windows but is capped by HEIGHT on short laptops,
-     keeping the cluster inside 100svh. The text-shadow is what lets it stay
-     readable where the screenshots sit beneath it: a tight shadow for a crisp
-     edge plus a soft navy glow that separates the letters from busy images.
+     Headline. Bricolage Grotesque (variable weight) for the hero only; the
+     rest of the site keeps Bebas for headings. Light weight for the lead-in,
+     heavy for the three words that "pull their weight".
      ---------------------------------------------------------------------- */
   .hero-headline {
-    font-size: clamp(3.25rem, min(9.5vw, 15vh), 9.5rem);
-    line-height: 0.86;
+    font-family: 'Bricolage Grotesque Variable', var(--font-body);
+    font-weight: 300;
+    font-size: clamp(3rem, min(6.2vw, 10.5vh), 6.25rem);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    text-transform: none;
     text-wrap: balance;
   }
-  /* Soft navy glow under the headline so it stays crisp over the dark hero.
-     Dark mode only: in light mode the dark headline on the light surface reads
-     cleanly and a navy shadow would only muddy it. */
-  :global(.dark) .hero-headline {
-    text-shadow:
-      0 1px 2px rgba(10, 22, 40, 0.6),
-      0 3px 12px rgba(10, 22, 40, 0.6),
-      0 8px 40px rgba(10, 22, 40, 0.5);
+
+  /* Each heavy word is a one-cell grid holding an invisible heavy copy (which
+     sets the cell's size) and the visible animating copy on top of it. */
+  .heft-word {
+    display: inline-grid;
+  }
+  .heft-reserve,
+  .heft {
+    grid-area: 1 / 1;
+    font-weight: 800;
+  }
+  .heft-reserve {
+    visibility: hidden;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .heft {
+      animation: heft 1.8s cubic-bezier(0.65, 0, 0.25, 1) var(--heft-delay, 350ms) both;
+    }
+  }
+  @keyframes heft {
+    from {
+      font-weight: 200;
+    }
+    to {
+      font-weight: 800;
+    }
   }
 
-  /* Positioning line: a soft halo in dark mode for the same reason. */
-  :global(.dark) .hero-sub {
-    text-shadow: 0 1px 14px rgba(10, 22, 40, 0.6);
-  }
-
-  /* Light mode: the WebGL flow is more active/colourful now, so give the muted
-     proof line a soft LIGHT halo to keep it legible over it. The headline and
-     sub are near-black and clear the flow on their own; only this muted-grey
-     line needs the lift. Dark mode handles legibility with its scrim, so this is
-     scoped light-only. */
-  :global(html:not(.dark)) .hero-proof {
-    text-shadow:
-      0 1px 2px rgba(244, 247, 250, 0.92),
-      0 0 12px rgba(244, 247, 250, 0.75);
-  }
-
-  /* "one person" links to the About page. It keeps its sky-blue emphasis at rest
-     (it already read as the highlight in the line) and gains a clear underline on
-     hover/focus so it reads as a link, with a sky focus ring (AA on navy). */
+  /* "one person" links to About: underline on hover and focus. */
   .hero-person {
     text-decoration: none;
-    transition: color 0.15s ease;
   }
   .hero-person:hover,
   .hero-person:focus-visible {
     text-decoration: underline;
     text-underline-offset: 0.2em;
   }
-  .hero-person:focus-visible {
-    outline: 2px solid var(--color-secondary);
-    outline-offset: 3px;
-    border-radius: 3px;
-  }
 
-  /* ----------------------------------------------------------------------
-     Hero copy entrance. The copy holds the LCP headline, so it is animated
-     with a CSS-only entrance that runs at first render rather than the JS
-     reveal system. The reveal observer fires only after the page scripts
-     run, and on a throttled phone (behind the WebGL bundle) that pushed the
-     headline's paint past 6s. A CSS animation leaves opacity:0 within the
-     first frame, so LCP lands at first paint instead. Base state is visible,
-     so reduced-motion and no-JS visitors get the copy immediately; the
-     keyframes only play when motion is OK. The headline carries no delay so
-     it is the first thing to paint; the sub and CTAs stagger behind it.
-     ---------------------------------------------------------------------- */
-  @media (prefers-reduced-motion: no-preference) {
-    .hero-anim {
-      opacity: 0;
-      animation: hero-copy-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-      animation-delay: var(--enter-delay, 0ms);
-    }
-  }
-  @keyframes hero-copy-in {
-    from {
-      opacity: 0;
-      transform: translateY(1rem);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  /* ----------------------------------------------------------------------
-     Showcase scene. A right-weighted band; a small right inset keeps the
-     cascade from touching the viewport edge so it reads as contained, not
-     bled. Width is generous so the work is prominent.
-     ---------------------------------------------------------------------- */
-  .hero-scene-inner {
-    /* Right-aligned within .ncs-container, so the cascade ends at the content
-       edge (level with the header nav) and the wide-screen margins stay clear
-       for the WebGL flow. */
-    width: 56%;
-  }
-
-  /* The device scene stops above the marquee strip so the screenshots never
-     cross the client names at the hero's base. (Set on the wrapper, which is
-     absolute inset-x-0 top-0 in markup; this supplies the bottom.) */
-  .hero-scene {
-    bottom: var(--hero-marquee-h);
-  }
-
-  /* ----------------------------------------------------------------------
-     Mobile phone backdrop (below lg). The phone showcase, enlarged and faded,
-     anchored to the lower-right and bleeding off the right + bottom edges so it
-     fills the otherwise-empty lower half of the hero BEHIND the copy. A top-down
-     mask fades the device out under the headline (which stays on clear surface)
-     and shows it through the lower copy; the reduced opacity plus the
-     theme-aware scrim keep the copy AA. Inset above the marquee so the device
-     never crosses the client names.
-     ---------------------------------------------------------------------- */
-  .hero-mobile-scene {
-    inset: 0 0 var(--hero-marquee-h) 0;
-    /* Light mode has no scrim over this backdrop, so the copy reads directly
-       against the device screenshot; 0.5 is about the legibility ceiling here. */
-    opacity: 0.5;
-    /* Clear at the very top (headline), ramping in through the middle/lower
-       where the device fills the space. */
-    -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
-    mask-image: linear-gradient(to bottom, transparent 6%, #000 38%);
-  }
-  /* Dark mode: the navy scrim (z-2) sits OVER this backdrop and veils it for
-     legibility, so dark mode can carry a much higher raw opacity than light
-     before the copy is at risk. At the light-mode 0.5 the device stayed a faint
-     ghost under that veil; pushing it up lets the screenshot actually read
-     through, while the scrim still keeps the headline + CTAs AA. */
-  :global(.dark) .hero-mobile-scene {
-    opacity: 0.85;
-  }
-  /* The phone variant defaults to a small centered frame; for the backdrop it is
-     enlarged and pushed to the lower-right so it bleeds off both edges. */
-  .hero-mobile-scene :global(.hero-stage.is-phone) {
-    height: 100%;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 0;
-  }
-  .hero-mobile-scene :global(.hero-stage.is-phone .dev-phone) {
-    width: min(74vw, 22rem);
-    transform: translate(14%, 8%);
-  }
-  /* The brand glow behind the backdrop phone is redundant with the hero's own
-     glow and would brighten the lower-right; drop it in this context. */
-  .hero-mobile-scene :global(.hero-stage.is-phone::before) {
-    display: none;
-  }
-
-  /* Client marquee strip: a thin band at the very bottom of the hero. No top
-     hairline, so it blends into the hero floor instead of reading as a hard line
-     where the device drop shadows fade out just above it. Holds the
-     ClientMarquee ticker centered. */
-  .hero-marquee {
-    display: flex;
-    align-items: center;
-    min-height: var(--hero-marquee-h);
-  }
-
-  /* ----------------------------------------------------------------------
-     Hero floor. The floating device frames cast large downward drop shadows,
-     and the hero is overflow-hidden, so those shadows were being clipped at the
-     hero's bottom edge, leaving a hard horizontal line right where the navy hero
-     meets the section below. This gradient paints the bottom band back to solid
-     navy, so the shadows dissolve into the floor and the clip lands in uniform
-     navy (no visible shadow edge). It stops well below the desktop frame so it
-     never dims the screenshots, and it sits beneath the marquee names (z-10), so
-     those stay crisp. Replaces the old faint bottom-darken (whose scroll cue is
-     gone, replaced by the marquee).
-     ---------------------------------------------------------------------- */
-  /* The floor blends the bottom of the hero into the surface colour behind the
-     marquee. Now that the WebGL flow fills the hero (brightly, in dark mode),
-     this is a long multi-stop fade rather than a short one, so there is no harsh
-     horizontal line where the flow meets the marquee band. It still hides the
-     device drop shadows clipping at the hero's bottom edge. */
-  .hero-floor {
-    background: linear-gradient(
-      to top,
-      var(--color-bg-soft) 0%,
-      var(--color-bg-soft) 5%,
-      color-mix(in oklab, var(--color-bg-soft) 60%, transparent) 12%,
-      color-mix(in oklab, var(--color-bg-soft) 25%, transparent) 20%,
-      transparent 30%
-    );
-  }
-  :global(.dark) .hero-floor {
-    background: linear-gradient(
-      to top,
-      var(--color-primary) 0%,
-      var(--color-primary) 5%,
-      color-mix(in oklab, var(--color-primary) 60%, transparent) 12%,
-      color-mix(in oklab, var(--color-primary) 25%, transparent) 20%,
-      transparent 30%
-    );
-  }
-
-  /* ----------------------------------------------------------------------
-     Scrim. Solid navy on the left (headline core), fading to transparent on
-     the right so the far images stay crisp. Tuned so the headline's right
-     edge still sits over enough navy to read with its shadow.
-     ---------------------------------------------------------------------- */
-  /* Mobile, light mode: a soft light veil behind the copy, the light-surface
-     counterpart to the dark navy scrim below. The phone backdrop (z-1) still
-     shows through under the headline (masked out up top) and low near the
-     marquee, but the dark copy band sits over enough bg-soft to stay legible,
-     the same job the navy veil does in dark mode. Without it, the brighter
-     backdrop made light mode noticeably harder to read than dark. Reset to
-     transparent on desktop (the lg block below), where the device sits to the
-     RIGHT, not under the copy, and the WebGL fade carries the headline. */
-  .hero-scrim {
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      transparent 22%,
-      color-mix(in oklab, var(--color-bg-soft) 82%, transparent) 38%,
-      color-mix(in oklab, var(--color-bg-soft) 82%, transparent) 66%,
-      color-mix(in oklab, var(--color-bg-soft) 38%, transparent) 84%,
-      transparent 96%
-    );
-  }
-  :global(.dark) .hero-scrim {
-    /* Mobile: a cohesive navy veil so the hero reads as one dark field rather
-       than a bright aurora band across the empty right half (the device scene
-       that the right side was clearing for is desktop-only). Darkest behind the
-       copy at the top and the marquee at the bottom; a touch lighter through the
-       middle so the brand glow behind the phone showcase still reads. */
-    background: linear-gradient(
-      to bottom,
-      var(--color-primary) 0%,
-      color-mix(in oklab, var(--color-primary) 86%, transparent) 30%,
-      color-mix(in oklab, var(--color-primary) 72%, transparent) 58%,
-      var(--color-primary) 100%
-    );
-  }
-  @media (min-width: 64rem) {
-    /* Desktop light: no veil. The device scene sits to the RIGHT (not under the
-       copy) and the WebGL fades to the light base under the headline, so the
-       mobile light veil above is reset away here. */
-    .hero-scrim {
-      background: transparent;
-    }
-    /* Desktop: a softened left scrim so the WebGL flow can fill basically the
-       whole hero in dark mode while the headline stays legible. Semi-opaque navy
-       under the headline (not the old solid column), fading to clear before the
-       device scene. The headline's text-shadow carries the rest of the
-       legibility where the flow shows through. */
-    :global(.dark) .hero-scrim {
-      background: linear-gradient(
-        to right,
-        color-mix(in oklab, var(--color-primary) 72%, transparent) 0%,
-        color-mix(in oklab, var(--color-primary) 52%, transparent) 30%,
-        color-mix(in oklab, var(--color-primary) 26%, transparent) 50%,
-        transparent 66%
-      );
-    }
-  }
-
-  /* ----------------------------------------------------------------------
-     Secondary CTA hover. Arrow slides right; opacity softens.
-     ---------------------------------------------------------------------- */
+  /* Secondary CTA: the arrow nudges right. */
   .hero-secondary-arrow {
     display: inline-block;
     transition: transform 150ms ease;
   }
-  .hero-secondary:hover,
-  .hero-secondary:focus-visible {
-    opacity: 0.85;
-  }
-
-  /* Explicit focus ring (sky blue is ~7:1 on navy) so keyboard focus is clearly
-     visible over the scene rather than relying on the UA default. */
-  .hero-secondary:focus-visible {
-    outline: 2px solid var(--color-secondary);
-    outline-offset: 4px;
-    border-radius: 4px;
-  }
-
   .hero-secondary:hover .hero-secondary-arrow,
   .hero-secondary:focus-visible .hero-secondary-arrow {
     transform: translateX(0.25rem);
   }
+  .hero-secondary:focus-visible,
+  .hero-person:focus-visible,
+  .hero-pause:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
 
-  @media (prefers-reduced-motion: reduce) {
-    .hero-secondary-arrow {
-      transition: none;
+  /* ----------------------------------------------------------------------
+     Ticker. All lines are stacked in one box; only the active one shows.
+     ---------------------------------------------------------------------- */
+  .hero-ticker {
+    border-color: color-mix(in oklab, var(--color-heading) 14%, transparent);
+  }
+  .ticker-window {
+    height: 3rem;
+  }
+  .ticker-item {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
+  }
+  .ticker-item.is-active {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Pause / play toggle for the moving reel. 44px target on touch. */
+  .hero-pause {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid color-mix(in oklab, var(--color-heading) 20%, transparent);
+    border-radius: 999px;
+    color: var(--color-heading);
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .hero-pause:hover {
+    background: color-mix(in oklab, var(--color-heading) 8%, transparent);
+  }
+  .hero-pause svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    fill: currentColor;
+  }
+  .hero-pause .icon-play,
+  .hero-pause[aria-pressed='true'] .icon-pause {
+    display: none;
+  }
+  .hero-pause[aria-pressed='true'] .icon-play {
+    display: block;
+  }
+  @media (pointer: coarse) {
+    .hero-pause {
+      width: 2.75rem;
+      height: 2.75rem;
     }
-    .hero-secondary:hover .hero-secondary-arrow,
-    .hero-secondary:focus-visible .hero-secondary-arrow {
-      transform: none;
+  }
+  /* Nothing moves under reduced motion, so the control has nothing to do. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-pause {
+      display: none;
+    }
+  }
+
+  /* Below lg the copy comes first and the wall sits under it as a band. */
+  @media (max-width: 63.99rem) {
+    .hero {
+      display: flex;
+      flex-direction: column;
+    }
+    .hero-wrap {
+      order: 1;
+      min-height: 0;
+      padding-block: 2.5rem 0.5rem;
+    }
+    .hero :global(.reel-stage) {
+      order: 2;
     }
   }
 </style>
+
+<script>
+  /* The ticker and the Pause button. Registered on astro:page-load (View
+     Transitions) with a re-bind guard on the section. */
+  function initHero(): void {
+    const hero = document.querySelector<HTMLElement>('[data-hero-reel]');
+    if (!hero || hero.dataset.heroBound) return;
+    hero.dataset.heroBound = '1';
+
+    const pause = hero.querySelector<HTMLButtonElement>('[data-hero-pause]');
+    pause?.addEventListener('click', () => {
+      const paused = pause.getAttribute('aria-pressed') !== 'true';
+      pause.setAttribute('aria-pressed', String(paused));
+      pause.setAttribute(
+        'aria-label',
+        paused ? 'Play the moving work reel' : 'Pause the moving work reel',
+      );
+      hero.toggleAttribute('data-paused', paused);
+    });
+
+    // Cycle the ticker every few seconds, unless motion is reduced, the
+    // visitor paused it, or the tab is hidden.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const items = hero.querySelectorAll<HTMLElement>('.ticker-item');
+    if (items.length < 2) return;
+    let active = 0;
+    const timer = window.setInterval(() => {
+      if (!document.body.contains(hero)) return window.clearInterval(timer);
+      if (hero.hasAttribute('data-paused') || document.hidden) return;
+      items[active].classList.remove('is-active');
+      active = (active + 1) % items.length;
+      items[active].classList.add('is-active');
+    }, 3800);
+  }
+  document.addEventListener('astro:page-load', initHero);
+</script>

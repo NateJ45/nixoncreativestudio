@@ -34,21 +34,21 @@ To add a new case study: drop an `.mdx` file in `src/content/case-studies/`, fil
 
 Static routes generated at build time:
 
-| Path               | Source                                                                                                    |
-| ------------------ | --------------------------------------------------------------------------------------------------------- |
-| `/`                | `src/pages/index.astro` (homepage: hero with client marquee, selected work, pricing teaser, process band) |
-| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)                      |
-| `/services/`       | `src/pages/services.astro`                                                                                |
-| `/work/`           | `src/pages/work/index.astro` (with filter chips)                                                          |
-| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                            |
-| `/photography/`    | `src/pages/photography.astro`                                                                             |
-| `/journal/`        | `src/pages/journal/index.astro`                                                                           |
-| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                              |
-| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                                             |
-| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                        |
-| `/privacy/`        | `src/pages/privacy.astro`                                                                                 |
-| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                                 |
-| `/now`             | redirects to `/about/#now` (the page was merged into About)                                               |
-| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                   |
-| `/404`             | `src/pages/404.astro` (custom not-found)                                                                  |
-| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                |
+| Path               | Source                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `/`                | `src/pages/index.astro` (homepage: hero reel, selected work, pricing teaser, process band) |
+| `/about/`          | `src/pages/about.astro` (about + the merged "now" snapshot in its Currently section)       |
+| `/services/`       | `src/pages/services.astro`                                                                 |
+| `/work/`           | `src/pages/work/index.astro` (with filter chips)                                           |
+| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                             |
+| `/photography/`    | `src/pages/photography.astro`                                                              |
+| `/journal/`        | `src/pages/journal/index.astro`                                                            |
+| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                               |
+| `/contact/`        | `src/pages/contact.astro` (Web3Forms inquiry)                                              |
+| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                         |
+| `/privacy/`        | `src/pages/privacy.astro`                                                                  |
+| `/accessibility/`  | `src/pages/accessibility.astro` (accessibility statement)                                  |
+| `/now`             | redirects to `/about/#now` (the page was merged into About)                                |
+| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                    |
+| `/404`             | `src/pages/404.astro` (custom not-found)                                                   |
+| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                 |

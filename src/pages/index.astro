@@ -5,15 +5,10 @@
    Homepage architecture (replaces the previous eight-section frame).
    Section order is the IA, not decoration:
 
-     Hero          — a tall (clamped, not full 100svh) opening, navy in both
-                     themes. An oversized headline + positioning + the one-person
-                     differentiator + two CTAs on the left, a crossfading
-                     showcase of real client sites on the right (at lg), over a
-                     domain-warped WebGL flow, with the client-name marquee
-                     riding a thin strip at its base. Studio wordmark lives in the
-                     header, not here. (The old separate proof band was folded in
-                     here: its differentiator line became hero copy and its
-                     marquee moved to the hero floor.)
+     Hero          — "The Reel": the headline, one positioning line and two
+                     CTAs on the left; a tilted wall of real client sites
+                     drifting in columns on the right (HeroReel). Light in light
+                     mode, navy in dark. Studio wordmark lives in the header.
      Selected Work — three featured case studies, asymmetric (one large + two
                      medium). Real client names, real outcomes, real links into
                      /work/{slug} for the long form.
@@ -45,11 +40,14 @@ import Hero from '../components/Hero.astro';
 import SelectedWork from '../components/SelectedWork.astro';
 import PricingTeaser from '../components/PricingTeaser.astro';
 import ProcessBand from '../components/ProcessBand.astro';
+// The hero headline's font, preloaded on this page only (it is the LCP text).
+import bricolageWoff2 from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url';
 ---
 
 <BaseLayout
   title="Nixon Creative Studio | Strategy-led design and photography"
   description="Strategy-led web design, brand work and photography from Nixon Creative Studio in Cincinnati, Ohio."
+  preloadFonts={[bricolageWoff2]}
 >
   <Hero />
   <SelectedWork />
