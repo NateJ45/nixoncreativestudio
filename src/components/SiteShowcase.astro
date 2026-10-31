@@ -54,6 +54,7 @@ import { getEntry } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 import BrowserFrame from './BrowserFrame.astro';
 import Media from './Media.astro';
+import { BODY_SIZES } from '../lib/picture';
 
 interface Props {
   /** Case study slug. Resolves <slug>-home.png. */
@@ -77,15 +78,7 @@ interface Props {
   variant?: 'scroll' | 'zoom';
 }
 
-const {
-  slug,
-  alt,
-  href,
-  label,
-  client: clientProp,
-  sizes = '(min-width: 64rem) 46rem, calc(100vw - 2.5rem)',
-  caption,
-} = Astro.props;
+const { slug, alt, href, label, client: clientProp, sizes = BODY_SIZES, caption } = Astro.props;
 
 // Resolve the capture by slug (eager glob, the same pattern as SelectedWork).
 const homeShots = import.meta.glob<{ default: ImageMetadata }>(

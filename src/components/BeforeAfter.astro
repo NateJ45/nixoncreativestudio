@@ -45,7 +45,8 @@
    labelled). No auto-motion, so there is nothing to gate for reduced motion.
    ============================================================================ */
 
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
+import { BODY_SIZES, ladder, PICTURE } from '../lib/picture';
 
 interface Props {
   before: ImageMetadata;
@@ -76,12 +77,13 @@ const {
   <div class="ba frame relative overflow-hidden select-none" data-beforeafter style="--pos: 50%;">
     <!-- Base layer: the AFTER (redesigned) image fills the frame. It shows on
          the RIGHT, wherever the clipped BEFORE layer doesn't cover it. -->
-    <Image
+    <Picture
       src={after}
       alt={afterAlt}
-      widths={[640, 768, 1024, 1440]}
-      sizes="(min-width: 56rem) 70vw, calc(100vw - 3rem)"
+      widths={ladder([640, 768, 1024, 1440])}
+      sizes={BODY_SIZES}
       class="block h-auto w-full"
+      {...PICTURE}
     />
 
     <!-- Top layer: the BEFORE (previous) image, clipped from the left edge to
@@ -89,12 +91,13 @@ const {
          alt="" inside an aria-hidden wrapper, so screen readers only ever heard
          the after image and the beforeAlt prop went nowhere). -->
     <div class="ba-before pointer-events-none absolute inset-0">
-      <Image
+      <Picture
         src={before}
         alt={beforeAlt}
-        widths={[640, 768, 1024, 1440]}
-        sizes="(min-width: 56rem) 70vw, calc(100vw - 3rem)"
+        widths={ladder([640, 768, 1024, 1440])}
+        sizes={BODY_SIZES}
         class="block h-auto w-full"
+        {...PICTURE}
       />
     </div>
 

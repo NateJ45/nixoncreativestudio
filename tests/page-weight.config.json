@@ -18,13 +18,13 @@
   },
   "pages": {
     "/": {
-      "_why": "The hero reel shows real client sites as images (about 13 small WebP captures, 2026-10-30). The WebGL hero and its 1237 KB of three.js were removed the same day, so scripts fall back to the default budget.",
-      "maxImagesKb": 770
+      "_why": "The hero reel shows real client sites as images (about 13 small WebP captures, 2026-10-30). The WebGL hero and its 1237 KB of three.js were removed the same day, so scripts fall back to the default budget. Lowered from 770 by overhaul 4.4 (2026-10-31): the Selected Work frames below the reel became AVIF with honest `sizes`, and the page measured 325 KB of images in Playwright chromium at 1280x720 (446 before). The budget is that plus about 25%. The reel itself stays WebP (AVIF came out larger at its quality).",
+      "maxImagesKb": 410
     },
     "/work/stone-steps-50k": {
-      "_why": "The sample case study (Stone Steps, since 2026-10-30). Lowered by overhaul 2.4b (2026-10-31): the site showcase became 'Walk the homepage', which crops the 1440x10824 capture to its first 4,000px at build time (ruling 4) and drops the floating phone. Measured in Playwright chromium after: 403 KB of images (was 875), the largest one the 145 KB walk capture (the full-length capture was one 504 KB WebP). The budget is that plus about 25%, so it sits just above the 500 KB default; the per-image cap is the walk capture plus margin.",
-      "maxImagesKb": 520,
-      "maxImageKb": 200
+      "_why": "The sample case study (Stone Steps, since 2026-10-30). Lowered by overhaul 2.4b (2026-10-31): the site showcase became 'Walk the homepage', which crops the 1440x10824 capture to its first 4,000px at build time (ruling 4) and drops the floating phone. Lowered again by overhaul 4.4 (2026-10-31): every study image is now AVIF with a WebP fallback, and Playwright chromium at 1280x720 measured 212 KB of images on load (270 before 4.4), the largest one the 94 KB AVIF stage capture. The budgets are those plus about 25%. Scrolled to the bottom at 1440 the page loads 744 KB (906 before), with the walk capture now served at the width its box really has.",
+      "maxImagesKb": 270,
+      "maxImageKb": 120
     }
   },
   "jsonLd": {

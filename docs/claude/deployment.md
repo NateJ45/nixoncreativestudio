@@ -7,7 +7,7 @@ Moved out of CLAUDE.md. Read when changing deploys, env vars, the Coming Soon ga
 - Build command: `npm run build`. Output directory: `dist`.
 - Unknown URLs: `wrangler.jsonc` sets `assets.not_found_handling: "404-page"`, so a path with no file gets `dist/client/404.html` (from `src/pages/404.astro`) with a 404 status. Without it Cloudflare answers with an empty body, which is what the live site did until 2026-10-18.
 - `output: 'static'` in `astro.config.mjs` prerenders every page to HTML at build time. The `@astrojs/cloudflare` adapter is installed but inert for static pages. To opt a single page into server rendering, add `export const prerender = false` in that page's frontmatter.
-- The adapter is configured with `imageService: 'compile'` so `<Image />` is optimized at build time into static `dist/_astro/*.webp` files. Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
+- The adapter is configured with `imageService: 'compile'` so `<Image />` and `<Picture />` are optimized at build time into static `dist/_astro/*.avif` and `*.webp` files (AVIF settings: `image.service.config` in `astro.config.mjs`, overhaul 4.4). Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
 
 ## Environment variables
 

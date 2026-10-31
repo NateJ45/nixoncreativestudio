@@ -78,6 +78,21 @@ export default defineConfig({
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
   adapter: cloudflare({ imageService: 'compile' }),
+  // Encoder settings for that build-time Sharp service (overhaul 4.4). Media.astro
+  // and the other <Picture> calls emit AVIF with a WebP fallback. Sharp's AVIF
+  // default (quality 50) visibly smears fine photographic detail (aerial maps,
+  // the about photos) next to the WebP, so AVIF runs at 60: side by side at 2x
+  // zoom it matches the WebP, and the files still come out about 30% smaller.
+  // Effort 3, not Sharp's default 4: on the site's screenshots 4 takes about three
+  // times as long for files only 2% smaller, and every CI build encodes from cold.
+  // WebP keeps Sharp's default (80). A component that passes its own `quality`
+  // (the hero reel's 68) overrides both.
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+      config: { avif: { quality: 60, effort: 3 } },
+    },
+  },
   integrations: [
     // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
     // so a code sample flips with the theme toggle instead of prefers-color-scheme.

@@ -34,6 +34,7 @@ import type { ImageMetadata } from 'astro';
 import Section from './Section.astro';
 import BrowserFrame from './BrowserFrame.astro';
 import Media from './Media.astro';
+import { BODY_SIZES } from '../lib/picture';
 
 interface Props {
   cms: { src: ImageMetadata; alt: string; name?: string } | null;
@@ -46,7 +47,7 @@ const { cms, frame, id = 'what-you-edit-heading' } = Astro.props;
 const media = {
   widths: [640, 960, 1440],
   // The body column: 9 of 12 columns of the 82.5rem container from lg up.
-  sizes: '(min-width: 82.5rem) 60rem, (min-width: 64rem) 72vw, calc(100vw - 3rem)',
+  sizes: BODY_SIZES,
 };
 ---
 
