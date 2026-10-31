@@ -4,7 +4,9 @@
    /colophon/parts/ | The parts page (overhaul package 1.8)
    ============================================================================
    One page that renders every shared building block (Section, BrowserFrame,
-   FramePair, Media, and the nav from src/data/nav.ts) with real content: the
+   FramePair, Media, and the nav from src/data/nav.ts), plus the case-study
+   body parts from package 2.4b (Signature, Decision, ResultsBlock), with
+   real content: the
    Stone Steps 50K captures and live URL, and facts computed from the
    case-study collection. It exists so the gates can check the parts in one
    place: it is in tests/routes.ts, so axe (light and dark), the 320px reflow
@@ -23,11 +25,15 @@ import Section from '../../components/Section.astro';
 import BrowserFrame from '../../components/BrowserFrame.astro';
 import FramePair from '../../components/FramePair.astro';
 import Media from '../../components/Media.astro';
+import Signature from '../../components/Signature.astro';
+import Decision from '../../components/Decision.astro';
+import ResultsBlock from '../../components/ResultsBlock.astro';
 import { getCoverPlaceholder } from '../../lib/coverPlaceholder';
 import { getNav, getFooterNav, MIN_PHOTOS } from '../../data/nav';
 
 import desktopShot from '../../assets/case-studies/shots/stone-steps-50k-home.png';
 import phoneShot from '../../assets/case-studies/shots/stone-steps-50k-mobile.png';
+import elevationShot from '../../assets/case-studies/shots/stone-steps-50k-feature-elevation.png';
 
 // The sample study: Stone Steps 50K, the same one the tests use.
 const SLUG = 'stone-steps-50k';
@@ -125,6 +131,47 @@ const footerNav = await getFooterNav();
       widths={[400, 640, 900]}
       sizes="(min-width: 64rem) 40rem, calc(100vw - 2rem)"
       class="rounded-frame"
+    />
+  </Section>
+
+  {/* The case-study body parts (2.4b). Every word below is taken from the
+      Stone Steps study's own MDX, which sources its numbers. */}
+  <Signature
+    hook={hook}
+    src={elevationShot}
+    alt="The elevation chart on stonesteps50k.com: seven loops of steep climbs, measured from USGS LiDAR"
+    url={liveUrl}
+    tone="paper"
+    id="parts-signature"
+  />
+
+  <Section rail="Decision" railMeta="One to three per study" labelledby="parts-decision">
+    <h2 id="parts-decision">
+      The easy version, and <b>what I did.</b>
+    </h2>
+    <Decision
+      title="Records from the results"
+      easy="Carry the hand-typed records tables over to the new site."
+      did="Calculate every record from the results instead, so a record and the finish behind it are the same entry."
+    />
+    <Decision
+      title="A look taken from the race's own sign"
+      easy="A near-black and blaze orange scheme that looks like a trail race."
+      did="Sample the palette from the race's hand-painted trail sign, because the first draft did not look like this race."
+    />
+  </Section>
+
+  <Section tone="paper" rail="Results" railMeta="Sourced or plain" prose label="Results ledger">
+    <ResultsBlock
+      id="parts-results"
+      items={[
+        {
+          figure: '2,188',
+          text: 'finishes on file, every edition since 2003',
+          source: "RunSignUp and the race's archived results pages",
+        },
+        'After each race the site updates itself. Results, records, and runner pages are live the next morning.',
+      ]}
     />
   </Section>
 

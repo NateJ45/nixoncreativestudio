@@ -1,301 +1,260 @@
 ---
 // Safe to edit.
 /* ============================================================================
-   SiteShowcase  [device pairing]
+   SiteShowcase: "Walk the homepage" (overhaul package 2.4b)
    ============================================================================
-   An animated "live site" showcase embedded in a case study: a browser-chrome
-   window whose full-page DESKTOP screenshot scrolls on view, paired with a small
-   PHONE in the lower-right showing the same site's MOBILE screenshot scrolling
-   in step. Showing one site on two screens reads as "this is a real, responsive
-   build," the same device-pairing language as the homepage hero and the Selected
-   Work cards. The desktop frame links to the live site.
+   The client's real homepage in a BrowserFrame, walked top to bottom as you
+   scroll the case study. Two ways it can behave, both from the same markup:
 
-   Captures are resolved by slug (the same convention as the hero showcase and
-   the /work cards), so a case study only needs:
-     - src/assets/case-studies/shots/<slug>-home.png   (desktop, 1440 wide, full page)  REQUIRED
-     - src/assets/case-studies/shots/<slug>-mobile.png  (phone, ~545 wide, full page)    OPTIONAL
-   If the mobile capture is absent, the phone simply is not shown (desktop only),
-   so a new study works the moment its home capture lands.
+   1. The walk (scroll-driven). Where the browser supports
+      `animation-timeline: view()`, the visitor has not asked for less motion,
+      and Pause motion is off (`html[data-motion-paused]` is not set), the
+      frame sticks under the header inside a tall track, and the capture
+      slides up (translateY) in step with the page scroll. Page scroll is the
+      only input: no timer, no loop, no script.
 
-   Usage inside a case study .mdx (import goes right under the frontmatter):
+   2. The scroll box (the fallback). Under `prefers-reduced-motion: reduce`,
+      under Pause motion, or without scroll-driven CSS, the frame's screen is a
+      plain native scroll box. It is a focusable region named "Scroll the
+      {client} homepage", so a keyboard user can Tab to it and use the arrow
+      keys, Page Down or Space (tests/walk.spec.ts).
+
+   Weight (overhaul ruling 4): the capture is cropped at build time to its
+   first 4,000px (Media.astro crops when the box's ratio differs from the
+   image's), so a 10,824px full-page capture never ships whole. It is lazy, in
+   a fixed-ratio box, so nothing shifts while it loads. Measured on Stone Steps
+   on 2026-10-31: the old full-length showcase image was 504 KB; see
+   tests/page-weight.config.json for the number after.
+
+   The phone that used to float in the corner is gone: the case-study stage
+   (FramePair) already shows the phone capture, so it would be the same
+   picture twice.
+
+   Captures are found by slug, as before:
+     src/assets/case-studies/shots/<slug>-home.png   (1440 wide, full page)
+   Re-shoot with `npm run capture:study <slug>`.
+
+   Usage inside a case study .mdx (the props the eight studies already pass):
 
      import SiteShowcase from '../../components/SiteShowcase.astro';
 
      <SiteShowcase
        slug="<slug>"
-       alt="The <Client> homepage, scrolling top to bottom"
+       alt="The <Client> homepage, top to bottom"
        href="https://example.com"
        label="example.com"
      />
 
-   Accessibility: the scroll is gated behind prefers-reduced-motion, so a
-   reduced-motion visitor sees static frames (the top of each page) and the link
-   still works. The phone is decorative (aria-hidden, pointer-events:none, so the
-   desktop link stays clickable beneath it). The chrome dots are decorative and
-   the link carries an explicit aria-label. The phone is hidden below md, where a
-   phone-inside-a-phone would be too cramped to read.
+   New, optional: `client` (the name in the scroll box's label; defaults to
+   the study's `client` from the collection), `sizes` (when a template sets
+   the walk wider or narrower than the default column) and `caption`.
    ============================================================================ */
 
-import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
 import type { ImageMetadata } from 'astro';
+import BrowserFrame from './BrowserFrame.astro';
+import Media from './Media.astro';
 
 interface Props {
-  /** Case study slug. Resolves <slug>-home.png (required) and <slug>-mobile.png (optional). */
+  /** Case study slug. Resolves <slug>-home.png. */
   slug: string;
-  /** Descriptive alt for the desktop screenshot. */
+  /** Alt text for the capture. */
   alt: string;
-  /** Live site URL the frame links to. */
+  /** The live site's URL. The frame shows its host; the caption links to it. */
   href: string;
-  /** Address-bar label. Defaults to the href host without protocol. */
+  /** Host as shown in the caption. Defaults to the href without protocol. */
   label?: string;
-  /** 'scroll' (default) auto-scrolls the whole page; 'zoom' slow Ken Burns. */
+  /** Client name for the scroll box label. Defaults to the study's `client`. */
+  client?: string;
+  /** The real rendered width of the frame, so a phone picks a small file. */
+  sizes?: string;
+  /** Optional line under the frame, before the live link. */
+  caption?: string;
+  /**
+   * @deprecated The old 'zoom' variant (a slow Ken Burns loop) was retired in
+   * 2.4b; every walk is scroll-driven now. Kept so older MDX still renders.
+   */
   variant?: 'scroll' | 'zoom';
 }
 
-const { slug, alt, href, label, variant = 'scroll' } = Astro.props;
+const {
+  slug,
+  alt,
+  href,
+  label,
+  client: clientProp,
+  sizes = '(min-width: 64rem) 46rem, calc(100vw - 2.5rem)',
+  caption,
+} = Astro.props;
 
-// Resolve the captures by slug (eager glob, same pattern as SelectedWork).
+// Resolve the capture by slug (eager glob, the same pattern as SelectedWork).
 const homeShots = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/case-studies/shots/*-home.png',
   { eager: true },
 );
-const mobileShots = import.meta.glob<{ default: ImageMetadata }>(
-  '../assets/case-studies/shots/*-mobile.png',
-  { eager: true },
-);
 const src = Object.entries(homeShots).find(([p]) => p.endsWith(`/${slug}-home.png`))?.[1].default;
-const mobileSrc = Object.entries(mobileShots).find(([p]) => p.endsWith(`/${slug}-mobile.png`))?.[1]
-  .default;
 if (!src) {
   throw new Error(
     `SiteShowcase: no desktop capture for slug "${slug}" (expected ${slug}-home.png)`,
   );
 }
 
+// The client's name, for "Scroll the {client} homepage". Taken from the
+// study itself so it can never disagree with the title card.
+const study = await getEntry('case-studies', slug);
+const client = clientProp ?? study?.data.client ?? label ?? new URL(href).hostname;
+
+// Ruling 4: walk the first 4,000px of the capture at most. The captures are
+// about 1440px wide, so this is a little under three screens of the site.
+const MAX_DEPTH = 4000;
+const depth = Math.min(src.height, MAX_DEPTH);
+const ratio = `${src.width} / ${depth}`;
+
 const shown = (label ?? href).replace(/^https?:\/\//, '').replace(/\/$/, '');
-const hasPhone = !!mobileSrc;
+const labelId = `walk-${slug}-label`;
 ---
 
-<figure class="site-showcase my-l">
-  <div class:list={['showcase-pair', hasPhone && 'has-phone']}>
-    <a
-      class="showcase group block overflow-hidden rounded-xl border border-border bg-bg no-underline shadow-[var(--shadow-frame)] transition-transform duration-300 hover:-translate-y-1"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Visit the live ${shown} site (opens in a new tab)`}
-    >
-      <!-- Browser chrome bar: traffic-light dots + a fake address bar. -->
-      <div class="flex items-center gap-s border-b border-border bg-bg-soft px-3 py-2">
-        <span class="flex gap-1.5" aria-hidden="true">
-          <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
-          <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
-          <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
-        </span>
-        <span class="mx-auto inline-flex items-center gap-1.5 rounded-md bg-bg px-3 py-1 font-mono text-[0.72rem] text-text-muted">
-          <svg
-            viewBox="0 0 24 24"
-            width="11"
-            height="11"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <rect x="5" y="11" width="14" height="9" rx="2"></rect>
-            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
-          </svg>
-          {shown}
-        </span>
-        <span class="font-mono text-[0.7rem] tracking-[0.08em] text-link uppercase opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
-          Visit ↗
-        </span>
-      </div>
-
-      <!-- Scrolling / zooming desktop viewport. -->
-      <div
-        class={`showcase-window ${variant === 'zoom' ? 'showcase-zoom' : 'showcase-scroll'}`}
-        data-motion={variant === 'zoom' ? 'loop' : undefined}
-      >
-        <Image
-          src={src}
-          alt={alt}
-          widths={[640, 768, 1024, 1425]}
-          sizes="(min-width: 56rem) 70vw, calc(100vw - 3rem)"
-        />
-      </div>
-    </a>
-
-    {hasPhone && (
-      /* Phone overlapping the desktop's lower-right. Decorative (the desktop
-           shows the same site), so aria-hidden; pointer-events:none keeps the
-           desktop link clickable beneath it. Hidden below md (see <style>). */
-      <div class="showcase-phone" aria-hidden="true">
-        <div class="showcase-phone-window">
-          <Image
-            src={mobileSrc!}
-            alt=""
-            widths={[220, 330, 440]}
-            sizes="(min-width: 48rem) 200px, 1px"
-            class="showcase-phone-img"
-            loading="lazy"
+<figure class="walk" data-walk>
+  <div class="walk-track">
+    <div class="walk-sticky">
+      <BrowserFrame url={href}>
+        {/* The screen. A focusable, named region so the fallback scroll box is
+            keyboard reachable (axe: scrollable-region-focusable). In walk
+            mode it clips instead, and the page scroll moves the capture. */}
+        <div class="walk-screen" tabindex="0" role="region" aria-labelledby={labelId}>
+          <Media
+            src={src}
+            alt={alt}
+            ratio={ratio}
+            position="top"
+            widths={[480, 800, 1200]}
+            sizes={sizes}
+            class="walk-capture"
           />
         </div>
-      </div>
-    )}
+      </BrowserFrame>
+    </div>
   </div>
-
-  <figcaption class="mt-xs text-center font-mono text-[0.75rem] text-text-muted">
-    Live at <span class="text-link">{shown}</span>.
+  <figcaption class="walk-caption">
+    <span id={labelId} class="sr-only">
+      Scroll the {client} homepage
+    </span>
+    {caption && <span class="walk-caption-line">{caption}</span>}
+    <span class="walk-hint walk-hint-box" aria-hidden="true">
+      Scroll inside the frame.
+    </span>
+    <span class="walk-hint walk-hint-scrub" aria-hidden="true">
+      Keep scrolling to walk it.
+    </span>
+    <a href={href} target="_blank" rel="noopener noreferrer" class="walk-live">
+      Live at {shown}
+      <span aria-hidden="true"> ↗</span>
+      <span class="sr-only"> (opens in a new tab)</span>
+    </a>
   </figcaption>
 </figure>
 
 <style>
-  /* The pair wraps the desktop frame and the floating phone. position:relative so
-     the phone can be absolutely placed against it. */
-  .showcase-pair {
-    position: relative;
+  /* ---- The scroll box: the default, and the fallback ---------------------
+     A fixed-ratio screen (16:10, never taller than the window allows) that
+     scrolls natively. Every browser, every motion setting gets this first;
+     the walk below only takes over when all three conditions hold. */
+  .walk {
+    margin-block: var(--spacing-l, 2.5rem);
   }
 
-  /* The fixed-height window crops the tall screenshot; the inner image is
-     animated to reveal the whole page. --wh is shared between the window
-     height and the scroll keyframe so the image stops exactly at its bottom. */
-  .showcase-window {
-    --wh: clamp(17rem, 52vh, 28rem);
-    position: relative;
-    height: var(--wh);
-    overflow: hidden;
-    background: var(--color-bg-soft);
+  .walk-screen {
+    aspect-ratio: 16 / 10;
+    max-height: calc(100svh - 10rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background-color: var(--paper);
+  }
+  .walk-screen:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
   }
 
-  .showcase-window :global(img) {
-    display: block;
-    width: 100%;
-    height: auto;
+  .walk-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--muted-foreground);
   }
-
-  /* ---- Phone: a small floating device in the lower-right -------------------
-     Hidden below md (a phone inside a phone is too cramped to read). At md+ it
-     overlaps the desktop's lower-right, bottom-aligned, with a deep soft shadow
-     so it reads as floating in front. --pw controls its width. */
-  .showcase-phone {
+  .walk-live {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .walk-hint-scrub {
     display: none;
   }
-  @media (min-width: 48rem) {
-    .showcase-phone {
-      --pw: clamp(8.5rem, 19%, 11.5rem);
-      display: block;
-      position: absolute;
-      right: 2.5%;
-      bottom: 0;
-      width: var(--pw);
-      z-index: 3;
-      padding: 0.35rem;
-      border-radius: 1.4rem;
-      background: #0b0e14;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow:
-        0 34px 60px -26px rgba(0, 0, 0, 0.62),
-        0 14px 30px -22px rgba(0, 0, 0, 0.5);
-      pointer-events: none; /* keep the desktop link clickable underneath */
-    }
-    /* Speaker/notch pill. */
-    .showcase-phone::before {
-      content: '';
-      position: absolute;
-      top: 0.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 26%;
-      height: 0.22rem;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.25);
-      z-index: 2;
-    }
-  }
 
-  .showcase-phone-window {
-    position: relative;
-    overflow: hidden;
-    border-radius: 1.05rem;
-    aspect-ratio: 9 / 19;
-    background: var(--color-bg-soft);
-  }
-  .showcase-phone-img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
+  /* ---- The walk ----------------------------------------------------------
+     Only with motion allowed, Pause motion off and scroll-driven CSS. The
+     track is the scroll distance; the frame sticks while the track passes,
+     and the capture moves from its top to its bottom over the track's
+     `contain` range (track top at the viewport top, to track bottom at the
+     viewport bottom), which ends while the frame is still stuck.
 
+     The timeline is NAMED on the track: an anonymous view() on the capture
+     would bind to its nearest scroll container, the clipped screen, which
+     never scrolls (the bug the old showcase hit). The screen is a size
+     container, so 100cqh is its height and the capture's last frame lines
+     its bottom up with the screen's bottom, whatever height the screen has. */
   @media (prefers-reduced-motion: no-preference) {
-    /* Scroll variant: pan the full-page screenshot top-to-bottom in lockstep
-       with the visitor's own scroll as the frame crosses the viewport, so it
-       feels like scrolling the real site through a window rather than watching
-       a timed loop. Where scroll-timeline is unsupported, the image simply
-       sits at the top (a clean static frame); the link still works. */
     @supports (animation-timeline: view()) {
-      /* The timeline must be NAMED and declared on the outer figure. An
-         anonymous view() set on the image binds to the image's NEAREST scroll
-         container, which is the overflow:hidden .showcase-window (and, for the
-         phone, .showcase-phone-window), NOT the page. Those inner boxes never
-         scroll, so the timeline never advances and the screenshot sits frozen
-         at one position (the bug this fixes). Naming the timeline on
-         .site-showcase, whose nearest scroll container IS the page, and
-         referencing it by name from both images, crosses the overflow boundary
-         so the pan tracks real page scroll as the frame travels the viewport. */
-      .site-showcase {
-        view-timeline-name: --ncs-showcase-view;
+      :global(html:not([data-motion-paused])) .walk-track {
+        height: 220vh;
+        view-timeline-name: --ncs-walk;
         view-timeline-axis: block;
       }
-      .showcase-scroll :global(img) {
-        animation: showcase-scroll linear both;
-        animation-timeline: --ncs-showcase-view;
-        animation-range: entry 12% exit 88%;
+      :global(html:not([data-motion-paused])) .walk-sticky {
+        position: sticky;
+        top: 6.5rem;
       }
-      /* The phone pans its (taller) mobile page on the same scroll, a touch
-         further since a mobile layout stacks taller. */
-      .showcase-phone-img {
-        animation: showcase-phone-scroll linear both;
-        animation-timeline: --ncs-showcase-view;
-        animation-range: entry 12% exit 88%;
+      :global(html:not([data-motion-paused])) .walk-screen {
+        overflow: hidden;
+        container-type: size;
       }
-    }
-
-    /* Zoom variant keeps a slow Ken Burns loop and pauses on hover/focus. */
-    .showcase-zoom :global(img) {
-      transform-origin: top center;
-      animation: showcase-zoom 18s ease-in-out infinite alternate;
-    }
-    .showcase:hover .showcase-zoom :global(img),
-    .showcase:focus-visible .showcase-zoom :global(img) {
-      animation-play-state: paused;
+      :global(html:not([data-motion-paused])) .walk-screen :global(.walk-capture) {
+        animation: ncs-walk linear both;
+        animation-timeline: --ncs-walk;
+        animation-range: contain 0% contain 100%;
+      }
+      :global(html:not([data-motion-paused])) .walk-hint-box {
+        display: none;
+      }
+      :global(html:not([data-motion-paused])) .walk-hint-scrub {
+        display: inline;
+      }
     }
   }
 
-  @keyframes showcase-scroll {
+  @keyframes ncs-walk {
     from {
       transform: translateY(0);
     }
     to {
-      transform: translateY(calc(-100% + var(--wh)));
+      transform: translateY(calc(-100% + 100cqh));
     }
   }
 
-  @keyframes showcase-phone-scroll {
-    from {
-      transform: translateY(0);
+  /* On paper the frame prints its URL; the capture prints from its top. */
+  @media print {
+    .walk-track {
+      height: auto;
     }
-    to {
-      transform: translateY(-58%);
+    .walk-screen {
+      overflow: hidden;
     }
-  }
-
-  @keyframes showcase-zoom {
-    from {
-      transform: scale(1);
-    }
-    to {
-      transform: scale(1.16) translateY(-6%);
+    .walk-hint {
+      display: none;
     }
   }
 </style>
