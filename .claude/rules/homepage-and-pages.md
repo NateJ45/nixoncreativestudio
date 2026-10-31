@@ -30,6 +30,19 @@ Services, photography, and testimonials each live elsewhere, not on the homepage
 
 Don't reorder these sections. The hero no longer depends on any single content gate: the reel of real client sites fills it today, so it ships complete.
 
+## /about (overhaul package 2.6)
+
+The page's job is trust in the person. Order, in `src/pages/about.astro`:
+
+1. **Head**: the real headshot (`src/assets/brand/headshot.jpg`, through `Media.astro` with `lcp`, 4:5) and the H1 with its Heft. The headshot is the page's LCP at every width, so it is never revealed: on a phone it sits above the H1 (visual order only; the H1 stays first in the DOM), and from lg the text takes columns 1 to 6 and the photo 7 to 12. This band is its own `.page-grid` rather than a `Section`, because Section's body starts at column 4, which leaves the photo too small to out-size the H1. The H1 uses `--text-h1-long` so "organizations" at 800 fits 320px. The H1 wording is Nathan's to pick (plan section 7); keep it until he does.
+2. **In short** (`Section`, white): the thesis line and four plain facts. The rail's "{n} client sites" and the case-study fact are counted from the collection.
+3. **The longer story** (`Section`, prose). The family "we" sits behind `data-copy-ignore`.
+4. **Outside the studio** (`Section`, paper): a contact sheet of the five real photos in `src/assets/about` (the `photos` array: `src`, `caption`, `alt`), numbered 01 to 05 in mono, each a `[data-zoom]` button for the one `Lightbox`.
+5. **Currently** (`Section id="now"`, white): the old /now snapshot. The rail shows the freshness ("Updated 4 weeks ago"), the body the "Last updated" date with a `data-motion="loop"` dot.
+6. **How I work**: one line linking `/services/#why` (the "why it costs what it costs" block). The old "How I work" principles list was a repeat of /services and is gone.
+
+Then the footer's ink closer ("Want to talk about **a project?**"). Deleted in 2.6: `Terminal.astro` and `LighthouseScore.astro` (the colophon carries the real numbers). Scoped CSS only.
+
 ## /work (package 2.3)
 
 `src/pages/work/index.astro`. Its job is "find one like mine, then open it". The H1 is "{n} sites, **all live today.**" with n computed from the collection; if any study loses its `liveUrl` the heavy phrase becomes "**all shipped.**" by itself. The heavy phrase is the page's one Heft. Under it, `WorkFilter` (the `?sector=` tabs and the aria-live count, see `components.md`), then one ruled `<ol>` in `order`: each row is the client name in Bricolage at `clamp(2rem, 5vw, 4.5rem)` (Stone Steps, order 1, gets a larger lead row), the `hook`, sector and year in mono (`facts` overrides them), and two sibling links: the case study (the whole row, a stretched `::after` on the name link) and the live host with an arrow, which sits above the stretch. Never nest them.
