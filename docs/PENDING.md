@@ -114,6 +114,18 @@ its own newer workerd; on Linux CI (and on a Windows install where wrangler and
 the plugin share one workerd, as today) it changes nothing. The wrapper copy is
 byte-identical to the starter's.
 
+### 6. Case-study covers start invisible (found 2026-10-30)
+
+`tests/first-viewport.spec.ts` found that `CaseStudyCover.astro` renders its
+`<img>` with `opacity-0` (not gated on `.js`) and fades it in from a script on
+load. The `/work` cards and the case-study hero, which is the LCP image, start
+at opacity 0, and with JavaScript off they never show at all. Never-break rule 3
+in CLAUDE.md forbids it. The spec marks `/work` and `/work/stone-steps-50k` as
+`test.fixme` until overhaul package 1.8 replaces the wrapper with `Media.astro`
+(or 1.2 rewrites it while removing plaiceholder). Fix: drop the fade and let the
+image paint over its blur placeholder, then delete the `KNOWN` entries in the
+spec.
+
 ---
 
 ## Deliberate absences (do not "fix" these)
