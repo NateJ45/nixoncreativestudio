@@ -18,9 +18,16 @@
    Order of contents below:
      1. Tailwind core import
      2. Webfont imports
-     3. @theme: brand tokens for utility wiring
+     3. @theme: brand tokens for utility wiring (type scale, fonts, radii)
      4. Base styles (body, headings, motion respect, list resets)
      5. Site-wide utility classes (.ncs-container, .card-link)
+     5b. Surfaces and grid (.band-ink, .page-grid, .frame, .hairline,
+         forced-colors borders)
+     6. Motion + effects (tokens live in :root; 1.7 builds on them)
+
+   FROZEN after overhaul packages 1.5 and 1.7 (plan ruling 10). Page and
+   component CSS goes in scoped <style> blocks; only shared tokens and
+   primitives belong here.
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
@@ -29,17 +36,50 @@
 @import 'tailwindcss';
 
 /* ----------------------------------------------------------------------------
-   2. Webfonts. Bebas Neue at weight 400, Source Sans 3 Variable for body.
-      Both default to font-display: swap from @fontsource.
+   2. Webfonts. Three faces, all self-hosted, all font-display: swap.
+      - Bricolage Grotesque Variable (wght 200 to 800): every heading and the
+        display utilities. Preloaded in BaseLayout.
+      - Source Sans 3 Variable: body, UI, buttons, forms. Preloaded.
+      - Bebas Neue 400: the header wordmark ONLY (Nathan's decision 1,
+        2026-10-30). Not preloaded: the wordmark is never the LCP element, and
+        its metric fallback keeps the swap from moving anything.
 
-      Bebas is imported as the LATIN subset only (not the full 400.css, which
-      ships @font-face blocks for latin-ext, cyrillic, greek, etc.). The site
-      is English, so the extra subsets were dead weight in a render-blocking
-      stylesheet, and the latin woff2 is the exact file BaseLayout preloads.
+      Every face is the LATIN subset only. The site is English, and the full
+      @fontsource stylesheets ship @font-face blocks for latin-ext, cyrillic,
+      greek and vietnamese that were dead weight in a render-blocking
+      stylesheet. Bebas has a per-subset stylesheet; the two variable packages
+      do not, so their latin @font-face is written out below by hand, pointing
+      at the exact woff2 files BaseLayout preloads (same URL, one fetch).
    ---------------------------------------------------------------------------- */
 @import '@fontsource/bebas-neue/latin-400.css';
-@import '@fontsource-variable/source-sans-3';
 @import './font-fallbacks.css';
+@import './wordmark-fallback.css';
+
+/* Copied from @fontsource-variable/source-sans-3/index.css (latin block). */
+@font-face {
+  font-family: 'Source Sans 3 Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Copied from @fontsource-variable/bricolage-grotesque/wght.css (latin block). */
+@font-face {
+  font-family: 'Bricolage Grotesque Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
@@ -82,18 +122,69 @@
   --color-bg: #ffffff; /* Default page background. */
   --color-bg-soft: #f4f7fa; /* Light blue-gray for alternating sections. */
 
-  /* Font families. --font-* drives font-display, font-body, font-mono. */
-  --font-display: 'Bebas Neue', 'Bebas Neue Fallback', system-ui, sans-serif;
+  /* Font families. --font-* drives font-display, font-body, font-mono,
+     font-wordmark. The display stack names the metric-matched fallback
+     second (src/styles/font-fallbacks.css, written by `npm run
+     font-fallback` from brand/brand.config.json; keep the two in step). */
+  --font-display:
+    'Bricolage Grotesque Variable', 'Bricolage Grotesque Variable Fallback', system-ui, sans-serif;
   --font-body: 'Source Sans 3 Variable', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, monospace;
+  /* The header wordmark, and nothing else (Nathan's decision 1). Never use
+     font-wordmark for a heading. */
+  --font-wordmark: 'Bebas Neue', 'Bebas Neue Fallback', system-ui, sans-serif;
 
-  /* Heading sizes (fluid clamp). --text-h1 etc. drive text-h1 utilities. */
+  /* Type scale (fluid clamp). Each size carries its own line-height,
+     tracking and weight, so `text-h3` on a <p> or <span> looks like an h3
+     without extra classes. A utility such as `font-semibold` or
+     `leading-[1.1]` still overrides the paired value.
+
+     Weight is the emphasis: display, h1 and h2 sit at 300 and a <b> or
+     <strong> inside them goes to 800 (section 4). h3 and below sit at 650.
+     Headings never use colour, capitals or gradient for emphasis.
+
+     --text-display: the homepage hero statement only.
+     --text-h1-long: the case-study title card, where a client name can run
+       long ("First Presbyterian Church of Orangeburg"). Same curve as h1 with
+       a 2.25rem floor (plan ruling 16), plus overflow-wrap: anywhere on h1. */
+  --text-display: clamp(3rem, min(6.2vw, 10.5vh), 6.25rem);
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.045em;
+  --text-display--font-weight: 300;
+  --text-h1: clamp(2.75rem, 5.2vw, 4.75rem);
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: -0.035em;
+  --text-h1--font-weight: 300;
+  --text-h1-long: clamp(2.25rem, 5.2vw, 4.75rem);
+  --text-h1-long--line-height: 1;
+  --text-h1-long--letter-spacing: -0.035em;
+  --text-h1-long--font-weight: 300;
+  --text-h2: clamp(2rem, 3.4vw, 3.25rem);
+  --text-h2--line-height: 1.05;
+  --text-h2--letter-spacing: -0.03em;
+  --text-h2--font-weight: 300;
+  --text-h3: clamp(1.375rem, 2vw, 1.75rem);
+  --text-h3--line-height: 1.15;
+  --text-h3--letter-spacing: -0.02em;
+  --text-h3--font-weight: 650;
+  --text-h4: clamp(1.1875rem, 1.6vw, 1.375rem);
+  --text-h4--line-height: 1.2;
+  --text-h4--letter-spacing: -0.015em;
+  --text-h4--font-weight: 650;
+  --text-h5: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  --text-h5--line-height: 1.25;
+  --text-h5--letter-spacing: -0.01em;
+  --text-h5--font-weight: 650;
   --text-h6: 1rem;
-  --text-h5: clamp(1.125rem, 1.5vw, 1.25rem);
-  --text-h4: clamp(1.25rem, 2vw, 1.5rem);
-  --text-h3: clamp(1.5rem, 2.5vw, 2rem);
-  --text-h2: clamp(2rem, 4vw, 3rem);
-  --text-h1: clamp(2.5rem, 6vw, 5rem);
+  --text-h6--line-height: 1.3;
+  --text-h6--letter-spacing: 0;
+  --text-h6--font-weight: 650;
+
+  /* Radii for the new surfaces. rounded-frame is the one radius for a
+     framed client site, photo or form; rounded-pill for the CTA pill and
+     small status chips. */
+  --radius-frame: 10px;
+  --radius-pill: 999px;
 
   /* Fluid spacing scale. --spacing-* drives p-xs, gap-m, m-l, etc. */
   --spacing-xs: clamp(0.25rem, 0.5vw, 0.5rem);
@@ -255,10 +346,10 @@
     pointer-events: none;
   }
 
-  /* All headings inherit the display face and brand color by default.
-     --color-heading is aliased to the shadcn --heading token (see @theme
-     inline below), so this flips automatically between navy in light
-     mode and near-white in dark mode. */
+  /* All headings take the display face (Bricolage) and the heading colour.
+     They read var(--heading) directly, not the --color-heading alias, so a
+     surface that re-scopes --heading (.band-ink) recolours its headings.
+     Sentence case as written: no text-transform anywhere on a heading. */
   h1,
   h2,
   h3,
@@ -266,40 +357,58 @@
   h5,
   h6 {
     font-family: var(--font-display);
-    font-weight: 400;
-    color: var(--color-heading);
+    color: var(--heading);
     text-wrap: balance;
+    /* Long words wrap instead of pushing the page sideways at 320px. */
+    overflow-wrap: break-word;
   }
 
   h1 {
     font-size: var(--text-h1);
-    line-height: 0.95;
-    letter-spacing: -0.01em;
+    line-height: var(--text-h1--line-height);
+    letter-spacing: var(--text-h1--letter-spacing);
+    font-weight: var(--text-h1--font-weight);
+    /* The 320px guard for long client names (plan ruling 16). `anywhere`
+       also lets the min-content width shrink, so a long title cannot widen
+       its column. */
+    overflow-wrap: anywhere;
   }
-
   h2 {
     font-size: var(--text-h2);
-    line-height: 1;
-    letter-spacing: -0.005em;
+    line-height: var(--text-h2--line-height);
+    letter-spacing: var(--text-h2--letter-spacing);
+    font-weight: var(--text-h2--font-weight);
   }
-
   h3 {
     font-size: var(--text-h3);
-    line-height: 1.05;
+    line-height: var(--text-h3--line-height);
+    letter-spacing: var(--text-h3--letter-spacing);
+    font-weight: var(--text-h3--font-weight);
   }
   h4 {
     font-size: var(--text-h4);
-    line-height: 1.1;
+    line-height: var(--text-h4--line-height);
+    letter-spacing: var(--text-h4--letter-spacing);
+    font-weight: var(--text-h4--font-weight);
   }
   h5 {
     font-size: var(--text-h5);
-    line-height: 1.1;
+    line-height: var(--text-h5--line-height);
+    letter-spacing: var(--text-h5--letter-spacing);
+    font-weight: var(--text-h5--font-weight);
   }
   h6 {
     font-size: var(--text-h6);
-    line-height: 1.1;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    line-height: var(--text-h6--line-height);
+    font-weight: var(--text-h6--font-weight);
+  }
+
+  /* Weight is the emphasis. Inside a light (300) heading, <b> and <strong>
+     carry the heavy phrase at 800: "A one-person studio for <b>organizations
+     that take their work seriously.</b>" Inside an h3 or smaller (650) they
+     still step up to 800. */
+  :is(h1, h2, h3, h4, h5, h6, .text-display, .text-h1, .text-h1-long, .text-h2) :is(b, strong) {
+    font-weight: 800;
   }
 
   /* Lists used as nav menus or layout groups shouldn't carry bullets by
@@ -417,6 +526,126 @@
 }
 
 /* ----------------------------------------------------------------------------
+   5b. Surfaces and grid (overhaul package 1.5).
+   The page is built from three surfaces: white (--background), paper
+   (--paper) and ink (--ink), separated by 1px hairlines (--line). Only real
+   artifacts (client sites, photos, the form) get a frame. The role tokens
+   themselves are in :root / .dark at the bottom of this file.
+   ---------------------------------------------------------------------------- */
+
+/* ---- Ink band --------------------------------------------------------------
+   The solid navy block every page ends on (the closer, built in Phase 2), and
+   any other ink section. Navy in BOTH themes, so it re-scopes the text roles
+   to light-on-navy values that hold AA in both (src/lib/ncs-tokens.test.ts):
+   headings #fff, body #e5e7eb, links and focus sky #40aaed, meta #a7b0be,
+   and the button flips to navy-on-sky as it does in dark mode.
+
+   The --color-* aliases are re-declared too. Tailwind utilities read the
+   role variable directly (@theme inline), but scoped component CSS often
+   reads var(--color-heading) and friends, and a custom property that points
+   at another one is resolved where it is declared (:root), not where it is
+   used. Re-declaring them here makes both routes pick up the ink values. */
+.band-ink {
+  --heading: #ffffff;
+  --foreground: #e5e7eb;
+  --link: #40aaed;
+  --muted-foreground: #a7b0be;
+  --accent: #40aaed;
+  --accent-foreground: #0a1628;
+  --ring: #40aaed;
+  --line: #1f3049;
+  --line-strong: #5b6b84;
+  --border: rgba(255, 255, 255, 0.12);
+  --color-heading: var(--heading);
+  --color-text: var(--foreground);
+  --color-foreground: var(--foreground);
+  --color-link: var(--link);
+  --color-text-muted: var(--muted-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-border: var(--border);
+  background-color: var(--ink);
+  color: var(--foreground);
+}
+
+/* ---- Page grid -------------------------------------------------------------
+   One 12-column grid. Children span the full width on small screens; from
+   lg (64rem) up:
+     .grid-rail   columns 1 to 3   the mono label rail (Section.astro, 1.8)
+     .grid-body   columns 4 to 12  section body
+     .grid-prose  columns 4 to 10  running text, capped at about 68ch (40rem)
+     .grid-wide   columns 1 to 12  wide media
+     .grid-full   full bleed       media that runs edge to edge
+   Section rhythm is --space-section (py-section). */
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+}
+.page-grid > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.page-grid > .grid-prose {
+  max-width: 68ch;
+}
+.page-grid > .grid-full {
+  /* Bleeds to the viewport edges from a centred container. <main> clips
+     overflow-x, so the scrollbar's width never causes a sideways scroll. */
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+@media (min-width: 64rem) {
+  .page-grid > .grid-rail {
+    grid-column: 1 / 4;
+  }
+  .page-grid > .grid-body {
+    grid-column: 4 / 13;
+  }
+  .page-grid > .grid-prose {
+    grid-column: 4 / 11;
+  }
+}
+
+/* ---- Frame and hairline ----------------------------------------------------
+   .frame: the one treatment for a real artifact (a client site, a photo, the
+   form): 10px radius, a 1px ring and the frame shadow. BrowserFrame.astro
+   (package 1.8) builds on it.
+   .hairline: the 1px rule at a change of surface. */
+.frame {
+  border-radius: var(--radius-frame);
+  box-shadow:
+    0 0 0 1px var(--frame-ring),
+    var(--shadow-frame);
+  overflow: hidden;
+}
+.hairline {
+  border-top: 1px solid var(--line);
+}
+
+/* ---- Forced colors (Windows High Contrast) --------------------------------
+   Forced-colors mode drops box-shadows and background colours, which would
+   erase every ring, frame and surface change on the site. Real borders and
+   outlines survive (in a system colour), so each of those gets one here.
+   tests/forced-colors.spec.ts checks one route. */
+@media (forced-colors: active) {
+  .frame,
+  .surface-card {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+  .band-ink,
+  .band-themed,
+  .hairline {
+    border-top: 1px solid CanvasText;
+  }
+}
+
+/* ----------------------------------------------------------------------------
    6. Motion + effects system
    ----------------------------------------------------------------------------
    Deliberately small since the 2026-10 overhaul (package 1.2): one scroll
@@ -488,12 +717,11 @@ main {
 }
 
 /* ---- Heading emphasis -----------------------------------------------------
-   Gradient text (background-clip:text over a gradient) was removed site-wide.
-   It is an impeccable absolute ban: decorative, never meaningful, and a top
-   AI-portfolio tell. Heading emphasis is now carried by a solid brand token
-   plus weight/size: amber (text-tertiary) on dark/navy heroes, NCS blue
-   (text-link) on light surfaces. If you ever want a colored accent phrase,
-   wrap it in a solid token span, never a clipped gradient. */
+   Weight only, since overhaul package 1.5: a light (300) lead and a <b> at
+   800 (section 4). Never a coloured span, never capitals, never gradient
+   text (background-clip:text was removed site-wide as an AI-portfolio
+   tell). The amber and blue accent spans that used to sit in the /about,
+   /contact and /photography H1s are now <b>. */
 
 /* ---- Theme-aware band -----------------------------------------------------
    A flat closing/process band: bg-soft in light mode, navy in dark mode. No
@@ -721,7 +949,19 @@ html.ncs-gated .ncs-overlay {
   --color-heading: var(--heading);
   --color-link: var(--link);
 
-  /* font-heading utility points at the display face (Bebas Neue), the real
+  /* Surface role tokens (package 1.5): bg-paper, bg-ink, bg-ink-raised,
+     border-line, border-line-strong, ring-frame-ring, text-live. */
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-raised: var(--ink-raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-frame-ring: var(--frame-ring);
+  --color-live: var(--live);
+  /* py-section, gap-section: the section rhythm. */
+  --spacing-section: var(--space-section);
+
+  /* font-heading utility points at the display face (Bricolage), the real
      heading font. font-sans tracks the body face so the utility and the
      base body style agree (the unused Geist webfont was removed). */
   --font-heading: var(--font-display);
@@ -892,6 +1132,45 @@ html.ncs-gated .ncs-overlay {
   /* --outline tracks --ring. Left over from the retired Starwind kit (removed
      2026-10); kept because src/lib/theme-tokens.test.ts still asserts it. */
   --outline: #3478bd;
+
+  /* ---- Surface roles (overhaul package 1.5) --------------------------------
+     Existing brand values in new roles, not a rebrand. Every rendered pair
+     is asserted in src/lib/ncs-tokens.test.ts.
+       --paper        the alternate section surface (the old bg-soft value)
+       --ink          the solid navy band (.band-ink); navy in both themes
+       --ink-raised   a raised panel inside an ink band
+       --line         decorative 1px hairline at a change of surface
+       --line-strong  a hairline that must be seen (3:1): frame dots, control edges
+       --frame-ring   the 1px ring around a framed artifact (decorative)
+       --live         amber, meaning "live now" and nothing else. Darkened in
+                      light mode so it reads as text (4.5:1) on white and paper.
+     NCS blue (--accent, --link, --ring) is for actions, links, focus and the
+     active nav item only. */
+  --paper: #f4f7fa;
+  --ink: #0a1628;
+  --ink-raised: #0f1e33;
+  --line: #dde3ea;
+  --line-strong: #7d8797;
+  --frame-ring: #d3dae3;
+  --live: #a85d00;
+
+  /* Layout rhythm. */
+  --space-section: clamp(5rem, 10vw, 9rem);
+  --grid-gutter: clamp(1rem, 2.5vw, 2rem);
+
+  /* ---- Motion tokens (package 1.5; the system itself is package 1.7) ------
+     Durations and easings only. Settle is for entrances, Glide for state to
+     state (and the hero's heft curve), Exit for things leaving, Heft for the
+     one weight animation per page. Reduced motion is handled globally in
+     section 4. */
+  --dur-instant: 120ms;
+  --dur-quick: 200ms;
+  --dur-settle: 420ms;
+  --dur-scene: 640ms;
+  --dur-heft: 1500ms;
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-glide: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-exit: cubic-bezier(0.55, 0, 1, 0.45);
 }
 
 /* ----------------------------------------------------------------------------
@@ -991,4 +1270,16 @@ html.ncs-gated .ncs-overlay {
 
   /* Dark --outline, tracks the dark --ring (see the light block). */
   --outline: #40aaed;
+
+  /* Surface roles, dark (see the :root block for what each one is for).
+     Paper is brand navy, a visible step up from the near-black page. Ink
+     stays navy too: in dark mode the ink band is marked off by its hairline
+     rather than a colour step. */
+  --paper: #0a1628;
+  --ink: #0a1628;
+  --ink-raised: #0f1e33;
+  --line: #1a2a40;
+  --line-strong: #5b6b84;
+  --frame-ring: #22324a;
+  --live: #ffa334;
 }

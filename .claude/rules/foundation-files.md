@@ -28,7 +28,7 @@ Moved out of CLAUDE.md. Loads when source, scripts, public assets or config are 
 
 ## Foundation, edit with care (route through a planned Claude session)
 
-- `src/styles/globals.css` (Tailwind 4 `@theme` blocks for brand tokens, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the leftover `--outline` token in `:root` / `.dark` that `theme-tokens.test.ts` still asserts)
+- `src/styles/globals.css` (FROZEN after overhaul packages 1.5 and 1.7, plan ruling 10: page CSS goes in scoped styles. Tailwind 4 `@theme` blocks for the type scale, fonts and brand tokens, the surface roles and motion tokens, `.band-ink`, `.page-grid`, `.frame`, `.hairline`, the forced-colors block, shadcn `:root` / `.dark` semantic-token overrides, base resets, site-wide utility classes `.ncs-container` and `.card-link`, print stylesheet, `[data-hidden]` utility, and the leftover `--outline` token in `:root` / `.dark` that `theme-tokens.test.ts` still asserts)
 - `src/content.config.ts` (schemas for case-studies, journal, and photos collections)
 - `src/layouts/BaseLayout.astro` structure (anti-FOUC theme bootstrap, skip link, header/main/footer wiring, View Transitions ClientRouter, Cloudflare Analytics, font preload, OG meta, JSON-LD, coming-soon gate, BackToTop)
 - `src/components/ui/` shadcn primitives, now only `button.tsx` (the custom `brand` variant and `cta` size are the Nathan-edits) and `sheet.tsx` (MobileNav; goes in package 1.4)
