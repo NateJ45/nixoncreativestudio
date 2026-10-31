@@ -115,3 +115,38 @@ for (const route of routes.filter((r) => r.startsWith('/work/'))) {
     await expect(lcp).toHaveAttribute('fetchpriority', 'high');
   });
 }
+
+// =============================================================================
+// No reveal waits part-faded for a scroll (overhaul 1.7)
+// =============================================================================
+// Reveals are scroll-driven CSS (animation-timeline: view()), so a block that
+// straddles the fold at load would sit at, say, 16% opacity until the visitor
+// scrolled. That is what Lighthouse saw on /photography (accessibility 0.96,
+// colour contrast, 2026-10-31). motion.ts marks every reveal already on screen
+// at load as done. Checked at Lighthouse's mobile size and at 1440.
+// =============================================================================
+for (const viewport of [
+  { width: 412, height: 823 },
+  { width: 1440, height: 900 },
+]) {
+  test.describe(`Reveals at load, ${viewport.width}px`, () => {
+    test.use({ viewport, reducedMotion: 'no-preference' });
+    for (const route of routes) {
+      test(`${route}: no on-screen reveal is part-faded`, async ({ page }) => {
+        await page.goto(route, { waitUntil: 'load' });
+        await page.waitForTimeout(300);
+        const partial = await page.evaluate(() =>
+          [...document.querySelectorAll('[data-reveal]')]
+            .filter((el) => el.getBoundingClientRect().top < window.innerHeight)
+            .map((el) => ({ el, o: parseFloat(getComputedStyle(el).opacity) }))
+            .filter(({ o }) => o < 1)
+            .map(
+              ({ el, o }) =>
+                `${o.toFixed(2)} ${el.tagName.toLowerCase()}: ${(el.textContent ?? '').trim().slice(0, 40)}`,
+            ),
+        );
+        expect(partial, `${route}: reveals on screen but not fully shown`).toEqual([]);
+      });
+    }
+  });
+}

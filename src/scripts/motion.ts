@@ -23,9 +23,11 @@
       Every [data-motion-toggle] button (the footer switch, the hero's Pause
       button) sets and reflects the same state through aria-pressed.
 
-   3. Reveal fallback. Reveals are scroll-driven CSS where the browser supports
-      animation-timeline: view() (globals.css section 6). Only where it does
-      not does this file add .is-visible with an IntersectionObserver.
+   3. Reveals. They are scroll-driven CSS where the browser supports
+      animation-timeline: view() (globals.css section 6); this file only marks
+      the ones already on screen at load as done (.is-visible), so nothing
+      waits part-faded for a scroll. Where scroll-driven CSS is unsupported it
+      adds .is-visible with an IntersectionObserver instead.
 
    Registered on astro:page-load (fires on the first load and after every
    ClientRouter navigation), with per-element guards so nothing binds twice.
@@ -132,11 +134,22 @@ function initToggles(): void {
 }
 
 /* ---- Reveal fallback ------------------------------------------------------- */
-function initRevealFallback(): void {
-  // Scroll-driven CSS handles reveals on its own where it is supported.
-  if (window.CSS?.supports?.('animation-timeline: view()')) return;
+function initReveals(): void {
   const els = Array.from(document.querySelectorAll('[data-reveal]:not(.is-visible)'));
   if (!els.length) return;
+  // Scroll-driven CSS handles reveals on its own where it is supported, with
+  // one exception: an element already on screen when the page loads (one that
+  // straddles the fold, or everything above it after a mid-page reload) would
+  // sit part-faded until the visitor scrolled. That reads as a broken page and
+  // fails colour contrast in Lighthouse (it did, on /photography, 2026-10-31).
+  // So those are marked .is-visible at once, which globals.css shows in full.
+  if (window.CSS?.supports?.('animation-timeline: view()')) {
+    const fold = window.innerHeight;
+    els.forEach((el) => {
+      if (el.getBoundingClientRect().top < fold) el.classList.add('is-visible');
+    });
+    return;
+  }
   if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
     els.forEach((el) => el.classList.add('is-visible'));
     return;
@@ -160,7 +173,7 @@ function onPageLoad(): void {
   syncTabVisibility();
   initLoops();
   initToggles();
-  initRevealFallback();
+  initReveals();
 }
 
 const flagged = window as unknown as { __ncsMotionBound?: boolean };
