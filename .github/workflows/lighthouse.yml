@@ -40,7 +40,7 @@ jobs:
       # with the assets and the encoder config; restore-keys fall back to the
       # newest cache so only the changed images are encoded again.
       - name: Restore the optimized-image cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules/.astro/assets
           key: astro-images-${{ hashFiles('src/assets/**', 'src/content/**', 'astro.config.mjs', 'package-lock.json') }}
