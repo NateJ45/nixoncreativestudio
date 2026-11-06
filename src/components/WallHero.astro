@@ -64,6 +64,20 @@ const payload = JSON.stringify(
       (navigator.hardwareConcurrency || 4) >= 4 &&
       !(conn && conn.saveData) &&
       !/[?&]wall=off/.test(location.search);
+    // Software rendering (no real GPU) gets the CSS reel: the wall would block
+    // the page. ?wall=force skips this check, for testing.
+    if (ok && !/[?&]wall=force/.test(location.search)) {
+      try {
+        var gl = document.createElement('canvas').getContext('webgl2');
+        var info = gl && gl.getExtension('WEBGL_debug_renderer_info');
+        var name = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : '';
+        if (!gl || /swiftshader|llvmpipe|software|basic render/i.test(name)) ok = false;
+        var lose = gl && gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+      } catch (_e) {
+        ok = false;
+      }
+    }
     root.classList.toggle('wall-on', ok);
   })();
 </script>

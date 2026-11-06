@@ -143,7 +143,7 @@ export function mountWall(root: HTMLElement): (() => void) | undefined {
   const sites = JSON.parse(dataEl.textContent ?? '[]') as WallSite[];
   const gl = canvas.getContext('webgl2', {
     alpha: true,
-    antialias: true,
+    antialias: false,
     premultipliedAlpha: true,
   });
   if (!gl) return undefined;
@@ -237,30 +237,45 @@ export function mountWall(root: HTMLElement): (() => void) | undefined {
   let introStart = 0;
   const maxAniso = gl.getExtension('EXT_texture_filter_anisotropic');
   const useSmall = window.innerWidth < 768;
+  // Decoded off the main thread, then uploaded one per frame, so loading the
+  // wall never blocks the page for long.
+  const uploads: Array<{ i: number; bitmap: ImageBitmap }> = [];
   sites.forEach((site, i) => {
-    const img = new Image();
-    img.decoding = 'async';
-    img.onload = () => {
-      if (!alive) return;
-      const tex = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-      gl.generateMipmap(gl.TEXTURE_2D);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      if (maxAniso) gl.texParameterf(gl.TEXTURE_2D, maxAniso.TEXTURE_MAX_ANISOTROPY_EXT, 8);
-      textures[i] = { tex, aspect: img.naturalWidth / img.naturalHeight };
-      loaded++;
-      if (loaded === sites.length) {
-        introStart = performance.now();
-        html.classList.add('wall-ready');
-      }
-    };
-    img.src = useSmall ? site.texSmall : site.tex;
+    void fetch(useSmall ? site.texSmall : site.tex)
+      .then((r) => r.blob())
+      .then((blob) => createImageBitmap(blob))
+      .then((bitmap) => {
+        if (alive) uploads.push({ i, bitmap });
+        else bitmap.close();
+      })
+      .catch(() => {
+        /* A tile without its picture just stays out of the wall. */
+      });
   });
+  function uploadOne(): void {
+    const next = uploads.shift();
+    if (!next) return;
+    const { i, bitmap } = next;
+    const tex = gl!.createTexture();
+    gl!.bindTexture(gl!.TEXTURE_2D, tex);
+    gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA, gl!.RGBA, gl!.UNSIGNED_BYTE, bitmap);
+    gl!.generateMipmap(gl!.TEXTURE_2D);
+    gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MIN_FILTER, gl!.LINEAR_MIPMAP_LINEAR);
+    gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_S, gl!.CLAMP_TO_EDGE);
+    gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_T, gl!.CLAMP_TO_EDGE);
+    if (maxAniso) gl!.texParameterf(gl!.TEXTURE_2D, maxAniso.TEXTURE_MAX_ANISOTROPY_EXT, 8);
+    textures[i] = { tex: tex!, aspect: bitmap.width / bitmap.height };
+    bitmap.close();
+    loaded++;
+    if (loaded === sites.length) {
+      introStart = performance.now();
+      last = introStart;
+      html.classList.add('wall-ready');
+    }
+  }
 
   // Layout, rebuilt on resize.
+  let lowRes = false;
   let W = 0;
   let H = 0;
   let dpr = 1;
@@ -314,7 +329,7 @@ export function mountWall(root: HTMLElement): (() => void) | undefined {
   function layout(): void {
     W = stage!.clientWidth;
     H = stage!.clientHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, W < 768 ? 1.5 : 1.75);
+    dpr = lowRes ? 1 : Math.min(window.devicePixelRatio || 1, W < 768 ? 1.5 : 1.75);
     canvas!.width = Math.round(W * dpr);
     canvas!.height = Math.round(H * dpr);
     gl!.viewport(0, 0, canvas!.width, canvas!.height);
@@ -347,6 +362,10 @@ export function mountWall(root: HTMLElement): (() => void) | undefined {
   let selected = -1;
   let selectedAt = 0;
   let paused = isMotionPaused();
+  // Set by the frame guard: a slow device keeps the scroll but loses the drift.
+  let frozen = false;
+  let slowSum = 0;
+  let slowCount = 0;
   let onScreen = true;
   let raf = 0;
   let last = performance.now();
@@ -376,7 +395,7 @@ export function mountWall(root: HTMLElement): (() => void) | undefined {
   function draw(now: number): void {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (!paused) clock += dt;
+    if (!paused && !frozen) clock += dt;
     const target = clamp(window.scrollY / scrollRange);
     pS += (target - pS) * (1 - Math.pow(0.0015, dt));
     if (Math.abs(target - pS) < 0.0001) pS = target;
@@ -500,11 +519,35 @@ export function mountWall(root: HTMLElement): (() => void) | undefined {
   function frame(now: number): void {
     raf = 0;
     if (!alive) return;
+    uploadOne();
+    // Nothing to draw until every picture is in.
+    if (!introStart) {
+      schedule();
+      return;
+    }
+    // The guard: over a stretch of slow frames, first drop the resolution,
+    // then stop the drift. Nothing about the layout changes either way.
+    const delta = now - last;
+    if (now - introStart > 1500 && !document.hidden && delta < 500) {
+      slowSum += delta;
+      slowCount++;
+      if (slowCount === 45) {
+        const avg = slowSum / slowCount;
+        if (avg > 34 && !lowRes) {
+          lowRes = true;
+          layout();
+        } else if (avg > 34) {
+          frozen = true;
+        }
+        slowSum = 0;
+        slowCount = 0;
+      }
+    }
     const settled =
       Math.abs(window.scrollY / scrollRange - pS) < 0.0002 && Math.abs(bulgeTarget - bulge) < 0.5;
     const introDone = introStart > 0 && now - introStart > 2000;
     // A paused wall that has come to rest draws nothing at all.
-    if (!paused || !settled || !introDone || dirty || selected >= 0) {
+    if ((!paused && !frozen) || !settled || !introDone || dirty || selected >= 0) {
       dirty = false;
       draw(now);
     } else {
