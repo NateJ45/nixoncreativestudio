@@ -1,0 +1,78 @@
+---
+// PROTOTYPE (redesign-2, phase 0). Removed before any cut-over.
+/* Lets Nathan compare the two chassis and two wordmarks on a real phone. The
+   ground uses the site's own theme key, so it survives navigation. */
+---
+
+<script is:inline data-astro-rerun>
+  (function () {
+    try {
+      document.documentElement.dataset.mark = localStorage.getItem('ncs-proto-mark') || 'old';
+    } catch (_e) {
+      document.documentElement.dataset.mark = 'old';
+    }
+  })();
+</script>
+
+<aside class="proto-bar" aria-label="Prototype options" data-proto-bar>
+  <button type="button" data-proto="ground">
+    Ground
+  </button>
+  <button type="button" data-proto="mark">
+    Wordmark
+  </button>
+</aside>
+
+<style is:global>
+  .proto-bar {
+    position: fixed;
+    right: 0;
+    top: 42%;
+    flex-direction: column;
+    z-index: 70;
+    display: flex;
+    gap: 1px;
+    background: #808080;
+    font:
+      500 0.8125rem/1 system-ui,
+      sans-serif;
+  }
+  .proto-bar button {
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    border: 0;
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+  }
+  .proto-bar button:focus-visible {
+    outline: 3px solid #808080;
+    outline-offset: 2px;
+  }
+</style>
+
+<script>
+  const label = (): void => {
+    const root = document.documentElement;
+    const ground = document.querySelector('[data-proto="ground"]');
+    const mark = document.querySelector('[data-proto="mark"]');
+    if (ground) ground.textContent = root.classList.contains('dark') ? 'Black' : 'Gallery grey';
+    if (mark) mark.textContent = root.dataset.mark === 'new' ? 'Bricolage mark' : 'Bebas mark';
+  };
+  document.addEventListener('astro:page-load', label);
+  document.addEventListener('click', (e) => {
+    const name = (e.target as Element | null)?.closest<HTMLElement>('[data-proto]')?.dataset.proto;
+    if (!name) return;
+    const root = document.documentElement;
+    if (name === 'ground') {
+      const dark = root.classList.toggle('dark');
+      root.style.colorScheme = dark ? 'dark' : 'light';
+      localStorage.setItem('ncs-theme', dark ? 'dark' : 'light');
+    } else {
+      const next = root.dataset.mark === 'new' ? 'old' : 'new';
+      root.dataset.mark = next;
+      localStorage.setItem('ncs-proto-mark', next);
+    }
+    label();
+  });
+</script>

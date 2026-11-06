@@ -1,0 +1,580 @@
+---
+// PROTOTYPE (redesign-2, phase 0). See _vault/projects/ncs-hyper-modern-plan.md.
+/* ============================================================================
+   WallHero: the homepage's first act, built on src/scripts/wall.ts
+   ============================================================================
+   With WebGL on a capable device (html.wall-on, set before first paint by the
+   inline check below): one tall section with a sticky full-screen stage. The
+   headline sits on the ground colour, the wall rises behind it, and scrolling
+   reforms the wall from drift to drum to grid.
+
+   Everyone else (reduced motion, no WebGL, low-end device, data saver, no JS)
+   gets the existing CSS reel behind the same headline, then the same eight
+   links as a normal section. The reel's images are all lazy so a hidden reel
+   costs nothing.
+
+   The H1 is plain text at full opacity from the first frame, so it stays the
+   LCP. The canvas is decoration; the real navigation is the links in the grid.
+   ============================================================================ */
+import { getImage } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Heft from './Heft.astro';
+import HeroReel from './HeroReel.astro';
+import { SECTOR_LABEL } from '../lib/study';
+
+const studies = (await getCollection('case-studies')).sort(
+  (a, b) => (a.data.order ?? 99) - (b.data.order ?? 99),
+);
+const sites = await Promise.all(
+  studies.map(async (s) => {
+    // Two sizes of each study's real cover capture: phones never fetch the big one.
+    const tex = await getImage({ src: s.data.cover, width: 1000, format: 'webp', quality: 66 });
+    const texSmall = await getImage({ src: s.data.cover, width: 560, format: 'webp', quality: 64 });
+    return {
+      slug: s.id,
+      name: s.data.client,
+      hook: s.data.hook ?? '',
+      sector: SECTOR_LABEL[s.data.sector] ?? '',
+      tex: tex.src,
+      texSmall: texSmall.src,
+      paper: s.data.palette?.paper ?? '#ffffff',
+      ink: s.data.palette?.ink ?? '#000000',
+    };
+  }),
+);
+const payload = JSON.stringify(
+  sites.map(({ slug, name, tex, texSmall, paper, ink }) => ({
+    slug,
+    name,
+    tex,
+    texSmall,
+    paper,
+    ink,
+  })),
+);
+---
+
+<script is:inline data-astro-rerun>
+  (function () {
+    var root = document.documentElement;
+    var conn = navigator.connection;
+    var ok =
+      'WebGL2RenderingContext' in window &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      (navigator.hardwareConcurrency || 4) >= 4 &&
+      !(conn && conn.saveData) &&
+      !/[?&]wall=off/.test(location.search);
+    root.classList.toggle('wall-on', ok);
+  })();
+</script>
+
+<section class="wall" data-wall data-hero-dark aria-labelledby="hero-statement">
+  <div class="wall-stage" data-wall-stage>
+    <canvas class="wall-canvas" data-wall-canvas aria-hidden="true"></canvas>
+    <div class="wall-reel">
+      <HeroReel />
+    </div>
+    <div class="wall-veil" data-wall-veil aria-hidden="true"></div>
+    <div class="wall-drum-veil" data-wall-drum-veil aria-hidden="true"></div>
+
+    <div class="wall-copy" data-wall-copy>
+      <h1 id="hero-statement" class="wall-h1">
+        I build websites that <br class="wall-br" />
+        <Heft
+          text="pull their weight."
+          delay={350}
+          duration={1800}
+          ease="cubic-bezier(0.65, 0, 0.25, 1)"
+        />
+      </h1>
+      <div class="wall-under">
+        <p class="wall-sub">
+          For churches, schools, nonprofits and small businesses. Designed, built and photographed
+          by <a href="/about/">one person</a> in Cincinnati.
+        </p>
+        <div class="wall-actions">
+          <a class="wall-cta" href="/work/">
+            See the work
+          </a>
+          <button
+            type="button"
+            class="wall-pause"
+            data-hero-pause
+            aria-pressed="false"
+            aria-label="Pause motion"
+            data-motion-toggle
+          >
+            <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="3.5" y="2.5" width="3" height="11"></rect>
+              <rect x="9.5" y="2.5" width="3" height="11"></rect>
+            </svg>
+            <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4.5 2.8v10.4l9-5.2z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* The site at the front of the drum, named at full scale. Mouse shortcuts
+        only: keyboard and screen-reader visitors get the same links in the grid. */}
+    <div class="wall-captions" aria-hidden="true">
+      {sites.map((s) => (
+        <a
+          class="wall-caption"
+          href={`/work/${s.slug}/`}
+          tabindex="-1"
+          data-wall-caption
+          data-slug={s.slug}
+        >
+          <span class="wall-caption-name">{s.name}</span>
+          <span class="wall-caption-hook">{s.hook}</span>
+        </a>
+      ))}
+    </div>
+
+    <div class="wall-panel" data-wall-panel>
+      <h2 class="wall-panel-title">{sites.length} sites, all live today.</h2>
+      <ul class="wall-grid">
+        {sites.map((s) => (
+          <li>
+            <a class="wall-cell" href={`/work/${s.slug}/`} data-wall-cell data-slug={s.slug}>
+              <span class="wall-frame" data-wall-frame>
+                <img class="wall-still" src={s.texSmall} alt="" loading="lazy" decoding="async" />
+              </span>
+              <span class="wall-name">{s.name}</span>
+              <span class="wall-sector">{s.sector}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <script type="application/json" data-wall-sites set:html={payload}></script>
+  </div>
+</section>
+
+<style is:global>
+  /* Animates client colour takeovers from CSS, so nothing here runs per frame. */
+  @property --wall-ground {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #000000;
+  }
+  @property --wall-ink {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #ffffff;
+  }
+  html {
+    --wall-ground: var(--background);
+    --wall-ink: var(--heading);
+    transition:
+      --wall-ground 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      --wall-ink 0.45s ease;
+  }
+
+  /* ----- Base: the fallback layout, and the shared type. ----- */
+  .wall {
+    position: relative;
+    isolation: isolate;
+    background: var(--wall-ground);
+    color: var(--wall-ink);
+    overflow: clip;
+  }
+  .wall-canvas,
+  .wall-drum-veil,
+  .wall-captions {
+    display: none;
+  }
+  .wall-veil {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    height: min(100svh, 60rem);
+    pointer-events: none;
+    background: linear-gradient(to top, var(--wall-ground) 46%, transparent 68%);
+  }
+  .wall-stage {
+    position: relative;
+  }
+  .wall-reel {
+    position: absolute;
+    inset: 0 0 auto;
+    height: min(100svh, 60rem);
+    overflow: hidden;
+  }
+  .wall-copy {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: calc(100svh - 5rem);
+    padding: 6rem clamp(1.25rem, 3vw, 3rem) clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .wall-h1 {
+    margin: 0;
+    max-width: 100%;
+    color: inherit;
+    font-family: var(--font-display);
+    font-size: min(15.5vw, 24svh);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+  }
+  @media (min-width: 48rem) {
+    .wall-h1 {
+      font-size: min(8.5vw, 18svh);
+    }
+  }
+  .wall-br {
+    display: none;
+  }
+  @media (min-width: 48rem) {
+    .wall-br {
+      display: inline;
+    }
+  }
+  .wall-under {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem 3rem;
+    margin-top: clamp(1.25rem, 3vh, 2.25rem);
+  }
+  .wall-sub {
+    margin: 0;
+    max-width: 34rem;
+    color: inherit;
+    font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
+    line-height: 1.35;
+  }
+  .wall-sub a {
+    color: inherit;
+    text-underline-offset: 0.18em;
+  }
+  .wall-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+  }
+  .wall-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 3.25rem;
+    padding: 0 1.5rem;
+    background: var(--wall-ink);
+    color: var(--wall-ground);
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: font-weight 0.25s ease;
+  }
+  .wall-cta:hover {
+    font-weight: 800;
+  }
+  .wall-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: inherit;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 500;
+    text-underline-offset: 0.22em;
+  }
+  .wall-pause {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid currentColor;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .wall-pause svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    fill: currentColor;
+  }
+  .wall-pause .icon-play,
+  .wall-pause[aria-pressed='true'] .icon-pause {
+    display: none;
+  }
+  .wall-pause[aria-pressed='true'] .icon-play {
+    display: block;
+  }
+  .wall a:focus-visible,
+  .wall button:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+  }
+
+  /* Without the wall the grid is a normal section with real pictures. */
+  .wall-panel {
+    position: relative;
+    z-index: 2;
+    padding: clamp(3rem, 8vh, 6rem) clamp(1.25rem, 3vw, 3rem);
+  }
+  .wall-panel-title {
+    margin: 0 0 clamp(1.25rem, 3vh, 2rem);
+    color: inherit;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4.4vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+  .wall-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 48rem) {
+    .wall-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem 1rem;
+    }
+  }
+  .wall-cell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+  .wall-frame {
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  .wall-still {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .wall-name {
+    margin-top: 0.5rem;
+    min-height: 2.3em;
+    font-family: var(--font-display);
+    font-size: clamp(0.875rem, 1.12vw, 1.125rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 48rem) {
+    .wall-name {
+      min-height: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+  .wall-sector {
+    font-size: 0.875rem;
+    line-height: 1.3;
+    opacity: 0.8;
+  }
+
+  /* ----- The wall itself. ----- */
+  .wall-on .wall {
+    height: 560svh;
+    /* Slides under the sticky header, which goes transparent over it. */
+    margin-top: -6rem;
+    --wall-top: 6rem;
+  }
+  .wall-on .wall-stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+  }
+  .wall-on .wall-reel {
+    display: none;
+  }
+  .wall-on .wall-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .wall-on .wall-veil,
+  .wall-on .wall-drum-veil {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+  /* The headline's solid ground: the wall rises from behind it. */
+  .wall-on .wall-veil {
+    height: auto;
+    inset: 0;
+    background:
+      linear-gradient(to bottom, var(--wall-ground) 0, transparent 7rem),
+      linear-gradient(to top, var(--wall-ground) 46%, transparent 68%);
+  }
+  .wall-on .wall-drum-veil {
+    z-index: 1;
+    opacity: 0;
+    background:
+      linear-gradient(to bottom, var(--wall-ground) 0, transparent 7rem),
+      linear-gradient(to top, var(--wall-ground) 34%, transparent 46%);
+  }
+  .wall-on .wall-copy {
+    position: absolute;
+    inset: auto 0 0;
+    min-height: 0;
+    padding-top: 0;
+    will-change: transform, opacity;
+  }
+  .wall-on .wall-captions {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 2;
+    display: block;
+    height: 42%;
+  }
+  .wall-caption {
+    position: absolute;
+    inset: auto clamp(1.25rem, 3vw, 3rem) clamp(1.25rem, 3vw, 2.5rem);
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(1.25rem);
+    transition:
+      opacity 0.3s ease,
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .wall-caption.is-front {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+  .wall-caption-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, min(7vw, 13svh), 9rem);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    text-wrap: balance;
+  }
+  .wall-caption-hook {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: clamp(1rem, 1.5vw, 1.375rem);
+    line-height: 1.3;
+  }
+  .wall-on .wall-panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(4.5rem, 11vh, 7rem) clamp(1.25rem, 3vw, 3rem) clamp(1rem, 3vh, 2rem);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .wall-on .wall-panel.is-live {
+    pointer-events: auto;
+  }
+  .wall-on .wall-grid {
+    flex: 1 1 0;
+    min-height: 0;
+    grid-auto-rows: minmax(0, 1fr);
+  }
+  .wall-on .wall-grid li {
+    min-height: 0;
+  }
+  .wall-on .wall-frame {
+    flex: 1 1 0;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  .wall-on .wall-still {
+    display: none;
+  }
+
+  /* Short phones: four rows must still fit, so each cell keeps its picture. */
+  @media (max-width: 47.99rem) and (max-height: 44rem) {
+    .wall-on .wall-panel {
+      padding-top: 3.75rem;
+      padding-bottom: 0.75rem;
+    }
+    .wall-on .wall-panel-title {
+      margin-bottom: 0.5rem;
+      font-size: 1.375rem;
+    }
+    .wall-on .wall-grid {
+      gap: 0.5rem;
+    }
+    .wall-on .wall-name {
+      min-height: 0;
+      margin-top: 0.25rem;
+      overflow: hidden;
+      font-size: 0.8125rem;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .wall-on .wall-sector {
+      display: none;
+    }
+  }
+
+  /* ----- The header, over the wall: no bar, just the ground's own ink. ----- */
+  .wall-on .ncs-header .ncs-container {
+    max-width: none;
+    padding-inline: clamp(1.25rem, 3vw, 3rem);
+  }
+  .wall-on .ncs-header[data-over-hero] {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    --color-heading: var(--wall-ink);
+    --color-text: var(--wall-ink);
+    --color-accent: var(--wall-ink);
+    --color-accent-foreground: var(--wall-ground);
+  }
+  .wall-on .ncs-header[data-over-hero] .wordmark-text,
+  .wall-on .ncs-header[data-over-hero] .nav-link,
+  .wall-on .ncs-header[data-over-hero] .theme-toggle,
+  .wall-on .ncs-header[data-over-hero] .mobile-trigger {
+    color: var(--wall-ink) !important;
+  }
+</style>
+
+<script>
+  import type {} from 'astro';
+
+  let teardown: (() => void) | undefined;
+
+  document.addEventListener('astro:page-load', async () => {
+    const root = document.querySelector<HTMLElement>('[data-wall]');
+    const html = document.documentElement;
+    if (!root || !html.classList.contains('wall-on')) return;
+    const { mountWall } = await import('../scripts/wall');
+    // The visitor may have left while the module loaded.
+    if (!root.isConnected) return;
+    teardown = mountWall(root);
+    // WebGL refused at the last moment: show the CSS reel instead.
+    if (!teardown) html.classList.remove('wall-on');
+  });
+  document.addEventListener('astro:before-swap', () => {
+    teardown?.();
+    teardown = undefined;
+  });
+</script>

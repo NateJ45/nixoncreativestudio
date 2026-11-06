@@ -1,0 +1,102 @@
+/* PROTOTYPE (redesign-2, phase 0). See _vault/projects/ncs-hyper-modern-plan.md.
+   The new chassis, laid over the existing tokens so it can be compared and
+   thrown away. No studio accent colour at all: pure black or a cool gallery
+   grey, and the only colour on the site is the clients' own. Phase 1 folds
+   this into globals.css properly (and into ncs-tokens.test.ts). */
+
+:root:not(.dark) {
+  --background: #e9eae6;
+  --foreground: #101010;
+  --card: #f2f3ef;
+  --card-foreground: #101010;
+  --popover: #f2f3ef;
+  --popover-foreground: #101010;
+  --primary: #000000;
+  --heading: #000000;
+  --secondary: #000000;
+  --secondary-foreground: #ffffff;
+  --accent: #000000;
+  --accent-foreground: #ffffff;
+  --muted: #dfe0db;
+  --muted-foreground: #4b4c48;
+  --link: #000000;
+  --ring: #000000;
+  --paper: #dfe0db;
+  --ink: #000000;
+  --ink-raised: #161616;
+  --line: #c9cac4;
+  --line-strong: #6f706b;
+  --frame-ring: #c9cac4;
+  --shadow-frame: 0 30px 70px -42px rgba(0, 0, 0, 0.55);
+}
+
+:root.dark {
+  --background: #000000;
+  --foreground: #e8e8e6;
+  --card: #111111;
+  --card-foreground: #e8e8e6;
+  --popover: #111111;
+  --popover-foreground: #e8e8e6;
+  --primary: #000000;
+  --heading: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #000000;
+  --accent: #ffffff;
+  --accent-foreground: #000000;
+  --muted: #141414;
+  --muted-foreground: #a3a3a0;
+  --link: #ffffff;
+  --ring: #ffffff;
+  --paper: #0d0d0d;
+  --ink: #000000;
+  --ink-raised: #161616;
+  --line: #262626;
+  --line-strong: #6a6a67;
+  --frame-ring: #2c2c2c;
+}
+
+.band-ink {
+  --link: #ffffff;
+  --accent: #ffffff;
+  --accent-foreground: #000000;
+  --ring: #ffffff;
+  --line: #2a2a2a;
+  --muted-foreground: #a3a3a0;
+}
+
+/* No pills. */
+.ncs-header a[class*='rounded-full'],
+main a[class*='rounded-full'],
+footer a[class*='rounded-full'] {
+  border-radius: 0;
+}
+
+/* No rail labels. The columns stay offset, which reads as a deliberate margin. */
+.section-rail {
+  display: none;
+}
+
+/* Wordmark option B: the same name in the display face, set by weight. */
+:root[data-mark='new'] .wordmark-text {
+  font-family: var(--font-display);
+  font-size: 1.3125rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-transform: none;
+}
+
+/* The About status colours, darkened to clear AA on the gallery grey. */
+:root:not(.dark) .text-emerald-700 {
+  color: #0b5a3f;
+}
+:root:not(.dark) .text-amber-700 {
+  color: #7a4406;
+}
+
+/* The browser frames inside a client-coloured title card keep their own ink. */
+.dark .cs-stage {
+  --muted-foreground: #a3a3a0;
+  --color-text-muted: #a3a3a0;
+  --foreground: #e8e8e6;
+  --color-text: #e8e8e6;
+}

@@ -229,6 +229,10 @@ const nextShot = next ? homeShot(next.id) : undefined;
   closer={closer}
 >
   <article class="study" style={paletteStyle(palette)}>
+    {/* PROTOTYPE: the header takes on the client's colour too, so a tile from the wall lands on one continuous ground. */}
+    {palette && (
+      <style set:html={`:root{--study-paper:${palette.paper};--study-ink:${palette.ink}}`} />
+    )}
     {/* 1 to 3. The title card: one band holding the title, the stage and the
         specimen, so the client's palette reads as one block. */}
     <header class="cs-title">
@@ -403,9 +407,31 @@ const nextShot = next ? homeShot(next.id) : undefined;
   }
 
   :global(.dark) .cs-title {
-    background-color: var(--ink);
-    color: var(--foreground);
-    border-top-color: var(--cs-mark-dark, var(--accent));
+    /* PROTOTYPE: the client's colour takes over in both grounds. */
+    background-color: var(--cs-paper, var(--ink));
+    color: var(--cs-ink, var(--foreground));
+    border-top-color: var(--cs-accent, var(--accent));
+    --heading: var(--cs-ink);
+    --foreground: var(--cs-ink);
+    --color-heading: var(--cs-ink);
+    --color-text: var(--cs-ink);
+    --color-accent: var(--cs-ink);
+    --color-accent-foreground: var(--cs-paper);
+    --color-link: var(--cs-ink);
+    --muted-foreground: var(--cs-ink);
+    --link: var(--cs-ink);
+  }
+  :global(html:has(.cs-title)) :global(.ncs-header:not([data-scrolled])) {
+    background: var(--study-paper) !important;
+    --color-heading: var(--study-ink);
+    --color-text: var(--study-ink);
+    --color-accent: var(--study-ink);
+    --color-accent-foreground: var(--study-paper);
+    color: var(--study-ink);
+  }
+  :global(html:has(.cs-title)) :global(.ncs-header:not([data-scrolled]) .wordmark-text),
+  :global(html:has(.cs-title)) :global(.ncs-header:not([data-scrolled]) .nav-link) {
+    color: var(--study-ink) !important;
   }
 
   .cs-crumbs ol {
