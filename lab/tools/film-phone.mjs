@@ -15,7 +15,7 @@ const SITES = {
   'foundation-for-reformed-theology': 'https://foundationrt.org',
   'first-presbyterian-orangeburg': 'https://www.1stpresbyterian.org',
 };
-const FPS = 24, SECONDS = 8;
+const FPS = 60, SECONDS = 8;
 const want = process.argv.slice(2);
 const b = await chromium.launch();
 for (const [slug, url] of Object.entries(SITES)) {

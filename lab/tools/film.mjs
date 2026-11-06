@@ -16,7 +16,7 @@ const SITES = {
   'first-baptist-muncie': 'https://www.fbcmuncie.org',
   'first-presbyterian-orangeburg': 'https://www.1stpresbyterian.org',
 };
-const FPS = 24, SECONDS = 8, W = 1120, H = 700;
+const FPS = 60, SECONDS = 8, W = 1120, H = 700;
 fs.mkdirSync(ROOT + 'assets', { recursive: true });
 const want = process.argv.slice(2);
 const b = await chromium.launch();
