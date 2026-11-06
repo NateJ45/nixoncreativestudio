@@ -78,6 +78,7 @@ const payload = JSON.stringify(
         ok = false;
       }
     }
+    window.__wallOk = ok;
     root.classList.toggle('wall-on', ok);
   })();
 </script>
@@ -591,8 +592,20 @@ const payload = JSON.stringify(
     // WebGL refused at the last moment: show the CSS reel instead.
     if (!teardown) html.classList.remove('wall-on');
   });
-  document.addEventListener('astro:before-swap', () => {
+  document.addEventListener('astro:before-swap', (event) => {
     teardown?.();
     teardown = undefined;
+    // Coming back to the homepage, the wall has to be on before the router
+    // restores the scroll position. Otherwise the section grows afterwards and
+    // scroll anchoring pushes the visitor far below where they left.
+    const swapEvent = event as Event & { newDocument: Document; swap: () => void };
+    if (!swapEvent.newDocument.querySelector('[data-wall]')) return;
+    const original = swapEvent.swap;
+    swapEvent.swap = () => {
+      original();
+      if ((window as Window & { __wallOk?: boolean }).__wallOk) {
+        document.documentElement.classList.add('wall-on');
+      }
+    };
   });
 </script>
