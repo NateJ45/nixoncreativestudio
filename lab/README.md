@@ -18,3 +18,7 @@ Live at https://ncs-motion-lab.nathanjnixon86.workers.dev/deal/ (a separate noin
 - `tools/verify.mjs [url]` runs axe on every route and client sheet.
 - `tools/fps-check.mjs [url]` plays footage in Chrome and counts the frames presented. Footage is filmed at 60 fps.
 - `tools/package.mjs` writes the deploy package. Test scratch and internal files stay out of it.
+
+## Logo
+
+`logo/` holds logo explorations: four N marks and two wordmarks. `logo/build.mjs` outlines the letters from `logo/fonts` and writes `logo/svg` and the page at `/logo/`. `logo/look.mjs` checks small sizes and `logo/motion.mjs` checks the animations. Nothing here is on the live site.
