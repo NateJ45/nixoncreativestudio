@@ -1,0 +1,158 @@
+:root {
+  --pad: clamp(14px, 2.6vw, 40px);
+  --display: 'Anybody', 'Arial Narrow', Impact, sans-serif;
+  --body: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'DM Mono', ui-monospace, Consolas, monospace;
+  --black: #07070b;
+  --ink: #07070b;
+  --g: #d4ff00;
+  --barh: 60px;
+}
+* { box-sizing: border-box; }
+html { background: #d4ff00; -webkit-text-size-adjust: 100%; scroll-padding-top: 70px; }
+body { margin: 0; font-family: var(--body); color: var(--ink); overflow-x: clip; }
+a { color: inherit; }
+ul { list-style: none; margin: 0; padding: 0; }
+:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 6px #07070b; border-radius: 2px; }
+
+#gl { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100lvh; display: block; z-index: 0; pointer-events: none; }
+main { position: relative; z-index: 1; }
+
+.skip { position: fixed; left: 8px; top: -80px; z-index: 30; background: #fff; color: #07070b; padding: 13px 16px; font-weight: 800; }
+.skip:focus { top: 8px; }
+
+/* Header: solid ink chips, so it reads on every hue. */
+.bar { position: fixed; z-index: 20; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 8px var(--pad); pointer-events: none; }
+.bar a { pointer-events: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; background: var(--black); color: #fff; text-decoration: none; font-family: var(--mono); font-weight: 500; font-size: 14px; white-space: nowrap; }
+.bar nav { display: flex; gap: 2px; }
+.bar a:hover { background: #fff; color: var(--black); }
+.bar .go { background: #fff; color: var(--black); font-weight: 500; }
+.bar .go:hover { background: var(--black); color: #fff; }
+.brand span { font-family: var(--display); font-weight: 900; font-stretch: 100%; font-size: 15px; letter-spacing: .01em; }
+
+/* Chips: guaranteed contrast whatever passes behind them. */
+.chip { display: inline-block; background: var(--ink); color: var(--g); padding: 10px 14px; margin: 0; font-weight: 600; line-height: 1.32; }
+.chip a { color: inherit; }
+
+/* Display type. In the WebGL version the letters are painted in the scene, so
+   the ribbon can pass in front of and behind them. The DOM text stays for screen
+   readers, selection and the no-WebGL fallback. */
+.gl-on [data-gl] { color: transparent; }
+h1, .big, .site h2 { font-family: var(--display); font-weight: 900; font-stretch: 75%; margin: 0; }
+h1 { line-height: .9; display: block; }
+h1 .ln { display: block; white-space: nowrap; width: max-content; }
+h1 .ln.lead { font-weight: 900; }
+
+.hero { min-height: 100vh; min-height: 100svh; padding: 76px var(--pad) 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+.hero-foot { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; padding-right: 170px; }
+.sub { max-width: 37em; font-size: clamp(15px, 1.35vw, 20px); }
+.ride-cue { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; text-decoration: none; font-family: var(--mono); font-size: 14px; }
+
+/* The ride. Each site pins while the film feeds past it. Native scroll throughout. */
+.site { height: 210vh; height: 210lvh; position: relative; }
+.site-in { position: sticky; top: 0; height: 100vh; height: 100svh; padding: 70px var(--pad) 66px; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; will-change: opacity; }
+.site-txt { max-width: min(50vw, 800px); pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.site.b .site-in { align-items: flex-end; }
+.site .num { font-family: var(--mono); font-size: 14px; font-weight: 500; }
+.site h2 { font-size: clamp(30px, min(6.1vw, 11.5vh), 110px); line-height: .9; text-wrap: balance; }
+.site h2.long { font-size: clamp(28px, min(4.9vw, 9.4vh), 90px); }
+.site h2 a { text-decoration: none; display: inline-block; padding-block: 8px; min-height: 44px; }
+.site h2 a:hover { text-decoration: underline; text-decoration-color: var(--ink); text-decoration-thickness: .06em; }
+.site .hook { font-size: clamp(15px, min(1.75vw, 3.4vh), 26px); font-weight: 600; max-width: 28em; }
+.site .see { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; font-family: var(--mono); font-size: 14px; background: var(--g); color: var(--ink); border: 2px solid var(--ink); text-decoration: none; }
+.site .see:hover { background: var(--ink); color: var(--g); }
+.site .poster { display: none; }
+.site-in.off .site-txt { pointer-events: none; }
+
+/* Prices */
+.prices { padding: 14vh var(--pad) 12vh; min-height: 100vh; }
+.big { line-height: .92; white-space: nowrap; width: max-content; }
+.tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 2vw, 26px); margin-top: clamp(16px, 4vh, 46px); }
+.tier { background: var(--black); color: #fff; padding: clamp(16px, 2.2vw, 30px); min-height: clamp(180px, 36vh, 400px); display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+.tier:nth-child(2) { transform: translateY(5vh); }
+.tier:nth-child(3) { transform: translateY(10vh); }
+.tier b { font-family: var(--mono); font-weight: 500; font-size: 15px; }
+.tier .amt { font-family: var(--display); font-weight: 900; font-stretch: 75%; font-size: clamp(26px, 7.6vw, 138px); line-height: .9; color: var(--tc); display: block; }
+.tier .from { font-family: var(--mono); font-size: 14px; color: #fff; display: block; margin-bottom: 4px; }
+.tier .who { font-size: clamp(16px, 1.5vw, 21px); font-weight: 600; margin: 0; }
+.after { margin-top: calc(10vh + 20px); padding: 0 14px; }
+.after a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Quote */
+.say { padding: 12vh var(--pad); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.quote { margin: 0; background: var(--black); color: #fff; padding: clamp(22px, 4vw, 66px); max-width: 1120px; }
+.quote blockquote { margin: 0; font-family: var(--display); font-weight: 700; font-stretch: 88%; font-size: clamp(23px, 3.25vw, 50px); line-height: 1.08; }
+.quote figcaption { margin-top: 24px; display: flex; flex-direction: column; gap: 3px; font-size: 16px; }
+.quote figcaption strong { color: var(--qc, #ff5a2e); font-family: var(--mono); font-weight: 500; }
+
+/* Start */
+.start { padding: 14vh var(--pad) 100px; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; gap: 30px; }
+.reach { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.reach a, .reach p { background: var(--black); color: #fff; margin: 0; padding: 8px 14px; }
+.mail { font-family: var(--display); font-weight: 900; font-stretch: 75%; font-size: clamp(21px, 5.1vw, 92px); line-height: 1.04; text-decoration: none; overflow-wrap: anywhere; min-height: 44px; display: inline-flex; align-items: center; }
+.tel { font-family: var(--display); font-weight: 900; font-stretch: 75%; font-size: clamp(26px, 3.6vw, 60px); line-height: 1.04; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.reach a:hover { background: #fff; color: var(--black); }
+.promise { font-size: clamp(15px, 1.4vw, 20px); font-weight: 600; }
+.place { font-family: var(--mono); font-size: 14px; }
+
+/* Pause control */
+.pause { position: fixed; z-index: 20; right: var(--pad); bottom: 12px; min-height: 44px; min-width: 44px; padding: 0 14px; display: inline-flex; align-items: center; gap: 9px; background: var(--black); color: #fff; border: 0; font-family: var(--mono); font-size: 14px; cursor: pointer; }
+.pause:hover { background: #fff; color: var(--black); }
+
+/* No WebGL: the sites still show, as stills. */
+.no-gl .site { height: auto; }
+.no-gl .site-in { position: static; height: auto; padding: 8vh var(--pad); }
+.no-gl .site-in { align-items: stretch; }
+.no-gl .site { background: var(--g); }
+.no-gl .site .poster { display: block; width: 100%; height: auto; max-width: 1120px; margin-bottom: 14px; border: 8px solid var(--black); }
+.no-gl .pause { display: none; }
+.no-gl .site-txt { max-width: none; }
+.no-gl .hero, .no-gl .prices, .no-gl .say, .no-gl .start { background: var(--g); }
+
+/* Portrait and narrow: film above, text below. */
+@media (max-aspect-ratio: 1/1) {
+  .site-txt { max-width: 100%; }
+  .site.b .site-in { align-items: flex-start; }
+  .site h2, .site h2.long { font-size: clamp(30px, min(11.4vw, 6.6vh), 84px); }
+  .site .hook { font-size: clamp(15px, 4vw, 26px); }
+  .tiers { grid-template-columns: 1fr; }
+  .tier, .tier:nth-child(2), .tier:nth-child(3) { transform: none; min-height: 0; }
+  .after { margin-top: 18px; }
+  .tier .amt { font-size: clamp(56px, 22vw, 150px); }
+}
+@media (max-width: 640px) {
+  .hero-foot { padding-right: 0; }
+  .ride-cue { margin-bottom: 48px; }
+  .bar .brand { display: none; }
+  .bar { justify-content: center; padding: 4px; }
+  .bar nav { width: 100%; justify-content: space-between; }
+  .bar a { padding: 0 9px; font-size: 13px; }
+  .hero { padding-top: 62px; }
+  .site-in { padding: 60px var(--pad) 66px; }
+  .pause { right: 6px; bottom: 6px; padding: 0; justify-content: center; }
+  .pause span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+/* Landscape phones: side by side and tight. */
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .hero { padding-top: 58px; padding-bottom: 8px; }
+  .bar { padding-top: 4px; padding-bottom: 4px; }
+  .site-in { padding: 54px var(--pad) 8px; }
+  .site-txt { max-width: 46vw; gap: 4px; }
+  .site h2, .site h2.long { font-size: clamp(22px, 8vh, 40px); }
+  .site.b .site-txt { max-width: 44vw; margin-right: 50px; }
+  .site .see { font-size: 13px; }
+  .site .hook { font-size: 14px; padding: 6px 10px; }
+  .sub { font-size: 13px; padding: 7px 10px; max-width: 62vw; }
+  .site .num { padding: 3px 8px; font-size: 13px; }
+  .site .see { align-self: flex-start; }
+  .pause { bottom: 4px; }
+  .pause { padding: 0; justify-content: center; }
+  .pause span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tier { min-height: 0; }
+  .tier:nth-child(2), .tier:nth-child(3) { transform: none; }
+  .after { margin-top: 16px; }
+  .prices, .say, .start { padding-top: 66px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

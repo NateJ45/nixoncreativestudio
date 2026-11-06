@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nixon Creative Studio | Websites that pull their weight</title>
+<meta name="description" content="Websites for churches, schools, nonprofits and small businesses, from $4,000. One person in Cincinnati.">
+<link rel="icon" href="data:,">
+<meta name="theme-color" content="#E8FF00">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:ital,wdth,wght@0,50..150,100..900&family=Martian+Mono:wdth,wght@75..112.5,400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fly.css">
+<script>
+  // Decide the mode before first paint: flight needs WebGL2 and no reduced-motion request.
+  (function () {
+    var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!still) { try { still = !document.createElement('canvas').getContext('webgl2'); } catch (e) { still = true; } }
+    document.documentElement.className = still ? 'still' : 'fly';
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#prices">Skip the flight, go to prices</a>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="Nixon Creative Studio, back to the top"><span class="brand-long">Nixon Creative Studio</span><span class="brand-short" aria-hidden="true">NCS</span></a>
+  <nav aria-label="Main">
+    <a href="#work">Work</a>
+    <a href="#prices">Prices</a>
+    <a id="nav-about" href="#">About</a>
+    <a class="nav-cta" href="#start">Start a project</a>
+  </nav>
+</header>
+
+<main id="top">
+  <div id="flight">
+    <div id="stage">
+      <canvas id="gl" aria-hidden="true"></canvas>
+      <div id="rooms"></div>
+      <p id="odo" aria-hidden="true"></p>
+    </div>
+    <div id="track" aria-hidden="true"><span id="work"></span></div>
+    <section id="prices" class="end" aria-labelledby="h-prices"></section>
+    <section id="quote" class="end" aria-label="What a client says"></section>
+    <section id="start" class="end" aria-labelledby="h-start"></section>
+  </div>
+</main>
+
+<button id="pause" type="button" aria-pressed="false"><span class="ico" aria-hidden="true"></span><span class="lbl">Pause motion</span></button>
+
+<script src="../shared.js"></script>
+<script src="fly.js"></script>
+</body>
+</html>
