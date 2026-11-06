@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Accessibility statement | Nixon Creative Studio</title>
+    <meta
+      name="description"
+      content="How I build and test this site for keyboard and screen-reader users, the standard it aims for (WCAG 2.1 AA), and how to tell me about a problem."
+    />
+    <link rel="icon" href="data:," />
+    <link
+      rel="preload"
+      href="/assets/fonts/bricolage.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/assets/fonts/instrument.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/deal/kit.css" />
+    <link rel="stylesheet" href="/deal/legal/legal.css" />
+    <script>
+      document.documentElement.classList.add('js');
+    </script>
+  </head>
+  <body>
+    <main id="main">
+      <header class="page-head">
+        <h1>Built to be used <b>by everyone.</b></h1>
+        <p class="lede">
+          I build this site toward WCAG 2.1 AA and I check it on every change. No website is ever
+          perfectly accessible, so if anything is hard to use with a keyboard or a screen reader,
+          tell me and I'll fix it:
+          <a href="mailto:nathan@nixoncreativestudio.com">nathan@nixoncreativestudio.com</a>.
+        </p>
+        <p class="updated">Last updated November 6, 2026</p>
+      </header>
+      <div class="doc">
+        <nav class="toc card" aria-label="On this page">
+          <p>On this page</p>
+          <ul>
+            <li><a href="#the-standard">The standard</a></li>
+            <li><a href="#in-practice">In practice</a></li>
+            <li><a href="#how-its-checked">How it is checked</a></li>
+            <li><a href="#where-it-stops">Where it stops short</a></li>
+            <li><a href="#report">Found a problem?</a></li>
+          </ul>
+        </nav>
+        <div class="prose">
+          <h2 id="the-standard">The standard</h2>
+          <p>
+            The goal is WCAG 2.1 AA, the same standard most public bodies and larger organizations
+            are held to. Each page is built to score 100 on Lighthouse's accessibility audit, and an
+            automated check runs on every change so that score does not quietly slip. That automated
+            score is a useful floor, not a certificate: it catches the machine-checkable issues,
+            which are only one part of the picture.
+          </p>
+          <h2 id="in-practice">In practice</h2>
+          <p>A few of the things that means on this site:</p>
+          <ul>
+            <li>
+              Everything you can do with a mouse, you can do with a keyboard. The focus outline is
+              always visible, and a "Skip to content" link is the first thing you reach.
+            </li>
+            <li>
+              Real landmarks and a clean heading order, so a screen reader can move through a page
+              by region and by heading instead of reading it all top to bottom.
+            </li>
+            <li>
+              Every form field has a visible label, uses the right input type, and announces its own
+              errors rather than signalling them with color alone.
+            </li>
+            <li>
+              Text is chosen to clear the AA contrast bar against its background. Images that carry
+              meaning have descriptions; purely decorative ones are hidden from assistive tech.
+            </li>
+            <li>
+              If your device is set to reduce motion, the animations and the smooth scrolling switch
+              off automatically.
+            </li>
+          </ul>
+          <h2 id="how-its-checked">How it is checked</h2>
+          <p>
+            The accessibility score is a hard gate: a change cannot ship if it drops a page below
+            100. On top of that, the pages are run through
+            <a
+              href="https://github.com/dequelabs/axe-core"
+              target="_blank"
+              rel="noopener noreferrer"
+              >axe-core</a
+            >
+            (a widely used accessibility testing engine), and structural changes get a manual
+            keyboard pass from the address bar through every control. Automated tools like these
+            only cover part of WCAG; the rest is judgment, whether the alt text is actually useful,
+            whether the reading order makes sense, so I treat the tooling as a safety net under the
+            hands-on work, not a stand-in for it.
+          </p>
+          <h2 id="where-it-stops">Where it stops short</h2>
+          <p>
+            I aim for AA, not the stricter AAA, on purpose, in line with the W3C's own guidance that
+            AAA is not meant as a blanket requirement for a whole site. A couple of AAA rules pull
+            against a brand-led design, so the work targets AA and stops there by choice, not by
+            oversight.
+          </p>
+          <p>
+            That is a line about polish, not about whether the site works. If a specific thing is
+            genuinely hard for you to use, that is a bug, and the next section is how to flag it.
+          </p>
+          <h2 id="report">Found a problem?</h2>
+          <p>
+            If a page is hard to read, hard to get through, or breaks with the assistive technology
+            you rely on, email
+            <a href="mailto:nathan@nixoncreativestudio.com">nathan@nixoncreativestudio.com</a> and
+            tell me what happened and what you were using. It reaches a real person, me, and I treat
+            accessibility problems as real problems to fix, not as nice-to-haves.
+          </p>
+        </div>
+      </div>
+      <section data-end aria-label="Start a project"></section>
+    </main>
+    <script src="/shared.js"></script>
+    <script src="/deal/kit.js"></script>
+    <script src="/deal/legal/legal.js"></script>
+  </body>
+</html>

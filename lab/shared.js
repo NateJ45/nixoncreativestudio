@@ -21,4 +21,4 @@ window.NCS = {
     { slug: 'first-presbyterian-orangeburg', name: 'First Presbyterian Church of Orangeburg', sector: 'Church', hook: 'Book the building through one form, not an inbox', paper: '#FFFFFF', accent: '#45050C', host: '1stpresbyterian.org' },
   ],
 };
-window.NCS.sites.forEach((s) => { s.video = '../assets/' + s.slug + '.mp4'; s.poster = '../assets/' + s.slug + '.webp'; s.study = 'https://nixoncreativestudio.com/work/' + s.slug + '/'; });
+window.NCS.sites.forEach((s) => { s.video = '/assets/' + s.slug + '.mp4'; s.poster = '/assets/' + s.slug + '.webp'; s.study = 'https://nixoncreativestudio.com/work/' + s.slug + '/'; });
