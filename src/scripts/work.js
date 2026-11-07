@@ -132,9 +132,12 @@ function syncUrl() {
   var q = new URLSearchParams();
   if (current !== 'all') q.set('sector', current);
   if (view === 'list') q.set('view', 'list');
+  /* An address with an open client sheet keeps it, and the sheet's history entry stays one. */
+  var client = new URLSearchParams(location.search).get('client');
+  if (client) q.set('client', client);
   var s = q.toString();
   try {
-    history.replaceState(null, '', s ? '?' + s : location.pathname);
+    history.replaceState(history.state, '', s ? '?' + s : location.pathname);
   } catch (e) {}
 }
 function words(key, n) {

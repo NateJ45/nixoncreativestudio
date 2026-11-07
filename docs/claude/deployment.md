@@ -71,16 +71,16 @@ Inline scripts and `<style>` blocks are allowed by sha256 hash. `public/_headers
 
 From other hosts, the policy allows what the site really loads:
 
-| Host                                                      | For                                         | Directives                             |
-| --------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
-| `static.cloudflareinsights.com`, `cloudflareinsights.com` | The Web Analytics beacon, and what it sends | `script-src`, `connect-src`            |
-| `*.googletagmanager.com`                                  | GA4 (`gtag.js`)                             | `script-src`, `img-src`, `connect-src` |
-| `*.google-analytics.com`, `*.analytics.google.com`        | GA4 hits                                    | `img-src`, `connect-src`               |
-| `api.web3forms.com`                                       | The contact form, fetch and native post     | `connect-src`, `form-action`           |
+| Host                                                                 | For                                                                                   | Directives                                      |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `static.cloudflareinsights.com`, `cloudflareinsights.com`            | The Web Analytics beacon, and what it sends                                           | `script-src`, `connect-src`                     |
+| `*.googletagmanager.com`                                             | GA4 (`gtag.js`)                                                                       | `script-src`, `img-src`, `connect-src`          |
+| `*.google-analytics.com`, `*.analytics.google.com`, `www.google.com` | GA4 hits (the live report on 2026-11-07 showed some go to `www.google.com/g/collect`) | `img-src` (not `www.google.com`), `connect-src` |
+| `api.web3forms.com`                                                  | The contact form, fetch and native post                                               | `connect-src`, `form-action`                    |
 
 `form-action` also keeps `'self'`, because the native post redirects back to `/contact/?sent=1#sent`, and Chrome applies `form-action` to that redirect.
 
-**What still reports on the live site.** Cloudflare injects an inline script at the end of each page on the proxied zone (it starts `(function(){function c(){var b=a.contentDocument` and loads `/cdn-cgi/challenge-platform/scripts/jsd/main.js`). That is JavaScript Detections, part of its bot tools. It carries the request's ray ID, so its text and hash change on every response and no hash can allow it. Cloudflare's documented answer is a per-request nonce, which a static site cannot make. A fixed nonce in `_headers` would be published to everyone, so it would allow an attacker's inline script too. See `docs/PENDING.md` for the decision this leaves.
+**What still reports on the live site.** Cloudflare injects an inline script at the end of some responses on the proxied zone, seen on the first page of a visit with no Cloudflare cookie yet (it starts `(function(){function c(){var b=a.contentDocument` and loads `/cdn-cgi/challenge-platform/scripts/jsd/main.js`). That is JavaScript Detections, part of its bot tools. It carries the request's ray ID, so its text and hash change on every response and no hash can allow it. Cloudflare's documented answer is a per-request nonce, which a static site cannot make. A fixed nonce in `_headers` would be published to everyone, so it would allow an attacker's inline script too. See `docs/PENDING.md` for the decision this leaves.
 
 **How to go from report-only to enforcing.** Never rename the header untested.
 

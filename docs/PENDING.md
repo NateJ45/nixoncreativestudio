@@ -15,9 +15,13 @@ Read this file early in any session on this repo.
 
 ## Waiting on a human
 
+### A0. Regenerate the visual baselines after the review pass (added 2026-11-07)
+
+The baselines were regenerated just before the review items changed /churches/, /contact/, /services/ and the case studies, so those pages will drift. Once that PR is on `main`, run `gh workflow run visual.yml --ref main -f update=true` and follow `docs/TESTING.md`.
+
 ### A1. Decide about Cloudflare's injected script, then enforce the CSP (added 2026-11-07)
 
-The Content-Security-Policy ships report-only (`docs/claude/deployment.md`). Everything the build makes passes it (`tests/csp.spec.ts`). On the live site, the one thing that reports is the inline script Cloudflare's JavaScript Detections injects into each page, which no hash can allow because it changes per request. If the policy were enforced as it stands, that script would be blocked: visitors would see nothing different, and Cloudflare would lose that bot signal. Nathan's choice, in the Cloudflare dashboard (Security settings; Bot Fight Mode can force it on): turn JS Detections off so the policy reports nothing, or keep it and accept the blocked script. Then follow the steps in the doc to enforce.
+The Content-Security-Policy ships report-only (`docs/claude/deployment.md`). Everything the build makes passes it (`tests/csp.spec.ts`). On the live site, the one thing that reports is the inline script Cloudflare's JavaScript Detections injects into some responses (the first page of a visit, in the 2026-11-07 check), which no hash can allow because it changes per request. If the policy were enforced as it stands, that script would be blocked: visitors would see nothing different, and Cloudflare would lose that bot signal. Nathan's choice, in the Cloudflare dashboard (Security settings; Bot Fight Mode can force it on): turn JS Detections off so the policy reports nothing, or keep it and accept the blocked script. Then follow the steps in the doc to enforce.
 
 ### A2. Check security.txt after the next deploy (added 2026-11-07)
 

@@ -18,6 +18,63 @@ test.describe('The client sheet and Back', () => {
     await expect(page.locator(sheet)).toHaveJSProperty('open', true);
   }
 
+  test('an open sheet has its own address, and reload comes back to it', async ({ page }) => {
+    await openFirst(page);
+    const slug = new URL(page.url()).searchParams.get('client');
+    expect(slug).toBeTruthy();
+    await page.reload();
+    await expect(page.locator(sheet)).toHaveJSProperty('open', true);
+    await expect(page.locator(`${sheet} [data-st]`)).toHaveAttribute('href', `/work/${slug}/`);
+    await page.keyboard.press('Escape');
+    await expect(page.locator(sheet)).toHaveJSProperty('open', false);
+    expect(new URL(page.url()).searchParams.has('client')).toBe(false);
+  });
+
+  test('a shared address opens the sheet, and Back and Esc stay on the page', async ({ page }) => {
+    for (const path of ['/', '/work/']) {
+      await page.goto(`${path}?client=stone-steps-50k`);
+      const dialog = page.locator(sheet);
+      await expect(dialog).toHaveJSProperty('open', true);
+      await expect(dialog.getByRole('heading', { name: 'Stone Steps 50K' })).toBeVisible();
+      await expect(page.locator(`${sheet} [data-back]`)).toBeFocused();
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveJSProperty('open', false);
+      expect(new URL(page.url()).pathname).toBe(path);
+      expect(new URL(page.url()).search).toBe('');
+
+      await page.goto(`${path}?client=stone-steps-50k`);
+      await expect(dialog).toHaveJSProperty('open', true);
+      await page.goBack();
+      await expect(dialog).toHaveJSProperty('open', false);
+      expect(new URL(page.url()).pathname).toBe(path);
+    }
+  });
+
+  test('the address keeps the /work filter around the sheet', async ({ page }) => {
+    await page.goto('/work/?sector=church&client=first-baptist-muncie');
+    await expect(page.locator(sheet)).toHaveJSProperty('open', true);
+    await page.keyboard.press('Escape');
+    await expect(page.locator(sheet)).toHaveJSProperty('open', false);
+    expect(new URL(page.url()).search).toBe('?sector=church');
+  });
+
+  test('an unknown client in the address is ignored', async ({ page }) => {
+    await page.goto('/?client=nobody');
+    await expect(page.locator(sheet)).toHaveJSProperty('open', false);
+    expect(new URL(page.url()).search).toBe('');
+  });
+
+  test('with JavaScript off a shared address is the page, with plain links', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/?client=stone-steps-50k');
+    await expect(page.locator(`${sheet}[open]`)).toHaveCount(0);
+    await expect(page.locator('a.tile[href="/work/stone-steps-50k/"]').first()).toBeVisible();
+    await context.close();
+  });
+
   test('browser Back closes the sheet and stays on the page', async ({ page }) => {
     await page.goto('/about/');
     await openFirst(page);
@@ -42,7 +99,7 @@ test.describe('The client sheet and Back', () => {
     await page.locator('[data-st]').click();
     await expect(page).toHaveURL(/\/work\/[a-z0-9-]+\/$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/work\/$/);
+    await expect(page).toHaveURL(/\/work\/\?client=[a-z0-9-]+$/);
     await expect(page.locator(sheet)).toHaveJSProperty('open', true);
     await page.goBack();
     await expect(page.locator(sheet)).toHaveJSProperty('open', false);

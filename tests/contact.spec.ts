@@ -135,6 +135,14 @@ test.describe('With JavaScript', () => {
     await expect(page.locator('input[name="org_type"]:checked')).toHaveValue('school');
   });
 
+  test('the brief is hidden when it would stack under the form', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/contact/');
+    await expect(page.locator('[data-phone]')).toBeHidden();
+    await expect(page.locator('.q-form .pip')).toHaveCount(0);
+    await expect(page.locator('.direct a').first()).toBeVisible();
+  });
+
   test('the brief assembles from the fields as plain text', async ({ page }) => {
     await page.goto('/contact/?from=stone-steps-50k');
     const brief = page.locator('[data-phone]');

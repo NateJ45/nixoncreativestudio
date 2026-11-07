@@ -22,6 +22,56 @@ test.describe('Prices', () => {
     await expect(page.locator('details#why')).toHaveJSProperty('open', true);
   });
 
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test('secondary sections fold, prices stay open, and a button opens one', async ({ page }) => {
+      await page.goto('/services/');
+      // The tiers, add-ons and care plans are open.
+      await expect(page.locator('#websites .t-price').first()).toBeVisible();
+      await expect(page.locator('#add-ons .addon').first()).toBeVisible();
+      await expect(page.locator('#care')).not.toHaveClass(/shut/);
+      // The rest are a list of headings.
+      const toggle = page.getByRole('button', { name: 'What it costs over five years' });
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(page.locator('#costs table')).toBeHidden();
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(page.locator('#costs table')).toBeVisible();
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      expect(height).toBeLessThan(14000);
+    });
+
+    test('a jump link and an address open the fold they point into', async ({ page }) => {
+      await page.goto('/services/');
+      await page.locator('.jump a[href="#costs"]').click();
+      await expect(page.locator('#costs table')).toBeVisible();
+      await page.goto('/services/#why-not');
+      await expect(page.locator('#why-not')).not.toHaveClass(/shut/);
+    });
+
+    test('the picker works once its fold is open', async ({ page }) => {
+      await page.goto('/services/');
+      await page.getByRole('button', { name: /Three questions/ }).click();
+      const pick = page.locator('[data-pick]');
+      await pick.getByRole('radio', { name: 'The essential pages' }).check();
+      await pick.getByRole('radio', { name: 'A few pages' }).check();
+      await expect(pick).toBeVisible();
+    });
+
+    test('with JavaScript off nothing is folded', async ({ browser }) => {
+      const context = await browser.newContext({
+        javaScriptEnabled: false,
+        viewport: { width: 390, height: 844 },
+      });
+      const page = await context.newPage();
+      await page.goto('/services/');
+      await expect(page.locator('#costs table')).toBeVisible();
+      await expect(page.locator('.mfold-btn')).toHaveCount(0);
+      await context.close();
+    });
+  });
+
   test('three questions deal a card, and it links the form', async ({ page }) => {
     await page.goto('/services/');
     const pick = page.locator('[data-pick]');

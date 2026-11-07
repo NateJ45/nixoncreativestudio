@@ -411,12 +411,21 @@ pvBtn.addEventListener('click', function () {
   if (pvStopped) pv.pause();
   else pvPlay();
 });
+/* An open sheet has its own address, the page plus ?client=<slug>, so it can be shared, and reload
+   comes back to it. Without a script that address is simply the page, with every window on it a
+   plain link to its case study. */
+var sheetUrl = function (slug) {
+  var u = new URL(location.href);
+  if (slug) u.searchParams.set('client', slug);
+  else u.searchParams.delete('client');
+  return u.pathname + u.search + u.hash;
+};
 /* The sheet gets its own history entry, so the browser's Back closes it instead of leaving the page.
    restoring means that entry already exists: the visitor came back to it. */
 ui.openSheet = function (s, el, restoring) {
   if (sheet.open) return;
   opener = el;
-  if (!restoring) history.pushState({ ncsSheet: s.slug }, '');
+  if (!restoring) history.pushState({ ncsSheet: s.slug }, '', sheetUrl(s.slug));
   sheet.style.setProperty('--c', s.accent);
   sheet.style.setProperty('--p', s.paper);
   $('[data-n]').textContent = s.name;
@@ -432,7 +441,17 @@ ui.openSheet = function (s, el, restoring) {
   var cms = $('[data-cmsbox]');
   cms.style.display = s.cms ? '' : 'none';
   if (s.cms) $('[data-pc]').src = s.cms;
-  sheet.style.setProperty('--from', clipFor(el.getBoundingClientRect()));
+  /* A shared address can name a client this page has no window for: grow from the middle instead. */
+  var cx = innerWidth / 2,
+    cy = innerHeight / 2;
+  sheet.style.setProperty(
+    '--from',
+    clipFor(
+      el
+        ? el.getBoundingClientRect()
+        : { top: cy - 40, right: cx + 40, bottom: cy + 40, left: cx - 40 },
+    ),
+  );
   sheet.scrollTop = 0;
   sheet.showModal();
   $('[data-back]').focus({ preventScroll: true });
@@ -466,13 +485,22 @@ var closeSheet = function () {
   shutSheet();
   if (history.state && history.state.ncsSheet) history.back();
 };
-/* Arrived on a sheet's history entry with the sheet shut: open it again. */
+/* Arrived on a sheet's history entry with the sheet shut: open it again. Arrived fresh on a shared
+   address: put the plain page behind it first, so Back and Esc land on this page, not off the site. */
 var sheetEntry = function () {
-  var slug = history.state && history.state.ncsSheet;
-  if (!slug || sheet.open) return;
+  if (sheet.open) return;
+  var slug = history.state && history.state.ncsSheet,
+    restoring = !!slug;
+  if (!slug) {
+    slug = new URLSearchParams(location.search).get('client');
+    if (!slug) return;
+    history.replaceState(history.state, '', sheetUrl(null));
+  }
   var client = ui.bySlug(slug),
-    tile = doc.querySelector('.tile[data-slug="' + slug + '"]');
-  if (client && tile) ui.openSheet(client, tile, true);
+    tile = [].filter.call(doc.querySelectorAll('.tile[data-slug]'), function (t) {
+      return t.dataset.slug === slug;
+    })[0];
+  if (client) ui.openSheet(client, tile || null, restoring);
 };
 addEventListener('popstate', function () {
   if (history.state && history.state.ncsSheet) sheetEntry();

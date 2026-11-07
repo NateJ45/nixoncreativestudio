@@ -609,13 +609,10 @@ select.f {
     display: block;
     padding-top: clamp(4.75rem, 11vh, 6.5rem);
   }
+  /* Beside the form the brief is a pleasure. Stacked under it, it only pushes the other ways
+     to reach me down a screen, and every word of it is what the visitor has just typed. */
   .st-phone {
-    position: static;
-    width: min(100%, 20rem);
-    margin: 2.5rem auto 0;
-  }
-  .tile.brief {
-    transform-origin: 50% 50%;
+    display: none;
   }
 }
 @media (max-width: 36rem) {
@@ -673,14 +670,8 @@ select.f {
     0 26px 44px -22px rgba(0, 0, 0, 0.42);
 }
 .q-form {
-  --pipx: clamp(1.25rem, 2.8vw, 2.5rem);
-  --pipy: 1.2rem;
-  --pips: 1.875rem;
-  padding-top: 4rem;
-  padding-bottom: 4rem;
-}
-html:not(.js) .q-form > .pip {
-  display: none;
+  padding-top: 2.25rem;
+  padding-bottom: 2.25rem;
 }
 .q-count {
   font: 500 0.8125rem/1.25 var(--body);
@@ -748,12 +739,5 @@ html:not(.js) .st-phone {
 @media (prefers-reduced-motion: reduce) {
   .is-spinning .contact-spinner {
     animation: none;
-  }
-}
-
-/* Wide, the form is a landscape box, so it keeps the one corner number. On a phone it is card-shaped. */
-@media (min-width: 40rem) {
-  .q-form > .pip.flip {
-    display: none;
   }
 }

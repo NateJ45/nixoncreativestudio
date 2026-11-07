@@ -17,6 +17,10 @@
 .sec.folds {
   padding-top: 0;
 }
+/* Timelines and the two rows after it read as one ruled list across this section's edge. */
+.sec.tight#how {
+  padding-bottom: 0;
+}
 .sec-head p {
   max-width: 42rem;
 }
@@ -656,7 +660,6 @@
 /* The two closed rows under the windows. The headings stay real headings, inside the summary. */
 .rows {
   display: grid;
-  gap: 0.5rem;
 }
 .fold {
   scroll-margin-top: 1rem;
@@ -681,8 +684,10 @@
   outline: 2px solid var(--ink);
   outline-offset: 3px;
 }
+/* A compact list: the same size as an FAQ question, not a section's headline. */
 .fold h2 {
-  font-size: var(--type-h2);
+  font: 600 clamp(1.125rem, 1.5vw, 1.3125rem) / 1.25 var(--display);
+  letter-spacing: -0.018em;
   transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .fold summary:hover h2 {
@@ -723,6 +728,76 @@
 }
 .fold .pair {
   gap: clamp(1.75rem, 4vw, 4rem);
+}
+
+/* On a phone the secondary sections fold to a ruled list of their headings (prices.js). Nothing
+   here applies until the script has added the button, so no script means the whole page. */
+.mfold-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.25rem 2.5rem 0.25rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mfold-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.mfold-btn i {
+  position: absolute;
+  right: 0.25rem;
+  top: calc(50% - 0.5625rem);
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.mfold-btn i::before,
+.mfold-btn i::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.mfold-btn i::after {
+  transform: rotate(90deg);
+}
+.mfold-btn[aria-expanded='true'] i::after {
+  display: none;
+}
+[data-mfold].shut .mfold-part {
+  display: none !important;
+}
+@media (max-width: 52rem) {
+  .sec.tight[data-mfold].shut {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  [data-mfold].shut > .wrap {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+    border-top: 1px solid var(--line);
+  }
+  [data-mfold].shut h2 {
+    font: 600 1.25rem/1.25 var(--display);
+    letter-spacing: -0.018em;
+  }
+  /* Pieces of the sections' own layout that would still take room around a lone heading. */
+  [data-mfold].shut :is(.sec-head, .behind-head, .pick-in, .pick-qs) {
+    display: block;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+  }
 }
 
 /* FAQ */

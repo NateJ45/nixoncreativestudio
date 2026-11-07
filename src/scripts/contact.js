@@ -367,9 +367,6 @@ function show(i, dir, noFocus) {
   q.classList.add('on');
   var msg = 'Question ' + (cur + 1) + ' of ' + steps.length;
   count.textContent = msg;
-  [].forEach.call(document.querySelectorAll('[data-q-pip]'), function (p) {
-    p.textContent = cur + 1;
-  });
   /* The visible count is hidden from screen readers; this is the one that gets read. */
   live.textContent = msg;
   bar.style.setProperty('--pr', ((cur + 1) / steps.length).toFixed(4));

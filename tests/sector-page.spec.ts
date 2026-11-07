@@ -1,5 +1,34 @@
 import { test, expect } from '@playwright/test';
 
+test('/churches/ lines its section up with the hero, and its window keeps to real content', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/churches/');
+  const left = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().left);
+  const hero = await left('.ch-head h1');
+  expect(Math.abs((await left('.ch-job')) - hero)).toBeLessThan(1);
+  expect(Math.abs((await left('.pt h3')) - hero)).toBeLessThan(1);
+  // Scrolled through every stop, Orangeburg's window never reaches its empty events band, which
+  // starts at 1947 of the 3400 pixels in its 560-wide capture.
+  const stand = page.locator('[data-stand="first-presbyterian-orangeburg"]');
+  const bottom = page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < (await bottom); y += 500) {
+    await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
+    await page.waitForTimeout(60);
+    const shown = await stand.locator('.scr').evaluate((scr) => {
+      const img = scr.querySelector('img') as HTMLImageElement;
+      const scale = scr.getBoundingClientRect().width / 560;
+      return (scr.getBoundingClientRect().bottom - img.getBoundingClientRect().top) / scale;
+    });
+    expect(shown).toBeLessThan(1947);
+  }
+});
+
 // =============================================================================
 // /churches: the sector page
 // =============================================================================

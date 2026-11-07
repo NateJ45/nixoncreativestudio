@@ -322,10 +322,78 @@ all('.faq details, .fold').forEach(function (d) {
     };
   });
 });
+/* On a phone the page was a very long scroll, so the sections marked data-mfold fold down to their
+   headings. The markup is untouched until this runs: wide screens, no script and search all get
+   the whole page, and these sections have no prices a buyer needs first (the tiers, add-ons and care
+   plans stay open). Each heading gets a real button; everything else in the section is folded. */
+var phoneFolds = matchMedia('(max-width:52rem)');
+var mfolds = all('[data-mfold]').map(function (sec) {
+  var h = sec.querySelector('h2'),
+    parts = [],
+    node = h;
+  while (node !== sec) {
+    [].forEach.call(node.parentElement.children, function (c) {
+      if (c !== node) parts.push(c);
+    });
+    node = node.parentElement;
+  }
+  parts.forEach(function (c) {
+    c.classList.add('mfold-part');
+  });
+  var btn = doc.createElement('button');
+  btn.type = 'button';
+  btn.className = 'mfold-btn';
+  var mark = doc.createElement('i');
+  mark.setAttribute('aria-hidden', 'true');
+  var f = { sec: sec, h: h, btn: btn, mark: mark };
+  btn.addEventListener('click', function () {
+    setFold(f, !sec.classList.contains('shut'));
+  });
+  return f;
+});
+function setFold(f, shut) {
+  f.sec.classList.toggle('shut', shut);
+  f.btn.setAttribute('aria-expanded', shut ? 'false' : 'true');
+}
+function mountFolds(folded) {
+  mfolds.forEach(function (f) {
+    if (phoneFolds.matches && !f.btn.parentElement) {
+      while (f.h.firstChild) f.btn.appendChild(f.h.firstChild);
+      f.btn.appendChild(f.mark);
+      f.h.appendChild(f.btn);
+      setFold(f, folded);
+    } else if (!phoneFolds.matches && f.btn.parentElement) {
+      f.mark.remove();
+      while (f.btn.firstChild) f.h.appendChild(f.btn.firstChild);
+      f.btn.remove();
+      f.sec.classList.remove('shut');
+    }
+  });
+}
+/* After a reload or Back the page is already scrolled, and folding it now would move what is on screen. */
+mountFolds(!ui.restored());
+phoneFolds.addEventListener('change', function () {
+  mountFolds(true);
+});
+/* What a link points at can be inside a folded section. Returns whether it opened anything. */
+function openFoldAround(t) {
+  var sec = t && t.closest('[data-mfold].shut');
+  if (!sec) return false;
+  mfolds.forEach(function (f) {
+    if (f.sec === sec) setFold(f, false);
+  });
+  return true;
+}
+doc.addEventListener('click', function (e) {
+  var a = e.target.closest && e.target.closest('a[href^="#"]');
+  if (a) openFoldAround(doc.getElementById(a.getAttribute('href').slice(1)));
+});
+
 /* A link to a closed row opens it, so the jump links never land on something shut. */
 function openTarget() {
   var t = location.hash && doc.getElementById(location.hash.slice(1));
   if (t && t.matches('details')) t.open = true;
+  return t;
 }
 all('.jump a').forEach(function (a) {
   var t = doc.getElementById(a.getAttribute('href').slice(1));
@@ -334,9 +402,21 @@ all('.jump a').forEach(function (a) {
       t.open = true;
     });
 });
-addEventListener('hashchange', openTarget);
-openTarget();
+addEventListener('hashchange', function () {
+  openFoldAround(openTarget());
+});
+/* Arriving on an address with a hash: the folds above it have just shortened the page, so go back to it. */
+(function () {
+  var t = openTarget();
+  if (t) {
+    openFoldAround(t);
+    if (phoneFolds.matches) t.scrollIntoView();
+  }
+})();
 addEventListener('beforeprint', function () {
+  mfolds.forEach(function (f) {
+    if (f.btn.parentElement) setFold(f, false);
+  });
   all('.faq details, .fold').forEach(function (d) {
     d.open = true;
   });
