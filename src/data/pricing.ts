@@ -158,13 +158,15 @@ export interface CarePlan {
   /** Included-time line, e.g. '30 minutes of edits each month'. */
   time: string;
   features: string[];
+  /** True for a care add-on, paid on top of Hosting, never instead of it. */
+  addOn?: boolean;
 }
 
-// Care after launch. Year one Hosting is included in every web tier (see the
-// tier features above). A care plan, if the client wants one, is billed from the
-// first month and includes hosting. Hosting is the
-// floor every live site needs; the monthly levels add edit time, the monthly
-// report and faster replies. Change a level here and in the proposal template
+// Care after launch. Hosting is paid by every live site, from year two, since
+// year one Hosting is included in every web tier (see the tier features above).
+// Care is an add-on on top of Hosting (Nathan, 2026-11-07): billed monthly from
+// launch, never instead of Hosting, and never with a free first year. The add-ons
+// bring edit time, the monthly report and faster replies. Change a level here and in the proposal template
 // together, and keep the /services "Do I need a care plan" answer in step.
 // These prices are for new work: signed agreements keep what they say.
 export const carePlans: CarePlan[] = [
@@ -186,14 +188,16 @@ export const carePlans: CarePlan[] = [
     name: 'Light Care',
     price: '$59',
     period: '/mo',
+    addOn: true,
     who: 'For a quick change now and then.',
     time: '30 minutes of edits each month',
-    features: ['Everything in Hosting', 'Email replies within 2 business days'],
+    features: ['Email replies within 2 business days'],
   },
   {
     name: 'Care',
     price: '$129',
     period: '/mo',
+    addOn: true,
     who: 'For peace of mind as the site grows.',
     time: '1 hour of edits and fixes each month',
     features: [
@@ -208,6 +212,7 @@ export const carePlans: CarePlan[] = [
     name: 'Care+',
     price: '$259',
     period: '/mo',
+    addOn: true,
     who: 'For an organization that wants a web partner.',
     time: '3 hours of content help each month',
     features: [

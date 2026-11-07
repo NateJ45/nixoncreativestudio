@@ -429,7 +429,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </div>
       <table class="cost-table">
         <caption class="vh">
-          The cost of each tier on Hosting alone, then with a care plan that includes hosting: first
+          The cost of each tier on Hosting alone, then with a care add-on on top of Hosting: first
           year, three years and five years
         </caption>
         <thead>
@@ -457,7 +457,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <th scope="row">
                 <b>{c.tier.name}</b>
                 <span>
-                  With {c.plan.name}, {`${c.plan.price}${c.plan.period}`}, hosting included
+                  Plus {c.plan.name}, {`${c.plan.price}${c.plan.period}`}, on top of Hosting
                 </span>
               </th>
               <td data-label="Year one">{money(c.yearOne)}</td>
@@ -469,11 +469,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </table>
       <p class="after">
         How I worked these out: each tier's starting price at today's prices. Year one hosting is
-        included, so Hosting alone is billed from year two. A care plan is billed from the first
-        month instead, and it includes hosting. On {hosting.name} alone you make every change
-        yourself; a care plan adds edit time and faster replies, and the care pairings are examples.
-        A build that lands higher in its range adds the difference, and custom work, photography or
-        a paid editor plan would be extra. Sites with custom tools need {care.name} or above.
+        included, so Hosting is billed from year two. Care is an add-on on top of Hosting, billed
+        from the first month. On {hosting.name} alone you make every change yourself; a care plan
+        adds edit time and faster replies, and the care pairings are examples. A build that lands
+        higher in its range adds the difference, and custom work, photography or a paid editor plan
+        would be extra. Sites with custom tools need {care.name} or above.
       </p>
       <p class="costs-go">
         <a class="chip" href="/one-page/">
@@ -708,9 +708,9 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </div>
       <p class="intro">
         A website is not something you print once. Hosting, security, domains, and certificates keep
-        moving, so every site I launch is quoted with care. After year one, Hosting is the part
-        every live site needs, and the monthly levels add edit time for when you would rather not do
-        it yourself.
+        moving, so every site I launch is quoted with care. After year one, every live site pays
+        Hosting. Care is an add-on on top of it, billed monthly from launch, for edit time and
+        faster replies when you would rather not do it yourself.
       </p>
       <p class="intro">
         Every site I look after sits on one status board. It checks every 15 minutes that the site
@@ -726,6 +726,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
               {c.price}
               <small>{c.period}</small>
             </p>
+            {c.addOn && <p class="care-on">On top of Hosting</p>}
             <p>{c.who}</p>
             <p class="care-time">{c.time}</p>
             <ul class="ticks">
@@ -739,8 +740,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <div class="card tbox">
         <table class="care">
           <caption class="vh">
-            The four care plans compared: price, who each is for, edit time, what's included and
-            reply times
+            Hosting and the three care add-ons on top of it compared: price, who each is for, edit
+            time, what's included and reply times
           </caption>
           <thead>
             <tr>
@@ -752,6 +753,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
                     {c.price}
                     <small>{c.period}</small>
                   </span>
+                  {c.addOn && <span class="care-on">plus Hosting</span>}
                 </th>
               ))}
             </tr>
