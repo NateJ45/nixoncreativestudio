@@ -21,7 +21,6 @@
   padding: clamp(6rem, 13vh, 8rem) 0 clamp(3rem, 8vh, 5rem);
 }
 .ch-head h1 {
-  font-size: clamp(2.75rem, 5.2vw, 5.5rem);
 }
 .ch-head .lede {
   max-width: 38rem;
@@ -91,7 +90,7 @@ html:not(.js) .stand {
 
 .ch-job {
   grid-row: 2;
-  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  font-size: var(--type-h2);
   padding-left: clamp(1.25rem, 2.4vw, 2.25rem);
   margin-bottom: 0.5rem;
 }
@@ -122,7 +121,7 @@ html:not(.js) .stand {
     box-shadow 0.6s ease;
 }
 .pt h3 {
-  font-size: clamp(1.625rem, 2.5vw, 2.25rem);
+  font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.05;
@@ -168,7 +167,7 @@ html:not(.js) .stand {
 }
 .study h3 {
   color: var(--c);
-  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  font-size: var(--type-h2);
   font-weight: 600;
   line-height: 1.02;
 }
@@ -193,6 +192,10 @@ html:not(.js) .stand {
   color: var(--soft);
   font-size: 1rem;
   line-height: 1.35;
+}
+.study .by .ctx {
+  display: block;
+  margin-top: 0.35rem;
 }
 .study .by b {
   display: block;
@@ -231,7 +234,7 @@ html:not(.js) .stand {
   gap: 1rem 2rem;
 }
 .ch-prices h2 {
-  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  font-size: var(--type-h2);
 }
 
 @media (max-width: 62rem) {
@@ -327,7 +330,7 @@ html:not(.js) .stand {
   }
 }
 
-/* The four jobs are numbered cards. The one you are reading turns face up. */
+/* The four jobs are numbered cards, one corner mark each because they are wide. The one you are reading turns face up. */
 .ch {
   counter-reset: pt;
 }
@@ -345,8 +348,7 @@ html:not(.js) .stand {
   outline: 1px solid rgba(18, 18, 17, 0.13);
   outline-offset: -0.45rem;
 }
-.pt-in::before,
-.pt-in::after {
+.pt-in::before {
   position: absolute;
   font: 600 1.625rem/1 var(--display);
   letter-spacing: -0.03em;
@@ -356,16 +358,6 @@ html:not(.js) .stand {
 .pt-in::before {
   left: clamp(1.25rem, 2.4vw, 2.25rem);
   top: 1.15rem;
-}
-.pt-in::after {
-  right: clamp(1.25rem, 2.4vw, 2.25rem);
-  bottom: 1.15rem;
-  transform: rotate(180deg);
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-.pt.on .pt-in::after {
-  opacity: 1;
 }
 .pt-in {
   padding-bottom: 3.5rem;
@@ -400,4 +392,112 @@ html:not(.js) .stand {
     opacity: 1;
     transition: none;
   }
+}
+
+/* Try it: four questions, and the real page scrolls to each answer. */
+.sun {
+  padding-top: clamp(1rem, 3vh, 2.5rem);
+}
+.sun-in {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(2rem, 5vw, 6rem);
+  align-items: center;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.sun h2 {
+  margin-top: 0.9rem;
+  font-size: var(--type-h2);
+}
+.sun h2 b {
+  font-weight: 700;
+  color: var(--accent);
+}
+.sun-lede {
+  max-width: 36rem;
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.4;
+}
+.sun-qs {
+  display: grid;
+  margin: clamp(1.25rem, 3vh, 2rem) 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.sun-qs li {
+  border-top: 1px solid var(--line);
+}
+.sun-qs button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  color: var(--soft);
+  font: 500 clamp(1.25rem, 1.9vw, 1.625rem)/1.15 var(--display);
+  letter-spacing: -0.02em;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 0.25s,
+    transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.sun-qs button:hover {
+  color: var(--ink);
+  transform: translateX(0.25rem);
+}
+.sun-qs button[aria-pressed='true'] {
+  color: var(--accent);
+  font-weight: 700;
+}
+.sun-qs button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.sun-a {
+  padding-bottom: 0.9rem;
+  color: var(--ink);
+}
+.sun-w {
+  justify-self: center;
+  width: min(100%, 19rem);
+  transform: rotate(2deg);
+}
+.sun-w .scr img {
+  inset: 0 0 auto;
+  height: auto;
+  object-fit: fill;
+  will-change: transform;
+}
+html:not(.js) .sun-qs button {
+  color: var(--ink);
+  cursor: default;
+}
+@media (max-width: 62rem) {
+  .sun-in {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sun-w {
+    width: min(66vw, 17rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sun-qs button {
+    transition: none;
+  }
+  .sun-w .scr img {
+    will-change: auto;
+  }
+}
+.sun h2 b {
+  white-space: nowrap;
 }

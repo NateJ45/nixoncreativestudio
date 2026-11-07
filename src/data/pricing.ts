@@ -120,6 +120,10 @@ export const addOns: AddOn[] = [
   },
 ];
 
+// Custom work outside a care plan, per hour. Ordinary changes are in Hosting's
+// `time` line below. The /services FAQ reads this.
+export const customWorkRate = 150;
+
 export interface CarePlan {
   name: string;
   /** Display price, e.g. '$49'. */

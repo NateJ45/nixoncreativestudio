@@ -170,6 +170,12 @@ function frame(now) {
 var nextSlot = 0;
 function deal(it) {
   if (it.state !== 'wait') return;
+  /* Back or a reload, already scrolled: the table is simply laid, nothing is thrown again. */
+  if (ui.restored()) {
+    it.li.classList.remove('wait');
+    land(it);
+    return;
+  }
   var now = performance.now(),
     h = hand();
   nextSlot = Math.max(now + 40, nextSlot + 92);

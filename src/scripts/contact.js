@@ -323,9 +323,17 @@ function focusStep(q) {
   var t =
     q.querySelector('input:checked') || q.querySelector('input:not([type=hidden]),textarea,select');
   if (t) t.focus({ preventScroll: true });
-  var r = form.getBoundingClientRect();
-  if (r.top < 8 || r.top > innerHeight * 0.55)
-    window.scrollTo({ top: scrollY + r.top - 16, behavior: reduce ? 'auto' : 'smooth' });
+  clearDock();
+}
+/* Bring the card into view, and keep its Next button above the dock on a small phone. If the card is
+   taller than the room there is, Next wins: it is the thing to reach, and the field is just above it. */
+function clearDock() {
+  var r = form.getBoundingClientRect(),
+    nav = form.querySelector('.q-nav').getBoundingClientRect(),
+    room = innerHeight - 96;
+  var by = r.top < 8 || r.top > innerHeight * 0.55 ? r.top - 16 : 0;
+  if (nav.bottom - by > room) by = nav.bottom - room;
+  if (by) window.scrollTo({ top: scrollY + by, behavior: reduce ? 'auto' : 'smooth' });
 }
 var inSpring = null;
 function enter(q, dir) {
@@ -362,7 +370,8 @@ function show(i, dir, noFocus) {
   [].forEach.call(document.querySelectorAll('[data-q-pip]'), function (p) {
     p.textContent = cur + 1;
   });
-  if (!noFocus) live.textContent = msg;
+  /* The visible count is hidden from screen readers; this is the one that gets read. */
+  live.textContent = msg;
   bar.style.setProperty('--pr', ((cur + 1) / steps.length).toFixed(4));
   back.hidden = cur === 0;
   var lastStep = cur === steps.length - 1;
@@ -389,6 +398,7 @@ function clear(q) {
     e.textContent = '';
     e.classList.remove('on');
   });
+  q.removeAttribute('aria-invalid');
   $$('[aria-invalid]', q).forEach(function (e) {
     e.removeAttribute('aria-invalid');
   });
@@ -418,7 +428,7 @@ var CHECK = {
   org_type: function () {
     return val('org_type')
       ? true
-      : fail('org-err', null, "Pick whichever is closest. It doesn't have to be perfect.");
+      : fail('org-err', steps[cur], "Pick whichever is closest. It doesn't have to be perfect.");
   },
   message: function () {
     var v = val('message');
@@ -453,9 +463,11 @@ function check(q) {
     ok = f ? f() : true;
   if (!ok) {
     var t =
-      q.querySelector('[aria-invalid=true]') ||
+      q.querySelector('input[aria-invalid=true],textarea[aria-invalid=true]') ||
       q.querySelector('input:not([type=hidden]),textarea');
-    if (t) t.focus();
+    if (t) t.focus({ preventScroll: true });
+    /* The message that just appeared pushed Next down. */
+    clearDock();
   }
   return ok;
 }

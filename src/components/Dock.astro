@@ -14,7 +14,11 @@ const links = [
 <nav class="dock" aria-label="Primary">
   <span class="slide" data-slide></span>
   {links.map((l) => (
-    <a href={l.href} class={l.cls} aria-current={path.startsWith(l.href) ? 'page' : undefined}>
+    <a
+      href={l.href}
+      class={l.cls}
+      aria-current={path === l.href ? 'page' : path.startsWith(l.href) ? 'true' : undefined}
+    >
       {l.label}
     </a>
   ))}

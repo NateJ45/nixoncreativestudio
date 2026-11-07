@@ -91,7 +91,7 @@
   background: var(--accent);
 }
 .t-head h3 {
-  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -284,7 +284,7 @@
   padding: clamp(1.25rem, 2vw, 1.75rem);
 }
 .panel h3 {
-  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.1;
@@ -375,14 +375,8 @@
   outline: 2px solid var(--ink);
   outline-offset: 3px;
 }
-.scroll-hint {
-  display: none;
-  margin-bottom: 0.75rem;
-  color: var(--soft);
-}
 .care {
   width: 100%;
-  min-width: 50rem;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 1rem;
@@ -433,8 +427,7 @@
   position: sticky;
   left: 0;
   z-index: 1;
-  width: 30%;
-  min-width: 11.5rem;
+  width: 24%;
 }
 .care tbody td.y,
 .care tbody td.n {
@@ -480,7 +473,7 @@
   letter-spacing: -0.025em;
 }
 .steps h3 {
-  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.1;
@@ -544,7 +537,7 @@
   list-style: none;
 }
 .whys h3 {
-  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -627,7 +620,7 @@
   outline-offset: 3px;
 }
 .fold h2 {
-  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  font-size: var(--type-h2);
   transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .fold summary:hover h2 {
@@ -742,7 +735,6 @@
 .price-head h1 {
   grid-column: 1;
   max-width: none;
-  font-size: clamp(2.75rem, 4.6vw, 5rem);
 }
 .price-head .lede {
   grid-column: 2;
@@ -973,9 +965,6 @@
   .steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .scroll-hint {
-    display: block;
-  }
 }
 @media (max-width: 40rem) {
   .jump {
@@ -1025,37 +1014,74 @@
   .whys {
     grid-template-columns: minmax(0, 1fr);
   }
-  .care {
-    min-width: 58rem;
-  }
-  .care thead th {
-    width: auto;
-  }
-  .care thead .corner,
-  .care tbody th {
-    min-width: 9.5rem;
-    width: 9.5rem;
-  }
+}
+/* The table fits from a tablet up. Below that the same plans are a stack of cards (the markup is in services.astro). */
+.care-cards {
+  display: none;
+}
+@media (max-width: 60rem) {
   .care th,
   .care td {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-  .care thead .corner,
-  .care tbody th {
-    box-shadow: 8px 0 10px -8px rgba(0, 0, 0, 0.16);
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
   }
   .care .y::before,
   .care .n::before {
-    left: 0.75rem;
+    left: 0.6rem;
   }
 }
-@media (min-width: 23.5rem) and (max-width: 40rem) {
-  .care thead .corner,
-  .care tbody th {
-    min-width: 10.5rem;
-    width: 10.5rem;
+@media (max-width: 47.99rem) {
+  .tbox {
+    display: none;
   }
+  .care-cards {
+    display: grid;
+    gap: 1rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+.care-card {
+  --cardr: 1.25rem;
+  --pipx: 1.15rem;
+  --pipy: 1rem;
+  width: 100%;
+  max-width: 24rem;
+  margin-inline: auto;
+  padding: 3.5rem clamp(1.25rem, 5vw, 1.75rem);
+}
+.care-card:nth-child(odd) {
+  rotate: -0.4deg;
+}
+.care-card:nth-child(even) {
+  rotate: 0.4deg;
+}
+.care-card h3 {
+  font-size: var(--type-h3);
+}
+.care-card .amt {
+  margin-top: 0.4rem;
+  font: 600 2.5rem/1 var(--display);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.care-card small {
+  margin-left: 0.15rem;
+  font: 400 1rem var(--body);
+  letter-spacing: 0;
+  color: var(--soft);
+}
+.care-card > p:not(.amt) {
+  margin-top: 0.75rem;
+  color: var(--soft);
+}
+.care-card .care-time {
+  color: var(--ink);
+  font-weight: 500;
+}
+.care-card .ticks {
+  margin-top: 1rem;
 }
 @media (prefers-reduced-motion: reduce) {
   .js .from-num {
@@ -1204,7 +1230,7 @@
 }
 .pick-qs h2 {
   margin-top: 0.9rem;
-  font-size: clamp(2.25rem, 4.4vw, 4.5rem);
+  font-size: var(--type-h2);
 }
 .pick-qs h2 b {
   font-weight: 700;
@@ -1295,6 +1321,14 @@
     transform: rotate(2.5deg);
   }
 }
+/* The picker needs its script, so with none there is no picker and no link to it. */
+html:not(.js) #pick,
+html:not(.js) .jump a[href='#pick'] {
+  display: none;
+}
+.pick-go {
+  gap: 0.25em;
+}
 .pick-go[hidden] {
   display: none;
 }
@@ -1307,6 +1341,9 @@
     top: auto;
     height: 15rem;
     aspect-ratio: auto;
+    width: 100%;
+    max-width: 24rem;
+    margin-inline: auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1331,7 +1368,7 @@
 }
 .behind-head h2 {
   margin-top: 0.9rem;
-  font-size: clamp(2.25rem, 4.4vw, 4.5rem);
+  font-size: var(--type-h2);
 }
 .behind-head h2 b {
   font-weight: 700;
@@ -1406,7 +1443,7 @@
     0 26px 44px -22px rgba(0, 0, 0, 0.42);
 }
 .see h3 {
-  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.1;

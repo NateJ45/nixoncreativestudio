@@ -21,6 +21,20 @@ const entries = (await getCollection('case-studies')).filter(
   (e) => e.data.sector === CHURCHES.sector,
 );
 const places = ['Muncie, Indiana', 'Orangeburg, South Carolina'];
+
+// The four questions, and where each answer sits on the church's real phone page,
+// in pixels of the 560-wide capture. The answers talk about the page, not the
+// church's details, so they stay true when the times or the sermon change.
+const sunday = [
+  { q: 'When is it, and where?', a: 'On the first screen, before anything else.', stop: 170 },
+  {
+    q: 'What happens when I walk in?',
+    a: 'Who meets you and where they point you, in plain words.',
+    stop: 1370,
+  },
+  { q: 'How does the morning run?', a: 'The whole morning in order, with the times.', stop: 1500 },
+  { q: 'What about my kids?', a: 'Answered before you have to ask anyone.', stop: 1700 },
+];
 const studies = entries
   .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99))
   .map((entry) => ({
@@ -130,12 +144,46 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
       <div class="pt-in">
         <h3>Open to everyone</h3>
         <p>
-          Every page I build is checked against WCAG AA, and that work is part of the price, not an
+          Every custom build is checked against WCAG AA, and that work is part of the price, not an
           upsell. For a church it is simply the right thing to do.
         </p>
       </div>
     </article>
   </div>
+
+  <section class="sec sun" aria-labelledby="sun-h" data-sun>
+    <div class="sun-in">
+      <div class="sun-say">
+        <p class="label">Try it</p>
+        <h2 id="sun-h">
+          Ask what a <b>first-time visitor</b> asks.
+        </h2>
+        <p class="sun-lede">
+          This is the real First Baptist Muncie homepage on a phone. Pick a question and see how far
+          they would have to look.
+        </p>
+        <ul class="sun-qs">
+          {sunday.map((q, i) => (
+            <li>
+              <button type="button" data-sun-q={q.stop} aria-pressed={i === 0 ? 'true' : 'false'}>
+                {q.q}
+              </button>
+              <p class="sun-a" data-sun-a>
+                {q.a}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="sun-w" data-sun-w>
+        <Tile
+          client={bySlug('first-baptist-muncie')}
+          long="/assets/churches/first-baptist-muncie-long.webp"
+          lazy
+        />
+      </div>
+    </div>
+  </section>
 
   <section class="sec" aria-labelledby="sh">
     <div class="wrap">
@@ -169,6 +217,7 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
                 <p class="by">
                   <b>{t.name}</b>
                   {t.title}
+                  {t.context && <span class="ctx">{t.context}</span>}
                 </p>
               )}
               <div class="study-links">

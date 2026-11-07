@@ -21,7 +21,7 @@ Loads when styles, components, layouts, scripts or pages are touched. The design
 
 Declared in `:root` at the top of `kit.css`:
 
-`--ground` (page), `--ink` (text), `--soft` (supporting text), `--card` (white), `--line` (hairlines), `--accent` (studio blue `#2f3fe6`), `--accent-soft`, `--display` and `--body` (both Hanken Grotesk), `--gut` (page side padding, `clamp(1.25rem, 4vw, 4rem)`) and `--ease`.
+`--ground` (page), `--ink` (text), `--soft` (supporting text), `--card` (white), `--line` (hairlines), `--accent` (studio blue `#2f3fe6`), `--accent-soft`, `--display` and `--body` (both Hanken Grotesk), `--gut` (page side padding, `clamp(1.25rem, 4vw, 4rem)`), `--edge` (the side padding that puts a full-bleed block's contents on the 90rem page's left edge), `--type-h1`, `--type-h2` and `--type-h3` (the display scale; use them rather than a new clamp) and `--ease`.
 
 - One typeface: Hanken Grotesk, one variable file at `public/assets/fonts/hanken.woff2`, preloaded in `BaseLayout.astro`. `brand/fonts/` holds two static `.woff` weights for the OG generators only; opentype.js cannot read a variable woff2. Do not add a second face.
 - One light theme. There is no dark mode, no theme toggle, no navy and no amber.
@@ -32,7 +32,7 @@ Declared in `:root` at the top of `kit.css`:
 
 - **Label voice**: `.label` (small, uppercase, tracked, tabular numbers).
 - **Big line**: a `.giant` inside a `.big` container, sized with `--fit` (wide) and `--fitm` (phone) in container-widths; add `data-weigh` for the scroll-driven weight gain. Check 320px.
-- **Deck**: `.pip` and `.pip.flip` in two opposite corners of a card, `.keyed` for the inner rule, `.pc` for a price card, `.tile` for a client window. No suits.
+- **Deck**: `.pip` and `.pip.flip` in two opposite corners of a portrait card, one `.pip` alone on a wide box, `.keyed` for the inner rule, `.pc` for a price card, `.tile` for a client window. No suits.
 - **Hairlines for non-cards**: `border-top: 1px solid var(--line)` on lists, tables and FAQs. Do not box them.
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.
 - **Cards** are `.card` or their own radius (1.25rem; bands and the closing 1.75rem; buttons fully round).
@@ -44,7 +44,8 @@ Declared in `:root` at the top of `kit.css`:
 - Springs are written in JavaScript: `ui.spring(k, c, v)` in `src/scripts/kit.js`, and the per-page scripts use it. CSS motion uses `--ease` or a springy bezier; keep durations short.
 - Page changes are cross-document view transitions (`@view-transition { navigation: auto }` in `kit.css`; the dock keeps `view-transition-name: dock`). There is no router.
 - Every moving thing has a reduced-motion answer: read `ui.reduce` in script, and add the selector to the `@media (prefers-reduced-motion: reduce)` blocks in CSS. Under reduce the view transition and smooth scroll are off, springs start at rest, footage stays a still, and nothing runs after load (`tests/reduced-motion.spec.ts`).
-- There is no Pause motion button and no `data-motion` attribute. Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves; nothing else loops by itself.
+- A hover that lifts its card uses `ui.stillHover` in `kit.js`, so the card cannot lift off the pointer and jitter.
+- There is no Pause motion button and no `data-motion` attribute (the client sheet's looping clip has its own pause button). Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves; nothing else loops by itself.
 
 ## Forced colors and print
 

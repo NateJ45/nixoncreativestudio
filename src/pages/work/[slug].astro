@@ -59,6 +59,8 @@ if (problem) throw new Error(`${entry.id}: ${problem}`);
 
 const s = toClient(entry);
 const nx = next ? toClient(next) : s;
+// For "The {client} homepage": a client whose name starts with The keeps just the one.
+const clientName = d.client.replace(/^The /, '');
 const longest = Math.max(...d.client.split(' ').map((w) => w.length));
 const host = d.facts?.host ?? (d.liveUrl ? hostOf(d.liveUrl) : '');
 const facts: [string, string | undefined][] = [
@@ -111,6 +113,9 @@ const breadcrumbs = [
   title={pageTitle}
   description={pageDescription}
   ogImage={ogCover.src}
+  ogImageWidth={Number(ogCover.attributes.width)}
+  ogImageHeight={Number(ogCover.attributes.height)}
+  ogImageAlt={`The ${clientName} website`}
   ogType="article"
   schemas={schemas}
   breadcrumbs={breadcrumbs}
@@ -150,7 +155,7 @@ const breadcrumbs = [
         )}
       </dl>
     </div>
-    <div class="s-fan" role="img" aria-label={`The ${d.client} homepage on a laptop and a phone`}>
+    <div class="s-fan" role="img" aria-label={`The ${clientName} homepage on a laptop and a phone`}>
       <figure class="pane p-home" style="--d:0" data-pane>
         <div>
           <img src={s.deskStill} alt="" fetchpriority="high" />

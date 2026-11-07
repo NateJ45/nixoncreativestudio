@@ -22,7 +22,8 @@ if (pick) {
   var card = doc.querySelector('[data-pick-card]'),
     go = doc.querySelector('[data-pick-go]');
   var tiers = JSON.parse(pick.dataset.tiers);
-  pick.addEventListener('change', function () {
+  /* Radios can come back checked after a reload or Back, so the card is rebuilt from them, without the throw. */
+  var dealCard = function (animate) {
     var vals = names.map(function (n) {
       var c = pick.querySelector('input[name="' + n + '"]:checked');
       return c ? +c.value : -1;
@@ -41,11 +42,18 @@ if (pick) {
     go.href = '/contact/?tier=' + t.name.toLowerCase();
     go.dataset.tier = t.name;
     go.hidden = false;
-    if (!reduce) {
+    if (animate && !reduce) {
       card.classList.remove('dealing');
       void card.offsetWidth;
       card.classList.add('dealing');
     }
+  };
+  pick.addEventListener('change', function () {
+    dealCard(true);
+  });
+  dealCard(false);
+  addEventListener('pageshow', function () {
+    dealCard(false);
   });
   go.addEventListener('click', function () {
     try {
