@@ -131,7 +131,7 @@ export const NONPROFITS: LeanSector = {
     'The nonprofits in my case studies are a journal, a theological library and a trail race. If you run a food pantry or a clinic, your pages would differ, but the jobs above stay the same, and these show how I handle them.',
   ],
   tierNotes: [
-    'Need this for a board or a grant? I can prepare a short summary of your project: the scope, the three-year cost, the upkeep and what you would own.',
+    'Need this for a board or a grant? I can prepare a short summary of your project: the scope, the three-year cost, the upkeep and what happens if you ever move on.',
     'If your budget is small, one of these tiers may be too large a share of it. Tell me the number and I will say so.',
   ],
 };

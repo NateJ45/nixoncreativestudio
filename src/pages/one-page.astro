@@ -1,6 +1,6 @@
 ---
 /* /one-page: the summary a staff member can send to a board or committee: what I
-   do, the three tiers with honest costs, what is included, what you keep and how to
+   do, the three tiers with honest costs, what is included, what happens if you move on and how to
    reach me. Prices and sums read src/data/pricing.ts and src/lib/tier-costs.ts.
    The sheet prints on one US Letter page: src/styles/pages/one-page.css has the print
    stylesheet, and tests/one-page.spec.ts prints it and counts the pages. Keep it to
@@ -8,7 +8,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/one-page.css';
 import Closing from '../components/Closing.astro';
-import { carePlans, yoursToKeep } from '../data/pricing';
+import { carePlans, freeToMove } from '../data/pricing';
 import { site } from '../data/site';
 import { money } from '../lib/money';
 import { tierCosts } from '../lib/tier-costs';
@@ -25,7 +25,7 @@ const servicesUrl = `${site.domain}/services/`;
 
 <BaseLayout
   title="A one-page summary | Nixon Creative Studio"
-  description="A one-page summary of what I do, the three website tiers, honest costs over five years, what you keep and how to reach me. Made to print or to forward."
+  description="A one-page summary of what I do, the three website tiers, honest costs over five years, how to leave and how to reach me. Made to print or to forward."
 >
   <div class="op-page">
     <div class="op-bar" data-op-bar>
@@ -39,7 +39,7 @@ const servicesUrl = `${site.domain}/services/`;
       <header class="op-head">
         <div>
           <p class="label">{site.studioName}</p>
-          <h1>Websites, what they cost, and what you keep</h1>
+          <h1>Websites, what they cost, and how you could leave</h1>
         </div>
         <p class="op-reach">
           <b>{site.ownerName}</b>
@@ -124,9 +124,9 @@ const servicesUrl = `${site.domain}/services/`;
           </ul>
         </section>
         <section aria-labelledby="op-keep">
-          <h2 id="op-keep">Yours to keep</h2>
+          <h2 id="op-keep">If you ever move on</h2>
           <ul>
-            {yoursToKeep.map((line) => (
+            {freeToMove.map((line) => (
               <li>{line}</li>
             ))}
           </ul>

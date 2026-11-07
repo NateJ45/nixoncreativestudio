@@ -110,13 +110,14 @@ export const webTiers: WebTier[] = [
   },
 ];
 
-// The same short block on every tier, on /services and /one-page/. Only what is
-// true today. Do not add domains, hosting or accounts being in the client's name,
-// or a backup person, until those are established.
-export const yoursToKeep: string[] = [
-  'A custom build is yours outright.',
-  'The code and content can be handed over, with documentation.',
+// The same short block on every tier, on /services and /one-page/. The promise is
+// that a client can leave, not that they hold the accounts: Nathan runs the hosting
+// and the repos on purpose (decided 2026-11-07). Do not say the domain, hosting or
+// accounts are in the client's name.
+export const freeToMove: string[] = [
+  'I host it and look after the code, so there is nothing for you to run.',
   'It uses well-used tools, WordPress or Sanity, GitHub and Cloudflare, that another developer can pick up.',
+  'If you ever move on, the code, content and documentation go with you.',
 ];
 
 export interface AddOn {

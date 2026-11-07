@@ -20,7 +20,7 @@ import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import Closing from '../components/Closing.astro';
 import { site } from '../data/site';
-import { webTiers as tiers, addOns, carePlans, customWorkRate, yoursToKeep } from '../data/pricing';
+import { webTiers as tiers, addOns, carePlans, customWorkRate, freeToMove } from '../data/pricing';
 import { SITUATIONS, sectorPagePath } from '../data/sector-pages';
 import { getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
@@ -99,7 +99,7 @@ const faq = [
   },
   {
     q: 'Do I need a care plan after launch?',
-    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. A custom build is yours outright, but hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour and custom work at ${money(customWorkRate)}. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, a monthly report, and faster replies. A site with custom tools needs ${care.name} or above, because tools need looking after. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
+    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. Hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour and custom work at ${money(customWorkRate)}. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, a monthly report, and faster replies. A site with custom tools needs ${care.name} or above, because tools need looking after. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
   },
   {
     q: 'Is there a monthly fee for the editor?',
@@ -165,8 +165,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
       You get a custom website planned, designed and built by one person, an editor your own people
-      can run, and a build that is yours when it is done. Every price is on this page, and the first
-      conversation is free and ends with an honest ballpark.
+      can run, and a site you can take elsewhere if you ever need to. Every price is on this page,
+      and the first conversation is free and ends with an honest ballpark.
     </p>
     <ul class="glance" aria-label="The three website tiers">
       {tiers.map((t) => (
@@ -244,9 +244,9 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <p class="t-price">{`${money(t.priceFrom)}${t.priceSuffix}`}</p>
               <p class="t-range">{t.range}</p>
               <div class="t-keep">
-                <h4 class="t-h">Yours to keep</h4>
+                <h4 class="t-h">If you ever move on</h4>
                 <ul>
-                  {yoursToKeep.map((line) => (
+                  {freeToMove.map((line) => (
                     <li>{line}</li>
                   ))}
                 </ul>
@@ -511,10 +511,12 @@ const heading = `What I do, and <b>what it costs.</b>`;
               </dd>
             </div>
             <div>
-              <dt>Can you leave with it?</dt>
+              <dt>Can you leave?</dt>
               <dd>
-                A custom build is yours outright, and the code and content can be handed over with
-                documentation. Ask any provider, me included, what comes with you if you go.
+                Yes, fairly easily. I host the site and look after the code, and if you want to move
+                on, the code, content and documentation go with you to another developer and another
+                host. Leaving Squarespace or Wix usually means rebuilding the whole site somewhere
+                else.
               </dd>
             </div>
             <div>
@@ -823,8 +825,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
           <h3>Launch, and follow-through</h3>
           <p>
             I launch the site with you, then stay close for the first month to fix anything that
-            surfaces. After that a custom build is yours outright, with documentation and a simple
-            way to reach me when something comes up.
+            surfaces. After that you have documentation and a simple way to reach me when something
+            comes up.
           </p>
         </li>
       </ol>
@@ -942,9 +944,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <li>
                 <h3>Built to be handed off</h3>
                 <p>
-                  Every site is set up so the next volunteer or staff member can keep it running. A
-                  custom build is yours outright, and the code and content can be handed over with
-                  documentation.
+                  Every site is set up so the next volunteer or staff member can keep it running. If
+                  you ever move on, the code, content and documentation go with you.
                 </p>
               </li>
               <li>
