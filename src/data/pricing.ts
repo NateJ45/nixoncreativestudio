@@ -178,7 +178,7 @@ export const carePlans: CarePlan[] = [
     time: 'No edits included; changes at $100 an hour',
     features: [
       'Fast, secure hosting',
-      'Software and security updates',
+      'Security updates when a known vulnerability is patched',
       'Uptime monitoring, every 15 minutes',
       'Daily backups',
       'Domain and security renewals handled',
@@ -192,6 +192,7 @@ export const carePlans: CarePlan[] = [
     who: 'For an organization that would rather send changes than make them.',
     time: 'Send me changes, up to 30 minutes a month; unused minutes carry over for three months',
     features: [
+      "Software updates: WordPress, plugins and the site's code kept current",
       'Fixes when something breaks, at no extra charge',
       'Ask me how to do anything in the editor',
       'Extra work at $85 an hour',
