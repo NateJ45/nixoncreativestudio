@@ -51,7 +51,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 - Production deploys from Cloudflare Workers Builds on a push to `main` (Worker `nixoncreativestudio`, assets from `dist/`). Other branches get a `*-nixoncreativestudio.nathanjnixon86.workers.dev` preview. The apex is canonical; `www` 301s to it.
 - `main` is the only branch. Short-lived branch, open a PR; the `main` ruleset requires PR plus green `build` and `test`. Undo with `git revert` or the Deployments tab rollback.
 - Hard gates: `astro check`, lint (0 errors), `prettier --check`, unit tests (including `kit-tokens` and `case-palettes`), sync-check, copy lint, link and slash checks, Playwright (including `tests/page-weight.spec.ts`, budgets in `tests/page-weight.config.json`: raise one only with the reason in `_why`), Lighthouse accessibility = 1, LCP under 4.5s, CLS under 0.1. A format gate that only runs in CI has bitten this studio before: run prettier locally.
-- Visual baselines (`visual.yml`, manual, not required) were removed with the old design and need regenerating, light only (`docs/PENDING.md`).
+- Visual baselines (`visual.yml`, manual, not required) are Linux PNGs, light only; regenerate after a deliberate visual change (`docs/TESTING.md`).
 - Details: `.claude/rules/testing-ci.md`, `docs/claude/deployment.md`, `docs/TESTING.md`, `docs/PENDING.md` (edit registries in the same commit as the thing they track).
 
 ## Never-break rules (each one cost real time)

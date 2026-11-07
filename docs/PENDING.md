@@ -15,10 +15,6 @@ Read this file early in any session on this repo.
 
 ## Waiting on a human
 
-### A. Regenerate the visual baselines (added 2026-11-06, the deal redesign)
-
-The Linux baselines in `tests/visual.spec.ts-snapshots/` were removed with the old design, and the spec now shoots light only (there is one theme). Run `gh workflow run visual.yml --ref <branch> -f update=true`, review the PNGs, push an empty commit to the PR branch so CI runs, and merge (steps in `docs/TESTING.md`). Until then `visual.yml` has nothing to compare against. It is not a required check, so nothing is blocked.
-
 ### A1. Decide about Cloudflare's injected script, then enforce the CSP (added 2026-11-07)
 
 The Content-Security-Policy ships report-only (`docs/claude/deployment.md`). Everything the build makes passes it (`tests/csp.spec.ts`). On the live site, the one thing that reports is the inline script Cloudflare's JavaScript Detections injects into each page, which no hash can allow because it changes per request. If the policy were enforced as it stands, that script would be blocked: visitors would see nothing different, and Cloudflare would lose that bot signal. Nathan's choice, in the Cloudflare dashboard (Security settings; Bot Fight Mode can force it on): turn JS Detections off so the policy reports nothing, or keep it and accept the blocked script. Then follow the steps in the doc to enforce.
