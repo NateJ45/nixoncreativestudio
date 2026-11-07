@@ -44,7 +44,7 @@ const pickTiers = tiers.map((t) => ({
   range: `${t.range}.`,
 }));
 
-// The honest sums, computed from pricing.ts: year one hosting is included, so care starts in year two.
+// The honest sums, computed from pricing.ts: year one Hosting is included; care is billed from month one.
 const costs = tierCosts();
 const situationCols = [
   { key: 'launch', tier: launch },
@@ -468,12 +468,12 @@ const heading = `What I do, and <b>what it costs.</b>`;
         ))}
       </table>
       <p class="after">
-        How I worked these out: each tier's starting price, with year one hosting included, so
-        hosting or a care plan is billed from year two and every year after, at today's prices. On{' '}
-        {hosting.name} alone you make every change yourself; a care plan adds edit time and faster
-        replies, and the care pairings are examples. A build that lands higher in its range adds the
-        difference, and custom work, photography or a paid editor plan would be extra. Sites with
-        custom tools need {care.name} or above.
+        How I worked these out: each tier's starting price at today's prices. Year one hosting is
+        included, so Hosting alone is billed from year two. A care plan is billed from the first
+        month instead, and it includes hosting. On {hosting.name} alone you make every change
+        yourself; a care plan adds edit time and faster replies, and the care pairings are examples.
+        A build that lands higher in its range adds the difference, and custom work, photography or
+        a paid editor plan would be extra. Sites with custom tools need {care.name} or above.
       </p>
       <p class="costs-go">
         <a class="chip" href="/one-page/">

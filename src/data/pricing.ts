@@ -161,7 +161,8 @@ export interface CarePlan {
 }
 
 // Care after launch. Year one Hosting is included in every web tier (see the
-// tier features above); from year two the client picks a level. Hosting is the
+// tier features above). A care plan, if the client wants one, is billed from the
+// first month and includes hosting. Hosting is the
 // floor every live site needs; the monthly levels add edit time, the monthly
 // report and faster replies. Change a level here and in the proposal template
 // together, and keep the /services "Do I need a care plan" answer in step.

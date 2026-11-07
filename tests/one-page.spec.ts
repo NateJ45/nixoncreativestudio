@@ -50,10 +50,10 @@ test.describe('/one-page/', () => {
     await expect(rows.first()).toContainText('Launch');
     await expect(rows.first()).toContainText('Light Care');
     await expect(rows.first()).toContainText('$3,500');
-    await expect(rows.first()).toContainText('$4,916');
-    await expect(rows.first()).toContainText('$6,332');
-    await expect(rows.nth(2)).toContainText('$24,932');
-    await expect(page.locator('.op-sheet')).toContainText('year one hosting included');
+    await expect(rows.first()).toContainText('$5,624');
+    await expect(rows.first()).toContainText('$7,040');
+    await expect(rows.nth(2)).toContainText('$28,040');
+    await expect(page.locator('.op-sheet')).toContainText('year one hosting is included');
     await expect(page.locator('.op-sheet')).toContainText('If you ever move on');
     await expect(page.locator('.op-sheet a[href^="mailto:"]')).toHaveCount(1);
     await expect(page.locator('.op-sheet a[href^="tel:"]')).toHaveCount(1);
