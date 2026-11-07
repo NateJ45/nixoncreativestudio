@@ -1,27 +1,68 @@
 ---
-/* The top line: the name and whether the studio is booking. `onColor` flips it
-   for pages that open on a client's color (the case studies). */
+/* The top line: two working corners, like the pips on a card. On the left the name, which is the
+   way home. On the right whether the studio is booking, which opens a card with the ways to reach
+   Nathan: a native popover, so it opens, dismisses and takes Escape with no script at all.
+   `onColor` flips it for pages that open on a client's color (the case studies). kit.js adds the
+   rest: the name takes on weight under the pointer, and both corners come back as small pills when
+   you scroll up. The dock stays the one nav, so nothing here is a menu. */
 import { site } from '../data/site';
 
 interface Props {
   onColor?: boolean;
 }
 const { onColor = false } = Astro.props;
-const city = site.address.split(',')[0];
 const [first, ...rest] = site.studioName.split(' ');
 ---
 
 <a class="skip" href="#main">
   Skip to content
 </a>
-<header class:list={['top', { 'on-color': onColor }]}>
-  <a class="mark" href="/">
-    <b>{first}</b> {rest.join(' ')}
-  </a>
-  {site.bookingOpen && (
-    <span class="status">
-      <i />
-      Booking projects, {city}
+<header class:list={['top', { 'on-color': onColor }]} data-top>
+  <a class="mark" href="/" aria-label={site.studioName} data-mark>
+    <b>{first}</b>
+    <span class="fold">
+      <span>{rest.join(' ')}</span>
     </span>
-  )}
+  </a>
+  <button class="status" type="button" popovertarget="reach">
+    {site.bookingOpen ? (
+      <>
+        <i />
+        <span>Booking</span>
+        <span class="fold wide">
+          <span>projects</span>
+        </span>
+      </>
+    ) : (
+      <span>Get in touch</span>
+    )}
+    <svg viewBox="0 0 12 12" aria-hidden="true">
+      <path d="M2.5 4.5 6 8l3.5-3.5" />
+    </svg>
+  </button>
+  <div class="reach card keyed" id="reach" popover data-reach>
+    <span class="pip" aria-hidden="true">
+      N
+    </span>
+    {site.bookingOpen && <p class="label">Booking projects</p>}
+    <p class="reach-h">Talk to {site.ownerName.split(' ')[0]}</p>
+    <ul>
+      <li>
+        <a href={site.phoneHref}>
+          <span>Call</span>
+          <b>{site.phone}</b>
+        </a>
+      </li>
+      <li>
+        <a href={site.emailHref}>
+          <span>Email</span>
+          <b>{site.email}</b>
+        </a>
+      </li>
+    </ul>
+    <p class="reach-say">{site.firstConversation}</p>
+    <a class="chip go" href="/contact/">
+      Start a project
+    </a>
+  </div>
 </header>

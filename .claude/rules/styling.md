@@ -51,6 +51,10 @@ Declared in `:root` at the top of `kit.css`:
 
 A card is drawn with a shadow and a background, so `kit.css` gives `.tile`, `.card`, `.pc-face`, `.chip` and `.dock` a 1px `CanvasText` border under `@media (forced-colors: active)`. A new surface whose edge is only a shadow joins that list (`tests/forced-colors.spec.ts`). Print hides the top line, dock, sheet and closing.
 
+## Top line
+
+`TopLine.astro` is the name and the status button, plus the `.reach` popover. `kit.js` adds `.float` and a transform (the pills on scrolling up) and splits the name into `.lt` letters on first use. Colors are tokens, so it follows the theme; `.top.float.on-color` puts it back on `--ink` once it has left the client's color. A new bar that sticks to the top of the screen joins the `topBar` selector in `kit.js`, so the pills do not land on it.
+
 ## Fixed elements
 
 The viewport meta carries `viewport-fit=cover`. The dock sits at `bottom: max(0.9rem, env(safe-area-inset-bottom))` and the mailto toast above it. A new `position: fixed` element at a screen edge adds the matching `env(safe-area-inset-*)`.

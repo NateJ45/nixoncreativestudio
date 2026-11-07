@@ -1,4 +1,4 @@
-/* Shared behaviour for every page: footage, the closing deck, quote bands, the dock's highlight,
+/* Shared behaviour for every page: the top line, footage, the closing deck, quote bands, the dock's highlight,
    the client sheet, the price hand and the big type's weight. The markup all comes from the server
    (Tile, Closing, QuoteBand, PriceHand, ClientSheet, Dock); this file only moves it. Page scripts
    import { ui, sites } from here, so this always runs first. Without JavaScript none of it runs and
@@ -667,6 +667,206 @@ if (weighs.length && !reduce) {
   };
   addEventListener('scroll', wwake, { passive: true });
   wwake();
+}
+
+/* The top line. Two things the markup cannot do by itself: both corners come back as pills when you
+   scroll up, and the name takes on weight under the pointer. Without this file it is a plain line
+   that scrolls away, and the status card still opens. */
+var topLine = doc.querySelector('[data-top]');
+if (topLine) {
+  var reach = doc.querySelector('[data-reach]');
+  /* A page with its own bar stuck to the top of the screen keeps that spot: /work's filter, a legal
+     page's contents. They are only sticky at wider sizes, so ask the browser. */
+  var topBar = doc.querySelector('.dw-bar, .toc');
+  var topClear = function () {
+    return !topBar || getComputedStyle(topBar).position !== 'sticky';
+  };
+  var topAway = ui.spring(210, 24, 1);
+  var topWant = 1,
+    topY = scrollY,
+    topTravel = 0,
+    topRaf = 0,
+    topLast = 0,
+    reachOpen = false,
+    reachFrom = 0;
+  var topPaint = function () {
+    topLine.style.transform = 'translate3d(0,' + (-130 * topAway.x).toFixed(2) + '%,0)';
+  };
+  var topLand = function () {
+    /* Fully away: back to the plain line, which by now is off the top of the page. */
+    if (topWant === 1) {
+      topLine.classList.remove('float');
+      topLine.style.transform = '';
+    }
+  };
+  var topFrame = function (now) {
+    topRaf = 0;
+    var dt = Math.min(0.033, (now - topLast) / 1000 || 0.016);
+    topLast = now;
+    var live = topAway.step(topWant, dt);
+    topPaint();
+    if (live) topRaf = requestAnimationFrame(topFrame);
+    else {
+      topAway.x = topWant;
+      topAway.v = 0;
+      topPaint();
+      topLand();
+    }
+  };
+  var topGo = function (want) {
+    topWant = want;
+    if (want === 0) topLine.classList.add('float');
+    if (reduce) {
+      topAway.x = want;
+      topPaint();
+      topLand();
+    } else if (!topRaf) {
+      topLast = performance.now();
+      topRaf = requestAnimationFrame(topFrame);
+    }
+  };
+  addEventListener(
+    'scroll',
+    function () {
+      var y = scrollY,
+        dy = y - topY;
+      topY = y;
+      if (reachOpen) {
+        /* A card pinned to a line that has scrolled away is nobody's. */
+        if (Math.abs(y - reachFrom) > 60) reach.hidePopover();
+        return;
+      }
+      if (y <= 0) {
+        /* Home at the top: the pills melt into the line, which sits in the very same place. */
+        if (topRaf) cancelAnimationFrame(topRaf);
+        topRaf = 0;
+        topWant = 1;
+        topAway.x = 1;
+        topAway.v = 0;
+        topLine.classList.remove('float');
+        topLine.style.transform = '';
+        return;
+      }
+      topTravel = topTravel < 0 === dy < 0 ? topTravel + dy : dy;
+      if (topWant === 1 && topTravel < -6 && y > 240 && topClear()) topGo(0);
+      /* Below 120px the plain line would still show once the pill left, so the pill stays. It also
+         stays while the keyboard is on it. */
+      else if (topWant === 0 && topTravel > 6 && y > 120) {
+        var on = doc.activeElement;
+        if (!(topLine.contains(on) && on.matches(':focus-visible'))) topGo(1);
+      }
+    },
+    { passive: true },
+  );
+  if (reach) {
+    reach.addEventListener('toggle', function (e) {
+      reachOpen = e.newState === 'open';
+      reachFrom = scrollY;
+    });
+  }
+
+  var mark = topLine.querySelector('[data-mark]');
+  if (mark && !reduce) {
+    var letters = null,
+      markX = null,
+      waveAt = 0,
+      markRaf = 0,
+      markLast = 0;
+    var split = function () {
+      /* Each letter is locked to the width it has at rest, kerning included, so a heavier letter
+         thickens in place and the name never shifts under the pointer. */
+      letters = [];
+      [mark.querySelector('b'), mark.querySelector('.fold > span')].forEach(function (part) {
+        var text = part.firstChild,
+          value = text.nodeValue,
+          rest = parseInt(getComputedStyle(part).fontWeight, 10),
+          range = doc.createRange(),
+          widths = [];
+        for (var i = 0; i < value.length; i++) {
+          range.setStart(text, i);
+          range.setEnd(text, i + 1);
+          widths.push(range.getBoundingClientRect().width);
+        }
+        part.textContent = '';
+        widths.forEach(function (w, i) {
+          var s = doc.createElement('span');
+          s.className = 'lt';
+          s.style.width = w + 'px';
+          s.textContent = value[i];
+          part.appendChild(s);
+          letters.push({ el: s, rest: rest, s: ui.spring(240, 17, 0), shown: rest });
+        });
+      });
+    };
+    var markFrame = function (now) {
+      markRaf = 0;
+      var dt = Math.min(0.033, (now - markLast) / 1000 || 0.016),
+        live = false,
+        at = markX;
+      markLast = now;
+      if (waveAt) {
+        var box = mark.getBoundingClientRect(),
+          t = (now - waveAt) / 1100;
+        if (t >= 1) waveAt = 0;
+        else {
+          at = box.left - 40 + (box.width + 80) * t;
+          live = true;
+        }
+      }
+      letters.forEach(function (l) {
+        var r = l.el.getBoundingClientRect();
+        var d = at === null || !r.width ? 1e3 : (r.left + r.width / 2 - at) / 30;
+        if (l.s.step(Math.exp(-d * d), dt)) live = true;
+        var w = Math.round(Math.min(900, Math.max(100, l.rest + (880 - l.rest) * l.s.x)));
+        if (w !== l.shown) {
+          l.shown = w;
+          l.el.style.fontWeight = w;
+        }
+        l.el.style.transform =
+          Math.abs(l.s.x) > 0.002 ? 'translateY(' + (-l.s.x * 0.07).toFixed(3) + 'em)' : '';
+      });
+      if (live) markRaf = requestAnimationFrame(markFrame);
+    };
+    var markWake = function () {
+      if (!letters) split();
+      if (!markRaf) {
+        markLast = performance.now();
+        markRaf = requestAnimationFrame(markFrame);
+      }
+    };
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      mark.addEventListener('pointermove', function (e) {
+        markX = e.clientX;
+        markWake();
+      });
+      mark.addEventListener('pointerleave', function () {
+        markX = null;
+        markWake();
+      });
+    }
+    mark.addEventListener('focus', function () {
+      if (mark.matches(':focus-visible')) {
+        waveAt = performance.now();
+        markWake();
+      }
+    });
+    /* One wave through the name, the first time a visit opens at the top of a page. */
+    var seen = false;
+    try {
+      seen = !!sessionStorage.getItem('ncs-mark-wave');
+      sessionStorage.setItem('ncs-mark-wave', '1');
+    } catch (e) {
+      seen = true;
+    }
+    if (!seen && scrollY < 200 && doc.fonts) {
+      doc.fonts.ready.then(function () {
+        setTimeout(function () {
+          waveAt = performance.now();
+          markWake();
+        }, 700);
+      });
+    }
+  }
 }
 
 addEventListener('pageshow', function () {
