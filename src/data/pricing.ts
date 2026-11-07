@@ -189,9 +189,14 @@ export const carePlans: CarePlan[] = [
     price: '$59',
     period: '/mo',
     addOn: true,
-    who: 'For a quick change now and then.',
-    time: '30 minutes of edits each month',
-    features: ['Email replies within 2 business days'],
+    who: 'For an organization that would rather send changes than make them.',
+    time: 'Send me changes, up to 30 minutes a month; unused minutes carry over for three months',
+    features: [
+      'Fixes when something breaks, at no extra charge',
+      'Ask me how to do anything in the editor',
+      'Extra work at $85 an hour',
+      'Email replies within 2 business days',
+    ],
   },
   {
     name: 'Care',
@@ -199,7 +204,7 @@ export const carePlans: CarePlan[] = [
     period: '/mo',
     addOn: true,
     who: 'For peace of mind as the site grows.',
-    time: '1 hour of edits and fixes each month',
+    time: '1 hour of edits each month',
     features: [
       'Everything in Light Care',
       'A monthly report: what people did, and what to fix',
