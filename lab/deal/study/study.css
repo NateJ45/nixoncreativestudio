@@ -237,3 +237,24 @@ figure{margin:0}
 .zoom,.next-tile,.tbtn,.ba-h i,.more summary i{transition:none}
 .zoom:hover,.next-tile:hover,.next-tile:focus-visible{transform:rotate(0)}
 }
+
+/* The deck. Decisions are numbered cards with the corner marks in the client's color. Their figures are ruled, not boxed. */
+.chaps { counter-reset: dec; }
+.dec { --cardr: 1.25rem; position: relative; counter-increment: dec; padding-top: 3.5rem; padding-bottom: 3.5rem; outline: 1px solid rgba(18, 18, 17, 0.13); outline-offset: -0.45rem; box-shadow: 0 0 0 1px rgba(18, 18, 17, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06), 0 22px 40px -24px rgba(0, 0, 0, 0.34); }
+.dec::before,
+.dec::after { position: absolute; color: var(--c); font: 600 1.625rem/1 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; content: counter(dec); }
+.dec::before { left: clamp(1.25rem, 2.4vw, 2rem); top: 1.1rem; }
+.dec::after { right: clamp(1.25rem, 2.4vw, 2rem); bottom: 1.1rem; transform: rotate(180deg); }
+.dec dt,
+.s-facts dt { font: 500 0.8125rem/1.5 var(--body); letter-spacing: 0.07em; text-transform: uppercase; }
+.ba-l,
+.next-l { font: 500 0.8125rem/1.25 var(--body); letter-spacing: 0.07em; text-transform: uppercase; }
+.next-l { color: var(--soft); }
+.fig.card { padding: 0.9rem 0 0; background: none; border-radius: 0; box-shadow: none; border-top: 2px solid var(--c); }
+.course { padding: 0; background: none; border-radius: 0; box-shadow: none; }
+.more { border-radius: 0; background: none; box-shadow: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.more summary { padding-left: 0; border-radius: 0; }
+.more summary i { right: 0.25rem; }
+.more-in { padding-left: 0; padding-right: 0; }
+/* The next client's name is the big moment here. */
+.next h2 { font-size: clamp(2.5rem, 7.2vw, 7.5rem); line-height: 0.96; letter-spacing: -0.05em; }

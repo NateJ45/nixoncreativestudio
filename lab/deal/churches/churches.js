@@ -115,4 +115,5 @@
   addEventListener('load', layout);
   if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
   layout();
+  window.NCS.ui.priceHand(document.querySelector('[data-prices]'));
 })();

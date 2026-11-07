@@ -137,6 +137,7 @@
     q.classList.add('on');
     var msg = 'Question ' + (cur + 1) + ' of ' + steps.length;
     count.textContent = msg;
+    [].forEach.call(document.querySelectorAll('[data-q-pip]'), function (p) { p.textContent = cur + 1; });
     if (!noFocus) live.textContent = msg;
     bar.style.setProperty('--pr', ((cur + 1) / steps.length).toFixed(4));
     back.hidden = cur === 0;

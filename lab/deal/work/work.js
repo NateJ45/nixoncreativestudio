@@ -13,7 +13,7 @@
   var buttons = $$('button', $('[data-filters]')), viewButtons = $$('button', $('[data-views]')), rowList = $('[data-rows]'), rows = $$('li', rowList), section = $('[data-section]');
 
   grid.innerHTML = N.sites.map(function (s, i) {
-    return '<li data-key="' + keyOf(s) + '">' + ui.tile(s, { index: i, lazy: i > 3 }) + '<div class="dw-note">' + ui.caption(s) +
+    return '<li data-key="' + keyOf(s) + '">' + ui.tile(s, { index: i, lazy: i > 3 }) + '<div class="dw-note">' + ui.caption(s, i) +
       '<div class="more"><p>' + s.hook + '</p><a href="' + s.study + '">Read the case study<span class="vh">: ' + s.name + '</span></a></div></div></li>';
   }).join('');
   ui.wireFootage(grid);

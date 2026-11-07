@@ -80,7 +80,7 @@
         '</b>' +
         (i === undefined
           ? '<span>' + s.sector + '</span>'
-          : '<span class="lb"><i>' + (i < 9 ? '0' : '') + (i + 1) + '</i>' + s.sector + '</span>') +
+          : '<span class="label"><i>' + (i < 9 ? '0' : '') + (i + 1) + '</i>' + s.sector + '</span>') +
         '</p>'
       );
     },
@@ -322,6 +322,72 @@
     ui.play(a, false);
     ui.openSheet(ui.bySlug(a.dataset.slug), a);
   });
+
+  /* Three price cards, each lettered in its corners like a face card. On a wide screen scroll deals them out of one
+     stack into a fan, and a card straightens and lifts when you reach for it. On a phone CSS stacks them instead. */
+  ui.priceHand = function (hand) {
+    hand.innerHTML = N.tiers.map(function (t, i) {
+      var pip = t.name.charAt(0);
+      return '<li class="pc pc-' + ['paper', 'blue', 'ink'][i] + '" style="--i:' + i + '"><a href="/deal/prices/#websites" class="pc-face"><span class="pip" aria-hidden="true">' + pip + '</span><span class="pip flip" aria-hidden="true">' + pip + '</span><h3 class="label">' + t.name + '</h3><strong>' + t.from + '</strong><span class="pc-who">Starting price.<br>' + t.who + '.</span></a></li>';
+    }).join('');
+    var wide = matchMedia('(min-width:52.01rem)'), raf = 0, last = 0;
+    var cards = [].slice.call(hand.children).map(function (li, i) {
+      return { li: li, i: i, d: i - 1, deal: ui.spring(120, 15, 0), lift: ui.spring(240, 19, 0), on: 0 };
+    });
+    function wake() { if (!raf && !reduce && wide.matches) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+    function frame(now) {
+      raf = 0;
+      var dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
+      var r = hand.getBoundingClientRect(), live = false, cw = cards[0].li.offsetWidth;
+      var p = Math.min(1, Math.max(0, (innerHeight * 0.92 - r.top) / (r.height * 0.72)));
+      cards.forEach(function (c) {
+        var tgt = Math.min(1, Math.max(0, (p - (c.i === 1 ? 0 : 0.1)) / 0.9));
+        tgt = tgt * tgt * (3 - 2 * tgt);
+        if (c.deal.step(tgt, dt)) live = true; else { c.deal.x = tgt; c.deal.v = 0; }
+        if (c.lift.step(c.on, dt)) live = true; else { c.lift.x = c.on; c.lift.v = 0; }
+        var v = c.deal.x, l = c.lift.x, k = 1 - v;
+        var x = -c.d * cw * 0.86 * k, y = (c.d === 0 ? -14 : 8) * v + 60 * k - l * 26, rot = c.d * 6 * v * (1 - l) + c.d * 1.5 * k;
+        c.li.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) rotate(' + rot.toFixed(3) + 'deg) scale(' + (1 + l * 0.035).toFixed(4) + ')';
+        c.li.style.zIndex = c.on ? 5 : c.d === 0 ? 2 : 1;
+      });
+      if (live) raf = requestAnimationFrame(frame);
+    }
+    cards.forEach(function (c) {
+      c.li.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { c.on = 1; wake(); } });
+      c.li.addEventListener('pointerleave', function () { c.on = 0; wake(); });
+      c.li.addEventListener('focusin', function (e) { if (e.target.matches(':focus-visible')) { c.on = 1; wake(); } });
+      c.li.addEventListener('focusout', function () { c.on = 0; wake(); });
+    });
+    addEventListener('scroll', wake, { passive: true });
+    addEventListener('resize', function () {
+      if (wide.matches) wake();
+      else cards.forEach(function (c) { c.li.style.transform = ''; c.li.style.zIndex = ''; });
+    });
+    wake();
+  };
+
+  /* A big heading picks up weight as you scroll to it, thin to heavy, so "pull their weight" happens to the type. */
+  var weighs = [].map.call(doc.querySelectorAll('[data-weigh]'), function (el) { return { el: el, g: 200, shown: 0 }; });
+  if (weighs.length && !reduce) {
+    var wraf = 0, wlast = 0;
+    var wwake = function () { if (!wraf) { wlast = performance.now(); wraf = requestAnimationFrame(wframe); } };
+    var wframe = function (now) {
+      wraf = 0;
+      var dt = Math.min(0.033, (now - wlast) / 1000 || 0.016), H = innerHeight, live = false; wlast = now;
+      weighs.forEach(function (w) {
+        var p = Math.min(1, Math.max(0, (H * 1.02 - w.el.getBoundingClientRect().top) / (H * 0.72)));
+        var t = 200 + 500 * p * p * (3 - 2 * p);
+        w.g += (t - w.g) * (1 - Math.pow(0.0015, dt));
+        if (Math.abs(t - w.g) > 0.8) live = true; else w.g = t;
+        var n = Math.round(w.g);
+        if (n !== w.shown) { w.shown = n; w.el.style.fontWeight = n; }
+      });
+      if (live) wraf = requestAnimationFrame(wframe);
+    };
+    addEventListener('scroll', wwake, { passive: true });
+    wwake();
+  }
+
   addEventListener('pageshow', function () {
     doc.documentElement.style.overflow = '';
   });

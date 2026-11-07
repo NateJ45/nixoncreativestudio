@@ -25,30 +25,7 @@
   });
   h1.innerHTML = out;
 
-  /* Three price cards, each lettered in its corners like a face card. */
-  var hand = $('[data-prices]');
-  hand.innerHTML = N.tiers
-    .map(function (t, i) {
-      var pip = t.name.charAt(0);
-      return (
-        '<li class="pc pc-' +
-        ['paper', 'blue', 'ink'][i] +
-        '" style="--i:' +
-        i +
-        '"><a href="/deal/prices/#websites" class="pc-face"><span class="pip" aria-hidden="true">' +
-        pip +
-        '</span><span class="pip flip" aria-hidden="true">' +
-        pip +
-        '</span><h3 class="lb">' +
-        t.name +
-        '</h3><strong>' +
-        t.from +
-        '</strong><span class="pc-who">Starting price.<br>' +
-        t.who +
-        '.</span></a></li>'
-      );
-    })
-    .join('');
+  ui.priceHand($('[data-prices]'));
 
   /* The ledger under the big heading: real counts, read from the client list. */
   var plural = {
@@ -124,10 +101,7 @@
     gridTop = 1,
     px = 0,
     pxT = 0,
-    t0 = performance.now(),
-    weigh = $('[data-weigh]'),
-    wg = 200,
-    wshown = 0;
+    t0 = performance.now();
   function layout() {
     W = innerWidth;
     H = innerHeight;
@@ -220,20 +194,6 @@
       s.el.parentNode.style.zIndex = s.hov ? 30 : k > 0.02 ? 20 - Math.round(Math.abs(s.d) * 2) : 1;
       s.el.parentNode.style.position = 'relative';
     });
-    /* The heading picks up weight as you scroll to it, thin to heavy, so the line in the hero happens to the type. */
-    if (weigh && !reduce) {
-      var wr = weigh.getBoundingClientRect(),
-        wp = Math.min(1, Math.max(0, (H * 1.02 - wr.top) / (H * 0.72)));
-      var wt = 200 + 500 * wp * wp * (3 - 2 * wp);
-      wg += (wt - wg) * (1 - Math.pow(0.0015, dt));
-      if (Math.abs(wt - wg) > 0.8) live = true;
-      else wg = wt;
-      var wi = Math.round(wg);
-      if (wi !== wshown) {
-        wshown = wi;
-        weigh.style.fontWeight = wi;
-      }
-    }
     if (live) raf = requestAnimationFrame(frame);
   }
   addEventListener('scroll', wake, { passive: true });
@@ -275,99 +235,4 @@
     });
   });
   layout();
-
-  /* The price hand. On a wide screen scroll deals the three cards out of one stack into a fan, and a card
-     straightens and lifts when you reach for it. On a phone CSS stacks them instead, so this stays out of the way. */
-  var wideHand = matchMedia('(min-width:52.01rem)'),
-    cards = [].slice.call(hand.children).map(function (li, i) {
-      return {
-        li: li,
-        i: i,
-        d: i - 1,
-        deal: ui.spring(120, 15, 0),
-        lift: ui.spring(240, 19, 0),
-        on: 0,
-      };
-    });
-  var hraf = 0,
-    hlast = 0;
-  function hwake() {
-    if (!hraf && !reduce && wideHand.matches) {
-      hlast = performance.now();
-      hraf = requestAnimationFrame(hframe);
-    }
-  }
-  function hframe(now) {
-    hraf = 0;
-    var dt = Math.min(0.033, (now - hlast) / 1000 || 0.016);
-    hlast = now;
-    var r = hand.getBoundingClientRect(),
-      live = false;
-    var p = Math.min(1, Math.max(0, (innerHeight * 0.92 - r.top) / (r.height * 0.72)));
-    var cw = cards[0].li.offsetWidth;
-    cards.forEach(function (c) {
-      var tgt = Math.min(1, Math.max(0, (p - (c.i === 1 ? 0 : 0.1)) / 0.9));
-      tgt = tgt * tgt * (3 - 2 * tgt);
-      if (c.deal.step(tgt, dt)) live = true;
-      else {
-        c.deal.x = tgt;
-        c.deal.v = 0;
-      }
-      if (c.lift.step(c.on, dt)) live = true;
-      else {
-        c.lift.x = c.on;
-        c.lift.v = 0;
-      }
-      var v = c.deal.x,
-        l = c.lift.x,
-        k = 1 - v;
-      var x = -c.d * cw * 0.86 * k;
-      var y = (c.d === 0 ? -14 : 8) * v + 60 * k - l * 26;
-      var rot = c.d * 6 * v * (1 - l) + c.d * 1.5 * k;
-      c.li.style.transform =
-        'translate3d(' +
-        x.toFixed(2) +
-        'px,' +
-        y.toFixed(2) +
-        'px,0) rotate(' +
-        rot.toFixed(3) +
-        'deg) scale(' +
-        (1 + l * 0.035).toFixed(4) +
-        ')';
-      c.li.style.zIndex = c.on ? 5 : c.d === 0 ? 2 : 1;
-    });
-    if (live) hraf = requestAnimationFrame(hframe);
-  }
-  cards.forEach(function (c) {
-    c.li.addEventListener('pointerenter', function (e) {
-      if (e.pointerType === 'mouse') {
-        c.on = 1;
-        hwake();
-      }
-    });
-    c.li.addEventListener('pointerleave', function () {
-      c.on = 0;
-      hwake();
-    });
-    c.li.addEventListener('focusin', function (e) {
-      if (e.target.matches(':focus-visible')) {
-        c.on = 1;
-        hwake();
-      }
-    });
-    c.li.addEventListener('focusout', function () {
-      c.on = 0;
-      hwake();
-    });
-  });
-  addEventListener('scroll', hwake, { passive: true });
-  addEventListener('resize', function () {
-    if (wideHand.matches) hwake();
-    else
-      cards.forEach(function (c) {
-        c.li.style.transform = '';
-        c.li.style.zIndex = '';
-      });
-  });
-  hwake();
 })();

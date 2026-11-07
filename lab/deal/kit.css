@@ -389,42 +389,6 @@ html {
   gap: 0.5rem 2rem;
   margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
 }
-.prices {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(0.75rem, 1.4vw, 1.25rem);
-}
-.price {
-  background: var(--card);
-  border-radius: 1.25rem;
-  padding: clamp(1.25rem, 2vw, 1.75rem);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 22px 40px -28px rgba(0, 0, 0, 0.3);
-  transition:
-    transform 0.5s var(--ease),
-    box-shadow 0.5s var(--ease);
-}
-.price:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 30px 50px -28px rgba(0, 0, 0, 0.38);
-}
-.price h3 {
-  font-size: 1.25rem;
-  letter-spacing: -0.02em;
-  font-weight: 600;
-}
-.price strong {
-  display: block;
-  margin: clamp(1.5rem, 4vw, 3.25rem) 0 0.25rem;
-  font: 600 clamp(2.5rem, 4.2vw, 4rem)/1 var(--display);
-  letter-spacing: -0.045em;
-}
-.price p {
-  color: var(--soft);
-}
 .quote {
   max-width: 62rem;
   margin: 0 auto;
@@ -751,9 +715,6 @@ blockquote {
   .status {
     display: none;
   }
-  .prices {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .sheet-in {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
@@ -792,7 +753,6 @@ blockquote {
   .pane,
   .fade,
   .scr,
-  .price,
   .chip {
     transition: none;
   }
@@ -973,8 +933,6 @@ h3,
 .end h2,
 .mark,
 .cap b,
-.price h3,
-.price strong,
 blockquote,
 .sheet .hook {
   font-weight: 500;
@@ -996,7 +954,7 @@ h1 b,
 }
 
 /* The label voice: figures, counts and small facts. Still Hanken, set small and even so the numbers line up. */
-.lb {
+.label {
   font: 500 0.8125rem/1.25 var(--body);
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -1080,11 +1038,11 @@ h1 b,
   color: var(--soft);
   font-size: 0.9375rem;
 }
-.cap span.lb {
+.cap span.label {
   margin-top: 0.35rem;
   font-size: 0.8125rem;
 }
-.cap span.lb i {
+.cap span.label i {
   margin-right: 0.55em;
   font-style: normal;
   color: var(--ink);
@@ -1110,7 +1068,7 @@ h1 b,
   font-weight: 700;
   color: var(--accent);
 }
-.dealt-copy > p:not(.lb) {
+.dealt-copy > p:not(.label) {
   margin-top: 1.1rem;
   max-width: 24rem;
   color: var(--soft);
@@ -1322,4 +1280,28 @@ h1 b,
     grid-template-columns: minmax(0, 1fr);
     justify-content: stretch;
   }
+}
+
+/* A giant line takes its size from the words in it: --fit on a wide screen, --fitm on a phone, both in cqw. */
+.giant { font-size: calc(var(--fit, 17) * 1cqw); }
+.big .giant .w { display: inline-block; }
+h1.giant { font-weight: 500; max-width: none; }
+h1.giant b { font-weight: 700; }
+@media (max-width: 52rem) {
+  .giant { font-size: calc(var(--fitm, 27) * 1cqw); }
+  .big .giant > span,
+  .big .giant > b { display: block; white-space: nowrap; }
+}
+.wrap .ledger,
+.ab-sec .ledger { max-width: none; }
+.ledger a { color: var(--ink); text-underline-offset: 0.2em; }
+.ledger-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem clamp(1.5rem, 3vw, 3rem); margin-bottom: 0; }
+.ledger-facts dt { margin-bottom: 0.3rem; color: var(--ink); }
+.ledger-facts dd { margin: 0; color: var(--soft); }
+@media (max-width: 40rem) { .ledger-facts { grid-template-columns: minmax(0, 1fr); } }
+.sheet .meta { font: 500 0.8125rem/1.25 var(--body); letter-spacing: 0.07em; text-transform: uppercase; }
+
+.page-head h1.giant { font-size: calc(var(--fit, 17) * 1cqw); }
+@media (max-width: 52rem) {
+  .page-head h1.giant { font-size: calc(var(--fitm, 27) * 1cqw); }
 }
