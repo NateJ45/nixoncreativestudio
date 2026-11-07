@@ -40,7 +40,7 @@ import { cmsShotProblem, nextInLoop } from '../../lib/study';
 import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
-import { sectorPagePath } from '../../data/sector-pages';
+import { sectorPage, sectorPagePath } from '../../data/sector-pages';
 
 export async function getStaticPaths() {
   const all = await getCollection('case-studies');
@@ -227,7 +227,7 @@ const breadcrumbs = [
       {sectorPagePath(d.sector) && (
         <p>
           <a class="tlink" href={sectorPagePath(d.sector)}>
-            How I build for churches
+            {sectorPage(d.sector)?.linkText}
           </a>
         </p>
       )}

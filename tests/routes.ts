@@ -12,8 +12,9 @@
 // First Presbyterian Church of Orangeburg is swept as well: its title is the
 // longest client name, so it holds the 320px reflow guard on the case-study H1.
 //
-// /churches is the first sector page (src/data/sector-pages.ts); add each new
-// sector page here too.
+// /churches is the first sector page (src/data/sector-pages.ts); /schools,
+// /nonprofits and /small-business are the lean ones. Add each new sector page here
+// too. /one-page is the forwardable summary, with its own print stylesheet.
 //
 // Add a route here when a new PRERENDERED page ships.
 export const routes = [
@@ -24,6 +25,10 @@ export const routes = [
   '/work/stone-steps-50k',
   '/work/first-presbyterian-orangeburg',
   '/churches',
+  '/schools',
+  '/nonprofits',
+  '/small-business',
+  '/one-page',
   '/journal',
   '/photography',
   '/contact',

@@ -1,0 +1,154 @@
+---
+/* /one-page: the summary a staff member can send to a board or committee: what I
+   do, the three tiers with honest costs, what is included, what you keep and how to
+   reach me. Prices and sums read src/data/pricing.ts and src/lib/tier-costs.ts.
+   The sheet prints on one US Letter page: src/styles/pages/one-page.css has the print
+   stylesheet, and tests/one-page.spec.ts prints it and counts the pages. Keep it to
+   what fits. Anything new here means something else comes out. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/pages/one-page.css';
+import Closing from '../components/Closing.astro';
+import { carePlans, yoursToKeep } from '../data/pricing';
+import { site } from '../data/site';
+import { money } from '../lib/money';
+import { tierCosts } from '../lib/tier-costs';
+
+const costs = tierCosts();
+const hostingPlan = carePlans[0];
+const asOf = new Date().toLocaleDateString('en-US', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const servicesUrl = `${site.domain}/services/`;
+---
+
+<BaseLayout
+  title="A one-page summary | Nixon Creative Studio"
+  description="A one-page summary of what I do, the three website tiers, honest costs over five years, what you keep and how to reach me. Made to print or to forward."
+>
+  <div class="op-page">
+    <div class="op-bar" data-op-bar>
+      <button type="button" class="chip go" data-print>
+        Print or save as PDF
+      </button>
+      <p>For a board or committee. It prints on one Letter page.</p>
+    </div>
+
+    <article class="op-sheet">
+      <header class="op-head">
+        <div>
+          <p class="label">{site.studioName}</p>
+          <h1>Websites, what they cost, and what you keep</h1>
+        </div>
+        <p class="op-reach">
+          <b>{site.ownerName}</b>
+          <a href={site.emailHref}>{site.email}</a>
+          <a href={site.phoneHref}>{site.phone}</a>
+          <span>
+            {site.domain}, {site.address}
+          </span>
+        </p>
+      </header>
+
+      <section aria-labelledby="op-do">
+        <h2 id="op-do">What I do</h2>
+        <p>
+          I plan, design and build websites for churches, schools, nonprofits and small businesses,
+          on my own, from strategy to launch. You talk to the person doing the work. Every build is
+          custom, comes with an editor your own people can run, and is made to WCAG AA.
+        </p>
+      </section>
+
+      <section aria-labelledby="op-tiers">
+        <h2 id="op-tiers">The three tiers</h2>
+        <table class="op-table">
+          <thead>
+            <tr>
+              <th scope="col">Tier</th>
+              <th scope="col">What I take responsibility for</th>
+              <th scope="col" class="n">
+                Year one
+              </th>
+              <th scope="col" class="n">
+                Three years
+              </th>
+              <th scope="col" class="n">
+                Five years
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {costs.map((c) => (
+              <tr>
+                <th scope="row">
+                  <b>{c.tier.name}</b>
+                  <span>{c.tier.who}</span>
+                  <span>
+                    With {c.plan.name}, {`${c.plan.price}${c.plan.period}`}
+                  </span>
+                </th>
+                <td>{c.tier.responsible}</td>
+                <td class="n" data-label="Year one">
+                  {money(c.yearOne)}
+                </td>
+                <td class="n" data-label="Three years">
+                  {money(c.threeYears)}
+                </td>
+                <td class="n" data-label="Five years">
+                  {money(c.fiveYears)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="op-small">
+          Each sum is the tier's starting price with year one hosting included, so care is billed
+          from year two, at today's prices. A build that lands higher in its range adds the
+          difference, and custom work or photography would be extra. You pick your care level from
+          year two. {hostingPlan.name} alone is {hostingPlan.price} a year, for an organization that
+          edits everything itself.
+        </p>
+      </section>
+
+      <div class="op-two">
+        <section aria-labelledby="op-every">
+          <h2 id="op-every">In every build</h2>
+          <ul>
+            <li>A working session and a one-page brief, before any design</li>
+            <li>A custom design, built for phones first</li>
+            <li>Accessibility checked against WCAG AA</li>
+            <li>An editor and a written guide for your people</li>
+            <li>Hosting set up, with year one included</li>
+            <li>A first month close by after launch</li>
+          </ul>
+        </section>
+        <section aria-labelledby="op-keep">
+          <h2 id="op-keep">Yours to keep</h2>
+          <ul>
+            {yoursToKeep.map((line) => (
+              <li>{line}</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <footer class="op-foot">
+        <p>
+          <b>Next step.</b>
+          {site.firstConversation} I'll tell you which tier fits, including if none does. If a
+          template platform would serve you better, I'll say that too.
+        </p>
+        <p class="op-small">
+          Prices current as of {asOf}. Full details and case studies: {servicesUrl}
+        </p>
+      </footer>
+    </article>
+  </div>
+
+  <Closing lead="Have a question the page didn't <b>answer?</b>" />
+</BaseLayout>
+
+<script>
+  import '../scripts/one-page.js';
+</script>

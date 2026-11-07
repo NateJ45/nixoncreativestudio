@@ -1,4 +1,4 @@
-/* Work: windows dealt onto a table, re-dealt by sector. */
+/* Work: large windows of the real sites, a sector filter, a list, and the index by job. */
 .vh {
   position: absolute;
   width: 1px;
@@ -9,6 +9,14 @@
 }
 .page-head {
   padding-bottom: clamp(1.25rem, 3vh, 2rem);
+}
+.page-head .lede a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+.sec.tight {
+  padding-top: clamp(2.5rem, 6vh, 4.5rem);
+  padding-bottom: clamp(2.5rem, 6vh, 4.5rem);
 }
 
 .dw {
@@ -145,30 +153,33 @@ html:not(.js) .dw-bar {
   }
 }
 
-/* The table. A wrapping row, centered, so whatever is left after a filter sits in the middle. */
+/* The windows: the real desktop page at a size you can judge it, two across from a tablet up,
+   each with its name, sector, one-line outcome and two links. */
 .dw-grid {
-  --cols: 4;
-  --gx: clamp(1rem, 3.4vw, 3.25rem);
-  --gy: clamp(2rem, 3.4vw, 3.25rem);
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
-  align-content: flex-start;
+  --gx: clamp(1.25rem, 3.4vw, 3.25rem);
+  --gy: clamp(2.5rem, 4.4vw, 4.25rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gy) var(--gx);
-  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   overflow-anchor: none;
 }
-.dw-grid > li {
-  flex: 0 0 auto;
-  width: calc((100% - (var(--cols) - 1) * var(--gx)) / var(--cols));
-}
-@media (max-width: 52rem) {
+@media (min-width: 52rem) {
   .dw-grid {
-    --cols: 2;
-    --gx: 0.875rem;
-    --gy: 1.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* A lone study (one school, say): the window and its words share the row. */
+  .dw-grid.one > li {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--gx);
+    align-items: center;
+  }
+  .dw-grid.one .dw-note {
+    margin-top: 0;
   }
 }
 html:not(.js) .dw-grid,
@@ -176,81 +187,123 @@ html:not(.js) .dw-grid,
 .js .dw[data-view='grid'] .dw-rows {
   display: none;
 }
-.dw-grid.sizing {
-  transition: height 0.75s var(--ease);
-}
-.dw-grid li {
+.dw-grid > li {
   position: relative;
-  --capo: 1;
   min-width: 0;
 }
-.dw-grid li[hidden] {
+.dw-grid > li[hidden] {
   display: none !important;
-}
-.dw-grid li.wait {
-  opacity: 0;
-}
-.dw-grid li.fly {
-  --capo: 0;
-  z-index: 6;
-  will-change: transform;
-}
-.dw-grid li.gone {
-  z-index: 2;
-  pointer-events: none;
 }
 .dw-grid .tile {
   transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 @media (hover: hover) {
-  .dw-grid li:not(.fly) .tile:hover {
-    transform: translateY(-8px) rotate(-0.5deg);
+  .dw-grid .tile:hover {
+    transform: translateY(-6px) rotate(-0.25deg);
   }
 }
-.dw-grid li:not(.fly) .tile:focus-visible {
-  transform: translateY(-8px);
+.dw-grid .tile:focus-visible {
+  transform: translateY(-6px);
 }
-.more {
-  display: none;
+.dw-note {
+  margin-top: clamp(0.875rem, 1.4vw, 1.25rem);
 }
-
-/* With one or two to show, each window keeps its size and gets its words underneath. A lone window's words may run wider than it, still centered on it. */
-.dw-grid li.few .cap b {
-  font-size: clamp(1.0625rem, 2vw, 1.75rem);
-  line-height: 1.08;
+.dw-note h2 {
+  font-size: var(--type-h3);
+  font-weight: 600;
   letter-spacing: -0.025em;
+  line-height: 1.1;
 }
-.dw-grid li.few .more {
-  display: block;
-  transition: opacity 0.35s;
-  opacity: var(--capo);
+.dw-note .label {
+  margin-top: 0.35rem;
 }
-.dw-grid li.solo .dw-note {
-  width: calc(200% + var(--gx));
-  margin-left: calc(-50% - var(--gx) / 2);
-  text-align: center;
-}
-.dw-grid li.solo .more p {
-  max-width: 30rem;
-  margin-inline: auto;
-  text-wrap: balance;
-}
-.more p {
+.dw-out {
+  max-width: 38rem;
   margin-top: 0.6rem;
-  font-size: clamp(0.9375rem, 1.25vw, 1.125rem);
-  line-height: 1.32;
+  color: var(--soft);
+  line-height: 1.4;
 }
-.more a {
+.dw-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+  margin-top: 0.25rem;
+}
+.dw-links a {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
-  margin-top: 0.2rem;
   font-size: 0.9375rem;
   font-weight: 500;
   text-underline-offset: 0.2em;
 }
-.more a + a {
-  margin-left: 1.25rem;
+
+/* What the site has to do: ruled rows, the job on the left and the studies that show it on the right. */
+.jobs .sec-head {
+  display: block;
+}
+.jobs .sec-head p {
+  max-width: 40rem;
+  margin-top: 0.75rem;
+}
+.jobs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.job {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 0.75rem clamp(1.5rem, 4vw, 4rem);
+  padding: clamp(1.25rem, 2.2vw, 1.75rem) 0;
+  border-top: 1px solid var(--line);
+}
+.job h3 {
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.job-say p {
+  max-width: 28rem;
+  margin-top: 0.5rem;
+  color: var(--soft);
+  line-height: 1.4;
+}
+.job-studies {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.job-studies li {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  column-gap: 1.25rem;
+  align-items: baseline;
+}
+.job-studies a {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 2.75rem;
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+.job-studies span {
+  color: var(--soft);
+  line-height: 1.35;
+}
+@media (max-width: 52rem) {
+  .job,
+  .job-studies li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .job-studies span {
+    margin-bottom: 0.5rem;
+  }
 }
 
 /* The same sites as rows. In the page from the start, so the links are there without script. */
@@ -386,21 +439,16 @@ html:not(.js) .dw-grid,
     min-height: 2.75rem;
     margin-top: 0;
   }
-  .dw-grid li.few .more p {
-    margin-top: 0.4rem;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .dw-pill,
   .dw-bar button,
   .dw-grid .tile,
-  .dw-rows li,
-  .more,
-  .cap {
+  .dw-rows li {
     transition: none;
   }
-  .dw-grid li .tile:hover,
-  .dw-grid li .tile:focus-visible {
+  .dw-grid .tile:hover,
+  .dw-grid .tile:focus-visible {
     transform: none;
   }
 }

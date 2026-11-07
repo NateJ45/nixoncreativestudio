@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // =============================================================================
-// /work: the deal, the sector filter and the list view
+// /work: the large windows, the sector filter and the list view
 // =============================================================================
 
 test('?sector= deep link shows that sector', async ({ page }) => {
@@ -10,6 +10,43 @@ test('?sector= deep link shows that sector', async ({ page }) => {
   await expect(page.locator('[data-grid] > li:visible')).toHaveCount(2);
   await expect(page.locator('[data-status]')).toHaveText('Showing 2 church case studies.');
   await expect(page.locator('[data-more]')).toBeVisible();
+});
+
+test('the grid shows large desktop captures with their words and links', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/work/');
+  const cards = page.locator('[data-grid] > li');
+  await expect(cards).toHaveCount(8);
+  const first = cards.first();
+  await expect(first.locator('a.tile.desk img')).toHaveAttribute('src', /-cover\.webp$/);
+  await expect(first.locator('a.tile.desk video')).toHaveAttribute(
+    'data-src',
+    /stone-steps-50k\.mp4$/,
+  );
+  await expect(first.locator('h2')).toHaveText('Stone Steps 50K');
+  await expect(first.locator('.label')).toHaveText('Nonprofit');
+  await expect(first.locator('.dw-out')).not.toBeEmpty();
+  await expect(first.getByRole('link', { name: /^Read the case study/ })).toBeVisible();
+  await expect(first.getByRole('link', { name: /^Visit the site/ })).toBeVisible();
+  // Big enough to judge the page: two across at 1440, each well over 600px wide.
+  const box = (await first.locator('a.tile').boundingBox())!;
+  expect(box.width).toBeGreaterThan(600);
+});
+
+test('a window opens the client sheet', async ({ page }) => {
+  await page.goto('/work/');
+  await page.locator('[data-grid] a.tile').first().click();
+  const sheet = page.locator('dialog[data-sheet]');
+  await expect(sheet).toBeVisible();
+  await expect(sheet.locator('h2')).toHaveText('Stone Steps 50K');
+});
+
+test('a lone study shares its row with its words, and links its sector page', async ({ page }) => {
+  await page.goto('/work/?sector=school');
+  await expect(page.locator('[data-grid] > li:visible')).toHaveCount(1);
+  await expect(page.locator('[data-grid]')).toHaveClass(/\bone\b/);
+  await expect(page.locator('[data-more]')).toHaveAttribute('href', '/schools/');
+  await expect(page.locator('[data-more]')).toHaveText('How I build for schools');
 });
 
 test('an unknown sector falls back to all', async ({ page }) => {

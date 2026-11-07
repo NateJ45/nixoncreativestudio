@@ -29,8 +29,12 @@ export interface WebTier {
   who: string;
   /** Typical-range line shown under the price on /services. */
   range: string;
-  /** Paragraph describing the tier on /services. */
-  note: string;
+  /** Who the tier fits, in their situation. Leads the tier on /services. */
+  fits: string;
+  /** What I take responsibility for. Second on /services, and on /one-page/. */
+  responsible: string;
+  /** The care level the honest cost table pairs with this tier (src/lib/tier-costs.ts). */
+  care: string;
   /** "What's included" bullets on /services. */
   features: string[];
   /** The anchor tier (Signature): gets the accent border + badge. */
@@ -54,7 +58,10 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'You keep the essentials current',
     range: 'Expect $5,000 to $8,000',
-    note: 'A focused custom site for a smaller organization: the essential pages done well, in an editor simple enough for one busy person. The right fit when you want a clear, strong presence and would rather not call anyone to change a date.',
+    fits: 'A smaller organization where one busy person keeps the site current. You want the essential pages done well, and you would rather not call anyone to change a date.',
+    responsible:
+      'I plan, design and build your core pages, set up an editor simple enough for one person, and write the guide they will use.',
+    care: 'Light Care',
     features: [
       'A focused set of core pages, designed around your goals',
       'A plain editor with a written guide, and deleted pages you can get back',
@@ -69,7 +76,10 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'Your team runs it',
     range: 'Expect $9,000 to $15,000',
-    note: 'For a staff or volunteer team that will run the site themselves: a larger custom site, several kinds of content, and an editor set up around the people using it, so a new volunteer can find their way without a phone call.',
+    fits: 'A staff or volunteer team who will run the site themselves, across several kinds of content, and who expect people to come and go.',
+    responsible:
+      'I plan and build a larger site, set up the editor around the people using it so a new volunteer can find their way without a phone call, and set up tracking for what matters to you.',
+    care: 'Care',
     features: [
       'A larger site with deeper content sections',
       'A home screen for your staff: what is coming up, what needs fixing, whether it is live',
@@ -85,7 +95,10 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'The site does real work',
     range: 'Quoted from $18,000, by scope',
-    note: 'For organizations where the site does real work: custom interactive tools, staff workflows, integrations with the systems you already use, or reporting a board can actually read. The kind of build an agency would charge far more for.',
+    fits: 'An organization whose site has to do real work: a custom tool, a staff workflow, a connection to systems you already use, or reports a board can actually read. If none of that is you, this is more than you need.',
+    responsible:
+      'I design and build the tools, map the workflows around how your staff work, connect the systems, build the reporting, and quote the care those tools will need.',
+    care: 'Care+',
     features: [
       'Custom interactive tools and features',
       'Staff workflows and integrations built around how you work',
@@ -95,6 +108,15 @@ export const webTiers: WebTier[] = [
     ],
     highlighted: false,
   },
+];
+
+// The same short block on every tier, on /services and /one-page/. Only what is
+// true today. Do not add domains, hosting or accounts being in the client's name,
+// or a backup person, until those are established.
+export const yoursToKeep: string[] = [
+  'A custom build is yours outright.',
+  'The code and content can be handed over, with documentation.',
+  'It uses well-used tools, WordPress or Sanity, GitHub and Cloudflare, that another developer can pick up.',
 ];
 
 export interface AddOn {

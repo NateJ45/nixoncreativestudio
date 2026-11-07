@@ -1,0 +1,190 @@
+/* The lean sector pages: ruled lists and large windows, no tools of their own. */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sec.tight {
+  padding-top: clamp(2rem, 5vh, 3.5rem);
+  padding-bottom: clamp(2rem, 5vh, 3.5rem);
+}
+.sl-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+}
+.sl-h {
+  font-size: var(--type-h2);
+}
+.sl-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 clamp(1.5rem, 3vw, 3rem);
+  margin: clamp(1.25rem, 2.5vw, 2rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sl-points li {
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+.sl-points h3,
+.sl-tiers h3,
+.sl-t h3 {
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.sl-points p {
+  margin-top: 0.5rem;
+  color: var(--soft);
+  line-height: 1.45;
+}
+.sl-note {
+  max-width: 46rem;
+  margin-top: 1rem;
+  color: var(--soft);
+  line-height: 1.45;
+}
+.sl-note a,
+.sl-after a {
+  color: var(--ink);
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+.sl-closest {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* The studies: the real desktop page, then what it does. */
+.sl-studies {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3.5rem);
+  margin: clamp(1.5rem, 3vw, 2.5rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sl-studies > li {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(1rem, 3vw, 3rem);
+  align-items: center;
+}
+.sl-w .tile {
+  transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+@media (hover: hover) {
+  .sl-w .tile:hover {
+    transform: translateY(-6px) rotate(-0.25deg);
+  }
+}
+.sl-t .label {
+  margin-top: 0.35rem;
+}
+.sl-out {
+  margin-top: 0.6rem;
+  line-height: 1.4;
+}
+.sl-t blockquote {
+  margin: 1rem 0 0;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--line);
+  color: var(--soft);
+  font: 400 1rem/1.45 var(--body);
+  letter-spacing: 0;
+}
+.sl-by {
+  margin-top: 0.5rem;
+  padding-left: 0.9rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.sl-by b {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+.sl-by span {
+  display: block;
+  margin-top: 0.15rem;
+}
+.sl-go {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+  margin-top: 0.5rem;
+}
+.sl-go a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+
+/* Which tier: ruled rows, the situation in words and the starting price. */
+.sl-tiers {
+  margin: clamp(1.25rem, 2.5vw, 2rem) 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.sl-tiers li {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr) auto;
+  gap: 0.25rem clamp(1rem, 3vw, 2.5rem);
+  align-items: baseline;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+}
+.sl-tiers h3 a {
+  text-underline-offset: 0.16em;
+}
+.sl-tiers p {
+  color: var(--soft);
+  line-height: 1.4;
+}
+.sl-tiers .sl-from {
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sl-after {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 46rem;
+  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+  color: var(--soft);
+  line-height: 1.45;
+}
+
+@media (max-width: 60rem) {
+  .sl-points,
+  .sl-studies > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sl-points {
+    row-gap: 1.25rem;
+  }
+}
+@media (max-width: 40rem) {
+  .sl-tiers li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-w .tile {
+    transition: none;
+  }
+  .sl-w .tile:hover {
+    transform: none;
+  }
+}

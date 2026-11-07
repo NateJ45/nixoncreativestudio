@@ -1,14 +1,16 @@
 ---
-/* /work: every client on the table. src/scripts/work.js deals the windows and
-   re-deals them when you pick a sector (?sector=church), and switches to the
-   ruled list (?view=list). Without JavaScript this is the full grid, every
-   window a link. Counts come from the case studies, never typed. */
+/* /work: every client as a large desktop window, because a buyer is judging the
+   page design. src/scripts/work.js filters by sector (?sector=church) and switches
+   to the ruled list (?view=list). Without JavaScript the ruled list is the page.
+   Under the windows, the same studies indexed by the job the site has to do
+   (src/data/jobs.ts). Counts come from the case studies, never typed. */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/work.css';
 import Tile from '../../components/Tile.astro';
-import Caption from '../../components/Caption.astro';
 import Closing from '../../components/Closing.astro';
 import { countWord, getClients, SECTOR_LABEL } from '../../lib/clients';
+import { JOBS } from '../../data/jobs';
+import { sectorPage, sectorPagePath } from '../../data/sector-pages';
 import { plainText, wordSpans } from '../../lib/words';
 
 const clients = await getClients();
@@ -22,6 +24,14 @@ const filters = [
   })),
 ];
 const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
+
+const jobs = JOBS.map((job) => ({
+  ...job,
+  studies: job.studies.flatMap(({ slug, why }) => {
+    const client = clients.find((c) => c.slug === slug);
+    return client ? [{ client, why }] : [];
+  }),
+})).filter((job) => job.studies.length > 0);
 ---
 
 <BaseLayout
@@ -39,8 +49,9 @@ const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
       />
     </div>
     <p class="lede">
-      Churches, schools, nonprofits and small businesses. Read how each one came together, then
-      visit the live site.
+      Churches, schools, nonprofits and small businesses. Look at the real pages, read how each one
+      came together, then visit the live site. Or find them by{' '}
+      <a href="#jobs">what the site has to do</a>.
     </p>
   </header>
 
@@ -49,7 +60,13 @@ const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
       <div class="dw-seg" role="group" aria-label="Show case studies by sector" data-filters>
         <span class="dw-pill" data-pill aria-hidden="true"></span>
         {filters.map((f, i) => (
-          <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-f={f.key}>
+          <button
+            type="button"
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            data-f={f.key}
+            data-more-href={sectorPagePath(f.key)}
+            data-more-label={sectorPage(f.key)?.linkText}
+          >
             {f.label} <span class="n">{f.n}</span>
           </button>
         ))}
@@ -67,17 +84,18 @@ const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
         Showing all {n} case studies.
       </p>
       <a class="dw-more" href="/churches/" data-more hidden>
-        More on the church sites I build
+        How I build for churches
       </a>
     </div>
-    <ul class="grid dw-grid" data-grid>
+    <ul class="dw-grid" data-grid>
       {clients.map((s, i) => (
         <li data-key={s.sectorKey}>
-          <Tile client={s} index={i} lazy={i > 3} />
+          <Tile client={s} index={i} lazy={i > 1} desk />
           <div class="dw-note">
-            <Caption client={s} index={i} />
-            <div class="more">
-              <p>{s.hook}</p>
+            <h2>{s.name}</h2>
+            <p class="label">{s.sector}</p>
+            <p class="dw-out">{s.outcome}</p>
+            <p class="dw-links">
               <a href={s.study}>
                 Read the case study<span class="vh">: {s.name}</span>
               </a>
@@ -92,7 +110,7 @@ const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
                   Visit the site<span class="vh">: {s.name} (opens in a new tab)</span>
                 </a>
               )}
-            </div>
+            </p>
           </div>
         </li>
       ))}
@@ -124,6 +142,36 @@ const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
         </li>
       ))}
     </ul>
+  </section>
+
+  <section class="sec tight jobs" id="jobs" aria-labelledby="jobs-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="jobs-h">What the site has to do</h2>
+        <p>
+          If your exact line of work is not above, the job may still be. Each of these is what the
+          site was built to do, not a promise about the numbers.
+        </p>
+      </div>
+      <ul class="jobs-list">
+        {jobs.map((job) => (
+          <li class="job" id={`job-${job.id}`}>
+            <div class="job-say">
+              <h3>{job.title}</h3>
+              <p>{job.line}</p>
+            </div>
+            <ul class="job-studies">
+              {job.studies.map(({ client, why }) => (
+                <li>
+                  <a href={client.study}>{client.name}</a>
+                  <span>{why}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
   </section>
 
   <Closing lead="Don't see your kind of <b>organization?</b>" />

@@ -40,6 +40,8 @@ export interface Client {
   /** The key: nonprofit, small-business and so on. */
   sectorKey: string;
   hook: string;
+  /** The one-line honest outcome from the study's frontmatter. */
+  outcome: string;
   /** The client's own color. Carries surfaces and the on-color text pair. */
   accent: string;
   /** The client's paper, the text on their color. */
@@ -66,6 +68,7 @@ export function toClient(entry: CollectionEntry<'case-studies'>): Client {
     sector: SECTOR_LABEL[d.sector] ?? d.sector,
     sectorKey: d.sector,
     hook: d.hook ?? '',
+    outcome: d.outcome ?? '',
     accent: d.palette?.accent ?? '#121211',
     paper: d.palette?.paper ?? '#ffffff',
     host: d.facts?.host ?? (live ? hostOf(live) : ''),

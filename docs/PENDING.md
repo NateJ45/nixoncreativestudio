@@ -169,9 +169,9 @@ in plan ruling 19. Its copy lives in `src/data/sector-pages.ts`.
 - **Nathan to read the copy**: the H1, lede and four points were drafted from
   the two church studies and /services, and the quote picked is Kendall
   Ellis's (FBCM). Edit them in `sector-pages.ts`.
-- **Nonprofits, schools, small business**: no page yet. Each needs copy of its
-  own before it gets one (steps in the header comment of `sector-pages.ts`);
-  until then they stay on `/work/?sector=…`.
+- **Nonprofits, schools, small business**: live as lean pages (`SectorLean.astro`,
+  copy in `sector-pages.ts`). **Nathan to read the copy**, the tier situations in
+  `SITUATIONS` and the `JOBS` placements in `src/data/jobs.ts`.
 
 ### 2e. Interaction clips: recorded 2026-10-31 (overhaul 3.5)
 

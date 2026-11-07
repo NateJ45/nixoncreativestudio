@@ -17,7 +17,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 ## Where things live
 
 - Case studies and journal entries: MDX in `src/content/case-studies/` and `src/content/journal/`, schemas in `src/content.config.ts`. A study's footage, captures and stills are in `public/assets/` under its slug (see `.claude/rules/content.md`).
-- Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts` (the one place a price lives; pages, FAQ, JSON-LD and `/llms.txt` read it). The client list and deck order: `src/lib/clients.ts`.
+- Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts` (the one place a price lives; pages, FAQ, JSON-LD and `/llms.txt` read it). The client list and deck order: `src/lib/clients.ts`. Sector pages and tier situations: `src/data/sector-pages.ts`. The /work index by job: `src/data/jobs.ts`. The five-year sums: `src/lib/tier-costs.ts`.
 - Page titles, meta descriptions and JSON-LD: `.claude/rules/content.md` ("Metadata and structured data").
 - Pages: `src/pages/`. The shared shell (head, top line, dock, client sheet, analytics, Coming Soon gate): `src/layouts/BaseLayout.astro`.
 - Look and tokens: `DESIGN.md` (the rules) and `src/styles/kit.css` (the code; tokens in `:root`). Page styles: `src/styles/pages/*.css`. Scripts: `src/scripts/kit.js` plus one per page. Security and cache headers: `public/_headers`.
