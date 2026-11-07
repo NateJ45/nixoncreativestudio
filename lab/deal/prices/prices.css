@@ -1188,3 +1188,32 @@
     margin-top: 0.75rem;
   }
 }
+
+/* The picker: three questions on the left, the card they deal on the right. */
+.picker { padding-top: clamp(3rem, 7vh, 5rem); padding-bottom: clamp(3rem, 7vh, 5rem); }
+.pick-in { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-top: 1rem; border-top: 1px solid var(--line); }
+.pick-qs h2 { margin-top: 0.9rem; font-size: clamp(2.25rem, 4.4vw, 4.5rem); }
+.pick-qs h2 b { font-weight: 700; color: var(--accent); }
+.pick-q { margin: clamp(1.25rem, 2.6vh, 1.75rem) 0 0; padding: 0; border: 0; min-width: 0; }
+.pick-q legend { padding: 0; font-weight: 600; }
+.opts-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+.pick-o { position: relative; display: block; cursor: pointer; }
+.pick-o input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pick-o span { display: flex; align-items: center; min-height: 2.75rem; padding: 0.4rem 1rem; border-radius: 99rem; background: var(--card); font-weight: 500; box-shadow: inset 0 0 0 1px var(--line); transition: background 0.2s, color 0.2s, transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.pick-o:hover span { box-shadow: inset 0 0 0 1px rgba(18, 18, 17, 0.34); }
+.pick-o input:checked + span { background: var(--accent); color: #fff; box-shadow: none; transform: scale(1.03); }
+.pick-o input:focus-visible + span { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+.pick-note { max-width: 36rem; margin-top: 1.25rem; color: var(--soft); font-size: 0.9375rem; }
+.pick-stage { display: grid; justify-items: center; gap: 1.25rem; }
+.pick-card { flex: none; width: min(100%, 19rem); margin: 0; transform: rotate(2.5deg); }
+.pick-card.dealing { animation: pick-deal 0.75s cubic-bezier(0.25, 1.35, 0.4, 1) both; }
+@keyframes pick-deal { from { transform: translateY(60px) rotate(-14deg) scale(0.9); } to { transform: rotate(2.5deg); } }
+.pick-go[hidden] { display: none; }
+@media (max-width: 60rem) {
+  .pick-in { grid-template-columns: minmax(0, 1fr); }
+  .pick-card { position: relative; top: auto; height: 15rem; aspect-ratio: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pick-o span { transition: none; }
+  .pick-card.dealing { animation: none; }
+}

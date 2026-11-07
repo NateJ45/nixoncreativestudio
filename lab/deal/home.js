@@ -84,6 +84,16 @@
   });
   ui.wireFootage(grid);
 
+  /* Draw a card: a random client opens from its own place in the grid, never the same one twice running. */
+  var lastDraw = -1;
+  $('[data-draw]').addEventListener('click', function () {
+    var i;
+    do { i = Math.floor(Math.random() * N.sites.length); } while (i === lastDraw);
+    lastDraw = i;
+    var tile = grid.querySelector('[data-slug="' + N.sites[i].slug + '"]');
+    ui.openSheet(N.sites[i], tile);
+  });
+
   /* The deal: every window has one spot in the real grid. Scroll carries it there from the hand. */
   var C = (tiles.length - 1) / 2,
     st = tiles.map(function (el, i) {
