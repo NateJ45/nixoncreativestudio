@@ -1,4 +1,4 @@
-/* Shared behaviour for every page: footage, the closing deck, quote bands, the dock's highlight,
+/* Shared behaviour for every page: the top line, footage, the closing deck, quote bands, the dock's highlight,
    the client sheet, the price hand and the big type's weight. The markup all comes from the server
    (Tile, Closing, QuoteBand, PriceHand, ClientSheet, Dock); this file only moves it. Page scripts
    import { ui, sites } from here, so this always runs first. Without JavaScript none of it runs and
@@ -215,12 +215,37 @@ export var ui = {
 };
 
 [].forEach.call(doc.querySelectorAll('[data-end]'), function (el) {
-  /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a last card, Yours, lands on top. */
+  /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a last card, Yours, lands on top.
+     Beside it, a name in the selected work pulls that client's card back out, and the poster name is dealt up a letter at a time. */
   var stage = $('[data-gather]', el),
     nine = $('[data-nine]', el);
   var gcs = [].slice.call(el.querySelectorAll('.gc')).map(function (g, i) {
-    return { g: g, d: i - 3.5, s: ui.spring(120, 16, reduce ? 1 : 0) };
+    return {
+      g: g,
+      d: i - 3.5,
+      s: ui.spring(120, 16, reduce ? 1 : 0),
+      pull: ui.spring(190, 17, 0),
+    };
   });
+  var rows = [].slice.call(el.querySelectorAll('[data-pull]')),
+    slide = $('[data-pull-slide]', el),
+    slideY = ui.spring(320, 26, 0),
+    slideO = 0,
+    slideH = 0,
+    picked = -1,
+    moved = ui.spring(190, 17, 0);
+  /* The poster name. Letters rise in reading order, and the ones by the pointer lift a little. */
+  var nameEl = $('[data-name]', el),
+    glyphs = [].slice.call(el.querySelectorAll('[data-name] i')).map(function (g, i) {
+      return {
+        g: g,
+        i: i,
+        s: ui.spring(170, 17, reduce ? 1 : 0),
+        h: ui.spring(280, 20, 0),
+        cx: 0,
+        t: 0,
+      };
+    });
   var n = ui.spring(150, 15, reduce ? 1 : 0),
     lift = ui.spring(240, 19, 0),
     onCard = 0,
@@ -228,26 +253,51 @@ export var ui = {
     last = 0;
   function paint() {
     var W = stage.offsetWidth,
+      gw = gcs.length ? gcs[0].g.offsetWidth : 0,
+      /* Out to the right of the deck, as far as the panel leaves room. */
+      reach = Math.min(gw * 0.4, (W - gw) / 2 + 24),
       spread = Math.min(W * 0.1, 46);
     gcs.forEach(function (c) {
       var v = c.s.x,
         k = 1 - v;
       c.g.style.transform =
         'translate3d(' +
-        (c.d * spread * k + c.d * 1.4 * v).toFixed(2) +
+        (c.d * spread * k + c.d * 1.4 * v + c.pull.x * reach).toFixed(2) +
         'px,' +
-        (c.d * c.d * 3 * k).toFixed(2) +
+        (c.d * c.d * 3 * k - c.pull.x * gw * 0.14).toFixed(2) +
         'px,0) rotate(' +
-        (c.d * 6 * k + c.d * 0.9 * v).toFixed(3) +
-        'deg)';
+        (c.d * 6 * k + c.d * 0.9 * v + c.pull.x * 7).toFixed(3) +
+        'deg) scale(' +
+        (1 + c.pull.x * 0.06).toFixed(4) +
+        ')';
+      c.g.style.zIndex = c.pull.x > 0.02 ? 5 : '';
+    });
+    if (slide) {
+      slide.style.transform = 'translate3d(0,' + slideY.x.toFixed(2) + 'px,0)';
+      slide.style.height = slideH + 'px';
+      slide.style.opacity = slideO;
+    }
+    glyphs.forEach(function (c) {
+      var v = c.s.x,
+        h = c.h.x;
+      c.g.style.transform =
+        v > 0.999 && h < 0.002
+          ? ''
+          : 'translate3d(0,' +
+            ((1 - v) * 108 - h * 9).toFixed(2) +
+            '%,0) rotate(' +
+            ((1 - v) * (c.i % 2 ? 7 : -7)).toFixed(2) +
+            'deg)';
     });
     var m = n.x,
       l = lift.x;
     nine.style.transform =
       'translate3d(0,' +
       ((1 - m) * stage.offsetHeight * 0.85 - l * 16).toFixed(2) +
-      'px,0) rotate(' +
-      ((1 - m) * -16 + -1.6 * (1 - l)).toFixed(3) +
+      'px,0) translateX(' +
+      (moved.x * gw * -0.13).toFixed(2) +
+      'px) rotate(' +
+      ((1 - m) * -16 + -1.6 * (1 - l) + moved.x * -3.5).toFixed(3) +
       'deg) scale(' +
       (1 + l * 0.03).toFixed(4) +
       ')';
@@ -280,6 +330,45 @@ export var ui = {
       lift.x = onCard;
       lift.v = 0;
     }
+    gcs.forEach(function (c, i) {
+      var to = picked === i ? 1 : 0;
+      if (c.pull.step(to, dt)) live = true;
+      else {
+        c.pull.x = to;
+        c.pull.v = 0;
+      }
+    });
+    if (moved.step(picked < 0 ? 0 : 1, dt)) live = true;
+    else {
+      moved.x = picked < 0 ? 0 : 1;
+      moved.v = 0;
+    }
+    if (picked >= 0 && slide) {
+      var to = rows[picked].parentNode.offsetTop;
+      if (slideY.step(to, dt)) live = true;
+      else {
+        slideY.x = to;
+        slideY.v = 0;
+      }
+    }
+    if (glyphs.length) {
+      var box = nameEl.getBoundingClientRect();
+      /* Done by the time the name is most of the way up, so it always finishes above the page's end. */
+      var q = Math.min(1, Math.max(0, (H - box.top) / (box.height * 0.8)));
+      glyphs.forEach(function (c) {
+        var t = Math.min(1, Math.max(0, q * 1.6 - (c.i / glyphs.length) * 0.6));
+        if (c.s.step(t, dt)) live = true;
+        else {
+          c.s.x = t;
+          c.s.v = 0;
+        }
+        if (c.h.step(c.t, dt)) live = true;
+        else {
+          c.h.x = c.t;
+          c.h.v = 0;
+        }
+      });
+    }
     paint();
     if (live) raf = requestAnimationFrame(frame);
   }
@@ -289,8 +378,70 @@ export var ui = {
       raf = requestAnimationFrame(frame);
     }
   }
+  /* Pick a name: its row takes the bar, its card comes out. Under reduced motion both simply jump. */
+  function pick(i) {
+    if (picked === i) return;
+    var was = picked < 0;
+    rows.forEach(function (r, k) {
+      r.classList.toggle('on', k === i);
+    });
+    picked = i;
+    if (i >= 0 && slide) {
+      var li = rows[i].parentNode;
+      slideH = li.offsetHeight;
+      slideO = 1;
+      if (was || reduce) {
+        slideY.x = li.offsetTop;
+        slideY.v = 0;
+      }
+    } else slideO = 0;
+    if (reduce) {
+      gcs.forEach(function (c, k) {
+        c.pull.x = k === i ? 1 : 0;
+      });
+      moved.x = i < 0 ? 0 : 1;
+      paint();
+    } else wake();
+  }
+  rows.forEach(function (r, i) {
+    /* A finger's tap goes straight to the study. Only a real pointer previews. */
+    r.addEventListener('pointerenter', function (e) {
+      if (e.pointerType !== 'touch') pick(i);
+    });
+    r.addEventListener('focus', function () {
+      if (r.matches(':focus-visible')) pick(i);
+    });
+    r.addEventListener('blur', function () {
+      if (picked === i) pick(-1);
+    });
+  });
+  if (rows.length)
+    rows[0].closest('ul').addEventListener('pointerleave', function () {
+      pick(-1);
+    });
   paint();
   if (!reduce) {
+    if (nameEl && matchMedia('(hover: hover)').matches) {
+      nameEl.addEventListener('pointerenter', function () {
+        glyphs.forEach(function (c) {
+          var b = c.g.getBoundingClientRect();
+          c.cx = b.left + b.width / 2;
+        });
+      });
+      nameEl.addEventListener('pointermove', function (e) {
+        var r = nameEl.offsetWidth * 0.07;
+        glyphs.forEach(function (c) {
+          c.t = Math.max(0, 1 - Math.abs(c.cx - e.clientX) / r);
+        });
+        wake();
+      });
+      nameEl.addEventListener('pointerleave', function () {
+        glyphs.forEach(function (c) {
+          c.t = 0;
+        });
+        wake();
+      });
+    }
     addEventListener('scroll', wake, { passive: true });
     addEventListener('resize', wake);
     ui.stillHover(
@@ -930,6 +1081,206 @@ if (weighs.length && !reduce) {
   };
   addEventListener('scroll', wwake, { passive: true });
   wwake();
+}
+
+/* The top line. Two things the markup cannot do by itself: both corners come back as pills when you
+   scroll up, and the name takes on weight under the pointer. Without this file it is a plain line
+   that scrolls away, and the status card still opens. */
+var topLine = doc.querySelector('[data-top]');
+if (topLine) {
+  var reach = doc.querySelector('[data-reach]');
+  /* A page with its own bar stuck to the top of the screen keeps that spot: /work's filter, a legal
+     page's contents. They are only sticky at wider sizes, so ask the browser. */
+  var topBar = doc.querySelector('.dw-bar, .toc');
+  var topClear = function () {
+    return !topBar || getComputedStyle(topBar).position !== 'sticky';
+  };
+  var topAway = ui.spring(210, 24, 1);
+  var topWant = 1,
+    topY = scrollY,
+    topTravel = 0,
+    topRaf = 0,
+    topLast = 0,
+    reachOpen = false,
+    reachFrom = 0;
+  var topPaint = function () {
+    topLine.style.transform = 'translate3d(0,' + (-130 * topAway.x).toFixed(2) + '%,0)';
+  };
+  var topLand = function () {
+    /* Fully away: back to the plain line, which by now is off the top of the page. */
+    if (topWant === 1) {
+      topLine.classList.remove('float');
+      topLine.style.transform = '';
+    }
+  };
+  var topFrame = function (now) {
+    topRaf = 0;
+    var dt = Math.min(0.033, (now - topLast) / 1000 || 0.016);
+    topLast = now;
+    var live = topAway.step(topWant, dt);
+    topPaint();
+    if (live) topRaf = requestAnimationFrame(topFrame);
+    else {
+      topAway.x = topWant;
+      topAway.v = 0;
+      topPaint();
+      topLand();
+    }
+  };
+  var topGo = function (want) {
+    topWant = want;
+    if (want === 0) topLine.classList.add('float');
+    if (reduce) {
+      topAway.x = want;
+      topPaint();
+      topLand();
+    } else if (!topRaf) {
+      topLast = performance.now();
+      topRaf = requestAnimationFrame(topFrame);
+    }
+  };
+  addEventListener(
+    'scroll',
+    function () {
+      var y = scrollY,
+        dy = y - topY;
+      topY = y;
+      if (reachOpen) {
+        /* A card pinned to a line that has scrolled away is nobody's. */
+        if (Math.abs(y - reachFrom) > 60) reach.hidePopover();
+        return;
+      }
+      if (y <= 0) {
+        /* Home at the top: the pills melt into the line, which sits in the very same place. */
+        if (topRaf) cancelAnimationFrame(topRaf);
+        topRaf = 0;
+        topWant = 1;
+        topAway.x = 1;
+        topAway.v = 0;
+        topLine.classList.remove('float');
+        topLine.style.transform = '';
+        return;
+      }
+      topTravel = topTravel < 0 === dy < 0 ? topTravel + dy : dy;
+      if (topWant === 1 && topTravel < -6 && y > 240 && topClear()) topGo(0);
+      /* Below 120px the plain line would still show once the pill left, so the pill stays. It also
+         stays while the keyboard is on it. */
+      else if (topWant === 0 && topTravel > 6 && y > 120) {
+        var on = doc.activeElement;
+        if (!(topLine.contains(on) && on.matches(':focus-visible'))) topGo(1);
+      }
+    },
+    { passive: true },
+  );
+  if (reach) {
+    reach.addEventListener('toggle', function (e) {
+      reachOpen = e.newState === 'open';
+      reachFrom = scrollY;
+    });
+  }
+
+  var mark = topLine.querySelector('[data-mark]');
+  if (mark && !reduce) {
+    var letters = null,
+      markX = null,
+      waveAt = 0,
+      markRaf = 0,
+      markLast = 0;
+    var split = function () {
+      /* Each letter is locked to the width it has at rest, kerning included, so a heavier letter
+         thickens in place and the name never shifts under the pointer. */
+      letters = [];
+      [mark.querySelector('b'), mark.querySelector('.nm-fold > span')].forEach(function (part) {
+        var text = part.firstChild,
+          value = text.nodeValue,
+          rest = parseInt(getComputedStyle(part).fontWeight, 10),
+          range = doc.createRange(),
+          widths = [];
+        for (var i = 0; i < value.length; i++) {
+          range.setStart(text, i);
+          range.setEnd(text, i + 1);
+          widths.push(range.getBoundingClientRect().width);
+        }
+        part.textContent = '';
+        widths.forEach(function (w, i) {
+          var s = doc.createElement('span');
+          s.className = 'lt';
+          s.style.width = w + 'px';
+          s.textContent = value[i];
+          part.appendChild(s);
+          letters.push({ el: s, rest: rest, s: ui.spring(240, 17, 0), shown: rest });
+        });
+      });
+    };
+    var markFrame = function (now) {
+      markRaf = 0;
+      var dt = Math.min(0.033, (now - markLast) / 1000 || 0.016),
+        live = false,
+        at = markX;
+      markLast = now;
+      if (waveAt) {
+        var box = mark.getBoundingClientRect(),
+          t = (now - waveAt) / 1100;
+        if (t >= 1) waveAt = 0;
+        else {
+          at = box.left - 40 + (box.width + 80) * t;
+          live = true;
+        }
+      }
+      letters.forEach(function (l) {
+        var r = l.el.getBoundingClientRect();
+        var d = at === null || !r.width ? 1e3 : (r.left + r.width / 2 - at) / 30;
+        if (l.s.step(Math.exp(-d * d), dt)) live = true;
+        var w = Math.round(Math.min(900, Math.max(100, l.rest + (880 - l.rest) * l.s.x)));
+        if (w !== l.shown) {
+          l.shown = w;
+          l.el.style.fontWeight = w;
+        }
+        l.el.style.transform =
+          Math.abs(l.s.x) > 0.002 ? 'translateY(' + (-l.s.x * 0.07).toFixed(3) + 'em)' : '';
+      });
+      if (live) markRaf = requestAnimationFrame(markFrame);
+    };
+    var markWake = function () {
+      if (!letters) split();
+      if (!markRaf) {
+        markLast = performance.now();
+        markRaf = requestAnimationFrame(markFrame);
+      }
+    };
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      mark.addEventListener('pointermove', function (e) {
+        markX = e.clientX;
+        markWake();
+      });
+      mark.addEventListener('pointerleave', function () {
+        markX = null;
+        markWake();
+      });
+    }
+    mark.addEventListener('focus', function () {
+      if (mark.matches(':focus-visible')) {
+        waveAt = performance.now();
+        markWake();
+      }
+    });
+    /* One wave through the name, the first time a visit opens at the top of a page. */
+    var seen = false;
+    try {
+      seen = !!sessionStorage.getItem('ncs-mark-wave');
+      sessionStorage.setItem('ncs-mark-wave', '1');
+    } catch (e) {
+      seen = true;
+    }
+    if (!seen && scrollY < 200 && doc.fonts) {
+      doc.fonts.ready.then(function () {
+        setTimeout(function () {
+          waveAt = performance.now();
+          markWake();
+        }, 700);
+      });
+    }
+  }
 }
 
 addEventListener('pageshow', function () {

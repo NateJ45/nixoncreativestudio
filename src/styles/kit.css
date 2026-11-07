@@ -51,8 +51,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
-  /* Keyboard focus and jump links stop clear of the top edge and of the dock. */
-  scroll-padding-block: 24px 96px;
+  /* Keyboard focus and jump links stop clear of the top line's pills and of the dock. */
+  scroll-padding-block: 72px 96px;
 }
 body {
   margin: 0;
@@ -93,7 +93,7 @@ p {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 1.1rem var(--edge);
+  padding: max(1.1rem, env(safe-area-inset-top)) var(--edge) 1.1rem;
 }
 .top a {
   display: inline-flex;
@@ -101,25 +101,237 @@ p {
   min-height: 2.75rem;
   text-decoration: none;
 }
+.mark,
+.status {
+  /* Padded out and pulled back, so the words stay on the page edge and a pill grows around them. */
+  margin-inline: -0.85rem;
+  padding-inline: 0.85rem;
+  border-radius: 99rem;
+  transition:
+    background-color 0.25s,
+    box-shadow 0.25s;
+}
 .mark {
   font-family: var(--display);
   font-weight: 700;
   font-size: 1.125rem;
   letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+.mark .lt {
+  display: inline-block;
+  text-align: center;
+  white-space: pre;
+}
+/* A piece of the top line that can fold away sideways. */
+.nm-fold {
+  display: inline-grid;
+  grid-template-columns: 1fr;
+  transition: grid-template-columns 0.5s var(--ease);
+}
+.nm-fold > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.mark .nm-fold > span {
+  padding-left: 0.26em;
 }
 .status {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9375rem;
+  min-height: 2.75rem;
+  border: 0;
+  background: none;
   color: var(--soft);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+.status .nm-fold {
+  /* The word gap lives inside the fold, so nothing is left behind when it closes. */
+  margin-left: -0.5rem;
+}
+.status .nm-fold > span {
+  padding-left: 0.26em;
+}
+.status:hover,
+.status:has(+ .reach:popover-open) {
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
 }
 .status i {
+  flex: none;
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.status svg {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: rotate 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.status:has(+ .reach:popover-open) svg {
+  rotate: 180deg;
+}
+@media (max-width: 52rem) {
+  .nm-fold.wide {
+    display: none;
+  }
+}
+@media (max-width: 23.5rem) {
+  .mark,
+  .status {
+    margin-inline: -0.55rem;
+    padding-inline: 0.55rem;
+  }
+}
+/* Scrolling back up: the same two corners, in the same places, each its own small pill, and the
+   name folds down to Nixon. The space between them stays clickable. kit.js springs it in and out. */
+.top.float {
+  position: fixed;
+  pointer-events: none;
+  will-change: transform;
+}
+.top.float .mark,
+.top.float .status {
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  color: var(--ink);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 14px 34px -12px rgba(0, 0, 0, 0.34);
+}
+.top.float .nm-fold {
+  grid-template-columns: 0fr;
+}
+.top.float .mark:hover .nm-fold,
+.top.float .mark:focus-visible .nm-fold {
+  grid-template-columns: 1fr;
+}
+.top.float.on-color .mark,
+.top.float.on-color .status {
+  color: var(--ink);
+}
+.top.float.on-color .status i {
+  background: var(--accent);
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--accent) 16%, transparent);
+}
+/* The card the status deals: out of the pill, with a little weight. */
+.reach {
+  --cardr: 1.25rem;
+  position: fixed;
+  inset: calc(max(1.1rem, env(safe-area-inset-top)) + 3.25rem) var(--edge) auto auto;
+  width: min(23rem, calc(100vw - 2 * var(--gut)));
+  margin: 0;
+  padding: 1.5rem;
+  border: 0;
+  color: var(--ink);
+  transform-origin: calc(100% - 3rem) 0;
+  transition:
+    opacity 0.2s,
+    transform 0.55s cubic-bezier(0.3, 1.35, 0.5, 1),
+    overlay 0.25s allow-discrete,
+    display 0.25s allow-discrete;
+}
+.reach.card {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 34px 60px -24px rgba(0, 0, 0, 0.55);
+}
+.reach:popover-open {
+  display: block;
+}
+.reach:not(:popover-open) {
+  opacity: 0;
+  transform: translateY(-0.5rem) scale(0.96);
+}
+@starting-style {
+  .reach:popover-open {
+    opacity: 0;
+    transform: translateY(-1.4rem) scale(0.72) rotate(-7deg);
+  }
+}
+@supports not selector(:popover-open) {
+  .reach {
+    display: none;
+  }
+}
+.reach .pip {
+  --pips: 1.25rem;
+  left: auto;
+  right: 1.25rem;
+  top: 1.1rem;
+  color: var(--accent);
+}
+/* Not a heading: this sits ahead of the page's H1 in the markup on every page. */
+.reach-h {
+  margin-top: 0.5rem;
+  font: 500 var(--type-h3)/1 var(--display);
+  letter-spacing: -0.035em;
+}
+.reach ul {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.reach li {
+  border-top: 1px solid var(--line);
+}
+.reach li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.reach li a {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 1rem;
+  width: 100%;
+  min-height: 3rem;
+  padding-block: 0.4rem;
+  transition: color 0.2s;
+}
+.reach li a:hover {
+  color: var(--accent);
+}
+.reach li span {
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+.reach li a:hover span {
+  color: inherit;
+}
+.reach li b {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.reach-say {
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.reach .chip {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.1rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nm-fold,
+  .status svg,
+  .reach {
+    transition: none;
+  }
 }
 
 .hero {
@@ -1116,9 +1328,6 @@ html:not(.js) .dk-rail {
   aspect-ratio: 16/10;
 }
 @media (max-width: 52rem) {
-  .status {
-    display: none;
-  }
   .sheet-in {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
@@ -1262,20 +1471,6 @@ html:not(.js) .dock > a[aria-current]:not(.go) {
 .js .w {
   animation-delay: calc(var(--n) * 55ms + var(--wd, 120ms));
 }
-.end .legal {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.25rem 1.25rem;
-  max-width: none;
-  margin-top: 2.25rem;
-  font-size: 0.9375rem;
-}
-.end .legal a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-}
 .top.on-color .mark,
 .top.on-color .status {
   color: var(--oncolor, #fff);
@@ -1347,7 +1542,6 @@ h1 b,
 
 /* The working wordmark: the whole name, heavy then medium, always together. */
 .mark {
-  column-gap: 0.26em;
   font-weight: 500;
   letter-spacing: -0.03em;
 }
@@ -1907,10 +2101,99 @@ h1.giant b {
 }
 .end-main {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4.5fr) minmax(0, 4fr);
+  grid-template-areas: 'say work deck';
   gap: clamp(2rem, 4vw, 4rem);
   align-items: center;
   padding-block: clamp(3rem, 8vh, 6rem);
+}
+.end-say {
+  grid-area: say;
+}
+/* The selected work, beside its deck. A name pulls its card out, and one white bar travels
+   between the names on the same kind of spring as the dock's highlight. */
+.end-work {
+  grid-area: work;
+  min-width: 0;
+}
+.end-work > .label {
+  color: #fff;
+}
+.end-work ul {
+  position: relative;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.end-work li {
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-work li:nth-last-child(2) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-work li a {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem;
+  margin-inline: -0.7rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.end-work li b {
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+}
+.end-work li .label {
+  flex: none;
+  color: inherit;
+  font-size: 0.75rem;
+}
+.end-work li a.on {
+  color: var(--fill);
+}
+.end-work li a.on b,
+.end-work li a[aria-current] b {
+  font-weight: 700;
+}
+html:not(.js) .end-work li a:hover {
+  background: #fff;
+  color: var(--fill);
+}
+.end-work li a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 0.7rem;
+}
+.end-work li.end-slide {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: -0.7rem;
+  right: -0.7rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.end-all {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  color: #fff;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
 }
 .end h2 {
   font-size: var(--type-h1);
@@ -1926,7 +2209,8 @@ h1.giant b {
   justify-content: flex-start;
 }
 .gather {
-  --gw: clamp(9.5rem, 15vw, 14.5rem);
+  --gw: clamp(9.5rem, 13vw, 13.5rem);
+  grid-area: deck;
   position: relative;
   display: grid;
   justify-items: center;
@@ -2012,9 +2296,64 @@ h1.giant b {
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
+/* The site, as a ruled index rather than one long line. */
+.end-index {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem clamp(1.5rem, 3vw, 3rem);
+  padding-block: 1.1rem clamp(2.5rem, 6vh, 4rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-index div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.end-index .label {
+  margin-bottom: 0.35rem;
+  color: #fff;
+}
+.end-index a,
+.end-base a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: #fff;
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.end-index a:hover,
+.end-base a:hover {
+  text-decoration: underline;
+  transform: translateX(0.2rem);
+}
 .end-name {
   container-type: inline-size;
   margin-top: clamp(0.5rem, 2vh, 1.5rem);
+}
+/* Each word clips its own letters, so they rise out of the line as they are dealt. */
+.end-name p > b,
+.end-name p > span {
+  display: inline-block;
+  /* The tight tracking pulls a word's box in past its last letter, so pad the clip back out. */
+  padding: 0.12em 0.07em 0.04em;
+  margin: -0.12em -0.07em -0.04em;
+  overflow: clip;
+}
+.end-name i {
+  display: inline-block;
+  font-style: normal;
+}
+.end-base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0 1.5rem;
+  margin-top: clamp(0.75rem, 2vh, 1.25rem);
+  color: #fff;
+  font-size: 0.9375rem;
 }
 .end .end-name p {
   max-width: none;
@@ -2027,30 +2366,34 @@ h1.giant b {
 .end .end-name b {
   font-weight: 700;
 }
-.end .legal {
-  justify-content: flex-start;
-  margin-top: 1rem;
-  color: #fff;
-}
-.end .legal a {
-  color: #fff;
+@media (max-width: 72rem) {
+  .end-main {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas: 'say deck' 'work deck';
+    row-gap: 2.5rem;
+  }
 }
 @media (max-width: 52rem) {
   .end-main {
     grid-template-columns: minmax(0, 1fr);
-    padding-block: 2.5rem 1.5rem;
+    grid-template-areas: 'say' 'deck' 'work';
+    row-gap: clamp(2rem, 6vw, 2.5rem);
+    padding-block: 2.5rem;
   }
   .gather {
     --gw: min(36vw, 9.5rem);
     margin-top: 1rem;
+  }
+  .end-index {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .end .end-name p {
     font-size: 26cqw;
     line-height: 0.92;
     white-space: normal;
   }
-  .end .end-name b,
-  .end .end-name span {
+  .end .end-name p > b,
+  .end .end-name p > span {
     display: block;
   }
 }
@@ -2088,6 +2431,17 @@ h1.giant b {
   }
   .end .end-name p {
     font-size: 26cqw;
+  }
+}
+/* A tablet has the width for the name on one line. Only a phone stacks it. */
+@media (min-width: 36rem) and (max-width: 52rem) {
+  .end .end-name p {
+    font-size: 11.3cqw;
+    white-space: nowrap;
+  }
+  .end .end-name p > b,
+  .end .end-name p > span {
+    display: inline-block;
   }
 }
 @media (min-width: 52.01rem) {
@@ -2185,9 +2539,17 @@ html.ncs-gated .ncs-overlay {
   .card,
   .pc-face,
   .chip,
+  .nine,
   .dock,
+  .reach,
+  .top.float .mark,
+  .top.float .status,
   .fc {
     border: 1px solid CanvasText;
+  }
+  /* The white bar is a background, so the name it is on says so itself. */
+  .end-work li a.on {
+    text-decoration: underline;
   }
   /* A chosen answer and the page you are on, which a background alone can no longer show. */
   :root .pick-o input:checked + span,

@@ -22,7 +22,7 @@ Every `mailto:` link site-wide has a graceful fallback (`src/scripts/mailto-fall
 
 The nav is the dock (`src/components/Dock.astro`): Work, Prices (`/services/`), About and Start a project (`/contact/`). Its four links are written in the component. To rename or reorder one, edit `Dock.astro`; the page paths and labels in `tests/chrome.spec.ts` follow.
 
-`nav.ts` now holds only `getGatedNav()`: two pages that join the closing's legal line once they have earned a link, so a link never points at an empty page. **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. Every href ends in a slash.
+`nav.ts` now holds only `getGatedNav()`: two pages that join the closing's site index once they have earned a link, so a link never points at an empty page. **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. Every href ends in a slash.
 
 **The /journal gate.** `journalOpen(count)` in `src/data/journal-gate.ts`: with no published entry the page is noindex and out of the sitemap, and the closing has no link to it. `tests/journal-gate.spec.ts` checks it.
 

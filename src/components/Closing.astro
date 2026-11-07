@@ -1,12 +1,13 @@
 ---
 /* The closing panel every page ends on: the page's line, the way to reach me,
-   the case studies gathering into one deck as you scroll, a last card reading
-   Yours, and the name at poster size. Everything here is real markup; kit.js
-   only moves the cards. Keep a neutral section between this and a quote band,
-   so the two colors never touch. */
+   the selected work beside its deck (a name pulls its card out), a last card
+   reading Yours, the site index, and the name at poster size, dealt up letter by
+   letter. Everything here is real markup; kit.js only moves things. Keep a neutral
+   section between this and a quote band, so the two colors never touch. */
 import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { getGatedNav } from '../data/nav';
+import { webTiers } from '../data/pricing';
 
 interface Props {
   /** The line, as HTML with the heavy words in <b>. */
@@ -16,6 +17,11 @@ const { lead = 'Tell me what you are <b>building.</b>' } = Astro.props;
 const clients = await getClients();
 const gated = await getGatedNav();
 const [first, second, third] = site.studioName.split(' ');
+const here = Astro.url.pathname;
+const fromPrice = Math.min(...webTiers.map((t) => t.priceFrom)).toLocaleString('en-US');
+const year = new Date().getFullYear();
+/* The poster name, one span a letter, so each can be dealt up. The whole line is aria-hidden. */
+const letters = (word: string) => [...word];
 ---
 
 <section data-end class="end" aria-label="Start a project">
@@ -46,6 +52,23 @@ const [first, second, third] = site.studioName.split(' ');
         </a>
       </div>
     </div>
+    <nav class="end-work" aria-label="Selected work">
+      <span class="label">Selected work</span>
+      <ul>
+        {clients.map((s, i) => (
+          <li>
+            <a href={s.study} data-pull={i} aria-current={here === s.study ? 'page' : undefined}>
+              <b>{s.name}</b>
+              <span class="label">{s.sector}</span>
+            </a>
+          </li>
+        ))}
+        <li class="end-slide" data-pull-slide aria-hidden="true" />
+      </ul>
+      <a class="end-all" href="/work/">
+        See all the work
+      </a>
+    </nav>
     <div class="gather" data-gather>
       <div class="gather-deck" aria-hidden="true">
         {clients.map((s) => (
@@ -66,21 +89,62 @@ const [first, second, third] = site.studioName.split(' ');
       </a>
     </div>
   </div>
-  <div class="end-name" aria-hidden="true">
+  <nav class="end-index" aria-label="Site">
+    <div>
+      <span class="label">Websites for</span>
+      <a href="/churches/">Churches</a>
+      <a href="/schools/">Schools</a>
+      <a href="/nonprofits/">Nonprofits</a>
+      <a href="/small-business/">Small businesses</a>
+    </div>
+    <div>
+      <span class="label">The studio</span>
+      <a href="/services/">Prices, from ${fromPrice}</a>
+      <a href="/about/">About</a>
+      <a href="/one-page/">The one-page summary</a>
+      {gated.map((l) => (
+        <a href={l.href}>{l.label}</a>
+      ))}
+    </div>
+    <div>
+      <span class="label">Elsewhere</span>
+      <a href={site.social.linkedin} rel="me noopener">
+        LinkedIn
+      </a>
+      <a href={site.social.instagram} rel="me noopener">
+        Instagram
+      </a>
+    </div>
+    <div>
+      <span class="label">The fine print</span>
+      <a href="/privacy/">Privacy</a>
+      <a href="/accessibility/">Accessibility</a>
+      <a href="/colophon/">How this site is built</a>
+    </div>
+  </nav>
+  <div class="end-name" data-name aria-hidden="true">
     <p>
-      <b>{first}</b> <span>{second}</span> <span>{third}</span>
+      <b>
+        {letters(first).map((c) => (
+          <i>{c}</i>
+        ))}
+      </b>
+      <span>
+        {letters(second).map((c) => (
+          <i>{c}</i>
+        ))}
+      </span>
+      <span>
+        {letters(third).map((c) => (
+          <i>{c}</i>
+        ))}
+      </span>
     </p>
   </div>
-  <p class="legal">
-    <a href="/churches/">Church websites</a>
-    <a href="/schools/">School websites</a>
-    <a href="/nonprofits/">Nonprofit websites</a>
-    <a href="/small-business/">Small business websites</a>
-    {gated.map((l) => (
-      <a href={l.href}>{l.label}</a>
-    ))}
-    <a href="/privacy/">Privacy</a>
-    <a href="/accessibility/">Accessibility</a>
-    <a href="/colophon/">How this site is built</a>
-  </p>
+  <div class="end-base">
+    <span>
+      &copy; {year} {site.studioName}
+    </span>
+    <a href="#main">Back to top</a>
+  </div>
 </section>

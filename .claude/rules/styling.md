@@ -37,6 +37,7 @@ Declared in `:root` at the top of `kit.css`:
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.
 - **Cards** are `.card` or their own radius (1.25rem; bands and the closing 1.75rem; buttons fully round).
 - **H1 reveal**: words are wrapped in the markup by `wordSpans()` (`src/lib/words.ts`; `PageHead.astro` does it). `.js .w` animates from opacity .02. This is the one allowed start below full opacity in the first viewport.
+- **The closing's parts**: `.end-work` (names and the white bar, `[data-pull]` per row, in `kit.js`), `.end-index` (the ruled site index, a new link goes in one of its groups), `.end-name` (one `<i>` a letter, clipped per word), `.end-base`. Text on the closing is white or sits on white; use `--fill` for blue on white.
 - **Reveals for study blocks**: `.rv` is hidden only under `.rv-on` (added by `study.js` when motion is allowed and `IntersectionObserver` exists) and shown with `.in`. Nothing in the first viewport takes it.
 
 ## Motion
@@ -51,6 +52,10 @@ Declared in `:root` at the top of `kit.css`:
 ## Forced colors and print
 
 A card is drawn with a shadow and a background, so `kit.css` gives `.tile`, `.card`, `.pc-face`, `.chip` and `.dock` a 1px `CanvasText` border under `@media (forced-colors: active)`. A new surface whose edge is only a shadow joins that list (`tests/forced-colors.spec.ts`). Print hides the top line, dock, sheet and closing.
+
+## Top line
+
+`TopLine.astro` is the name and the status button, plus the `.reach` popover. `kit.js` adds `.float` and a transform (the pills on scrolling up) and splits the name into `.lt` letters on first use. Colors are tokens, so it follows the theme; `.top.float.on-color` puts it back on `--ink` once it has left the client's color. A new bar that sticks to the top of the screen joins the `topBar` selector in `kit.js`, so the pills do not land on it.
 
 ## Fixed elements
 
