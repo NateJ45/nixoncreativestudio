@@ -80,7 +80,12 @@
         '</b>' +
         (i === undefined
           ? '<span>' + s.sector + '</span>'
-          : '<span class="label"><i>' + (i < 9 ? '0' : '') + (i + 1) + '</i>' + s.sector + '</span>') +
+          : '<span class="label"><i>' +
+            (i < 9 ? '0' : '') +
+            (i + 1) +
+            '</i>' +
+            s.sector +
+            '</span>') +
         '</p>'
       );
     },
@@ -212,8 +217,22 @@
   [].forEach.call(doc.querySelectorAll('[data-end]'), function (el) {
     el.classList.add('end');
     var lead = el.dataset.end || 'Tell me what you are <b>building.</b>';
+    var deck = N.sites
+      .map(function (s) {
+        return (
+          '<span class="gc" style="--c:' +
+          s.accent +
+          '"><img src="' +
+          s.still +
+          '" alt="" loading="lazy" width="584" height="1138"></span>'
+        );
+      })
+      .join('');
     el.innerHTML =
-      '<h2>' +
+      '<div class="end-top label"><span class="end-live"><i></i>Booking projects</span><span>' +
+      N.contact.place +
+      '</span></div>' +
+      '<div class="end-main"><div class="end-say"><h2>' +
       lead +
       '</h2><p>' +
       N.contact.free +
@@ -227,8 +246,154 @@
       N.contact.phone.replace(/[^0-9+]/g, '') +
       '">' +
       N.contact.phone +
-      '</a></div><p class="legal"><a href="/deal/privacy/">Privacy</a><a href="/deal/accessibility/">Accessibility</a><a href="/deal/colophon/">How this site is built</a></p>';
+      '</a></div></div>' +
+      '<div class="gather" data-gather><div class="gather-deck" aria-hidden="true">' +
+      deck +
+      '</div><a class="nine" href="/deal/start/" data-nine><span class="pip" aria-hidden="true">9</span><span class="pip flip" aria-hidden="true">9</span><span class="label">Next in the deck</span><strong>Yours.</strong></a></div></div>' +
+      '<div class="end-name" aria-hidden="true"><p><b>Nixon</b> <span>Creative</span> <span>Studio</span></p></div>' +
+      '<p class="legal"><a href="/deal/privacy/">Privacy</a><a href="/deal/accessibility/">Accessibility</a><a href="/deal/colophon/">How this site is built</a></p>';
+
+    /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a ninth card lands on top. */
+    var stage = $('[data-gather]', el),
+      nine = $('[data-nine]', el);
+    var gcs = [].slice.call(el.querySelectorAll('.gc')).map(function (g, i) {
+      return { g: g, d: i - 3.5, s: ui.spring(120, 16, reduce ? 1 : 0) };
+    });
+    var n = ui.spring(150, 15, reduce ? 1 : 0),
+      lift = ui.spring(240, 19, 0),
+      onCard = 0,
+      raf = 0,
+      last = 0;
+    function paint() {
+      var W = stage.offsetWidth,
+        spread = Math.min(W * 0.1, 46);
+      gcs.forEach(function (c) {
+        var v = c.s.x,
+          k = 1 - v;
+        c.g.style.transform =
+          'translate3d(' +
+          (c.d * spread * k + c.d * 1.4 * v).toFixed(2) +
+          'px,' +
+          (c.d * c.d * 3 * k).toFixed(2) +
+          'px,0) rotate(' +
+          (c.d * 6 * k + c.d * 0.9 * v).toFixed(3) +
+          'deg)';
+      });
+      var m = n.x,
+        l = lift.x;
+      nine.style.transform =
+        'translate3d(0,' +
+        ((1 - m) * stage.offsetHeight * 0.85 - l * 16).toFixed(2) +
+        'px,0) rotate(' +
+        ((1 - m) * -16 + -1.6 * (1 - l)).toFixed(3) +
+        'deg) scale(' +
+        (1 + l * 0.03).toFixed(4) +
+        ')';
+      nine.style.opacity = Math.min(1, Math.max(0, m * 2.5)).toFixed(3);
+    }
+    function frame(now) {
+      raf = 0;
+      var dt = Math.min(0.033, (now - last) / 1000 || 0.016),
+        H = innerHeight,
+        live = false;
+      last = now;
+      var p = Math.min(1, Math.max(0, (H * 0.92 - stage.getBoundingClientRect().top) / (H * 0.55)));
+      gcs.forEach(function (c, i) {
+        var t = Math.min(1, Math.max(0, (p - Math.abs(c.d) * 0.03) / 0.72));
+        t = t * t * (3 - 2 * t);
+        if (c.s.step(t, dt)) live = true;
+        else {
+          c.s.x = t;
+          c.s.v = 0;
+        }
+      });
+      var nt = p >= 0.8 || onCard ? 1 : 0;
+      if (n.step(nt, dt)) live = true;
+      else {
+        n.x = nt;
+        n.v = 0;
+      }
+      if (lift.step(onCard, dt)) live = true;
+      else {
+        lift.x = onCard;
+        lift.v = 0;
+      }
+      paint();
+      if (live) raf = requestAnimationFrame(frame);
+    }
+    function wake() {
+      if (!raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    }
+    paint();
+    if (!reduce) {
+      addEventListener('scroll', wake, { passive: true });
+      addEventListener('resize', wake);
+      nine.addEventListener('pointerenter', function (e) {
+        if (e.pointerType === 'mouse') {
+          onCard = 1;
+          wake();
+        }
+      });
+      nine.addEventListener('pointerleave', function () {
+        onCard = 0;
+        wake();
+      });
+      nine.addEventListener('focus', function () {
+        onCard = 1;
+        wake();
+      });
+      nine.addEventListener('blur', function () {
+        onCard = 0;
+        wake();
+      });
+      wake();
+    } else addEventListener('resize', paint);
   });
+
+  /* Quote bands: the band opens out and its phone settles as it reaches you. */
+  ui.band = function (el, slug, html) {
+    var s = ui.bySlug(slug);
+    el.style.setProperty('--c', s.accent);
+    el.style.setProperty('--p', s.paper);
+    el.innerHTML = html + '<div class="band-w">' + ui.tile(s, { lazy: true }) + '</div>';
+    ui.wireFootage(el);
+  };
+  var bands = [].slice.call(doc.querySelectorAll('.band'));
+  if (bands.length && !reduce) {
+    var braf = 0,
+      blast = 0;
+    var bstate = bands.map(function () {
+      return 0;
+    });
+    var bframe = function (now) {
+      braf = 0;
+      var dt = Math.min(0.033, (now - blast) / 1000 || 0.016),
+        H = innerHeight,
+        live = false;
+      blast = now;
+      bands.forEach(function (el, i) {
+        var t = Math.min(1, Math.max(0, (H * 1.02 - el.getBoundingClientRect().top) / (H * 0.62)));
+        t = t * t * (3 - 2 * t);
+        bstate[i] += (t - bstate[i]) * (1 - Math.pow(0.002, dt));
+        if (Math.abs(t - bstate[i]) > 0.001) live = true;
+        else bstate[i] = t;
+        el.style.setProperty('--bs', (0.9 + bstate[i] * 0.1).toFixed(4));
+        el.style.setProperty('--bk', (1 - bstate[i]).toFixed(4));
+      });
+      if (live) braf = requestAnimationFrame(bframe);
+    };
+    var bwake = function () {
+      if (!braf) {
+        blast = performance.now();
+        braf = requestAnimationFrame(bframe);
+      }
+    };
+    addEventListener('scroll', bwake, { passive: true });
+    bwake();
+  }
 
   /* The pill's highlight slides to whichever link you are near. */
   var dock = $('.dock'),
@@ -326,61 +491,155 @@
   /* Three price cards, each lettered in its corners like a face card. On a wide screen scroll deals them out of one
      stack into a fan, and a card straightens and lifts when you reach for it. On a phone CSS stacks them instead. */
   ui.priceHand = function (hand) {
-    hand.innerHTML = N.tiers.map(function (t, i) {
-      var pip = t.name.charAt(0);
-      return '<li class="pc pc-' + ['paper', 'blue', 'ink'][i] + '" style="--i:' + i + '"><a href="/deal/prices/#websites" class="pc-face"><span class="pip" aria-hidden="true">' + pip + '</span><span class="pip flip" aria-hidden="true">' + pip + '</span><h3 class="label">' + t.name + '</h3><strong>' + t.from + '</strong><span class="pc-who">Starting price.<br>' + t.who + '.</span></a></li>';
-    }).join('');
-    var wide = matchMedia('(min-width:52.01rem)'), raf = 0, last = 0;
+    hand.innerHTML = N.tiers
+      .map(function (t, i) {
+        var pip = t.name.charAt(0);
+        return (
+          '<li class="pc pc-' +
+          ['paper', 'blue', 'ink'][i] +
+          '" style="--i:' +
+          i +
+          '"><a href="/deal/prices/#websites" class="pc-face"><span class="pip" aria-hidden="true">' +
+          pip +
+          '</span><span class="pip flip" aria-hidden="true">' +
+          pip +
+          '</span><h3 class="label">' +
+          t.name +
+          '</h3><strong>' +
+          t.from +
+          '</strong><span class="pc-who">Starting price.<br>' +
+          t.who +
+          '.</span></a></li>'
+        );
+      })
+      .join('');
+    var wide = matchMedia('(min-width:52.01rem)'),
+      raf = 0,
+      last = 0;
     var cards = [].slice.call(hand.children).map(function (li, i) {
-      return { li: li, i: i, d: i - 1, deal: ui.spring(120, 15, 0), lift: ui.spring(240, 19, 0), on: 0 };
+      return {
+        li: li,
+        i: i,
+        d: i - 1,
+        deal: ui.spring(120, 15, 0),
+        lift: ui.spring(240, 19, 0),
+        on: 0,
+      };
     });
-    function wake() { if (!raf && !reduce && wide.matches) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+    function wake() {
+      if (!raf && !reduce && wide.matches) {
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    }
     function frame(now) {
       raf = 0;
-      var dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
-      var r = hand.getBoundingClientRect(), live = false, cw = cards[0].li.offsetWidth;
+      var dt = Math.min(0.033, (now - last) / 1000 || 0.016);
+      last = now;
+      var r = hand.getBoundingClientRect(),
+        live = false,
+        cw = cards[0].li.offsetWidth;
       var p = Math.min(1, Math.max(0, (innerHeight * 0.92 - r.top) / (r.height * 0.72)));
       cards.forEach(function (c) {
         var tgt = Math.min(1, Math.max(0, (p - (c.i === 1 ? 0 : 0.1)) / 0.9));
         tgt = tgt * tgt * (3 - 2 * tgt);
-        if (c.deal.step(tgt, dt)) live = true; else { c.deal.x = tgt; c.deal.v = 0; }
-        if (c.lift.step(c.on, dt)) live = true; else { c.lift.x = c.on; c.lift.v = 0; }
-        var v = c.deal.x, l = c.lift.x, k = 1 - v;
-        var x = -c.d * cw * 0.86 * k, y = (c.d === 0 ? -14 : 8) * v + 60 * k - l * 26, rot = c.d * 6 * v * (1 - l) + c.d * 1.5 * k;
-        c.li.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) rotate(' + rot.toFixed(3) + 'deg) scale(' + (1 + l * 0.035).toFixed(4) + ')';
+        if (c.deal.step(tgt, dt)) live = true;
+        else {
+          c.deal.x = tgt;
+          c.deal.v = 0;
+        }
+        if (c.lift.step(c.on, dt)) live = true;
+        else {
+          c.lift.x = c.on;
+          c.lift.v = 0;
+        }
+        var v = c.deal.x,
+          l = c.lift.x,
+          k = 1 - v;
+        var x = -c.d * cw * 0.86 * k,
+          y = (c.d === 0 ? -14 : 8) * v + 60 * k - l * 26,
+          rot = c.d * 6 * v * (1 - l) + c.d * 1.5 * k;
+        c.li.style.transform =
+          'translate3d(' +
+          x.toFixed(2) +
+          'px,' +
+          y.toFixed(2) +
+          'px,0) rotate(' +
+          rot.toFixed(3) +
+          'deg) scale(' +
+          (1 + l * 0.035).toFixed(4) +
+          ')';
         c.li.style.zIndex = c.on ? 5 : c.d === 0 ? 2 : 1;
       });
       if (live) raf = requestAnimationFrame(frame);
     }
     cards.forEach(function (c) {
-      c.li.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { c.on = 1; wake(); } });
-      c.li.addEventListener('pointerleave', function () { c.on = 0; wake(); });
-      c.li.addEventListener('focusin', function (e) { if (e.target.matches(':focus-visible')) { c.on = 1; wake(); } });
-      c.li.addEventListener('focusout', function () { c.on = 0; wake(); });
+      c.li.addEventListener('pointerenter', function (e) {
+        if (e.pointerType === 'mouse') {
+          c.on = 1;
+          wake();
+        }
+      });
+      c.li.addEventListener('pointerleave', function () {
+        c.on = 0;
+        wake();
+      });
+      c.li.addEventListener('focusin', function (e) {
+        if (e.target.matches(':focus-visible')) {
+          c.on = 1;
+          wake();
+        }
+      });
+      c.li.addEventListener('focusout', function () {
+        c.on = 0;
+        wake();
+      });
     });
     addEventListener('scroll', wake, { passive: true });
     addEventListener('resize', function () {
       if (wide.matches) wake();
-      else cards.forEach(function (c) { c.li.style.transform = ''; c.li.style.zIndex = ''; });
+      else
+        cards.forEach(function (c) {
+          c.li.style.transform = '';
+          c.li.style.zIndex = '';
+        });
     });
     wake();
   };
 
   /* A big heading picks up weight as you scroll to it, thin to heavy, so "pull their weight" happens to the type. */
-  var weighs = [].map.call(doc.querySelectorAll('[data-weigh]'), function (el) { return { el: el, g: 200, shown: 0 }; });
+  var weighs = [].map.call(doc.querySelectorAll('[data-weigh]'), function (el) {
+    return { el: el, g: 200, shown: 0 };
+  });
   if (weighs.length && !reduce) {
-    var wraf = 0, wlast = 0;
-    var wwake = function () { if (!wraf) { wlast = performance.now(); wraf = requestAnimationFrame(wframe); } };
+    var wraf = 0,
+      wlast = 0;
+    var wwake = function () {
+      if (!wraf) {
+        wlast = performance.now();
+        wraf = requestAnimationFrame(wframe);
+      }
+    };
     var wframe = function (now) {
       wraf = 0;
-      var dt = Math.min(0.033, (now - wlast) / 1000 || 0.016), H = innerHeight, live = false; wlast = now;
+      var dt = Math.min(0.033, (now - wlast) / 1000 || 0.016),
+        H = innerHeight,
+        live = false;
+      wlast = now;
       weighs.forEach(function (w) {
-        var p = Math.min(1, Math.max(0, (H * 1.02 - w.el.getBoundingClientRect().top) / (H * 0.72)));
+        var p = Math.min(
+          1,
+          Math.max(0, (H * 1.02 - w.el.getBoundingClientRect().top) / (H * 0.72)),
+        );
         var t = 200 + 500 * p * p * (3 - 2 * p);
         w.g += (t - w.g) * (1 - Math.pow(0.0015, dt));
-        if (Math.abs(t - w.g) > 0.8) live = true; else w.g = t;
+        if (Math.abs(t - w.g) > 0.8) live = true;
+        else w.g = t;
         var n = Math.round(w.g);
-        if (n !== w.shown) { w.shown = n; w.el.style.fontWeight = n; }
+        if (n !== w.shown) {
+          w.shown = n;
+          w.el.style.fontWeight = n;
+        }
       });
       if (live) wraf = requestAnimationFrame(wframe);
     };

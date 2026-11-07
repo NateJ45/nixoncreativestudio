@@ -1,65 +1,301 @@
 /* About: the portrait is a print you can lift; a hand of client windows opens behind it as you read. */
-.ab{--pw:min(29vw,44vh,30rem);position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,47%);gap:clamp(2rem,4vw,4.5rem);align-items:start;max-width:90rem;margin:0 auto;padding:0 var(--gut) clamp(4.5rem,11vh,7.5rem)}
-.ab-text{padding:clamp(6rem,15vh,9.5rem) 0 0;min-width:0}
-.ab-head h1{max-width:none;font-size:clamp(2.25rem,4.7vw,5.25rem);line-height:1.02}
-.ab-head .lede{max-width:38rem;margin-top:clamp(1.25rem,2.6vh,1.75rem);color:var(--soft);font-size:clamp(1.0625rem,1.35vw,1.25rem);line-height:1.45}
-.ab-stage-slot{display:none}
-.story{max-width:38rem;margin-top:clamp(4rem,12vh,7rem);font-size:1.125rem;line-height:1.6}
-.story h2{font-size:clamp(2rem,3.6vw,3.5rem);margin-bottom:1.25rem}
-.story p+p{margin-top:1.15rem}
-
-.ab-stage{position:sticky;top:max(1.5rem,calc((100vh - var(--pw)*1.92)/2));height:calc(var(--pw)*1.92);margin-top:clamp(3.5rem,7vh,5rem)}
-.fan-wins .tile{position:absolute;left:50%;top:calc(var(--pw)*.42);width:calc(var(--pw)*.5);margin-left:calc(var(--pw)*-.25)}
-.tile:focus-visible{border-radius:1.5rem;outline-offset:2px}
-.pcard{position:absolute;left:50%;bottom:0;z-index:20;width:var(--pw);margin:0 0 0 calc(var(--pw)*-.5);padding:.6rem .6rem 0;border-radius:1.75rem;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08),0 calc(26px + var(--lift,0)*34px) calc(50px + var(--lift,0)*40px) calc(-24px - var(--lift,0)*6px) rgba(0,0,0,calc(.42 + var(--lift,0)*.14));transform-origin:50% 50%;will-change:transform}
-.js .pcard{cursor:grab;touch-action:pan-y;-webkit-user-select:none;user-select:none}
-.js .pcard.held{cursor:grabbing}
-.pcard img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:1.25rem;-webkit-user-drag:none}
-.pcard figcaption{display:flex;align-items:center;min-height:2.9rem;padding:.45rem .55rem .55rem;font-size:.9375rem;line-height:1.2;color:var(--soft)}
-
-.ab-sec{padding-top:0;max-width:90rem;margin:0 auto}
-.dodont{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(.75rem,1.4vw,1.25rem)}
-.dodont .card{padding:clamp(1.5rem,2.6vw,2.5rem)}
-.dodont h3{font-size:clamp(1.75rem,2.6vw,2.5rem);font-weight:600}
-.dodont ul{margin:clamp(1.25rem,2vw,1.75rem) 0 0;padding:0;list-style:none;font-size:1.125rem;line-height:1.4}
-.dodont li+li{margin-top:.95rem}
-.tools{max-width:44rem;margin-top:clamp(1.5rem,3vw,2.25rem);color:var(--soft)}
-.tools a{color:var(--ink);font-weight:500;text-underline-offset:.15em}
-
-.says{display:grid;gap:clamp(3rem,7vw,6rem);max-width:70rem;margin:clamp(1.5rem,3vw,2.5rem) auto 0}
-.say{display:grid;grid-template-columns:clamp(9rem,17vw,14.5rem) minmax(0,1fr);gap:clamp(1.5rem,5vw,5rem);align-items:center}
-.say:nth-child(even){grid-template-columns:minmax(0,1fr) clamp(9rem,17vw,14.5rem)}
-.say:nth-child(even) .say-tile{order:2}
-.say-tile .tile{transition:transform .6s cubic-bezier(.3,1.5,.5,1)}
-.say:nth-child(odd) .say-tile .tile{transform:rotate(-2deg)}
-.say:nth-child(even) .say-tile .tile{transform:rotate(2deg)}
-.say .say-tile .tile:hover,.say .say-tile .tile:focus-visible{transform:rotate(0) scale(1.025)}
-.say blockquote{font-size:clamp(1.375rem,2.5vw,2.25rem);line-height:1.17}
-.say .cite{display:block;margin-top:1.1rem;color:var(--soft);font-size:1rem;line-height:1.4}
-.say .cite b{display:block;color:var(--ink);font-weight:600}
-.say .ctx{display:block;margin-top:.35rem;font-size:.9375rem}
-
-@media (max-width:60rem){
-  .ab{--pw:min(66vw,24rem);display:block}
-  .ab-head h1{font-size:clamp(2.25rem,9vw,4.5rem)}
-  .js .ab-stage-slot{display:block;height:calc(var(--pw)*1.92 + 1.5rem);margin-top:2rem}
-  .js .ab-stage{position:absolute;left:0;right:0;top:0;height:calc(var(--pw)*1.92 + 1.5rem);margin:0}
-  html:not(.js) .ab-stage{position:static;height:auto;margin:0}
-  html:not(.js) .pcard{position:static;margin:2.5rem auto 0}
-  .story{margin-top:clamp(3rem,8vh,5rem)}
-  .dodont{grid-template-columns:minmax(0,1fr)}
+.ab {
+  --pw: min(29vw, 44vh, 30rem);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 47%);
+  gap: clamp(2rem, 4vw, 4.5rem);
+  align-items: start;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 var(--gut) clamp(4.5rem, 11vh, 7.5rem);
 }
-@media (max-width:36rem){
-  .say,.say:nth-child(even){grid-template-columns:minmax(0,1fr)}
-  .say-tile{width:min(58vw,13rem)}
-  .say:nth-child(even) .say-tile{order:0;justify-self:end}
+.ab-text {
+  padding: clamp(6rem, 15vh, 9.5rem) 0 0;
+  min-width: 0;
 }
-@media (prefers-reduced-motion:reduce){.say-tile .tile{transition:none}.js .pcard{cursor:default;touch-action:auto}}
+.ab-head h1 {
+  max-width: none;
+  font-size: clamp(2.25rem, 4.7vw, 5.25rem);
+  line-height: 1.02;
+}
+.ab-head .lede {
+  max-width: 38rem;
+  margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.45;
+}
+.ab-stage-slot {
+  display: none;
+}
+.story {
+  max-width: 38rem;
+  margin-top: clamp(4rem, 12vh, 7rem);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.story h2 {
+  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  margin-bottom: 1.25rem;
+}
+.story p + p {
+  margin-top: 1.15rem;
+}
+
+.ab-stage {
+  position: sticky;
+  top: max(1.5rem, calc((100vh - var(--pw) * 1.92) / 2));
+  height: calc(var(--pw) * 1.92);
+  margin-top: clamp(3.5rem, 7vh, 5rem);
+}
+.fan-wins .tile {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--pw) * 0.42);
+  width: calc(var(--pw) * 0.5);
+  margin-left: calc(var(--pw) * -0.25);
+}
+.tile:focus-visible {
+  border-radius: 1.5rem;
+  outline-offset: 2px;
+}
+.pcard {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 20;
+  width: var(--pw);
+  margin: 0 0 0 calc(var(--pw) * -0.5);
+  padding: 0.6rem 0.6rem 0;
+  border-radius: 1.75rem;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 calc(26px + var(--lift, 0) * 34px) calc(50px + var(--lift, 0) * 40px)
+      calc(-24px - var(--lift, 0) * 6px) rgba(0, 0, 0, calc(0.42 + var(--lift, 0) * 0.14));
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.js .pcard {
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.js .pcard.held {
+  cursor: grabbing;
+}
+.pcard img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  border-radius: 1.25rem;
+  -webkit-user-drag: none;
+}
+.pcard figcaption {
+  display: flex;
+  align-items: center;
+  min-height: 2.9rem;
+  padding: 0.45rem 0.55rem 0.55rem;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  color: var(--soft);
+}
+
+.ab-sec {
+  padding-top: 0;
+  max-width: 90rem;
+  margin: 0 auto;
+}
+.dodont {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.4vw, 1.25rem);
+}
+.dodont .card {
+  padding: clamp(1.5rem, 2.6vw, 2.5rem);
+}
+.dodont h3 {
+  font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+  font-weight: 600;
+}
+.dodont ul {
+  margin: clamp(1.25rem, 2vw, 1.75rem) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+.dodont li + li {
+  margin-top: 0.95rem;
+}
+.tools {
+  max-width: 44rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  color: var(--soft);
+}
+.tools a {
+  color: var(--ink);
+  font-weight: 500;
+  text-underline-offset: 0.15em;
+}
+
+.says {
+  display: grid;
+  gap: clamp(3rem, 7vw, 6rem);
+  max-width: 70rem;
+  margin: clamp(1.5rem, 3vw, 2.5rem) auto 0;
+}
+.say {
+  display: grid;
+  grid-template-columns: clamp(9rem, 17vw, 14.5rem) minmax(0, 1fr);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  align-items: center;
+}
+.say:nth-child(even) {
+  grid-template-columns: minmax(0, 1fr) clamp(9rem, 17vw, 14.5rem);
+}
+.say:nth-child(even) .say-tile {
+  order: 2;
+}
+.say-tile .tile {
+  transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.say:nth-child(odd) .say-tile .tile {
+  transform: rotate(-2deg);
+}
+.say:nth-child(even) .say-tile .tile {
+  transform: rotate(2deg);
+}
+.say .say-tile .tile:hover,
+.say .say-tile .tile:focus-visible {
+  transform: rotate(0) scale(1.025);
+}
+.say blockquote {
+  font-size: clamp(1.375rem, 2.5vw, 2.25rem);
+  line-height: 1.17;
+}
+.say .cite {
+  display: block;
+  margin-top: 1.1rem;
+  color: var(--soft);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.say .cite b {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+.say .ctx {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 60rem) {
+  .ab {
+    --pw: min(66vw, 24rem);
+    display: block;
+  }
+  .ab-head h1 {
+    font-size: clamp(2.25rem, 9vw, 4.5rem);
+  }
+  .js .ab-stage-slot {
+    display: block;
+    height: calc(var(--pw) * 1.92 + 1.5rem);
+    margin-top: 2rem;
+  }
+  .js .ab-stage {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: calc(var(--pw) * 1.92 + 1.5rem);
+    margin: 0;
+  }
+  html:not(.js) .ab-stage {
+    position: static;
+    height: auto;
+    margin: 0;
+  }
+  html:not(.js) .pcard {
+    position: static;
+    margin: 2.5rem auto 0;
+  }
+  .story {
+    margin-top: clamp(3rem, 8vh, 5rem);
+  }
+  .dodont {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 36rem) {
+  .say,
+  .say:nth-child(even) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .say-tile {
+    width: min(58vw, 13rem);
+  }
+  .say:nth-child(even) .say-tile {
+    order: 0;
+    justify-self: end;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .say-tile .tile {
+    transition: none;
+  }
+  .js .pcard {
+    cursor: default;
+    touch-action: auto;
+  }
+}
 
 /* Two cards from the deck: what I do on paper, what I don't on ink. */
-.dodont .do-card { --cardr: 1.5rem; --pipx: clamp(1.5rem, 2.6vw, 2.5rem); --pipy: 1.1rem; --pips: 1.875rem; border-radius: var(--cardr); padding-top: 4rem; padding-bottom: 4rem; box-shadow: 0 0 0 1px rgba(18, 18, 17, 0.08), 0 1px 2px rgba(0, 0, 0, 0.08), 0 26px 44px -22px rgba(0, 0, 0, 0.42); transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1); }
-.dodont .do-card:nth-child(1) { transform: rotate(-0.4deg); }
-.dodont .do-card:nth-child(2) { transform: rotate(0.4deg); }
-.dodont .do-card:hover { transform: translateY(-6px); }
-.do-ink { background: var(--ink); color: #fff; }
-@media (prefers-reduced-motion: reduce) { .dodont .do-card { transition: none; } }
+.dodont .do-card {
+  --cardr: 1.5rem;
+  --pipx: clamp(1.5rem, 2.6vw, 2.5rem);
+  --pipy: 1.1rem;
+  --pips: 1.875rem;
+  border-radius: var(--cardr);
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 26px 44px -22px rgba(0, 0, 0, 0.42);
+  transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.dodont .do-card:nth-child(1) {
+  transform: rotate(-0.4deg);
+}
+.dodont .do-card:nth-child(2) {
+  transform: rotate(0.4deg);
+}
+.dodont .do-card:hover {
+  transform: translateY(-6px);
+}
+.do-ink {
+  background: var(--ink);
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dodont .do-card {
+    transition: none;
+  }
+}
+
+.says {
+  gap: clamp(6rem, 11vw, 10rem);
+  max-width: none;
+  margin-top: clamp(4rem, 7vw, 6rem);
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+.ab-sec:has(.says) {
+  padding-bottom: clamp(5rem, 9vw, 8rem);
+}

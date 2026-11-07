@@ -1283,25 +1283,390 @@ h1 b,
 }
 
 /* A giant line takes its size from the words in it: --fit on a wide screen, --fitm on a phone, both in cqw. */
-.giant { font-size: calc(var(--fit, 17) * 1cqw); }
-.big .giant .w { display: inline-block; }
-h1.giant { font-weight: 500; max-width: none; }
-h1.giant b { font-weight: 700; }
+.giant {
+  font-size: calc(var(--fit, 17) * 1cqw);
+}
+.big .giant .w {
+  display: inline-block;
+}
+h1.giant {
+  font-weight: 500;
+  max-width: none;
+}
+h1.giant b {
+  font-weight: 700;
+}
 @media (max-width: 52rem) {
-  .giant { font-size: calc(var(--fitm, 27) * 1cqw); }
+  .giant {
+    font-size: calc(var(--fitm, 27) * 1cqw);
+  }
   .big .giant > span,
-  .big .giant > b { display: block; white-space: nowrap; }
+  .big .giant > b {
+    display: block;
+    white-space: nowrap;
+  }
 }
 .wrap .ledger,
-.ab-sec .ledger { max-width: none; }
-.ledger a { color: var(--ink); text-underline-offset: 0.2em; }
-.ledger-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem clamp(1.5rem, 3vw, 3rem); margin-bottom: 0; }
-.ledger-facts dt { margin-bottom: 0.3rem; color: var(--ink); }
-.ledger-facts dd { margin: 0; color: var(--soft); }
-@media (max-width: 40rem) { .ledger-facts { grid-template-columns: minmax(0, 1fr); } }
-.sheet .meta { font: 500 0.8125rem/1.25 var(--body); letter-spacing: 0.07em; text-transform: uppercase; }
+.ab-sec .ledger {
+  max-width: none;
+}
+.ledger a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+.ledger-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem clamp(1.5rem, 3vw, 3rem);
+  margin-bottom: 0;
+}
+.ledger-facts dt {
+  margin-bottom: 0.3rem;
+  color: var(--ink);
+}
+.ledger-facts dd {
+  margin: 0;
+  color: var(--soft);
+}
+@media (max-width: 40rem) {
+  .ledger-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.sheet .meta {
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
 
-.page-head h1.giant { font-size: calc(var(--fit, 17) * 1cqw); }
+.page-head h1.giant {
+  font-size: calc(var(--fit, 17) * 1cqw);
+}
 @media (max-width: 52rem) {
-  .page-head h1.giant { font-size: calc(var(--fitm, 27) * 1cqw); }
+  .page-head h1.giant {
+    font-size: calc(var(--fitm, 27) * 1cqw);
+  }
+}
+
+/* A quote band: one client's color, with their phone breaking out of it. The only full-width color besides the closing. */
+.band {
+  --bs: 1;
+  --bk: 0;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(11rem, 18vw, 16.5rem);
+  gap: clamp(2rem, 6vw, 6.5rem);
+  align-items: center;
+  padding: clamp(3rem, 7vw, 6.5rem) clamp(1.5rem, 6vw, 6.5rem);
+  color: var(--p);
+}
+.band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 1.75rem;
+  background: var(--c);
+  transform: scale(var(--bs));
+}
+.band .label {
+  margin-bottom: 1.25rem;
+  color: var(--p);
+}
+.band blockquote {
+  font: 500 clamp(1.625rem, 3vw, 3.125rem)/1.14 var(--display);
+  letter-spacing: -0.03em;
+  text-wrap: pretty;
+}
+.band .cite {
+  display: block;
+  margin-top: 1.5rem;
+  color: var(--p);
+  font: 400 1rem/1.4 var(--body);
+  text-align: left;
+}
+.band .cite b {
+  display: block;
+  color: var(--p);
+  font-weight: 600;
+}
+.band .ctx {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.9375rem;
+}
+.band-w {
+  margin-block: clamp(-7rem, -7vw, -3.5rem);
+  transform: rotate(calc(3deg + var(--bk) * 9deg)) translateY(calc(var(--bk) * 3rem));
+}
+.band-w .tile {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 40px 70px -24px rgba(0, 0, 0, 0.65);
+  transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.band-w .tile:hover,
+.band-w .tile:focus-visible {
+  transform: rotate(-3deg) scale(1.03);
+}
+.band-flip {
+  grid-template-columns: clamp(11rem, 18vw, 16.5rem) minmax(0, 1fr);
+}
+.band-flip .band-w {
+  order: -1;
+  transform: rotate(calc(-3deg - var(--bk) * 9deg)) translateY(calc(var(--bk) * 3rem));
+}
+.band-flip .band-w .tile:hover,
+.band-flip .band-w .tile:focus-visible {
+  transform: rotate(3deg) scale(1.03);
+}
+.home-band {
+  margin: clamp(5rem, 11vw, 9rem) clamp(0.5rem, 1.2vw, 1rem);
+}
+@media (max-width: 52rem) {
+  .band,
+  .band-flip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.25rem;
+    padding-bottom: 0;
+  }
+  .band-w,
+  .band-flip .band-w {
+    order: 2;
+    justify-self: center;
+    width: min(58vw, 14rem);
+    margin-block: 0 -3.5rem;
+  }
+  .home-band {
+    margin-bottom: 7rem;
+  }
+}
+
+/* The closing: the studio's color, edge to edge, down to the bottom of the page. */
+.end {
+  position: relative;
+  margin: 0;
+  padding: clamp(1.1rem, 2vw, 1.75rem) var(--gut) clamp(5.5rem, 7vw, 6.25rem);
+  border-radius: 1.75rem 1.75rem 0 0;
+  overflow: clip;
+  text-align: left;
+}
+.end-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.end-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+}
+.end-live i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 0.22rem rgba(255, 255, 255, 0.24);
+}
+.end-main {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: center;
+  padding-block: clamp(3rem, 8vh, 6rem);
+}
+.end h2 {
+  font-size: clamp(2.75rem, 5.8vw, 6.25rem);
+  line-height: 1;
+  text-align: left;
+}
+.end .end-say > p {
+  max-width: 33rem;
+  margin: 1.25rem 0 0;
+  color: #fff;
+}
+.end-links {
+  justify-content: flex-start;
+}
+.gather {
+  --gw: clamp(9.5rem, 15vw, 14.5rem);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  height: calc(var(--gw) * 2.02 + 2.5rem);
+}
+.gather-deck {
+  position: absolute;
+  inset: 0;
+}
+.gc {
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  width: var(--gw);
+  margin-left: calc(var(--gw) / -2);
+  aspect-ratio: 9/18.2;
+  padding: 9% 0 7%;
+  border-radius: clamp(1rem, 1.7vw, 1.6rem);
+  background: var(--c);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.14),
+    0 22px 36px -22px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+.gc img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  background: #fff;
+}
+.nine {
+  --cardr: clamp(1rem, 1.7vw, 1.6rem);
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--gw);
+  margin-left: calc(var(--gw) / -2);
+  aspect-ratio: 9/18.2;
+  border-radius: var(--cardr);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  container-type: inline-size;
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 30px 50px -22px rgba(0, 0, 0, 0.6);
+  transform-origin: 50% 90%;
+  will-change: transform;
+  --pipx: 8cqw;
+  --pipy: 7cqw;
+  --pips: 13cqw;
+}
+.nine::after {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: calc(var(--cardr) - 0.45rem);
+  opacity: 0.13;
+  pointer-events: none;
+}
+.nine .label {
+  font-size: clamp(0.75rem, 5.6cqw, 0.8125rem);
+  text-align: center;
+}
+.nine strong {
+  display: block;
+  margin-top: 3cqw;
+  font: 700 24cqw/1 var(--display);
+  letter-spacing: -0.05em;
+  color: var(--accent);
+}
+.nine:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.end-name {
+  container-type: inline-size;
+  margin-top: clamp(0.5rem, 2vh, 1.5rem);
+}
+.end .end-name p {
+  max-width: none;
+  margin: 0;
+  color: #fff;
+  font: 500 10.4cqw/0.95 var(--display);
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+.end .end-name b {
+  font-weight: 700;
+}
+.end .legal {
+  justify-content: flex-start;
+  margin-top: 1rem;
+  color: #fff;
+}
+.end .legal a {
+  color: #fff;
+}
+@media (max-width: 52rem) {
+  .end-main {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 2.5rem 1.5rem;
+  }
+  .gather {
+    --gw: min(36vw, 9.5rem);
+    margin-top: 1rem;
+  }
+  .end .end-name p {
+    font-size: 26cqw;
+    line-height: 0.92;
+    white-space: normal;
+  }
+  .end .end-name b,
+  .end .end-name span {
+    display: block;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc,
+  .nine {
+    will-change: auto;
+  }
+  .band-w .tile {
+    transition: none;
+  }
+}
+
+/* The phone is taller than its band on purpose, so it breaks out top and bottom. */
+.band {
+  grid-template-columns: minmax(0, 1fr) clamp(13rem, 21vw, 19.5rem);
+}
+.band-flip {
+  grid-template-columns: clamp(13rem, 21vw, 19.5rem) minmax(0, 1fr);
+}
+.band-w {
+  margin-block: clamp(-9rem, -9vw, -4rem);
+}
+.end .end-name p {
+  font-size: 11.3cqw;
+}
+@media (max-width: 52rem) {
+  .band,
+  .band-flip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .band-w,
+  .band-flip .band-w {
+    margin-block: 0 -3.5rem;
+  }
+  .end .end-name p {
+    font-size: 26cqw;
+  }
+}
+@media (min-width: 52.01rem) {
+  .band {
+    grid-template-columns: minmax(0, 1fr) clamp(14rem, 23vw, 21rem);
+    padding-block: clamp(2.25rem, 3.8vw, 3.5rem);
+  }
+  .band-flip {
+    grid-template-columns: clamp(14rem, 23vw, 21rem) minmax(0, 1fr);
+  }
+  .band blockquote {
+    font-size: clamp(1.5rem, 2.5vw, 2.625rem);
+  }
 }

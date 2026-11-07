@@ -59,8 +59,17 @@
     })
     .join('');
 
-  $('[data-quote]').textContent = N.quote.text;
-  $('[data-cite]').innerHTML = '<b>' + N.quote.by + '</b>' + N.quote.role;
+  ui.band(
+    $('[data-band]'),
+    'theology-matters',
+    '<div class="band-t"><p class="label">In their words</p><blockquote>' +
+      N.quote.text +
+      '</blockquote><p class="cite"><b>' +
+      N.quote.by +
+      '</b>' +
+      N.quote.role +
+      '</p></div>',
+  );
 
   var grid = $('[data-grid]');
   grid.innerHTML = N.sites
