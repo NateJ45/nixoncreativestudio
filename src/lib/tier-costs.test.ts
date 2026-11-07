@@ -23,12 +23,12 @@ test('the three published rows', () => {
     r.fiveYears,
   ]);
   assert.deepEqual(rows, [
-    ['Launch', 'Light Care', 5000, 6656, 8312],
-    ['Signature', 'Care', 9000, 12576, 16152],
-    ['Flagship', 'Care+', 18000, 25176, 32352],
+    ['Launch', 'Light Care', 3500, 4916, 6332],
+    ['Signature', 'Care', 6500, 9596, 12692],
+    ['Flagship', 'Care+', 12500, 18716, 24932],
   ]);
 });
 
 test('Launch on Hosting alone for five years', () => {
-  assert.equal(hostingOnlyFiveYears(webTiers[0]), 5720);
+  assert.equal(hostingOnlyFiveYears(webTiers[0]), 4300);
 });

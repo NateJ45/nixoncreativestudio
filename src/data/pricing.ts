@@ -11,7 +11,7 @@
    like 'from $900', dollars() (src/lib/money.ts).
 
    The numbers reflect the 2026 market for an agency-grade solo studio:
-   Launch from $5,000, Signature from $9,000, Flagship from $18,000, plus the
+   Launch from $3,500, Signature from $6,500, Flagship from $12,500, plus the
    add-ons. If a number changes here, also
    update the strategy doc (outside this repo). Keep the dollar amounts in the
    display strings (price, range, time) written as '$1,234': the JSON-LD and
@@ -54,10 +54,10 @@ export interface WebTier {
 export const webTiers: WebTier[] = [
   {
     name: 'Launch',
-    priceFrom: 5000,
+    priceFrom: 3500,
     priceSuffix: '+',
     who: 'You keep the essentials current',
-    range: 'Expect $5,000 to $8,000',
+    range: 'Expect $3,500 to $6,000',
     fits: 'A smaller organization where one busy person keeps the site current. You want the essential pages done well, and you would rather not call anyone to change a date.',
     responsible:
       'I plan, design and build your core pages, set up an editor simple enough for one person, and write the guide they will use.',
@@ -72,10 +72,10 @@ export const webTiers: WebTier[] = [
   },
   {
     name: 'Signature',
-    priceFrom: 9000,
+    priceFrom: 6500,
     priceSuffix: '+',
     who: 'Your team runs it',
-    range: 'Expect $9,000 to $15,000',
+    range: 'Expect $6,500 to $11,000',
     fits: 'A staff or volunteer team who will run the site themselves, across several kinds of content, and who expect people to come and go.',
     responsible:
       'I plan and build a larger site, set up the editor around the people using it so a new volunteer can find their way without a phone call, and set up tracking for what matters to you.',
@@ -91,10 +91,10 @@ export const webTiers: WebTier[] = [
   },
   {
     name: 'Flagship',
-    priceFrom: 18000,
+    priceFrom: 12500,
     priceSuffix: '+',
     who: 'The site does real work',
-    range: 'Quoted from $18,000, by scope',
+    range: 'Quoted from $12,500, by scope',
     fits: 'An organization whose site has to do real work: a custom tool, a staff workflow, a connection to systems you already use, or reports a board can actually read. If none of that is you, this is more than you need.',
     responsible:
       'I design and build the tools, map the workflows around how your staff work, connect the systems, build the reporting, and quote the care those tools will need.',
@@ -169,12 +169,13 @@ export interface CarePlan {
 export const carePlans: CarePlan[] = [
   {
     name: 'Hosting',
-    price: '$180',
+    price: '$200',
     period: '/yr',
     who: 'For an organization that edits everything itself.',
     time: 'No edits included; changes at $100 an hour',
     features: [
       'Fast, secure hosting',
+      'Software and security updates',
       'Uptime monitoring, every 15 minutes',
       'Daily backups',
       'Domain and security renewals handled',
@@ -182,19 +183,15 @@ export const carePlans: CarePlan[] = [
   },
   {
     name: 'Light Care',
-    price: '$69',
+    price: '$59',
     period: '/mo',
     who: 'For a quick change now and then.',
     time: '30 minutes of edits each month',
-    features: [
-      'Everything in Hosting',
-      'Software and security updates',
-      'Email replies within 2 business days',
-    ],
+    features: ['Everything in Hosting', 'Email replies within 2 business days'],
   },
   {
     name: 'Care',
-    price: '$149',
+    price: '$129',
     period: '/mo',
     who: 'For peace of mind as the site grows.',
     time: '1 hour of edits and fixes each month',
@@ -208,7 +205,7 @@ export const carePlans: CarePlan[] = [
   },
   {
     name: 'Care+',
-    price: '$299',
+    price: '$259',
     period: '/mo',
     who: 'For an organization that wants a web partner.',
     time: '3 hours of content help each month',

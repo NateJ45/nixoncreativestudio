@@ -48,7 +48,7 @@ test.describe('Without JavaScript', () => {
     await expect(page.locator('[data-ledger] li').first()).toHaveText('Since 2020');
     await expect(page.locator('.band blockquote')).toHaveCount(1);
     await expect(page.locator('[data-prices] li')).toHaveCount(3);
-    await expect(page.locator('[data-prices] strong').first()).toHaveText('$5,000');
+    await expect(page.locator('[data-prices] strong').first()).toHaveText('$3,500');
     await expect(page.locator('h1')).toHaveAttribute(
       'aria-label',
       'I build websites that pull their weight.',
