@@ -1,8 +1,8 @@
 ---
 /* /colophon: must stay true of the code: fonts, hosting, analytics, colors. */
+import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/legal.css';
 import '../styles/pages/colophon.css';
-import BaseLayout from '../layouts/BaseLayout.astro';
 import Closing from '../components/Closing.astro';
 import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
@@ -17,27 +17,82 @@ const heading = `How this site is <b>made.</b>`;
   title="Colophon: how this site is built | Nixon Creative Studio"
   description="How I built this site: the framework, the hosting, the typefaces, and the accessibility, speed and privacy standards I hold it to before anything ships."
 >
-<header class="page-head"><h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} /><p class="lede">How this site is made, and the standards behind it. Custom-built, so the same care that goes into client work goes into my own.</p><p class="updated">Last updated November 6, 2026</p></header>
-<div class="doc">
-<nav class="toc card" aria-label="On this page"><p>On this page</p><ul><li><a href="#built-with">Built with</a></li><li><a href="#typography">Typography</a></li><li><a href="#color">Color</a></li><li><a href="#accessibility">Accessibility</a></li><li><a href="#performance">Performance</a></li><li><a href="#screenshots">Screenshots</a></li><li><a href="#privacy">Privacy</a></li></ul></nav>
-<div class="prose">
-<h2 id="built-with">Built with</h2>
-<p>Custom-coded in Astro 7 with TypeScript, and deployed to Cloudflare. Every page is built ahead of time as plain HTML, and the case studies are text files that live with the code. No page builder, no stock template, no lock-in.</p>
-<h2 id="typography">Typography</h2>
-<p>Everything is set in Hanken Grotesk, served from this site, not from a font service.</p>
-<h2 id="color">Color</h2>
-<p>A near-white page, near-black ink and one blue of my own, for headlines, buttons, one price card and the closing panel. Every other color on the site is a client's, inside the window, sheet or section that shows their work.</p>
-<h2 id="accessibility">Accessibility</h2>
-<p>Built toward WCAG AA and checked automatically on every deploy. In plain terms: it works with a keyboard and with a screen reader. There is a fuller statement on the <a href="/accessibility/">accessibility page</a>.</p>
-<h2 id="performance">Performance</h2>
-<p>Every page is static HTML, so it stays fast on a phone and a slow connection.</p>
-<h2 id="screenshots">Screenshots</h2>
-<p>Every client site shown here is a real, live site. The screenshots and footage are captured from the live pages by a script that lives with the code, not mocked up.</p>
-<h2 id="privacy">Privacy</h2>
-<p>Two analytics tools: Cloudflare's, which sets no cookies, and Google Analytics, with its advertising features left off. No advertising trackers. The <a href="/privacy/">privacy page</a> lists everything the site collects.</p>
-</div>
-<div class="colo-win" data-colo-win><Tile client={window} lazy /><Caption client={window} /></div></div>
-<Closing lead="Want a site built <b>the same way?</b>" />
+  <header class="page-head">
+    <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+    <p class="lede">
+      How this site is made, and the standards behind it. Custom-built, so the same care that goes
+      into client work goes into my own.
+    </p>
+    <p class="updated">Last updated November 6, 2026</p>
+  </header>
+  <div class="doc">
+    <nav class="toc card" aria-label="On this page">
+      <p>On this page</p>
+      <ul>
+        <li>
+          <a href="#built-with">Built with</a>
+        </li>
+        <li>
+          <a href="#typography">Typography</a>
+        </li>
+        <li>
+          <a href="#color">Color</a>
+        </li>
+        <li>
+          <a href="#accessibility">Accessibility</a>
+        </li>
+        <li>
+          <a href="#performance">Performance</a>
+        </li>
+        <li>
+          <a href="#screenshots">Screenshots</a>
+        </li>
+        <li>
+          <a href="#privacy">Privacy</a>
+        </li>
+      </ul>
+    </nav>
+    <div class="prose">
+      <h2 id="built-with">Built with</h2>
+      <p>
+        Custom-coded in Astro 7 with TypeScript, and deployed to Cloudflare. Every page is built
+        ahead of time as plain HTML, and the case studies are text files that live with the code. No
+        page builder, no stock template, no lock-in.
+      </p>
+      <h2 id="typography">Typography</h2>
+      <p>Everything is set in Hanken Grotesk, served from this site, not from a font service.</p>
+      <h2 id="color">Color</h2>
+      <p>
+        A near-white page, near-black ink and one blue of my own, for headlines, buttons, one price
+        card and the closing panel. Every other color on the site is a client's, inside the window,
+        sheet or section that shows their work.
+      </p>
+      <h2 id="accessibility">Accessibility</h2>
+      <p>
+        Built toward WCAG AA and checked automatically on every deploy. In plain terms: it works
+        with a keyboard and with a screen reader. There is a fuller statement on the{' '}
+        <a href="/accessibility/">accessibility page</a>.
+      </p>
+      <h2 id="performance">Performance</h2>
+      <p>Every page is static HTML, so it stays fast on a phone and a slow connection.</p>
+      <h2 id="screenshots">Screenshots</h2>
+      <p>
+        Every client site shown here is a real, live site. The screenshots and footage are captured
+        from the live pages by a script that lives with the code, not mocked up.
+      </p>
+      <h2 id="privacy">Privacy</h2>
+      <p>
+        Two analytics tools: Cloudflare's, which sets no cookies, and Google Analytics, with its
+        advertising features left off. No advertising trackers. The{' '}
+        <a href="/privacy/">privacy page</a> lists everything the site collects.
+      </p>
+    </div>
+    <div class="colo-win" data-colo-win>
+      <Tile client={window} lazy />
+      <Caption client={window} />
+    </div>
+  </div>
+  <Closing lead="Want a site built <b>the same way?</b>" />
 </BaseLayout>
 
 <script>

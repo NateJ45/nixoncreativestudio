@@ -1,5 +1,7 @@
 # SETUP — bootstrap a new Astro project on this stack
 
+> **Not this site's stack.** This template describes the Tailwind 4, shadcn and React starter stack that the client sites in the family still use (the starter is `internal/ncs-astro-sanity-starter`; the new-site steps are in the vault's `templates/new-project-checklist.md`). The studio's own site left Tailwind, shadcn and React in the November 2026 redesign and now uses plain CSS and plain scripts; see the repo's `CLAUDE.md` and `DESIGN.md`. Read this as a snapshot of the starter, not as a description of this repo.
+
 Step-by-step runbook for spinning up a new site on the same infrastructure as Nixon Creative Studio. Read straight through once before you start so the order makes sense, then follow the steps. Companion architecture doc lives at `CLAUDE.md` next to this file; copy that into the new repo's root once the scaffold is in place.
 
 This runbook assumes you're running on Windows with PowerShell, Node 22+, and Git installed. Every command below works the same on macOS or Linux unless noted.

@@ -38,11 +38,9 @@ test(`/photography/ is ${open ? 'open' : 'gated'} (${photoFiles} photos)`, async
   expect(urls).toContain('/work/');
   expect(urls.includes('/photography/')).toBe(open);
 
-  // Nav: the header and the footer's Studio column (#site-nav) read getNav().
+  // Links: the closing's legal line reads getNav().
   await page.goto('/');
-  const navLinks = page.locator(
-    'header a[href="/photography/"], #site-nav a[href="/photography/"]',
-  );
+  const navLinks = page.locator('[data-end] a[href="/photography/"]');
   if (open) {
     await expect(navLinks.first()).toBeAttached();
   } else {

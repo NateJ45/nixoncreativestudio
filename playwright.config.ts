@@ -13,8 +13,10 @@ import { defineConfig, devices } from '@playwright/test';
 // public route is reachable here. tests/routes.ts lists them.
 // =============================================================================
 
-const PORT = 4321;
-const baseURL = `http://localhost:${PORT}`;
+// PW_PORT: for a machine where another worktree's server already holds 4321 (reuseExistingServer
+// below would otherwise test that other build, silently).
+const PORT = Number(process.env.PW_PORT || 4321);
+const baseURL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: './tests',
@@ -31,9 +33,9 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   // Chromium runs everything. A real WebKit iPhone profile runs the
-  // viewport-agnostic suites (smoke, both axe sweeps, reduced-motion): Safari's engine finds
-  // layout and JS issues Chromium never will, and the WebGL hero and the
-  // React islands are exactly the kind of client code that behaves differently
+  // viewport-agnostic suites (smoke, the axe sweep, reduced-motion): Safari's engine finds
+  // layout and JS issues Chromium never will, and the deck's spring code is exactly the
+  // kind of client code that behaves differently
   // there. reflow.spec.ts drives its own explicit viewport widths
   // (320/768/1024/1440), which fights device emulation, so it is chromium-only.
   projects: [
@@ -43,14 +45,14 @@ export default defineConfig({
       use: { ...devices['iPhone 14'] },
       // reduced-motion added 2026-09-30 (starter PORTS.md card 61): WebKit is the
       // engine that strands a 0.01ms transition, so that is where it must run.
-      testMatch: /(smoke|a11y|a11y-dark|reduced-motion)\.spec\.ts$/,
+      testMatch: /(smoke|a11y|reduced-motion)\.spec\.ts$/,
     },
   ],
   webServer: {
-    command: 'npm run build && npm run serve:dist',
+    command: `npm run build && http-server dist/client -p ${PORT} -s -c-1 --silent`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    // A cold build encodes every image as AVIF and WebP (overhaul 4.4): about two
+    // A cold build can take a couple of
     // minutes on a CI runner before the image cache is warm, so allow five.
     timeout: 300_000,
   },

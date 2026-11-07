@@ -6,79 +6,58 @@ paths:
 
 # Accessibility
 
-Moved out of CLAUDE.md. Loads when anything under `src/` or `tests/` is touched.
+Loads when anything under `src/` or `tests/` is touched.
 
-Target: WCAG 2.1 AA in both light and dark modes. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. Verified with axe-core (WCAG 2.0 A + AA, 2.1 AA) across every page in both themes: zero violations. The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
+Target: WCAG 2.1 AA on the one light theme. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. Verified with axe-core (the default rule set, which includes best-practice and `target-size` checks) on every route by `tests/a11y.spec.ts`, on Chromium and a WebKit iPhone. The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
 
 ## Conformance target is AA, deliberately (not AAA)
 
-AA is the standard for this site, by choice, in line with W3C's own guidance that AAA is not recommended as a blanket requirement for whole sites. AAA is not targeted because a few of its criteria pull against a brand-led design, and the gap is small and intentional, not an oversight:
+AA is the standard for this site, by choice, in line with W3C's own guidance that AAA is not recommended as a blanket requirement for whole sites. The gap is small and intentional:
 
-- **1.4.6 Enhanced contrast (7:1):** the accent-toned tokens clear AA but sit just under 7:1 by design, to keep the NCS-blue identity vivid: `--link` `#2A6FB0` on white (5.25:1), `--muted-foreground` `#5F6573` on white (5.84:1), white-on-`--accent` buttons (~4.7:1), footer sky-on-navy (~6.5:1). Body text and headings already exceed 7:1. Pushing these to 7:1 would mean darkening the brand blues; that trade was declined.
-- **2.5.5 Target Size (44px):** on phones the interactive controls (hamburger, the compact header CTA, mobile-nav close, links, email, Pause motion and theme toggle, back-to-top, copy-email button, before/after handle, footer links and the footer closer email) are sized to the 44px comfort target, so the AAA bar is effectively met on mobile. A few standalone text links (the wordmark, the hero "See the work" link, the footer email link) still size to their text height (24-34px); they clear the AA 24px rule (2.5.8) and the inline-text exception covers links inside prose. A mouse-driven desktop deliberately keeps its tuned compact density: footer link tap-height and copy-email sizing are gated on `pointer: coarse`, so every touch device (phone and tablet, including iPads) gets the 44px targets while a desktop with a mouse stays compact. Gating on input type, not screen width, is what keeps tablets covered.
-- **3.1.5 Reading Level / 2.4.9 Link Purpose (link-only):** confident marketing copy and repeated "Read the case study" links don't meet the AAA bars.
+- **1.4.6 Enhanced contrast (7:1):** body text and headings are far above it. The soft grey (`--soft`, 6.2:1 on the page) and the studio blue on the page (6.5:1) clear AA and sit under 7:1; white on the blue is 7.1:1. Pushing the grey to 7:1 would change the calm of the page, and that trade was declined.
+- **2.5.5 Target size (44px):** the dock links are 44px tall, chips are 48px. A few standalone text links still size to their text height, clearing the AA 24px rule (2.5.8); the inline-text exception covers links inside prose. `scripts/measure-tap-targets.mjs` is the manual 44px check.
+- **3.1.5 Reading level / 2.4.9 Link purpose (link-only):** confident marketing copy and repeated "Read the case study" links do not meet the AAA bars.
 
-If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 large/UI) in both themes; AA is the line that must not regress.
+If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 large text and UI) and update `src/lib/kit-tokens.test.ts`; AA is the line that must not regress.
 
 ## Required patterns
 
-**Landmarks and structure.** `BaseLayout` provides `<header>`, `<main id="main">`, `<footer>`, and a "Skip to main content" link as the first focusable element. Each top-level `<section>` needs an accessible name, via either `aria-labelledby` pointing at its heading (preferred when there's a visible heading) or `aria-label="..."` (for sections without one). When `aria-labelledby` names a heading id, make sure the heading actually carries that id; otherwise the reference points at nothing.
+**Landmarks and structure.** `BaseLayout` provides `<header>` (the top line), `<main id="main">`, the dock `<nav aria-label="Primary">` and a "Skip to content" link as the first focusable element. Each top-level `<section>` needs an accessible name, via `aria-labelledby` pointing at its heading (preferred) or `aria-label`. When `aria-labelledby` names a heading id, make sure the heading actually carries that id.
 
-**Heading hierarchy.** One `<h1>` per page (usually inside the hero). Don't skip levels. Section headings are `<h2>`; subsections inside them are `<h3>`. Heading text describes the content, not its position ("How we work", not "Section 5").
+**Heading hierarchy.** One `<h1>` per page. Don't skip levels. Section headings are `<h2>`, subsections `<h3>`. A page's H1 is word-wrapped for the reveal, so it carries an `aria-label` with the plain sentence; keep the label in step with the visible text. Heading text describes the content, not its position.
 
-**Forms.** Every input gets an associated `<label for="...">`. Use native input types (`email`, `tel`, `url`) and `autocomplete` hints so browsers and password managers help. Required fields get `required`. Error containers get `role="alert"`. The contact form is the working reference pattern: it posts without JavaScript (browser validation on; the script sets `noValidate` and validates itself), groups the budget chips in a `<fieldset>` with real radios, and its "What I'll read" brief card is a plain summary screen readers can reach (`aria-live="off"`, never `aria-hidden`, ruling 17) so it never talks over the field being typed in. After a script submit, focus moves to the success heading.
+**Cards and decoration.** `.pip` corner letters are `aria-hidden`. A `Tile`'s screen (image or video) is `aria-hidden` because the link carries a full label (name, host and hook). Decorative shapes and pseudo-elements are hidden from assistive tech.
 
-**Images.**
+**Forms.** Every input gets an associated `<label>`. Use native input types and `autocomplete` hints. Required fields get `required`. Errors are plain words in an element tied to the field with `aria-describedby`. The contact form is the reference: it works with no JavaScript (the browser validates; the script then sets `noValidate` and validates itself), groups choices in a `<fieldset>` with real radios, announces the question count through a polite live region, and its brief phone is a plain summary that never talks over the field being typed in. After a script submit, focus moves to the success heading. Field focus is an `outline`, not a `box-shadow` (Gotcha 11).
 
-- Content images: descriptive `alt`. "Hero image" / "Image of X" is filler; describe what the image shows.
-- Image immediately adjacent to a heading that names the same thing (card thumbnails, case-study hero below an `h1`): `alt=""`. Empty alt explicitly marks the image decorative so screen readers skip it instead of announcing the title twice.
-- Decorative gradients, shapes, or pseudo-elements: `aria-hidden="true"` on the wrapper.
+**Images.** Content images get a descriptive `alt`; filler like "Hero image" is not alt text. An image beside a heading that names the same thing gets `alt=""`. Give every image its real `width` and `height`.
 
 **Interactive elements.**
 
-- Icon-only buttons and links require `aria-label`. The inlined Lucide SVGs (`ChromeIcon.astro`) are `aria-hidden` and carry no accessible name; the label lives on the wrapper. See `MobileNav.astro`, `ThemeToggle.astro` for the pattern. A modal is a native `<dialog>` opened with `showModal()` (MobileNav, Lightbox), never a hand-rolled overlay.
-- Hover and focus states must not be color-only. Pair color changes with underline, motion, or icon swap.
-- Stick to native interactive elements (`<button>`, `<a>`, `<details>`, `<summary>`) whenever possible. Custom controls take real work to make accessible.
+- A modal is a native `<dialog>` opened with `showModal()` (the client sheet). Focus goes to Back on open and returns to the window that opened it on close.
+- Hover and focus states must not be color-only. Pair color changes with movement, underline or a shape change.
+- Prefer native elements: `<button>`, `<a>`, `<details>`, `<summary>`, `<input type="range">` (the before/after slider and the course line are real range inputs, so arrows, Home and End work).
 
-**Color tokens by responsibility** (definitions and contrast math in `globals.css`):
+**Color and emphasis.** Every pair is a token in `:root` of `kit.css` and is asserted in `src/lib/kit-tokens.test.ts`. A client's pair (`--c` with `--p`) is asserted in `src/lib/case-palettes.test.ts`, and this site's own text color on each client paper is checked too. Emphasis in a heading is weight (a `<b>` at 700 against a 500 lead). Colour alone never marks emphasis. Never thin a colour with opacity to make a grey; use `--soft`.
 
-- `--accent` (`#3478BD` light, `#40AAED` dark): buttons, focus rings, large CTAs. Paired with white text in light mode, navy in dark.
-- `--link` (`#2A6FB0` light, `#40AAED` dark): accent-toned body text (card-link arrows, Process / Services step numbers, prose anchors). Darker than `--accent` in light so body-size text clears AA.
-- `--secondary` (`#40AAED`): the old sky accent. The navy footer no longer uses it: since overhaul 2.1 the footer is `.band-ink`, which re-scopes `--link` to sky.
-- `--muted-foreground` (`#5F6573` light, `#9CA3AF` dark): meta and supporting text on bg-soft surfaces.
-- Surface roles (overhaul 1.5): `--paper`, `--ink` / `--ink-raised`, `--line` (decorative), `--line-strong` (3:1, for any hairline that must be seen), `--frame-ring` (decorative) and `--live` (amber, darkened to `#A85D00` in light mode so "Live" can be text). `.band-ink` re-scopes headings, body, links, meta and focus to light-on-navy values that hold AA in both themes.
+**Forced colors.** Windows High Contrast drops shadows and backgrounds, and a card is drawn with both. `kit.css` gives `.tile`, `.card`, `.pc-face`, `.chip` and `.dock` a real border under `@media (forced-colors: active)`; `tests/forced-colors.spec.ts` checks it. A new surface whose edge is only a shadow joins that list.
 
-Every pair added since overhaul 1.5 is asserted in `src/lib/ncs-tokens.test.ts` (site-owned); `src/lib/theme-tokens.test.ts` is PORTABLE and keeps the older pairs. A new token pair goes in `ncs-tokens.test.ts`, in both themes.
+**Motion.** There is no Pause motion button. Motion stands down under `prefers-reduced-motion: reduce`: the view transition and smooth scroll are off, springs start at rest, footage stays on its poster, the word reveal and the dealt cards show their finished state (`DESIGN.md`, "Motion"). `tests/reduced-motion.spec.ts` checks that nothing is still running 2.5s after load. Footage and clips start only on hover, touch-centre or when scrolled into view, and a clip has its own "Play it" button, so nothing loops on its own for more than five seconds (WCAG 2.2.2).
 
-**Heading emphasis is weight, not colour.** A heavy phrase in a heading is a `<b>` (800 against a 300 lead). Colour alone never marks emphasis, so a reader who cannot see the blue loses nothing, and headings stay in the heading colour.
+**Mobile and safe areas.** The viewport meta carries `viewport-fit=cover`. The dock and the mailto toast add `env(safe-area-inset-bottom)`; a new `position: fixed` element at a screen edge adds the matching inset. Form inputs stay at 16px so iOS doesn't zoom on focus. There is one nav at every width (the dock), so there is no separate mobile menu to test.
 
-**Forced colors.** Windows High Contrast drops shadows and background colours. `globals.css` gives `.frame`, `.band-ink` and `.hairline` a real border or outline under `@media (forced-colors: active)`; `tests/forced-colors.spec.ts` checks one route. A new surface whose edge is only a shadow or a background joins that list.
-
-New tokens or hex literals must clear WCAG AA against every surface they appear on (4.5:1 body text, 3:1 large text and UI components). Run the math in both modes before introducing one.
-
-**Pause motion (WCAG 2.2.2).** Anything that moves on its own for more than five seconds must be stoppable. Every loop carries `data-motion="loop"`, and one site-wide switch stops them all: the "Pause motion" button (`MotionToggle.astro`) in the footer's utility row and the mobile menu (and the hero's Pause button, which sets the same state). Both are real `<button>`s with `aria-pressed` and a constant accessible name ("Pause motion"); the pressed state also swaps the icon and outlines the pill, so it is never colour alone. The choice is remembered on the device (`localStorage["ncs-motion"]`) and applied before first paint, so there is no flash of motion on the next page. While paused, page transitions and the Heft weight animation stand down too. The footer switch is 44px tall everywhere and hidden without JavaScript. `tests/motion-pause.spec.ts` covers all of this.
-
-**Motion.** `globals.css` disables animations (0.01ms, so `animationend` still fires) and transitions (`0s` duration AND delay, since 2026-09-30, starter PORTS.md card 61: a 0.01ms transition on `all` strands in WebKit; so `transitionend` does not fire under reduce) globally under `prefers-reduced-motion: reduce`. New animations inherit this; no per-component handling needed.
-
-**Mobile and safe areas.** The viewport meta carries `viewport-fit=cover` so the navy hero and footer run edge-to-edge into the notch on modern phones. Because of that, content that touches a screen edge must add the matching `env(safe-area-inset-*)`: side insets are handled once in `.ncs-container` (so every page's content clears a landscape notch), and the sticky header, the mobile-nav drawer (`.mnav-shell`), the fixed back-to-top button, and the lightbox close button each add their own top/bottom/side inset. `env()` resolves to 0 on non-notched devices, so these read as the flat base padding everywhere except the phones that need them. If you add a new `position: fixed` element at a screen edge, or remove `viewport-fit=cover`, revisit those insets. Touch targets are sized to 44px on touch devices (see Target Size above); reach for the `pointer-coarse:` variant (not a `max-*` width breakpoint) when a control should stay compact for a mouse but grow for touch, so phones and tablets are both covered. Form inputs stay at `text-base` (16px) so iOS doesn't zoom on focus.
-
-**Language and metadata.** `<html lang="en">` and the document `title` / `description` come from `BaseLayout`. Pass `title` and `description` through every page that uses the layout.
+**Language and metadata.** `<html lang="en">` and the document `title` and `description` come from `BaseLayout`. Pass `title` and `description` through every page.
 
 ## Before merging
 
-Run Lighthouse against any page you changed. Accessibility should stay at 100. Common regressions and what they mean:
+Run Lighthouse (the CI run is authoritative; Gotcha 9) against any page you changed. Accessibility should stay at 100. Common regressions: `color-contrast` (a new color in a new context), `image-alt`, `label`, `link-name` and `button-name`.
 
-- `color-contrast`: a token or literal used in a new context that doesn't pass. Check both modes.
-- `image-alt`: missing `alt` attribute (empty `alt=""` is fine; missing isn't).
-- `label`: input without an associated label.
-- `link-name` / `button-name`: icon-only element without `aria-label`.
-
-Lighthouse can't catch everything. For structural changes, also do a manual keyboard pass: Tab from the address bar through every interactive element. Each should be reachable, the focus indicator visible, and the order logical. The "Skip to main content" link should be the first thing focused after the address bar.
+Lighthouse can't catch everything. For structural changes, also do a keyboard pass: Tab from the address bar through every control. Each should be reachable, the focus indicator visible, the order logical, and the skip link first. Check the page at 320px, and with reduced motion on.
 
 ## Don't
 
-- `aria-hidden="true"` on a focusable element (Tab still lands on it; screen reader hides the context).
-- `tabindex` greater than 0 (breaks natural focus order).
-- Remove focus outlines (`outline: none`) without a clearly visible replacement. shadcn primitives provide `focus-visible` rings already; preserve them.
-- Use color as the only state cue (error red, success green) without an icon or text companion.
-- Add ARIA roles to native elements that already have the right role (`role="button"` on a `<button>` is redundant).
+- `aria-hidden="true"` on a focusable element (Tab still lands on it).
+- `tabindex` greater than 0.
+- Remove focus outlines without a clearly visible replacement.
+- Use color as the only state cue.
+- Add ARIA roles to native elements that already have the right role.

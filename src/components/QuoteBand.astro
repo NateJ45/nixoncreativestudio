@@ -8,8 +8,8 @@ import { getClient } from '../lib/clients';
 
 interface Props {
   slug: string;
-  /** Which of the study's quotes. */
-  quote?: number;
+  /** Whose quote, when the study has more than one: part of their name. */
+  by?: string;
   /** The small line above the quote. */
   label?: string;
   flip?: boolean;
@@ -17,18 +17,11 @@ interface Props {
   class?: string;
   ariaLabel?: string;
 }
-const {
-  slug,
-  quote = 0,
-  label,
-  flip = false,
-  as: Tag = 'section',
-  class: cls,
-  ariaLabel,
-} = Astro.props;
+const { slug, by, label, flip = false, as: Tag = 'section', class: cls, ariaLabel } = Astro.props;
 const entry = await getEntry('case-studies', slug);
-const t = entry?.data.testimonials?.[quote];
-if (!t) throw new Error(`No quote ${quote} on ${slug}`);
+const quotes = entry?.data.testimonials ?? [];
+const t = by ? quotes.find((q) => q.name.includes(by)) : quotes[0];
+if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
 const client = await getClient(slug);
 ---
 

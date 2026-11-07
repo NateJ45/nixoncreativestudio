@@ -17,7 +17,9 @@ ui.wireFootage(grid);
 var lastDraw = -1;
 $('[data-draw]').addEventListener('click', function () {
   var i;
-  do { i = Math.floor(Math.random() * sites.length); } while (i === lastDraw);
+  do {
+    i = Math.floor(Math.random() * sites.length);
+  } while (i === lastDraw);
   lastDraw = i;
   var tile = grid.querySelector('[data-slug="' + sites[i].slug + '"]');
   ui.openSheet(sites[i], tile);

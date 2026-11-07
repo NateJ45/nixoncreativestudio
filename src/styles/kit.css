@@ -160,7 +160,7 @@ h1 b {
 @keyframes pop {
   from {
     transform: scale(0.2) rotate(-14deg);
-    opacity: 0;
+    opacity: 0.02;
   }
   to {
     transform: none;
@@ -206,8 +206,21 @@ h1 b {
   animation-delay: 760ms;
 }
 .stackspace {
-  height: var(--stackh, 24rem);
+  /* The same sum home.js does, so the hero is its final height before any script runs. */
+  height: var(
+    --stackh,
+    calc(min(14.2vw, max(170px, (100vh - 515px) / 2.02), 250px) * 2.02 + 104px)
+  );
   width: 100%;
+}
+@media (max-width: 44.99rem) {
+  .stackspace {
+    height: var(--stackh, calc(min(42vw, max(120px, (100vh - 470px) / 2.02), 200px) * 2.02 + 88px));
+  }
+}
+/* No script, no hand: the grid is simply the grid. */
+html:not(.js) .stackspace {
+  display: none;
 }
 
 .work {
@@ -1671,12 +1684,35 @@ h1.giant b {
   }
 }
 
-.ledger-do .draw { display: inline-flex; align-items: center; min-height: 2.75rem; margin-block: -0.75rem; padding: 0 0.8rem; border: 0; border-radius: 99rem; background: var(--accent); color: #fff; font: 600 0.9375rem/1 var(--body); cursor: pointer; transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1); }
-.ledger-do .draw:hover { transform: scale(1.04) rotate(-1.5deg); }
-.ledger-do .draw:active { transform: scale(0.97); }
-.ledger-do .draw:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { .ledger-do .draw { transition: none; } }
-
+.ledger-do .draw {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-block: -0.75rem;
+  padding: 0 0.8rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--accent);
+  color: #fff;
+  font: 600 0.9375rem/1 var(--body);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.ledger-do .draw:hover {
+  transform: scale(1.04) rotate(-1.5deg);
+}
+.ledger-do .draw:active {
+  transform: scale(0.97);
+}
+.ledger-do .draw:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger-do .draw {
+    transition: none;
+  }
+}
 
 /* The mailto fallback's toast (src/scripts/mailto-fallback.ts). */
 .ncs-toast {
@@ -1694,7 +1730,9 @@ h1.giant b {
   opacity: 0;
   transform: translate(-50%, 0.5rem);
   pointer-events: none;
-  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+  transition:
+    opacity 0.2s var(--ease),
+    transform 0.2s var(--ease);
 }
 .ncs-toast.is-visible {
   opacity: 1;
@@ -1720,5 +1758,16 @@ html.ncs-gated .ncs-overlay {
   .sheet,
   .end {
     display: none !important;
+  }
+}
+
+/* Forced colors drop shadows and backgrounds, and a card is drawn with both. */
+@media (forced-colors: active) {
+  .tile,
+  .card,
+  .pc-face,
+  .chip,
+  .dock {
+    border: 1px solid CanvasText;
   }
 }

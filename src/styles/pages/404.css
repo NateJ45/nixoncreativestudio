@@ -1,22 +1,98 @@
 /* 404: a knocked-askew phone window that springs upright when you reach for it. */
-.nf{display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem;align-items:center;max-width:90rem;margin:0 auto;padding-bottom:7rem}
-.nf .page-head{padding-bottom:0}
-.nf .page-head h1{max-width:9em}
-.lost{margin-top:1rem;color:var(--soft);font-size:.9375rem;overflow-wrap:anywhere}
-.lost span{font-weight:600;color:var(--ink)}
-.nf-links{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.75rem}
-.nf .chip{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06),0 14px 28px -18px rgba(0,0,0,.35)}
-.nf .chip.dark{background:var(--accent);color:#fff}
-.knock{justify-self:center;width:min(15rem,62vw);margin:1rem 0 2rem;padding:0 var(--gut);box-sizing:content-box;transform-origin:50% 90%;will-change:transform}
-.knock .tile{box-shadow:0 40px 70px -34px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.12)}
-@media (min-width:56rem){
-  .nf{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(2rem,6vw,6rem);padding-right:var(--gut)}
-  .nf .page-head{padding-right:0}
-  .knock{width:min(17rem,100%);padding:0;margin:clamp(5rem,12vh,8rem) 0 0}
+.nf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding-bottom: 7rem;
+}
+.nf .page-head {
+  padding-bottom: 0;
+}
+.nf .page-head h1 {
+  max-width: 9em;
+}
+.lost {
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+.lost span {
+  font-weight: 600;
+  color: var(--ink);
+}
+.nf-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
+}
+.nf .chip {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 14px 28px -18px rgba(0, 0, 0, 0.35);
+}
+.nf .chip.dark {
+  background: var(--accent);
+  color: #fff;
+}
+.knock {
+  justify-self: center;
+  width: min(15rem, 62vw);
+  margin: 1rem 0 2rem;
+  padding: 0 var(--gut);
+  box-sizing: content-box;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+.knock .tile {
+  box-shadow:
+    0 40px 70px -34px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+}
+@media (min-width: 56rem) {
+  .nf {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: clamp(2rem, 6vw, 6rem);
+    padding-right: var(--gut);
+  }
+  .nf .page-head {
+    padding-right: 0;
+  }
+  .knock {
+    width: min(17rem, 100%);
+    padding: 0;
+    margin: clamp(5rem, 12vh, 8rem) 0 0;
+  }
 }
 
 /* The one big thing on this page. */
-.nf-num { margin: 0 0 0.05em -0.04em; font: 700 clamp(7rem, 24vw, 19rem)/0.84 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.js .nf-num { animation: nf-weigh 1.5s cubic-bezier(0.2, 0.75, 0.2, 1) both 0.1s; }
-@keyframes nf-weigh { from { font-weight: 100; opacity: 0.2; } to { font-weight: 700; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .js .nf-num { animation: none; } }
+.nf-num {
+  margin: 0 0 0.05em -0.04em;
+  font: 700 clamp(7rem, 24vw, 19rem)/0.84 var(--display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.js .nf-num {
+  animation: nf-weigh 1.5s cubic-bezier(0.2, 0.75, 0.2, 1) both 0.1s;
+}
+@keyframes nf-weigh {
+  from {
+    font-weight: 100;
+    opacity: 0.2;
+  }
+  to {
+    font-weight: 700;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .nf-num {
+    animation: none;
+  }
+}

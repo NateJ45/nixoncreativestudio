@@ -38,6 +38,9 @@ export default defineConfig({
   // Every page lives at /x/ (canonical and sitemap agree); a slashless internal
   // link is a 307 on Cloudflare and Search Console reports it (PORTS Card 89).
   trailingSlash: 'always',
+  // Keep the whitespace in the markup: the headline's words are inline spans, and
+  // compression joins two words that the formatter put on separate lines.
+  compressHTML: false,
   // Astro 7's adapter no longer forces server mode; this site never used sessions.
   session: false,
   // The standalone /now page was merged into the About page. Keep old links and
@@ -76,8 +79,7 @@ export default defineConfig({
     // noindex /photography/ page.
     sitemap({
       filter: (page) =>
-        !page.includes('/coming-soon') &&
-        (photographyIsOpen || !page.includes('/photography')),
+        !page.includes('/coming-soon') && (photographyIsOpen || !page.includes('/photography')),
     }),
   ],
 });

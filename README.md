@@ -14,9 +14,9 @@ Most of my clients are running something that matters to a community and cannot 
 
 Three things, usually in this order:
 
-- **Brand strategy** — the name, voice, palette, and typography that make an organization look like itself and not like a template.
-- **Web design and build** — fast, accessible, editor-friendly sites on a modern stack (Astro + Sanity + Cloudflare). Every word and image is editable in a friendly CMS; nothing important is trapped in the code.
-- **Photography** — real photographs of real places and people, because the fastest way to look generic is to fill a site with stock.
+- **Brand strategy**: the name, voice, palette, and typography that make an organization look like itself and not like a template.
+- **Web design and build**: fast, accessible, editor-friendly sites on a modern stack (Astro + Sanity + Cloudflare). Every word and image is editable in a friendly CMS; nothing important is trapped in the code.
+- **Photography**: real photographs of real places and people, because the fastest way to look generic is to fill a site with stock.
 
 ## Selected work
 
@@ -43,14 +43,15 @@ A few standards show up in every project, and they are the reason the sites hold
 
 ## How this site is built
 
-- **[Astro 6](https://astro.build)** with TypeScript in strict mode, `output: 'static'`
-- **[Tailwind 4](https://tailwindcss.com)** via the Vite plugin; brand tokens declared in `@theme` blocks in `src/styles/globals.css`
-- **React 19** for the photo gallery + lightbox only (unused until the gallery opens); the mobile nav (a native `<dialog>`), theme toggle and contact form are plain Astro plus small scripts
-- **MDX content collections** for case studies; a JSON-backed collection for the photography set
-- Astro View Transitions for soft page-to-page navigation, with native scrolling
-- Plain Astro components with native HTML, plus the shadcn/ui Button
-- **[Cloudflare Pages](https://pages.cloudflare.com)** hosting + Cloudflare Web Analytics (privacy-friendly, no cookies)
-- **ESLint** + **Prettier** + `node --test` unit suites, run in **GitHub Actions** on every push and PR
+- **[Astro 7](https://astro.build)** with TypeScript in strict mode, `output: 'static'`: every page is prerendered to HTML
+- **Plain CSS**: one shared stylesheet (`src/styles/kit.css`, with the design tokens) plus one file per page. No Tailwind, no utility classes
+- **One typeface**, Hanken Grotesk, self-hosted. One light theme, one studio blue; every other color on the site belongs to a client and stays inside their own window
+- **Small plain scripts, no framework**: the deck of client windows, the closing, the client sheet and the form are real markup that a few scripts move. Motion is springs written in JavaScript, and it all stands down under reduced motion. Page changes are native cross-document view transitions, with no router
+- **MDX content collections** for case studies and the journal; a JSON-backed collection for the photography set
+- **[Cloudflare Workers](https://workers.cloudflare.com)** serving the static build as assets, plus Cloudflare Web Analytics (privacy-friendly, no cookies)
+- **ESLint** + **Prettier** + `node --test` unit suites + Playwright and axe-core, run in **GitHub Actions** on every push and PR
+
+The look is written down in [DESIGN.md](./DESIGN.md).
 
 ## Running it locally
 
@@ -59,7 +60,7 @@ npm install
 npm run dev      # http://localhost:4321
 ```
 
-See [CLAUDE.md](./CLAUDE.md) for the full conventions, brand decisions, and architecture notes.
+See [CLAUDE.md](./CLAUDE.md) for the full conventions and architecture notes, and [DESIGN.md](./DESIGN.md) for the design system.
 
 ---
 

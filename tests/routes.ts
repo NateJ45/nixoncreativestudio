@@ -9,17 +9,11 @@
 // does. `/coming-soon` is the standalone gate page (its own HTML document, not
 // BaseLayout) and is always live, so it is swept too.
 //
-// First Presbyterian Church of Orangeburg is swept as well (overhaul ruling 16):
-// its title is the longest client name, so it holds the 320px reflow guard on
-// the case-study H1 (--text-h1-long, overflow-wrap: anywhere).
+// First Presbyterian Church of Orangeburg is swept as well: its title is the
+// longest client name, so it holds the 320px reflow guard on the case-study H1.
 //
-// /colophon/parts is the noindex check page for the shared components
-// (Section, BrowserFrame, FramePair, Media; overhaul package 1.8). It is swept
-// like any page, so axe in both themes, reflow at 320 and first-viewport cover
-// every part.
-//
-// /churches is the first sector page (overhaul 4.2, src/pages/[sector].astro);
-// add each new sector page from src/data/sector-pages.ts here too.
+// /churches is the first sector page (src/data/sector-pages.ts); add each new
+// sector page here too.
 //
 // Add a route here when a new PRERENDERED page ships.
 export const routes = [
@@ -34,7 +28,6 @@ export const routes = [
   '/photography',
   '/contact',
   '/colophon',
-  '/colophon/parts',
   '/privacy',
   '/accessibility',
   '/coming-soon',

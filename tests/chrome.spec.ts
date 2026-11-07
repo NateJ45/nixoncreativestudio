@@ -2,90 +2,113 @@ import { test, expect } from '@playwright/test';
 import { routes } from './routes';
 
 // =============================================================================
-// Site chrome: header, ink footer and closer (overhaul package 2.1)
+// The chrome: top line, dock, client sheet and closing are in the markup
 // =============================================================================
-// - Every BaseLayout page ends on the ink footer, whose closer is an H2 (never
-//   a Heft: no data-heft inside it).
-// - The footer's Work column lists every case study, computed from the
-//   collection, so it must match the cards on /work.
-// - The compact "Start a project" pill shows next to the menu button on a
-//   phone, and is left out on /contact (it would link to the page itself).
-// - The case-study closer deep-links to the form with the study and sector.
-// - The header never changes height when the page scrolls.
-//
-// Chromium only (the WebKit project's testMatch leaves it out).
-// =============================================================================
+// The design's one hard build rule: chrome and content come from the server and
+// scripts only enhance. So most of this runs with JavaScript off.
 
-// /coming-soon is a standalone document with no site chrome.
 const chromeRoutes = routes.filter((r) => r !== '/coming-soon');
+const closingRoutes = chromeRoutes.filter((r) => r !== '/contact');
 
-for (const route of chromeRoutes) {
-  test(`${route}: ends on the ink footer with a static closer H2`, async ({ page }) => {
-    await page.goto(route);
-    const footer = page.locator('footer.band-ink');
-    await expect(footer).toHaveCount(1);
-    await expect(footer.locator('h2#closer-title')).toHaveCount(1);
-    await expect(footer.locator('#closer-title [data-heft], #closer-title .heft')).toHaveCount(0);
-    // The menu button's no-JS target (CLAUDE.md never-break rule 8).
-    await expect(footer.locator('nav#site-nav')).toHaveCount(1);
-  });
-}
+test.describe('Without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
 
-test('the footer Work column lists every case study on /work', async ({ page }) => {
-  await page.goto('/work/');
-  const footerLinks = await page
-    .locator('footer nav[aria-label="Case studies"] a')
-    .evaluateAll((as) => as.map((a) => a.getAttribute('href')).sort());
-  const cardLinks = await page
-    .locator('main a[href^="/work/"]')
-    .evaluateAll((as) => [
-      ...new Set(
-        as.map((a) => a.getAttribute('href') ?? '').filter((h) => /^\/work\/[^/]+\/$/.test(h)),
-      ),
-    ]);
-  expect(footerLinks.length).toBeGreaterThan(0);
-  expect(footerLinks).toEqual(cardLinks.sort());
-});
+  for (const route of chromeRoutes) {
+    test(`${route}: the top line and dock are real links`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page.locator('.top .mark')).toHaveAttribute('href', '/');
+      const dock = page.locator('nav.dock');
+      await expect(dock.locator('a[href="/work/"]')).toHaveText('Work');
+      await expect(dock.locator('a[href="/services/"]')).toHaveText('Prices');
+      await expect(dock.locator('a[href="/about/"]')).toHaveText('About');
+      await expect(dock.locator('a[href="/contact/"]')).toHaveText('Start a project');
+      await expect(page.locator('a.skip')).toHaveAttribute('href', '#main');
+      await expect(page.locator('dialog[data-sheet]')).toHaveCount(1);
+    });
+  }
 
-test('a case-study closer links to the form with the study and its sector', async ({ page }) => {
-  await page.goto('/work/first-presbyterian-orangeburg/');
-  await expect(page.locator('#closer-title')).toHaveText(/Building for a\s+church\?/);
-  await expect(page.locator('footer .closer a', { hasText: 'Start a project' })).toHaveAttribute(
-    'href',
-    '/contact/?from=first-presbyterian-orangeburg&org_type=church',
-  );
-});
+  for (const route of closingRoutes) {
+    test(`${route}: the closing is in the markup`, async ({ page }) => {
+      await page.goto(route);
+      const end = page.locator('[data-end]');
+      await expect(end.locator('h2')).toHaveCount(1);
+      await expect(end.locator('a[href^="mailto:"]')).toHaveCount(1);
+      await expect(end.locator('a[href^="tel:"]')).toHaveCount(1);
+      await expect(end.locator('.gc img')).toHaveCount(8);
+      await expect(end.locator('a[data-nine]')).toHaveAttribute('href', '/contact/');
+      await expect(end.locator('.legal a[href="/privacy/"]')).toHaveCount(1);
+    });
+  }
 
-test('/contact has a quiet closer with no pill', async ({ page }) => {
-  await page.goto('/contact/');
-  await expect(page.locator('footer .closer a', { hasText: 'Start a project' })).toHaveCount(0);
-});
-
-test.describe('on a phone', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
-
-  test('the compact CTA is a 44px pill beside the menu button, but not on /contact', async ({
-    page,
-  }) => {
-    await page.goto('/about/');
-    const cta = page.locator('header .header-compact-cta');
-    await expect(cta).toBeVisible();
-    const box = await cta.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(44);
-    await page.goto('/contact/');
-    await expect(page.locator('header .header-compact-cta')).toHaveCount(0);
+  test('/: the phones, ledger, quote and prices are in the markup', async ({ page }) => {
+    await page.goto('/');
+    const tiles = page.locator('[data-grid] a.tile');
+    await expect(tiles).toHaveCount(8);
+    await expect(tiles.first()).toHaveAttribute('href', '/work/stone-steps-50k/');
+    await expect(page.locator('[data-ledger] li').first()).toHaveText('Since 2020');
+    await expect(page.locator('.band blockquote')).toHaveCount(1);
+    await expect(page.locator('[data-prices] li')).toHaveCount(3);
+    await expect(page.locator('[data-prices] strong').first()).toHaveText('$4,000');
+    await expect(page.locator('h1')).toHaveAttribute(
+      'aria-label',
+      'I build websites that pull their weight.',
+    );
   });
 });
 
-for (const width of [1440, 390]) {
-  test(`the header keeps its height when the page scrolls (${width}px)`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 900 });
+test.describe('With JavaScript', () => {
+  test('the current page is marked in the dock', async ({ page }) => {
     await page.goto('/work/stone-steps-50k/');
-    const header = page.locator('header[data-header]');
-    const before = (await header.boundingBox())!.height;
-    await page.evaluate(() => window.scrollTo(0, 1200));
-    await expect(header).toHaveAttribute('data-scrolled', /.*/);
-    const after = (await header.boundingBox())!.height;
-    expect(after).toBe(before);
+    await expect(page.locator('nav.dock a[href="/work/"]')).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('nav.dock a[href="/about/"]')).not.toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
-}
+
+  test('a window opens the client sheet, and Back returns focus to it', async ({ page }) => {
+    await page.goto('/work/');
+    const tile = page.locator('[data-grid] a.tile').first();
+    await tile.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200);
+    await tile.click();
+    const sheet = page.locator('dialog[data-sheet]');
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator('[data-st]')).toHaveAttribute('href', '/work/stone-steps-50k/');
+    await expect(sheet.locator('[data-vi]')).toHaveAttribute('href', /stonesteps50k\.com/);
+    await expect(sheet.locator('h2')).toHaveText('Stone Steps 50K');
+    await sheet.locator('[data-back]').click();
+    await expect(sheet).toBeHidden();
+    await expect(tile).toBeFocused();
+  });
+
+  test('draw a card opens a client', async ({ page }) => {
+    await page.goto('/');
+    const draw = page.locator('[data-draw]');
+    await draw.scrollIntoViewIfNeeded();
+    await draw.click();
+    await expect(page.locator('dialog[data-sheet] h2')).not.toHaveText('');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('dialog[data-sheet]')).toBeHidden();
+  });
+
+  test('cross-document view transitions, and no client router', async ({ page }) => {
+    await page.goto('/');
+    expect(await page.locator('meta[name="astro-view-transitions-enabled"]').count()).toBe(0);
+    const hasRule = await page.evaluate(() =>
+      [...document.styleSheets].some((s) =>
+        [...s.cssRules].some((r) => r.cssText.includes('@view-transition')),
+      ),
+    );
+    expect(hasRule).toBe(true);
+  });
+});
+
+test('old short names are redirected in public/_redirects', async () => {
+  const { readFileSync } = await import('node:fs');
+  const text = readFileSync('public/_redirects', 'utf8');
+  expect(text).toMatch(/^\/prices\/ \/services\/ 301$/m);
+  expect(text).toMatch(/^\/prices \/services\/ 301$/m);
+  expect(text).toMatch(/^\/start\/ \/contact\/ 301$/m);
+  expect(text).toMatch(/^\/start \/contact\/ 301$/m);
+});

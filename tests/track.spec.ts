@@ -30,12 +30,17 @@ test('a sent contact form fires generate_lead, with no field values', async ({ p
     route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' }),
   );
   await page.goto('/contact/');
-  await page.getByLabel('Your name').fill('Test Person');
-  await page.getByLabel('Email', { exact: true }).fill('test@example.com');
-  await page.getByLabel('Organization type').selectOption('church');
+  await page.getByLabel("What's your name?").fill('Test Person');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel("What's your email?").fill('test@example.com');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('radio', { name: 'Church' }).check();
+  await page.getByRole('button', { name: 'Next' }).click();
   await page
     .getByLabel('What are you hoping to build?')
     .fill('A new site for our congregation, with sermons and events kept current.');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByRole('heading', { name: 'Thanks, your message is in.' })).toBeFocused();
 
@@ -52,12 +57,17 @@ test('a failed post fires no generate_lead', async ({ page }) => {
   await stubGtag(page);
   await page.route(`${WEB3FORMS}**`, (route) => route.fulfill({ status: 500, body: '' }));
   await page.goto('/contact/');
-  await page.getByLabel('Your name').fill('Test Person');
-  await page.getByLabel('Email', { exact: true }).fill('test@example.com');
-  await page.getByLabel('Organization type').selectOption('church');
+  await page.getByLabel("What's your name?").fill('Test Person');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel("What's your email?").fill('test@example.com');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('radio', { name: 'Church' }).check();
+  await page.getByRole('button', { name: 'Next' }).click();
   await page
     .getByLabel('What are you hoping to build?')
     .fill('A new site for our congregation, with sermons and events kept current.');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.locator('[data-contact-submit]')).toBeEnabled();
   expect((await events(page)).filter(([, n]) => n === 'generate_lead')).toHaveLength(0);
@@ -84,9 +94,9 @@ test('a mailto link fires contact_click without the address', async ({ page }) =
   await page.evaluate(() =>
     document.addEventListener('click', (e) => e.preventDefault(), { once: true }),
   );
-  await page.locator('footer a[href^="mailto:"]').first().click();
+  await page.locator('.direct a[href^="mailto:"]').first().click();
   const click = (await events(page)).find(([, n]) => n === 'contact_click');
-  expect(click?.[2]).toEqual({ cta_location: 'footer', method: 'mailto' });
+  expect(click?.[2]).toEqual({ cta_location: 'main', method: 'mailto' });
   expect(JSON.stringify(click)).not.toContain('@');
 });
 

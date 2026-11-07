@@ -19,14 +19,21 @@ all('[data-tier]').forEach(function (a) {
 var pick = doc.querySelector('[data-pick]');
 if (pick) {
   var names = ['size', 'who', 'tools'];
-  var card = doc.querySelector('[data-pick-card]'), go = doc.querySelector('[data-pick-go]');
+  var card = doc.querySelector('[data-pick-card]'),
+    go = doc.querySelector('[data-pick-go]');
   var tiers = JSON.parse(pick.dataset.tiers);
   pick.addEventListener('change', function () {
-    var vals = names.map(function (n) { var c = pick.querySelector('input[name="' + n + '"]:checked'); return c ? +c.value : -1; });
+    var vals = names.map(function (n) {
+      var c = pick.querySelector('input[name="' + n + '"]:checked');
+      return c ? +c.value : -1;
+    });
     if (vals.indexOf(-1) !== -1) return;
-    var i = Math.max.apply(null, vals), t = tiers[i];
+    var i = Math.max.apply(null, vals),
+      t = tiers[i];
     card.className = 'pc pick-card pc-' + ['paper', 'blue', 'ink'][i];
-    all('[data-pick-pip]').forEach(function (p) { p.textContent = t.name.charAt(0); });
+    all('[data-pick-pip]').forEach(function (p) {
+      p.textContent = t.name.charAt(0);
+    });
     doc.querySelector('[data-pick-name]').textContent = t.name;
     doc.querySelector('[data-pick-price]').textContent = t.from;
     doc.querySelector('[data-pick-who]').textContent = t.range;
@@ -34,9 +41,17 @@ if (pick) {
     go.href = '/contact/?tier=' + t.name.toLowerCase();
     go.dataset.tier = t.name;
     go.hidden = false;
-    if (!reduce) { card.classList.remove('dealing'); void card.offsetWidth; card.classList.add('dealing'); }
+    if (!reduce) {
+      card.classList.remove('dealing');
+      void card.offsetWidth;
+      card.classList.add('dealing');
+    }
   });
-  go.addEventListener('click', function () { try { sessionStorage.setItem('ncs-tier', go.dataset.tier); } catch (e) {} });
+  go.addEventListener('click', function () {
+    try {
+      sessionStorage.setItem('ncs-tier', go.dataset.tier);
+    } catch (e) {}
+  });
 }
 
 /* One window per kind of client. Sector only, in its own block: no client is tied to a tier or a price. */

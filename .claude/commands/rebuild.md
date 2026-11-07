@@ -12,7 +12,7 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
    npm run build
    ```
 
-   A `prebuild` hook first stops any stale dev server holding `dist/` (`scripts/free-dist.mjs`). Then the build runs `npm run placeholders` (generates `src/lib/coverPlaceholders.json` from case study cover images), `npm run og:pages` (per-page Open Graph cards into `public/og/`), and `node scripts/with-workerd.mjs astro build` (the Windows workerd shim around `astro build`; compiles every page to static HTML in `dist/`). All three must succeed.
+   A `prebuild` hook first stops any stale dev server holding `dist/` (`scripts/free-dist.mjs`). Then the build runs `npm run og:pages` (per-page Open Graph cards into `public/og/`), `node scripts/with-workerd.mjs astro build` (the Windows workerd shim around `astro build`; compiles every page to static HTML in `dist/`) and `node scripts/finish-share-cards.mjs` (recompresses the share cards). All three must succeed.
 
 3. **Run tests:**
 
@@ -20,7 +20,7 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
    npm run test:unit
    ```
 
-   This runs the `src/lib/*.test.ts` unit suites with Node's built-in test runner. `npm test` runs the Playwright suites in `tests/` (smoke, axe in both themes, reflow); it builds and serves `dist/client` itself, so it takes longer.
+   This runs the `src/lib/*.test.ts` unit suites with Node's built-in test runner. `npm test` runs the Playwright suites in `tests/` (smoke, axe, reflow, reduced motion, and the page specs); it builds and serves `dist/client` itself, so it takes longer.
 
 4. **Run the linter:**
 
@@ -40,8 +40,8 @@ Use this any time you want to confirm the site compiles cleanly from scratch, or
 
 **Common build failures and where to look:**
 
-- **Placeholders step fails**: usually a malformed image in `src/assets/case-studies/` or a missing cover for a case study whose .mdx `cover` frontmatter points at a file that doesn't exist. Check the error path.
+- **The OG step fails**: usually a case study whose `cover` file is missing from `src/assets/case-studies/`, or a page title the card cannot lay out. Check the error path and look at the generated card.
 - **Astro build fails on a content collection entry**: a frontmatter field is missing or the wrong type. Check `src/content.config.ts` for the expected schema.
 - **Type errors in strict mode**: `astro build` does not type-check; `npm run check` does. Any `any` or missing type annotation can surface there even if the dev server and the build were happy.
 
-After a successful build, `dist/` holds the production output. Cloudflare Pages picks this up on the next push to `main` (build command: `npm run build`, output directory: `dist`).
+After a successful build, `dist/` holds the production output. Cloudflare Workers Builds picks this up on the next push to `main` (build command: `npm run build`, assets from `dist/`).

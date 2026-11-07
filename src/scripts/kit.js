@@ -436,10 +436,7 @@ if (weighs.length && !reduce) {
       live = false;
     wlast = now;
     weighs.forEach(function (w) {
-      var p = Math.min(
-        1,
-        Math.max(0, (H * 1.02 - w.el.getBoundingClientRect().top) / (H * 0.72)),
-      );
+      var p = Math.min(1, Math.max(0, (H * 1.02 - w.el.getBoundingClientRect().top) / (H * 0.72)));
       var t = 200 + 500 * p * p * (3 - 2 * p);
       w.g += (t - w.g) * (1 - Math.pow(0.0015, dt));
       if (Math.abs(t - w.g) > 0.8) live = true;

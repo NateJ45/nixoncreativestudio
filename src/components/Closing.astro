@@ -6,7 +6,7 @@
    so the two colors never touch. */
 import { site } from '../data/site';
 import { getClients } from '../lib/clients';
-import { getNav } from '../data/nav';
+import { getGatedNav } from '../data/nav';
 
 interface Props {
   /** The line, as HTML with the heavy words in <b>. */
@@ -14,7 +14,7 @@ interface Props {
 }
 const { lead = 'Tell me what you are <b>building.</b>' } = Astro.props;
 const clients = await getClients();
-const gated = await getNav();
+const gated = await getGatedNav();
 const [first, second, third] = site.studioName.split(' ');
 ---
 

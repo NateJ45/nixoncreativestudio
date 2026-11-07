@@ -1,8 +1,8 @@
 ---
-/* The 404: one client window knocked askew. "Did you mean" is kept below the two
-   links: a mistyped study address leads with the study it was probably after. */
-import '../styles/pages/404.css';
+/* The 404: one client window knocked askew, the address that failed, and two
+   links. */
 import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/pages/404.css';
 import Tile from '../components/Tile.astro';
 import { getClients } from '../lib/clients';
 import { plainText, wordSpans } from '../lib/words';
@@ -16,13 +16,32 @@ const heading = `This page <b>isn't here.</b>`;
   title="Page not found | Nixon Creative Studio"
   description="This page isn't here. Head back to the homepage or look through my work."
 >
-<div class="nf">
-<header class="page-head"><p class="nf-num" aria-hidden="true">404</p><h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
-<p class="lede">The link you followed might be old, or the address might be a typo. Nothing's broken on this end. Here are a few places to try instead.</p>
-<p class="lost" hidden>Not found: <span data-path></span></p>
-<div class="nf-links"><a class="chip dark" href="/work/">See the work</a><a class="chip" href="/">Back to home</a></div></header>
-<div class="knock" data-knock><Tile client={first} direct lazy index={0} /></div>
-</div>
+  <div class="nf">
+    <header class="page-head">
+      <p class="nf-num" aria-hidden="true">
+        404
+      </p>
+      <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+      <p class="lede">
+        The link you followed might be old, or the address might be a typo. Nothing's broken on this
+        end. Here are a few places to try instead.
+      </p>
+      <p class="lost" hidden>
+        Not found: <span data-path></span>
+      </p>
+      <div class="nf-links">
+        <a class="chip dark" href="/work/">
+          See the work
+        </a>
+        <a class="chip" href="/">
+          Back to home
+        </a>
+      </div>
+    </header>
+    <div class="knock" data-knock>
+      <Tile client={first} direct lazy index={0} />
+    </div>
+  </div>
 </BaseLayout>
 
 <script>

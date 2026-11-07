@@ -1,76 +1,68 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // =============================================================================
-// /contact (overhaul package 2.7)
+// /contact: the real form, one question at a time
 // =============================================================================
-// Site-owned. The inquiry form is the studio's lead pipeline, so this pins:
-//   - it posts natively to Web3Forms with JavaScript off (right action,
-//     method, required fields, browser validation left on);
-//   - the URL prefill (?org_type ?tier ?service ?from) fills the select, the
-//     budget chip and the hidden origin fields;
-//   - the brief card is a plain summary, not a live region (ruling 17);
-//   - the success panel takes focus and links two studies from the sector;
-//   - the clock line, and that the page makes no third-party map request.
-// Nothing here ever reaches Web3Forms: every request to it is intercepted.
-// =============================================================================
+// Requests to Web3Forms are intercepted, so these never send anything.
 
 const WEB3FORMS = 'https://api.web3forms.com/submit';
 
-test.describe('without JavaScript', () => {
+/** Walk the questions the way a visitor does. */
+async function fillAll(page: Page, sector = 'Church') {
+  await page.getByLabel("What's your name?").fill('Test Person');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel("What's your email?").fill('test@example.com');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('radio', { name: sector }).check();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page
+    .getByLabel('What are you hoping to build?')
+    .fill('A new website for the congregation, with room for the weekly news.');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: /Next|Skip/ }).click();
+}
+
+test.describe('Without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
   test('the form posts natively to Web3Forms with the required fields', async ({ page }) => {
-    let posted: { method: string; body: string } | null = null;
-    await page.route(`${WEB3FORMS}**`, async (route) => {
-      posted = { method: route.request().method(), body: route.request().postData() ?? '' };
-      await route.fulfill({ status: 200, contentType: 'text/html', body: '<p>ok</p>' });
+    let posted: string | null = null;
+    await page.route(WEB3FORMS, async (route) => {
+      posted = route.request().postData();
+      await route.fulfill({ status: 200, contentType: 'text/html', body: 'ok' });
     });
-
     await page.goto('/contact/');
     const form = page.locator('form[data-contact-form]');
     await expect(form).toHaveAttribute('action', WEB3FORMS);
     await expect(form).toHaveAttribute('method', 'post');
-    // Browser validation stays on without the script.
-    expect(await form.getAttribute('novalidate')).toBeNull();
-
-    for (const name of ['name', 'email', 'org_type', 'message']) {
+    for (const name of ['name', 'email', 'message']) {
       await expect(form.locator(`[name="${name}"]`)).toHaveAttribute('required', '');
     }
-    // Budget and the optional details are optional.
-    for (const name of ['phone', 'current_website', 'timeline', 'heard_from', 'organization']) {
+    await expect(form.locator('[name="org_type"]').first()).toHaveAttribute('required', '');
+    for (const name of ['organization', 'phone', 'current_website', 'timeline', 'heard_from']) {
       expect(await form.locator(`[name="${name}"]`).getAttribute('required')).toBeNull();
     }
     expect(await form.locator('[name="budget"]').first().getAttribute('required')).toBeNull();
-    // The optional details start closed.
-    await expect(form.locator('details[data-optional-details]')).not.toHaveAttribute('open', '');
-    // The no-JS success path.
     await expect(form.locator('input[name="redirect"]')).toHaveAttribute(
       'value',
       /\/contact\/\?sent=1#sent$/,
     );
-    // The clock renders its static line.
-    await expect(page.locator('[data-contact-clock]')).toHaveText('Cincinnati (Eastern time)');
 
-    // An empty submit is stopped by the browser.
-    await page.getByRole('button', { name: 'Send' }).click();
-    expect(posted).toBeNull();
+    // Every question shows at once.
+    await expect(page.getByLabel('Phone')).toBeVisible();
+    await expect(page.getByLabel("What's your name?")).toBeVisible();
 
-    // A filled one goes straight to Web3Forms (intercepted above).
-    await page.getByLabel('Your name').fill('Test Person');
-    await page.getByLabel('Email', { exact: true }).fill('test@example.com');
-    await page.getByLabel('Organization type').selectOption('church');
+    await page.getByLabel("What's your name?").fill('Test Person');
+    await page.getByLabel("What's your email?").fill('test@example.com');
+    await page.getByRole('radio', { name: 'Church' }).check();
     await page
       .getByLabel('What are you hoping to build?')
-      .fill('A new site for our congregation, with sermons and events kept current.');
+      .fill('A new website for the congregation, with room for the weekly news.');
     await Promise.all([
-      page.waitForURL(`${WEB3FORMS}**`),
+      page.waitForURL(WEB3FORMS),
       page.getByRole('button', { name: 'Send' }).click(),
     ]);
-    expect(posted).not.toBeNull();
-    expect(posted!.method).toBe('POST');
-    for (const field of ['name=Test', 'org_type=church', 'access_key=', 'botcheck=']) {
-      expect(posted!.body).toContain(field);
-    }
+    expect(posted).toContain('Test Person');
   });
 
   test('the #sent redirect target shows the success panel', async ({ page }) => {
@@ -81,88 +73,120 @@ test.describe('without JavaScript', () => {
   });
 });
 
-test.describe('with JavaScript', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => localStorage.removeItem('ncs-contact-draft'));
+test.describe('With JavaScript', () => {
+  test('one question at a time, with validation in plain words', async ({ page }) => {
+    await page.goto('/contact/');
+    await expect(page.getByLabel("What's your name?")).toBeVisible();
+    await expect(page.getByLabel("What's your email?")).toBeHidden();
+    await expect(page.locator('[data-count]')).toHaveText('Question 1 of 6');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.locator('#name-err')).toContainText('your name');
+    await page.getByLabel("What's your name?").fill('Sam');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByLabel("What's your email?")).toBeVisible();
+    await expect(page.locator('[data-count]')).toHaveText('Question 2 of 6');
   });
 
-  test('prefill fills the select, the budget chip and the origin fields', async ({ page }) => {
+  test('prefill fills the radio, the budget and the origin fields', async ({ page }) => {
     await page.goto(
-      '/contact/?from=first-presbyterian-orangeburg&org_type=church&tier=signature&service=photography',
+      '/contact/?from=first-presbyterian-orangeburg&tier=signature&service=photography&org_type=church',
     );
     const form = page.locator('form[data-contact-form]');
-    await expect(form.locator('select[name="org_type"]')).toHaveValue('church');
+    await expect(form.locator('input[name="org_type"]:checked')).toHaveValue('church');
     await expect(form.locator('input[name="budget"]:checked')).toHaveValue('7k-12k');
     await expect(form.locator('input[name="from"]')).toHaveValue('first-presbyterian-orangeburg');
     await expect(form.locator('input[name="tier"]')).toHaveValue('signature');
     await expect(form.locator('input[name="service"]')).toHaveValue('photography');
     await expect(form.locator('input[name="origin_org_type"]')).toHaveValue('church');
+    await expect(page.locator('[data-tier-note]')).toContainText('Signature');
+  });
+
+  test('the tier name works in any case', async ({ page }) => {
+    await page.goto('/contact/?tier=Launch');
+    await expect(page.locator('input[name="budget"]:checked')).toHaveValue('4k-7k');
+    await expect(page.locator('input[name="tier"]')).toHaveValue('launch');
   });
 
   test('values that are not slugs are ignored', async ({ page }) => {
     await page.goto('/contact/?from=%3Cscript%3E&tier=nope&org_type=castle');
     const form = page.locator('form[data-contact-form]');
     await expect(form.locator('input[name="from"]')).toHaveValue('');
-    await expect(form.locator('select[name="org_type"]')).toHaveValue('');
+    await expect(form.locator('input[name="org_type"]:checked')).toHaveCount(0);
     await expect(form.locator('input[name="budget"]:checked')).toHaveCount(0);
   });
 
-  test('the brief card assembles from the fields and is not a live region', async ({ page }) => {
+  test('a draft comes back after a reload, and a prefill does not override it', async ({
+    page,
+  }) => {
+    await page.goto('/contact/');
+    await page.getByLabel("What's your name?").fill('Sam Draft');
+    await page.waitForTimeout(400);
+    await page.goto('/contact/?org_type=church');
+    await expect(page.getByLabel("What's your name?")).toHaveValue('Sam Draft');
+    await expect(page.locator('input[name="org_type"]:checked')).toHaveValue('church');
+    await page.evaluate(() =>
+      localStorage.setItem(
+        'ncs-contact-draft',
+        JSON.stringify({ name: 'Sam Draft', org_type: 'school' }),
+      ),
+    );
+    await page.goto('/contact/?org_type=church');
+    await expect(page.locator('input[name="org_type"]:checked')).toHaveValue('school');
+  });
+
+  test('the brief assembles from the fields as plain text', async ({ page }) => {
     await page.goto('/contact/?from=stone-steps-50k');
-    const brief = page.locator('[data-brief]');
-    await expect(brief).toBeVisible();
-    await expect(brief).not.toHaveAttribute('aria-hidden', /.*/);
-    await expect(brief.locator('[data-brief-list]')).toHaveAttribute('aria-live', 'off');
-    await page.getByLabel('Your name').fill('Sam');
-    await page.getByLabel('Organization type').selectOption('nonprofit');
-    await page.getByText('Not sure yet').click();
-    await expect(brief).toContainText('Sam');
-    await expect(brief).toContainText('Nonprofit');
-    await expect(brief).toContainText('Not sure yet');
-    await expect(brief).toContainText('Stone Steps');
+    const brief = page.locator('[data-phone]');
+    await page.getByLabel("What's your name?").fill('<b>Sam</b>');
+    await expect(brief).toContainText('<b>Sam</b>');
+    await expect(brief.locator('dd b')).toHaveCount(0);
+    await expect(brief).toContainText('The Stone Steps 50K study');
   });
 
   test('a sent form moves focus to the success heading and links sector studies', async ({
     page,
   }) => {
-    await page.route(`${WEB3FORMS}**`, (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' }),
-    );
-    await page.goto('/contact/');
-    await page.getByLabel('Your name').fill('Test Person');
-    await page.getByLabel('Email', { exact: true }).fill('test@example.com');
-    await page.getByLabel('Organization type').selectOption('church');
-    await page
-      .getByLabel('What are you hoping to build?')
-      .fill('A new site for our congregation, with sermons and events kept current.');
-    await page.getByRole('button', { name: 'Send' }).click();
-
-    const heading = page.getByRole('heading', { name: 'Thanks, your message is in.' });
-    await expect(heading).toBeFocused();
-    const links = page.locator('[data-success-studies="church"] a');
-    await expect(links).toHaveCount(2);
-    await expect(links.first()).toBeVisible();
-    await expect(page.locator('form[data-contact-form]')).toBeHidden();
-  });
-
-  test('the clock reads the time in Cincinnati', async ({ page }) => {
-    await page.goto('/contact/');
-    await expect(page.locator('[data-contact-clock]')).toHaveText(
-      /^It's \d{1,2}:\d{2} (am|pm) in Cincinnati\.$/,
-    );
-  });
-
-  test('no third-party map request, even after scrolling the map into view', async ({ page }) => {
-    const thirdParty: string[] = [];
-    page.on('request', (req) => {
-      if (/google\.com\/maps|maps\.google|maps\.gstatic|openstreetmap/.test(req.url())) {
-        thirdParty.push(req.url());
-      }
+    let body = '';
+    await page.route(WEB3FORMS, async (route) => {
+      body = route.request().postData() ?? '';
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     });
     await page.goto('/contact/');
-    await page.locator('.contact-map').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
-    await expect(page.locator('iframe')).toHaveCount(0);
-    expect(thirdParty).toEqual([]);
+    await fillAll(page);
+    await page.getByRole('button', { name: 'Send' }).click();
+    const heading = page.getByRole('heading', { name: 'Thanks, your message is in.' });
+    await expect(heading).toBeFocused();
+    await expect(page.locator('[data-success-studies="church"] a')).toHaveCount(2);
+    await expect(page.locator('form[data-contact-form]')).toBeHidden();
+    await expect(page.locator('[data-phone]')).toContainText('Sent to Nathan');
+    expect(body).toContain('access_key');
+    expect(await page.evaluate(() => localStorage.getItem('ncs-contact-draft'))).toBeNull();
+    await expect(page.locator('body')).not.toContainText(/preview/i);
+  });
+
+  test('a failed post shows the error panel and keeps the form', async ({ page }) => {
+    await page.route(WEB3FORMS, (route) => route.fulfill({ status: 500, body: 'nope' }));
+    await page.goto('/contact/');
+    await fillAll(page);
+    await page.getByRole('button', { name: 'Send' }).click();
+    await expect(page.locator('[data-contact-error]')).toBeVisible();
+    await expect(page.locator('form[data-contact-form]')).toBeVisible();
+    await expect(page.locator('[data-contact-submit]')).toBeEnabled();
+  });
+
+  test('the honeypot pretends and sends nothing', async ({ page }) => {
+    let sent = false;
+    await page.route(WEB3FORMS, async (route) => {
+      sent = true;
+      await route.fulfill({ status: 200, body: '{}' });
+    });
+    await page.goto('/contact/');
+    await fillAll(page);
+    await page.evaluate(() => {
+      (document.getElementById('botcheck') as HTMLInputElement).value = 'bot';
+    });
+    await page.getByRole('button', { name: 'Send' }).click();
+    await expect(page.getByRole('heading', { name: 'Thanks, your message is in.' })).toBeVisible();
+    expect(sent).toBe(false);
   });
 });
