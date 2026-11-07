@@ -17,6 +17,8 @@
   var grid = $('[data-grid]');
   grid.innerHTML = N.sites.map(function (s, i) { return '<li>' + ui.tile(s, { index: i }) + ui.caption(s) + '</li>'; }).join('');
   var tiles = [].slice.call(document.querySelectorAll('.tile'));
+  /* Layout measures each window against its cell, so the cell must be positioned before the first measure. */
+  tiles.forEach(function (t) { t.parentNode.style.position = 'relative'; });
   ui.wireFootage(grid);
 
   /* The deal: every window has one spot in the real grid. Scroll carries it there from the hand. */

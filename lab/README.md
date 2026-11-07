@@ -22,3 +22,7 @@ Live at https://ncs-motion-lab.nathanjnixon86.workers.dev/deal/ (a separate noin
 ## Logo
 
 `logo/` holds logo explorations: four N marks and two wordmarks. `logo/build.mjs` outlines the letters from `logo/fonts` and writes `logo/svg` and the page at `/logo/`. `logo/look.mjs` checks small sizes and `logo/motion.mjs` checks the animations. Nothing here is on the live site.
+
+## Fonts
+
+`fonts/` is a switcher that shows the homepage in eight font pairings through `/deal/?type=<option>`. `fonts/cold.mjs` loads the homepage in a fresh browser each run, which is how the stuck-windows bug showed up.

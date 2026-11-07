@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Homepage fonts | Nixon Creative Studio</title><link rel="icon" href="data:,">
+<link rel="stylesheet" href="/deal/kit.css">
+<style>
+html,body{height:100%;overflow:hidden}
+body{display:flex;flex-direction:column}
+.pick{flex:none;display:flex;align-items:center;gap:1rem;padding:.6rem var(--gut);background:#fff;box-shadow:0 1px 0 var(--line);z-index:2;min-width:0}
+.btns{display:flex;gap:.3rem;overflow-x:auto;scrollbar-width:none;min-width:0}
+.btns button{flex:none;min-height:2.75rem;padding:0 .95rem;border:0;border-radius:99rem;background:var(--ground);color:var(--ink);font:500 .9375rem var(--body);white-space:nowrap;cursor:pointer}
+.btns button[aria-pressed=true]{background:var(--accent);color:#fff}
+.feel{flex:1;min-width:14rem;margin:0;color:var(--soft);font-size:.9375rem;line-height:1.25}
+.feel b{display:block;color:var(--ink);font-weight:600}
+iframe{flex:1;width:100%;min-height:0;border:0;background:var(--ground)}
+@media (max-width:70rem){.pick{flex-direction:column;align-items:stretch;gap:.4rem}.feel{min-width:0}.btns{order:1}}
+</style></head><body>
+<div class="pick"><div class="btns" role="group" aria-label="Choose a font pairing" data-btns></div><p class="feel" data-feel aria-live="polite"></p></div>
+<iframe data-f title="The homepage in the chosen fonts"></iframe>
+<script src="/fonts/options.js"></script>
+<script>
+(function () {
+  var btns = document.querySelector('[data-btns]'), feel = document.querySelector('[data-feel]'), f = document.querySelector('[data-f]');
+  var names = { current: 'Current', editorial: 'Editorial', fraunces: 'Soft serif', gloock: 'Poster', bodoni: 'Fashion', syne: 'Art school', unbounded: 'Tech', geist: 'Software' };
+  window.NCS_TYPE.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = names[o.key]; b.dataset.k = o.key;
+    b.addEventListener('click', function () { show(o.key, true); });
+    btns.appendChild(b);
+  });
+  function show(k, push) {
+    var o = window.NCS_TYPE.find(function (x) { return x.key === k; }) || window.NCS_TYPE[0];
+    [].forEach.call(btns.children, function (b) { b.setAttribute('aria-pressed', b.dataset.k === o.key); });
+    feel.innerHTML = '<b></b>'; feel.firstChild.textContent = o.name; feel.appendChild(document.createTextNode(o.feel));
+    f.src = '/deal/?type=' + o.key;
+    if (push) history.replaceState(null, '', '#' + o.key);
+  }
+  show(location.hash.slice(1) || 'current');
+})();
+</script></body></html>
