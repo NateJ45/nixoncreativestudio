@@ -30,7 +30,7 @@ for (const { path, sector, studies, closing } of LEAN) {
       await page.goto(path);
       const tiers = page.locator('.sl-tiers > li');
       await expect(tiers).toHaveCount(3);
-      await expect(tiers.first().locator('.sl-from')).toHaveText('From $5,000');
+      await expect(tiers.first().locator('.sl-from')).toHaveText('From $3,500');
       await expect(tiers.locator('a[href^="/work/"]')).toHaveCount(0);
     });
 

@@ -81,7 +81,7 @@ test.describe('Prices', () => {
     await expect(page.locator('[data-pick-go]')).toBeHidden();
     await pick.getByRole('radio', { name: 'Connect to other services' }).check();
     await expect(page.locator('[data-pick-name]')).toHaveText('Signature');
-    await expect(page.locator('[data-pick-price]')).toHaveText('$9,000');
+    await expect(page.locator('[data-pick-price]')).toHaveText('$6,500');
     const go = page.locator('[data-pick-go]');
     await expect(go).toBeVisible();
     await expect(go).toHaveAttribute('href', '/contact/?tier=signature');
@@ -91,12 +91,12 @@ test.describe('Prices', () => {
     await page.goto('/services/');
     const heads = page.locator('table.care thead th');
     await expect(heads).toHaveCount(4);
-    await expect(heads.first()).toContainText('$180');
+    await expect(heads.first()).toContainText('$200');
     await expect(page.locator('table.care')).toContainText('Same business day replies');
-    // Software updates start at Light Care: not included in Hosting, included after.
+    // Security is never gated: software updates are in every plan, from Hosting up.
     const row = page.locator('table.care tr', { hasText: 'Software and security updates' });
-    await expect(row.locator('td.n')).toHaveCount(1);
-    await expect(row.locator('td.y')).toHaveCount(3);
+    await expect(row.locator('td.n')).toHaveCount(0);
+    await expect(row.locator('td.y')).toHaveCount(4);
   });
 
   test('the first screen meets the tiers before the big number', async ({ page }) => {
@@ -105,7 +105,7 @@ test.describe('Prices', () => {
     const glance = page.locator('.glance > li');
     await expect(glance).toHaveCount(3);
     await expect(glance.first()).toContainText('Launch');
-    await expect(glance.first()).toContainText('$5,000+');
+    await expect(glance.first()).toContainText('$3,500+');
     // The lede comes first, the tiers next, and all of them inside the first screen.
     const lede = (await page.locator('.price-head .lede').boundingBox())!;
     const row = (await page.locator('.glance').boundingBox())!;
@@ -113,7 +113,7 @@ test.describe('Prices', () => {
     expect(row.y).toBeGreaterThan(lede.y);
     expect(big.y).toBeGreaterThan(row.y + row.height - 1);
     expect(row.y + row.height).toBeLessThan(900);
-    await expect(page.locator('.from-num')).toHaveText('$5,000');
+    await expect(page.locator('.from-num')).toHaveText('$3,500');
     await expect(glance.first().locator('a')).toHaveAttribute('href', '#launch');
     await expect(page.locator('#launch')).toHaveCount(1);
   });
@@ -165,9 +165,9 @@ test.describe('Prices', () => {
     const rows = page.locator('.cost-table tbody tr');
     await expect(rows).toHaveCount(3);
     const cells = (i: number) => rows.nth(i).locator('td').allInnerTexts();
-    expect(await cells(0)).toEqual(['$5,000', '$6,656', '$8,312']);
-    expect(await cells(1)).toEqual(['$9,000', '$12,576', '$16,152']);
-    expect(await cells(2)).toEqual(['$18,000', '$25,176', '$32,352']);
+    expect(await cells(0)).toEqual(['$3,500', '$4,916', '$6,332']);
+    expect(await cells(1)).toEqual(['$6,500', '$9,596', '$12,692']);
+    expect(await cells(2)).toEqual(['$12,500', '$18,716', '$24,932']);
     await expect(rows.first()).toContainText('Light Care');
     await expect(page.locator('#costs')).toContainText('year one hosting included');
   });
@@ -218,7 +218,7 @@ test.describe('Prices', () => {
     test('the tiers, care plans and FAQ are all in the markup', async ({ page }) => {
       await page.goto('/services/');
       await expect(page.locator('.tier')).toHaveCount(3);
-      await expect(page.locator('.t-price').first()).toHaveText('$5,000+');
+      await expect(page.locator('.t-price').first()).toHaveText('$3,500+');
       await expect(page.locator('.faq details')).toHaveCount(8);
       await expect(page.locator('[data-sites] a.tile')).toHaveCount(4);
     });
