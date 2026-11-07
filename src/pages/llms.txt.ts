@@ -65,7 +65,7 @@ export const GET: APIRoute = async () => {
     '',
     `Full details: ${url('/services/')}`,
     '',
-    `## Case studies (${studies.length})`,
+    `## Selected case studies`,
     '',
     ...studies.map((s) => {
       // The hook (one line about the live site) leads, then the summary.

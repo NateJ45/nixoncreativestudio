@@ -10,7 +10,7 @@ import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import DealtPrices from '../components/DealtPrices.astro';
 import Closing from '../components/Closing.astro';
-import { countWord, getClients, toClient, type Client } from '../lib/clients';
+import { getClients, toClient, type Client } from '../lib/clients';
 import { CHURCHES } from '../data/sector-pages';
 import { site } from '../data/site';
 import { plainText, wordSpans } from '../lib/words';
@@ -51,7 +51,7 @@ const schemas = [
   {
     '@type': 'ItemList',
     '@id': `${canonical}#studies`,
-    name: 'Church websites I have built',
+    name: 'Church website case studies',
     numberOfItems: n,
     itemListElement: studies.map(({ s }, i) => ({
       '@type': 'ListItem',
@@ -84,7 +84,7 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
           Start a project
         </a>
         <a class="chip soft" href="/work/?sector=church">
-          See the church sites
+          See the church case studies
         </a>
       </div>
     </header>
@@ -199,7 +199,7 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
           ))}
         </ul>
         <p>
-          <a href="/work/">See all {countWord(clients.length).toLowerCase()} sites</a>
+          <a href="/work/">See all the case studies</a>
         </p>
       </div>
       <ul class="ch-studies">

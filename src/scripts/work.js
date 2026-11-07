@@ -234,9 +234,9 @@ function syncUrl() {
   } catch (e) {}
 }
 function words(key, n) {
-  if (key === 'all') return 'Showing all ' + n + ' sites.';
+  if (key === 'all') return 'Showing all ' + n + ' case studies.';
   var phrase = key === 'small-business' ? 'small business' : key;
-  return 'Showing ' + n + ' ' + phrase + (n === 1 ? ' site.' : ' sites.');
+  return 'Showing ' + n + ' ' + phrase + (n === 1 ? ' case study.' : ' case studies.');
 }
 function setWide(count) {
   items.forEach(function (it) {

@@ -96,7 +96,7 @@ One family, set in weight and spacing rather than in different faces.
 
 ### Big lines
 
-- **`.giant`** is the one big line on a page. Put it in a `.big` container (a size container) and it is sized in `cqw` so it fills the line and never overflows. Set `--fit` (wide screens) and `--fitm` (phones, under 52rem) on the element to the number of container-widths the words need: `style="--fit: 20; --fitm: 20"`. On a phone each child span or `<b>` becomes its own nowrap line. Check at 320px.
+- **`.giant`** is the one big line on a page. Put it in a `.big` container (a size container) and it is sized in `cqw` so it fills the line and never overflows. Set `--fit` (wide screens) and `--fitm` (phones, under 52rem) on the element to the number of container-widths the words need: `style="--fit: 20; --fitm: 20"`. On a phone each child span or `<b>` becomes its own nowrap line. Add `.stack` to keep those separate lines on wide screens too, for a phrase too long to stand on one row. Check at 320px.
 - **`[data-weigh]`** on a `.giant` makes it gain weight, thin to heavy, as you scroll to it. A value sets where: `data-weigh="0.38 0.06"` on the home line runs the gain while its top goes from 38 to 6 percent of the screen, because the dealt phones cover it until then. `kit.js` drives it; with reduced motion it simply stays at its CSS weight.
 - **The H1 reveal.** Each word is wrapped in `<span class="w">` in the markup by `wordSpans()` in `src/lib/words.ts` (`PageHead.astro` does it for a page head), and the H1 carries the plain sentence as its `aria-label`. Words fade in from opacity .02 with a blur on `.js` only. That near-zero start is deliberate: it paints, so it does not cost LCP, and it is the one exception to "nothing in the first viewport starts hidden". The small `.me` portrait in the home headline is exempt in `tests/first-viewport.spec.ts` for the same reason.
 
@@ -108,7 +108,7 @@ Cards are the site's one repeated object, and they are written like playing card
 - **`.keyed`** (and `.pc-face`) draws a faint inner rule inside the card, like the border on a face card.
 - **A client's window** is `.tile`: a phone browser window with the client's host in the address bar, their footage on the screen, and their color around it. It is a real link to the case study; with JavaScript a click opens the client sheet instead, unless `data-direct` keeps it a link. `Caption` sits under it with the name and sector, numbered like `01 Nonprofit` when it has a place in the deck.
 - **The price hand** (`PriceHand.astro`, `ui.priceHand`) is three cards, paper, blue and ink. On a wide screen they are dealt out of one stack into a fan; on a phone CSS stacks them.
-- **The closing deck**: the eight clients gather into one deck as the closing arrives, a ninth card reads Yours, and the studio name sits at poster size.
+- **The closing deck**: the case studies gather into one deck as the closing arrives, a last card reads Yours, with a Y in its corner and never a number, and the studio name sits at poster size.
 - **The deck order** is `DECK` in `src/lib/clients.ts`, not the study loop's `order` field. Home, /work and the closing all read it.
 
 ## 5. Surfaces that are not cards
