@@ -220,6 +220,26 @@
   font-size: var(--type-h2);
   min-width: 0;
 }
+/* The client's color carries down the page in small things: each chapter opens on a short numbered
+   mark in it. The page itself stays neutral. The pair is checked in case-palettes.test.ts. */
+.chap > h2::before {
+  content: counter(chap, decimal-leading-zero);
+  content: counter(chap, decimal-leading-zero) / '';
+  display: block;
+  width: fit-content;
+  min-width: 2.75rem;
+  margin-bottom: 0.7rem;
+  padding-top: 0.5rem;
+  border-top: 0.25rem solid var(--c);
+  color: var(--c);
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  font-variant-numeric: tabular-nums;
+}
+::selection {
+  background: var(--c);
+  color: var(--p);
+}
 .chap.idea h2 {
   font-size: var(--type-h2);
   max-width: 18em;
@@ -354,6 +374,10 @@ figure {
 }
 .dec-did dt {
   color: var(--c);
+}
+.dec-did {
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--c);
 }
 @container (min-width:40rem) {
   .dec dl {
@@ -1121,7 +1145,10 @@ html:not(.js) .ba .ba-i .ba-b {
 /* The deck. Decisions are numbered cards with one corner mark in the client's color: a box this wide is no playing card,
    and an upside-down numeral on it reads as a typo. Their figures are ruled, not boxed. */
 .chaps {
-  counter-reset: dec;
+  counter-reset: dec chap;
+}
+.chap {
+  counter-increment: chap;
 }
 .dec {
   --cardr: 1.25rem;
@@ -1180,8 +1207,11 @@ html:not(.js) .ba .ba-i .ba-b {
   border-radius: 0;
   background: none;
   box-shadow: none;
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--c);
   border-bottom: 1px solid var(--line);
+}
+.more summary i {
+  color: var(--c);
 }
 .more summary {
   padding-left: 0;
@@ -1196,13 +1226,31 @@ html:not(.js) .ba .ba-i .ba-b {
 }
 /* Their words sit on their own color, inside the column. */
 .q {
+  position: relative;
   padding: clamp(1.75rem, 3.6vw, 3.5rem);
   border-radius: 1.5rem;
   background: var(--c);
   color: var(--p);
 }
+/* The same faint inner rule a face card has, in the client's paper, and a large opening mark. */
+.q::after {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid var(--p);
+  border-radius: 1.1rem;
+  opacity: 0.3;
+  pointer-events: none;
+}
 .q blockquote {
   color: var(--p);
+}
+.q blockquote::before {
+  content: '\201C';
+  content: '\201C' / '';
+  display: block;
+  height: 0.62em;
+  font: 700 clamp(3.5rem, 6vw, 5rem) / 1 var(--display);
 }
 .q figcaption,
 .q figcaption b {

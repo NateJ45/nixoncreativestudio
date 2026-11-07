@@ -91,13 +91,19 @@ html:not(.js) .stand {
 .ch-job {
   grid-row: 2;
   font-size: var(--type-h2);
-  padding-left: clamp(1.25rem, 2.4vw, 2.25rem);
   margin-bottom: 0.5rem;
 }
+/* The words sit on the hero's margin; a card's surface hangs out into the gutter around them. */
 .pt {
+  --pti: clamp(1.25rem, 2.4vw, 2.25rem);
   display: flex;
   align-items: center;
-  min-height: min(62vh, 34rem);
+  min-height: min(44vh, 24rem);
+}
+@media (min-width: 62.01rem) {
+  .pt-in {
+    margin-left: calc(-1 * var(--pti));
+  }
 }
 .p1 {
   grid-row: 3;
@@ -113,7 +119,7 @@ html:not(.js) .stand {
   margin-bottom: clamp(2rem, 10vh, 6rem);
 }
 .pt-in {
-  padding: clamp(1.25rem, 2.4vw, 2.25rem);
+  padding: var(--pti, 1.25rem);
   border-radius: 1.25rem;
   background: rgba(255, 255, 255, 0);
   transition:
@@ -252,7 +258,6 @@ html:not(.js) .stand {
     margin: 0 auto 3rem;
   }
   .ch-job {
-    padding-left: 0;
     margin: 0 0 1.25rem;
   }
   .pt {
@@ -323,7 +328,6 @@ html:not(.js) .stand {
   }
   .ch-job {
     margin-bottom: 1rem;
-    padding-left: 0;
   }
   .ch-head {
     min-height: 0;
@@ -356,7 +360,7 @@ html:not(.js) .stand {
   content: counter(pt);
 }
 .pt-in::before {
-  left: clamp(1.25rem, 2.4vw, 2.25rem);
+  left: var(--pti, 1.25rem);
   top: 1.15rem;
 }
 .pt-in {

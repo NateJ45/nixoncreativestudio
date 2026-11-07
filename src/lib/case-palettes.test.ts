@@ -40,6 +40,18 @@ test('study order runs 1..n with no gaps or repeats', () => {
   );
 });
 
+// The accent also leaves the hero as small text on the page: chapter marks, the corner number on a
+// decision, "What I did". So it has to read on the neutral page and on a white card.
+for (const { slug, accent } of studies) {
+  test(`${slug}: accent as text on the page and on a card clears AA`, () => {
+    assert.ok(accent);
+    for (const ground of ['#f5f5f3', '#ffffff']) {
+      const ratio = contrastRatio(accent, ground);
+      assert.ok(ratio >= AA_BODY_TEXT, `${slug}: ${accent} on ${ground} is ${ratio.toFixed(2)}:1`);
+    }
+  });
+}
+
 for (const { slug, paper, accent } of studies) {
   test(`${slug}: paper on accent clears AA`, () => {
     assert.ok(paper && accent, `${slug} needs palette.paper and palette.accent`);

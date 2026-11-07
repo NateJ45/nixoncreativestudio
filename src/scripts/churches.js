@@ -17,10 +17,13 @@ import { ui } from './kit.js';
 
   ui.wireFootage($('.ch-studies'));
 
-  /* Where each page rests, in pixels of the 560-wide capture: the top, then the part each point is talking about. */
+  /* Where each page rests, in pixels of the 560-wide capture: the top, then the part each point is talking about.
+     Orangeburg stops above its events band: that real section reads "No events at the moment" between
+     events, which says nothing about the site. The screen is about 1090 of these pixels tall, and the
+     band starts at 1947, so the last stop keeps the band out of the window on the way there too. */
   var STOPS = {
     'first-baptist-muncie': [0, 1370, 2280],
-    'first-presbyterian-orangeburg': [0, 985, 2200],
+    'first-presbyterian-orangeburg': [0, 430, 840],
   };
   var LONG = { 'first-baptist-muncie': 3300, 'first-presbyterian-orangeburg': 3400 };
   var stands = $$('[data-stand]').map(function (el, i) {
