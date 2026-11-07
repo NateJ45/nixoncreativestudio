@@ -82,16 +82,16 @@ test.describe('Prices', () => {
     }
   });
 
-  test('every tier has the same Yours to keep block, claiming only what is true', async ({
+  test('every tier has the same move-on block, and no claim about whose accounts they are', async ({
     page,
   }) => {
     await page.goto('/services/');
     const blocks = await page.locator('.t-keep').allInnerTexts();
     expect(blocks).toHaveLength(3);
     expect(new Set(blocks).size).toBe(1);
-    expect(blocks[0]).toContain('yours outright');
-    expect(blocks[0]).toContain('handed over, with documentation');
-    // Not established yet: see the comment on yoursToKeep in src/data/pricing.ts.
+    expect(blocks[0]).toContain('I host it');
+    expect(blocks[0]).toContain('code, content and documentation go with you');
+    // Nathan runs the hosting and repos on purpose: see the comment on freeToMove in src/data/pricing.ts.
     expect(blocks[0]).not.toMatch(/your name|backup|your accounts|your domain/i);
     const main = await page.locator('main').innerText();
     expect(main).not.toMatch(/in your name|backup person|never locked out/i);
@@ -137,7 +137,9 @@ test.describe('Prices', () => {
     await expect(box.locator('.checks dt')).toHaveCount(5);
     const words = await box.innerText();
     expect(words).not.toMatch(/saves? (you )?money|pays for itself|cheaper in the long run/i);
-    expect(words).not.toMatch(/squarespace|wix|wordpress\.com|nucleus|subsplash/i);
+    // Squarespace and Wix are named on purpose: leaving them usually means a rebuild.
+    expect(words).toMatch(/leaving squarespace or wix usually means rebuilding/i);
+    expect(words).not.toMatch(/wordpress\.com|nucleus|subsplash/i);
   });
 
   test('the status board paragraph stays as written', async ({ page }) => {
