@@ -93,10 +93,14 @@ test.describe('Prices', () => {
     await expect(heads).toHaveCount(4);
     await expect(heads.first()).toContainText('$200');
     await expect(page.locator('table.care')).toContainText('Same business day replies');
-    // Security is never gated: software updates are in every plan, from Hosting up.
-    const row = page.locator('table.care tr', { hasText: 'Software and security updates' });
-    await expect(row.locator('td.n')).toHaveCount(0);
-    await expect(row.locator('td.y')).toHaveCount(4);
+    // Security is never gated: security updates are in every plan, from Hosting up.
+    const security = page.locator('table.care tr', { hasText: 'Security updates' });
+    await expect(security.locator('td.n')).toHaveCount(0);
+    await expect(security.locator('td.y')).toHaveCount(4);
+    // Routine software updates are care work: Light Care and up.
+    const software = page.locator('table.care tr', { hasText: 'Software updates' });
+    await expect(software.locator('td.n')).toHaveCount(1);
+    await expect(software.locator('td.y')).toHaveCount(3);
   });
 
   test('the first screen meets the tiers before the big number', async ({ page }) => {
