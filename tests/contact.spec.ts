@@ -20,6 +20,7 @@ async function fillAll(page: Page, sector = 'Church') {
     .fill('A new website for the congregation, with room for the weekly news.');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
+  await page.getByRole('button', { name: /Next|Skip/ }).click();
 }
 
 test.describe('Without JavaScript', () => {
@@ -78,13 +79,13 @@ test.describe('With JavaScript', () => {
     await page.goto('/contact/');
     await expect(page.getByLabel("What's your name?")).toBeVisible();
     await expect(page.getByLabel("What's your email?")).toBeHidden();
-    await expect(page.locator('[data-count]')).toHaveText('Question 1 of 6');
+    await expect(page.locator('[data-count]')).toHaveText('Question 1 of 7');
     await page.getByRole('button', { name: 'Next' }).click();
     await expect(page.locator('#name-err')).toContainText('your name');
     await page.getByLabel("What's your name?").fill('Sam');
     await page.getByRole('button', { name: 'Next' }).click();
     await expect(page.getByLabel("What's your email?")).toBeVisible();
-    await expect(page.locator('[data-count]')).toHaveText('Question 2 of 6');
+    await expect(page.locator('[data-count]')).toHaveText('Question 2 of 7');
   });
 
   test('prefill fills the radio, the budget and the origin fields', async ({ page }) => {

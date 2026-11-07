@@ -31,7 +31,7 @@ test.describe('Prices', () => {
     await expect(page.locator('[data-pick-go]')).toBeHidden();
     await pick.getByRole('radio', { name: 'Connect to other services' }).check();
     await expect(page.locator('[data-pick-name]')).toHaveText('Signature');
-    await expect(page.locator('[data-pick-price]')).toHaveText('$7,000');
+    await expect(page.locator('[data-pick-price]')).toHaveText('$9,000');
     const go = page.locator('[data-pick-go]');
     await expect(go).toBeVisible();
     await expect(go).toHaveAttribute('href', '/contact/?tier=signature');
@@ -67,8 +67,8 @@ test.describe('Prices', () => {
     test('the tiers, care plans and FAQ are all in the markup', async ({ page }) => {
       await page.goto('/services/');
       await expect(page.locator('.tier')).toHaveCount(3);
-      await expect(page.locator('.t-price').first()).toHaveText('$4,000+');
-      await expect(page.locator('.faq details')).toHaveCount(6);
+      await expect(page.locator('.t-price').first()).toHaveText('$5,000+');
+      await expect(page.locator('.faq details')).toHaveCount(7);
       await expect(page.locator('[data-sites] a.tile')).toHaveCount(4);
     });
   });

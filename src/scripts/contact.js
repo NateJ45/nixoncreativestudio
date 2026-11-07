@@ -38,9 +38,13 @@ var orgLabel = {
   'small-business': 'A small business',
   other: 'Something else',
 };
-var budgetLabel = {},
+var runsLabel = {},
+  budgetLabel = {},
   timeLabel = {},
   heardLabel = {};
+$$('input[name=runs]').forEach(function (r) {
+  runsLabel[r.value] = r.nextElementSibling.textContent;
+});
 $$('input[name=budget]').forEach(function (r) {
   budgetLabel[r.value] = r.nextElementSibling.textContent;
 });
@@ -108,6 +112,15 @@ var LINES = [
     cls: 'msg',
     get: function () {
       return val('message');
+    },
+  },
+  {
+    key: 'runs',
+    term: 'Who runs it',
+    ph: 'Who runs it',
+    cls: 'pill',
+    get: function () {
+      return runsLabel[val('runs')] || '';
     },
   },
   {
@@ -355,7 +368,10 @@ function show(i, dir, noFocus) {
   var lastStep = cur === steps.length - 1;
   next.hidden = lastStep;
   send.hidden = !lastStep;
-  next.textContent = q.dataset.step === 'budget' && !val('budget') ? 'Skip' : 'Next';
+  next.textContent =
+    (q.dataset.step === 'budget' && !val('budget')) || (q.dataset.step === 'runs' && !val('runs'))
+      ? 'Skip'
+      : 'Next';
   if (dir) enter(q, dir);
   if (!noFocus) focusStep(q);
 }
@@ -479,7 +495,7 @@ form.addEventListener('input', function (e) {
   var q = e.target.closest('[data-step]');
   if (q) {
     clear(q);
-    if (q.dataset.step === 'budget') next.textContent = 'Next';
+    if (q.dataset.step === 'budget' || q.dataset.step === 'runs') next.textContent = 'Next';
   }
   refresh();
 });
@@ -496,6 +512,7 @@ var PERSISTED = [
   'organization',
   'org_type',
   'message',
+  'runs',
   'budget',
   'phone',
   'current_website',

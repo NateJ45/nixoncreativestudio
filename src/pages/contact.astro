@@ -16,7 +16,7 @@
 
    The form, field by field:
      Required: name, email, org_type (radios), message.
-     Optional: budget, as radios whose labels read from the web tier floors in
+     Optional: runs (who keeps it up to date), and budget, as radios whose labels read from the web tier floors in
      src/data/pricing.ts. Then organization, phone, current_website, timeline
      and heard_from on the last step.
      Hidden: access_key, subject, from_name and redirect (Web3Forms), the
@@ -58,6 +58,15 @@ import { plainText, wordSpans } from '../lib/words';
 const orgTypes = [
   ...Object.entries(SECTOR_LABEL).map(([value, label]) => ({ value, label })),
   { value: 'other', label: 'Something else' },
+];
+
+// What the "who keeps it up to date" step offers. The answer points at the depth of editor.
+const runs = [
+  { value: 'one-person', label: 'One busy person' },
+  { value: 'team', label: 'A staff or volunteer team' },
+  { value: 'tools', label: 'A team, and it needs custom tools' },
+  { value: 'you', label: "I'd rather you did it" },
+  { value: 'not-sure', label: 'Not sure yet' },
 ];
 
 // Budget ranges, built from the three web tier floors in src/data/pricing.ts, so
@@ -185,7 +194,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
         <input type="hidden" name="origin_org_type" value="" data-origin="org_type" />
 
         <div class="q-count" data-count-box>
-          <p data-count>Question 1 of 6</p>
+          <p data-count>Question 1 of 7</p>
           <span class="q-bar" aria-hidden="true">
             <i data-bar></i>
           </span>
@@ -267,6 +276,21 @@ const heading = 'Start a project, or just <b>say hello.</b>';
           </p>
           <p class="err" id="message-err" data-err></p>
         </div>
+
+        <fieldset class="q" data-step="runs">
+          <legend class="q-t">
+            Who will keep it up to date? <span class="opt-mark">(optional)</span>
+          </legend>
+          <p class="q-h">This shapes the editor I build more than anything else.</p>
+          <div class="opts" data-runs>
+            {runs.map((r) => (
+              <label class="opt">
+                <input type="radio" name="runs" value={r.value} />
+                <span>{r.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <fieldset class="q" data-step="budget">
           <legend class="q-t">

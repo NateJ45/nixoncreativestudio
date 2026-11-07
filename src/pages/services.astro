@@ -73,7 +73,7 @@ const photoBody =
 const faq = [
   {
     q: 'What does it cost?',
-    a: `Websites start at ${money(launch.priceFrom)} for a focused ${launch.name} site. Most projects land between ${money(signatureLow)} and ${money(signatureHigh)}, and builds with real custom functionality start around ${money(flagship.priceFrom)}. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before anyone is committed, and larger projects can be split into monthly payments so the budget is about cash flow, not one big wall.`,
+    a: `Websites start at ${money(launch.priceFrom)} for a focused ${launch.name} site. A site your team runs usually comes to ${money(signatureLow)} to ${money(signatureHigh)}, and builds with real custom functionality start around ${money(flagship.priceFrom)}. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before anyone is committed, and larger projects can be split into monthly payments so the budget is about cash flow, not one big wall.`,
   },
   {
     q: 'What if I have been quoted less somewhere else?',
@@ -85,7 +85,11 @@ const faq = [
   },
   {
     q: 'Do I need a care plan after launch?',
-    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. Your site is yours outright, but hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, and faster replies. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
+    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. Your site is yours outright, but hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour and custom work at $150. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, a monthly report, and faster replies. A site with custom tools needs ${care.name} or above, because tools need looking after. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
+  },
+  {
+    q: 'Is there a monthly fee for the editor?',
+    a: 'Usually not for a small team. WordPress has no license fee, and Sanity has a free plan and a plan for nonprofits. If your team would ever need a paid plan, I tell you the cost before you commit.',
   },
   {
     q: 'Can you work with my existing brand?',
@@ -155,7 +159,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <p class="from-num">{money(launch.priceFrom)}</p>
       <ul class="from-notes">
         <li>
-          <b>Most projects</b>
+          <b>A site your team runs</b>
           {money(signatureLow)} to {money(signatureHigh)}
         </li>
         <li>
@@ -169,6 +173,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <nav class="jump" aria-label="On this page">
       <a href="#websites">Websites</a>
       <a href="#pick">Help me choose</a>
+      <a href="#behind">Behind the site</a>
       <a href="#every-build">In every build</a>
       <a href="#why">Why one person</a>
       <a href="#add-ons">Add-ons and photography</a>
@@ -331,6 +336,88 @@ const heading = `What I do, and <b>what it costs.</b>`;
           <a class="chip go pick-go" href="/contact/" data-pick-go hidden>
             Start with <span data-pick-go-name></span>
           </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec tight behind" id="behind" aria-labelledby="behind-h">
+    <div class="wrap">
+      <div class="behind-head">
+        <p class="label">Behind the site</p>
+        <h2 id="behind-h">
+          The part your team <b>actually uses.</b>
+        </h2>
+        <p class="lede">
+          A template gives you a site and a settings screen. I build the side your staff see every
+          week, on Sanity or WordPress, whichever suits the people running it.
+        </p>
+      </div>
+      <div class="behind-grid">
+        <figure class="behind-shot">
+          <img
+            src="/assets/theology-matters-cms.webp"
+            width="1100"
+            height="688"
+            alt="The WordPress dashboard I built for Theology Matters, with tasks like adding an article and a list of scheduled articles"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>The home screen I built for the Theology Matters staff.</figcaption>
+        </figure>
+        <ul class="behind-list">
+          <li>
+            <b>A home screen</b>What is coming up, what needs fixing, and whether the site is live.
+          </li>
+          <li>
+            <b>A guide beside the work</b>Written for your site, searchable, with help next to each
+            page.
+          </li>
+          <li>
+            <b>Checks before publishing</b>Missing photos and broken links get caught before a
+            visitor sees them.
+          </li>
+          <li>
+            <b>Hard to break</b>Deleted pages go to a trash can, and earlier versions are there to
+            go back to.
+          </li>
+          <li>
+            <b>Private previews</b>See a page exactly as it will look, and send the link to a
+            colleague.
+          </li>
+        </ul>
+      </div>
+      <div class="behind-cards">
+        <div class="card keyed see see-plain">
+          <span class="pip" aria-hidden="true">
+            &minus;
+          </span>
+          <span class="pip flip" aria-hidden="true">
+            &minus;
+          </span>
+          <h3>A plain tracker tells you</h3>
+          <ul>
+            <li>How many people visited</li>
+            <li>Which pages they landed on</li>
+            <li>Where they came from</li>
+          </ul>
+        </div>
+        <div class="card keyed see see-mine">
+          <span class="pip" aria-hidden="true">
+            +
+          </span>
+          <span class="pip flip" aria-hidden="true">
+            +
+          </span>
+          <h3>What I set up tells you</h3>
+          <ul>
+            <li>On a church site: who started a gift, added an event, got the app</li>
+            <li>On a race site: who went on to register</li>
+            <li>
+              On a journal: which articles got read to the end, and searches that found nothing
+            </li>
+            <li>Each month on Care: a short report I read first, with what to fix</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -595,8 +682,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
         </table>
       </div>
       <p class="after">
-        Unused hours do not roll over. Anything beyond your plan is quoted in writing first. Change
-        or cancel with 30 days notice.
+        Unused hours do not roll over. Anything beyond your plan is quoted in writing first. Sites
+        with custom tools need {care.name} or above. Change or cancel with 30 days notice.
       </p>
     </div>
   </section>

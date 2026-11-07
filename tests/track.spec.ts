@@ -41,6 +41,7 @@ test('a sent contact form fires generate_lead, with no field values', async ({ p
     .fill('A new site for our congregation, with sermons and events kept current.');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
+  await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByRole('heading', { name: 'Thanks, your message is in.' })).toBeFocused();
 
@@ -67,6 +68,7 @@ test('a failed post fires no generate_lead', async ({ page }) => {
     .getByLabel('What are you hoping to build?')
     .fill('A new site for our congregation, with sermons and events kept current.');
   await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.locator('[data-contact-submit]')).toBeEnabled();

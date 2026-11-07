@@ -248,7 +248,7 @@
     transform: translateY(calc((var(--f) - 1) * var(--lh)));
   }
   .tiers.live .t-list li {
-    --fi: clamp(0, calc((var(--f) - 0.1 - var(--i) * 0.22) / 0.24), 1);
+    --fi: clamp(0, calc((var(--f) - 0.1 - var(--i) * 0.16) / 0.24), 1);
     opacity: var(--fi);
     transform-origin: 50% 0;
     transform: perspective(38rem) rotateX(calc((1 - var(--fi)) * -82deg))
@@ -1322,4 +1322,119 @@
 .jump {
   position: relative;
   z-index: 1;
+}
+
+/* Behind the site: what the team sees, and what the numbers can say. */
+.behind-head {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.behind-head h2 {
+  margin-top: 0.9rem;
+  font-size: clamp(2.25rem, 4.4vw, 4.5rem);
+}
+.behind-head h2 b {
+  font-weight: 700;
+  color: var(--accent);
+}
+.behind-head .lede {
+  max-width: 42rem;
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.4;
+}
+.behind-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+.behind-shot {
+  margin: 0;
+}
+.behind-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.9rem;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 26px 44px -26px rgba(0, 0, 0, 0.42);
+}
+.behind-shot figcaption {
+  margin-top: 0.75rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+.behind-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.behind-list li {
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+  line-height: 1.35;
+}
+.behind-list b {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+.behind-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: clamp(0.75rem, 1.4vw, 1.25rem);
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+}
+.see {
+  --cardr: 1.5rem;
+  --pipx: 1.5rem;
+  --pipy: 1.1rem;
+  --pips: 1.75rem;
+  padding: 3.75rem 1.5rem 3.5rem;
+  border-radius: var(--cardr);
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 26px 44px -22px rgba(0, 0, 0, 0.42);
+}
+.see h3 {
+  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.see ul {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.35;
+}
+.see-plain {
+  color: var(--soft);
+}
+.see-plain h3 {
+  color: var(--ink);
+}
+.see-mine {
+  background: var(--ink);
+  color: #fff;
+}
+.see-mine h3 {
+  color: #fff;
+}
+@media (max-width: 60rem) {
+  .behind-grid,
+  .behind-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
