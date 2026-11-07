@@ -79,3 +79,7 @@ Set in the dashboard (nixoncreativestudio.com, Rules, Redirect Rules), not in th
 
 1. **Redirect www to apex**: `www` 301s to the apex. (It also carries an exclusion for `/_emdash/` and `/_astro/` from the EmDash period; EmDash was rolled back, so the exclusion does nothing now.)
 2. **Slashless page paths 301 to trailing slash** (2026-10-26): on `nixoncreativestudio.com`, a GET or HEAD for a path with no trailing slash and no dot 301s to the same path plus `/`, keeping the query string. Without it, Workers static assets answer `/about` with a **307**, which Google treats as temporary, so the slashless URL can stay canonical in Search Console. It skips `/_emdash`, `/api/`, `/files/`, `/cdn-cgi/`, `/preview` and `/studio`, because those were Worker routes and a 301 would turn a POST into a GET. Nothing here is server-rendered today. **If you ever add an SSR route prefix, add it to the rule's exclusions.**
+
+## Video and byte ranges
+
+A static build deploys as assets only, and the adapter drops any Worker named in `wrangler.jsonc`. Static assets answer a Range request with a plain 200, and iPhones will not play a clip that way. So `scripts/add-video-worker.mjs`, the last step of `npm run build`, adds `src/worker.ts` to `dist/client/wrangler.json` with `run_worker_first` limited to `*.mp4`. Everything else is still served as a plain asset. To check it live, request a clip with `Range: bytes=0-1` and expect a 206.
