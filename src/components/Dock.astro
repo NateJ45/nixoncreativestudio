@@ -11,6 +11,7 @@ import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
+import ThemeFlip from './ThemeFlip.astro';
 
 const path = Astro.url.pathname;
 const current = (href: string) =>
@@ -123,9 +124,5 @@ const deck = 'Eight selected case studies';
     </div>
   </div>
 
-  {/* The theme flipper's place. ThemeFlip.astro from the dark mode work replaces this
-      drawing with the real button; until then it is only the card, and does nothing. */}
-  <span class="flip-slot" aria-hidden="true">
-    <i>N</i>
-  </span>
+  <ThemeFlip />
 </nav>

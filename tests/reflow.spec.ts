@@ -25,7 +25,8 @@ const overflowOf = (page: Parameters<typeof settle>[0]) =>
   }));
 
 test.describe('Reflow: no horizontal overflow at 320px', () => {
-  test.use({ viewport: { width: 320, height: 720 } });
+  // On the dark side, because that is the theme with extra rules; the layout is the same in both.
+  test.use({ viewport: { width: 320, height: 720 }, colorScheme: 'dark' });
 
   for (const route of routes) {
     test(`${route} does not overflow at 320px`, async ({ page }) => {

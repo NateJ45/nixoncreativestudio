@@ -18,24 +18,27 @@ import { settle } from './helpers';
 // best-practice + 2.2 coverage the default set gives us.
 // =============================================================================
 
-test.describe('Accessibility: no axe violations', () => {
-  for (const route of routes) {
-    test(`${route} passes axe`, async ({ page }) => {
-      await page.goto(route, { waitUntil: 'domcontentloaded' });
-      // Settle fonts + reveal content (no half-faded text) so axe audits the
-      // real, fully-rendered page; mid-transition opacity produces false
-      // color-contrast violations.
-      await settle(page);
-      const results = await new AxeBuilder({ page }).analyze();
-      expect(
-        results.violations,
-        results.violations
-          .map((v) => {
-            const targets = v.nodes.map((n) => n.target.join(' ')).join(', ');
-            return `[${v.impact ?? 'unknown'}] ${v.id}: ${v.help}\n    selectors: ${targets}`;
-          })
-          .join('\n'),
-      ).toEqual([]);
-    });
-  }
-});
+for (const colorScheme of ['light', 'dark'] as const)
+  test.describe(`Accessibility: no axe violations, ${colorScheme}`, () => {
+    // ThemeBoot follows the device when no choice has been made.
+    test.use({ colorScheme });
+    for (const route of routes) {
+      test(`${route} passes axe`, async ({ page }) => {
+        await page.goto(route, { waitUntil: 'domcontentloaded' });
+        // Settle fonts + reveal content (no half-faded text) so axe audits the
+        // real, fully-rendered page; mid-transition opacity produces false
+        // color-contrast violations.
+        await settle(page);
+        const results = await new AxeBuilder({ page }).analyze();
+        expect(
+          results.violations,
+          results.violations
+            .map((v) => {
+              const targets = v.nodes.map((n) => n.target.join(' ')).join(', ');
+              return `[${v.impact ?? 'unknown'}] ${v.id}: ${v.help}\n    selectors: ${targets}`;
+            })
+            .join('\n'),
+        ).toEqual([]);
+      });
+    }
+  });

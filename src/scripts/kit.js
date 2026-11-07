@@ -923,6 +923,7 @@ if (weighs.length && !reduce) {
       if (n !== w.shown) {
         w.shown = n;
         w.el.style.fontWeight = n;
+        w.el.style.setProperty('--lit', ((n - 200) / 500).toFixed(3));
       }
     });
     if (live) wraf = requestAnimationFrame(wframe);

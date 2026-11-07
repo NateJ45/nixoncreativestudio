@@ -26,7 +26,7 @@ const viewports = [
   { name: '1440', width: 1440, height: 900 },
   { name: '390', width: 390, height: 844 },
 ] as const;
-const themes = ['light'] as const;
+const themes = ['light', 'dark'] as const;
 
 // Elements whose text changes between runs. Missing ones are simply not masked.
 const MASKED = [
