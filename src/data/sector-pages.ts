@@ -68,7 +68,7 @@ export const SCHOOLS: LeanSector = {
   sector: 'school',
   title: 'School websites',
   description:
-    'School websites built around what families ask first: what it costs, how to visit and how to start. Real work, thin proof said plainly, and honest tier advice.',
+    'School websites built around what families ask first: what it costs, how to visit and how to start, with honest advice on which tier fits your school.',
   label: 'Schools',
   linkText: 'How I build for schools',
   heading: `School websites built around <b>a family's first questions.</b>`,

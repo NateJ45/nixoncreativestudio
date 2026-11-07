@@ -144,7 +144,7 @@ test.describe('Prices', () => {
     await page.goto('/services/');
     const care = (await page.locator('#care').innerText()).replace(/\s+/g, ' ');
     expect(care).toContain(
-      "Every site I look after sits on one status board. It checks every 15 minutes that the site is up, and tracks how fast it answers, whether deploys and backups ran, known security alerts in its software, and domain renewals where I manage the domain. Spotting a problem isn't left to you.",
+      'Every site I look after sits on one status board. It checks every 15 minutes that the site is up, and tracks how fast it answers, whether deploys and backups ran, known security alerts in its software, and domain renewals where I manage the domain. If a site goes down, my phone tells me, so I usually know before you do.',
     );
   });
 
