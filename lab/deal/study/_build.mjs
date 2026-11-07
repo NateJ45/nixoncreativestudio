@@ -293,7 +293,7 @@ async function page(st, next) {
   });
 
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>${esc(d.client)} | Nixon Creative Studio</title><meta name="description" content="${esc(fix(d.metaDescription || d.summary))}"><link rel="icon" href="data:,">
+<title>${esc(d.client)} | Nixon Creative Studio</title><meta name="description" content="${esc(fix(d.metaDescription || d.summary))}"><link rel="icon" href="/assets/brand/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/hanken.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/deal/kit.css"><link rel="stylesheet" href="/deal/study/study.css"><script>document.documentElement.classList.add('js')</script></head>
 <body data-ink="1" style="--c:${st.accent};--p:${st.accentInk};--oncolor:${st.accentInk};--long:${longest}"><main id="main">

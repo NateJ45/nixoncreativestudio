@@ -26,3 +26,7 @@ Live at https://ncs-motion-lab.nathanjnixon86.workers.dev/deal/ (a separate noin
 ## Fonts
 
 `fonts/` is a switcher that shows the homepage in eight font pairings through `/deal/?type=<option>`. `fonts/cold.mjs` loads the homepage in a fresh browser each run, which is how the stuck-windows bug showed up.
+
+## Working wordmark
+
+The name in Hanken Grotesk, with Nixon bold, is the working wordmark. `tools/wordmark.mjs` writes the outlined SVGs and favicon in `assets/brand/`. `logo/name/` and `logo/skyline/` are shelved explorations and are not deployed.

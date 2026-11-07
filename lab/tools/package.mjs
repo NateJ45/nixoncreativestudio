@@ -9,7 +9,7 @@ fs.mkdirSync(OUT + 'public', { recursive: true });
 fs.writeFileSync(OUT + 'worker.js', workerSrc);
 const pub = OUT + 'public/';
 for (const d of ['deal', 'assets', 'logo', 'fonts']) {
-  fs.cpSync(LAB + d, pub + d, { recursive: true, filter: (s) => !/[\\/](_test|_qa|_design|_shots|skyline)([\\/]|$)/.test(s) && !/[\\/]_f-/.test(s) && !/[\\/](BRIEF\.md|_build\.mjs|gf\.css|build\.mjs|look\.mjs|motion\.mjs|shot\.mjs|sheet\.mjs|check\.mjs|cold\.mjs|close\.mjs|_compare\.jpg|_close-[^\\/]*|_switch-[^\\/]*|_bodoni\.jpg|_shot-[^\\/]*|[^\\/]*\.ttf)$/.test(s) });
+  fs.cpSync(LAB + d, pub + d, { recursive: true, filter: (s) => !/[\\/](_test|_qa|_design|_shots|skyline|name)([\\/]|$)/.test(s) && !/[\\/]_[^\\/]*$/.test(s) && !/\.(mjs|ttf)$/.test(s) && !/[\\/]BRIEF\.md$/.test(s) });
 }
 fs.copyFileSync(LAB + 'shared.js', pub + 'shared.js');
 fs.copyFileSync(LAB + 'deal/404.html', pub + '404.html');
