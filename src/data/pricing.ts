@@ -152,7 +152,7 @@ export const carePlans: CarePlan[] = [
     time: 'No edits included; changes at $100 an hour',
     features: [
       'Fast, secure hosting',
-      'Uptime monitoring',
+      'Uptime monitoring, every 15 minutes',
       'Daily backups',
       'Domain and security renewals handled',
     ],
