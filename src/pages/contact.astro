@@ -155,7 +155,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
       <header class="st-head">
         <h1 id="sth" aria-label={plainText(heading)} set:html={wordSpans(heading)} />
         <p class="lede">
-          A sentence about your project is enough to get started. If you'd rather{' '}
+          A few sentences about your project are enough to get started. If you'd rather{' '}
           <a href={site.emailHref}>email</a> or <a href={site.phoneHref}>call</a>, those work just
           as well.
         </p>
@@ -194,7 +194,9 @@ const heading = 'Start a project, or just <b>say hello.</b>';
         <input type="hidden" name="origin_org_type" value="" data-origin="org_type" />
 
         <div class="q-count" data-count-box>
-          <p data-count>Question 1 of 7</p>
+          <p data-count aria-hidden="true">
+            Question 1 of 7
+          </p>
           <span class="q-bar" aria-hidden="true">
             <i data-bar></i>
           </span>
@@ -214,7 +216,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             autocomplete="name"
             aria-describedby="name-err"
           />
-          <p class="err" id="name-err" data-err></p>
+          <p class="err" id="name-err" data-err role="alert"></p>
         </div>
 
         <div class="q" data-step="email">
@@ -234,10 +236,10 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             inputmode="email"
             aria-describedby="email-h email-err"
           />
-          <p class="err" id="email-err" data-err></p>
+          <p class="err" id="email-err" data-err role="alert"></p>
         </div>
 
-        <fieldset class="q" data-step="org_type" aria-describedby="org-h org-err">
+        <fieldset class="q" role="radiogroup" data-step="org_type" aria-describedby="org-h org-err">
           <legend class="q-t">What kind of organization is it?</legend>
           <p class="q-h" id="org-h">
             Pick the closest.
@@ -250,7 +252,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
               </label>
             ))}
           </div>
-          <p class="err" id="org-err" data-err></p>
+          <p class="err" id="org-err" data-err role="alert"></p>
         </fieldset>
 
         <div class="q" data-step="message">
@@ -268,13 +270,13 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             rows="5"
             required
             minlength="30"
-            aria-describedby="msg-h message-err"
+            aria-describedby="msg-h msg-enter message-err"
             placeholder="What you're trying to do and roughly when you'd like to launch."
           ></textarea>
-          <p class="enter-h" data-enter-h aria-hidden="true">
+          <p class="enter-h" id="msg-enter" data-enter-h>
             Enter to continue, Shift and Enter for a new line.
           </p>
-          <p class="err" id="message-err" data-err></p>
+          <p class="err" id="message-err" data-err role="alert"></p>
         </div>
 
         <fieldset class="q" data-step="runs">
@@ -343,7 +345,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
                 placeholder="https://"
                 aria-describedby="site-err"
               />
-              <p class="err" id="site-err" data-err></p>
+              <p class="err" id="site-err" data-err role="alert"></p>
             </div>
             <div class="m-f">
               <label for="timeline">Project timeline</label>

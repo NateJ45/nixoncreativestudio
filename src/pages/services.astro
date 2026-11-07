@@ -20,7 +20,7 @@ import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import Closing from '../components/Closing.astro';
 import { site } from '../data/site';
-import { webTiers as tiers, addOns, carePlans } from '../data/pricing';
+import { webTiers as tiers, addOns, carePlans, customWorkRate } from '../data/pricing';
 import { getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
 import { addOnNamed, addOnOffer, careOffers, ids, tierOffers } from '../lib/schema';
@@ -65,7 +65,7 @@ const webBody =
   'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.';
 
 const strategyBody =
-  'Strategy always comes first. Without it, design becomes decoration. It starts with a working session together, then I write a short brief that the rest of the project follows.';
+  'Strategy always comes first, because the design has to serve a plan. It starts with a working session together, then I write a short brief that the rest of the project follows.';
 
 const photoBody =
   'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.';
@@ -73,7 +73,7 @@ const photoBody =
 const faq = [
   {
     q: 'What does it cost?',
-    a: `Websites start at ${money(launch.priceFrom)} for a focused ${launch.name} site. A site your team runs usually comes to ${money(signatureLow)} to ${money(signatureHigh)}, and builds with real custom functionality start around ${money(flagship.priceFrom)}. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before anyone is committed, and larger projects can be split into monthly payments so the budget is about cash flow, not one big wall.`,
+    a: `Websites start at ${money(launch.priceFrom)} for a focused ${launch.name} site. A site your team runs usually comes to ${money(signatureLow)} to ${money(signatureHigh)}, and builds with real custom functionality start around ${money(flagship.priceFrom)}. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before anyone is committed, and larger projects can be split into monthly payments, which is easier on cash flow.`,
   },
   {
     q: 'What if I have been quoted less somewhere else?',
@@ -85,7 +85,7 @@ const faq = [
   },
   {
     q: 'Do I need a care plan after launch?',
-    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. Your site is yours outright, but hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour and custom work at $150. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, a monthly report, and faster replies. A site with custom tools needs ${care.name} or above, because tools need looking after. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
+    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. A custom build is yours outright, but hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour and custom work at ${money(customWorkRate)}. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, a monthly report, and faster replies. A site with custom tools needs ${care.name} or above, because tools need looking after. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
   },
   {
     q: 'Is there a monthly fee for the editor?',
@@ -151,8 +151,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
       Websites for churches, schools, nonprofits and small businesses, with photos when needed.
-      Every price is on this page, and the first conversation ends with an honest scope, not a sales
-      pitch.
+      Every price is on this page, and the first conversation is free and ends with an honest
+      ballpark.
     </p>
     <div class="from">
       <p class="label">Websites start at</p>
@@ -174,12 +174,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <a href="#websites">Websites</a>
       <a href="#pick">Help me choose</a>
       <a href="#behind">Behind the site</a>
-      <a href="#every-build">In every build</a>
-      <a href="#why">Why one person</a>
       <a href="#add-ons">Add-ons and photography</a>
       <a href="#care">Care plans</a>
       <a href="#how">How it works</a>
-      <a href="#timelines">Timelines</a>
+      <a href="#every-build">In every build</a>
+      <a href="#why">Why one person</a>
       <a href="#faq">Questions</a>
     </nav>
   </header>
@@ -311,8 +310,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
             </fieldset>
           </form>
           <p class="pick-note">
-            This points you at a starting place, not a quote. The first conversation sets the real
-            scope.
+            This points you at a starting place, not a quote. The first conversation, which is free,
+            gets you an honest ballpark.
           </p>
         </div>
         <div class="pick-stage" aria-live="polite" data-pick-out>
@@ -392,9 +391,6 @@ const heading = `What I do, and <b>what it costs.</b>`;
           <span class="pip" aria-hidden="true">
             &minus;
           </span>
-          <span class="pip flip" aria-hidden="true">
-            &minus;
-          </span>
           <h3>A plain tracker tells you</h3>
           <ul>
             <li>How many people visited</li>
@@ -404,9 +400,6 @@ const heading = `What I do, and <b>what it costs.</b>`;
         </div>
         <div class="card keyed see see-mine">
           <span class="pip" aria-hidden="true">
-            +
-          </span>
-          <span class="pip flip" aria-hidden="true">
             +
           </span>
           <h3>What I set up tells you</h3>
@@ -440,115 +433,6 @@ const heading = `What I do, and <b>what it costs.</b>`;
     </div>
   </section>
 
-  <div class="sec tight folds">
-    <div class="wrap rows">
-      <details class="fold" id="every-build">
-        <summary>
-          <h2>In every build</h2>
-          <i aria-hidden="true"></i>
-        </summary>
-        <div class="fold-a">
-          <div class="fold-in">
-            <div class="pair">
-              <div class="card panel">
-                <h3>The site itself</h3>
-                <p>
-                  Modern, accessible, fast websites built on the platform that fits you, from a
-                  custom-coded site to Squarespace or WordPress, and set up so your team can
-                  actually run it.
-                </p>
-                <p>
-                  I match the build to your budget and to whoever will maintain it after launch.
-                  Everything is built mobile-first and tested for accessibility from the very first
-                  screen, then handed off so you are never locked out of your own site.
-                </p>
-                <ul class="ticks">
-                  <li>A custom design built to your brand, not a stock template</li>
-                  <li>Fast pages, with fonts and images served from your own site</li>
-                  <li>Layouts that work on every phone, tablet and desktop</li>
-                  <li>Accessible from the first screen, checked against WCAG AA</li>
-                  <li>Hosting set up for you, with year one included</li>
-                </ul>
-              </div>
-              <div class="card panel">
-                <h3>Strategy, first</h3>
-                <p>
-                  Strategy always comes first. Without it, design becomes decoration. It starts with
-                  a working session together, then I write a short brief that the rest of the
-                  project follows.
-                </p>
-                <ul class="ticks">
-                  <li>A working session, then back-and-forth until the plan is right</li>
-                  <li>Audience map and conversion path</li>
-                  <li>Content inventory of what you already have</li>
-                  <li>A one-page brief the rest of the project follows</li>
-                </ul>
-                <p>
-                  Strategy is the front of every project, not a line item. The prices above already
-                  include the session and the brief, and year one hosting too.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </details>
-      <details class="fold" id="why">
-        <summary>
-          <h2>Why one person</h2>
-          <i aria-hidden="true"></i>
-        </summary>
-        <div class="fold-a">
-          <div class="fold-in">
-            <p class="intro">
-              Plenty of people will quote you less. Here is what the price actually buys, and what a
-              cheaper one usually leaves out.
-            </p>
-            <ul class="whys">
-              <li>
-                <h3>One person, no handoffs</h3>
-                <p>
-                  The person who plans your site designs it, builds it, and, when needed, shoots the
-                  photos. No agency markup, and nothing lost in translation between a strategist, a
-                  designer, and a developer who never quite talk to each other.
-                </p>
-              </li>
-              <li>
-                <h3>Built to be handed off</h3>
-                <p>
-                  Every site is set up so the next volunteer or staff member can keep it running,
-                  and you own it outright. A cheaper site that leaves you stranded the day the
-                  freelancer goes quiet costs far more to replace than it saved.
-                </p>
-              </li>
-              <li>
-                <h3>Accessible by default</h3>
-                <p>
-                  Every page is built to WCAG AA and checked until it scores 100 for accessibility
-                  in Lighthouse. Plenty of budget builds never get checked at all. For a church,
-                  school, or nonprofit it is the right thing to do, and it is included, not an
-                  upsell.
-                </p>
-              </li>
-              <li>
-                <h3>Cheap is expensive later</h3>
-                <p>
-                  A bargain site quietly runs into thousands a year once you bolt on the features it
-                  could not handle up front. I would rather build it once, on a stack that is nearly
-                  free to run and is yours to keep.
-                </p>
-              </li>
-            </ul>
-            <p class="tools">
-              I build with modern tools, including AI-assisted workflows, the same way I use
-              frameworks and a camera. They help one person do the work of a team. The strategy, the
-              design, and the accountability stay mine, start to finish.
-            </p>
-          </div>
-        </div>
-      </details>
-    </div>
-  </div>
-
   <section class="sec tight" id="add-ons" aria-labelledby="addons-h">
     <div class="wrap">
       <div class="sec-head">
@@ -558,9 +442,6 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <div class="pair pair-wide">
         <div class="card panel keyed addon" id="photography">
           <span class="pip" aria-hidden="true">
-            P
-          </span>
-          <span class="pip flip" aria-hidden="true">
             P
           </span>
           <div class="line">
@@ -586,9 +467,6 @@ const heading = `What I do, and <b>what it costs.</b>`;
         </div>
         <div class="card panel keyed addon">
           <span class="pip" aria-hidden="true">
-            B
-          </span>
-          <span class="pip flip" aria-hidden="true">
             B
           </span>
           <div class="line">
@@ -617,13 +495,31 @@ const heading = `What I do, and <b>what it costs.</b>`;
         every live site needs, and the monthly levels add edit time for when you would rather not do
         it yourself.
       </p>
-      <p class="scroll-hint">Swipe the table sideways to see all four plans.</p>
-      <div
-        class="card tbox"
-        tabindex="0"
-        role="region"
-        aria-label="Care plans compared. Scrolls sideways on small screens."
-      >
+      <ul class="care-cards">
+        {carePlans.map((c) => (
+          <li class="card keyed care-card">
+            <span class="pip" aria-hidden="true">
+              {c.name.replace(/[a-z ]/g, '')}
+            </span>
+            <span class="pip flip" aria-hidden="true">
+              {c.name.replace(/[a-z ]/g, '')}
+            </span>
+            <h3>{c.name}</h3>
+            <p class="amt">
+              {c.price}
+              <small>{c.period}</small>
+            </p>
+            <p>{c.who}</p>
+            <p class="care-time">{c.time}</p>
+            <ul class="ticks">
+              {c.features.map((f) => (
+                <li>{f}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      <div class="card tbox">
         <table class="care">
           <caption class="vh">
             The four care plans compared: price, who each is for, edit time, what's included and
@@ -697,17 +593,18 @@ const heading = `What I do, and <b>what it costs.</b>`;
         <li>
           <h3>Start with a conversation</h3>
           <p>
-            It starts with an hour together, in person or on video, talking about what you actually
-            need. No pitch deck, no agency theater. Just a working session that ends with a one-page
-            brief you sign off on.
+            The first conversation is free: a call about what you actually need, and an honest
+            ballpark before anyone is committed. If you go ahead, the project opens with a working
+            session, an hour together in person or on video, that ends with a one-page brief you
+            sign off on.
           </p>
         </li>
         <li>
           <h3>Then the strategy</h3>
           <p>
-            I write the audience map, the page architecture, and the conversion path. You read it
-            and push back, and I revise. The strategy doc is the source of truth for every design
-            choice that follows.
+            I write down who the site is for, how the pages fit together, and what you want visitors
+            to do next. You read it and push back, and I revise. The strategy doc is the source of
+            truth for every design choice that follows.
           </p>
         </li>
         <li>
@@ -722,8 +619,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
           <h3>Launch, and follow-through</h3>
           <p>
             I launch the site with you, then stay close for the first month to fix anything that
-            surfaces. After that you own the site outright, with documentation and a simple way to
-            reach me when something comes up.
+            surfaces. After that a custom build is yours outright, with documentation and a simple
+            way to reach me when something comes up.
           </p>
         </li>
       </ol>
@@ -764,6 +661,116 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </details>
     </div>
   </section>
+
+  <div class="sec tight folds">
+    <div class="wrap rows">
+      <details class="fold" id="every-build">
+        <summary>
+          <h2>In every build</h2>
+          <i aria-hidden="true"></i>
+        </summary>
+        <div class="fold-a">
+          <div class="fold-in">
+            <div class="pair">
+              <div class="card panel">
+                <h3>The site itself</h3>
+                <p>
+                  Modern, accessible, fast websites, built on Sanity or WordPress, whichever suits
+                  the people running yours.
+                </p>
+                <p>
+                  I match the build to your budget and to whoever will maintain it after launch.
+                  Everything is built mobile-first and tested for accessibility from the very first
+                  screen, then handed off so you are never locked out of your own site.
+                </p>
+                <ul class="ticks">
+                  <li>A custom design built to your brand, not a stock template</li>
+                  <li>
+                    Fast pages, with fonts and images served from your own site on a custom build
+                  </li>
+                  <li>Layouts that work on every phone, tablet and desktop</li>
+                  <li>Accessible from the first screen, checked against WCAG AA</li>
+                  <li>Hosting set up for you, with year one included</li>
+                </ul>
+              </div>
+              <div class="card panel">
+                <h3>Strategy, first</h3>
+                <p>
+                  Strategy always comes first, because the design has to serve a plan. It starts
+                  with a working session together, then I write a short brief that the rest of the
+                  project follows.
+                </p>
+                <ul class="ticks">
+                  <li>A working session, then back-and-forth until the plan is right</li>
+                  <li>Who the site is for, and what you want them to do next</li>
+                  <li>Content inventory of what you already have</li>
+                  <li>A one-page brief the rest of the project follows</li>
+                </ul>
+                <p>
+                  Strategy is the front of every project, not a line item. The prices above already
+                  include the session and the brief, and year one hosting too.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+      <details class="fold" id="why">
+        <summary>
+          <h2>Why one person</h2>
+          <i aria-hidden="true"></i>
+        </summary>
+        <div class="fold-a">
+          <div class="fold-in">
+            <p class="intro">
+              Plenty of people will quote you less. Here is what the price actually buys, and what a
+              cheaper one usually leaves out.
+            </p>
+            <ul class="whys">
+              <li>
+                <h3>One person, no handoffs</h3>
+                <p>
+                  The person who plans your site designs it, builds it, and, when needed, shoots the
+                  photos. No agency markup, and nothing lost in translation between a strategist, a
+                  designer, and a developer who never quite talk to each other.
+                </p>
+              </li>
+              <li>
+                <h3>Built to be handed off</h3>
+                <p>
+                  Every site is set up so the next volunteer or staff member can keep it running,
+                  and a custom build is yours outright. A cheaper site that leaves you stranded the
+                  day the freelancer goes quiet costs far more to replace than it saved.
+                </p>
+              </li>
+              <li>
+                <h3>Accessible by default</h3>
+                <p>
+                  Every custom build is made to WCAG AA and checked until each page scores 100 for
+                  accessibility in Lighthouse. Plenty of budget builds never get checked at all. For
+                  a church, school, or nonprofit it is the right thing to do, and it is included,
+                  not an upsell.
+                </p>
+              </li>
+              <li>
+                <h3>Cheap is expensive later</h3>
+                <p>
+                  A bargain site quietly runs into thousands a year once you bolt on the features it
+                  could not handle up front. I would rather build it once, on a stack that is nearly
+                  free to run and is yours to keep.
+                </p>
+              </li>
+            </ul>
+            <p class="tools">
+              I build with modern tools, including AI-assisted workflows, the same way I use
+              frameworks and a camera. They help one person do the work of a team. The strategy, the
+              design, and the accountability stay mine, start to finish.
+            </p>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
 
   <section class="sec tight" id="faq" aria-labelledby="faq-h">
     <div class="wrap">
