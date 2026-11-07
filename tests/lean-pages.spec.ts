@@ -76,7 +76,7 @@ test('/nonprofits/ offers a board or grant summary', async ({ page }) => {
 test('the closing links every sector page, and a study links back to its own', async ({ page }) => {
   await page.goto('/work/');
   for (const href of ['/churches/', '/schools/', '/nonprofits/', '/small-business/']) {
-    await expect(page.locator(`[data-end] .legal a[href="${href}"]`)).toHaveCount(1);
+    await expect(page.locator(`[data-end] .end-index a[href="${href}"]`)).toHaveCount(1);
   }
   await page.goto('/work/presbyterian-academy/');
   await expect(page.locator('a.tlink[href="/schools/"]')).toHaveText('How I build for schools');

@@ -38,7 +38,7 @@ test(`/photography/ is ${open ? 'open' : 'gated'} (${photoFiles} photos)`, async
   expect(urls).toContain('/work/');
   expect(urls.includes('/photography/')).toBe(open);
 
-  // Links: the closing's legal line reads getNav().
+  // Links: the closing's site index reads getNav().
   await page.goto('/');
   const navLinks = page.locator('[data-end] a[href="/photography/"]');
   if (open) {

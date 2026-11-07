@@ -924,20 +924,6 @@ main {
 .js .w {
   animation-delay: calc(var(--n) * 55ms + var(--wd, 120ms));
 }
-.end .legal {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.25rem 1.25rem;
-  max-width: none;
-  margin-top: 2.25rem;
-  font-size: 0.9375rem;
-}
-.end .legal a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-}
 .top.on-color .mark,
 .top.on-color .status {
   color: var(--oncolor, #fff);
@@ -1574,10 +1560,99 @@ h1.giant b {
 }
 .end-main {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4.5fr) minmax(0, 4fr);
+  grid-template-areas: 'say work deck';
   gap: clamp(2rem, 4vw, 4rem);
   align-items: center;
   padding-block: clamp(3rem, 8vh, 6rem);
+}
+.end-say {
+  grid-area: say;
+}
+/* The selected work, beside its deck. A name pulls its card out, and one white bar travels
+   between the names on the same kind of spring as the dock's highlight. */
+.end-work {
+  grid-area: work;
+  min-width: 0;
+}
+.end-work > .label {
+  color: #fff;
+}
+.end-work ul {
+  position: relative;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.end-work li {
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-work li:nth-last-child(2) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-work li a {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem;
+  margin-inline: -0.7rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.end-work li b {
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+}
+.end-work li .label {
+  flex: none;
+  color: inherit;
+  font-size: 0.75rem;
+}
+.end-work li a.on {
+  color: var(--accent);
+}
+.end-work li a.on b,
+.end-work li a[aria-current] b {
+  font-weight: 700;
+}
+html:not(.js) .end-work li a:hover {
+  background: #fff;
+  color: var(--accent);
+}
+.end-work li a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 0.7rem;
+}
+.end-work li.end-slide {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: -0.7rem;
+  right: -0.7rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.end-all {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  color: #fff;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
 }
 .end h2 {
   font-size: var(--type-h1);
@@ -1593,7 +1668,8 @@ h1.giant b {
   justify-content: flex-start;
 }
 .gather {
-  --gw: clamp(9.5rem, 15vw, 14.5rem);
+  --gw: clamp(9.5rem, 13vw, 13.5rem);
+  grid-area: deck;
   position: relative;
   display: grid;
   justify-items: center;
@@ -1678,9 +1754,64 @@ h1.giant b {
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
+/* The site, as a ruled index rather than one long line. */
+.end-index {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem clamp(1.5rem, 3vw, 3rem);
+  padding-block: 1.1rem clamp(2.5rem, 6vh, 4rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-index div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.end-index .label {
+  margin-bottom: 0.35rem;
+  color: #fff;
+}
+.end-index a,
+.end-base a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: #fff;
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.end-index a:hover,
+.end-base a:hover {
+  text-decoration: underline;
+  transform: translateX(0.2rem);
+}
 .end-name {
   container-type: inline-size;
   margin-top: clamp(0.5rem, 2vh, 1.5rem);
+}
+/* Each word clips its own letters, so they rise out of the line as they are dealt. */
+.end-name p > b,
+.end-name p > span {
+  display: inline-block;
+  /* The tight tracking pulls a word's box in past its last letter, so pad the clip back out. */
+  padding: 0.12em 0.07em 0.04em;
+  margin: -0.12em -0.07em -0.04em;
+  overflow: clip;
+}
+.end-name i {
+  display: inline-block;
+  font-style: normal;
+}
+.end-base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0 1.5rem;
+  margin-top: clamp(0.75rem, 2vh, 1.25rem);
+  color: #fff;
+  font-size: 0.9375rem;
 }
 .end .end-name p {
   max-width: none;
@@ -1693,30 +1824,34 @@ h1.giant b {
 .end .end-name b {
   font-weight: 700;
 }
-.end .legal {
-  justify-content: flex-start;
-  margin-top: 1rem;
-  color: #fff;
-}
-.end .legal a {
-  color: #fff;
+@media (max-width: 72rem) {
+  .end-main {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas: 'say deck' 'work deck';
+    row-gap: 2.5rem;
+  }
 }
 @media (max-width: 52rem) {
   .end-main {
     grid-template-columns: minmax(0, 1fr);
-    padding-block: 2.5rem 1.5rem;
+    grid-template-areas: 'say' 'deck' 'work';
+    row-gap: clamp(2rem, 6vw, 2.5rem);
+    padding-block: 2.5rem;
   }
   .gather {
     --gw: min(36vw, 9.5rem);
     margin-top: 1rem;
+  }
+  .end-index {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .end .end-name p {
     font-size: 26cqw;
     line-height: 0.92;
     white-space: normal;
   }
-  .end .end-name b,
-  .end .end-name span {
+  .end .end-name p > b,
+  .end .end-name p > span {
     display: block;
   }
 }
@@ -1754,6 +1889,17 @@ h1.giant b {
   }
   .end .end-name p {
     font-size: 26cqw;
+  }
+}
+/* A tablet has the width for the name on one line. Only a phone stacks it. */
+@media (min-width: 36rem) and (max-width: 52rem) {
+  .end .end-name p {
+    font-size: 11.3cqw;
+    white-space: nowrap;
+  }
+  .end .end-name p > b,
+  .end .end-name p > span {
+    display: inline-block;
   }
 }
 @media (min-width: 52.01rem) {
@@ -1851,8 +1997,13 @@ html.ncs-gated .ncs-overlay {
   .card,
   .pc-face,
   .chip,
+  .nine,
   .dock {
     border: 1px solid CanvasText;
+  }
+  /* The white bar is a background, so the name it is on says so itself. */
+  .end-work li a.on {
+    text-decoration: underline;
   }
   /* A chosen answer and the page you are on, which a background alone can no longer show. */
   :root .pick-o input:checked + span,

@@ -3,7 +3,7 @@
    ============================================================================
    The dock (src/components/Dock.astro) is the fixed menu: Work, Prices, About,
    Start a project. Two more pages exist and are gated at build time, so a link
-   never points at an empty page. When open, they join the closing's legal line.
+   never points at an empty page. When open, they join the closing's site index.
 
      Journal       only when at least one entry is published. Same filter as
                    the journal index: drafts are hidden in production builds

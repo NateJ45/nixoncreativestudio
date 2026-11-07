@@ -36,7 +36,8 @@ test.describe('Without JavaScript', () => {
       await expect(end.locator('a[href^="tel:"]')).toHaveCount(1);
       await expect(end.locator('.gc img')).toHaveCount(8);
       await expect(end.locator('a[data-nine]')).toHaveAttribute('href', '/contact/');
-      await expect(end.locator('.legal a[href="/privacy/"]')).toHaveCount(1);
+      await expect(end.locator('.end-index a[href="/privacy/"]')).toHaveCount(1);
+      await expect(end.locator('.end-work a[data-pull]')).toHaveCount(8);
     });
   }
 

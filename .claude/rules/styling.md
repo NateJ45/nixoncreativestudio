@@ -37,6 +37,7 @@ Declared in `:root` at the top of `kit.css`:
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.
 - **Cards** are `.card` or their own radius (1.25rem; bands and the closing 1.75rem; buttons fully round).
 - **H1 reveal**: words are wrapped in the markup by `wordSpans()` (`src/lib/words.ts`; `PageHead.astro` does it). `.js .w` animates from opacity .02. This is the one allowed start below full opacity in the first viewport.
+- **The closing's parts**: `.end-work` (names and the white bar, `[data-pull]` per row, in `kit.js`), `.end-index` (the ruled site index, a new link goes in one of its groups), `.end-name` (one `<i>` a letter, clipped per word), `.end-base`. Text on the closing is white or sits on white; use `--accent` on white, which stays cobalt inside `.end`.
 - **Reveals for study blocks**: `.rv` is hidden only under `.rv-on` (added by `study.js` when motion is allowed and `IntersectionObserver` exists) and shown with `.in`. Nothing in the first viewport takes it.
 
 ## Motion
