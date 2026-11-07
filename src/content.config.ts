@@ -224,7 +224,7 @@ const caseStudies = defineCollection({
       // beforeShot is the site before the project (only where one was
       // captured while the old site was live), mobileShot is the phone-width
       // capture written by `npm run capture:study`.
-      featureShot: image().optional(),
+      featureShot: z.string().optional(),
       // Alt text for featureShot where it is shown ("The idea" band). Say what
       // the still shows on the live site. Falls back to a generic line.
       featureShotAlt: z.string().optional(),
@@ -243,8 +243,8 @@ const caseStudies = defineCollection({
           alt: z.string().min(1),
         })
         .optional(),
-      beforeShot: image().optional(),
-      mobileShot: image().optional(),
+      beforeShot: z.string().optional(),
+      mobileShot: z.string().optional(),
 
       // ---- "What you edit" (package 3.6) --------------------------------
       // A screenshot of the site's own editor (Sanity Studio or wp-admin)
@@ -264,7 +264,7 @@ const caseStudies = defineCollection({
       // /work/[slug].astro throws on it, so a cmsShot without its alt text
       // fails the build. (Not a superRefine here, which would re-indent
       // this whole schema and collide with every other edit to it.)
-      cmsShot: image().optional(),
+      cmsShot: z.string().optional(),
       cmsShotAlt: z.string().optional(),
       cmsName: z.string().optional(),
       cmsUrl: z.string().url().optional(),

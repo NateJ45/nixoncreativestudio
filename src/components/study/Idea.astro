@@ -1,0 +1,55 @@
+---
+/* The idea: the hook with its clip or its still. A clip plays once when it
+   reaches you, with a button to see it again, never on a loop. A still is only
+   here when that shot does not come round again in the full build. */
+import Chapter from './Chapter.astro';
+import ZoomImage from './ZoomImage.astro';
+import { LOCK } from '../../lib/window-chrome';
+import { clipPoster, inline, studyImage } from '../../lib/study-markup';
+import { hostOf } from '../../lib/clients';
+
+const { study, still } = Astro.props;
+const clip = study.signatureClip;
+const host = study.facts?.host ?? hostOf(study.liveUrl);
+const poster = clip ? clipPoster(clip.src) : undefined;
+const shot = !clip && still ? studyImage(still) : undefined;
+---
+
+<Chapter title={study.hook} class="idea">
+  {clip && poster && (
+    <figure class="clip rv" data-clip>
+      <div class="win">
+        <div class="win-bar" aria-hidden="true">
+          <span class="url">
+            <span data-lock set:html={LOCK} />
+            <span>{host}</span>
+          </span>
+        </div>
+        <video
+          muted
+          playsinline
+          preload="none"
+          poster={`${clip.src}.webp`}
+          width={poster.w}
+          height={poster.h}
+          aria-label={clip.alt}
+        >
+          <source src={`${clip.src}.webm`} type="video/webm" />
+          <source src={`${clip.src}.mp4`} type="video/mp4" />
+        </video>
+      </div>
+      <figcaption>
+        <p set:html={inline(clip.alt)} />
+        <button type="button" class="tbtn" data-clip-btn hidden>
+          Play it
+        </button>
+      </figcaption>
+    </figure>
+  )}
+  {shot && (
+    <figure class="still rv">
+      <ZoomImage img={shot} alt={study.featureShotAlt} />
+      <figcaption set:html={inline(study.featureShotAlt)} />
+    </figure>
+  )}
+</Chapter>

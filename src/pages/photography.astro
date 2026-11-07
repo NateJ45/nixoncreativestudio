@@ -1,48 +1,30 @@
 ---
 // Safe to edit (copy). The gate itself lives in src/data/photography-gate.ts.
 /* ============================================================================
-   /photography | Photography  [gated, overhaul package 2.8]
+   /photography | Photography  [gated]
    ============================================================================
    The gallery is not ready, so this page says so plainly: one real photo, one
-   honest line, and a way to ask for samples. No placeholder images, no empty
-   category cards (a photographer's page full of blank gradients was the worst
-   possible tell, and those gradient files are gone from the repo).
+   honest line, and a way to ask for samples. No placeholder images.
 
    The gate. Until the `photos` collection (src/content/photos/*.json) holds
-   MIN_PHOTOS real photographs, this page is:
-     - noindex (BaseLayout's `noindex` prop, below),
-     - out of the sitemap (the filter in astro.config.mjs),
-     - out of the header, mobile menu and footer (src/data/nav.ts).
+   MIN_PHOTOS real photographs, this page is noindex, out of the sitemap (the
+   filter in astro.config.mjs) and out of the closing's links (src/data/nav.ts).
    All three read photographyOpen() from src/data/photography-gate.ts, so they
    open together. tests/photography-gate.spec.ts checks the closed state.
+   Ungating: docs/PENDING.md.
 
-   The gallery comes back in package 4.6 (a contact sheet with a loupe and a
-   lightbox). The React island for it, src/components/PhotoGallery.tsx, is
-   still in the repo but rendered nowhere. When the photos arrive:
-     1. Put each optimized image in src/assets/photography/<name>.jpg
-     2. Add src/content/photos/<name>.json:
-        { "title": "...", "image": "../../assets/photography/<name>.jpg",
-          "category": "events", "year": 2026, "caption": "...",
-          "location": "...", "featured": true }
-     3. Build the gallery (4.6), then ungate: docs/PENDING.md has the steps.
-
-   The photo. No photo in the repo is yet a confirmed frame of Nathan's own
-   client work, so this is the black-and-white portrait from the About page,
-   captioned for what it is. Swap in one of Nathan's own frames once he picks
-   one (and change the caption to match).
+   The photo. No photo in the repo is yet a confirmed frame of Nathan's own client
+   work, so this is the portrait from the About page, captioned for what it is.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
-
+import '../styles/pages/sub.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Heft from '../components/Heft.astro';
-import Media from '../components/Media.astro';
-import { buttonVariants } from '../components/ui/button';
-import { cn } from '@/lib/utils';
+import Closing from '../components/Closing.astro';
 import { photographyOpen } from '../data/photography-gate';
 import { addOns } from '../data/pricing';
 import { addOnNamed } from '../lib/schema';
-import portrait from '../assets/about/portrait-bw.jpg';
+import { plainText, wordSpans } from '../lib/words';
 
 // The photography price quoted in the meta description, from pricing.ts.
 const photography = addOnNamed(addOns, 'Photography');
@@ -52,88 +34,37 @@ const open = photographyOpen((await getCollection('photos')).length);
 
 // Where every "ask" on this page goes: the contact form, preset to photography.
 const contactHref = '/contact/?service=photography';
+const heading = 'Photography that matches <b>the website it lives on.</b>';
 ---
 
 <BaseLayout
   title="Photography in Cincinnati | Nixon Creative Studio"
   description={`Headshots, events and environmental photos across the Cincinnati region, shot by the person who designs your website. Photography starts ${photography.price}.`}
   noindex={!open}
-  closer={{
-    heading: 'Need photography',
-    emphasis: 'for your project?',
-    sub: 'Day-of coverage, headshots, environments. Often paired with web work, sometimes booked on its own.',
-    href: contactHref,
-    label: 'Ask for samples',
-  }}
 >
-  <section class="photo-gate py-section" aria-labelledby="photography-heading">
-    <div class="ncs-container page-grid">
-      <div class="photo-gate__copy">
-        <h1 id="photography-heading">
-          Photography that matches the <Heft text="website it lives on." />
-        </h1>
-        <p class="photo-gate__lede">
-          I photograph events, portraits and places across Cincinnati. The gallery is being
-          assembled; ask for samples.
-        </p>
-        <a
-          href={contactHref}
-          class={cn(buttonVariants({ variant: 'brand', size: 'cta' }), 'rounded-full')}
-        >
+  <div class="photo-gate">
+    <header class="page-head">
+      <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+      <p class="lede">
+        I photograph events, portraits and places across Cincinnati. The gallery is being assembled;
+        ask for samples.
+      </p>
+      <p>
+        <a class="chip go" href={contactHref}>
           Ask for samples
         </a>
-      </div>
-
-      {/* First-viewport media: no data-reveal (ruling 3). lcp makes it eager
-          with fetchpriority high, since at desktop widths it is the LCP. */}
-      <figure class="photo-gate__photo">
-        <Media
-          src={portrait}
-          alt="A black-and-white studio portrait of Nathan looking off to the side."
-          ratio="5 / 4"
-          widths={[480, 800, 1200]}
-          sizes="(min-width: 82.5rem) 620px, (min-width: 64rem) calc(48.4vw - 21px), calc(100vw - 3rem)"
-          lcp
-          class="frame"
-        />
-        <figcaption>Me, from the other side of the lens.</figcaption>
-      </figure>
-    </div>
-  </section>
+      </p>
+    </header>
+    <figure class="photo-card">
+      <img
+        src="/assets/about/portrait-bw.webp"
+        width="960"
+        height="1200"
+        alt="A black-and-white studio portrait of Nathan looking off to the side."
+        fetchpriority="high"
+      />
+      <figcaption>Me, from the other side of the lens.</figcaption>
+    </figure>
+  </div>
+  <Closing lead="Need photography <b>for your project?</b>" />
 </BaseLayout>
-
-<style>
-  /* Two columns from lg: the copy on 1 to 6, the photo on 7 to 12. Below lg
-     both span the full width (.page-grid's default) and stack. */
-  .photo-gate .page-grid {
-    row-gap: clamp(2.5rem, 6vw, 3.5rem);
-    align-items: center;
-  }
-  .photo-gate__copy h1 {
-    max-width: 14ch;
-    text-wrap: balance;
-  }
-  .photo-gate__lede {
-    max-width: 44ch;
-    margin: 1.25rem 0 2rem;
-    font-size: 1.125rem;
-    line-height: 1.5;
-    color: var(--muted-foreground);
-  }
-  .photo-gate__photo {
-    margin: 0;
-  }
-  .photo-gate__photo figcaption {
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
-    color: var(--muted-foreground);
-  }
-  @media (min-width: 64rem) {
-    .photo-gate__copy {
-      grid-column: 1 / span 6;
-    }
-    .photo-gate__photo {
-      grid-column: 7 / span 6;
-    }
-  }
-</style>

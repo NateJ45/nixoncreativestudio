@@ -1,0 +1,21 @@
+---
+/* The floating menu. Always there, on every page and every width, so it is the
+   one nav: no drawer, no hamburger, and it works with no script at all. The
+   script only slides the highlight to the link you are near. */
+const path = Astro.url.pathname;
+const links = [
+  { href: '/work/', label: 'Work' },
+  { href: '/services/', label: 'Prices' },
+  { href: '/about/', label: 'About' },
+  { href: '/contact/', label: 'Start a project', cls: 'go' },
+];
+---
+
+<nav class="dock" aria-label="Primary">
+  <span class="slide" data-slide></span>
+  {links.map((l) => (
+    <a href={l.href} class={l.cls} aria-current={path.startsWith(l.href) ? 'page' : undefined}>
+      {l.label}
+    </a>
+  ))}
+</nav>

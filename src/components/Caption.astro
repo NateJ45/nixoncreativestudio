@@ -1,0 +1,23 @@
+---
+/* The line under a window: the client's name and their sector. Pass a place in
+   the deck to number the card, as in "01 Nonprofit". */
+import type { Client } from '../lib/clients';
+
+interface Props {
+  client: Client;
+  index?: number;
+}
+const { client: s, index } = Astro.props;
+---
+
+<p class="cap">
+  <b>{s.name}</b>
+  {index === undefined ? (
+    <span>{s.sector}</span>
+  ) : (
+    <span class="label">
+      <i>{String(index + 1).padStart(2, '0')}</i>
+      {s.sector}
+    </span>
+  )}
+</p>

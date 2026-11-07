@@ -2,268 +2,95 @@
 /* ============================================================================
    ComingSoon
    ============================================================================
-   Foundation, edit with care. The "launching soon" view. Renders as the
-   entire <body> contents on:
-     - /coming-soon/ (always)
-     - every other route when PUBLIC_COMING_SOON=true (via BaseLayout)
-
-   Overhaul 2.9: nothing moves. The wordmark, one line and the email from
-   site.ts, beside a still of the homepage reel wall: the real desktop
-   captures from src/assets/reel/ (the same files HeroReel uses, listed in
-   src/data/reel.ts), laid out at build time as a tilted wall of framed
-   cards. The old drifting mesh, film grain and staggered entrance are gone.
-   The wall is decorative (aria-hidden); its images are small WebP built by
-   astro:assets and load lazily, so a phone that shows the wall below the
-   fold fetches it only when it scrolls there.
-
-   IMPORTANT: this component can render OUTSIDE BaseLayout, so it must NOT
-   depend on globals.css being present. Every colour and font below is
-   declared in the self-contained <style> block, scoped under the .ncs-cs
-   root. Brand values are repeated here on purpose. Light is the default;
-   the .dark class (set by the theme bootstrap in the page <head>) flips the
-   surface and text tokens. The standalone <head> in
-   src/pages/coming-soon.astro does the theme and Pause motion bootstrap.
+   Foundation, edit with care. The "launching soon" view. Renders as the entire
+   <body> contents on /coming-soon/ (always), and over every other route when
+   PUBLIC_COMING_SOON=true (via BaseLayout). Nothing moves: the name, one line
+   and the email from site.ts, beside a still fan of the real client windows.
+   The fan is decorative (aria-hidden). kit.css is always loaded with it.
    ============================================================================ */
-
-import { Picture } from 'astro:assets';
-import { ladder, PICTURE } from '../lib/picture';
-import type { ImageMetadata } from 'astro';
 import { site } from '../data/site';
-import { reelSites } from '../data/reel';
+import { getClients } from '../lib/clients';
 
-// Every reel capture, keyed by file name. Only the desktop ones are used.
-const files = import.meta.glob<{ default: ImageMetadata }>('../assets/reel/*-desktop.jpg', {
-  eager: true,
-});
-const cards = reelSites
-  .map((s) => ({ host: s.host, image: files[`../assets/reel/${s.slug}-desktop.jpg`]?.default }))
-  .filter((c): c is { host: string; image: ImageMetadata } => Boolean(c.image))
-  .slice(0, 6);
-
-// Three columns of two, the middle one dropped a little, like the reel.
-const columns = [cards.slice(0, 2), cards.slice(2, 4), cards.slice(4, 6)].filter((c) => c.length);
+const clients = (await getClients()).slice(0, 5);
+const [first, ...rest] = site.studioName.split(' ');
 ---
 
-<main class="ncs-cs">
+<div class="ncs-cs" id="main">
   <div class="ncs-cs__copy">
-    <h1 class="ncs-cs__wordmark">{site.studioName}</h1>
-    <p class="ncs-cs__line">The new site opens soon. Until then, email me:</p>
+    <h1>
+      <b>{first}</b> {rest.join(' ')}
+    </h1>
+    <p class="lede">The new site opens soon. Until then, email me:</p>
     <p>
-      <a class="ncs-cs__link" href={site.emailHref}>
+      <a class="chip" href={site.emailHref}>
         {site.email}
       </a>
     </p>
   </div>
-
-  <div class="ncs-cs__wall" aria-hidden="true">
-    <div class="ncs-cs__plane">
-      {columns.map((col) => (
-        <div class="ncs-cs__col">
-          {col.map((card) => (
-            <span class="ncs-cs__card">
-              <span class="ncs-cs__bar">
-                <span class="ncs-cs__dot" />
-                <span class="ncs-cs__dot" />
-                <span class="ncs-cs__dot" />
-                <span class="ncs-cs__host">{card.host}</span>
-              </span>
-              <Picture
-                src={card.image}
-                alt=""
-                widths={ladder([240, 480])}
-                sizes="240px"
-                class="ncs-cs__shot"
-                {...PICTURE}
-              />
-            </span>
-          ))}
-        </div>
-      ))}
-    </div>
+  <div class="ncs-cs__fan" aria-hidden="true">
+    {clients.map((s, i) => (
+      <span
+        class="ncs-cs__card"
+        style={`--c:${s.accent};--d:${i - (clients.length - 1) / 2};z-index:${5 - Math.abs(i - 2)}`}
+      >
+        <img src={s.still} alt="" width="584" height="1138" loading="lazy" />
+      </span>
+    ))}
   </div>
-</main>
+</div>
 
 <style>
-  /* ==========================================================================
-     Self-contained tokens. Scoped under .ncs-cs so nothing here can leak into
-     the rest of the site when this renders inside BaseLayout. Values match
-     globals.css (paper, ink, heading, link, muted, line).
-     ========================================================================== */
   .ncs-cs {
-    --cs-bg: #f4f7fa;
-    --cs-heading: #0a1628;
-    --cs-text: #1a1a1a;
-    --cs-muted: #5f6573;
-    --cs-link: #2a6fb0;
-    --cs-focus: #3478bd;
-    --cs-line: #dde3ea;
-    --cs-card: #ffffff;
-    --cs-dot: #7d8797;
-
-    --cs-font-display: 'Bebas Neue', ui-sans-serif, system-ui, sans-serif;
-    --cs-font-body: 'Source Sans 3 Variable', 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-    --cs-font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', monospace;
-
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
+    align-content: center;
     align-items: center;
     gap: clamp(2rem, 5vw, 4rem);
-    min-height: 100vh;
     min-height: 100dvh;
-    padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 5vw, 3rem);
+    padding: clamp(2rem, 6vw, 5rem) var(--gut);
     overflow: hidden;
-    background-color: var(--cs-bg);
-    color: var(--cs-text);
-    font-family: var(--cs-font-body);
-    -webkit-font-smoothing: antialiased;
+    background: var(--ground);
   }
-
-  :global(.dark) .ncs-cs {
-    --cs-bg: #0a1628;
-    --cs-heading: #f4f7fa;
-    --cs-text: #e8edf3;
-    --cs-muted: #9ca3af;
-    --cs-link: #40aaed;
-    --cs-focus: #40aaed;
-    --cs-line: #1a2a40;
-    --cs-card: #0f1e33;
-    --cs-dot: #5b6b84;
+  .ncs-cs h1 {
+    font-size: clamp(2.75rem, 7vw, 5.5rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-weight: 300;
+    overflow-wrap: anywhere;
   }
-
+  .ncs-cs__copy .lede {
+    margin: 1.5rem 0 1rem;
+    font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  }
+  .ncs-cs__copy .chip {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .ncs-cs__fan {
+    position: relative;
+    height: clamp(16rem, 50vh, 28rem);
+  }
+  .ncs-cs__card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: clamp(7rem, 15vw, 12rem);
+    aspect-ratio: 584 / 1138;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: var(--c);
+    box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.5);
+    transform: translate(calc(-50% + var(--d) * 42%), calc(-50% + var(--d) * var(--d) * 3%))
+      rotate(calc(var(--d) * 6deg));
+  }
+  .ncs-cs__card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
   @media (min-width: 56rem) {
     .ncs-cs {
       grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-      align-content: center;
-    }
-  }
-
-  /* ---- Copy ------------------------------------------------------------- */
-  .ncs-cs__copy {
-    max-width: 34rem;
-  }
-  .ncs-cs__wordmark {
-    margin: 0;
-    font-family: var(--cs-font-display);
-    font-weight: 400;
-    line-height: 0.92;
-    letter-spacing: 0.01em;
-    font-size: clamp(2.75rem, 9vw, 5.5rem);
-    color: var(--cs-heading);
-    overflow-wrap: anywhere;
-  }
-  .ncs-cs__line {
-    margin: 1.5rem 0 0.5rem;
-    max-width: 40ch;
-    font-size: clamp(1.0625rem, 2vw, 1.25rem);
-    line-height: 1.5;
-    color: var(--cs-text);
-  }
-  .ncs-cs__link {
-    display: inline-block;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--cs-link);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    overflow-wrap: anywhere;
-  }
-  .ncs-cs__link:hover,
-  .ncs-cs__link:focus-visible {
-    text-underline-offset: 5px;
-  }
-  .ncs-cs__link:focus-visible {
-    outline: 2px solid var(--cs-focus);
-    outline-offset: 4px;
-    border-radius: 3px;
-  }
-  /* Touch devices: a 44px-tall link. */
-  @media (pointer: coarse) {
-    .ncs-cs__link {
-      padding-block: 0.65rem;
-    }
-  }
-
-  /* ---- The still wall ----------------------------------------------------
-     A fixed-height window onto a tilted plane of framed captures. Static:
-     no animation, no transition, so there is nothing to pause. */
-  .ncs-cs__wall {
-    position: relative;
-    height: clamp(18rem, 60vw, 34rem);
-    overflow: hidden;
-    border-radius: 10px;
-  }
-  @media (min-width: 56rem) {
-    .ncs-cs__wall {
-      height: min(80vh, 40rem);
-    }
-  }
-  .ncs-cs__plane {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    display: flex;
-    gap: 1rem;
-    transform: translate(-50%, -50%) rotate(-8deg) scale(0.75);
-  }
-  @media (min-width: 56rem) {
-    .ncs-cs__plane {
-      transform: translate(-50%, -50%) rotate(-8deg);
-    }
-  }
-  .ncs-cs__col {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .ncs-cs__col:nth-child(2) {
-    margin-top: 4rem;
-  }
-  .ncs-cs__card {
-    display: block;
-    width: 240px;
-    overflow: hidden;
-    border-radius: 10px;
-    background-color: var(--cs-card);
-    box-shadow:
-      0 0 0 1px var(--cs-line),
-      0 18px 40px -24px rgba(10, 22, 40, 0.45);
-  }
-  .ncs-cs__bar {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    height: 22px;
-    padding-inline: 0.6rem;
-    border-bottom: 1px solid var(--cs-line);
-  }
-  .ncs-cs__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background-color: var(--cs-dot);
-  }
-  .ncs-cs__host {
-    margin-left: 0.4rem;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-family: var(--cs-font-mono);
-    font-size: 0.625rem;
-    color: var(--cs-muted);
-  }
-  .ncs-cs__card :global(.ncs-cs__shot) {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 600 / 1240;
-    object-fit: cover;
-    object-position: top;
-  }
-
-  @media (forced-colors: active) {
-    .ncs-cs__card {
-      border: 1px solid CanvasText;
     }
   }
 </style>

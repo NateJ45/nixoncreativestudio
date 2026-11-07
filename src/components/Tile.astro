@@ -1,0 +1,48 @@
+---
+/* A client's phone window. A real link to their case study; with JavaScript a
+   click opens the client sheet instead, unless `direct` keeps it a plain link.
+   The footage is only fetched when something asks the window to play. */
+import { LOCK, TOOLS } from '../lib/window-chrome';
+import type { Client } from '../lib/clients';
+
+interface Props {
+  client: Client;
+  /** Place in the deck, written to data-i. */
+  index?: number;
+  lazy?: boolean;
+  direct?: boolean;
+  /** A different picture on the screen and no footage (the churches' long pages). */
+  long?: string;
+}
+const { client: s, index, lazy = false, direct = false, long } = Astro.props;
+---
+
+<a
+  class="tile"
+  href={s.study}
+  data-slug={s.slug}
+  data-direct={direct ? '' : undefined}
+  data-i={index}
+  aria-label={`${s.name}, ${s.host}: ${s.hook}`}
+  style={`--c:${s.accent};--p:${s.paper}`}
+>
+  <span class="b-top" aria-hidden="true">
+    <span class="url">
+      <Fragment set:html={LOCK} />
+      <span>{s.host}</span>
+    </span>
+  </span>
+  <span class="scr" aria-hidden="true">
+    {long ? (
+      <img src={long} alt="" loading={lazy ? 'lazy' : 'eager'} />
+    ) : (
+      <>
+        <img src={s.still} alt="" loading={lazy ? 'lazy' : 'eager'} width="584" height="1138" />
+        <video muted loop playsinline preload="none" data-src={s.clip} />
+      </>
+    )}
+  </span>
+  <span class="b-bot" aria-hidden="true">
+    <Fragment set:html={TOOLS} />
+  </span>
+</a>

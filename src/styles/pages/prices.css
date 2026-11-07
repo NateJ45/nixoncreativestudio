@@ -1,0 +1,1219 @@
+/* The prices page. All text is in the HTML, every card is open at rest; the springs only ever move what is already readable. */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sec {
+  scroll-margin-top: 1rem;
+}
+.sec.tight {
+  padding-top: clamp(2rem, 4.4vh, 3.5rem);
+  padding-bottom: clamp(2rem, 4.4vh, 3.5rem);
+}
+.sec.folds {
+  padding-top: 0;
+}
+.sec-head p {
+  max-width: 42rem;
+}
+
+/* Jump row */
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+}
+.jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 99rem;
+  background: var(--card);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.jump a:hover {
+  transform: translateY(-2px);
+}
+.tiers-sec {
+  padding-top: clamp(1.5rem, 4vh, 3rem);
+  padding-bottom: clamp(0.5rem, 2vh, 1rem);
+}
+
+/* The three tiers. They share a seven-row subgrid so prices, notes and buttons line up across the row. */
+.tiers {
+  --tgap: clamp(0.75rem, 1.4vw, 1.25rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--tgap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tier {
+  position: relative;
+  min-width: 0;
+}
+.t-card {
+  --f: 1;
+  --l: 0;
+  --lh: 0px;
+  position: relative;
+  isolation: isolate;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  color: var(--ink);
+  transform-origin: 50% 40%;
+}
+.t-bg {
+  position: absolute;
+  inset: 0 0 calc((1 - var(--f)) * var(--lh)) 0;
+  z-index: -1;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 calc(22px + var(--l) * 18px) calc(40px + var(--l) * 24px) -28px
+      rgba(0, 0, 0, calc(0.3 + var(--l) * 0.16));
+}
+.t-ink {
+  color: #fff;
+}
+.t-ink .t-bg {
+  background: var(--accent);
+}
+.t-head h3 {
+  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.t-head p {
+  margin-top: 0.3rem;
+  color: var(--soft);
+}
+.t-ink .t-head p,
+.t-ink .t-range,
+.t-ink .t-note {
+  color: #c9c9c4;
+}
+.t-price {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  font: 600 clamp(2.75rem, 4.2vw, 4rem)/1 var(--display);
+  letter-spacing: -0.045em;
+}
+.t-range {
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+.t-ink .t-range {
+  color: #fff;
+}
+.t-note {
+  margin-top: 1rem;
+  color: var(--soft);
+  line-height: 1.5;
+}
+.t-inc {
+  margin: 1.5rem 0 0;
+  font: 600 1.125rem/1.2 var(--display);
+  letter-spacing: -0.015em;
+}
+.t-inc-s {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.t-inc-b {
+  display: none;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.t-inc-b i {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px currentColor;
+  transition: box-shadow 0.3s var(--ease);
+}
+.t-inc-b[aria-pressed='true'] i {
+  box-shadow: inset 0 0 0 0.5625rem currentColor;
+}
+.t-list {
+  margin: 0;
+}
+.ticks {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ticks li {
+  position: relative;
+  padding-left: 1.6rem;
+  line-height: 1.35;
+}
+.ticks li::before,
+.care .y::before,
+.care .n::before {
+  content: '';
+  position: absolute;
+  background: currentColor;
+  -webkit-mask: var(--ic) center/contain no-repeat;
+  mask: var(--ic) center/contain no-repeat;
+}
+.ticks li::before,
+.care .y::before {
+  --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8.500l3.200 3.200L13 4.800'/%3E%3C/svg%3E");
+}
+.ticks li::before {
+  left: 0;
+  top: 0.2em;
+  width: 1rem;
+  height: 1rem;
+}
+.t-go {
+  margin-top: 1.5rem;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 1.35rem;
+  border-radius: 99rem;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.cta:hover {
+  transform: scale(1.04);
+}
+.cta:active {
+  transform: scale(0.97);
+}
+.t-ink .cta {
+  background: #fff;
+  color: #111;
+}
+.after {
+  max-width: 62rem;
+  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+  color: var(--soft);
+  line-height: 1.5;
+}
+.after a {
+  color: var(--ink);
+}
+
+@media (min-width: 60rem) {
+  .tiers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(7, auto);
+    column-gap: var(--tgap);
+    row-gap: 0;
+  }
+  .tier,
+  .t-card {
+    display: grid;
+    grid-row: span 7;
+    grid-template-rows: subgrid;
+  }
+  /* Rows fold like paper from the top edge of each line. */
+  .tiers.live .t-card {
+    will-change: transform;
+  }
+  .tiers.live .t-go {
+    transform: translateY(calc((var(--f) - 1) * var(--lh)));
+  }
+  .tiers.live .t-list li {
+    --fi: clamp(0, calc((var(--f) - 0.1 - var(--i) * 0.22) / 0.24), 1);
+    opacity: var(--fi);
+    transform-origin: 50% 0;
+    transform: perspective(38rem) rotateX(calc((1 - var(--fi)) * -82deg))
+      translateY(calc((1 - var(--fi)) * -0.5rem));
+  }
+  .tiers.live .t-inc-s {
+    display: none;
+  }
+  .tiers.live .t-inc-b {
+    display: flex;
+  }
+  .tiers.live {
+    margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  }
+  .tiers.live .t-list {
+    padding-top: 0.4rem;
+  }
+  .t-inc-b:focus-visible {
+    outline-offset: 1px;
+  }
+}
+
+/* Shared card insides */
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.4vw, 1.25rem);
+}
+.pair-wide {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+.panel {
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+}
+.panel h3 {
+  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.panel > p,
+.panel > .ticks {
+  margin-top: 0.875rem;
+  line-height: 1.5;
+}
+.panel > p {
+  color: var(--soft);
+}
+.panel .t-go {
+  margin-top: 1.5rem;
+}
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+}
+.amt {
+  font: 600 clamp(1.5rem, 2vw, 1.875rem)/1.1 var(--display);
+  letter-spacing: -0.03em;
+}
+.intro {
+  max-width: 62rem;
+  margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+  color: var(--soft);
+  line-height: 1.5;
+}
+
+@media (min-width: 60rem) {
+  #photography {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(1.5rem, 2.5vw, 2.25rem);
+    align-content: start;
+  }
+  #photography .line {
+    grid-column: 1/-1;
+  }
+  #photography > p:not(.t-go) {
+    grid-column: 1;
+  }
+  #photography > .ticks {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+  }
+  #photography > .t-go {
+    grid-column: 1;
+  }
+  .pair-wide {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 2fr);
+  }
+}
+@media (min-width: 80rem) {
+  #photography {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  #photography > .line + p {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  #photography > .line + p + p {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  #photography > .ticks {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  #photography > .t-go {
+    grid-column: 1/-1;
+    grid-row: 3;
+  }
+}
+
+/* Care table: its own focusable box, so a phone scrolls the table and never the page. */
+.tbox {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.tbox:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.scroll-hint {
+  display: none;
+  margin-bottom: 0.75rem;
+  color: var(--soft);
+}
+.care {
+  width: 100%;
+  min-width: 50rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.care th,
+.care td {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  vertical-align: top;
+  font-weight: 400;
+  background: var(--card);
+}
+.care thead th,
+.care .corner {
+  padding-top: 1.25rem;
+  padding-bottom: 0.9rem;
+  vertical-align: bottom;
+}
+.care thead th {
+  width: 17.5%;
+}
+.pl {
+  display: block;
+  margin-bottom: 0.4rem;
+  font: 600 1.25rem/1.1 var(--display);
+  letter-spacing: -0.02em;
+}
+.care .amt {
+  display: block;
+  font-size: clamp(1.875rem, 2.6vw, 2.5rem);
+  letter-spacing: -0.04em;
+}
+.care small {
+  margin-left: 0.15rem;
+  font: 400 1rem var(--body);
+  letter-spacing: 0;
+  color: var(--soft);
+}
+.care tbody tr:nth-child(odd) > * {
+  background: #f9f9f7;
+}
+.care tbody th {
+  font-weight: 500;
+}
+.care thead .corner,
+.care tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 30%;
+  min-width: 11.5rem;
+}
+.care tbody td.y,
+.care tbody td.n {
+  position: relative;
+  min-height: 3rem;
+}
+.care .y::before,
+.care .n::before {
+  left: 1rem;
+  top: 0.6rem;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.care .n::before {
+  --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M5 8h6'/%3E%3C/svg%3E");
+  color: #6b6b65;
+}
+.care tbody tr:last-child > *:first-child {
+  border-bottom-left-radius: 1.25rem;
+}
+
+/* How it works: a real sequence, so it gets real numbers. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 3rem);
+  margin: 0 0 clamp(1.75rem, 3vw, 2.5rem);
+  padding: 0;
+  list-style: none;
+  counter-reset: s;
+}
+.steps li {
+  counter-increment: s;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.6rem;
+  align-content: start;
+  align-items: baseline;
+}
+.steps li::before {
+  content: counter(s);
+  font: 600 clamp(1.375rem, 1.8vw, 1.625rem)/1.1 var(--display);
+  letter-spacing: -0.025em;
+}
+.steps h3 {
+  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.steps p {
+  grid-column: 1/-1;
+  margin-top: 0.6rem;
+  color: var(--soft);
+  line-height: 1.5;
+}
+
+/* Timelines, drawn to scale: sixteen weeks across. */
+.span {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+.bar-t {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.15rem 1.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--ink) !important;
+}
+.bar-t b {
+  font-weight: 600;
+  max-width: 30rem;
+}
+.bar-t span {
+  color: var(--soft);
+}
+.bar {
+  position: relative;
+  height: 0.875rem;
+  border-radius: 99rem;
+  background: #ededea;
+}
+.bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--a) / 16 * 100%);
+  width: calc((var(--b) - var(--a)) / 16 * 100%);
+  border-radius: 99rem;
+  background: var(--accent);
+}
+.bar-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -0.75rem !important;
+  font-size: 1rem;
+}
+
+/* Why one person */
+.whys {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.75rem) clamp(1.5rem, 4vw, 4rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.whys h3 {
+  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.whys p {
+  margin-top: 0.6rem;
+  max-width: 36rem;
+  color: var(--soft);
+  line-height: 1.5;
+}
+.tools {
+  max-width: 52rem;
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
+  font: 500 clamp(1.5rem, 2.6vw, 2.25rem)/1.18 var(--display);
+  letter-spacing: -0.025em;
+  text-wrap: pretty;
+}
+
+/* The windows, right under the tiers. Four across under three on purpose, in their own section with their own heading: no client stands for a price. */
+.sites {
+  --capo: 1;
+  max-width: none;
+  margin-top: clamp(0.5rem, 1vw, 1rem);
+}
+@media (min-width: 60rem) {
+  #sites .wrap {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    column-gap: clamp(2rem, 3.4vw, 3rem);
+    align-items: start;
+  }
+  #sites .sec-head {
+    display: block;
+    margin: 0;
+  }
+  #sites .sec-head p {
+    margin-top: 0.75rem;
+  }
+  .sites {
+    margin-top: 0;
+    column-gap: clamp(1rem, 2vw, 1.75rem);
+  }
+  #sites noscript {
+    grid-column: 2;
+  }
+}
+.sites .tile {
+  transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.sites .tile:hover,
+.sites .tile:focus-visible {
+  transform: translateY(-6px);
+}
+
+/* The two closed rows under the windows. The headings stay real headings, inside the summary. */
+.rows {
+  display: grid;
+  gap: 0.5rem;
+}
+.fold {
+  scroll-margin-top: 1rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 22px 40px -28px rgba(0, 0, 0, 0.3);
+}
+.fold summary {
+  position: relative;
+  display: block;
+  padding: 1.125rem 4.5rem 1.125rem clamp(1.25rem, 2vw, 1.75rem);
+  border-radius: 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+.fold summary::-webkit-details-marker {
+  display: none;
+}
+.fold summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.fold h2 {
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.fold summary:hover h2 {
+  transform: translateX(0.25rem);
+}
+.fold summary i {
+  position: absolute;
+  right: clamp(1.25rem, 2vw, 1.75rem);
+  top: calc(50% - 0.5625rem);
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.fold summary i::before,
+.fold summary i::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.fold summary i::after {
+  transform: rotate(90deg);
+}
+.fold[open]:not(.closing) summary i {
+  transform: rotate(45deg);
+}
+.fold-in {
+  padding: 0.25rem clamp(1.25rem, 2vw, 1.75rem) clamp(1.5rem, 2.6vw, 2.25rem);
+}
+.fold .panel {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+.fold .pair {
+  gap: clamp(1.75rem, 4vw, 4rem);
+}
+
+/* FAQ */
+.faq {
+  display: grid;
+  gap: 0.4rem;
+}
+.faq details {
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.faq summary {
+  position: relative;
+  display: block;
+  min-height: 2.75rem;
+  padding: 0.8rem 3.5rem 0.8rem clamp(1.25rem, 2vw, 1.75rem);
+  font: 600 clamp(1.125rem, 1.5vw, 1.3125rem)/1.25 var(--display);
+  letter-spacing: -0.018em;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 1.25rem;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.faq summary i {
+  position: absolute;
+  right: clamp(1.25rem, 2vw, 1.75rem);
+  top: 1.05rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.faq summary i::before,
+.faq summary i::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.faq summary i::after {
+  transform: rotate(90deg);
+}
+.faq details[open]:not(.closing) summary i {
+  transform: rotate(45deg);
+}
+.faq-a p {
+  max-width: 50rem;
+  padding: 0 clamp(1.25rem, 2vw, 1.75rem) 1.35rem;
+  color: var(--soft);
+  line-height: 1.55;
+}
+
+/* The big moment. The heading and lede sit beside each other, then the starting price fills the line. */
+.price-head {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
+  padding-bottom: clamp(1rem, 2.5vh, 2rem);
+}
+.price-head h1 {
+  grid-column: 1;
+  max-width: none;
+  font-size: clamp(2.75rem, 4.6vw, 5rem);
+}
+.price-head .lede {
+  grid-column: 2;
+  margin-top: 0;
+}
+.from {
+  grid-column: 1/-1;
+  margin-top: clamp(1.25rem, 3vh, 2.5rem);
+}
+.from .label {
+  display: block;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+}
+.from-num {
+  display: block;
+  margin: 0.1em 0 0 -0.035em;
+  font: 600 30.5cqw/0.8 var(--display);
+  letter-spacing: -0.065em;
+  white-space: nowrap;
+}
+.js .from-num {
+  animation: weigh 1.5s cubic-bezier(0.2, 0.75, 0.2, 1) both 0.15s;
+}
+@keyframes weigh {
+  from {
+    font-weight: 100;
+    opacity: 0.2;
+  }
+  to {
+    font-weight: 600;
+    opacity: 1;
+  }
+}
+.price-head .jump {
+  grid-column: 1/-1;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+}
+
+/* The tier cards: one paper, one blue, one ink, lettered in the corners like face cards. */
+.t-bg {
+  --cardr: 1.5rem;
+  border-radius: var(--cardr);
+  --pipx: 1.15rem;
+  --pipy: 1rem;
+  --pips: 1.875rem;
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 calc(26px + var(--l) * 18px) calc(44px + var(--l) * 24px) -22px
+      rgba(0, 0, 0, calc(0.42 + var(--l) * 0.16));
+}
+.t-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: calc(var(--cardr) - 0.45rem);
+  opacity: 0.13;
+  pointer-events: none;
+}
+.t-ink .t-bg {
+  color: #fff;
+}
+.t-dark .t-bg {
+  background: var(--ink);
+}
+.t-head {
+  margin-top: clamp(2.5rem, 3vw, 3rem);
+}
+.t-go {
+  padding-bottom: 1.75rem;
+}
+.t-card {
+  padding: clamp(1.25rem, 1.7vw, 1.5rem) clamp(1.4rem, 2vw, 1.85rem);
+}
+.t-range {
+  font-size: 0.9375rem;
+}
+.t-inc,
+.t-inc-b {
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Add-ons are smaller cards from the same deck. */
+.addon {
+  --cardr: 1.25rem;
+  --pipx: 1.05rem;
+  --pipy: 0.9rem;
+  --pips: 1.5rem;
+  padding-top: clamp(3rem, 3.4vw, 3.25rem);
+  padding-bottom: clamp(2.75rem, 3.4vw, 3.25rem);
+}
+.pair-wide .addon {
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 22px 40px -24px rgba(0, 0, 0, 0.34);
+}
+
+/* How it works: four numbered cards from the deck, set slightly by hand. */
+.steps {
+  gap: clamp(0.75rem, 1.2vw, 1rem);
+}
+.steps li {
+  --cardr: 1.25rem;
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 3.25rem clamp(1.1rem, 1.6vw, 1.4rem) 3.25rem;
+  border-radius: var(--cardr);
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 22px 40px -24px rgba(0, 0, 0, 0.34);
+  transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.steps li::before,
+.steps li::after {
+  position: absolute;
+  font: 600 1.5rem/1 var(--display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  content: counter(s);
+}
+.steps li::before {
+  left: 1.05rem;
+  top: 0.9rem;
+}
+.steps li::after {
+  right: 1.05rem;
+  bottom: 0.9rem;
+  transform: rotate(180deg);
+}
+.steps li:nth-child(odd) {
+  transform: rotate(-0.5deg);
+}
+.steps li:nth-child(even) {
+  transform: rotate(0.5deg);
+}
+.steps li:hover {
+  transform: translateY(-6px) rotate(0);
+}
+
+/* Everything that was another white box becomes a ruled row, so cards keep meaning cards. */
+.tbox.card {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.care th,
+.care td {
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+}
+.care thead th,
+.care thead .corner {
+  border-top: 0;
+}
+.care tbody tr:nth-child(odd) > * {
+  background: var(--ground);
+}
+.care tbody tr:last-child > *:first-child {
+  border-bottom-left-radius: 0;
+}
+.pl {
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+.rows {
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+.fold,
+.faq details {
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  border-top: 1px solid var(--line);
+}
+.fold summary,
+.faq summary {
+  padding-left: 0;
+  border-radius: 0;
+}
+.fold summary i,
+.faq summary i {
+  right: 0.25rem;
+}
+.fold-in {
+  padding-left: 0;
+  padding-right: 0;
+}
+.faq {
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+.faq-a p {
+  padding-left: 0;
+  padding-right: 0;
+}
+.span.card {
+  background: none;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (max-width: 60rem) {
+  .price-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .price-head .lede {
+    grid-column: 1;
+    margin-top: clamp(1rem, 2.2vh, 1.5rem);
+  }
+  .pair,
+  .pair-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .scroll-hint {
+    display: block;
+  }
+}
+@media (max-width: 40rem) {
+  .jump {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-left: calc(var(--gut) * -1);
+    margin-right: calc(var(--gut) * -1);
+    padding: 0.25rem var(--gut);
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .jump::-webkit-scrollbar {
+    display: none;
+  }
+  .jump a {
+    flex: none;
+  }
+  .page-head {
+    padding-top: 5.5rem;
+  }
+  .sec.tight {
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
+  }
+  .sec.folds {
+    padding-top: 0;
+  }
+  .t-price {
+    margin-top: 1rem;
+  }
+  .t-note,
+  .t-inc {
+    margin-top: 0.75rem;
+  }
+  .t-go,
+  .panel .t-go {
+    margin-top: 1rem;
+  }
+  .ticks {
+    gap: 0.35rem;
+  }
+  .panel > p,
+  .panel > .ticks {
+    margin-top: 0.7rem;
+  }
+  .steps,
+  .whys {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .care {
+    min-width: 58rem;
+  }
+  .care thead th {
+    width: auto;
+  }
+  .care thead .corner,
+  .care tbody th {
+    min-width: 9.5rem;
+    width: 9.5rem;
+  }
+  .care th,
+  .care td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .care thead .corner,
+  .care tbody th {
+    box-shadow: 8px 0 10px -8px rgba(0, 0, 0, 0.16);
+  }
+  .care .y::before,
+  .care .n::before {
+    left: 0.75rem;
+  }
+}
+@media (min-width: 23.5rem) and (max-width: 40rem) {
+  .care thead .corner,
+  .care tbody th {
+    min-width: 10.5rem;
+    width: 10.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .from-num {
+    animation: none;
+  }
+  .steps li,
+  .jump a,
+  .cta,
+  .sites .tile,
+  .faq summary i,
+  .fold summary i,
+  .fold h2,
+  .t-inc-b i {
+    transition: none;
+  }
+}
+@media print {
+  .dock,
+  .top,
+  .skip,
+  .jump,
+  .scroll-hint,
+  #sites,
+  [data-end] {
+    display: none !important;
+  }
+  .t-card {
+    --f: 1 !important;
+    --l: 0 !important;
+    transform: none !important;
+  }
+  .tiers.live .t-go,
+  .tiers.live .t-list li {
+    transform: none;
+    opacity: 1;
+  }
+  .tbox {
+    overflow: visible;
+    box-shadow: none;
+  }
+  .card,
+  .t-bg {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  .t-card,
+  .panel,
+  .faq details,
+  .care tr {
+    break-inside: avoid;
+  }
+}
+
+/* The price and its small facts share the line. The comma hangs below the figures, so it gets room. */
+.from {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: clamp(1rem, 2vw, 2rem);
+  align-items: end;
+}
+.from > .label {
+  grid-column: 1 / -1;
+  display: block;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+}
+.from-num {
+  display: block;
+  margin: 0.08em 0 0 -0.035em;
+  padding-bottom: 0.13em;
+}
+.from-notes {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  color: var(--soft);
+}
+.from-notes b {
+  display: block;
+  margin-bottom: 0.15rem;
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.price-head .jump {
+  margin-top: clamp(0.5rem, 1.5vh, 1rem);
+}
+
+/* Corner marks line up with the text under them. */
+.t-card {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.t-bg {
+  --pipx: 1.5rem;
+  --pipy: 1.15rem;
+}
+.steps li {
+  padding-left: 1.3rem;
+  padding-right: 1.3rem;
+}
+.steps li::before {
+  left: 1.3rem;
+  top: 1.05rem;
+}
+.steps li::after {
+  right: 1.3rem;
+  bottom: 1.05rem;
+}
+.addon {
+  --pipx: clamp(1.25rem, 2vw, 1.75rem);
+  --pipy: 1.05rem;
+}
+
+@media (max-width: 60rem) {
+  .from {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .from-num {
+    font-size: 36.5cqw;
+  }
+  .from-notes {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    margin-top: 0.75rem;
+  }
+}
+
+/* The picker: three questions on the left, the card they deal on the right. */
+.picker { padding-top: clamp(3rem, 7vh, 5rem); padding-bottom: clamp(3rem, 7vh, 5rem); }
+.pick-in { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(2rem, 5vw, 5rem); align-items: center; padding-top: 1rem; border-top: 1px solid var(--line); }
+.pick-qs h2 { margin-top: 0.9rem; font-size: clamp(2.25rem, 4.4vw, 4.5rem); }
+.pick-qs h2 b { font-weight: 700; color: var(--accent); }
+.pick-q { margin: clamp(1.25rem, 2.6vh, 1.75rem) 0 0; padding: 0; border: 0; min-width: 0; }
+.pick-q legend { padding: 0; font-weight: 600; }
+.opts-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+.pick-o { position: relative; display: block; cursor: pointer; }
+.pick-o input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pick-o span { display: flex; align-items: center; min-height: 2.75rem; padding: 0.4rem 1rem; border-radius: 99rem; background: var(--card); font-weight: 500; box-shadow: inset 0 0 0 1px var(--line); transition: background 0.2s, color 0.2s, transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.pick-o:hover span { box-shadow: inset 0 0 0 1px rgba(18, 18, 17, 0.34); }
+.pick-o input:checked + span { background: var(--accent); color: #fff; box-shadow: none; transform: scale(1.03); }
+.pick-o input:focus-visible + span { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+.pick-note { max-width: 36rem; margin-top: 1.25rem; color: var(--soft); font-size: 0.9375rem; }
+.pick-stage { display: grid; justify-items: center; gap: 1.25rem; }
+.pick-card { flex: none; width: min(100%, 19rem); margin: 0; transform: rotate(2.5deg); }
+.pick-card.dealing { animation: pick-deal 0.75s cubic-bezier(0.25, 1.35, 0.4, 1) both; }
+@keyframes pick-deal { from { transform: translateY(60px) rotate(-14deg) scale(0.9); } to { transform: rotate(2.5deg); } }
+.pick-go[hidden] { display: none; }
+@media (max-width: 60rem) {
+  .pick-in { grid-template-columns: minmax(0, 1fr); }
+  .pick-card { position: relative; top: auto; height: 15rem; aspect-ratio: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pick-o span { transition: none; }
+  .pick-card.dealing { animation: none; }
+}

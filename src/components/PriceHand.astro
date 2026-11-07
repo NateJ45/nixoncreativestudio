@@ -1,0 +1,31 @@
+---
+/* The three price cards, from src/data/pricing.ts. Each is lettered in its
+   corners like a face card. On a wide screen kit.js deals them out of one stack
+   into a fan; on a phone CSS stacks them. */
+import { webTiers } from '../data/pricing';
+import { money } from '../lib/money';
+
+const faces = ['paper', 'blue', 'ink'];
+---
+
+<ul class="hand" data-prices data-track-view="pricing_view" data-track-variant="teaser">
+  {webTiers.map((t, i) => (
+    <li class={`pc pc-${faces[i]}`} style={`--i:${i}`}>
+      <a href="/services/#websites" class="pc-face">
+        <span class="pip" aria-hidden="true">
+          {t.name.charAt(0)}
+        </span>
+        <span class="pip flip" aria-hidden="true">
+          {t.name.charAt(0)}
+        </span>
+        <h3 class="label">{t.name}</h3>
+        <strong>{money(t.priceFrom)}</strong>
+        <span class="pc-who">
+          Starting price.
+          <br />
+          {t.who}.
+        </span>
+      </a>
+    </li>
+  ))}
+</ul>

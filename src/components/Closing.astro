@@ -1,0 +1,82 @@
+---
+/* The closing panel every page ends on: the page's line, the way to reach me,
+   the eight clients gathering into one deck as you scroll, a ninth card reading
+   Yours, and the name at poster size. Everything here is real markup; kit.js
+   only moves the cards. Keep a neutral section between this and a quote band,
+   so the two colors never touch. */
+import { site } from '../data/site';
+import { getClients } from '../lib/clients';
+import { getNav } from '../data/nav';
+
+interface Props {
+  /** The line, as HTML with the heavy words in <b>. */
+  lead?: string;
+}
+const { lead = 'Tell me what you are <b>building.</b>' } = Astro.props;
+const clients = await getClients();
+const gated = await getNav();
+const [first, second, third] = site.studioName.split(' ');
+---
+
+<section data-end class="end" aria-label="Start a project">
+  <div class="end-top label">
+    {site.bookingOpen && (
+      <span class="end-live">
+        <i />
+        Booking projects
+      </span>
+    )}
+    <span>{site.address}</span>
+  </div>
+  <div class="end-main">
+    <div class="end-say">
+      <h2 set:html={lead} />
+      <p>
+        {site.firstConversation} {site.replyPromise}
+      </p>
+      <div class="end-links">
+        <a class="chip" href="/contact/">
+          Start a project
+        </a>
+        <a class="chip ghost" href={site.emailHref}>
+          {site.email}
+        </a>
+        <a class="chip ghost" href={site.phoneHref}>
+          {site.phone}
+        </a>
+      </div>
+    </div>
+    <div class="gather" data-gather>
+      <div class="gather-deck" aria-hidden="true">
+        {clients.map((s) => (
+          <span class="gc" style={`--c:${s.accent}`}>
+            <img src={s.still} alt="" loading="lazy" width="584" height="1138" />
+          </span>
+        ))}
+      </div>
+      <a class="nine" href="/contact/" data-nine>
+        <span class="pip" aria-hidden="true">
+          {clients.length + 1}
+        </span>
+        <span class="pip flip" aria-hidden="true">
+          {clients.length + 1}
+        </span>
+        <span class="label">Next in the deck</span>
+        <strong>Yours.</strong>
+      </a>
+    </div>
+  </div>
+  <div class="end-name" aria-hidden="true">
+    <p>
+      <b>{first}</b> <span>{second}</span> <span>{third}</span>
+    </p>
+  </div>
+  <p class="legal">
+    {gated.map((l) => (
+      <a href={l.href}>{l.label}</a>
+    ))}
+    <a href="/privacy/">Privacy</a>
+    <a href="/accessibility/">Accessibility</a>
+    <a href="/colophon/">How this site is built</a>
+  </p>
+</section>

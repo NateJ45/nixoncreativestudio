@@ -1,26 +1,21 @@
 ---
-// Safe to edit. The page wiring is foundation; the copy at the top is
-// safe to swap when positioning changes.
+// Safe to edit. The page wiring is foundation; the copy at the top is safe to swap.
 /* ============================================================================
-   /journal | Journal index (restyled in overhaul 2.9)
+   /journal | Journal index
    ============================================================================
    Listing for the journal collection, newest first, with drafts left out of
-   production builds (the same filter src/data/nav.ts uses to gate the
-   Journal link, so the link appears with the first published entry).
-
-   A dated hairline list, not cards: each entry is one row in the prose
-   measure (columns 4 to 10, about 40rem) with its date and reading time in
-   mono, the title as a link, and the one-line summary. Rows are ruled by a
-   1px --line hairline. No cover images on the index: the entry page has
-   them.
-
-   Empty state (the live state today, nothing published): one plain line
-   and two onward links, in the same measure. No card.
+   production builds (the same filter src/data/nav.ts uses to gate the Journal
+   link, so the link appears with the first published entry). Ruled rows with
+   hairlines, not cards. Empty state (the live state today): one plain line and
+   two onward links.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
+import '../../styles/pages/sub.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Closing from '../../components/Closing.astro';
 import { readingTime } from '../../lib/readingTime';
+import { plainText, wordSpans } from '../../lib/words';
 
 const entries = (
   await getCollection('journal', ({ data }) =>
@@ -31,103 +26,46 @@ const entries = (
 ).sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
 
 const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const heading = 'Notes from <b>the studio.</b>';
 ---
 
 <BaseLayout
   title="Journal | Nixon Creative Studio"
-  description="Short essays, process notes and field reports from Nixon Creative Studio, on web design, brand work and photography for the organizations I work with."
+  description="Short essays, process notes and field reports from Nixon Creative Studio, on web design, brand work and photography for churches, schools and nonprofits."
 >
-  <section class="py-section" aria-labelledby="journal-heading">
-    <div class="ncs-container page-grid">
-      <header class="journal-head grid-prose">
-        <h1 id="journal-heading">Journal</h1>
-        <p class="text-lg leading-[1.5] text-text-muted">
-          Short notes from the studio: process, opinions, the occasional field report. Updated
-          whenever there's something worth writing down.
-        </p>
-      </header>
-
-      {entries.length === 0 ? (
-        <div class="journal-empty grid-prose">
-          <p class="text-lg leading-[1.6] text-text">
-            Nothing's published yet. This is where I'll write down how the studio works: the
-            thinking behind a build, notes from a shoot, the small decisions that add up. Until
-            then, the <a href="/work/">case studies</a> show the work, and you can always{' '}
-            <a href="/contact/">say hello</a>.
-          </p>
-        </div>
-      ) : (
-        <ol class="journal-list grid-prose">
-          {entries.map((entry) => (
-            <li class="journal-row">
-              <p class="journal-meta">
-                <time datetime={entry.data.published.toISOString().slice(0, 10)}>
-                  {fmt.format(entry.data.published)}
-                </time>
-                <span aria-hidden="true">·</span>
-                <span>{readingTime(entry.body ?? '')} min read</span>
-              </p>
-              <h2 class="journal-title text-h3">
-                <a href={`/journal/${entry.id}/`}>{entry.data.title}</a>
-              </h2>
-              <p class="leading-[1.55] text-text">{entry.data.summary}</p>
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
+  <header class="page-head">
+    <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+    <p class="lede">
+      Short notes from the studio: process, opinions, the occasional field report. Updated whenever
+      there's something worth writing down.
+    </p>
+  </header>
+  <section class="sec tight" aria-label="Journal entries">
+    {entries.length === 0 ? (
+      <p class="sub-empty">
+        Nothing's published yet. This is where I'll write down how the studio works: the thinking
+        behind a build, notes from a shoot, the small decisions that add up. Until then, the{' '}
+        <a href="/work/">case studies</a> show the work, and you can always{' '}
+        <a href="/contact/">say hello</a>.
+      </p>
+    ) : (
+      <ol class="sub-rows">
+        {entries.map((entry) => (
+          <li>
+            <p class="label">
+              <time datetime={entry.data.published.toISOString().slice(0, 10)}>
+                {fmt.format(entry.data.published)}
+              </time>
+              , {readingTime(entry.body ?? '')} min read
+            </p>
+            <h2>
+              <a href={`/journal/${entry.id}/`}>{entry.data.title}</a>
+            </h2>
+            <p>{entry.data.summary}</p>
+          </li>
+        ))}
+      </ol>
+    )}
   </section>
+  <Closing />
 </BaseLayout>
-
-<style>
-  .journal-head {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding-bottom: var(--spacing-l);
-  }
-
-  /* One measure for the list and the empty line: about 40rem. */
-  .journal-list,
-  .journal-empty {
-    max-width: 40rem;
-    border-top: 1px solid var(--line);
-  }
-  .journal-empty {
-    padding-top: var(--spacing-l);
-  }
-  .journal-empty a {
-    color: var(--color-link);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .journal-empty a:hover,
-  .journal-empty a:focus-visible {
-    text-underline-offset: 4px;
-  }
-
-  .journal-row {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
-    padding-block: var(--spacing-l);
-    border-bottom: 1px solid var(--line);
-  }
-  .journal-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    color: var(--muted-foreground);
-  }
-  .journal-title a {
-    color: var(--color-heading);
-    text-decoration: none;
-  }
-  .journal-title a:hover,
-  .journal-title a:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
-</style>

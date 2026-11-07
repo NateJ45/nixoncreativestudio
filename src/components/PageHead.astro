@@ -1,0 +1,18 @@
+---
+/* The head of a page: the H1, revealed word by word in the markup, then
+   whatever the page slots in under it (the lede, a date, a giant line's notes). */
+import { plainText, wordSpans } from '../lib/words';
+
+interface Props {
+  /** The heading as HTML, with the heavy words in <b>. */
+  heading: string;
+  class?: string;
+  id?: string;
+}
+const { heading, class: cls, id } = Astro.props;
+---
+
+<header class:list={['page-head', cls]}>
+  <h1 id={id} aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+  <slot />
+</header>

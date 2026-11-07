@@ -1,0 +1,8 @@
+---
+/* A paragraph in a case study, mapped to MDX's `p`. A line ending in a colon
+   leads into the list below it, so it sits closer to that list. */
+const html = await Astro.slots.render('default');
+const leadIn = /:\s*$/.test(html.replace(/<[^>]+>/g, ''));
+---
+
+<p class:list={[leadIn ? 'lead-in' : 'para', 'rv']} set:html={html} />

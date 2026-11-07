@@ -1,0 +1,17 @@
+---
+/* A capture you can open larger. study.js does the opening; the image itself is
+   always on the page. */
+import type { StudyImage } from '../../lib/study-markup';
+
+interface Props {
+  img: StudyImage;
+  alt: string;
+  /** Sits flush in a window (the editor shots). */
+  flat?: boolean;
+}
+const { img, alt, flat = false } = Astro.props;
+---
+
+<button type="button" class:list={['zoom', { flat }]} data-zoom data-full={img.url}>
+  <img src={img.url} width={img.w} height={img.h} alt={alt} loading="lazy" decoding="async" />
+</button>
