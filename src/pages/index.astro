@@ -1,85 +1,114 @@
 ---
 /* ============================================================================
-   Homepage (overhaul package 2.2)
+   / | The homepage
    ============================================================================
-   Its job: proof of craft, then fit, then price. Section order IS the IA:
+   Top to bottom:
+     Hero        the headline, with the portrait inside the sentence, and the
+                 empty space the hand of clients is dealt into.
+     Work        the giant "Eight live sites.", the ledger, and the grid. Every
+                 window has one spot here; scroll carries it from the hand.
+     Quote band  one real client quote on their color, phone breaking out.
+     Prices      the three cards, dealt out of a stack.
+     Closing     the gathering deck and the ninth card.
 
-     Hero           "The Reel" (Hero.astro + HeroReel.astro). Not changed
-                    by 2.2.
-     Selected work  three client sites (the lowest `order`) as FramePairs,
-                    alternating sides, with the peek on hover and focus, then
-                    "All {n} sites" to /work/. White.
-     Who I build for  SectorIndex: one hairline row per sector with its count,
-                    each linking /work/?sector={key}. Paper.
-     In their words one real client quote (Testimonial.astro), verbatim from
-                    the study's `testimonials` frontmatter, with a link to
-                    that study. White.
-     What it costs  PricingTeaser, variant "teaser": the ruled tiers from
-                    src/data/pricing.ts. Paper.
-     How I work     ProcessBand, the weighted timeline. White.
-     Ink closer     the footer (BaseLayout), set by the `closer` prop below.
-
-   Surfaces alternate white and paper so each hairline marks a real change,
-   and the page always ends on ink. Details: .claude/rules/homepage-and-pages.md.
+   All of it is in the markup. src/scripts/home.js only moves the windows, so
+   with no JavaScript the hand's space collapses and the grid is simply the grid.
    ============================================================================ */
-
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Hero from '../components/Hero.astro';
-import SelectedWork from '../components/SelectedWork.astro';
-import SectorIndex from '../components/SectorIndex.astro';
-import PricingTeaser from '../components/PricingTeaser.astro';
-import ProcessBand from '../components/ProcessBand.astro';
-import Section from '../components/Section.astro';
-import Testimonial from '../components/Testimonial.astro';
-import { getEntry } from 'astro:content';
-import type { Closer } from '../lib/closer';
+import Tile from '../components/Tile.astro';
+import Caption from '../components/Caption.astro';
+import QuoteBand from '../components/QuoteBand.astro';
+import DealtPrices from '../components/DealtPrices.astro';
+import Closing from '../components/Closing.astro';
+import { countWord, getClients, sectorCounts } from '../lib/clients';
+import { webTiers } from '../data/pricing';
+import { site } from '../data/site';
+import { money } from '../lib/money';
 
-// The one quote on the home (testimonials package). Richard Burnett on
-// Theology Matters: the site is live, the quote is about the site as it is
-// today, and it names the thing this studio sells (speed without losing the
-// message). The three Selected work studies have no quote about their
-// current site (Stone Steps' is about the earlier refresh), so it comes from
-// the rest of the collection. To change it, point QUOTE_FROM at another
-// study with `testimonials`; the first one is shown. Nothing renders if the
-// study or its quotes are missing.
-const QUOTE_FROM = 'theology-matters';
-const quoteStudy = await getEntry('case-studies', QUOTE_FROM);
-const homeQuote = quoteStudy?.data.testimonials?.[0];
+const clients = await getClients();
+const city = site.address.split(',')[0];
+const ledger = ['Since 2020', 'One person', city, ...sectorCounts(clients)];
 
-// The home's last word. ProcessBand used to close the page with this line and
-// its own button; the footer's ink closer carries it now, with the same
-// promise under it.
-const closer: Closer = {
-  heading: 'Tell me what you are',
-  emphasis: 'building.',
-  sub: 'The first conversation is free and ends with an honest ballpark, so you know where you stand before anything is signed.',
-};
+const lead = ['I', 'build', 'websites'];
+const heavy = ['pull', 'their', 'weight.'];
 ---
 
 <BaseLayout
   title="Nixon Creative Studio | Cincinnati websites and photography"
   description="I design and build fast, accessible websites for churches, schools, nonprofits and small businesses. Based in Cincinnati, working with clients anywhere."
-  closer={closer}
 >
-  <Hero />
-  <SelectedWork />
-  <SectorIndex tone="paper" />
-  {/* One real client quote, verbatim, between "Who I build for" and "What it
-       costs" (never a made-up or paraphrased one, CLAUDE.md never-break rule
-       9). White, so the tones below it swap to keep the surfaces alternating. */}
-  {quoteStudy && homeQuote && (
-    <Section
-      rail="In their words"
-      railMeta={quoteStudy.data.client}
-      label="A client in their words"
-    >
-      <Testimonial
-        testimonials={[homeQuote]}
-        labelled={false}
-        study={{ slug: quoteStudy.id, client: quoteStudy.data.client }}
-      />
-    </Section>
-  )}
-  <PricingTeaser variant="teaser" tone="paper" />
-  <ProcessBand tone="white" />
+  <section class="hero" aria-labelledby="h">
+    <h1 id="h" aria-label="I build websites that pull their weight.">
+      {lead.map((w, i) => (
+        <>
+          <span class="w" aria-hidden="true" style={`--n:${i}`}>
+            {w}
+          </span>{' '}
+        </>
+      ))}
+      <span class="me" aria-hidden="true">
+        <img src="/assets/portrait.webp" alt="" />
+        <span>Hi, that's me</span>
+      </span>
+      <span class="w" aria-hidden="true" style="--n:3">
+        that
+      </span>
+      {heavy.map((w, i) => (
+        <>
+          <b>
+            <span class="w" aria-hidden="true" style={`--n:${i + 4}`}>
+              {w}
+            </span>
+          </b>{' '}
+        </>
+      ))}
+    </h1>
+    <p class="sub">
+      Websites for churches, schools, nonprofits and small businesses, from{' '}
+      {money(webTiers[0].priceFrom)}. One person does the design, the build and, when needed, the
+      photos.
+    </p>
+    <div class="stackspace" data-space></div>
+  </section>
+  <section class="work" id="work" aria-labelledby="wh">
+    <div class="big">
+      <h2 id="wh" class="giant" data-weigh>
+        <span>{countWord(clients.length)}</span>
+        <span>live sites.</span>
+      </h2>
+    </div>
+    <div class="ledger">
+      <ul class="label" data-ledger>
+        {ledger.map((t) => (
+          <li>{t}</li>
+        ))}
+      </ul>
+      <p class="ledger-do">
+        Open one to see inside it, or{' '}
+        <button type="button" class="draw" data-draw>
+          draw a card
+        </button>
+      </p>
+    </div>
+    <ul class="grid" data-grid>
+      {clients.map((s, i) => (
+        <li>
+          <Tile client={s} index={i} />
+          <Caption client={s} index={i} />
+        </li>
+      ))}
+    </ul>
+  </section>
+  <QuoteBand
+    slug="theology-matters"
+    label="In their words"
+    class="home-band"
+    ariaLabel="What a client says"
+  />
+  <DealtPrices id="prices" />
+  <Closing />
 </BaseLayout>
+
+<script>
+  import '../scripts/home.js';
+</script>

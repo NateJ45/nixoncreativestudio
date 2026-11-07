@@ -1,0 +1,196 @@
+---
+/* /churches: the sector page. As you read the four points, the church's real
+   phone page scrolls along in its window (src/scripts/churches.js). The two
+   studies, their outcomes and the quotes all come from the case studies. Title
+   and description live in src/data/sector-pages.ts with the sector path. */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/pages/churches.css';
+import Tile from '../components/Tile.astro';
+import Caption from '../components/Caption.astro';
+import DealtPrices from '../components/DealtPrices.astro';
+import Closing from '../components/Closing.astro';
+import { countWord, getClients, toClient, type Client } from '../lib/clients';
+import { CHURCHES } from '../data/sector-pages';
+import { site } from '../data/site';
+import { plainText, wordSpans } from '../lib/words';
+
+const clients = await getClients();
+const bySlug = (slug: string) => clients.find((c) => c.slug === slug) as Client;
+const entries = (await getCollection('case-studies')).filter(
+  (e) => e.data.sector === CHURCHES.sector,
+);
+const places = ['Muncie, Indiana', 'Orangeburg, South Carolina'];
+const studies = entries
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99))
+  .map((entry) => ({
+    entry,
+    s: toClient(entry),
+    t:
+      entry.data.testimonials?.find((q) => q.name.includes('Kendall Ellis')) ??
+      entry.data.testimonials?.[0],
+  }));
+const n = entries.length;
+const path = `/${CHURCHES.path}/`;
+const canonical = new URL(path, site.url).toString();
+const schemas = [
+  {
+    '@type': 'ItemList',
+    '@id': `${canonical}#studies`,
+    name: 'Church websites I have built',
+    numberOfItems: n,
+    itemListElement: studies.map(({ s }, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(s.study, site.url).toString(),
+      name: s.name,
+    })),
+  },
+];
+const heading = `Church websites, starting with <b>the first Sunday.</b>`;
+---
+
+<BaseLayout
+  title={`${CHURCHES.title} | ${site.studioName}`}
+  description={CHURCHES.description.replace('{n}', String(n))}
+  breadcrumbs={[{ name: CHURCHES.label, path }]}
+  pageType="CollectionPage"
+  schemas={schemas}
+>
+  <div class="ch" data-ch>
+    <header class="ch-head">
+      <h1 id="h" aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+      <p class="lede">
+        Every church site I build starts with the person who has never been inside: when the service
+        is, how to get there, and what happens when they walk in. Then it has to work for the people
+        who keep it running, so the staff can post the week’s news without waiting on a developer.
+      </p>
+      <div class="ch-links">
+        <a class="chip ink" href="/contact/">
+          Start a project
+        </a>
+        <a class="chip soft" href="/work/?sector=church">
+          See the church sites
+        </a>
+      </div>
+    </header>
+
+    <div class="stand a" data-stand="first-baptist-muncie">
+      <Tile
+        client={bySlug('first-baptist-muncie')}
+        long="/assets/churches/first-baptist-muncie-long.webp"
+      />
+      <Caption client={bySlug('first-baptist-muncie')} />
+    </div>
+
+    <h2 class="ch-job" data-job>
+      What a church site has to do
+    </h2>
+    <article class="pt p1" data-pt>
+      <div class="pt-in">
+        <h3>Make the first visit easy</h3>
+        <p>
+          A first-time visitor should know the time, the place and how the morning runs before they
+          arrive. So the service times, the address and a plain what-to-expect page come first,
+          ahead of everything the members already know.
+        </p>
+      </div>
+    </article>
+    <article class="pt p2" data-pt>
+      <div class="pt-in">
+        <h3>Let the staff run it</h3>
+        <p>
+          I match the platform to whoever keeps the site up after launch: a custom build with an
+          editing studio and a live preview for one church, Wix for another whose communications
+          team wanted to own every page. Either way, the bulletin, the events and the news go up
+          without me.
+        </p>
+      </div>
+    </article>
+
+    <div class="stand b" data-stand="first-presbyterian-orangeburg">
+      <Tile
+        client={bySlug('first-presbyterian-orangeburg')}
+        long="/assets/churches/first-presbyterian-orangeburg-long.webp"
+      />
+      <Caption client={bySlug('first-presbyterian-orangeburg')} />
+    </div>
+
+    <article class="pt p3" data-pt>
+      <div class="pt-in">
+        <h3>Cover the rest of the week</h3>
+        <p>
+          A church building is busy all week, and a church has a history worth keeping. On the sites
+          below that meant one form for booking the building, a page about the building itself, and
+          an old blog brought across with every post at its address.
+        </p>
+      </div>
+    </article>
+    <article class="pt p4" data-pt>
+      <div class="pt-in">
+        <h3>Open to everyone</h3>
+        <p>
+          Every page I build is checked against WCAG AA, and that work is part of the price, not an
+          upsell. For a church it is simply the right thing to do.
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <section class="sec" aria-labelledby="sh">
+    <div class="wrap">
+      <div class="big">
+        <h2 id="sh" class="giant" data-weigh style="--fit:10;--fitm:17.2">
+          <span>Churches</span> <span>I have built for</span>
+        </h2>
+      </div>
+      <div class="ledger">
+        <ul class="label">
+          {places.map((p) => (
+            <li>{p}</li>
+          ))}
+        </ul>
+        <p>
+          <a href="/work/">See all {countWord(clients.length).toLowerCase()} sites</a>
+        </p>
+      </div>
+      <ul class="ch-studies">
+        {studies.map(({ s, entry, t }) => (
+          <li class="study" style={`--c:${s.accent};--p:${s.paper}`}>
+            <div class="study-w">
+              <Tile client={s} lazy />
+            </div>
+            <div class="study-t">
+              <h3>{s.name}</h3>
+              <p class="hook">{s.hook}</p>
+              <p class="out">{entry.data.outcome}</p>
+              {t && <blockquote>{t.quote}</blockquote>}
+              {t && (
+                <p class="by">
+                  <b>{t.name}</b>
+                  {t.title}
+                </p>
+              )}
+              <div class="study-links">
+                <a class="chip" href={s.study}>
+                  Read the case study
+                </a>
+                <a class="chip ghost" href={s.live} rel="noopener" data-cta="visit_client_site">
+                  Visit {s.host}
+                </a>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <DealtPrices />
+
+  <Closing lead="Building for a <b>church?</b>" />
+</BaseLayout>
+
+<script>
+  import '../scripts/churches.js';
+</script>

@@ -1,0 +1,403 @@
+/* Churches: you read, and the church's real page scrolls along beside you. Slowly, and with no bounce. */
+.ch {
+  --tw: min(calc((100vh - 11.5rem) / 2.022), 25vw, 22rem);
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: clamp(2rem, 5vw, 6rem);
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 var(--gut);
+}
+.ch > * {
+  grid-column: 1;
+  min-width: 0;
+}
+.ch-head {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: min(100vh, 60rem);
+  padding: clamp(6rem, 13vh, 8rem) 0 clamp(3rem, 8vh, 5rem);
+}
+.ch-head h1 {
+  font-size: clamp(2.75rem, 5.2vw, 5.5rem);
+}
+.ch-head .lede {
+  max-width: 38rem;
+  margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.42;
+}
+.ch-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: clamp(1.5rem, 3vh, 2rem);
+}
+.chip.ink {
+  background: var(--accent);
+  color: #fff;
+}
+.chip.ink:focus-visible {
+  outline-color: #111;
+}
+.chip.soft {
+  background: #fff;
+  color: #111;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 10px 22px -16px rgba(0, 0, 0, 0.3);
+}
+
+/* The two windows share one spot and trade places. */
+.stand {
+  grid-column: 2;
+  grid-row: 1 / span 6;
+  align-self: start;
+  justify-self: center;
+  position: sticky;
+  top: 5.25rem;
+  width: var(--tw);
+  margin-top: 5.25rem;
+}
+html:not(.js) .stand {
+  display: none;
+}
+.stand.a {
+  z-index: 2;
+}
+.stand.b {
+  z-index: 1;
+}
+.stand:focus-within {
+  z-index: 3 !important;
+}
+.stand .scr img {
+  inset: 0 0 auto;
+  height: auto;
+  object-fit: fill;
+  will-change: transform;
+}
+.stand .cap {
+  --capo: 1;
+  transition: none;
+}
+.js .stand .cap {
+  opacity: var(--co, 1);
+  transform: none;
+}
+
+.ch-job {
+  grid-row: 2;
+  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  padding-left: clamp(1.25rem, 2.4vw, 2.25rem);
+  margin-bottom: 0.5rem;
+}
+.pt {
+  display: flex;
+  align-items: center;
+  min-height: min(62vh, 34rem);
+}
+.p1 {
+  grid-row: 3;
+}
+.p2 {
+  grid-row: 4;
+}
+.p3 {
+  grid-row: 5;
+}
+.p4 {
+  grid-row: 6;
+  margin-bottom: clamp(2rem, 10vh, 6rem);
+}
+.pt-in {
+  padding: clamp(1.25rem, 2.4vw, 2.25rem);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0);
+  transition:
+    background 0.6s ease,
+    box-shadow 0.6s ease;
+}
+.pt h3 {
+  font-size: clamp(1.625rem, 2.5vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  transition: color 0.6s ease;
+}
+.pt p {
+  max-width: 36rem;
+  margin-top: 0.8rem;
+  font-size: clamp(1.0625rem, 1.3vw, 1.1875rem);
+  line-height: 1.55;
+  color: var(--soft);
+  transition: color 0.6s ease;
+}
+.pt.on .pt-in {
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 22px 40px -28px rgba(0, 0, 0, 0.3);
+}
+.pt.on p {
+  color: var(--ink);
+}
+
+/* The two churches, each on its own paper. */
+.ch-studies {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.study {
+  display: grid;
+  grid-template-columns: minmax(11rem, 19rem) minmax(0, 1fr);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  align-items: center;
+  padding: clamp(1.25rem, 3.5vw, 3.5rem);
+  border-radius: 1.75rem;
+  background: var(--p);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 22px 40px -28px rgba(0, 0, 0, 0.3);
+}
+.study h3 {
+  color: var(--c);
+  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.02;
+}
+.study .hook {
+  margin-top: 0.8rem;
+  font: 500 clamp(1.1875rem, 1.7vw, 1.5rem)/1.2 var(--display);
+  letter-spacing: -0.02em;
+}
+.study .out {
+  max-width: 38rem;
+  margin-top: 0.7rem;
+  color: var(--soft);
+}
+.study blockquote {
+  max-width: 42rem;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  font: 500 clamp(1.125rem, 1.5vw, 1.375rem)/1.32 var(--display);
+  letter-spacing: -0.015em;
+}
+.study .by {
+  margin-top: 0.8rem;
+  color: var(--soft);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.study .by b {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+.study-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: clamp(1.25rem, 2vw, 1.75rem);
+}
+.study .chip {
+  background: var(--c);
+  color: var(--p);
+}
+.study .chip.ghost {
+  background: rgba(0, 0, 0, 0.07);
+  color: var(--ink);
+}
+.study-links .chip:focus-visible {
+  outline-color: var(--ink);
+}
+.sec-head a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+.ch-prices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem 2rem;
+}
+.ch-prices h2 {
+  font-size: clamp(2rem, 3.6vw, 3.5rem);
+}
+
+@media (max-width: 62rem) {
+  .ch {
+    display: block;
+    --tw: min(66vw, 17.5rem, calc((100svh - 11rem) / 2.022));
+  }
+  .ch-head {
+    min-height: 0;
+    padding: clamp(5.5rem, 13vh, 8rem) 0 2.25rem;
+  }
+  .stand {
+    position: relative;
+    top: auto;
+    margin: 0 auto 3rem;
+  }
+  .ch-job {
+    padding-left: 0;
+    margin: 0 0 1.25rem;
+  }
+  .pt {
+    display: block;
+    min-height: 0;
+    margin-bottom: 0.9rem;
+  }
+  .pt-in {
+    padding: 1.35rem 1.25rem;
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 22px 40px -28px rgba(0, 0, 0, 0.3);
+  }
+  .pt p {
+    color: var(--ink);
+  }
+  .stand.b {
+    margin-top: 3rem;
+  }
+  .p4 {
+    margin-bottom: 0;
+  }
+  .study {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+  .study-w {
+    width: min(62vw, 15rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pt-in,
+  .pt h3,
+  .pt p {
+    transition: none;
+  }
+  .pt .pt-in {
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 22px 40px -28px rgba(0, 0, 0, 0.3);
+  }
+  .pt p {
+    color: var(--ink);
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 62.01rem) {
+  .ch {
+    --tw: min(calc((100vh - 11.5rem) / 2.022), 15.5vw, 15rem);
+  }
+  .stand {
+    position: relative;
+    top: auto;
+    grid-row: 1;
+    align-self: center;
+    margin-top: 3rem;
+  }
+  .stand.a {
+    justify-self: start;
+  }
+  .stand.b {
+    justify-self: end;
+  }
+  .pt {
+    min-height: 0;
+    margin-bottom: 1rem;
+  }
+  .ch-job {
+    margin-bottom: 1rem;
+    padding-left: 0;
+  }
+  .ch-head {
+    min-height: 0;
+  }
+}
+
+/* The four jobs are numbered cards. The one you are reading turns face up. */
+.ch {
+  counter-reset: pt;
+}
+.pt {
+  counter-increment: pt;
+}
+.pt-in {
+  --cardr: 1.5rem;
+  position: relative;
+  padding-top: 3.5rem;
+  border-radius: var(--cardr);
+}
+.pt.on .pt-in {
+  padding-bottom: 3.5rem;
+  outline: 1px solid rgba(18, 18, 17, 0.13);
+  outline-offset: -0.45rem;
+}
+.pt-in::before,
+.pt-in::after {
+  position: absolute;
+  font: 600 1.625rem/1 var(--display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  content: counter(pt);
+}
+.pt-in::before {
+  left: clamp(1.25rem, 2.4vw, 2.25rem);
+  top: 1.15rem;
+}
+.pt-in::after {
+  right: clamp(1.25rem, 2.4vw, 2.25rem);
+  bottom: 1.15rem;
+  transform: rotate(180deg);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.pt.on .pt-in::after {
+  opacity: 1;
+}
+.pt-in {
+  padding-bottom: 3.5rem;
+}
+.study {
+  position: relative;
+}
+.study::after {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid var(--c);
+  border-radius: 1.3rem;
+  opacity: 0.16;
+  pointer-events: none;
+}
+@media (max-width: 62rem) {
+  .pt-in {
+    outline: 1px solid rgba(18, 18, 17, 0.13);
+    outline-offset: -0.45rem;
+  }
+  .pt-in::after {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pt .pt-in {
+    outline: 1px solid rgba(18, 18, 17, 0.13);
+    outline-offset: -0.45rem;
+  }
+  .pt-in::after {
+    opacity: 1;
+    transition: none;
+  }
+}

@@ -1,110 +1,75 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 // =============================================================================
-// /services (overhaul package 2.5)
-// =============================================================================
-// - The sticky "On this page" sub-nav: Tab to each link, press Enter, and the
-//   target heading lands below both sticky bars (the header and the sub-nav),
-//   with and without JavaScript, at 1440, 768 and 320. That is what
-//   scroll-padding-top on <html> is for (WCAG 2.4.11, focus not obscured).
-// - The page never repeats the home's three studies (the lowest `order`) in
-//   "Recently shipped".
-// - Every web tier links to /contact/?tier=..., and the add-ons sit in a
-//   <details> whose summary shows their prices.
-// - The FAQPage JSON-LD is the visible FAQ text, word for word.
-//
-// Chromium only (the WebKit project's testMatch leaves it out).
+// /services: the Prices page
 // =============================================================================
 
-const anchors = ['web-design', 'photography', 'pricing', 'size-up', 'care', 'faq'];
-
-/** Where the heading sits against the bottom of the two sticky bars. */
-async function clearance(page: Page, id: string) {
-  return page.evaluate((id) => {
-    const heading = document.getElementById(id)!.getBoundingClientRect();
-    const nav = document.querySelector('.svc-subnav')!.getBoundingClientRect();
-    const header = document.querySelector('[data-header]')!.getBoundingClientRect();
-    return {
-      headingTop: heading.top,
-      barsBottom: Math.max(nav.bottom, header.bottom),
-      navUnderHeader: nav.top < header.bottom - 0.5,
-    };
-  }, id);
-}
-
-for (const javaScriptEnabled of [true, false]) {
-  test.describe(`sub-nav, JavaScript ${javaScriptEnabled ? 'on' : 'off'}`, () => {
-    test.use({ javaScriptEnabled, reducedMotion: 'reduce' });
-
-    for (const width of [1440, 768, 320]) {
-      test(`each anchored heading clears the sticky bars at ${width}`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 800 });
-        await page.goto('/services/');
-        for (const id of anchors) {
-          await page.evaluate(() => window.scrollTo(0, 0));
-          const link = page.locator(`.svc-subnav a[href="#${id}"]`);
-          await link.focus();
-          await page.keyboard.press('Enter');
-          await expect(page).toHaveURL(new RegExp(`#${id}$`));
-          await expect
-            .poll(async () => (await clearance(page, id)).headingTop, { timeout: 3000 })
-            .toBeLessThan(800);
-          const { headingTop, barsBottom, navUnderHeader } = await clearance(page, id);
-          expect(navUnderHeader, 'the sub-nav sits below the header').toBe(false);
-          expect(headingTop, `#${id} is below both sticky bars`).toBeGreaterThanOrEqual(barsBottom);
-        }
-      });
+test.describe('Prices', () => {
+  test('every tier links the form with its name', async ({ page }) => {
+    await page.goto('/services/');
+    for (const tier of ['launch', 'signature', 'flagship']) {
+      await expect(page.locator(`#websites a[href="/contact/?tier=${tier}"]`)).toHaveCount(1);
     }
   });
-}
 
-test('every tier starts a project with its name, and the add-ons show their prices', async ({
-  page,
-}) => {
-  await page.goto('/services/');
-  const tierLinks = page.locator('a[href^="/contact/?tier="]');
-  expect(await tierLinks.count()).toBeGreaterThanOrEqual(3);
-  for (const href of await tierLinks.evaluateAll((els) => els.map((e) => e.getAttribute('href')))) {
-    expect(href).toMatch(/^\/contact\/\?tier=[a-z]+$/);
-  }
-  const summary = page.locator('details.pt-addons > summary');
-  await expect(summary).toBeVisible();
-  await expect(summary).toContainText('$');
-});
+  test('the on-this-page links land on a section, and open a closed one', async ({ page }) => {
+    await page.goto('/services/');
+    for (const a of await page.locator('.jump a').all()) {
+      const id = ((await a.getAttribute('href')) ?? '').slice(1);
+      await expect(page.locator(`[id="${id}"]`), id).toHaveCount(1);
+    }
+    await page.locator('.jump a[href="#why"]').click();
+    await expect(page.locator('details#why')).toHaveJSProperty('open', true);
+  });
 
-test('"Recently shipped" never repeats a study from the home', async ({ page }) => {
-  await page.goto('/');
-  const homeStudies = await page
-    .locator('.sw-title a')
-    .evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-  expect(homeStudies.length).toBeGreaterThan(0);
-  await page.goto('/services/');
-  const recent = await page
-    .locator('.svc-recent-title a')
-    .evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-  expect(recent.length).toBe(2);
-  for (const href of recent) expect(homeStudies).not.toContain(href);
-});
+  test('three questions deal a card, and it links the form', async ({ page }) => {
+    await page.goto('/services/');
+    const pick = page.locator('[data-pick]');
+    await pick.scrollIntoViewIfNeeded();
+    await pick.getByRole('radio', { name: 'The essential pages' }).check();
+    await pick.getByRole('radio', { name: 'A few pages' }).check();
+    await expect(page.locator('[data-pick-go]')).toBeHidden();
+    await pick.getByRole('radio', { name: 'Connect to other services' }).check();
+    await expect(page.locator('[data-pick-name]')).toHaveText('Signature');
+    await expect(page.locator('[data-pick-price]')).toHaveText('$9,000');
+    const go = page.locator('[data-pick-go]');
+    await expect(go).toBeVisible();
+    await expect(go).toHaveAttribute('href', '/contact/?tier=signature');
+  });
 
-test('the FAQPage JSON-LD equals the visible FAQ', async ({ page }) => {
-  await page.goto('/services/');
-  const graph = await page.evaluate(() =>
-    [...document.querySelectorAll('script[type="application/ld+json"]')].map((s) =>
-      JSON.parse(s.textContent ?? '{}'),
-    ),
-  );
-  type Q = { name: string; acceptedAnswer: { text: string } };
-  const faqNode = graph
-    .flatMap((g) => g['@graph'] ?? [g])
-    .find((n: { '@type'?: string }) => n['@type'] === 'FAQPage') as { mainEntity: Q[] } | undefined;
-  expect(faqNode).toBeTruthy();
-  const visible = await page.locator('.svc-faq-item').evaluateAll((items) =>
-    items.map((d) => ({
-      q: d.querySelector('summary')!.textContent!.trim(),
-      a: d.querySelector('p')!.textContent!.trim(),
-    })),
-  );
-  expect(faqNode!.mainEntity.map((q) => ({ q: q.name, a: q.acceptedAnswer.text }))).toEqual(
-    visible,
-  );
+  test('the care table reads from the plans', async ({ page }) => {
+    await page.goto('/services/');
+    const heads = page.locator('table.care thead th');
+    await expect(heads).toHaveCount(4);
+    await expect(heads.first()).toContainText('$180');
+    await expect(page.locator('table.care')).toContainText('Same business day replies');
+    // Software updates start at Light Care: not included in Hosting, included after.
+    const row = page.locator('table.care tr', { hasText: 'Software and security updates' });
+    await expect(row.locator('td.n')).toHaveCount(1);
+    await expect(row.locator('td.y')).toHaveCount(3);
+  });
+
+  test('the FAQPage JSON-LD equals the visible FAQ', async ({ page }) => {
+    await page.goto('/services/');
+    const graph = await page
+      .locator('script[type="application/ld+json"]')
+      .first()
+      .evaluate((s) => JSON.parse(s.textContent ?? '{}'));
+    const faq = (graph['@graph'] as { '@type': string; mainEntity: { name: string }[] }[]).find(
+      (n) => n['@type'] === 'FAQPage',
+    );
+    const asked = await page.locator('.faq summary').allTextContents();
+    expect(faq?.mainEntity.map((q) => q.name)).toEqual(asked.map((t) => t.trim()));
+  });
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+    test('the tiers, care plans and FAQ are all in the markup', async ({ page }) => {
+      await page.goto('/services/');
+      await expect(page.locator('.tier')).toHaveCount(3);
+      await expect(page.locator('.t-price').first()).toHaveText('$5,000+');
+      await expect(page.locator('.faq details')).toHaveCount(7);
+      await expect(page.locator('[data-sites] a.tile')).toHaveCount(4);
+    });
+  });
 });

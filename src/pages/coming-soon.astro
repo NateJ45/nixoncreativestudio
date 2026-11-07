@@ -1,29 +1,24 @@
 ---
-// Safe to edit. Standalone "coming soon" landing page. Always live, even
-// when PUBLIC_COMING_SOON is unset, useful for previewing the page
-// without flipping the site-wide gate.
+// Safe to edit. Standalone "coming soon" landing page. Always live, even when
+// PUBLIC_COMING_SOON is unset, useful for previewing the page without flipping
+// the site-wide gate.
 /* ============================================================================
    /coming-soon | Coming Soon landing
    ============================================================================
-   Renders the ComingSoon component as the entire body. Uses its own
-   minimal HTML doc rather than BaseLayout because the goal is full
-   isolation from the WIP nav and footer: visitors should see one
-   focused page: the wordmark, one line, the email and a still of the
-   reel wall (overhaul 2.9).
+   Renders the ComingSoon component as the entire body. Uses its own minimal
+   HTML doc rather than BaseLayout, for full isolation from the dock and closing.
 
-   When PUBLIC_COMING_SOON=true is set at build time, every other route
-   on the site also renders this same component (see BaseLayout). To
-   take the site live, unset the env var (Cloudflare Pages > Settings >
-   Variables) and redeploy.
+   When PUBLIC_COMING_SOON=true is set at build time, every other route on the
+   site also renders this same component (see BaseLayout). To take the site
+   live, unset the env var in Cloudflare and redeploy.
    ============================================================================ */
 
-import '../styles/globals.css';
+import '../styles/kit.css';
 import { site } from '../data/site';
 import ComingSoon from '../components/ComingSoon.astro';
-import bebasNeueWoff2 from '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2?url';
 
 const title = `${site.studioName} | Launching soon`;
-const description = `${site.studioName} is a small studio in ${site.address}: web design and brand work for clients anywhere, and photography nearby. The new site launches soon.`;
+const description = `${site.studioName} is one person in ${site.address}: web design and brand work anywhere, photography across the region. The new site opens soon.`;
 ---
 
 <!doctype html>
@@ -34,36 +29,8 @@ const description = `${site.studioName} is a small studio in ${site.address}: we
     <meta name="description" content={description} />
     <meta name="robots" content="noindex, follow" />
     <title>{title}</title>
-
-    <!-- Theme bootstrap. Same logic as BaseLayout so dark / light is
-         consistent if a visitor has a theme preference. It also applies the
-         visitor's Pause motion choice (src/scripts/motion.ts); the page
-         itself has no motion since overhaul 2.9, so this only keeps the
-         stored choice in step with the rest of the site. -->
-    <script is:inline>
-      (function () {
-        try {
-          document.documentElement.toggleAttribute(
-            'data-motion-paused',
-            localStorage.getItem('ncs-motion') === 'paused',
-          );
-        } catch (_e) {
-          /* Storage blocked: motion follows the system setting only. */
-        }
-        try {
-          var stored = localStorage.getItem('ncs-theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
-          document.documentElement.classList.toggle('dark', isDark);
-          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-        } catch (e) {
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.classList.toggle('dark', prefersDark);
-          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
-        }
-      })();
-    </script>
-    <link rel="preload" as="font" type="font/woff2" href={bebasNeueWoff2} crossorigin />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/hanken.woff2" crossorigin />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -73,6 +40,8 @@ const description = `${site.studioName} is a small studio in ${site.address}: we
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
-    <ComingSoon />
+    <main>
+      <ComingSoon />
+    </main>
   </body>
 </html>

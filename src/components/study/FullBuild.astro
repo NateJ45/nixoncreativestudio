@@ -1,0 +1,26 @@
+---
+/* The long feature list stays closed until someone asks for it. Native details,
+   so keyboard and find-in-page come free; study.js springs the height a little. */
+interface Props {
+  /** The study has extra before and afters in here. */
+  more?: boolean;
+}
+const { more = false } = Astro.props;
+---
+
+<section class="chap build" id="what-i-built" aria-labelledby="cb">
+  <details class="more" data-more>
+    <summary>
+      <h2 id="cb">What I built</h2>
+      <span class="more-l">
+        The full build, with screenshots{more && ' and more before and afters'}
+      </span>
+      <i aria-hidden="true"></i>
+    </summary>
+    <div class="more-box">
+      <div class="more-in">
+        <slot />
+      </div>
+    </div>
+  </details>
+</section>

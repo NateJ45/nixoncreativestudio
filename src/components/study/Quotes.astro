@@ -1,0 +1,20 @@
+---
+/* In their words: the client's own words from the frontmatter, character for
+   character. Never edit, tidy or paraphrase one here. */
+import Chapter from './Chapter.astro';
+
+const { study } = Astro.props;
+---
+
+<Chapter title="In their words">
+  {study.testimonials.map((t: { quote: string; name: string; title: string; context?: string }) => (
+    <figure class="q rv">
+      <blockquote>{t.quote}</blockquote>
+      <figcaption>
+        <b>{t.name}</b>
+        {t.title}
+        {t.context && <span class="q-ctx">{t.context}</span>}
+      </figcaption>
+    </figure>
+  ))}
+</Chapter>

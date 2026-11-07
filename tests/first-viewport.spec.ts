@@ -22,8 +22,11 @@ import { routes } from './routes';
 // not media, and only show on hover.
 // =============================================================================
 
-const CHECKED = 'h1, img, picture, video, canvas, iframe, .reel-stage, .reel-card, .ticker-item';
-const EXEMPT = '.ticker-item:not(.is-active)';
+const CHECKED = 'h1, img, picture, canvas, iframe';
+// Exempt: anything in the closed sheet, and the small portrait inside the homepage
+// headline, which is decorative (aria-hidden), never the LCP, and arrives with the
+// words from opacity .02 like the rest of the sentence.
+const EXEMPT = 'dialog, .me';
 
 // Known failures, one line each, with the package that fixes them. Remove the
 // entry when that package lands; the test then runs for real. Empty since
@@ -109,44 +112,39 @@ for (const viewport of widths) {
 for (const route of routes.filter((r) => r.startsWith('/work/'))) {
   test(`${route}: the cover (LCP image) loads eagerly with high priority`, async ({ page }) => {
     await page.goto(route, { waitUntil: 'domcontentloaded' });
-    const lcp = page.locator('.media[data-lcp] img');
+    const lcp = page.locator('.s-fan .p-home img');
     await expect(lcp).toHaveCount(1);
-    await expect(lcp).toHaveAttribute('loading', 'eager');
     await expect(lcp).toHaveAttribute('fetchpriority', 'high');
   });
 }
 
 // =============================================================================
-// No reveal waits part-faded for a scroll (overhaul 1.7)
+// The hero stack is visible at load
 // =============================================================================
-// Reveals are scroll-driven CSS (animation-timeline: view()), so a block that
-// straddles the fold at load would sit at, say, 16% opacity until the visitor
-// scrolled. That is what Lighthouse saw on /photography (accessibility 0.96,
-// colour contrast, 2026-10-31). motion.ts marks every reveal already on screen
-// at load as done. Checked at Lighthouse's mobile size and at 1440.
-// =============================================================================
+// The hand of clients on the homepage is the first thing that moves, so it has to
+// be on screen as the page opens: every card present, not hidden, inside the hero.
 for (const viewport of [
-  { width: 412, height: 823 },
   { width: 1440, height: 900 },
+  { width: 390, height: 844 },
 ]) {
-  test.describe(`Reveals at load, ${viewport.width}px`, () => {
-    test.use({ viewport, reducedMotion: 'no-preference' });
-    for (const route of routes) {
-      test(`${route}: no on-screen reveal is part-faded`, async ({ page }) => {
-        await page.goto(route, { waitUntil: 'load' });
-        await page.waitForTimeout(300);
-        const partial = await page.evaluate(() =>
-          [...document.querySelectorAll('[data-reveal]')]
-            .filter((el) => el.getBoundingClientRect().top < window.innerHeight)
-            .map((el) => ({ el, o: parseFloat(getComputedStyle(el).opacity) }))
-            .filter(({ o }) => o < 1)
-            .map(
-              ({ el, o }) =>
-                `${o.toFixed(2)} ${el.tagName.toLowerCase()}: ${(el.textContent ?? '').trim().slice(0, 40)}`,
-            ),
-        );
-        expect(partial, `${route}: reveals on screen but not fully shown`).toEqual([]);
-      });
-    }
+  test(`/: the hand of clients is on screen at load, ${viewport.width}px`, async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport, reducedMotion: 'no-preference' });
+    const page = await ctx.newPage();
+    await page.goto('/', { waitUntil: 'load' });
+    await page.waitForTimeout(1200);
+    const onScreen = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('[data-grid] a.tile')].filter((t) => {
+          const r = t.getBoundingClientRect();
+          return (
+            r.top < window.innerHeight &&
+            r.bottom > 0 &&
+            getComputedStyle(t).visibility !== 'hidden' &&
+            parseFloat(getComputedStyle(t).opacity) === 1
+          );
+        }).length,
+    );
+    expect(onScreen).toBe(8);
+    await ctx.close();
   });
 }

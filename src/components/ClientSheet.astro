@@ -1,0 +1,50 @@
+---
+/* The client sheet: a window grows into its color and the screens fan out. It
+   stays closed until kit.js opens it, and the list below is what fills it. A
+   window is still a plain link to its case study with no script. */
+import { getClients } from '../lib/clients';
+
+const clients = await getClients();
+---
+
+<dialog class="sheet" data-sheet aria-labelledby="sn">
+  <button type="button" class="back" data-back>
+    Back to the work
+  </button>
+  <div class="sheet-in">
+    <div>
+      <h2 id="sn" class="fade" style="--d:0" data-n></h2>
+      <p class="hook fade" style="--d:1" data-k></p>
+      <p class="meta fade" style="--d:2" data-m></p>
+      <div class="sheet-links fade" style="--d:3">
+        <a class="chip" data-st href="/work/">
+          Read the case study
+        </a>
+        <a class="chip ghost" data-vi href="/work/" data-cta="visit_client_site">
+          Visit the site
+        </a>
+      </div>
+    </div>
+    <div class="fan">
+      <figure class="pane p-home" style="--d:0">
+        <div>
+          <video data-pv muted loop playsinline preload="none"></video>
+        </div>
+        <figcaption>The homepage</figcaption>
+      </figure>
+      <figure class="pane p-phone" style="--d:1">
+        <div>
+          <img data-pp alt="" />
+        </div>
+        <figcaption>On a phone</figcaption>
+      </figure>
+      <figure class="pane p-cms" style="--d:2" data-cmsbox>
+        <div>
+          <img data-pc alt="" />
+        </div>
+        <figcaption>The editor behind it</figcaption>
+      </figure>
+    </div>
+  </div>
+</dialog>
+<script id="ncs-clients" type="application/json" set:html={JSON.stringify(clients)} is:inline />

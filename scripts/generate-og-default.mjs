@@ -4,11 +4,11 @@
    One-off generator for public/og-default.png.
 
    Produces a 1200x630 Open Graph image using:
-     - Brand navy background (#0A1628)
-     - "NIXON CREATIVE STUDIO" in Bebas Neue (rendered as SVG paths from
-       the @fontsource WOFF file, so the result is the real brand
+     - The studio blue background (#2F3FE6)
+     - "Nixon Creative Studio" in Hanken Grotesk 800 (rendered as SVG paths from
+       the WOFF in brand/fonts/, so the result is the real brand
        typeface regardless of what fonts the build server has installed)
-     - Tagline + locale stamp in Bebas at smaller sizes
+     - Tagline + locale stamp at smaller sizes
      - A small NCS-blue accent rule above the wordmark
 
    Run with:
@@ -33,16 +33,16 @@ const projectRoot = resolve(__dirname, '..');
 // Hard-coded here (rather than imported from site.ts) because Node can't
 // import .ts modules without extra tooling, and an OG image regenerated
 // rarely is fine to update by hand.
-const WORDMARK = 'NIXON CREATIVE STUDIO';
+const WORDMARK = 'Nixon Creative Studio';
 const TAGLINE = 'PHOTOGRAPHY, WEB DESIGN, STRATEGY';
 const LOCALE = 'CINCINNATI REGION';
 
 const COLORS = {
-  bg: '#0A1628', // brand navy
-  fg: '#F4F7FA', // off-white, matches dark-mode heading color
-  muted: '#9CA3AF', // dark-mode --muted-foreground
-  accent: '#40AAED', // bright accent for the rule (passes AA on navy)
-  amber: '#FFA334', // brand amber for the tagline
+  bg: '#2F3FE6', // the studio blue
+  fg: '#FFFFFF',
+  muted: '#DDE1FF',
+  accent: '#FFFFFF', // the rule
+  amber: '#FFFFFF', // the tagline
 };
 
 // OG image canonical dimensions. 1200x630 is the spec all major social
@@ -55,20 +55,20 @@ const outPath = resolve(projectRoot, 'public/og-default.png');
 
 // Font file. WOFF works directly with opentype.js; WOFF2 would need a
 // separate decompressor.
-const fontPath = resolve(
-  projectRoot,
-  'node_modules/@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff',
-);
+const fontPath = resolve(projectRoot, 'brand/fonts/hanken-grotesk-latin-800-normal.woff');
 
 // --- Helpers ---------------------------------------------------------------
 
-/** Load the Bebas Neue WOFF file as an opentype.js Font instance. */
+/** Load the WOFF file as an opentype.js Font instance. */
 function loadFont(path) {
   const buf = readFileSync(path);
   // opentype.parse expects an ArrayBuffer; Buffer.slice gives a view we
   // can pass directly.
   const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-  return opentype.parse(arrayBuffer);
+  const parsed = opentype.parse(arrayBuffer);
+  // opentype.js cannot run this font's substitution lookups, and plain latin needs none.
+  delete parsed.tables.gsub;
+  return parsed;
 }
 
 /**
@@ -110,7 +110,7 @@ const locale = textToPathData(font, LOCALE, LOCALE_SIZE);
 // Vertically balance the lockup: accent rule, wordmark, tagline, locale. Walk
 // down the centered group computing each baseline from cap-height estimates
 // (opentype.js positions glyphs above the baseline by default).
-const cap = 0.8;
+const cap = 0.7;
 const barH = 6;
 const gapBar = 36; // accent rule -> wordmark
 const gapWord = 28; // wordmark -> tagline
@@ -155,7 +155,7 @@ const svg = `
     rx="3"
   />
 
-  <!-- Wordmark. The dominant brand element, fit to nearly full width. Bebas
+  <!-- Wordmark. The dominant brand element, fit to nearly full width. Hanken
        Neue glyph outlines rendered as path data so the result is independent
        of what fonts the build host has. -->
   <g transform="translate(${wordmarkX}, ${wordmarkY})" fill="${COLORS.fg}">

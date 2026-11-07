@@ -1,0 +1,37 @@
+---
+/* A phone showing the whole real homepage, which slides inside the window as you
+   scroll. study.js does the sliding; without it the top of the page shows. */
+import { LOCK, TOOLS } from '../../lib/window-chrome';
+import { studyImage } from '../../lib/study-markup';
+
+interface Props {
+  slug: string;
+  host: string;
+  /** rp beside the story, wp in the walk. */
+  variant: 'rp' | 'wp';
+}
+const { slug, host, variant } = Astro.props;
+const shot = studyImage(`${slug}-mobile`);
+---
+
+<div class={`tile phone ${variant}`}>
+  <span class="b-top" aria-hidden="true">
+    <span class="url">
+      <span data-lock set:html={LOCK} />
+      <span>{host}</span>
+    </span>
+  </span>
+  <span class="scr" aria-hidden="true">
+    <img
+      class="long"
+      src={shot.url}
+      width={shot.w}
+      height={shot.h}
+      alt=""
+      loading="lazy"
+      decoding="async"
+    />
+    <i class="thumb"></i>
+  </span>
+  <span class="b-bot" aria-hidden="true" data-tools set:html={TOOLS} />
+</div>

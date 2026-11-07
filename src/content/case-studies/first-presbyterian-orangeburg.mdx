@@ -76,21 +76,26 @@ facts:
   host: 1stpresbyterian.org
 ---
 
-import Decision from '../../components/Decision.astro';
-import ResultsBlock from '../../components/ResultsBlock.astro';
-import SiteShowcase from '../../components/SiteShowcase.astro';
-import FeatureHighlight from '../../components/FeatureHighlight.astro';
-import Lightbox from '../../components/Lightbox.astro';
-import reservationShot from '../../assets/case-studies/shots/first-presbyterian-orangeburg-feature-reservation.png';
-import welcomeShot from '../../assets/case-studies/shots/first-presbyterian-orangeburg-feature-welcome.png';
+<Chapter title="The brief">
 
-## The brief
+<Lede study={props.study} />
 
 First Presbyterian Church of Orangeburg is a Presbyterian congregation in Orangeburg, South Carolina, whose tagline puts the mission plainly: "Above all to glorify Jesus Christ." The church needed a website that could serve two very different groups at once. Visitors showing up for the first time want to know when services are, what to expect, and how to get there. Active members want to find ministry information, read the week's bulletin, give online, and book the building for events. The site had to do both jobs from the same front door.
 
 The church had active ministry programming across music, children, youth, adult education, and community outreach, but none of it was organized in a way that helped someone understand what the church does in a normal week. Staff also needed something they could maintain without developer help.
 
-## Decisions
+<ResultsBlock
+  items={[
+    'The building can be booked through an online form that captures the date, space, and purpose up front, replacing the phone-and-email back-and-forth the office used to run on.',
+    'Staff post the weekly bulletin and prayer focus and keep the calendar current on their own, with no developer needed.',
+    'Online giving through OnRealm is reachable from any page on the site, so no one has to go to a separate platform to give.',
+    'First-time visitors and active members each have a clear front door: worship and what-to-expect info for guests, and ministry, giving, and building reservations for members.',
+  ]}
+/>
+
+</Chapter>
+
+<Chapter title="Decisions">
 
 <Decision
   title="Booking the building through one form"
@@ -110,12 +115,25 @@ The church had active ministry programming across music, children, youth, adult 
   did="Link to Facebook and YouTube, where the church already had an established presence. It keeps content management simple and puts the videos where members are already watching them."
 />
 
-The site follows three audience lanes. Visitors land on clear worship information and an expectations guide before anything else. Members get a ministry section that covers every program the church runs, plus a Building section for facility reservations and a Giving section tied to OnRealm. The Updates section, with the blog, event calendar, and weekly prayer focus materials, serves both groups depending on what they are looking for.
+</Chapter>
 
-## What I built
+<Chapter title="Walk the homepage">
+
+<SiteShowcase
+  study={props.study}
+  label="1stpresbyterian.org"
+  href="https://www.1stpresbyterian.org"
+  alt="The First Presbyterian Church of Orangeburg homepage, scrolling top to bottom"
+/>
+
+</Chapter>
+
+<Quotes study={props.study} />
+
+<FullBuild more={false}>
 
 <FeatureHighlight
-  src={reservationShot}
+  src="first-presbyterian-orangeburg-feature-reservation"
   alt="The building reservation page on the First Presbyterian Orangeburg site"
   title="Booking the building, off email"
   body="The reservation page routes each request, nonprofit, for-profit, or member, to the right form, capturing the date, space, and purpose up front and replacing the phone-and-email back-and-forth the office used to run on."
@@ -123,7 +141,7 @@ The site follows three audience lanes. Visitors land on clear worship informatio
 />
 
 <FeatureHighlight
-  src={welcomeShot}
+  src="first-presbyterian-orangeburg-feature-welcome"
   alt="The What to Expect on Sunday page for first-time visitors"
   title="A warm front door for first-time guests"
   body="A plain 'what to expect on Sunday' page answers the questions a visitor actually has, check-in, greeters, and nursery hours, before they ever walk through the doors."
@@ -141,22 +159,8 @@ The full build, including the pieces above:
 - Giving page connected to OnRealm for online giving
 - Contact page with office hours and location information
 
-## Walk the homepage
+### Behind the decisions
 
-<SiteShowcase
-  slug="first-presbyterian-orangeburg"
-  alt="The First Presbyterian Church of Orangeburg homepage, scrolling top to bottom"
-  href="https://www.1stpresbyterian.org"
-  label="1stpresbyterian.org"
-/>
+The site follows three audience lanes. Visitors land on clear worship information and an expectations guide before anything else. Members get a ministry section that covers every program the church runs, plus a Building section for facility reservations and a Giving section tied to OnRealm. The Updates section, with the blog, event calendar, and weekly prayer focus materials, serves both groups depending on what they are looking for.
 
-<ResultsBlock
-  items={[
-    'The building can be booked through an online form that captures the date, space, and purpose up front, replacing the phone-and-email back-and-forth the office used to run on.',
-    'Staff post the weekly bulletin and prayer focus and keep the calendar current on their own, with no developer needed.',
-    'Online giving through OnRealm is reachable from any page on the site, so no one has to go to a separate platform to give.',
-    'First-time visitors and active members each have a clear front door: worship and what-to-expect info for guests, and ministry, giving, and building reservations for members.',
-  ]}
-/>
-
-<Lightbox />
+</FullBuild>

@@ -13,12 +13,11 @@
    paths and sharp to rasterize, so the result is the real brand type on any
    build host.
 
-   Two faces (overhaul package 2.1, ruling 11): the studio mark stays Bebas
-   Neue, as in the header wordmark, and each card's TITLE (the page or study
-   name) is Bricolage Grotesque at 800, the site's display face, in sentence
-   case. Bricolage's npm package ships woff2 only, which opentype.js cannot
-   read, so the static 800 weight is kept as a .woff in brand/fonts/ (from
-   @fontsource/bricolage-grotesque 5.3.0, SIL OFL, licence beside it).
+   One face, as on the site: Hanken Grotesk. The studio mark at 500 and each card's
+   TITLE (the page or study name) at 800, in sentence case, on the studio blue. The
+   site's own font is a variable woff2, which opentype.js cannot read, so the two
+   static weights are kept as .woff in brand/fonts/ (from @fontsource/hanken-grotesk
+   5.3.0, SIL OFL, licence beside them).
 
    Output (committed, like og-default.png and the placeholder JSON):
      public/og/<page>.png            e.g. public/og/index.png, /og/work.png
@@ -41,42 +40,41 @@ import sharp from 'sharp';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 
-// --- Brand constants (keep in sync with globals.css / generate-og-default) ---
+// --- Brand constants (keep in sync with kit.css / generate-og-default) ---
 const STUDIO = 'Nixon Creative Studio';
-// Short brand tagline that sits under the studio name on every card. Bebas is
-// an all-caps display face, so this renders uppercased.
-const TAGLINE = 'photography, web design, strategy';
+// Short brand tagline that sits under the studio name on every card.
+const TAGLINE = 'Web design, photography, strategy';
 const COLORS = {
-  bg0: '#0A1628', // navy
-  bg1: '#0F1E33', // lifted navy for the gradient
-  fg: '#F4F7FA', // off-white studio name
-  amber: '#FFA334', // brand amber for the tagline
-  accent: '#3478BD', // NCS blue accent rule
-  muted: '#9CA3AF', // muted off-white for the small page label
+  bg0: '#2F3FE6', // the studio blue
+  bg1: '#2F3FE6',
+  fg: '#FFFFFF',
+  amber: '#FFFFFF', // the tagline
+  accent: '#FFFFFF', // the rules
+  scrim: '#121211', // near-black ink, over a screenshot
+  muted: '#DDE1FF',
 };
 const WIDTH = 1200;
 const HEIGHT = 630;
 const PAD = 90;
 
 // --- Font ------------------------------------------------------------------
-const fontPath = resolve(
-  projectRoot,
-  'node_modules/@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff',
-);
+const fontPath = resolve(projectRoot, 'brand/fonts/hanken-grotesk-latin-500-normal.woff');
 function loadFont(p) {
   const buf = readFileSync(p);
-  return opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+  const parsed = opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+  // opentype.js cannot run this font's substitution lookups, and plain latin needs none.
+  delete parsed.tables.gsub;
+  return parsed;
 }
 const font = loadFont(fontPath);
 
-// Title face: Bricolage Grotesque 800 (see the header). Sentence case, as
-// written; never uppercased.
+// Title face: Hanken Grotesk 800 (see the header). Sentence case, as written.
 const titleFont = loadFont(
-  resolve(projectRoot, 'brand/fonts/bricolage-grotesque-latin-800-normal.woff'),
+  resolve(projectRoot, 'brand/fonts/hanken-grotesk-latin-800-normal.woff'),
 );
 const TITLE_CAP = titleFont.tables.os2.sCapHeight / titleFont.unitsPerEm;
 // Laid out glyph by glyph (cmap, advance, pair kerning) rather than through
-// font.getPath(): opentype.js's text shaper throws on one of Bricolage's
+// font.getPath(): opentype.js's text shaper has thrown on some fonts'
 // contextual substitution lookups (GSUB type 6, format 2), and the titles are
 // plain latin that need no substitution.
 function glyphsT(text) {
@@ -121,9 +119,7 @@ function pathT(text, size) {
   return d;
 }
 
-// Bebas Neue is an all-caps display face; render titles uppercased so wrapping
-// math matches what actually paints.
-const up = (s) => s.toUpperCase();
+const up = (s) => s;
 function advance(text, size) {
   return font.getAdvanceWidth(up(text), size);
 }
@@ -158,11 +154,10 @@ function fitSize(text, target, start, min) {
 }
 
 // --- Card builder ----------------------------------------------------------
-// Brand-forward navy card: the Bebas studio name is the hero, the Bebas tagline
-// sits under it in amber, and the page title closes the lockup in Bricolage
-// 800. The whole lockup is centered and vertically balanced.
+// The studio blue card: the studio name is the hero, the tagline sits under it, and
+// the page title closes the lockup at 800. The whole lockup is centered and vertically balanced.
 function buildSvg(pageLabel) {
-  const cap = 0.8; // Bebas cap height as a fraction of em, for the vertical math.
+  const cap = 0.7; // Hanken cap height as a fraction of em, for the vertical math.
 
   // Size each line: the studio name fills nearly the full width, the tagline is
   // a clear second, the page label is a quiet third.
@@ -223,17 +218,17 @@ function buildSvg(pageLabel) {
 }
 
 // --- Cover-card builder (case studies) -------------------------------------
-// For a case study we put the REAL hero screenshot behind the card, with a navy
+// For a case study we put the REAL hero screenshot behind the card, with a dark
 // scrim for legibility and the title anchored bottom-left. A share of a case
 // study then shows the actual shipped work, which is the strongest trust signal
-// the studio has. Non-case-study pages keep the plain navy card above.
+// the studio has. Non-case-study pages keep the plain blue card above.
 function buildCoverOverlay(title) {
   const maxWidth = WIDTH - PAD * 2;
-  const cap = 0.8;
+  const cap = 0.7;
 
   // The case study title stays the hero (the work itself is the trust signal).
   // Greedy shrink-to-fit at up to 3 lines.
-  // Bricolage 800, sentence case. Tight leading, as the site's headings.
+  // Hanken 800, sentence case. Tight leading, as the site's headings.
   let size = 80;
   let lines = wrap(title, size, maxWidth, advanceT);
   while (lines.length > 3 && size > 48) {
@@ -272,12 +267,12 @@ function buildCoverOverlay(title) {
 <svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <defs>
     <linearGradient id="scrimV" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0.12" stop-color="${COLORS.bg0}" stop-opacity="0" />
-      <stop offset="1" stop-color="${COLORS.bg0}" stop-opacity="0.94" />
+      <stop offset="0.12" stop-color="${COLORS.scrim}" stop-opacity="0" />
+      <stop offset="1" stop-color="${COLORS.scrim}" stop-opacity="0.94" />
     </linearGradient>
     <linearGradient id="scrimH" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="${COLORS.bg0}" stop-opacity="0.72" />
-      <stop offset="0.62" stop-color="${COLORS.bg0}" stop-opacity="0" />
+      <stop offset="0" stop-color="${COLORS.scrim}" stop-opacity="0.72" />
+      <stop offset="0.62" stop-color="${COLORS.scrim}" stop-opacity="0" />
     </linearGradient>
   </defs>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#scrimV)" />
@@ -352,8 +347,8 @@ function collectionEntries(dir, prefix) {
 // --- Pages -----------------------------------------------------------------
 const STATIC_PAGES = [
   { route: 'index', title: 'Modern websites and photography' },
-  { route: 'work', title: 'Selected work' },
-  { route: 'services', title: 'Services' },
+  { route: 'work', title: 'Case studies' },
+  { route: 'services', title: 'Prices' },
   { route: 'about', title: 'About the studio' },
   { route: 'photography', title: 'Photography' },
   { route: 'journal', title: 'Journal' },

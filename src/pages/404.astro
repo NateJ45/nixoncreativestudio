@@ -1,217 +1,49 @@
 ---
-// Safe to edit (copy). Astro builds this as 404.html, which Cloudflare serves
-// for any path that is not a real page.
-/* ============================================================================
-   /404 | Page not found (overhaul 2.9)
-   ============================================================================
-   Its job is recovery: say plainly that the address is wrong, show the
-   address, and offer the pages the visitor most likely meant.
-
-   1. The H1 runs Heft in reverse (ruling 9): "lost its weight." starts heavy
-      and drains to a hairline 200 once on load. Under reduced motion, without
-      JS or under Pause motion it simply shows that end state. The block is the
-      first viewport, so nothing here takes data-reveal (ruling 3).
-   2. An empty BrowserFrame. Its address bar is built with the site's own host
-      and the script below writes the path that failed into it with
-      textContent (never innerHTML: the path is whatever someone typed).
-   3. "Did you mean". The build hands the script a list of real routes (the
-      nav pages, the colophon, privacy and accessibility pages, and every case
-      study); src/lib/did-you-mean.ts scores them against the last part of
-      the path with a small Damerau-Levenshtein and the script swaps in up to
-      three close ones. Without JS, or when nothing is close, the list stays
-      as built: every case study, counted from the collection.
-
-   The old floating "404" numeral and its drift are gone (Part B, 404).
-   ============================================================================ */
-
-import { getCollection } from 'astro:content';
+/* The 404: one client window knocked askew, the address that failed, and two
+   links. */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import BrowserFrame from '../components/BrowserFrame.astro';
-import Heft from '../components/Heft.astro';
-import { buttonVariants } from '../components/ui/button';
-import { getFooterNav } from '../data/nav';
-import { site } from '../data/site';
-import type { Route } from '../lib/did-you-mean';
+import '../styles/pages/404.css';
+import Tile from '../components/Tile.astro';
+import { getClients } from '../lib/clients';
+import { plainText, wordSpans } from '../lib/words';
 
-// Every case study in loop order (the `order` field /work follows).
-const studies = (await getCollection('case-studies')).sort(
-  (a, b) => (a.data.order ?? 99) - (b.data.order ?? 99),
-);
-const studyRoutes: Route[] = studies.map((s) => ({
-  href: `/work/${s.id}/`,
-  label: s.data.title,
-}));
-
-// The pages a mistyped address most likely meant. getFooterNav() already
-// leaves out the gated pages (Journal, Photography) while they are empty.
-const routes: Route[] = [
-  ...(await getFooterNav()).map((l) => ({ href: l.href, label: l.label })),
-  { href: '/colophon/', label: 'Colophon' },
-  { href: '/privacy/', label: 'Privacy' },
-  { href: '/accessibility/', label: 'Accessibility' },
-  ...studyRoutes,
-];
+const clients = await getClients();
+const first = clients[0];
+const heading = `This page <b>isn't here.</b>`;
 ---
 
 <BaseLayout
   title="Page not found | Nixon Creative Studio"
-  description="This page lost its weight. Head back to the homepage, look through my case studies, or tell me what you were looking for and I'll point you to it."
+  description="This page isn't here. Head back to the homepage or look through my work."
 >
-  <section class="notfound py-section" aria-labelledby="notfound-heading">
-    <div class="ncs-container page-grid">
-      <header class="notfound-head grid-prose">
-        <p class="font-mono text-sm text-text-muted">Page not found</p>
-        <h1 id="notfound-heading">
-          This page <Heft text="lost its weight." reverse />
-        </h1>
-        <p class="max-w-[50ch] text-lg leading-[1.6] text-text">
-          The link you followed might be old, or the address might be a typo. Nothing's broken on
-          this end. Here are a few places to try instead.
-        </p>
-      </header>
-
-      {/* The address that failed, in an empty frame. */}
-      <div class="notfound-frame" data-notfound-frame>
-        <BrowserFrame url={`${site.url}/`}>
-          <div class="notfound-screen"></div>
-        </BrowserFrame>
+  <div class="nf">
+    <header class="page-head">
+      <p class="nf-num" aria-hidden="true">
+        404
+      </p>
+      <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+      <p class="lede">
+        The link you followed might be old, or the address might be a typo. Nothing's broken on this
+        end. Here are a few places to try instead.
+      </p>
+      <p class="lost" hidden>
+        Not found: <span data-path></span>
+      </p>
+      <div class="nf-links">
+        <a class="chip dark" href="/work/">
+          See the work
+        </a>
+        <a class="chip" href="/">
+          Back to home
+        </a>
       </div>
-
-      <nav class="notfound-suggest" aria-labelledby="suggest-heading">
-        <h2 id="suggest-heading" class="text-h3" data-suggest-heading>
-          The case studies
-        </h2>
-        <ul class="suggest-list" data-suggest-list data-routes={JSON.stringify(routes)}>
-          {studyRoutes.map((r) => (
-            <li>
-              <a href={r.href}>{r.label}</a>
-            </li>
-          ))}
-        </ul>
-        <div class="mt-l flex flex-wrap items-center gap-m">
-          <span class="inline-block">
-            <a href="/" class={buttonVariants({ variant: 'brand', size: 'cta' })}>
-              Back to home
-            </a>
-          </span>
-          <a class="card-link" href="/contact/">
-            Get in touch
-          </a>
-        </div>
-      </nav>
+    </header>
+    <div class="knock" data-knock>
+      <Tile client={first} direct lazy index={0} />
     </div>
-  </section>
+  </div>
 </BaseLayout>
 
 <script>
-  import { suggest, type Route } from '../lib/did-you-mean';
-
-  // Fills the address bar and swaps in close matches. Re-binds after a View
-  // Transitions navigation; the dataset flag stops a double run.
-  function initNotFound() {
-    const frame = document.querySelector<HTMLElement>('[data-notfound-frame]');
-    const list = document.querySelector<HTMLUListElement>('[data-suggest-list]');
-    if (!frame || !list || list.dataset.bound) return;
-    list.dataset.bound = 'true';
-
-    const path = window.location.pathname;
-    const host = window.location.host.replace(/^www\./, '');
-
-    // textContent only: the path is untrusted input.
-    const bar = frame.querySelector<HTMLElement>('.bf-host');
-    if (bar) bar.textContent = `${host}${path}`;
-    const printUrl = frame.querySelector<HTMLElement>('.bf-url');
-    if (printUrl) printUrl.textContent = `${window.location.origin}${path}`;
-
-    let routes: Route[] = [];
-    try {
-      routes = JSON.parse(list.dataset.routes ?? '[]') as Route[];
-    } catch {
-      return;
-    }
-    const hits = suggest(path, routes);
-    if (hits.length === 0) return; // keep every case study
-
-    const items = hits.map((hit) => {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = hit.href;
-      a.textContent = hit.label;
-      const where = document.createElement('span');
-      where.className = 'suggest-path';
-      where.textContent = hit.href;
-      li.append(a, ' ', where);
-      return li;
-    });
-    list.replaceChildren(...items);
-    list.dataset.suggested = String(hits.length);
-    const heading = document.querySelector<HTMLElement>('[data-suggest-heading]');
-    if (heading) heading.textContent = 'Did you mean';
-  }
-  document.addEventListener('astro:page-load', initNotFound);
-  initNotFound();
+  import '../scripts/not-found.js';
 </script>
-
-<style>
-  .notfound-head {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m, 1.25rem);
-  }
-
-  /* Stacked below lg; side by side from lg: the frame in columns 1 to 7, the
-     suggestions in 8 to 12. */
-  .notfound-frame,
-  .notfound-suggest {
-    margin-top: var(--spacing-xl, 3rem);
-  }
-  @media (min-width: 64rem) {
-    .notfound-head {
-      grid-column: 1 / 9;
-    }
-    .notfound-frame {
-      grid-column: 1 / 8;
-    }
-    .notfound-suggest {
-      grid-column: 8 / 13;
-    }
-  }
-
-  /* The empty screen: a blank page of the site's own background. */
-  .notfound-screen {
-    aspect-ratio: 16 / 10;
-    background-color: var(--background);
-  }
-
-  /* A ruled list: one hairline between entries, no cards. */
-  .suggest-list {
-    margin-top: var(--spacing-s, 0.75rem);
-    border-top: 1px solid var(--line-strong);
-  }
-  .suggest-list :global(li) {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.25rem 1rem;
-    padding-block: 0.65rem;
-    border-bottom: 1px solid var(--line);
-  }
-  .suggest-list :global(a) {
-    color: var(--color-link);
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    overflow-wrap: anywhere;
-  }
-  .suggest-list :global(a:hover),
-  .suggest-list :global(a:focus-visible) {
-    text-underline-offset: 5px;
-  }
-  .suggest-list :global(.suggest-path) {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--muted-foreground);
-    overflow-wrap: anywhere;
-  }
-</style>

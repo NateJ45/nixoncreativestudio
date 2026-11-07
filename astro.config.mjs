@@ -2,11 +2,8 @@
 import { defineConfig } from 'astro/config';
 
 import cloudflare from '@astrojs/cloudflare';
-import expressiveCode from 'astro-expressive-code';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import tailwindcss from '@tailwindcss/vite';
-import react from '@astrojs/react';
 import { readdirSync } from 'node:fs';
 import { photographyOpen } from './src/data/photography-gate.ts';
 
@@ -29,24 +26,11 @@ const photographyIsOpen = photographyOpen(photoFiles);
 // rendering later via `export const prerender = false`, but in the static
 // default it's effectively inert for this site.
 //
-// Integrations (order matters: expressiveCode must precede mdx):
-//   - expressiveCode : themed code blocks in MDX (journal dev posts). Maps its
-//                      dark theme to the site's .dark class so code follows the
-//                      site theme.
 //   - mdx       : powers the case-studies + journal content collections
 //   - sitemap   : emits sitemap-index.xml and sitemap-0.xml at build time
-//   - (partytown removed 2026-09-04: its sandbox cost more main-thread time
-//                 than the one small beacon it isolated; Analytics.astro now
-//                 loads the beacon with `defer`)
-//   - react     : enables React islands. Since overhaul 2.8 no page renders
-//                 one: PhotoGallery waits, unused, for package 4.6 and the
-//                 first real photos. Kept installed so that is a one-line change.
 //
-// prefetch: links preload as they enter the viewport, so navigation feels
-// instant and pairs with the View Transitions router.
-//
-// Tailwind 4 wires in via Vite plugin (not the older @astrojs/tailwind
-// integration). Theme tokens live in src/styles/globals.css via @theme.
+// prefetch: links preload as they enter the viewport, so a page load feels instant
+// and the cross-document view transition (kit.css) has the next page ready.
 // =============================================================================
 export default defineConfig({
   site: 'https://nixoncreativestudio.com',
@@ -54,12 +38,15 @@ export default defineConfig({
   // Every page lives at /x/ (canonical and sitemap agree); a slashless internal
   // link is a 307 on Cloudflare and Search Console reports it (PORTS Card 89).
   trailingSlash: 'always',
+  // Keep the whitespace in the markup: the headline's words are inline spans, and
+  // compression joins two words that the formatter put on separate lines.
+  compressHTML: false,
   // Astro 7's adapter no longer forces server mode; this site never used sessions.
   session: false,
-  // The standalone /now page was merged into the About page (its Currently
-  // section). Keep old links and bookmarks working with a static redirect.
+  // The standalone /now page was merged into the About page. Keep old links and
+  // bookmarks working with a static redirect.
   redirects: {
-    '/now': '/about/#now',
+    '/now': '/about/',
     // A retired case study (2026-10-01). Send any old links or search results
     // to the work index instead of a 404.
     '/work/west-chester-preschool': '/work/',
@@ -78,46 +65,21 @@ export default defineConfig({
   // blur-up placeholder in production. Build-time images need no binding and
   // work on any host.
   adapter: cloudflare({ imageService: 'compile' }),
-  // Encoder settings for that build-time Sharp service (overhaul 4.4). Media.astro
-  // and the other <Picture> calls emit AVIF with a WebP fallback. Sharp's AVIF
-  // default (quality 50) visibly smears fine photographic detail (aerial maps,
-  // the about photos) next to the WebP, so AVIF runs at 60: side by side at 2x
-  // zoom it matches the WebP, and the files still come out about 30% smaller.
-  // Effort 3, not Sharp's default 4: on the site's screenshots 4 takes about three
-  // times as long for files only 2% smaller, and every CI build encodes from cold.
-  // WebP keeps Sharp's default (80). A component that passes its own `quality`
-  // (the hero reel's 68) overrides both.
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',
-      config: { avif: { quality: 60, effort: 3 } },
     },
   },
   integrations: [
-    // Themed code blocks for MDX. Dark theme is tied to the site's .dark class
-    // so a code sample flips with the theme toggle instead of prefers-color-scheme.
-    expressiveCode({
-      themes: ['github-dark', 'github-light'],
-      themeCssSelector: (theme) => (theme.name === 'github-dark' ? '.dark' : ':root'),
-      styleOverrides: { borderRadius: '0.5rem' },
-    }),
     mdx(),
     // /coming-soon/ is the pre-launch gate page, not content: it is noindex
     // (see src/pages/coming-soon.astro), and a sitemap must not list a
     // noindex page (Search Console flags the mismatch).
-    // Out of the sitemap: the Coming Soon gate, the noindex parts page
-    // (/colophon/parts/, the check page for the shared components) and,
-    // while its gate is closed, the noindex /photography/ page.
+    // Out of the sitemap: the Coming Soon gate and, while its gate is closed, the
+    // noindex /photography/ page.
     sitemap({
       filter: (page) =>
-        !page.includes('/coming-soon') &&
-        !page.includes('/colophon/parts') &&
-        (photographyIsOpen || !page.includes('/photography')),
+        !page.includes('/coming-soon') && (photographyIsOpen || !page.includes('/photography')),
     }),
-    react(),
   ],
-
-  vite: {
-    plugins: [tailwindcss()],
-  },
 });

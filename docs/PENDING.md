@@ -15,11 +15,31 @@ Read this file early in any session on this repo.
 
 ## Waiting on a human
 
+### A. Regenerate the visual baselines (added 2026-11-06, the deal redesign)
+
+The Linux baselines in `tests/visual.spec.ts-snapshots/` were removed with the old design, and the spec now shoots light only (there is one theme). Run `gh workflow run visual.yml --ref <branch> -f update=true`, review the PNGs, push an empty commit to the PR branch so CI runs, and merge (steps in `docs/TESTING.md`). Until then `visual.yml` has nothing to compare against. It is not a required check, so nothing is blocked.
+
+### B. Build a non-React gallery for /photography (added 2026-11-06; was overhaul package 4.6)
+
+The React gallery (`react-photo-album`, `yet-another-react-lightbox`, `Photo.tsx`, `PhotoGallery.tsx`) was removed with React. When the photos exist (item 2f), /photography needs a new gallery in plain markup and a small script, in the deck's style (`DESIGN.md`), reading the `photos` collection. It must pass `tests/no-react.spec.ts` without an exception.
+
+### C. Repoint the capture scripts at `public/assets/` (added 2026-11-06)
+
+`scripts/capture-case-study.mjs` and `scripts/capture-cms.mjs` still write PNGs under `src/assets/case-studies/` and `shots/`. The site now serves webp copies from `public/assets/` (`{slug}-cover.webp`, `{slug}-m.webp`, `{slug}-cms.webp`, and the footage). Until the scripts write there, a re-capture needs a hand conversion, and `study-images.json` needs the new size for anything under `public/assets/study/`.
+
+### D. Decide what the monthly live-scores job is for (added 2026-11-06)
+
+`.github/workflows/live-scores.yml`, `scripts/measure-live.mjs`, `src/data/live-scores.json` and `src/lib/live-scores.ts` still run, and each month a PR opens with fresh numbers, but no page prints them any more. Either bring a "Measured live" fact back into the study page (the library already hides anything older than 120 days) or retire the workflow and the library.
+
+### E. Re-baseline the parity harness (added 2026-11-06)
+
+`scripts/.parity/` holds HTML from the old front end, so `npm run parity compare` fails on every page. Run `capture` on a good build of the new site and commit the result, or delete the harness.
+
 - **The `test` job is pinned to ubuntu-24.04 (2026-10-30).** `ubuntu-latest` moved to 26.04, where Playwright's WebKit will not launch, so every `[webkit-iphone]` test failed. `ci.yml` now says `runs-on: ubuntu-24.04` on that job only. Unpin it once a Playwright release supports 26.04 (try it on a branch first). Starter PORTS.md card and vault gotcha `playwright-webkit-ubuntu-26-04`.
 
 ### 0. After the cut-over: Rich Results test (added 2026-10-30, overhaul 1.9)
 
-Once `redesign` is live on `main`, run Google's Rich Results test
+Once the deal redesign is live on `main`, run Google's Rich Results test
 (https://search.google.com/test/rich-results) and the Schema Markup Validator
 (https://validator.schema.org) on `/`, `/services/` and one case study. The
 JSON-LD is one `@graph` per page (studio, WebSite, Person, WebPage, plus
@@ -31,7 +51,7 @@ Then resubmit the sitemap in Search Console. Delete this item when done.
 
 The site now sends `generate_lead`, `contact_click`, `book_call_click`,
 `visit_client_site`, `pricing_view` and `cta_click` (`src/lib/track.ts`). Once
-`redesign` is live, open GA4 (property 532519109) > Admin > Events, wait for
+the deal redesign is live, open GA4 (property 532519109) > Admin > Events, wait for
 `generate_lead` to appear after a real or test inquiry, and mark it as a key
 event so it counts as a conversion. Optionally register `cta_location`,
 `link_domain`, `method`, `cta_id` and `pricing_variant` as event-scoped custom
@@ -50,46 +70,12 @@ unset 2026-08-27 (`gh variable list` returned nothing; `gh secret list` too).
 gh variable set SITE_URL --body https://nixoncreativestudio.com
 ```
 
-Use the **www** form with **no trailing slash**. The apex 301s to www, and the
-workflow follows redirects, so the apex form also works; www just saves a hop
-on every route.
+Use the **apex** form with **no trailing slash**: the apex is canonical and `www` 301s to it. The
+workflow follows redirects, so either works.
 
 Nothing else in this repo reads `SITE_URL`. The canonical site origin for the
 build lives in `astro.config.mjs` (`site: 'https://nixoncreativestudio.com'`)
 and is unrelated.
-
-### 2. Decide what to do about the `--link` comment in `globals.css`
-
-**File:** `src/styles/globals.css`, the `--link` declaration in `:root`
-(and the matching paragraph under "Brand colors" in `.claude/rules/styling.md`).
-
-The comment reads `/* AA on #FFFFFF, #F4F7FA, and #0A1628 */`. Measured
-2026-08-27:
-
-| pair                   | ratio      | AA body text (4.5:1) |
-| ---------------------- | ---------- | -------------------- |
-| `#2A6FB0` on `#FFFFFF` | 5.25:1     | pass                 |
-| `#2A6FB0` on `#F4F7FA` | 4.88:1     | pass                 |
-| `#2A6FB0` on `#0A1628` | **3.45:1** | **fail**             |
-
-The third claim is wrong. It is **not** a live accessibility defect: the pair
-is not rendered anywhere. Since overhaul 2.1 the Footer is a `.band-ink` block
-in both themes, and `.band-ink` re-scopes `--link` to sky `#40AAED` (asserted in
-`src/lib/ncs-tokens.test.ts`), so no link on navy uses `#2A6FB0`. So this is a
-documentation error, not a bug.
-
-It is left for a human because `globals.css` is a "foundation, edit with care"
-file per `.claude/rules/foundation-files.md`, and because there are two defensible fixes:
-
-- **a)** Correct the comment to say AA on the two paper surfaces only. Zero
-  risk, and the token keeps its current value.
-- **b)** Darken `--link` until it genuinely clears 4.5:1 on navy too, making the
-  comment true and giving a future navy-in-light-mode surface a safe link
-  colour. This changes rendered colour on every page and needs an eye on it.
-
-Option (a) is the recommendation. Whichever is chosen, add the navy pair to
-`src/lib/theme-tokens.test.ts` afterwards so the claim is machine-checked from
-then on.
 
 ### 2a. Case-study honesty follow-ups (added 2026-10-30, overhaul 1.3)
 
@@ -117,22 +103,20 @@ Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is stil
   /services/, and `/portfolio/` redirected home (the portfolio is switched
   off in Reid's CMS). The README's Reid row was corrected in the same PR.
 
-### 2b. Ungate /photography (added 2026-10-31, overhaul 2.8)
+### 2f. Ungate /photography (added 2026-10-31, overhaul 2.8)
 
-/photography/ is gated: noindex, out of the sitemap, the menus and `/llms.txt`,
+/photography/ is gated: noindex, out of the sitemap, the closing's legal line and `/llms.txt`,
 showing one photo and "ask for samples". It needs **6 to 20 real photos of
 Nathan's own work, with permission from the people and places in them**. Then:
 
 1. Optimize each into `src/assets/photography/<name>.jpg` and add a
    `src/content/photos/<name>.json` entry (fields in `src/content.config.ts`).
-2. Build the gallery (package 4.6: contact sheet, loupe, lightbox). Add
-   `/photography` to `GALLERY_ROUTES` in `tests/no-react.spec.ts` if it uses
-   the `PhotoGallery` React island.
-3. At 6 photos (`MIN_PHOTOS` in `src/data/photography-gate.ts`) the nav link,
+2. Build the gallery (item B above): plain markup and a small script, no React.
+3. At 6 photos (`MIN_PHOTOS` in `src/data/photography-gate.ts`) the closing link,
    the sitemap entry, the `/llms.txt` line and indexing all switch on by
    themselves on the next build; `tests/photography-gate.spec.ts` follows.
 4. Swap the gate page's photo: today it is the black-and-white portrait from
-   About (`src/assets/about/portrait-bw.jpg`), captioned as a portrait of
+   About (`public/assets/about/portrait-bw.webp`), captioned as a portrait of
    Nathan, because no photo in the repo is a confirmed frame of his client work.
    Nathan can pick one of his own frames for it now, before the gallery is ready.
 
@@ -144,7 +128,7 @@ only if Nathan confirms it.
 ### 2b. Testimonials still missing (added 2026-10-31, testimonials package)
 
 Five studies carry their client's own words (`testimonials` frontmatter,
-rendered by `Testimonial.astro`): Theology Matters, Foundation for Reformed
+shown by `QuoteBand` and the study's `Quotes` chapter): Theology Matters, Foundation for Reformed
 Theology, Stone Steps 50K, First Baptist Muncie (two) and First Presbyterian
 Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
 
@@ -170,7 +154,7 @@ document form, captured from Nathan's own signed-in Chrome at 1440 wide. Before
 each shot, anything private was hidden or blurred: staff names in FBCM's Fix-it
 list, and the donor, readership, search-term and warning panels on the TM and
 FRT dashboards. Re-shoot with the same care, either that way or with
-`npm run capture:cms` (steps in `docs/claude/setup-checklist.md`).
+`npm run capture:cms` (steps in `docs/claude/setup-checklist.md`). The site serves them as `public/assets/{slug}-cms.webp`.
 
 ### 2d. The /churches/ copy, and the next sector pages (added 2026-10-31, overhaul 4.2)
 
@@ -202,45 +186,20 @@ paste the printed `signatureClip` into the study.
 
 ## Open technical exposure (no human decision needed, just not done yet)
 
-### 3. `react` / `react-dom` are on carets
-
-PORTS.md Card 13. Both resolve to 19.2.6 today, but `package.json` declares
-`^19.2.6` for each. The moment an install drags one of them forward
-independently, the build dies inside workerd behind a wall of Miniflare stack
-frames, with the real message (`Incompatible React versions`) buried **above**
-the `MiniflareCoreError`. presacademy lost a session to exactly this on
-2026-08-25.
-
-The fix is to pin both **exact**, no caret. Not done here because it is a
-lockfile-affecting change and this sync session deliberately made none. Do it
-in its own commit, ideally alongside the next dependency bump.
-
-### 4. `wrangler` is on a caret, and the generated config still carries
+### 3. `wrangler` is on a caret, and the generated config still carries
 
 `legacy_env`
 
-PORTS.md Card 14. `wrangler` is declared `^4.94.0` and resolves to 4.94.0.
+PORTS.md Card 14. `wrangler` is declared `^4.156.0`, which is past 4.126.
 `dist/server/wrangler.json`, which `@astrojs/cloudflare` 13.5.4 generates on
 every build, contains `"legacy_env": true` (verified 2026-08-27). wrangler
-4.126+ rejects that field outright.
+4.126+ rejects that field outright. Both sides of that are true today, so the only thing keeping it latent is the deploy path below.
 
 This is latent rather than live: `npm run deploy` runs a plain `wrangler deploy`
 against the **root** `wrangler.jsonc`, which has no `legacy_env`, so the
 generated file's copy is not read on the current deploy path. It becomes live
-the day either the caret resolves past 4.126 **and** something starts pointing
-wrangler at the generated config. Pin `wrangler` to `~4.94.0` if that day is
-ever in doubt.
-
-### 5. `scripts/with-workerd.mjs` is wired (done 2026-10-13)
-
-PORTS.md Card 1. The wrapper works around a workerd crash that can hit Astro 7 /
-`@astrojs/cloudflare` 14 on Windows, where the prerender runs through
-`@cloudflare/vite-plugin`. `npm run build` now ends with
-`node scripts/with-workerd.mjs astro build`, the same shape presacademy and
-reid-design-site use. It only acts on Windows, and only when wrangler carries
-its own newer workerd; on Linux CI (and on a Windows install where wrangler and
-the plugin share one workerd, as today) it changes nothing. The wrapper copy is
-byte-identical to the starter's.
+the day something starts pointing wrangler at the generated config. If that day
+is ever in doubt, check the generated file for `legacy_env` first.
 
 ---
 
@@ -256,7 +215,3 @@ These are recorded so a future session stops re-deriving them.
   to go stale.
 - **No page-builder.** Card 12 is a method for converting bespoke pages into
   CMS-driven sections. There is no CMS.
-- **No visual-regression suite.** The family standard runs one only where a
-  site has a fixture-driven `/styleguide` route; this site does not. The
-  Playwright / axe / reflow suite (Card 8) landed 2026-09-06; see
-  `docs/TESTING.md`.

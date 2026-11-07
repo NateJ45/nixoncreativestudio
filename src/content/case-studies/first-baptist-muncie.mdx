@@ -105,24 +105,27 @@ facts:
   host: fbcmuncie.org
 ---
 
-import Decision from '../../components/Decision.astro';
-import ResultsBlock from '../../components/ResultsBlock.astro';
-import SiteShowcase from '../../components/SiteShowcase.astro';
-import BeforeAfter from '../../components/BeforeAfter.astro';
-import FeatureHighlight from '../../components/FeatureHighlight.astro';
-import Lightbox from '../../components/Lightbox.astro';
-import historyShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-history.png';
-import buildingShot from '../../assets/case-studies/shots/first-baptist-muncie-feature-building.png';
-import beforeShot from '../../assets/case-studies/shots/first-baptist-muncie-before.png';
-import afterShot from '../../assets/case-studies/first-baptist-muncie.png';
+<Chapter title="The brief">
 
-## The brief
+<Lede study={props.study} />
 
 First Baptist Church Muncie was founded in 1859 and meets at 309 East Adams Street, in a Late Gothic Revival building completed in 1929 and on the National Register of Historic Places since 1988. I had built the church's earlier website on Wix. This time the job was a full rebuild onto Astro, Sanity and Cloudflare Workers.
 
 The new site had a few jobs, in order. Make a first visit easy. Help people find the church's people and ministries. Keep the church's history and every one of its blog posts. And let the staff edit the pages themselves, without a site builder in the way.
 
-## Decisions
+<ResultsBlock
+  items={[
+    "Every one of the church's blog posts kept its original address, so an old link still lands on the right post.",
+    'The staff edit the pages themselves in Sanity Studio, with a live preview, instead of working inside a site builder.',
+    'A first-time visitor can see the time, the place and how the morning runs before they arrive.',
+  ]}
+/>
+
+</Chapter>
+
+<Idea study={props.study} still="first-baptist-muncie-feature-visit" />
+
+<Chapter title="Decisions">
 
 <Decision
   title="Open on this Sunday"
@@ -139,15 +142,43 @@ The new site had a few jobs, in order. Make a first visit easy. Help people find
 <Decision
   title="Let the building be the identity"
   easy="A clean, generic church template."
-  did="Draw the look from the church itself: the lancet window and the Adams Street door as photo frames, line glyphs from the sanctuary, and the five logo colours as accents on warm paper and ink."
+  did="Draw the look from the church itself: the lancet window and the Adams Street door as photo frames, line glyphs from the sanctuary, and the five logo colors as accents on warm paper and ink."
 />
 
-The content lives in Sanity, and the Studio is built into the site at /studio. An editor picks a page, sees it as visitors will, and changes the words or the sections right there, with a live preview of the draft before it goes out.
+</Chapter>
 
-## What I built
+<Chapter title="Before and after">
+
+<BeforeAfter
+  before="first-baptist-muncie-before"
+  after="first-baptist-muncie-after"
+  beforeAlt="The earlier First Baptist Church Muncie home page on Wix"
+  afterAlt="The rebuilt First Baptist Church Muncie home page"
+  beforePlatform="Wix"
+  afterPlatform="Astro"
+/>
+
+</Chapter>
+
+<Chapter title="Walk the homepage">
+
+<SiteShowcase
+  study={props.study}
+  label="fbcmuncie.org"
+  href="https://www.fbcmuncie.org"
+  alt="The First Baptist Church Muncie homepage, scrolling top to bottom"
+/>
+
+</Chapter>
+
+<WhatYouEdit study={props.study} />
+
+<Quotes study={props.study} />
+
+<FullBuild more={false}>
 
 <FeatureHighlight
-  src={historyShot}
+  src="first-baptist-muncie-feature-history"
   alt="The Our History page on fbcmuncie.org: 1859 to 2026, with archive photographs in arched frames and a bar of era dates to jump between"
   title="The church's history, era by era"
   body="The story runs from the founding in 1859 to today in named eras, with a bar of dates that jumps straight to each one and the church's own archive photographs."
@@ -155,7 +186,7 @@ The content lives in Sanity, and the Studio is built into the site at /studio. A
 />
 
 <FeatureHighlight
-  src={buildingShot}
+  src="first-baptist-muncie-feature-building"
   alt="Four things to look for on the Our Building page: the tower, the stained glass, the nave and the entry arch, each in an arched frame"
   title="The 1929 building, given its own page"
   body="The architecture page covers the building's designers, its Indiana limestone and how it was built, then points out four things to look for when you visit."
@@ -175,32 +206,8 @@ The full build, including the pieces above:
 - Sanity Studio built in at /studio, where every page is made of sections the staff can add, reorder or remove
 - Type checks, linting, link checks, Playwright with axe accessibility runs, and Lighthouse on every change
 
-## Before and after
+### Behind the decisions
 
-<BeforeAfter
-  before={beforeShot}
-  after={afterShot}
-  beforeAlt="The earlier First Baptist Church Muncie home page on Wix"
-  afterAlt="The rebuilt First Baptist Church Muncie home page"
-  beforePlatform="Wix"
-  afterPlatform="Astro"
-/>
+The content lives in Sanity, and the Studio is built into the site at /studio. An editor picks a page, sees it as visitors will, and changes the words or the sections right there, with a live preview of the draft before it goes out.
 
-## Walk the homepage
-
-<SiteShowcase
-  slug="first-baptist-muncie"
-  alt="The First Baptist Church Muncie homepage, scrolling top to bottom"
-  href="https://www.fbcmuncie.org"
-  label="fbcmuncie.org"
-/>
-
-<ResultsBlock
-  items={[
-    "Every one of the church's blog posts kept its original address, so an old link still lands on the right post.",
-    'The staff edit the pages themselves in Sanity Studio, with a live preview, instead of working inside a site builder.',
-    'A first-time visitor can see the time, the place and how the morning runs before they arrive.',
-  ]}
-/>
-
-<Lightbox />
+</FullBuild>

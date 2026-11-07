@@ -1,0 +1,27 @@
+---
+/* The top line: the name and whether the studio is booking. `onColor` flips it
+   for pages that open on a client's color (the case studies). */
+import { site } from '../data/site';
+
+interface Props {
+  onColor?: boolean;
+}
+const { onColor = false } = Astro.props;
+const city = site.address.split(',')[0];
+const [first, ...rest] = site.studioName.split(' ');
+---
+
+<a class="skip" href="#main">
+  Skip to content
+</a>
+<header class:list={['top', { 'on-color': onColor }]}>
+  <a class="mark" href="/">
+    <b>{first}</b> {rest.join(' ')}
+  </a>
+  {site.bookingOpen && (
+    <span class="status">
+      <i />
+      Booking projects, {city}
+    </span>
+  )}
+</header>

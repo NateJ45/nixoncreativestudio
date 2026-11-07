@@ -93,21 +93,29 @@ facts:
   host: presbyterianacademy.org
 ---
 
-import Decision from '../../components/Decision.astro';
-import ResultsBlock from '../../components/ResultsBlock.astro';
-import SiteShowcase from '../../components/SiteShowcase.astro';
-import FeatureHighlight from '../../components/FeatureHighlight.astro';
-import Lightbox from '../../components/Lightbox.astro';
-import catalogShot from '../../assets/case-studies/shots/presbyterian-academy-feature-catalog.png';
-import finderShot from '../../assets/case-studies/shots/presbyterian-academy-feature-finder.png';
+<Chapter title="The brief">
 
-## The brief
+<Lede study={props.study} />
 
 The Presbyterian Academy is a Reformed lay formation school, made possible by the Presbytery of Cincinnati. Its courses are in person and in cohorts, for elders, teachers, small-group leaders and anyone who wants to study Reformed theology seriously without pursuing ordination.
 
 A new school has a trust problem an established one does not. There is no alumni network to quote and no long history to point to. The site had to build credibility from what the Academy does have, its courses and the people teaching them, and it had to answer three questions in order: What is this? Is it for me? How do I start?
 
-## Decisions
+<ResultsBlock
+  items={[
+    'A new school has a front door that reads like its own term catalog: what the Academy is, every course and the people teaching it.',
+    'An interested visitor can size up the fit, get a suggested first course, then take a clear next step through a form, a free intro or a free class visit.',
+    'Every course has a cover and a page of its own, generated from the CMS, so a new course looks finished the day it is published.',
+    'The Academy team can update courses, faculty, terms and enrollment status from the Studio without involving a developer.',
+    'Rates and the scholarship note are published up front, with no "contact for pricing" hedging.',
+  ]}
+/>
+
+</Chapter>
+
+<Idea study={props.study} />
+
+<Chapter title="Decisions">
 
 <Decision
   title="Design it like the thing it is"
@@ -127,14 +135,25 @@ A new school has a trust problem an established one does not. There is no alumni
   did="A course finder styled as a reply card: three quick questions about what you do at church, what you want most and how much you can take on, and it suggests one place to start."
 />
 
-Every course gets a generated cover instead of stock photography: its code, its topic, its teacher and the one question the course is trying to answer. The covers are drawn from fields in the CMS, so a new course looks finished the moment it is published.
+</Chapter>
 
-The CMS runs on Sanity, built into the site at `/studio`, so the Academy team can update courses, faculty, terms and enrollment status, including marking a course open or waitlisted, without involving a developer.
+<Chapter title="Walk the homepage">
 
-## What I built
+<SiteShowcase
+  study={props.study}
+  label="presbyterianacademy.org"
+  href="https://www.presbyterianacademy.org"
+  alt="The Presbyterian Academy homepage, scrolling top to bottom"
+/>
+
+</Chapter>
+
+<WhatYouEdit study={props.study} />
+
+<FullBuild more={false}>
 
 <FeatureHighlight
-  src={catalogShot}
+  src="presbyterian-academy-feature-catalog"
   alt="The Presbyterian Academy course catalog, with a generated cover for each course"
   title="A catalog that answers 'is it for me?'"
   body="Each course shows its code, topic, teacher, term, sessions and enrollment status at a glance, with the question it asks and what week one covers, and the catalog filters by topic or teacher. A visitor can size up the fit without emailing to ask."
@@ -142,7 +161,7 @@ The CMS runs on Sanity, built into the site at `/studio`, so the Academy team ca
 />
 
 <FeatureHighlight
-  src={finderShot}
+  src="presbyterian-academy-feature-finder"
   alt="The reply-card course finder on the Presbyterian Academy home page"
   title="Three questions, one course"
   body="The finder asks three things and suggests a single course to begin with, with its teacher and rate, and a button to express interest in it."
@@ -162,23 +181,10 @@ The full build, including the pieces above:
 - Light and dark themes
 - Full Sanity CMS for courses, faculty, terms, events and site settings
 
-## Walk the homepage
+### Behind the decisions
 
-<SiteShowcase
-  slug="presbyterian-academy"
-  alt="The Presbyterian Academy homepage, scrolling top to bottom"
-  href="https://www.presbyterianacademy.org"
-  label="presbyterianacademy.org"
-/>
+Every course gets a generated cover instead of stock photography: its code, its topic, its teacher and the one question the course is trying to answer. The covers are drawn from fields in the CMS, so a new course looks finished the moment it is published.
 
-<ResultsBlock
-  items={[
-    'A new school has a front door that reads like its own term catalog: what the Academy is, every course and the people teaching it.',
-    'An interested visitor can size up the fit, get a suggested first course, then take a clear next step through a form, a free intro or a free class visit.',
-    'Every course has a cover and a page of its own, generated from the CMS, so a new course looks finished the day it is published.',
-    'The Academy team can update courses, faculty, terms and enrollment status from the Studio without involving a developer.',
-    'Rates and the scholarship note are published up front, with no "contact for pricing" hedging.',
-  ]}
-/>
+The CMS runs on Sanity, built into the site at /studio, so the Academy team can update courses, faculty, terms and enrollment status, including marking a course open or waitlisted, without involving a developer.
 
-<Lightbox />
+</FullBuild>

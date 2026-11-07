@@ -1,5 +1,7 @@
 # [Project Name] — CLAUDE.md template
 
+> **Not this site's stack.** This template describes the Tailwind 4, shadcn and React starter stack that the client sites in the family still use (the starter is `internal/ncs-astro-sanity-starter`; the new-site steps are in the vault's `templates/new-project-checklist.md`). The studio's own site left Tailwind, shadcn and React in the November 2026 redesign and now uses plain CSS and plain scripts; see the repo's `CLAUDE.md` and `DESIGN.md`. Read this as a snapshot of the starter, not as a description of this repo.
+
 This is a portable CLAUDE.md template extracted from the Nixon Creative Studio portfolio. Drop it into the root of a new Astro project and replace every `[bracketed placeholder]` with project-specific content. The infrastructure choices (Astro, Tailwind 4, shadcn, React 19, Cloudflare Pages) are deliberate and tested; the brand and content schema are blanks for the new project to fill in.
 
 Companion setup runbook lives at `SETUP.md` next to this file. Follow it once to bootstrap the project from scratch.

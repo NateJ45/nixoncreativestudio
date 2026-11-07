@@ -11,8 +11,8 @@
    like 'from $900', dollars() (src/lib/money.ts).
 
    The numbers reflect the 2026 market for an agency-grade solo studio:
-   Launch from $4,000, Signature from $7,000 (where most projects land),
-   Flagship from $12,000, plus the add-ons. If a number changes here, also
+   Launch from $5,000, Signature from $9,000, Flagship from $18,000, plus the
+   add-ons. If a number changes here, also
    update the strategy doc (outside this repo). Keep the dollar amounts in the
    display strings (price, range, time) written as '$1,234': the JSON-LD and
    the FAQ read them back out of those strings.
@@ -39,56 +39,58 @@ export interface WebTier {
   badge?: string;
 }
 
-// The three web design tiers. Every build is custom-designed and ships with a
-// content system the client can run themselves after launch, so the tiers do
-// NOT differ in whether the work is custom or whether there is a CMS (both are
-// baseline). They differ in SCOPE and how much bespoke functionality the site
-// needs: Launch is a focused site; Signature (the anchor, where most projects
-// land) is a larger, content-rich site; Flagship adds real custom functionality
-// (tools, advanced integrations, headless). Order is ascending, anchor second.
+// The three web design tiers. Every build is custom-designed and comes with a
+// system the client can run, so the tiers do NOT differ in whether the work is
+// custom or whether there is a CMS. They differ in scope and in how much the
+// organization runs itself: Launch, one busy person keeps the essentials
+// current. Signature, a team runs it, so it gets the staff home screen, checks
+// and event tracking. Flagship, the site does real work, so it gets custom tools,
+// workflows and reporting. Sanity or WordPress is chosen per client, not sold as
+// an option. Ranges say what to expect: no claim about what most clients paid.
 export const webTiers: WebTier[] = [
   {
     name: 'Launch',
-    priceFrom: 4000,
+    priceFrom: 5000,
     priceSuffix: '+',
-    who: 'Smaller organizations',
-    range: 'Most land between $4,000 and $6,500',
-    note: 'A focused custom site for a smaller organization: the essential pages done well, with content you can keep current yourself. The right fit when you want a clear, strong presence without a lot of moving parts.',
+    who: 'You keep the essentials current',
+    range: 'Expect $5,000 to $8,000',
+    note: 'A focused custom site for a smaller organization: the essential pages done well, in an editor simple enough for one busy person. The right fit when you want a clear, strong presence and would rather not call anyone to change a date.',
     features: [
       'A focused set of core pages, designed around your goals',
-      'Content you can keep current yourself',
-      'Accessible and fast, set up and handed off',
+      'A plain editor with a written guide, and deleted pages you can get back',
+      'Visitor numbers, plus the calls and forms that matter',
       'Year one hosting included',
     ],
     highlighted: false,
   },
   {
     name: 'Signature',
-    priceFrom: 7000,
+    priceFrom: 9000,
     priceSuffix: '+',
-    who: 'Most projects',
-    range: 'Most land between $7,000 and $11,000',
-    note: 'The right fit for most projects: a larger custom site with deeper content, several content types your team manages itself, and the integrations a growing church, school, or business needs.',
+    who: 'Your team runs it',
+    range: 'Expect $9,000 to $15,000',
+    note: 'For a staff or volunteer team that will run the site themselves: a larger custom site, several kinds of content, and an editor set up around the people using it, so a new volunteer can find their way without a phone call.',
     features: [
       'A larger site with deeper content sections',
-      'Several content types your team manages itself',
-      'Integrations and search-engine work built in',
+      'A home screen for your staff: what is coming up, what needs fixing, whether it is live',
+      'Checks before anything publishes, and earlier versions to go back to',
+      'Tracking for what matters to you: gifts, registrations, sign-ups',
       'Year one hosting included',
     ],
     highlighted: true,
-    badge: 'Where most projects land',
   },
   {
     name: 'Flagship',
-    priceFrom: 12000,
+    priceFrom: 18000,
     priceSuffix: '+',
-    who: 'Advanced builds',
-    range: 'Typically $12,000 and up',
-    note: 'For organizations that need the site to do real work: custom interactive tools, advanced integrations, or a headless build for a large, complex site. The kind of build an agency would charge far more for.',
+    who: 'The site does real work',
+    range: 'Quoted from $18,000, by scope',
+    note: 'For organizations where the site does real work: custom interactive tools, staff workflows, integrations with the systems you already use, or reporting a board can actually read. The kind of build an agency would charge far more for.',
     features: [
       'Custom interactive tools and features',
-      'Advanced and third-party integrations',
-      'A headless build for a large, deep site',
+      'Staff workflows and integrations built around how you work',
+      'A deep content system for a large site',
+      'Reporting built for your staff and your board',
       'Year one hosting included',
     ],
     highlighted: false,
@@ -132,18 +134,18 @@ export interface CarePlan {
 }
 
 // Care after launch. Year one Hosting is included in every web tier (see the
-// tier features above); from year two the client picks a level. These four levels match the client proposals on price and
-// inclusions (First Baptist Auburn, October 2026): change a level here and in
-// the proposal template together. Hosting is the floor every live site needs;
-// the monthly levels add edit time and faster replies. Keep the /services
-// "Do I need a care plan" FAQ answer in step with these numbers.
+// tier features above); from year two the client picks a level. Hosting is the
+// floor every live site needs; the monthly levels add edit time, the monthly
+// report and faster replies. Change a level here and in the proposal template
+// together, and keep the /services "Do I need a care plan" answer in step.
+// These prices are for new work: signed agreements keep what they say.
 export const carePlans: CarePlan[] = [
   {
     name: 'Hosting',
     price: '$180',
     period: '/yr',
     who: 'For an organization that edits everything itself.',
-    time: 'No edits included; changes at $85 an hour',
+    time: 'No edits included; changes at $100 an hour',
     features: [
       'Fast, secure hosting',
       'Uptime monitoring',
@@ -153,7 +155,7 @@ export const carePlans: CarePlan[] = [
   },
   {
     name: 'Light Care',
-    price: '$49',
+    price: '$69',
     period: '/mo',
     who: 'For a quick change now and then.',
     time: '30 minutes of edits each month',
@@ -165,12 +167,13 @@ export const carePlans: CarePlan[] = [
   },
   {
     name: 'Care',
-    price: '$99',
+    price: '$149',
     period: '/mo',
     who: 'For peace of mind as the site grows.',
     time: '1 hour of edits and fixes each month',
     features: [
       'Everything in Light Care',
+      'A monthly report: what people did, and what to fix',
       'A yearly backup restore test',
       'Annual health report: speed, search, security',
       'Next business day replies',
@@ -178,7 +181,7 @@ export const carePlans: CarePlan[] = [
   },
   {
     name: 'Care+',
-    price: '$149',
+    price: '$299',
     period: '/mo',
     who: 'For an organization that wants a web partner.',
     time: '3 hours of content help each month',

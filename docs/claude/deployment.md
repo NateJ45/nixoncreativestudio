@@ -7,7 +7,7 @@ Moved out of CLAUDE.md. Read when changing deploys, env vars, the Coming Soon ga
 - Build command: `npm run build`. Output directory: `dist`.
 - Unknown URLs: `wrangler.jsonc` sets `assets.not_found_handling: "404-page"`, so a path with no file gets `dist/client/404.html` (from `src/pages/404.astro`) with a 404 status. Without it Cloudflare answers with an empty body, which is what the live site did until 2026-10-18.
 - `output: 'static'` in `astro.config.mjs` prerenders every page to HTML at build time. The `@astrojs/cloudflare` adapter is installed but inert for static pages. To opt a single page into server rendering, add `export const prerender = false` in that page's frontmatter.
-- The adapter is configured with `imageService: 'compile'` so `<Image />` and `<Picture />` are optimized at build time into static `dist/_astro/*.avif` and `*.webp` files (AVIF settings: `image.service.config` in `astro.config.mjs`, overhaul 4.4). Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding.
+- The adapter is configured with `imageService: 'compile'` so any Astro-processed image (today the study `cover`, read through `getImage` for the share card and structured data) is optimized at build time with sharp. Do not remove this on a static build: the adapter's default runtime image service points the HTML at a `/_image?...` endpoint that needs the Cloudflare Images binding, which once left every case-study cover stuck on its blur-up placeholder in production. Build-time images need no binding. The pictures on the pages themselves (footage, stills, study images) are plain files in `public/assets/`, so they never touch the image service.
 
 ## Environment variables
 
@@ -51,7 +51,7 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 ## Security headers
 
-`public/_redirects` holds real 301s for retired URLs with no live equivalent (currently `/work/cincy-table`, both forms, to `/work/`). Astro `redirects` in `astro.config.mjs` only emit a meta-refresh page, so use `_redirects` when Search Console needs a true 301.
+`public/_redirects` holds real 301s: retired URLs with no live equivalent (`/work/cincy-table` and `/work/second-presbyterian-chicago`, both forms, to `/work/`) and the short names the nav no longer uses (`/prices` to `/services/`, `/start` to `/contact/`). Astro `redirects` in `astro.config.mjs` only emit a meta-refresh page (`/now` to `/about/`, `/work/west-chester-preschool` to `/work/`), so use `_redirects` when Search Console needs a true 301.
 
 `public/_headers` ships with the deploy. Five site-wide headers Cloudflare applies to every route:
 
@@ -63,9 +63,19 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 Content-Security-Policy is intentionally not included; doing it right requires testing because of the external Cloudflare beacon and the Web3Forms POST endpoint.
 
+### Cache headers
+
+`public/_headers` also sets caching by path:
+
+- `/_astro/*`: one year, `immutable` (content-hashed build output).
+- `/media/*`: one year, `immutable`. The interaction clips carry a content hash in the name (`npm run capture:clips`), so a re-recorded clip gets a new file.
+- `/assets/*`: one month, revalidated after that. The footage, captures, study images and the font sit here under plain names, so they can change.
+
+A changed file in `/assets/` can take up to a month to reach a returning visitor unless its name changes; rename it (or move it to `/media/` with a hash) when that matters.
+
 ## Cloudflare zone rules
 
 Set in the dashboard (nixoncreativestudio.com, Rules, Redirect Rules), not in this repo. The API token cannot read them.
 
-1. **Redirect www to apex**: `www` 301s to the apex, except `/_emdash/` and `/_astro/`, which stay on www so the admin and its plugin scripts load.
-2. **Slashless page paths 301 to trailing slash** (2026-10-26): on `nixoncreativestudio.com`, a GET or HEAD for a path with no trailing slash and no dot 301s to the same path plus `/`, keeping the query string. Without it, Workers static assets answer `/about` with a **307**, which Google treats as temporary, so the slashless URL can stay canonical in Search Console. It skips `/_emdash`, `/api/`, `/files/`, `/cdn-cgi/`, `/preview` and `/studio`, because those are Worker routes and a 301 would turn a POST into a GET. **If you add a new SSR route prefix, add it to the rule's exclusions.**
+1. **Redirect www to apex**: `www` 301s to the apex. (It also carries an exclusion for `/_emdash/` and `/_astro/` from the EmDash period; EmDash was rolled back, so the exclusion does nothing now.)
+2. **Slashless page paths 301 to trailing slash** (2026-10-26): on `nixoncreativestudio.com`, a GET or HEAD for a path with no trailing slash and no dot 301s to the same path plus `/`, keeping the query string. Without it, Workers static assets answer `/about` with a **307**, which Google treats as temporary, so the slashless URL can stay canonical in Search Console. It skips `/_emdash`, `/api/`, `/files/`, `/cdn-cgi/`, `/preview` and `/studio`, because those were Worker routes and a 301 would turn a POST into a GET. Nothing here is server-rendered today. **If you ever add an SSR route prefix, add it to the rule's exclusions.**

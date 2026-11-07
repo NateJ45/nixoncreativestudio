@@ -61,6 +61,10 @@ interface SiteData {
   // link on the site reads from this one value.
   bookingUrl: string;
 
+  // Lines repeated across the site (the closing, the contact page).
+  firstConversation: string;
+  replyPromise: string;
+
   // Newsletter signup target. Empty string disables the Newsletter
   // block. Buttondown publish URL works directly; for other providers
   // (ConvertKit, Mailchimp), wire up the form's `action` differently.
@@ -114,6 +118,10 @@ export const site: SiteData = {
   // is the recommended pick (open source, free at this volume); the URL
   // looks like https://cal.com/nathannixon/30min.
   bookingUrl: '',
+
+  // The two lines every closing makes good on. Change the promise here, nowhere else.
+  firstConversation: 'The first conversation is free and ends with an honest ballpark.',
+  replyPromise: 'I read it myself and reply within one or two business days.',
 
   // Newsletter publish URL. Leave empty to hide the Newsletter block.
   // Buttondown's publish URL works as the form action directly; the

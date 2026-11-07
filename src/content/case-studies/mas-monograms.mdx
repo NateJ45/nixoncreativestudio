@@ -54,7 +54,7 @@ cmsName: 'Sanity Studio'
 hook: 'Try your own initials right in the hero'
 order: 2
 # Palette source: mas-monograms-rebuild DESIGN.md and src/styles/globals.css
-# (Direction D, "The Atelier"; these colours carried over unchanged from the
+# (Direction D, "The Atelier"; these colors carried over unchanged from the
 # earlier direction); no dark mode, markDark is its Gold.
 palette:
   paper: '#F4EEE3'
@@ -95,25 +95,29 @@ facts:
   host: mas-monograms.com
 ---
 
-import Decision from '../../components/Decision.astro';
-import ResultsBlock from '../../components/ResultsBlock.astro';
-import SiteShowcase from '../../components/SiteShowcase.astro';
-import BeforeAfter from '../../components/BeforeAfter.astro';
-import FeatureHighlight from '../../components/FeatureHighlight.astro';
-import Lightbox from '../../components/Lightbox.astro';
-import beforeShot from '../../assets/case-studies/shots/mas-monograms-before.png';
-import afterShot from '../../assets/case-studies/mas-monograms.png';
-import shopShot from '../../assets/case-studies/shots/mas-monograms-feature-shop.png';
-import quoteShot from '../../assets/case-studies/shots/mas-monograms-feature-quote.png';
-import galleryShot from '../../assets/case-studies/shots/mas-monograms-feature-gallery.png';
+<Chapter title="The brief">
 
-## The brief
+<Lede study={props.study} />
 
 MAS Monograms is a home-based custom embroidery studio run by Mary Ann Stone in St. Matthews, South Carolina. Every piece is made to order: the item, the font, the thread colors, the placement and the stitch count all change from one customer to the next, and each of those choices moves the price. The first site I built for her lived on Squarespace and worked around that with a quote-first flow: show the work, take a detailed request, then send a price.
 
 She wanted to keep that flow, because it fits handmade work, and move everything else onto a site that was more her own: one she owns outright, one she can edit herself, and one that helps a customer picture a monogram before they ask for it.
 
-## Decisions
+<ResultsBlock
+  items={[
+    'Mary Ann owns her site now, built on Astro and served from Cloudflare.',
+    'A customer can design a monogram on the home page and send that exact design to Mary Ann as a quote request.',
+    'The home page, shop and gallery lead with real photographs of her finished work.',
+    'The quote form captures the item, placement, size, thread colors, font and reference photos up front, so requests arrive ready to price.',
+    'Every word and photo on the site lives in Sanity, so Mary Ann can change any of it herself.',
+  ]}
+/>
+
+</Chapter>
+
+<Idea study={props.study} />
+
+<Chapter title="Decisions">
 
 <Decision
   title="Keep the strategy, rebuild the foundation"
@@ -133,12 +137,38 @@ She wanted to keep that flow, because it fits handmade work, and move everything
   did="Ask for the item, placement, size, thread colors, font and reference photos up front, so a request arrives ready to price."
 />
 
-Everything a customer reads lives in Sanity, in a Studio built into the site at `/studio`. Mary Ann changes a photo, a price or a line of copy on the real page and publishes it herself, without a page builder and without waiting on me.
+</Chapter>
 
-## What I built
+<Chapter title="Before and after">
+
+<BeforeAfter
+  before="mas-monograms-before"
+  after="mas-monograms-after"
+  beforeAlt="The previous Squarespace MAS Monograms site"
+  afterAlt="The redesigned MAS Monograms homepage"
+  beforePlatform="Squarespace"
+  afterPlatform="Astro"
+/>
+
+</Chapter>
+
+<Chapter title="Walk the homepage">
+
+<SiteShowcase
+  study={props.study}
+  label="mas-monograms.com"
+  href="https://mas-monograms.com"
+  alt="The MAS Monograms homepage, scrolling top to bottom"
+/>
+
+</Chapter>
+
+<WhatYouEdit study={props.study} />
+
+<FullBuild more={false}>
 
 <FeatureHighlight
-  src={shopShot}
+  src="mas-monograms-feature-shop"
   alt="The Shop by Item grid on mas-monograms.com, with a photograph of real finished work for each category"
   title="Real work, grouped by item"
   body="The shop leads with photographs of Mary Ann's own finished pieces, one category per item, with starting prices, so a customer sees the stitching before they open the quote form."
@@ -146,7 +176,7 @@ Everything a customer reads lives in Sanity, in a Studio built into the site at 
 />
 
 <FeatureHighlight
-  src={quoteShot}
+  src="mas-monograms-feature-quote"
   alt="The custom quote request form on mas-monograms.com"
   title="A quote form built for custom work"
   body="Custom embroidery has no fixed cart price, so the site ends at a detailed request in four short parts: the order, the customer, optional photos and anything else. Mary Ann replies with a price within one business day, and nothing is stitched until it is approved."
@@ -154,7 +184,7 @@ Everything a customer reads lives in Sanity, in a Studio built into the site at 
 />
 
 <FeatureHighlight
-  src={galleryShot}
+  src="mas-monograms-feature-gallery"
   alt="The Style Gallery of finished work on mas-monograms.com, with filters for item, theme, technique and recipient"
   title="A gallery that shows the range"
   body="Real finished pieces, from monograms to appliqué to pet portraits, filtered by item, theme, technique and recipient. Every piece has its own Request this link into the quote form."
@@ -175,34 +205,8 @@ The full build, including the pieces above:
 - Sanity Studio built into the site, with live preview, so every word and photo is Mary Ann's to change
 - Privacy, terms and accessibility pages
 
-## Before and after
+### Behind the decisions
 
-<BeforeAfter
-  before={beforeShot}
-  after={afterShot}
-  beforeAlt="The previous Squarespace MAS Monograms site"
-  afterAlt="The redesigned MAS Monograms homepage"
-  beforePlatform="Squarespace"
-  afterPlatform="Astro"
-/>
+Everything a customer reads lives in Sanity, in a Studio built into the site at /studio. Mary Ann changes a photo, a price or a line of copy on the real page and publishes it herself, without a page builder and without waiting on me.
 
-## Walk the homepage
-
-<SiteShowcase
-  slug="mas-monograms"
-  alt="The MAS Monograms homepage, scrolling top to bottom"
-  href="https://mas-monograms.com"
-  label="mas-monograms.com"
-/>
-
-<ResultsBlock
-  items={[
-    'Mary Ann owns her site now, built on Astro and served from Cloudflare.',
-    'A customer can design a monogram on the home page and send that exact design to Mary Ann as a quote request.',
-    'The home page, shop and gallery lead with real photographs of her finished work.',
-    'The quote form captures the item, placement, size, thread colors, font and reference photos up front, so requests arrive ready to price.',
-    'Every word and photo on the site lives in Sanity, so Mary Ann can change any of it herself.',
-  ]}
-/>
-
-<Lightbox />
+</FullBuild>

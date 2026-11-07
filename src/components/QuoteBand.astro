@@ -1,0 +1,45 @@
+---
+/* A client's words on their own color, with their phone breaking out of the
+   band. Only real quotes, word for word: pass `slug` and it reads the quote from
+   that study's frontmatter. kit.js opens the band out as it reaches you. */
+import { getEntry } from 'astro:content';
+import Tile from './Tile.astro';
+import { getClient } from '../lib/clients';
+
+interface Props {
+  slug: string;
+  /** Whose quote, when the study has more than one: part of their name. */
+  by?: string;
+  /** The small line above the quote. */
+  label?: string;
+  flip?: boolean;
+  as?: 'section' | 'article';
+  class?: string;
+  ariaLabel?: string;
+}
+const { slug, by, label, flip = false, as: Tag = 'section', class: cls, ariaLabel } = Astro.props;
+const entry = await getEntry('case-studies', slug);
+const quotes = entry?.data.testimonials ?? [];
+const t = by ? quotes.find((q) => q.name.includes(by)) : quotes[0];
+if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
+const client = await getClient(slug);
+---
+
+<Tag
+  class:list={['band', { 'band-flip': flip }, cls]}
+  aria-label={ariaLabel}
+  style={`--c:${client.accent};--p:${client.paper}`}
+>
+  <div class="band-t">
+    {label && <p class="label">{label}</p>}
+    <blockquote>{t.quote}</blockquote>
+    <p class="cite">
+      <b>{t.name}</b>
+      {t.title}
+      {t.context && <span class="ctx">{t.context}</span>}
+    </p>
+  </div>
+  <div class="band-w">
+    <Tile client={client} lazy />
+  </div>
+</Tag>

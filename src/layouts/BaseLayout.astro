@@ -2,129 +2,73 @@
 /* ============================================================================
    Base Layout
    ============================================================================
-   The shell every page renders inside. Owns the document <head>, the
-   global stylesheet import, the Header, the Footer, and any sitewide
-   bookkeeping like analytics and font preloads.
+   The shell every page renders inside. Owns the document <head> (title,
+   description, canonical, Open Graph and share cards, JSON-LD, analytics, the
+   Coming Soon gate) and the chrome: the top line, the floating dock and the
+   client sheet. A page brings its own content and usually ends on <Closing />.
 
-   Page-specific content goes in the <slot /> inside <main>.
+   One light theme. Every other color on the site is a client's. The design rules
+   are in DESIGN.md; the shared look is src/styles/kit.css, and each page imports
+   its own stylesheet from src/styles/pages/.
+
+   Navigation between pages is a normal page load with a cross-document view
+   transition (the @view-transition rule in kit.css), so scripts just run on load.
    ============================================================================ */
 
-import '../styles/globals.css';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import type { Closer } from '../lib/closer';
+import '../styles/kit.css';
+import TopLine from '../components/TopLine.astro';
+import Dock from '../components/Dock.astro';
+import ClientSheet from '../components/ClientSheet.astro';
 import Analytics from '../components/Analytics.astro';
-import BackToTop from '../components/BackToTop.astro';
 import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
 import ComingSoonGate from '../components/ComingSoonGate.astro';
 import { site } from '../data/site';
 import type { Crumb, Node } from '../lib/schema';
 
-// Astro View Transitions. PageTransition renders the ClientRouter, which
-// wires same-origin link clicks into the browser's View Transitions API
-// instead of a hard reload (same-origin only; external links work as normal),
-// and owns the overlap (overhaul 4.11): the new page slides up over the old
-// one, which recedes a little, and history back reverses it. The header and
-// footer stay put. None of it runs under reduced motion or while the visitor
-// has paused motion. Details in the component header.
-import PageTransition from '../components/PageTransition.astro';
-
-// Resolve the Bricolage Grotesque woff2 file through Vite's URL pipeline. The
-// ?url query asks Vite to copy the file into the build output and hand us the
-// hashed public path at build time. The same file is named by the latin
-// @font-face in globals.css, so the preload link below points at the exact
-// resource the browser will fetch.
-//
-// Why preload Bricolage: it is the display face of every heading on the site
-// (overhaul package 1.5), and a page's H1 is almost always the LCP element,
-// so getting the font loaded early shortens LCP measurably. Bebas Neue is no
-// longer preloaded: it sets only the header wordmark, which is never the LCP
-// element, and its metric-matched fallback (wordmark-fallback.css) keeps the
-// swap from moving anything.
-//
-// Source Sans 3 (body) is preloaded too, since 2026-09-06. It used to be
-// left out on the grounds that a variable font costs more bandwidth than
-// the LCP gain is worth, and that held while the scroll-reveal kept the
-// top of every page invisible until after the fonts had settled: the swap
-// happened behind a curtain. Now that first-screen content paints
-// immediately (see the reveal note in globals.css), the swap from the
-// system fallback to Source Sans 3 relaid out real text and Lighthouse
-// measured it: cumulative layout shift 0.17 on /work and 0.11 on /journal
-// against a 0.1 budget, attributed by name to this file. Fetching it in
-// parallel with the stylesheet rather than after it is what keeps the
-// first paint and the final paint the same shape. Latin subset only, the
-// same file the unicode-range in the stylesheet resolves to for English.
-import bricolageWoff2 from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url';
-import sourceSans3Woff2 from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
-
-// Coming-soon gate. Implemented client-side so the owner can bypass
-// per-device by visiting a magic URL, while everyone else lands on
-// the ComingSoon view. See ComingSoonGate.astro (rendered further down in
-// <head>) for the runtime logic.
+// Coming-soon gate. Implemented client-side so the owner can bypass per-device
+// by visiting a magic URL, while everyone else lands on the ComingSoon view. See
+// ComingSoonGate.astro (rendered further down in <head>) for the runtime logic.
 //
 // PUBLIC_COMING_SOON=true at build time:
-//   - Every page ships with BOTH the real content (Header / Main /
-//     Footer) AND the ComingSoon overlay div.
-//   - A blocking inline <script> in <head> adds class="ncs-gated" to
-//     <html> unless the visitor's localStorage carries the bypass
-//     token (or the current URL contains ?preview=<TOKEN>).
-//   - CSS in globals.css hides everything but .ncs-overlay when
-//     html.ncs-gated is present, and hides .ncs-overlay otherwise.
-//   - <meta name="robots" content="noindex"> ships so search engines
-//     don't index the WIP content while gated.
+//   - Every page ships with BOTH the real content AND the ComingSoon overlay div.
+//   - A blocking inline <script> in <head> adds class="ncs-gated" to <html>
+//     unless the visitor's localStorage carries the bypass token (or the current
+//     URL contains ?preview=<TOKEN>).
+//   - CSS in kit.css hides everything but .ncs-overlay when html.ncs-gated is
+//     present, and hides .ncs-overlay otherwise.
+//   - <meta name="robots" content="noindex"> ships so search engines don't index
+//     the WIP content while gated.
 //
 // PUBLIC_COMING_SOON unset (or anything other than "true") at build time:
 //   - No overlay, no gating script, no noindex. Normal site.
 //
-// PUBLIC_PREVIEW_TOKEN is the bypass secret. Visit any page with
-// ?preview=<PUBLIC_PREVIEW_TOKEN> once and the script saves it to
-// localStorage; from then on, that browser bypasses on every page.
-//
-// PUBLIC_ prefix on both: required because they're read at build
-// time AND inlined into the client script. The token is technically
-// visible in shipped HTML for anyone viewing source — soft gate, not
-// security. For real auth, use Cloudflare Access at the DNS layer.
+// PUBLIC_PREVIEW_TOKEN is the bypass secret. PUBLIC_ prefix on both: required
+// because they're read at build time AND inlined into the client script. Soft
+// gate, not security. For real auth, use Cloudflare Access at the DNS layer.
 const comingSoonEnabled = import.meta.env.PUBLIC_COMING_SOON === 'true';
 const previewToken = import.meta.env.PUBLIC_PREVIEW_TOKEN || '';
 
 interface Props {
   title: string;
   description?: string;
-  /** Open Graph image URL. Defaults to the site-wide OG image in
-      public/. Pages with a richer hero (case studies) pass their own
-      cover so social shares render the project's actual artwork. */
+  /** Open Graph image URL. Defaults to the page's generated card in public/og/. */
   ogImage?: string;
-  /** Override the default og:type. Case study detail pages set this to
-      "article" so platforms that treat articles specially (search,
-      readers) render them correctly. */
+  /** Override the default og:type. Case study pages set "article". */
   ogType?: 'website' | 'article';
-  /** Page-specific schema.org nodes, added to the site-wide @graph that
-      StructuredData prints (studio, WebSite, Person, WebPage). Used by case
-      study pages (CreativeWork), journal entries (Article) and /services
-      (Service + FAQPage). */
+  /** Page-specific schema.org nodes, added to the site-wide @graph. */
   schemas?: Node[];
-  /** Breadcrumb trail after Home, for nested pages (case studies, journal
-      entries). Becomes a BreadcrumbList in the JSON-LD. */
+  /** Breadcrumb trail after Home, for nested pages. */
   breadcrumbs?: Crumb[];
-  /** The JSON-LD page type: WebPage unless set. The sector pages
-      (src/pages/[sector].astro) are a CollectionPage. */
+  /** The JSON-LD page type: WebPage unless set. */
   pageType?: 'WebPage' | 'CollectionPage';
-  /** Extra woff2 files to preload on this page only (resolved with ?url).
-      Bricolage and Source Sans are always preloaded, so a page may add at
-      most one more. Keep the total at three or fewer
-      (tests/page-weight.config.json, maxFontPreloads). */
-  preloadFonts?: string[];
-  /** Keep this page out of search results (robots noindex). For pages that
-      exist for checking, not visiting, like /colophon/parts/. Pair it with
-      the sitemap filter in astro.config.mjs. */
+  /** Keep this page out of search results (robots noindex). Pair it with the
+      sitemap filter in astro.config.mjs. */
   noindex?: boolean;
-  /** The ink closer that opens the footer: the page's last word (overhaul
-      2.1, replaces CtaBanner). A static H2 (heading at 300, emphasis in a
-      <b> at 800), an optional sub line, and the pill (href and label, or
-      cta: false for none). Leave it out for the site default in
-      src/lib/closer.ts. */
-  closer?: Closer;
+  /** The top line sits on a client's color (the case studies). */
+  onColor?: boolean;
+  /** Inline style on <body>: the case studies set the client's colors here. */
+  bodyStyle?: string;
 }
 const {
   title,
@@ -134,22 +78,16 @@ const {
   schemas = [],
   breadcrumbs = [],
   pageType,
-  preloadFonts = [],
   noindex = false,
-  closer,
+  onColor = false,
+  bodyStyle,
 } = Astro.props;
 
-// Build a canonical URL for the current page so og:url and JSON-LD have
-// the right absolute reference. Astro.url is the live request URL in
-// dev and the resolved page URL at build time.
 const canonical = new URL(Astro.url.pathname, site.url).toString();
 
-// Per-page Open Graph card. Derived from the pathname to match the images
-// written to public/og/ by scripts/generate-og.mjs ('' becomes 'index'), so every page
-// gets its own branded card. An explicit ogImage prop still overrides, and
-// any path without a generated card would 404 the image, so the known routes
-// are kept in sync with STATIC_PAGES in that script. The default OG
-// (public/og-default.png) remains as a manual fallback if a prop passes it.
+// Per-page Open Graph card. Derived from the pathname to match the images written
+// to public/og/ by scripts/generate-og.mjs ('' becomes 'index'). An explicit
+// ogImage prop still overrides.
 const ogSlug = Astro.url.pathname.replace(/^\/+|\/+$/g, '') || 'index';
 const resolvedOgImage = ogImage ?? `/og/${ogSlug}.png`;
 const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
@@ -159,41 +97,26 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <!-- viewport-fit=cover lets the navy hero and footer run edge-to-edge into
-         the notch / rounded-corner area on modern phones. The safe-area insets
-         that pairs with (so content never sits under the notch or home
-         indicator) are handled in .ncs-container, the sticky header, the mobile
-         nav panel, the footer, and the fixed back-to-top / lightbox controls. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <title>{title}</title>
-
-    <!-- Canonical URL. Tells search engines the authoritative location
-         for this page, even if it's reached through alternate query
-         strings or aliased paths. -->
     <link rel="canonical" href={canonical} />
 
-    {/* Favicon / app-icon set. The mark is a white Bebas "N" on a navy squircle
-        with one amber spark, generated from the real wordmark glyph by
-        scripts/generate-icons.mjs (run `npm run icons` after a brand change).
-        Modern browsers take the SVG; the .ico is the legacy fallback; iOS uses
-        the apple-touch PNG; the manifest carries the PWA / maskable icons.
-        theme-color is brand navy, matching the hero and the over-hero header. */}
+    {/* Favicon set: the white N on studio blue. public/favicon.svg is the source;
+        npm run icons writes the rest from it. */}
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#0A1628" />
+    <meta name="theme-color" content="#f5f5f3" />
 
     {(comingSoonEnabled || noindex) && <meta name="robots" content="noindex, follow" />}
 
-    {/* The blocking gate script itself lives in ComingSoonGate.astro (a
-        <script> cannot sit inside this expression: prettier-plugin-astro
-        cannot parse it there). */}
+    {/* The blocking gate script itself lives in ComingSoonGate.astro (a <script>
+        cannot sit inside this expression: prettier-plugin-astro cannot parse it). */}
     {comingSoonEnabled && <ComingSoonGate previewToken={previewToken} />}
 
-    <!-- RSS auto-discovery. Lets feed readers (and browser extensions
-         that detect feeds) pick up /rss.xml without manual entry. -->
+    <!-- RSS auto-discovery. -->
     <link
       rel="alternate"
       type="application/rss+xml"
@@ -201,11 +124,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       href="/rss.xml"
     />
 
-    <!-- Open Graph + Twitter card meta. Drives the rich preview that
-         appears when the URL is shared on Slack, iMessage, LinkedIn, etc.
-         Pages that pass an `ogImage` prop (typically case studies, using
-         their cover) get a project-specific preview; everything else
-         falls back to the site-wide default in public/og-default.png. -->
+    <!-- Open Graph + Twitter card meta. -->
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
@@ -217,92 +136,20 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
 
-    <!--
-      Anti-FOUC theme bootstrap. Runs synchronously before <body> paints so
-      the .dark class lands on <html> in time for the first frame; otherwise
-      a visitor who prefers dark would see a flash of light theme.
-
-      The same script applies the visitor's Pause motion choice
-      (html[data-motion-paused], localStorage["ncs-motion"]), for the same
-      reason: it has to be in place before the first frame.
-
-      Decision order for the theme:
-        1. localStorage["ncs-theme"] (the visitor's explicit choice)
-           - "dark" -> force dark
-           - "light" -> force light
-           - "system" (or missing) -> fall through
-        2. window.matchMedia('(prefers-color-scheme: dark)') for system.
-
-      ThemeToggle.astro (src/scripts/theme-toggle.ts) writes to the same localStorage key, and Astro's
-      View Transitions ClientRouter preserves <html> attributes across
-      same-origin navigations, so the class survives page changes.
-
-      is:inline keeps this out of the Vite module graph so it's literally
-      the first script the browser executes, with no async delay.
-      data-astro-rerun lets View Transitions re-execute it on swap, which
-      matters if the visitor changes their OS theme on a system-pref tab
-      mid-session and then navigates.
-    -->
-    <script is:inline data-astro-rerun>
-      (function () {
-        // Mark that JS is running so CSS can scope the scroll-reveal hidden
-        // state to .js only. Without JS the class is absent and [data-reveal]
-        // content stays fully visible (see globals.css section 6).
-        document.documentElement.classList.add('js');
-        // Pause motion (src/scripts/motion.ts, overhaul 1.7). A visitor who
-        // pressed Pause motion keeps it on every page and every visit, and the
-        // attribute lands here, before first paint, so not one frame moves.
-        try {
-          document.documentElement.toggleAttribute(
-            'data-motion-paused',
-            localStorage.getItem('ncs-motion') === 'paused',
-          );
-        } catch (_e) {
-          /* Storage blocked: motion follows the system setting only. */
-        }
-        try {
-          var stored = localStorage.getItem('ncs-theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = stored === 'dark' || ((stored === 'system' || !stored) && prefersDark);
-          var root = document.documentElement;
-          root.classList.toggle('dark', isDark);
-          root.style.colorScheme = isDark ? 'dark' : 'light';
-        } catch (e) {
-          /* localStorage blocked (private mode / cookies disabled). Fall back
-             to system preference only. */
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.classList.toggle('dark', prefersDark);
-          document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
-        }
-      })();
+    <!-- Marks that scripts run, before first paint, so CSS can gate the entrances
+         on .js. Without JavaScript the class is absent and everything is simply there. -->
+    <script is:inline>
+      document.documentElement.classList.add('js');
     </script>
-    <!-- Font preloads: Bricolage Grotesque for every heading, Source Sans 3 for
-         every other word on the page. `crossorigin` is required for font
-         preloads: without it, the preload and the eventual CSS font fetch
-         are considered different requests, and the browser would download
-         the font twice. With it, the second fetch hits the preload cache.
-         Both start with the HTML rather than waiting on the stylesheet, so
-         text is laid out in its real metrics from the first paint instead
-         of reflowing when the swap lands. -->
-    <link rel="preload" as="font" type="font/woff2" href={bricolageWoff2} crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href={sourceSans3Woff2} crossorigin />
-    {preloadFonts.map((href) => (
-      <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />
-    ))}
 
-    <!-- Cloudflare Web Analytics. Component renders the beacon script
-         only when PUBLIC_CF_ANALYTICS_TOKEN is set, so local dev and any
-         deploy without the token simply emits nothing. -->
+    <!-- The one typeface, self-hosted. Starts with the HTML so text is laid out in
+         its real metrics from the first paint. -->
+    <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/hanken.woff2" crossorigin />
+
+    <!-- Cloudflare Web Analytics and GA4. Each renders only when its env var is set. -->
     <Analytics />
 
-    <!-- Astro View Transitions (the ClientRouter plus the overlap page
-         transition). Renders in <head> so the client router is in place
-         before the first navigation. -->
-    <PageTransition />
-
-    <!-- schema.org JSON-LD: one connected @graph per page (the studio,
-         the WebSite, Nathan, this WebPage, breadcrumbs on nested pages,
-         plus anything the page passes in schemas). See StructuredData. -->
+    <!-- schema.org JSON-LD: one connected @graph per page. -->
     <StructuredData
       url={canonical}
       title={title}
@@ -312,35 +159,18 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       pageType={pageType}
     />
   </head>
-  <body>
+  <body style={bodyStyle}>
     <!--
-      Hello, curious visitor. This site is custom-built by Nathan Nixon on Astro,
-      Tailwind, and Cloudflare, no page builder and no template. How it is made:
-      /colophon. Want one like it: /contact.
+      Hello, curious visitor. This site is custom-built by Nathan Nixon on Astro and
+      Cloudflare, no page builder and no template. How it is made: /colophon/. Want one
+      like it: /contact/.
     -->
-
-    <!--
-      Skip link. Hidden off-screen until it receives focus (Tab from the
-      address bar), then jumps into view at top-left. Lets keyboard and
-      screen reader users bypass the header / nav and land directly on
-      page content. The href targets the <main id="main"> below.
-    -->
-    <a
-      href="#main"
-      class="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-50 focus-visible:rounded-md focus-visible:bg-primary focus-visible:px-3 focus-visible:py-2 focus-visible:font-body focus-visible:text-sm focus-visible:font-semibold focus-visible:text-primary-foreground focus-visible:no-underline focus-visible:ring-3 focus-visible:ring-accent/50"
-    >
-      Skip to main content
-    </a>
-
-    <Header />
-    <main id="main" tabindex="-1">
+    <TopLine onColor={onColor} />
+    <main id="main">
       <slot />
     </main>
-    <Footer closer={closer} />
-
-    {/* Floating back-to-top button: hidden (and inert) until the visitor
-        scrolls past 600px. Plain markup plus a small script, no React. */}
-    <BackToTop />
+    <Dock />
+    <ClientSheet />
 
     {comingSoonEnabled && (
       <div class="ncs-overlay" aria-label="Launching soon">
@@ -348,55 +178,22 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       </div>
     )}
 
-    <!--
-      Progressive enhancement layer. Wires the declarative data-* effects
-      (the scroll-aware header and the prose heading anchors)
-      on every page including View Transitions navigations. Everything it does
-      is optional polish: the page is fully functional without it, and each
-      effect self-disables under prefers-reduced-motion or coarse pointers.
-    -->
     <script>
-      import '../scripts/enhance';
-    </script>
-    <!--
-      Mailto graceful fallback. A mailto: link only opens anything if the device
-      has a mail app registered for it; without one (common on desktops) the
-      click is a silent dead-end. This watches for that case and, when nothing
-      opens, copies the address and shows a confirmation toast. It never blocks
-      the real mailto for visitors who do have a mail app. See the script header.
-    -->
-    <script>
+      import '../scripts/kit.js';
+      // Mailto fallback: a click with no mail app copies the address and says so.
       import '../scripts/mailto-fallback';
-    </script>
-    <!--
-      Motion controller (overhaul 1.7). Pauses data-motion="loop" elements off
-      screen, in a hidden tab and under Pause motion, wires every
-      [data-motion-toggle] button, and runs the IntersectionObserver reveal
-      fallback where scroll-driven CSS is not supported. See the file header.
-    -->
-    <script>
-      import '../scripts/motion';
-    </script>
-    <!--
-      GA4 events (overhaul 4.1). One delegated click listener for [data-cta]
-      and mailto: links, plus a once-per-page pricing_view. Calls window.gtag
-      only when the PORTABLE GoogleAnalytics tag defined it, so dev, CI and
-      previews send nothing. Event list and the no-personal-data rule: the
-      header of src/lib/track.ts. /privacy names every event.
-    -->
-    <script>
+      // GA4 events: a no-op unless the GA tag defined window.gtag. See src/lib/track.ts.
       import { initTracking } from '../lib/track';
-      document.addEventListener('astro:page-load', initTracking);
+      initTracking();
     </script>
-    <!-- A quiet hello in the console for anyone who opens dev tools. Honest:
-         the real stack, with pointers to the colophon and contact. -->
+    <!-- A quiet hello in the console for anyone who opens dev tools. -->
     <script is:inline>
       console.log(
         '%cNixon Creative Studio',
-        'font: 600 16px ui-sans-serif, system-ui; color: #40AAED;',
+        'font: 600 16px ui-sans-serif, system-ui; color: #2f3fe6;',
       );
       console.log(
-        'Hand-built on Astro, Tailwind, and Cloudflare. How it is made: /colophon  ·  Want one like it: /contact',
+        'Hand-built on Astro and Cloudflare. How it is made: /colophon/  ·  Want one like it: /contact/',
       );
     </script>
   </body>

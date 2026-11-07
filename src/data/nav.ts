@@ -1,41 +1,26 @@
-// Safe to edit.
 /* ============================================================================
-   Site navigation: the one list the header, mobile menu and footer read
+   Gated links
    ============================================================================
-   Before overhaul package 1.8 the header and the footer each kept their own
-   copy of this list, with the Journal check written out twice. Now it lives
-   here, and each piece of chrome asks for the list it shows:
-
-     getNav()         Work, Services, About, then the gated pages. The desktop
-                      header and the mobile menu (MobileNav) show this. Contact
-                      is not in it: the "Start a project" button covers it.
-     getFooterNav()   the same list plus Contact, for the footer's Studio
-                      column (also the no-JS target of the mobile menu button).
-
-   Every href ends in a slash: the site builds with trailingSlash 'always',
-   and a slashless internal link is a redirect hop (npm run check:slashes).
-
-   Two pages are gated at build time, so a link never points at an empty page:
+   The dock (src/components/Dock.astro) is the fixed menu: Work, Prices, About,
+   Start a project. Two more pages exist and are gated at build time, so a link
+   never points at an empty page. When open, they join the closing's legal line.
 
      Journal       only when at least one entry is published. Same filter as
                    the journal index: drafts are hidden in production builds
                    and shown in `npm run dev`.
      Photography   only when the photos collection holds MIN_PHOTOS or more
-                   real photographs. Today it holds none, so the link is off
-                   (the page still builds at /photography/, noindex and out
-                   of the sitemap). The rule lives in
-                   src/data/photography-gate.ts, which the page and the
-                   sitemap filter in astro.config.mjs read too, so the three
-                   never disagree. Ungating: docs/PENDING.md.
+                   real photographs. The rule lives in
+                   src/data/photography-gate.ts, which the page and the sitemap
+                   filter in astro.config.mjs read too, so the three never
+                   disagree. Ungating: docs/PENDING.md.
 
-   To rename, reorder or add a page, edit BASE below; the header, the mobile
-   menu and the footer all follow.
+   Every href ends in a slash: the site builds with trailingSlash 'always', and a
+   slashless internal link is a redirect hop (npm run check:slashes).
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
 import { MIN_PHOTOS, photographyOpen } from './photography-gate';
 
-// Re-exported so /colophon/parts/ can keep importing it from here.
 export { MIN_PHOTOS };
 
 export interface NavLink {
@@ -44,17 +29,9 @@ export interface NavLink {
   href: string;
 }
 
-const BASE: NavLink[] = [
-  { label: 'Work', href: '/work/' },
-  { label: 'Services', href: '/services/' },
-  { label: 'About', href: '/about/' },
-];
-
 const JOURNAL: NavLink = { label: 'Journal', href: '/journal/' };
 const PHOTOGRAPHY: NavLink = { label: 'Photography', href: '/photography/' };
-const CONTACT: NavLink = { label: 'Contact', href: '/contact/' };
 
-/** Published journal entries (drafts count in dev only, as on /journal/). */
 async function journalCount(): Promise<number> {
   const entries = await getCollection('journal', ({ data }) =>
     import.meta.env.PROD ? data.draft !== true : true,
@@ -62,22 +39,12 @@ async function journalCount(): Promise<number> {
   return entries.length;
 }
 
-/** Real photographs in the photos collection (src/content/photos/*.json). */
 export async function photoCount(): Promise<number> {
   return (await getCollection('photos')).length;
 }
 
-/** The primary nav: header (desktop) and the mobile menu. */
-export async function getNav(): Promise<NavLink[]> {
+/** The pages that have earned a link. Empty today. */
+export async function getGatedNav(): Promise<NavLink[]> {
   const [journal, photos] = await Promise.all([journalCount(), photoCount()]);
-  return [
-    ...BASE,
-    ...(photographyOpen(photos) ? [PHOTOGRAPHY] : []),
-    ...(journal > 0 ? [JOURNAL] : []),
-  ];
-}
-
-/** The footer's Studio column: the primary nav plus Contact. */
-export async function getFooterNav(): Promise<NavLink[]> {
-  return [...(await getNav()), CONTACT];
+  return [...(photographyOpen(photos) ? [PHOTOGRAPHY] : []), ...(journal > 0 ? [JOURNAL] : [])];
 }

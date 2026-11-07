@@ -138,7 +138,7 @@ function init(): void {
   document.addEventListener('click', onClick);
 }
 
-document.addEventListener('astro:page-load', init);
+init();
 init();
 
 export {};

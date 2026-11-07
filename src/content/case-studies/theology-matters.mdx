@@ -53,7 +53,7 @@ hook: 'Every issue since 1995, online, searchable and read aloud'
 order: 6
 # Palette source: Theology Matters Website DESIGN.md (--tm-* tokens), checked
 # against the live :root on 2026-10-31 (unchanged); light only, markDark is
-# its cream, the colour it sets on navy.
+# its cream, the color it sets on navy.
 palette:
   paper: '#F6F1E7'
   ink: '#1C1A17'
@@ -69,7 +69,7 @@ palette:
 # The Signature band's still: the feature the hook names (the journal
 # archive, captured 2026-10-31 from theologymatters.com/journal/).
 featureShot: ../../assets/case-studies/shots/theology-matters-feature-archive.png
-featureShotAlt: 'The theologymatters.com journal archive: a search box, a strip of years, and the 2026 issues as season-coloured covers with their articles listed underneath'
+featureShotAlt: 'The theologymatters.com journal archive: a search box, a strip of years, and the 2026 issues as season-colored covers with their articles listed underneath'
 # The interaction clip for "The idea" band (overhaul 3.5): recorded from the
 # live site with `npm run capture:clips` on 2026-10-31. It replaces the
 # featureShot in that band only; re-run the script and paste the new src after
@@ -93,112 +93,22 @@ facts:
   host: theologymatters.com
 ---
 
-import Decision from '../../components/Decision.astro';
-import ResultsBlock from '../../components/ResultsBlock.astro';
-import SiteShowcase from '../../components/SiteShowcase.astro';
-import FeatureHighlight from '../../components/FeatureHighlight.astro';
-import Lightbox from '../../components/Lightbox.astro';
-import archiveShot from '../../assets/case-studies/shots/theology-matters-feature-archive.png';
-import audioShot from '../../assets/case-studies/shots/theology-matters-feature-audio.png';
-import printShot from '../../assets/case-studies/shots/theology-matters-feature-print.png';
+<Chapter title="The brief">
 
-## The brief
+<Lede study={props.study} />
 
 Theology Matters is a Reformed and Presbyterian journal edited by Dr. Richard E. Burnett. It has been mailed free, four times a year, to anyone who asks since the mid-1990s, and it also runs an annual theology conference and an institute for theological education. The content is serious: several authors an issue, three decades of back issues, conference lectures, and a course of study for working ministers.
 
-The old site sat on a dated theme. Changing it meant editing code, so adding an issue, a speaker or a faculty listing waited on a developer, and most of the back catalogue lived only inside the issue PDFs. The rebuild had to make the whole journal readable and findable, let a small staff run it themselves, and turn readers who want the journal into names on the mailing list.
+The old site sat on a dated theme. Changing it meant editing code, so adding an issue, a speaker or a faculty listing waited on a developer, and most of the back catalog lived only inside the issue PDFs. The rebuild had to make the whole journal readable and findable, let a small staff run it themselves, and turn readers who want the journal into names on the mailing list.
 
 The new site went live in spring 2026, and I have kept building on it since: a full redesign of every page, the back issues brought online as real articles, a rebuilt admin for the staff, and new sign-up forms.
-
-## Decisions
-
-<Decision
-  title="Audio at the template level"
-  easy="Record and upload an audio version piece by piece."
-  did="Wire ElevenLabs in at the template level. Every essay, back issues included, carries a Listen to this essay player with no production work for the editors."
-/>
-
-<Decision
-  title="An admin built around the jobs"
-  easy="Hand over the stock WordPress admin and a written manual."
-  did="Stay on WordPress, which the staff already knew, and reshape the admin around what they actually do: prepare an issue, add a writer, change the conference programme. Guided forms, a checklist before anything publishes, undo on every edit, and a Site Guide with short videos for each job."
-/>
-
-<Decision
-  title="Sign-ups that land where the office works"
-  easy="Leave sign-ups in a forms plugin's inbox for someone to copy across by hand."
-  did="Build the newsletter, print edition and stop-or-move forms into the theme, check each one for spam, and send it straight into Neon CRM, the supporter database the office already sends its email from."
-/>
-
-The look comes from academic press publishing: cream paper, oxblood and navy, Newsreader for reading. Each issue gets a cover in its season's colour, so a run of issues reads like a shelf. Articles carry a contents list, footnotes, drop caps, Scripture references that show the verse on hover (RefTagger), and scholarly metadata so search engines index them as journal articles.
-
-## What I built
-
-<FeatureHighlight
-  src={archiveShot}
-  alt="The Theology Matters journal archive with season-coloured issue covers"
-  title="Every issue since 1995, on one shelf"
-  body="The journal archive shows each year's issues as covers with their articles underneath. Three hundred back-issue articles that only ever existed inside the issue PDFs are now full pages with their own authors, issue and date, so the whole run of the journal can be read and searched."
-  side="left"
-/>
-
-<FeatureHighlight
-  src={audioShot}
-  alt="A Theology Matters essay with its Listen to this essay player and Cite and Reading buttons"
-  title="Read it, hear it, cite it"
-  body="Every essay has an audio version from ElevenLabs, a Cite button, text size controls, a contents list that follows along, and footnotes that open in place. A reader can listen in the car and cite the same piece in a paper."
-  side="right"
-/>
-
-<FeatureHighlight
-  src={printShot}
-  alt="The Theology Matters print edition sign-up form"
-  title="Asking for the journal takes one form"
-  body="The print sign-up asks for an address and a few questions about the reader's ministry, then sends a confirmation email before anything is mailed. A short form handles moves, extra copies and stopping, and a newsletter sign-up sits on the home page and between article paragraphs."
-  side="left"
-/>
-
-The full build, including the pieces above:
-
-**For readers**
-
-- A redesign of every page: a nameplate header with the current issue, season-coloured issue covers, typeset articles with drop caps and small caps, and section photographs
-- Every issue since 1995 online, with the back issues turned from PDFs into full articles
-- Search across every article, author and issue, including the full text of the issue PDFs, with phrase search, Scripture references ("Rom 8" finds Romans 8), suggestions as you type and "Did you mean"
-- Topics and authors indexes with an A to Z strip, and author pages across each writer's work
-- Audio on every essay, a Cite button, text size, footnotes in place, and a contents list that tracks the section you are reading
-- Print edition sign-up with a confirmation email, a stop-or-move form, and a newsletter sign-up on the home page
-- Small Give, Newsletter and Institute panels between article paragraphs, so the ask sits where readers already are
-- An Institute page and a Conference page with lectures, speakers and workshops
-- Scholarly structured data on every article and Google Scholar metadata, so the essays are indexed as journal articles
-
-**For the staff**
-
-- A Home screen in the admin: task buttons, what needs a look, what is scheduled, and recent changes with an Undo link
-- Prepare an issue: pick the season, the PDF, the articles and a release time, and the site publishes the whole issue at that moment
-- Start an article from a Word file, footnotes included, and add a new writer from the article screen
-- A Before you publish checklist beside every article, which also warns when another article already uses the same picture
-- Undo and redo on every edit screen, a daily summary of changes, and no way to delete anything permanently by accident
-- The Institute and Conference pages edited through plain fields instead of a page builder
-- Private preview links for drafts, and a Share this article box with ready-made posts for social media and the newsletter
-- Form messages screened for spam and passed to Neon CRM, with anything unclear set aside for a person
-- A Site Guide with step-by-step recipes and short captioned videos for each job
-
-## Walk the homepage
-
-<SiteShowcase
-  slug="theology-matters"
-  alt="The Theology Matters homepage, scrolling top to bottom"
-  href="https://theologymatters.com"
-  label="theologymatters.com"
-/>
 
 <ResultsBlock
   items={[
     {
       figure: '458',
       text: 'essays to read online, from every issue of the journal since 1995',
-      source: 'The journal archive on theologymatters.com, read 31 October 2026',
+      source: 'The journal archive on theologymatters.com, read October 31, 2026',
     },
     {
       figure: '300',
@@ -211,4 +121,101 @@ The full build, including the pieces above:
   ]}
 />
 
-<Lightbox />
+</Chapter>
+
+<Idea study={props.study} />
+
+<Chapter title="Decisions">
+
+<Decision
+  title="Audio at the template level"
+  easy="Record and upload an audio version piece by piece."
+  did="Wire ElevenLabs in at the template level. Every essay, back issues included, carries a Listen to this essay player with no production work for the editors."
+/>
+
+<Decision
+  title="An admin built around the jobs"
+  easy="Hand over the stock WordPress admin and a written manual."
+  did="Stay on WordPress, which the staff already knew, and reshape the admin around what they actually do: prepare an issue, add a writer, change the conference program. Guided forms, a checklist before anything publishes, undo on every edit, and a Site Guide with short videos for each job."
+/>
+
+<Decision
+  title="Sign-ups that land where the office works"
+  easy="Leave sign-ups in a forms plugin's inbox for someone to copy across by hand."
+  did="Build the newsletter, print edition and stop-or-move forms into the theme, check each one for spam, and send it straight into Neon CRM, the supporter database the office already sends its email from."
+/>
+
+</Chapter>
+
+<Chapter title="Walk the homepage">
+
+<SiteShowcase
+  study={props.study}
+  label="theologymatters.com"
+  href="https://theologymatters.com"
+  alt="The Theology Matters homepage, scrolling top to bottom"
+/>
+
+</Chapter>
+
+<WhatYouEdit study={props.study} />
+
+<Quotes study={props.study} />
+
+<FullBuild more={false}>
+
+<FeatureHighlight
+  src="theology-matters-feature-archive"
+  alt="The Theology Matters journal archive with season-colored issue covers"
+  title="Every issue since 1995, on one shelf"
+  body="The journal archive shows each year's issues as covers with their articles underneath. Three hundred back-issue articles that only ever existed inside the issue PDFs are now full pages with their own authors, issue and date, so the whole run of the journal can be read and searched."
+  side="left"
+/>
+
+<FeatureHighlight
+  src="theology-matters-feature-audio"
+  alt="A Theology Matters essay with its Listen to this essay player and Cite and Reading buttons"
+  title="Read it, hear it, cite it"
+  body="Every essay has an audio version from ElevenLabs, a Cite button, text size controls, a contents list that follows along, and footnotes that open in place. A reader can listen in the car and cite the same piece in a paper."
+  side="right"
+/>
+
+<FeatureHighlight
+  src="theology-matters-feature-print"
+  alt="The Theology Matters print edition sign-up form"
+  title="Asking for the journal takes one form"
+  body="The print sign-up asks for an address and a few questions about the reader's ministry, then sends a confirmation email before anything is mailed. A short form handles moves, extra copies and stopping, and a newsletter sign-up sits on the home page and between article paragraphs."
+  side="left"
+/>
+
+The full build, including the pieces above:
+
+### For readers
+
+- A redesign of every page: a nameplate header with the current issue, season-colored issue covers, typeset articles with drop caps and small caps, and section photographs
+- Every issue since 1995 online, with the back issues turned from PDFs into full articles
+- Search across every article, author and issue, including the full text of the issue PDFs, with phrase search, Scripture references ("Rom 8" finds Romans 8), suggestions as you type and "Did you mean"
+- Topics and authors indexes with an A to Z strip, and author pages across each writer's work
+- Audio on every essay, a Cite button, text size, footnotes in place, and a contents list that tracks the section you are reading
+- Print edition sign-up with a confirmation email, a stop-or-move form, and a newsletter sign-up on the home page
+- Small Give, Newsletter and Institute panels between article paragraphs, so the ask sits where readers already are
+- An Institute page and a Conference page with lectures, speakers and workshops
+- Scholarly structured data on every article and Google Scholar metadata, so the essays are indexed as journal articles
+
+### For the staff
+
+- A Home screen in the admin: task buttons, what needs a look, what is scheduled, and recent changes with an Undo link
+- Prepare an issue: pick the season, the PDF, the articles and a release time, and the site publishes the whole issue at that moment
+- Start an article from a Word file, footnotes included, and add a new writer from the article screen
+- A Before you publish checklist beside every article, which also warns when another article already uses the same picture
+- Undo and redo on every edit screen, a daily summary of changes, and no way to delete anything permanently by accident
+- The Institute and Conference pages edited through plain fields instead of a page builder
+- Private preview links for drafts, and a Share this article box with ready-made posts for social media and the newsletter
+- Form messages screened for spam and passed to Neon CRM, with anything unclear set aside for a person
+- A Site Guide with step-by-step recipes and short captioned videos for each job
+
+### Behind the decisions
+
+The look comes from academic press publishing: cream paper, oxblood and navy, Newsreader for reading. Each issue gets a cover in its season's color, so a run of issues reads like a shelf. Articles carry a contents list, footnotes, drop caps, Scripture references that show the verse on hover (RefTagger), and scholarly metadata so search engines index them as journal articles.
+
+</FullBuild>

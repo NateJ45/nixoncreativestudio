@@ -1,0 +1,58 @@
+/* A third column for the one window. Narrower than that, it sits after the text and the column drops away. */
+.colo-win {
+  --capo: 1;
+  width: min(62vw, 15rem);
+  margin: clamp(1rem, 4vh, 2rem) auto 0;
+}
+html:not(.js) .colo-win {
+  display: none;
+}
+.colo-win .tile {
+  transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.colo-win .tile:hover,
+.colo-win .tile:focus-visible {
+  transform: translateY(-6px);
+}
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  /* No room for a third column: it sits under the page list, still beside the text. */
+  .doc {
+    grid-template-rows: auto 1fr;
+  }
+  .toc {
+    grid-column: 1;
+    grid-row: 1;
+    position: static;
+  }
+  .prose {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .colo-win {
+    grid-column: 1;
+    grid-row: 2;
+    width: 15rem;
+    margin: 0;
+  }
+}
+@media (min-width: 80rem) {
+  .doc {
+    grid-template-columns: 15rem minmax(0, 40rem) minmax(0, 1fr);
+    gap: clamp(3rem, 5vw, 6rem);
+  }
+  /* Lifted into the empty space beside the heading, so the whole window shows on arrival. */
+  .colo-win {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    position: sticky;
+    top: 1.5rem;
+    width: min(100%, 17rem, calc((100vh - 8.5rem) / 2.022));
+    margin: -12rem 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .colo-win .tile {
+    transition: none;
+  }
+}
