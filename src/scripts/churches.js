@@ -147,7 +147,8 @@ import { ui } from './kit.js';
         s = swap,
         apart = Math.sin(Math.PI * s) * 0.3 * W,
         rest = 0.19 * W;
-      /* On arrival the first window rises, then the second slides out from behind it. */
+      /* On arrival the first window rises at full strength (nothing on the first screen starts
+         hidden), then the second slides out from behind it. */
       var rise = (1 - intro) * 46,
         out = clamp((intro - 0.35) / 0.65);
       A.el.style.transform =
@@ -170,8 +171,6 @@ import { ui } from './kit.js';
         'deg) scale(' +
         (1 - 0.075 * (1 - s)).toFixed(4) +
         ')';
-      A.el.style.opacity = intro < 1 ? clamp(intro * 2.2).toFixed(3) : '';
-      B.el.style.opacity = intro < 0.6 ? '0' : '';
       A.el.style.zIndex = s < 0.5 ? 2 : 1;
       B.el.style.zIndex = s < 0.5 ? 1 : 2;
       A.cap.style.setProperty('--co', clamp(1 - s * 3).toFixed(3));

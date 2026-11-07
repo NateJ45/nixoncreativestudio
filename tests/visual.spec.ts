@@ -71,15 +71,6 @@ for (const vp of viewports) {
 
       for (const route of routes) {
         test(route, async ({ page }) => {
-          await page.addInitScript((t) => {
-            try {
-              localStorage.setItem('ncs-theme', t);
-              localStorage.setItem('ncs-motion', 'paused');
-            } catch {
-              /* storage blocked: the emulated colour scheme still applies */
-            }
-          }, theme);
-
           await page.goto(route);
           await page.waitForLoadState('load');
           await settle(page);

@@ -62,7 +62,7 @@ test.describe('Without JavaScript', () => {
       page.waitForURL(WEB3FORMS),
       page.getByRole('button', { name: 'Send' }).click(),
     ]);
-    expect(posted).toContain('Test Person');
+    expect(posted).toContain('Test+Person');
   });
 
   test('the #sent redirect target shows the success panel', async ({ page }) => {
