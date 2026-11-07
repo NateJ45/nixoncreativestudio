@@ -205,8 +205,8 @@ export var ui = {
     return {
       x: v || 0,
       v: 0,
-      step: function (to, dt) {
-        this.v += (k * (to - this.x) - c * this.v) * dt;
+      step: function (to, dt, stiffer) {
+        this.v += ((stiffer || k) * (to - this.x) - c * this.v) * dt;
         this.x += this.v * dt;
         return Math.abs(to - this.x) > 0.0005 || Math.abs(this.v) > 0.004;
       },
@@ -360,19 +360,281 @@ if (bands.length && !reduce) {
   bwake();
 }
 
-/* The pill's highlight slides to whichever link you are near. */
+/* The dock. Three things move here, all on the same springs as the rest of the site. */
 var dock = $('.dock'),
-  slide = $('[data-slide]');
-[].forEach.call(dock.querySelectorAll('a:not(.go)'), function (a) {
-  a.addEventListener('pointerenter', function () {
-    slide.style.width = a.offsetWidth + 'px';
-    slide.style.transform = 'translateX(' + a.offsetLeft + 'px)';
-    slide.style.opacity = 1;
+  slide = $('[data-slide]'),
+  scrim = $('[data-dock-scrim]'),
+  dockLinks = [].slice.call(dock.querySelectorAll(':scope > a'));
+
+/* The puck rests on the page you are on and goes to the link you are near. Each edge has its own
+   spring and the leading edge is the quicker, so it stretches on the way and gathers on landing. */
+var puckRest = dock.querySelector(':scope > a[aria-current]:not(.go)'),
+  puckTo = puckRest,
+  puckL = ui.spring(320, 26, 0),
+  puckR = ui.spring(320, 26, 0),
+  puckRaf = 0,
+  puckLast = 0,
+  puckFwd = true;
+function puckPaint() {
+  slide.style.width = Math.max(0, puckR.x - puckL.x) + 'px';
+  slide.style.transform = 'translateX(' + puckL.x + 'px)';
+}
+function puckFrame(t) {
+  var dt = Math.min((t - puckLast) / 1000, 0.032),
+    left = puckTo.offsetLeft,
+    right = left + puckTo.offsetWidth,
+    a = puckL.step(left, dt, puckFwd ? 210 : 420),
+    b = puckR.step(right, dt, puckFwd ? 420 : 210);
+  puckLast = t;
+  puckPaint();
+  puckRaf = a || b ? requestAnimationFrame(puckFrame) : 0;
+}
+function puckGo(a, jump) {
+  puckTo = a || puckRest;
+  slide.style.opacity = puckTo && puckTo.offsetWidth ? 1 : 0;
+  if (!puckTo) return;
+  var left = puckTo.offsetLeft,
+    right = left + puckTo.offsetWidth;
+  if (jump || reduce) {
+    puckL.x = left;
+    puckR.x = right;
+    puckL.v = puckR.v = 0;
+    puckPaint();
+    return;
+  }
+  /* The edge going forward leads. */
+  puckFwd = left > puckL.x;
+  if (!puckRaf) {
+    puckLast = performance.now();
+    puckRaf = requestAnimationFrame(puckFrame);
+  }
+}
+
+/* How far down the page you are: a hairline round the pill. It answers scrolling and nothing else. */
+var rail = $('[data-rail]'),
+  railPath = rail.firstElementChild,
+  railSeen = -1;
+function railShape() {
+  var w = dock.offsetWidth,
+    h = dock.offsetHeight,
+    r = h / 2;
+  /* From the left end, along the top, round the right end and back along the bottom. */
+  railPath.setAttribute(
+    'd',
+    'M0 ' +
+      r +
+      'A' +
+      r +
+      ' ' +
+      r +
+      ' 0 0 1 ' +
+      r +
+      ' 0' +
+      'H' +
+      (w - r) +
+      'A' +
+      r +
+      ' ' +
+      r +
+      ' 0 0 1 ' +
+      (w - r) +
+      ' ' +
+      h +
+      'H' +
+      r +
+      'A' +
+      r +
+      ' ' +
+      r +
+      ' 0 0 1 0 ' +
+      r +
+      'Z',
+  );
+}
+function railPaint() {
+  var range = doc.documentElement.scrollHeight - innerHeight,
+    /* A page with no real length has no distance to show. */
+    p = range > innerHeight * 0.25 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
+  if (p === railSeen) return;
+  railSeen = p;
+  rail.classList.toggle('on', p > 0.002);
+  railPath.style.strokeDashoffset = 1 - p;
+}
+addEventListener('scroll', railPaint, { passive: true });
+
+function dockMeasure() {
+  railShape();
+  railPaint();
+  puckGo(puckTo, true);
+}
+dockMeasure();
+addEventListener('resize', dockMeasure);
+if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(dockMeasure);
+
+/* Tapping the page you are already on goes back to the top of it, rather than reloading it. */
+dockLinks.forEach(function (a) {
+  if (a.getAttribute('aria-current') !== 'page') return;
+  a.addEventListener('click', function (e) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   });
 });
-dock.addEventListener('pointerleave', function () {
-  slide.style.opacity = 0;
+
+/* The hands. Each link can deal its cards up out of the pill. Only for a mouse on a wide screen,
+   or a keyboard (the up arrow opens one; Escape folds it and hands focus back). A phone taps the
+   link and gets the page, which has everything a hand has. */
+var canDeal = matchMedia(
+    '(hover: hover) and (pointer: fine) and (min-width: 56rem) and (min-height: 36rem)',
+  ),
+  hands = [],
+  handOpen = null,
+  handWait = 0,
+  handRaf = 0,
+  handLast = 0;
+dockLinks.forEach(function (a) {
+  var fan = a.nextElementSibling;
+  puckEnter(a);
+  if (!fan || !fan.hasAttribute('data-fan')) return;
+  var cards = [].slice.call(fan.querySelectorAll('.fc')),
+    mid = (cards.length - 1) / 2,
+    cap = fan.querySelector('[data-fan-cap]'),
+    hand = {
+      a: a,
+      fan: fan,
+      to: 0,
+      cards: cards.map(function (el, i) {
+        var d = i - mid;
+        el.style.setProperty('--d', d);
+        el.style.setProperty('--far', Math.round(Math.abs(d)));
+        return { el: el, s: ui.spring(170, 17, 0), wait: Math.abs(d) * 26 };
+      }),
+    };
+  hands.push(hand);
+  if (canDeal.matches) a.setAttribute('aria-expanded', 'false');
+  if (cap) {
+    cards.forEach(function (el) {
+      var say = function () {
+          cap.textContent = el.dataset.cap;
+        },
+        rest = function () {
+          cap.textContent = cap.dataset.rest;
+        };
+      el.addEventListener('pointerenter', say);
+      el.addEventListener('focus', say);
+      el.addEventListener('pointerleave', rest);
+      el.addEventListener('blur', rest);
+    });
+  }
+  a.addEventListener('pointerenter', function (e) {
+    if (e.pointerType !== 'mouse' || !canDeal.matches) return;
+    clearTimeout(handWait);
+    /* A pointer just passing through the dock on its way somewhere does not deal anything. */
+    handWait = setTimeout(
+      function () {
+        handShow(hand);
+      },
+      handOpen ? 0 : 90,
+    );
+  });
+  a.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowUp' || !canDeal.matches) return;
+    e.preventDefault();
+    handShow(hand);
+    var first = fan.querySelector('a');
+    if (first) first.focus({ preventScroll: true });
+  });
+  fan.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handHide();
+      a.focus();
+    }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      var all = [].slice.call(fan.querySelectorAll('a')),
+        at = all.indexOf(doc.activeElement);
+      if (at < 0) return;
+      e.preventDefault();
+      all[(at + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length].focus({
+        preventScroll: true,
+      });
+    }
+  });
+  fan.addEventListener('focusout', function (e) {
+    if (!dock.contains(e.relatedTarget) && handOpen === hand) handHide();
+  });
 });
+function puckEnter(a) {
+  a.addEventListener('pointerenter', function () {
+    /* The action has its own color, so the puck stays home for it. */
+    puckGo(a.classList.contains('go') ? puckRest : a);
+  });
+}
+dock.addEventListener('pointerleave', function () {
+  puckGo(puckRest);
+  clearTimeout(handWait);
+  handWait = setTimeout(handHide, 180);
+});
+dock.addEventListener('pointerenter', function () {
+  clearTimeout(handWait);
+});
+addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && handOpen && !handOpen.fan.contains(doc.activeElement)) handHide();
+});
+function handMark(hand, open) {
+  hand.to = open ? 1 : 0;
+  hand.opened = performance.now();
+  hand.fan.classList.toggle('on', open);
+  if (hand.a.hasAttribute('aria-expanded')) hand.a.setAttribute('aria-expanded', String(open));
+  if (open) hand.fan.hidden = false;
+}
+function handShow(hand) {
+  if (handOpen === hand) return;
+  if (handOpen) handMark(handOpen, false);
+  handOpen = hand;
+  scrim.classList.add('on');
+  handMark(hand, true);
+  handWake();
+}
+function handHide() {
+  if (!handOpen) return;
+  handMark(handOpen, false);
+  handOpen = null;
+  scrim.classList.remove('on');
+  handWake();
+}
+function handFrame(t) {
+  var dt = Math.min((t - handLast) / 1000, 0.032),
+    alive = false;
+  handLast = t;
+  hands.forEach(function (h) {
+    if (h.fan.hidden) return;
+    var moving = false;
+    h.cards.forEach(function (c) {
+      /* Dealt from the middle out; folded all together, and quicker. */
+      var go = h.to === 0 || t - h.opened >= c.wait;
+      if (reduce) {
+        c.s.x = h.to;
+        c.s.v = 0;
+      } else if (go && c.s.step(h.to, h.to ? dt : dt * 1.5)) {
+        moving = true;
+      } else if (!go) {
+        moving = true;
+      }
+      c.el.style.setProperty('--v', c.s.x.toFixed(4));
+    });
+    if (moving) alive = true;
+    /* A folded hand leaves the tab order and the page's way. */
+    else if (h.to === 0) h.fan.hidden = true;
+  });
+  handRaf = alive ? requestAnimationFrame(handFrame) : 0;
+}
+function handWake() {
+  if (!handRaf) {
+    handLast = performance.now();
+    handRaf = requestAnimationFrame(handFrame);
+  }
+}
 
 /* The client sheet: a window grows into its color and the screens fan out. A window is a plain link
    until this script runs, so it only says it opens a dialog from here on. */

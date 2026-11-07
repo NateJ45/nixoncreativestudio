@@ -1,25 +1,131 @@
 ---
 /* The floating menu. Always there, on every page and every width, so it is the
-   one nav: no drawer, no hamburger, and it works with no script at all. The
-   script only slides the highlight to the link you are near. */
+   one nav: no drawer, no hamburger, and it works with no script at all.
+
+   Each link can also deal a small hand of real shortcuts out of the pill: the
+   client phones from Work, the three prices from Prices, a way to reach me from
+   Start a project. A hand is plain markup, `hidden` until kit.js opens it on a
+   wide screen with a mouse, or from the keyboard with the up arrow. Nothing in a
+   hand is the only way to reach anything: each link's page has it all. */
+import { site } from '../data/site';
+import { getClients } from '../lib/clients';
+import { webTiers } from '../data/pricing';
+import { money } from '../lib/money';
+
 const path = Astro.url.pathname;
-const links = [
-  { href: '/work/', label: 'Work' },
-  { href: '/services/', label: 'Prices' },
-  { href: '/about/', label: 'About' },
-  { href: '/contact/', label: 'Start a project', cls: 'go' },
-];
+const current = (href: string) =>
+  path === href ? 'page' : path.startsWith(href) ? 'true' : undefined;
+const clients = await getClients();
+const faces = ['paper', 'blue', 'ink'];
+const deck = 'Eight selected case studies';
 ---
 
+{/* The dock rises in on arrival, not on every page: a page reached from this site
+    finds it already there, so the view transition can hold it still. */}
+<script is:inline>
+  if (document.referrer.indexOf(location.origin + '/') === 0) {
+    document.documentElement.classList.add('dock-here');
+  }
+</script>
+<span class="dock-scrim" data-dock-scrim aria-hidden="true"></span>
 <nav class="dock" aria-label="Primary">
   <span class="slide" data-slide></span>
-  {links.map((l) => (
-    <a
-      href={l.href}
-      class={l.cls}
-      aria-current={path === l.href ? 'page' : path.startsWith(l.href) ? 'true' : undefined}
-    >
-      {l.label}
+  <svg class="dk-rail" data-rail aria-hidden="true">
+    <path pathLength="1"></path>
+  </svg>
+
+  <a
+    class="home"
+    href="/"
+    aria-label={`${site.studioName}, home`}
+    aria-current={path === '/' ? 'page' : undefined}
+  >
+    N
+  </a>
+
+  <a href="/work/" aria-current={current('/work/')}>
+    Work
+  </a>
+  <div class="dk-hand" data-fan hidden>
+    <p class="dk-cap" aria-hidden="true" data-fan-cap data-rest={deck}>
+      {deck}
+    </p>
+    {clients.map((s) => (
+      <a
+        class="fc fc-phone"
+        href={s.study}
+        style={`--c:${s.accent}`}
+        aria-label={`${s.name}, ${s.sector}`}
+        data-cap={`${s.name}, ${s.sector}`}
+      >
+        <span class="fc-in">
+          <img src={s.still} alt="" loading="lazy" width="584" height="1138" />
+        </span>
+      </a>
+    ))}
+  </div>
+
+  <a href="/services/" aria-current={current('/services/')}>
+    Prices
+  </a>
+  <div class="dk-hand" data-fan hidden>
+    <p class="dk-cap" aria-hidden="true" data-fan-cap data-rest="Starting prices">
+      Starting prices
+    </p>
+    {webTiers.map((t, i) => (
+      <a class={`fc fc-price fc-${faces[i]}`} href="/services/#websites" data-cap={t.who}>
+        <span class="fc-in">
+          <span class="pip" aria-hidden="true">
+            {t.name.charAt(0)}
+          </span>
+          <span class="pip flip" aria-hidden="true">
+            {t.name.charAt(0)}
+          </span>
+          <span class="label">{t.name}</span>
+          <strong>{money(t.priceFrom)}</strong>
+        </span>
+      </a>
+    ))}
+  </div>
+
+  <a href="/about/" aria-current={current('/about/')}>
+    About
+  </a>
+  <div class="dk-hand" data-fan hidden>
+    <a class="fc fc-me" href="/about/#sh">
+      <span class="fc-in">
+        <img src="/assets/portrait.webp" alt="" loading="lazy" />
+        <span class="fc-text">
+          <strong>{site.ownerName}</strong>
+          <span>One person does the design, the build and, when needed, the photos.</span>
+        </span>
+      </span>
     </a>
-  ))}
+  </div>
+
+  <a href="/contact/" class="go" aria-current={current('/contact/')}>
+    Start<span class="dk-more"> a project</span>
+  </a>
+  <div class="dk-hand" data-fan hidden>
+    <div class="fc fc-yours">
+      <span class="fc-in">
+        <span class="pip" aria-hidden="true">
+          Y
+        </span>
+        <span class="pip flip" aria-hidden="true">
+          Y
+        </span>
+        <strong>Yours.</strong>
+        <span class="fc-say">{site.firstConversation}</span>
+        <a href={site.emailHref}>{site.email}</a>
+        <a href={site.phoneHref}>{site.phone}</a>
+      </span>
+    </div>
+  </div>
+
+  {/* The theme flipper's place. ThemeFlip.astro from the dark mode work replaces this
+      drawing with the real button; until then it is only the card, and does nothing. */}
+  <span class="flip-slot" aria-hidden="true">
+    <i>N</i>
+  </span>
 </nav>

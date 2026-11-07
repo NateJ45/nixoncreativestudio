@@ -44,6 +44,7 @@ Declared in `:root` at the top of `kit.css`:
 - Springs are written in JavaScript: `ui.spring(k, c, v)` in `src/scripts/kit.js`, and the per-page scripts use it. CSS motion uses `--ease` or a springy bezier; keep durations short.
 - Page changes are cross-document view transitions (`@view-transition { navigation: auto }` in `kit.css`; the dock keeps `view-transition-name: dock`). There is no router.
 - Every moving thing has a reduced-motion answer: read `ui.reduce` in script, and add the selector to the `@media (prefers-reduced-motion: reduce)` blocks in CSS. Under reduce the view transition and smooth scroll are off, springs start at rest, footage stays a still, and nothing runs after load (`tests/reduced-motion.spec.ts`).
+- The dock's motion (puck, rail, hands) is its own block in `kit.js`. `ui.spring`'s `step` takes an optional third argument, a stiffness for that step, which the puck uses so the leading edge is the quicker one. Class names in the dock are prefixed `dk-` or `fc`: `.fan`, `.rail` and `.more` already mean something on the sheet and the case studies.
 - A hover that lifts its card uses `ui.stillHover` in `kit.js`, so the card cannot lift off the pointer and jitter.
 - There is no Pause motion button and no `data-motion` attribute (the client sheet's looping clip has its own pause button). Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves; nothing else loops by itself.
 
@@ -53,4 +54,4 @@ A card is drawn with a shadow and a background, so `kit.css` gives `.tile`, `.ca
 
 ## Fixed elements
 
-The viewport meta carries `viewport-fit=cover`. The dock sits at `bottom: max(0.9rem, env(safe-area-inset-bottom))` and the mailto toast above it. A new `position: fixed` element at a screen edge adds the matching `env(safe-area-inset-*)`.
+The viewport meta carries `viewport-fit=cover`. The dock (`Dock.astro`, design in `DESIGN.md`) sits at `bottom: max(0.9rem, env(safe-area-inset-bottom))` and the mailto toast above it. A new `position: fixed` element at a screen edge adds the matching `env(safe-area-inset-*)`.
