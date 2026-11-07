@@ -115,3 +115,41 @@ test('old short names are redirected in public/_redirects', async () => {
   expect(text).toMatch(/^\/start\/ \/contact\/ 301$/m);
   expect(text).toMatch(/^\/start \/contact\/ 301$/m);
 });
+
+// The top line's status opens a card with no script at all: it is a native popover.
+test.describe('The top line', () => {
+  test('the status deals the contact card, and Escape puts it back', async ({ page }) => {
+    await page.goto('/');
+    const card = page.locator('[data-reach]');
+    await expect(card).toBeHidden();
+    await page.locator('.top .status').click();
+    await expect(card).toBeVisible();
+    await expect(card.locator('a[href^="tel:"]')).toHaveCount(1);
+    await expect(card.locator('a[href^="mailto:"]')).toHaveCount(1);
+    await expect(card.locator('a[href="/contact/"]')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(card).toBeHidden();
+  });
+
+  test('scrolling up brings the corners back as pills, and the top puts them away', async ({
+    page,
+  }) => {
+    await page.goto('/about/');
+    const top = page.locator('[data-top]');
+    await page.evaluate(() => scrollTo({ top: 1200, behavior: 'instant' }));
+    await expect(top).not.toHaveClass(/float/);
+    await page.evaluate(() => scrollTo({ top: 1100, behavior: 'instant' }));
+    await expect(top).toHaveClass(/float/);
+    await expect(top.locator('.mark')).toBeInViewport();
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+    await expect(top).not.toHaveClass(/float/);
+  });
+
+  test('the pills leave a stuck bar its spot', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/work/');
+    await page.evaluate(() => scrollTo({ top: 1600, behavior: 'instant' }));
+    await page.evaluate(() => scrollTo({ top: 1400, behavior: 'instant' }));
+    await expect(page.locator('[data-top]')).not.toHaveClass(/float/);
+  });
+});
