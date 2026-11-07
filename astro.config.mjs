@@ -4,7 +4,8 @@ import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { journalOpen } from './src/data/journal-gate.ts';
 import { photographyOpen } from './src/data/photography-gate.ts';
 
 // The /photography gate (overhaul 2.8). The sitemap filter runs before the
@@ -15,6 +16,21 @@ const photoFiles = readdirSync(new URL('./src/content/photos/', import.meta.url)
   recursive: true,
 }).filter((name) => String(name).endsWith('.json')).length;
 const photographyIsOpen = photographyOpen(photoFiles);
+
+// The /journal gate: the same idea, counting published entries (drafts stay out).
+const journalDir = new URL('./src/content/journal/', import.meta.url);
+const journalEntries = existsSync(journalDir)
+  ? readdirSync(journalDir, { recursive: true })
+      .map(String)
+      .filter((name) => /\.mdx?$/.test(name))
+      .filter(
+        (name) =>
+          !/^draft:\s*true/m.test(
+            readFileSync(new URL(name.replaceAll('\\', '/'), journalDir), 'utf8'),
+          ),
+      ).length
+  : 0;
+const journalIsOpen = journalOpen(journalEntries);
 
 // =============================================================================
 // Astro config
@@ -75,11 +91,13 @@ export default defineConfig({
     // /coming-soon/ is the pre-launch gate page, not content: it is noindex
     // (see src/pages/coming-soon.astro), and a sitemap must not list a
     // noindex page (Search Console flags the mismatch).
-    // Out of the sitemap: the Coming Soon gate and, while its gate is closed, the
-    // noindex /photography/ page.
+    // Out of the sitemap: the Coming Soon gate and, while their gates are closed, the
+    // noindex /photography/ and /journal/ pages.
     sitemap({
       filter: (page) =>
-        !page.includes('/coming-soon') && (photographyIsOpen || !page.includes('/photography')),
+        !page.includes('/coming-soon') &&
+        (photographyIsOpen || !page.includes('/photography')) &&
+        (journalIsOpen || !page.includes('/journal')),
     }),
   ],
 });
