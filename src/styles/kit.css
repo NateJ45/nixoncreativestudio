@@ -124,17 +124,17 @@ p {
   white-space: pre;
 }
 /* A piece of the top line that can fold away sideways. */
-.fold {
+.nm-fold {
   display: inline-grid;
   grid-template-columns: 1fr;
   transition: grid-template-columns 0.5s var(--ease);
 }
-.fold > span {
+.nm-fold > span {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
 }
-.mark .fold > span {
+.mark .nm-fold > span {
   padding-left: 0.26em;
 }
 .status {
@@ -149,11 +149,11 @@ p {
   font-size: 0.9375rem;
   cursor: pointer;
 }
-.status .fold {
+.status .nm-fold {
   /* The word gap lives inside the fold, so nothing is left behind when it closes. */
   margin-left: -0.5rem;
 }
-.status .fold > span {
+.status .nm-fold > span {
   padding-left: 0.26em;
 }
 .status:hover,
@@ -183,7 +183,7 @@ p {
   rotate: 180deg;
 }
 @media (max-width: 52rem) {
-  .fold.wide {
+  .nm-fold.wide {
     display: none;
   }
 }
@@ -213,11 +213,11 @@ p {
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 14px 34px -12px rgba(0, 0, 0, 0.34);
 }
-.top.float .fold {
+.top.float .nm-fold {
   grid-template-columns: 0fr;
 }
-.top.float .mark:hover .fold,
-.top.float .mark:focus-visible .fold {
+.top.float .mark:hover .nm-fold,
+.top.float .mark:focus-visible .nm-fold {
   grid-template-columns: 1fr;
 }
 .top.float.on-color .mark,
@@ -327,7 +327,7 @@ p {
   margin-top: 1.1rem;
 }
 @media (prefers-reduced-motion: reduce) {
-  .fold,
+  .nm-fold,
   .status svg,
   .reach {
     transition: none;

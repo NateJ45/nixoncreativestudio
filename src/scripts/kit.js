@@ -777,7 +777,7 @@ if (topLine) {
       /* Each letter is locked to the width it has at rest, kerning included, so a heavier letter
          thickens in place and the name never shifts under the pointer. */
       letters = [];
-      [mark.querySelector('b'), mark.querySelector('.fold > span')].forEach(function (part) {
+      [mark.querySelector('b'), mark.querySelector('.nm-fold > span')].forEach(function (part) {
         var text = part.firstChild,
           value = text.nodeValue,
           rest = parseInt(getComputedStyle(part).fontWeight, 10),
