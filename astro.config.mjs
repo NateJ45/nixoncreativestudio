@@ -7,6 +7,7 @@ import sitemap from '@astrojs/sitemap';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { journalOpen } from './src/data/journal-gate.ts';
 import { photographyOpen } from './src/data/photography-gate.ts';
+import { frontmatterLastmod } from './src/lib/sitemap-dates.ts';
 
 // The /photography gate (overhaul 2.8). The sitemap filter runs before the
 // content layer exists, so count the photos collection's JSON files here, the
@@ -31,6 +32,21 @@ const journalEntries = existsSync(journalDir)
       ).length
   : 0;
 const journalIsOpen = journalOpen(journalEntries);
+
+// Real dates for the sitemap's <lastmod>: case studies and journal entries, read from their
+// frontmatter. Pages with no date in their content get no lastmod (src/lib/sitemap-dates.ts).
+const lastmodByPath = new Map();
+for (const [folder, base] of [
+  ['./src/content/case-studies/', '/work/'],
+  ['./src/content/journal/', '/journal/'],
+]) {
+  const dir = new URL(folder, import.meta.url);
+  if (!existsSync(dir)) continue;
+  for (const name of readdirSync(dir).filter((file) => file.endsWith('.mdx'))) {
+    const date = frontmatterLastmod(readFileSync(new URL(name, dir), 'utf8'));
+    if (date) lastmodByPath.set(`${base}${name.replace(/\.mdx$/, '')}/`, date);
+  }
+}
 
 // =============================================================================
 // Astro config
@@ -98,6 +114,10 @@ export default defineConfig({
         !page.includes('/coming-soon') &&
         (photographyIsOpen || !page.includes('/photography')) &&
         (journalIsOpen || !page.includes('/journal')),
+      serialize: (item) => {
+        const lastmod = lastmodByPath.get(new URL(item.url).pathname);
+        return lastmod ? { ...item, lastmod } : item;
+      },
     }),
   ],
 });

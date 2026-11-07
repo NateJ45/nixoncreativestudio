@@ -53,6 +53,23 @@
   # for a static portfolio, but it's free and good hygiene.
   Cross-Origin-Opener-Policy: same-origin
 
+  # Switch off browser features this site never uses, so a script that got in
+  # somehow cannot ask for them either. An empty list means no one, not even us.
+  Permissions-Policy: accelerometer=(), browsing-topics=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+
+  # Content-Security-Policy, REPORT-ONLY: the browser logs what it would have
+  # blocked and blocks nothing. What each source is for, how to read the reports
+  # and how to start enforcing: docs/claude/deployment.md. Never rename this
+  # header to enforce it without doing those checks.
+  # The two hash markers in it are filled in by scripts/write-csp.mjs during the
+  # build, with the hash of every inline script and style in dist/client.
+  # Allowed from elsewhere: GA4 (googletagmanager, google-analytics), the
+  # Cloudflare beacon (cloudflareinsights) and the contact form (web3forms).
+  # style-src-attr needs unsafe-inline because a client's colors arrive as
+  # style="--c: ...; --p: ..." attributes, which hashes cannot cover. Style-src is
+  # the fallback for browsers that do not know the two more exact directives.
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' __CSP_SCRIPT_HASHES__ https://static.cloudflareinsights.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; style-src-elem 'self' __CSP_STYLE_HASHES__; style-src-attr 'unsafe-inline'; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.web3forms.com https://cloudflareinsights.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; form-action 'self' https://api.web3forms.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+
 
 # -----------------------------------------------------------------------------
 # Immutable, content-hashed build assets
