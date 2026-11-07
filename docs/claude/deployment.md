@@ -82,4 +82,4 @@ Set in the dashboard (nixoncreativestudio.com, Rules, Redirect Rules), not in th
 
 ## Video and byte ranges
 
-A static build deploys as assets only, and the adapter drops any Worker named in `wrangler.jsonc`. Static assets answer a Range request with a plain 200, and iPhones will not play a clip that way. So `scripts/add-video-worker.mjs`, the last step of `npm run build`, adds `src/worker.ts` to `dist/client/wrangler.json` with `run_worker_first` limited to `*.mp4`. Everything else is still served as a plain asset. To check it live, request a clip with `Range: bytes=0-1` and expect a 206.
+A static build deploys as assets only, and the adapter drops any Worker named in `wrangler.jsonc`. Static assets answer a Range request with a plain 200, and iPhones will not play a clip that way. So `scripts/add-video-worker.mjs`, the last step of `npm run build`, adds `src/worker.ts` to `dist/client/wrangler.json` with `run_worker_first` limited to `*.mp4` and `*.webm`. Everything else is still served as a plain asset. To check it live, request a clip with `Range: bytes=0-1` and expect a 206.

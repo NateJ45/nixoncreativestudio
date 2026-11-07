@@ -60,7 +60,7 @@ The tokens live in `:root` at the top of `src/styles/kit.css`, and the CSS wins 
 **The idea: a calm page, and a deck of real client sites.** The page is a quiet neutral so that the work can be loud. Each client brings one rich color inside a phone window, and everything that moves, moves with a little weight, like a card being dealt. The studio itself owns exactly one color, a blue, and uses it sparingly.
 
 - **One typeface.** Hanken Grotesk, self-hosted as one variable file (`public/assets/fonts/hanken.woff2`) and preloaded in `BaseLayout.astro`.
-- **One light theme.** There is no dark mode, no theme toggle and no Pause motion button. Reduced motion is the one preference the site answers, and it answers it everywhere.
+- **One light theme.** There is no dark mode, no theme toggle and no Pause motion button (the one pause button on the site belongs to the client sheet's looping clip). Reduced motion is the one preference the site answers, and it answers it everywhere.
 - **Plain CSS.** Shared styles are in `src/styles/kit.css`; each page imports its own file from `src/styles/pages/`. There are no utility classes and no framework.
 - **Real markup first.** The top line, the dock, the closing and every window are in the HTML. Scripts only move them, so a page reads and links correctly with JavaScript off.
 
@@ -89,6 +89,7 @@ Rules:
 One family, set in weight and spacing rather than in different faces.
 
 - **Headings** (h1 to h3, `.end h2`, `blockquote`, `.mark`): weight 500, `letter-spacing: -0.04em`, line-height about 1, `text-wrap: balance`. Emphasis is a `<b>` at weight 700, never a colour alone and never capitals.
+- **The display scale** is three tokens in `:root`: `--type-h1` for a page's H1 and the closing's line, `--type-h2` for a section, `--type-h3` for a card. Peer headings use the same token. A case study H1 is `--type-h1` unless the client's name is long enough to need less room. The homepage headline, the `.giant` lines and the long-form `.prose` headings sit outside it on purpose.
 - **Body**: 400 at 1.0625rem and 1.45 line-height.
 - **`.label`**: the small label voice for figures, counts and facts. 0.8125rem, weight 500, uppercase, `0.07em` tracking, tabular numbers, `--soft`. Still Hanken, set small and even so numbers line up.
 - **The wordmark** is the whole name in Hanken, with "Nixon" at 700 and the rest at 500 (`.mark`). The OG cards and the favicon draw the same name from the two static weights in `brand/fonts/`.
@@ -96,14 +97,14 @@ One family, set in weight and spacing rather than in different faces.
 ### Big lines
 
 - **`.giant`** is the one big line on a page. Put it in a `.big` container (a size container) and it is sized in `cqw` so it fills the line and never overflows. Set `--fit` (wide screens) and `--fitm` (phones, under 52rem) on the element to the number of container-widths the words need: `style="--fit: 20; --fitm: 20"`. On a phone each child span or `<b>` becomes its own nowrap line. Check at 320px.
-- **`[data-weigh]`** on a `.giant` makes it gain weight, thin to heavy, as you scroll to it. `kit.js` drives it; with reduced motion it simply stays at its CSS weight.
+- **`[data-weigh]`** on a `.giant` makes it gain weight, thin to heavy, as you scroll to it. A value sets where: `data-weigh="0.38 0.06"` on the home line runs the gain while its top goes from 38 to 6 percent of the screen, because the dealt phones cover it until then. `kit.js` drives it; with reduced motion it simply stays at its CSS weight.
 - **The H1 reveal.** Each word is wrapped in `<span class="w">` in the markup by `wordSpans()` in `src/lib/words.ts` (`PageHead.astro` does it for a page head), and the H1 carries the plain sentence as its `aria-label`. Words fade in from opacity .02 with a blur on `.js` only. That near-zero start is deliberate: it paints, so it does not cost LCP, and it is the one exception to "nothing in the first viewport starts hidden". The small `.me` portrait in the home headline is exempt in `tests/first-viewport.spec.ts` for the same reason.
 
 ## 4. The deck
 
 Cards are the site's one repeated object, and they are written like playing cards without the suits.
 
-- **A card is lettered or numbered in two opposite corners with `.pip`**, the far one `.pip.flip`, upside down. Both are `aria-hidden`. The price cards use `L`, `S` and `F` (the first letter of the tier), the contact form uses the question number, the About card uses `+` and the minus sign. No suits, no spades or hearts.
+- **A portrait or near-portrait card is lettered or numbered in two opposite corners with `.pip`**, the far one `.pip.flip`, upside down. Both are `aria-hidden`. A wide landscape box (a case study decision, a Churches point, an add-on, the contact form when wide) keeps one corner mark only: upside down on a wide box it reads as a typo. The price cards use `L`, `S` and `F` (the first letter of the tier), the contact form uses the question number, the About card uses `+` and the minus sign. No suits, no spades or hearts.
 - **`.keyed`** (and `.pc-face`) draws a faint inner rule inside the card, like the border on a face card.
 - **A client's window** is `.tile`: a phone browser window with the client's host in the address bar, their footage on the screen, and their color around it. It is a real link to the case study; with JavaScript a click opens the client sheet instead, unless `data-direct` keeps it a link. `Caption` sits under it with the name and sector, numbered like `01 Nonprofit` when it has a place in the deck.
 - **The price hand** (`PriceHand.astro`, `ui.priceHand`) is three cards, paper, blue and ink. On a wide screen they are dealt out of one stack into a fan; on a phone CSS stacks them.
@@ -118,11 +119,12 @@ Shapes: cards 1.25rem, bands and the closing 1.75rem, buttons and the dock fully
 
 ## 6. Components
 
+- **The page edge.** Everything starts on one left edge, the 90rem page. A full-bleed block (the top line, the closing, a case study hero, the home quote band) keeps its color edge to edge and pads its contents with `--edge` so they meet it.
 - **Top line** (`TopLine.astro`): the name on the left, "Booking projects, {city}" on the right when `site.bookingOpen`. Positioned over the hero, not sticky. On a client's color it flips with `onColor`.
 - **Dock** (`Dock.astro`): the one nav at every width. A floating pill at the bottom of the screen with plain links (Work, Prices, About, Start a project), no drawer and no menu button. It works with no script; `kit.js` only slides a highlight to the link you are near. It keeps `view-transition-name: dock` so it stays put between pages.
 - **Closing** (`Closing.astro`): the studio blue, edge to edge, down to the bottom of every page. The page's line, the first-conversation and reply-time sentences from `site.ts`, the way to reach me, the deck, the name, and a legal line that gains Journal and Photography when those open (`getGatedNav()`).
 - **Quote band** (`QuoteBand.astro`): a client's own words on their own color, with their phone breaking out of the band. Real quotes only, read from the study's frontmatter.
-- **Client sheet** (`ClientSheet.astro`): a native `<dialog>`. A window grows into its color and the screens fan out; Back and Escape close it.
+- **Client sheet** (`ClientSheet.astro`): a native `<dialog>`. A window grows into its color and the screens fan out; its button, Escape and the browser's Back close it, because opening it adds a history entry. Coming back from a case study reopens it. Its looping clip has a pause button (WCAG 2.2.2).
 - **Chips**: `.chip` is the white pill, `.chip.go` the blue one, `.chip.ghost` the translucent one for use on a color. 48px tall.
 
 ## 7. Motion
@@ -131,7 +133,9 @@ House motion is **springs, in JavaScript**. `ui.spring(k, c, v)` in `src/scripts
 
 - **Scroll deals the cards.** The hero hand of clients is dealt as you scroll (`home.js`), the closing deck gathers as you reach it, and a quote band opens out as it arrives.
 - **Page changes** are cross-document view transitions (`@view-transition` in `kit.css`), not a router. Scripts simply run on load.
-- **Footage is fetched only when asked for.** A window's video has `preload="none"` and its address in `data-src`. It plays on hover, or on a touch screen while the window is centred, two at most; nothing is downloaded at load.
+- **Footage is fetched only when asked for.** A window's video has `preload="none"` and its address in `data-src`. It plays on hover, or on a touch screen while the window is centred, two at most; nothing is downloaded at load, and with Data Saver on nothing is fetched at all.
+- **Hover holds still.** A card that lifts can lift off the pointer, so `ui.stillHover` remembers where it rested and only lets go when the pointer is 40px outside that, or on another card. Home tiles, the price hand, the ninth card and footage all use it.
+- **A page that loads already scrolled replays nothing.** After a reload or Back, the home deal and the /work table are simply laid (`ui.restored()`).
 
 **Reduced motion stands everything down.** Under `prefers-reduced-motion: reduce`: the view transition is switched off, smooth scrolling is off, springs start at their rest value, the H1 words and the dock arrive in place, the hero hand is already dealt, the closing deck is already gathered, `[data-weigh]` headings stay put, footage never plays and the window stays on its poster still, and the sheet and chip transitions are off. `tests/reduced-motion.spec.ts` checks that nothing is still running a couple of seconds after load.
 
@@ -141,7 +145,7 @@ House motion is **springs, in JavaScript**. `ui.spring(k, c, v)` in `src/scripts
 
 - Let a client's color fill their own window, band or sheet, and keep the page around it neutral.
 - Size a big line from the words in it (`--fit`, `--fitm`) and check it at 320px.
-- Letter a card in two corners with `.pip` and `.pip.flip`.
+- Letter a portrait card in two corners with `.pip` and `.pip.flip`, and a wide box in one.
 - Rule non-cards with hairlines.
 - Use springs for anything that should move with weight, and give every moving thing a reduced-motion answer.
 - Keep chrome and content in the markup, and let scripts only enhance.

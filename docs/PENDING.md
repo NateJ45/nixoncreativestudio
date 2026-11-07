@@ -19,6 +19,10 @@ Read this file early in any session on this repo.
 
 The Linux baselines in `tests/visual.spec.ts-snapshots/` were removed with the old design, and the spec now shoots light only (there is one theme). Run `gh workflow run visual.yml --ref <branch> -f update=true`, review the PNGs, push an empty commit to the PR branch so CI runs, and merge (steps in `docs/TESTING.md`). Until then `visual.yml` has nothing to compare against. It is not a required check, so nothing is blocked.
 
+### A2. Check security.txt after the next deploy (added 2026-11-07)
+
+Live, `/.well-known/security.txt` shows the personal Gmail, but no such file was in this repo: it appears to come from the Cloudflare zone's security.txt setting. The repo now ships `public/.well-known/security.txt` with the studio address. If the live file still shows the Gmail after a deploy, turn off or update that setting in the Cloudflare dashboard (Security Center).
+
 ### B. Build a non-React gallery for /photography (added 2026-11-06; was overhaul package 4.6)
 
 The React gallery (`react-photo-album`, `yet-another-react-lightbox`, `Photo.tsx`, `PhotoGallery.tsx`) was removed with React. When the photos exist (item 2f), /photography needs a new gallery in plain markup and a small script, in the deck's style (`DESIGN.md`), reading the `photos` collection. It must pass `tests/no-react.spec.ts` without an exception.

@@ -24,6 +24,8 @@ The nav is the dock (`src/components/Dock.astro`): Work, Prices (`/services/`), 
 
 `nav.ts` now holds only `getGatedNav()`: two pages that join the closing's legal line once they have earned a link, so a link never points at an empty page. **Journal** appears once an entry is published (drafts count in `npm run dev` only, the same filter as /journal), and **Photography** once the `photos` collection holds `MIN_PHOTOS` (6) or more real photographs. Today both are off. Every href ends in a slash.
 
+**The /journal gate.** `journalOpen(count)` in `src/data/journal-gate.ts`: with no published entry the page is noindex and out of the sitemap, and the closing has no link to it. `tests/journal-gate.spec.ts` checks it.
+
 **The /photography gate.** One rule, `photographyOpen(count)` in `src/data/photography-gate.ts`, decides four things together: the closing's link (`nav.ts`), the page's robots `noindex` (BaseLayout's `noindex` prop, set in `src/pages/photography.astro`), the sitemap filter in `astro.config.mjs` (which counts the JSON files in `src/content/photos/` itself, because the content layer does not exist yet when the config runs), and the Photography line in `/llms.txt`. While it is closed the page still builds at `/photography/`: one portrait, the line "I photograph events, portraits and places across Cincinnati. The gallery is being assembled; ask for samples.", and a button to `/contact/?service=photography`. Never put placeholder images on it. `tests/photography-gate.spec.ts` checks all of this against the real photo count. Ungating is in `docs/PENDING.md`.
 
 ## Content collections
