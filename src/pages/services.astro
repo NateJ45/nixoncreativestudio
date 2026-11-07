@@ -24,7 +24,7 @@ import { webTiers as tiers, addOns, carePlans, customWorkRate, freeToMove } from
 import { SITUATIONS, sectorPagePath } from '../data/sector-pages';
 import { getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
-import { hostingOnlyFiveYears, tierCosts } from '../lib/tier-costs';
+import { tierCosts } from '../lib/tier-costs';
 import { addOnNamed, addOnOffer, careOffers, ids, tierOffers } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
 
@@ -429,40 +429,51 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </div>
       <table class="cost-table">
         <caption class="vh">
-          The cost of each tier with a named care plan: first year, three years and five years
+          The cost of each tier on Hosting alone, then with a care plan that includes hosting: first
+          year, three years and five years
         </caption>
         <thead>
           <tr>
-            <th scope="col">Tier and care plan</th>
+            <th scope="col">Tier and plan</th>
             <th scope="col">Year one</th>
             <th scope="col">Three years</th>
             <th scope="col">Five years</th>
           </tr>
         </thead>
-        <tbody>
-          {costs.map((c) => (
+        {costs.map((c) => (
+          <tbody>
             <tr>
               <th scope="row">
                 <b>{c.tier.name}</b>
                 <span>
-                  with {c.plan.name}, {`${c.plan.price}${c.plan.period}`}
+                  {c.hostingPlan.name} only, {`${c.hostingPlan.price}${c.hostingPlan.period}`}
+                </span>
+              </th>
+              <td data-label="Year one">{money(c.hostingOnly.yearOne)}</td>
+              <td data-label="Three years">{money(c.hostingOnly.threeYears)}</td>
+              <td data-label="Five years">{money(c.hostingOnly.fiveYears)}</td>
+            </tr>
+            <tr class="with-care">
+              <th scope="row">
+                <b>{c.tier.name}</b>
+                <span>
+                  With {c.plan.name}, {`${c.plan.price}${c.plan.period}`}, hosting included
                 </span>
               </th>
               <td data-label="Year one">{money(c.yearOne)}</td>
               <td data-label="Three years">{money(c.threeYears)}</td>
               <td data-label="Five years">{money(c.fiveYears)}</td>
             </tr>
-          ))}
-        </tbody>
+          </tbody>
+        ))}
       </table>
       <p class="after">
-        How I worked these out: each tier's starting price, with year one hosting included, so the
-        care plan is billed from year two and every year after, at today's prices. A build that
-        lands higher in its range adds the difference, and custom work, photography or a paid editor
-        plan would be extra. The pairings are examples, and you pick your care level from year two.
-        On {hosting.name} alone, at {hosting.price} a year, five years of {launch.name} comes to{' '}
-        {money(hostingOnlyFiveYears(launch))}, and you make every change yourself. Sites with custom
-        tools need {care.name} or above.
+        How I worked these out: each tier's starting price, with year one hosting included, so
+        hosting or a care plan is billed from year two and every year after, at today's prices. On{' '}
+        {hosting.name} alone you make every change yourself; a care plan adds edit time and faster
+        replies, and the care pairings are examples. A build that lands higher in its range adds the
+        difference, and custom work, photography or a paid editor plan would be extra. Sites with
+        custom tools need {care.name} or above.
       </p>
       <p class="costs-go">
         <a class="chip" href="/one-page/">

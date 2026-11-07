@@ -84,30 +84,30 @@ const servicesUrl = `${site.domain}/services/`;
                 <th scope="row">
                   <b>{c.tier.name}</b>
                   <span>{c.tier.who}</span>
-                  <span>
-                    With {c.plan.name}, {`${c.plan.price}${c.plan.period}`}
-                  </span>
                 </th>
                 <td>{c.tier.responsible}</td>
-                <td class="n" data-label="Year one">
-                  {money(c.yearOne)}
-                </td>
-                <td class="n" data-label="Three years">
-                  {money(c.threeYears)}
-                </td>
-                <td class="n" data-label="Five years">
-                  {money(c.fiveYears)}
-                </td>
+                {(['yearOne', 'threeYears', 'fiveYears'] as const).map((k, i) => (
+                  <td class="n" data-label={['Year one', 'Three years', 'Five years'][i]}>
+                    <span class="op-sum">
+                      <small>{c.hostingPlan.name} only</small>
+                      {money(c.hostingOnly[k])}
+                    </span>
+                    <span class="op-sum">
+                      <small>With {c.plan.name}</small>
+                      {money(c[k])}
+                    </span>
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
         <p class="op-small">
-          Each sum is the tier's starting price with year one hosting included, so care is billed
-          from year two, at today's prices. A build that lands higher in its range adds the
-          difference, and custom work or photography would be extra. You pick your care level from
-          year two. {hostingPlan.name} alone is {hostingPlan.price} a year, for an organization that
-          edits everything itself.
+          Each sum is the tier's starting price with year one hosting included, then{' '}
+          {hostingPlan.name}
+          alone ({hostingPlan.price} a year, you make every change) or the care plan shown, which
+          includes hosting, from year two at today's prices. A build that lands higher in its range
+          adds the difference, and custom work or photography would be extra.
         </p>
       </section>
 
