@@ -14,10 +14,10 @@ test('year one Hosting is included, so Hosting starts in year two', () => {
   assert.equal(costOver(5000, 200, 5), 5800);
 });
 
-test('a care plan is billed from the first month', () => {
-  assert.equal(careOver(5000, 828, 1), 5828);
-  assert.equal(careOver(5000, 828, 3), 7484);
-  assert.equal(careOver(5000, 828, 5), 9140);
+test('care is an add-on from the first month, with Hosting still paid from year two', () => {
+  assert.equal(careOver(5000, 828, 200, 1), 5828);
+  assert.equal(careOver(5000, 828, 200, 3), 7884);
+  assert.equal(careOver(5000, 828, 200, 5), 9940);
 });
 
 test('the three published rows', () => {
@@ -29,9 +29,9 @@ test('the three published rows', () => {
     r.fiveYears,
   ]);
   assert.deepEqual(rows, [
-    ['Launch', 'Light Care', 4208, 5624, 7040],
-    ['Signature', 'Care', 8048, 11144, 14240],
-    ['Flagship', 'Care+', 15608, 21824, 28040],
+    ['Launch', 'Light Care', 4208, 6024, 7840],
+    ['Signature', 'Care', 8048, 11544, 15040],
+    ['Flagship', 'Care+', 15608, 22224, 28840],
   ]);
 });
 
