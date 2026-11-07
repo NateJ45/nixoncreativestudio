@@ -163,3 +163,19 @@ test('/robots.txt allows the AI crawlers and keeps the sitemap', async ({ reques
   expect(text).not.toMatch(/Disallow:\s*\/\s*$/m);
   expect(text).toContain('Sitemap: https://nixoncreativestudio.com/sitemap-index.xml');
 });
+
+test('the sitemap dates case studies from their frontmatter and invents nothing else', async ({
+  request,
+}) => {
+  const xml = await (await request.get('/sitemap-0.xml')).text();
+  const urls = [...xml.matchAll(/<url>(.*?)<\/url>/gs)].map((m) => m[1]);
+  const dated = urls.filter((url) => url.includes('<lastmod>'));
+  // Every dated URL is a case study (or, once open, a journal entry), and every study is dated.
+  for (const url of dated) expect(url).toMatch(/\/(work|journal)\/[a-z0-9-]+\//);
+  const studies = urls.filter((url) => /\/work\/[a-z0-9-]+\/</.test(url));
+  expect(studies.length).toBeGreaterThan(0);
+  for (const url of studies) expect(url).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}/);
+  // A page with no date in its content carries none.
+  const prices = urls.find((url) => url.includes('/services/'));
+  expect(prices).not.toContain('<lastmod>');
+});

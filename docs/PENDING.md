@@ -19,6 +19,10 @@ Read this file early in any session on this repo.
 
 The Linux baselines in `tests/visual.spec.ts-snapshots/` were removed with the old design, and the spec now shoots light only (there is one theme). Run `gh workflow run visual.yml --ref <branch> -f update=true`, review the PNGs, push an empty commit to the PR branch so CI runs, and merge (steps in `docs/TESTING.md`). Until then `visual.yml` has nothing to compare against. It is not a required check, so nothing is blocked.
 
+### A1. Decide about Cloudflare's injected script, then enforce the CSP (added 2026-11-07)
+
+The Content-Security-Policy ships report-only (`docs/claude/deployment.md`). Everything the build makes passes it (`tests/csp.spec.ts`). On the live site, the one thing that reports is the inline script Cloudflare's JavaScript Detections injects into each page, which no hash can allow because it changes per request. If the policy were enforced as it stands, that script would be blocked: visitors would see nothing different, and Cloudflare would lose that bot signal. Nathan's choice, in the Cloudflare dashboard (Security settings; Bot Fight Mode can force it on): turn JS Detections off so the policy reports nothing, or keep it and accept the blocked script. Then follow the steps in the doc to enforce.
+
 ### A2. Check security.txt after the next deploy (added 2026-11-07)
 
 Live, `/.well-known/security.txt` shows the personal Gmail, but no such file was in this repo: it appears to come from the Cloudflare zone's security.txt setting. The repo now ships `public/.well-known/security.txt` with the studio address. If the live file still shows the Gmail after a deploy, turn off or update that setting in the Cloudflare dashboard (Security Center).

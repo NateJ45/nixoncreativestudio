@@ -35,7 +35,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 ## Commands
 
 - `npm run dev` (astro dev). Stop it before `npm run build` (port clash, see `.claude/rules/build-pipeline.md` and Gotcha 6).
-- `npm run build` = `prebuild` (`free-dist`), then `og:pages`, `node scripts/with-workerd.mjs astro build` (the Windows workerd shim), then `finish-share-cards`. `npm run check` = `astro check && npm run lint`. `npm run check:full` adds unit tests and the build.
+- `npm run build` = `prebuild` (`free-dist`), then `og:pages`, `node scripts/with-workerd.mjs astro build` (the Windows workerd shim), then `finish-share-cards` and `write-csp` (fills the CSP hashes in `dist/client/_headers`). `npm run check` = `astro check && npm run lint`. `npm run check:full` adds unit tests and the build.
 - `npm run lint`, `npm run format` / `format:check` (prettier, run it on md files too), `npm run test:unit` (`node --test` over `src/lib/*.test.ts`, plus `test:scripts`; import `.ts` with the extension).
 - `npm test` runs Playwright; its webServer builds and serves `dist/client` on 4321 (`npm run serve:dist`). Set `PW_PORT` when another worktree holds 4321. `npm run test:ui` opens the UI.
 - `npm run test:copy` (after a build) is the copy lint: built pages may not say "we", "our" or "us" in body text, because site copy is first person singular (`tests/unit/copy-rules.test.mjs`; `<blockquote>` and `data-copy-ignore` are skipped).

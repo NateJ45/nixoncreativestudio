@@ -53,15 +53,42 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 `public/_redirects` holds real 301s: retired URLs with no live equivalent (`/work/cincy-table` and `/work/second-presbyterian-chicago`, both forms, to `/work/`) and the short names the nav no longer uses (`/prices` to `/services/`, `/start` to `/contact/`). Astro `redirects` in `astro.config.mjs` only emit a meta-refresh page (`/now` to `/about/`, `/work/west-chester-preschool` to `/work/`), so use `_redirects` when Search Console needs a true 301.
 
-`public/_headers` ships with the deploy. Five site-wide headers Cloudflare applies to every route:
+`public/_headers` ships with the deploy. Site-wide headers Cloudflare applies to every route:
 
 - `Strict-Transport-Security` (HSTS, one year, includeSubDomains)
 - `X-Frame-Options: DENY` (clickjacking)
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Cross-Origin-Opener-Policy: same-origin`
+- `Permissions-Policy`: camera, microphone, location, payment, motion sensors, USB and Topics are switched off, because the site uses none of them. If a feature ever needs one, take it off the list in the same change.
+- `Content-Security-Policy-Report-Only`: below.
 
-Content-Security-Policy is intentionally not included; doing it right requires testing because of the external Cloudflare beacon and the Web3Forms POST endpoint.
+### Content-Security-Policy
+
+It ships **report-only**: the browser logs what it would have blocked and blocks nothing. There is no reporting endpoint, so reports only appear in a browser's console (and as `securitypolicyviolation` events).
+
+Inline scripts and `<style>` blocks are allowed by sha256 hash. `public/_headers` holds two markers, and `scripts/write-csp.mjs` (a build step) fills them from the built pages in `dist/client`. So a new inline script is picked up by itself, and the production build's hashes include the GA snippet, whose text depends on `PUBLIC_GA_ID`. Style attributes need `style-src-attr 'unsafe-inline'`, because a client's colors arrive as `style="--c: ..."`.
+
+From other hosts, the policy allows what the site really loads:
+
+| Host                                                      | For                                         | Directives                             |
+| --------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
+| `static.cloudflareinsights.com`, `cloudflareinsights.com` | The Web Analytics beacon, and what it sends | `script-src`, `connect-src`            |
+| `*.googletagmanager.com`                                  | GA4 (`gtag.js`)                             | `script-src`, `img-src`, `connect-src` |
+| `*.google-analytics.com`, `*.analytics.google.com`        | GA4 hits                                    | `img-src`, `connect-src`               |
+| `api.web3forms.com`                                       | The contact form, fetch and native post     | `connect-src`, `form-action`           |
+
+`form-action` also keeps `'self'`, because the native post redirects back to `/contact/?sent=1#sent`, and Chrome applies `form-action` to that redirect.
+
+**What still reports on the live site.** Cloudflare injects an inline script at the end of each page on the proxied zone (it starts `(function(){function c(){var b=a.contentDocument` and loads `/cdn-cgi/challenge-platform/scripts/jsd/main.js`). That is JavaScript Detections, part of its bot tools. It carries the request's ray ID, so its text and hash change on every response and no hash can allow it. Cloudflare's documented answer is a per-request nonce, which a static site cannot make. A fixed nonce in `_headers` would be published to everyone, so it would allow an attacker's inline script too. See `docs/PENDING.md` for the decision this leaves.
+
+**How to go from report-only to enforcing.** Never rename the header untested.
+
+1. Run `tests/csp.spec.ts` (it serves every route with the built policy as an ENFORCED header and fails on any violation). It runs in `npm test`, so a green CI run covers this.
+2. On the live site, open Home, /work/, /services/, /churches/, a case study, the lean sector pages and /contact/ in a real browser, not an automated one (GA4 does not run in automated browsers), with the console open. Scroll each, play a window, open the client sheet and send a test through the form. Every line starting `[Report Only]` needs an answer. The Cloudflare script above is the one known line until its decision is made.
+3. Wait a week or two after any change to analytics or Cloudflare settings, then repeat step 2.
+4. In `public/_headers`, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy`, on a branch, and check the branch's `*.workers.dev` preview the same way.
+5. After the deploy, check again that the contact form sends, that GA4's Realtime report sees the visit and that Web Analytics still counts. To back out quickly, rename the header back or roll back in the Deployments tab.
 
 ### Cache headers
 

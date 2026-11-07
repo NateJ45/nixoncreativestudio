@@ -3,7 +3,7 @@ name: CI
 # 2026-09-06: brought up to the family test standard (WCP is the reference):
 # astro check, eslint, a prettier format check, the node --test unit suites,
 # the build, an internal link check over dist/client, and a separate `test`
-# job running the Playwright suites (smoke, axe light + dark, reflow) on
+# job running the Playwright suites (smoke, axe, reflow and the rest) on
 # chromium and a WebKit iPhone profile. Before this the workflow was install,
 # build, unit tests, and lint was advisory only.
 #
@@ -214,14 +214,13 @@ jobs:
             timeout 360 npx playwright install --with-deps chromium webkit
           }
 
-      # smoke (every route 200s and carries the studio name in its title), axe
-      # in light, axe in dark as a separate sweep plus a focus-indicator check
-      # (a theme swap is a different resting DOM), and reflow at
-      # 320/768/1024/1440 (WCAG 1.4.10 starts at 320, not 375). The config's
+      # smoke (every route 200s and carries the studio name in its title), axe on
+      # the one light theme, reflow at 320/768/1024/1440 (WCAG 1.4.10 starts at 320,
+      # not 375) and the rest of tests/ (docs/TESTING.md has the map). The config's
       # webServer runs `npm run build` itself and serves dist/client on 4321.
       # The html reporter is added on the command line so local runs keep the
       # quiet `list` output while CI still produces the report artifact below.
-      - name: Run tests (smoke, a11y light + dark, reflow)
+      - name: Run tests (smoke, a11y, reflow and the rest)
         run: npm test -- --reporter=github,html
 
       - uses: actions/upload-artifact@v7
