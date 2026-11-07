@@ -20,9 +20,11 @@ import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import Closing from '../components/Closing.astro';
 import { site } from '../data/site';
-import { webTiers as tiers, addOns, carePlans, customWorkRate } from '../data/pricing';
+import { webTiers as tiers, addOns, carePlans, customWorkRate, yoursToKeep } from '../data/pricing';
+import { SITUATIONS, sectorPagePath } from '../data/sector-pages';
 import { getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
+import { hostingOnlyFiveYears, tierCosts } from '../lib/tier-costs';
 import { addOnNamed, addOnOffer, careOffers, ids, tierOffers } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
 
@@ -41,6 +43,14 @@ const pickTiers = tiers.map((t) => ({
   from: money(t.priceFrom),
   range: `${t.range}.`,
 }));
+
+// The honest sums, computed from pricing.ts: year one hosting is included, so care starts in year two.
+const costs = tierCosts();
+const situationCols = [
+  { key: 'launch', tier: launch },
+  { key: 'signature', tier: signature },
+  { key: 'flagship', tier: flagship },
+] as const;
 
 // One window per kind of client. Sector only: no client is tied to a tier or a price.
 const clients = await getClients();
@@ -62,7 +72,7 @@ const careRows = carePlans.flatMap((plan, i) =>
 );
 
 const webBody =
-  'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed off so you are never locked out of your own site.';
+  'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed over with documentation.';
 
 const strategyBody =
   'Strategy always comes first, because the design has to serve a plan. It starts with a working session together, then I write a short brief that the rest of the project follows.';
@@ -77,7 +87,7 @@ const faq = [
   },
   {
     q: 'What if I have been quoted less somewhere else?',
-    a: 'You probably can find a cheaper quote, and for a very simple need that might be the right call. What a low quote usually leaves out is the part that matters later: accessibility, a content system your team can actually run, a plan for who maintains the site after launch, and someone who still answers the phone in a year. A site you have to rebuild in eighteen months is the expensive one. I would rather build it once.',
+    a: 'You probably can find a cheaper quote, and for a very simple need that might be the right call. Ask what it includes: accessibility checks, a content system your team can actually run, a plan for who maintains the site after launch, and who answers the phone in a year. If it covers those, take it seriously.',
   },
   {
     q: 'What happens if you are ever unavailable?',
@@ -154,10 +164,21 @@ const heading = `What I do, and <b>what it costs.</b>`;
   <header class="page-head price-head">
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
-      Websites for churches, schools, nonprofits and small businesses, with photos when needed.
-      Every price is on this page, and the first conversation is free and ends with an honest
-      ballpark.
+      You get a custom website planned, designed and built by one person, an editor your own people
+      can run, and a build that is yours when it is done. Every price is on this page, and the first
+      conversation is free and ends with an honest ballpark.
     </p>
+    <ul class="glance" aria-label="The three website tiers">
+      {tiers.map((t) => (
+        <li>
+          <a href={`#${t.name.toLowerCase()}`}>
+            <span class="label">{t.name}</span>
+            <span class="glance-who">{t.who}</span>
+            <span class="glance-num">{`${money(t.priceFrom)}${t.priceSuffix}`}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
     <div class="from">
       <p class="label">Websites start at</p>
       <p class="from-num">{money(launch.priceFrom)}</p>
@@ -175,10 +196,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </ul>
     </div>
     <nav class="jump" aria-label="On this page">
-      <a href="#websites">Websites</a>
-      <a href="#pick">Help me choose</a>
+      <a href="#fit">Help me choose</a>
+      <a href="#costs">Five-year costs</a>
+      <a href="#why-not">Why not a platform</a>
       <a href="#behind">Behind the site</a>
-      <a href="#add-ons">Add-ons and photography</a>
+      <a href="#add-ons">Add-ons</a>
       <a href="#care">Care plans</a>
       <a href="#how">How it works</a>
       <a href="#every-build">In every build</a>
@@ -197,11 +219,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <div class="wrap">
       <div class="sec-head">
         <h2 id="websites-h">Websites</h2>
-        <p>Every one is custom. The difference is scope.</p>
+        <p>Every one is custom. The difference is who runs it, and how much I take on.</p>
       </div>
       <ul class="tiers" data-tiers>
         {tiers.map((t, i) => (
-          <li class="tier">
+          <li class="tier" id={t.name.toLowerCase()}>
             <article class:list={['t-card', { 't-ink': i > 0, 't-dark': i === 2 }]}>
               <div class="t-bg" aria-hidden="true">
                 <span class="pip">{t.name.charAt(0)}</span>
@@ -211,9 +233,24 @@ const heading = `What I do, and <b>what it costs.</b>`;
                 <h3>{t.name}</h3>
                 <p>{t.badge ?? t.who}</p>
               </div>
+              <div class="t-fits">
+                <h4 class="t-h">Who it fits</h4>
+                <p>{t.fits}</p>
+              </div>
+              <div class="t-fits">
+                <h4 class="t-h">What I take responsibility for</h4>
+                <p>{t.responsible}</p>
+              </div>
               <p class="t-price">{`${money(t.priceFrom)}${t.priceSuffix}`}</p>
               <p class="t-range">{t.range}</p>
-              <p class="t-note">{t.note}</p>
+              <div class="t-keep">
+                <h4 class="t-h">Yours to keep</h4>
+                <ul>
+                  {yoursToKeep.map((line) => (
+                    <li>{line}</li>
+                  ))}
+                </ul>
+              </div>
               <h4 class="t-inc">
                 <span class="t-inc-s">What's included</span>
                 <button
@@ -244,10 +281,50 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </li>
         ))}
       </ul>
+      <p class="after" id="moves">
+        What moves a price within a tier: how many pages and kinds of content it holds, how much of
+        the content I write or move for you, how many outside systems connect, and whether
+        photography is part of it.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec tight fit" id="fit" aria-labelledby="fit-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="fit-h">If this sounds like you</h2>
+        <p>Find your row, then the description closest to where you are today.</p>
+      </div>
+      <table class="fit-table">
+        <caption class="vh">
+          Which website tier usually fits a church, a school, a nonprofit and a small business
+        </caption>
+        <thead>
+          <tr>
+            <td></td>
+            {situationCols.map(({ tier }) => (
+              <th scope="col">
+                <a href={`#${tier.name.toLowerCase()}`}>{tier.name}</a>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {SITUATIONS.map((row) => (
+            <tr>
+              <th scope="row">
+                <a href={sectorPagePath(row.sector)}>{row.label}</a>
+              </th>
+              {situationCols.map(({ key, tier }) => (
+                <td data-tier-name={tier.name}>{row[key]}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
       <p class="after">
-        Every build comes with a content system you can manage yourself. What moves the number is
-        scope, functionality, photography, and content, and larger projects can be split into
-        monthly payments.
+        These are starting points, and none of them is a promise about what your site will do. Tell
+        me about yours and I'll tell you which tier fits, including if none does.
       </p>
     </div>
   </section>
@@ -339,6 +416,129 @@ const heading = `What I do, and <b>what it costs.</b>`;
           <a class="chip go pick-go" href="/contact/" data-pick-go hidden>
             Start with <span data-pick-go-name></span>
           </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec tight costs" id="costs" aria-labelledby="costs-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="costs-h">What it costs over five years</h2>
+        <p>The sum a treasurer will do anyway, so here it is.</p>
+      </div>
+      <table class="cost-table">
+        <caption class="vh">
+          The cost of each tier with a named care plan: first year, three years and five years
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Tier and care plan</th>
+            <th scope="col">Year one</th>
+            <th scope="col">Three years</th>
+            <th scope="col">Five years</th>
+          </tr>
+        </thead>
+        <tbody>
+          {costs.map((c) => (
+            <tr>
+              <th scope="row">
+                <b>{c.tier.name}</b>
+                <span>
+                  with {c.plan.name}, {`${c.plan.price}${c.plan.period}`}
+                </span>
+              </th>
+              <td data-label="Year one">{money(c.yearOne)}</td>
+              <td data-label="Three years">{money(c.threeYears)}</td>
+              <td data-label="Five years">{money(c.fiveYears)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="after">
+        How I worked these out: each tier's starting price, with year one hosting included, so the
+        care plan is billed from year two and every year after, at today's prices. A build that
+        lands higher in its range adds the difference, and custom work, photography or a paid editor
+        plan would be extra. The pairings are examples, and you pick your care level from year two.
+        On {hosting.name} alone, at {hosting.price} a year, five years of {launch.name} comes to{' '}
+        {money(hostingOnlyFiveYears(launch))}, and you make every change yourself. Sites with custom
+        tools need {care.name} or above.
+      </p>
+      <p class="costs-go">
+        <a class="chip" href="/one-page/">
+          One-page summary for a board or committee
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <section class="sec tight why-not" id="why-not" aria-labelledby="why-not-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="why-not-h">Why not a cheaper platform?</h2>
+        <p>
+          Sometimes you should use one. Over five years a template platform will usually cost less
+          cash than anything on this page, and I won't argue with that arithmetic.
+        </p>
+      </div>
+      <div class="why-not-in">
+        <div class="why-not-yes">
+          <h3>Choose a platform if</h3>
+          <ul class="ticks">
+            <li>
+              A good template covers what you need, and someone on your team enjoys the setup.
+            </li>
+            <li>The budget is tight, and the site is a small part of the job.</li>
+            <li>
+              You want giving, email or booking on one bill, and the design limits don't bother you.
+            </li>
+          </ul>
+          <p>
+            I have built on one myself, for a church whose communications team wanted to own every
+            page. With me, things like giving and email are separate services with their own terms,
+            and I tell you what they cost before you commit.
+          </p>
+        </div>
+        <div>
+          <h3 class="why-not-h">What you can check, whichever you choose</h3>
+          <dl class="checks">
+            <div>
+              <dt>Who does the work?</dt>
+              <dd>
+                On a platform, someone on your team fits your content into a template and keeps it
+                there. With me, I plan, design and build around your content, and your people edit
+                it afterward.
+              </dd>
+            </div>
+            <div>
+              <dt>Can you leave with it?</dt>
+              <dd>
+                A custom build is yours outright, and the code and content can be handed over with
+                documentation. Ask any provider, me included, what comes with you if you go.
+              </dd>
+            </div>
+            <div>
+              <dt>What happens when your web person moves on?</dt>
+              <dd>
+                Every build comes with an editor and a written guide, so the next staff member or
+                volunteer is not starting from nothing. Ask to see the guide, or the editor.
+              </dd>
+            </div>
+            <div>
+              <dt>Does it work for everyone?</dt>
+              <dd>
+                Every custom build is made to WCAG AA and checked. Run a free accessibility checker
+                on this site, then on any site you are comparing.
+              </dd>
+            </div>
+            <div>
+              <dt>Who answers?</dt>
+              <dd>
+                You reach the person who built it, and the reply time is written into each care
+                plan.
+              </dd>
+            </div>
+          </dl>
         </div>
       </div>
     </div>
@@ -502,8 +702,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <p class="intro">
         Every site I look after sits on one status board. It checks every 15 minutes that the site
         is up, and tracks how fast it answers, whether deploys and backups ran, known security
-        alerts in its software, and domain renewals where I manage the domain. Spotting a problem
-        isn't left to you.
+        alerts in its software, and domain renewals where I manage the domain. If a site goes down,
+        my phone tells me, so I usually know before you do.
       </p>
       <ul class="care-cards">
         {carePlans.map((c) => (
@@ -685,7 +885,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
                 <p>
                   I match the build to your budget and to whoever will maintain it after launch.
                   Everything is built mobile-first and tested for accessibility from the very first
-                  screen, then handed off so you are never locked out of your own site.
+                  screen, then handed over with documentation.
                 </p>
                 <ul class="ticks">
                   <li>A custom design built to your brand, not a stock template</li>
@@ -727,8 +927,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
         <div class="fold-a">
           <div class="fold-in">
             <p class="intro">
-              Plenty of people will quote you less. Here is what the price actually buys, and what a
-              cheaper one usually leaves out.
+              Plenty of people will quote you less, and for some sites that is the right call. Here
+              is what this price buys.
             </p>
             <ul class="whys">
               <li>
@@ -742,26 +942,24 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <li>
                 <h3>Built to be handed off</h3>
                 <p>
-                  Every site is set up so the next volunteer or staff member can keep it running,
-                  and a custom build is yours outright. A cheaper site that leaves you stranded the
-                  day the freelancer goes quiet costs far more to replace than it saved.
+                  Every site is set up so the next volunteer or staff member can keep it running. A
+                  custom build is yours outright, and the code and content can be handed over with
+                  documentation.
                 </p>
               </li>
               <li>
                 <h3>Accessible by default</h3>
                 <p>
                   Every custom build is made to WCAG AA and checked until each page scores 100 for
-                  accessibility in Lighthouse. Plenty of budget builds never get checked at all. For
-                  a church, school, or nonprofit it is the right thing to do, and it is included,
-                  not an upsell.
+                  accessibility in Lighthouse. For a church, school, or nonprofit it is the right
+                  thing to do, and it is included, not an upsell.
                 </p>
               </li>
               <li>
-                <h3>Cheap is expensive later</h3>
+                <h3>Priced where you can see it</h3>
                 <p>
-                  A bargain site quietly runs into thousands a year once you bolt on the features it
-                  could not handle up front. I would rather build it once, on a stack that is nearly
-                  free to run and is yours to keep.
+                  The tiers, the care plans and the five-year sums are all on this page, so you can
+                  check them against anything else you are looking at before you ever talk to me.
                 </p>
               </li>
             </ul>

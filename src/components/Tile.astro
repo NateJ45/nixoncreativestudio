@@ -1,7 +1,9 @@
 ---
-/* A client's phone window. A real link to their case study; with JavaScript a
-   click opens the client sheet instead, unless `direct` keeps it a plain link.
-   The footage is only fetched when something asks the window to play. */
+/* A client's window. A phone by default; with `desk` a large desktop browser
+   window showing the real page (/work/ and the lean sector pages). A real link to
+   their case study; with JavaScript a click opens the client sheet instead, unless
+   `direct` keeps it a plain link. The footage is only fetched when something asks
+   the window to play. */
 import { LOCK, TOOLS } from '../lib/window-chrome';
 import type { Client } from '../lib/clients';
 
@@ -13,12 +15,14 @@ interface Props {
   direct?: boolean;
   /** A different picture on the screen and no footage (the churches' long pages). */
   long?: string;
+  /** The desktop capture and footage, in a wide window. */
+  desk?: boolean;
 }
-const { client: s, index, lazy = false, direct = false, long } = Astro.props;
+const { client: s, index, lazy = false, direct = false, long, desk = false } = Astro.props;
 ---
 
 <a
-  class="tile"
+  class:list={['tile', { desk }]}
   href={s.study}
   data-slug={s.slug}
   data-direct={direct ? '' : undefined}
@@ -35,6 +39,18 @@ const { client: s, index, lazy = false, direct = false, long } = Astro.props;
   <span class="scr" aria-hidden="true">
     {long ? (
       <img src={long} alt="" loading={lazy ? 'lazy' : 'eager'} />
+    ) : desk ? (
+      <>
+        <img
+          src={s.deskStill}
+          alt=""
+          loading={lazy ? 'lazy' : 'eager'}
+          decoding="async"
+          width="1000"
+          height="750"
+        />
+        <video muted loop playsinline preload="none" data-src={s.desk} />
+      </>
     ) : (
       <>
         <img src={s.still} alt="" loading={lazy ? 'lazy' : 'eager'} width="584" height="1138" />
@@ -42,7 +58,9 @@ const { client: s, index, lazy = false, direct = false, long } = Astro.props;
       </>
     )}
   </span>
-  <span class="b-bot" aria-hidden="true">
-    <Fragment set:html={TOOLS} />
-  </span>
+  {!desk && (
+    <span class="b-bot" aria-hidden="true">
+      <Fragment set:html={TOOLS} />
+    </span>
+  )}
 </a>

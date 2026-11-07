@@ -1,0 +1,181 @@
+---
+/* A lean sector page: the job in this buyer's language, the proof there actually
+   is, which tier usually fits, and the call to action. /schools/, /nonprofits/ and
+   /small-business/ are one line each around this; the copy is in
+   src/data/sector-pages.ts, the situations in SITUATIONS, the prices in pricing.ts.
+   No client is tied to a tier here: proof and tiers are separate sections on purpose.
+   /churches/ is its own, larger build. */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/pages/sector.css';
+import Tile from './Tile.astro';
+import Closing from './Closing.astro';
+import { webTiers } from '../data/pricing';
+import { SITUATIONS, type LeanSector, type Rich } from '../data/sector-pages';
+import { site } from '../data/site';
+import { getClients } from '../lib/clients';
+import { money } from '../lib/money';
+import { plainText, wordSpans } from '../lib/words';
+
+interface Props {
+  page: LeanSector;
+}
+const { page } = Astro.props;
+
+const clients = (await getClients()).filter((c) => c.sectorKey === page.sector);
+const entries = await getCollection('case-studies');
+const studies = clients.map((s) => ({
+  s,
+  quote: entries.find((e) => e.id === s.slug)?.data.testimonials?.[0],
+}));
+
+const situation = SITUATIONS.find((row) => row.sector === page.sector);
+const fits = situation
+  ? webTiers.map((tier, i) => ({
+      tier,
+      text: [situation.launch, situation.signature, situation.flagship][i],
+    }))
+  : [];
+
+const path = `/${page.path}/`;
+const canonical = new URL(path, site.url).toString();
+const contact = `/contact/?org_type=${page.sector}`;
+const schemas = [
+  {
+    '@type': 'ItemList',
+    '@id': `${canonical}#studies`,
+    name: `${page.title}: case studies`,
+    numberOfItems: studies.length,
+    itemListElement: studies.map(({ s }, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(s.study, site.url).toString(),
+      name: s.name,
+    })),
+  },
+];
+const rich = (copy: Rich) => copy;
+---
+
+<BaseLayout
+  title={`${page.title} | ${site.studioName}`}
+  description={page.description}
+  breadcrumbs={[{ name: page.label, path }]}
+  pageType="CollectionPage"
+  schemas={schemas}
+>
+  <header class="page-head sl-head">
+    <h1 aria-label={plainText(page.heading)} set:html={wordSpans(page.heading)} />
+    <p class="lede">{page.lede}</p>
+    <div class="sl-links">
+      <a class="chip go" href={contact}>
+        Tell me about your site
+      </a>
+      <a class="chip" href="/one-page/">
+        One-page summary to forward
+      </a>
+    </div>
+  </header>
+
+  <section class="sec tight" aria-labelledby="sl-job">
+    <div class="wrap">
+      <h2 id="sl-job" class="sl-h">
+        What the site has to do
+      </h2>
+      <ul class="sl-points">
+        {page.points.map((p) => (
+          <li>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec tight" aria-labelledby="sl-proof">
+    <div class="wrap">
+      <h2 id="sl-proof" class="sl-h">
+        What I can show you
+      </h2>
+      <p class="sl-note">
+        {rich(page.proofNote).map((part) =>
+          typeof part === 'string' ? part : <a href={part.href}>{part.text}</a>,
+        )}
+      </p>
+      <ul class="sl-studies" data-sl-studies>
+        {studies.map(({ s, quote }) => (
+          <li>
+            <div class="sl-w">
+              <Tile client={s} lazy desk />
+            </div>
+            <div class="sl-t">
+              <h3>{s.name}</h3>
+              <p class="label">{s.sector}</p>
+              <p class="sl-out">{s.outcome}</p>
+              {quote && <blockquote>{quote.quote}</blockquote>}
+              {quote && (
+                <p class="sl-by">
+                  <b>{quote.name}</b>
+                  {quote.title}
+                  {quote.context && <span>{quote.context}</span>}
+                </p>
+              )}
+              <p class="sl-go">
+                <a href={s.study}>
+                  Read the case study<span class="vh">: {s.name}</span>
+                </a>
+                {s.live && (
+                  <a href={s.live} target="_blank" rel="noopener" data-cta="visit_client_site">
+                    Visit the site<span class="vh">: {s.name} (opens in a new tab)</span>
+                  </a>
+                )}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {page.closest && (
+        <p class="sl-note sl-closest">
+          {rich(page.closest).map((part) =>
+            typeof part === 'string' ? part : <a href={part.href}>{part.text}</a>,
+          )}
+        </p>
+      )}
+    </div>
+  </section>
+
+  <section class="sec tight" aria-labelledby="sl-tier">
+    <div class="wrap">
+      <h2 id="sl-tier" class="sl-h">
+        Which tier usually fits
+      </h2>
+      <ul class="sl-tiers">
+        {fits.map(({ tier, text }) => (
+          <li>
+            <h3>
+              <a href={`/services/#${tier.name.toLowerCase()}`}>{tier.name}</a>
+            </h3>
+            <p>{text}</p>
+            <p class="sl-from">From {money(tier.priceFrom)}</p>
+          </li>
+        ))}
+      </ul>
+      <div class="sl-after">
+        {page.tierNotes.map((note) => (
+          <p>{note}</p>
+        ))}
+        <p>
+          <a href="/services/#costs">What each tier costs over five years</a>, or
+          <a href="/one-page/">a one-page summary to forward</a> to whoever has to say yes.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Closing lead="I'll tell you which tier fits, <b>including if none does.</b>" />
+</BaseLayout>
+
+<script>
+  import '../scripts/sector.js';
+</script>

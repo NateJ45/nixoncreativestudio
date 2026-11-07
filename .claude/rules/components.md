@@ -27,8 +27,9 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## The deck and shared pieces
 
-- `Tile`: a client's phone window (a real link to the case study; `data-direct` keeps it a link). Takes a `Client` from `getClients()`. The footage is only fetched when something asks the window to play.
+- `Tile`: a client's phone window, or with `desk` a large desktop browser window (a real link to the case study; `data-direct` keeps it a link). Takes a `Client` from `getClients()`. The footage is only fetched when something asks the window to play.
 - `Caption`: the name and sector under a window; pass `index` to number it.
+- `SectorLean`: the whole of a lean sector page (/schools/, /nonprofits/, /small-business/), drawn from `src/data/sector-pages.ts`.
 - `QuoteBand`: a client's quote on their own color, read from the study's `testimonials` (`slug`, `quote` index, `flip`). It throws if the quote does not exist.
 - `PriceHand` and `DealtPrices`: the three starting-price cards and the "Every price is public" section around them; both read `src/data/pricing.ts`.
 - `window-chrome.ts` supplies the address-bar lock and the toolbar icons shared by `Tile`, the contact brief phone and the study windows.
@@ -43,7 +44,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## `src/lib`
 
-`clients.ts` (`getClients`, `getClient`, `toClient`, `DECK` order, sector labels and counts), `words.ts` (`wordSpans`, `plainText`, for the H1 reveal), `window-chrome.ts`, `study-markup.ts`, `study.ts` (`nextInLoop`, `cmsShotProblem`), `closer.ts` (closing sector phrases), `seo.ts` (`studyTitle`), `schema.ts` (JSON-LD), `money.ts`, `href.ts` (`withTrailingSlash`), `track.ts` (GA4 events), `readingTime.ts`, `contrast.ts` (PORTABLE), `live-scores.ts` (still built and tested, but no page prints it). Each has a unit test beside it where it holds logic.
+`clients.ts` (`getClients`, `getClient`, `toClient`, `DECK` order, sector labels and counts), `words.ts` (`wordSpans`, `plainText`, for the H1 reveal), `window-chrome.ts`, `study-markup.ts`, `study.ts` (`nextInLoop`, `cmsShotProblem`), `closer.ts` (closing sector phrases), `seo.ts` (`studyTitle`), `schema.ts` (JSON-LD), `money.ts`, `tier-costs.ts` (the five-year sums), `href.ts` (`withTrailingSlash`), `track.ts` (GA4 events), `readingTime.ts`, `contrast.ts` (PORTABLE), `live-scores.ts` (still built and tested, but no page prints it). Each has a unit test beside it where it holds logic.
 
 ## Code conventions
 

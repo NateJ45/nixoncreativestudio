@@ -1,0 +1,264 @@
+/* The one-page summary. On screen, a sheet of paper on the page. In print, only the sheet, on one US Letter
+   page: the sizes in the print block are what make it fit, and tests/one-page.spec.ts counts the pages. */
+.op-page {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: clamp(5.5rem, 12vh, 8rem) var(--gut) clamp(2rem, 5vh, 3.5rem);
+}
+.op-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+html:not(.js) [data-print] {
+  display: none;
+}
+.op-sheet {
+  display: grid;
+  gap: clamp(1.25rem, 2.4vw, 1.75rem);
+  padding: clamp(1.25rem, 4vw, 3rem);
+  background: var(--card);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 22px 40px -24px rgba(0, 0, 0, 0.34);
+}
+.op-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem clamp(1.5rem, 4vw, 3rem);
+  align-items: end;
+  padding-bottom: clamp(1rem, 2vw, 1.5rem);
+  border-bottom: 1px solid var(--line);
+}
+.op-head h1 {
+  margin-top: 0.5rem;
+  font-size: var(--type-h2);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+}
+.op-reach {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.op-reach a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  text-underline-offset: 0.2em;
+}
+.op-reach span {
+  color: var(--soft);
+}
+.op-sheet h2 {
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+.op-sheet section > p,
+.op-sheet section > table,
+.op-sheet section > ul {
+  margin-top: 0.5rem;
+}
+.op-sheet p {
+  line-height: 1.45;
+}
+.op-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.op-table th,
+.op-table td {
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  font-weight: 400;
+}
+.op-table thead th {
+  border-top: 0;
+  padding-top: 0;
+  color: var(--soft);
+  font-size: 0.8125rem;
+}
+.op-table tbody th b {
+  display: block;
+  font: 600 1.25rem/1.1 var(--display);
+  letter-spacing: -0.02em;
+}
+.op-table tbody th span {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--soft);
+  font-size: 0.8125rem;
+}
+.op-table td {
+  color: var(--soft);
+}
+.op-table .n {
+  padding-right: 0;
+  padding-left: 0.75rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.op-table td.n {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.op-small {
+  margin-top: 0.5rem;
+  color: var(--soft);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.op-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem clamp(1.5rem, 4vw, 3rem);
+}
+.op-two ul {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0;
+  list-style: none;
+  line-height: 1.35;
+}
+.op-two li {
+  padding-left: 0.9rem;
+  text-indent: -0.9rem;
+}
+.op-two li::before {
+  content: '\2013\00a0\00a0';
+  color: var(--soft);
+}
+.op-foot {
+  padding-top: clamp(0.9rem, 2vw, 1.25rem);
+  border-top: 1px solid var(--line);
+}
+
+/* A phone: the sums move under the words, in three columns. */
+@media screen and (max-width: 44rem) {
+  .op-head,
+  .op-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .op-table,
+  .op-table tbody,
+  .op-table th,
+  .op-table td {
+    display: block;
+    width: auto;
+  }
+  .op-table thead {
+    display: none;
+  }
+  .op-table tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .op-table tbody th,
+  .op-table tbody td {
+    padding: 0;
+    border: 0;
+  }
+  .op-table tbody th,
+  .op-table tbody td:not(.n) {
+    grid-column: 1/-1;
+    margin-bottom: 0.5rem;
+  }
+  .op-table .n {
+    padding-left: 0;
+    text-align: left;
+  }
+  .op-table td.n::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--soft);
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+}
+
+@page {
+  size: Letter;
+  margin: 0.5in 0.6in;
+}
+@media print {
+  html,
+  body {
+    background: #fff;
+    overflow: visible;
+  }
+  .top,
+  .dock,
+  .skip,
+  dialog,
+  .op-bar,
+  [data-end] {
+    display: none !important;
+  }
+  .op-page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .op-sheet {
+    gap: 0.17in;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 10.5pt;
+  }
+  .op-head {
+    gap: 0.3in;
+    padding-bottom: 0.13in;
+  }
+  .op-head h1 {
+    font-size: 21pt;
+  }
+  .op-reach,
+  .op-table {
+    font-size: 9.5pt;
+  }
+  .op-reach a {
+    min-height: 0;
+    text-decoration: none;
+  }
+  .op-sheet h2,
+  .op-table thead th,
+  .op-table tbody th span {
+    font-size: 8pt;
+  }
+  .op-table tbody th b {
+    font-size: 12.5pt;
+  }
+  .op-table th,
+  .op-table td {
+    padding: 0.06in 0.09in 0.06in 0;
+  }
+  .op-table .n {
+    padding-right: 0;
+    padding-left: 0.09in;
+  }
+  .op-small {
+    font-size: 8.5pt;
+  }
+  .op-two {
+    gap: 0.3in;
+  }
+}

@@ -354,6 +354,10 @@ const STATIC_PAGES = [
   { route: 'journal', title: 'Journal' },
   // Sector pages (src/data/sector-pages.ts). Add one line per new sector page.
   { route: 'churches', title: 'Church websites' },
+  { route: 'schools', title: 'School websites' },
+  { route: 'nonprofits', title: 'Nonprofit websites' },
+  { route: 'small-business', title: 'Small business websites' },
+  { route: 'one-page', title: 'A one-page summary' },
   { route: 'contact', title: 'Start a project' },
   { route: 'colophon', title: 'Colophon' },
   { route: 'privacy', title: 'Privacy' },
