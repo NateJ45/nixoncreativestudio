@@ -399,6 +399,23 @@
 .care thead th {
   width: 17.5%;
 }
+/* Wide enough that the table never scrolls sideways, so the plan names can stay in view down it. */
+@media (min-width: 64rem) {
+  .tbox {
+    overflow: visible;
+  }
+  .care thead th,
+  .care .corner {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: 0 1px 0 var(--line);
+  }
+  /* Above the row labels, which stay pinned when a phone scrolls the table sideways. */
+  .care thead td.corner {
+    z-index: 3;
+  }
+}
 .pl {
   display: block;
   margin-bottom: 0.4rem;

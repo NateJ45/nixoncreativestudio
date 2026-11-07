@@ -63,10 +63,10 @@ const nx = next ? toClient(next) : s;
 const clientName = d.client.replace(/^The /, '');
 const longest = Math.max(...d.client.split(' ').map((w) => w.length));
 const host = d.facts?.host ?? (d.liveUrl ? hostOf(d.liveUrl) : '');
+const builtWith = (d.facts?.stack ?? d.stack)?.join(', ');
 const facts: [string, string | undefined][] = [
   ['Sector', d.facts?.sector ?? s.sector],
   ['Role', d.facts?.role ?? d.role],
-  ['Built with', (d.facts?.stack ?? d.stack)?.join(', ')],
 ];
 // "Building for a church?" on a church study. Small business reads as two words.
 const phrase = SECTOR_PHRASE[d.sector] ?? d.sector.replace('-', ' ');
@@ -202,6 +202,7 @@ const breadcrumbs = [
           FullBuild,
         }}
       />
+      {builtWith && <p class="s-built">Built with {builtWith}</p>}
     </div>
     <aside class="rail" aria-hidden="true">
       <div class="rail-in">
@@ -223,6 +224,13 @@ const breadcrumbs = [
           See all the work
         </a>
       </p>
+      {sectorPagePath(d.sector) && (
+        <p>
+          <a class="tlink" href={sectorPagePath(d.sector)}>
+            How I build for churches
+          </a>
+        </p>
+      )}
     </div>
     <div class="next-w">
       <a

@@ -70,7 +70,7 @@ export default defineConfig({
   },
   prefetch: {
     prefetchAll: true,
-    defaultStrategy: 'viewport',
+    defaultStrategy: 'hover',
   },
   // imageService: 'compile' makes Astro optimize <Image /> at BUILD time with
   // Sharp, emitting static .webp files into dist/_astro/. Without it the
