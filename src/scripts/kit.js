@@ -255,7 +255,7 @@ export var ui = {
     var W = stage.offsetWidth,
       gw = gcs.length ? gcs[0].g.offsetWidth : 0,
       /* Out to the right of the deck, as far as the panel leaves room. */
-      reach = Math.min(gw * 0.5, (W - gw) / 2 + 24),
+      reach = Math.min(gw * 0.4, (W - gw) / 2 + 24),
       spread = Math.min(W * 0.1, 46);
     gcs.forEach(function (c) {
       var v = c.s.x,
@@ -812,6 +812,7 @@ if (weighs.length && !reduce) {
       if (n !== w.shown) {
         w.shown = n;
         w.el.style.fontWeight = n;
+        w.el.style.setProperty('--lit', ((n - 200) / 500).toFixed(3));
       }
     });
     if (live) wraf = requestAnimationFrame(wframe);

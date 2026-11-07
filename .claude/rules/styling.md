@@ -21,10 +21,10 @@ Loads when styles, components, layouts, scripts or pages are touched. The design
 
 Declared in `:root` at the top of `kit.css`:
 
-`--ground` (page), `--ink` (text), `--soft` (supporting text), `--card` (white), `--line` (hairlines), `--accent` (studio blue `#2f3fe6`), `--accent-soft`, `--display` and `--body` (both Hanken Grotesk), `--gut` (page side padding, `clamp(1.25rem, 4vw, 4rem)`), `--edge` (the side padding that puts a full-bleed block's contents on the 90rem page's left edge), `--type-h1`, `--type-h2` and `--type-h3` (the display scale; use them rather than a new clamp) and `--ease`.
+`--ground` (page), `--ink` (text), `--soft` (supporting text), `--card` (white), `--line` (hairlines), `--accent` (studio blue `#2f3fe6`), `--accent-soft`, `--fill`, `--on-ink`, `--on-ink-soft`, `--chip`, `--chip-ink`, `--dock`, `--wash`, `--well`, `--zebra`, `--sunk`, `--screen`, `--rim`, `--display` and `--body` (both Hanken Grotesk), `--gut` (page side padding, `clamp(1.25rem, 4vw, 4rem)`), `--edge` (the side padding that puts a full-bleed block's contents on the 90rem page's left edge), `--type-h1`, `--type-h2` and `--type-h3` (the display scale; use them rather than a new clamp) and `--ease`.
 
 - One typeface: Hanken Grotesk, one variable file at `public/assets/fonts/hanken.woff2`, preloaded in `BaseLayout.astro`. `brand/fonts/` holds two static `.woff` weights for the OG generators only; opentype.js cannot read a variable woff2. Do not add a second face.
-- One light theme. There is no dark mode, no theme toggle, no navy and no amber.
+- Two themes, light and dark, under `data-theme` on `<html>`; DESIGN.md section 2a has the rules. Dark tokens are set again in `:root[data-theme='dark']` inside `@media screen`, dark-only rules sit in the same kind of block in the file that owns the surface, and light must stay pixel-identical when dark changes. `--accent` is blue text, `--fill` is a blue surface. A client's color on the neutral page is `var(--cm, var(--c))`. A new card's `box-shadow` starts with `var(--rim)`. There is no navy and no amber.
 - A client's colors never become tokens. They arrive as `--c` (accent) and `--p` (paper, and the text color on the accent), set inline on a `.tile`, a `.band`, the sheet or the study `<body>` (`bodyStyle` on `BaseLayout`).
 - A new hex or token pair clears WCAG AA and is asserted in `src/lib/kit-tokens.test.ts`; a client pair in `src/lib/case-palettes.test.ts`.
 
@@ -37,7 +37,7 @@ Declared in `:root` at the top of `kit.css`:
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.
 - **Cards** are `.card` or their own radius (1.25rem; bands and the closing 1.75rem; buttons fully round).
 - **H1 reveal**: words are wrapped in the markup by `wordSpans()` (`src/lib/words.ts`; `PageHead.astro` does it). `.js .w` animates from opacity .02. This is the one allowed start below full opacity in the first viewport.
-- **The closing's parts**: `.end-work` (names and the white bar, `[data-pull]` per row, in `kit.js`), `.end-index` (the ruled site index, a new link goes in one of its groups), `.end-name` (one `<i>` a letter, clipped per word), `.end-base`. Text on the closing is white or sits on white; use `--accent` on white, which stays cobalt inside `.end`.
+- **The closing's parts**: `.end-work` (names and the white bar, `[data-pull]` per row, in `kit.js`), `.end-index` (the ruled site index, a new link goes in one of its groups), `.end-name` (one `<i>` a letter, clipped per word), `.end-base`. Text on the closing is white or sits on white; use `--fill` for blue on white.
 - **Reveals for study blocks**: `.rv` is hidden only under `.rv-on` (added by `study.js` when motion is allowed and `IntersectionObserver` exists) and shown with `.in`. Nothing in the first viewport takes it.
 
 ## Motion

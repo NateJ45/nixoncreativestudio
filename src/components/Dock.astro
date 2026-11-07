@@ -2,6 +2,8 @@
 /* The floating menu. Always there, on every page and every width, so it is the
    one nav: no drawer, no hamburger, and it works with no script at all. The
    script only slides the highlight to the link you are near. */
+import ThemeFlip from './ThemeFlip.astro';
+
 const path = Astro.url.pathname;
 const links = [
   { href: '/work/', label: 'Work' },
@@ -19,7 +21,14 @@ const links = [
       class={l.cls}
       aria-current={path === l.href ? 'page' : path.startsWith(l.href) ? 'true' : undefined}
     >
-      {l.label}
+      {l.cls === 'go' ? (
+        <span>
+          Start<span class="go-more"> a project</span>
+        </span>
+      ) : (
+        l.label
+      )}
     </a>
   ))}
+  <ThemeFlip />
 </nav>
