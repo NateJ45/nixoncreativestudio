@@ -7,7 +7,8 @@
    Coming Soon gate) and the chrome: the top line, the floating dock and the
    client sheet. A page brings its own content and usually ends on <Closing />.
 
-   One light theme. Every other color on the site is a client's. The design rules
+   Two sides, light and dark: ThemeBoot.astro sets one before paint and the flip in the
+   dock turns it over. Every other color on the site is a client's. The design rules
    are in DESIGN.md; the shared look is src/styles/kit.css, and each page imports
    its own stylesheet from src/styles/pages/.
 
@@ -19,6 +20,7 @@ import '../styles/kit.css';
 import TopLine from '../components/TopLine.astro';
 import Dock from '../components/Dock.astro';
 import ClientSheet from '../components/ClientSheet.astro';
+import ThemeBoot from '../components/ThemeBoot.astro';
 import Analytics from '../components/Analytics.astro';
 import StructuredData from '../components/StructuredData.astro';
 import ComingSoon from '../components/ComingSoon.astro';
@@ -120,6 +122,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#f5f5f3" />
+    <ThemeBoot />
 
     {(comingSoonEnabled || noindex) && <meta name="robots" content="noindex, follow" />}
 
@@ -196,6 +199,7 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
 
     <script>
       import '../scripts/kit.js';
+      import '../scripts/theme.js';
       // Mailto fallback: a click with no mail app copies the address and says so.
       import '../scripts/mailto-fallback';
       // GA4 events: a no-op unless the GA tag defined window.gtag. See src/lib/track.ts.
