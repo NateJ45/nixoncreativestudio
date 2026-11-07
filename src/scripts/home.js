@@ -1,5 +1,5 @@
 /* The homepage: the hand of clients that scroll deals into the grid, and draw a card. */
-import { ui, sites } from './kit.js';
+import { ui } from './kit.js';
 var reduce = ui.reduce,
   $ = function (a) {
     return document.querySelector(a);
@@ -13,16 +13,23 @@ tiles.forEach(function (t) {
 });
 ui.wireFootage(grid);
 
-/* Draw a card: a random client opens from its own place in the grid, never the same one twice running. */
-var lastDraw = -1;
+/* Draw a card: a random client opens from its own place in the grid, never the same one twice running.
+   It draws from the windows you can see, so the sheet visibly grows out of one, and from all of them
+   when none is on the screen. */
+var lastDraw = null;
 $('[data-draw]').addEventListener('click', function () {
-  var i;
-  do {
-    i = Math.floor(Math.random() * sites.length);
-  } while (i === lastDraw);
-  lastDraw = i;
-  var tile = grid.querySelector('[data-slug="' + sites[i].slug + '"]');
-  ui.openSheet(sites[i], tile);
+  var inView = tiles.filter(function (t) {
+    var r = t.getBoundingClientRect();
+    return t !== lastDraw && r.bottom > 40 && r.top < innerHeight - 40;
+  });
+  var pool = inView.length
+    ? inView
+    : tiles.filter(function (t) {
+        return t !== lastDraw;
+      });
+  var tile = pool[Math.floor(Math.random() * pool.length)];
+  lastDraw = tile;
+  ui.openSheet(ui.bySlug(tile.dataset.slug), tile);
 });
 
 /* The deal: every window has one spot in the real grid. Scroll carries it there from the hand. */
@@ -96,7 +103,10 @@ function frame(now) {
   var p = Math.min(1, Math.max(0, scrollY / Math.max(200, gridTop - H * 0.6)));
   px += (pxT - px) * (1 - Math.pow(0.002, dt));
   var live = Math.abs(pxT - px) > 0.001;
+  /* Loaded already scrolled, by a reload or Back: everything is simply where it would have ended up. */
+  var seed = ui.restored();
   st.forEach(function (s) {
+    if (seed) s.a = 1;
     if (now - t0 > 260 + s.i * 62 && s.a !== 1) {
       s.av += (190 * (1 - s.a) - 15 * s.av) * dt;
       s.a += s.av * dt;
@@ -108,6 +118,10 @@ function frame(now) {
     var o = (st.length - 1 - s.i) * 0.045,
       tgt = reduce ? 1 : Math.min(1, Math.max(0, (p - o) / (1 - 0.32)));
     tgt = tgt * tgt * (3 - 2 * tgt);
+    if (seed) {
+      s.v = tgt;
+      s.vv = 0;
+    }
     s.vv += (150 * (tgt - s.v) - 19 * s.vv) * dt;
     s.v += s.vv * dt;
     if (Math.abs(tgt - s.v) < 0.0006 && Math.abs(s.vv) < 0.004) {
@@ -147,7 +161,13 @@ function frame(now) {
   if (live) raf = requestAnimationFrame(frame);
 }
 addEventListener('scroll', wake, { passive: true });
-addEventListener('resize', layout);
+/* A phone's URL bar sliding away is a height-only resize, and the grid must not move for it. */
+var laidW = innerWidth;
+addEventListener('resize', function () {
+  if (innerWidth < 720 && innerWidth === laidW) return;
+  laidW = innerWidth;
+  layout();
+});
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
 addEventListener('load', layout);
 addEventListener(
@@ -161,18 +181,17 @@ addEventListener(
   { passive: true },
 );
 st.forEach(function (s) {
-  s.el.addEventListener('pointerenter', function (e) {
-    if (e.pointerType === 'mouse') {
+  ui.stillHover(
+    s.el,
+    function () {
       s.hov = 1;
       wake();
-    }
-  });
-  s.el.addEventListener('pointerleave', function (e) {
-    if (e.pointerType === 'mouse') {
+    },
+    function () {
       s.hov = 0;
       wake();
-    }
-  });
+    },
+  );
   s.el.addEventListener('focus', function () {
     if (s.el.matches(':focus-visible')) {
       s.hov = 1;

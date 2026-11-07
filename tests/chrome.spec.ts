@@ -58,8 +58,11 @@ test.describe('Without JavaScript', () => {
 
 test.describe('With JavaScript', () => {
   test('the current page is marked in the dock', async ({ page }) => {
-    await page.goto('/work/stone-steps-50k/');
+    await page.goto('/work/');
     await expect(page.locator('nav.dock a[href="/work/"]')).toHaveAttribute('aria-current', 'page');
+    // Inside a section, the link is current but not this exact page.
+    await page.goto('/work/stone-steps-50k/');
+    await expect(page.locator('nav.dock a[href="/work/"]')).toHaveAttribute('aria-current', 'true');
     await expect(page.locator('nav.dock a[href="/about/"]')).not.toHaveAttribute(
       'aria-current',
       'page',
