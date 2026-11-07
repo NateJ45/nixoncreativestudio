@@ -230,8 +230,8 @@
   min-width: 2.75rem;
   margin-bottom: 0.7rem;
   padding-top: 0.5rem;
-  border-top: 0.25rem solid var(--c);
-  color: var(--c);
+  border-top: 0.25rem solid var(--cm, var(--c));
+  color: var(--cm, var(--c));
   font: 500 0.8125rem/1.25 var(--body);
   letter-spacing: 0.07em;
   font-variant-numeric: tabular-nums;
@@ -304,14 +304,14 @@
   align-items: center;
   min-height: 2.75rem;
   font-weight: 500;
-  color: var(--c);
+  color: var(--cm, var(--c));
 }
 .tbtn {
   min-height: 2.75rem;
   padding: 0 1.1rem;
   border: 0;
   border-radius: 99rem;
-  background: rgba(0, 0, 0, 0.075);
+  background: var(--wash);
   color: var(--ink);
   font: 500 0.9375rem var(--body);
   cursor: pointer;
@@ -346,6 +346,7 @@ figure {
   background: var(--card);
   border-radius: 1.25rem;
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 22px 40px -28px rgba(0, 0, 0, 0.3);
 }
@@ -373,11 +374,11 @@ figure {
   color: var(--soft);
 }
 .dec-did dt {
-  color: var(--c);
+  color: var(--cm, var(--c));
 }
 .dec-did {
   padding-left: 0.9rem;
-  border-left: 2px solid var(--c);
+  border-left: 2px solid var(--cm, var(--c));
 }
 @container (min-width:40rem) {
   .dec dl {
@@ -426,7 +427,7 @@ figure {
   width: 100%;
   padding: 0;
   border: 0;
-  background: #fff;
+  background: var(--screen);
   border-radius: 0.9rem;
   overflow: hidden;
   cursor: zoom-in;
@@ -486,7 +487,7 @@ html:not(.js) .zoom {
 .win {
   border-radius: 0.9rem;
   overflow: hidden;
-  background: #fff;
+  background: var(--screen);
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.08),
     0 26px 44px -26px rgba(0, 0, 0, 0.42);
@@ -509,13 +510,13 @@ html:not(.js) .zoom {
   display: block;
   width: 100%;
   height: auto;
-  background: #fff;
+  background: var(--screen);
 }
 .walk-s {
   position: relative;
   aspect-ratio: 16/8.6;
   overflow: auto;
-  background: #fff;
+  background: var(--screen);
 }
 .walk-s:focus-visible {
   outline: 3px solid var(--ink);
@@ -569,6 +570,7 @@ html:not(.js) .zoom {
   border-radius: 1.25rem;
   background: var(--card);
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 22px 40px -28px rgba(0, 0, 0, 0.3);
 }
@@ -683,7 +685,7 @@ html:not(.js) .ba .ba-i .ba-b {
   inset: 0;
   overflow: hidden;
   border-radius: 0.9rem;
-  background: #fff;
+  background: var(--screen);
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.08),
     0 26px 44px -26px rgba(0, 0, 0, 0.42);
@@ -720,6 +722,7 @@ html:not(.js) .ba .ba-i .ba-b {
   border-radius: 50%;
   background: #fff;
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.2),
     0 10px 22px -8px rgba(0, 0, 0, 0.5);
   transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
@@ -796,6 +799,7 @@ html:not(.js) .ba .ba-i .ba-b {
   background: var(--card);
   border-radius: 1.25rem;
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 22px 40px -28px rgba(0, 0, 0, 0.3);
 }
@@ -826,7 +830,7 @@ html:not(.js) .ba .ba-i .ba-b {
 }
 .cl {
   fill: none;
-  stroke: var(--c);
+  stroke: var(--cm, var(--c));
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -838,13 +842,13 @@ html:not(.js) .ba .ba-i .ba-b {
   vector-effect: non-scaling-stroke;
 }
 .cc {
-  stroke: rgba(18, 18, 17, 0.4);
+  stroke: color-mix(in srgb, var(--ink) 40%, transparent);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 .cd {
-  fill: var(--c);
-  stroke: #fff;
+  fill: var(--cm, var(--c));
+  stroke: var(--card);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
@@ -855,7 +859,7 @@ html:not(.js) .ba .ba-i .ba-b {
   margin: -0.4rem 0 0 -0.4rem;
   border-radius: 50%;
   background: var(--c);
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--card);
   pointer-events: none;
 }
 .course-ax {
@@ -924,7 +928,7 @@ html:not(.js) .ba .ba-i .ba-b {
 .fig dt {
   font: 600 clamp(2.25rem, 3.6vw, 3.5rem)/1 var(--display);
   letter-spacing: -0.04em;
-  color: var(--c);
+  color: var(--cm, var(--c));
 }
 .fig dd {
   margin: 0.6rem 0 0;
@@ -1033,7 +1037,7 @@ html:not(.js) .ba .ba-i .ba-b {
   padding: 0;
   border: 0;
   border-radius: 1rem;
-  background: #fff;
+  background: var(--screen);
   overflow: auto;
 }
 .lb::backdrop {
@@ -1156,16 +1160,17 @@ html:not(.js) .ba .ba-i .ba-b {
   counter-increment: dec;
   padding-top: 3.5rem;
   padding-bottom: 3.5rem;
-  outline: 1px solid rgba(18, 18, 17, 0.13);
+  outline: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
   outline-offset: -0.45rem;
   box-shadow:
-    0 0 0 1px rgba(18, 18, 17, 0.08),
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 22px 40px -24px rgba(0, 0, 0, 0.34);
 }
 .dec::before {
   position: absolute;
-  color: var(--c);
+  color: var(--cm, var(--c));
   font: 600 1.625rem/1 var(--display);
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
@@ -1195,7 +1200,7 @@ html:not(.js) .ba .ba-i .ba-b {
   background: none;
   border-radius: 0;
   box-shadow: none;
-  border-top: 2px solid var(--c);
+  border-top: 2px solid var(--cm, var(--c));
 }
 .course {
   padding: 0;
@@ -1207,11 +1212,11 @@ html:not(.js) .ba .ba-i .ba-b {
   border-radius: 0;
   background: none;
   box-shadow: none;
-  border-top: 2px solid var(--c);
+  border-top: 2px solid var(--cm, var(--c));
   border-bottom: 1px solid var(--line);
 }
 .more summary i {
-  color: var(--c);
+  color: var(--cm, var(--c));
 }
 .more summary {
   padding-left: 0;

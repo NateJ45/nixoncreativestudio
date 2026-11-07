@@ -10,6 +10,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { contrastRatio, AA_BODY_TEXT } from './contrast.ts';
+import { nightMark, NIGHT_SURFACES } from './night-mark.ts';
 
 const dir = new URL('../content/case-studies/', import.meta.url);
 const studies = readdirSync(dir)
@@ -25,6 +26,7 @@ const studies = readdirSync(dir)
       order: Number(/^order: (\d+)/m.exec(front)?.[1]),
       paper: color('paper'),
       accent: color('accent'),
+      markDark: color('markDark'),
     };
   });
 
@@ -48,6 +50,18 @@ for (const { slug, accent } of studies) {
     for (const ground of ['#f5f5f3', '#ffffff']) {
       const ratio = contrastRatio(accent, ground);
       assert.ok(ratio >= AA_BODY_TEXT, `${slug}: ${accent} on ${ground} is ${ratio.toFixed(2)}:1`);
+    }
+  });
+}
+
+// On the dark side the accent is usually too deep to read, so a study's marks take nightMark().
+for (const { slug, accent, markDark } of studies) {
+  test(`${slug}: its mark on the dark side clears AA on the page and on a card`, () => {
+    assert.ok(accent);
+    const mark = nightMark(accent, markDark);
+    for (const ground of NIGHT_SURFACES) {
+      const ratio = contrastRatio(mark, ground);
+      assert.ok(ratio >= AA_BODY_TEXT, `${slug}: ${mark} on ${ground} is ${ratio.toFixed(2)}:1`);
     }
   });
 }

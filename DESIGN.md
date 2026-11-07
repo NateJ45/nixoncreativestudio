@@ -1,6 +1,6 @@
 ---
 name: Nixon Creative Studio
-description: A calm neutral page, one studio blue, and a deck of client phones. Every other color belongs to a client and stays inside their own window. One typeface, one light theme, and motion that moves with weight.
+description: A calm neutral page, one studio blue, and a deck of client phones. Every other color belongs to a client and stays inside their own window. One typeface, two sides of the same card, light and dark, and motion that moves with weight.
 colors:
   ground: '#f5f5f3'
   ink: '#121211'
@@ -60,7 +60,7 @@ The tokens live in `:root` at the top of `src/styles/kit.css`, and the CSS wins 
 **The idea: a calm page, and a deck of real client sites.** The page is a quiet neutral so that the work can be loud. Each client brings one rich color inside a phone window, and everything that moves, moves with a little weight, like a card being dealt. The studio itself owns exactly one color, a blue, and uses it sparingly.
 
 - **One typeface.** Hanken Grotesk, self-hosted as one variable file (`public/assets/fonts/hanken.woff2`) and preloaded in `BaseLayout.astro`.
-- **One light theme.** There is no dark mode, no theme toggle and no Pause motion button (the one pause button on the site belongs to the client sheet's looping clip). Reduced motion is the one preference the site answers, and it answers it everywhere.
+- **Two sides.** Light is the face of the card and dark is its back, each designed in its own right (section 2a). The small card in the dock turns the page over. There is no Pause motion button (the one pause button on the site belongs to the client sheet's looping clip). Reduced motion is answered everywhere.
 - **Plain CSS.** Shared styles are in `src/styles/kit.css`; each page imports its own file from `src/styles/pages/`. There are no utility classes and no framework.
 - **Real markup first.** The top line, the dock, the closing and every window are in the HTML. Scripts only move them, so a page reads and links correctly with JavaScript off.
 
@@ -78,11 +78,39 @@ The tokens live in `:root` at the top of `src/styles/kit.css`, and the CSS wins 
 
 Rules:
 
-- **The page is neutral.** Anything that is not a client's work is `--ground`, `--card`, `--ink`, `--soft` or the studio blue. No second brand color, no gradients, no glow.
+- **The page is neutral.** Anything that is not a client's work is `--ground`, `--card`, `--ink`, `--soft` or the studio blue. No second brand color, no gradients, and no glow apart from the dark side's cast light (section 2a).
 - **One studio blue.** It carries `h1 b` emphasis (skipped when `<body>` carries `data-ink`; nothing sets it today), primary actions (`.chip.go`, the dock's Start a project), prose link underlines, the text selection and the closing panel. White on the blue and the blue on the page both clear AA; the pairs are asserted in `src/lib/kit-tokens.test.ts`.
 - **A client's color lives only in their work.** It arrives through `--c` (their accent) and `--p` (their paper, and the text color on their accent), set on a `.tile`, a `.band`, the client sheet or the case-study `<body>`. Nothing else on the site picks one up. On a case study it carries down the neutral page in small things: a numbered mark opening each chapter, the corner number and a rule on "What I did" in a decision, the figures' rules, the rule over What I built, the text selection and the quote on its own color. The page itself stays `--ground`. The pairs are checked in `src/lib/case-palettes.test.ts`.
 - **A quote band and the blue closing never touch.** A `.band` is the one other full-width color, so keep a neutral section between a band and `Closing`. The home page puts the price section there.
 - **Never thin a color with opacity to get a grey.** Use `--soft`. The one deliberate exception is `.pip` and the `.keyed` inner rule, which are decoration at low opacity.
+
+## 2a. The dark side
+
+Dark is the back of the card, not light with the values inverted. The tokens are set again in `:root[data-theme='dark']`, inside `@media screen` so that print always takes the light ones.
+
+| Token      | Dark value | Used for                                        |
+| ---------- | ---------- | ----------------------------------------------- |
+| `--ground` | `#14162f`  | The page: the deck's printed ink, a deep cobalt |
+| `--card`   | `#1d2042`  | Cards                                           |
+| `--ink`    | `#f3f2ec`  | Text, and the bone card in the price hand       |
+| `--soft`   | `#b2b4cc`  | Supporting text                                 |
+| `--accent` | `#aab3ff`  | The blue as text, lifted so it reads            |
+| `--fill`   | `#3345f0`  | The blue as a surface: buttons and the closing  |
+
+`--fill` equals the studio blue on the light side. Use `--accent` for blue text and `--fill` for a blue surface, and every new pair goes in `src/lib/kit-tokens.test.ts`, which checks both sides.
+
+What only the dark side does:
+
+- **Lit edges.** A shadow can't be seen on a dark page, so cards carry `--rim`, a lit top edge and a faint ring. `--rim` draws nothing on the light side. A new card puts it first in its `box-shadow`.
+- **The work lights the table.** A window's screen rests a little dim. Hover, focus or playing footage brings it to full brightness and casts that client's color on the page under it. This is the one exception to "no glow" and to a client's color staying in its window: it belongs to a real object, and only on the dark side.
+- **The hand turns over too.** `--ink` is bone, so the ink card in the price hand becomes the bright one, with its text in `--on-ink`.
+- **Client marks use the client's own second color.** A deep accent would vanish, so a study's chapter marks, figures and rules use `--cm`, set from `nightMark()` (`src/lib/night-mark.ts`): `palette.markDark` where the client has one, most often a gold, otherwise the accent lifted as little as it takes to clear AA. Write `var(--cm, var(--c))` for a client's color on the neutral page, and plain `--c` on the client's own paper.
+- **The lights come up.** A `[data-weigh]` line brightens as it gains weight, through `--lit` from `kit.js`.
+- **The closing is the back of the deck,** with the same faint lattice as the flip's card, and it is the one full-strength color on the page.
+
+Surfaces that keep their color on either side get the light tokens back: `.end`, `.band`, `.sheet` and anything set on a client's paper. A new one joins that `:is()` list in `kit.css`.
+
+**The flip.** `ThemeBoot.astro` sets `data-theme` before first paint: a saved choice (`localStorage` key `ncs-theme`), otherwise the device. Until a choice is made the page keeps following the device. `ThemeFlip.astro` is the button in the dock, and `src/scripts/theme.js` turns the page over on its vertical axis with a same-document view transition, showing the studio blue behind it for the moment it is edge-on. Reduced motion, or a browser with no view transitions, swaps with no animation. Without script the page is light and the button is hidden.
 
 ## 3. Typography
 
@@ -126,7 +154,7 @@ Shapes: cards 1.25rem, bands and the closing 1.75rem, buttons and the dock fully
   - **The status** ("Booking projects" when `site.bookingOpen`, "Get in touch" when not; "Booking" alone under 52rem) is a button that deals `.reach`, a card with the phone, the email, `site.firstConversation` and Start a project. It is a native `popover`, so it opens, light-dismisses and takes Escape with no script. It closes after 60px of scrolling. Its title is not a heading, because it sits ahead of the H1 in the markup.
   - **Scrolling up** past 240px brings both corners back as `.top.float`: the same places, each its own frosted pill, the name folded down to Nixon (it unfolds on hover and keyboard focus). Scrolling down sends them away, and at the very top they melt into the plain line. The space between stays clickable. A page with its own bar stuck to the top keeps that spot, so while `.dw-bar` or `.toc` is sticky there are no pills. With no script it is a plain line that scrolls away.
   - `html` keeps 72px of `scroll-padding-top` so a focused element or a jump target stops clear of the pills.
-- **Dock** (`Dock.astro`): the one nav at every width. A floating pill at the bottom of the screen with plain links (Work, Prices, About, Start a project), no drawer and no menu button. It works with no script; `kit.js` only slides a highlight to the link you are near. It keeps `view-transition-name: dock` so it stays put between pages.
+- **Dock** (`Dock.astro`): the one nav at every width. A floating pill at the bottom of the screen with plain links (Work, Prices, About, Start a project), no drawer and no menu button. It works with no script; `kit.js` only slides a highlight to the link you are near. It keeps `view-transition-name: dock` so it stays put between pages and while the page turns over. It holds the flip, and under 23.5rem the last link's visible label shortens to Start while its accessible name stays whole.
 - **Closing** (`Closing.astro`): the studio blue, edge to edge, down to the bottom of every page. The page's line, the first-conversation and reply-time sentences from `site.ts`, the way to reach me, the deck, the name, and a legal line that gains Journal and Photography when those open (`getGatedNav()`).
 - **Quote band** (`QuoteBand.astro`): a client's own words on their own color, with their phone breaking out of the band. Real quotes only, read from the study's frontmatter.
 - **Client sheet** (`ClientSheet.astro`): a native `<dialog>`. A window grows into its color and the screens fan out; its button, Escape and the browser's Back close it, because opening it adds a history entry. It has its own address, the page plus `?client=<slug>`, so it can be shared and survives a reload; with no script that address is just the page. Coming back from a case study reopens it. Its looping clip has a pause button (WCAG 2.2.2).
@@ -160,7 +188,7 @@ House motion is **springs, in JavaScript**. `ui.spring(k, c, v)` in `src/scripts
 
 **Don't**
 
-- Don't add a second typeface, a dark theme, a theme toggle or a Pause motion button.
+- Don't add a second typeface or a Pause motion button. Don't make a dark variant by inverting: a new surface gets its dark answer designed with it.
 - Don't use the studio blue for a client's work, or a client's color for the studio's chrome.
 - Don't put a quote band next to the closing.
 - Don't use suits, emoji icons, sparkles, glow blobs, shimmer or a centred SaaS hero.

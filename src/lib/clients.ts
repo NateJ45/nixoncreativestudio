@@ -12,6 +12,7 @@
    ============================================================================ */
 
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { nightMark } from './night-mark';
 
 /** The order the deck is dealt in: home, /work and the closing. */
 export const DECK = [
@@ -44,6 +45,8 @@ export interface Client {
   outcome: string;
   /** The client's own color. Carries surfaces and the on-color text pair. */
   accent: string;
+  /** The color of the client's marks on the dark side of this site. See night-mark.ts. */
+  night: string;
   /** The client's paper, the text on their color. */
   paper: string;
   host: string;
@@ -70,6 +73,7 @@ export function toClient(entry: CollectionEntry<'case-studies'>): Client {
     hook: d.hook ?? '',
     outcome: d.outcome ?? '',
     accent: d.palette?.accent ?? '#121211',
+    night: nightMark(d.palette?.accent ?? '#121211', d.palette?.markDark),
     paper: d.palette?.paper ?? '#ffffff',
     host: d.facts?.host ?? (live ? hostOf(live) : ''),
     live,
