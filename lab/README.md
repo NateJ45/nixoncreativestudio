@@ -1,6 +1,6 @@
 # Motion lab
 
-Prototypes, never for main as is. Footage is not committed; re-make it with `node lab/tools/film.mjs` and `node lab/tools/film-phone.mjs`.
+Prototypes, never for main as is. Footage is not committed. Bring it back from the deployed lab with `node lab/tools/pull-assets.mjs`, or re-make it with `node lab/tools/film.mjs` and `node lab/tools/film-phone.mjs`. Always have it on disk before packaging: a deploy without it deletes it from the worker.
 Live at https://ncs-motion-lab.nathanjnixon86.workers.dev/deal/ (a separate noindex worker).
 
 ## Deal
@@ -8,6 +8,7 @@ Live at https://ncs-motion-lab.nathanjnixon86.workers.dev/deal/ (a separate noin
 `deal/` is a mock of the whole site in the current direction: a calm page, one studio blue (`--accent` in `kit.css`) for headline emphasis, primary actions and the closing panel, and every other color inside a client's phone browser window. Every route is here: home, work, churches, prices, about, start, the eight case studies, privacy, accessibility, colophon and the 404.
 
 - `deal/kit.js` and `deal/kit.css` hold the shared parts: top line, floating menu, closing block, client sheet, windows and footage.
+- The deck, in `kit.css` and on home and prices so far: a card is lettered or numbered in two opposite corners with `.pip`, the far one upside down, with no suits (`L`, `S`, `F` for the tiers). `.lb` is the small label voice for figures and facts, still Hanken with tabular numbers. `.giant` and `.from-num` are the one big moment on a page, sized in `cqw` so they fill their line. Other pages still use the older white `.card`.
 - `deal/study/_build.mjs` generates each case study from the repo's mdx. Edit it and rerun it rather than editing the output.
 - The mock is plain HTML, CSS and vanilla JS. The shared chrome is built by script, the form has no inbox behind it, and Privacy, Accessibility and Colophon describe the site as it would be after a port to Astro. A real build needs the chrome in the markup and the live analytics and form wiring.
 
@@ -17,6 +18,7 @@ Live at https://ncs-motion-lab.nathanjnixon86.workers.dev/deal/ (a separate noin
 - `tools/sweep.mjs [url]` shoots every route at 1440, 390 and 320, and reports overflow and errors.
 - `tools/verify.mjs [url]` runs axe on every route and client sheet.
 - `tools/fps-check.mjs [url]` plays footage in Chrome and counts the frames presented. Footage is filmed at 60 fps.
+- `tools/pull-assets.mjs [url]` copies footage and captures back from the deployed lab. Files already on disk are skipped.
 - `tools/package.mjs` writes the deploy package. Test scratch and internal files stay out of it.
 
 ## Logo
