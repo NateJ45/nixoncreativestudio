@@ -215,7 +215,7 @@ export var ui = {
 };
 
 [].forEach.call(doc.querySelectorAll('[data-end]'), function (el) {
-  /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a ninth card lands on top. */
+  /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a last card, Yours, lands on top. */
   var stage = $('[data-gather]', el),
     nine = $('[data-nine]', el);
   var gcs = [].slice.call(el.querySelectorAll('.gc')).map(function (g, i) {

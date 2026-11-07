@@ -56,6 +56,7 @@ var space = $('[data-space]'),
   W = 0,
   H = 0,
   gridTop = 1,
+  dealEnd = 1,
   px = 0,
   pxT = 0,
   t0 = performance.now();
@@ -76,6 +77,11 @@ function layout() {
     cx = W / 2;
   var spread = narrow ? W * 0.068 : Math.min(W * 0.082, 132);
   gridTop = grid.getBoundingClientRect().top + scrollY;
+  /* The windows land while the whole headline can still be read: the grid stops at 60% of the screen, or lower when a tall headline needs the room. */
+  dealEnd = Math.max(
+    H * 0.6,
+    gridTop - ($('#wh').getBoundingClientRect().top + scrollY) + H * 0.16,
+  );
   st.forEach(function (s) {
     var r = s.el.parentNode.getBoundingClientRect(),
       midY = r.top + s.el.offsetTop + s.el.offsetHeight / 2,
@@ -100,7 +106,7 @@ function frame(now) {
   raf = 0;
   var dt = Math.min(0.033, (now - last) / 1000 || 0.016);
   last = now;
-  var p = Math.min(1, Math.max(0, scrollY / Math.max(200, gridTop - H * 0.6)));
+  var p = Math.min(1, Math.max(0, scrollY / Math.max(200, gridTop - dealEnd)));
   px += (pxT - px) * (1 - Math.pow(0.002, dt));
   var live = Math.abs(pxT - px) > 0.001;
   /* Loaded already scrolled, by a reload or Back: everything is simply where it would have ended up. */

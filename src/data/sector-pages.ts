@@ -25,7 +25,7 @@ export const CHURCHES: SectorPage = {
   sector: 'church',
   title: 'Church websites',
   description:
-    'Church websites I designed and built: a clear first Sunday for visitors, and pages the staff keep current themselves. See the {n} church sites live today.',
+    'Church websites I designed and built: a clear first Sunday for visitors, and pages the staff keep current. Read the case studies and visit the live sites.',
   label: 'Churches',
 };
 

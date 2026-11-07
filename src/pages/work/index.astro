@@ -8,7 +8,7 @@ import '../../styles/pages/work.css';
 import Tile from '../../components/Tile.astro';
 import Caption from '../../components/Caption.astro';
 import Closing from '../../components/Closing.astro';
-import { getClients, SECTOR_LABEL } from '../../lib/clients';
+import { countWord, getClients, SECTOR_LABEL } from '../../lib/clients';
 import { plainText, wordSpans } from '../../lib/words';
 
 const clients = await getClients();
@@ -21,32 +21,32 @@ const filters = [
     n: clients.filter((c) => c.sectorKey === key).length,
   })),
 ];
-const heading = `<span>${n} sites,</span> <b>all live today.</b>`;
+const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
 ---
 
 <BaseLayout
   title="Case studies | Nixon Creative Studio"
-  description={`${n} live client websites I planned, designed and built for churches, schools, nonprofits and small businesses, each with the thinking behind it.`}
+  description="Selected case studies from websites I planned, designed and built for churches, schools, nonprofits and small businesses, with links to the live sites."
 >
   <header class="page-head">
     <div class="big">
       <h1
         id="h"
-        class="giant"
-        style="--fit:12.2;--fitm:18.8"
+        class="giant stack"
+        style="--fit:16;--fitm:18"
         aria-label={plainText(heading)}
         set:html={wordSpans(heading)}
       />
     </div>
     <p class="lede">
-      Churches, schools, nonprofits and small businesses. Each one started with a conversation about
-      what the organization actually needed.
+      Churches, schools, nonprofits and small businesses. Read how each one came together, then
+      visit the live site.
     </p>
   </header>
 
-  <section class="dw" aria-label="The sites" data-section data-view="grid">
+  <section class="dw" aria-label="The case studies" data-section data-view="grid">
     <div class="dw-bar" data-bar>
-      <div class="dw-seg" role="group" aria-label="Show sites by sector" data-filters>
+      <div class="dw-seg" role="group" aria-label="Show case studies by sector" data-filters>
         <span class="dw-pill" data-pill aria-hidden="true"></span>
         {filters.map((f, i) => (
           <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-f={f.key}>
@@ -54,7 +54,7 @@ const heading = `<span>${n} sites,</span> <b>all live today.</b>`;
           </button>
         ))}
       </div>
-      <div class="dw-seg" role="group" aria-label="View sites as" data-views>
+      <div class="dw-seg" role="group" aria-label="View case studies as" data-views>
         <span class="dw-pill" data-pill aria-hidden="true"></span>
         <button type="button" aria-pressed="true" data-v="grid">
           Grid
@@ -64,7 +64,7 @@ const heading = `<span>${n} sites,</span> <b>all live today.</b>`;
         </button>
       </div>
       <p class="dw-status" role="status" data-status>
-        Showing all {n} sites.
+        Showing all {n} case studies.
       </p>
       <a class="dw-more" href="/churches/" data-more hidden>
         More on the church sites I build
@@ -81,6 +81,17 @@ const heading = `<span>${n} sites,</span> <b>all live today.</b>`;
               <a href={s.study}>
                 Read the case study<span class="vh">: {s.name}</span>
               </a>
+              {s.live && (
+                <a
+                  href={s.live}
+                  target="_blank"
+                  rel="noopener"
+                  data-cta="visit_client_site"
+                  data-cta-location="work_grid"
+                >
+                  Visit the site<span class="vh">: {s.name} (opens in a new tab)</span>
+                </a>
+              )}
             </div>
           </div>
         </li>
@@ -98,6 +109,18 @@ const heading = `<span>${n} sites,</span> <b>all live today.</b>`;
           <a href={s.study}>
             Read the case study<span class="vh">: {s.name}</span>
           </a>
+          {s.live && (
+            <a
+              class="vis"
+              href={s.live}
+              target="_blank"
+              rel="noopener"
+              data-cta="visit_client_site"
+              data-cta-location="work_list"
+            >
+              Visit the site<span class="vh">: {s.name} (opens in a new tab)</span>
+            </a>
+          )}
         </li>
       ))}
     </ul>

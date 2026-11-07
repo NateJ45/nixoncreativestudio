@@ -249,6 +249,9 @@ html:not(.js) .dw-grid,
   font-weight: 500;
   text-underline-offset: 0.2em;
 }
+.more a + a {
+  margin-left: 1.25rem;
+}
 
 /* The same sites as rows. In the page from the start, so the links are there without script. */
 .dw-rows {
@@ -259,7 +262,7 @@ html:not(.js) .dw-grid,
 .dw-rows li {
   position: relative;
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1.25fr) minmax(0, 0.6fr) minmax(0, 1.9fr) auto;
+  grid-template-columns: 2.75rem minmax(0, 1.25fr) minmax(0, 0.6fr) minmax(0, 1.9fr) auto auto;
   gap: 0.1rem 1.5rem;
   align-items: center;
   padding: 0.65rem 1rem 0.65rem 0.75rem;
@@ -310,6 +313,18 @@ html:not(.js) .dw-grid,
   outline: 2px solid var(--ink);
   outline-offset: -2px;
 }
+/* The live site sits above the row's stretched link to the case study. */
+.dw-rows a.vis {
+  position: relative;
+  z-index: 1;
+}
+.dw-rows a.vis::after {
+  content: none;
+}
+.dw-rows a.vis:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
 .mini {
   display: block;
   aspect-ratio: 9/15;
@@ -350,7 +365,7 @@ html:not(.js) .dw-grid,
     padding: 0.7rem 0.6rem;
   }
   .mini {
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 5;
   }
   .dw-rows h2,
   .dw-rows .sc,
@@ -363,6 +378,13 @@ html:not(.js) .dw-grid,
   }
   .dw-rows a {
     margin-top: 0.3rem;
+  }
+  .dw-rows a.vis {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    min-height: 2.75rem;
+    margin-top: 0;
   }
   .dw-grid li.few .more p {
     margin-top: 0.4rem;

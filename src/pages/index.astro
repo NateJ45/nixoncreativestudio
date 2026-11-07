@@ -5,11 +5,11 @@
    Top to bottom:
      Hero        the headline, with the portrait inside the sentence, and the
                  empty space the hand of clients is dealt into.
-     Work        the giant "Eight live sites.", the ledger, and the grid. Every
+     Work        the giant "Eight selected case studies.", the ledger, and the grid. Every
                  window has one spot here; scroll carries it from the hand.
      Quote band  one real client quote on their color, phone breaking out.
      Prices      the three cards, dealt out of a stack.
-     Closing     the gathering deck and the ninth card.
+     Closing     the gathering deck and the Yours card.
 
    All of it is in the markup. src/scripts/home.js only moves the windows, so
    with no JavaScript the hand's space collapses and the grid is simply the grid.
@@ -20,14 +20,14 @@ import Caption from '../components/Caption.astro';
 import QuoteBand from '../components/QuoteBand.astro';
 import DealtPrices from '../components/DealtPrices.astro';
 import Closing from '../components/Closing.astro';
-import { countWord, getClients, sectorCounts } from '../lib/clients';
+import { countWord, getClients, sectorNames } from '../lib/clients';
 import { webTiers } from '../data/pricing';
 import { site } from '../data/site';
 import { money } from '../lib/money';
 
 const clients = await getClients();
 const city = site.address.split(',')[0];
-const ledger = ['Since 2020', 'One person', city, ...sectorCounts(clients)];
+const ledger = ['Since 2020', 'One person', city, ...sectorNames(clients)];
 
 const lead = ['I', 'build', 'websites'];
 const heavy = ['pull', 'their', 'weight.'];
@@ -72,9 +72,9 @@ const heavy = ['pull', 'their', 'weight.'];
   </section>
   <section class="work" id="work" aria-labelledby="wh">
     <div class="big">
-      <h2 id="wh" class="giant" data-weigh="0.38 0.06">
-        <span>{countWord(clients.length)}</span>
-        <span>live sites.</span>
+      <h2 id="wh" class="giant stack" data-weigh="0.38 0.06" style="--fit:17.4;--fitm:18.4">
+        <span>{countWord(clients.length)} selected</span>
+        <span>case studies.</span>
       </h2>
     </div>
     <div class="ledger">

@@ -143,7 +143,7 @@ test('/llms.txt is plain text and lists every case study', async ({ page, reques
   expect(res.headers()['content-type']).toContain('text/plain');
   const text = await res.text();
   expect(text).toMatch(/^# Nixon Creative Studio/);
-  expect(text).toContain(`## Case studies (${studies.length})`);
+  expect(text).toContain('## Selected case studies');
   for (const path of studies) expect(text, `llms.txt lists ${path}`).toContain(path);
 });
 

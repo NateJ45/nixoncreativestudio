@@ -1,7 +1,7 @@
 /* ============================================================================
    Clients | The deck
    ============================================================================
-   One list of the eight client sites, read from the case study frontmatter:
+   One list of the selected case studies, read from the case study frontmatter:
    name, sector, hook, colors and live address all live in the MDX, so a window,
    a sheet, a quote band and the closing deck can never disagree. Only the deal
    order is kept here, because the deck runs in its own order, not the study
@@ -98,27 +98,19 @@ export async function getClient(slug: string): Promise<Client> {
   return client;
 }
 
-/** Plural and singular sector names for the ledger counts. */
+/** Sector names for the ledger. Names, not counts: the case studies are a selection, not the whole list. */
 const PLURAL: Record<string, string> = {
-  Nonprofit: 'nonprofits',
-  Church: 'churches',
-  School: 'schools',
-  'Small business': 'small businesses',
-};
-const SINGLE: Record<string, string> = {
-  Nonprofit: 'nonprofit',
-  Church: 'church',
-  School: 'school',
-  'Small business': 'small business',
+  Nonprofit: 'Nonprofits',
+  Church: 'Churches',
+  School: 'Schools',
+  'Small business': 'Small businesses',
 };
 
-/** "3 nonprofits", largest first, read from the client list. */
-export function sectorCounts(clients: Client[]): string[] {
+/** "Nonprofits", most-shown sector first, read from the client list. */
+export function sectorNames(clients: Client[]): string[] {
   const counts = new Map<string, number>();
   for (const c of clients) counts.set(c.sector, (counts.get(c.sector) ?? 0) + 1);
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([k, n]) => `${n} ${n === 1 ? SINGLE[k] : PLURAL[k]}`);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => PLURAL[k] ?? k);
 }
 
 /** The big line on the homepage spells the real count. */
