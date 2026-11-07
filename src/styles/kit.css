@@ -747,6 +747,7 @@ blockquote {
   z-index: 40;
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
   gap: 0.1rem;
   padding: 0.3rem;
   border-radius: 99rem;
@@ -758,7 +759,7 @@ blockquote {
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 14px 34px -12px rgba(0, 0, 0, 0.34);
 }
-.js .dock {
+.js:not(.dock-here) .dock {
   animation: dock 1s cubic-bezier(0.3, 1.35, 0.5, 1) both;
   animation-delay: 1s;
 }
@@ -770,7 +771,7 @@ blockquote {
     transform: translate(-50%, 0);
   }
 }
-.dock a {
+.dock > a {
   position: relative;
   z-index: 1;
   display: inline-flex;
@@ -783,12 +784,28 @@ blockquote {
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-.dock a.go {
+.dock > a:active {
+  transform: scale(0.95);
+}
+.dock > a.go {
   background: var(--fill);
   color: #fff;
   margin-left: 0.15rem;
 }
+/* The way home, once the top line has scrolled away: the wordmark's N. A phone keeps the room. */
+.dock > a.home {
+  justify-content: center;
+  width: 2.75rem;
+  padding: 0;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+/* The puck: it rests on the page you are on and goes to the link you are near. Two springs, one
+   for each edge, so it stretches on the way and gathers when it lands. kit.js drives it. */
 .dock .slide {
   position: absolute;
   top: 0.3rem;
@@ -797,11 +814,307 @@ blockquote {
   width: 0;
   border-radius: 99rem;
   background: var(--wash);
-  transition:
-    transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1),
-    width 0.5s cubic-bezier(0.3, 1.35, 0.5, 1),
-    opacity 0.2s;
+  transition: opacity 0.2s;
   opacity: 0;
+}
+/* How far down the page you are: a hairline travelling round the pill's edge. */
+.dk-rail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.dk-rail.on {
+  opacity: 1;
+}
+.dk-rail path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+}
+html:not(.js) .dk-rail {
+  display: none;
+}
+/* A phone tightens up. Under 375px the whole row still cannot fit, so the action says Start; "a
+   project" stays for a screen reader, and 320px holds all five targets at 44px high. */
+@media (max-width: 40rem) {
+  .dock > a.home {
+    display: none;
+  }
+}
+@media (max-width: 26rem) {
+  .dock {
+    gap: 0;
+  }
+  .dock > a {
+    padding: 0 0.55rem;
+  }
+  .dock > a.go {
+    margin-left: 0.1rem;
+    padding: 0 0.8rem;
+  }
+}
+@media (max-width: 23.4rem) {
+  .dk-more {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* The space in "Start a project": the words are two flex items, which would otherwise lose it. */
+.dk-more {
+  white-space: pre;
+}
+/* While a hand is open the page steps back, so the cards read over anything, even the home deck. */
+.dock-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: var(--ground);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.dock-scrim.on {
+  opacity: 0.78;
+}
+/* A hand dealt out of the dock. kit.js places each card with a spring (--v runs 0 to 1, --d is its
+   place from the middle of the hand); only a wide screen with a mouse or a keyboard opens one. */
+.dk-hand {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 0.5rem);
+  width: 0;
+  height: 0;
+  /* Nothing here takes the page's clicks until it is open. */
+  pointer-events: none;
+}
+.dk-hand[hidden] {
+  display: none;
+}
+.dk-hand.on {
+  pointer-events: auto;
+}
+.dk-hand.on::before {
+  /* The bridge: the pointer can cross from the link to a card without the hand folding. */
+  content: '';
+  position: absolute;
+  left: -24rem;
+  width: 48rem;
+  bottom: 0.5rem;
+  height: 18rem;
+}
+.fc {
+  position: absolute;
+  left: 0;
+  bottom: 2.4rem;
+  display: block;
+  width: var(--fw);
+  margin-left: calc(var(--fw) / -2);
+  color: var(--ink);
+  text-decoration: none;
+  transform-origin: 50% 100%;
+  transform: translate(
+      calc(var(--d) * var(--fs) * var(--v, 0)),
+      calc((1 - var(--v, 0)) * 7rem + var(--d) * var(--d) * var(--v, 0) * var(--fa))
+    )
+    rotate(calc(var(--d) * var(--fr) * var(--v, 0))) scale(calc(0.55 + var(--v, 0) * 0.45));
+  opacity: min(1, calc(var(--v, 0) * 3));
+  z-index: calc(10 - var(--far, 0));
+}
+.fc:hover,
+.fc:focus-within {
+  z-index: 20;
+}
+.fc-in {
+  display: block;
+  position: relative;
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.fc:hover .fc-in,
+.fc:focus-visible .fc-in {
+  transform: translateY(-0.9rem) scale(1.05);
+}
+.fc:focus-visible {
+  outline: none;
+}
+.fc:focus-visible .fc-in {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.dk-cap {
+  position: absolute;
+  bottom: 16.5rem;
+  left: 0;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.75rem;
+  border-radius: 99rem;
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 500 0.9375rem/1.2 var(--body);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.dk-hand.on .dk-cap {
+  opacity: 1;
+  transition-delay: 0.12s;
+}
+/* A client's phone: their color around their own page, like the windows on the home page. */
+.fc-phone {
+  --fw: 6rem;
+  --fs: 5.35rem;
+  --fa: 0.075rem;
+  --fr: 1.6deg;
+}
+.fc-phone .fc-in {
+  padding: 0.5rem 0.25rem 0.6rem;
+  border-radius: 1rem;
+  background: var(--c);
+  box-shadow:
+    var(--rim),
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 18px 30px -16px rgba(0, 0, 0, 0.55);
+}
+.fc-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.2rem;
+  background: #fff;
+}
+/* A price card: the same three faces as the price hand, with the same corner letters. */
+.fc-price {
+  --fw: 9.5rem;
+  --fs: 8.9rem;
+  --fa: 0.5rem;
+  --fr: 4deg;
+  --pips: 1.125rem;
+  --pipx: 0.7rem;
+  --pipy: 0.6rem;
+}
+.fc-price .fc-in {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  aspect-ratio: 5/7;
+  padding: 0 0.95rem;
+  border-radius: 1rem;
+  background: var(--fcb);
+  color: var(--fci);
+  box-shadow:
+    var(--rim),
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 18px 30px -16px rgba(0, 0, 0, 0.55);
+}
+.fc-price .label {
+  color: inherit;
+}
+.fc-price strong {
+  font: 600 1.5rem/1 var(--display);
+  letter-spacing: -0.03em;
+}
+.fc-paper {
+  --fcb: var(--card);
+  --fci: var(--ink);
+}
+.fc-blue {
+  --fcb: var(--fill);
+  --fci: #fff;
+}
+.fc-ink {
+  --fcb: var(--ink);
+  --fci: var(--on-ink);
+}
+/* One wide card: me, or the way to reach me. */
+.fc-me,
+.fc-yours {
+  --fs: 0rem;
+  --fa: 0rem;
+  --fr: 0deg;
+}
+.fc-me {
+  --fw: 20rem;
+}
+.fc-me .fc-in,
+.fc-yours .fc-in {
+  border-radius: 1.25rem;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow:
+    var(--rim),
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 22px 36px -18px rgba(0, 0, 0, 0.55);
+}
+.fc-me .fc-in {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem;
+}
+.fc-me img {
+  flex: none;
+  width: 5.25rem;
+  height: 6.5rem;
+  object-fit: cover;
+  object-position: 50% 28%;
+  border-radius: 0.75rem;
+}
+.fc-text {
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  color: var(--soft);
+}
+.fc-text strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font: 600 1.125rem/1.1 var(--display);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.fc-yours {
+  --fw: 19rem;
+  --pips: 1.125rem;
+  --pipx: 0.8rem;
+  --pipy: 0.65rem;
+}
+.fc-yours .fc-in {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 1.1rem 1.5rem 1.2rem 2.5rem;
+}
+.fc-yours strong {
+  font: 700 1.75rem/1 var(--display);
+  letter-spacing: -0.035em;
+  margin-bottom: 0.2rem;
+}
+.fc-say {
+  margin-bottom: 0.4rem;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  color: var(--soft);
+}
+.fc-yours a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  color: var(--accent);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-underline-offset: 0.18em;
 }
 
 /* Open a client: the tile grows into a sheet of its color and the screens fan out. */
@@ -1048,6 +1361,13 @@ blockquote {
   .js .dock {
     animation: none;
   }
+  .dock > a,
+  .dock .slide,
+  .dk-rail,
+  .dock-scrim,
+  .fc-in {
+    transition: none;
+  }
   .sheet,
   .pane,
   .fade,
@@ -1144,28 +1464,12 @@ main {
 .prose ol {
   margin: 0 0 1rem;
 }
-.dock a[aria-current]:not(.go) {
+/* With no script the current page wears the highlight itself; with script the puck rests on it. */
+html:not(.js) .dock > a[aria-current]:not(.go) {
   background: var(--wash);
-}
-.dock a.go[aria-current] {
-  background: var(--fill);
 }
 .js .w {
   animation-delay: calc(var(--n) * 55ms + var(--wd, 120ms));
-}
-.end .legal {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.25rem 1.25rem;
-  max-width: none;
-  margin-top: 2.25rem;
-  font-size: 0.9375rem;
-}
-.end .legal a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
 }
 .top.on-color .mark,
 .top.on-color .status {
@@ -1182,22 +1486,6 @@ main {
 
 /* The smallest phones: the floating menu must fit. */
 @media (max-width: 23.5rem) {
-  .dock a {
-    padding: 0 0.45rem;
-  }
-  .dock a.go {
-    margin-left: 0.05rem;
-    padding: 0 0.85rem;
-  }
-  /* With the flip in the dock there is no room for the whole label. Its name stays whole. */
-  .go-more {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
   .end {
     padding-inline: 0.75rem;
   }
@@ -1813,10 +2101,99 @@ h1.giant b {
 }
 .end-main {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4.5fr) minmax(0, 4fr);
+  grid-template-areas: 'say work deck';
   gap: clamp(2rem, 4vw, 4rem);
   align-items: center;
   padding-block: clamp(3rem, 8vh, 6rem);
+}
+.end-say {
+  grid-area: say;
+}
+/* The selected work, beside its deck. A name pulls its card out, and one white bar travels
+   between the names on the same kind of spring as the dock's highlight. */
+.end-work {
+  grid-area: work;
+  min-width: 0;
+}
+.end-work > .label {
+  color: #fff;
+}
+.end-work ul {
+  position: relative;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.end-work li {
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-work li:nth-last-child(2) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-work li a {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem;
+  margin-inline: -0.7rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.end-work li b {
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+}
+.end-work li .label {
+  flex: none;
+  color: inherit;
+  font-size: 0.75rem;
+}
+.end-work li a.on {
+  color: var(--fill);
+}
+.end-work li a.on b,
+.end-work li a[aria-current] b {
+  font-weight: 700;
+}
+html:not(.js) .end-work li a:hover {
+  background: #fff;
+  color: var(--fill);
+}
+.end-work li a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 0.7rem;
+}
+.end-work li.end-slide {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: -0.7rem;
+  right: -0.7rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.end-all {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  color: #fff;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
 }
 .end h2 {
   font-size: var(--type-h1);
@@ -1832,7 +2209,8 @@ h1.giant b {
   justify-content: flex-start;
 }
 .gather {
-  --gw: clamp(9.5rem, 15vw, 14.5rem);
+  --gw: clamp(9.5rem, 13vw, 13.5rem);
+  grid-area: deck;
   position: relative;
   display: grid;
   justify-items: center;
@@ -1918,9 +2296,64 @@ h1.giant b {
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
+/* The site, as a ruled index rather than one long line. */
+.end-index {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem clamp(1.5rem, 3vw, 3rem);
+  padding-block: 1.1rem clamp(2.5rem, 6vh, 4rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+.end-index div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.end-index .label {
+  margin-bottom: 0.35rem;
+  color: #fff;
+}
+.end-index a,
+.end-base a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: #fff;
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.end-index a:hover,
+.end-base a:hover {
+  text-decoration: underline;
+  transform: translateX(0.2rem);
+}
 .end-name {
   container-type: inline-size;
   margin-top: clamp(0.5rem, 2vh, 1.5rem);
+}
+/* Each word clips its own letters, so they rise out of the line as they are dealt. */
+.end-name p > b,
+.end-name p > span {
+  display: inline-block;
+  /* The tight tracking pulls a word's box in past its last letter, so pad the clip back out. */
+  padding: 0.12em 0.07em 0.04em;
+  margin: -0.12em -0.07em -0.04em;
+  overflow: clip;
+}
+.end-name i {
+  display: inline-block;
+  font-style: normal;
+}
+.end-base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0 1.5rem;
+  margin-top: clamp(0.75rem, 2vh, 1.25rem);
+  color: #fff;
+  font-size: 0.9375rem;
 }
 .end .end-name p {
   max-width: none;
@@ -1933,30 +2366,34 @@ h1.giant b {
 .end .end-name b {
   font-weight: 700;
 }
-.end .legal {
-  justify-content: flex-start;
-  margin-top: 1rem;
-  color: #fff;
-}
-.end .legal a {
-  color: #fff;
+@media (max-width: 72rem) {
+  .end-main {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas: 'say deck' 'work deck';
+    row-gap: 2.5rem;
+  }
 }
 @media (max-width: 52rem) {
   .end-main {
     grid-template-columns: minmax(0, 1fr);
-    padding-block: 2.5rem 1.5rem;
+    grid-template-areas: 'say' 'deck' 'work';
+    row-gap: clamp(2rem, 6vw, 2.5rem);
+    padding-block: 2.5rem;
   }
   .gather {
     --gw: min(36vw, 9.5rem);
     margin-top: 1rem;
+  }
+  .end-index {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .end .end-name p {
     font-size: 26cqw;
     line-height: 0.92;
     white-space: normal;
   }
-  .end .end-name b,
-  .end .end-name span {
+  .end .end-name p > b,
+  .end .end-name p > span {
     display: block;
   }
 }
@@ -1994,6 +2431,17 @@ h1.giant b {
   }
   .end .end-name p {
     font-size: 26cqw;
+  }
+}
+/* A tablet has the width for the name on one line. Only a phone stacks it. */
+@media (min-width: 36rem) and (max-width: 52rem) {
+  .end .end-name p {
+    font-size: 11.3cqw;
+    white-space: nowrap;
+  }
+  .end .end-name p > b,
+  .end .end-name p > span {
+    display: inline-block;
   }
 }
 @media (min-width: 52.01rem) {
@@ -2091,11 +2539,17 @@ html.ncs-gated .ncs-overlay {
   .card,
   .pc-face,
   .chip,
+  .nine,
   .dock,
   .reach,
   .top.float .mark,
-  .top.float .status {
+  .top.float .status,
+  .fc {
     border: 1px solid CanvasText;
+  }
+  /* The white bar is a background, so the name it is on says so itself. */
+  .end-work li a.on {
+    text-decoration: underline;
   }
   /* A chosen answer and the page you are on, which a background alone can no longer show. */
   :root .pick-o input:checked + span,

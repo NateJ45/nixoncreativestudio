@@ -113,7 +113,7 @@ Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is stil
 
 ### 2f. Ungate /photography (added 2026-10-31, overhaul 2.8)
 
-/photography/ is gated: noindex, out of the sitemap, the closing's legal line and `/llms.txt`,
+/photography/ is gated: noindex, out of the sitemap, the closing's site index and `/llms.txt`,
 showing one photo and "ask for samples". It needs **6 to 20 real photos of
 Nathan's own work, with permission from the people and places in them**. Then:
 

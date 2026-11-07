@@ -205,8 +205,8 @@ export var ui = {
     return {
       x: v || 0,
       v: 0,
-      step: function (to, dt) {
-        this.v += (k * (to - this.x) - c * this.v) * dt;
+      step: function (to, dt, stiffer) {
+        this.v += ((stiffer || k) * (to - this.x) - c * this.v) * dt;
         this.x += this.v * dt;
         return Math.abs(to - this.x) > 0.0005 || Math.abs(this.v) > 0.004;
       },
@@ -215,12 +215,37 @@ export var ui = {
 };
 
 [].forEach.call(doc.querySelectorAll('[data-end]'), function (el) {
-  /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a last card, Yours, lands on top. */
+  /* The deal in reverse: the clients fan out as the closing arrives, scroll squares them into one deck, and a last card, Yours, lands on top.
+     Beside it, a name in the selected work pulls that client's card back out, and the poster name is dealt up a letter at a time. */
   var stage = $('[data-gather]', el),
     nine = $('[data-nine]', el);
   var gcs = [].slice.call(el.querySelectorAll('.gc')).map(function (g, i) {
-    return { g: g, d: i - 3.5, s: ui.spring(120, 16, reduce ? 1 : 0) };
+    return {
+      g: g,
+      d: i - 3.5,
+      s: ui.spring(120, 16, reduce ? 1 : 0),
+      pull: ui.spring(190, 17, 0),
+    };
   });
+  var rows = [].slice.call(el.querySelectorAll('[data-pull]')),
+    slide = $('[data-pull-slide]', el),
+    slideY = ui.spring(320, 26, 0),
+    slideO = 0,
+    slideH = 0,
+    picked = -1,
+    moved = ui.spring(190, 17, 0);
+  /* The poster name. Letters rise in reading order, and the ones by the pointer lift a little. */
+  var nameEl = $('[data-name]', el),
+    glyphs = [].slice.call(el.querySelectorAll('[data-name] i')).map(function (g, i) {
+      return {
+        g: g,
+        i: i,
+        s: ui.spring(170, 17, reduce ? 1 : 0),
+        h: ui.spring(280, 20, 0),
+        cx: 0,
+        t: 0,
+      };
+    });
   var n = ui.spring(150, 15, reduce ? 1 : 0),
     lift = ui.spring(240, 19, 0),
     onCard = 0,
@@ -228,26 +253,51 @@ export var ui = {
     last = 0;
   function paint() {
     var W = stage.offsetWidth,
+      gw = gcs.length ? gcs[0].g.offsetWidth : 0,
+      /* Out to the right of the deck, as far as the panel leaves room. */
+      reach = Math.min(gw * 0.4, (W - gw) / 2 + 24),
       spread = Math.min(W * 0.1, 46);
     gcs.forEach(function (c) {
       var v = c.s.x,
         k = 1 - v;
       c.g.style.transform =
         'translate3d(' +
-        (c.d * spread * k + c.d * 1.4 * v).toFixed(2) +
+        (c.d * spread * k + c.d * 1.4 * v + c.pull.x * reach).toFixed(2) +
         'px,' +
-        (c.d * c.d * 3 * k).toFixed(2) +
+        (c.d * c.d * 3 * k - c.pull.x * gw * 0.14).toFixed(2) +
         'px,0) rotate(' +
-        (c.d * 6 * k + c.d * 0.9 * v).toFixed(3) +
-        'deg)';
+        (c.d * 6 * k + c.d * 0.9 * v + c.pull.x * 7).toFixed(3) +
+        'deg) scale(' +
+        (1 + c.pull.x * 0.06).toFixed(4) +
+        ')';
+      c.g.style.zIndex = c.pull.x > 0.02 ? 5 : '';
+    });
+    if (slide) {
+      slide.style.transform = 'translate3d(0,' + slideY.x.toFixed(2) + 'px,0)';
+      slide.style.height = slideH + 'px';
+      slide.style.opacity = slideO;
+    }
+    glyphs.forEach(function (c) {
+      var v = c.s.x,
+        h = c.h.x;
+      c.g.style.transform =
+        v > 0.999 && h < 0.002
+          ? ''
+          : 'translate3d(0,' +
+            ((1 - v) * 108 - h * 9).toFixed(2) +
+            '%,0) rotate(' +
+            ((1 - v) * (c.i % 2 ? 7 : -7)).toFixed(2) +
+            'deg)';
     });
     var m = n.x,
       l = lift.x;
     nine.style.transform =
       'translate3d(0,' +
       ((1 - m) * stage.offsetHeight * 0.85 - l * 16).toFixed(2) +
-      'px,0) rotate(' +
-      ((1 - m) * -16 + -1.6 * (1 - l)).toFixed(3) +
+      'px,0) translateX(' +
+      (moved.x * gw * -0.13).toFixed(2) +
+      'px) rotate(' +
+      ((1 - m) * -16 + -1.6 * (1 - l) + moved.x * -3.5).toFixed(3) +
       'deg) scale(' +
       (1 + l * 0.03).toFixed(4) +
       ')';
@@ -280,6 +330,45 @@ export var ui = {
       lift.x = onCard;
       lift.v = 0;
     }
+    gcs.forEach(function (c, i) {
+      var to = picked === i ? 1 : 0;
+      if (c.pull.step(to, dt)) live = true;
+      else {
+        c.pull.x = to;
+        c.pull.v = 0;
+      }
+    });
+    if (moved.step(picked < 0 ? 0 : 1, dt)) live = true;
+    else {
+      moved.x = picked < 0 ? 0 : 1;
+      moved.v = 0;
+    }
+    if (picked >= 0 && slide) {
+      var to = rows[picked].parentNode.offsetTop;
+      if (slideY.step(to, dt)) live = true;
+      else {
+        slideY.x = to;
+        slideY.v = 0;
+      }
+    }
+    if (glyphs.length) {
+      var box = nameEl.getBoundingClientRect();
+      /* Done by the time the name is most of the way up, so it always finishes above the page's end. */
+      var q = Math.min(1, Math.max(0, (H - box.top) / (box.height * 0.8)));
+      glyphs.forEach(function (c) {
+        var t = Math.min(1, Math.max(0, q * 1.6 - (c.i / glyphs.length) * 0.6));
+        if (c.s.step(t, dt)) live = true;
+        else {
+          c.s.x = t;
+          c.s.v = 0;
+        }
+        if (c.h.step(c.t, dt)) live = true;
+        else {
+          c.h.x = c.t;
+          c.h.v = 0;
+        }
+      });
+    }
     paint();
     if (live) raf = requestAnimationFrame(frame);
   }
@@ -289,8 +378,70 @@ export var ui = {
       raf = requestAnimationFrame(frame);
     }
   }
+  /* Pick a name: its row takes the bar, its card comes out. Under reduced motion both simply jump. */
+  function pick(i) {
+    if (picked === i) return;
+    var was = picked < 0;
+    rows.forEach(function (r, k) {
+      r.classList.toggle('on', k === i);
+    });
+    picked = i;
+    if (i >= 0 && slide) {
+      var li = rows[i].parentNode;
+      slideH = li.offsetHeight;
+      slideO = 1;
+      if (was || reduce) {
+        slideY.x = li.offsetTop;
+        slideY.v = 0;
+      }
+    } else slideO = 0;
+    if (reduce) {
+      gcs.forEach(function (c, k) {
+        c.pull.x = k === i ? 1 : 0;
+      });
+      moved.x = i < 0 ? 0 : 1;
+      paint();
+    } else wake();
+  }
+  rows.forEach(function (r, i) {
+    /* A finger's tap goes straight to the study. Only a real pointer previews. */
+    r.addEventListener('pointerenter', function (e) {
+      if (e.pointerType !== 'touch') pick(i);
+    });
+    r.addEventListener('focus', function () {
+      if (r.matches(':focus-visible')) pick(i);
+    });
+    r.addEventListener('blur', function () {
+      if (picked === i) pick(-1);
+    });
+  });
+  if (rows.length)
+    rows[0].closest('ul').addEventListener('pointerleave', function () {
+      pick(-1);
+    });
   paint();
   if (!reduce) {
+    if (nameEl && matchMedia('(hover: hover)').matches) {
+      nameEl.addEventListener('pointerenter', function () {
+        glyphs.forEach(function (c) {
+          var b = c.g.getBoundingClientRect();
+          c.cx = b.left + b.width / 2;
+        });
+      });
+      nameEl.addEventListener('pointermove', function (e) {
+        var r = nameEl.offsetWidth * 0.07;
+        glyphs.forEach(function (c) {
+          c.t = Math.max(0, 1 - Math.abs(c.cx - e.clientX) / r);
+        });
+        wake();
+      });
+      nameEl.addEventListener('pointerleave', function () {
+        glyphs.forEach(function (c) {
+          c.t = 0;
+        });
+        wake();
+      });
+    }
     addEventListener('scroll', wake, { passive: true });
     addEventListener('resize', wake);
     ui.stillHover(
@@ -360,19 +511,281 @@ if (bands.length && !reduce) {
   bwake();
 }
 
-/* The pill's highlight slides to whichever link you are near. */
+/* The dock. Three things move here, all on the same springs as the rest of the site. */
 var dock = $('.dock'),
-  slide = $('[data-slide]');
-[].forEach.call(dock.querySelectorAll('a:not(.go)'), function (a) {
-  a.addEventListener('pointerenter', function () {
-    slide.style.width = a.offsetWidth + 'px';
-    slide.style.transform = 'translateX(' + a.offsetLeft + 'px)';
-    slide.style.opacity = 1;
+  slide = $('[data-slide]'),
+  scrim = $('[data-dock-scrim]'),
+  dockLinks = [].slice.call(dock.querySelectorAll(':scope > a'));
+
+/* The puck rests on the page you are on and goes to the link you are near. Each edge has its own
+   spring and the leading edge is the quicker, so it stretches on the way and gathers on landing. */
+var puckRest = dock.querySelector(':scope > a[aria-current]:not(.go)'),
+  puckTo = puckRest,
+  puckL = ui.spring(320, 26, 0),
+  puckR = ui.spring(320, 26, 0),
+  puckRaf = 0,
+  puckLast = 0,
+  puckFwd = true;
+function puckPaint() {
+  slide.style.width = Math.max(0, puckR.x - puckL.x) + 'px';
+  slide.style.transform = 'translateX(' + puckL.x + 'px)';
+}
+function puckFrame(t) {
+  var dt = Math.min((t - puckLast) / 1000, 0.032),
+    left = puckTo.offsetLeft,
+    right = left + puckTo.offsetWidth,
+    a = puckL.step(left, dt, puckFwd ? 210 : 420),
+    b = puckR.step(right, dt, puckFwd ? 420 : 210);
+  puckLast = t;
+  puckPaint();
+  puckRaf = a || b ? requestAnimationFrame(puckFrame) : 0;
+}
+function puckGo(a, jump) {
+  puckTo = a || puckRest;
+  slide.style.opacity = puckTo && puckTo.offsetWidth ? 1 : 0;
+  if (!puckTo) return;
+  var left = puckTo.offsetLeft,
+    right = left + puckTo.offsetWidth;
+  if (jump || reduce) {
+    puckL.x = left;
+    puckR.x = right;
+    puckL.v = puckR.v = 0;
+    puckPaint();
+    return;
+  }
+  /* The edge going forward leads. */
+  puckFwd = left > puckL.x;
+  if (!puckRaf) {
+    puckLast = performance.now();
+    puckRaf = requestAnimationFrame(puckFrame);
+  }
+}
+
+/* How far down the page you are: a hairline round the pill. It answers scrolling and nothing else. */
+var rail = $('[data-rail]'),
+  railPath = rail.firstElementChild,
+  railSeen = -1;
+function railShape() {
+  var w = dock.offsetWidth,
+    h = dock.offsetHeight,
+    r = h / 2;
+  /* From the left end, along the top, round the right end and back along the bottom. */
+  railPath.setAttribute(
+    'd',
+    'M0 ' +
+      r +
+      'A' +
+      r +
+      ' ' +
+      r +
+      ' 0 0 1 ' +
+      r +
+      ' 0' +
+      'H' +
+      (w - r) +
+      'A' +
+      r +
+      ' ' +
+      r +
+      ' 0 0 1 ' +
+      (w - r) +
+      ' ' +
+      h +
+      'H' +
+      r +
+      'A' +
+      r +
+      ' ' +
+      r +
+      ' 0 0 1 0 ' +
+      r +
+      'Z',
+  );
+}
+function railPaint() {
+  var range = doc.documentElement.scrollHeight - innerHeight,
+    /* A page with no real length has no distance to show. */
+    p = range > innerHeight * 0.25 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
+  if (p === railSeen) return;
+  railSeen = p;
+  rail.classList.toggle('on', p > 0.002);
+  railPath.style.strokeDashoffset = 1 - p;
+}
+addEventListener('scroll', railPaint, { passive: true });
+
+function dockMeasure() {
+  railShape();
+  railPaint();
+  puckGo(puckTo, true);
+}
+dockMeasure();
+addEventListener('resize', dockMeasure);
+if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(dockMeasure);
+
+/* Tapping the page you are already on goes back to the top of it, rather than reloading it. */
+dockLinks.forEach(function (a) {
+  if (a.getAttribute('aria-current') !== 'page') return;
+  a.addEventListener('click', function (e) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   });
 });
-dock.addEventListener('pointerleave', function () {
-  slide.style.opacity = 0;
+
+/* The hands. Each link can deal its cards up out of the pill. Only for a mouse on a wide screen,
+   or a keyboard (the up arrow opens one; Escape folds it and hands focus back). A phone taps the
+   link and gets the page, which has everything a hand has. */
+var canDeal = matchMedia(
+    '(hover: hover) and (pointer: fine) and (min-width: 56rem) and (min-height: 36rem)',
+  ),
+  hands = [],
+  handOpen = null,
+  handWait = 0,
+  handRaf = 0,
+  handLast = 0;
+dockLinks.forEach(function (a) {
+  var fan = a.nextElementSibling;
+  puckEnter(a);
+  if (!fan || !fan.hasAttribute('data-fan')) return;
+  var cards = [].slice.call(fan.querySelectorAll('.fc')),
+    mid = (cards.length - 1) / 2,
+    cap = fan.querySelector('[data-fan-cap]'),
+    hand = {
+      a: a,
+      fan: fan,
+      to: 0,
+      cards: cards.map(function (el, i) {
+        var d = i - mid;
+        el.style.setProperty('--d', d);
+        el.style.setProperty('--far', Math.round(Math.abs(d)));
+        return { el: el, s: ui.spring(170, 17, 0), wait: Math.abs(d) * 26 };
+      }),
+    };
+  hands.push(hand);
+  if (canDeal.matches) a.setAttribute('aria-expanded', 'false');
+  if (cap) {
+    cards.forEach(function (el) {
+      var say = function () {
+          cap.textContent = el.dataset.cap;
+        },
+        rest = function () {
+          cap.textContent = cap.dataset.rest;
+        };
+      el.addEventListener('pointerenter', say);
+      el.addEventListener('focus', say);
+      el.addEventListener('pointerleave', rest);
+      el.addEventListener('blur', rest);
+    });
+  }
+  a.addEventListener('pointerenter', function (e) {
+    if (e.pointerType !== 'mouse' || !canDeal.matches) return;
+    clearTimeout(handWait);
+    /* A pointer just passing through the dock on its way somewhere does not deal anything. */
+    handWait = setTimeout(
+      function () {
+        handShow(hand);
+      },
+      handOpen ? 0 : 90,
+    );
+  });
+  a.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowUp' || !canDeal.matches) return;
+    e.preventDefault();
+    handShow(hand);
+    var first = fan.querySelector('a');
+    if (first) first.focus({ preventScroll: true });
+  });
+  fan.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handHide();
+      a.focus();
+    }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      var all = [].slice.call(fan.querySelectorAll('a')),
+        at = all.indexOf(doc.activeElement);
+      if (at < 0) return;
+      e.preventDefault();
+      all[(at + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length].focus({
+        preventScroll: true,
+      });
+    }
+  });
+  fan.addEventListener('focusout', function (e) {
+    if (!dock.contains(e.relatedTarget) && handOpen === hand) handHide();
+  });
 });
+function puckEnter(a) {
+  a.addEventListener('pointerenter', function () {
+    /* The action has its own color, so the puck stays home for it. */
+    puckGo(a.classList.contains('go') ? puckRest : a);
+  });
+}
+dock.addEventListener('pointerleave', function () {
+  puckGo(puckRest);
+  clearTimeout(handWait);
+  handWait = setTimeout(handHide, 180);
+});
+dock.addEventListener('pointerenter', function () {
+  clearTimeout(handWait);
+});
+addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && handOpen && !handOpen.fan.contains(doc.activeElement)) handHide();
+});
+function handMark(hand, open) {
+  hand.to = open ? 1 : 0;
+  hand.opened = performance.now();
+  hand.fan.classList.toggle('on', open);
+  if (hand.a.hasAttribute('aria-expanded')) hand.a.setAttribute('aria-expanded', String(open));
+  if (open) hand.fan.hidden = false;
+}
+function handShow(hand) {
+  if (handOpen === hand) return;
+  if (handOpen) handMark(handOpen, false);
+  handOpen = hand;
+  scrim.classList.add('on');
+  handMark(hand, true);
+  handWake();
+}
+function handHide() {
+  if (!handOpen) return;
+  handMark(handOpen, false);
+  handOpen = null;
+  scrim.classList.remove('on');
+  handWake();
+}
+function handFrame(t) {
+  var dt = Math.min((t - handLast) / 1000, 0.032),
+    alive = false;
+  handLast = t;
+  hands.forEach(function (h) {
+    if (h.fan.hidden) return;
+    var moving = false;
+    h.cards.forEach(function (c) {
+      /* Dealt from the middle out; folded all together, and quicker. */
+      var go = h.to === 0 || t - h.opened >= c.wait;
+      if (reduce) {
+        c.s.x = h.to;
+        c.s.v = 0;
+      } else if (go && c.s.step(h.to, h.to ? dt : dt * 1.5)) {
+        moving = true;
+      } else if (!go) {
+        moving = true;
+      }
+      c.el.style.setProperty('--v', c.s.x.toFixed(4));
+    });
+    if (moving) alive = true;
+    /* A folded hand leaves the tab order and the page's way. */
+    else if (h.to === 0) h.fan.hidden = true;
+  });
+  handRaf = alive ? requestAnimationFrame(handFrame) : 0;
+}
+function handWake() {
+  if (!handRaf) {
+    handLast = performance.now();
+    handRaf = requestAnimationFrame(handFrame);
+  }
+}
 
 /* The client sheet: a window grows into its color and the screens fan out. A window is a plain link
    until this script runs, so it only says it opens a dialog from here on. */

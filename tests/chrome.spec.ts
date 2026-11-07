@@ -36,7 +36,8 @@ test.describe('Without JavaScript', () => {
       await expect(end.locator('a[href^="tel:"]')).toHaveCount(1);
       await expect(end.locator('.gc img')).toHaveCount(8);
       await expect(end.locator('a[data-nine]')).toHaveAttribute('href', '/contact/');
-      await expect(end.locator('.legal a[href="/privacy/"]')).toHaveCount(1);
+      await expect(end.locator('.end-index a[href="/privacy/"]')).toHaveCount(1);
+      await expect(end.locator('.end-work a[data-pull]')).toHaveCount(8);
     });
   }
 
@@ -57,6 +58,48 @@ test.describe('Without JavaScript', () => {
 });
 
 test.describe('With JavaScript', () => {
+  test('the dock fits five 44px targets at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto('/work/');
+    const fit = await page.evaluate(() => {
+      const dock = document.querySelector('nav.dock')!.getBoundingClientRect();
+      const targets = [...document.querySelectorAll('nav.dock > a, nav.dock > :is(button, span)')]
+        .filter((el) => !el.matches('.slide') && getComputedStyle(el).display !== 'none')
+        .map((el) => el.getBoundingClientRect().height);
+      return { left: dock.left, right: innerWidth - dock.right, targets };
+    });
+    expect(fit.left).toBeGreaterThanOrEqual(4);
+    expect(fit.right).toBeGreaterThanOrEqual(4);
+    expect(fit.targets).toHaveLength(5);
+    for (const h of fit.targets) expect(h).toBeGreaterThanOrEqual(44);
+    // The action reads Start here, and is still named in full.
+    await expect(page.locator('nav.dock a[href="/contact/"]')).toHaveText('Start a project');
+  });
+
+  test('a hand is out of the way until asked for, and Escape folds it', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/work/');
+    const hands = page.locator('nav.dock [data-fan]:not([hidden])');
+    await expect(hands).toHaveCount(0);
+    const prices = page.locator('nav.dock > a[href="/services/"]');
+    await prices.focus();
+    await prices.press('ArrowUp');
+    await expect(hands).toHaveCount(1);
+    await expect(prices).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('nav.dock .fc-price').first()).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(prices).toBeFocused();
+    await expect(prices).toHaveAttribute('aria-expanded', 'false');
+    await expect(hands).toHaveCount(0);
+  });
+
+  test('the link for the page you are on goes back to the top', async ({ page }) => {
+    await page.goto('/work/');
+    await page.evaluate(() => scrollTo({ top: 800, behavior: 'instant' }));
+    await page.locator('nav.dock > a[href="/work/"]').click();
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  });
+
   test('the current page is marked in the dock', async ({ page }) => {
     await page.goto('/work/');
     await expect(page.locator('nav.dock a[href="/work/"]')).toHaveAttribute('aria-current', 'page');

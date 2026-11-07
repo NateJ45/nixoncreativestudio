@@ -37,6 +37,7 @@ Declared in `:root` at the top of `kit.css`:
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.
 - **Cards** are `.card` or their own radius (1.25rem; bands and the closing 1.75rem; buttons fully round).
 - **H1 reveal**: words are wrapped in the markup by `wordSpans()` (`src/lib/words.ts`; `PageHead.astro` does it). `.js .w` animates from opacity .02. This is the one allowed start below full opacity in the first viewport.
+- **The closing's parts**: `.end-work` (names and the white bar, `[data-pull]` per row, in `kit.js`), `.end-index` (the ruled site index, a new link goes in one of its groups), `.end-name` (one `<i>` a letter, clipped per word), `.end-base`. Text on the closing is white or sits on white; use `--fill` for blue on white.
 - **Reveals for study blocks**: `.rv` is hidden only under `.rv-on` (added by `study.js` when motion is allowed and `IntersectionObserver` exists) and shown with `.in`. Nothing in the first viewport takes it.
 
 ## Motion
@@ -44,6 +45,7 @@ Declared in `:root` at the top of `kit.css`:
 - Springs are written in JavaScript: `ui.spring(k, c, v)` in `src/scripts/kit.js`, and the per-page scripts use it. CSS motion uses `--ease` or a springy bezier; keep durations short.
 - Page changes are cross-document view transitions (`@view-transition { navigation: auto }` in `kit.css`; the dock keeps `view-transition-name: dock`). There is no router.
 - Every moving thing has a reduced-motion answer: read `ui.reduce` in script, and add the selector to the `@media (prefers-reduced-motion: reduce)` blocks in CSS. Under reduce the view transition and smooth scroll are off, springs start at rest, footage stays a still, and nothing runs after load (`tests/reduced-motion.spec.ts`).
+- The dock's motion (puck, rail, hands) is its own block in `kit.js`. `ui.spring`'s `step` takes an optional third argument, a stiffness for that step, which the puck uses so the leading edge is the quicker one. Class names in the dock are prefixed `dk-` or `fc`: `.fan`, `.rail` and `.more` already mean something on the sheet and the case studies.
 - A hover that lifts its card uses `ui.stillHover` in `kit.js`, so the card cannot lift off the pointer and jitter.
 - There is no Pause motion button and no `data-motion` attribute (the client sheet's looping clip has its own pause button). Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves; nothing else loops by itself.
 
@@ -57,4 +59,4 @@ A card is drawn with a shadow and a background, so `kit.css` gives `.tile`, `.ca
 
 ## Fixed elements
 
-The viewport meta carries `viewport-fit=cover`. The dock sits at `bottom: max(0.9rem, env(safe-area-inset-bottom))` and the mailto toast above it. A new `position: fixed` element at a screen edge adds the matching `env(safe-area-inset-*)`.
+The viewport meta carries `viewport-fit=cover`. The dock (`Dock.astro`, design in `DESIGN.md`) sits at `bottom: max(0.9rem, env(safe-area-inset-bottom))` and the mailto toast above it. A new `position: fixed` element at a screen edge adds the matching `env(safe-area-inset-*)`.
