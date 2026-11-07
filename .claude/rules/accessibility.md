@@ -8,7 +8,7 @@ paths:
 
 Loads when anything under `src/` or `tests/` is touched.
 
-Target: WCAG 2.1 AA on the one light theme. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. Verified with axe-core (the default rule set, which includes best-practice and `target-size` checks) on every route by `tests/a11y.spec.ts`, on Chromium and a WebKit iPhone. The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
+Target: WCAG 2.1 AA in both the light and dark themes. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. Verified with axe-core (the default rule set, which includes best-practice and `target-size` checks) on every route by `tests/a11y.spec.ts`, on Chromium and a WebKit iPhone. The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
 
 ## Conformance target is AA, deliberately (not AAA)
 
