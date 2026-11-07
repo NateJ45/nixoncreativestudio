@@ -3,8 +3,9 @@
    ============================================================================
    Computed from src/data/pricing.ts, never typed, so /services and /one-page/
    cannot drift from the prices. The rule the sums follow is the one the page
-   states: year one hosting is included in every build, so nothing is billed for
-   care until year two, and the named care level runs every year after that.
+   states: year one Hosting is included in every build, so Hosting alone is billed
+   from year two. A care plan is billed from the first month, and it includes
+   hosting, so a client on care pays the care price every year from launch.
    A tier's starting price is used, because that is the one fixed number.
    ============================================================================ */
 
@@ -17,9 +18,14 @@ export function carePerYear(plan: Pick<CarePlan, 'price' | 'period'>): number {
   return plan.period === '/mo' ? amount * 12 : amount;
 }
 
-/** Build price plus care, with year one's care included in the build. */
+/** Build price plus Hosting, with year one's Hosting included in the build. */
 export function costOver(build: number, perYear: number, years: number): number {
   return build + perYear * Math.max(0, years - 1);
+}
+
+/** Build price plus a care plan billed from the first month. */
+export function careOver(build: number, perYear: number, years: number): number {
+  return build + perYear * years;
 }
 
 export interface Sums {
@@ -38,10 +44,10 @@ export interface TierCost extends Sums {
   hostingOnly: Sums;
 }
 
-const sums = (build: number, perYear: number): Sums => ({
-  yearOne: costOver(build, perYear, 1),
-  threeYears: costOver(build, perYear, 3),
-  fiveYears: costOver(build, perYear, 5),
+const sums = (over: typeof costOver, build: number, perYear: number): Sums => ({
+  yearOne: over(build, perYear, 1),
+  threeYears: over(build, perYear, 3),
+  fiveYears: over(build, perYear, 5),
 });
 
 export function tierCost(tier: WebTier, plans: CarePlan[] = carePlans): TierCost {
@@ -54,9 +60,9 @@ export function tierCost(tier: WebTier, plans: CarePlan[] = carePlans): TierCost
     tier,
     plan,
     perYear,
-    ...sums(tier.priceFrom, perYear),
+    ...sums(careOver, tier.priceFrom, perYear),
     hostingPlan,
-    hostingOnly: sums(tier.priceFrom, carePerYear(hostingPlan)),
+    hostingOnly: sums(costOver, tier.priceFrom, carePerYear(hostingPlan)),
   };
 }
 
