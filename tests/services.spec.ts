@@ -68,7 +68,7 @@ test.describe('Prices', () => {
       await page.goto('/services/');
       await expect(page.locator('.tier')).toHaveCount(3);
       await expect(page.locator('.t-price').first()).toHaveText('$5,000+');
-      await expect(page.locator('.faq details')).toHaveCount(7);
+      await expect(page.locator('.faq details')).toHaveCount(8);
       await expect(page.locator('[data-sites] a.tile')).toHaveCount(4);
     });
   });

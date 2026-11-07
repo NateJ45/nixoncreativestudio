@@ -48,8 +48,20 @@ if (pick) {
       card.classList.add('dealing');
     }
   };
+  var shown = false;
   pick.addEventListener('change', function () {
     dealCard(true);
+    /* On a phone the answer lands below the questions, so bring it up the first time it appears. */
+    if (!shown && !go.hidden) {
+      shown = true;
+      var r = go.getBoundingClientRect();
+      if (r.bottom > innerHeight - 90) {
+        doc.querySelector('[data-pick-out]').scrollIntoView({
+          block: 'center',
+          behavior: reduce ? 'auto' : 'smooth',
+        });
+      }
+    }
   });
   dealCard(false);
   addEventListener('pageshow', function () {
