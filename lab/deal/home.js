@@ -77,7 +77,7 @@
       return '<li>' + ui.tile(s, { index: i }) + ui.caption(s, i) + '</li>';
     })
     .join('');
-  var tiles = [].slice.call(document.querySelectorAll('.tile'));
+  var tiles = [].slice.call(grid.querySelectorAll('.tile'));
   /* Layout measures each window against its cell, so the cell must be positioned before the first measure. */
   tiles.forEach(function (t) {
     t.parentNode.style.position = 'relative';
