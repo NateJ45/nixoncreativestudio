@@ -3,8 +3,9 @@
    Static assets answer a Range request with the whole file and a plain 200, and
    iPhones refuse to play a clip that way: Safari asks for the first bytes and
    gives up without a 206. scripts/add-video-worker.mjs adds this file to the
-   deploy config after the build, with run_worker_first limited to *.mp4, so
-   every other request is served as a plain asset and never reaches this code. */
+   deploy config after the build, with run_worker_first limited to *.mp4 and
+   *.webm, so every other request is served as a plain asset and never reaches
+   this code. */
 
 type Assets = { fetch: (request: Request) => Promise<Response> };
 
@@ -35,7 +36,7 @@ async function video(request: Request, assets: Assets): Promise<Response> {
 
 export default {
   fetch(request: Request, env: { ASSETS: Assets }): Promise<Response> {
-    return new URL(request.url).pathname.endsWith('.mp4')
+    return /\.(mp4|webm)$/.test(new URL(request.url).pathname)
       ? video(request, env.ASSETS)
       : env.ASSETS.fetch(request);
   },
