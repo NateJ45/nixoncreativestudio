@@ -299,3 +299,32 @@
 .ab-sec:has(.says) {
   padding-bottom: clamp(5rem, 9vw, 8rem);
 }
+
+/* Narrow screens: the stage sits in the flow between the head and the story, placed by CSS alone, so nothing shifts when the script arrives. */
+@media (max-width: 60rem) {
+  .js .ab {
+    display: flex;
+    flex-direction: column;
+    padding-top: clamp(6rem, 15vh, 9.5rem);
+  }
+  .js .ab-text {
+    display: contents;
+  }
+  .js .ab-head {
+    order: 1;
+  }
+  .js .ab-stage-slot {
+    display: none;
+  }
+  .js .ab-stage {
+    position: relative;
+    order: 2;
+    top: auto;
+    width: 100%;
+    flex: none;
+    margin-top: 2rem;
+  }
+  .js .story {
+    order: 3;
+  }
+}

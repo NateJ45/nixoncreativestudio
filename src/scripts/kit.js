@@ -50,15 +50,26 @@ export var ui = {
       });
     });
     if (matchMedia('(hover: none)').matches && !reduce && 'IntersectionObserver' in window) {
+      /* Touch has no hover, so the phone at the middle of the screen plays. It is judged by its holder,
+         because the home deal moves the phones themselves: otherwise the whole hand counts as centered
+         on load and every clip downloads. Nothing starts until the first scroll, so a page that is only
+         looked at costs no video. */
       var cur = null,
+        wait = 0,
+        holders = new Map(),
         io = new IntersectionObserver(
           function (es) {
             es.forEach(function (e) {
+              var t = holders.get(e.target);
               if (e.isIntersecting) {
-                if (cur && cur !== e.target) ui.play(cur, false);
-                cur = e.target;
-                ui.play(cur, true);
-              } else if (cur === e.target) {
+                /* Wait until it has settled there, so scrolling past a phone never downloads its clip. */
+                clearTimeout(wait);
+                wait = setTimeout(function () {
+                  if (cur && cur !== t) ui.play(cur, false);
+                  cur = t;
+                  ui.play(cur, true);
+                }, 350);
+              } else if (cur === t) {
                 ui.play(cur, false);
                 cur = null;
               }
@@ -67,8 +78,17 @@ export var ui = {
           { rootMargin: '-40% 0px -40% 0px' },
         );
       tiles.forEach(function (t) {
-        io.observe(t);
+        holders.set(t.parentNode, t);
       });
+      addEventListener(
+        'scroll',
+        function () {
+          holders.forEach(function (t, holder) {
+            io.observe(holder);
+          });
+        },
+        { once: true, passive: true },
+      );
     }
   },
   /* A plain spring, for anything that should move with weight. Returns a stepper. */

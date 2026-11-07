@@ -15,7 +15,6 @@ var REST = 0.5,
 var wins = $('[data-wins]'),
   stage = $('[data-stage]'),
   card = $('[data-card]'),
-  slot = $('[data-slot]'),
   story = $('[data-story]');
 var tiles = [].slice.call(wins.querySelectorAll('.tile'));
 var C = (tiles.length - 1) / 2;
@@ -41,11 +40,6 @@ function layout() {
   W = innerWidth;
   H = innerHeight;
   wide = W > 960;
-  /* On narrow screens the stage sits over a reserved slot in the text column. */
-  if (!wide)
-    stage.style.top =
-      slot.getBoundingClientRect().top - stage.parentNode.getBoundingClientRect().top + 'px';
-  else stage.style.top = '';
   pw = card.offsetWidth;
   tw = tiles[0].offsetWidth;
   stageW = stage.offsetWidth;
@@ -120,7 +114,7 @@ function frame(now) {
   var live = false,
     p;
   if (wide) p = scrollY / Math.max(240, (storyEnd - H) * 0.72);
-  else p = (H * 0.86 - slot.getBoundingClientRect().top) / Math.max(200, H * 0.68);
+  else p = (H * 0.86 - stage.getBoundingClientRect().top) / Math.max(200, H * 0.68);
   p = Math.min(1, Math.max(0, p));
   var open = focusOpen || (!reduce && (inStage || pressed || held));
   st.forEach(function (s) {
