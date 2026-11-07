@@ -68,8 +68,9 @@
   margin: 0 0 0 calc(var(--pw) * -0.5);
   padding: 0.6rem 0.6rem 0;
   border-radius: 1.75rem;
-  background: #fff;
+  background: var(--card);
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 calc(26px + var(--lift, 0) * 34px) calc(50px + var(--lift, 0) * 40px)
       calc(-24px - var(--lift, 0) * 6px) rgba(0, 0, 0, calc(0.42 + var(--lift, 0) * 0.14));
@@ -262,7 +263,8 @@
   padding-top: 4rem;
   padding-bottom: 4rem;
   box-shadow:
-    0 0 0 1px rgba(18, 18, 17, 0.08),
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 26px 44px -22px rgba(0, 0, 0, 0.42);
   transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
@@ -278,7 +280,7 @@
 }
 .do-ink {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
 }
 @media (prefers-reduced-motion: reduce) {
   .dodont .do-card {

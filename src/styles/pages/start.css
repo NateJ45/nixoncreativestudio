@@ -87,7 +87,7 @@ html:not(.js) .st-phone {
   height: 0.3rem;
   max-width: 12rem;
   border-radius: 99rem;
-  background: rgba(18, 18, 17, 0.1);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
   overflow: hidden;
 }
 .q-bar i {
@@ -95,7 +95,7 @@ html:not(.js) .st-phone {
   height: 100%;
   width: 100%;
   border-radius: 99rem;
-  background: var(--accent);
+  background: var(--fill);
   transform-origin: 0 50%;
   transform: scaleX(var(--pr, 0.1667));
 }
@@ -152,18 +152,18 @@ html:not(.js) .q + .q {
   background: var(--ground);
   color: var(--ink);
   font: 500 clamp(1.25rem, 2vw, 1.625rem)/1.25 var(--body);
-  box-shadow: inset 0 0 0 1.5px rgba(18, 18, 17, 0.14);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 14%, transparent);
   transition: box-shadow 0.2s;
   -webkit-appearance: none;
   appearance: none;
 }
 .f::placeholder {
-  color: #63635e;
+  color: var(--soft-2);
   opacity: 1;
   font-weight: 400;
 }
 .f:hover {
-  box-shadow: inset 0 0 0 1.5px rgba(18, 18, 17, 0.3);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 30%, transparent);
 }
 .f:focus {
   outline: 2.5px solid var(--ink);
@@ -228,7 +228,7 @@ select.f {
   height: 1.25rem;
   border-radius: 50%;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   font-size: 0.875rem;
   line-height: 1;
   transform: translateY(0.12rem);
@@ -261,17 +261,17 @@ select.f {
   border-radius: 99rem;
   background: var(--ground);
   font: 500 clamp(1.0625rem, 1.5vw, 1.25rem)/1.15 var(--body);
-  box-shadow: inset 0 0 0 1.5px rgba(18, 18, 17, 0.14);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 14%, transparent);
   transition:
     background 0.2s,
     color 0.2s,
     transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .opt:hover span {
-  box-shadow: inset 0 0 0 1.5px rgba(18, 18, 17, 0.34);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 34%, transparent);
 }
 .opt input:checked + span {
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
   box-shadow: none;
   transform: scale(1.03);
@@ -328,7 +328,7 @@ select.f {
   padding: 0 1.6rem;
   border: 0;
   border-radius: 99rem;
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
   font: 600 1.0625rem/1.2 var(--body);
   text-decoration: none;
@@ -347,14 +347,15 @@ select.f {
   border-radius: 99rem;
 }
 .b.ghost {
-  background: rgba(18, 18, 17, 0.07);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
   color: var(--ink);
 }
 .b.light {
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   font-weight: 500;
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 10px 24px -16px rgba(0, 0, 0, 0.3);
 }
@@ -466,7 +467,7 @@ select.f {
   margin-right: 1.8cqw;
 }
 .brief .scr {
-  background: #fbfbfa;
+  background: var(--sunk);
   color: var(--ink);
 }
 .doc {
@@ -513,7 +514,7 @@ select.f {
 .ln.msg {
   padding: 0.6rem 0.75rem;
   border-radius: 0.8rem;
-  background: rgba(18, 18, 17, 0.05);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
 }
 .ln.msg dd {
   line-height: 1.36;
@@ -550,21 +551,21 @@ select.f {
   display: inline-flex;
   padding: 0.2rem 0.65rem;
   border-radius: 99rem;
-  background: rgba(18, 18, 17, 0.07);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
   font-weight: 500;
 }
 .ln.done dd {
   display: inline-flex;
   padding: 0.25rem 0.7rem;
   border-radius: 99rem;
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
   font-weight: 500;
 }
 /* A line still waiting: its label on a blank to fill in. */
 .ln.sk {
   padding-bottom: 0.4rem;
-  box-shadow: inset 0 -1.5px 0 rgba(18, 18, 17, 0.14);
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--ink) 14%, transparent);
 }
 .ln.sk dd {
   color: var(--soft);
@@ -583,7 +584,7 @@ select.f {
 }
 .ln.sk.pill dd {
   background: none;
-  box-shadow: inset 0 0 0 1.5px rgba(18, 18, 17, 0.14);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .st-legal {
@@ -665,7 +666,8 @@ select.f {
 .sent {
   --cardr: 1.75rem;
   box-shadow:
-    0 0 0 1px rgba(18, 18, 17, 0.08),
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 26px 44px -22px rgba(0, 0, 0, 0.42);
 }
@@ -739,5 +741,17 @@ html:not(.js) .st-phone {
 @media (prefers-reduced-motion: reduce) {
   .is-spinning .contact-spinner {
     animation: none;
+  }
+}
+
+/* The brief is this studio's own window, so its frame is the studio's neutral, not a client's color. */
+.tile.brief {
+  --c: #1b1b1a;
+  --p: #fff;
+}
+@media screen {
+  :root[data-theme='dark'] .tile.brief {
+    --c: #272b55;
+    --cast: #5c68e8;
   }
 }

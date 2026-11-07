@@ -85,11 +85,11 @@ CI installs chromium and webkit and runs both projects.
 
 The webkit-iphone project runs `smoke`, `a11y` and `reduced-motion` (its `testMatch`); every other
 spec is chromium-only. `/coming-soon` is a standalone document and is in `routes.ts`, so it is swept
-too. There is one light theme, so there is no dark sweep.
+too. `a11y` sweeps every route in both themes, and `reflow` runs its 320px sweep on the dark side. `theme.spec.ts` covers the boot, the flip, persistence, print and no-script.
 
 ### Visual baselines (`playwright.visual.config.ts`, `tests/visual.spec.ts`, `.github/workflows/visual.yml`)
 
-Full-page screenshots of every route in `tests/routes.ts` at 1440 and 390, light only (the site has one theme), compared with Linux PNGs committed in `tests/visual.spec.ts-snapshots/`. **Not in `npm test`, not in `ci.yml`, not a required check**: `playwright.config.ts` ignores the spec, and the workflow is `workflow_dispatch` only, so it can never block a PR.
+Full-page screenshots of every route in `tests/routes.ts` at 1440 and 390, in both themes, compared with Linux PNGs committed in `tests/visual.spec.ts-snapshots/`. **Not in `npm test`, not in `ci.yml`, not a required check**: `playwright.config.ts` ignores the spec, and the workflow is `workflow_dispatch` only, so it can never block a PR.
 
 - Frozen for repeatability: reduced motion, `settle()`, Playwright `animations: 'disabled'`. Footage therefore shows stills. Lazy images are scrolled in first. Dynamic text (a date, a counter) needs a selector in `MASKED` in the spec.
 - Tolerance: 1% of pixels, plus two retries. Chromium on Linux does not rasterise a few large photographs byte-identically from one shot to the next; the spec takes a thrown-away warm-up capture first. A shot that still flakes means a new image-heavy page: read the diff PNG before widening anything.
@@ -228,7 +228,6 @@ has not been run against the redesign.
   springs, the client sheet, the form) and nothing asserts that a page runs
   without throwing. The family standard does not include one either; add it
   here first if it ever becomes a family suite.
-- **No dark-mode sweep.** There is one light theme.
 - **No Sanity anything.** No dataset, no Studio, no generated types, so no
   typegen step, no stale-types CI guard, and no backup workflow. Content lives
   in Astro content collections and MDX. See `docs/PENDING.md`.

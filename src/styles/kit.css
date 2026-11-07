@@ -14,6 +14,25 @@
   --soft: #5c5c57;
   --card: #fff;
   --line: rgba(18, 18, 17, 0.1);
+  /* The blue as a surface. Equal to --accent here; on the dark side --accent is lifted so it can
+     be read as text, and the surface keeps its full cobalt. */
+  --fill: #2f3fe6;
+  /* Text on an --ink surface, which is bone rather than black on the dark side. */
+  --on-ink: #fff;
+  --on-ink-soft: #bebeb8;
+  --soft-2: #63635e;
+  --soft-3: #6b6b65;
+  --chip: #fff;
+  --chip-ink: #111;
+  --dock: rgba(255, 255, 255, 0.82);
+  --wash: rgba(0, 0, 0, 0.075);
+  --well: #ededea;
+  --zebra: #f9f9f7;
+  --sunk: #fbfbfa;
+  /* What a screenshot's frame shows while it loads. */
+  --screen: #fff;
+  /* Cards have a shadow on paper. On the dark side a shadow can't be seen, so they get a lit edge. */
+  --rim: 0 0 transparent;
   --display: 'Hanken Grotesk', system-ui, sans-serif;
   --body: 'Hanken Grotesk', system-ui, sans-serif;
   --gut: clamp(1.25rem, 4vw, 4rem);
@@ -191,7 +210,7 @@ h1 b {
   padding: 0.35rem 0.65rem;
   border-radius: 0.6rem;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   font: 500 0.9375rem/1 var(--body);
   letter-spacing: 0;
   white-space: nowrap;
@@ -356,7 +375,7 @@ html:not(.js) .ledger-do {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--screen);
 }
 .scr img,
 .scr video {
@@ -462,7 +481,7 @@ blockquote {
 .end {
   margin: 0 clamp(0.5rem, 1.2vw, 1rem) clamp(5rem, 8vw, 5.5rem);
   padding: clamp(3.5rem, 9vw, 8rem) var(--gut) clamp(6rem, 10vw, 8rem);
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
   border-radius: 1.75rem;
   text-align: center;
@@ -492,8 +511,8 @@ blockquote {
   min-height: 3rem;
   padding: 0 1.35rem;
   border-radius: 99rem;
-  background: #fff;
-  color: #111;
+  background: var(--chip);
+  color: var(--chip-ink);
   font-weight: 600;
   text-decoration: none;
   transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
@@ -519,10 +538,11 @@ blockquote {
   gap: 0.1rem;
   padding: 0.3rem;
   border-radius: 99rem;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--dock);
   -webkit-backdrop-filter: blur(14px) saturate(1.5);
   backdrop-filter: blur(14px) saturate(1.5);
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 14px 34px -12px rgba(0, 0, 0, 0.34);
 }
@@ -548,12 +568,12 @@ blockquote {
   border-radius: 99rem;
   font-size: 0.9375rem;
   font-weight: 500;
-  color: #111;
+  color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
 }
 .dock a.go {
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
   margin-left: 0.15rem;
 }
@@ -564,7 +584,7 @@ blockquote {
   left: 0;
   width: 0;
   border-radius: 99rem;
-  background: rgba(0, 0, 0, 0.075);
+  background: var(--wash);
   transition:
     transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1),
     width 0.5s cubic-bezier(0.3, 1.35, 0.5, 1),
@@ -692,7 +712,7 @@ blockquote {
 }
 .pane > div {
   overflow: hidden;
-  background: #fff;
+  background: var(--screen);
   border-radius: 0.7rem;
   box-shadow: 0 34px 60px -24px rgba(0, 0, 0, 0.55);
 }
@@ -866,7 +886,7 @@ blockquote {
   padding: 0.6rem 1rem;
   border-radius: 99rem;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   text-decoration: none;
 }
 .skip:focus {
@@ -916,10 +936,10 @@ main {
   margin: 0 0 1rem;
 }
 .dock a[aria-current]:not(.go) {
-  background: rgba(0, 0, 0, 0.075);
+  background: var(--wash);
 }
 .dock a.go[aria-current] {
-  background: var(--accent);
+  background: var(--fill);
 }
 .js .w {
   animation-delay: calc(var(--n) * 55ms + var(--wd, 120ms));
@@ -946,6 +966,7 @@ main {
   background: var(--card);
   border-radius: 1.25rem;
   box-shadow:
+    var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 22px 40px -28px rgba(0, 0, 0, 0.3);
 }
@@ -957,7 +978,16 @@ main {
   }
   .dock a.go {
     margin-left: 0.05rem;
-    padding: 0 0.6rem;
+    padding: 0 0.85rem;
+  }
+  /* With the flip in the dock there is no room for the whole label. Its name stays whole. */
+  .go-more {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .end {
     padding-inline: 0.75rem;
@@ -982,14 +1012,14 @@ main {
 
 /* The studio color: headline emphasis, primary actions, links and the closing panel. */
 ::selection {
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
 }
 body:not([data-ink]) h1 b {
   color: var(--accent);
 }
 .end .chip:not(.ghost) {
-  color: var(--accent);
+  color: var(--fill);
 }
 .prose a {
   text-decoration-color: var(--accent);
@@ -1155,7 +1185,7 @@ h1 b,
   margin-top: 1.5rem;
 }
 .chip.go {
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
 }
 .hand {
@@ -1201,7 +1231,8 @@ h1 b,
   text-align: center;
   text-decoration: none;
   box-shadow:
-    0 0 0 1px rgba(18, 18, 17, 0.08),
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.1),
     0 26px 44px -22px rgba(0, 0, 0, 0.5);
   --pipx: 6.5cqw;
@@ -1209,19 +1240,19 @@ h1 b,
   --pips: 11cqw;
 }
 .pc-paper {
-  --pcb: #fff;
+  --pcb: var(--card);
   --pci: var(--ink);
   --pcs: var(--soft);
 }
 .pc-blue {
-  --pcb: var(--accent);
+  --pcb: var(--fill);
   --pci: #fff;
   --pcs: var(--accent-soft);
 }
 .pc-ink {
   --pcb: var(--ink);
-  --pci: #fff;
-  --pcs: #bebeb8;
+  --pci: var(--on-ink);
+  --pcs: var(--on-ink-soft);
 }
 .pc h3 {
   font-size: clamp(0.8125rem, 4.6cqw, 1rem);
@@ -1626,7 +1657,7 @@ h1.giant b {
   height: 100%;
   object-fit: cover;
   object-position: 50% 0;
-  background: #fff;
+  background: var(--screen);
 }
 .nine {
   --cardr: clamp(1rem, 1.7vw, 1.6rem);
@@ -1646,7 +1677,8 @@ h1.giant b {
   text-decoration: none;
   container-type: inline-size;
   box-shadow:
-    0 0 0 1px rgba(18, 18, 17, 0.08),
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
     0 30px 50px -22px rgba(0, 0, 0, 0.6);
   transform-origin: 50% 90%;
   will-change: transform;
@@ -1672,7 +1704,7 @@ h1.giant b {
   margin-top: 3cqw;
   font: 700 24cqw/1 var(--display);
   letter-spacing: -0.05em;
-  color: var(--accent);
+  color: var(--fill);
 }
 .nine:focus-visible {
   outline: 3px solid #fff;
@@ -1776,7 +1808,7 @@ h1.giant b {
   padding: 0 0.8rem;
   border: 0;
   border-radius: 99rem;
-  background: var(--accent);
+  background: var(--fill);
   color: #fff;
   font: 600 0.9375rem/1 var(--body);
   cursor: pointer;
@@ -1808,7 +1840,7 @@ h1.giant b {
   padding: 0.75rem 1rem;
   border-radius: 0.8rem;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   font-size: 0.95rem;
   line-height: 1.45;
   opacity: 0;
@@ -1863,5 +1895,243 @@ html.ncs-gated .ncs-overlay {
   .dock a[aria-current] {
     text-decoration: underline;
     text-underline-offset: 0.2em;
+  }
+}
+
+/* ==========================================================================
+   The other side of the card
+   ==========================================================================
+   Light is the face of the card: paper, ink, the blue used sparingly. Dark is its back, the deck's
+   printed ink, and the room has gone quiet: the cards carry a lit edge rather than a shadow, the
+   screens sit a little dim until you reach for one, and a window that wakes casts its client's color
+   on the table under it. The blue closing is the one full-strength color on the page.
+
+   Screen only: paper is paper, so print always takes the light tokens. The one-page sheet relies on
+   this. Every pair is asserted in src/lib/kit-tokens.test.ts. */
+@media screen {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --ground: #14162f;
+    --ink: #f3f2ec;
+    --soft: #b2b4cc;
+    --card: #1d2042;
+    --line: rgba(226, 228, 255, 0.15);
+    --accent: #aab3ff;
+    --fill: #3345f0;
+    --on-ink: #14162f;
+    --on-ink-soft: #4c4f6e;
+    --soft-2: #a4a6bf;
+    --soft-3: #a4a6bf;
+    --chip: #272b55;
+    --chip-ink: #f3f2ec;
+    --dock: rgba(29, 32, 66, 0.82);
+    --wash: rgba(226, 228, 255, 0.13);
+    --well: #272b55;
+    --zebra: #191b3a;
+    --sunk: #191b3a;
+    --screen: #1d2042;
+    --rim: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(226, 228, 255, 0.08);
+  }
+  /* These surfaces keep their own color on either side, so what sits on them keeps the light
+     tokens: the closing, a client's band or sheet, and anything set on a client's paper. */
+  :root[data-theme='dark'] :is(.end, .band, .sheet, .study, .dw-rows li:is(:hover, :focus-within)) {
+    --ink: #121211;
+    --soft: #5c5c57;
+    --card: #fff;
+    --line: rgba(18, 18, 17, 0.1);
+    --accent: #2f3fe6;
+    --chip: #fff;
+    --chip-ink: #111;
+    --on-ink: #fff;
+    --screen: #fff;
+    --rim: 0 0 transparent;
+  }
+  /* Text is inherited from the page, so a client's paper has to take it back too. */
+  :root[data-theme='dark'] :is(.study, .dw-rows li:is(:hover, :focus-within)) {
+    color: var(--ink);
+  }
+  /* A client's marks on the neutral page: their own second color where they have one. */
+  :root[data-theme='dark'] [style*='--c-night'] {
+    --cm: var(--c-night);
+  }
+
+  /* The closing is the back of the deck: the same lattice as the flip's card. */
+  :root[data-theme='dark'] .end {
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 22px);
+  }
+
+  /* The windows. A screen rests a little dim, and waking one lights the table under it with that
+     client's color: the only place the color leaves the window, and only when you asked for it. */
+  :root[data-theme='dark'] .tile {
+    --cast: color-mix(in oklab, var(--c) 58%, #fff);
+    box-shadow:
+      0 0 0 1px rgba(226, 228, 255, 0.16),
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 28px 46px -24px rgba(0, 0, 0, 0.75),
+      0 34px 70px -30px color-mix(in oklab, var(--cast) 34%, transparent);
+    transition: box-shadow 0.5s var(--ease);
+  }
+  :root[data-theme='dark'] .tile:is(:hover, :focus-visible, :has(video.on)) {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--cast) 60%, transparent),
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 28px 46px -24px rgba(0, 0, 0, 0.75),
+      0 26px 120px -8px color-mix(in oklab, var(--cast) 88%, transparent);
+  }
+  :root[data-theme='dark'] .scr img {
+    filter: brightness(0.84);
+    transition: filter 0.5s var(--ease);
+  }
+  :root[data-theme='dark'] .tile:is(:hover, :focus-visible, :has(video.on)) .scr img,
+  :root[data-theme='dark'] :is(.band, .sheet) .scr img {
+    filter: none;
+  }
+
+  /* The one big line: the lights come up as it gains its weight. --lit comes from kit.js and stays
+     unset, so full strength, under reduced motion. */
+  :root[data-theme='dark'] .giant[data-weigh] {
+    color: color-mix(in srgb, var(--ink) calc(38% + var(--lit, 1) * 62%), var(--ground));
+  }
+}
+
+/* The flip: the switch in the dock. */
+.turn {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 99rem;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  perspective: 12rem;
+  -webkit-tap-highlight-color: transparent;
+  /* On the button, not the card: a view-transition-name flattens its own element's 3D. */
+  view-transition-name: flip-card;
+}
+.js .turn {
+  display: inline-flex;
+}
+.turn:hover {
+  background: var(--wash);
+}
+.turn-card {
+  position: relative;
+  display: block;
+  width: 1.3rem;
+  height: 1.8rem;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.turn:hover .turn-card {
+  transform: rotateY(-22deg) rotateZ(-5deg);
+}
+.turn:active .turn-card {
+  transform: scale(0.92);
+}
+.fc-face,
+.fc-back {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 0.25rem;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 0 0 1px rgba(18, 18, 17, 0.14);
+}
+.fc-face {
+  background: #fff;
+  color: #2f3fe6;
+  font: 700 0.9375rem/1 var(--display);
+  letter-spacing: -0.03em;
+}
+.fc-back {
+  transform: rotateY(180deg);
+  background-color: #3345f0;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.55) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 0 1px, transparent 1px 4px);
+  box-shadow:
+    0 0 0 1px rgba(226, 228, 255, 0.35),
+    inset 0 0 0 2px #3345f0;
+}
+:root[data-theme='dark'] .turn-card {
+  transform: rotateY(180deg);
+}
+:root[data-theme='dark'] .turn:hover .turn-card {
+  transform: rotateY(158deg) rotateZ(5deg);
+}
+:root[data-theme='dark'] .turn:active .turn-card {
+  transform: rotateY(180deg) scale(0.92);
+}
+
+/* The page turning over. The old side rotates to edge-on, the new one comes round from the other
+   edge and settles with a small overshoot, over the studio blue for the moment nothing faces you. */
+html.flipping::view-transition {
+  background: #3345f0;
+}
+html.flipping::view-transition-group(root) {
+  animation: none;
+}
+html.flipping::view-transition-old(root),
+html.flipping::view-transition-old(flip-card) {
+  animation: page-out 0.3s cubic-bezier(0.55, 0, 0.9, 0.5) both;
+}
+html.flipping::view-transition-new(root),
+html.flipping::view-transition-new(flip-card) {
+  animation: page-in 0.72s 0.3s linear both;
+}
+html.flipping::view-transition-group(dock),
+html.flipping::view-transition-group(flip-card) {
+  animation-duration: 0.01s;
+}
+@keyframes page-out {
+  to {
+    transform: perspective(2200px) rotateY(-90deg);
+  }
+}
+/* Written out because a spring needs its overshoot: 90 to about -7 to +2 to rest. */
+@keyframes page-in {
+  0% {
+    transform: perspective(2200px) rotateY(90deg);
+    animation-timing-function: cubic-bezier(0.1, 0.7, 0.3, 1);
+  }
+  48% {
+    transform: perspective(2200px) rotateY(-7deg);
+    animation-timing-function: ease-in-out;
+  }
+  76% {
+    transform: perspective(2200px) rotateY(2deg);
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: perspective(2200px) rotateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turn-card,
+  :root[data-theme='dark'] .tile,
+  :root[data-theme='dark'] .scr img {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .fc-face,
+  .fc-back {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .turn {
+    display: none;
   }
 }

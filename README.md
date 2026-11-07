@@ -45,7 +45,7 @@ A few standards show up in every project, and they are the reason the sites hold
 
 - **[Astro 7](https://astro.build)** with TypeScript in strict mode, `output: 'static'`: every page is prerendered to HTML
 - **Plain CSS**: one shared stylesheet (`src/styles/kit.css`, with the design tokens) plus one file per page. No Tailwind, no utility classes
-- **One typeface**, Hanken Grotesk, self-hosted. One light theme, one studio blue; every other color on the site belongs to a client and stays inside their own window
+- **One typeface**, Hanken Grotesk, self-hosted. Light and dark, each designed on its own, one studio blue; every other color on the site belongs to a client and stays inside their own window
 - **Small plain scripts, no framework**: the deck of client windows, the closing, the client sheet and the form are real markup that a few scripts move. Motion is springs written in JavaScript, and it all stands down under reduced motion. Page changes are native cross-document view transitions, with no router
 - **MDX content collections** for case studies and the journal; a JSON-backed collection for the photography set
 - **[Cloudflare Workers](https://workers.cloudflare.com)** serving the static build as assets, plus Cloudflare Web Analytics (privacy-friendly, no cookies)
