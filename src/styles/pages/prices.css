@@ -1904,3 +1904,28 @@ html:not(.js) .jump a[href='#pick'] {
     color: #fff;
   }
 }
+
+/* Each tier is two rows: Hosting alone, then with care. The second row belongs to the first. */
+@media (min-width: 40.01rem) {
+  .cost-table tbody + tbody tr:first-child > * {
+    border-top: 1px solid var(--line);
+  }
+}
+.cost-table tr.with-care > * {
+  border-top: 0;
+  padding-top: 0;
+}
+.cost-table tr.with-care th b {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 40rem) {
+  .cost-table tbody tr.with-care {
+    padding-top: 0;
+    border-top: 0;
+  }
+}

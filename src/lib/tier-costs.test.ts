@@ -32,3 +32,18 @@ test('the three published rows', () => {
 test('Launch on Hosting alone for five years', () => {
   assert.equal(hostingOnlyFiveYears(webTiers[0]), 4300);
 });
+
+test('every tier also has its sums on Hosting alone', () => {
+  const rows = tierCosts().map((r) => [
+    r.tier.name,
+    r.hostingPlan.name,
+    r.hostingOnly.yearOne,
+    r.hostingOnly.threeYears,
+    r.hostingOnly.fiveYears,
+  ]);
+  assert.deepEqual(rows, [
+    ['Launch', 'Hosting', 3500, 3900, 4300],
+    ['Signature', 'Hosting', 6500, 6900, 7300],
+    ['Flagship', 'Hosting', 12500, 12900, 13300],
+  ]);
+});

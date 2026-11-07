@@ -22,26 +22,41 @@ export function costOver(build: number, perYear: number, years: number): number 
   return build + perYear * Math.max(0, years - 1);
 }
 
-export interface TierCost {
-  tier: WebTier;
-  plan: CarePlan;
-  perYear: number;
+export interface Sums {
   yearOne: number;
   threeYears: number;
   fiveYears: number;
 }
 
+export interface TierCost extends Sums {
+  tier: WebTier;
+  /** The tier's example care level. Every care level includes hosting. */
+  plan: CarePlan;
+  perYear: number;
+  /** The same build kept on Hosting alone, the floor every live site needs. */
+  hostingPlan: CarePlan;
+  hostingOnly: Sums;
+}
+
+const sums = (build: number, perYear: number): Sums => ({
+  yearOne: costOver(build, perYear, 1),
+  threeYears: costOver(build, perYear, 3),
+  fiveYears: costOver(build, perYear, 5),
+});
+
 export function tierCost(tier: WebTier, plans: CarePlan[] = carePlans): TierCost {
   const plan = plans.find((p) => p.name === tier.care);
   if (!plan) throw new Error(`No care plan called ${tier.care}`);
+  const hostingPlan = plans.find((p) => p.name === 'Hosting');
+  if (!hostingPlan) throw new Error('No care plan called Hosting');
   const perYear = carePerYear(plan);
   return {
     tier,
     plan,
     perYear,
-    yearOne: costOver(tier.priceFrom, perYear, 1),
-    threeYears: costOver(tier.priceFrom, perYear, 3),
-    fiveYears: costOver(tier.priceFrom, perYear, 5),
+    ...sums(tier.priceFrom, perYear),
+    hostingPlan,
+    hostingOnly: sums(tier.priceFrom, carePerYear(hostingPlan)),
   };
 }
 

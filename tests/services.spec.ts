@@ -163,12 +163,18 @@ test.describe('Prices', () => {
   test('the five-year sums are computed with year one hosting included', async ({ page }) => {
     await page.goto('/services/');
     const rows = page.locator('.cost-table tbody tr');
-    await expect(rows).toHaveCount(3);
+    // Two rows a tier: Hosting alone ($200 a year from year two), then with its care plan.
+    await expect(rows).toHaveCount(6);
     const cells = (i: number) => rows.nth(i).locator('td').allInnerTexts();
-    expect(await cells(0)).toEqual(['$3,500', '$4,916', '$6,332']);
-    expect(await cells(1)).toEqual(['$6,500', '$9,596', '$12,692']);
-    expect(await cells(2)).toEqual(['$12,500', '$18,716', '$24,932']);
-    await expect(rows.first()).toContainText('Light Care');
+    expect(await cells(0)).toEqual(['$3,500', '$3,900', '$4,300']);
+    expect(await cells(1)).toEqual(['$3,500', '$4,916', '$6,332']);
+    expect(await cells(2)).toEqual(['$6,500', '$6,900', '$7,300']);
+    expect(await cells(3)).toEqual(['$6,500', '$9,596', '$12,692']);
+    expect(await cells(4)).toEqual(['$12,500', '$12,900', '$13,300']);
+    expect(await cells(5)).toEqual(['$12,500', '$18,716', '$24,932']);
+    await expect(rows.first()).toContainText('Hosting only');
+    await expect(rows.nth(1)).toContainText('Light Care');
+    await expect(rows.nth(1)).toContainText('hosting included');
     await expect(page.locator('#costs')).toContainText('year one hosting included');
   });
 
