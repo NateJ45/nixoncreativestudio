@@ -17,6 +17,13 @@
   --display: 'Hanken Grotesk', system-ui, sans-serif;
   --body: 'Hanken Grotesk', system-ui, sans-serif;
   --gut: clamp(1.25rem, 4vw, 4rem);
+  /* Where a full-bleed block's contents start, so its left edge meets the 90rem page. */
+  --edge: max(var(--gut), calc((100% - 90rem) / 2 + var(--gut)));
+  /* The display scale: a page's H1, a section's H2, a card's H3. The giant lines and the
+     homepage headline sit outside it on purpose. */
+  --type-h1: clamp(2.5rem, 5.4vw, 5.75rem);
+  --type-h2: clamp(2rem, 3.6vw, 3.5rem);
+  --type-h3: clamp(1.375rem, 2vw, 1.75rem);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 * {
@@ -25,6 +32,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   overflow-x: clip;
+  /* Keyboard focus and jump links stop clear of the top edge and of the dock. */
+  scroll-padding-block: 24px 96px;
 }
 body {
   margin: 0;
@@ -65,7 +74,7 @@ p {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 1.1rem var(--gut);
+  padding: 1.1rem var(--edge);
 }
 .top a {
   display: inline-flex;
@@ -104,9 +113,12 @@ p {
 }
 h1 {
   max-width: 15.5em;
-  font-size: clamp(2.75rem, 6.3vw, 6.5rem);
+  font-size: var(--type-h1);
   line-height: 1.02;
   font-weight: 500;
+}
+.hero h1 {
+  font-size: clamp(2.75rem, 6.3vw, 6.5rem);
 }
 h1 b {
   font-weight: 800;
@@ -201,10 +213,6 @@ h1 b {
   font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
   line-height: 1.4;
 }
-.js .sub {
-  animation: word 0.9s var(--ease) both;
-  animation-delay: 760ms;
-}
 .stackspace {
   /* The same sum home.js does, so the hero is its final height before any script runs. */
   height: var(
@@ -218,8 +226,9 @@ h1 b {
     height: var(--stackh, calc(min(42vw, max(120px, (100vh - 470px) / 2.02), 200px) * 2.02 + 88px));
   }
 }
-/* No script, no hand: the grid is simply the grid. */
-html:not(.js) .stackspace {
+/* No script, no hand: the grid is simply the grid, and there is no card to draw. */
+html:not(.js) .stackspace,
+html:not(.js) .ledger-do {
   display: none;
 }
 
@@ -237,7 +246,7 @@ html:not(.js) .stackspace {
 }
 .work-head h2,
 .sec-head h2 {
-  font-size: clamp(2rem, 3.6vw, 3.5rem);
+  font-size: var(--type-h2);
 }
 .work-head p,
 .sec-head p {
@@ -669,6 +678,29 @@ blockquote {
   object-fit: cover;
   object-position: 0 0;
 }
+/* The sheet's looping clip can be paused (WCAG 2.2.2). */
+.pv-toggle {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: 99rem;
+  background: rgba(17, 17, 17, 0.82);
+  color: #fff;
+  font: 500 0.9375rem/1 var(--body);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.pv-toggle[hidden] {
+  display: none;
+}
+.pv-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
 .pane figcaption {
   position: absolute;
   left: 0.7rem;
@@ -758,7 +790,6 @@ blockquote {
 @media (prefers-reduced-motion: reduce) {
   .js .w,
   .js .me,
-  .js .sub,
   .js .dock {
     animation: none;
   }
@@ -825,7 +856,6 @@ main {
 }
 .page-head h1 {
   max-width: 14em;
-  font-size: clamp(2.75rem, 6.3vw, 6.5rem);
 }
 .page-head .lede {
   max-width: 40rem;
@@ -834,8 +864,9 @@ main {
   font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
   line-height: 1.4;
 }
+/* Sits inside a .sec's gutters, so together they make the same 90rem page as .page-head. */
 .wrap {
-  max-width: 90rem;
+  max-width: calc(90rem - 2 * var(--gut));
   margin: 0 auto;
 }
 .prose {
@@ -1051,6 +1082,12 @@ h1 b,
   color: var(--soft);
   font-size: 0.9375rem;
 }
+.ledger-do {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
 .cap span.label {
   margin-top: 0.35rem;
   font-size: 0.8125rem;
@@ -1074,7 +1111,7 @@ h1 b,
 }
 .dealt-copy h2 {
   margin-top: 0.9rem;
-  font-size: clamp(2.75rem, 5.4vw, 5.5rem);
+  font-size: var(--type-h2);
   font-weight: 500;
 }
 .dealt-copy h2 b {
@@ -1254,10 +1291,11 @@ h1 b,
 .giant {
   font-size: 17cqw;
 }
+/* Far enough apart that the S card leaves the L card's far corner showing. */
 .pc,
 .pc:nth-child(1),
 .pc:nth-child(3) {
-  margin-inline: -1.4%;
+  margin-inline: 0.9%;
 }
 .pc:nth-child(1) {
   transform: translateY(8px) rotate(-6deg);
@@ -1292,6 +1330,19 @@ h1 b,
   .hand {
     grid-template-columns: minmax(0, 1fr);
     justify-content: stretch;
+  }
+}
+/* A tablet's width turns a stacked price card into a bar, so it stays card-shaped. */
+@media (min-width: 40rem) and (max-width: 52rem) {
+  .hand {
+    justify-items: center;
+  }
+  .pc,
+  .pc:nth-child(1),
+  .pc:nth-child(2),
+  .pc:nth-child(3) {
+    width: 100%;
+    max-width: 24rem;
   }
 }
 
@@ -1436,7 +1487,9 @@ h1.giant b {
   transform: rotate(3deg) scale(1.03);
 }
 .home-band {
-  margin: clamp(5rem, 11vw, 9rem) clamp(0.5rem, 1.2vw, 1rem);
+  --bandm: clamp(0.5rem, 1.2vw, 1rem);
+  margin: clamp(5rem, 11vw, 9rem) var(--bandm);
+  padding-inline: max(clamp(1.5rem, 6vw, 6.5rem), calc(var(--edge) - var(--bandm)));
 }
 @media (max-width: 52rem) {
   .band,
@@ -1461,7 +1514,7 @@ h1.giant b {
 .end {
   position: relative;
   margin: 0;
-  padding: clamp(1.1rem, 2vw, 1.75rem) var(--gut) clamp(5.5rem, 7vw, 6.25rem);
+  padding: clamp(1.1rem, 2vw, 1.75rem) var(--edge) clamp(5.5rem, 7vw, 6.25rem);
   border-radius: 1.75rem 1.75rem 0 0;
   overflow: clip;
   text-align: left;
@@ -1495,7 +1548,7 @@ h1.giant b {
   padding-block: clamp(3rem, 8vh, 6rem);
 }
 .end h2 {
-  font-size: clamp(2.75rem, 5.8vw, 6.25rem);
+  font-size: var(--type-h1);
   line-height: 1;
   text-align: left;
 }
@@ -1688,7 +1741,6 @@ h1.giant b {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
-  margin-block: -0.75rem;
   padding: 0 0.8rem;
   border: 0;
   border-radius: 99rem;
@@ -1769,5 +1821,15 @@ html.ncs-gated .ncs-overlay {
   .chip,
   .dock {
     border: 1px solid CanvasText;
+  }
+  /* A chosen answer and the page you are on, which a background alone can no longer show. */
+  :root .pick-o input:checked + span,
+  :root .opt input:checked + span {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .dock a[aria-current] {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 }
