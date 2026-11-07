@@ -401,3 +401,111 @@ html:not(.js) .stand {
     transition: none;
   }
 }
+
+/* Try it: four questions, and the real page scrolls to each answer. */
+.sun {
+  padding-top: clamp(1rem, 3vh, 2.5rem);
+}
+.sun-in {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(2rem, 5vw, 6rem);
+  align-items: center;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.sun h2 {
+  margin-top: 0.9rem;
+  font-size: clamp(2.25rem, 4.4vw, 4.5rem);
+}
+.sun h2 b {
+  font-weight: 700;
+  color: var(--accent);
+}
+.sun-lede {
+  max-width: 36rem;
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.4;
+}
+.sun-qs {
+  display: grid;
+  margin: clamp(1.25rem, 3vh, 2rem) 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.sun-qs li {
+  border-top: 1px solid var(--line);
+}
+.sun-qs button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  color: var(--soft);
+  font: 500 clamp(1.25rem, 1.9vw, 1.625rem)/1.15 var(--display);
+  letter-spacing: -0.02em;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 0.25s,
+    transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.sun-qs button:hover {
+  color: var(--ink);
+  transform: translateX(0.25rem);
+}
+.sun-qs button[aria-pressed='true'] {
+  color: var(--accent);
+  font-weight: 700;
+}
+.sun-qs button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.sun-a {
+  padding-bottom: 0.9rem;
+  color: var(--ink);
+}
+.sun-w {
+  justify-self: center;
+  width: min(100%, 19rem);
+  transform: rotate(2deg);
+}
+.sun-w .scr img {
+  inset: 0 0 auto;
+  height: auto;
+  object-fit: fill;
+  will-change: transform;
+}
+html:not(.js) .sun-qs button {
+  color: var(--ink);
+  cursor: default;
+}
+@media (max-width: 62rem) {
+  .sun-in {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sun-w {
+    width: min(66vw, 17rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sun-qs button {
+    transition: none;
+  }
+  .sun-w .scr img {
+    will-change: auto;
+  }
+}
+.sun h2 b {
+  white-space: nowrap;
+}
