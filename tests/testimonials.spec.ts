@@ -23,10 +23,49 @@ for (const { slug, count } of studies) {
   });
 }
 
-test('the homepage shows one quote band, with its window linking the study', async ({ page }) => {
+test('the homepage band carries every quote, one at a time, starting with Theology Matters', async ({
+  page,
+}) => {
   await page.goto('/');
-  await expect(page.locator('main blockquote')).toHaveCount(1);
-  await expect(page.locator('.band a.tile')).toHaveAttribute('href', '/work/theology-matters/');
+  const band = page.locator('.home-band');
+  await expect(band.locator('blockquote')).toHaveCount(studies.reduce((n, s) => n + s.count, 0));
+  await expect(band.locator('[data-q]:not([inert])')).toHaveCount(1);
+  await expect(band.locator('[data-tw]:not([inert]) a.tile')).toHaveAttribute(
+    'href',
+    '/work/theology-matters/',
+  );
+});
+
+test('Next and Previous step the home band through each client, color and window', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const band = page.locator('.home-band');
+  const n = studies.reduce((n, s) => n + s.count, 0);
+  const count = band.locator('[data-q-count]');
+  await expect(count).toHaveText(`1 / ${n}`);
+  const accent = () => band.evaluate((el) => el.style.getPropertyValue('--c'));
+  const first = await accent();
+  const seen = new Set<string>();
+  for (let i = 2; i <= n; i++) {
+    await band.locator('[data-q-next]').click();
+    await expect(count).toHaveText(`${i} / ${n}`);
+    const live = band.locator('[data-q]:not([inert])');
+    await expect(live).toHaveCount(1);
+    const slug = await live.getAttribute('data-slug');
+    await expect(band.locator('[data-tw]:not([inert]) a.tile')).toHaveAttribute(
+      'href',
+      `/work/${slug}/`,
+    );
+    expect(await accent()).toBe(await live.getAttribute('data-c'));
+    seen.add(slug!);
+  }
+  expect(seen.size).toBeGreaterThan(1);
+  await band.locator('[data-q-next]').click();
+  await expect(count).toHaveText(`1 / ${n}`);
+  expect(await accent()).toBe(first);
+  await band.locator('[data-q-prev]').click();
+  await expect(count).toHaveText(`${n} / ${n}`);
 });
 
 test('/about/ shows two quote bands', async ({ page }) => {

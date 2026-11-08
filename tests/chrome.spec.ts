@@ -53,7 +53,9 @@ test.describe('Without JavaScript', () => {
     for (const href of ['/churches/', '/schools/', '/nonprofits/', '/small-business/'])
       await expect(page.locator(`.ledger-for a[href="${href}"]`)).toHaveCount(1);
     await expect(page.locator('[data-draw]')).toHaveText('Show me a random one');
-    await expect(page.locator('.band blockquote')).toHaveCount(1);
+    // One quote band, showing one quote at a time (the rest wait behind Next).
+    await expect(page.locator('.band')).toHaveCount(1);
+    await expect(page.locator('.band [data-q]:not([inert]) blockquote')).toHaveCount(1);
     await expect(page.locator('[data-prices] li')).toHaveCount(3);
     await expect(page.locator('[data-prices] strong').first()).toHaveText('$3,500');
     await expect(page.locator('h1')).toHaveAttribute(
