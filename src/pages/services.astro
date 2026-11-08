@@ -10,7 +10,7 @@
    tests/metadata.spec.ts checks every JSON-LD offer is printed on the page, and
    the FAQPage is built from the same list the page renders.
 
-   src/scripts/prices.js adds the motion: three questions that deal a card, the
+   src/scripts/prices.js adds the motion: three questions that suggest a tier, the
    tiers that lift, the folding rows. Without it everything is simply open and
    every link works.
    ============================================================================ */
@@ -20,7 +20,15 @@ import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import Closing from '../components/Closing.astro';
 import { site } from '../data/site';
-import { webTiers as tiers, addOns, carePlans, customWorkRate, freeToMove } from '../data/pricing';
+import {
+  webTiers as tiers,
+  addOns,
+  carePlans,
+  customWorkRate,
+  freeToMove,
+  perWords,
+  pricesAsOf,
+} from '../data/pricing';
 import { SITUATIONS, sectorPagePath } from '../data/sector-pages';
 import { getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
@@ -33,11 +41,16 @@ const signature = tiers.find((t) => t.highlighted) ?? tiers[1];
 const flagship = tiers[tiers.length - 1];
 const [signatureLow, signatureHigh] = dollars(signature.range);
 const [hosting, lightCare, care, carePlus] = carePlans;
-const [hourlyRate] = dollars(hosting.time);
+// One rate for extra changes on Hosting, one on any care plan, and one for custom development.
+const hourlyRate = hosting.rate;
+const careRate = lightCare.rate;
+const rateLine = `Rate for extra changes: ${money(hourlyRate)} an hour on ${hosting.name}, ${money(careRate)} an hour on any care plan.`;
 const photography = addOnNamed(addOns, 'Photography');
 const brandStrategy = addOnNamed(addOns, 'Brand & strategy');
+// "$200 per year", "$59 per month": a unit on every recurring price, in words.
+const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
 
-// What the three questions deal: read by src/scripts/prices.js.
+// What the three questions suggest: read by src/scripts/prices.js.
 const pickTiers = tiers.map((t) => ({
   name: t.name,
   from: money(t.priceFrom),
@@ -45,7 +58,11 @@ const pickTiers = tiers.map((t) => ({
 }));
 
 // The honest sums, computed from pricing.ts: year one Hosting is included; care is billed from month one.
+// Flagship has no Hosting-only row: custom tools need Care or Care+.
 const costs = tierCosts();
+// The cost bars share one scale, the largest five-year total, so their lengths compare honestly.
+const barMax = Math.max(...costs.map((c) => c.usual.fiveYears));
+const pct = (n: number) => `${((n / barMax) * 100).toFixed(2)}%`;
 const situationCols = [
   { key: 'launch', tier: launch },
   { key: 'signature', tier: signature },
@@ -62,17 +79,16 @@ const oneOfEach = [
 ].flatMap((slug) => clients.filter((c) => c.slug === slug));
 
 // The care table, from the plans' feature lists. Each plan's "Everything in X"
-// line means it has every row before it, and reply times get their own row.
-const isReply = (f: string) => /repl(y|ies)/i.test(f);
-const replies = carePlans.map((c) => c.features.find(isReply));
+// line means it has every row before it. Edit time, the hourly rate and replies
+// have rows of their own, written out in words rather than ticked.
 const careRows = carePlans.flatMap((plan, i) =>
   plan.features
-    .filter((f) => !isReply(f) && !f.startsWith('Everything in'))
+    .filter((f) => !f.startsWith('Everything in'))
     .map((name) => ({ name, has: carePlans.map((_, j) => j >= i) })),
 );
 
 const webBody =
-  'I match the build to your budget and to whoever will maintain it after launch. Everything is built mobile-first and tested for accessibility from the very first screen, then handed over with documentation.';
+  'I match the build to your budget and to whoever will maintain it after launch. Everything is built for phones first and tested for accessibility from the very first screen, then handed over with a written guide.';
 
 const strategyBody =
   'Strategy always comes first, because the design has to serve a plan. It starts with a working session together, then I write a short brief that the rest of the project follows.';
@@ -83,27 +99,27 @@ const photoBody =
 const faq = [
   {
     q: 'What does it cost?',
-    a: `Websites start at ${money(launch.priceFrom)} for a focused ${launch.name} site. A site your team runs usually comes to ${money(signatureLow)} to ${money(signatureHigh)}, and builds with real custom functionality start around ${money(flagship.priceFrom)}. Every build is custom, comes with a content system you can manage yourself, and includes year one hosting; what moves the number is scope, functionality, photography, and content. The first conversation is free and ends with an honest ballpark before anyone is committed, and larger projects can be split into monthly payments, which is easier on cash flow.`,
+    a: `Websites start at ${money(launch.priceFrom)} for a focused ${launch.name} site. A site your team runs usually comes to ${money(signatureLow)} to ${money(signatureHigh)}, and builds with custom tools start around ${money(flagship.priceFrom)}. Every build is custom, comes with an editor your own people can use, and includes year one hosting. What moves the number is how big the site is, what it has to do, photography, and how much writing I do for you. The first conversation is free and ends with an honest ballpark before anyone is committed. Larger projects can be split into monthly payments, which is easier on cash flow.`,
   },
   {
     q: 'What if I have been quoted less somewhere else?',
-    a: 'You probably can find a cheaper quote, and for a very simple need that might be the right call. Ask what it includes: accessibility checks, a content system your team can actually run, a plan for who maintains the site after launch, and who answers the phone in a year. If it covers those, take it seriously.',
+    a: 'You probably can find a cheaper quote, and for a very simple need that might be the right call. Ask what it includes: accessibility checks, an editor your team can actually use, a plan for who looks after the site after launch, and who answers the phone in a year. If it covers those, take it seriously.',
   },
   {
     q: 'What happens if you are ever unavailable?',
-    a: 'Your site is built on tools plenty of developers already use: WordPress or Sanity for the content, GitHub for the code, and Cloudflare for hosting. Nothing is a private system only I understand, and the code, content and documentation can go to another developer, who picks it up without starting over.',
+    a: 'Your site is built on tools plenty of web developers already use: WordPress or Sanity (an editor for your content), GitHub (where the code is stored) and Cloudflare (the network the site is hosted on). Nothing is a private system only I understand, and the code, content and written guide can go to another developer, who picks it up without starting over.',
   },
   {
     q: 'How long does a typical project take?',
-    a: 'Most websites land between six and ten weeks from kickoff to launch. Larger projects with custom photography or multiple content collections can run twelve to sixteen weeks. The brief at the end of strategy sets the real timeline.',
+    a: 'Most websites take 6 to 10 weeks from the first working session to launch. Larger projects with custom photography or several kinds of content can take 12 to 16 weeks. The brief at the end of the planning sets the real timeline.',
   },
   {
     q: 'Do I need a care plan after launch?',
-    a: `Year one hosting is included in every build. After that, every live site needs Hosting at the least, and I quote care with every build. Hosting, security patches, domains, and certificates all keep moving, and a site nobody is watching tends to break quietly and at a bad moment. ${hosting.name} is ${hosting.price} a year and covers hosting, security updates, uptime monitoring, daily backups, and renewals, with changes billed at ${money(hourlyRate)} an hour and custom work at ${money(customWorkRate)}. If you would rather not make edits yourself, ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price}), and ${carePlus.name} (${carePlus.price}) add monthly edit time, software updates, a monthly report, and faster replies. A site with custom tools needs ${care.name} or above, because tools need looking after. Unused hours do not roll over, and you can change or cancel with 30 days notice.`,
+    a: `No. Care is optional, but every live site needs ${hosting.name}. Year one hosting is included in every build, and from year two ${hosting.name} is ${hosting.price} a year. It covers hosting, security updates, a check every 15 minutes that the site is up, daily backups, and renewals. On ${hosting.name} you make changes yourself, or I make them at ${money(hourlyRate)} an hour. ${lightCare.name} (${lightCare.price} a month), ${care.name} (${care.price} a month) and ${carePlus.name} (${carePlus.price} a month) are add-ons on top of ${hosting.name}, billed monthly from launch. They add routine software updates, changes I make for you each month, fixes at no extra charge, faster replies and, from ${care.name} up, a monthly report. Extra changes on any care plan are ${money(careRate)} an hour, and custom development is ${money(customWorkRate)} an hour, quoted first. A site with custom tools needs ${care.name} or ${carePlus.name}, because tools need looking after. ${lightCare.name} minutes carry over for three months; ${care.name} and ${carePlus.name} hours do not. You can change or cancel with 30 days notice.`,
   },
   {
     q: 'Is there a monthly fee for the editor?',
-    a: 'Usually not for a small team. WordPress has no license fee, and Sanity has a free plan and a plan for nonprofits. If your team would ever need a paid plan, I tell you the cost before you commit.',
+    a: 'Usually not for a small team. WordPress has no license fee, and Sanity, the other editor I use, has a free plan and a plan for nonprofits. If your team would ever outgrow the free plan, I tell you the cost before you commit.',
   },
   {
     q: 'Can you work with my existing brand?',
@@ -111,7 +127,7 @@ const faq = [
   },
   {
     q: 'Where are you based, and do you work with clients outside Cincinnati?',
-    a: "I'm based in Cincinnati, but web design, strategy, and brand work happen with clients anywhere, fully remote when that is easier. Photography is the one piece that needs me on site, so that stays within the greater Cincinnati region.",
+    a: "I'm based in Cincinnati, but web design, planning, and brand work happen with clients anywhere, fully remote when that is easier. Photography is the one piece that needs me on site, so that stays within the greater Cincinnati region.",
   },
 ];
 
@@ -174,13 +190,21 @@ const heading = `What I do, and <b>what it costs.</b>`;
           <a href={`#${t.name.toLowerCase()}`}>
             <span class="label">{t.name}</span>
             <span class="glance-who">{t.who}</span>
-            <span class="glance-num">{`${money(t.priceFrom)}${t.priceSuffix}`}</span>
+            <span class="glance-num">
+              {`${money(t.priceFrom)}${t.priceSuffix}`}
+              <small>one-time</small>
+            </span>
           </a>
         </li>
       ))}
     </ul>
+    <p class="after-one">
+      <b>After year one:</b>
+      {` ${hosting.name} ${hosting.price} ${perWords(hosting.period)}. Optional care from ${lightCare.price} ${perWords(lightCare.period)}.`}
+      <a href="#care">What Hosting and care cover</a>
+    </p>
     <div class="from">
-      <p class="label">Websites start at</p>
+      <p class="label">Websites start at, one-time</p>
       <p class="from-num">{money(launch.priceFrom)}</p>
       <ul class="from-notes">
         <li>
@@ -225,10 +249,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
         {tiers.map((t, i) => (
           <li class="tier" id={t.name.toLowerCase()}>
             <article class:list={['t-card', { 't-ink': i > 0, 't-dark': i === 2 }]}>
-              <div class="t-bg" aria-hidden="true">
-                <span class="pip">{t.name.charAt(0)}</span>
-                <span class="pip flip">{t.name.charAt(0)}</span>
-              </div>
+              <div class="t-bg" aria-hidden="true"></div>
               <div class="t-head">
                 <h3>{t.name}</h3>
                 <p>{t.badge ?? t.who}</p>
@@ -242,7 +263,14 @@ const heading = `What I do, and <b>what it costs.</b>`;
                 <p>{t.responsible}</p>
               </div>
               <p class="t-price">{`${money(t.priceFrom)}${t.priceSuffix}`}</p>
-              <p class="t-range">{t.range}</p>
+              <p class="t-range">
+                {`One-time build. ${t.range}.`}
+                {t.needsCare && (
+                  <span class="t-need">
+                    Custom tools need {t.needsCare} or {carePlus.name} after launch.
+                  </span>
+                )}
+              </p>
               <div class="t-keep">
                 <h4 class="t-h">If you ever move on</h4>
                 <ul>
@@ -251,18 +279,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
                   ))}
                 </ul>
               </div>
-              <h4 class="t-inc">
-                <span class="t-inc-s">What's included</span>
-                <button
-                  type="button"
-                  class="t-inc-b"
-                  aria-pressed="false"
-                  aria-label={`What's included in ${t.name}`}
-                >
-                  <span>What's included</span>
-                  <i aria-hidden="true"></i>
-                </button>
-              </h4>
+              <h4 class="t-inc">What's included</h4>
               <ul class="t-list ticks">
                 {t.features.map((f, j) => (
                   <li style={`--i:${j}`}>{f}</li>
@@ -293,11 +310,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <div class="wrap">
       <div class="sec-head">
         <h2 id="fit-h">If this sounds like you</h2>
-        <p>Find your row, then the description closest to where you are today.</p>
+        <p>Find your kind of organization, then the description closest to where you are today.</p>
       </div>
       <table class="fit-table">
-        <caption class="vh">
-          Which website tier usually fits a church, a school, a nonprofit and a small business
+        <caption class="tcap">
+          Which tier usually fits a church, a school, a nonprofit and a small business
         </caption>
         <thead>
           <tr>
@@ -335,7 +352,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
         <div class="pick-qs">
           <p class="label">Not sure yet</p>
           <h2 id="pick-h">
-            Three questions, <b>one card.</b>
+            Three questions to <b>suggest a tier.</b>
           </h2>
           <form data-pick data-tiers={JSON.stringify(pickTiers)}>
             <fieldset class="pick-q">
@@ -385,7 +402,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
                 </label>
                 <label class="pick-o">
                   <input type="radio" name="tools" value="2" />
-                  <span>Custom interactive tools</span>
+                  <span>Custom tools, like bookings or sign-ups</span>
                 </label>
               </div>
             </fieldset>
@@ -398,21 +415,16 @@ const heading = `What I do, and <b>what it costs.</b>`;
         <div class="pick-stage" aria-live="polite" data-pick-out>
           <div class="pc pc-paper pick-card" data-pick-card>
             <div class="pc-face">
-              <span class="pip" aria-hidden="true" data-pick-pip>
-                ?
-              </span>
-              <span class="pip flip" aria-hidden="true" data-pick-pip>
-                ?
-              </span>
               <h3 class="label" data-pick-name>
-                Your card
+                Your starting tier
               </h3>
               <strong data-pick-price>?</strong>
               <span class="pc-who" data-pick-who>
-                Answer all three and I'll deal you one.
+                Answer all three and I'll suggest a starting tier.
               </span>
             </div>
           </div>
+          <p class="pick-why" data-pick-why hidden></p>
           <a class="chip go pick-go" href="/contact/" data-pick-go hidden>
             Start with <span data-pick-go-name></span>
           </a>
@@ -428,53 +440,80 @@ const heading = `What I do, and <b>what it costs.</b>`;
         <p>The sum a treasurer will do anyway, so here it is.</p>
       </div>
       <table class="cost-table">
-        <caption class="vh">
-          The cost of each tier on Hosting alone, then with a care add-on on top of Hosting: first
-          year, three years and five years
+        <caption class="tcap">
+          {`What each tier costs in total, from its starting price. Prices as of ${pricesAsOf}.`}
         </caption>
         <thead>
           <tr>
-            <th scope="col">Tier and plan</th>
-            <th scope="col">Year one</th>
-            <th scope="col">Three years</th>
-            <th scope="col">Five years</th>
+            <th scope="col">Tier, and what you pay after launch</th>
+            <th scope="col">First year, build and hosting</th>
+            <th scope="col">Total after 3 years</th>
+            <th scope="col">Total after 5 years</th>
           </tr>
         </thead>
         {costs.map((c) => (
           <tbody>
-            <tr>
-              <th scope="row">
-                <b>{c.tier.name}</b>
-                <span>
-                  {c.hostingPlan.name} only, {`${c.hostingPlan.price}${c.hostingPlan.period}`}
-                </span>
-              </th>
-              <td data-label="Year one">{money(c.hostingOnly.yearOne)}</td>
-              <td data-label="Three years">{money(c.hostingOnly.threeYears)}</td>
-              <td data-label="Five years">{money(c.hostingOnly.fiveYears)}</td>
-            </tr>
-            <tr class="with-care">
-              <th scope="row">
-                <b>{c.tier.name}</b>
-                <span>
-                  Plus {c.plan.name}, {`${c.plan.price}${c.plan.period}`}, on top of Hosting
-                </span>
-              </th>
-              <td data-label="Year one">{money(c.yearOne)}</td>
-              <td data-label="Three years">{money(c.threeYears)}</td>
-              <td data-label="Five years">{money(c.fiveYears)}</td>
-            </tr>
+            {c.rows.map((r, j) => (
+              <tr class:list={{ 'with-care': j > 0 }}>
+                <th scope="row">
+                  <b>{c.tier.name}</b>
+                  <span>
+                    {r.withCare
+                      ? `Plus ${r.plan.name}, ${r.plan.price} ${perUnit(r.plan.period)}, on top of ${hosting.name}`
+                      : `${hosting.name} only, ${hosting.price} ${perUnit(hosting.period)} from year two`}
+                  </span>
+                  {j === 0 && c.tier.needsCare && (
+                    <span class="t-need">
+                      Custom tools need {c.tier.needsCare} or {carePlus.name}.
+                    </span>
+                  )}
+                </th>
+                <td data-label="First year">{money(r.yearOne)}</td>
+                <td data-label="After 3 years">{money(r.threeYears)}</td>
+                <td data-label="After 5 years">{money(r.fiveYears)}</td>
+              </tr>
+            ))}
           </tbody>
         ))}
       </table>
       <p class="after">
-        How I worked these out: each tier's starting price at today's prices. Year one hosting is
-        included, so Hosting is billed from year two. Care is an add-on on top of Hosting, billed
-        from the first month. On {hosting.name} alone you make every change yourself; a care plan
-        adds edit time and faster replies, and the care pairings are examples. A build that lands
-        higher in its range adds the difference, and custom work, photography or a paid editor plan
-        would be extra. Sites with custom tools need {care.name} or above.
+        How I worked these out: each tier's starting price, which is a one-time build cost. Year one
+        hosting is included, so {hosting.name} is billed from year two. A care plan is an add-on on
+        top of {hosting.name}, billed every month from launch. On {hosting.name} only, you make
+        every change yourself. Any tier can take any care plan; these are the usual pairings. A
+        build that lands higher in its range adds the difference. Photography, custom development,
+        or a paid Sanity plan if your team ever outgrows the free one, would be extra.
       </p>
+      <figure class="cost-bars" aria-labelledby="bars-cap">
+        <figcaption id="bars-cap" class="tcap">
+          Where the money goes over 5 years, with each tier's usual care plan
+        </figcaption>
+        <p class="bar-key" aria-hidden="true">
+          <span class="k-build">Build, one-time</span>
+          <span class="k-host">{hosting.name}, years 2 to 5</span>
+          <span class="k-care">Care plan, 5 years</span>
+        </p>
+        <ul class="bars">
+          {costs.map(({ tier, usual }) => (
+            <li>
+              <p class="bars-t">
+                <b>
+                  {tier.name} with {usual.plan.name}
+                </b>
+                <span class="bars-sum">{`${money(usual.fiveYears)} over 5 years`}</span>
+              </p>
+              <div class="bars-bar" aria-hidden="true">
+                <i class="k-build" style={`width:${pct(usual.parts.build)}`}></i>
+                <i class="k-host" style={`width:${pct(usual.parts.hosting)}`}></i>
+                <i class="k-care" style={`width:${pct(usual.parts.care)}`}></i>
+              </div>
+              <p class="bars-parts">
+                {`Build ${money(usual.parts.build)}, ${hosting.name} ${money(usual.parts.hosting)}, ${usual.plan.name} ${money(usual.parts.care)}. Total ${money(usual.fiveYears)}.`}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </figure>
       <p class="costs-go">
         <a class="chip" href="/one-page/">
           One-page summary for a board or committee
@@ -540,8 +579,9 @@ const heading = `What I do, and <b>what it costs.</b>`;
             <div>
               <dt>Does it work for everyone?</dt>
               <dd>
-                Every custom build is made to WCAG AA and checked. Run a free accessibility checker
-                on this site, then on any site you are comparing.
+                Every custom build is made to work for people with disabilities, and checked against
+                WCAG AA, the usual accessibility standard. Run a free accessibility checker on this
+                site, then on any site you are comparing.
               </dd>
             </div>
             <div>
@@ -562,11 +602,12 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <div class="behind-head">
         <p class="label">Behind the site</p>
         <h2 id="behind-h">
-          The part your team <b>actually uses.</b>
+          What your staff see <b>when they log in.</b>
         </h2>
         <p class="lede">
           A template gives you a site and a settings screen. I build the side your staff see every
-          week, on Sanity or WordPress, whichever suits the people running it.
+          week, on WordPress or Sanity (another editor, made for teams), whichever suits the people
+          running it.
         </p>
       </div>
       <div class="behind-grid">
@@ -605,10 +646,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </div>
       <div class="behind-cards">
         <div class="card keyed see see-plain">
-          <span class="pip" aria-hidden="true">
-            &minus;
-          </span>
-          <h3>A plain tracker tells you</h3>
+          <p class="label see-tag">Basic</p>
+          <h3>A plain visitor counter tells you</h3>
           <ul>
             <li>How many people visited</li>
             <li>Which pages they landed on</li>
@@ -616,9 +655,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </ul>
         </div>
         <div class="card keyed see see-mine">
-          <span class="pip" aria-hidden="true">
-            +
-          </span>
+          <p class="label see-tag">What I add</p>
           <h3>What I set up tells you</h3>
           <ul>
             <li>On a church site: who started a gift, added an event, got the app</li>
@@ -636,8 +673,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
   <section class="sec tight" data-mfold id="sites" aria-labelledby="sites-h">
     <div class="wrap">
       <div class="sec-head">
-        <h2 id="sites-h">One of each</h2>
-        <p>A church, a school, a nonprofit and a small business. Open one to see inside it.</p>
+        <h2 id="sites-h">
+          Four example sites: <span class="sites-kinds">church, school, nonprofit, business</span>
+        </h2>
+        <p>One of each kind I work with. Open one to see inside it.</p>
       </div>
       <ul class="sites grid" data-sites>
         {oneOfEach.map((s) => (
@@ -658,23 +697,23 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </div>
       <div class="pair pair-wide">
         <div class="card panel keyed addon" id="photography">
-          <span class="pip" aria-hidden="true">
-            P
-          </span>
           <div class="line">
             <h3>Photography</h3>
-            <p class="amt">{photography.price}</p>
+            <p class="amt">
+              {photography.price}
+              <small>a half-day</small>
+            </p>
           </div>
           <p>{photography.note}</p>
           <p>
             When the photographer and the designer are one person, the photos match the layout
-            instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.
+            instead of fighting it. Images arrive edited, sized for the web, and ready to use.
           </p>
           <ul class="ticks">
             <li>On-site Sunday or weekday coverage</li>
             <li>Headshots for team and staff</li>
-            <li>Environmental photography of your space</li>
-            <li>Edited, web-optimized images delivered with the website</li>
+            <li>Photos of your building and the people in it</li>
+            <li>Edited images, sized for the web, delivered with the website</li>
           </ul>
           <p class="t-go">
             <a class="cta" href="/contact/?service=photography">
@@ -683,12 +722,12 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </p>
         </div>
         <div class="card panel keyed addon">
-          <span class="pip" aria-hidden="true">
-            B
-          </span>
           <div class="line">
             <h3>Brand &amp; strategy</h3>
-            <p class="amt">{brandStrategy.price}</p>
+            <p class="amt">
+              {brandStrategy.price}
+              <small>one-time</small>
+            </p>
           </div>
           <p>{brandStrategy.note}</p>
           <p>
@@ -704,19 +743,26 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <div class="wrap">
       <div class="sec-head">
         <h2 id="care-h">Care plans</h2>
-        <p>Year one hosting is included in every build.</p>
+        <p>
+          {`${hosting.name} is ${hosting.price} ${perWords(hosting.period)}, and free in year one. Care is optional, from ${lightCare.price} ${perWords(lightCare.period)}.`}
+        </p>
       </div>
       <p class="intro">
-        A website is not something you print once. Hosting, security, domains, and certificates keep
-        moving, so every site I launch is quoted with care. After year one, every live site pays
-        Hosting. Care is an add-on on top of it, billed monthly from launch, for edit time and
-        faster replies when you would rather not do it yourself.
+        A website is not something you print once. Hosting, security fixes, web addresses and
+        security certificates keep moving, so every quote I send includes the cost after launch.
+        After year one, every live site pays {hosting.name}. Care is an add-on on top of it, billed
+        monthly from launch, for changes I make for you, routine software updates and faster
+        replies. Care never replaces {hosting.name}.
       </p>
       <p class="intro">
         Every site I look after sits on one status board. It checks every 15 minutes that the site
-        is up, and tracks how fast it answers, whether deploys and backups ran, known security
+        is up, and tracks how fast it answers, whether updates and backups ran, known security
         alerts in its software, and domain renewals where I manage the domain. If a site goes down,
         my phone tells me, so I usually know before you do.
+      </p>
+      <p class="intro rate-line">
+        <b>{rateLine}</b> New features and custom tools are custom development, at{' '}
+        {money(customWorkRate)} an hour, and I quote them in writing first.
       </p>
       <ul class="care-cards">
         {carePlans.map((c) => (
@@ -724,11 +770,28 @@ const heading = `What I do, and <b>what it costs.</b>`;
             <h3>{c.name}</h3>
             <p class="amt">
               {c.price}
-              <small>{c.period}</small>
+              <small>{perUnit(c.period)}</small>
             </p>
-            {c.addOn && <p class="care-on">On top of Hosting</p>}
+            {c.addOn ? (
+              <p class="care-on">On top of {hosting.name}, billed monthly from launch</p>
+            ) : (
+              <p class="care-on">Free in year one. Every live site needs it.</p>
+            )}
             <p>{c.who}</p>
-            <p class="care-time">{c.time}</p>
+            <dl class="care-facts">
+              <div>
+                <dt>Changes I make for you each month</dt>
+                <dd>{c.edits}</dd>
+              </div>
+              <div>
+                <dt>Rate for extra changes</dt>
+                <dd>{`${money(c.rate)} an hour`}</dd>
+              </div>
+              <div>
+                <dt>Replies, and when something breaks</dt>
+                <dd>{c.support}</dd>
+              </div>
+            </dl>
             <ul class="ticks">
               {c.features.map((f) => (
                 <li>{f}</li>
@@ -739,9 +802,8 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </ul>
       <div class="card tbox">
         <table class="care">
-          <caption class="vh">
-            Hosting and the three care add-ons on top of it compared: price, who each is for, edit
-            time, what's included and reply times
+          <caption class="tcap">
+            {`${hosting.name} and the three care plans, compared. Prices as of ${pricesAsOf}.`}
           </caption>
           <thead>
             <tr>
@@ -751,9 +813,13 @@ const heading = `What I do, and <b>what it costs.</b>`;
                   <span class="pl">{c.name}</span>
                   <span class="amt">
                     {c.price}
-                    <small>{c.period}</small>
+                    <small>{perUnit(c.period)}</small>
                   </span>
-                  {c.addOn && <span class="care-on">plus Hosting</span>}
+                  {c.addOn ? (
+                    <span class="care-on">on top of {hosting.name}</span>
+                  ) : (
+                    <span class="care-on">free in year one</span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -766,30 +832,28 @@ const heading = `What I do, and <b>what it costs.</b>`;
               ))}
             </tr>
             <tr>
-              <th scope="row">Edit time</th>
+              <th scope="row">Changes I make for you each month</th>
               {carePlans.map((c) => (
-                <td>{c.time}</td>
+                <td class="v">{c.edits}</td>
               ))}
             </tr>
             <tr>
-              <th scope="row">Replies</th>
-              {replies.map((r) =>
-                r ? (
-                  <td>{r}</td>
-                ) : (
-                  <td class="n">
-                    <span class="vh">Not included</span>
-                  </td>
-                ),
-              )}
+              <th scope="row">Rate for extra changes</th>
+              {carePlans.map((c) => (
+                <td class="v">{`${money(c.rate)} an hour`}</td>
+              ))}
+            </tr>
+            <tr>
+              <th scope="row">Replies, and when something breaks</th>
+              {carePlans.map((c) => (
+                <td>{c.support}</td>
+              ))}
             </tr>
             {careRows.map((row) => (
               <tr>
                 <th scope="row">{row.name}</th>
                 {row.has.map((y) => (
-                  <td class={y ? 'y' : 'n'}>
-                    <span class="vh">{y ? 'Included' : 'Not included'}</span>
-                  </td>
+                  <td class={y ? 'y' : 'n'}>{y ? 'Included' : 'Not included'}</td>
                 ))}
               </tr>
             ))}
@@ -797,10 +861,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
         </table>
       </div>
       <p class="after">
-        Light Care minutes carry over for three months; on Care and Care+, unused hours do not roll
-        over. A fix means something that stopped working; anything new or beyond your plan is quoted
-        in writing first. Sites with custom tools need {care.name} or above. Change or cancel with
-        30 days notice.
+        {lightCare.name} minutes carry over for three months; {care.name} and {carePlus.name} hours
+        do not. A fix means something that stopped working. Anything new, or beyond your plan, is
+        quoted in writing first. Sites with custom tools need {care.name} or {carePlus.name}. Change
+        or cancel with 30 days notice.
       </p>
     </div>
   </section>
@@ -821,27 +885,27 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </p>
         </li>
         <li>
-          <h3>Then the strategy</h3>
+          <h3>Then the plan</h3>
           <p>
             I write down who the site is for, how the pages fit together, and what you want visitors
-            to do next. You read it and push back, and I revise. The strategy doc is the source of
-            truth for every design choice that follows.
+            to do next. You read it and push back, and I revise. Every design choice after that
+            follows this plan.
           </p>
         </li>
         <li>
           <h3>Then I design and build</h3>
           <p>
-            Components, content, and pages built in the open. Preview links land in your inbox at
-            every milestone so you can react early instead of seeing the whole thing for the first
-            time at launch.
+            I design and build the pages where you can see them. A link to the work so far lands in
+            your inbox at each step, so you can react early instead of seeing the whole thing for
+            the first time at launch.
           </p>
         </li>
         <li>
           <h3>Launch, and follow-through</h3>
           <p>
             I launch the site with you, then stay close for the first month to fix anything that
-            surfaces. After that you have documentation and a simple way to reach me when something
-            comes up.
+            surfaces. After that you have a written guide and a simple way to reach me when
+            something comes up.
           </p>
         </li>
       </ol>
@@ -852,12 +916,12 @@ const heading = `What I do, and <b>what it costs.</b>`;
         </summary>
         <div class="fold-a">
           <div class="fold-in">
-            <p class="intro">The brief at the end of strategy sets the real timeline.</p>
+            <p class="intro">The brief at the end of the planning sets the real timeline.</p>
             <div class="card panel span">
               <div class="bar-row">
                 <p class="bar-t">
                   <b>Most websites</b>
-                  <span>Six to ten weeks from kickoff to launch</span>
+                  <span>6 to 10 weeks from the first working session to launch</span>
                 </p>
                 <div class="bar" aria-hidden="true">
                   <i style="--a: 6; --b: 10"></i>
@@ -865,15 +929,15 @@ const heading = `What I do, and <b>what it costs.</b>`;
               </div>
               <div class="bar-row">
                 <p class="bar-t">
-                  <b>Larger projects with custom photography or multiple content collections</b>
-                  <span>Twelve to sixteen weeks</span>
+                  <b>Larger projects with custom photography or several kinds of content</b>
+                  <span>12 to 16 weeks</span>
                 </p>
                 <div class="bar" aria-hidden="true">
                   <i style="--a: 12; --b: 16"></i>
                 </div>
               </div>
               <p class="bar-scale" aria-hidden="true">
-                <span>Kickoff</span>
+                <span>Start</span>
                 <span>16 weeks</span>
               </p>
             </div>
@@ -896,21 +960,19 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <div class="card panel">
                 <h3>The site itself</h3>
                 <p>
-                  Modern, accessible, fast websites, built on Sanity or WordPress, whichever suits
-                  the people running yours.
+                  Modern, accessible, fast websites, built on WordPress or Sanity (another editor),
+                  whichever suits the people running yours.
                 </p>
                 <p>
                   I match the build to your budget and to whoever will maintain it after launch.
-                  Everything is built mobile-first and tested for accessibility from the very first
-                  screen, then handed over with documentation.
+                  Everything is built for phones first and tested for accessibility from the very
+                  first screen, then handed over with a written guide.
                 </p>
                 <ul class="ticks">
                   <li>A custom design built to your brand, not a stock template</li>
-                  <li>
-                    Fast pages, with fonts and images served from your own site on a custom build
-                  </li>
+                  <li>Fast pages that load quickly, even on a slow phone connection</li>
                   <li>Layouts that work on every phone, tablet and desktop</li>
-                  <li>Accessible from the first screen, checked against WCAG AA</li>
+                  <li>Works for people with disabilities, checked against the WCAG AA standard</li>
                   <li>Hosting set up for you, with year one included</li>
                 </ul>
               </div>
@@ -924,7 +986,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
                 <ul class="ticks">
                   <li>A working session, then back-and-forth until the plan is right</li>
                   <li>Who the site is for, and what you want them to do next</li>
-                  <li>Content inventory of what you already have</li>
+                  <li>A list of the words and photos you already have</li>
                   <li>A one-page brief the rest of the project follows</li>
                 </ul>
                 <p>
@@ -966,9 +1028,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <li>
                 <h3>Accessible by default</h3>
                 <p>
-                  Every custom build is made to WCAG AA and checked until each page scores 100 for
-                  accessibility in Lighthouse. For a church, school, or nonprofit it is the right
-                  thing to do, and it is included, not an upsell.
+                  Every custom build is made to work for people with disabilities, checked against
+                  the WCAG AA standard until each page scores 100 in Google's accessibility check.
+                  For a church, school, or nonprofit it is the right thing to do, and it is
+                  included, not an upsell.
                 </p>
               </li>
               <li>
@@ -980,9 +1043,9 @@ const heading = `What I do, and <b>what it costs.</b>`;
               </li>
             </ul>
             <p class="tools">
-              I build with modern tools, including AI-assisted workflows, the same way I use
-              frameworks and a camera. They help one person do the work of a team. The strategy, the
-              design, and the accountability stay mine, start to finish.
+              I build with modern tools, including AI, the same way I use good software and a
+              camera. They help one person do the work of a team. The strategy, the design, and the
+              accountability stay mine, start to finish.
             </p>
           </div>
         </div>

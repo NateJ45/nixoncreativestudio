@@ -42,6 +42,8 @@ test('a sent contact form fires generate_lead, with no field values', async ({ p
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
+  // The optional details, then "Check your answers", where Send lives.
+  await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByRole('heading', { name: 'Thanks, your message is in.' })).toBeFocused();
 
@@ -70,6 +72,8 @@ test('a failed post fires no generate_lead', async ({ page }) => {
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
+  // The optional details, then "Check your answers", where Send lives.
+  await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.locator('[data-contact-submit]')).toBeEnabled();
   expect((await events(page)).filter(([, n]) => n === 'generate_lead')).toHaveLength(0);

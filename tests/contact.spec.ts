@@ -7,7 +7,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const WEB3FORMS = 'https://api.web3forms.com/submit';
 
-/** Walk the questions the way a visitor does. */
+/** Walk the questions the way a visitor does, ending on "Check your answers". */
 async function fillAll(page: Page, sector = 'Church') {
   await page.getByLabel("What's your name?").fill('Test Person');
   await page.getByRole('button', { name: 'Next' }).click();
@@ -21,6 +21,11 @@ async function fillAll(page: Page, sector = 'Church') {
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
   await page.getByRole('button', { name: /Next|Skip/ }).click();
+  // The optional details, then the check step.
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Check your answers before sending' }),
+  ).toBeVisible();
 }
 
 test.describe('Without JavaScript', () => {
@@ -49,9 +54,10 @@ test.describe('Without JavaScript', () => {
       /\/contact\/\?sent=1#sent$/,
     );
 
-    // Every question shows at once.
+    // Every question shows at once, and the check step, which needs the script, does not.
     await expect(page.getByLabel('Phone')).toBeVisible();
     await expect(page.getByLabel("What's your name?")).toBeVisible();
+    await expect(page.locator('.q-check')).toBeHidden();
 
     await page.getByLabel("What's your name?").fill('Test Person');
     await page.getByLabel("What's your email?").fill('test@example.com');
@@ -86,6 +92,72 @@ test.describe('With JavaScript', () => {
     await page.getByRole('button', { name: 'Next' }).click();
     await expect(page.getByLabel("What's your email?")).toBeVisible();
     await expect(page.locator('[data-count]')).toHaveText('Question 2 of 7');
+    // Errors say what to do, in the question's own words.
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.locator('#email-err')).toHaveText(
+      'Enter your email address, so I can reply.',
+    );
+    await page.getByLabel("What's your email?").fill('sam@example');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.locator('#email-err')).toHaveText(
+      'Enter an email address like name@example.org.',
+    );
+  });
+
+  test('Enter in the long answer makes a new line and never moves on', async ({ page }) => {
+    await page.goto('/contact/');
+    await page.getByLabel("What's your name?").fill('Sam');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByLabel("What's your email?").fill('sam@example.org');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('radio', { name: 'Church' }).check();
+    await page.getByRole('button', { name: 'Next' }).click();
+    const box = page.getByLabel('What are you hoping to build?');
+    await box.click();
+    await page.keyboard.type('First thought.');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Second thought.');
+    await expect(box).toBeVisible();
+    await expect(box).toHaveValue('First thought.\nSecond thought.');
+    await expect(page.locator('[data-count]')).toHaveText('Question 4 of 7');
+  });
+
+  test('plain choices with one reassurance line, and budgets that never overlap', async ({
+    page,
+  }) => {
+    await page.goto('/contact/');
+    const budgets = await page.locator('input[name="budget"] + span').allInnerTexts();
+    expect(budgets).toEqual([
+      'Under $3,500',
+      '$3,500 to $6,499',
+      '$6,500 to $12,499',
+      '$12,500 or more',
+      'Not sure yet',
+    ]);
+    const runs = await page.locator('input[name="runs"] + span').allInnerTexts();
+    expect(runs.join(' ')).not.toMatch(/custom tools|editor/i);
+    await expect(page.locator('[data-step="budget"]')).toContainText(
+      "Not sure? Pick the closest. I'll work it out with you.",
+    );
+    // The panel beside the form says what it is, so it never reads as a second form.
+    await expect(page.getByRole('complementary', { name: 'Your answers so far' })).toHaveCount(1);
+  });
+
+  test('check your answers, change one, and come straight back', async ({ page }) => {
+    await page.goto('/contact/');
+    await fillAll(page);
+    await expect(page.locator('[data-count]')).toHaveText('Check your answers');
+    const list = page.locator('[data-check]');
+    await expect(list).toContainText('test@example.com');
+    await expect(list).toContainText('Not provided');
+    await expect(page.getByRole('button', { name: 'Send' })).toBeVisible();
+    await page.getByRole('button', { name: 'Change email' }).click();
+    await page.getByLabel("What's your email?").fill('other@example.org');
+    await page.getByRole('button', { name: 'Back to your answers' }).click();
+    await expect(page.locator('[data-count]')).toHaveText('Check your answers');
+    await expect(list).toContainText('other@example.org');
+    // Answers are shown as plain text.
+    await expect(list.locator('b, script')).toHaveCount(0);
   });
 
   test('prefill fills the radio, the budget and the origin fields', async ({ page }) => {

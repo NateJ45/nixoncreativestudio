@@ -26,10 +26,14 @@
      org_type itself, so the hidden copy takes another name rather than send two
      org_type values).
 
-   With JavaScript (src/scripts/contact.js): validation in plain words, draft
-   save and restore, URL prefill, the brief, fetch submit, the same success panel
-   with focus on its heading and two studies from the visitor's sector, the error
-   panel, and one generate_lead event carrying no field value.
+   With JavaScript (src/scripts/contact.js): one question at a time, then a
+   "Check your answers" step with a Change button for each answer (it is hidden
+   without JavaScript, where every question already shows). Validation in plain
+   words that say what to do ("Enter your email address"), draft save and
+   restore, URL prefill, the "Your answers so far" panel, fetch submit, the same
+   success panel with focus on its heading and two studies from the visitor's
+   sector, the error panel, and one generate_lead event carrying no field value.
+   Enter in the long answer always makes a new line; only the buttons move on.
 
    Prefill: ?org_type picks the radio, ?tier picks the matching budget and fills
    `tier`, ?service fills `service`, ?from fills `from`. Values are checked
@@ -60,23 +64,30 @@ const orgTypes = [
   { value: 'other', label: 'Something else' },
 ];
 
-// What the "who keeps it up to date" step offers. The answer points at the depth of editor.
+// What the "who keeps it up to date" step offers, in plain words. The values are what
+// the form submits, so they stay fixed even when the labels change.
 const runs = [
-  { value: 'one-person', label: 'One busy person' },
-  { value: 'team', label: 'A staff or volunteer team' },
-  { value: 'tools', label: 'A team, and it needs custom tools' },
-  { value: 'you', label: "I'd rather you did it" },
+  { value: 'one-person', label: 'Just me, or one person, when there is time' },
+  { value: 'team', label: 'A few staff or volunteers' },
+  { value: 'tools', label: 'A team that needs extra tools, like bookings or sign-ups' },
+  { value: 'you', label: "I'd rather you kept it updated" },
   { value: 'not-sure', label: 'Not sure yet' },
 ];
 
+// The one reassurance line, on the two optional choice steps.
+const notSure = "Not sure? Pick the closest. I'll work it out with you.";
+
 // Budget ranges, built from the three web tier floors in src/data/pricing.ts, so
-// a price change there moves them too. The `value`s are what the form submits,
-// so they stay fixed even if the numbers move.
-const [launchFloor, signatureFloor, flagshipFloor] = webTiers.map((t) => money(t.priceFrom));
+// a price change there moves them too. They never overlap: each one ends a dollar
+// below the next floor. The `value`s are what the form submits, so they stay
+// fixed even if the numbers move.
+const floors = webTiers.map((t) => t.priceFrom);
+const [launchFloor, signatureFloor, flagshipFloor] = floors.map(money);
+const below = (n: number) => money(n - 1);
 const budgets = [
   { value: 'under-4k', label: `Under ${launchFloor}` },
-  { value: '4k-7k', label: `${launchFloor} to ${signatureFloor}` },
-  { value: '7k-12k', label: `${signatureFloor} to ${flagshipFloor}` },
+  { value: '4k-7k', label: `${launchFloor} to ${below(floors[1])}` },
+  { value: '7k-12k', label: `${signatureFloor} to ${below(floors[2])}` },
   { value: '12k-plus', label: `${flagshipFloor} or more` },
   { value: 'not-sure', label: 'Not sure yet' },
 ];
@@ -253,8 +264,8 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             What are you hoping to build?
           </label>
           <p class="q-h" id="msg-h">
-            At least a few sentences, please. The more you share, the better I can scope the first
-            conversation.
+            A few sentences is plenty: what you want the site to do, and roughly when. Press Next
+            when you're done.
           </p>
           <textarea
             class="f"
@@ -263,12 +274,8 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             rows="5"
             required
             minlength="30"
-            aria-describedby="msg-h msg-enter message-err"
-            placeholder="What you're trying to do and roughly when you'd like to launch."
+            aria-describedby="msg-h message-err"
           ></textarea>
-          <p class="enter-h" id="msg-enter" data-enter-h>
-            Enter to continue, Shift and Enter for a new line.
-          </p>
           <p class="err" id="message-err" data-err role="alert"></p>
         </div>
 
@@ -276,7 +283,8 @@ const heading = 'Start a project, or just <b>say hello.</b>';
           <legend class="q-t">
             Who will keep it up to date? <span class="opt-mark">(optional)</span>
           </legend>
-          <p class="q-h">This shapes the editor I build more than anything else.</p>
+          <p class="q-h">This tells me how simple the editing side needs to be.</p>
+          <p class="q-h q-sure">{notSure}</p>
           <div class="opts" data-runs>
             {runs.map((r) => (
               <label class="opt">
@@ -291,6 +299,8 @@ const heading = 'Start a project, or just <b>say hello.</b>';
           <legend class="q-t">
             What's your budget range? <span class="opt-mark">(optional)</span>
           </legend>
+          <p class="q-h">A rough number helps me suggest the right size.</p>
+          <p class="q-h q-sure">{notSure}</p>
           <div class="opts" data-budgets>
             {budgets.map((b) => (
               <label class="opt">
@@ -365,6 +375,16 @@ const heading = 'Start a project, or just <b>say hello.</b>';
           </div>
         </fieldset>
 
+        <!-- Check your answers. Filled in by the script; without JavaScript every
+             question is already on the page, so this step is hidden (start.css). -->
+        <div class="q q-check" data-step="check">
+          <h2 class="q-t" id="check-h" tabindex="-1">
+            Check your answers before sending
+          </h2>
+          <p class="q-h">Change anything that isn't right. Nothing is sent until you press Send.</p>
+          <dl class="check-list" data-check></dl>
+        </div>
+
         <!-- Honeypot. Hidden from sighted users and screen readers; bots tend to fill
              every field, so a filled one is dropped. -->
         <div class="hp" aria-hidden="true">
@@ -428,7 +448,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
       </div>
     </div>
 
-    <aside class="st-phone" aria-label="Your brief so far" data-phone-wrap>
+    <aside class="st-phone" aria-labelledby="brief-h" data-phone-wrap>
       <div class="tile brief" data-phone>
         <span class="b-top" aria-hidden="true">
           <span class="url">
@@ -439,8 +459,9 @@ const heading = 'Start a project, or just <b>say hello.</b>';
         <div class="scr" data-scr>
           <div class="doc">
             <h2 class="doc-h" id="brief-h">
-              Your brief
+              Your answers so far
             </h2>
+            <p class="doc-sub">Fills in as you go. Nothing to type here.</p>
             <dl class="lines" data-lines></dl>
           </div>
         </div>

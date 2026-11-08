@@ -27,8 +27,16 @@ export interface WebTier {
   priceSuffix: string;
   /** One-line "who it's for", used by the compact homepage teaser. */
   who: string;
-  /** Typical-range line shown under the price on /services. */
+  /** Typical-range line shown under the price on /services and /one-page/. */
   range: string;
+  /** Top of the usual range, when the tier has one (Flagship is quoted by scope). */
+  rangeTo?: number;
+  /**
+   * The lowest care add-on this tier needs, when it needs one. Flagship's custom
+   * tools need Care or Care+, so its cost rows never show Hosting alone
+   * (Nathan, 2026-11-07).
+   */
+  needsCare?: string;
   /** Who the tier fits, in their situation. Leads the tier on /services. */
   fits: string;
   /** What I take responsibility for. Second on /services, and on /one-page/. */
@@ -57,7 +65,8 @@ export const webTiers: WebTier[] = [
     priceFrom: 3500,
     priceSuffix: '+',
     who: 'You keep the essentials current',
-    range: 'Expect $3,500 to $6,000',
+    range: 'Usually $3,500 to $6,000',
+    rangeTo: 6000,
     fits: 'A smaller organization where one busy person keeps the site current. You want the essential pages done well, and you would rather not call anyone to change a date.',
     responsible:
       'I plan, design and build your core pages, set up an editor simple enough for one person, and write the guide they will use.',
@@ -75,13 +84,14 @@ export const webTiers: WebTier[] = [
     priceFrom: 6500,
     priceSuffix: '+',
     who: 'Your team runs it',
-    range: 'Expect $6,500 to $11,000',
+    range: 'Usually $6,500 to $11,000',
+    rangeTo: 11000,
     fits: 'A staff or volunteer team who will run the site themselves, across several kinds of content, and who expect people to come and go.',
     responsible:
       'I plan and build a larger site, set up the editor around the people using it so a new volunteer can find their way without a phone call, and set up tracking for what matters to you.',
     care: 'Care',
     features: [
-      'A larger site with deeper content sections',
+      'A larger site with more sections',
       'A home screen for your staff: what is coming up, what needs fixing, whether it is live',
       'Checks before anything publishes, and earlier versions to go back to',
       'Tracking for what matters to you: gifts, registrations, sign-ups',
@@ -95,14 +105,15 @@ export const webTiers: WebTier[] = [
     priceSuffix: '+',
     who: 'The site does real work',
     range: 'Quoted from $12,500, by scope',
+    needsCare: 'Care',
     fits: 'An organization whose site has to do real work: a custom tool, a staff workflow, a connection to systems you already use, or reports a board can actually read. If none of that is you, this is more than you need.',
     responsible:
       'I design and build the tools, map the workflows around how your staff work, connect the systems, build the reporting, and quote the care those tools will need.',
     care: 'Care+',
     features: [
-      'Custom interactive tools and features',
-      'Staff workflows and integrations built around how you work',
-      'A deep content system for a large site',
+      'Custom tools built for your site',
+      'Staff tasks and connections to the systems you already use, built around how you work',
+      'Room for lots of kinds of pages on a large site',
       'Reporting built for your staff and your board',
       'Year one hosting included',
     ],
@@ -116,7 +127,7 @@ export const webTiers: WebTier[] = [
 // accounts are in the client's name.
 export const freeToMove: string[] = [
   'I host it and look after the code, so there is nothing for you to run.',
-  'It uses well-used tools, WordPress or Sanity, GitHub and Cloudflare, that another developer can pick up.',
+  'It is built on WordPress or other common tools that any web developer can pick up.',
   'If you ever move on, the code, content and documentation go with you.',
 ];
 
@@ -143,9 +154,16 @@ export const addOns: AddOn[] = [
   },
 ];
 
-// Custom work outside a care plan, per hour. Ordinary changes are in Hosting's
-// `time` line below. The /services FAQ reads this.
+// Custom development (new features and tools), per hour, quoted in writing first.
+// Ordinary changes are billed at each plan's `rate` below. /services reads this.
 export const customWorkRate = 150;
+
+// The date every printed price is good for. /services and /one-page/ print it, so a
+// printout and the live page can be told apart. Change it whenever a price changes.
+export const pricesAsOf = 'November 2026';
+
+/** How a plan's period reads in words: '/yr' is 'a year', '/mo' is 'a month'. */
+export const perWords = (period: string): string => (period === '/yr' ? 'a year' : 'a month');
 
 export interface CarePlan {
   name: string;
@@ -155,8 +173,16 @@ export interface CarePlan {
   period: string;
   /** One-line "who it's for". */
   who: string;
-  /** Included-time line, e.g. '30 minutes of edits each month'. */
+  /** Included-time line, a sentence, e.g. '30 minutes of changes a month'. /llms.txt reads it. */
   time: string;
+  /** The same time in a table cell: "Changes I make for you each month". */
+  edits: string;
+  /** What extra changes cost on this plan, per hour. */
+  rate: number;
+  /** Replies, and what happens when something breaks, in words. Never a bare dash. */
+  support: string;
+  /** What the plan covers, in one short line, for the "What Hosting and care cover" box on /one-page/. */
+  short: string;
   features: string[];
   /** True for a care add-on, paid on top of Hosting, never instead of it. */
   addOn?: boolean;
@@ -175,13 +201,20 @@ export const carePlans: CarePlan[] = [
     price: '$200',
     period: '/yr',
     who: 'For an organization that edits everything itself.',
-    time: 'No edits included; changes at $100 an hour',
+    time: 'No changes included; I make changes at $100 an hour',
+    edits: 'None',
+    rate: 100,
+    // Nathan's words, 2026-11-07. Light Care and up keep "Fixes when something breaks".
+    support:
+      'If the site goes down, I investigate and fix it. An outage at Cloudflare itself can be outside my control. If a change you made breaks it, I fix it at my hourly rate.',
+    short:
+      'Hosting, security updates, daily backups and a check that the site is up. You make changes, or I do at $100 an hour.',
     features: [
       'Fast, secure hosting',
-      'Security updates when a known vulnerability is patched',
-      'Uptime monitoring, every 15 minutes',
+      'Security updates when a known weakness in the software is patched',
+      'A check every 15 minutes that the site is up',
       'Daily backups',
-      'Domain and security renewals handled',
+      'Web address and security certificate renewals handled',
     ],
   },
   {
@@ -190,13 +223,16 @@ export const carePlans: CarePlan[] = [
     period: '/mo',
     addOn: true,
     who: 'For an organization that would rather send changes than make them.',
-    time: 'Send me changes, up to 30 minutes a month; unused minutes carry over for three months',
+    time: '30 minutes of changes a month, and unused minutes carry over for three months',
+    edits: '30 minutes',
+    rate: 85,
+    support:
+      'Email replies within 2 business days. Fixes when something breaks, at no extra charge.',
+    short:
+      '30 minutes of changes a month, software updates, fixes at no extra charge, replies within 2 business days.',
     features: [
       "Software updates: WordPress, plugins and the site's code kept current",
-      'Fixes when something breaks, at no extra charge',
       'Ask me how to do anything in the editor',
-      'Extra work at $85 an hour',
-      'Email replies within 2 business days',
     ],
   },
   {
@@ -205,13 +241,17 @@ export const carePlans: CarePlan[] = [
     period: '/mo',
     addOn: true,
     who: 'For peace of mind as the site grows.',
-    time: '1 hour of edits each month',
+    time: '1 hour of changes a month',
+    edits: '1 hour',
+    rate: 85,
+    support: 'Next business day replies. Fixes when something breaks, at no extra charge.',
+    short:
+      'Everything in Light Care, 1 hour of changes a month, a monthly report, next-day replies.',
     features: [
       'Everything in Light Care',
       'A monthly report: what people did, and what to fix',
-      'A yearly backup restore test',
-      'Annual health report: speed, search, security',
-      'Next business day replies',
+      'A yearly test that the backups really restore',
+      'A yearly health report: speed, search, security',
     ],
   },
   {
@@ -220,12 +260,16 @@ export const carePlans: CarePlan[] = [
     period: '/mo',
     addOn: true,
     who: 'For an organization that wants a web partner.',
-    time: '3 hours of content help each month',
+    time: '3 hours of changes a month',
+    edits: '3 hours',
+    rate: 85,
+    support: 'Same business day replies. Fixes when something breaks, at no extra charge.',
+    short:
+      'Everything in Care, 3 hours of changes a month, 2 new pages or features a year, same-day replies.',
     features: [
       'Everything in Care',
       '2 new pages or features a year',
-      'Quarterly check-in and analytics review',
-      'Same business day replies',
+      'A check-in every 3 months, with a look at your visitor numbers',
     ],
   },
 ];
