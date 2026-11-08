@@ -2,7 +2,11 @@
 /* The Stone Steps course: the plan and the elevation drawn from the real trace
    in src/data/stone-steps-course.ts, with a slider to walk it a tenth of a mile
    at a time. study.js reads the same paths back to place the dot. Without
-   JavaScript both lines are there and the slider stays hidden. */
+   JavaScript both lines are there and the slider stays hidden.
+
+   Every part is labelled for a reader who has never seen an elevation chart: a
+   title over each drawing, the heights in feet, what the grey lines are, and
+   what the steepness percentage means. */
 import {
   courseBounds as B,
   courseElevation as E,
@@ -46,6 +50,12 @@ const starts = L.map((l) => P.findIndex((p) => p[5] === l.loop));
   data-grades={P.map((p) => p[4]).join(' ')}
 >
   <div class="course-d">
+    <p class="course-t course-t-plan" aria-hidden="true">
+      The course from above
+    </p>
+    <p class="course-t course-t-prof" aria-hidden="true">
+      Height above sea level along the course, in feet
+    </p>
     <svg
       class="course-plan"
       viewBox={`0 0 ${PLAN_W} ${PLAN_H}`}
@@ -74,7 +84,7 @@ const starts = L.map((l) => P.findIndex((p) => p[5] === l.loop));
       <div class="course-ax">
         <span>Mile 0</span>
         <span>
-          {ft(E.highFt)} ft high, {ft(E.lowFt)} ft low
+          Highest point {ft(E.highFt)} feet, lowest {ft(E.lowFt)} feet
         </span>
         <span>Mile {M}</span>
       </div>
@@ -94,8 +104,15 @@ const starts = L.map((l) => P.findIndex((p) => p[5] === l.loop));
     <output for="course-range" data-readout></output>
   </div>
   <figcaption>
-    {L.length} loops, {M} miles as recorded on David's own run of the course, between {ft(E.lowFt)}{' '}
-    and
-    {ft(E.highFt)} feet. Elevation from USGS 1-meter LiDAR.
+    <p>
+      {L.length} loops, {M} miles as recorded on David's own run of the course, between{' '}
+      {ft(E.lowFt)} and {ft(E.highFt)} feet above sea level. Each grey line marks the end of a loop,
+      back at the aid station.
+    </p>
+    <p>
+      When you walk the course, the percentage is how steep the trail is there: 10% means it climbs
+      (or drops) 10 feet for every 100 feet you move forward. Heights come from government
+      laser-mapped elevation data (USGS LiDAR).
+    </p>
   </figcaption>
 </figure>

@@ -19,7 +19,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## The chrome (every page, from `BaseLayout.astro`)
 
-- `TopLine`: the name and "Booking projects, {city}" (`site.bookingOpen`), with the skip link before it. `onColor` flips it for pages that open on a client's color.
+- `TopLine`: the name and the status, "Taking new projects · Call or email" (`site.bookingOpen`; "Call or email" alone on a phone), with the skip link before it. `onColor` flips it for pages that open on a client's color.
 - `Dock`: the floating nav, plain links, the one nav at every width (never-break rule 8). Labels: Work, Prices (`/services/`), About, Start a project (`/contact/`).
 - `ClientSheet`: a native `<dialog>` that opens when a `Tile` is clicked. It also prints the client list as JSON in `#ncs-clients`, which `kit.js` reads.
 - `Closing`: the page's last section, on every page except /contact, the 404 and /coming-soon. Takes a `lead` string (HTML, heavy words in `<b>`). It reads `getClients()`, `getGatedNav()` and `site`.

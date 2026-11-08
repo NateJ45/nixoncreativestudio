@@ -1,6 +1,7 @@
 ---
 /* A capture you can open larger. study.js does the opening; the image itself is
-   always on the page. */
+   always on the page. A small "Enlarge" tag in the corner says it opens, and the
+   button's name starts with the same word. */
 import type { StudyImage } from '../../lib/study-markup';
 
 interface Props {
@@ -12,6 +13,19 @@ interface Props {
 const { img, alt, flat = false } = Astro.props;
 ---
 
-<button type="button" class:list={['zoom', { flat }]} data-zoom data-full={img.url}>
+<button
+  type="button"
+  class:list={['zoom', { flat }]}
+  data-zoom
+  data-full={img.url}
+  aria-label={`Enlarge: ${alt}`}
+>
   <img src={img.url} width={img.w} height={img.h} alt={alt} loading="lazy" decoding="async" />
+  <span class="zoom-tip" aria-hidden="true">
+    <svg viewBox="0 0 20 20" focusable="false">
+      <circle cx="8.5" cy="8.5" r="5"></circle>
+      <path d="M12.3 12.3 17 17M8.5 6.3v4.4M6.3 8.5h4.4"></path>
+    </svg>
+    Enlarge
+  </span>
 </button>

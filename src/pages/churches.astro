@@ -5,6 +5,7 @@
    and description live in src/data/sector-pages.ts with the sector path. */
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/pages/sector.css';
 import '../styles/pages/churches.css';
 import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
@@ -13,6 +14,9 @@ import Closing from '../components/Closing.astro';
 import { getClients, toClient, type Client } from '../lib/clients';
 import { CHURCHES } from '../data/sector-pages';
 import { site } from '../data/site';
+import { webTiers } from '../data/pricing';
+import { SITUATIONS } from '../data/sector-pages';
+import { money } from '../lib/money';
 import { plainText, wordSpans } from '../lib/words';
 
 const clients = await getClients();
@@ -23,17 +27,36 @@ const entries = (await getCollection('case-studies')).filter(
 const places = ['Muncie, Indiana', 'Orangeburg, South Carolina'];
 
 // The four questions, and where each answer sits on the church's real phone page,
-// in pixels of the 560-wide capture. The answers talk about the page, not the
-// church's details, so they stay true when the times or the sermon change.
+// in pixels of the 560-wide capture (one phone screen is about 1,090 of them).
+// Each answer says in words where it was found, so the reader does not have to
+// read the picture: `where` is how far down, `a` is what is there. They name the
+// page's own headings, not the church's details, so they stay true when the times
+// or the sermon change.
 const sunday = [
-  { q: 'When is it, and where?', a: 'On the first screen, before anything else.', stop: 170 },
+  {
+    q: 'When is it, and where?',
+    where: 'Found it on the first screen,',
+    a: 'under Sundays and Where, before anything else.',
+    stop: 170,
+  },
   {
     q: 'What happens when I walk in?',
-    a: 'Who meets you and where they point you, in plain words.',
+    where: 'Found it about 1 scroll down,',
+    a: 'under What to expect: who meets you and where they point you.',
     stop: 1370,
   },
-  { q: 'How does the morning run?', a: 'The whole morning in order, with the times.', stop: 1500 },
-  { q: 'What about my kids?', a: 'Answered before you have to ask anyone.', stop: 1700 },
+  {
+    q: 'How does the morning run?',
+    where: 'Found it about 1 scroll down,',
+    a: 'under What to expect: the whole morning in order, with the times.',
+    stop: 1500,
+  },
+  {
+    q: 'What about my kids?',
+    where: 'Found it about 2 scrolls down,',
+    a: 'in the note on nursery care, before you have to ask anyone.',
+    stop: 1700,
+  },
 ];
 const studies = entries
   .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99))
@@ -45,6 +68,15 @@ const studies = entries
       entry.data.testimonials?.[0],
   }));
 const n = entries.length;
+// Which tier usually fits, the same list the lean sector pages carry (SectorLean.astro), from the
+// church row of SITUATIONS. Situations only: no church is tied to a tier here.
+const situation = SITUATIONS.find((row) => row.sector === CHURCHES.sector);
+const fits = situation
+  ? webTiers.map((tier, i) => ({
+      tier,
+      text: [situation.launch, situation.signature, situation.flagship][i],
+    }))
+  : [];
 const path = `/${CHURCHES.path}/`;
 const canonical = new URL(path, site.url).toString();
 const schemas = [
@@ -114,10 +146,10 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
       <div class="pt-in">
         <h3>Let the staff run it</h3>
         <p>
-          I match the platform to whoever keeps the site up after launch: a custom build with an
-          editing studio and a live preview for one church, Wix for another whose communications
-          team wanted to own every page. Either way, the bulletin, the events and the news go up
-          without me.
+          I match the site to whoever keeps it up after launch. One church got a custom build where
+          the staff edit the pages and see each change before it goes live. Another got Wix, because
+          its communications team wanted to own every page. Either way, the bulletin, the events and
+          the news go up without me.
         </p>
       </div>
     </article>
@@ -145,8 +177,9 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
       <div class="pt-in">
         <h3>Open to everyone</h3>
         <p>
-          Every custom build is checked against WCAG AA, and that work is part of the price, not an
-          upsell. For a church it is simply the right thing to do.
+          Every custom build is checked against the accessibility standard most public bodies use
+          (WCAG AA), so people who use screen readers or have poor eyesight can use it too. That
+          work is part of the price, not an extra. For a church it is simply the right thing to do.
         </p>
       </div>
     </article>
@@ -160,17 +193,27 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
           Ask what a <b>first-time visitor</b> asks.
         </h2>
         <p class="sun-lede">
-          This is the real First Baptist Muncie homepage on a phone. Pick a question and see how far
-          they would have to look.
+          This is the real First Baptist Muncie homepage on a phone. Tap a question and the page
+          scrolls to its answer, so you can see how far a visitor would have to look.
         </p>
-        <ul class="sun-qs">
+      </div>
+      {/* On a phone the picture comes before the questions (the grid areas in churches.css), so a
+          tap never changes something hidden below the fold or behind the dock. */}
+      <div class="sun-ask">
+        <p class="label sun-hint" id="sun-hint">
+          Tap a question
+        </p>
+        <ul class="sun-qs" aria-labelledby="sun-hint">
           {sunday.map((q, i) => (
             <li>
               <button type="button" data-sun-q={q.stop} aria-pressed={i === 0 ? 'true' : 'false'}>
-                {q.q}
+                <span>{q.q}</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                  <path d="M7.5 4.5 13 10l-5.5 5.5" />
+                </svg>
               </button>
               <p class="sun-a" data-sun-a>
-                {q.a}
+                <b>{q.where}</b> {q.a}
               </p>
             </li>
           ))}
@@ -233,6 +276,31 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
           </li>
         ))}
       </ul>
+    </div>
+  </section>
+
+  <section class="sec tight" aria-labelledby="ch-tier">
+    <div class="wrap">
+      <h2 id="ch-tier" class="sl-h">
+        Which tier usually fits
+      </h2>
+      <ul class="sl-tiers">
+        {fits.map(({ tier, text }) => (
+          <li>
+            <h3>
+              <a href={`/services/#${tier.name.toLowerCase()}`}>{tier.name}</a>
+            </h3>
+            <p>{text}</p>
+            <p class="sl-from">From {money(tier.priceFrom)}</p>
+          </li>
+        ))}
+      </ul>
+      <div class="sl-after">
+        <p>
+          See <a href="/services/#costs">what each tier costs over five years</a>, or forward
+          <a href="/one-page/">a one-page summary</a> to whoever has to say yes.
+        </p>
+      </div>
     </div>
   </section>
 

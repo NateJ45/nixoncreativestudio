@@ -253,15 +253,14 @@
   }
 }
 
-/* Two cards from the deck: what I do on paper, what I don't on ink. */
+/* Two cards: what I do on paper, what I don't on ink. Each title carries a tick or a cross beside
+   it. The old + and - sat alone in the corners and read as expand and collapse buttons, and the
+   cards no longer lift under the pointer, so nothing here looks like it can be pressed. */
 .dodont .do-card {
   --cardr: 1.5rem;
-  --pipx: clamp(1.5rem, 2.6vw, 2.5rem);
-  --pipy: 1.1rem;
-  --pips: 1.875rem;
   border-radius: var(--cardr);
-  padding-top: 4rem;
-  padding-bottom: 4rem;
+  padding-top: clamp(1.75rem, 3vw, 2.75rem);
+  padding-bottom: clamp(2rem, 3.5vw, 3rem);
   box-shadow:
     var(--rim),
     0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
@@ -275,8 +274,20 @@
 .dodont .do-card:nth-child(2) {
   transform: rotate(0.4deg);
 }
-.dodont .do-card:hover {
-  transform: translateY(-6px);
+.dodont h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.dodont h3 svg {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .do-ink {
   background: var(--ink);

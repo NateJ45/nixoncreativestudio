@@ -56,7 +56,7 @@ Specific commitments:
 
 - All interactive elements reachable by keyboard with visible focus indicators.
 - Color contrast cleared for every token pair (the studio blue, the soft grey and each client's own pair), asserted in `src/lib/kit-tokens.test.ts` and `src/lib/case-palettes.test.ts`.
-- Light and dark themes that follow the device until the visitor chooses one with the flip in the dock; the choice is remembered. Print always takes the light theme.
+- Light and dark themes that follow the device until the visitor chooses one with the "Dark mode" or "Light mode" switch (in the dock on wide screens, in the closing band on every screen); the choice is remembered. Print always takes the light theme.
 - Reduced motion respected: with `prefers-reduced-motion: reduce`, the page transition, the word reveal, the dealt cards, footage and weight changes all stand down and the page shows its finished state.
 - Audience includes church volunteers, nonprofit staff, and board members; copy defaults to non-technical readers unless context makes peer-readability obvious.
 - Skip link as the first focusable element, semantic landmarks (`<header>`, `<main>`, `<footer>`), proper heading hierarchy (one h1, no level skips).

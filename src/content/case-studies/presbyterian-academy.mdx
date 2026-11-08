@@ -46,7 +46,7 @@ outcome: 'A new school with a front door that reads like its own catalog: clear 
 #     date: YYYY-MM-DD
 designerNote: 'The hardest call on this one was pricing. Everybody told me to bury the numbers and make people call, but this audience is weighing a semester-long commitment, and they respect being given straight answers. So the rates and the scholarship note sit right in the issue, next to the courses they pay for.'
 cmsShot: ../../assets/case-studies/shots/presbyterian-academy-cms.png
-cmsShotAlt: 'The Sanity Studio home screen I built for The Presbyterian Academy, with tasks like opening a new term or adding a course'
+cmsShotAlt: 'The home screen of the editing area I built for The Presbyterian Academy, with tasks like opening a new term or adding a course'
 cmsName: 'Sanity Studio'
 hook: 'A term catalog, laid out like one'
 order: 3
@@ -97,17 +97,17 @@ facts:
 
 <Lede study={props.study} />
 
-The Presbyterian Academy is a Reformed lay formation school, made possible by the Presbytery of Cincinnati. Its courses are in person and in cohorts, for elders, teachers, small-group leaders and anyone who wants to study Reformed theology seriously without pursuing ordination.
+The Presbyterian Academy is a Reformed lay formation school, made possible by the Presbytery of Cincinnati. Its courses are in person, in small groups that study together through a term, for elders, teachers, small-group leaders and anyone who wants to study Reformed theology seriously without pursuing ordination.
 
-A new school has a trust problem an established one does not. There is no alumni network to quote and no long history to point to. The site had to build credibility from what the Academy does have, its courses and the people teaching them, and it had to answer three questions in order: What is this? Is it for me? How do I start?
+A new school has a trust problem an established one does not. There is no alumni network to quote and no long history to point to. The site had to build credibility from what the Academy does have, its courses and the people teaching them, and it had to answer 3 questions in order: What is this? Is it for me? How do I start?
 
 <ResultsBlock
   items={[
     'A new school has a front door that reads like its own term catalog: what the Academy is, every course and the people teaching it.',
     'An interested visitor can size up the fit, get a suggested first course, then take a clear next step through a form, a free intro or a free class visit.',
-    'Every course has a cover and a page of its own, generated from the CMS, so a new course looks finished the day it is published.',
-    'The Academy team can update courses, faculty, terms and enrollment status from the Studio without involving a developer.',
-    'The page has a place for rates and the scholarship note up front, rather than "contact for pricing".',
+    'Every course has a cover and a page of its own, made automatically from its details, so a new course looks finished the day it is published.',
+    'The Academy team can update courses, faculty, terms and enrollment status themselves, without involving a developer.',
+    'Rates and the scholarship note are on the page, not hidden behind "contact for pricing".',
   ]}
 />
 
@@ -120,7 +120,7 @@ A new school has a trust problem an established one does not. There is no alumni
 <Decision
   title="Design it like the thing it is"
   easy="A generic school template with hero photography of empty lecture halls."
-  did="I designed the site as a printed term catalog, the Term Issue: a cover for the term, a contents page, course codes, contributors, letters and rates, set in Fraunces, Source Sans 3 and IBM Plex Mono on warm paper with a deep forest green. The school is text-forward, so the site is too."
+  did="I designed the site as a printed term catalog, the Term Issue: a cover for the term, a contents page, course codes, contributors, letters and rates, set in 3 typefaces chosen to feel like a printed catalog, on warm paper with a deep forest green. The school is text-forward, so the site is too."
 />
 
 <Decision
@@ -132,7 +132,7 @@ A new school has a trust problem an established one does not. There is no alumni
 <Decision
   title="Help people pick a first course"
   easy="A list of courses and a contact form, and leave the choosing to the visitor."
-  did="A course finder styled as a reply card: three quick questions about what you do at church, what you want most and how much you can take on, and it suggests one place to start."
+  did="A course finder styled as a reply card: 3 quick questions about what you do at church, what you want most and how much you can take on, and it suggests one place to start."
 />
 
 </Chapter>
@@ -164,7 +164,7 @@ A new school has a trust problem an established one does not. There is no alumni
   src="presbyterian-academy-feature-finder"
   alt="The reply-card course finder on the Presbyterian Academy home page"
   title="Three questions, one course"
-  body="The finder asks three things and suggests a single course to begin with, with its teacher and rate, and a button to express interest in it."
+  body="The finder asks 3 things and suggests a single course to begin with, with its teacher and rate, and a button to express interest in it."
   side="right"
 />
 
@@ -174,17 +174,17 @@ The full build, including the pieces above:
 - A slim bar across the top of every page with the current term's dates and an invitation to visit a class free
 - Course catalog with filters by topic and teacher, and a page per course with an at-a-glance table, the sessions, who it is for and a syllabus
 - Faculty directory with a profile for every teacher
-- A place for rates and need-based scholarship information, rather than "contact for pricing"
+- Rates and need-based scholarship information on the page, rather than "contact for pricing"
 - A course finder that suggests one place to start
-- Request-information and express-interest forms that post to the site's own endpoint on Cloudflare, checked by Turnstile, with every submission stored before the Academy is emailed
+- Request-information and express-interest forms that block spam without making visitors tick a box, with every submission saved before the Academy is emailed
 - A back-cover footer with the Academy's details and an A to Z index of the site
 - Light and dark themes
-- Full Sanity CMS for courses, faculty, terms, events and site settings
+- Editing screens for courses, faculty, terms, events and site settings
 
 ### Behind the decisions
 
-Every course gets a generated cover instead of stock photography: its code, its topic, its teacher and the one question the course is trying to answer. The covers are drawn from fields in the CMS, so a new course looks finished the moment it is published.
+Every course gets a generated cover instead of stock photography: its code, its topic, its teacher and the one question the course is trying to answer. The covers are drawn from the details the team types in for each course, so a new course looks finished the moment it is published.
 
-The CMS runs on Sanity, built into the site at /studio, so the Academy team can update courses, faculty, terms and enrollment status, including marking a course open or waitlisted, without involving a developer.
+The editing screens are built into the site, so the Academy team can update courses, faculty, terms and enrollment status, including marking a course open or waitlisted, without involving a developer.
 
 </FullBuild>

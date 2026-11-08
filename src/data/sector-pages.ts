@@ -84,11 +84,11 @@ export const SCHOOLS: LeanSector = {
     },
     {
       title: 'Let the office keep it current',
-      body: 'Calendars, staff, tuition and forms in an editor set up for the people who run the office, with no developer in the way.',
+      body: 'Calendars, staff, tuition and forms, in editing screens set up for the people who run the office, so changes never wait on a developer.',
     },
   ],
   proofNote: [
-    'I will be straight about this. The Presbyterian Academy is the one school in my case studies, and it is new, so I have no enrollment figures to show you. It teaches adults in cohorts, so it is not a K-12 school with tours and a tuition schedule either. What it does show is the same job done for a new school: what it is, who it is for, and how to start.',
+    'The Presbyterian Academy shows the same job done for a new school: what it is, who it is for, what it costs and how to start. I will be straight about the rest. It is the one school in my case studies, and it is new, so I have no enrollment figures to show you. It also teaches adults in small groups that study together, so it is not a school for children with tours and a tuition schedule.',
   ],
   closest: [
     'For the parts it does not cover, the closest work I can show you is ',
@@ -99,7 +99,7 @@ export const SCHOOLS: LeanSector = {
   ],
   tierNotes: [
     'If you use an admissions or school management system, tell me early. What has to connect to it is part of what sets the tier.',
-    'One way to weigh the cost: divide the first-year cost by a year of tuition. That is how many student-years would cover it. I cannot promise you a single student, so only you can judge whether that number looks reachable.',
+    'One way to weigh the cost: divide the first-year cost by a year of tuition. The answer is how many students, for one year each, would cover it. I cannot promise you a single student, so only you can judge whether that number looks reachable.',
   ],
 };
 
@@ -124,7 +124,7 @@ export const NONPROFITS: LeanSector = {
     },
     {
       title: 'Stay current on a small staff',
-      body: 'An editor built around the jobs your people actually do, with a guide beside the work, so the site does not wait on a developer.',
+      body: 'Editing screens built around the jobs your people actually do, with short written help beside them, so the site never waits on a developer.',
     },
   ],
   proofNote: [
@@ -145,7 +145,7 @@ export const SMALL_BUSINESS: LeanSector = {
   label: 'Small businesses',
   linkText: 'How I build for small businesses',
   heading: `Small business websites built around <b>the first call.</b>`,
-  lede: 'Someone told them to call you, or they found you on a phone. Either way, they want to see what you do, what it might cost and how to ask, and you want that first call to start further along than the same five questions.',
+  lede: 'Someone told them to call you, or they found you on a phone. Either way, they want to see what you do, what it might cost and how to ask, and you want that first call to start further along than the same 5 questions.',
   points: [
     {
       title: 'Answer what you keep getting asked',
@@ -161,7 +161,7 @@ export const SMALL_BUSINESS: LeanSector = {
     },
   ],
   proofNote: [
-    'These two are an interior designer and a home embroidery studio. I have not shown you every trade here, and yours may not be on the list. The job may still be the same: getting a stranger ready to ask you for something.',
+    'These 2 are an interior designer and a home embroidery studio. I have not shown you every trade here, and yours may not be on the list. The job may still be the same: getting a stranger ready to ask you for something.',
   ],
   tierNotes: [
     'If you need a few pages and enjoy doing it yourself, a site builder is probably enough, and I will tell you so.',
@@ -189,11 +189,12 @@ export const SITUATIONS: Situation[] = [
   {
     sector: 'church',
     label: 'A church',
-    launch: 'A small staff and one part-time administrator, with the visitor path done right.',
+    launch:
+      'A small staff and one part-time administrator, with everything a first-time visitor needs done right.',
     signature:
       'Several ministries, and a staff or volunteer team who post the news and events themselves.',
     flagship:
-      'Many editors, plus staff workflows, connected systems or reports for an elder board.',
+      'Many editors, plus custom tools, links to the church database or other systems you use, or reports for an elder board.',
   },
   {
     sector: 'school',
@@ -201,7 +202,8 @@ export const SITUATIONS: Situation[] = [
     launch: 'A preschool or small school with one office person, and clear inquiry pages.',
     signature:
       'An admissions lead and office staff running several kinds of content, with inquiries tracked.',
-    flagship: 'Several divisions and many editors, with connections into the systems you use.',
+    flagship:
+      'Several campuses or age groups and many editors, with links into the systems you already use.',
   },
   {
     sector: 'nonprofit',

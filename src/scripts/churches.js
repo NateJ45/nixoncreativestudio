@@ -204,30 +204,9 @@ import { ui } from './kit.js';
     if (live) raf = requestAnimationFrame(frame);
   }
 
-  if (reduce) {
-    /* A still page: both windows at the part of the page that matters most, and all the words at full strength. */
-    var still = function () {
-      stands.forEach(function (st) {
-        st.p = 0.5;
-        st.target = 0.5;
-        panTo(st);
-      });
-    };
-    addEventListener('resize', still);
-    addEventListener('load', still);
-    still();
-    return;
-  }
-  stands.forEach(function (st) {
-    st.img.addEventListener('load', wake);
-  });
-  addEventListener('scroll', wake, { passive: true });
-  addEventListener('resize', layout);
-  addEventListener('load', layout);
-  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
-  layout();
-
-  /* Try it: a question scrolls the church's real page to its answer, on the same damped ease as the rest of this page. */
+  /* Try it: a question scrolls the church's real page to its answer, on the same damped ease as the
+     rest of this page. It is wired before the reduced-motion return below, so it works there too:
+     the page simply jumps to the answer. */
   var sun = $('[data-sun]');
   if (sun) {
     var sunImg = $('.scr img', sun),
@@ -282,4 +261,27 @@ import { ui } from './kit.js';
     addEventListener('resize', sunPaint);
     sunImg.addEventListener('load', sunPaint);
   }
+
+  if (reduce) {
+    /* A still page: both windows at the part of the page that matters most, and all the words at full strength. */
+    var still = function () {
+      stands.forEach(function (st) {
+        st.p = 0.5;
+        st.target = 0.5;
+        panTo(st);
+      });
+    };
+    addEventListener('resize', still);
+    addEventListener('load', still);
+    still();
+    return;
+  }
+  stands.forEach(function (st) {
+    st.img.addEventListener('load', wake);
+  });
+  addEventListener('scroll', wake, { passive: true });
+  addEventListener('resize', layout);
+  addEventListener('load', layout);
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
+  layout();
 })();

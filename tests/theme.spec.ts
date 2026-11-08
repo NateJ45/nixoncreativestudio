@@ -26,18 +26,29 @@ test.describe('The theme', () => {
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
     await page.goto('/about/', { waitUntil: 'domcontentloaded' });
     await settle(page);
-    const flip = page.getByRole('button', { name: 'Dark mode' });
-    await expect(flip).toHaveAttribute('aria-pressed', 'false');
-
-    await flip.click();
+    // The switch says in words what it will do, and says the other thing once it has.
+    const dock = page.locator('nav.dock');
+    await dock.getByRole('button', { name: 'Dark mode' }).click();
     expect(await theme(page)).toBe('dark');
-    await expect(flip).toHaveAttribute('aria-pressed', 'true');
+    await expect(dock.getByRole('button', { name: 'Light mode' })).toBeVisible();
+    await expect(dock.getByRole('button', { name: 'Dark mode' })).toHaveCount(0);
 
     await page.goto('/work/', { waitUntil: 'domcontentloaded' });
     expect(await theme(page)).toBe('dark');
 
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.emulateMedia({ colorScheme: 'light' });
+    expect(await theme(page)).toBe('dark');
+  });
+
+  test('a phone finds the switch, in words, in the closing band', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
+    await page.goto('/about/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('nav.dock [data-theme-flip]')).toBeHidden();
+    const flip = page.locator('[data-end]').getByRole('button', { name: 'Dark mode' });
+    await flip.scrollIntoViewIfNeeded();
+    await flip.click();
     expect(await theme(page)).toBe('dark');
   });
 
@@ -60,7 +71,9 @@ test.describe('The theme', () => {
     const context = await browser.newContext({ javaScriptEnabled: false, colorScheme: 'dark' });
     const page = await context.newPage();
     await page.goto('/about/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('[data-theme-flip]')).toBeHidden();
+    await expect(page.locator('[data-theme-flip]')).toHaveCount(2);
+    for (const flip of await page.locator('[data-theme-flip]').all())
+      await expect(flip).toBeHidden();
     await context.close();
   });
 });

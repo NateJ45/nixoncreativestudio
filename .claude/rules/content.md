@@ -65,11 +65,13 @@ Every study body uses the same chapters, in page order, as `<Chapter title="..."
 1. **The brief**: `<Lede study={props.study} />` (prints `summary`), prose, then `<ResultsBlock items={[...]} />` ("What changed": a row is a plain sentence, or `{ figure, text, source }` at display size; a figure without a real `source` fails `src/lib/case-results.test.ts`).
 2. **`<Idea study={props.study} />`**: a chapter titled with the study's `hook`. It shows the `signatureClip` if there is one, or a still if you pass `still="file-name"`. Leave it out when no capture shows the feature.
 3. **Decisions**: one to three `<Decision title easy did>`, "the easy version" against "what I did", taken only from the study's own approach text, then any supporting prose and special blocks (`<CourseLine />` on Stone Steps).
-4. **Before and after**: `<BeforeAfter before after beforeAlt afterAlt>` only where a real "before" was captured while the old site was live. `beforePlatform` and `afterPlatform` only where the study already names the old platform.
-5. **Walk the homepage**: `<SiteShowcase study label href alt />`.
+4. **Before and after**: `<BeforeAfter before after beforeAlt afterAlt>` only where a real "before" was captured while the old site was live. The halves are labelled "Before" and "After" only, never a platform, with "Drag the middle handle to compare..." under the picture.
+5. **Walk the homepage**: `<SiteShowcase study label href alt />`. It opens with one line saying what the moving picture is.
 6. **`<WhatYouEdit study={props.study} />`** (only renders with a `cmsShot`).
 7. **`<Quotes study={props.study} />`** (only renders with testimonials).
 8. **`<FullBuild more={...}>`**: "What I built", closed `<details>`: `<FeatureHighlight src alt title body side>` rows for real, live features, then the full list (`ul` becomes `FullList`) and any closing prose.
+
+**Words for a client, not a developer** (the November 2026 clarity pass). The body, decision cards, "What I built" lists, figure `text` and `source` lines, `cmsShotAlt`, `summary` and `outcome` describe what the client gets ("editing screens the staff run", "forms that block spam without making visitors tick a box"), never the tool ("Sanity Studio", "Turnstile", "static pages", "API"). WordPress stays, because owners know it. Tool names live only in the frontmatter `stack`, which the page prints after "For the technically curious, it is built with". A `source` is written for a reader ("the official race results from RunSignUp, the timing company", "my record of the import"), and a quote's `context` says it positively when a client came back ("They came back for this rebuild in 2026"). Counts are numerals unless they start a sentence.
 
 Image props are file names without extension from `public/assets/study/`. Their real sizes are in `src/data/study-images.json`; a name not in the JSON fails the build. Comments in an MDX body get mangled by prettier (`{/* */}` becomes `{/_ _/}`), so notes about a study go in the frontmatter's YAML comments.
 
