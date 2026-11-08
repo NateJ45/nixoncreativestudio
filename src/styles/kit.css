@@ -2107,6 +2107,80 @@ h1.giant b {
 .band-flip .band-w .tile:focus-visible {
   transform: rotate(3deg) scale(1.03);
 }
+/* A band with every quote (QuoteBand `cycle`): the quotes and phones stack in one cell each, so the
+   band holds the longest one's height, and the color eases across as you step. */
+.band-q,
+.band-w {
+  display: grid;
+}
+.band-s,
+.band-tw {
+  grid-area: 1 / 1;
+}
+.band-s[inert],
+.band-tw[inert] {
+  visibility: hidden;
+}
+.band-cycle {
+  transition: color 0.5s var(--ease);
+}
+.band-cycle::before {
+  transition: background-color 0.5s var(--ease);
+}
+.band-cycle.stepped .band-s:not([inert]),
+.band-cycle.stepped .band-tw:not([inert]) {
+  animation: band-in 0.45s var(--ease);
+}
+@keyframes band-in {
+  from {
+    opacity: 0;
+    translate: 0 0.6rem;
+  }
+}
+.band-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+.band-nav[hidden] {
+  display: none;
+}
+.band-nav button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: none;
+  color: var(--p);
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+.band-nav button:hover {
+  background: var(--p);
+  color: var(--c);
+}
+.band-n {
+  min-width: 3.5ch;
+  font: 500 0.9375rem/1 var(--body);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .band-cycle,
+  .band-cycle::before,
+  .band-nav button {
+    transition: none;
+  }
+  .band-cycle .band-s:not([inert]),
+  .band-cycle .band-tw:not([inert]) {
+    animation: none;
+  }
+}
 .home-band {
   --bandm: clamp(0.5rem, 1.2vw, 1rem);
   margin: clamp(5rem, 11vw, 9rem) var(--bandm);

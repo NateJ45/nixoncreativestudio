@@ -1,10 +1,15 @@
 ---
 /* A client's words on their own color, with their phone breaking out of the
    band. Only real quotes, word for word: pass `slug` and it reads the quote from
-   that study's frontmatter. kit.js opens the band out as it reaches you. */
+   that study's frontmatter. kit.js opens the band out as it reaches you.
+
+   With `cycle` the band carries every quote on file, starting with `slug`'s and
+   then in deck order. Previous and Next step through them, and the band takes
+   each client's color and phone as it goes (scripts/quote-cycle.js). Without
+   JavaScript only the first quote shows and the buttons stay hidden. */
 import { getEntry } from 'astro:content';
 import Tile from './Tile.astro';
-import { getClient } from '../lib/clients';
+import { getClient, getClients, type Client } from '../lib/clients';
 
 interface Props {
   slug: string;
@@ -16,30 +21,101 @@ interface Props {
   as?: 'section' | 'article';
   class?: string;
   ariaLabel?: string;
+  /** Carry every quote on file, with Previous and Next. */
+  cycle?: boolean;
 }
-const { slug, by, label, flip = false, as: Tag = 'section', class: cls, ariaLabel } = Astro.props;
-const entry = await getEntry('case-studies', slug);
-const quotes = entry?.data.testimonials ?? [];
-const t = by ? quotes.find((q) => q.name.includes(by)) : quotes[0];
-if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
-const client = await getClient(slug);
+const {
+  slug,
+  by,
+  label,
+  flip = false,
+  as: Tag = 'section',
+  class: cls,
+  ariaLabel,
+  cycle = false,
+} = Astro.props;
+
+type Quote = { quote: string; name: string; title: string; context?: string };
+type Slide = { t: Quote; client: Client; tile: boolean };
+
+let slides: Slide[];
+if (cycle) {
+  const clients = await getClients();
+  const start = clients.findIndex((c) => c.slug === slug);
+  const order = start === -1 ? clients : [...clients.slice(start), ...clients.slice(0, start)];
+  slides = [];
+  for (const client of order) {
+    const entry = await getEntry('case-studies', client.slug);
+    (entry?.data.testimonials ?? []).forEach((t, i) => slides.push({ t, client, tile: i === 0 }));
+  }
+  if (!slides.length) throw new Error('No quotes on file');
+} else {
+  const entry = await getEntry('case-studies', slug);
+  const quotes = entry?.data.testimonials ?? [];
+  const t = by ? quotes.find((q) => q.name.includes(by)) : quotes[0];
+  if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
+  slides = [{ t, client: await getClient(slug), tile: true }];
+}
+const first = slides[0].client;
+const many = slides.length > 1;
 ---
 
 <Tag
-  class:list={['band', { 'band-flip': flip }, cls]}
+  class:list={['band', { 'band-flip': flip, 'band-cycle': many }, cls]}
   aria-label={ariaLabel}
-  style={`--c:${client.accent};--p:${client.paper}`}
+  style={`--c:${first.accent};--p:${first.paper}`}
+  data-cycle={many ? '' : undefined}
 >
   <div class="band-t">
     {label && <p class="label">{label}</p>}
-    <blockquote>{t.quote}</blockquote>
-    <p class="cite">
-      <b>{t.name}</b>
-      {t.title}
-      {t.context && <span class="ctx">{t.context}</span>}
-    </p>
+    <div class="band-q" aria-live={many ? 'polite' : undefined}>
+      {slides.map((s, i) => (
+        <div
+          class="band-s"
+          data-q={i}
+          data-c={s.client.accent}
+          data-p={s.client.paper}
+          data-slug={s.client.slug}
+          inert={i ? true : undefined}
+        >
+          <blockquote>{s.t.quote}</blockquote>
+          <p class="cite">
+            <b>{s.t.name}</b>
+            {s.t.title}
+            {s.t.context && <span class="ctx">{s.t.context}</span>}
+          </p>
+        </div>
+      ))}
+    </div>
+    {many && (
+      <div class="band-nav" data-q-nav hidden>
+        <button type="button" data-q-prev aria-label="Previous quote">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" />
+          </svg>
+        </button>
+        <span class="band-n" data-q-count>
+          1 / {slides.length}
+        </span>
+        <button type="button" data-q-next aria-label="Next quote">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" />
+          </svg>
+        </button>
+      </div>
+    )}
   </div>
   <div class="band-w">
-    <Tile client={client} lazy sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)" />
+    {slides
+      .filter((s) => s.tile)
+      .map((s, i) => (
+        <div class="band-tw" data-tw={s.client.slug} inert={i ? true : undefined}>
+          <Tile
+            client={s.client}
+            lazy
+            sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
+          />
+        </div>
+      ))}
   </div>
 </Tag>
