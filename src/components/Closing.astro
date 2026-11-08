@@ -75,7 +75,15 @@ const letters = (word: string) => [...word];
       <div class="gather-deck" aria-hidden="true">
         {clients.map((s) => (
           <span class="gc" style={`--c:${s.accent}`}>
-            <img src={s.still} alt="" loading="lazy" width="584" height="1138" />
+            <img
+              src={s.still}
+              srcset={s.stillSet}
+              sizes="(max-width: 52rem) min(36vw, 9.5rem), clamp(9.5rem, 13vw, 13.5rem)"
+              alt=""
+              loading="lazy"
+              width="584"
+              height="1138"
+            />
           </span>
         ))}
       </div>

@@ -54,6 +54,8 @@ export interface Client {
   study: string;
   clip: string;
   still: string;
+  /** srcset for `still` (320w, 448w, 584w). Pair it with a `sizes` that matches the card's CSS width. */
+  stillSet: string;
   desk: string;
   deskStill: string;
   cms: string;
@@ -80,6 +82,7 @@ export function toClient(entry: CollectionEntry<'case-studies'>): Client {
     study: `/work/${slug}/`,
     clip: `/assets/${slug}-m.mp4`,
     still: `/assets/${slug}-m.webp`,
+    stillSet: `/assets/${slug}-m-320.webp 320w, /assets/${slug}-m-448.webp 448w, /assets/${slug}-m.webp 584w`,
     desk: `/assets/${slug}.mp4`,
     deskStill: `/assets/${slug}-cover.webp`,
     cms: d.cmsShot ? `/assets/${slug}-cms.webp` : '',

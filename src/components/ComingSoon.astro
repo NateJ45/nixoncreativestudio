@@ -33,7 +33,15 @@ const [first, ...rest] = site.studioName.split(' ');
         class="ncs-cs__card"
         style={`--c:${s.accent};--d:${i - (clients.length - 1) / 2};z-index:${5 - Math.abs(i - 2)}`}
       >
-        <img src={s.still} alt="" width="584" height="1138" loading="lazy" />
+        <img
+          src={s.still}
+          srcset={s.stillSet}
+          sizes="clamp(7rem, 15vw, 12rem)"
+          alt=""
+          width="584"
+          height="1138"
+          loading="lazy"
+        />
       </span>
     ))}
   </div>
