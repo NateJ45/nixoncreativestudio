@@ -65,7 +65,7 @@
 html:not(.js) .q-count,
 html:not(.js) [data-back],
 html:not(.js) [data-next],
-html:not(.js) .enter-h,
+html:not(.js) .q-check,
 html:not(.js) .preview-h,
 html:not(.js) .st-phone {
   display: none;
@@ -195,16 +195,6 @@ select.f {
   background-repeat: no-repeat;
   background-position: right 0.8rem center;
   background-size: 1rem;
-}
-.enter-h {
-  margin-top: 0.5rem;
-  color: var(--soft);
-  font-size: 0.9375rem;
-}
-@media (hover: none) {
-  .enter-h {
-    display: none;
-  }
 }
 .err {
   display: none;
@@ -754,4 +744,102 @@ html:not(.js) .st-phone {
     --c: #272b55;
     --cast: #5c68e8;
   }
+}
+
+/* Clarity pass (Nov 2026). The reassurance line on the optional choices. */
+.q-h.q-sure {
+  margin-top: 0.3rem;
+  color: var(--soft);
+}
+
+/* Check your answers: a ruled list, the answer beside its question, a Change button on the right. */
+.q-check .q-t:focus {
+  outline: none;
+}
+.q-check .q-t:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.check-list {
+  margin: 1.25rem 0 0;
+  border-bottom: 1px solid var(--line);
+}
+.ck {
+  display: grid;
+  grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) auto;
+  gap: 0.25rem 1.25rem;
+  align-items: baseline;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line);
+}
+.ck dt {
+  font-weight: 600;
+}
+.ck dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.ck .ck-none {
+  color: var(--soft);
+}
+.ck-change {
+  min-height: 2.75rem;
+  margin-block: -0.6rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: 600 1rem/1.2 var(--body);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.ck-change:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+@media (max-width: 40rem) {
+  .ck {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ck dd:not(.ck-act) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .ck .ck-act {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+}
+
+/* The answers phone says what it is, so it never reads as a second form. */
+.doc-sub {
+  margin-top: 0.25rem;
+  color: var(--soft);
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+/* A line still waiting is plain soft text, with no blank or outline under it, so the panel never looks
+   like fields to fill in (clarity pass, Nov 2026). */
+.ln.sk,
+.ln.sk.msg,
+.ln.sk.pill {
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+.ln.sk.msg {
+  min-height: 0;
+}
+.ln.sk dd,
+.ln.sk.pill dd {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font-weight: 400;
+}
+.ln.sk.name dd {
+  font-weight: 400;
 }

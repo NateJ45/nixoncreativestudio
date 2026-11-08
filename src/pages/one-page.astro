@@ -1,31 +1,34 @@
 ---
-/* /one-page: the summary a staff member can send to a board or committee: what I
-   do, the three tiers with honest costs, what is included, what happens if you move on and how to
-   reach me. Prices and sums read src/data/pricing.ts and src/lib/tier-costs.ts.
+/* /one-page: the summary a staff member can send to a board or committee. It answers, in
+   order: what I do, the three tiers (who each fits, the usual price, what I take on), what it
+   costs over five years (Hosting first, then with care; Flagship only with care, because custom
+   tools need it), what Hosting and care cover, what is in every build, what happens if you move
+   on, and how to reach me. Every price and sum reads src/data/pricing.ts and
+   src/lib/tier-costs.ts, and the date reads `pricesAsOf`.
+
    The sheet prints on one US Letter page: src/styles/pages/one-page.css has the print
-   stylesheet, and tests/one-page.spec.ts prints it and counts the pages. Keep it to
-   what fits. Anything new here means something else comes out. */
+   stylesheet, and tests/one-page.spec.ts prints it and counts the pages. Keep it to what
+   fits. Anything new here means something else comes out. */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/one-page.css';
 import Closing from '../components/Closing.astro';
-import { carePlans, freeToMove } from '../data/pricing';
+import { carePlans, customWorkRate, freeToMove, perWords, pricesAsOf } from '../data/pricing';
 import { site } from '../data/site';
 import { money } from '../lib/money';
 import { tierCosts } from '../lib/tier-costs';
 
 const costs = tierCosts();
-const hostingPlan = carePlans[0];
-const asOf = new Date().toLocaleDateString('en-US', {
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
+const [hosting, lightCare, care, carePlus] = carePlans;
+const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
 const servicesUrl = `${site.domain}/services/`;
+// "Usually $3,500 to $6,000", or for a tier quoted by scope, its own range line.
+const usually = (t: (typeof costs)[number]['tier']) =>
+  t.rangeTo ? `Usually ${money(t.priceFrom)} to ${money(t.rangeTo)}` : t.range;
 ---
 
 <BaseLayout
   title="A one-page summary | Nixon Creative Studio"
-  description="A one-page summary of what I do, the three website tiers, honest costs over five years, how to leave and how to reach me. Made to print or to forward."
+  description="What I do, the three website tiers, what they cost over five years, what Hosting and care cover, and how to reach me, on one page to print or forward."
 >
   <div class="op-page">
     <div class="op-bar" data-op-bar>
@@ -39,15 +42,14 @@ const servicesUrl = `${site.domain}/services/`;
       <header class="op-head">
         <div>
           <p class="label">{site.studioName}</p>
-          <h1>Websites, what they cost, and how you could leave</h1>
+          <h1>Websites, and what they cost</h1>
+          <p class="op-date">Prices as of {pricesAsOf}</p>
         </div>
         <p class="op-reach">
           <b>{site.ownerName}</b>
           <a href={site.emailHref}>{site.email}</a>
           <a href={site.phoneHref}>{site.phone}</a>
-          <span>
-            {site.domain}, {site.address}
-          </span>
+          <span>{`${site.domain}, ${site.address}`}</span>
         </p>
       </header>
 
@@ -55,71 +57,124 @@ const servicesUrl = `${site.domain}/services/`;
         <h2 id="op-do">What I do</h2>
         <p>
           I plan, design and build websites for churches, schools, nonprofits and small businesses,
-          on my own, from strategy to launch. You talk to the person doing the work. Every build is
-          custom, comes with an editor your own people can run, and is made to WCAG AA.
+          on my own, so you always talk to the person doing the work. Every site is custom, with an
+          editor and a written guide for your people, and works for people with disabilities.
         </p>
       </section>
 
       <section aria-labelledby="op-tiers">
-        <h2 id="op-tiers">The three tiers</h2>
+        <h2 id="op-tiers">Three sizes of website</h2>
+        <ul class="op-tiers">
+          {costs.map(({ tier }, i) => (
+            <li class:list={['op-tier', `op-t${i}`]}>
+              <h3>{tier.name}</h3>
+              <p class="op-price">
+                {`${money(tier.priceFrom)}${tier.priceSuffix}`} <small>one-time</small>
+              </p>
+              <p class="op-range">
+                {usually(tier)}
+                {tier.needsCare && (
+                  <span class="op-need">
+                    {`Custom tools need ${tier.needsCare} or ${carePlus.name}.`}
+                  </span>
+                )}
+              </p>
+              <p>
+                <b>Who it fits.</b> {tier.fits}
+              </p>
+              <p>
+                <b>What I take responsibility for.</b> {tier.responsible}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="op-cost">
         <table class="op-table">
+          <caption id="op-cost">
+            <span class="op-cap">What it costs over five years</span>
+            {`Totals from each tier's starting price: ${hosting.name} only first, then with care on top.`}
+          </caption>
           <thead>
             <tr>
-              <th scope="col">Tier</th>
-              <th scope="col">What I take responsibility for</th>
+              <th scope="col">Tier, and what you pay after launch</th>
               <th scope="col" class="n">
-                Year one
+                First year, build and hosting
               </th>
               <th scope="col" class="n">
-                Three years
+                Total after 3 years
               </th>
               <th scope="col" class="n">
-                Five years
+                Total after 5 years
               </th>
             </tr>
           </thead>
-          <tbody>
-            {costs.map((c) => (
-              <tr>
-                <th scope="row">
-                  <b>{c.tier.name}</b>
-                  <span>{c.tier.who}</span>
-                </th>
-                <td>{c.tier.responsible}</td>
-                {(['yearOne', 'threeYears', 'fiveYears'] as const).map((k, i) => (
-                  <td class="n" data-label={['Year one', 'Three years', 'Five years'][i]}>
-                    <span class="op-sum">
-                      <small>{c.hostingPlan.name} only</small>
-                      {money(c.hostingOnly[k])}
+          {costs.map((c) => (
+            <tbody>
+              {c.rows.map((r) => (
+                <tr>
+                  <th scope="row">
+                    <b>{c.tier.name}</b>
+                    <span>
+                      {r.withCare
+                        ? `plus ${r.plan.name}, ${r.plan.price} ${perUnit(r.plan.period)}`
+                        : `${hosting.name} only, ${hosting.price} ${perUnit(hosting.period)}`}
                     </span>
-                    <span class="op-sum">
-                      <small>Plus {c.plan.name}</small>
-                      {money(c[k])}
-                    </span>
+                  </th>
+                  <td class="n" data-label="First year">
+                    {money(r.yearOne)}
                   </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
+                  <td class="n" data-label="After 3 years">
+                    {money(r.threeYears)}
+                  </td>
+                  <td class="n" data-label="After 5 years">
+                    {money(r.fiveYears)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          ))}
         </table>
-        <p class="op-small">
-          Each sum is the tier's starting price at today's prices, then either {hostingPlan.name}
-          alone ({hostingPlan.price} a year from year two, since year one hosting is included, and
-          you make every change) plus the care add-on shown, billed on top of Hosting from the first
-          month. A build that lands higher in its range adds the difference, and custom work or
-          photography would be extra.
+        <p class="op-note">
+          {`Each total is the tier's starting price, plus ${hosting.name} at ${hosting.price} ${perWords(hosting.period)} from year two, plus the care plan shown, billed monthly from launch.`}
         </p>
       </section>
 
-      <div class="op-two">
+      <section class="op-cover" aria-labelledby="op-care">
+        <h2 id="op-care">What Hosting and care cover</h2>
+        <dl>
+          <div>
+            <dt>
+              {`${hosting.name}, ${hosting.price} ${perUnit(hosting.period)}`}
+              <small>free in year one; every live site needs it</small>
+            </dt>
+            <dd>{hosting.short}</dd>
+          </div>
+          {[lightCare, care, carePlus].map((p) => (
+            <div>
+              <dt>
+                {`${p.name}, ${p.price} ${perUnit(p.period)}`}
+                <small>{`optional, on top of ${hosting.name}`}</small>
+              </dt>
+              <dd>{p.short}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="op-note">
+          {`Extra changes are ${money(lightCare.rate)} an hour on any care plan. Custom development is ${money(customWorkRate)} an hour, quoted first.`}
+        </p>
+      </section>
+
+      <div class="op-three">
         <section aria-labelledby="op-every">
           <h2 id="op-every">In every build</h2>
           <ul>
-            <li>A working session and a one-page brief, before any design</li>
+            <li>A planning session and a brief, before design</li>
             <li>A custom design, built for phones first</li>
-            <li>Accessibility checked against WCAG AA</li>
-            <li>An editor and a written guide for your people</li>
-            <li>Hosting set up, with year one included</li>
+            <li>Accessibility checked (WCAG AA)</li>
+            <li>An editor, and a guide for your people</li>
+            <li>Year one hosting included</li>
             <li>A first month close by after launch</li>
           </ul>
         </section>
@@ -131,18 +186,12 @@ const servicesUrl = `${site.domain}/services/`;
             ))}
           </ul>
         </section>
+        <section aria-labelledby="op-reach">
+          <h2 id="op-reach">How to reach me</h2>
+          <p>{`Email ${site.email} or call ${site.phone}. ${site.firstConversation}`}</p>
+          <p class="op-note">{`Prices as of ${pricesAsOf}. More detail: ${servicesUrl}`}</p>
+        </section>
       </div>
-
-      <footer class="op-foot">
-        <p>
-          <b>Next step.</b>
-          {site.firstConversation} I'll tell you which tier fits, including if none does. If a
-          template platform would serve you better, I'll say that too.
-        </p>
-        <p class="op-small">
-          Prices current as of {asOf}. Full details and case studies: {servicesUrl}
-        </p>
-      </footer>
     </article>
   </div>
 

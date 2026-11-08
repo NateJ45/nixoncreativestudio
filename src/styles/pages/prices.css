@@ -81,9 +81,7 @@
   scroll-margin-top: 1rem;
 }
 .t-card {
-  --f: 1;
   --l: 0;
-  --lh: 0px;
   position: relative;
   isolation: isolate;
   padding: clamp(1.25rem, 2vw, 1.75rem);
@@ -92,7 +90,7 @@
 }
 .t-bg {
   position: absolute;
-  inset: 0 0 calc((1 - var(--f)) * var(--lh)) 0;
+  inset: 0;
   z-index: -1;
   border-radius: 1.25rem;
   background: var(--card);
@@ -176,39 +174,9 @@
   font: 600 1.125rem/1.2 var(--display);
   letter-spacing: -0.015em;
 }
-.t-inc-s {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-.t-inc-b {
-  display: none;
-  width: 100%;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.t-inc-b i {
-  flex: none;
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px currentColor;
-  transition: box-shadow 0.3s var(--ease);
-}
-.t-inc-b[aria-pressed='true'] i {
-  box-shadow: inset 0 0 0 0.5625rem currentColor;
-}
+/* What's included is always open: no button, nothing folds (clarity pass, Nov 2026). */
 .t-list {
-  margin: 0;
+  margin: 0.5rem 0 0;
 }
 .ticks {
   display: grid;
@@ -290,34 +258,11 @@
     grid-row: span 9;
     grid-template-rows: subgrid;
   }
-  /* Rows fold like paper from the top edge of each line. */
   .tiers.live .t-card {
     will-change: transform;
   }
-  .tiers.live .t-go {
-    transform: translateY(calc((var(--f) - 1) * var(--lh)));
-  }
-  .tiers.live .t-list li {
-    --fi: clamp(0, calc((var(--f) - 0.1 - var(--i) * 0.16) / 0.24), 1);
-    opacity: var(--fi);
-    transform-origin: 50% 0;
-    transform: perspective(38rem) rotateX(calc((1 - var(--fi)) * -82deg))
-      translateY(calc((1 - var(--fi)) * -0.5rem));
-  }
-  .tiers.live .t-inc-s {
-    display: none;
-  }
-  .tiers.live .t-inc-b {
-    display: flex;
-  }
   .tiers.live {
     margin-top: clamp(1.75rem, 3vw, 2.5rem);
-  }
-  .tiers.live .t-list {
-    padding-top: 0.4rem;
-  }
-  .t-inc-b:focus-visible {
-    outline-offset: 1px;
   }
 }
 
@@ -496,15 +441,24 @@
   z-index: 1;
   width: 24%;
 }
+/* "Included" and "Not included" in words, with a small mark beside the word, never a bare tick or dash. */
 .care tbody td.y,
 .care tbody td.n {
   position: relative;
-  min-height: 3rem;
+  padding-left: 2.6rem;
+  white-space: nowrap;
+}
+.care tbody td.y {
+  color: var(--ink);
+  font-weight: 500;
+}
+.care tbody td.n {
+  color: var(--soft);
 }
 .care .y::before,
 .care .n::before {
   left: 1rem;
-  top: 0.6rem;
+  top: 0.62rem;
   width: 1.125rem;
   height: 1.125rem;
 }
@@ -945,7 +899,7 @@
   background: var(--ink);
 }
 .t-head {
-  margin-top: clamp(2.5rem, 3vw, 3rem);
+  margin-top: 0.5rem;
 }
 .t-go {
   padding-bottom: 1.75rem;
@@ -956,8 +910,7 @@
 .t-range {
   font-size: 0.9375rem;
 }
-.t-inc,
-.t-inc-b {
+.t-inc {
   font: 500 0.8125rem/1.25 var(--body);
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -969,8 +922,8 @@
   --pipx: 1.05rem;
   --pipy: 0.9rem;
   --pips: 1.5rem;
-  padding-top: clamp(3rem, 3.4vw, 3.25rem);
-  padding-bottom: clamp(2.75rem, 3.4vw, 3.25rem);
+  padding-top: clamp(1.5rem, 2.4vw, 2rem);
+  padding-bottom: clamp(1.5rem, 2.4vw, 2rem);
 }
 .pair-wide .addon {
   box-shadow:
@@ -989,7 +942,7 @@
   position: relative;
   display: block;
   min-width: 0;
-  padding: 3.25rem clamp(1.1rem, 1.6vw, 1.4rem) 3.25rem;
+  padding: 3.25rem clamp(1.1rem, 1.6vw, 1.4rem) 1.75rem;
   border-radius: var(--cardr);
   background: var(--card);
   box-shadow:
@@ -999,8 +952,8 @@
     0 22px 40px -24px rgba(0, 0, 0, 0.34);
   transition: transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
-.steps li::before,
-.steps li::after {
+/* One number per step, top left. The upside-down copy in the far corner read as a printing error. */
+.steps li::before {
   position: absolute;
   font: 600 1.5rem/1 var(--display);
   letter-spacing: -0.03em;
@@ -1010,11 +963,6 @@
 .steps li::before {
   left: 1.05rem;
   top: 0.9rem;
-}
-.steps li::after {
-  right: 1.05rem;
-  bottom: 0.9rem;
-  transform: rotate(180deg);
 }
 .steps li:nth-child(odd) {
   transform: rotate(-0.5deg);
@@ -1190,7 +1138,7 @@
   width: 100%;
   max-width: 24rem;
   margin-inline: auto;
-  padding: 3.5rem clamp(1.25rem, 5vw, 1.75rem);
+  padding: 1.75rem clamp(1.25rem, 5vw, 1.75rem);
 }
 .care-card:nth-child(odd) {
   rotate: -0.4deg;
@@ -1234,8 +1182,7 @@
   .sites .tile,
   .faq summary i,
   .fold summary i,
-  .fold h2,
-  .t-inc-b i {
+  .fold h2 {
     transition: none;
   }
 }
@@ -1250,14 +1197,8 @@
     display: none !important;
   }
   .t-card {
-    --f: 1 !important;
     --l: 0 !important;
     transform: none !important;
-  }
-  .tiers.live .t-go,
-  .tiers.live .t-list li {
-    transform: none;
-    opacity: 1;
   }
   .tbox {
     overflow: visible;
@@ -1333,10 +1274,6 @@
 .steps li::before {
   left: 1.3rem;
   top: 1.05rem;
-}
-.steps li::after {
-  right: 1.3rem;
-  bottom: 1.05rem;
 }
 .addon {
   --pipx: clamp(1.25rem, 2vw, 1.75rem);
@@ -1847,7 +1784,7 @@ html:not(.js) .jump a[href='#pick'] {
   --pipx: 1.5rem;
   --pipy: 1.1rem;
   --pips: 1.75rem;
-  padding: 3.75rem 1.5rem 3.5rem;
+  padding: 1.5rem 1.5rem 1.75rem;
   border-radius: var(--cardr);
   box-shadow:
     var(--rim),
@@ -1936,4 +1873,214 @@ html:not(.js) .jump a[href='#pick'] {
   margin-top: 0.15rem;
   color: var(--soft);
   font-size: 0.875rem;
+}
+
+/* ============================================================================
+   Clarity pass (Nov 2026): visible captions, units in words, the cost bars
+   ============================================================================ */
+
+/* Every table has a visible caption, in the small label voice, above it. */
+.tcap {
+  caption-side: top;
+  padding: 0 0 0.75rem;
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+}
+.care .tcap {
+  padding-left: 1rem;
+}
+
+/* A unit after a price, in words and smaller: one-time, per year, per month. */
+.glance-num small,
+.addon .amt small {
+  margin-left: 0.3rem;
+  color: var(--soft);
+  font: 400 0.875rem/1 var(--body);
+  letter-spacing: 0;
+}
+
+/* Flagship's custom tools need care: said under its price and in the cost table. */
+.t-need {
+  display: block;
+  margin-top: 0.35rem;
+  font-weight: 600;
+}
+.cost-table .t-need {
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+/* The tracker cards say what they are in words, where the minus and plus used to sit. */
+.see-tag {
+  margin-bottom: 0.75rem;
+}
+.see-mine .see-tag {
+  color: var(--on-ink);
+}
+
+/* Why the quiz suggested what it did. */
+.pick-why {
+  max-width: 24rem;
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+.pick-why[hidden] {
+  display: none;
+}
+
+/* The hourly rates, said once, plainly. */
+.rate-line b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* The care table's word cells: edit time and the hourly rate. */
+.care td.v {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* The phone care cards: the same three facts the table has, as a ruled list. */
+.care-facts {
+  margin: 1rem 0 0;
+  border-top: 1px solid var(--line);
+}
+.care-facts > div {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.care-facts dt {
+  color: var(--soft);
+  font-size: 0.875rem;
+}
+.care-facts dd {
+  margin: 0.15rem 0 0;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+/* The cost bars: build, Hosting and care over five years, one shared scale, labelled in words. The bar
+   itself is decoration (aria-hidden); the sentence under it says the same numbers for everyone. */
+.cost-bars {
+  margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.cost-bars figcaption {
+  display: block;
+}
+.bar-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin: 0 0 0.75rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+.bar-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.bar-key span::before {
+  content: '';
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 0.2rem;
+  background: var(--k);
+}
+.bars {
+  display: grid;
+  gap: 1.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bars-t {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+.bars-sum {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bars-bar {
+  display: flex;
+  gap: 2px;
+  height: 1.125rem;
+}
+.bars-bar i {
+  display: block;
+  min-width: 3px;
+  background: var(--k);
+}
+.bars-bar i:first-child {
+  border-radius: 0.3rem 0 0 0.3rem;
+}
+.bars-bar i:last-child {
+  border-radius: 0 0.3rem 0.3rem 0;
+}
+.bars-parts {
+  margin-top: 0.35rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+.k-build {
+  --k: var(--ink);
+}
+.k-host {
+  --k: var(--soft);
+}
+.k-care {
+  --k: var(--fill);
+}
+@media (forced-colors: active) {
+  .bars-bar i,
+  .bar-key span::before {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+}
+
+/* The floating dock sits over the bottom of the screen, so the last rows of a long table get room. */
+#costs,
+#care {
+  scroll-margin-bottom: 6rem;
+}
+#care .after {
+  padding-bottom: 2rem;
+}
+
+/* The examples heading names what is inside it; on a wide screen the kinds sit on a smaller line. */
+@media (min-width: 60rem) {
+  .sites-kinds {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--soft);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+}
+
+/* The ongoing cost, said on the first screen: straight under the three tiers. */
+.after-one {
+  grid-column: 1/-1;
+  margin: 0 0 clamp(1rem, 2.4vh, 1.75rem);
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+  line-height: 1.4;
+}
+.after-one b {
+  font-weight: 600;
+}
+.after-one a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+  white-space: nowrap;
 }

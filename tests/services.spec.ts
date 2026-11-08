@@ -39,7 +39,9 @@ test.describe('Prices', () => {
       await expect(toggle).toHaveAttribute('aria-expanded', 'true');
       await expect(page.locator('#costs table')).toBeVisible();
       const height = await page.evaluate(() => document.documentElement.scrollHeight);
-      expect(height).toBeLessThan(14000);
+      // Raised from 14000 in the clarity pass (Nov 2026): the open costs fold now carries the cost
+      // bars, and the always-open care cards spell out edit time, rate and replies in words.
+      expect(height).toBeLessThan(15500);
     });
 
     test('a jump link and an address open the fold they point into', async ({ page }) => {
@@ -85,6 +87,34 @@ test.describe('Prices', () => {
     const go = page.locator('[data-pick-go]');
     await expect(go).toBeVisible();
     await expect(go).toHaveAttribute('href', '/contact/?tier=signature');
+    await expect(page.locator('[data-pick-why]')).toHaveText(
+      'Why: you said it connects to other services.',
+    );
+  });
+
+  test('the quiz only suggests Flagship when custom tools are asked for', async ({ page }) => {
+    await page.goto('/services/');
+    const pick = page.locator('[data-pick]');
+    const answer = async (size: string, who: string, tools: string) => {
+      for (const [n, v] of [
+        ['size', size],
+        ['who', who],
+        ['tools', tools],
+      ]) {
+        await pick.locator(`input[name="${n}"][value="${v}"]`).check({ force: true });
+      }
+    };
+    // A large site that mostly informs people tops out at Signature, and says why.
+    await answer('2', '2', '0');
+    await expect(page.locator('[data-pick-name]')).toHaveText('Signature');
+    await expect(page.locator('[data-pick-why]')).toContainText('Flagship is for custom tools');
+    await answer('0', '0', '2');
+    await expect(page.locator('[data-pick-name]')).toHaveText('Flagship');
+    await expect(page.locator('[data-pick-why]')).toHaveText(
+      'Why: you said it needs custom tools.',
+    );
+    await answer('0', '0', '0');
+    await expect(page.locator('[data-pick-name]')).toHaveText('Launch');
   });
 
   test('the care table reads from the plans', async ({ page }) => {
@@ -101,6 +131,82 @@ test.describe('Prices', () => {
     const software = page.locator('table.care tr', { hasText: 'Software updates' });
     await expect(software.locator('td.n')).toHaveCount(1);
     await expect(software.locator('td.y')).toHaveCount(3);
+    // Every cell says it in words: no bare tick or dash.
+    for (const cell of await page.locator('table.care td.y, table.care td.n').all()) {
+      await expect(cell).toHaveText(/^(Included|Not included)$/);
+    }
+    // One row for the hourly rate, with no tick next to a rate.
+    const rate = page.locator('table.care tr', { hasText: 'Rate for extra changes' });
+    expect(await rate.locator('td').allInnerTexts()).toEqual([
+      '$100 an hour',
+      '$85 an hour',
+      '$85 an hour',
+      '$85 an hour',
+    ]);
+    await expect(rate.locator('td.y, td.n')).toHaveCount(0);
+    const edits = page.locator('table.care tr', { hasText: 'Changes I make for you each month' });
+    expect(await edits.locator('td').allInnerTexts()).toEqual([
+      'None',
+      '30 minutes',
+      '1 hour',
+      '3 hours',
+    ]);
+    // Hosting answers in words when something breaks; the care plans keep "at no extra charge".
+    const replies = page.locator('table.care tr', {
+      hasText: 'Replies, and when something breaks',
+    });
+    const said = await replies.locator('td').allInnerTexts();
+    expect(said[0]).toContain('If the site goes down, I investigate and fix it.');
+    for (const s of said.slice(1)) {
+      expect(s).toContain('Fixes when something breaks, at no extra charge');
+    }
+    await expect(page.locator('table.care caption')).toBeVisible();
+  });
+
+  test('every table has a visible caption', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/services/');
+    for (const t of ['.fit-table', '.cost-table', 'table.care']) {
+      await expect(page.locator(`${t} caption`), t).toBeVisible();
+    }
+  });
+
+  test('the price cards show every list, with no toggle and no corner letters', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/services/');
+    await expect(page.locator('#websites button')).toHaveCount(0);
+    await expect(page.locator('#websites .pip, #add-ons .pip, #behind .pip')).toHaveCount(0);
+    await page.locator('#signature').hover();
+    for (const item of await page.locator('.t-list li').all()) await expect(item).toBeVisible();
+    await expect(page.locator('#flagship .t-range')).toContainText(
+      'Custom tools need Care or Care+',
+    );
+  });
+
+  test('the cost bars print their numbers in words', async ({ page }) => {
+    await page.goto('/services/');
+    const parts = await page.locator('.bars-parts').allInnerTexts();
+    // Hand-worked: Hosting is $200 for years two to five; care is 12 months x 5 years.
+    expect(parts).toEqual([
+      'Build $3,500, Hosting $800, Light Care $3,540. Total $7,840.',
+      'Build $6,500, Hosting $800, Care $7,740. Total $15,040.',
+      'Build $12,500, Hosting $800, Care+ $15,540. Total $28,840.',
+    ]);
+    await expect(page.locator('.bars-bar').first()).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  test('the FAQ agrees with the care table on carry-over and rates', async ({ page }) => {
+    await page.goto('/services/');
+    const faq = (await page.locator('.faq').textContent()) ?? '';
+    expect(faq).toContain(
+      'Light Care minutes carry over for three months; Care and Care+ hours do not.',
+    );
+    expect(faq).not.toMatch(/unused hours do not roll over/i);
+    expect(faq).toContain('$100 an hour');
+    expect(faq).toContain('$85 an hour');
+    expect(faq).toContain('$150 an hour');
   });
 
   test('the first screen meets the tiers before the big number', async ({ page }) => {
@@ -118,6 +224,13 @@ test.describe('Prices', () => {
     expect(big.y).toBeGreaterThan(row.y + row.height - 1);
     expect(row.y + row.height).toBeLessThan(900);
     await expect(page.locator('.from-num')).toHaveText('$3,500');
+    // The ongoing cost is on the first screen too.
+    const after = page.locator('.after-one');
+    await expect(after).toContainText(
+      'After year one: Hosting $200 a year. Optional care from $59 a month.',
+    );
+    const afterBox = (await after.boundingBox())!;
+    expect(afterBox.y + afterBox.height).toBeLessThan(900);
     await expect(glance.first().locator('a')).toHaveAttribute('href', '#launch');
     await expect(page.locator('#launch')).toHaveCount(1);
   });
@@ -167,19 +280,31 @@ test.describe('Prices', () => {
   test('the five-year sums are computed with year one hosting included', async ({ page }) => {
     await page.goto('/services/');
     const rows = page.locator('.cost-table tbody tr');
-    // Two rows a tier: Hosting alone ($200 a year from year two), then care on top from month one.
+    // Launch and Signature: Hosting only ($200 a year from year two), then care on top from month
+    // one. Flagship has no Hosting-only row: custom tools need Care or Care+.
     await expect(rows).toHaveCount(6);
     const cells = (i: number) => rows.nth(i).locator('td').allInnerTexts();
     expect(await cells(0)).toEqual(['$3,500', '$3,900', '$4,300']);
     expect(await cells(1)).toEqual(['$4,208', '$6,024', '$7,840']);
     expect(await cells(2)).toEqual(['$6,500', '$6,900', '$7,300']);
     expect(await cells(3)).toEqual(['$8,048', '$11,544', '$15,040']);
-    expect(await cells(4)).toEqual(['$12,500', '$12,900', '$13,300']);
+    // Flagship plus Care, by hand: 12,500 + 1,548 a year + $200 Hosting from year two.
+    expect(await cells(4)).toEqual(['$14,048', '$17,544', '$21,040']);
     expect(await cells(5)).toEqual(['$15,608', '$22,224', '$28,840']);
-    await expect(rows.first()).toContainText('Hosting only');
-    await expect(rows.nth(1)).toContainText('Light Care');
+    await expect(rows.first()).toContainText('Hosting only, $200 per year');
+    await expect(rows.nth(1)).toContainText('Light Care, $59 per month');
     await expect(rows.nth(1)).toContainText('on top of Hosting');
+    const flagship = page.locator('.cost-table tbody').nth(2);
+    await expect(flagship).not.toContainText('Hosting only');
+    await expect(flagship).toContainText('Custom tools need Care or Care+');
+    const heads = await page.locator('.cost-table thead th').allTextContents();
+    expect(heads.slice(1)).toEqual([
+      'First year, build and hosting',
+      'Total after 3 years',
+      'Total after 5 years',
+    ]);
     await expect(page.locator('#costs')).toContainText('Year one hosting is included');
+    await expect(page.locator('#costs')).toContainText('Prices as of November 2026');
   });
 
   test('a line says what moves a price within a tier', async ({ page }) => {
@@ -206,7 +331,7 @@ test.describe('Prices', () => {
     await page.goto('/services/');
     const care = (await page.locator('#care').innerText()).replace(/\s+/g, ' ');
     expect(care).toContain(
-      'Every site I look after sits on one status board. It checks every 15 minutes that the site is up, and tracks how fast it answers, whether deploys and backups ran, known security alerts in its software, and domain renewals where I manage the domain. If a site goes down, my phone tells me, so I usually know before you do.',
+      'Every site I look after sits on one status board. It checks every 15 minutes that the site is up, and tracks how fast it answers, whether updates and backups ran, known security alerts in its software, and domain renewals where I manage the domain. If a site goes down, my phone tells me, so I usually know before you do.',
     );
   });
 

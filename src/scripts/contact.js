@@ -1,6 +1,7 @@
-/* The contact form's enhancement layer: one question at a time, validation in plain words, draft
-   save and restore, URL prefill, the brief phone, fetch submit and the success panel. The form works
-   without any of this: it is a plain post to Web3Forms. */
+/* The contact form's enhancement layer: one question at a time, a "Check your answers" step with a
+   Change button per answer, validation that says what to do, draft save and restore, URL prefill, the
+   "Your answers so far" phone, fetch submit and the success panel. The form works without any of this:
+   it is a plain post to Web3Forms, with the same fields. */
 import { ui } from './kit.js';
 import { track } from '../lib/track';
 
@@ -28,7 +29,10 @@ var wrap = $('[data-contact]'),
 var errorEl = $('[data-contact-error]'),
   submitLabel = $('[data-contact-submit-label]');
 var studies = JSON.parse(form.dataset.studies || '{}');
-var coarse = matchMedia('(hover: none)').matches;
+/* The last step is "Check your answers"; the ones before it are the questions. */
+var checkAt = steps.length - 1,
+  checkEl = $('[data-check]'),
+  returning = false;
 
 /* The brief. A line shows its label until it has an answer. The same element holds one or the other, and a line still waiting is hidden from screen readers. */
 var orgLabel = {
@@ -107,7 +111,7 @@ var LINES = [
   },
   {
     key: 'message',
-    term: 'What they hope to build',
+    term: 'What you hope to build',
     ph: "What you're hoping to build",
     cls: 'msg',
     get: function () {
@@ -116,8 +120,8 @@ var LINES = [
   },
   {
     key: 'runs',
-    term: 'Who runs it',
-    ph: 'Who runs it',
+    term: 'Who will keep it updated',
+    ph: 'Who will keep it updated',
     cls: 'pill',
     get: function () {
       return runsLabel[val('runs')] || '';
@@ -192,7 +196,7 @@ var LINES = [
   },
   {
     key: 'heard_from',
-    term: 'How they heard',
+    term: 'How you heard',
     ph: 'How you heard about me',
     cls: '',
     opt: 1,
@@ -318,10 +322,74 @@ function frame(now) {
   if (alive) raf = requestAnimationFrame(frame);
 }
 
+/* Check your answers: every answer in a list, "Not provided" for a skipped one, and a Change button
+   that goes back to that question and then straight back here. Built with textContent only. */
+var CHECK_ROWS = [
+  ['Name', 'name', 'name'],
+  ['Email', 'email', 'email'],
+  ['Kind of organization', 'org_type', 'org_type'],
+  ['What you hope to build', 'message', 'message'],
+  ['Who will keep it updated', 'runs', 'runs'],
+  ['Budget range', 'budget', 'budget'],
+  ['Organization name', 'organization', 'details'],
+  ['Phone', 'phone', 'details'],
+  ['Current website', 'current_website', 'details'],
+  ['Project timeline', 'timeline', 'details'],
+  ['How you heard about me', 'heard_from', 'details'],
+];
+var shownAs = function (key) {
+  var v = val(key);
+  if (key === 'org_type') return orgLabel[v] || '';
+  if (key === 'runs') return runsLabel[v] || '';
+  if (key === 'budget') return budgetLabel[v] || '';
+  if (key === 'timeline') return timeLabel[v] || '';
+  if (key === 'heard_from') return heardLabel[v] || '';
+  return v;
+};
+var stepIndex = function (name) {
+  for (var i = 0; i < steps.length; i++) if (steps[i].dataset.step === name) return i;
+  return 0;
+};
+function buildCheck() {
+  checkEl.textContent = '';
+  CHECK_ROWS.forEach(function (row) {
+    var wrapRow = doc.createElement('div'),
+      dt = doc.createElement('dt'),
+      dd = doc.createElement('dd'),
+      act = doc.createElement('dd'),
+      btn = doc.createElement('button'),
+      hint = doc.createElement('span'),
+      shown = shownAs(row[1]);
+    wrapRow.className = 'ck';
+    dt.textContent = row[0];
+    dd.textContent = shown || 'Not provided';
+    if (!shown) dd.className = 'ck-none';
+    act.className = 'ck-act';
+    btn.type = 'button';
+    btn.className = 'ck-change';
+    btn.textContent = 'Change';
+    hint.className = 'sr-only';
+    hint.textContent = ' ' + row[0].toLowerCase();
+    btn.appendChild(hint);
+    btn.addEventListener('click', function () {
+      returning = true;
+      show(stepIndex(row[2]), -1);
+    });
+    act.appendChild(btn);
+    wrapRow.appendChild(dt);
+    wrapRow.appendChild(dd);
+    wrapRow.appendChild(act);
+    checkEl.appendChild(wrapRow);
+  });
+}
+
 /* One question at a time. */
 function focusStep(q) {
   var t =
-    q.querySelector('input:checked') || q.querySelector('input:not([type=hidden]),textarea,select');
+    q.dataset.step === 'check'
+      ? q.querySelector('#check-h')
+      : q.querySelector('input:checked') ||
+        q.querySelector('input:not([type=hidden]),textarea,select');
   if (t) t.focus({ preventScroll: true });
   clearDock();
 }
@@ -365,24 +433,35 @@ function show(i, dir, noFocus) {
   cur = i;
   var q = steps[cur];
   q.classList.add('on');
-  var msg = 'Question ' + (cur + 1) + ' of ' + steps.length;
+  var lastStep = cur === checkAt;
+  if (lastStep) {
+    returning = false;
+    buildCheck();
+  }
+  var msg = lastStep ? 'Check your answers' : 'Question ' + (cur + 1) + ' of ' + checkAt;
   count.textContent = msg;
   /* The visible count is hidden from screen readers; this is the one that gets read. */
   live.textContent = msg;
-  bar.style.setProperty('--pr', ((cur + 1) / steps.length).toFixed(4));
+  bar.style.setProperty('--pr', (lastStep ? 1 : (cur + 1) / (checkAt + 1)).toFixed(4));
   back.hidden = cur === 0;
-  var lastStep = cur === steps.length - 1;
   next.hidden = lastStep;
   send.hidden = !lastStep;
-  next.textContent =
-    (q.dataset.step === 'budget' && !val('budget')) || (q.dataset.step === 'runs' && !val('runs'))
-      ? 'Skip'
-      : 'Next';
+  setNextLabel();
   if (dir) enter(q, dir);
   if (!noFocus) focusStep(q);
 }
 
-/* Plain words when something is off. */
+/* Next says what it does: Skip on an unanswered optional choice, and after a Change, back to the list. */
+function setNextLabel() {
+  var step = steps[cur].dataset.step;
+  next.textContent = returning
+    ? 'Back to your answers'
+    : (step === 'budget' && !val('budget')) || (step === 'runs' && !val('runs'))
+      ? 'Skip'
+      : 'Next';
+}
+
+/* Say what to do when something is off: "Enter your email address", in the question's own words. */
 function fail(id, field, text) {
   var e = doc.getElementById(id);
   e.textContent = text;
@@ -404,28 +483,24 @@ var CHECK = {
   name: function () {
     return val('name')
       ? true
-      : fail(
-          'name-err',
-          form.elements.name,
-          "I'd like to know who I'm writing back to. What's your name?",
-        );
+      : fail('name-err', form.elements.name, "Enter your name, so I know who I'm writing back to.");
   },
   email: function () {
     var v = val('email');
     if (!v)
-      return fail('email-err', form.elements.email, 'I need an email address so I can reply.');
+      return fail('email-err', form.elements.email, 'Enter your email address, so I can reply.');
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
       ? true
-      : fail(
-          'email-err',
-          form.elements.email,
-          "That email doesn't look quite right. It should look like name@example.org.",
-        );
+      : fail('email-err', form.elements.email, 'Enter an email address like name@example.org.');
   },
   org_type: function () {
     return val('org_type')
       ? true
-      : fail('org-err', steps[cur], "Pick whichever is closest. It doesn't have to be perfect.");
+      : fail(
+          'org-err',
+          steps[cur],
+          "Choose the kind of organization closest to yours. It doesn't have to be exact.",
+        );
   },
   message: function () {
     var v = val('message');
@@ -433,14 +508,14 @@ var CHECK = {
       return fail(
         'message-err',
         form.elements.message,
-        'Tell me a little about what you have in mind.',
+        "Tell me what you're hoping to build. A few sentences is plenty.",
       );
     return v.length >= 30
       ? true
       : fail(
           'message-err',
           form.elements.message,
-          'Just a little more, please. A few sentences gives me enough to go on.',
+          'Write a little more about what you hope to build: at least 30 letters. What you wrote is still there.',
         );
   },
   details: function () {
@@ -450,7 +525,7 @@ var CHECK = {
       : fail(
           'site-err',
           form.elements.current_website,
-          "That web address doesn't look right. Something like yourchurch.org is fine.",
+          'Enter a web address like yourchurch.org, or leave it empty.',
         );
   },
 };
@@ -470,12 +545,14 @@ function check(q) {
 }
 function goNext() {
   if (!check(steps[cur])) return;
-  if (cur < steps.length - 1) show(cur + 1, 1);
+  if (returning) show(checkAt, 1);
+  else if (cur < checkAt) show(cur + 1, 1);
 }
 next.addEventListener('click', goNext);
 back.addEventListener('click', function () {
   if (cur > 0) {
     clear(steps[cur]);
+    returning = false;
     show(cur - 1, -1);
   }
 });
@@ -484,18 +561,14 @@ form.addEventListener('keydown', function (e) {
   if (e.key !== 'Enter' || e.isComposing) return;
   var t = e.target;
   if (t.tagName === 'BUTTON' || t.tagName === 'A' || t.tagName === 'SELECT') return;
-  if (t.tagName === 'TEXTAREA') {
-    if (e.shiftKey || coarse) return;
-    e.preventDefault();
-    goNext();
-    return;
-  }
+  /* Enter in the long answer is a new line, always. Only the buttons move on. */
+  if (t.tagName === 'TEXTAREA') return;
   e.preventDefault();
-  /* On the last, many-field question, Enter walks down the fields so nothing is sent by accident. */
+  /* On the many-field question, Enter walks down the fields, then to Next. */
   if (steps[cur].dataset.step === 'details') {
-    var fs = $$('input:not([type=hidden]),select', steps[cur]),
+    var fs = $('input:not([type=hidden]),select', steps[cur]),
       i = fs.indexOf(t);
-    (fs[i + 1] || send).focus();
+    (fs[i + 1] || next).focus();
     return;
   }
   goNext();
@@ -504,7 +577,7 @@ form.addEventListener('input', function (e) {
   var q = e.target.closest('[data-step]');
   if (q) {
     clear(q);
-    if (q.dataset.step === 'budget' || q.dataset.step === 'runs') next.textContent = 'Next';
+    setNextLabel();
   }
   refresh();
 });
