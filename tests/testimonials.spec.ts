@@ -30,7 +30,7 @@ test('the homepage band carries every quote, one at a time, starting with Theolo
   const band = page.locator('.home-band');
   await expect(band.locator('blockquote')).toHaveCount(studies.reduce((n, s) => n + s.count, 0));
   await expect(band.locator('[data-q]:not([inert])')).toHaveCount(1);
-  await expect(band.locator('[data-tw]:not([inert]) a.tile')).toHaveAttribute(
+  await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
     'href',
     '/work/theology-matters/',
   );
@@ -53,7 +53,7 @@ test('Next and Previous step the home band through each client, color and window
     const live = band.locator('[data-q]:not([inert])');
     await expect(live).toHaveCount(1);
     const slug = await live.getAttribute('data-slug');
-    await expect(band.locator('[data-tw]:not([inert]) a.tile')).toHaveAttribute(
+    await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
       'href',
       `/work/${slug}/`,
     );
@@ -83,4 +83,17 @@ test('a quote band never touches the closing', async ({ page }) => {
     );
     expect(touching, route).toBe(false);
   }
+});
+
+test('the home band shows a desktop window on a phone and the phone on a wide screen', async ({
+  page,
+}) => {
+  const visible = () => page.locator('.home-band [data-tw]:not([inert]) a.tile:visible');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(visible()).toHaveCount(1);
+  await expect(visible()).toHaveClass(/\bdesk\b/);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(visible()).toHaveCount(1);
+  await expect(visible()).not.toHaveClass(/\bdesk\b/);
 });

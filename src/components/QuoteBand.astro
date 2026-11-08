@@ -6,7 +6,9 @@
    With `cycle` the band carries every quote on file, starting with `slug`'s and
    then in deck order. Previous and Next step through them, and the band takes
    each client's color and phone as it goes (scripts/quote-cycle.js). The buttons
-   share the label's line at the top. Without
+   share the label's line at the top. On a phone the band shows each client's
+   desktop window instead of their phone, so it stays short and adds the one view
+   the grid above does not have. Without
    JavaScript only the first quote shows and the buttons stay hidden. */
 import { getEntry } from 'astro:content';
 import Tile from './Tile.astro';
@@ -115,11 +117,18 @@ const many = slides.length > 1;
       .filter((s) => s.tile)
       .map((s, i) => (
         <div class="band-tw" data-tw={s.client.slug} inert={i ? true : undefined}>
-          <Tile
-            client={s.client}
-            lazy
-            sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
-          />
+          <span class="band-ph">
+            <Tile
+              client={s.client}
+              lazy
+              sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
+            />
+          </span>
+          {many && (
+            <span class="band-dk">
+              <Tile client={s.client} desk lazy />
+            </span>
+          )}
         </div>
       ))}
   </div>
