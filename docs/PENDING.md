@@ -33,7 +33,7 @@ The React gallery (`react-photo-album`, `yet-another-react-lightbox`, `Photo.tsx
 
 ### C. Repoint the capture scripts at `public/assets/` (added 2026-11-06)
 
-`scripts/capture-case-study.mjs` and `scripts/capture-cms.mjs` still write PNGs under `src/assets/case-studies/` and `shots/`. The site now serves webp copies from `public/assets/` (`{slug}-cover.webp`, `{slug}-m.webp`, `{slug}-cms.webp`, and the footage). Until the scripts write there, a re-capture needs a hand conversion, and `study-images.json` needs the new size for anything under `public/assets/study/`.
+`scripts/capture-case-study.mjs` and `scripts/capture-cms.mjs` still write PNGs under `src/assets/case-studies/` and `shots/`. The site now serves webp copies from `public/assets/` (`{slug}-cover.webp`, `{slug}-m.webp`, `{slug}-cms.webp`, and the footage). Until the scripts write there, a re-capture needs a hand conversion (then `npm run stills` for the smaller phone-still copies), and `study-images.json` needs the new size for anything under `public/assets/study/`.
 
 ### D. Decide what the monthly live-scores job is for (added 2026-11-06)
 

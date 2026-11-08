@@ -53,7 +53,15 @@ const { client: s, index, lazy = false, direct = false, long, desk = false } = A
       </>
     ) : (
       <>
-        <img src={s.still} alt="" loading={lazy ? 'lazy' : 'eager'} width="584" height="1138" />
+        <img
+          src={s.still}
+          srcset={s.stillSet}
+          sizes="(max-width: 480px) 60vw, 346px"
+          alt=""
+          loading={lazy ? 'lazy' : 'eager'}
+          width="584"
+          height="1138"
+        />
         <video muted loop playsinline preload="none" data-src={s.clip} />
       </>
     )}

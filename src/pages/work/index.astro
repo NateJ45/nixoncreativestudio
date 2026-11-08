@@ -119,7 +119,15 @@ const jobs = JOBS.map((job) => ({
       {clients.map((s) => (
         <li data-key={s.sectorKey} style={`--c:${s.accent};--p:${s.paper}`}>
           <span class="mini" aria-hidden="true">
-            <img src={s.still} alt="" loading="lazy" width="584" height="1138" />
+            <img
+              src={s.still}
+              srcset={s.stillSet}
+              sizes="4rem"
+              alt=""
+              loading="lazy"
+              width="584"
+              height="1138"
+            />
           </span>
           <h2>{s.name}</h2>
           <p class="sc">{s.sector}</p>

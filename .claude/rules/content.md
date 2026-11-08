@@ -84,7 +84,7 @@ Image props are file names without extension from `public/assets/study/`. Their 
 Never hard-code the number of studies anywhere; compute it from the collection (`getClients()`). To add one:
 
 1. **MDX**: `src/content/case-studies/{slug}.mdx` with `hook`, `order` and `palette` filled, and the body chapters above. Renumber `order` so it runs 1..n in /work order.
-2. **Captures in `public/assets/`**: footage `{slug}.mp4` and `{slug}-m.mp4`; stills `{slug}-m.webp`, `{slug}-cover.webp` and (with a CMS) `{slug}-cms.webp`; body images in `public/assets/study/`. `npm run capture:study {slug}` (add `--wix` for a Wix site) re-shoots the stills; look at every one. Footage and phone stills are what the windows show.
+2. **Captures in `public/assets/`**: footage `{slug}.mp4` and `{slug}-m.mp4`; stills `{slug}-m.webp`, `{slug}-cover.webp` and (with a CMS) `{slug}-cms.webp`; body images in `public/assets/study/`. `npm run capture:study {slug}` (add `--wix` for a Wix site) re-shoots the stills; look at every one. Then run `npm run stills` for the smaller `{slug}-m-320.webp` and `-448.webp` copies the cards use. Footage and phone stills are what the windows show.
 3. **`study-images.json`**: add an entry (real `w` and `h`) for every image under `public/assets/study/` and for each clip poster.
 4. **Deck**: add the slug to `DECK` in `src/lib/clients.ts` (a study missing from `DECK` goes last).
 5. **Cover for share cards**: `src/assets/case-studies/{slug}.{png|jpg|webp}` (the `cover` field), then `npm run og:pages` writes `public/og/work/{slug}.png`.
