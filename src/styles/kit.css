@@ -2160,6 +2160,33 @@ h1.giant b {
 .band-nav[hidden] {
   display: none;
 }
+/* Each client's window comes twice: their phone, and on a phone screen their desktop window, which
+   is shorter there and is the view the grid above does not show. Each sits in its own holder, so a
+   touch screen only ever plays the one you can see. */
+.band-ph,
+.band-dk {
+  display: block;
+}
+.band-dk {
+  display: none;
+}
+@media (max-width: 52rem) {
+  .band-cycle .band-ph {
+    display: none;
+  }
+  .band-cycle .band-dk {
+    display: block;
+  }
+  .band-cycle .band-w {
+    width: min(100%, 32rem);
+    margin-block: 0 -2.5rem;
+    transform: rotate(calc(1.5deg + var(--bk) * 5deg)) translateY(calc(var(--bk) * 2rem));
+  }
+  .band-cycle .band-w .tile:hover,
+  .band-cycle .band-w .tile:focus-visible {
+    transform: rotate(-1.5deg) scale(1.02);
+  }
+}
 @media (forced-colors: active) {
   .band-nav {
     border: 1px solid CanvasText;
