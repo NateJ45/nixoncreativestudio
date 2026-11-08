@@ -25,7 +25,7 @@
                         Param: link_domain (the client site's hostname).
      book_call_click    the "Open my calendar" link on /contact (only shown
                         when site.bookingUrl is set).
-     contact_click      any mailto: link (picked up automatically, no
+     contact_click      any mailto: or sms: link (picked up automatically, no
                         attribute needed) or a CopyEmail copy button.
                         Param: method ('mailto' or 'copy').
      pricing_view       a pricing block scrolled into view, once per page.
@@ -113,8 +113,9 @@ export function eventFor(target: CtaTarget): { name: string; params: TrackParams
     return { name: id, params: domain ? { ...base, link_domain: domain } : base };
   }
   if (id === 'book_call_click') return { name: id, params: base };
-  if (id === 'contact_click' || (!id && /^mailto:/i.test(href))) {
-    const method = target.method || (/^mailto:/i.test(href) ? 'mailto' : 'other');
+  if (id === 'contact_click' || (!id && /^(mailto|sms):/i.test(href))) {
+    const method =
+      target.method || (/^mailto:/i.test(href) ? 'mailto' : /^sms:/i.test(href) ? 'text' : 'other');
     return { name: 'contact_click', params: { ...base, method } };
   }
   if (id) return { name: 'cta_click', params: { ...base, cta_id: id } };

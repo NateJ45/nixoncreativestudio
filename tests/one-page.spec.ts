@@ -83,7 +83,7 @@ test.describe('/one-page/', () => {
     await expect(sheet).toContainText('Prices as of November 2026');
     await expect(sheet).toContainText('If you ever move on');
     await expect(page.locator('.op-sheet a[href^="mailto:"]')).toHaveCount(1);
-    await expect(page.locator('.op-sheet a[href^="tel:"]')).toHaveCount(1);
+    await expect(page.locator('.op-sheet a[href^="sms:"]')).toHaveCount(1);
   });
 
   test('the footnote is one plain sentence', async ({ page }) => {

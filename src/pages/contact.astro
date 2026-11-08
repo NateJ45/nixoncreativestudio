@@ -121,7 +121,7 @@ const heardFromOptions = [
 // not change the timing without Nathan.
 const nextSteps = [
   site.replyPromise,
-  'If it looks like a fit, a half-hour call to talk it through.',
+  'If it looks like a fit, we talk it through by text, or on a call if you would rather.',
 ];
 
 // Case studies, for two things: the brief names the study a visitor came from
@@ -167,7 +167,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
         <h1 id="sth" aria-label={plainText(heading)} set:html={wordSpans(heading)} />
         <p class="lede">
           A few sentences about your project are enough to get started. If you'd rather{' '}
-          <a href={site.emailHref}>email</a> or <a href={site.phoneHref}>call</a>, those work just
+          <a href={site.smsHref}>text me</a> or <a href={site.emailHref}>email</a>, those work just
           as well.
         </p>
       </header>
@@ -475,8 +475,8 @@ const heading = 'Start a project, or just <b>say hello.</b>';
       <a class="b light" href={site.emailHref}>
         {site.email}
       </a>
-      <a class="b light" href={site.phoneHref}>
-        {site.phone}
+      <a class="b light" href={site.smsHref}>
+        Text {site.phone}
       </a>
       {site.bookingUrl && (
         <a
