@@ -2137,38 +2137,66 @@ h1.giant b {
     translate: 0 0.6rem;
   }
 }
+/* The label and the steps share one line at the top, so the buttons sit where you start reading
+   and stay put whatever the length of the quote below. */
+.band-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+.band-head .label {
+  margin-bottom: 0;
+}
 .band-nav {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.75rem;
+  margin-block: -0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--p) 12%, transparent);
 }
 .band-nav[hidden] {
   display: none;
+}
+@media (forced-colors: active) {
+  .band-nav {
+    border: 1px solid CanvasText;
+  }
 }
 .band-nav button {
   display: inline-grid;
   place-items: center;
   width: 2.75rem;
   height: 2.75rem;
-  border: 1.5px solid currentColor;
+  border: 0;
   border-radius: 50%;
   background: none;
   color: var(--p);
   cursor: pointer;
-  transition:
-    background-color 0.2s var(--ease),
-    color 0.2s var(--ease);
+  transition: background-color 0.2s var(--ease);
 }
 .band-nav button:hover {
-  background: var(--p);
-  color: var(--c);
+  background: color-mix(in srgb, var(--p) 18%, transparent);
+}
+.band-nav button:focus-visible {
+  outline-offset: -2px;
+  border-radius: 50%;
 }
 .band-n {
-  min-width: 3.5ch;
-  font: 500 0.9375rem/1 var(--body);
+  min-width: 4.5ch;
+  font: 500 0.8125rem/1 var(--body);
+  letter-spacing: 0.07em;
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+/* On a phone the band stacks, so holding the longest quote's height leaves a hole above the phone.
+   There it fits the quote in front of you; the buttons are above it, so they still never move. */
+@media (max-width: 52rem) {
+  .band-cycle .band-s[inert] {
+    display: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .band-cycle,
