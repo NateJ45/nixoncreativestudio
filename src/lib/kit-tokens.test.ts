@@ -101,6 +101,19 @@ test('print always takes the light tokens', () => {
   assert.ok(!css.slice(css.lastIndexOf('@media screen {', at), at).includes('}'));
 });
 
+// A text field's edge (start.css `.f`) sits between the card outside it and the field's own fill.
+for (const [side, pick] of [
+  ['light', token],
+  ['dark', night],
+] as const) {
+  test(`the text field edge clears 3:1 on the card and on its fill, ${side}`, () => {
+    for (const bg of [pick('card'), pick('ground')]) {
+      const ratio = contrastRatio(pick('field-edge'), bg);
+      assert.ok(ratio >= AA_NON_TEXT, `${side}: field edge on ${bg} is ${ratio.toFixed(2)}:1`);
+    }
+  });
+}
+
 test('the focus outline (currentColor on the page) clears 3:1', () => {
   assert.ok(contrastRatio(token('ink'), token('ground')) >= AA_NON_TEXT);
 });

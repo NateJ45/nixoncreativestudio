@@ -50,7 +50,7 @@ Reference sites pulled in early research (kept as positive anchors, not slavish 
 
 ## Accessibility & Inclusion
 
-Target: WCAG 2.1 AA in both the light and dark themes. Every page currently sits at 100 Lighthouse Accessibility and that bar holds for every future change.
+Target: WCAG 2.2 AA for this site, in both the light and dark themes (audited 2026-11-08; detail in `.claude/rules/accessibility.md`). Every page currently sits at 100 Lighthouse Accessibility and that bar holds for every future change. Client builds are promised to "WCAG AA" in the site copy, a separate line.
 
 Specific commitments:
 

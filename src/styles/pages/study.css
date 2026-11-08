@@ -117,6 +117,12 @@
 .tile.inv .url {
   background: rgba(0, 0, 0, 0.07);
 }
+/* On the dark side the phone's frame is the dark screen (`.pane > div`), where the client's deep
+   accent would sit at 1:1 to 2.8:1. The address takes their night mark instead, which clears AA on
+   that surface (src/lib/night-mark.ts). Light is untouched. */
+:root[data-theme='dark'] .tile.inv .url {
+  color: var(--cm, var(--p));
+}
 .url [data-lock] {
   display: inline-flex;
 }

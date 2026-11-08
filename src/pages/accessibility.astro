@@ -12,17 +12,18 @@ const heading = `Built to be used <b>by everyone.</b>`;
 
 <BaseLayout
   title="Accessibility | Nixon Creative Studio"
-  description="How I build this site to WCAG AA, what I test it with, what it does for keyboard and screen reader users, and how to tell me if something is not working."
+  description="How I build this site to WCAG 2.2 AA, what I test it with, what it does for keyboard and screen reader users, and how to tell me if something is not working."
 >
   <header class="page-head">
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
-      I build this site toward WCAG 2.1 AA, the accessibility standard most public bodies use, and I
-      check it on every change. No website is ever perfectly accessible, so if anything is hard to
-      use with a keyboard or a screen reader, tell me and I'll fix it:{' '}
-      <a href={site.emailHref}>{site.email}</a>.
+      I build and test this site to WCAG 2.2 AA, the current version of the accessibility standard
+      most public bodies use. I last checked every page against it, one requirement at a time, on
+      November 8, 2026, and automated checks run on every change. No website is ever perfectly
+      accessible, so if anything is hard to use with a keyboard or a screen reader, tell me and I'll
+      fix it: <a href={site.emailHref}>{site.email}</a>.
     </p>
-    <p class="updated">Last updated November 6, 2026</p>
+    <p class="updated">Last updated November 8, 2026</p>
   </header>
   <div class="doc">
     <nav class="toc card" aria-label="On this page">
@@ -48,11 +49,22 @@ const heading = `Built to be used <b>by everyone.</b>`;
     <div class="prose">
       <h2 id="the-standard">The standard</h2>
       <p>
-        The goal is WCAG 2.1 AA, the same standard most public bodies and larger organizations are
-        held to. Each page is built to score 100 on the accessibility check in Lighthouse, Google's
-        free testing tool, and an automated check runs on every change so that score does not
-        quietly slip. That automated score is a useful floor, not a certificate: it catches the
-        machine-checkable issues, which are only one part of the picture.
+        This site is built to WCAG 2.2 AA, the current version of the standard most public bodies
+        and larger organizations are held to. Each page is built to score 100 on the accessibility
+        check in Lighthouse, Google's free testing tool, and an automated check runs on every change
+        so that score does not quietly slip. That automated score is a useful floor, not a
+        certificate: it catches the machine-checkable issues, which are only one part of the
+        picture.
+      </p>
+      <p>
+        Version 2.2 added a few rules, and this site meets each one. A link or button you reach with
+        the keyboard is never hidden behind the floating menu at the bottom or the name and contact
+        buttons at the top. Nothing needs a drag: the before and after pictures in a case study move
+        with a single tap or click, and so does the race course map. Every button and link is big
+        enough to hit, at least 24 pixels each way. The ways to reach me sit in the same order on
+        every page. The contact form never asks for the same thing twice, and you can check and
+        change every answer before it sends. There are no logins on this site, so the rule about
+        signing in does not apply here.
       </p>
       <h2 id="in-practice">In practice</h2>
       <p>A few of the things that means on this site:</p>
@@ -85,11 +97,13 @@ const heading = `Built to be used <b>by everyone.</b>`;
         <a href="https://github.com/dequelabs/axe-core" target="_blank" rel="noopener noreferrer">
           axe-core
         </a>{' '}
-        (a widely used accessibility testing engine), and structural changes get a manual keyboard
-        pass from the address bar through every control. Automated tools like these only cover part
-        of WCAG; the rest is judgment, whether the alt text is actually useful, whether the reading
-        order makes sense, so I treat the tooling as a safety net under the hands-on work, not a
-        stand-in for it.
+        (a widely used accessibility testing engine) against every WCAG 2.2 A and AA rule it can
+        check, in light and dark mode. Further tests tab through long pages to make sure nothing
+        covers the focus, tap the sliders, and measure every button. Structural changes get a manual
+        keyboard pass from the address bar through every control. Automated tools like these only
+        cover part of WCAG; the rest is judgment, whether the alt text is actually useful, whether
+        the reading order makes sense, so I treat the tooling as a safety net under the hands-on
+        work, not a stand-in for it.
       </p>
       <h2 id="where-it-stops">Where it stops short</h2>
       <p>

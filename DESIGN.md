@@ -63,6 +63,7 @@ The tokens live in `:root` at the top of `src/styles/kit.css`, and the CSS wins 
 - **Two sides.** Light is the face of the card and dark is its back, each designed in its own right (section 2a). The small card in the dock turns the page over. There is no Pause motion button (the one pause button on the site belongs to the client sheet's looping clip). Reduced motion is answered everywhere.
 - **Plain CSS.** Shared styles are in `src/styles/kit.css`; each page imports its own file from `src/styles/pages/`. There are no utility classes and no framework.
 - **Real markup first.** The top line, the dock, the closing and every window are in the HTML. Scripts only move them, so a page reads and links correctly with JavaScript off.
+- **WCAG 2.2 AA, both sides.** Every design choice answers WCAG 2.2 AA in light and dark (`.claude/rules/accessibility.md`). The ones that touch the look: a focused control is never fully covered by the dock, the pills or a stacked card (`scroll-padding-block` on `html`, and a focused card comes to the top of its pile); nothing needs a drag (the before/after slider and the course line move to a tap); every target is at least 24 by 24px; a text field has a 3:1 edge (`--field-edge`); a client's color on a dark surface is their night mark, never the deep accent.
 
 ## 2. Color
 
@@ -104,7 +105,7 @@ What only the dark side does:
 - **Lit edges.** A shadow can't be seen on a dark page, so cards carry `--rim`, a lit top edge and a faint ring. `--rim` draws nothing on the light side. A new card puts it first in its `box-shadow`.
 - **The work lights the table.** A window's screen rests a little dim. Hover, focus or playing footage brings it to full brightness and casts that client's color on the page under it. This is the one exception to "no glow" and to a client's color staying in its window: it belongs to a real object, and only on the dark side.
 - **The hand turns over too.** `--ink` is bone, so the ink card in the price hand becomes the bright one, with its text in `--on-ink`.
-- **Client marks use the client's own second color.** A deep accent would vanish, so a study's chapter marks, figures and rules use `--cm`, set from `nightMark()` (`src/lib/night-mark.ts`): `palette.markDark` where the client has one, most often a gold, otherwise the accent lifted as little as it takes to clear AA. Write `var(--cm, var(--c))` for a client's color on the neutral page, and plain `--c` on the client's own paper.
+- **Client marks use the client's own second color.** A deep accent would vanish, so a study's chapter marks, figures and rules use `--cm`, set from `nightMark()` (`src/lib/night-mark.ts`): `palette.markDark` where the client has one, most often a gold, otherwise the accent lifted as little as it takes to clear AA. Write `var(--cm, var(--c))` for a client's color on the neutral page, and plain `--c` on the client's own paper. The phone in a study's opening fan has a `--screen` frame, dark on the dark side, so its address bar takes `--cm` there too.
 - **The lights come up.** A `[data-weigh]` line brightens as it gains weight, through `--lit` from `kit.js`.
 - **The closing is the back of the deck,** and it is the one full-strength color on the page.
 
@@ -193,6 +194,7 @@ House motion is **springs, in JavaScript**. `ui.spring(k, c, v)` in `src/scripts
 - Letter a portrait card in two corners with `.pip` and `.pip.flip`, and a wide box in one.
 - Rule non-cards with hairlines.
 - Use springs for anything that should move with weight, and give every moving thing a reduced-motion answer.
+- Give anything that moves under a drag a single tap or click that does the same (WCAG 2.5.7), and bring a focused card above anything stacked on it (2.4.11).
 - Keep chrome and content in the markup, and let scripts only enhance.
 
 **Don't**

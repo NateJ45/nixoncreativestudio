@@ -65,7 +65,7 @@ Every study body uses the same chapters, in page order, as `<Chapter title="..."
 1. **The brief**: `<Lede study={props.study} />` (prints `summary`), prose, then `<ResultsBlock items={[...]} />` ("What changed": a row is a plain sentence, or `{ figure, text, source }` at display size; a figure without a real `source` fails `src/lib/case-results.test.ts`).
 2. **`<Idea study={props.study} />`**: a chapter titled with the study's `hook`. It shows the `signatureClip` if there is one, or a still if you pass `still="file-name"`. Leave it out when no capture shows the feature.
 3. **Decisions**: one to three `<Decision title easy did>`, "the easy version" against "what I did", taken only from the study's own approach text, then any supporting prose and special blocks (`<CourseLine />` on Stone Steps).
-4. **Before and after**: `<BeforeAfter before after beforeAlt afterAlt>` only where a real "before" was captured while the old site was live. The halves are labelled "Before" and "After" only, never a platform, with "Drag the middle handle to compare..." under the picture.
+4. **Before and after**: `<BeforeAfter before after beforeAlt afterAlt>` only where a real "before" was captured while the old site was live. The halves are labelled "Before" and "After" only, never a platform, with "Drag the middle handle, or tap anywhere on the picture, to compare..." under the picture (the tap is the non-drag alternative WCAG 2.5.7 asks for; `study.js` makes it work on iOS too).
 5. **Walk the homepage**: `<SiteShowcase study label href alt />`. It opens with one line saying what the moving picture is.
 6. **`<WhatYouEdit study={props.study} />`** (only renders with a `cmsShot`).
 7. **`<Quotes study={props.study} />`** (only renders with testimonials).

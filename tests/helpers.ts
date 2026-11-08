@@ -28,3 +28,33 @@ export async function settle(page: Page): Promise<void> {
     document.querySelectorAll('.rv').forEach((el) => el.classList.add('in')),
   );
 }
+
+// =============================================================================
+// springsAtRest(): wait until nothing on the page is still moving under script.
+// The home hand, the About fan and the price cards are placed by spring code that
+// writes inline transforms each frame. settle() stops CSS motion but not these, and
+// a measure taken mid-spring sees cards overlapping more than they ever rest. So:
+// wait for every inline transform to hold still for ten frames (at most 4s).
+// =============================================================================
+export async function springsAtRest(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        const read = () =>
+          [...document.querySelectorAll<HTMLElement>('[style*="transform"]')]
+            .map((e) => e.style.transform)
+            .join('|');
+        let last = read();
+        let still = 0;
+        const t0 = performance.now();
+        const tick = () => {
+          const now = read();
+          still = now === last ? still + 1 : 0;
+          last = now;
+          if (still >= 10 || performance.now() - t0 > 4000) done();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+}

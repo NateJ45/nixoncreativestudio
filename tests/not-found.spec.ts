@@ -21,7 +21,10 @@ test('the 404 passes axe and reflows at 320', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto('/nope/');
   await settle(page);
-  const results = await new AxeBuilder({ page }).analyze();
+  // The same WCAG 2.2 AA tags as a11y.spec.ts.
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
+    .analyze();
   expect(results.violations).toEqual([]);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
