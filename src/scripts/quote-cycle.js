@@ -1,7 +1,7 @@
 /* A quote band with every quote on file (QuoteBand `cycle`): Previous and Next step through them,
-   and the band takes each client's color and phone as it goes. The slides are stacked in one cell, so
-   the band keeps the height of its longest quote and the buttons never move under your finger. The
-   hidden ones are inert, so only the quote you can see is read out or reachable by Tab. */
+   and the band takes each client's color and phone as it goes. The buttons sit beside the label at
+   the top, so they never move under your finger. The hidden quotes are inert, so only the one you can
+   see is read out or reachable by Tab. */
 [].forEach.call(document.querySelectorAll('[data-cycle]'), function (band) {
   var slides = [].slice.call(band.querySelectorAll('[data-q]')),
     tiles = [].slice.call(band.querySelectorAll('[data-tw]')),
