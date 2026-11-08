@@ -1,13 +1,15 @@
 ---
 /* The closing panel every page ends on: the page's line, the way to reach me,
    the selected work beside its deck (a name pulls its card out), a last card
-   reading Yours, the site index, and the name at poster size, dealt up letter by
-   letter. Everything here is real markup; kit.js only moves things. Keep a neutral
+   that says in words "Your site could be next. Start a project", the site index
+   (with the light and dark switch in its fine print), and the name at poster size,
+   dealt up letter by letter. Everything here is real markup; kit.js only moves things. Keep a neutral
    section between this and a quote band, so the two colors never touch. */
 import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { getGatedNav } from '../data/nav';
 import { webTiers } from '../data/pricing';
+import ThemeFlip from './ThemeFlip.astro';
 
 interface Props {
   /** The line, as HTML with the heavy words in <b>. */
@@ -29,7 +31,7 @@ const letters = (word: string) => [...word];
     {site.bookingOpen && (
       <span class="end-live">
         <i />
-        Booking projects
+        Taking new projects
       </span>
     )}
     <span>{site.address}</span>
@@ -78,14 +80,11 @@ const letters = (word: string) => [...word];
         ))}
       </div>
       <a class="nine" href="/contact/" data-nine>
-        <span class="pip" aria-hidden="true">
-          Y
-        </span>
-        <span class="pip flip" aria-hidden="true">
-          Y
-        </span>
-        <span class="label">Next in the deck</span>
-        <strong>Yours.</strong>
+        <span class="label">Your site could be next</span>
+        <strong>Start a project</strong>
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <path d="M4 10h11M11 5.5 15.5 10 11 14.5"></path>
+        </svg>
       </a>
     </div>
   </div>
@@ -120,6 +119,7 @@ const letters = (word: string) => [...word];
       <a href="/privacy/">Privacy</a>
       <a href="/accessibility/">Accessibility</a>
       <a href="/colophon/">How this site is built</a>
+      <ThemeFlip where="end" />
     </div>
   </nav>
   <div class="end-name" data-name aria-hidden="true">

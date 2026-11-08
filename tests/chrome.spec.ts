@@ -47,6 +47,12 @@ test.describe('Without JavaScript', () => {
     await expect(tiles).toHaveCount(8);
     await expect(tiles.first()).toHaveAttribute('href', '/work/stone-steps-50k/');
     await expect(page.locator('[data-ledger] li').first()).toHaveText('Since 2020');
+    // Every sector word on the home ledger is a link to its page, so none looks like the main one.
+    const sectors = page.locator('.ledger-for a');
+    await expect(sectors).toHaveCount(4);
+    for (const href of ['/churches/', '/schools/', '/nonprofits/', '/small-business/'])
+      await expect(page.locator(`.ledger-for a[href="${href}"]`)).toHaveCount(1);
+    await expect(page.locator('[data-draw]')).toHaveText('Show me a random one');
     await expect(page.locator('.band blockquote')).toHaveCount(1);
     await expect(page.locator('[data-prices] li')).toHaveCount(3);
     await expect(page.locator('[data-prices] strong').first()).toHaveText('$3,500');
@@ -58,7 +64,7 @@ test.describe('Without JavaScript', () => {
 });
 
 test.describe('With JavaScript', () => {
-  test('the dock fits five 44px targets at 320px', async ({ page }) => {
+  test('the dock fits four 44px targets at 320px', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/work/');
     const fit = await page.evaluate(() => {
@@ -70,10 +76,40 @@ test.describe('With JavaScript', () => {
     });
     expect(fit.left).toBeGreaterThanOrEqual(4);
     expect(fit.right).toBeGreaterThanOrEqual(4);
-    expect(fit.targets).toHaveLength(5);
+    // Work, Prices, About and Start. The light and dark switch needs its words, so on a phone
+    // it lives in the closing band (theme.spec.ts).
+    expect(fit.targets).toHaveLength(4);
     for (const h of fit.targets) expect(h).toBeGreaterThanOrEqual(44);
     // The action reads Start here, and is still named in full.
     await expect(page.locator('nav.dock a[href="/contact/"]')).toHaveText('Start a project');
+  });
+
+  test('the two dock buttons that were a bare N now say what they are', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/work/');
+    await expect(page.locator('nav.dock a.home')).toHaveText('Home');
+    await expect(page.locator('nav.dock').getByRole('button', { name: 'Dark mode' })).toBeVisible();
+  });
+
+  test('a phone gets the whole name and a plain "Call or email"', async ({ page }) => {
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 720 });
+      await page.goto('/work/stone-steps-50k/');
+      const fit = await page.evaluate(() => {
+        const mark = document.querySelector('.mark')!;
+        const status = document.querySelector('.status')!;
+        return {
+          clipped: [...mark.querySelectorAll('span')].some(
+            (s) => s.scrollWidth > s.clientWidth + 1,
+          ),
+          apart: mark.getBoundingClientRect().right <= status.getBoundingClientRect().left,
+        };
+      });
+      expect(fit.clipped, `${width}px: the name is clipped`).toBe(false);
+      expect(fit.apart, `${width}px: the name runs into the status`).toBe(true);
+      await expect(page.locator('.status')).toContainText('Call or email');
+    }
   });
 
   test('a hand is out of the way until asked for, and Escape folds it', async ({ page }) => {

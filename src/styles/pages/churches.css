@@ -403,19 +403,31 @@ html:not(.js) .stand {
   }
 }
 
-/* Try it: four questions, and the real page scrolls to each answer. */
+/* Try it: four questions, and the real page scrolls to each answer. The questions are rows with a
+   chevron under a "Tap a question" hint, so they read as things to press, and each answer says in
+   words where it was found. Wide: words on the left, the phone on the right. Narrow: the phone comes
+   before the questions, so a tap never moves something out of sight. */
 .sun {
   padding-top: clamp(1rem, 3vh, 2.5rem);
 }
 .sun-in {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: clamp(2rem, 5vw, 6rem);
+  grid-template-areas: 'say w' 'ask w';
+  column-gap: clamp(2rem, 5vw, 6rem);
   align-items: center;
   max-width: 90rem;
   margin: 0 auto;
   padding-top: 1rem;
   border-top: 1px solid var(--line);
+}
+.sun-say {
+  grid-area: say;
+  align-self: end;
+}
+.sun-ask {
+  grid-area: ask;
+  align-self: start;
 }
 .sun h2 {
   margin-top: 0.9rem;
@@ -432,9 +444,13 @@ html:not(.js) .stand {
   font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
   line-height: 1.4;
 }
+.sun-hint {
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+  color: var(--ink);
+}
 .sun-qs {
   display: grid;
-  margin: clamp(1.25rem, 3vh, 2rem) 0 0;
+  margin: 0.6rem 0 0;
   padding: 0;
   list-style: none;
   border-bottom: 1px solid var(--line);
@@ -445,38 +461,58 @@ html:not(.js) .stand {
 .sun-qs button {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   width: 100%;
   min-height: 3.25rem;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.6rem;
   border: 0;
+  border-radius: 0.6rem;
   background: none;
-  color: var(--soft);
-  font: 500 clamp(1.25rem, 1.9vw, 1.625rem)/1.15 var(--display);
+  color: var(--ink);
+  font: 500 clamp(1.125rem, 1.9vw, 1.5rem)/1.15 var(--display);
   letter-spacing: -0.02em;
   text-align: left;
   cursor: pointer;
   transition:
     color 0.25s,
-    transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+    background-color 0.25s;
+}
+.sun-qs button svg {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: rotate 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .sun-qs button:hover {
-  color: var(--ink);
-  transform: translateX(0.25rem);
+  background: var(--wash);
 }
 .sun-qs button[aria-pressed='true'] {
   color: var(--accent);
   font-weight: 700;
 }
+/* The open question's chevron points down at its answer. */
+.sun-qs button[aria-pressed='true'] svg {
+  rotate: 90deg;
+}
 .sun-qs button:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: -2px;
-  border-radius: 6px;
 }
 .sun-a {
-  padding-bottom: 0.9rem;
+  padding: 0 0.6rem 0.9rem;
   color: var(--ink);
 }
+.sun-a b {
+  font-weight: 700;
+}
 .sun-w {
+  grid-area: w;
   justify-self: center;
   width: min(100%, 19rem);
   transform: rotate(2deg);
@@ -487,20 +523,30 @@ html:not(.js) .stand {
   object-fit: fill;
   will-change: transform;
 }
+html:not(.js) .sun-hint,
+html:not(.js) .sun-qs svg {
+  display: none;
+}
 html:not(.js) .sun-qs button {
-  color: var(--ink);
   cursor: default;
+}
+html:not(.js) .sun-qs button:hover {
+  background: none;
 }
 @media (max-width: 62rem) {
   .sun-in {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'say' 'w' 'ask';
   }
   .sun-w {
-    width: min(66vw, 17rem);
+    width: min(40vw, 10rem);
+    margin-top: 1.25rem;
+    transform: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sun-qs button {
+  .sun-qs button,
+  .sun-qs button svg {
     transition: none;
   }
   .sun-w .scr img {

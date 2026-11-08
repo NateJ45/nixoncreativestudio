@@ -49,10 +49,10 @@ testimonials:
     name: 'David Corfman'
     title: 'StoneSteps50k.com'
     date: 2025-02-28
-    context: 'Written about the earlier refresh, before the 2026 rebuild.'
+    context: 'Written in 2025 about the first site I built for the race. Dave came back for this rebuild in 2026.'
 designerNote: 'I built the first Stone Steps site in 2024, so this was a rebuild of my own work, and the old records tables are what convinced me it was worth doing. They had been kept by hand, and over the years they had quietly started to disagree with each other. The map is the part people notice first, but the part I spent the most care on is the results archive: recovering the early years from archived pages, fixing what the recovery got wrong, and checking every year against its source before a single record was calculated from it.'
 cmsShot: ../../assets/case-studies/shots/stone-steps-50k-cms.png
-cmsShotAlt: 'The Sanity Studio home screen I built for Stone Steps 50K, with race-day tasks and a button to fetch the latest results'
+cmsShotAlt: 'The home screen of the editing area I built for Stone Steps 50K, with race-day tasks and a button to fetch the latest results'
 cmsName: 'Sanity Studio'
 hook: 'Results and records that update themselves after every race'
 order: 1
@@ -97,9 +97,9 @@ facts:
 
 <Lede study={props.study} />
 
-The Stone Steps 50K is a trail ultramarathon through Mt. Airy Forest in Cincinnati: seven loops out of The Oval, a 27K for runners who want four, and a loyal community that has come back every October since 2003. Race director David Corfman has run it for most of that time.
+The Stone Steps 50K is a trail ultramarathon through Mt. Airy Forest in Cincinnati: 7 loops out of The Oval, a 27K for runners who want 4, and a loyal community that has come back every October since 2003. Race director David Corfman has run it for most of that time.
 
-I built the race's first real website in 2024, on WordPress. It gave the race a home, but two years on its weak spots were clear. After every race Dave had spreadsheets to put up by hand, and the records lived in hand-typed tables that had started to contradict each other. The course was summed up by a single elevation figure with no measurement behind it written down anywhere.
+I built the race's first real website in 2024, on WordPress. It gave the race a home, but 2 years on its weak spots were clear. After every race Dave had spreadsheets to put up by hand, and the records lived in hand-typed tables that had started to contradict each other. The course was summed up by a single elevation figure with no measurement behind it written down anywhere.
 
 So the brief for version two was about trust as much as looks. Every number on the site should come from a source you can point to, the history should be complete, and the site should keep itself current after each race without anyone typing anything in.
 
@@ -107,17 +107,18 @@ So the brief for version two was about trust as much as looks. Every number on t
   items={[
     {
       figure: '2,345',
-      text: 'finishes on file across 24 runnings, every edition from 2003 to 2026, each with its own results page',
+      text: 'finishes on file, from every race since 2003, each year with its own results page',
       source:
-        "RunSignUp's public API and the race's archived results pages, checked year by year against their sources",
+        "the official race results from RunSignUp, the timing company, and the race's old results pages, checked year by year",
     },
     {
       figure: 'About 5,200',
-      text: 'feet of climbing along the course, measured rather than estimated',
-      source: "USGS 1-meter LiDAR along the race director's own recorded run of the course",
+      text: 'feet of climbing along the course (about 10,300 feet of climbing and descent together), measured rather than estimated',
+      source:
+        "government laser-mapped elevation data (USGS LiDAR), along the race director's own recorded run of the course",
     },
     'Records are calculated from those results instead of typed into tables, so a record and the finish behind it are the same entry. The old site had drifted: it listed one 1:58:36 under two different years, and spelled one runner two ways.',
-    'After each race the site updates itself. Results, records and runner pages are live the next morning, with no spreadsheets for Dave to put up. When the timer corrects a time, the site picks that up too, and a button in the Studio fetches the latest results if he would rather not wait.',
+    'After each race the site updates itself. Results, records and runner pages are live the next morning, with no spreadsheets for Dave to put up. When the timer corrects a time, the site picks that up too, and a button on his editing screen fetches the latest results if he would rather not wait.',
     "Every runner has a page of their own with every finish on file, so results have a home on the race's own site as well as on RunSignUp. In the 13 days from the 2026 race (25 October to 6 November), just over half of the site's page views went to its results, runner and records pages.",
   ]}
 />
@@ -134,8 +135,8 @@ So the brief for version two was about trust as much as looks. Every number on t
 
 <Decision
   title="The course, measured instead of described"
-  easy="Keep the old total, 10,726 feet of elevation change, a number nobody had written down a source for."
-  did="Draw the course map from Dave's own recorded run, on real 3D terrain, and measure the climbing along that same track: about 5,200 feet, from USGS 1-meter LiDAR, with the method stated right next to the chart."
+  easy="Keep the old figure, 10,726 feet of elevation change (the climbing and descent added together), a number nobody had written down a source for."
+  did="Draw the course map from Dave's own recorded run, on real 3D terrain, and measure the course along that same track: about 5,200 feet of climbing (about 10,300 feet of climbing and descent together), from government laser-mapped elevation data, with the method stated right next to the chart."
 />
 
 <CourseLine />
@@ -155,8 +156,6 @@ So the brief for version two was about trust as much as looks. Every number on t
   after="stone-steps-50k-after"
   beforeAlt="The first Stone Steps 50K site, built on WordPress in 2024: a race photo behind a centered title and a countdown"
   afterAlt="The rebuilt Stone Steps 50K homepage: a stamped wordmark and race facts on the left, the trail photograph bleeding off the right edge"
-  beforePlatform="WordPress"
-  afterPlatform="Astro"
 />
 
 </Chapter>
@@ -182,7 +181,7 @@ So the brief for version two was about trust as much as looks. Every number on t
   src="stone-steps-50k-feature-board-crop"
   alt="The course-records board: four record holders stamped onto a bark board with their times and years"
   title="The names on the board"
-  body="The four course records, men's and women's for both distances, stamped onto a bark board. It is calculated from the results like everything else, so it changes on its own the morning after someone breaks a record."
+  body="The 4 course records, men's and women's for both distances, stamped onto a bark board. It is calculated from the results like everything else, so it changes on its own the morning after someone breaks a record."
   side="left"
 />
 
@@ -190,7 +189,7 @@ So the brief for version two was about trust as much as looks. Every number on t
   src="stone-steps-50k-feature-elevation-crop"
   alt="The elevation chart: seven loops of steep saw-tooth climbs, with a note that it was measured from USGS LiDAR"
   title="A stack of saw teeth"
-  body="The elevation profile of all seven loops, with each return to the aid station marked. The source is written right under the chart: USGS 1-meter LiDAR along a recorded run of the course."
+  body="The height of the trail across all 7 loops, with each return to the aid station marked. The 10,344 feet under the chart is the climbing and the descent added together; the climbing alone is about 5,200 feet. (The old site's 10,726 was an earlier total with no source.) The source is written right under the chart: government laser-mapped elevation data (USGS LiDAR) along a recorded run of the course."
   side="right"
 />
 
@@ -198,28 +197,28 @@ So the brief for version two was about trust as much as looks. Every number on t
   src="stone-steps-50k-feature-weather-crop"
   alt="The race-day weather chart: a temperature bar for every race morning from 2003 to 2025, with rainy years marked"
   title="What the weather has done"
-  body="Every race morning since 2003 as a temperature range, with rain on the day and rain the night before marked. Under it, a what-to-pack note reads the same record: the usual start temperature, how much it warms up by the afternoon, and how many years the steps were wet. It replaces the live forecast widget from the first version with something only this race has, and it adds each new year on its own."
+  body="Every race day since 2003, in °F. Each bar runs from that day's low to its high, and the short line across it is the temperature at the 8 a.m. start. The years along the bottom are shortened: 03 is 2003 and 25 is 2025. A red bar or a filled dot means rain on the day, and an open dot means the trail was wet from the night before. Under it, a what-to-pack note reads the same record: the usual start temperature, how much it warms up by the afternoon, and how many years the steps were wet. It replaces the live forecast from the first version with something only this race has, and it adds each new year on its own."
   side="left"
 />
 
-The site keeps itself current. Race details live in a Sanity Studio that Dave can edit himself, with a checklist for rolling the site over to a new year. After each race, a nightly job pulls the new results from RunSignUp, and by the next morning the results page, the records, the runner pages, and the edition count are all up to date. If he doesn't want to wait for the night, there is a "Fetch the latest results" button on the Studio's home screen, and a correction from the timer rebuilds the site by itself. Trekkers who take the optional early start are marked in the results, so they never land on an awards list by mistake. The contact form delivers straight to the race director's inbox, and the whole site moved onto Cloudflare along with its domain. Every change is checked against a perfect Lighthouse accessibility score, and the check fails if it drops.
+The site keeps itself current. Race details live in editing screens Dave runs himself, with a checklist for rolling the site over to a new year. After each race, the site checks RunSignUp for new results every night, and by the next morning the results page, the records, the runner pages, and the count of races are all up to date. If he doesn't want to wait for the night, there is a "Fetch the latest results" button on his editing home screen, and a correction from the timer updates the site by itself. Trekkers who take the optional early start are marked in the results, so they never land on an awards list by mistake. The contact form delivers straight to the race director's inbox, and the whole site moved to a new host along with its domain. Every change is tested automatically for people who use screen readers or a keyboard before it goes live, and nothing goes live if that test slips.
 
 The full build:
 
 - Homepage with the race date, a countdown to the gun, both distances with their fees and start times, a race-morning timetable, and registration through RunSignUp
 - A course preview on the homepage: pick the long or short loop and run your cursor along its profile
-- Interactive 3D course map with a flyover, satellite and topo views, a steepness view, and an elevation scrubber
+- Interactive 3D course map with a flyover, satellite and topographic views, a steepness view, and an elevation chart you can run your finger along
 - A results page for every year from 2003 to 2026, plus a page for each runner showing every finish on file
 - All-time records and top-ten lists for both distances, calculated from the results
 - Historical race-day weather for every edition, with what to pack going by the record
 - Parking and directions to the start, a travel map with hotels downtown and near the airport, the common questions answered, and a contact form that goes straight to the race director
-- A Sanity Studio for the race director, with automatic results imports after each race
+- Editing screens for the race director, with each race's results brought in automatically
 
 ### Behind the decisions
 
-Hand-kept tables are how the same 1:58:36 ended up listed under both 2010 and 2011 on the old site. Calculating the records meant finding the results first. The recent years came straight from RunSignUp's public API. The early ones came from the race's archived results pages, and every year was re-checked against its source. That check caught real mistakes: an importer that misread one year's column for sex and left 2004 without its three women, and twelve old 27K "records" that matched no finish in any year. Those came off the board, and the question of where they came from went back to Dave.
+Hand-kept tables are how the same 1:58:36 ended up listed under both 2010 and 2011 on the old site. Calculating the records meant finding the results first. The recent years came straight from RunSignUp's official results. The early ones came from the race's old results pages, and every year was re-checked against its source. That check caught real mistakes: an import that misread one year's column for sex and left 2004 without its three women, and twelve old 27K "records" that matched no finish in any year. Those came off the board, and the question of where they came from went back to Dave.
 
-The old course section was a race photo, a scan of the park's trail map, and a paragraph of loop directions. On the new map, visitors can drag, tilt, switch between satellite and topo, color the route by steepness, and fly the whole course. The elevation profile below the map doubles as a scrubber, so hovering over a climb shows exactly where it is on the course.
+The old course section was a race photo, a scan of the park's trail map, and a paragraph of loop directions. On the new map, visitors can drag, tilt, switch between satellite and topographic views, color the route by steepness, and fly the whole course. The elevation chart below the map works as a pointer too, so hovering over a climb shows exactly where it is on the course.
 
 Course records are names stamped onto a bark board, and each year's results page is laid out like a timing sheet on a clipboard.
 
@@ -230,8 +229,6 @@ Course records are names stamped onto a bark board, and each year's results page
   after="stone-steps-50k-after-records-after-crop"
   beforeAlt="The old records page: two brown-headed tables of age groups, names, years and times"
   afterAlt="The rebuilt records page: men's and women's 50K records side by side, with the course record called out above each table and a fastest-ten list below"
-  beforePlatform="WordPress"
-  afterPlatform="Astro"
 />
 
 <BeforeAfter
@@ -239,8 +236,6 @@ Course records are names stamped onto a bark board, and each year's results page
   after="stone-steps-50k-after-course-after"
   beforeAlt="The old course section: a tilted race photo, a scanned park map, and a paragraph describing the loops"
   afterAlt="The rebuilt course map: the seven loops drawn in orange over 3D satellite terrain of Mt. Airy Forest, with fly, flatten, topo and gradient controls and an elevation profile below"
-  beforePlatform="WordPress"
-  afterPlatform="Astro"
 />
 
 </FullBuild>

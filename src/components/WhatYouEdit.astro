@@ -23,7 +23,7 @@ const img = { url: `/assets/${study.slug}-cms.webp`, w: 1440, h: 900 };
 <Chapter title={who ? `What ${who} edits` : 'What the staff edit'} class="edit">
   <p
     class="para rv"
-    set:html={`The site's own editor, as ${who ? `${who} sees` : 'the staff see'} it. ${inline(study.cmsShotAlt)}.`}
+    set:html={`Where ${who ?? 'the staff'} ${who ? 'makes' : 'make'} changes, on the first screen after signing in. ${inline(study.cmsShotAlt)}.`}
   />
   <figure class="cms rv">
     <div class="win">
@@ -33,7 +33,11 @@ const img = { url: `/assets/${study.slug}-cms.webp`, w: 1440, h: 900 };
           <span>{label}</span>
         </span>
       </div>
-      <ZoomImage img={img} alt={`${study.cmsName} home screen for ${study.client}`} flat />
+      <ZoomImage
+        img={img}
+        alt={`The ${study.cmsName === 'WordPress' ? 'WordPress ' : ''}editing home screen for ${study.client}`}
+        flat
+      />
     </div>
   </figure>
 </Chapter>

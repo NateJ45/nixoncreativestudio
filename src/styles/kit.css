@@ -112,6 +112,9 @@ p {
     box-shadow 0.25s;
 }
 .mark {
+  /* The name never gives up width to the status beside it: squeezed, its fold clipped it to
+     "Nixon Creativ" on a phone. The status is the one that tightens (see 23.5rem below). */
+  flex: none;
   font-family: var(--display);
   font-weight: 700;
   font-size: 1.125rem;
@@ -150,12 +153,11 @@ p {
   cursor: pointer;
 }
 .status .nm-fold {
-  /* The word gap lives inside the fold, so nothing is left behind when it closes. */
-  margin-left: -0.5rem;
+  /* "Taking new projects ·" comes before "Call or email". The word gap after it lives inside the
+     fold, so nothing is left behind when it closes. */
+  margin-right: -0.5rem;
 }
-.status .nm-fold > span {
-  padding-left: 0.26em;
-}
+
 .status:hover,
 .status:has(+ .reach:popover-open) {
   background-color: color-mix(in srgb, currentColor 10%, transparent);
@@ -193,9 +195,20 @@ p {
     margin-inline: -0.55rem;
     padding-inline: 0.55rem;
   }
+  /* The smallest phones keep both corners whole, with a gap between the two pills: the name steps
+     down a size, and the status drops its dot and tightens up. */
+  .mark {
+    font-size: 1.0625rem;
+  }
+  .status {
+    gap: 0.35rem;
+    font-size: 0.875rem;
+  }
+  .status i {
+    display: none;
+  }
 }
-/* Scrolling back up: the same two corners, in the same places, each its own small pill, and the
-   name folds down to Nixon. The space between them stays clickable. kit.js springs it in and out. */
+/* Scrolling back up: the same two corners, in the same places, each its own small pill. The space between them stays clickable. kit.js springs it in and out. */
 .top.float {
   position: fixed;
   pointer-events: none;
@@ -213,12 +226,10 @@ p {
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 14px 34px -12px rgba(0, 0, 0, 0.34);
 }
-.top.float .nm-fold {
+/* Only the status folds, to "Call or email". The name stays whole: folded to "Nixon" it read as
+   a name cut off. */
+.top.float .status .nm-fold {
   grid-template-columns: 0fr;
-}
-.top.float .mark:hover .nm-fold,
-.top.float .mark:focus-visible .nm-fold {
-  grid-template-columns: 1fr;
 }
 .top.float.on-color .mark,
 .top.float.on-color .status {
@@ -626,6 +637,16 @@ html:not(.js) .ledger-do {
 .b-bot svg.off {
   opacity: 0.42;
 }
+/* On a phone the drawn toolbar sits beside the real one, and its back arrow looked like something to
+   tap. There it loses the arrows and fades right back, so it reads as part of the picture. */
+@media (max-width: 40rem) {
+  .b-bot svg:nth-child(-n + 2) {
+    display: none;
+  }
+  .b-bot svg {
+    opacity: 0.3;
+  }
+}
 .cap {
   margin-top: 0.8rem;
   transition:
@@ -795,14 +816,10 @@ blockquote {
   color: #fff;
   margin-left: 0.15rem;
 }
-/* The way home, once the top line has scrolled away: the wordmark's N. A phone keeps the room. */
+/* The way home, once the top line has scrolled away, said in a word. A phone keeps the room: its
+   top line's name is the way home there. */
 .dock > a.home {
-  justify-content: center;
-  width: 2.75rem;
-  padding: 0;
-  font-size: 1.0625rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-weight: 600;
 }
 /* The puck: it rests on the page you are on and goes to the link you are near. Two springs, one
    for each edge, so it stretches on the way and gathers when it lands. kit.js drives it. */
@@ -1094,10 +1111,10 @@ html:not(.js) .dk-rail {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
-  padding: 1.1rem 1.5rem 1.2rem 2.5rem;
+  padding: 1.1rem 1.5rem 1.2rem;
 }
 .fc-yours strong {
-  font: 700 1.75rem/1 var(--display);
+  font: 700 1.5rem/1 var(--display);
   letter-spacing: -0.035em;
   margin-bottom: 0.2rem;
 }
@@ -1639,6 +1656,34 @@ h1 b,
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 0.6rem;
+}
+/* Home: the facts on one line, then "Websites for:" and the four sector pages, every one a link. */
+.ledger-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ledger-for {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.1rem;
+  margin: 0;
+}
+.ledger-for .label {
+  color: var(--ink);
+}
+.ledger .ledger-for a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+.ledger .ledger-for a:hover {
+  color: var(--accent);
 }
 .cap span.label {
   margin-top: 0.35rem;
@@ -2281,16 +2326,30 @@ html:not(.js) .end-work li a:hover {
   opacity: 0.13;
   pointer-events: none;
 }
+/* The last card says what it is in words: "Your site could be next. Start a project", and an arrow. */
 .nine .label {
+  padding-inline: 10cqw;
   font-size: clamp(0.75rem, 5.6cqw, 0.8125rem);
   text-align: center;
 }
 .nine strong {
   display: block;
-  margin-top: 3cqw;
-  font: 700 24cqw/1 var(--display);
-  letter-spacing: -0.05em;
+  margin-top: 4cqw;
+  padding-inline: 8cqw;
+  font: 700 clamp(1.125rem, 15cqw, 2.25rem)/1.05 var(--display);
+  letter-spacing: -0.04em;
+  text-align: center;
   color: var(--fill);
+}
+.nine svg {
+  width: clamp(1.25rem, 14cqw, 2rem);
+  height: clamp(1.25rem, 14cqw, 2rem);
+  margin-top: 5cqw;
+  fill: none;
+  stroke: var(--fill);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .nine:focus-visible {
   outline: 3px solid #fff;
@@ -2661,26 +2720,26 @@ html.ncs-gated .ncs-overlay {
   }
 }
 
-/* The flip: the switch in the dock. */
+/* The light and dark switch (src/components/ThemeFlip.astro). It names what it will do, with an icon:
+   "Dark mode" and a moon on the light side, "Light mode" and a sun on the dark side. One copy sits in
+   the dock on wide screens; a phone's dock has no room for the words, so there it lives only in the
+   closing band's fine print. */
 .turn {
   position: relative;
   z-index: 1;
   flex: none;
   display: none;
   align-items: center;
-  justify-content: center;
-  width: 2.75rem;
   min-height: 2.75rem;
-  padding: 0;
+  padding: 0 clamp(0.7rem, 1.3vw, 1rem);
   border: 0;
   border-radius: 99rem;
   background: none;
   color: var(--ink);
+  font: 500 0.9375rem/1 var(--body);
+  white-space: nowrap;
   cursor: pointer;
-  perspective: 12rem;
   -webkit-tap-highlight-color: transparent;
-  /* On the button, not the card: a view-transition-name flattens its own element's 3D. */
-  view-transition-name: flip-card;
 }
 .js .turn {
   display: inline-flex;
@@ -2688,55 +2747,45 @@ html.ncs-gated .ncs-overlay {
 .turn:hover {
   background: var(--wash);
 }
-.turn-card {
-  position: relative;
-  display: block;
-  width: 1.3rem;
-  height: 1.8rem;
-  transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.3, 1.5, 0.5, 1);
+.turn:active {
+  transform: scale(0.95);
 }
-.turn:hover .turn-card {
-  transform: rotateY(-22deg) rotateZ(-5deg);
+.turn > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
-.turn:active .turn-card {
-  transform: scale(0.92);
+.turn svg {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.fc-face,
-.fc-back {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 0.25rem;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  box-shadow: 0 0 0 1px rgba(18, 18, 17, 0.14);
+.turn .turn-to-light,
+:root[data-theme='dark'] .turn .turn-to-dark {
+  display: none;
 }
-.fc-face {
-  background: #fff;
-  color: #2f3fe6;
-  font: 700 0.9375rem/1 var(--display);
-  letter-spacing: -0.03em;
+:root[data-theme='dark'] .turn .turn-to-light {
+  display: inline-flex;
 }
-.fc-back {
-  transform: rotateY(180deg);
-  background-color: #3345f0;
-  background-image:
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.55) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.55) 0 1px, transparent 1px 4px);
-  box-shadow:
-    0 0 0 1px rgba(226, 228, 255, 0.35),
-    inset 0 0 0 2px #3345f0;
+/* In the closing band: one more fine-print line, white on the band's blue. */
+.turn-end {
+  justify-content: flex-start;
+  margin-left: -0.6rem;
+  padding: 0 0.6rem;
+  color: #fff;
 }
-:root[data-theme='dark'] .turn-card {
-  transform: rotateY(180deg);
+.turn-end:hover {
+  background: rgba(255, 255, 255, 0.13);
 }
-:root[data-theme='dark'] .turn:hover .turn-card {
-  transform: rotateY(158deg) rotateZ(5deg);
-}
-:root[data-theme='dark'] .turn:active .turn-card {
-  transform: rotateY(180deg) scale(0.92);
+@media (max-width: 40rem) {
+  .dock .turn-dock {
+    display: none;
+  }
 }
 
 /* The page turning over. The old side rotates to edge-on, the new one comes round from the other
@@ -2747,16 +2796,13 @@ html.flipping::view-transition {
 html.flipping::view-transition-group(root) {
   animation: none;
 }
-html.flipping::view-transition-old(root),
-html.flipping::view-transition-old(flip-card) {
+html.flipping::view-transition-old(root) {
   animation: page-out 0.3s cubic-bezier(0.55, 0, 0.9, 0.5) both;
 }
-html.flipping::view-transition-new(root),
-html.flipping::view-transition-new(flip-card) {
+html.flipping::view-transition-new(root) {
   animation: page-in 0.72s 0.3s linear both;
 }
-html.flipping::view-transition-group(dock),
-html.flipping::view-transition-group(flip-card) {
+html.flipping::view-transition-group(dock) {
   animation-duration: 0.01s;
 }
 @keyframes page-out {
@@ -2783,16 +2829,9 @@ html.flipping::view-transition-group(flip-card) {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .turn-card,
   :root[data-theme='dark'] .tile,
   :root[data-theme='dark'] .scr img {
     transition: none;
-  }
-}
-@media (forced-colors: active) {
-  .fc-face,
-  .fc-back {
-    border: 1px solid CanvasText;
   }
 }
 @media print {

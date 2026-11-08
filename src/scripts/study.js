@@ -400,6 +400,8 @@ $$('[data-course]').forEach(function (fig) {
     pdot.style.left = (p.x / W) * 100 + '%';
     pdot.style.top = (p.y / H2) * 100 + '%';
     var flat = Math.abs(p.g) < 0.5;
+    /* The steepness in words first, the percentage after it: "gently downhill (−2%)". */
+    var how = Math.abs(p.g) < 4 ? 'gently ' : Math.abs(p.g) < 10 ? '' : 'steeply ';
     out.textContent =
       'Mile ' +
       mile.toFixed(1) +
@@ -409,8 +411,8 @@ $$('[data-course]').forEach(function (fig) {
       starts.length +
       ', ' +
       ft +
-      ' ft, ' +
-      (flat ? 'level' : (p.g > 0 ? '+' : '−') + a + '% grade');
+      ' feet above sea level, ' +
+      (flat ? 'level' : how + (p.g > 0 ? 'uphill (+' : 'downhill (−') + a + '%)');
     range.setAttribute(
       'aria-valuetext',
       'Mile ' +

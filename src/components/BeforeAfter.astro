@@ -1,6 +1,11 @@
 ---
 /* Old site and new, on a slider. A range input does the work, so arrows, Home,
-   End and both ends come free. Only where a before was captured while still live. */
+   End and both ends come free. Only where a before was captured while still live.
+
+   The labels say only "Before" and "After": a platform name on top of the most visual thing on the
+   page made readers ask whether they had to buy or learn it (tools live in the "Built with" line).
+   The handle shows left and right arrows, not two bars that read as a pause button, and a line under
+   the picture says what to do with it. */
 import { studyImage } from '../lib/study-markup';
 
 interface Props {
@@ -8,20 +13,18 @@ interface Props {
   after: string;
   beforeAlt: string;
   afterAlt: string;
-  beforePlatform?: string;
-  afterPlatform?: string;
 }
-const { before, after, beforeAlt, afterAlt, beforePlatform, afterPlatform } = Astro.props;
+const { before, after, beforeAlt, afterAlt } = Astro.props;
 const a = studyImage(after);
 const b = studyImage(before);
 const ratio = Math.max(a.w / a.h, 1.6).toFixed(3);
 ---
 
 <figure class="ba rv" data-ba>
-  <figcaption class="ba-l">
-    <span>Before{beforePlatform ? `, on ${beforePlatform}` : ''}</span>
-    <span>After{afterPlatform ? `, on ${afterPlatform}` : ''}</span>
-  </figcaption>
+  <div class="ba-l" aria-hidden="true">
+    <span>Before</span>
+    <span>After</span>
+  </div>
   <div class="ba-f" style={`aspect-ratio:${ratio};--v:50`}>
     <div class="ba-i">
       <img
@@ -53,7 +56,15 @@ const ratio = Math.max(a.w / a.h, 1.6).toFixed(3);
       aria-valuetext="50 percent of the old site showing"
     />
     <span class="ba-h" aria-hidden="true">
-      <i></i>
+      <i>
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M9 7 4 12l5 5M15 7l5 5-5 5" />
+        </svg>
+      </i>
     </span>
   </div>
+  <figcaption class="ba-hint">
+    <span class="ba-js">Drag the middle handle to compare the old site with the new one.</span>
+    <span class="ba-nojs">The old site, then the new one.</span>
+  </figcaption>
 </figure>

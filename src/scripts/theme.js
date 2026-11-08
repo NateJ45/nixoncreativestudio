@@ -1,7 +1,6 @@
 /* The flip. The theme itself is one attribute on <html>, set before paint by ThemeBoot.astro. This
    turns it over: the page rotates away on its vertical axis like a card and comes back showing the
-   other side, with the little card in the dock turning in step. Reduced motion, or a browser with no
-   view transitions, simply swaps. */
+   other side. Reduced motion, or a browser with no view transitions, simply swaps. */
 
 var root = document.documentElement;
 var KEY = 'ncs-theme';
@@ -19,12 +18,11 @@ function saved() {
   }
 }
 
+/* The switches name what they will do ("Dark mode" or "Light mode"); CSS picks the label from the
+   theme attribute, so turning the page over is all this has to do. */
 function show(theme) {
   root.dataset.theme = theme;
   if (meta) meta.content = GROUND[theme];
-  buttons.forEach(function (b) {
-    b.setAttribute('aria-pressed', String(theme === 'dark'));
-  });
 }
 
 function turn(theme) {

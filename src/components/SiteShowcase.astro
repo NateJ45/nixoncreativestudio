@@ -1,7 +1,9 @@
 ---
 /* Walk the homepage: the real capture in a desktop window beside a phone. The
    capture moves with page scroll (study.js), and without that the window is a
-   plain keyboard-scrollable box. Cropped to 4,000px where a page runs longer. */
+   plain keyboard-scrollable box. Cropped to 4,000px where a page runs longer.
+   A line above says what it is and what it does, and a phone shows the phone
+   capture instead of a shrunken desktop window (study.css). */
 import LongPhone from './study/LongPhone.astro';
 import { LOCK } from '../lib/window-chrome';
 import { studyHome } from '../lib/study-markup';
@@ -14,6 +16,9 @@ const host = study.facts?.host ?? hostOf(study.liveUrl);
 ---
 
 <figure class="walk rv">
+  <p class="walk-intro">
+    The real homepage, top to bottom. It scrolls along as you scroll this page.
+  </p>
   <div class="win">
     <div class="win-bar" aria-hidden="true">
       <span class="url">
