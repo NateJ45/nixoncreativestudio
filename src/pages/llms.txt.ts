@@ -48,7 +48,7 @@ export const GET: APIRoute = async () => {
     '',
     `> ${site.tagline} ${site.studioName} is one person, ${site.ownerName}, who plans, designs and builds every site himself and photographs projects across the Cincinnati region.`,
     '',
-    `Based in ${site.address}. Web design, strategy and brand work for clients anywhere; photography in the Greater Cincinnati region. Every site is custom, accessible (built to WCAG 2.1 AA), fast, and handed over with a content system the client runs themselves.`,
+    `Based in ${site.address}. Web design, strategy and brand work for clients anywhere; photography in the Greater Cincinnati region. Every site is custom, accessible (built to WCAG 2.2 AA), fast, and handed over with a content system the client runs themselves.`,
     '',
     `Contact: ${site.email}, ${site.phone}. Start a project: ${url('/contact/')}`,
     '',

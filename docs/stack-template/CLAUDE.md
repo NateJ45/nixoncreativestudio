@@ -183,7 +183,7 @@ shadcn primitives that wrap Radix's Dialog (Sheet, Dialog, DropdownMenu with por
 
 ## Accessibility
 
-Target: WCAG 2.1 AA in both light and dark modes. Aim for 100 Lighthouse Accessibility on every page and preserve that bar after edits.
+Target: WCAG 2.2 AA in both light and dark modes. Aim for 100 Lighthouse Accessibility on every page and preserve that bar after edits.
 
 ### Required patterns
 

@@ -10,7 +10,7 @@ Loads when anything under `src/` or `tests/` is touched.
 
 Target: WCAG 2.2 AA in both the light and dark themes (audited criterion by criterion on 2026-11-08; the audit lives in the vault at `studio/strategy/wcag-2-2-audit-2026-11.md`). Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. `tests/a11y.spec.ts` runs axe-core with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa` and `best-practice` on every route, light and dark, on Chromium and a WebKit iPhone. Name the tags: axe ships its one 2.2 rule, `target-size` (2.5.8), switched off in its default set. `tests/wcag22.spec.ts` covers what axe cannot see (2.4.11, 2.5.7, and 2.5.8 on controls that only show after a step). The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
 
-This is the target for THIS site. The line about client builds ("Every custom build is made to WCAG AA" on Prices, the sector pages, the one-page summary, About and `/llms.txt`) is a separate promise and is not changed by this one.
+Client builds carry the same promise (Nathan, 2026-11-08: "2.2 AA for all builds"). Prices, Churches, the one-page summary, About and `/llms.txt` say WCAG 2.2 AA; keep any new client-build line on that version.
 
 ## Conformance target is AA, deliberately (not AAA)
 
