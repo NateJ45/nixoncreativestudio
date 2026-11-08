@@ -165,6 +165,7 @@ export var ui = {
          looked at costs no video. */
       var cur = null,
         wait = 0,
+        stop = 0,
         holders = new Map(),
         io = new IntersectionObserver(
           function (es) {
@@ -177,8 +178,15 @@ export var ui = {
                   if (cur && cur !== t) ui.play(cur, false);
                   cur = t;
                   ui.play(cur, true);
+                  /* Scrolling started it, not a tap, so it goes back to its still inside five
+                     seconds (WCAG 2.2.2). Moving it off the middle and back plays it again. */
+                  clearTimeout(stop);
+                  stop = setTimeout(function () {
+                    if (cur === t) ui.play(t, false);
+                  }, 5000);
                 }, 350);
               } else if (cur === t) {
+                clearTimeout(stop);
                 ui.play(cur, false);
                 cur = null;
               }

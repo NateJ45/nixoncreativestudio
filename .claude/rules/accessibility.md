@@ -8,7 +8,9 @@ paths:
 
 Loads when anything under `src/` or `tests/` is touched.
 
-Target: WCAG 2.1 AA in both the light and dark themes. Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. Verified with axe-core (the default rule set, which includes best-practice and `target-size` checks) on every route by `tests/a11y.spec.ts`, on Chromium and a WebKit iPhone. The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
+Target: WCAG 2.2 AA in both the light and dark themes (audited criterion by criterion on 2026-11-08; the audit lives in the vault at `studio/strategy/wcag-2-2-audit-2026-11.md`). Every page currently sits at 100 Lighthouse Accessibility; preserve that bar. `tests/a11y.spec.ts` runs axe-core with the tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa` and `best-practice` on every route, light and dark, on Chromium and a WebKit iPhone. Name the tags: axe ships its one 2.2 rule, `target-size` (2.5.8), switched off in its default set. `tests/wcag22.spec.ts` covers what axe cannot see (2.4.11, 2.5.7, and 2.5.8 on controls that only show after a step). The `.github/workflows/lighthouse.yml` gate keeps accessibility at 100 on every build.
+
+This is the target for THIS site. The line about client builds ("Every custom build is made to WCAG AA" on Prices, the sector pages, the one-page summary, About and `/llms.txt`) is a separate promise and is not changed by this one.
 
 ## Conformance target is AA, deliberately (not AAA)
 
@@ -20,6 +22,15 @@ AA is the standard for this site, by choice, in line with W3C's own guidance tha
 
 If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 large text and UI) and update `src/lib/kit-tokens.test.ts`; AA is the line that must not regress.
 
+## What WCAG 2.2 added, and how this site meets it
+
+- **2.4.11 Focus Not Obscured (Minimum).** The floating dock, the top line's pills, the sticky care-table headers on /services and the /work filter bar could each sit on a focused control. `scroll-padding-block: 72px 96px` on `html` (`kit.css`) makes a focus scroll stop clear of the pills at the top and the dock at the bottom, and the pills step back when the page scrolls down, unless the keyboard is on them. A new fixed or sticky element at an edge must fit inside that padding or raise it. `wcag22.spec.ts` tabs both ways through long pages and hit-tests every stop.
+- **2.5.7 Dragging Movements.** Nothing needs a drag. The before/after slider moves to a click or a tap anywhere on the picture (`study.js` adds the tap, since iOS Safari will not jump a range to a tap), and its hint says so. The course line moves to a tap. The About portrait can be picked up and thrown, but that is play with no outcome; the hand behind it opens on a press, a hover or focus. The home deal and the price cards move on scroll, not drag.
+- **2.5.8 Target Size (Minimum).** Every control is at least 24 by 24 CSS px (dock links 44px tall, chips 48px). Links inside a sentence use the inline exception. axe's `target-size` checks what is on screen; `wcag22.spec.ts` checks the dock, the pills, the light and dark switch, the /work pills, the tier quiz and every contact step, Change buttons included.
+- **3.2.6 Consistent Help.** The ways to reach me come in the same order on every page: the top line's "Text or email" card, then the dock's "Start a project", then the closing band's email and text links. /contact has no closing band (it is the help) and the Coming Soon gate is its own document; neither changes the order of what is there.
+- **3.3.7 Redundant Entry.** The contact form never asks for anything twice. A sector, tier or service carried in from another page is filled in for you, a draft is kept on the device, and "Check your answers" shows everything with a Change button instead of asking again.
+- **3.3.8 Accessible Authentication (Minimum).** Not applicable: the public site has no sign-in. If one is ever added, it must not rely on a memory or puzzle test without an alternative (paste and password managers allowed).
+
 ## Required patterns
 
 **Landmarks and structure.** `BaseLayout` provides `<header>` (the top line), `<main id="main">`, the dock `<nav aria-label="Primary">` and a "Skip to content" link as the first focusable element. Each top-level `<section>` needs an accessible name, via `aria-labelledby` pointing at its heading (preferred) or `aria-label`. When `aria-labelledby` names a heading id, make sure the heading actually carries that id.
@@ -28,7 +39,7 @@ If a token's contrast is ever changed, re-check it against AA (4.5:1 body, 3:1 l
 
 **Cards and decoration.** `.pip` corner letters are `aria-hidden`. A `Tile`'s screen (image or video) is `aria-hidden` because the link carries a full label (name, host and hook). Decorative shapes and pseudo-elements are hidden from assistive tech.
 
-**Forms.** Every input gets an associated `<label>`. Use native input types and `autocomplete` hints. Required fields get `required`. Errors are plain words in an element tied to the field with `aria-describedby`. The contact form is the reference: it works with no JavaScript (the browser validates; the script then sets `noValidate` and validates itself), groups choices in a `<fieldset>` with real radios, announces the question count through a polite live region, its "Your answers so far" phone is a plain summary that never talks over the field being typed in, and a "Check your answers" step (Change buttons named for their answer, "Not provided" for a skipped one) comes before Send. After a script submit, focus moves to the success heading. Field focus is an `outline`, not a `box-shadow` (Gotcha 11).
+**Forms.** Every input gets an associated `<label>`. Use native input types and `autocomplete` hints. Required fields get `required`. Errors are plain words in an element tied to the field with `aria-describedby`. The contact form is the reference: it works with no JavaScript (the browser validates; the script then sets `noValidate` and validates itself), groups choices in a `<fieldset>` with real radios, announces the question count through a polite live region, its "Your answers so far" phone is a plain summary that never talks over the field being typed in, and a "Check your answers" step (Change buttons named for their answer, "Not provided" for a skipped one) comes before Send. After a script submit, focus moves to the success heading. Field focus is an `outline`, not a `box-shadow` (Gotcha 11). A text field's resting edge is `--field-edge`, 3:1 against the card and the field fill on both sides (WCAG 1.4.11, asserted in `kit-tokens.test.ts`), so the box can be found before it has focus.
 
 **Images.** Content images get a descriptive `alt`; filler like "Hero image" is not alt text. An image beside a heading that names the same thing gets `alt=""`. Give every image its real `width` and `height`.
 

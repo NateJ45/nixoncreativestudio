@@ -310,6 +310,17 @@ $$('[data-ba]').forEach(function (fig) {
     set(v);
     say(v);
   });
+  /* A tap or click anywhere on the picture moves the line there, so nobody has to drag (WCAG 2.5.7).
+     Desktop browsers already jump a range to a click on its track; iOS Safari does not, so this makes
+     the tap work everywhere. A real drag ends in a click too, at the spot it let go, so it agrees. */
+  input.addEventListener('click', function (e) {
+    var b = f.getBoundingClientRect();
+    if (!b.width || !e.clientX) return;
+    var v = Math.round(Math.max(0, Math.min(1, (e.clientX - b.left) / b.width)) * 100);
+    if (v === +input.value) return;
+    input.value = v;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
   set(+input.value);
   say(+input.value);
   if (baIO) {

@@ -29,6 +29,9 @@
   --well: #ededea;
   --zebra: #f9f9f7;
   --sunk: #fbfbfa;
+  /* The edge of a text field: 3:1 against the card it sits on and the field's own fill, so the box
+     can be found without the focus ring (WCAG 1.4.11). */
+  --field-edge: #8a8a85;
   /* What a screenshot's frame shows while it loads. */
   --screen: #fff;
   /* Cards have a shadow on paper. On the dark side a shadow can't be seen, so they get a lit edge. */
@@ -787,6 +790,11 @@ blockquote {
 .js:not(.dock-here) .dock {
   animation: dock 1s cubic-bezier(0.3, 1.35, 0.5, 1) both;
   animation-delay: 1s;
+}
+/* A keyboard that reaches the dock before it has risen finds it already there, never below the
+   screen (WCAG 2.4.11). */
+.js:not(.dock-here) .dock:focus-within {
+  animation: none;
 }
 @keyframes dock {
   from {
@@ -1823,6 +1831,11 @@ h1 b,
   outline: 3px solid var(--ink);
   outline-offset: 3px;
 }
+/* A card the keyboard is on comes to the top of the hand. On a phone the cards stick in one pile,
+   so Shift+Tab back up the page would otherwise land on a card the next one covers (WCAG 2.4.11). */
+.pc:has(> .pc-face:focus-visible) {
+  z-index: 3;
+}
 
 @media (max-width: 52rem) {
   .giant {
@@ -2662,6 +2675,7 @@ html.ncs-gated .ncs-overlay {
     --well: #272b55;
     --zebra: #191b3a;
     --sunk: #191b3a;
+    --field-edge: #6e7196;
     --screen: #1d2042;
     --rim: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(226, 228, 255, 0.08);
   }
