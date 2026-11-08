@@ -62,6 +62,10 @@ test('eventFor maps each data-cta to its event', () => {
       params: { cta_location: 'main' },
     },
   );
+  assert.deepEqual(eventFor({ href: 'sms:+12565550100', location: 'footer' }), {
+    name: 'contact_click',
+    params: { cta_location: 'footer', method: 'text' },
+  });
   assert.deepEqual(eventFor({ cta: 'contact_click', method: 'copy', location: 'footer' }), {
     name: 'contact_click',
     params: { cta_location: 'footer', method: 'copy' },

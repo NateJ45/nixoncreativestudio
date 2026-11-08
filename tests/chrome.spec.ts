@@ -33,7 +33,7 @@ test.describe('Without JavaScript', () => {
       const end = page.locator('[data-end]');
       await expect(end.locator('h2')).toHaveCount(1);
       await expect(end.locator('a[href^="mailto:"]')).toHaveCount(1);
-      await expect(end.locator('a[href^="tel:"]')).toHaveCount(1);
+      await expect(end.locator('a[href^="sms:"]')).toHaveCount(1);
       await expect(end.locator('.gc img')).toHaveCount(8);
       await expect(end.locator('a[data-nine]')).toHaveAttribute('href', '/contact/');
       await expect(end.locator('.end-index a[href="/privacy/"]')).toHaveCount(1);
@@ -92,7 +92,7 @@ test.describe('With JavaScript', () => {
     await expect(page.locator('nav.dock').getByRole('button', { name: 'Dark mode' })).toBeVisible();
   });
 
-  test('a phone gets the whole name and a plain "Call or email"', async ({ page }) => {
+  test('a phone gets the whole name and a plain "Text or email"', async ({ page }) => {
     for (const width of [320, 390]) {
       await page.setViewportSize({ width, height: 720 });
       await page.goto('/work/stone-steps-50k/');
@@ -108,7 +108,7 @@ test.describe('With JavaScript', () => {
       });
       expect(fit.clipped, `${width}px: the name is clipped`).toBe(false);
       expect(fit.apart, `${width}px: the name runs into the status`).toBe(true);
-      await expect(page.locator('.status')).toContainText('Call or email');
+      await expect(page.locator('.status')).toContainText('Text or email');
     }
   });
 
@@ -203,11 +203,45 @@ test.describe('The top line', () => {
     await expect(card).toBeHidden();
     await page.locator('.top .status').click();
     await expect(card).toBeVisible();
-    await expect(card.locator('a[href^="tel:"]')).toHaveCount(1);
+    await expect(card.locator('a[href^="sms:"]')).toHaveCount(1);
     await expect(card.locator('a[href^="mailto:"]')).toHaveCount(1);
     await expect(card.locator('a[href="/contact/"]')).toHaveCount(1);
     await page.keyboard.press('Escape');
     await expect(card).toBeHidden();
+  });
+
+  test('opened from the floating pill far down a page, the card is on the screen', async ({
+    page,
+  }) => {
+    await page.goto('/services/');
+    for (let i = 0; i < 12; i++) {
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(100);
+    }
+    for (let i = 0; i < 3; i++) {
+      await page.mouse.wheel(0, -250);
+      await page.waitForTimeout(120);
+    }
+    await expect(page.locator('[data-top]')).toHaveClass(/float/);
+    await page.locator('.top .status').click({ force: true });
+    const card = page.locator('[data-reach]');
+    await expect(card).toBeVisible();
+    const box = await card.boundingBox();
+    const height = page.viewportSize()!.height;
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+  });
+
+  test('the closing line stays inside its column on a wide screen', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1000 });
+    await page.goto('/work/');
+    const over = await page.locator('.end-say h2').evaluate((h) => {
+      const range = document.createRange();
+      range.selectNodeContents(h);
+      const right = Math.max(...[...range.getClientRects()].map((r) => r.right));
+      return right - h.parentElement!.getBoundingClientRect().right;
+    });
+    expect(over).toBeLessThanOrEqual(1);
   });
 
   test('scrolling up brings the corners back as pills, and the top puts them away', async ({

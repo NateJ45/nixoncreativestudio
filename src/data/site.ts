@@ -72,6 +72,7 @@ interface SiteData {
 
   // Helpers
   phoneHref: string; // Pre-computed tel: target.
+  smsHref: string; // Pre-computed sms: target. Texting is the first way in (Nathan, 2026-11-07).
   emailHref: string; // Pre-computed mailto: target.
 }
 
@@ -131,5 +132,6 @@ export const site: SiteData = {
   // Pre-computed link targets so consumers don't have to repeat the
   // string-stripping logic at every call site.
   phoneHref: `tel:${_phoneDigits}`,
+  smsHref: `sms:+1${_phoneDigits}`,
   emailHref: `mailto:${_email}`,
 } as const;

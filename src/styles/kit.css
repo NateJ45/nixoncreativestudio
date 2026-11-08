@@ -226,7 +226,7 @@ p {
     0 1px 2px rgba(0, 0, 0, 0.08),
     0 14px 34px -12px rgba(0, 0, 0, 0.34);
 }
-/* Only the status folds, to "Call or email". The name stays whole: folded to "Nixon" it read as
+/* Only the status folds, to "Text or email". The name stays whole: folded to "Nixon" it read as
    a name cut off. */
 .top.float .status .nm-fold {
   grid-template-columns: 0fr;
@@ -257,6 +257,10 @@ p {
     display 0.25s allow-discrete;
 }
 .reach.card {
+  /* Stays on the screen. `.keyed` (later in this file) sets position: relative, which in the
+     popover's top layer fell back to the top of the PAGE, so after scrolling the card opened far
+     above the screen. */
+  position: fixed;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.1),
     0 34px 60px -24px rgba(0, 0, 0, 0.55);
@@ -2240,8 +2244,13 @@ html:not(.js) .end-work li a:hover {
   font-weight: 600;
   text-underline-offset: 0.2em;
 }
+.end-say {
+  container-type: inline-size;
+}
 .end h2 {
-  font-size: var(--type-h1);
+  /* Never wider than its own column: the window-based size alone let a long line ("Don't see your
+     kind of organization?") run into the selected work beside it from about 1600px up. */
+  font-size: min(var(--type-h1), 17cqi);
   line-height: 1;
   text-align: left;
 }
