@@ -448,6 +448,34 @@ figure {
   width: 100%;
   height: auto;
 }
+/* "Enlarge", in the corner of every picture that opens larger. */
+.zoom {
+  position: relative;
+}
+.zoom-tip {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem 0.3rem 0.5rem;
+  border-radius: 99rem;
+  background: rgba(18, 18, 17, 0.78);
+  color: #fff;
+  font: 500 0.8125rem/1 var(--body);
+}
+.zoom-tip svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+html:not(.js) .zoom-tip {
+  display: none;
+}
 /* Zooming needs the script: with none, the picture is just a picture. */
 html:not(.js) .zoom {
   cursor: default;
@@ -534,6 +562,11 @@ html:not(.js) .zoom {
 }
 .walk figcaption {
   margin-top: 0.3rem;
+}
+.walk-intro {
+  grid-column: 1/-1;
+  margin-bottom: 0.75rem;
+  color: var(--soft);
 }
 .walk-ph {
   display: none;
@@ -727,21 +760,33 @@ html:not(.js) .ba .ba-i .ba-b {
     0 10px 22px -8px rgba(0, 0, 0, 0.5);
   transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-.ba-h i::before,
-.ba-h i::after {
-  content: '';
+/* Left and right arrows on the handle: two bars read as a pause button. */
+.ba-h i svg {
   position: absolute;
-  top: 30%;
-  bottom: 30%;
-  width: 3px;
-  border-radius: 3px;
-  background: var(--c);
+  inset: 22%;
+  width: 56%;
+  height: 56%;
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.ba-h i::before {
-  left: 38%;
+/* What to do with it, in words, under the picture. */
+.ba-hint {
+  margin-top: 0.6rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
 }
-.ba-h i::after {
-  right: 38%;
+.ba-nojs,
+html:not(.js) .ba-js {
+  display: none;
+}
+html:not(.js) .ba-nojs {
+  display: inline;
+}
+html:not(.js) .ba-l {
+  display: none;
 }
 .ba-f:hover .ba-h i {
   transform: scale(1.08);
@@ -805,8 +850,30 @@ html:not(.js) .ba .ba-i .ba-b {
 }
 .course-d {
   display: grid;
-  gap: 1.25rem;
+  grid-template-areas: 'tplan' 'plan' 'tprof' 'prof';
+  gap: 0.5rem 1.25rem;
   align-items: center;
+}
+/* A title over each drawing, so nobody has to guess what the line is. */
+.course-t {
+  align-self: end;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.course-t-plan {
+  grid-area: tplan;
+  text-align: center;
+}
+.course-t-prof {
+  grid-area: tprof;
+  margin-top: 0.75rem;
+}
+.course-plan {
+  grid-area: plan;
+}
+.course-p {
+  grid-area: prof;
 }
 .course-plan {
   display: block;
@@ -901,6 +968,9 @@ html:not(.js) .ba .ba-i .ba-b {
   margin-top: 0.75rem;
   max-width: 42rem;
 }
+.course figcaption p + p {
+  margin-top: 0.5rem;
+}
 .course-ax span:nth-child(2) {
   order: 3;
   flex: 0 0 100%;
@@ -908,6 +978,10 @@ html:not(.js) .ba .ba-i .ba-b {
 @container (min-width:40rem) {
   .course-d {
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    grid-template-areas: 'tplan tprof' 'plan prof';
+  }
+  .course-t-prof {
+    margin-top: 0;
   }
   .course-ax span:nth-child(2) {
     order: 0;
