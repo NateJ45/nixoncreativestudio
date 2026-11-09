@@ -55,45 +55,16 @@ import '../styles/pages/start.css';
 import { site } from '../data/site';
 import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
-import { SECTOR_LABEL } from '../lib/clients';
+import { orgTypes, runs, budgets, timelines, heardFromOptions } from '../data/inquiry-options';
 import { LOCK, TOOLS } from '../lib/window-chrome';
 import { plainText, wordSpans } from '../lib/words';
 
-// Organization types. Same keys as the case-studies `sector` field, so ?org_type
-// from a study's closing lines up and the success panel can pick studies from
-// the same sector.
-const orgTypes = [
-  ...Object.entries(SECTOR_LABEL).map(([value, label]) => ({ value, label })),
-  { value: 'other', label: 'Something else' },
-];
-
-// What the "who keeps it up to date" step offers, in plain words. The values are what
-// the form submits, so they stay fixed even when the labels change.
-const runs = [
-  { value: 'one-person', label: 'Just me, or one person, when there is time' },
-  { value: 'team', label: 'A few staff or volunteers' },
-  { value: 'tools', label: 'A team that needs extra tools, like bookings or sign-ups' },
-  { value: 'you', label: "I'd rather you kept it updated" },
-  { value: 'not-sure', label: 'Not sure yet' },
-];
+// The form's choices live in src/data/inquiry-options.ts, shared with the
+// inquiry email so it shows the same words a visitor picked. The `value`s are
+// what the form submits, so they stay fixed even when the labels change.
 
 // The one reassurance line, on the two optional choice steps.
 const notSure = "Not sure? Pick the closest. I'll work it out with you.";
-
-// Budget ranges, built from the three web tier floors in src/data/pricing.ts, so
-// a price change there moves them too. They never overlap: each one ends a dollar
-// below the next floor. The `value`s are what the form submits, so they stay
-// fixed even if the numbers move.
-const floors = webTiers.map((t) => t.priceFrom);
-const [launchFloor, signatureFloor, flagshipFloor] = floors.map(money);
-const below = (n: number) => money(n - 1);
-const budgets = [
-  { value: 'under-4k', label: `Under ${launchFloor}` },
-  { value: '4k-7k', label: `${launchFloor} to ${below(floors[1])}` },
-  { value: '7k-12k', label: `${signatureFloor} to ${below(floors[2])}` },
-  { value: '12k-plus', label: `${flagshipFloor} or more` },
-  { value: 'not-sure', label: 'Not sure yet' },
-];
 
 // ?tier=<name> picks the budget that starts at that tier's floor.
 const tierInfo = Object.fromEntries(
@@ -102,23 +73,6 @@ const tierInfo = Object.fromEntries(
     { name: t.name, from: money(t.priceFrom), budget: budgets[i + 1]?.value ?? '' },
   ]),
 );
-
-const timelines = [
-  { value: 'asap', label: 'Right away' },
-  { value: '1-3-months', label: 'In the next 1 to 3 months' },
-  { value: '3-6-months', label: '3 to 6 months from now' },
-  { value: '6-plus', label: 'More than 6 months out' },
-  { value: 'flexible', label: 'Flexible, no fixed deadline' },
-];
-
-const heardFromOptions = [
-  { value: 'referral', label: 'A referral from someone I know' },
-  { value: 'search', label: 'Google or another search engine' },
-  { value: 'social', label: 'Instagram, LinkedIn, or other social' },
-  { value: 'past-client', label: "I've worked with Nathan before" },
-  { value: 'event', label: 'In person, at an event or through a church or school' },
-  { value: 'other', label: 'Somewhere else' },
-];
 
 // What happens next. The reply line is the promise this page already made; do
 // not change the timing without Nathan.

@@ -13,6 +13,7 @@
 
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { nightMark } from './night-mark';
+import { SECTOR_LABEL } from '../data/inquiry-options';
 
 /** The order the deck is dealt in: home, /work and the closing. */
 export const DECK = [
@@ -26,12 +27,8 @@ export const DECK = [
   'first-presbyterian-orangeburg',
 ];
 
-export const SECTOR_LABEL: Record<string, string> = {
-  church: 'Church',
-  school: 'School',
-  nonprofit: 'Nonprofit',
-  'small-business': 'Small business',
-};
+// Moved to src/data/inquiry-options.ts so the Worker can read it; re-exported here.
+export { SECTOR_LABEL };
 
 export interface Client {
   slug: string;

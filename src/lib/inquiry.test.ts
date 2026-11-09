@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { inquiryToSubmission } from './inquiry.ts';
 import { validateSubmission, looksAutomated } from './contact-submission.ts';
+import { labelFor } from '../data/inquiry-options.ts';
 
 const base = {
   name: 'Test Person',
@@ -22,7 +23,9 @@ describe('inquiryToSubmission', () => {
     assert.equal(
       raw.message,
       'A new website for the congregation.\n\n' +
-        'Organization type: church\nBudget: 4k-7k\nOrganization: First Church\nTimeline: 1-3-months',
+        // The labels the visitor saw, not the stored keys (church, 4k-7k, 1-3-months).
+        `Organization type: Church\nBudget: ${labelFor('budget', '4k-7k')}\n` +
+        'Organization: First Church\nTimeline: In the next 1 to 3 months',
     );
     assert.equal(raw.subject, 'New project inquiry from First Church');
   });
