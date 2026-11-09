@@ -209,11 +209,17 @@ async function storeAndNotify(
     }
   }
 
+  // `failure` decides `notified`; `note` is what notify_error keeps. A fallback
+  // delivery still records why Email Sending failed: otherwise the row reads
+  // notified = 1 with no error and a broken primary transport goes unnoticed.
   let failure = await notifyByEmail(e, value);
+  let note = failure;
   if (failure) {
     const first = failure;
-    failure = await notifyByWeb3Forms(e, value);
-    if (failure) failure = `${first}; ${failure}`;
+    console.warn('[contact] email send failed, trying web3forms:', first);
+    const second = await notifyByWeb3Forms(e, value);
+    failure = second ? `${first}; ${second}` : null;
+    note = second ? failure : `sent via web3forms; email failed: ${first}`;
   }
 
   if (rowId !== null && e.CONTACT_DB) {
@@ -221,7 +227,7 @@ async function storeAndNotify(
       await e.CONTACT_DB.prepare(
         `UPDATE contact_submissions SET notified = ?, notify_error = ? WHERE id = ?`,
       )
-        .bind(failure ? 0 : 1, failure, rowId)
+        .bind(failure ? 0 : 1, note, rowId)
         .run();
     } catch (err) {
       console.error('[contact] could not record notification state:', err);
