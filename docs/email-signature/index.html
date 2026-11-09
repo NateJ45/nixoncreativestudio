@@ -652,9 +652,17 @@
               .replace(/<!--[\s\S]*?-->/g, '')
               .replace(/\s*\n\s*/g, ' ')
               .replace(/>\s+</g, '><')
-              .replace(/;\s*"/g, '"')
-              .replace(/:\s+/g, ':')
-              .replace(/;\s+/g, ';');
+              .replace(/style="([^"]*)"/g, function (m, s) {
+                // Tighten inside style attributes only: text spaces (after a separator) must stay breakable.
+                return (
+                  'style="' +
+                  s
+                    .replace(/\s*([:;])\s*/g, '$1')
+                    .trim()
+                    .replace(/;$/, '') +
+                  '"'
+                );
+              });
             var html = new Blob([min], { type: 'text/html' });
             var text = new Blob([el.innerText], { type: 'text/plain' });
             navigator.clipboard
