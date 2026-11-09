@@ -8,7 +8,7 @@ Reid Design is a separate business entity. Do not conflate it with Nixon Creativ
 
 **History.** The EmDash CMS and server rendering (PRs #47 to #105) were rolled back on 2026-10-09 to the static state of 7bca364: every page is prerendered and all content lives in this repo. The care plan pricing (now the four care levels in `src/data/pricing.ts`) and the sync-check and GA4 hostname fixes were kept. In November 2026 the whole front end was replaced with the design called "the deal" (ported from a mock in the motion lab). It left Tailwind, shadcn, React, dark mode and the old homepage behind. `main` is the only branch.
 
-Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker, MDX content collections for case studies and journal, plain CSS (`src/styles/kit.css` plus one file per page), plain processed Astro scripts, one typeface (Hanken Grotesk). No Tailwind, React or shadcn. Full list: `docs/claude/stack.md`.
+Stack in one line: Astro 7 (TypeScript strict, `output: 'static'`) served as assets by a Cloudflare Worker (whose only code is video byte ranges and the contact endpoint, `src/worker.ts`), MDX content collections for case studies and journal, plain CSS (`src/styles/kit.css` plus one file per page), plain processed Astro scripts, one typeface (Hanken Grotesk). No Tailwind, React or shadcn. Full list: `docs/claude/stack.md`.
 
 ## How this file is organised
 

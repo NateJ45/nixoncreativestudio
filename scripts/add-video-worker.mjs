@@ -1,13 +1,16 @@
 // A static Astro build deploys as assets only, and the adapter drops any Worker
 // named in wrangler.jsonc. iPhones will not play video without byte ranges, so
 // this adds src/worker.ts to the generated deploy config after the build. Only
-// *.mp4 and *.webm reach the Worker; everything else is still served as a plain asset.
+// *.mp4, *.webm and the contact endpoint (/api/contact/, src/contact-endpoint.ts)
+// reach the Worker; everything else is still served as a plain asset. The
+// bindings the endpoint needs (CONTACT_DB, EMAIL, vars) come through from
+// wrangler.jsonc in the generated config untouched.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const path = 'dist/client/wrangler.json';
 if (!existsSync(path)) {
   console.error(
-    `[video-worker] ${path} not found, so the build layout changed. Footage would not play on iPhones.`,
+    `[video-worker] ${path} not found, so the build layout changed. Footage would not play on iPhones and the contact form would have no endpoint.`,
   );
   process.exit(1);
 }
@@ -16,7 +19,7 @@ config.main = '../../src/worker.ts';
 config.assets = {
   ...config.assets,
   binding: 'ASSETS',
-  run_worker_first: ['/**/*.mp4', '/**/*.webm'],
+  run_worker_first: ['/**/*.mp4', '/**/*.webm', '/api/contact', '/api/contact/'],
 };
 writeFileSync(path, JSON.stringify(config));
-console.log('[video-worker] added to the deploy config, for *.mp4 and *.webm only.');
+console.log('[video-worker] added to the deploy config, for *.mp4, *.webm and /api/contact/ only.');

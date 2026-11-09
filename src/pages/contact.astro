@@ -1,26 +1,29 @@
 ---
-// Foundation, edit with care. The form structure, the Web3Forms wiring and
-// src/scripts/contact.js are the production inquiry pipeline; touch only with
+// Foundation, edit with care. The form structure, src/scripts/contact.js and
+// src/contact-endpoint.ts are the production inquiry pipeline; touch only with
 // intent. Copy is safe to edit.
 /* ============================================================================
    /contact | Start a project
    ============================================================================
-   The job: a qualified inquiry in under two minutes. Posts to Web3Forms.
+   The job: a qualified inquiry in under two minutes. Posts to the site's own
+   endpoint, /api/contact/ (src/contact-endpoint.ts), which stores the inquiry
+   in D1 before it emails Nathan.
 
    One question at a time with the brief phone beside it, when scripts run. The
    markup is one plain form with every field showing, so without JavaScript it
    posts natively (no novalidate in the markup, so the browser checks the
    required fields; the script turns validation over to itself with
-   form.noValidate). Web3Forms then redirects to /contact/?sent=1#sent, and the
-   success panel shows through CSS :target.
+   form.noValidate). The endpoint then redirects to /contact/?sent=1#sent, and
+   the success panel shows through CSS :target.
 
    The form, field by field:
      Required: name, email, org_type (radios), message.
      Optional: runs (who keeps it up to date), and budget, as radios whose labels read from the web tier floors in
      src/data/pricing.ts. Then organization, phone, current_website, timeline
      and heard_from on the last step.
-     Hidden: access_key, subject, from_name and redirect (Web3Forms), the
-     botcheck honeypot, and four origin fields the script fills from the URL:
+     Hidden: rendered_at (the script stamps the load time for the endpoint's
+     timing check), the botcheck honeypot, and four origin fields the script
+     fills from the URL:
      from (the page or study that sent the visitor), tier, service and
      origin_org_type (the org type the link carried; the visible radios are
      org_type itself, so the hidden copy takes another name rather than send two
@@ -40,10 +43,10 @@
    against a slug pattern before use, and a prefill never overrides a restored
    draft.
 
-   Spam protection is the hidden honeypot field (botcheck) alone. To bring
-   hCaptcha back: restore the .h-captcha div, the js.hcaptcha.com/1/api.js script
-   tag, a captcha gate in the submit handler, and turn hCaptcha back on in the
-   Web3Forms dashboard (and name it in /privacy).
+   Spam protection is the hidden honeypot field (botcheck) plus the endpoint's
+   timing check. The endpoint also verifies a Turnstile token when the
+   TURNSTILE_SECRET secret is set; wiring the widget is PORTS.md card 45's
+   presacademy addendum (and name it in /privacy).
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
@@ -145,15 +148,6 @@ const successSets = [
     .map((o) => ({ key: o.value, items: pickTwo(o.value) })),
 ];
 
-// Web3Forms access key. The PUBLIC_ prefix exposes it to the client at build
-// time, which the browser-side form needs.
-const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
-const formActive = web3formsKey.length > 0;
-
-// Where Web3Forms sends a no-JS visitor after a successful post. The #sent
-// fragment is what shows the success panel without a script (CSS :target).
-const redirectUrl = `${site.url}/contact/?sent=1#sent`;
-
 const heading = 'Start a project, or just <b>say hello.</b>';
 ---
 
@@ -177,19 +171,16 @@ const heading = 'Start a project, or just <b>say hello.</b>';
       <form
         class="card keyed q-form"
         method="post"
-        action="https://api.web3forms.com/submit"
+        action="/api/contact/"
         data-contact-form
         data-form
         data-tiers={JSON.stringify(tierInfo)}
         data-studies={JSON.stringify(studyNames)}
         aria-labelledby="sth"
       >
-        <!-- Web3Forms fields. access_key routes the post to Nathan's inbox, subject
-             and from_name label the email, redirect is where a no-JS visitor lands. -->
-        <input type="hidden" name="access_key" value={web3formsKey} />
-        <input type="hidden" name="subject" value={`New project inquiry from ${site.domain}`} />
-        <input type="hidden" name="from_name" value={`${site.studioName} website`} />
-        <input type="hidden" name="redirect" value={redirectUrl} />
+        <!-- Load time in epoch ms, stamped by the script for the endpoint's timing
+             check. Empty without JavaScript, and the check then skips itself. -->
+        <input type="hidden" name="rendered_at" value="" data-rendered-at />
 
         <!-- Origin fields. Empty unless the script finds them in the URL. -->
         <input type="hidden" name="from" value="" data-origin="from" />
@@ -404,12 +395,6 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             <span data-contact-submit-label>Send</span>
           </button>
         </div>
-        {!formActive && (
-          <p class="ns">
-            The Web3Forms access key is missing. Set <code>PUBLIC_WEB3FORMS_KEY</code> in
-            <code>.env</code> locally and in Cloudflare settings before launch.
-          </p>
-        )}
       </form>
 
       <!-- Error panel: something went wrong on my end, without red. -->

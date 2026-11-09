@@ -4,9 +4,12 @@ Read when asked what is unconfigured or what content is outstanding.
 
 Things that still need configuration before or during the public launch. Everything below ships gracefully today (components render nothing or fall back when not configured), so the site stays clean while these wait.
 
+## Contact form
+
+- [ ] `WEB3FORMS_KEY` Worker secret (`npx wrangler secret put WEB3FORMS_KEY`): the fallback if Cloudflare Email Sending fails. Without it a failed send is still stored in D1, just not emailed. Detail: `deployment.md` "Contact form".
+
 ## Cloudflare env vars (Settings → Variables and Secrets)
 
-- [ ] `PUBLIC_WEB3FORMS_KEY`: contact form delivery (web3forms.com). Without it the form shows an inline notice instead of sending.
 - [ ] `PUBLIC_CF_ANALYTICS_TOKEN`: Cloudflare Web Analytics.
 - [ ] `PUBLIC_GA_ID`: GA4 Measurement ID.
 - [ ] `PUBLIC_COMING_SOON`: set to `true` while the site is WIP; unset to launch.

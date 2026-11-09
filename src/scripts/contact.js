@@ -1,7 +1,7 @@
 /* The contact form's enhancement layer: one question at a time, a "Check your answers" step with a
    Change button per answer, validation that says what to do, draft save and restore, URL prefill, the
    "Your answers so far" phone, fetch submit and the success panel. The form works without any of this:
-   it is a plain post to Web3Forms, with the same fields. */
+   it is a plain post to the site's own /api/contact/ endpoint, with the same fields. */
 import { ui } from './kit.js';
 import { track } from '../lib/track';
 
@@ -16,6 +16,9 @@ var $$ = function (a, r) {
 
 var form = $('[data-form]');
 form.noValidate = true;
+/* When the page loaded, for the endpoint's "too fast to be a person" check. */
+var renderedAt = $('[data-rendered-at]', form);
+if (renderedAt) renderedAt.value = String(Date.now());
 var steps = $$('[data-step]', form),
   cur = 0;
 var count = $('[data-count]'),

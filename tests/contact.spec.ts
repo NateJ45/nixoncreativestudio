@@ -3,9 +3,11 @@ import { test, expect, type Page } from '@playwright/test';
 // =============================================================================
 // /contact: the real form, one question at a time
 // =============================================================================
-// Requests to Web3Forms are intercepted, so these never send anything.
+// Posts to the site's own endpoint are intercepted, so these never send anything.
+// (The test server is static, so the real endpoint is not there anyway.)
 
-const WEB3FORMS = 'https://api.web3forms.com/submit';
+const ENDPOINT = '/api/contact/';
+const ENDPOINT_GLOB = '**/api/contact/';
 
 /** Walk the questions the way a visitor does, ending on "Check your answers". */
 async function fillAll(page: Page, sector = 'Church') {
@@ -31,15 +33,17 @@ async function fillAll(page: Page, sector = 'Church') {
 test.describe('Without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('the form posts natively to Web3Forms with the required fields', async ({ page }) => {
+  test("the form posts natively to the site's own endpoint with the required fields", async ({
+    page,
+  }) => {
     let posted: string | null = null;
-    await page.route(WEB3FORMS, async (route) => {
+    await page.route(ENDPOINT_GLOB, async (route) => {
       posted = route.request().postData();
       await route.fulfill({ status: 200, contentType: 'text/html', body: 'ok' });
     });
     await page.goto('/contact/');
     const form = page.locator('form[data-contact-form]');
-    await expect(form).toHaveAttribute('action', WEB3FORMS);
+    await expect(form).toHaveAttribute('action', ENDPOINT);
     await expect(form).toHaveAttribute('method', 'post');
     for (const name of ['name', 'email', 'message']) {
       await expect(form.locator(`[name="${name}"]`)).toHaveAttribute('required', '');
@@ -49,10 +53,9 @@ test.describe('Without JavaScript', () => {
       expect(await form.locator(`[name="${name}"]`).getAttribute('required')).toBeNull();
     }
     expect(await form.locator('[name="budget"]').first().getAttribute('required')).toBeNull();
-    await expect(form.locator('input[name="redirect"]')).toHaveAttribute(
-      'value',
-      /\/contact\/\?sent=1#sent$/,
-    );
+    // The endpoint, not the form, owns the redirect, and no key ships in the page.
+    await expect(form.locator('input[name="access_key"]')).toHaveCount(0);
+    await expect(form.locator('input[name="rendered_at"]')).toHaveAttribute('value', '');
 
     // Every question shows at once, and the check step, which needs the script, does not.
     await expect(page.getByLabel('Phone')).toBeVisible();
@@ -66,7 +69,7 @@ test.describe('Without JavaScript', () => {
       .getByLabel('What are you hoping to build?')
       .fill('A new website for the congregation, with room for the weekly news.');
     await Promise.all([
-      page.waitForURL(WEB3FORMS),
+      page.waitForURL(ENDPOINT_GLOB),
       page.getByRole('button', { name: 'Send' }).click(),
     ]);
     expect(posted).toContain('Test+Person');
@@ -228,7 +231,7 @@ test.describe('With JavaScript', () => {
     page,
   }) => {
     let body = '';
-    await page.route(WEB3FORMS, async (route) => {
+    await page.route(ENDPOINT_GLOB, async (route) => {
       body = route.request().postData() ?? '';
       await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     });
@@ -240,13 +243,14 @@ test.describe('With JavaScript', () => {
     await expect(page.locator('[data-success-studies="church"] a')).toHaveCount(2);
     await expect(page.locator('form[data-contact-form]')).toBeHidden();
     await expect(page.locator('[data-phone]')).toContainText('Sent to Nathan');
-    expect(body).toContain('access_key');
+    // The load-time stamp rides along for the endpoint's timing check.
+    expect(body).toMatch(/name="rendered_at"\r\n\r\n\d{13}/);
     expect(await page.evaluate(() => localStorage.getItem('ncs-contact-draft'))).toBeNull();
     await expect(page.locator('body')).not.toContainText(/preview/i);
   });
 
   test('a failed post shows the error panel and keeps the form', async ({ page }) => {
-    await page.route(WEB3FORMS, (route) => route.fulfill({ status: 500, body: 'nope' }));
+    await page.route(ENDPOINT_GLOB, (route) => route.fulfill({ status: 500, body: 'nope' }));
     await page.goto('/contact/');
     await fillAll(page);
     await page.getByRole('button', { name: 'Send' }).click();
@@ -257,7 +261,7 @@ test.describe('With JavaScript', () => {
 
   test('the honeypot pretends and sends nothing', async ({ page }) => {
     let sent = false;
-    await page.route(WEB3FORMS, async (route) => {
+    await page.route(ENDPOINT_GLOB, async (route) => {
       sent = true;
       await route.fulfill({ status: 200, body: '{}' });
     });
