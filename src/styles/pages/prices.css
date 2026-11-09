@@ -1560,6 +1560,12 @@ html:not(.js) .jump a[href='#pick'] {
     display: block;
     width: auto;
   }
+  /* A stacked table's caption has to stack too. Left as display: table-caption inside a table that
+     is now display: block, the browser wraps the caption in an anonymous table that shrinks to fit,
+     and the caption is crushed into a column one or two words wide. */
+  .fit-table caption {
+    display: block;
+  }
   .fit-table thead {
     display: none;
   }
@@ -1622,6 +1628,10 @@ html:not(.js) .jump a[href='#pick'] {
   .cost-table td {
     display: block;
     width: auto;
+  }
+  /* The same anonymous-table trap as the fit table's caption above. */
+  .cost-table caption {
+    display: block;
   }
   .cost-table thead {
     display: none;
