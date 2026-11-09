@@ -11,6 +11,7 @@
 // endpoint in src/contact-endpoint.ts.
 
 import type { RawSubmission } from './contact-submission.ts';
+import { labelFor } from '../data/inquiry-options.ts';
 
 /** The optional fields, in the order the form asks them, with the label the email shows. */
 export const DETAIL_FIELDS = [
@@ -45,8 +46,9 @@ function text(v: unknown): string {
  */
 export function inquiryToSubmission(fields: Record<string, unknown>): RawSubmission {
   const details = DETAIL_FIELDS.map(([key, label]) => {
+    // The words the visitor saw ("$4,000 to $6,999"), not the stored key ("4k-7k").
     const value = text(fields[key]).slice(0, MAX_DETAIL);
-    return value ? `${label}: ${value}` : '';
+    return value ? `${label}: ${labelFor(key, value)}` : '';
   }).filter(Boolean);
 
   const message = text(fields.message);

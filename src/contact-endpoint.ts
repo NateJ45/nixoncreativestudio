@@ -33,10 +33,10 @@
 import {
   validateSubmission,
   looksAutomated,
-  buildNotification,
   type CleanSubmission,
 } from './lib/contact-submission.ts';
 import { inquiryToSubmission } from './lib/inquiry.ts';
+import { buildInquiryEmail, type InquiryEmail } from './lib/inquiry-email.ts';
 import { site } from './data/site.ts';
 
 /** The slice of D1 this route uses, declared structurally (no workers-types dependency). */
@@ -115,9 +115,12 @@ async function passesTurnstile(
 }
 
 /** Cloudflare Email Sending. Returns null on success, or the reason it failed. */
-async function notifyByEmail(e: ContactEnv, s: CleanSubmission): Promise<string | null> {
+async function notifyByEmail(
+  e: ContactEnv,
+  s: CleanSubmission,
+  note: InquiryEmail,
+): Promise<string | null> {
   if (!e.EMAIL || !e.CONTACT_TO || !e.CONTACT_FROM) return 'email binding not configured';
-  const note = buildNotification(s, site.studioName);
   const message: Record<string, unknown> = {
     to: e.CONTACT_TO,
     from: { email: e.CONTACT_FROM, name: `${site.studioName} website` },
@@ -141,7 +144,11 @@ async function notifyByEmail(e: ContactEnv, s: CleanSubmission): Promise<string 
 }
 
 /** The fallback transport, with the key in a Worker secret instead of the page. */
-async function notifyByWeb3Forms(e: ContactEnv, s: CleanSubmission): Promise<string | null> {
+async function notifyByWeb3Forms(
+  e: ContactEnv,
+  s: CleanSubmission,
+  note: InquiryEmail,
+): Promise<string | null> {
   if (!e.WEB3FORMS_KEY) return 'no fallback transport configured';
   try {
     const res = await fetch('https://api.web3forms.com/submit', {
@@ -151,8 +158,8 @@ async function notifyByWeb3Forms(e: ContactEnv, s: CleanSubmission): Promise<str
         access_key: e.WEB3FORMS_KEY,
         name: s.name,
         email: s.email,
-        subject: s.subject,
-        message: s.message,
+        subject: note.subject,
+        message: note.text,
         from_name: `${site.studioName} website`,
       }),
     });
@@ -183,7 +190,10 @@ async function storeAndNotify(
   e: ContactEnv,
   request: Request,
   value: CleanSubmission,
+  fields: Record<string, unknown>,
 ): Promise<{ stored: boolean; failure: string | null }> {
+  const receivedAt = new Date();
+  const country = request.headers.get('cf-ipcountry') ?? null;
   let rowId: number | null = null;
   if (e.CONTACT_DB) {
     try {
@@ -193,13 +203,13 @@ async function storeAndNotify(
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
         .bind(
-          new Date().toISOString(),
+          receivedAt.toISOString(),
           value.name,
           value.email,
           value.subject,
           value.message,
           request.headers.get('user-agent')?.slice(0, 300) ?? null,
-          request.headers.get('cf-ipcountry') ?? null,
+          country,
         )
         .run();
       rowId = res.meta?.last_row_id ?? null;
@@ -212,12 +222,20 @@ async function storeAndNotify(
   // `failure` decides `notified`; `note` is what notify_error keeps. A fallback
   // delivery still records why Email Sending failed: otherwise the row reads
   // notified = 1 with no error and a broken primary transport goes unnoticed.
-  let failure = await notifyByEmail(e, value);
+  // Built after the insert so the email can name its row (Inquiry #12).
+  const email = buildInquiryEmail(fields, {
+    id: rowId,
+    receivedAt,
+    country,
+    siteUrl: site.url,
+    studioName: site.studioName,
+  });
+  let failure = await notifyByEmail(e, value, email);
   let note = failure;
   if (failure) {
     const first = failure;
     console.warn('[contact] email send failed, trying web3forms:', first);
-    const second = await notifyByWeb3Forms(e, value);
+    const second = await notifyByWeb3Forms(e, value, email);
     failure = second ? `${first}; ${second}` : null;
     note = second ? failure : `sent via web3forms; email failed: ${first}`;
   }
@@ -268,7 +286,7 @@ export async function handleContact(request: Request, e: ContactEnv): Promise<Re
     return wantsJson ? json({ ok: false, error }, 403) : plainPage(403, [error]);
   }
 
-  const { stored, failure } = await storeAndNotify(e, request, value);
+  const { stored, failure } = await storeAndNotify(e, request, value, fields);
 
   // Stored but not sent is still a success for the visitor: the message exists
   // and the row says it needs chasing. Only neither-stored-nor-sent has failed.
