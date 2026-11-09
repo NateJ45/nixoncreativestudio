@@ -28,15 +28,15 @@
       "migrations_dir": "migrations",
     },
   ],
-  // Cloudflare Email Sending. The onboarded sending domain is the SUBDOMAIN
-  // alerts.nixoncreativestudio.com (the root's MX stays with Google Workspace),
-  // so CONTACT_FROM must be an @alerts address. WEB3FORMS_KEY,
+  // Cloudflare Email Sending, from the onboarded nixoncreativestudio.com
+  // sending domain (bounce records on the cf-bounce subdomain, so Google
+  // Workspace keeps the root MX). WEB3FORMS_KEY,
   // the fallback transport, is a Worker secret:
   //   npx wrangler secret put WEB3FORMS_KEY
   "send_email": [{ "name": "EMAIL" }],
   // Both addresses are public (the site prints the first), so they are plain vars.
   "vars": {
     "CONTACT_TO": "nathan@nixoncreativestudio.com",
-    "CONTACT_FROM": "website@alerts.nixoncreativestudio.com",
+    "CONTACT_FROM": "website@nixoncreativestudio.com",
   },
 }
