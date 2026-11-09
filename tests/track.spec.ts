@@ -3,10 +3,10 @@ import { test, expect, type Page } from '@playwright/test';
 /* GA4 events (overhaul 4.1). The real tag never runs in a test browser (the
    PORTABLE GoogleAnalytics.astro skips WebDriver and non-production hosts), so
    each test stubs window.gtag before the page loads and reads back what
-   src/lib/track.ts sent. Web3Forms is intercepted, never reached. Chromium
+   src/lib/track.ts sent. The contact endpoint is intercepted, never reached. Chromium
    only (the WebKit project runs a fixed list of specs). */
 
-const WEB3FORMS = 'https://api.web3forms.com/submit';
+const ENDPOINT_GLOB = '**/api/contact/';
 
 type Sent = [string, string, Record<string, unknown>];
 
@@ -26,7 +26,7 @@ async function events(page: Page): Promise<Sent[]> {
 
 test('a sent contact form fires generate_lead, with no field values', async ({ page }) => {
   await stubGtag(page);
-  await page.route(`${WEB3FORMS}**`, (route) =>
+  await page.route(ENDPOINT_GLOB, (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' }),
   );
   await page.goto('/contact/');
@@ -58,7 +58,7 @@ test('a sent contact form fires generate_lead, with no field values', async ({ p
 
 test('a failed post fires no generate_lead', async ({ page }) => {
   await stubGtag(page);
-  await page.route(`${WEB3FORMS}**`, (route) => route.fulfill({ status: 500, body: '' }));
+  await page.route(ENDPOINT_GLOB, (route) => route.fulfill({ status: 500, body: '' }));
   await page.goto('/contact/');
   await page.getByLabel("What's your name?").fill('Test Person');
   await page.getByRole('button', { name: 'Next' }).click();

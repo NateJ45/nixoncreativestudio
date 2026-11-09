@@ -75,15 +75,13 @@ test('a client window opens the sheet with no CSP violation', async ({ page }) =
   expect(violations).toEqual([]);
 });
 
-test('the policy lets the contact form reach Web3Forms', async ({ page }) => {
+test('the policy lets the contact form reach its own endpoint', async ({ page }) => {
   const violations = await enforce(page);
   await page.goto('/contact/');
-  // Answered here, so nothing leaves the test. A blocked request would still show as a violation.
-  await page.route('https://api.web3forms.com/**', (route) =>
-    route.fulfill({ status: 200, body: '{}' }),
-  );
+  // Answered here, so nothing is stored. A blocked request would still show as a violation.
+  await page.route('**/api/contact/', (route) => route.fulfill({ status: 200, body: '{}' }));
   await page.evaluate(() =>
-    fetch('https://api.web3forms.com/submit', { method: 'POST', body: '{}' }).catch(() => null),
+    fetch('/api/contact/', { method: 'POST', body: '{}' }).catch(() => null),
   );
   expect(violations).toEqual([]);
 });

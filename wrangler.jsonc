@@ -14,4 +14,29 @@
   "observability": {
     "enabled": true,
   },
+  // The contact form's own endpoint (src/contact-endpoint.ts, PORTS.md card 45):
+  // every inquiry is stored here BEFORE the email is tried. Schema:
+  // migrations/0001_contact_submissions.sql, applied with
+  //   npx wrangler d1 migrations apply nixoncreativestudio-contact --remote
+  // Read the latest rows (notified = 0 means the email did not go out):
+  //   npx wrangler d1 execute nixoncreativestudio-contact --remote --command "SELECT id, received_at, name, email, notified, notify_error FROM contact_submissions ORDER BY id DESC LIMIT 10"
+  "d1_databases": [
+    {
+      "binding": "CONTACT_DB",
+      "database_name": "nixoncreativestudio-contact",
+      "database_id": "c83c1426-f3c6-4158-b4e5-46223a42185c",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Cloudflare Email Sending, from the onboarded nixoncreativestudio.com
+  // sending domain (bounce records on the cf-bounce subdomain, so Google
+  // Workspace keeps the root MX). WEB3FORMS_KEY,
+  // the fallback transport, is a Worker secret:
+  //   npx wrangler secret put WEB3FORMS_KEY
+  "send_email": [{ "name": "EMAIL" }],
+  // Both addresses are public (the site prints the first), so they are plain vars.
+  "vars": {
+    "CONTACT_TO": "nathan@nixoncreativestudio.com",
+    "CONTACT_FROM": "website@nixoncreativestudio.com",
+  },
 }
