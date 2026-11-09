@@ -22,6 +22,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 - Pages: `src/pages/`. The shared shell (head, top line, dock, client sheet, analytics, Coming Soon gate): `src/layouts/BaseLayout.astro`.
 - Look and tokens: `DESIGN.md` (the rules) and `src/styles/kit.css` (the code; tokens in `:root`). Page styles: `src/styles/pages/*.css`. Scripts: `src/scripts/kit.js` plus one per page. Security and cache headers: `public/_headers`.
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.
+- Gmail signatures (full and compact) with copy buttons: `docs/email-signature/index.html`. Their headshots are served from `public/email/`; keep those file names, every sent email points at them.
 - Read the strategy doc (`docs/claude/strategy-and-audience.md`) before any design call.
 
 ## Vault
