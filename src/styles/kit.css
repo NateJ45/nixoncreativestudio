@@ -220,10 +220,10 @@ p {
 .top.float .mark,
 .top.float .status {
   pointer-events: auto;
-  /* Solid, not frosted: a see-through pill changed tone as dark and light screen captures passed
-     under it, which read as a flicker on the case studies. */
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
   color: var(--ink);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
   box-shadow:
     0 0 0 1px var(--line),
     0 1px 2px rgba(0, 0, 0, 0.08),
