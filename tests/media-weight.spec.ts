@@ -61,7 +61,7 @@ test('a window plays its footage under the pointer', async ({ page }) => {
     .poll(() =>
       band.locator('video').evaluate((v: HTMLVideoElement) => v.getAttribute('src') ?? ''),
     )
-    .toMatch(/-m\.mp4$/);
+    .toMatch(/-m\.mp4\?v=[0-9a-f]{8}$/);
 });
 
 for (const { slug } of studies) {

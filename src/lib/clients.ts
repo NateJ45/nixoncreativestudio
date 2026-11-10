@@ -12,6 +12,7 @@
    ============================================================================ */
 
 import { getCollection, type CollectionEntry } from 'astro:content';
+import versions from '../data/footage-versions.json';
 import { nightMark } from './night-mark';
 import { SECTOR_LABEL } from '../data/inquiry-options';
 
@@ -77,13 +78,23 @@ export function toClient(entry: CollectionEntry<'case-studies'>): Client {
     host: d.facts?.host ?? (live ? hostOf(live) : ''),
     live,
     study: `/work/${slug}/`,
-    clip: `/assets/${slug}-m.mp4`,
+    clip: stamped(`/assets/${slug}-m.mp4`),
     still: `/assets/${slug}-m.webp`,
     stillSet: `/assets/${slug}-m-320.webp 320w, /assets/${slug}-m-448.webp 448w, /assets/${slug}-m.webp 584w`,
-    desk: `/assets/${slug}.mp4`,
+    desk: stamped(`/assets/${slug}.mp4`),
     deskStill: `/assets/${slug}-cover.webp`,
     cms: d.cmsShot ? `/assets/${slug}-cms.webp` : '',
   };
+}
+
+/** A footage address with a short hash of the file on the end. `/assets/*` is cached for a month
+ *  (public/_headers) and a re-filmed clip keeps its name, so without this a returning visitor
+ *  would go on seeing the old clip. The hashes are in src/data/footage-versions.json, written by
+ *  `npm run footage:stamp` and checked against the files by footage-versions.test.ts (pages are
+ *  rendered where there is no file system to read the clip from). */
+function stamped(path: string): string {
+  const v = (versions as Record<string, string>)[path.split('/').pop() ?? ''];
+  return v ? `${path}?v=${v}` : path;
 }
 
 /** Every client, in deal order. */

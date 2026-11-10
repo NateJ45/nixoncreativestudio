@@ -58,6 +58,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## Images and media
 
+- Footage addresses carry `?v=` and a short hash of the file (`stamped()` in `src/lib/clients.ts`, hashes in `src/data/footage-versions.json`), because `/assets/*` is cached for a month and a re-filmed clip keeps its name. After changing a clip run `npm run footage:stamp`; `footage-versions.test.ts` fails until you do.
 - Footage and captures are plain files in `public/assets/`, named by study slug: `{slug}.mp4` (desktop footage), `{slug}-m.mp4` (phone footage), `{slug}-m.webp` (phone still, 584w, with `-320` and `-448` copies that the cards pick through `client.stillSet` plus a `sizes` matching each card's CSS width; `npm run stills` rewrites the copies), `{slug}-cover.webp` (desktop still), `{slug}-cms.webp` (editor screen), plus `study/*.webp` for the body images. They are cached for a month (`public/_headers`). Interaction clips stay in `public/media/` with a content hash in the name (cached for a year).
 - Give every `<img>` its real `width` and `height`. Content images get a descriptive `alt`; an image beside a heading that names the same thing gets `alt=""`. A window's screen is `aria-hidden` because its link already carries a full label.
 - The studio's own pictures (the portrait) are in `public/assets/`. A study's `cover` frontmatter is still an Astro `image()` from `src/assets/case-studies/`, used for the share card and structured data, not shown on the page.

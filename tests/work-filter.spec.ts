@@ -21,7 +21,7 @@ test('the grid shows large desktop captures with their words and links', async (
   await expect(first.locator('a.tile.desk img')).toHaveAttribute('src', /-cover\.webp$/);
   await expect(first.locator('a.tile.desk video')).toHaveAttribute(
     'data-src',
-    /stone-steps-50k\.mp4$/,
+    /stone-steps-50k\.mp4\?v=[0-9a-f]{8}$/,
   );
   await expect(first.locator('h2')).toHaveText('Stone Steps 50K');
   await expect(first.locator('.label')).toHaveText('Nonprofit');
