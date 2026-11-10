@@ -1,5 +1,7 @@
-/* Prices: the three questions that suggest a tier, the tiers that lift, the folding rows. */
+/* Prices: the three questions that suggest a tier, the tiers that lift, the folding rows, the live
+   receipt, the weeks strip in the care section and the step icons in How it works. */
 import { ui } from './kit.js';
+import { receipt, receiptLines, usd, yearsWord } from '../lib/receipt';
 var reduce = ui.reduce,
   doc = document;
 var all = function (a, r) {
@@ -374,4 +376,207 @@ addEventListener('beforeprint', function () {
   all('.faq details, .fold').forEach(function (d) {
     d.open = true;
   });
+  /* Paper shows the finished state: every dot and every icon. */
+  all('[data-weeks]').forEach(function (w) {
+    w.classList.add('in');
+  });
+  all('[data-steps] li').forEach(function (li) {
+    li.classList.add('drawn');
+  });
 });
+
+/* The live receipt (LiveReceipt.astro). A tier, a plan and a number of years print the build, Hosting,
+   care and the total, from src/lib/receipt.ts, which is the cost table's rule (receipt.test.ts checks
+   they agree). The page hands over the numbers from pricing.ts, so nothing here types a price. A line
+   whose words changed is reprinted and feeds back in from just above on a small spring, like a till
+   slip; the numbers are swapped as text, never counted. Under reduced motion they are simply swapped. */
+var rc = doc.querySelector('[data-rcpt]');
+if (rc) {
+  var R = JSON.parse(rc.dataset.r);
+  var rform = rc.querySelector('[data-rcpt-form]'),
+    range = rform.querySelector('input[type="range"]'),
+    yearsOut = rc.querySelector('[data-rcpt-years]'),
+    needEl = rc.querySelector('[data-rcpt-need]'),
+    say = rc.querySelector('[data-rcpt-say]');
+  var lineEls = {};
+  all('[data-line]', rc).forEach(function (el) {
+    lineEls[el.dataset.line] = el;
+  });
+  var checked = function (name) {
+    return rform.querySelector('input[name="' + name + '"]:checked');
+  };
+  var byName = function (list, name) {
+    return list.filter(function (x) {
+      return x.name === name;
+    })[0];
+  };
+
+  /* The paper feed: each reprinted line starts 14px up, inside its own clipped row, and springs down. */
+  var feeds = [],
+    fraf = 0,
+    flast = 0;
+  var feedFrame = function (now) {
+    fraf = 0;
+    var dt = Math.min(0.033, (now - flast) / 1000 || 0.016);
+    flast = now;
+    feeds = feeds.filter(function (f) {
+      var going = f.s.step(0, dt);
+      var t = going ? 'translateY(' + f.s.x.toFixed(2) + 'px)' : '';
+      f.kids.forEach(function (k) {
+        k.style.transform = t;
+      });
+      return going;
+    });
+    if (feeds.length) fraf = requestAnimationFrame(feedFrame);
+  };
+  var feed = function (el) {
+    if (reduce) return;
+    var f = feeds.filter(function (x) {
+      return x.el === el;
+    })[0];
+    if (!f) {
+      f = { el: el, kids: all('dt, dd', el), s: ui.spring(260, 18, 0) };
+      feeds.push(f);
+    }
+    f.s.x = -14;
+    f.s.v = 0;
+    if (!fraf) {
+      flast = performance.now();
+      fraf = requestAnimationFrame(feedFrame);
+    }
+  };
+
+  var sayT = 0;
+  var update = function (animate) {
+    var tier = byName(R.tiers, (checked('r-tier') || {}).value) || R.tiers[1];
+    /* Only the plans this tier's cost table prints: Flagship's custom tools need Care or Care+. */
+    all('input[name="r-plan"]', rform).forEach(function (i) {
+      i.disabled = tier.plans.indexOf(i.value) === -1;
+    });
+    var pick = checked('r-plan');
+    if (!pick || pick.disabled) {
+      pick = rform.querySelector(
+        'input[name="r-plan"][value="' + (tier.needs || tier.plans[0]) + '"]',
+      );
+      pick.checked = true;
+    }
+    if (needEl) needEl.hidden = !tier.needs;
+    var plan = byName(R.plans, pick.value),
+      years = +range.value;
+    range.style.setProperty('--p', ((years - 1) / 4) * 100 + '%');
+    yearsOut.textContent = yearsWord(years);
+    var input = {
+      build: tier.build,
+      hostingPerYear: R.hostingPerYear,
+      carePerMonth: plan.perMonth,
+      years: years,
+    };
+    var r = receipt(input);
+    receiptLines(
+      r,
+      {
+        tier: tier.name,
+        plan: plan.perMonth ? plan.name : '',
+        hostingName: R.hostingName,
+        years: years,
+      },
+      input,
+    ).forEach(function (l) {
+      var el = lineEls[l.key],
+        b = el.querySelector('dt b'),
+        sp = el.querySelector('dt span'),
+        dd = el.querySelector('dd');
+      if (
+        b.textContent === l.label &&
+        (!sp || sp.textContent === l.note) &&
+        dd.textContent === l.amount
+      )
+        return;
+      b.textContent = l.label;
+      if (sp) sp.textContent = l.note;
+      dd.textContent = l.amount;
+      if (animate) feed(el);
+    });
+    /* One short sentence for a screen reader, once the scrubber has settled, rather than one per step. */
+    if (animate) {
+      clearTimeout(sayT);
+      sayT = setTimeout(function () {
+        say.textContent =
+          tier.name +
+          (plan.perMonth ? ' with ' + plan.name : ' on ' + R.hostingName + ' only') +
+          ', ' +
+          yearsWord(years) +
+          ': ' +
+          usd(r.total) +
+          ' in total.';
+      }, 450);
+    }
+  };
+  rform.addEventListener('input', function () {
+    update(true);
+  });
+  rform.addEventListener('change', function () {
+    update(true);
+  });
+  /* Radios and the scrubber can come back set after a reload or Back, so the receipt is rebuilt from them. */
+  update(false);
+  addEventListener('pageshow', function () {
+    update(false);
+  });
+}
+
+/* Life in weeks (ClientWeeks.astro). The filled dots fill left to right as the strip arrives. Only when it
+   starts below the screen: a strip already on screen, reduced motion or no observer keeps them filled. */
+var weeksEl = doc.querySelector('[data-weeks]');
+if (weeksEl && !reduce && 'IntersectionObserver' in window) {
+  if (weeksEl.getBoundingClientRect().top > innerHeight) {
+    weeksEl.classList.add('wk-wait');
+    var wio = new IntersectionObserver(
+      function (es) {
+        if (!es[0].isIntersecting) return;
+        wio.disconnect();
+        requestAnimationFrame(function () {
+          weeksEl.classList.add('in');
+        });
+      },
+      { threshold: 0.3 },
+    );
+    wio.observe(weeksEl);
+  }
+}
+
+/* How it works: as the list arrives, each step's stretch of hairline runs to it and its icon draws, in
+   order, the one drawing in the blue. Same rule as the weeks: only from below the screen, never under
+   reduced motion. A step folded away on a phone has no box, so it is simply drawn. */
+var stepsEl = doc.querySelector('[data-steps]');
+if (stepsEl && !reduce && 'IntersectionObserver' in window) {
+  if (stepsEl.getBoundingClientRect().top > innerHeight) {
+    var stepLis = all('li', stepsEl);
+    stepsEl.classList.add('st-wait');
+    var sio = new IntersectionObserver(
+      function (es) {
+        if (!es[0].isIntersecting) return;
+        sio.disconnect();
+        stepLis.forEach(function (li, i) {
+          setTimeout(
+            function () {
+              stepLis.forEach(function (l) {
+                l.classList.remove('at');
+              });
+              li.classList.add('drawn', 'at');
+            },
+            150 + i * 520,
+          );
+        });
+        setTimeout(
+          function () {
+            stepLis[stepLis.length - 1].classList.remove('at');
+          },
+          150 + stepLis.length * 520 + 900,
+        );
+      },
+      { threshold: 0.35 },
+    );
+    sio.observe(stepsEl);
+  }
+}

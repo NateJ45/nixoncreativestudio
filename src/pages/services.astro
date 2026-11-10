@@ -19,6 +19,8 @@ import '../styles/pages/prices.css';
 import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import Closing from '../components/Closing.astro';
+import LiveReceipt from '../components/LiveReceipt.astro';
+import ClientWeeks from '../components/ClientWeeks.astro';
 import { site } from '../data/site';
 import {
   webTiers as tiers,
@@ -514,6 +516,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
           ))}
         </ul>
       </figure>
+      <LiveReceipt />
       <p class="costs-go">
         <a class="chip" href="/one-page/">
           One-page summary for a board or committee
@@ -760,6 +763,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
         alerts in its software, and domain renewals where I manage the domain. If a site goes down,
         my phone tells me, so I usually know before you do.
       </p>
+      <ClientWeeks />
       <p class="intro rate-line">
         <b>{rateLine}</b> New features and custom tools are custom development, at{' '}
         {money(customWorkRate)} an hour, and I quote them in writing first.
@@ -874,8 +878,19 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <div class="sec-head">
         <h2 id="how-h">How it works</h2>
       </div>
-      <ol class="steps">
+      <ol class="steps" data-steps>
         <li>
+          {/* A conversation: two speech bubbles. */}
+          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M4 4.5h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+              pathLength="1"
+            ></path>
+            <path
+              d="M18.5 8.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.5-3H12"
+              pathLength="1"
+            ></path>
+          </svg>
           <h3>Start with a conversation</h3>
           <p>
             The first conversation is free: text me about what you actually need, and I'll come back
@@ -885,6 +900,12 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </p>
         </li>
         <li>
+          {/* The plan: a written page. */}
+          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 2.5h8.5l4 4v15H6z" pathLength="1"></path>
+            <path d="M14.5 2.5v4h4" pathLength="1"></path>
+            <path d="M9 11.5h6.5M9 15h6.5M9 18.5h4" pathLength="1"></path>
+          </svg>
           <h3>Then the plan</h3>
           <p>
             I write down who the site is for, how the pages fit together, and what you want visitors
@@ -893,6 +914,13 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </p>
         </li>
         <li>
+          {/* Design and build: a browser window with a layout in it. */}
+          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M2.5 4.5h19v15h-19z" pathLength="1"></path>
+            <path d="M2.5 8.5h19" pathLength="1"></path>
+            <path d="M6 12h5.5v4H6z" pathLength="1"></path>
+            <path d="M14.5 12.5h3.5M14.5 15.5h3.5" pathLength="1"></path>
+          </svg>
           <h3>Then I design and build</h3>
           <p>
             I design and build the pages where you can see them. A link to the work so far lands in
@@ -901,6 +929,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </p>
         </li>
         <li>
+          {/* Launch: a flag planted. */}
+          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5.5 21.5v-18" pathLength="1"></path>
+            <path d="M5.5 4h12l-2.75 4.25L17.5 12.5h-12" pathLength="1"></path>
+          </svg>
           <h3>Launch, and follow-through</h3>
           <p>
             I launch the site with you, then stay close for the first month to fix anything that

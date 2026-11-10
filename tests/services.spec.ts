@@ -41,7 +41,9 @@ test.describe('Prices', () => {
       const height = await page.evaluate(() => document.documentElement.scrollHeight);
       // Raised from 14000 in the clarity pass (Nov 2026): the open costs fold now carries the cost
       // bars, and the always-open care cards spell out edit time, rate and replies in words.
-      expect(height).toBeLessThan(15500);
+      // Raised again to 17500 in the motion pack (Nov 2026): the costs fold now ends on the live
+      // receipt, and the care section carries the weeks strip, one row per client.
+      expect(height).toBeLessThan(17500);
     });
 
     test('a jump link and an address open the fold they point into', async ({ page }) => {
