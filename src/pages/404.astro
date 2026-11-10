@@ -1,15 +1,19 @@
 ---
-/* The 404: one client window knocked askew, the address that failed, and two
-   links. */
+/* The 404: the numerals as a drawing caught mid-edit (an outline with a square
+   on every anchor point, src/lib/not-found-art.ts), one client window knocked
+   askew, the address that failed, and two links. The drawing is decoration and
+   aria-hidden; the heading says what happened. */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/404.css';
 import Tile from '../components/Tile.astro';
 import { getClients } from '../lib/clients';
 import { plainText, wordSpans } from '../lib/words';
+import { VIEW, artPaths } from '../lib/not-found-art';
 
 const clients = await getClients();
 const first = clients[0];
 const heading = `This page <b>isn't here.</b>`;
+const art = artPaths();
 ---
 
 <BaseLayout
@@ -19,9 +23,15 @@ const heading = `This page <b>isn't here.</b>`;
 >
   <div class="nf">
     <header class="page-head">
-      <p class="nf-num" aria-hidden="true">
-        404
-      </p>
+      <div class="nf-num" aria-hidden="true" data-nf>
+        <svg viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`} focusable="false">
+          <path class="nf-o" d={art.outline} />
+          <path class="nf-h" d={art.handles} />
+          <path class="nf-e" d={art.ends} />
+          <path class="nf-a" d={art.anchors} />
+          <path class="nf-ai" d={art.anchors} />
+        </svg>
+      </div>
       <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
       <p class="lede">
         The link you followed might be old, or the address might be a typo. Nothing's broken on this

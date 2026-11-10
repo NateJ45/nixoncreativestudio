@@ -1,4 +1,5 @@
-/* 404: a knocked-askew phone window that springs upright when you reach for it. */
+/* 404: the numerals as a drawing with its points showing, and a knocked-askew phone window that
+   springs upright when you reach for it. */
 .nf {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -74,28 +75,77 @@
   }
 }
 
-/* The one big thing on this page. */
+/* The one big thing on this page: "404" as a drawing caught mid-edit (src/lib/not-found-art.ts).
+   The outline is ink on a card-white fill, like every card on the site, and the anchor points and
+   handles are the studio blue, because they are this site's own chrome. Every stroke keeps its
+   width however large the drawing is, so a point is the same small square on a phone and a desk.
+   It is on the page in full from the first paint; not-found.js only moves its points. */
 .nf-num {
-  margin: 0 0 0.05em;
-  font: 700 clamp(7rem, 24vw, 19rem)/0.84 var(--display);
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
+  width: min(100%, clamp(15rem, 56vw, 46rem));
+  margin: 0 0 clamp(1.25rem, 3vw, 2.25rem);
 }
-.js .nf-num {
-  animation: nf-weigh 1.5s cubic-bezier(0.2, 0.75, 0.2, 1) both 0.1s;
+.nf-num svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }
-@keyframes nf-weigh {
-  from {
-    font-weight: 100;
-    opacity: 0.2;
+.nf-num path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+.nf-num .nf-o {
+  fill: var(--card);
+  fill-rule: evenodd;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.nf-num .nf-h {
+  stroke: var(--accent);
+  stroke-width: 1.25;
+}
+.nf-num .nf-e {
+  stroke: var(--accent);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+/* A point is a blue square with a card-white middle: two square line caps, one inside the other. */
+.nf-num .nf-a {
+  stroke: var(--accent);
+  stroke-width: 10;
+  stroke-linecap: square;
+}
+.nf-num .nf-ai {
+  stroke: var(--card);
+  stroke-width: 5;
+  stroke-linecap: square;
+}
+@media (max-width: 30rem) {
+  .nf-num .nf-o {
+    stroke-width: 2;
   }
-  to {
-    font-weight: 700;
-    opacity: 1;
+  .nf-num .nf-e {
+    stroke-width: 5;
+  }
+  .nf-num .nf-a {
+    stroke-width: 8;
+  }
+  .nf-num .nf-ai {
+    stroke-width: 4;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .js .nf-num {
-    animation: none;
+@media (forced-colors: active) {
+  .nf-num .nf-o {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+  .nf-num .nf-h,
+  .nf-num .nf-e,
+  .nf-num .nf-a {
+    stroke: Highlight;
+  }
+  .nf-num .nf-ai {
+    stroke: Canvas;
   }
 }

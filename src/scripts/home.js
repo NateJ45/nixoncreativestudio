@@ -32,6 +32,45 @@ $('[data-draw]').addEventListener('click', function () {
   ui.openSheet(ui.bySlug(tile.dataset.slug), tile);
 });
 
+/* "Websites for:" in the ledger. Reaching for a sector with a mouse, or landing on it with the
+   keyboard, deals that sector's client windows up beside the word (the motion is CSS, `.lf` in
+   kit.css). The pictures are fetched the first time they are asked for, so they cost nothing on
+   load. Escape puts them away, and a touch screen or a narrow one gets the plain link. */
+var roomy = matchMedia('(min-width: 48rem)');
+[].forEach.call(document.querySelectorAll('[data-lf]'), function (stack) {
+  var box = stack.parentNode,
+    link = box.querySelector('a'),
+    filled = false;
+  var show = function () {
+    if (!roomy.matches) return;
+    if (!filled) {
+      filled = true;
+      [].forEach.call(stack.children, function (card) {
+        var img = new Image();
+        img.alt = '';
+        img.decoding = 'async';
+        img.src = card.dataset.src;
+        card.appendChild(img);
+      });
+    }
+    box.classList.add('on');
+  };
+  var hide = function () {
+    box.classList.remove('on');
+  };
+  link.addEventListener('pointerenter', function (e) {
+    if (e.pointerType === 'mouse') show();
+  });
+  link.addEventListener('pointerleave', hide);
+  link.addEventListener('focus', function () {
+    if (link.matches(':focus-visible')) show();
+  });
+  link.addEventListener('blur', hide);
+  link.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hide();
+  });
+});
+
 /* The deal: every window has one spot in the real grid. Scroll carries it there from the hand. */
 var C = (tiles.length - 1) / 2,
   st = tiles.map(function (el, i) {

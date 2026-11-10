@@ -17,6 +17,10 @@
       el.inert = el.dataset.tw !== s.dataset.slug;
     });
     band.classList.add('stepped');
+    /* The marker on the key phrase draws again for the quote that has just come in. */
+    band.classList.remove('hl-on');
+    void band.offsetWidth;
+    band.classList.add('hl-on');
     band.style.setProperty('--c', s.dataset.c);
     band.style.setProperty('--p', s.dataset.p);
     count.textContent = at + 1 + ' / ' + slides.length;

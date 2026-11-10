@@ -109,8 +109,16 @@ for (const { slug, text } of studies) {
       const d = new Date(`${t.date}T00:00:00Z`);
       assert.equal(d.toISOString().slice(0, 10), t.date, `${slug}: ${t.date} is not a real day`);
       assert.ok(t.date <= today, `${slug}: ${t.date} is in the future`);
-      const known = new Set(['quote', 'name', 'title', 'date', 'context']);
+      const known = new Set(['quote', 'name', 'title', 'date', 'context', 'highlight']);
       for (const key of Object.keys(t)) assert.ok(known.has(key), `${slug}: unknown key ${key}`);
+      // The optional key phrase (the quote band's marker) picks words out of the quote. It can
+      // never add or change any, so it has to be in the quote exactly as written.
+      if (t.highlight !== undefined) {
+        assert.ok(
+          t.highlight.length > 0 && t.quote.includes(t.highlight),
+          `${slug}: highlight must be copied exactly out of the quote`,
+        );
+      }
     }
   });
 
