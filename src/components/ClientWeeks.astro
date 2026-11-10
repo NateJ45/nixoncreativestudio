@@ -1,0 +1,85 @@
+---
+/* ============================================================================
+   ClientWeeks | Life in weeks, in the care section on /services
+   ============================================================================
+   One row per client: their name, then one dot for every week since the build
+   began, filled where that week had changes. The weeks come from
+   src/data/client-weeks.json, written by `npm run weeks` (scripts/client-weeks.mjs)
+   from the client repos' git history: week numbers and counts only, never a
+   message or an author. Rerun it and commit the JSON to bring the dots up to date;
+   the as-of date under the strip says when that was.
+
+   The dots are aria-hidden; each row carries a sentence for a screen reader
+   instead ("Stone Steps 50K: 10 weeks, 9 with changes"). Colors are tokens only,
+   ink for a filled week and a ring for an empty one: the strip sits on the
+   neutral page, so no client color comes out of its own window. src/scripts/prices.js
+   fills the dots left to right as the strip arrives; with reduced motion, or no
+   script, they are simply filled.
+   ============================================================================ */
+import weeks from '../data/client-weeks.json';
+import { getClients } from '../lib/clients';
+
+const clients = await getClients();
+// Deck order, and only the clients the script found a repo for.
+const rows = clients.flatMap((c) => {
+  const w = weeks.find((r) => r.slug === c.slug);
+  if (!w) return [];
+  const on = new Set(w.active);
+  return [
+    {
+      name: c.name,
+      weeks: w.weeks,
+      count: w.active.length,
+      dots: Array.from({ length: w.weeks }, (_, i) => on.has(i)),
+    },
+  ];
+});
+// The newest run date across the rows, printed in words.
+const asOf =
+  weeks
+    .map((r) => r.asOf)
+    .sort()
+    .at(-1) ?? '';
+const asOfWords = asOf
+  ? new Date(`${asOf}T12:00:00`).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  : '';
+const weekWord = (n: number) => `${n} ${n === 1 ? 'week' : 'weeks'}`;
+---
+
+{rows.length > 0 && (
+  <figure class="weeks" aria-labelledby="weeks-cap" data-weeks>
+    <figcaption id="weeks-cap" class="tcap">
+      The sites I look after, week by week
+    </figcaption>
+    <p class="weeks-key">
+      <span class="wk-k" aria-hidden="true">
+        <i class="on" />
+        <i />
+      </span>
+      Each dot is a week since the build began. Filled weeks had changes.
+    </p>
+    <ul class="weeks-rows">
+      {rows.map((r) => (
+        <li>
+          <p class="wk-name">
+            <b aria-hidden="true">{r.name}</b>
+            <span class="vh">{`${r.name}: ${weekWord(r.weeks)}, ${r.count} with changes`}</span>
+            <span class="wk-count" aria-hidden="true">
+              {`${r.count} of ${weekWord(r.weeks)}`}
+            </span>
+          </p>
+          <span class="wk-dots" aria-hidden="true">
+            {r.dots.map((on, i) => (
+              <i class:list={{ on }} style={`--i:${i}`} />
+            ))}
+          </span>
+        </li>
+      ))}
+    </ul>
+    <p class="weeks-asof">{`As of ${asOfWords}, from each site's change history.`}</p>
+  </figure>
+)}

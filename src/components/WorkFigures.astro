@@ -1,0 +1,64 @@
+---
+/* What changed, on /work: every sourced figure from the case studies, one card each in that client's
+   color, stacked so each card slides up over the last as you scroll (position: sticky, styles in
+   work.css). The figures are read out of each study's ResultsBlock (src/lib/work-figures.ts), so
+   nothing here is typed and a figure only appears once it names its source.
+
+   Beside each figure a dot grid, aria-hidden, says the size of the number at a glance: one dot per
+   `unit`, never more than 120, and the unit in words under it. work.js fills the dots as a card
+   arrives; with no script or under reduced motion they are simply full. The figure itself is plain
+   static text. */
+import { getCollection } from 'astro:content';
+import type { Client } from '../lib/clients';
+import { inline } from '../lib/study-markup';
+import { dotPlan, dotWords, figureNumber, sourcedFigures } from '../lib/work-figures';
+
+interface Props {
+  /** The clients in deck order, as /work already has them. */
+  clients: Client[];
+}
+const { clients } = Astro.props;
+const entries = await getCollection('case-studies');
+const cards = clients.flatMap((client) => {
+  const body = entries.find((e) => e.id === client.slug)?.body ?? '';
+  return sourcedFigures(body).map((f) => {
+    const plan = dotPlan(figureNumber(f.figure));
+    return { client, ...f, plan, unit: dotWords(plan) };
+  });
+});
+---
+
+{cards.length > 0 && (
+  <section class="wf" aria-labelledby="wf-h" data-figures>
+    <div class="wf-head">
+      <h2 id="wf-h">What changed</h2>
+      <p>
+        The numbers from the case studies, each with where it came from, so you can check it. They
+        are counts and measurements, not promises.
+      </p>
+    </div>
+    <ol class="wf-stack">
+      {cards.map((c, i) => (
+        <li class="wf-card" style={`--c:${c.client.accent};--p:${c.client.paper};--i:${i}`}>
+          <div class="wf-say">
+            <p class="wf-who">{c.client.name}</p>
+            <p class="wf-num">{c.figure}</p>
+            <p class="wf-text" set:html={inline(c.text)} />
+            <p class="wf-src" set:html={`Source: ${inline(c.source)}`} />
+            <a href={c.client.study}>
+              Read the case study<span class="vh">: {c.client.name}</span>
+            </a>
+          </div>
+          <div class="wf-dots" aria-hidden="true">
+            <span class="wf-grid">
+              {Array.from({ length: c.plan.dots }, () => (
+                <i />
+              ))}
+            </span>
+            <span class="wf-unit">{c.unit}</span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+)}

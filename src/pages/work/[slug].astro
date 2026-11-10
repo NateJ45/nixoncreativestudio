@@ -179,6 +179,25 @@ const breadcrumbs = [
       </figure>
     </div>
   </section>
+  {/* Before the first paint: is a window from the last page growing into the desktop pane
+      (src/scripts/hero-morph.js)? Then the pane shows at once, so the morph lands on it. If not,
+      the pane gives up its view-transition name, so nothing fades in where the fan will land. */}
+  <script is:inline>
+    (function () {
+      var path = null;
+      try {
+        path = sessionStorage.getItem('ncs-hero');
+        sessionStorage.removeItem('ncs-hero');
+      } catch (_e) {
+        /* No storage, no morph: the fan runs as usual. */
+      }
+      if (path === location.pathname) document.documentElement.classList.add('hero-morph');
+      else {
+        var p = document.querySelector('.s-fan .p-home');
+        if (p) p.style.viewTransitionName = 'none';
+      }
+    })();
+  </script>
 
   <div class="story" data-story>
     <div class="chaps">

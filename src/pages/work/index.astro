@@ -8,6 +8,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/work.css';
 import Tile from '../../components/Tile.astro';
 import Closing from '../../components/Closing.astro';
+import WorkFigures from '../../components/WorkFigures.astro';
+import captureSizes from '../../data/capture-sizes.json';
 import { countWord, getClients, SECTOR_LABEL } from '../../lib/clients';
 import { JOBS } from '../../data/jobs';
 import { sectorPage, sectorPagePath } from '../../data/sector-pages';
@@ -23,6 +25,19 @@ const filters = [
     n: clients.filter((c) => c.sectorKey === key).length,
   })),
 ];
+/* The marks over each window: its place in the deck and the real size of the still and the footage
+   behind it. The sizes are checked against the files by src/lib/work-figures.test.ts, so they only
+   ever say what is true; a study with no entry simply prints no size. */
+const pad = (v: number) => String(v).padStart(2, '0');
+const sizes = captureSizes as Record<string, { still: number[]; footage: number[] } | undefined>;
+const marks = clients.map((c, i) => {
+  const z = sizes[c.slug];
+  return {
+    place: `${pad(i + 1)} / ${pad(n)}`,
+    still: z ? `${z.still[0]} × ${z.still[1]}` : '',
+    footage: z ? `${z.footage[0]} × ${z.footage[1]}` : '',
+  };
+});
 const heading = `<span>${countWord(n)} selected</span> <b>case studies.</b>`;
 
 const jobs = JOBS.map((job) => ({
@@ -90,6 +105,12 @@ const jobs = JOBS.map((job) => ({
     <ul class="dw-grid" data-grid>
       {clients.map((s, i) => (
         <li data-key={s.sectorKey}>
+          <p class="dw-mark" aria-hidden="true">
+            <span>{marks[i].place}</span>
+            <span class="dw-ruler" />
+            {marks[i].still && <span>Still {marks[i].still}</span>}
+            {marks[i].footage && <span class="dw-ft">Footage {marks[i].footage}</span>}
+          </p>
           <Tile client={s} index={i} lazy={i > 1} desk />
           <div class="dw-note">
             <h2>{s.name}</h2>
@@ -117,7 +138,7 @@ const jobs = JOBS.map((job) => ({
     </ul>
     <ul class="dw-rows card" data-rows>
       {clients.map((s) => (
-        <li data-key={s.sectorKey} style={`--c:${s.accent};--p:${s.paper}`}>
+        <li data-key={s.sectorKey} data-slug={s.slug} style={`--c:${s.accent};--p:${s.paper}`}>
           <span class="mini" aria-hidden="true">
             <img
               src={s.still}
@@ -150,7 +171,26 @@ const jobs = JOBS.map((job) => ({
         </li>
       ))}
     </ul>
+    {/* Back from a case study: its hero shrinks into this page's window for it (the leaving half is
+        src/scripts/hero-morph.js). Inline, because it has to listen before the first paint. */}
+    <script is:inline>
+      addEventListener('pagereveal', function (e) {
+        var nav = window.navigation,
+          from = e.viewTransition && nav && nav.activation && nav.activation.from;
+        var m = from && /^\/work\/([a-z0-9-]+)\/$/.exec(new URL(from.url).pathname);
+        var el = m && document.querySelector('[data-grid] .tile[data-slug="' + m[1] + '"]');
+        if (!el || document.querySelector('[data-section]').dataset.view === 'list') return;
+        var r = el.getBoundingClientRect();
+        if (r.bottom <= 0 || r.top >= innerHeight) return;
+        el.style.viewTransitionName = 'study-hero';
+        e.viewTransition.finished.finally(function () {
+          el.style.viewTransitionName = '';
+        });
+      });
+    </script>
   </section>
+
+  <WorkFigures clients={clients} />
 
   <section class="sec tight jobs" id="jobs" aria-labelledby="jobs-h">
     <div class="wrap">

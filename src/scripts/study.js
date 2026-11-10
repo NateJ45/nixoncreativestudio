@@ -1,5 +1,6 @@
 /* The signature: a phone beside the story that scrolls through the real site as you read. */
 import { ui } from './kit.js';
+import './hero-morph.js';
 var reduce = ui.reduce,
   doc = document;
 var $$ = function (a, r) {
@@ -9,11 +10,23 @@ var clamp = function (v, a, b) {
   return Math.min(b, Math.max(a, v));
 };
 
-/* The entry: the two windows get thrown onto the page and land on the kit's spring. The phone arrives second and knocks the desktop window as it lands. */
+/* The entry: the two windows get thrown onto the page and land on the kit's spring. The phone arrives second and knocks the desktop window as it lands.
+   When a window from the last page is growing into this one (hero-morph.js), the desktop pane is already
+   where the morph lands, so only the phone is thrown, and it does not knock. */
 (function () {
   var home = doc.querySelector('.s-fan .p-home'),
     ph = doc.querySelector('.s-fan .p-phone');
   if (reduce || !home || !ph) return;
+  var morph = doc.documentElement.classList.contains('hero-morph');
+  if (!morph) {
+    try {
+      morph = sessionStorage.getItem('ncs-hero') === location.pathname;
+    } catch (e) {}
+  }
+  if (morph) {
+    doc.documentElement.classList.add('hero-morph');
+    home.style.visibility = 'visible';
+  }
   var show = function (b) {
     b.el.style.visibility = 'visible';
   };
@@ -47,7 +60,7 @@ var clamp = function (v, a, b) {
   };
   var hb = launch(home, W * 0.07, Math.max(260, H - home.getBoundingClientRect().top + 40), 11, 90);
   var pb = launch(ph, Math.max(260, W - ph.getBoundingClientRect().left + 40), H * 0.34, 30, 300);
-  var bodies = [hb, pb];
+  var bodies = morph ? [pb] : [hb, pb];
   if (scrollY > 200) {
     bodies.forEach(clear);
     return;
@@ -81,7 +94,7 @@ var clamp = function (v, a, b) {
       )
         live = true;
     });
-    if (!knocked && pb.flying && Math.abs(pb.x.x) < 34) {
+    if (!knocked && !morph && pb.flying && Math.abs(pb.x.x) < 34) {
       knocked = true;
       hb.x.v -= W * 0.1;
       hb.y.v += H * 0.05;

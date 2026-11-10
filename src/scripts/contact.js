@@ -646,6 +646,54 @@ form.addEventListener('input', scheduleSave);
 form.addEventListener('change', scheduleSave);
 restoreDraft();
 
+/* The "Received" stamp on the sent card. It carries today's date, written plainly ("Nov 9, 2026").
+   After a send it presses in on a spring: it comes down from above the card, large and a little
+   turned, lands with a small overshoot, and the ink spreads once. A reload of #sent, and reduced
+   motion, find it already stamped. */
+var stamp = $('[data-stamp]'),
+  stampDate = $('[data-stamp-date]');
+if (stampDate) {
+  try {
+    stampDate.textContent = new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date());
+  } catch (err) {
+    /* An old browser without Intl: the stamp just says Received. */
+  }
+}
+function pressStamp() {
+  if (!stamp || reduce) return;
+  var press = ui.spring(230, 13, 0),
+    last = 0,
+    landed = false;
+  /* Waiting above the card until the panel has settled into view. */
+  stamp.style.opacity = '0';
+  stamp.classList.remove('inked');
+  setTimeout(function () {
+    requestAnimationFrame(function frame(now) {
+      var dt = Math.min(0.033, last ? (now - last) / 1000 : 0.016);
+      last = now;
+      var going = press.step(1, dt),
+        p = press.x;
+      /* Scale 1.6 down to 1, a dip under 1 on the overshoot reads as the press. */
+      stamp.style.transform =
+        'rotate(' + (-16 + 8 * p).toFixed(2) + 'deg) scale(' + (1.6 - 0.6 * p).toFixed(3) + ')';
+      stamp.style.opacity = String(Math.min(1, 0.15 + p * 1.7));
+      if (!landed && p >= 0.98) {
+        landed = true;
+        stamp.classList.add('inked');
+      }
+      if (going) requestAnimationFrame(frame);
+      else {
+        stamp.style.transform = '';
+        stamp.style.opacity = '';
+      }
+    });
+  }, 260);
+}
+
 /* Sent: two studies from the visitor's sector, the status on the brief, focus on the heading. */
 function showSuccess() {
   var sector = val('org_type') || val('origin_org_type');
@@ -662,6 +710,7 @@ function showSuccess() {
   $('[data-tier-note]').hidden = true;
   errorEl.hidden = true;
   wrap.dataset.state = 'sent';
+  pressStamp();
   refresh(true);
   sentH.focus({ preventScroll: true });
   /* Back to the top if the note fits there, with the brief still beside it; otherwise bring the note up. */

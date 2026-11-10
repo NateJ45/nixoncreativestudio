@@ -31,7 +31,7 @@ Declared in `:root` at the top of `kit.css`:
 ## Patterns to reuse
 
 - **Label voice**: `.label` (small, uppercase, tracked, tabular numbers).
-- **Big line**: a `.giant` inside a `.big` container, sized with `--fit` (wide) and `--fitm` (phone) in container-widths; add `data-weigh` for the scroll-driven weight gain. Check 320px.
+- **Big line**: a `.giant` inside a `.big` container, sized with `--fit` (wide) and `--fitm` (phone) in container-widths; add `data-weigh` for the scroll-driven weight gain, and `data-build` (below-the-fold lines only, never a page-head H1) for the words rising in on scroll. Check 320px.
 - **Deck**: `.pip` and `.pip.flip` in two opposite corners of a portrait card, one `.pip` alone on a wide box, `.keyed` for the inner rule, `.pc` for a price card, `.tile` for a client window. No suits.
 - **Hairlines for non-cards**: `border-top: 1px solid var(--line)` on lists, tables and FAQs. Do not box them.
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.
@@ -44,6 +44,7 @@ Declared in `:root` at the top of `kit.css`:
 
 - Springs are written in JavaScript: `ui.spring(k, c, v)` in `src/scripts/kit.js`, and the per-page scripts use it. CSS motion uses `--ease` or a springy bezier; keep durations short.
 - Page changes are cross-document view transitions (`@view-transition { navigation: auto }` in `kit.css`; the dock keeps `view-transition-name: dock`). There is no router.
+- `study-hero` is the one borrowed name: `src/scripts/hero-morph.js` (imported by `Tile.astro` and `study.js`) puts it on the window you picked in `pageswap`, the study's `.s-fan .p-home` wears it in `study.css`, and a sessionStorage note read by an inline script in `[slug].astro` tells the study to show the pane instead of throwing it. Two elements with one name cancel a transition, so anything that takes it must give it back. The /work grid and list morph uses temporary `dw-<slug>` names under `html.dw-morph` (`work.js`, `work.css`).
 - Every moving thing has a reduced-motion answer: read `ui.reduce` in script, and add the selector to the `@media (prefers-reduced-motion: reduce)` blocks in CSS. Under reduce the view transition and smooth scroll are off, springs start at rest, footage stays a still, and nothing runs after load (`tests/reduced-motion.spec.ts`).
 - The dock's motion (puck, rail, hands) is its own block in `kit.js`. `ui.spring`'s `step` takes an optional third argument, a stiffness for that step, which the puck uses so the leading edge is the quicker one. Class names in the dock are prefixed `dk-` or `fc`: `.fan`, `.rail` and `.more` already mean something on the sheet and the case studies.
 - A hover that lifts its card uses `ui.stillHover` in `kit.js`, so the card cannot lift off the pointer and jitter.

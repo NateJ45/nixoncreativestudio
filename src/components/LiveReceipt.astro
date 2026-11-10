@@ -1,0 +1,149 @@
+---
+/* ============================================================================
+   LiveReceipt | "Work out your own" under the five-year table on /services
+   ============================================================================
+   Pick a tier, Hosting only or a care plan, and 1 to 5 years; the receipt beside
+   it prints the build (one-time), Hosting, care and the total. Every number comes
+   from src/data/pricing.ts through src/lib/tier-costs.ts and src/lib/receipt.ts,
+   and the plans each tier may take come from costRows(), so Flagship offers only
+   Care or Care+ here, as in the table.
+
+   The page prints the receipt for the usual choice (Signature with Care, 5 years)
+   and src/scripts/prices.js reprints the lines that change. The numbers are plain
+   text, swapped, never counted. Without JavaScript the form and the receipt are
+   hidden and a note points back at the table, which has every total for 1, 3 and
+   5 years.
+   ============================================================================ */
+import { carePlans, perWords, pricesAsOf, webTiers } from '../data/pricing';
+import { dollars, money } from '../lib/money';
+import { carePerYear, costRows } from '../lib/tier-costs';
+import { receipt, receiptLines, yearsWord } from '../lib/receipt';
+
+const hosting = carePlans.find((p) => p.name === 'Hosting')!;
+const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
+const perMonth = (name: string) =>
+  name === hosting.name ? 0 : dollars(carePlans.find((p) => p.name === name)!.price)[0];
+
+// What prices.js needs, read from pricing.ts here so the script types no number.
+const data = {
+  hostingName: hosting.name,
+  hostingPerYear: carePerYear(hosting),
+  plans: carePlans.map((p) => ({ name: p.name, perMonth: perMonth(p.name) })),
+  tiers: webTiers.map((t) => ({
+    name: t.name,
+    build: t.priceFrom,
+    // Any tier can take any plan, except a tier that needs care: then only the rows its cost
+    // table prints, Care and up (costRows), so Flagship never shows Hosting alone.
+    plans: t.needsCare ? costRows(t).map((r) => r.plan.name) : carePlans.map((p) => p.name),
+    needs: t.needsCare ?? '',
+  })),
+};
+
+// The receipt the page opens on: the usual pairing for the anchor tier, over five years.
+const start = webTiers.find((t) => t.highlighted) ?? webTiers[1];
+const startPlan = start.care;
+const startYears = 5;
+const input = {
+  build: start.priceFrom,
+  hostingPerYear: data.hostingPerYear,
+  carePerMonth: perMonth(startPlan),
+  years: startYears,
+};
+const lines = receiptLines(
+  receipt(input),
+  { tier: start.name, plan: startPlan, hostingName: hosting.name, years: startYears },
+  input,
+);
+const needy = webTiers.find((t) => t.needsCare);
+const needLine = needy
+  ? `${needy.name} comes with ${needy.needsCare} or ${carePlans[carePlans.length - 1].name}, because custom tools need looking after.`
+  : '';
+---
+
+<div class="rcpt" data-rcpt data-r={JSON.stringify(data)}>
+  <div class="rcpt-head">
+    <h3 id="rcpt-h">Work out your own</h3>
+    <p>
+      Pick a tier, what you want after launch and how many years. The receipt adds it up the same
+      way as the table.
+    </p>
+  </div>
+  <div class="rcpt-in">
+    <form class="rcpt-form" data-rcpt-form aria-labelledby="rcpt-h">
+      <fieldset class="pick-q">
+        <legend>Tier</legend>
+        <div class="opts-row">
+          {webTiers.map((t) => (
+            <label class="pick-o">
+              <input type="radio" name="r-tier" value={t.name} checked={t === start} />
+              <span>{`${t.name}, from ${money(t.priceFrom)}`}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <fieldset class="pick-q">
+        <legend>After launch</legend>
+        <div class="opts-row">
+          {carePlans.map((p) => (
+            <label class="pick-o">
+              <input type="radio" name="r-plan" value={p.name} checked={p.name === startPlan} />
+              <span>
+                {p.addOn
+                  ? `${p.name}, ${p.price} ${perUnit(p.period)}`
+                  : `${p.name} only, ${p.price} ${perUnit(p.period)}`}
+              </span>
+            </label>
+          ))}
+        </div>
+        {needLine && (
+          <p class="rcpt-need" data-rcpt-need hidden>
+            {needLine}
+          </p>
+        )}
+      </fieldset>
+      <div class="rcpt-yrs pick-q">
+        <p class="rcpt-yrs-t">
+          <label for="rcpt-years">How many years</label>
+          <output for="rcpt-years" data-rcpt-years>
+            {yearsWord(startYears)}
+          </output>
+        </p>
+        <input
+          type="range"
+          id="rcpt-years"
+          name="r-years"
+          min="1"
+          max="5"
+          step="1"
+          value={startYears}
+          style={`--p:${((startYears - 1) / 4) * 100}%`}
+        />
+        <p class="rcpt-ticks" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <span>{n}</span>
+          ))}
+        </p>
+      </div>
+    </form>
+    <div class="card rcpt-card">
+      <p class="label">Your receipt</p>
+      <dl class="rcpt-lines" data-rcpt-lines>
+        {lines.map((l) => (
+          <div class={`rcpt-line rl-${l.key}`} data-line={l.key}>
+            <dt>
+              <b>{l.label}</b>
+              {l.note && <span>{l.note}</span>}
+            </dt>
+            <dd>{l.amount}</dd>
+          </div>
+        ))}
+      </dl>
+      <p class="rcpt-foot">{`From each tier's starting price. Prices as of ${pricesAsOf}.`}</p>
+      <p class="vh" aria-live="polite" data-rcpt-say></p>
+    </div>
+  </div>
+</div>
+<p class="rcpt-nojs after">
+  Every tier's total after 1, 3 and 5 years, with {hosting.name} only or its usual care plan, is in
+  the table above.
+</p>

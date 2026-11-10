@@ -31,6 +31,8 @@ html:not(.js) .dw-bar {
   display: none;
 }
 .dw-bar {
+  /* The label on the blue pill: white on --fill on either side. */
+  --pill-ink: #fff;
   position: relative;
   z-index: 20;
   display: flex;
@@ -87,7 +89,11 @@ html:not(.js) .dw-bar {
   font-variant-numeric: tabular-nums;
 }
 .dw-bar button[aria-pressed='true'] {
-  color: #fff;
+  color: var(--pill-ink);
+}
+/* While the ink blooms, the label under it stays ink on the card (see .dw-ink below). */
+.dw-bar button.inking {
+  color: var(--ink);
 }
 .dw-bar button[aria-pressed='true'] .n {
   opacity: 0.82;
@@ -100,7 +106,7 @@ html:not(.js) .dw-bar {
   border-radius: 99rem;
 }
 .dw-bar button[aria-pressed='true']:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--pill-ink);
 }
 .dw-pill {
   position: absolute;
@@ -478,4 +484,237 @@ html:not(.js) .dw-grid,
 /* The filter and the list need a script. Without one, the full grid is the page. */
 html:not(.js) .dw-bar {
   display: none;
+}
+
+/* ---- The marks over each window: its place in the deck, a hairline ruler, and the real size of the
+   still and the footage behind it (read off the files in work/index.astro). Quiet label voice. ---- */
+.dw-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.6rem;
+  color: var(--soft);
+  font: 500 0.75rem/1 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* A tick every 8px and a taller one every 40px, in the soft grey, standing on a hairline. */
+.dw-ruler {
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  height: 7px;
+  background:
+    repeating-linear-gradient(90deg, var(--soft) 0 1px, transparent 1px 40px) 0 0 / 100% 7px
+      no-repeat,
+    repeating-linear-gradient(90deg, var(--soft) 0 1px, transparent 1px 8px) 0 100% / 100% 3px
+      no-repeat,
+    linear-gradient(var(--line), var(--line)) 0 100% / 100% 1px no-repeat;
+}
+@media (max-width: 40rem) {
+  .dw-ft {
+    display: none;
+  }
+}
+@media (min-width: 52rem) {
+  .dw-grid.one .dw-mark {
+    grid-column: 1/-1;
+  }
+}
+
+/* ---- The ink in a filter button. A press blooms a circle of the pill's blue from the pointer (the
+   centre for a keyboard), and the label inside the circle is a white copy, so every letter is ink
+   on the card or white on the blue the whole way through. Once the pill has slid in under it, it
+   goes. work.js draws it; under reduced motion it never starts. ---- */
+.dw-ink {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0 0.95rem;
+  border-radius: inherit;
+  background: var(--fill);
+  color: var(--pill-ink);
+  pointer-events: none;
+}
+.dw-ink .n {
+  opacity: 0.82;
+}
+@media (max-width: 52rem) {
+  .dw-ink {
+    padding: 0 0.8rem;
+  }
+}
+@media (forced-colors: active) {
+  .dw-ink {
+    display: none;
+  }
+}
+
+/* ---- The grid and the list trade places by view transition (work.js): each window becomes its row
+   and back on the house spring, and the rest of the page simply swaps under them. ---- */
+html.dw-morph::view-transition-old(root),
+html.dw-morph::view-transition-new(root) {
+  animation: none;
+}
+html.dw-morph::view-transition-group(*) {
+  animation-duration: 0.62s;
+  animation-timing-function: cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+html.dw-morph::view-transition-old(*),
+html.dw-morph::view-transition-new(*) {
+  height: 100%;
+  object-fit: cover;
+  object-position: 0 0;
+  animation-duration: 0.28s;
+}
+html.dw-morph::view-transition-group(dock),
+html.dw-morph::view-transition-group(root) {
+  animation: none;
+}
+
+/* Back from a case study, its hero shrinks into its window here (src/scripts/hero-morph.js). */
+::view-transition-group(study-hero) {
+  z-index: 2;
+  animation-duration: 0.62s;
+  animation-timing-function: cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+::view-transition-old(study-hero),
+::view-transition-new(study-hero) {
+  height: 100%;
+  object-fit: cover;
+  object-position: 0 0;
+  animation-duration: 0.28s;
+}
+
+/* ---- What changed: one card per sourced figure, in that client's color. On a screen tall enough,
+   each card sticks a little lower than the one before, so the next slides up over it as you scroll.
+   The client's paper is the text on their color everywhere (case-palettes.test.ts holds that pair to
+   AA), so the card reads the same on either side. No corner mark: a number beside the figure read
+   as part of it. ---- */
+.wf {
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vh, 4.5rem) var(--gut) clamp(1rem, 3vh, 2rem);
+}
+.wf-head h2 {
+  font-size: var(--type-h2);
+}
+.wf-head p {
+  max-width: 40rem;
+  margin-top: 0.75rem;
+  color: var(--soft);
+}
+.wf-stack {
+  display: grid;
+  gap: clamp(1rem, 3vh, 1.75rem);
+  margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.wf-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem 3rem;
+  align-items: center;
+  padding: clamp(1.5rem, 4vw, 3.25rem);
+  border-radius: 1.75rem;
+  background: var(--c);
+  color: var(--p);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 -18px 40px -26px rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 52rem) {
+  .wf-card {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}
+/* Only where a whole card fits under the top line and over the dock; a short screen reads a list. */
+@media (min-height: 46rem) {
+  .wf-card {
+    position: sticky;
+    top: calc(5.5rem + var(--i) * 0.85rem);
+  }
+  /* A card with keyboard focus comes up over the ones stacked on it (WCAG 2.4.11). */
+  .wf-card:focus-within {
+    z-index: 1;
+  }
+}
+.wf-who,
+.wf-unit {
+  font: 500 0.8125rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.wf-num {
+  margin-top: 0.5rem;
+  font: 600 clamp(2.5rem, 7.5vw, 6.25rem)/0.95 var(--display);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+}
+.wf-text {
+  max-width: 34rem;
+  margin-top: 0.85rem;
+  font: 500 clamp(1.125rem, 1.6vw, 1.375rem)/1.3 var(--display);
+  letter-spacing: -0.015em;
+  text-wrap: pretty;
+}
+.wf-src {
+  max-width: 34rem;
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.wf-say a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+.wf-dots {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+.wf-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(0.3rem, 0.8vw, 0.5rem);
+  width: min(100%, 20rem);
+}
+.wf-grid i {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--p);
+  box-shadow: inset 0 0 0 1.5px var(--p);
+}
+/* With script and motion, the dots wait as rings and fill in reading order as the card arrives
+   (work.js). With no script, or under reduced motion, they are full from the start. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-figures] .wf-card:not(.on) .wf-grid i {
+    background: transparent;
+    transform: scale(0.6);
+  }
+  .js [data-figures] .wf-grid i {
+    transition:
+      background-color 0.25s var(--ease),
+      transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+}
+@media (forced-colors: active) {
+  .wf-card {
+    border: 1px solid CanvasText;
+  }
+  .wf-grid i {
+    background: CanvasText;
+  }
 }

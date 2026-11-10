@@ -362,6 +362,12 @@ const heading = 'Start a project, or just <b>say hello.</b>';
       <!-- Success panel. Shown when data-state="sent" (the script) or when #sent is the
            URL target (the no-JS redirect). The heading takes focus after a script submit. -->
       <div id="sent" class="card keyed sent" data-sent data-contact-thanks>
+        {/* The rubber stamp: decoration only, since the heading already says it arrived. contact.js
+            fills in today's date and presses it in; with no script it shows the word alone. */}
+        <span class="stamp" data-stamp aria-hidden="true">
+          <span class="stamp-word">Received</span>
+          <span class="stamp-date" data-stamp-date></span>
+        </span>
         <h2 tabindex="-1" data-sent-h data-contact-thanks-heading>
           Thanks, your message is in.
         </h2>
