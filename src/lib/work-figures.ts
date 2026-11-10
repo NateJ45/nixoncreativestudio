@@ -7,14 +7,25 @@
    those same figures, so this reads them straight out of the study's body text:
    nothing is typed twice, and a figure that leaves a study leaves /work too.
 
-   The dot maths lives here as well, so it can be unit tested
-   (work-figures.test.ts): one dot per `unit`, never more than MAX_DOTS dots.
+   A figure can also name a capture of the page where the number lives (shot,
+   shotAlt, shotNote) and, when it is part of a stated whole, that whole (of,
+   ofLabel). /work shows the capture beside the number and draws the part as a
+   bar; the maths for the bar is here so it can be unit tested.
    ============================================================================ */
 
 export interface SourcedFigure {
   figure: string;
   text: string;
   source: string;
+  /** A capture of the page where the number lives: a file name in public/assets/study/. */
+  shot?: string;
+  shotAlt?: string;
+  /** The line under the capture, saying what it is. */
+  shotNote?: string;
+  /** The whole this figure is part of ("216"), when it is one. */
+  of?: string;
+  /** What the whole is counted in, to finish "195 of 216 ...". */
+  ofLabel?: string;
 }
 
 /** A quoted string in an object literal: '...', "..." or `...`, escapes allowed. */
@@ -35,7 +46,13 @@ export function sourcedFigures(body: string): SourcedFigure[] {
       const figure = field(obj, 'figure');
       const text = field(obj, 'text');
       const source = field(obj, 'source');
-      if (figure && text && source) out.push({ figure, text, source });
+      if (!figure || !text || !source) continue;
+      const fig: SourcedFigure = { figure, text, source };
+      for (const key of ['shot', 'shotAlt', 'shotNote', 'of', 'ofLabel'] as const) {
+        const v = field(obj, key);
+        if (v) fig[key] = v;
+      }
+      out.push(fig);
     }
   }
   return out;
@@ -47,35 +64,29 @@ export function figureNumber(figure: string): number {
   return m ? Number(m[0].replace(/,/g, '')) : NaN;
 }
 
-export const MAX_DOTS = 120;
-
-/** Round units a reader can hold in their head: 1, 2, 5, 10, 20, 25, 50, 100 and so on. */
-function* niceUnits() {
-  for (let p = 1; ; p *= 10) for (const m of [1, 2, 2.5, 5]) if (m * p >= 1) yield m * p;
+export interface Share {
+  /** The part, the figure's own number. */
+  part: number;
+  /** The whole it is counted out of. */
+  whole: number;
+  /** The part as a fraction of the whole, 0 to 1, for the bar's width. */
+  ratio: number;
+  /** The line beside the bar: "195 of 216 library items searchable word for word". */
+  words: string;
 }
 
-export interface DotPlan {
-  /** What one dot stands for. */
-  unit: number;
-  /** How many dots to draw: round(n / unit), at most MAX_DOTS. */
-  dots: number;
-  /** True when the dots add up to the figure exactly. */
-  exact: boolean;
-}
-
-/** The smallest round unit that keeps the grid at or under `max` dots. */
-export function dotPlan(n: number, max = MAX_DOTS): DotPlan {
-  if (!Number.isFinite(n) || n <= 0) throw new Error(`No dots for ${n}`);
-  for (const unit of niceUnits()) {
-    if (!Number.isInteger(unit)) continue;
-    const dots = Math.round(n / unit);
-    if (dots <= max) return { unit, dots: Math.max(1, dots), exact: dots * unit === n };
-  }
-  throw new Error('unreachable');
-}
-
-/** The words under the grid: "Each dot is 20." or, when the dots round, says so. */
-export function dotWords({ unit, exact }: DotPlan): string {
-  const u = unit.toLocaleString('en-US');
-  return exact ? `Each dot is ${u}.` : `Each dot is ${u}, rounded to the nearest dot.`;
+/** A figure that is part of a stated whole, or undefined when it names no whole. */
+export function share(f: SourcedFigure): Share | undefined {
+  if (!f.of) return undefined;
+  const part = figureNumber(f.figure);
+  const whole = figureNumber(f.of);
+  if (!(part > 0) || !(whole > 0) || part > whole)
+    throw new Error(`"${f.figure}" of "${f.of}" is not a part of a whole`);
+  const n = (x: number) => x.toLocaleString('en-US');
+  return {
+    part,
+    whole,
+    ratio: part / whole,
+    words: `${n(part)} of ${n(whole)}${f.ofLabel ? ' ' + f.ofLabel : ''}`,
+  };
 }

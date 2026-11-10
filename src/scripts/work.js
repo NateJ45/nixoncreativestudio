@@ -438,21 +438,18 @@ addEventListener('resize', setPill);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(setPill);
 addEventListener('load', setPill);
 
-/* What changed: each card's dots fill in reading order as the card comes up the screen, a few
-   milliseconds apart, so a big number visibly takes longer to fill than a small one. CSS holds the
-   rings (work.css) only while motion is allowed; a page that loads already scrolled just shows them
-   full, and so does a browser without IntersectionObserver. */
+/* What changed: as a card comes up the screen its capture settles into place and, where the number is
+   part of a whole, the bar draws to its length. CSS holds the waiting state (work.css) only while
+   motion is allowed; a page that loads already scrolled just shows them in place, and so does a
+   browser without IntersectionObserver. */
 var figCards = $$('[data-figures] .wf-card');
-function fill(card, slow) {
-  $$('.wf-grid i', card).forEach(function (dot, k) {
-    dot.style.transitionDelay = slow ? k * 7 + 'ms' : '0ms';
-  });
+function fill(card) {
   card.classList.add('on');
 }
 if (figCards.length) {
   if (reduce || ui.restored() || !('IntersectionObserver' in window))
     figCards.forEach(function (c) {
-      fill(c, false);
+      fill(c);
     });
   else {
     var fio = new IntersectionObserver(
@@ -460,7 +457,7 @@ if (figCards.length) {
         es.forEach(function (e) {
           if (!e.isIntersecting) return;
           fio.unobserve(e.target);
-          fill(e.target, true);
+          fill(e.target);
         });
       },
       { rootMargin: '0px 0px -25% 0px' },

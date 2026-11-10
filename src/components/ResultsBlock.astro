@@ -3,7 +3,20 @@
    without a real source is not allowed (src/lib/case-results.test.ts). */
 import { inline } from '../lib/study-markup';
 
-type Row = string | { figure: string; text: string; source?: string };
+/* shot, shotAlt, shotNote, of and ofLabel are for the What changed cards on /work
+   (WorkFigures.astro); a study already shows those captures further down its own page. */
+type Row =
+  | string
+  | {
+      figure: string;
+      text: string;
+      source?: string;
+      shot?: string;
+      shotAlt?: string;
+      shotNote?: string;
+      of?: string;
+      ofLabel?: string;
+    };
 
 interface Props {
   items: Row[];

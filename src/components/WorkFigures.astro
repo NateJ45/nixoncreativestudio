@@ -4,14 +4,15 @@
    work.css). The figures are read out of each study's ResultsBlock (src/lib/work-figures.ts), so
    nothing here is typed and a figure only appears once it names its source.
 
-   Beside each figure a dot grid, aria-hidden, says the size of the number at a glance: one dot per
-   `unit`, never more than 120, and the unit in words under it. work.js fills the dots as a card
-   arrives; with no script or under reduced motion they are simply full. The figure itself is plain
-   static text. */
+   Beside each number is the thing it counts: a capture of the real page where the number lives, with
+   a line saying what it is. A number that is part of a stated whole ("195 of 216") also gets a bar
+   with that sentence beside it. work.js settles the capture and draws the bar as a card arrives;
+   with no script or under reduced motion both are simply there. The figure itself is plain static
+   text. (Until 2026-11-10 this was a grid of dots, one per so-many units, which said only "big".) */
 import { getCollection } from 'astro:content';
 import type { Client } from '../lib/clients';
-import { inline } from '../lib/study-markup';
-import { dotPlan, dotWords, figureNumber, sourcedFigures } from '../lib/work-figures';
+import { inline, studyImage } from '../lib/study-markup';
+import { share, sourcedFigures } from '../lib/work-figures';
 
 interface Props {
   /** The clients in deck order, as /work already has them. */
@@ -22,8 +23,8 @@ const entries = await getCollection('case-studies');
 const cards = clients.flatMap((client) => {
   const body = entries.find((e) => e.id === client.slug)?.body ?? '';
   return sourcedFigures(body).map((f) => {
-    const plan = dotPlan(figureNumber(f.figure));
-    return { client, ...f, plan, unit: dotWords(plan) };
+    const img = f.shot ? studyImage(f.shot) : undefined;
+    return { client, ...f, img, part: share(f), wide: img ? img.w / img.h > 2.4 : false };
   });
 });
 ---
@@ -33,30 +34,46 @@ const cards = clients.flatMap((client) => {
     <div class="wf-head">
       <h2 id="wf-h">What changed</h2>
       <p>
-        The numbers from the case studies, each with where it came from, so you can check it. They
-        are counts and measurements, not promises.
+        The numbers from the case studies, each beside the page it counts and with where it came
+        from, so you can check it. They are counts and measurements, not promises.
       </p>
     </div>
     <ol class="wf-stack">
       {cards.map((c, i) => (
-        <li class="wf-card" style={`--c:${c.client.accent};--p:${c.client.paper};--i:${i}`}>
+        <li
+          class:list={['wf-card', { wide: c.wide, bare: !c.img }]}
+          style={`--c:${c.client.accent};--p:${c.client.paper};--i:${i}`}
+        >
           <div class="wf-say">
             <p class="wf-who">{c.client.name}</p>
             <p class="wf-num">{c.figure}</p>
             <p class="wf-text" set:html={inline(c.text)} />
+            {c.part && (
+              <p class="wf-part">
+                <span class="wf-bar" aria-hidden="true" style={`--r:${c.part.ratio.toFixed(4)}`}>
+                  <i />
+                </span>
+                <span class="wf-part-t">{c.part.words}</span>
+              </p>
+            )}
             <p class="wf-src" set:html={`Source: ${inline(c.source)}`} />
             <a href={c.client.study}>
               Read the case study<span class="vh">: {c.client.name}</span>
             </a>
           </div>
-          <div class="wf-dots" aria-hidden="true">
-            <span class="wf-grid">
-              {Array.from({ length: c.plan.dots }, () => (
-                <i />
-              ))}
-            </span>
-            <span class="wf-unit">{c.unit}</span>
-          </div>
+          {c.img && (
+            <figure class="wf-shot">
+              <img
+                src={c.img.url}
+                width={c.img.w}
+                height={c.img.h}
+                alt={c.shotAlt ?? ''}
+                loading="lazy"
+                decoding="async"
+              />
+              {c.shotNote && <figcaption>{c.shotNote}</figcaption>}
+            </figure>
+          )}
         </li>
       ))}
     </ol>

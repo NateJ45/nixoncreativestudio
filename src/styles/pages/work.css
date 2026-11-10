@@ -632,11 +632,17 @@ html.dw-morph::view-transition-group(root) {
 }
 @media (min-width: 52rem) {
   .wf-card {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  }
+  /* A capture much wider than it is tall (the elevation chart) runs under the words instead. */
+  .wf-card.wide,
+  .wf-card.bare {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
-/* Only where a whole card fits under the top line and over the dock; a short screen reads a list. */
-@media (min-height: 46rem) {
+/* Only where a whole card fits under the top line and over the dock; a short or narrow screen, where
+   the capture sits under the words and the card is taller than the screen, reads a list. */
+@media (min-height: 46rem) and (min-width: 52rem) {
   .wf-card {
     position: sticky;
     top: calc(5.5rem + var(--i) * 0.85rem);
@@ -647,7 +653,7 @@ html.dw-morph::view-transition-group(root) {
   }
 }
 .wf-who,
-.wf-unit {
+.wf-shot figcaption {
   font: 500 0.8125rem/1.25 var(--body);
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -680,42 +686,82 @@ html.dw-morph::view-transition-group(root) {
   font-weight: 600;
   text-underline-offset: 0.2em;
 }
-.wf-dots {
+/* The part of a whole: a bar in the client's paper, filled to the part, and the sentence beside it. */
+.wf-part {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 34rem;
+  margin-top: 1.1rem;
+}
+.wf-bar {
+  display: block;
+  height: 0.75rem;
+  border-radius: 99px;
+  box-shadow: inset 0 0 0 1.5px var(--p);
+  overflow: hidden;
+}
+.wf-bar i {
+  display: block;
+  width: calc(var(--r) * 100%);
+  height: 100%;
+  border-radius: 99px;
+  background: var(--p);
+  transform-origin: 0 50%;
+}
+.wf-part-t {
+  font: 600 0.9375rem/1.3 var(--body);
+  font-variant-numeric: tabular-nums;
+}
+/* The page the number counts, as a real capture, with a line under it saying what it is. */
+.wf-shot {
   display: grid;
   gap: 0.75rem;
-  justify-items: start;
+  margin: 0;
 }
-.wf-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: clamp(0.3rem, 0.8vw, 0.5rem);
-  width: min(100%, 20rem);
+.wf-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.9rem;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 22px 40px -22px rgba(0, 0, 0, 0.55);
 }
-.wf-grid i {
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--p);
-  box-shadow: inset 0 0 0 1.5px var(--p);
-}
-/* With script and motion, the dots wait as rings and fill in reading order as the card arrives
-   (work.js). With no script, or under reduced motion, they are full from the start. */
+/* With script and motion, the capture waits a little low and tilted and settles as the card arrives,
+   and the bar draws to its length (work.js). It is never hidden: with no script, or under reduced
+   motion, both are simply in place. */
 @media (prefers-reduced-motion: no-preference) {
-  .js [data-figures] .wf-card:not(.on) .wf-grid i {
-    background: transparent;
-    transform: scale(0.6);
+  .js [data-figures] .wf-card:not(.on) .wf-shot img {
+    transform: translateY(1.25rem) rotate(1.4deg) scale(0.97);
   }
-  .js [data-figures] .wf-grid i {
-    transition:
-      background-color 0.25s var(--ease),
-      transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  .js [data-figures] .wf-card:not(.on) .wf-bar i {
+    transform: scaleX(0);
+  }
+  .js [data-figures] .wf-shot img {
+    transition: transform 0.7s cubic-bezier(0.3, 1.45, 0.5, 1);
+  }
+  .js [data-figures] .wf-bar i {
+    transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s;
   }
 }
 @media (forced-colors: active) {
   .wf-card {
     border: 1px solid CanvasText;
   }
-  .wf-grid i {
+  .wf-bar {
+    border: 1px solid CanvasText;
+  }
+  .wf-bar i {
     background: CanvasText;
+  }
+}
+
+/* The card with the chart under its words is taller than the others: it only sticks on a tall screen,
+   and otherwise scrolls by like a list item so its chart is never covered. */
+@media (max-height: 62rem) {
+  .wf-card.wide {
+    position: relative;
+    top: auto;
   }
 }
 
