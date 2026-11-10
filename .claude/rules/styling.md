@@ -31,7 +31,7 @@ Declared in `:root` at the top of `kit.css`:
 ## Patterns to reuse
 
 - **Label voice**: `.label` (small, uppercase, tracked, tabular numbers).
-- **Big line**: a `.giant` inside a `.big` container, sized with `--fit` (wide) and `--fitm` (phone) in container-widths; add `data-weigh` for the scroll-driven weight gain. Check 320px.
+- **Big line**: a `.giant` inside a `.big` container, sized with `--fit` (wide) and `--fitm` (phone) in container-widths; add `data-weigh` for the scroll-driven weight gain, and `data-build` (below-the-fold lines only, never a page-head H1) for the words rising in on scroll. Check 320px.
 - **Deck**: `.pip` and `.pip.flip` in two opposite corners of a portrait card, one `.pip` alone on a wide box, `.keyed` for the inner rule, `.pc` for a price card, `.tile` for a client window. No suits.
 - **Hairlines for non-cards**: `border-top: 1px solid var(--line)` on lists, tables and FAQs. Do not box them.
 - **Color**: the page is neutral, the studio blue is `--accent`, a client's color stays in their own surface. A `.band` and the `.end` closing never touch: keep a neutral section between them.

@@ -1091,6 +1091,108 @@ if (weighs.length && !reduce) {
   wwake();
 }
 
+/* A big line builds as you scroll to it: its words rise into place in reading order, tied to the
+   scroll, and are all home by the time the line's top reaches 40 percent of the screen.
+   data-build="1 0.4" is that default (start as the top crosses the bottom edge, finish at 40
+   percent); two numbers change it. Only a line that starts below the fold does this. One already
+   on the first screen, a page that loaded scrolled (ui.restored), and reduced motion all leave it
+   simply set. The words are wrapped in visual spans here; the heading keeps its plain sentence as
+   its accessible name. Works beside data-weigh: that one sets the weight, this one moves the words. */
+var builds =
+  reduce || ui.restored()
+    ? []
+    : [].filter.call(doc.querySelectorAll('[data-build]'), function (el) {
+        return el.getBoundingClientRect().top >= innerHeight;
+      });
+var wordsOf = function (el) {
+  var words = [];
+  var walk = function (node) {
+    [].slice.call(node.childNodes).forEach(function (n) {
+      if (n.nodeType === 1) return walk(n);
+      if (n.nodeType !== 3 || !n.textContent.trim()) return;
+      var frag = doc.createDocumentFragment();
+      n.textContent.split(/(\s+)/).forEach(function (part) {
+        if (!part) return;
+        if (/^\s+$/.test(part)) return frag.appendChild(doc.createTextNode(part));
+        var s = doc.createElement('span');
+        s.className = 'bw';
+        s.textContent = part;
+        words.push(s);
+        frag.appendChild(s);
+      });
+      n.parentNode.replaceChild(frag, n);
+    });
+  };
+  if (!el.hasAttribute('aria-label'))
+    el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+  walk(el);
+  return words;
+};
+var lines = builds.map(function (el) {
+  var range = (el.dataset.build || '').split(' ').map(Number);
+  var words = wordsOf(el);
+  return {
+    el: el,
+    from: range.length === 2 ? range[0] : 1,
+    to: range.length === 2 ? range[1] : 0.4,
+    words: words.map(function () {
+      return { q: 0, shown: -1 };
+    }),
+    spans: words,
+  };
+});
+if (lines.length) {
+  var braf = 0,
+    blast = 0;
+  var bwake = function () {
+    if (!braf) {
+      blast = performance.now();
+      braf = requestAnimationFrame(bframe);
+    }
+  };
+  /* Each word gets a window of the line's progress, half of it wide, spaced in reading order. */
+  var WIN = 0.5;
+  var bframe = function (now) {
+    braf = 0;
+    var dt = Math.min(0.033, (now - blast) / 1000 || 0.016),
+      H = innerHeight,
+      live = false;
+    blast = now;
+    lines.forEach(function (l) {
+      var top = l.el.getBoundingClientRect().top;
+      var P = (H * l.from - top) / (H * (l.from - l.to));
+      P = Math.min(1, Math.max(0, P));
+      var n = l.words.length;
+      /* Off the screen the words only wait low, at full ink: the faint start is applied once the
+         line is in sight, so an audit of the page as it loads never meets half-faded text. */
+      var seen = top < H ? 1 : 0;
+      l.words.forEach(function (w, i) {
+        var start = n > 1 ? (i * (1 - WIN)) / (n - 1) : 0;
+        var t = Math.min(1, Math.max(0, (P - start) / WIN));
+        t = t * t * (3 - 2 * t);
+        w.q += (t - w.q) * (1 - Math.pow(0.0008, dt));
+        if (Math.abs(t - w.q) > 0.002) live = true;
+        else w.q = t;
+        var shown = Math.round(w.q * 1000) * 2 + seen;
+        if (shown === w.shown) return;
+        w.shown = shown;
+        var s = l.spans[i].style;
+        if (w.q >= 1) {
+          s.transform = '';
+          s.opacity = '';
+        } else {
+          s.transform = 'translateY(' + ((1 - w.q) * 0.4).toFixed(3) + 'em)';
+          s.opacity = seen ? (0.15 + 0.85 * w.q).toFixed(3) : '';
+        }
+      });
+    });
+    if (live) braf = requestAnimationFrame(bframe);
+  };
+  addEventListener('scroll', bwake, { passive: true });
+  addEventListener('resize', bwake, { passive: true });
+  bwake();
+}
+
 /* The top line. Two things the markup cannot do by itself: both corners come back as pills when you
    scroll up, and the name takes on weight under the pointer. Without this file it is a plain line
    that scrolls away, and the status card still opens. */
