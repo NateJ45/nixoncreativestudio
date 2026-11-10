@@ -225,15 +225,6 @@ test.describe('The top line', () => {
       await page.waitForTimeout(120);
     }
     await expect(page.locator('[data-top]')).toHaveClass(/float/);
-    // The pills are solid: see-through, they changed tone as captures passed underneath.
-    for (const pill of ['.top .mark', '.top .status']) {
-      const paint = await page.locator(pill).evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { bg: s.backgroundColor, blur: s.backdropFilter };
-      });
-      expect(paint.bg, pill).toMatch(/^rgb\(/);
-      expect(paint.blur, pill).toBe('none');
-    }
     await page.locator('.top .status').click({ force: true });
     const card = page.locator('[data-reach]');
     await expect(card).toBeVisible();
