@@ -189,6 +189,7 @@ function choose(key, first) {
     });
     applyFilter(key);
     setPill();
+    syncPeek();
     return;
   }
   syncUrl();
@@ -211,7 +212,73 @@ function choose(key, first) {
     },
     deal,
   );
+  syncPeek();
   if (wasStuck) backToTable(view === 'list' ? rowList : grid);
+}
+
+/* The list's stage: the row you are on shows its window and its outcome beside the list (work.css,
+   wide screens only). A mouse picks by hovering, a keyboard by focus, and a touch screen by which
+   row is nearest the middle, so nothing here needs a hover. The stage always shows a row that is
+   on the page, and the window lands on the house bounce; under reduced motion it is simply
+   swapped. A hidden figure's still is never fetched. */
+var peek = $('[data-peek]'),
+  figs = peek ? $$('figure', peek) : [],
+  peekRow = null,
+  peekWide = matchMedia('(min-width: 75rem)');
+function showPeek(row, quiet) {
+  if (!peek || !row || row.hidden || row === peekRow) return;
+  if (peekRow) peekRow.classList.remove('on');
+  peekRow = row;
+  row.classList.add('on');
+  figs.forEach(function (f) {
+    f.hidden = f.dataset.for !== row.dataset.slug;
+    if (f.hidden || quiet || reduce || view !== 'list' || !peekWide.matches) return;
+    f.animate(
+      [{ transform: 'translateY(16px) rotate(-1.1deg) scale(.975)' }, { transform: 'none' }],
+      { duration: 520, easing: bounce },
+    );
+  });
+}
+function syncPeek() {
+  if (peekRow && !peekRow.hidden) return;
+  if (peekRow) peekRow.classList.remove('on');
+  peekRow = null;
+  showPeek(shown(rows)[0], true);
+}
+var peekTick = 0;
+function peekByScroll() {
+  peekTick = 0;
+  if (view !== 'list' || !peekWide.matches) return;
+  var mid = innerHeight / 2,
+    best = null,
+    gap = Infinity;
+  shown(rows).forEach(function (r) {
+    var b = r.getBoundingClientRect(),
+      d = Math.abs((b.top + b.bottom) / 2 - mid);
+    if (d < gap) {
+      gap = d;
+      best = r;
+    }
+  });
+  showPeek(best);
+}
+if (peek) {
+  rows.forEach(function (r) {
+    r.addEventListener('pointerenter', function (e) {
+      if (e.pointerType === 'mouse') showPeek(r);
+    });
+    r.addEventListener('focusin', function () {
+      showPeek(r);
+    });
+  });
+  if (matchMedia('(hover: none)').matches)
+    addEventListener(
+      'scroll',
+      function () {
+        if (!peekTick) peekTick = requestAnimationFrame(peekByScroll);
+      },
+      { passive: true },
+    );
 }
 
 /* The view switch. Windows rise back onto the page; on to the list, the rows rise in. */

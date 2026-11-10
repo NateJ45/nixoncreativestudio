@@ -1,0 +1,65 @@
+---
+/* ============================================================================
+   ReplyOrder | "How soon you hear back", in the care section on /services
+   ============================================================================
+   One ruled row per plan, soonest reply first. Pick a plan and a small slip,
+   "Your message", moves to that plan's row on a spring (src/scripts/prices.js),
+   so a faster plan visibly puts the message further up.
+
+   It says only what each plan's `support` line in src/data/pricing.ts promises:
+   src/lib/reply-order.ts reads the reply time out of that line and prints the
+   plan's own sentence. Hosting promises no reply time, so its row says that and
+   then quotes its own first sentence. No time, count or order is typed here.
+
+   Without JavaScript the picker and the slip are hidden and the rows are a plain
+   ruled list. Under reduced motion the slip simply changes rows.
+   ============================================================================ */
+import { carePlans, webTiers } from '../data/pricing';
+import { firstSentence, replyOrder } from '../lib/reply-order';
+
+const rows = replyOrder(carePlans);
+// Opens on the usual care plan for the anchor tier, as the receipt does.
+const start = (webTiers.find((t) => t.highlighted) ?? webTiers[1]).care;
+const says = (r: (typeof rows)[number]) =>
+  r.says || `No reply time is written into ${r.plan.name}. ${firstSentence(r.plan.support)}`;
+---
+
+<div class="reply" data-reply>
+  <div class="reply-head">
+    <h3 id="reply-h">How soon you hear back</h3>
+    <p>
+      A reply time is written into each care plan.
+      <span class="reply-js">Pick a plan to see where your message lands.</span>
+    </p>
+  </div>
+  <form class="reply-form" data-reply-form aria-labelledby="reply-h">
+    <fieldset class="pick-q">
+      <legend>Your plan</legend>
+      <div class="opts-row">
+        {carePlans.map((p) => (
+          <label class="pick-o">
+            <input type="radio" name="reply-plan" value={p.name} checked={p.name === start} />
+            <span>{p.addOn ? p.name : `${p.name} only`}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  </form>
+  <p class="label reply-cap">Soonest reply first</p>
+  <ol class="reply-rows">
+    {rows.map((r) => (
+      <li data-reply-row={r.plan.name}>
+        <b>{r.plan.name}</b>
+        <span class="reply-says">{says(r)}</span>
+        <span class="reply-slot" aria-hidden="true">
+          {r.plan.name === start && (
+            <i class="reply-note" data-reply-note>
+              Your message
+            </i>
+          )}
+        </span>
+      </li>
+    ))}
+  </ol>
+  <p class="vh" aria-live="polite" data-reply-say></p>
+</div>

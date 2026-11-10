@@ -1382,3 +1382,326 @@ html:not(.js) .ba-l {
   color: var(--soft);
   font-size: 0.9375rem;
 }
+
+/* ============================================================================
+   Four things that show the work behind the page (study.js). Each prints only
+   what is real: a file's pixel size, or what the browser measures here.
+   ============================================================================ */
+
+/* ---- The sizing frame: a dashed frame round one hero window, with the pixel size of the still
+   inside it. Two buttons move it between the desktop window and the phone. It is drawn in the
+   client's paper on their own color, the same pair as the hero's words. ---- */
+.s-stage {
+  min-width: 0;
+}
+.s-size {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: clamp(1rem, 2.6vh, 1.75rem);
+}
+html:not(.js) .s-size {
+  display: none;
+}
+.s-size-seg {
+  display: flex;
+  gap: 0.35rem;
+}
+.s-size button {
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 1px solid currentColor;
+  border-radius: 99rem;
+  background: none;
+  color: inherit;
+  font: 500 0.9375rem var(--body);
+  cursor: pointer;
+}
+.s-size button[aria-pressed='true'] {
+  background: var(--p);
+  color: var(--c);
+}
+.s-size button:focus-visible {
+  outline: 2px solid var(--p);
+  outline-offset: 3px;
+}
+.s-size-out {
+  font: 500 0.8125rem/1.3 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.s-frame {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  border: 1.5px dashed var(--p);
+  border-radius: 2px;
+  /* A hairline of their color either side, so the dashes still read where they cross a window. */
+  box-shadow:
+    0 0 0 1px var(--c),
+    inset 0 0 0 1px var(--c);
+}
+.s-frame i {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--c);
+  border: 1.5px solid var(--p);
+}
+.s-frame i:nth-child(1) {
+  left: -0.3rem;
+  top: -0.3rem;
+}
+.s-frame i:nth-child(2) {
+  right: -0.3rem;
+  top: -0.3rem;
+}
+.s-frame i:nth-child(3) {
+  left: -0.3rem;
+  bottom: -0.3rem;
+}
+.s-frame i:nth-child(4) {
+  right: -0.3rem;
+  bottom: -0.3rem;
+}
+.s-frame-px {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  padding: 0.2rem 0.55rem;
+  border-radius: 99rem;
+  background: var(--p);
+  color: var(--c);
+  font: 600 0.75rem/1.2 var(--body);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* The measured phone steps forward a little, so the frame has something to grow round. */
+.s-fan .p-phone {
+  transition: scale 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.s-fan.size-phone .p-phone {
+  scale: 1.06;
+}
+
+/* ---- The two switches at the top of Decisions. ---- */
+.insp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.insp[hidden],
+.insp [hidden] {
+  display: none;
+}
+.tbtn[aria-pressed] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* On is a filled button with a tick, so it is never colour alone. */
+.tbtn[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--ground);
+}
+.tbtn[aria-pressed='true']::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.4rem;
+  margin-top: -0.2rem;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  rotate: -45deg;
+}
+
+/* ---- The grid: this page's own columns, laid over the story. Each band is where a real column
+   sits (study.js reads the boxes), and its label is that column's measured width. ---- */
+.story {
+  position: relative;
+}
+.s-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s 0.5s;
+}
+.s-grid.on {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.s-grid i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.s-grid i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-inline: 1px solid var(--accent);
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform 0.55s var(--ease);
+  transition-delay: calc(var(--n) * 55ms);
+}
+.s-grid i.col::before {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.s-grid i:not(.col)::before {
+  border-color: transparent;
+}
+.s-grid.on i::before {
+  transform: none;
+}
+.s-grid b,
+.spec b {
+  display: block;
+  width: fit-content;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.5rem;
+  background: var(--ink);
+  color: var(--ground);
+  font: 500 0.75rem/1.25 var(--body);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.s-grid b {
+  position: sticky;
+  top: 5.5rem;
+  margin: 5.5rem auto 0;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s;
+  transition-delay: 0s;
+}
+.s-grid.on b {
+  opacity: 1;
+  transition-delay: calc(0.3s + var(--n) * 55ms);
+}
+/* A column's label keeps to its right edge, clear of the words it sits over. */
+.s-grid i.col:not(.thin) b {
+  margin-right: 0.5rem;
+}
+/* A band too narrow for its label turns the label on its side. */
+.s-grid i.thin b {
+  writing-mode: vertical-rl;
+  padding: 0.55rem 0.2rem;
+}
+
+/* ---- The measurements on a decision card: its heading size, its padding, and its label's colour
+   against the card with the contrast ratio. Under the pointer on one card, or on every card from
+   the switch, or with a tap. The lines are the studio blue: they are my ruler, not the client's
+   work. Nothing here takes up room, so the page never moves. ---- */
+.spec {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  visibility: hidden;
+}
+.dec.spec-on .spec {
+  visibility: visible;
+}
+.spec i {
+  position: absolute;
+  border: 1px dashed var(--accent);
+  border-radius: 2px;
+  opacity: 0;
+  scale: 0.97;
+  transition:
+    opacity 0.2s,
+    scale 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.spec i.spec-pad {
+  border: 0;
+  border-radius: 0;
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 1px, transparent 1px 6px);
+  scale: 1;
+}
+.spec b {
+  position: absolute;
+  opacity: 0;
+  translate: 0 0.3rem;
+  transition:
+    opacity 0.2s,
+    translate 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.spec .spec-top {
+  top: 0.95rem;
+  right: clamp(1.25rem, 2.4vw, 2rem);
+}
+.spec .spec-strip {
+  position: absolute;
+  left: clamp(1.25rem, 2.4vw, 2rem);
+  right: clamp(1.25rem, 2.4vw, 2rem);
+  bottom: 0.45rem;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: 0.25rem;
+}
+.spec .spec-strip b {
+  position: static;
+}
+.spec .spec-strip b:nth-child(2) {
+  transition-delay: 0.06s;
+}
+.spec b u {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--ground);
+  vertical-align: -0.05rem;
+}
+.spec b u + u {
+  margin-left: 0.3rem;
+}
+.dec.spec-on .spec i {
+  opacity: 1;
+  scale: 1;
+}
+.dec.spec-on .spec b {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s-fan .p-phone,
+  .s-grid,
+  .s-grid i::before,
+  .s-grid b,
+  .spec i,
+  .spec b {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .s-size button[aria-pressed='true'],
+  .tbtn[aria-pressed='true'] {
+    outline: 2px solid Highlight;
+  }
+  .s-frame-px,
+  .s-grid b,
+  .spec b {
+    border: 1px solid CanvasText;
+  }
+  .s-grid i::before {
+    border-color: CanvasText;
+  }
+}
+@media print {
+  .s-size,
+  .s-frame,
+  .insp,
+  .s-grid,
+  .spec {
+    display: none;
+  }
+}

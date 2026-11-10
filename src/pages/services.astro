@@ -10,9 +10,11 @@
    tests/metadata.spec.ts checks every JSON-LD offer is printed on the page, and
    the FAQPage is built from the same list the page renders.
 
-   src/scripts/prices.js adds the motion: three questions that suggest a tier, the
-   tiers that lift, the folding rows. Without it everything is simply open and
-   every link works.
+   src/scripts/prices.js adds the motion: three questions that suggest a tier (its
+   card's stub tears off on the way to /contact), the tiers that lift, the folding
+   rows, a cost table row sent to the receipt, the cost bars at 1, 3 and 5 years,
+   the reply slip in the care section and the FAQ answers that open like a reply.
+   Without it everything is simply open and every link works.
    ============================================================================ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/prices.css';
@@ -21,6 +23,7 @@ import Caption from '../components/Caption.astro';
 import Closing from '../components/Closing.astro';
 import LiveReceipt from '../components/LiveReceipt.astro';
 import ClientWeeks from '../components/ClientWeeks.astro';
+import ReplyOrder from '../components/ReplyOrder.astro';
 import { site } from '../data/site';
 import {
   webTiers as tiers,
@@ -35,6 +38,15 @@ import { SITUATIONS, sectorPagePath } from '../data/sector-pages';
 import { getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
 import { tierCosts } from '../lib/tier-costs';
+import {
+  VIEW_YEARS,
+  careKey,
+  costViews,
+  hostingKey,
+  viewSentence,
+  viewSum,
+} from '../lib/cost-views';
+import { yearsWord } from '../lib/receipt';
 import { addOnNamed, addOnOffer, careOffers, ids, tierOffers } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
 
@@ -65,6 +77,16 @@ const costs = tierCosts();
 // The cost bars share one scale, the largest five-year total, so their lengths compare honestly.
 const barMax = Math.max(...costs.map((c) => c.usual.fiveYears));
 const pct = (n: number) => `${((n / barMax) * 100).toFixed(2)}%`;
+// The bars can show 1, 3 or 5 years (src/lib/cost-views.ts). Every view keeps the five-year scale,
+// so a bar visibly grows from one view to the next. The page opens on five years.
+const barYears = VIEW_YEARS[VIEW_YEARS.length - 1];
+const bars = costs.map((c) => ({ ...c, views: costViews(c) }));
+// The receipt opens on the anchor tier with its usual care plan: that row's button starts pressed.
+const onReceipt = (tierName: string, planName: string) =>
+  tierName === signature.name && planName === signature.care;
+// A cost table row in words, for its button and the slip it sends: "Signature with Care".
+const rowName = (tierName: string, r: { withCare: boolean; plan: { name: string } }) =>
+  `${tierName} ${r.withCare ? `with ${r.plan.name}` : `on ${hosting.name} only`}`;
 const situationCols = [
   { key: 'launch', tier: launch },
   { key: 'signature', tier: signature },
@@ -170,6 +192,9 @@ const schemas = [
     })),
   },
 ];
+
+// The FAQ answers read as replies in a thread, each signed with the name on the studio.
+const firstName = site.ownerName.split(' ')[0];
 
 const heading = `What I do, and <b>what it costs.</b>`;
 ---
@@ -425,6 +450,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
                 Answer all three and I'll suggest a starting tier.
               </span>
             </div>
+            <div class="pick-stub" data-pick-stub aria-hidden="true" hidden>
+              <span>Starting tier</span>
+              <b data-pick-stub-name />
+            </div>
           </div>
           <p class="pick-why" data-pick-why hidden></p>
           <a class="chip go pick-go" href="/contact/" data-pick-go hidden>
@@ -469,6 +498,19 @@ const heading = `What I do, and <b>what it costs.</b>`;
                       Custom tools need {c.tier.needsCare} or {carePlus.name}.
                     </span>
                   )}
+                  <button
+                    type="button"
+                    class="row-send"
+                    data-send-tier={c.tier.name}
+                    data-send-plan={r.plan.name}
+                    data-send-label={rowName(c.tier.name, r)}
+                    aria-pressed={onReceipt(c.tier.name, r.plan.name) ? 'true' : 'false'}
+                  >
+                    Show on the receipt
+                    <span class="vh">
+                      {`for ${rowName(c.tier.name, r)}, ${yearsWord(barYears)}`}
+                    </span>
+                  </button>
                 </th>
                 <td data-label="First year">{money(r.yearOne)}</td>
                 <td data-label="After 3 years">{money(r.threeYears)}</td>
@@ -486,32 +528,65 @@ const heading = `What I do, and <b>what it costs.</b>`;
         build that lands higher in its range adds the difference. Photography, custom development,
         or a paid Sanity plan if your team ever outgrows the free one, would be extra.
       </p>
-      <figure class="cost-bars" aria-labelledby="bars-cap">
+      <figure class="cost-bars" aria-labelledby="bars-cap" data-bars>
         <figcaption id="bars-cap" class="tcap">
-          Where the money goes over 5 years, with each tier's usual care plan
+          Where the money goes over 1, 3 or 5 years, with each tier's usual care plan
         </figcaption>
+        <fieldset class="pick-q bars-pick">
+          <legend>Show the cost after</legend>
+          <div class="opts-row">
+            {VIEW_YEARS.map((y) => (
+              <label class="pick-o">
+                <input type="radio" name="bars-years" value={y} checked={y === barYears} />
+                <span>{yearsWord(y)}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <p class="bar-key" aria-hidden="true">
           <span class="k-build">Build, one-time</span>
-          <span class="k-host">{hosting.name}, years 2 to 5</span>
-          <span class="k-care">Care plan, 5 years</span>
+          {VIEW_YEARS.map((y) => (
+            <span class="k-host" data-v={y} hidden={y !== barYears}>
+              {hostingKey(hosting.name, y)}
+            </span>
+          ))}
+          {VIEW_YEARS.map((y) => (
+            <span class="k-care" data-v={y} hidden={y !== barYears}>
+              {careKey(y)}
+            </span>
+          ))}
         </p>
         <ul class="bars">
-          {costs.map(({ tier, usual }) => (
+          {bars.map(({ tier, usual, views }) => (
             <li>
               <p class="bars-t">
                 <b>
                   {tier.name} with {usual.plan.name}
                 </b>
-                <span class="bars-sum">{`${money(usual.fiveYears)} over 5 years`}</span>
+                {views.map((v) => (
+                  <span class="bars-sum" data-v={v.years} hidden={v.years !== barYears}>
+                    {viewSum(v, money)}
+                  </span>
+                ))}
               </p>
               <div class="bars-bar" aria-hidden="true">
-                <i class="k-build" style={`width:${pct(usual.parts.build)}`}></i>
-                <i class="k-host" style={`width:${pct(usual.parts.hosting)}`}></i>
-                <i class="k-care" style={`width:${pct(usual.parts.care)}`}></i>
+                {(['build', 'hosting', 'care'] as const).map((part, k) => (
+                  <i
+                    class={['k-build', 'k-host', 'k-care'][k]}
+                    style={`width:${pct(usual.parts[part])}`}
+                    data-w={views.map((v) => ((v[part] / barMax) * 100).toFixed(2)).join(' ')}
+                  />
+                ))}
               </div>
-              <p class="bars-parts">
-                {`Build ${money(usual.parts.build)}, ${hosting.name} ${money(usual.parts.hosting)}, ${usual.plan.name} ${money(usual.parts.care)}. Total ${money(usual.fiveYears)}.`}
-              </p>
+              {views.map((v) => (
+                <p
+                  class={v.years === barYears ? 'bars-parts' : 'bars-alt'}
+                  data-v={v.years}
+                  hidden={v.years !== barYears}
+                >
+                  {viewSentence(v, { hosting: hosting.name, plan: usual.plan.name }, money)}
+                </p>
+              ))}
             </li>
           ))}
         </ul>
@@ -864,6 +939,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </tbody>
         </table>
       </div>
+      <ReplyOrder />
       <p class="after">
         {lightCare.name} minutes carry over for three months; {care.name} and {carePlus.name} hours
         do not. A fix means something that stopped working. Anything new, or beyond your plan, is
@@ -1101,7 +1177,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
               <i aria-hidden="true"></i>
             </summary>
             <div class="faq-a">
-              <p>{a}</p>
+              <div class="faq-reply">
+                <p class="label faq-from">{firstName}</p>
+                <p>{a}</p>
+              </div>
             </div>
           </details>
         ))}

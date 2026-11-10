@@ -43,7 +43,9 @@ test.describe('Prices', () => {
       // bars, and the always-open care cards spell out edit time, rate and replies in words.
       // Raised again to 17500 in the motion pack (Nov 2026): the costs fold now ends on the live
       // receipt, and the care section carries the weeks strip, one row per client.
-      expect(height).toBeLessThan(17500);
+      // Raised to 18500 (Nov 2026): each cost row has a "Show on the receipt" button, the cost
+      // bars have their 1, 3 and 5 year radios, and the care section ends on the reply rows.
+      expect(height).toBeLessThan(18500);
     });
 
     test('a jump link and an address open the fold they point into', async ({ page }) => {

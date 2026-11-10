@@ -138,17 +138,27 @@ const caseStudies = defineCollection({
       //   date     the day they wrote it (YYYY-MM-DD), the permission date
       //   context  optional: one plain line that frames the quote honestly,
       //            for example when it is about an earlier version of the site
+      //   highlight  optional: the key phrase, copied exactly out of `quote`.
+      //            The quote band draws a marker across it (QuoteBand.astro).
+      //            It picks words out, it never changes them, so it must be
+      //            found in the quote as written or the build stops.
       // src/lib/case-testimonials.test.ts checks the shape and which studies
       // carry one.
       testimonials: z
         .array(
-          z.object({
-            quote: z.string().min(1),
-            name: z.string().min(1),
-            title: z.string().min(1),
-            date: z.date(),
-            context: z.string().optional(),
-          }),
+          z
+            .object({
+              quote: z.string().min(1),
+              name: z.string().min(1),
+              title: z.string().min(1),
+              date: z.date(),
+              context: z.string().optional(),
+              highlight: z.string().min(1).optional(),
+            })
+            .refine((t) => !t.highlight || t.quote.includes(t.highlight), {
+              message: 'highlight must be copied exactly out of the quote',
+              path: ['highlight'],
+            }),
         )
         .optional(),
 

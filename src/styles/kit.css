@@ -870,6 +870,84 @@ blockquote {
 html:not(.js) .dk-rail {
   display: none;
 }
+/* A case study's chapters, as ticks on the rail (kit.js). A tick is hollow until the line reaches
+   it, filled once it has, and the chapter you are in is the larger one, so the state is a shape as
+   well as a color. */
+.dk-rail.has-ticks {
+  opacity: 1;
+}
+.dk-rail circle {
+  fill: var(--card);
+  stroke: var(--soft);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.dk-rail circle.past {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.dk-rail circle.now {
+  transform: scale(1.6);
+}
+/* The chapter's name, for a moment, above the pill. Never in the way of a click. */
+.dk-spy {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  display: flex;
+  gap: 0.5rem;
+  max-width: min(19rem, calc(100vw - 2rem));
+  padding: 0.4rem 0.8rem;
+  border-radius: 99rem;
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 500 0.875rem/1.2 var(--body);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 0.35rem);
+  transition:
+    opacity 0.2s,
+    transform 0.3s var(--ease),
+    visibility 0s 0.3s;
+}
+.dk-spy.on {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+.dk-spy-n {
+  color: var(--on-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.dk-spy span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html:not(.js) .dk-spy {
+  display: none;
+}
+@media (forced-colors: active) {
+  .dk-spy {
+    border: 1px solid CanvasText;
+  }
+  .dk-rail circle {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+  .dk-rail circle.past {
+    fill: CanvasText;
+  }
+}
+@media print {
+  .dk-spy {
+    display: none;
+  }
+}
 /* A phone tightens up. Under 375px the whole row still cannot fit, so the action says Start; "a
    project" stays for a screen reader, and 320px holds all five targets at 44px high. */
 @media (max-width: 40rem) {
@@ -1393,6 +1471,9 @@ html:not(.js) .dk-rail {
   .dock > a,
   .dock .slide,
   .dk-rail,
+  .dk-rail circle,
+  .dk-spy,
+  .dk-spy.on,
   .dock-scrim,
   .fc-in {
     transition: none;
@@ -1696,6 +1777,84 @@ h1 b,
 }
 .ledger .ledger-for a:hover {
   color: var(--accent);
+}
+/* A sector's own client windows, dealt up beside its word when you reach for it (home.js adds
+   `.on`). Each card is that client's color around their own page, like the windows in the grid.
+   `--d` is the card's place either side of the middle and `--i` its turn in the deal. */
+.lf {
+  position: relative;
+  display: inline-flex;
+}
+.lf-stack {
+  display: none;
+}
+@media (min-width: 48rem) {
+  .js .lf-stack {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.1rem);
+    z-index: 5;
+    display: flex;
+    padding-left: 0.4rem;
+    pointer-events: none;
+    visibility: hidden;
+    transition: visibility 0s 0.3s;
+  }
+  .lf.on .lf-stack {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .lf-card {
+    flex: none;
+    width: 4.75rem;
+    aspect-ratio: 320 / 660;
+    margin-left: -1.5rem;
+    padding: 0.3rem 0.2rem 0.35rem;
+    border-radius: 0.8rem;
+    background: var(--c);
+    box-shadow:
+      var(--rim),
+      0 1px 2px rgba(0, 0, 0, 0.12),
+      0 16px 26px -14px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.7);
+    transform-origin: 50% 100%;
+    transition:
+      transform 0.25s var(--ease),
+      opacity 0.15s;
+  }
+  .lf-card:first-child {
+    margin-left: 0;
+  }
+  .lf-card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.55rem;
+    background: var(--screen);
+    object-fit: cover;
+    object-position: top;
+  }
+  .lf.on .lf-card {
+    opacity: 1;
+    transform: translateY(calc(var(--d) * var(--d) * 0.3rem)) rotate(calc(var(--d) * 7deg));
+    transition:
+      transform 0.5s cubic-bezier(0.3, 1.45, 0.5, 1) calc(var(--i) * 55ms),
+      opacity 0.15s calc(var(--i) * 55ms);
+  }
+}
+@media (min-width: 48rem) and (prefers-reduced-motion: reduce) {
+  /* No deal: the cards are already fanned and simply fade in. */
+  .lf-card,
+  .lf.on .lf-card {
+    transform: translateY(calc(var(--d) * var(--d) * 0.3rem)) rotate(calc(var(--d) * 7deg));
+    transition: opacity 0.15s;
+  }
+}
+@media (forced-colors: active) {
+  .lf-card {
+    border: 1px solid CanvasText;
+  }
 }
 .cap span.label {
   margin-top: 0.35rem;
@@ -2068,6 +2227,73 @@ h1.giant b {
   font: 500 clamp(1.625rem, 3vw, 3.125rem)/1.14 var(--display);
   letter-spacing: -0.03em;
   text-wrap: pretty;
+}
+/* The key phrase of a quote, marked the way a highlighter would: the client's paper behind the
+   words and their color on top, so it is the band's own pair turned over (the same contrast, checked
+   in case-palettes.test.ts). It is bold as well, so color is not the only thing that marks it.
+   `--hl` is how far the marker has got. The text is painted by a gradient with the same stop, so a
+   letter the marker has not reached yet keeps the band's text color and can always be read. */
+@property --hl {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%;
+}
+.band .hl {
+  --hl: 100%;
+  margin-inline: -0.14em;
+  padding: 0.02em 0.14em 0.06em;
+  border-radius: 0.14em;
+  background: var(--p);
+  color: var(--c);
+  font-weight: 700;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .band .hl {
+    background:
+      linear-gradient(90deg, var(--c) var(--hl), currentColor var(--hl)),
+      linear-gradient(90deg, var(--p) var(--hl), transparent var(--hl));
+    -webkit-background-clip: text, border-box;
+    background-clip: text, border-box;
+    color: inherit;
+    -webkit-text-fill-color: transparent;
+  }
+}
+/* It waits for the band, then draws across in five hard steps, the way a marker is dragged. */
+@media (prefers-reduced-motion: no-preference) {
+  .band.hl-wait:not(.hl-on) .hl {
+    --hl: 0%;
+  }
+  .band.hl-on .hl {
+    animation: hl-draw 0.55s steps(5, end) 0.15s both;
+  }
+  .band.hl-on.stepped .hl {
+    animation-delay: 0.4s;
+  }
+}
+@keyframes hl-draw {
+  from {
+    --hl: 0%;
+  }
+  to {
+    --hl: 100%;
+  }
+}
+@media (forced-colors: active) {
+  .band .hl {
+    background: Mark;
+    color: MarkText;
+    -webkit-text-fill-color: currentColor;
+    animation: none;
+  }
+}
+@media print {
+  .band .hl {
+    background: none;
+    color: inherit;
+    -webkit-text-fill-color: currentColor;
+  }
 }
 .band .cite {
   display: block;
