@@ -112,6 +112,7 @@ export default defineConfig({
     sitemap({
       filter: (page) =>
         !page.includes('/coming-soon') &&
+        !page.includes('/text/') &&
         (photographyIsOpen || !page.includes('/photography')) &&
         (journalIsOpen || !page.includes('/journal')),
       serialize: (item) => {

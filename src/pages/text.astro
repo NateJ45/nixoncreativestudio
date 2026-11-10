@@ -1,0 +1,98 @@
+---
+/* ============================================================================
+   /text | Handoff from the inquiry email's Text button to Messages
+   ============================================================================
+   Gmail strips sms: links from email, so the Text button in the inquiry email
+   (src/lib/inquiry-email.ts) links here as /text/#<number>. This page reads the
+   number from the fragment (never sent to the server), opens Messages, and
+   shows a button and the number in case the browser wants a tap first.
+
+   Its own minimal document, like /coming-soon: no dock, nav or analytics.
+   Never in the sitemap, noindex. Logic: src/lib/text-handoff.ts.
+   ============================================================================ */
+
+import '../styles/kit.css';
+import { site } from '../data/site';
+
+const title = `Text back | ${site.studioName}`;
+const description = `Opens Messages to text back someone who sent a project inquiry to ${site.studioName}.`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <main class="tx">
+      <h1>Text back</h1>
+      <p data-tx-ok hidden>
+        Opening Messages for <strong data-tx-num></strong>. If nothing happens, tap the button.
+      </p>
+      <p>
+        <a class="tx-btn" data-tx-btn href="#" hidden>
+          Open Messages
+        </a>
+      </p>
+      <p data-tx-bad>
+        This link has no phone number in it. Use the Call button in the email, or reply by email.
+      </p>
+    </main>
+    <style>
+      body {
+        margin: 0;
+        background: var(--ground);
+        color: var(--ink);
+        font-family: var(--body);
+      }
+      .tx {
+        max-width: 28rem;
+        margin: 0 auto;
+        padding: 3rem 1rem;
+        font-size: 1.0625rem;
+        line-height: 1.5;
+      }
+      h1 {
+        font-family: var(--display);
+        font-size: 2rem;
+        margin: 0 0 1rem;
+      }
+      .tx-btn {
+        display: inline-block;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .tx-btn:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 3px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <script>
+      import { smsFromHash } from '../lib/text-handoff';
+
+      const target = smsFromHash(location.hash);
+      if (target) {
+        const btn = document.querySelector<HTMLAnchorElement>('[data-tx-btn]')!;
+        btn.href = target;
+        btn.hidden = false;
+        document.querySelector<HTMLElement>('[data-tx-num]')!.textContent = target.slice(4);
+        document.querySelector<HTMLElement>('[data-tx-ok]')!.hidden = false;
+        document.querySelector<HTMLElement>('[data-tx-bad]')!.hidden = true;
+        location.href = target;
+      }
+    </script>
+  </body>
+</html>
