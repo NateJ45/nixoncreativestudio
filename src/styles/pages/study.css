@@ -88,6 +88,40 @@
   left: 0;
   top: 9%;
   width: 79%;
+  /* The window you picked on the last page grows into this pane (src/scripts/hero-morph.js). */
+  view-transition-name: study-hero;
+}
+/* A morph is landing here, so the pane is simply in place and only the phone is thrown in. */
+.hero-morph .s-fan .p-home {
+  visibility: visible;
+  animation: none;
+}
+/* The growing window: one spring, with a small overshoot as it lands. The old and new pictures
+   cross over quickly at the start, so it reads as one window, not two. Under reduced motion there
+   is no view transition at all (kit.css). */
+::view-transition-group(study-hero) {
+  z-index: 2;
+  animation-duration: 0.72s;
+  animation-timing-function: linear(
+    0,
+    0.22 8%,
+    0.58 18%,
+    0.86 28%,
+    1.02 38%,
+    1.06 46%,
+    1.04 56%,
+    1.005 70%,
+    0.998 84%,
+    1
+  );
+}
+::view-transition-old(study-hero),
+::view-transition-new(study-hero) {
+  height: 100%;
+  object-fit: cover;
+  object-position: 0 0;
+  animation-duration: 0.3s;
+  animation-timing-function: var(--ease);
 }
 .s-fan .p-home > div {
   position: relative;

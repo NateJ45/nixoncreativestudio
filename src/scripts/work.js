@@ -151,6 +151,9 @@ function backToTable(el) {
     behavior: reduce ? 'auto' : 'smooth',
   });
 }
+function jumpToTable(el) {
+  scrollTo(0, el.getBoundingClientRect().top + scrollY - bar.offsetHeight - 28);
+}
 function matches(el, key) {
   return key === 'all' || el.dataset.key === key;
 }
@@ -218,12 +221,56 @@ function markView() {
     b.setAttribute('aria-pressed', b.dataset.v === view ? 'true' : 'false');
   });
 }
+/* Where the browser can, the switch is one view transition: window i and row i share a name for the
+   moment it runs, so each window folds into its row and back on the house spring. Only the ones on
+   show take part, and the names go again once it has landed. */
+var canMorph = !reduce && typeof doc.startViewTransition === 'function';
+function pairs() {
+  var bySlug = {};
+  shown(rows).forEach(function (r) {
+    bySlug[r.dataset.slug] = r;
+  });
+  return shown(cards)
+    .map(function (li) {
+      var slug = li.querySelector('.tile').dataset.slug;
+      return [li, bySlug[slug], 'dw-' + slug];
+    })
+    .filter(function (p) {
+      return p[1];
+    });
+}
+function nameAll(list, on) {
+  list.forEach(function (p) {
+    p[0].style.viewTransitionName = on ? p[2] : '';
+    p[1].style.viewTransitionName = on ? p[2] : '';
+  });
+}
 function setView(v) {
   var wasStuck = section.getBoundingClientRect().top < 0;
-  view = v;
-  markView();
-  syncUrl();
-  setPill();
+  var change = function () {
+    view = v;
+    markView();
+    syncUrl();
+    setPill();
+  };
+  if (canMorph) {
+    var list = pairs(),
+      html = doc.documentElement;
+    nameAll(list, true);
+    html.classList.add('dw-morph');
+    /* Inside the transition the page jumps straight back to the table: the morph is the motion. */
+    doc
+      .startViewTransition(function () {
+        change();
+        if (wasStuck) jumpToTable(v === 'list' ? rowList : grid);
+      })
+      .finished.finally(function () {
+        nameAll(list, false);
+        html.classList.remove('dw-morph');
+      });
+    return;
+  }
+  change();
   if (!reduce) {
     if (v === 'list')
       shown(rows).forEach(function (r, n) {
@@ -243,9 +290,49 @@ viewButtons.forEach(function (b) {
   });
 });
 
+/* The ink. A press blooms a circle of the pill's blue inside the button, from the pointer, or from the
+   centre when Enter or Space pressed it. The circle holds a white copy of the label, so each letter is
+   ink on the card or white on the blue at every moment (AA throughout). It grows on a quick spring,
+   waits for the sliding pill to arrive under it, and is taken away: by then the two look the same. */
+function bloom(b, e) {
+  var r = b.getBoundingClientRect(),
+    x = e.detail > 0 && e.clientX ? e.clientX - r.left : r.width / 2,
+    y = e.detail > 0 && e.clientY ? e.clientY - r.top : r.height / 2;
+  var far = Math.hypot(Math.max(x, r.width - x), Math.max(y, r.height - y)) + 1;
+  $$('.dw-ink', bar).forEach(function (old) {
+    old.remove();
+  });
+  buttons.forEach(function (o) {
+    o.classList.remove('inking');
+  });
+  var ink = doc.createElement('span');
+  ink.className = 'dw-ink';
+  ink.setAttribute('aria-hidden', 'true');
+  ink.innerHTML = b.innerHTML;
+  b.classList.add('inking');
+  b.appendChild(ink);
+  var at = function (rad) {
+    return 'circle(' + rad.toFixed(1) + 'px at ' + x.toFixed(1) + 'px ' + y.toFixed(1) + 'px)';
+  };
+  ink.animate(
+    [{ clipPath: at(0) }, { clipPath: at(far * 1.04), offset: 0.7 }, { clipPath: at(far) }],
+    {
+      duration: 420,
+      easing: 'cubic-bezier(.2,.8,.2,1)',
+      fill: 'forwards',
+    },
+  );
+  setTimeout(function () {
+    ink.remove();
+    b.classList.remove('inking');
+  }, 640);
+}
+
 buttons.forEach(function (b) {
-  b.addEventListener('click', function () {
-    if (b.dataset.f !== current) choose(b.dataset.f);
+  b.addEventListener('click', function (e) {
+    if (b.dataset.f === current) return;
+    if (!reduce) bloom(b, e);
+    choose(b.dataset.f);
   });
 });
 
@@ -283,3 +370,36 @@ if (io && view === 'grid')
 addEventListener('resize', setPill);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(setPill);
 addEventListener('load', setPill);
+
+/* What changed: each card's dots fill in reading order as the card comes up the screen, a few
+   milliseconds apart, so a big number visibly takes longer to fill than a small one. CSS holds the
+   rings (work.css) only while motion is allowed; a page that loads already scrolled just shows them
+   full, and so does a browser without IntersectionObserver. */
+var figCards = $$('[data-figures] .wf-card');
+function fill(card, slow) {
+  $$('.wf-grid i', card).forEach(function (dot, k) {
+    dot.style.transitionDelay = slow ? k * 7 + 'ms' : '0ms';
+  });
+  card.classList.add('on');
+}
+if (figCards.length) {
+  if (reduce || ui.restored() || !('IntersectionObserver' in window))
+    figCards.forEach(function (c) {
+      fill(c, false);
+    });
+  else {
+    var fio = new IntersectionObserver(
+      function (es) {
+        es.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          fio.unobserve(e.target);
+          fill(e.target, true);
+        });
+      },
+      { rootMargin: '0px 0px -25% 0px' },
+    );
+    figCards.forEach(function (c) {
+      fio.observe(c);
+    });
+  }
+}
