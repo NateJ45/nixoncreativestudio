@@ -1,6 +1,7 @@
 /* The signature: a phone beside the story that scrolls through the real site as you read. */
 import { ui } from './kit.js';
 import './hero-morph.js';
+import { pairSpec, pxWords, ratioWords } from '../lib/study-spec';
 var reduce = ui.reduce,
   doc = document;
 var $$ = function (a, r) {
@@ -10,13 +11,127 @@ var clamp = function (v, a, b) {
   return Math.min(b, Math.max(a, v));
 };
 
+/* The sizing frame: a dashed frame with corner handles sits round one of the hero's two windows and
+   prints the pixel size of the still inside it (the sizes are in the markup, from the files). The
+   Desktop and Phone buttons move it, and it resizes from one window to the other on the kit's
+   spring while the measured phone steps forward a little. Both windows are real captures, so
+   nothing is ever reflowed to fake a width in between, and the number is swapped, never counted.
+   It only appears once the fan has landed (start), so it never fights the throw or a window
+   growing in from the last page. Under reduced motion it is simply in place and jumps. */
+var sizer = (function () {
+  var box = doc.querySelector('[data-size]'),
+    fan = doc.querySelector('.s-fan');
+  if (!box || !fan) return { start: function () {} };
+  var btns = $$('button', box),
+    out = box.querySelector('[data-size-out]'),
+    panes = { home: fan.querySelector('.p-home'), phone: fan.querySelector('.p-phone') },
+    frame = doc.createElement('span'),
+    px = doc.createElement('b'),
+    which = 'home',
+    started = false,
+    sp = null,
+    raf = 0,
+    last = 0,
+    PAD = 7,
+    GROW = 1.06;
+  frame.className = 's-frame';
+  frame.setAttribute('aria-hidden', 'true');
+  frame.innerHTML = '<i></i><i></i><i></i><i></i>';
+  px.className = 's-frame-px';
+  frame.appendChild(px);
+  function target() {
+    var p = panes[which],
+      k = which === 'phone' ? GROW : 1,
+      w = p.offsetWidth,
+      h = p.offsetHeight;
+    return [
+      p.offsetLeft + w / 2,
+      p.offsetTop + h / 2,
+      w * k + PAD * 2,
+      h * k + PAD * 2,
+      parseFloat(getComputedStyle(p).getPropertyValue('--r')) || 0,
+    ];
+  }
+  function put() {
+    var v = sp.map(function (s) {
+      return s.x;
+    });
+    frame.style.left = (v[0] - v[2] / 2).toFixed(1) + 'px';
+    frame.style.top = (v[1] - v[3] / 2).toFixed(1) + 'px';
+    frame.style.width = Math.max(0, v[2]).toFixed(1) + 'px';
+    frame.style.height = Math.max(0, v[3]).toFixed(1) + 'px';
+    frame.style.rotate = v[4].toFixed(2) + 'deg';
+  }
+  function snap() {
+    if (!started) return;
+    cancelAnimationFrame(raf);
+    raf = 0;
+    sp = target().map(function (v) {
+      return ui.spring(190, 21, v);
+    });
+    put();
+  }
+  function go(now) {
+    var dt = Math.min(0.033, (now - last) / 1000 || 0.016),
+      to = target(),
+      live = false;
+    last = now;
+    sp.forEach(function (s, i) {
+      if (s.step(to[i], dt) && (Math.abs(to[i] - s.x) > 0.2 || Math.abs(s.v) > 2)) live = true;
+    });
+    if (live) {
+      put();
+      raf = requestAnimationFrame(go);
+    } else snap();
+  }
+  function pick(name) {
+    if (name === which) return;
+    which = name;
+    fan.classList.toggle('size-phone', name === 'phone');
+    btns.forEach(function (b) {
+      var on = b.dataset.sizeFor === name;
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (!on) return;
+      px.textContent = b.dataset.sizePx;
+      out.textContent = b.textContent.trim() + ' still: ' + b.dataset.sizePx + ' pixels';
+    });
+    if (!started) return;
+    if (reduce) return snap();
+    if (!raf) {
+      last = performance.now();
+      raf = requestAnimationFrame(go);
+    }
+  }
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      pick(b.dataset.sizeFor);
+    });
+  });
+  px.textContent = btns[0].dataset.sizePx;
+  return {
+    start: function () {
+      if (started) return;
+      started = true;
+      fan.appendChild(frame);
+      snap();
+      if ('ResizeObserver' in window)
+        new ResizeObserver(function () {
+          if (!raf) snap();
+        }).observe(fan);
+    },
+  };
+})();
+
 /* The entry: the two windows get thrown onto the page and land on the kit's spring. The phone arrives second and knocks the desktop window as it lands.
    When a window from the last page is growing into this one (hero-morph.js), the desktop pane is already
    where the morph lands, so only the phone is thrown, and it does not knock. */
 (function () {
   var home = doc.querySelector('.s-fan .p-home'),
     ph = doc.querySelector('.s-fan .p-phone');
-  if (reduce || !home || !ph) return;
+  if (reduce || !home || !ph) {
+    sizer.start();
+    return;
+  }
   var morph = doc.documentElement.classList.contains('hero-morph');
   if (!morph) {
     try {
@@ -63,6 +178,7 @@ var clamp = function (v, a, b) {
   var bodies = morph ? [pb] : [hb, pb];
   if (scrollY > 200) {
     bodies.forEach(clear);
+    sizer.start();
     return;
   }
   bodies.forEach(put);
@@ -101,7 +217,10 @@ var clamp = function (v, a, b) {
       hb.r.v -= 9;
     }
     if (live) requestAnimationFrame(go);
-    else bodies.forEach(clear);
+    else {
+      bodies.forEach(clear);
+      sizer.start();
+    }
   });
 })();
 ui.wireFootage(doc.querySelector('.s-fan'));
@@ -532,3 +651,269 @@ $$('[data-zoom]').forEach(function (b) {
     lb.scrollTop = 0;
   });
 });
+
+/* The walk grows as it arrives: the window of the real homepage starts a little small and scales up
+   to its full size as you scroll it to the middle of the screen, and back if you scroll away. It is
+   tied to the scroll position, transform only, so nothing runs when the page is still. Under
+   reduced motion it is simply full size. */
+(function () {
+  var wins = $$('.walk .win, .walk .walk-ph');
+  if (reduce || !wins.length) return;
+  var FROM = 0.86,
+    tick = 0;
+  function size() {
+    tick = 0;
+    var vh = innerHeight;
+    wins.forEach(function (el) {
+      var h = el.offsetHeight;
+      if (!h) return;
+      /* The middle of the box does not move when it scales, so read the unscaled top from it. */
+      var r = el.getBoundingClientRect(),
+        top = (r.top + r.bottom) / 2 - h / 2,
+        p = clamp((vh - top) / (vh / 2 + h / 2), 0, 1),
+        e = 1 - Math.pow(1 - p, 3);
+      el.style.scale = e >= 1 ? '' : (FROM + (1 - FROM) * e).toFixed(4);
+    });
+  }
+  function ask() {
+    if (!tick) tick = requestAnimationFrame(size);
+  }
+  addEventListener('scroll', ask, { passive: true });
+  addEventListener('resize', ask);
+  size();
+})();
+
+/* The two switches at the top of Decisions.
+
+   Show the grid lays this page's own columns over the story: the margin, the story, the gap and the
+   phone beside it, each band labelled with the width the browser gives it right now. The bands
+   grow down from the top one after another. It is this page's structure, read off the page, not a
+   guess at the client's.
+
+   Show the measurements draws, on every decision card, what that card is really set in: the
+   heading's size and weight, the card's padding, and the "What I did" label's colour on the card
+   with its contrast ratio (the same maths as the palette test, src/lib/study-spec.ts). A pointer
+   over one card shows just that card's, and a tap on a card pins it. A value that cannot be read
+   is left out. Under reduced motion both simply appear. */
+(function () {
+  var bar = doc.querySelector('[data-insp]');
+  if (!bar || !story) return;
+  var gridBtn = bar.querySelector('[data-insp-grid]'),
+    specBtn = bar.querySelector('[data-insp-spec]'),
+    say = bar.querySelector('[data-insp-out]'),
+    chaps = story.querySelector('.chaps'),
+    rail = story.querySelector('.rail'),
+    decs = $$('.dec', story),
+    grid = null;
+  bar.hidden = false;
+  if (!decs.length) specBtn.hidden = true;
+
+  function bands() {
+    var s = story.getBoundingClientRect(),
+      c = chaps.getBoundingClientRect(),
+      r = rail && rail.getBoundingClientRect(),
+      out = [['Margin', s.left, c.left, false]];
+    out.push(['Story', c.left, c.right, true]);
+    if (r && r.width > 1) {
+      out.push(['Gap', c.right, r.left, false]);
+      out.push(['Phone', r.left, r.right, true]);
+      out.push(['Margin', r.right, s.right, false]);
+    } else out.push(['Margin', c.right, s.right, false]);
+    return out
+      .map(function (b) {
+        return { name: b[0], x: b[1] - s.left, w: Math.round(b[2] - b[1]), col: b[3] };
+      })
+      .filter(function (b) {
+        return b.w > 0;
+      });
+  }
+  function drawGrid() {
+    var list = bands();
+    grid.textContent = '';
+    list.forEach(function (b, n) {
+      var i = doc.createElement('i'),
+        label = doc.createElement('b');
+      i.style.left = b.x.toFixed(1) + 'px';
+      i.style.width = b.w + 'px';
+      i.style.setProperty('--n', n);
+      if (b.col) i.className = 'col';
+      if (b.w < 96) i.classList.add('thin');
+      label.textContent = b.name + ' ' + b.w + 'px';
+      i.appendChild(label);
+      grid.appendChild(i);
+    });
+    return list;
+  }
+  gridBtn.addEventListener('click', function () {
+    var on = gridBtn.getAttribute('aria-pressed') !== 'true';
+    gridBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!grid) {
+      grid = doc.createElement('div');
+      grid.className = 's-grid';
+      grid.setAttribute('aria-hidden', 'true');
+      story.appendChild(grid);
+      if ('ResizeObserver' in window)
+        new ResizeObserver(function () {
+          if (grid.classList.contains('on')) drawGrid();
+        }).observe(story);
+    }
+    if (!on) {
+      grid.classList.remove('on');
+      say.textContent = 'The grid is off.';
+      return;
+    }
+    var list = drawGrid();
+    /* One frame at rest first, so the bands grow instead of just appearing. */
+    void grid.offsetWidth;
+    grid.classList.add('on');
+    say.textContent =
+      'The grid is on. Left to right: ' +
+      list
+        .map(function (b) {
+          return b.name.toLowerCase() + ' ' + b.w + ' pixels';
+        })
+        .join(', ') +
+      '.';
+  });
+
+  /* One card's measurements, built the first time they are asked for and re-read each time after. */
+  function measure(card) {
+    var h = card.querySelector('h3'),
+      dt = card.querySelector('.dec-did dt'),
+      cs = getComputedStyle(card),
+      hs = h && getComputedStyle(h),
+      spec = card.querySelector('.spec'),
+      words = [];
+    if (!spec) {
+      spec = doc.createElement('span');
+      spec.className = 'spec';
+      spec.setAttribute('aria-hidden', 'true');
+      card.appendChild(spec);
+    }
+    spec.textContent = '';
+    var box = function (el, cls) {
+      var i = doc.createElement('i');
+      i.className = cls;
+      i.style.left = el.left + 'px';
+      i.style.top = el.top + 'px';
+      i.style.width = el.width + 'px';
+      i.style.height = el.height + 'px';
+      spec.appendChild(i);
+    };
+    var pill = function (text, into) {
+      var b = doc.createElement('b');
+      b.textContent = text;
+      (into || spec).appendChild(b);
+      return b;
+    };
+    var strip = doc.createElement('span');
+    strip.className = 'spec-strip';
+
+    var size = hs && pxWords(hs.fontSize);
+    if (size) {
+      box(
+        {
+          left: h.offsetLeft - 4,
+          top: h.offsetTop - 3,
+          width: h.offsetWidth + 8,
+          height: h.offsetHeight + 6,
+        },
+        'spec-h',
+      );
+      pill('Heading ' + size + ' / ' + hs.fontWeight).className = 'spec-top';
+      words.push('heading ' + size + ' at weight ' + hs.fontWeight);
+    }
+    var pair = dt && pairSpec(getComputedStyle(dt).color, cs.backgroundColor);
+    if (pair) {
+      var range = doc.createRange(),
+        cr = card.getBoundingClientRect();
+      range.selectNodeContents(dt);
+      var tr = range.getBoundingClientRect();
+      box(
+        {
+          left: tr.left - cr.left - 4,
+          top: tr.top - cr.top - 2,
+          width: tr.width + 8,
+          height: tr.height + 4,
+        },
+        'spec-l',
+      );
+      var b = pill('', strip);
+      [pair.fg, pair.bg].forEach(function (hex, n) {
+        var u = doc.createElement('u');
+        u.style.background = hex;
+        b.appendChild(u);
+        b.appendChild(doc.createTextNode(hex.toUpperCase() + (n ? '' : ' on')));
+      });
+      b.appendChild(doc.createTextNode(' ' + ratioWords(pair.ratio) + (pair.aa ? ' AA' : '')));
+      words.push(
+        'label ' +
+          pair.fg +
+          ' on ' +
+          pair.bg +
+          ', contrast ' +
+          ratioWords(pair.ratio).replace(':', ' to ') +
+          (pair.aa ? ', passes AA' : ''),
+      );
+    }
+    var pad = pxWords(cs.paddingLeft);
+    if (pad) {
+      var top = parseFloat(cs.paddingTop) || 0,
+        bottom = parseFloat(cs.paddingBottom) || 0;
+      box(
+        {
+          left: 0,
+          top: top,
+          width: parseFloat(cs.paddingLeft),
+          height: Math.max(0, card.clientHeight - top - bottom),
+        },
+        'spec-pad',
+      );
+      pill('Padding ' + pad, strip);
+      words.push('side padding ' + pad);
+    }
+    if (strip.firstChild) spec.appendChild(strip);
+    return words;
+  }
+  var all = false;
+  function show(card, on) {
+    if (on) measure(card);
+    /* Read once, so the lines start from rest and draw in. */
+    if (on) void card.offsetWidth;
+    card.classList.toggle('spec-on', on);
+  }
+  decs.forEach(function (card) {
+    card.addEventListener('pointerenter', function (e) {
+      if (e.pointerType === 'mouse' && !all && !card.dataset.pin) show(card, true);
+    });
+    card.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse' && !all && !card.dataset.pin) show(card, false);
+    });
+    card.addEventListener('click', function (e) {
+      if (all || e.target.closest('a, button') || !getSelection().isCollapsed) return;
+      if (card.dataset.pin) delete card.dataset.pin;
+      else card.dataset.pin = '1';
+      show(card, !!card.dataset.pin);
+    });
+  });
+  specBtn.addEventListener('click', function () {
+    all = specBtn.getAttribute('aria-pressed') !== 'true';
+    specBtn.setAttribute('aria-pressed', all ? 'true' : 'false');
+    var words = [];
+    decs.forEach(function (card) {
+      delete card.dataset.pin;
+      if (all) words = measure(card);
+      show(card, all);
+    });
+    say.textContent = all
+      ? words.length
+        ? 'Measurements are on. Each decision card: ' + words.join('; ') + '.'
+        : 'Measurements are on.'
+      : 'Measurements are off.';
+  });
+  addEventListener('resize', function () {
+    decs.forEach(function (card) {
+      if (card.classList.contains('spec-on')) measure(card);
+    });
+  });
+})();

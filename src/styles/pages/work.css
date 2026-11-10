@@ -718,3 +718,112 @@ html.dw-morph::view-transition-group(root) {
     background: CanvasText;
   }
 }
+
+/* ---- The list's stage. On a wide screen the row you are on (pointer, keyboard, or the middle of a
+   touch screen) shows that client's window and its one-line outcome beside the list. Narrower than
+   that there is no room beside a row, so every row simply prints its outcome. The stage is
+   decoration (aria-hidden): the outcome is in each row for a screen reader. ---- */
+.dw-peek {
+  display: none;
+}
+.dw-rows .ou {
+  grid-column: 2;
+  margin-top: 0.2rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+/* Wider than a phone the outcome sits under the hook, and everything else keeps to the middle. */
+@media (min-width: 52.01rem) {
+  .dw-rows .mini,
+  .dw-rows h2,
+  .dw-rows .sc {
+    grid-row: 1 / span 2;
+  }
+  .dw-rows .wh {
+    grid-area: 1 / 4;
+    align-self: end;
+  }
+  .dw-rows .ou {
+    grid-area: 2 / 4;
+    align-self: start;
+    margin-top: 0;
+  }
+  .dw-rows li > a {
+    grid-area: 1 / 5 / span 2;
+  }
+  .dw-rows li > a.vis {
+    grid-column: 6;
+  }
+}
+@media (min-width: 75rem) {
+  .js .dw[data-view='list'] .dw-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(17rem, 26vw, 24rem);
+    column-gap: clamp(1.5rem, 3vw, 3rem);
+    align-items: start;
+  }
+  .js .dw[data-view='list'] .dw-peek {
+    display: block;
+    position: sticky;
+    top: 5.5rem;
+  }
+  /* The outcome moves to the stage, and stays in the row for a screen reader. */
+  .js .dw-rows .ou {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .js .dw-rows li {
+    grid-template-columns: 2.75rem minmax(0, 1fr) minmax(0, 1.3fr) auto auto;
+    column-gap: 1.25rem;
+  }
+  .js .dw-rows h2 {
+    grid-area: 1 / 2;
+    align-self: end;
+  }
+  .js .dw-rows .sc {
+    grid-area: 2 / 2;
+    align-self: start;
+  }
+  .js .dw-rows .wh {
+    grid-area: 1 / 3 / span 2;
+    align-self: center;
+  }
+  .js .dw-rows li > a {
+    grid-column: 4;
+  }
+  .js .dw-rows li > a.vis {
+    grid-column: 5;
+  }
+  /* Which row the stage is showing: a short ink mark, so it never leans on a color. */
+  .js .dw-rows li.on::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65rem;
+    bottom: 0.65rem;
+    width: 2px;
+    background: var(--ink);
+  }
+  .dw-peek figure {
+    margin: 0;
+  }
+  .dw-peek .tile {
+    cursor: default;
+  }
+  .dw-peek figcaption {
+    margin-top: 0.9rem;
+    font: 500 1.0625rem/1.35 var(--body);
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+  }
+}
+@media (forced-colors: active) {
+  .js .dw-rows li.on::before {
+    background: CanvasText;
+  }
+}

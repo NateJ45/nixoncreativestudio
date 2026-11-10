@@ -3,7 +3,8 @@
    page design. src/scripts/work.js filters by sector (?sector=church) and switches
    to the ruled list (?view=list). Without JavaScript the ruled list is the page.
    Under the windows, the same studies indexed by the job the site has to do
-   (src/data/jobs.ts). Counts come from the case studies, never typed. */
+   (src/data/jobs.ts). Counts come from the case studies, never typed.
+   Beside the list on a wide screen, the row you are on shows its window and its outcome. */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/work.css';
 import Tile from '../../components/Tile.astro';
@@ -14,6 +15,7 @@ import { countWord, getClients, SECTOR_LABEL } from '../../lib/clients';
 import { JOBS } from '../../data/jobs';
 import { sectorPage, sectorPagePath } from '../../data/sector-pages';
 import { plainText, wordSpans } from '../../lib/words';
+import { LOCK } from '../../lib/window-chrome';
 
 const clients = await getClients();
 const n = clients.length;
@@ -136,41 +138,79 @@ const jobs = JOBS.map((job) => ({
         </li>
       ))}
     </ul>
-    <ul class="dw-rows card" data-rows>
-      {clients.map((s) => (
-        <li data-key={s.sectorKey} data-slug={s.slug} style={`--c:${s.accent};--p:${s.paper}`}>
-          <span class="mini" aria-hidden="true">
-            <img
-              src={s.still}
-              srcset={s.stillSet}
-              sizes="4rem"
-              alt=""
-              loading="lazy"
-              width="584"
-              height="1138"
-            />
-          </span>
-          <h2>{s.name}</h2>
-          <p class="sc">{s.sector}</p>
-          <p class="wh">{s.hook}</p>
-          <a href={s.study}>
-            Read the case study<span class="vh">: {s.name}</span>
-          </a>
-          {s.live && (
-            <a
-              class="vis"
-              href={s.live}
-              target="_blank"
-              rel="noopener"
-              data-cta="visit_client_site"
-              data-cta-location="work_list"
-            >
-              Visit the site<span class="vh">: {s.name} (opens in a new tab)</span>
+    <div class="dw-list">
+      <ul class="dw-rows card" data-rows>
+        {clients.map((s) => (
+          <li data-key={s.sectorKey} data-slug={s.slug} style={`--c:${s.accent};--p:${s.paper}`}>
+            <span class="mini" aria-hidden="true">
+              <img
+                src={s.still}
+                srcset={s.stillSet}
+                sizes="4rem"
+                alt=""
+                loading="lazy"
+                width="584"
+                height="1138"
+              />
+            </span>
+            <h2>{s.name}</h2>
+            <p class="sc">{s.sector}</p>
+            <p class="wh">{s.hook}</p>
+            {s.outcome && <p class="ou">{s.outcome}</p>}
+            <a href={s.study}>
+              Read the case study<span class="vh">: {s.name}</span>
             </a>
-          )}
-        </li>
-      ))}
-    </ul>
+            {s.live && (
+              <a
+                class="vis"
+                href={s.live}
+                target="_blank"
+                rel="noopener"
+                data-cta="visit_client_site"
+                data-cta-location="work_list"
+              >
+                Visit the site<span class="vh">: {s.name} (opens in a new tab)</span>
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+      {/* The window for the row you are on (work.js): hover, keyboard focus, or the row nearest the
+        middle of a touch screen. Hidden figures fetch nothing. The words are in the row too, so
+        this whole stage is decoration. */}
+      <div class="dw-peek" data-peek aria-hidden="true">
+        <div class="dw-peek-in">
+          {clients.map((s, i) => (
+            <figure data-for={s.slug} hidden style={`--c:${s.accent};--p:${s.paper}`}>
+              <p class="dw-mark">
+                <span>{marks[i].place}</span>
+                <span class="dw-ruler" />
+                {marks[i].still && <span>Still {marks[i].still}</span>}
+              </p>
+              <span class="tile desk">
+                <span class="b-top">
+                  <span class="url">
+                    <Fragment set:html={LOCK} />
+                    <span>{s.host}</span>
+                  </span>
+                </span>
+                <span class="scr">
+                  <img
+                    src={s.deskStill}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="1000"
+                    height="750"
+                  />
+                </span>
+              </span>
+              {s.outcome && <figcaption>{s.outcome}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      </div>
+    </div>
     {/* Back from a case study: its hero shrinks into this page's window for it (the leaving half is
         src/scripts/hero-morph.js). Inline, because it has to listen before the first paint. */}
     <script is:inline>
