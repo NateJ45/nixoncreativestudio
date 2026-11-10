@@ -275,3 +275,60 @@ test.describe('With JavaScript', () => {
     expect(sent).toBe(false);
   });
 });
+
+// The "Received" stamp on the sent card: decoration only, dated today, pressed in after a send.
+test.describe('The sent stamp', () => {
+  const today = () =>
+    new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(
+      new Date(),
+    );
+
+  test('it is hidden from screen readers and carries the date', async ({ page }) => {
+    await page.goto('/contact/#sent');
+    const stamp = page.locator('[data-stamp]');
+    await expect(stamp).toBeVisible();
+    await expect(stamp).toHaveAttribute('aria-hidden', 'true');
+    await expect(stamp).toContainText('Received');
+    await expect(page.locator('[data-stamp-date]')).toHaveText(today());
+    // A reload of #sent finds it already stamped: no inline motion at all.
+    expect(await stamp.getAttribute('style')).toBeNull();
+  });
+
+  test('a send presses it in, then it rests at its CSS place', async ({ browser }) => {
+    const ctx = await browser.newContext({ reducedMotion: 'no-preference' });
+    const page = await ctx.newPage();
+    await page.route(ENDPOINT_GLOB, (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/contact/');
+    await fillAll(page);
+    await page.getByRole('button', { name: 'Send' }).click();
+    const stamp = page.locator('[data-stamp]');
+    // Mid-press it is larger and more turned than at rest.
+    await expect
+      .poll(() => stamp.evaluate((el) => (el as HTMLElement).style.transform), { timeout: 2000 })
+      .toContain('scale(');
+    // Then it lands, the ink spreads once, and the inline motion is cleared.
+    await expect
+      .poll(() => stamp.evaluate((el) => (el as HTMLElement).style.transform), { timeout: 4000 })
+      .toBe('');
+    await expect(stamp).toHaveClass(/inked/);
+    await ctx.close();
+  });
+
+  test('under reduced motion a send shows it already stamped', async ({ browser }) => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await ctx.newPage();
+    await page.route(ENDPOINT_GLOB, (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/contact/');
+    await fillAll(page);
+    await page.getByRole('button', { name: 'Send' }).click();
+    const stamp = page.locator('[data-stamp]');
+    await expect(stamp).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(await stamp.getAttribute('style')).toBeNull();
+    await ctx.close();
+  });
+});
