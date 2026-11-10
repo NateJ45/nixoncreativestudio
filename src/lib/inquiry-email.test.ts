@@ -57,7 +57,8 @@ describe('buildInquiryEmail', () => {
     const { html } = buildInquiryEmail(full, meta);
     assert.ok(html.includes('mailto:jane@gracechurch.org?subject='));
     assert.ok(html.includes('Reply to Jane'));
-    assert.ok(html.includes('href="sms:5135550142"'));
+    assert.ok(html.includes('href="https://nixoncreativestudio.com/text/#5135550142"'));
+    assert.ok(!html.includes('sms:'), 'Gmail strips sms: links');
     assert.ok(html.includes('href="tel:5135550142"'));
     assert.ok(html.includes('href="https://gracechurch.org/"'));
   });
@@ -90,7 +91,7 @@ describe('buildInquiryEmail', () => {
 
   it('leaves out actions and rows for answers it does not have', () => {
     const { html } = buildInquiryEmail({ name: 'Jane', email: 'j@x.org', message: 'Hi' }, meta);
-    assert.ok(!html.includes('sms:'));
+    assert.ok(!html.includes('/text/#'));
     assert.ok(!html.includes('At a glance'));
     assert.ok(!html.includes('Where they came from'));
   });

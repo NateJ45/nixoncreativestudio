@@ -17,6 +17,7 @@
 // Pure: no bindings, no Astro. Unit-tested in inquiry-email.test.ts.
 
 import { labelFor } from '../data/inquiry-options.ts';
+import { textHandoffUrl } from './text-handoff.ts';
 
 export interface InquiryMeta {
   /** The D1 row id, when the row was stored. */
@@ -84,7 +85,7 @@ export function websiteHref(raw: string): string | null {
   }
 }
 
-/** Digits (and a leading +) for tel: and sms: links, or null if it is not a phone number. */
+/** Digits (and a leading +) for tel: links and the Text handoff, or null if it is not a phone number. */
 export function phoneHref(raw: string): string | null {
   const plus = raw.trim().startsWith('+') ? '+' : '';
   const digits = raw.replace(/\D/g, '');
@@ -234,7 +235,8 @@ function html(q: Inquiry, meta: InquiryMeta, subject: string): string {
 
   const buttons = [
     button(mailto, q.first ? `Reply to ${q.first}` : 'Reply', true),
-    tel ? button(`sms:${tel}`, 'Text', false) : '',
+    // Gmail strips sms: links, so Text goes through /text/ on the site (text-handoff.ts).
+    tel ? button(textHandoffUrl(meta.siteUrl, tel), 'Text', false) : '',
     tel ? button(`tel:${tel}`, 'Call', false) : '',
     site ? button(site, 'Their website', false) : '',
   ].join('');
