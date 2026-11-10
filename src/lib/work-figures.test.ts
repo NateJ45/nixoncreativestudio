@@ -1,12 +1,13 @@
 // Safe to edit. Site-owned (not PORTABLE).
 // The "What changed" stack on /work: the figures it reads out of the study bodies, the number in
-// each figure, the dot maths, and the capture sizes the window marks print.
+// each figure, the part-of-a-whole maths, the captures, and the capture sizes the window marks print.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
-import { dotPlan, dotWords, figureNumber, MAX_DOTS, sourcedFigures } from './work-figures.ts';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { figureNumber, share, sourcedFigures } from './work-figures.ts';
 import { mp4Size, webpSize } from './capture-size.ts';
 import sizes from '../data/capture-sizes.json' with { type: 'json' };
+import images from '../data/study-images.json' with { type: 'json' };
 
 test('the number in a figure', () => {
   assert.equal(figureNumber('About 5,200'), 5200);
@@ -15,29 +16,18 @@ test('the number in a figure', () => {
   assert.ok(Number.isNaN(figureNumber('Many')));
 });
 
-test('dots are round(n / unit), with the smallest round unit that keeps them at 120 or fewer', () => {
-  assert.deepEqual(dotPlan(37), { unit: 1, dots: 37, exact: true });
-  assert.deepEqual(dotPlan(120), { unit: 1, dots: 120, exact: true });
-  assert.deepEqual(dotPlan(121), { unit: 2, dots: 61, exact: false });
-  assert.deepEqual(dotPlan(195), { unit: 2, dots: 98, exact: false });
-  assert.deepEqual(dotPlan(300), { unit: 5, dots: 60, exact: true });
-  assert.deepEqual(dotPlan(458), { unit: 5, dots: 92, exact: false });
-  assert.deepEqual(dotPlan(2345), { unit: 20, dots: 117, exact: false });
-  assert.deepEqual(dotPlan(5200), { unit: 50, dots: 104, exact: true });
-  assert.deepEqual(dotPlan(1_000_000), { unit: 10_000, dots: 100, exact: true });
-  for (const n of [1, 7, 99, 241, 999, 1234, 98_765]) {
-    const { unit, dots } = dotPlan(n);
-    assert.ok(dots >= 1 && dots <= MAX_DOTS, `${n}: ${dots} dots`);
-    assert.equal(dots, Math.round(n / unit));
-  }
-  assert.throws(() => dotPlan(0));
-  assert.throws(() => dotPlan(NaN));
-});
-
-test('the words under the grid', () => {
-  assert.equal(dotWords(dotPlan(37)), 'Each dot is 1.');
-  assert.equal(dotWords(dotPlan(5200)), 'Each dot is 50.');
-  assert.equal(dotWords(dotPlan(2345)), 'Each dot is 20, rounded to the nearest dot.');
+test('a figure that is part of a stated whole', () => {
+  const base = { text: 't', source: 's' };
+  assert.equal(share({ ...base, figure: '37' }), undefined);
+  assert.deepEqual(share({ ...base, figure: '195', of: '216', ofLabel: 'library items' }), {
+    part: 195,
+    whole: 216,
+    ratio: 195 / 216,
+    words: '195 of 216 library items',
+  });
+  assert.equal(share({ ...base, figure: '1,200', of: '2,400' })?.words, '1,200 of 2,400');
+  assert.throws(() => share({ ...base, figure: '300', of: '200' }));
+  assert.throws(() => share({ ...base, figure: 'Many', of: '200' }));
 });
 
 test('figures come out of a ResultsBlock with their text and source', () => {
@@ -51,6 +41,16 @@ test('figures come out of a ResultsBlock with their text and source', () => {
       source:
         'measured, not estimated',
     },
+    {
+      figure: '195',
+      text: 'of 216 items',
+      source: 'the home page',
+      of: '216',
+      ofLabel: 'items',
+      shot: 'some-capture',
+      shotAlt: 'A capture',
+      shotNote: 'What it shows',
+    },
     { figure: '12', text: 'no source here' },
     'A plain line.',
   ]}
@@ -61,10 +61,20 @@ test('figures come out of a ResultsBlock with their text and source', () => {
       text: "feet of climbing, the race's own",
       source: 'measured, not estimated',
     },
+    {
+      figure: '195',
+      text: 'of 216 items',
+      source: 'the home page',
+      shot: 'some-capture',
+      shotAlt: 'A capture',
+      shotNote: 'What it shows',
+      of: '216',
+      ofLabel: 'items',
+    },
   ]);
 });
 
-// The real studies: every sourced figure has a number the dot grid can draw.
+// The real studies: every sourced figure has a number, and shows the page it lives on.
 const dir = new URL('../content/case-studies/', import.meta.url);
 const all = readdirSync(dir)
   .filter((f) => f.endsWith('.mdx'))
@@ -76,8 +86,15 @@ test('the studies have sourced figures, and each one has a number', () => {
   assert.ok(all.length > 0);
   for (const f of all) {
     const n = figureNumber(f.figure);
-    assert.ok(n > 0, `${f.file}: "${f.figure}" has no number for the dot grid`);
-    assert.ok(dotPlan(n).dots <= MAX_DOTS);
+    assert.ok(n > 0, `${f.file}: "${f.figure}" has no number`);
+    // A card on /work is the number beside the real page: no capture, no card worth reading.
+    assert.ok(
+      f.shot && f.shot in images,
+      `${f.file}: "${f.figure}" needs a shot in public/assets/study/`,
+    );
+    assert.ok(existsSync(new URL(`../../public/assets/study/${f.shot}.webp`, import.meta.url)));
+    assert.ok(f.shotAlt && f.shotNote, `${f.file}: "${f.figure}" needs shotAlt and shotNote`);
+    if (f.of) assert.ok(share(f)!.ratio <= 1);
   }
 });
 
