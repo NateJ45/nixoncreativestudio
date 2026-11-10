@@ -56,6 +56,21 @@ test.describe('Prices', () => {
       await expect(page.locator('#why-not')).not.toHaveClass(/shut/);
     });
 
+    test('each home price card lands on its own tier, not the top of the list', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      for (const tier of ['launch', 'signature', 'flagship']) {
+        await expect(page.locator(`[data-prices] a[href="/services/#${tier}"]`)).toHaveCount(1);
+      }
+      await page.locator('[data-prices] a[href="/services/#flagship"]').click();
+      await expect(page).toHaveURL(/\/services\/#flagship$/);
+      const top = () =>
+        page.locator('#flagship').evaluate((el) => Math.round(el.getBoundingClientRect().top));
+      await expect.poll(top).toBeGreaterThanOrEqual(0);
+      await expect.poll(top).toBeLessThan(120);
+    });
+
     test('the picker works once its fold is open', async ({ page }) => {
       await page.goto('/services/');
       await page.getByRole('button', { name: /Three questions/ }).click();
