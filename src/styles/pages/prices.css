@@ -2489,3 +2489,314 @@ html:not(.js) .rcpt,
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The printer slot (LiveReceipt.astro, prices.js). The receipt hangs from a drawn
+   slot, a little narrower than it, and prices.js clips the card along its bottom
+   edge while it feeds. At rest nothing is clipped. The slot is decoration.
+   --------------------------------------------------------------------------- */
+.rcpt-slot {
+  position: relative;
+  z-index: 1;
+  height: 0.875rem;
+  border-radius: 99rem;
+  background: var(--ink);
+}
+.rcpt-slot::after {
+  content: '';
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  top: calc(50% - 1px);
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ground) 45%, transparent);
+}
+.rcpt-out .rcpt-card {
+  margin: -0.4375rem 0.875rem 0;
+  padding-top: 1.5rem;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+.rcpt-card:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+/* Waiting below the screen: only the heading is out. prices.js prints the rest as it arrives. */
+.rcpt-card.rcpt-wait {
+  clip-path: inset(-3rem -3rem calc(100% - 2.55rem) -3rem);
+}
+/* Reduced motion's answer to the feed: a changed line is tinted for a moment. */
+.rcpt-line.fresh {
+  background: color-mix(in srgb, var(--fill) 12%, transparent);
+}
+@media print {
+  .rcpt-card {
+    clip-path: none !important;
+  }
+  .rcpt-slot,
+  .row-send,
+  .bars-pick,
+  .reply-form,
+  .reply-slot {
+    display: none;
+  }
+}
+
+/* "Show on the receipt", one per cost table row. A real button, so it looks like one: a pill with a
+   hairline, and a tick and the blue once its row is the one on the receipt. */
+html:not(.js) .row-send {
+  display: none;
+}
+.row-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  margin-top: 0.55rem;
+  padding: 0.35rem 1rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--card);
+  color: var(--ink);
+  font: 500 0.9375rem/1.2 var(--body);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.row-send:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 60%, transparent);
+}
+.row-send[aria-pressed='true'] {
+  background: var(--fill);
+  color: #fff;
+  box-shadow: none;
+}
+.row-send[aria-pressed='true']::before {
+  content: '';
+  width: 0.35rem;
+  height: 0.65rem;
+  margin: -0.15rem 0.1rem 0 0.15rem;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.cost-table tr.with-care .row-send {
+  margin-bottom: 0.35rem;
+}
+/* The slip that leaves the row for the slot. Drawn by prices.js on the page itself, never in the table. */
+.row-ghost {
+  position: absolute;
+  z-index: 6;
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 18px 34px -18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  will-change: transform;
+}
+.row-ghost b {
+  font-weight: 600;
+}
+.row-ghost span {
+  color: var(--soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The cost bars' years: three radios, drawn like the quiz options. */
+html:not(.js) .bars-pick {
+  display: none;
+}
+.bars-pick {
+  margin: 0 0 1.1rem;
+}
+.bars-pick .pick-o input,
+.reply .pick-o input {
+  z-index: 1;
+}
+.bar-key span[hidden] {
+  display: none;
+}
+.bars-bar i.nil {
+  display: none;
+}
+.bars-alt {
+  margin-top: 0.35rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   How soon you hear back (ReplyOrder.astro, prices.js). A ruled list, one row a
+   plan, soonest reply first, and a small paper slip that sits in the chosen
+   plan's row. With no script it is the plain list.
+   --------------------------------------------------------------------------- */
+html:not(.js) :is(.reply-form, .reply-slot, .reply-js) {
+  display: none;
+}
+.reply {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.reply-head h3 {
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.reply-head p {
+  max-width: 38rem;
+  margin-top: 0.5rem;
+  color: var(--soft);
+}
+.reply-form .pick-q {
+  margin-top: 1rem;
+}
+.reply-cap {
+  margin-top: 1.5rem;
+}
+.reply-rows {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+.reply-rows li {
+  display: grid;
+  grid-template-columns: 8.25rem 7.5rem minmax(0, 1fr);
+  gap: 0.15rem 1.25rem;
+  align-items: center;
+  min-height: 3.75rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line);
+}
+html:not(.js) .reply-rows li {
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+}
+.reply-rows b {
+  font-weight: 600;
+}
+.reply-says {
+  color: var(--soft);
+  line-height: 1.4;
+}
+/* The slip's place: ahead of the plan's name on a wide screen, beside it on a phone. */
+.reply-slot {
+  display: flex;
+  grid-column: 1;
+  grid-row: 1;
+  padding-left: 0.25rem;
+}
+.reply-note {
+  display: inline-block;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.3rem;
+  background: var(--card);
+  color: var(--ink);
+  font: 500 0.875rem/1.2 var(--body);
+  white-space: nowrap;
+  rotate: -2deg;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent),
+    0 10px 18px -10px rgba(0, 0, 0, 0.4);
+  will-change: transform;
+}
+@media (max-width: 40rem) {
+  .reply-rows li,
+  html:not(.js) .reply-rows li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .reply-rows b {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .reply-says {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .reply-slot {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 2rem;
+    align-items: center;
+    padding: 0 0.25rem 0 0;
+  }
+}
+
+/* The quiz card's stub: a strip under a perforation, in the card's own color. prices.js shows it once
+   there is an answer and tears it off on the way to the form. It repeats the card, so it is aria-hidden. */
+.pick-stub[hidden] {
+  display: none;
+}
+.pick-card.has-stub {
+  margin-bottom: 4.5rem;
+}
+.pick-card.has-stub .pc-face {
+  border-bottom-left-radius: 0.6rem;
+  border-bottom-right-radius: 0.6rem;
+}
+.pick-stub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.95rem 1.25rem 1.05rem;
+  border-top: 2px dashed color-mix(in srgb, var(--pci) 45%, var(--pcb));
+  border-radius: 0.6rem 0.6rem var(--cardr) var(--cardr);
+  background: var(--pcb);
+  color: var(--pci);
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 26px 44px -22px rgba(0, 0, 0, 0.5);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.pick-stub span {
+  color: var(--pcs);
+  font: 500 0.75rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.pick-stub b {
+  font: 600 1.125rem/1.1 var(--display);
+  letter-spacing: -0.02em;
+}
+
+/* An FAQ answer reads as a reply in a thread: signed, set off by one blue rule, and on a wide screen
+   sitting to the right of its question. Ruled, never boxed (DESIGN.md section 8). */
+.faq-reply {
+  max-width: 46rem;
+  margin: 0.15rem 0 1.35rem;
+  padding: 0.1rem 0 0.1rem 1.1rem;
+  border-left: 2px solid var(--fill);
+  transform-origin: 0 0;
+}
+.faq-a .faq-reply p {
+  max-width: none;
+  padding: 0;
+}
+.faq-a .faq-reply .faq-from {
+  margin-bottom: 0.35rem;
+  line-height: 1.25;
+}
+@media (min-width: 48rem) {
+  .faq-reply {
+    margin-left: auto;
+    margin-right: 3.5rem;
+    transform-origin: 100% 0;
+  }
+}

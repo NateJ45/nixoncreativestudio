@@ -10,7 +10,12 @@
 
    The page prints the receipt for the usual choice (Signature with Care, 5 years)
    and src/scripts/prices.js reprints the lines that change. The numbers are plain
-   text, swapped, never counted. Without JavaScript the form and the receipt are
+   text, swapped, never counted. The card hangs from a drawn printer slot
+   (.rcpt-slot): it feeds out a line at a time when it first comes on screen, and
+   from the first changed line whenever the choice changes. A "Show on the
+   receipt" button in a cost table row (services.astro) sets this form to that
+   row and drops a slip into the slot. Under reduced motion nothing feeds or
+   travels and the changed lines are tinted for a moment. Without JavaScript the form and the receipt are
    hidden and a note points back at the table, which has every total for 1, 3 and
    5 years.
    ============================================================================ */
@@ -125,20 +130,31 @@ const needLine = needy
         </p>
       </div>
     </form>
-    <div class="card rcpt-card">
-      <p class="label">Your receipt</p>
-      <dl class="rcpt-lines" data-rcpt-lines>
-        {lines.map((l) => (
-          <div class={`rcpt-line rl-${l.key}`} data-line={l.key}>
-            <dt>
-              <b>{l.label}</b>
-              {l.note && <span>{l.note}</span>}
-            </dt>
-            <dd>{l.amount}</dd>
-          </div>
-        ))}
-      </dl>
-      <p class="rcpt-foot">{`From each tier's starting price. Prices as of ${pricesAsOf}.`}</p>
+    <div class="rcpt-out" data-rcpt-out>
+      <div class="rcpt-slot" aria-hidden="true"></div>
+      <div
+        class="card rcpt-card"
+        data-rcpt-card
+        role="group"
+        aria-labelledby="rcpt-label"
+        tabindex="-1"
+      >
+        <p class="label" id="rcpt-label">
+          Your receipt
+        </p>
+        <dl class="rcpt-lines" data-rcpt-lines>
+          {lines.map((l) => (
+            <div class={`rcpt-line rl-${l.key}`} data-line={l.key}>
+              <dt>
+                <b>{l.label}</b>
+                {l.note && <span>{l.note}</span>}
+              </dt>
+              <dd>{l.amount}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="rcpt-foot">{`From each tier's starting price. Prices as of ${pricesAsOf}.`}</p>
+      </div>
       <p class="vh" aria-live="polite" data-rcpt-say></p>
     </div>
   </div>
