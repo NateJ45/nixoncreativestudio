@@ -9,7 +9,13 @@
    share the label's line at the top. On a phone the band shows each client's
    desktop window instead of their phone, so it stays short and adds the one view
    the grid above does not have. Without
-   JavaScript only the first quote shows and the buttons stay hidden. */
+   JavaScript only the first quote shows and the buttons stay hidden.
+
+   A quote can name its key phrase (`highlight` in the study's frontmatter, copied
+   exactly out of the quote). The band then draws a marker across those words as
+   it arrives: the client's paper sweeping in behind them in a few hard steps
+   (`.hl` in kit.css, `hl-on` from kit.js). The words themselves never change, and
+   a quote with no phrase set is simply the quote. */
 import { getEntry } from 'astro:content';
 import Tile from './Tile.astro';
 import { getClient, getClients, type Client } from '../lib/clients';
@@ -38,7 +44,7 @@ const {
   cycle = false,
 } = Astro.props;
 
-type Quote = { quote: string; name: string; title: string; context?: string };
+type Quote = { quote: string; name: string; title: string; context?: string; highlight?: string };
 type Slide = { t: Quote; client: Client; tile: boolean };
 
 let slides: Slide[];
@@ -59,6 +65,21 @@ if (cycle) {
   if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
   slides = [{ t, client: await getClient(slug), tile: true }];
 }
+/* The quote as HTML: the same characters, with the key phrase (when one is set) inside a <mark>.
+   Built as one string so no white space can slip in around the mark. */
+const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const marked = (t: Quote) => {
+  const at = t.highlight ? t.quote.indexOf(t.highlight) : -1;
+  if (!t.highlight || at === -1) return esc(t.quote);
+  return (
+    esc(t.quote.slice(0, at)) +
+    '<mark class="hl">' +
+    esc(t.highlight) +
+    '</mark>' +
+    esc(t.quote.slice(at + t.highlight.length))
+  );
+};
 const first = slides[0].client;
 const many = slides.length > 1;
 ---
@@ -102,7 +123,7 @@ const many = slides.length > 1;
           data-slug={s.client.slug}
           inert={i ? true : undefined}
         >
-          <blockquote>{s.t.quote}</blockquote>
+          <blockquote set:html={marked(s.t)} />
           <p class="cite">
             <b>{s.t.name}</b>
             {s.t.title}

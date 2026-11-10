@@ -29,13 +29,16 @@ import { money } from '../lib/money';
 const clients = await getClients();
 const city = site.address.split(',')[0];
 const ledger = ['Since 2020', 'One person', city];
-/* Every sector word is a link to its page, so the row never looks church-first. */
+/* Every sector word is a link to its page, so the row never looks church-first. Reaching for one
+   with a mouse or the keyboard also deals that sector's own client windows beside it (up to three,
+   in deck order, read from the case studies). The pictures are only a preview of the page the link
+   goes to, so a touch screen gets the plain link and misses nothing. */
 const sectors = [
-  { name: 'Churches', href: '/churches/' },
-  { name: 'Schools', href: '/schools/' },
-  { name: 'Nonprofits', href: '/nonprofits/' },
-  { name: 'Small businesses', href: '/small-business/' },
-];
+  { name: 'Churches', href: '/churches/', key: 'church' },
+  { name: 'Schools', href: '/schools/', key: 'school' },
+  { name: 'Nonprofits', href: '/nonprofits/', key: 'nonprofit' },
+  { name: 'Small businesses', href: '/small-business/', key: 'small-business' },
+].map((s) => ({ ...s, cards: clients.filter((c) => c.sectorKey === s.key).slice(0, 3) }));
 
 const lead = ['I', 'build', 'websites'];
 const heavy = ['pull', 'their', 'weight.'];
@@ -106,7 +109,20 @@ const heavy = ['pull', 'their', 'weight.'];
         <p class="ledger-for">
           <span class="label">Websites for:</span>
           {sectors.map((s) => (
-            <a href={s.href}>{s.name}</a>
+            <span class="lf">
+              <a href={s.href}>{s.name}</a>
+              {s.cards.length > 0 && (
+                <span class="lf-stack" aria-hidden="true" data-lf>
+                  {s.cards.map((c, i) => (
+                    <span
+                      class="lf-card"
+                      style={`--c:${c.accent};--d:${i - (s.cards.length - 1) / 2};--i:${i}`}
+                      data-src={`/assets/${c.slug}-m-320.webp`}
+                    />
+                  ))}
+                </span>
+              )}
+            </span>
           ))}
         </p>
       </div>

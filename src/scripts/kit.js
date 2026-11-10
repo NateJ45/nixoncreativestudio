@@ -486,6 +486,29 @@ var bands = [].slice.call(doc.querySelectorAll('.band'));
 bands.forEach(function (el) {
   ui.wireFootage(el);
 });
+/* The marker on a quote's key phrase (QuoteBand `highlight`) draws once the band is mostly on
+   screen. With no IntersectionObserver the phrase is simply marked from the start. */
+var hlBands = bands.filter(function (el) {
+  return el.querySelector('.hl');
+});
+if (hlBands.length) {
+  if ('IntersectionObserver' in window) {
+    var hlSee = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('hl-on');
+          hlSee.unobserve(e.target);
+        });
+      },
+      { threshold: 0.4 },
+    );
+    hlBands.forEach(function (el) {
+      el.classList.add('hl-wait');
+      hlSee.observe(el);
+    });
+  }
+}
 if (bands.length && !reduce) {
   var braf = 0,
     blast = 0;
@@ -618,14 +641,97 @@ function railPaint() {
   railSeen = p;
   rail.classList.toggle('on', p > 0.002);
   railPath.style.strokeDashoffset = 1 - p;
+  spyPaint();
 }
 addEventListener('scroll', railPaint, { passive: true });
 
+/* Where you are in a long read. A page with chapters (a case study) gets one tick a chapter on the
+   rail, each at the point the line reaches as that chapter comes up the screen, and the chapter's
+   name shows above the pill for a moment when you arrive in it. It is a picture of the headings,
+   not a second menu: nothing here is focusable, and the headings themselves are on the page. */
+var spy = $('[data-spy]'),
+  spyN = $('[data-spy-n]'),
+  spyT = $('[data-spy-t]'),
+  spyAt = -1,
+  spyTall = 0,
+  spyHide = 0,
+  ticks = [].slice
+    .call(doc.querySelectorAll('.chap[id]'))
+    .map(function (sec) {
+      var h = sec.querySelector('h2');
+      return { sec: sec, name: h ? h.textContent.trim() : '', p: 0, el: null };
+    })
+    .filter(function (t) {
+      return t.name;
+    });
+if (!spy || ticks.length < 2) ticks = [];
+ticks.forEach(function (t) {
+  t.el = doc.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  t.el.setAttribute('r', 3);
+  rail.appendChild(t.el);
+});
+if (ticks.length) rail.classList.add('has-ticks');
+function spyMeasure() {
+  if (!ticks.length) return;
+  spyTall = doc.documentElement.scrollHeight;
+  var range = Math.max(1, spyTall - innerHeight),
+    len = railPath.getTotalLength();
+  ticks.forEach(function (t) {
+    /* A chapter counts as reached when its top is a little above the middle of the screen. */
+    var top = t.sec.getBoundingClientRect().top + scrollY - innerHeight * 0.45;
+    t.p = Math.min(1, Math.max(0, top / range));
+    var pt = railPath.getPointAtLength(t.p * len);
+    t.el.setAttribute('cx', pt.x.toFixed(2));
+    t.el.setAttribute('cy', pt.y.toFixed(2));
+  });
+}
+function spyPaint() {
+  if (!ticks.length) return;
+  /* Pictures loading further up move every chapter down the page. */
+  if (doc.documentElement.scrollHeight !== spyTall) spyMeasure();
+  var at = -1;
+  ticks.forEach(function (t, i) {
+    var past = railSeen > 0.002 && railSeen >= t.p;
+    t.el.classList.toggle('past', past);
+    if (past) at = i;
+  });
+  if (at === spyAt) return;
+  spyAt = at;
+  ticks.forEach(function (t, i) {
+    t.el.classList.toggle('now', i === at);
+  });
+  clearTimeout(spyHide);
+  /* The name shows only for someone scrolling. Not on a page that loaded already scrolled, not over
+     an open hand, and never while the keyboard is on something in the page, so it cannot sit on a
+     focused control (WCAG 2.4.11). */
+  var f = doc.activeElement,
+    keyed = f && f !== doc.body && !dock.contains(f) && f.matches(':focus-visible');
+  if (at < 0 || !moved || handOpen || keyed) {
+    spy.classList.remove('on');
+    return;
+  }
+  spyN.textContent = (at < 9 ? '0' : '') + (at + 1);
+  spyT.textContent = ticks[at].name;
+  spy.classList.add('on');
+  spyHide = setTimeout(function () {
+    spy.classList.remove('on');
+  }, 1900);
+}
+/* Tab moves on to a control in the page: the name steps out of the way at once. */
+if (ticks.length) {
+  addEventListener('keydown', function (e) {
+    if (e.key === 'Tab') spy.classList.remove('on');
+  });
+}
+
 function dockMeasure() {
   railShape();
+  spyMeasure();
+  railSeen = -1;
   railPaint();
   puckGo(puckTo, true);
 }
+if (ticks.length) addEventListener('load', dockMeasure);
 dockMeasure();
 addEventListener('resize', dockMeasure);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(dockMeasure);

@@ -6,7 +6,11 @@
    client phones from Work, the three prices from Prices, a way to reach me from
    Start a project. A hand is plain markup, `hidden` until kit.js opens it on a
    wide screen with a mouse, or from the keyboard with the up arrow. Nothing in a
-   hand is the only way to reach anything: each link's page has it all. */
+   hand is the only way to reach anything: each link's page has it all.
+
+   On a page with chapters (a case study) kit.js puts one tick a chapter on the
+   progress rail and shows the chapter's name in `.dk-spy` for a moment as you
+   reach it. Both are aria-hidden: the chapters are real headings on the page. */
 import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { webTiers } from '../data/pricing';
@@ -34,6 +38,11 @@ const deck = 'Eight selected case studies';
   <svg class="dk-rail" data-rail aria-hidden="true">
     <path pathLength="1"></path>
   </svg>
+  {/* A div, not a span: the dock's own spans are counted as tap targets (tests/chrome.spec.ts). */}
+  <div class="dk-spy" data-spy aria-hidden="true">
+    <span class="dk-spy-n" data-spy-n></span>
+    <span data-spy-t></span>
+  </div>
 
   <a class="home" href="/" aria-current={path === '/' ? 'page' : undefined}>
     Home
