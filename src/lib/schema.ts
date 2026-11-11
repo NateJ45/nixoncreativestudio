@@ -74,8 +74,26 @@ export function studioNode(lowestPrice: number): Node {
     ],
     // The Google Business Profile is the studio's, not the person's, so only this node lists it.
     sameAs: [site.social.instagram, site.social.linkedin, site.social.googleBusiness],
+    // What the studio does, in the words people search with. Helps search and
+    // answer engines file the entity under the right topics.
+    knowsAbout: KNOWS_ABOUT,
   };
 }
+
+/** Topics for knowsAbout on the studio and on Nathan. Keep it to things the site shows. */
+export const KNOWS_ABOUT = [
+  'Web design',
+  'Website development',
+  'Church website design',
+  'School website design',
+  'Nonprofit website design',
+  'Small business website design',
+  'Web accessibility (WCAG 2.2 AA)',
+  'Astro',
+  'Sanity CMS',
+  'Brand strategy',
+  'Photography',
+];
 
 export function websiteNode(): Node {
   return {
@@ -95,6 +113,15 @@ export function personNode(): Node {
     name: site.ownerName,
     jobTitle: 'Founder, designer, developer and photographer',
     url: `${site.url}/about/`,
+    // The same headshot the email signature serves from public/email/.
+    image: `${site.url}/email/nathan-nixon-176.jpg`,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Cincinnati',
+      addressRegion: 'OH',
+      addressCountry: 'US',
+    },
+    knowsAbout: KNOWS_ABOUT,
     worksFor: { '@id': ids.studio },
     sameAs: [site.social.instagram, site.social.linkedin],
   };

@@ -93,6 +93,7 @@ Reference docs, read when needed:
 - `DESIGN.md`: the design system (YAML tokens plus the rules). Read before any visual work.
 - `docs/claude/gotchas.md`: full text of the gotchas (index below). Read the entry before touching what its line mentions.
 - `docs/claude/deployment.md`: deploys, env vars (`PUBLIC_*`), the Coming Soon gate, security and cache headers.
+- `docs/claude/analytics.md`: measuring the site. Lead attribution in D1, every GA4 event and its parameters, Search Console, and what is in place for SEO, GEO and AEO. Read before adding or renaming an event.
 - `docs/claude/stack.md`: what is installed and why.
 - `docs/claude/setup-checklist.md`: what is unconfigured, what content is outstanding, how to capture CMS screens.
 - `docs/claude/working-style.md`: full communication-style text.
