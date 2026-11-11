@@ -72,7 +72,7 @@ Useful views in GA4:
 
 Queries, impressions and positions for nixoncreativestudio.com. Linked to GA4, so Reports >
 Search Console shows queries next to landing pages. The `ncs-studio:search-console` skill reads
-it. Bing Webmaster Tools matters as well: Bing's index feeds ChatGPT search and Copilot.
+it. Bing Webmaster Tools (set up 2026-11-10 by GSC import) matters as well: Bing's index feeds ChatGPT search and Copilot.
 
 ## Findability (SEO, GEO, AEO), what is in place
 
@@ -84,4 +84,4 @@ it. Bing Webmaster Tools matters as well: Bing's index feeds ChatGPT search and 
 - `/llms.txt` for AI tools: who, prices, studies, plus "good fit" and "common questions" blocks
   built from `site.ts` and `pricing.ts`.
 - robots.txt names and allows the AI crawlers.
-- Not yet on: Cloudflare Crawler Hints (IndexNow pings to Bing when pages change), Bing Webmaster Tools and a Google Business Profile. See docs/PENDING.md item 0b.
+- Not yet on: Cloudflare Crawler Hints (IndexNow pings to Bing when pages change), and a Google Business Profile. See docs/PENDING.md item 0b.

@@ -60,19 +60,17 @@ Then resubmit the sitemap in Search Console. Delete this item when done.
 GA4 is set up (done 2026-11-10 in Chrome): `generate_lead`, `contact_click` and
 `book_call_click` are key events, all 14 parameters in `docs/claude/analytics.md` are
 custom dimensions, retention is 14 months, a "Channels with AI" channel group exists, and
-Search Console is linked. Three things need Nathan's own sign-in:
+Search Console is linked. Bing Webmaster Tools was set up the same day (GSC import). Two things need Nathan's own sign-in:
 
 1. **Google Business Profile** (none exists). business.google.com > Add business >
    "Nixon Creative Studio", category "Website designer", service-area business (hide the
    address) covering Greater Cincinnati, phone and website from `src/data/site.ts`. Google
    verifies by video or postcard. This is the biggest single lever for "web designer near me"
    and the map pack. Then ask two or three past clients for a review.
-2. **Bing Webmaster Tools** (bing.com/webmasters): sign in, Import from Google Search Console.
-   Bing's index feeds ChatGPT search and Copilot.
-3. **Cloudflare Crawler Hints**: dash.cloudflare.com > nixoncreativestudio.com > Caching >
+2. **Cloudflare Crawler Hints**: dash.cloudflare.com > nixoncreativestudio.com > Caching >
    Configuration > Crawler Hints: On (free; pings IndexNow when pages change).
 
-Delete each line when done, and the item when all three are.
+Delete each line when done, and the item when both are.
 
 ### 1. Set the `SITE_URL` repo variable
 
