@@ -55,21 +55,15 @@ BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
 errors. Google shows no FAQ rich result for this kind of site, which is fine.
 Then resubmit the sitemap in Search Console. Delete this item when done.
 
-### 0b. Findability steps only Nathan can do (added 2026-11-10)
+### 0b. Google Business Profile: reviews (added 2026-11-10)
 
-GA4 is set up (done 2026-11-10 in Chrome): `generate_lead`, `contact_click` and
-`book_call_click` are key events, all 14 parameters in `docs/claude/analytics.md` are
-custom dimensions, retention is 14 months, a "Channels with AI" channel group exists, and
-Search Console is linked. Bing Webmaster Tools was set up the same day (GSC import),
-Cloudflare Crawler Hints (IndexNow) has been on for this zone since 2026-04-11 (checked by API),
-and every studio site's sitemap is submitted in Search Console (checked 2026-11-10). One thing
-needs Nathan's own sign-in:
-
-- **Google Business Profile** (none exists). business.google.com > Add business >
-  "Nixon Creative Studio", category "Website designer", service-area business (hide the
-  address) covering Greater Cincinnati, phone and website from `src/data/site.ts`. Google
-  verifies by video or postcard. This is the biggest single lever for "web designer near me"
-  and the map pack. Then ask two or three past clients for a review. Delete this item when done.
+The profile exists (on the studio Google account, signed in as the second account in Chrome,
+`authuser=1`): primary category Website designer, service area Cincinnati Metropolitan Area,
+no storefront. Brought up to date 2026-11-10: description, and every service priced from
+`src/data/pricing.ts` (Website design and Website migration from $3,500, Care plans from $59,
+Corporate and Headshot photography from $900, Brand and strategy from $500). When prices change,
+change them there too. Still to do: ask two or three past clients for a Google review (the
+profile has none), and add photos. Delete this item when it has reviews.
 
 ### 1. Set the `SITE_URL` repo variable
 
