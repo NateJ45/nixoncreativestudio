@@ -130,6 +130,15 @@ function read(fields: Record<string, unknown>) {
     tier: f('tier', 60),
     service: f('service', 120),
     originOrgType: opt('origin_org_type'),
+    // First-touch attribution (src/lib/attribution.ts): where this person first found the site.
+    leadSource: f('lead_source', 60),
+    firstLanding: f('first_landing', 120),
+    firstReferrer: f('first_referrer', 120),
+    utm: [f('utm_source', 60), f('utm_medium', 60), f('utm_campaign', 60)]
+      .filter(Boolean)
+      .join(' / '),
+    daysSinceFirst: f('days_since_first', 6),
+    pagesSeen: f('pages_seen', 6),
   };
 }
 
@@ -171,6 +180,18 @@ function origin(q: Inquiry, siteUrl: string): Array<[string, string, string | nu
   if (q.originOrgType && q.originOrgType !== q.orgType) {
     out.push(['Org type in the link', q.originOrgType, null]);
   }
+  if (q.leadSource && q.leadSource !== 'unknown')
+    out.push(['First found the site via', q.leadSource, null]);
+  if (q.firstReferrer) out.push(['Sent by', q.firstReferrer, null]);
+  if (q.utm) out.push(['Campaign tags', q.utm, null]);
+  if (q.firstLanding) {
+    out.push(['First page they saw', q.firstLanding, websiteHref(`${siteUrl}${q.firstLanding}`)]);
+  }
+  if (q.daysSinceFirst) {
+    const d = Number(q.daysSinceFirst);
+    out.push(['First visit', d === 0 ? 'Today' : d === 1 ? '1 day ago' : `${d} days ago`, null]);
+  }
+  if (q.pagesSeen && q.pagesSeen !== '0') out.push(['Pages seen this visit', q.pagesSeen, null]);
   return out;
 }
 

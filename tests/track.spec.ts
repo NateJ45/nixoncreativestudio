@@ -50,8 +50,14 @@ test('a sent contact form fires generate_lead, with no field values', async ({ p
   const sent = await events(page);
   const leads = sent.filter(([, name]) => name === 'generate_lead');
   expect(leads).toHaveLength(1);
+  // The lead carries the CHOICE keys the visitor picked (org type, here) and where they first
+  // came from, never anything typed. (A direct visit to /contact/ in a fresh browser.)
+  expect(leads[0][2]).toMatchObject({ form: 'contact', org_type: 'church', lead_source: 'direct' });
+  // The funnel: one inquiry_start, and a inquiry_step for each question reached going forward.
+  expect(sent.filter(([, n]) => n === 'inquiry_start')).toHaveLength(1);
+  expect(sent.filter(([, n]) => n === 'inquiry_step').length).toBeGreaterThanOrEqual(5);
   const all = JSON.stringify(sent);
-  for (const value of ['Test Person', 'test@example.com', 'congregation', 'church']) {
+  for (const value of ['Test Person', 'test@example.com', 'congregation']) {
     expect(all, `no event carries "${value}"`).not.toContain(value);
   }
 });

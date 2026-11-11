@@ -21,7 +21,7 @@ const heading = `What this site <b>collects.</b>`;
       cookies, and Google Analytics), and the things any web server logs. No advertising trackers.
       If you have questions, email <a href={site.emailHref}>{site.email}</a>.
     </p>
-    <p class="updated">Last updated November 9, 2026</p>
+    <p class="updated">Last updated November 10, 2026</p>
   </header>
   <div class="doc">
     <nav class="toc card" aria-label="On this page">
@@ -117,9 +117,22 @@ const heading = `What this site <b>collects.</b>`;
         parts of the site lead to a conversation: <code>generate_lead</code> (the contact form went
         through), <code>contact_click</code> (an email or phone link),{' '}
         <code>visit_client_site</code> (a link out to a client's live site from a case study) and{' '}
-        <code>pricing_view</code> (a pricing section came into view). Each one carries only a fixed
-        label, such as where on the page the click was or which client site it went to. None of them
-        includes anything you type into the form, your email address or the text of a message.
+        <code>pricing_view</code> (a pricing section came into view), <code>tool_use</code> (the
+        first time you try one of the site's tools, such as the tier picker or the cost receipt),
+        and three for the contact form: <code>inquiry_start</code>, <code>inquiry_step</code> (which
+        question you reached) and <code>inquiry_error</code> (a send that failed). Each one carries
+        only a fixed label, such as where on the page the click was or which client site it went to.
+        When the form goes through, <code>generate_lead</code> also carries the options you picked
+        from the lists (organization type, budget range, timing, how you heard about me), never
+        anything you typed, your name, your email address or the text of a message.
+      </p>
+      <p>
+        So I can tell which channels bring real inquiries, this site keeps one small note in your
+        browser's own storage on your first visit: the page you landed on, the name of the site that
+        sent you (just the hostname, like google.com) and any campaign tags in the link. It stays on
+        your device and is not sent anywhere on its own. If you send the contact form, that note
+        goes with your message, along with how many pages you looked at, so I can see how you found
+        me. Clearing your browser's site data removes it.
       </p>
       <h2 id="server-logs">Server logs</h2>
       <p>

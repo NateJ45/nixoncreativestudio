@@ -27,6 +27,16 @@ export const DETAIL_FIELDS = [
   ['tier', 'Tier they were looking at'],
   ['service', 'Service they were looking at'],
   ['origin_org_type', 'Org type in the link'],
+  // First-touch attribution, filled by src/scripts/contact.js from src/lib/attribution.ts.
+  // Folded into the stored message so D1 keeps "where did this lead come from" forever.
+  ['lead_source', 'First found the site via'],
+  ['first_referrer', 'Sent by'],
+  ['first_landing', 'First page they saw'],
+  ['utm_source', 'utm_source'],
+  ['utm_medium', 'utm_medium'],
+  ['utm_campaign', 'utm_campaign'],
+  ['days_since_first', 'Days since first visit'],
+  ['pages_seen', 'Pages seen this visit'],
 ] as const;
 
 const MAX_DETAIL = 300;

@@ -55,16 +55,21 @@ BreadcrumbList, CreativeWork, Service and FAQPage where they apply); expect no
 errors. Google shows no FAQ rich result for this kind of site, which is fine.
 Then resubmit the sitemap in Search Console. Delete this item when done.
 
-### 0b. After the cut-over: mark `generate_lead` as a GA4 key event (added 2026-10-31, overhaul 4.1)
+### 0b. Findability steps only Nathan can do (added 2026-11-10)
 
-The site now sends `generate_lead`, `contact_click`, `book_call_click`,
-`visit_client_site`, `pricing_view` and `cta_click` (`src/lib/track.ts`). Once
-the deal redesign is live, open GA4 (property 532519109) > Admin > Events, wait for
-`generate_lead` to appear after a real or test inquiry, and mark it as a key
-event so it counts as a conversion. Optionally register `cta_location`,
-`link_domain`, `method`, `cta_id` and `pricing_variant` as event-scoped custom
-dimensions (Admin > Custom definitions) so they show in reports. Delete this
-item when done.
+GA4 is set up (done 2026-11-10 in Chrome): `generate_lead`, `contact_click` and
+`book_call_click` are key events, all 14 parameters in `docs/claude/analytics.md` are
+custom dimensions, retention is 14 months, a "Channels with AI" channel group exists, and
+Search Console is linked. Bing Webmaster Tools was set up the same day (GSC import),
+Cloudflare Crawler Hints (IndexNow) has been on for this zone since 2026-04-11 (checked by API),
+and every studio site's sitemap is submitted in Search Console (checked 2026-11-10). One thing
+needs Nathan's own sign-in:
+
+- **Google Business Profile** (none exists). business.google.com > Add business >
+  "Nixon Creative Studio", category "Website designer", service-area business (hide the
+  address) covering Greater Cincinnati, phone and website from `src/data/site.ts`. Google
+  verifies by video or postcard. This is the biggest single lever for "web designer near me"
+  and the map pack. Then ask two or three past clients for a review. Delete this item when done.
 
 ### 1. Set the `SITE_URL` repo variable
 
