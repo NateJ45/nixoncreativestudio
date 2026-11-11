@@ -46,6 +46,8 @@ interface SiteData {
   social: {
     instagram: string;
     linkedin: string;
+    // The Google Business Profile, as its Maps link (category: Website designer).
+    googleBusiness: string;
   };
 
   // Marketing
@@ -106,6 +108,7 @@ export const site: SiteData = {
   social: {
     instagram: 'https://www.instagram.com/thenate_n/',
     linkedin: 'https://www.linkedin.com/in/nathannixon/',
+    googleBusiness: 'https://www.google.com/maps?cid=8761877824848034127',
   },
 
   tagline:

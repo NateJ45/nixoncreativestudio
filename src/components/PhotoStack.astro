@@ -1,0 +1,48 @@
+---
+/* A word in a paragraph that raises a small fanned stack of photos (the About bio's "family"
+   and "running"). The word is a real button: a mouse raises the stack on hover, the keyboard on
+   focus, a tap toggles it, and Escape puts it away (src/scripts/photo-stack.js). aria-expanded
+   says whether it is up. Without JavaScript the stack still rises on hover and focus (CSS).
+   Under reduced motion the photos do not fan: they sit in a tidy static pile.
+
+   Phrasing content only (spans, a button, images), because it lives inside a <p>. The photos
+   are optimised by astro:assets and lazy: a closed stack is display: none, so they cost nothing
+   until someone asks for them. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  /** The words in the sentence that raise the stack. */
+  text: string;
+  /** Punctuation straight after the words, so no space can creep in before it. */
+  tail?: string;
+  /** Unique on the page; the stack's id is built from it. */
+  id: string;
+  /** What the photos are of, for the stack's group name, e.g. "Family photos". */
+  label: string;
+  photos: { src: ImageMetadata; alt: string }[];
+}
+const { id, text, tail = '', label, photos } = Astro.props;
+const n = photos.length;
+---
+
+<span class="ps" data-ps>
+  <button type="button" class="ps-w" aria-expanded="false" aria-controls={`ps-${id}`}>
+    {text}
+  </button>
+  <span class="ps-pile" id={`ps-${id}`} role="group" aria-label={label} style={`--n:${n}`}>
+    {photos.map((p, i) => (
+      <Image
+        class="ps-ph"
+        src={p.src}
+        alt={p.alt}
+        widths={[200, 400]}
+        sizes="9rem"
+        loading="lazy"
+        decoding="async"
+        style={`--d:${i - (n - 1) / 2}`}
+      />
+    ))}
+  </span>
+  {tail}
+</span>
