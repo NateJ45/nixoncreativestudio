@@ -88,3 +88,16 @@ test('eventFor picks up a bare mailto link and never sends the address', () => {
 test('eventFor ignores an ordinary link', () => {
   assert.equal(eventFor({ href: '/work/', location: 'header' }), null);
 });
+
+test('a tel: link is a contact_click with method call', () => {
+  assert.deepEqual(eventFor({ href: 'tel:2563186627', location: 'footer' }), {
+    name: 'contact_click',
+    params: { cta_location: 'footer', method: 'call' },
+  });
+});
+
+test('track keeps a landing path label but still drops an email', () => {
+  const { calls, win } = fakeWindow();
+  track('generate_lead', { landing_page: 'work/stone-steps-50k', who: 'a@b.com' }, win);
+  assert.deepEqual(calls, [['event', 'generate_lead', { landing_page: 'work/stone-steps-50k' }]]);
+});

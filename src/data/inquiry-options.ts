@@ -63,6 +63,8 @@ export const timelines: Option[] = [
 export const heardFromOptions: Option[] = [
   { value: 'referral', label: 'A referral from someone I know' },
   { value: 'search', label: 'Google or another search engine' },
+  // Added 2026-11-10 to measure AI search (GEO/AEO): ChatGPT, Claude, Perplexity and the like.
+  { value: 'ai', label: 'ChatGPT, Claude or another AI assistant' },
   { value: 'social', label: 'Instagram, LinkedIn, or other social' },
   { value: 'past-client', label: "I've worked with Nathan before" },
   { value: 'event', label: 'In person, at an event or through a church or school' },

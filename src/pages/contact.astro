@@ -27,7 +27,9 @@
      from (the page or study that sent the visitor), tier, service and
      origin_org_type (the org type the link carried; the visible radios are
      org_type itself, so the hidden copy takes another name rather than send two
-     org_type values).
+     org_type values). Then eight attribution fields (lead_source, first_landing,
+     first_referrer, utm_source, utm_medium, utm_campaign, days_since_first,
+     pages_seen) filled at send time from src/lib/attribution.ts.
 
    With JavaScript (src/scripts/contact.js): one question at a time, then a
    "Check your answers" step with a Change button for each answer (it is hidden
@@ -70,7 +72,13 @@ const notSure = "Not sure? Pick the closest. I'll work it out with you.";
 const tierInfo = Object.fromEntries(
   webTiers.map((t, i) => [
     t.name.toLowerCase(),
-    { name: t.name, from: money(t.priceFrom), budget: budgets[i + 1]?.value ?? '' },
+    {
+      name: t.name,
+      from: money(t.priceFrom),
+      // The plain number, for the generate_lead value in src/scripts/contact.js.
+      floor: t.priceFrom,
+      budget: budgets[i + 1]?.value ?? '',
+    },
   ]),
 );
 
@@ -141,6 +149,18 @@ const heading = 'Start a project, or just <b>say hello.</b>';
         <input type="hidden" name="tier" value="" data-origin="tier" />
         <input type="hidden" name="service" value="" data-origin="service" />
         <input type="hidden" name="origin_org_type" value="" data-origin="org_type" />
+
+        <!-- Where the visitor first came from (src/lib/attribution.ts). Filled by the
+             script at send time from this browser's first-touch note; empty without
+             JavaScript. Hostnames, paths and UTM labels only, never a full URL. -->
+        <input type="hidden" name="lead_source" value="" data-attr="lead_source" />
+        <input type="hidden" name="first_landing" value="" data-attr="first_landing" />
+        <input type="hidden" name="first_referrer" value="" data-attr="first_referrer" />
+        <input type="hidden" name="utm_source" value="" data-attr="utm_source" />
+        <input type="hidden" name="utm_medium" value="" data-attr="utm_medium" />
+        <input type="hidden" name="utm_campaign" value="" data-attr="utm_campaign" />
+        <input type="hidden" name="days_since_first" value="" data-attr="days_since_first" />
+        <input type="hidden" name="pages_seen" value="" data-attr="pages_seen" />
 
         <div class="q-count" data-count-box>
           <p data-count aria-hidden="true">

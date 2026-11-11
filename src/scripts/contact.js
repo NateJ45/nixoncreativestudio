@@ -4,6 +4,7 @@
    it is a plain post to the site's own /api/contact/ endpoint, with the same fields. */
 import { ui } from './kit.js';
 import { track } from '../lib/track';
+import { attributionFields } from '../lib/attribution';
 
 var reduce = ui.reduce,
   doc = document;
@@ -431,8 +432,25 @@ function enter(q, dir) {
   q.style.opacity = 0;
   requestAnimationFrame(f);
 }
+/* Funnel events: form_start on the first answer, form_step each time a new question is reached
+   going forward, so GA4 shows where people stop. Step names are the fixed data-step keys. */
+var started = false,
+  furthest = 0;
+function noteStart() {
+  if (started) return;
+  started = true;
+  track('form_start', { form: 'contact' });
+}
 function show(i, dir, noFocus) {
   steps[cur].classList.remove('on');
+  if (dir > 0 && i > furthest) {
+    furthest = i;
+    track('form_step', {
+      form: 'contact',
+      step_number: i + 1,
+      step_name: i === checkAt ? 'check' : steps[i].dataset.step || 'step',
+    });
+  }
   cur = i;
   var q = steps[cur];
   q.classList.add('on');
@@ -577,6 +595,7 @@ form.addEventListener('keydown', function (e) {
   goNext();
 });
 form.addEventListener('input', function (e) {
+  noteStart();
   var q = e.target.closest('[data-step]');
   if (q) {
     clear(q);
@@ -585,6 +604,7 @@ form.addEventListener('input', function (e) {
   refresh();
 });
 form.addEventListener('change', function () {
+  noteStart();
   refresh();
 });
 
@@ -745,6 +765,12 @@ form.addEventListener('submit', function (e) {
     return;
   }
   errorEl.hidden = true;
+  /* Copy the first-touch note into the hidden fields, so the stored inquiry says where this
+     person first found the site. */
+  var attr = attributionFields();
+  $$('[data-attr]', form).forEach(function (el) {
+    el.value = attr[el.dataset.attr] || '';
+  });
   send.disabled = true;
   send.classList.add('is-spinning');
   var label = submitLabel.textContent;
@@ -757,16 +783,18 @@ form.addEventListener('submit', function (e) {
     .then(function (res) {
       if (!res.ok) {
         errorEl.hidden = false;
+        track('form_error', { form: 'contact', error_type: 'http-' + res.status });
         return;
       }
       clearDraft();
       /* GA4 key event. Only fixed labels, never a field value, and a no-op when gtag is absent.
          The honeypot path above deliberately sends nothing. */
-      track('generate_lead', { form: 'contact' });
+      track('generate_lead', leadParams(attr));
       showSuccess();
     })
     .catch(function () {
       errorEl.hidden = false;
+      track('form_error', { form: 'contact', error_type: 'network' });
     })
     .then(function () {
       send.disabled = false;
@@ -774,6 +802,31 @@ form.addEventListener('submit', function (e) {
       submitLabel.textContent = label;
     });
 });
+
+/* The lead event's parameters: the CHOICE keys the visitor picked (org type, budget band,
+   timeline, how they heard), never anything they typed. track() drops anything that is not a
+   short label. value is the floor of the budget band they chose, from src/data/pricing.ts via
+   the form's data-tiers, so GA4 can total "lead value" per channel; no band, no value. */
+function leadParams(attr) {
+  var p = { form: 'contact', lead_source: attr.lead_source || 'unknown' };
+  /* The first page they saw, as a label (work/stone-steps-50k; home for /). */
+  var landing = (attr.first_landing || '').replace(/^\/+|\/+$/g, '');
+  if (attr.first_landing) p.landing_page = landing || 'home';
+  ['org_type', 'budget', 'timeline', 'heard_from', 'runs'].forEach(function (k) {
+    var v = val(k);
+    if (v) p[k] = v;
+  });
+  var tiers = JSON.parse(form.dataset.tiers || '{}'),
+    band = 0;
+  Object.keys(tiers).forEach(function (k) {
+    if (tiers[k].budget && tiers[k].budget === p.budget) band = tiers[k].floor;
+  });
+  if (band) {
+    p.value = band;
+    p.currency = 'USD';
+  }
+  return p;
+}
 
 /* A preselected tier: a note, and the budget only where a tier's floor truly starts a bracket. */
 var TIER = JSON.parse(form.dataset.tiers || '{}');

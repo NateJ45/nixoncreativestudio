@@ -44,6 +44,8 @@
      data-track-variant="teaser"    optional param for pricing_view
    ============================================================================ */
 
+import { noteVisit } from './attribution.ts';
+
 export type TrackParams = Record<string, string | number | boolean>;
 
 type Gtag = (command: 'event', name: string, params?: TrackParams) => void;
@@ -52,7 +54,8 @@ type Gtag = (command: 'event', name: string, params?: TrackParams) => void;
 export const NAMED_EVENTS = ['visit_client_site', 'book_call_click', 'contact_click'] as const;
 
 /** A param value is only sent when it looks like a short label, never free text. */
-const LABEL = /^[a-z0-9][a-z0-9._-]{0,60}$/i;
+// Slashes are allowed so a landing path (work/stone-steps-50k) can ride along; '@' and spaces never are.
+const LABEL = /^[a-z0-9][a-z0-9._/-]{0,79}$/i;
 
 function gtagOf(win: unknown): Gtag | undefined {
   const g = (win as { gtag?: unknown } | undefined)?.gtag;
@@ -113,9 +116,16 @@ export function eventFor(target: CtaTarget): { name: string; params: TrackParams
     return { name: id, params: domain ? { ...base, link_domain: domain } : base };
   }
   if (id === 'book_call_click') return { name: id, params: base };
-  if (id === 'contact_click' || (!id && /^(mailto|sms):/i.test(href))) {
+  if (id === 'contact_click' || (!id && /^(mailto|sms|tel):/i.test(href))) {
     const method =
-      target.method || (/^mailto:/i.test(href) ? 'mailto' : /^sms:/i.test(href) ? 'text' : 'other');
+      target.method ||
+      (/^mailto:/i.test(href)
+        ? 'mailto'
+        : /^sms:/i.test(href)
+          ? 'text'
+          : /^tel:/i.test(href)
+            ? 'call'
+            : 'other');
     return { name: 'contact_click', params: { ...base, method } };
   }
   if (id) return { name: 'cta_click', params: { ...base, cta_id: id } };
@@ -138,7 +148,9 @@ function onClick(event: Event): void {
   const start = event.target;
   if (!(start instanceof Element)) return;
   // An explicit data-cta wins; otherwise any mailto: link counts.
-  const el = start.closest<HTMLElement>('[data-cta]') ?? start.closest('a[href^="mailto:" i]');
+  const el =
+    start.closest<HTMLElement>('[data-cta]') ??
+    start.closest('a[href^="mailto:" i], a[href^="sms:" i], a[href^="tel:" i]');
   if (!el) return;
   const result = eventFor({
     cta: (el as HTMLElement).dataset.cta,
@@ -147,6 +159,51 @@ function onClick(event: Event): void {
     location: locationOf(el),
   });
   if (result) track(result.name, result.params);
+}
+
+/* ---- Tool use ----------------------------------------------------------------
+   The site's toys (draw a card, the tier picker, the receipt, the first-Sunday
+   tool...) are part of the pitch, so it is worth knowing which ones people
+   actually touch. The first click or change inside one sends tool_use once per
+   page, with tool_name from the table below and tool_result saying what kind of
+   control it was. Nothing typed is ever read. The contact form is left out on
+   purpose: it sends its own form_start and form_step events. */
+export const TOOLS: [selector: string, name: string][] = [
+  ['[data-draw]', 'draw_card'],
+  ['[data-sun]', 'first_sunday'],
+  ['[data-size]', 'size_frame'],
+  ['[data-rcpt]', 'live_receipt'],
+  ['[data-reply]', 'reply_order'],
+  ['[data-ba]', 'before_after'],
+  ['[data-theme-flip]', 'theme_flip'],
+  ['[data-sheet]', 'client_sheet'],
+  ['#fit', 'fit_quiz'],
+  ['#pick', 'tier_picker'],
+  ['#costs', 'cost_compare'],
+  ['#faq', 'faq'],
+  ['#jobs', 'work_jobs'],
+  ['[data-f]', 'work_filter'],
+  ['[data-v]', 'work_view'],
+];
+
+const toolsSeen = new Set<string>();
+
+/** The tool a control belongs to, or '' when it is not one of ours. */
+export function toolOf(el: Element): string {
+  for (const [selector, name] of TOOLS) if (el.closest(selector)) return name;
+  return '';
+}
+
+function onInteract(event: Event): void {
+  const start = event.target;
+  if (!(start instanceof Element)) return;
+  const el = start.closest('button, input, select, summary, [role="slider"]');
+  if (!el || el.closest('[data-form], [data-cta]')) return;
+  const name = toolOf(el);
+  if (!name || toolsSeen.has(name)) return;
+  toolsSeen.add(name);
+  const kind = el.tagName === 'SUMMARY' ? 'open' : el.tagName.toLowerCase();
+  track('tool_use', { tool_name: name, tool_result: kind });
 }
 
 let viewObserver: IntersectionObserver | undefined;
@@ -184,11 +241,16 @@ function watchViews(): void {
  * View Transitions) and re-scan view targets on every astro:page-load.
  */
 export function initTracking(): void {
+  // First-touch attribution (src/lib/attribution.ts): stored in this browser only,
+  // read by the contact form when someone chooses to send an inquiry.
+  noteVisit();
   const w = window as unknown as { __ncsTrackBound?: boolean };
   if (!w.__ncsTrackBound) {
     w.__ncsTrackBound = true;
     // Capture phase, so a handler that stops propagation can't hide a click.
     document.addEventListener('click', onClick, { capture: true });
+    document.addEventListener('click', onInteract, { capture: true });
+    document.addEventListener('change', onInteract, { capture: true });
   }
   watchViews();
 }
