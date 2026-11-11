@@ -108,7 +108,7 @@ Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is stil
 
 ### 2f. Photography: keep the permissions true (opened 2026-11-11)
 
-/photography/ is open: the light table holds 62 photos and 11 short films from
+/photography/ is open: the light table holds 75 photos and 11 short films from
 `src/content/photos/`. Every frame is Nathan's own. Before adding more, make sure the
 people and places in them are fine being on a public portfolio, children above all (a church's
 own photo policy covers its own channels, not this site). To add one: optimize it into
