@@ -300,9 +300,10 @@ const caseStudies = defineCollection({
    photos
    ----------------------------------------------------------------------------
    Lightweight catalogue for the photography page. Each entry is a small
-   JSON file in src/content/photos/ describing one photograph: title,
-   image asset, category, optional caption + location, year, and a
-   featured flag.
+   JSON file in src/content/photos/ describing one photograph or one short
+   film: title, alt text, image asset (a film's poster), category, optional
+   client, caption, location and video, year, and a featured flag.
+   /photography lays them all out on the light table (src/lib/photo-table.ts).
 
    Why JSON rather than MDX: photos don't need a prose body, just
    metadata. JSON keeps each entry to a handful of lines and removes
@@ -320,26 +321,50 @@ const photos = defineCollection({
       // subject). Example: 'Sunday morning', 'Classroom light'.
       title: z.string(),
 
+      // What is in the frame, in plain words, for a screen reader and the
+      // open print's description.
+      alt: z.string().min(1),
+
       // The image file itself. image() runs the asset through Astro's
       // optimization pipeline. The path in JSON is relative to the
-      // entry's location: e.g. '../../assets/photography/<name>.jpg'.
+      // entry's location: e.g. '../../assets/photography/canvas/<name>.jpg'.
+      // For a film this is its poster still.
       image: image(),
 
-      // Optional caption shown in the lightbox.
+      // Optional caption shown on the open print.
       caption: z.string().optional(),
 
-      // Category bucket. Matches the three sections on the photography
-      // page so we can filter entries per section.
-      category: z.enum(['events', 'portraits', 'environments']),
+      // Which kind of work it is. The light table's filters are built from
+      // the categories in use, in this order (src/lib/photo-table.ts).
+      category: z.enum([
+        'weddings',
+        'worship',
+        'community',
+        'events',
+        'portraits',
+        'landscapes',
+        'environments',
+      ]),
 
-      // Optional location string for the lightbox caption or future
-      // map-style listing. Example: 'Crestview Presbyterian, West Chester'.
+      // Who it was for, when it was for a client or a congregation.
+      // Example: 'Theology Matters'. Printed on the open print.
+      client: z.string().optional(),
+
+      // Optional place, printed on the open print.
+      // Example: 'Crestview Presbyterian, West Chester'.
       location: z.string().optional(),
 
       // Year the photo was taken.
       year: z.number().int(),
 
-      // Featured flag for the homepage PhotoStrip's curated selection.
+      // A short silent loop instead of a still: a public path to an mp4 under
+      // /photography/video/ (public/photography/video/). `image` is its poster.
+      video: z
+        .string()
+        .regex(/^\/photography\/video\/[a-z0-9-]+\.mp4$/)
+        .optional(),
+
+      // The light table opens centred on the first featured print.
       featured: z.boolean().default(false),
     }),
 });

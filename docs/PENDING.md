@@ -27,10 +27,6 @@ The Content-Security-Policy ships report-only (`docs/claude/deployment.md`). Eve
 
 Live, `/.well-known/security.txt` shows the personal Gmail, but no such file was in this repo: it appears to come from the Cloudflare zone's security.txt setting. The repo now ships `public/.well-known/security.txt` with the studio address. If the live file still shows the Gmail after a deploy, turn off or update that setting in the Cloudflare dashboard (Security Center).
 
-### B. Build a non-React gallery for /photography (added 2026-11-06; was overhaul package 4.6)
-
-The React gallery (`react-photo-album`, `yet-another-react-lightbox`, `Photo.tsx`, `PhotoGallery.tsx`) was removed with React. When the photos exist (item 2f), /photography needs a new gallery in plain markup and a small script, in the deck's style (`DESIGN.md`), reading the `photos` collection. It must pass `tests/no-react.spec.ts` without an exception.
-
 ### C. Repoint the capture scripts at `public/assets/` (added 2026-11-06)
 
 `scripts/capture-case-study.mjs` and `scripts/capture-cms.mjs` still write PNGs under `src/assets/case-studies/` and `shots/`. The site now serves webp copies from `public/assets/` (`{slug}-cover.webp`, `{slug}-m.webp`, `{slug}-cms.webp`, and the footage). Until the scripts write there, a re-capture needs a hand conversion (then `npm run stills` for the smaller phone-still copies), and `study-images.json` needs the new size for anything under `public/assets/study/`.
@@ -110,27 +106,16 @@ Nathan signed off FBCM and Reid; both are done. Only the Orangeburg hook is stil
   /services/, and `/portfolio/` redirected home (the portfolio is switched
   off in Reid's CMS). The README's Reid row was corrected in the same PR.
 
-### 2f. Ungate /photography (added 2026-10-31, overhaul 2.8)
+### 2f. Photography: keep the permissions true (opened 2026-11-11)
 
-/photography/ is gated: noindex, out of the sitemap, the closing's site index and `/llms.txt`,
-showing one photo and "ask for samples". It needs **6 to 20 real photos of
-Nathan's own work, with permission from the people and places in them**. Then:
-
-1. Optimize each into `src/assets/photography/<name>.jpg` and add a
-   `src/content/photos/<name>.json` entry (fields in `src/content.config.ts`).
-2. Build the gallery (item B above): plain markup and a small script, no React.
-3. At 6 photos (`MIN_PHOTOS` in `src/data/photography-gate.ts`) the closing link,
-   the sitemap entry, the `/llms.txt` line and indexing all switch on by
-   themselves on the next build; `tests/photography-gate.spec.ts` follows.
-4. Swap the gate page's photo: today it is the black-and-white portrait from
-   About (`public/assets/about/portrait-bw.webp`), captioned as a portrait of
-   Nathan, because no photo in the repo is a confirmed frame of his client work.
-   Nathan can pick one of his own frames for it now, before the gallery is ready.
-
-Package 1.3 only changed the pronouns in those studies ("we" to "I"); the claims
-themselves are untouched. A capacity line ("I take a small number of projects
-each quarter") was removed site-wide because nothing sources it; put it back
-only if Nathan confirms it.
+/photography/ is open: the light table holds 62 photos and 11 short films from
+`src/content/photos/`. Every frame is Nathan's own. Before adding more, make sure the
+people and places in them are fine being on a public portfolio, children above all (a church's
+own photo policy covers its own channels, not this site). To add one: optimize it into
+`src/assets/photography/canvas/<name>.jpg` (1800px long edge) and add
+`src/content/photos/<name>.json` (fields in `src/content.config.ts`); a film also needs a short
+silent mp4 in `public/photography/video/` with its poster as the image.
+`src/lib/photo-table.test.ts` checks the files and the alt text.
 
 ### 2b. Testimonials still missing (added 2026-10-31, testimonials package)
 
