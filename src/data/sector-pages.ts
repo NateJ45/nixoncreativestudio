@@ -56,7 +56,7 @@ export interface LeanSector extends SectorPage {
 export const CHURCHES: SectorPage = {
   path: 'churches',
   sector: 'church',
-  title: 'Church websites',
+  title: 'Church website design in Cincinnati',
   description:
     'Church websites I designed and built: a clear first Sunday for visitors, and pages the staff keep current. Read the case studies and visit the live sites.',
   label: 'Churches',
@@ -66,7 +66,7 @@ export const CHURCHES: SectorPage = {
 export const SCHOOLS: LeanSector = {
   path: 'schools',
   sector: 'school',
-  title: 'School websites',
+  title: 'School website design in Cincinnati',
   description:
     'School websites built around what families ask first: what it costs, how to visit and how to start, with honest advice on which tier fits your school.',
   label: 'Schools',
@@ -106,7 +106,7 @@ export const SCHOOLS: LeanSector = {
 export const NONPROFITS: LeanSector = {
   path: 'nonprofits',
   sector: 'nonprofit',
-  title: 'Nonprofit websites',
+  title: 'Nonprofit website design',
   description:
     'Nonprofit websites a small staff can run, with honest first-year and five-year costs, real case studies, and a summary you can take to your board or a funder.',
   label: 'Nonprofits',
@@ -139,7 +139,7 @@ export const NONPROFITS: LeanSector = {
 export const SMALL_BUSINESS: LeanSector = {
   path: 'small-business',
   sector: 'small-business',
-  title: 'Small business websites',
+  title: 'Small business web design',
   description:
     'Small business websites built around the first call: what you do, what it costs and an easy way to ask. Real case studies, and honest advice on which tier fits.',
   label: 'Small businesses',
