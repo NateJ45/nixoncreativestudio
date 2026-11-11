@@ -3,74 +3,195 @@
 /* ============================================================================
    /journal | Journal index
    ============================================================================
-   Listing for the journal collection, newest first, with drafts left out of
-   production builds (the same filter src/data/nav.ts uses to gate the Journal
-   link, so the link appears with the first published entry). Ruled rows with
-   hairlines, not cards. Empty state (the live state today): one plain line and
-   two onward links. While that is the state, the page is noindex and out of the
-   sitemap (src/data/journal-gate.ts).
+   Newest first, drafts left out of production builds (the same filter
+   src/data/nav.ts uses to gate the Journal link, so the link appears with the
+   first published entry). Two views of the same posts:
+
+     Deck   the post cards stacked along a date rail, newest on top. "Older"
+            and "Newer" (and the arrow keys inside the deck) deal the next one
+            forward. The default on a wide screen.
+     List   ruled rows, as the journal always had. The default on a phone,
+            under reduced motion, and the whole page with no JavaScript.
+
+   The chips over both are the /work sector bar (seg-bar.css): one per cluster
+   that has a post (src/lib/journal.ts), and they work on either view. The
+   address keeps the choice: /journal/?cluster=lab&view=list. src/scripts/
+   journal.js does the dealing; with no script the list is the page.
+
+   Empty state: one plain line and two onward links. While that is the state,
+   the page is noindex and out of the sitemap (src/data/journal-gate.ts).
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/sub.css';
+import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
 import { journalOpen } from '../../data/journal-gate';
 import { readingTime } from '../../lib/readingTime';
+import { clusterChips, clusterLabel, newestFirst } from '../../lib/journal';
 import { plainText, wordSpans } from '../../lib/words';
 
-const entries = (
+const entries = newestFirst(
   await getCollection('journal', ({ data }) =>
     // Drop drafts in production. import.meta.env.PROD is true on `astro build`,
     // false on `astro dev`, so drafts stay visible locally.
     import.meta.env.PROD ? data.draft !== true : true,
-  )
-).sort((a, b) => b.data.published.valueOf() - a.data.published.valueOf());
+  ),
+);
+const chips = clusterChips(entries);
+const n = entries.length;
 
-const fmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const fmt = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+// The card's corner number: its place in the order the posts were written, oldest is 1.
+const no = (i: number) => String(n - i).padStart(2, '0');
 const heading = 'Notes from <b>the studio.</b>';
+const posts = entries.map((e, i) => ({
+  id: e.id,
+  href: `/journal/${e.id}/`,
+  title: e.data.title,
+  summary: e.data.summary,
+  shortAnswer: e.data.shortAnswer,
+  cluster: e.data.cluster ?? '',
+  label: clusterLabel(e.data.cluster),
+  date: e.data.published,
+  minutes: readingTime(e.body ?? ''),
+  no: no(i),
+  // Behind the top card the pile leans a little, alternately, like a stack dealt by hand.
+  tilt: i % 2 ? 1.4 : -1.1,
+}));
 ---
 
 <BaseLayout
   title="Journal | Nixon Creative Studio"
-  description="Short essays, process notes and field reports from Nixon Creative Studio, on web design, brand work and photography for churches, schools and nonprofits."
-  noindex={!journalOpen(entries.length)}
+  description="Plain answers about church, school and nonprofit websites: what they cost, what to look for, and the things I build for my own people, with real prices."
+  noindex={!journalOpen(n)}
 >
   <header class="page-head">
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
-      Short notes from the studio: process, opinions, the occasional field report. Updated whenever
-      there's something worth writing down.
+      Plain answers to the questions people ask me about websites, with real prices and the sources
+      linked, plus the things I build for my own people.
     </p>
   </header>
-  <section class="sec tight" aria-label="Journal entries">
-    <div class="wrap">
-      {entries.length === 0 ? (
+  {n === 0 ? (
+    <section class="sec tight" aria-label="Journal entries">
+      <div class="wrap">
         <p class="sub-empty">
           Nothing's published yet. This is where I'll write down how the studio works: the thinking
           behind a build, notes from a shoot, the small decisions that add up. Until then, the{' '}
           <a href="/work/">case studies</a> show the work, and you can always{' '}
           <a href="/contact/">say hello</a>.
         </p>
-      ) : (
-        <ol class="sub-rows">
-          {entries.map((entry) => (
-            <li>
-              <p class="label">
-                <time datetime={entry.data.published.toISOString().slice(0, 10)}>
-                  {fmt.format(entry.data.published)}
-                </time>
-                , {readingTime(entry.body ?? '')} min read
-              </p>
-              <h2>
-                <a href={`/journal/${entry.id}/`}>{entry.data.title}</a>
-              </h2>
-              <p>{entry.data.summary}</p>
+      </div>
+    </section>
+  ) : (
+    <section class="jx" aria-label="Journal posts" data-jx>
+      <div class="dw-bar" data-bar>
+        <div class="dw-seg" role="group" aria-label="Show posts about" data-filters>
+          <span class="dw-pill" data-pill aria-hidden="true" />
+          {chips.map((c, i) => (
+            <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-f={c.key}>
+              {c.label} <span class="n">{c.n}</span>
+            </button>
+          ))}
+        </div>
+        <div class="dw-seg" role="group" aria-label="View posts as" data-views>
+          <span class="dw-pill" data-pill aria-hidden="true" />
+          <button type="button" aria-pressed="false" data-v="deck">
+            Deck
+          </button>
+          <button type="button" aria-pressed="false" data-v="list">
+            List
+          </button>
+        </div>
+        <p class="dw-status" role="status" data-status>
+          {`Showing all ${n} ${n === 1 ? 'post' : 'posts'}.`}
+        </p>
+      </div>
+
+      <div class="jx-deck" data-deck>
+        <ol class="jx-rail label" aria-hidden="true" data-rail>
+          {posts.map((p, i) => (
+            <li data-key={p.cluster} class={i === 0 ? 'now' : undefined}>
+              <span class="label">{fmt.format(p.date)}</span>
             </li>
           ))}
         </ol>
-      )}
-    </div>
-  </section>
+        <div
+          class="jx-hand"
+          role="group"
+          aria-roledescription="deck"
+          aria-label="Posts, newest on top"
+        >
+          <ol class="jx-pile" data-pile>
+            {posts.map((p, i) => (
+              <li
+                data-key={p.cluster}
+                class={i === 0 ? 'on-top' : i > 2 ? 'deep' : undefined}
+                style={`--k:${i};--tilt:${p.tilt}deg`}
+              >
+                <article class="card keyed jx-card">
+                  <span class="pip" aria-hidden="true">
+                    {p.no}
+                  </span>
+                  <span class="pip flip" aria-hidden="true">
+                    {p.no}
+                  </span>
+                  <p class="label">
+                    {p.label && <span>{p.label}, </span>}
+                    <time datetime={iso(p.date)}>{fmt.format(p.date)}</time>, {p.minutes} min read
+                  </p>
+                  <h2>
+                    <a href={p.href}>{p.title}</a>
+                  </h2>
+                  <p class="jx-sa">{p.shortAnswer}</p>
+                  <p class="jx-read" aria-hidden="true">
+                    Read it
+                  </p>
+                </article>
+              </li>
+            ))}
+          </ol>
+          <div class="jx-ctl">
+            <button type="button" data-deal="-1">
+              Newer
+            </button>
+            <button type="button" data-deal="1">
+              Older
+            </button>
+            <p data-place aria-live="polite">{`Post 1 of ${n}`}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="jx-list" data-list>
+        <ol class="sub-rows">
+          {posts.map((p) => (
+            <li data-key={p.cluster}>
+              <p class="label">
+                {p.label && <span>{p.label}, </span>}
+                <time datetime={iso(p.date)}>{fmt.format(p.date)}</time>, {p.minutes} min read
+              </p>
+              <h2>
+                <a href={p.href}>{p.title}</a>
+              </h2>
+              <p>{p.summary}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )}
   <Closing />
 </BaseLayout>
+
+<script>
+  import '../../scripts/journal.js';
+</script>

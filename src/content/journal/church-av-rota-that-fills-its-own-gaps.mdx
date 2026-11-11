@@ -1,0 +1,100 @@
+---
+title: "How I built a rota that fills its own gaps for my church's AV team"
+metaTitle: 'A church AV rota that fills its own gaps'
+summary: 'How a shared sheet and a small script replaced one emailed spreadsheet for the Crestview Church AV team, and took the 2027 draft from 19 gaps to 5.'
+published: 2026-11-10
+cluster: lab
+sector: church
+shortAnswer: 'I replaced one person emailing a spreadsheet with a shared Google Sheet and a script that sends the Wednesday and Friday emails, runs five forms, sends calendar invites and drafts the rota. A one-step swap rule took the first 2027 draft from 19 empty slots to 5. It is checked by 1,205 automated tests.'
+draft: false
+---
+
+This one is a personal project. I volunteer on the audio and video team at Crestview Church, and this is the story of the rota I built for it. If you run volunteers at a church, school or nonprofit, the problem will feel familiar even if you never touch a spreadsheet script. If you were hoping for a plug-in you can install on Monday, this is not that: it is a build story, with the lessons I would carry into any volunteer system.
+
+## What was the problem?
+
+One person held the whole rota, and it lived in their inbox. A spreadsheet went out by email, people replied with changes, a new version went out, and the person in the middle kept it all in their head. It worked because that person was generous with their time. It would stop working the day they stepped back, and they were stepping back.
+
+The team covers two Sunday services. The Traditional service needs four jobs (livestream, sound, slides in ProPresenter, camera). The Contemporary service needs two (sound and slides). Six jobs a week, a small pool of trained people, everyone with their own away dates and limits on how often they can serve. That is a scheduling puzzle, and puzzles are what code is good at.
+
+## What does it do now?
+
+It runs the routine work on a timetable, so nobody has to remember to.
+
+Everything lives in one shared Google Sheet with a small Google Apps Script behind it. The sheet is the single place the rota lives. The script does the chasing.
+
+| When               | What happens                                                         | Who it reaches            |
+| ------------------ | -------------------------------------------------------------------- | ------------------------- |
+| Wednesday morning  | Team email with the coming Sunday and any special services that week | Everyone on the rota list |
+| Friday morning     | Personal reminder with that person's job and checklist               | That Sunday's team        |
+| Every morning      | Calendar invites kept in step for the next 8 weeks                   | Each person on a job      |
+| Every Monday       | New Sundays added, form choices refreshed                            | The sheet and the forms   |
+| Every Sunday night | A backup copy of the sheet, newest 8 kept                            | The sheet owner           |
+
+Source: my own project notes.
+
+On top of the timetable there are five forms, because a form is easier for a busy volunteer than editing a shared sheet:
+
+- **Can't make it?** for swaps. It suggests who could cover.
+- **Away dates**, sent once a quarter.
+- **Team check-in**, used in the autumn to gather everyone's plans for the 2027 rota.
+- **Join the team**, a standing form for new volunteers that adds them to the roster.
+- **What can you do?**, a training form where each person says, job by job, whether they can do it on their own, are learning, or would rather not.
+
+There is also a short "something went wrong on Sunday" form, linked in the Friday reminder, so the people who were just in the booth can say what broke while they still remember.
+
+Calendar invites matter because plenty of people check their phone calendar more often than their email. If someone declines an invite within two weeks of their date, the coordinators get an email with who could cover.
+
+## How does the draft rota fill its own gaps?
+
+It fills the rota in a normal pass, then makes one swap for each job still empty.
+
+The draft builder goes through each week and fills jobs in order, trying people who are trained for the job, serve at that service, are not away and are under their monthly limit. It also tries to share the load fairly and not put the same person on week after week. That gets most of the way.
+
+The first full draft of 2027 still left 19 empty slots. When I looked at them, a lot had the same shape. One week, someone was away, and the draft gave the one remaining person who could do slides at the second service a different job first, because jobs are filled in column order. Someone else was free for that first job. The draft just never went back to check.
+
+So I added a second step. After the normal fill, each empty job looks for someone already serving that week who could do it, plus a free person who could take that person's current job. If both exist, the two moves happen. Names typed in by hand never move, and nobody ends up serving twice in one week.
+
+That single step took the draft from 19 gaps to 5. The 5 left are all the same job on 5th Sundays, when the few people trained for it have already hit their limits for the month. That is not a code problem. It is a real shortage of trained people for one job, and the rota now shows it plainly instead of hiding it in a pile of other gaps.
+
+I kept it to one step on purpose. A full search could squeeze a little more out, but a coordinator needs to understand why a name landed where it did. One swap is easy to explain. The draft also stays a draft: a person reviews it before it goes onto the real schedule.
+
+## Why 1,205 tests for a church rota?
+
+Because it emails real people about real Sundays, and a wrong email is worse than no email.
+
+The script has 1,205 automated tests across 15 files. That sounds like a lot for a volunteer project. The tests are what let me change the draft builder, the forms or the emails without breaking the parts that already worked. One review of the code found that dates were being read 12 hours off, so Sunday rows quietly matched the wrong day when a draft was copied over. The fix came with tests, so that mistake cannot creep back in unnoticed.
+
+## What would I tell another church team?
+
+Most of the value came from small, boring decisions, not clever code.
+
+- **One place for the truth.** A shared sheet beat a spreadsheet passed around by email, before any script was added.
+- **Forms for the people, the sheet for the coordinators.** Volunteers answer a question. They do not edit a grid.
+- **Reminders at the right moment.** A team email midweek, a personal one on Friday, an invite in the calendar.
+- **Show the gaps honestly.** An empty job is red on the sheet and named in the monthly summary. A shortage you can see is one you can recruit for.
+- **Keep a backup and keep it boring.** A weekly copy, the newest 8 kept.
+
+## What I'd do
+
+If I were starting again at another church, I would start with the shared sheet and the two emails, and nothing else, for a month. Then I would add the swap form, because swaps are where most of the back-and-forth lives. I would leave the draft builder until last, because by then you know the real rules people want, like how many Sundays a month each person is happy to serve.
+
+I would also write down every rule in plain words before coding it. Some of the changes I made were not code mistakes at all. They were rules nobody had said out loud yet, like someone who mainly serves at one service but will cover the other in a pinch.
+
+## What does this have to do with your church?
+
+Your volunteers are the same problem, wherever they serve.
+
+Greeters, children's ministry, the welcome table, the people who run your website. A small team, everyone busy, and one generous person holding it together by email. A website that is easy to keep current is part of the same answer: it should not depend on one person who knows where everything is. That is how I approach [church websites](/churches/), and it is why every plan on my [services page](/services/) comes with documentation that goes with you if you ever move on.
+
+## Could this run on something other than Google Sheets?
+
+Yes. The ideas carry over to any tool with forms, email and a calendar. I used Google Sheets because the rota was already a spreadsheet, so the move felt small to the team. Pick the tool your volunteers already use.
+
+## Do you build these for other churches?
+
+This one is a volunteer project for my own church team, not a product. If your church has a volunteer process that runs on email and goodwill, I am happy to talk it through. [Get in touch](/contact/).
+
+## How long did it take?
+
+My project notes start in late September 2026, and it grew a piece at a time alongside the actual Sundays. The rules for the draft rota took the longest, because they came from real conversations with the team about how they like to serve.

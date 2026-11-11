@@ -1,20 +1,43 @@
 ---
 // Safe to edit. Dynamic journal entry page: one per MDX file in src/content/journal/.
 /* ============================================================================
-   /journal/{slug} | A journal entry
+   /journal/{slug} | A journal post
    ============================================================================
-   The page head, then the entry in the legal pages' reading measure. Drafts build
-   in `astro dev` only. Article JSON-LD comes through BaseLayout.
+   Top to bottom: a visible breadcrumb (the same three crumbs the BreadcrumbList
+   says), the H1, the byline card (portrait, "Written by Nathan Nixon", the
+   dates and, on a revised post, the "Updated" stamp with what changed), then
+   the reading column beside its table of contents:
+
+     - The short answer, in a card. A post with `receipt: true` prints the
+       /services receipt in it (PostReceipt.astro), from pricing.ts.
+     - The post itself. Tables are styled like the price cards, with the
+       "Source:" line under each (journal-post.js wraps them so a wide one
+       scrolls inside its card and never the page).
+     - Two dealt cards: the post's sector page and Prices.
+
+   The table of contents is one <nav popover>: a sticky rail on a wide screen,
+   and on a phone a "Contents" pill above the dock opens it. The pill and the
+   popover work without JavaScript; journal-post.js adds the scrollspy mark and
+   closes the list when a link is chosen. Drafts build in `astro dev` only.
+
+   JSON-LD: Article (author is Nathan as a Person, with sameAs) plus the
+   BreadcrumbList BaseLayout builds from `breadcrumbs`. No FAQPage: Google no
+   longer shows FAQ results, and the follow-up questions are plain headings.
    ============================================================================ */
 import { getCollection, render } from 'astro:content';
 import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/legal.css';
-import '../../styles/pages/sub.css';
+import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
+import PostReceipt from '../../components/PostReceipt.astro';
 import { site } from '../../data/site';
+import { sectorPage, sectorPagePath } from '../../data/sector-pages';
+import { pricesAsOf } from '../../data/pricing';
 import { ids, pageIds } from '../../lib/schema';
 import { readingTime } from '../../lib/readingTime';
+import { changesProblem, clusterLabel, tocItems } from '../../lib/journal';
+import { fitTitle } from '../../lib/seo';
 import { plainText, wordSpans } from '../../lib/words';
 
 export async function getStaticPaths() {
@@ -25,12 +48,79 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
-const { title, summary, published, updated, cover } = entry.data;
+const { Content, headings } = await render(entry);
+const {
+  title,
+  metaTitle,
+  summary,
+  published,
+  updated,
+  changes,
+  cover,
+  cluster,
+  sector,
+  shortAnswer,
+  receipt,
+  draft,
+} = entry.data;
 
-const fmt = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-const canonical = new URL(`/journal/${entry.id}/`, site.url).toString();
+// A revised post says what changed; the pair is checked here so a half-done update fails the build.
+const problem = changesProblem(entry.data);
+if (problem) throw new Error(`journal/${entry.id}: ${problem}`);
+
+const fmt = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+const minutes = readingTime(entry.body ?? '');
+const toc = tocItems(headings);
+const path = `/journal/${entry.id}/`;
+const canonical = new URL(path, site.url).toString();
 const coverImage = cover ? await getImage({ src: cover, width: 1200, format: 'jpg' }) : undefined;
+// The share card the build draws for every post (scripts/generate-og.mjs), unless it has a cover.
+const image = new URL(coverImage?.src ?? `/og/journal/${entry.id}.png`, site.url).toString();
+const label = clusterLabel(cluster);
+// The byline's small line, built as one string so no stray space lands before a comma. Every
+// part is a date, a number or a cluster name from src/lib/journal.ts, never free text.
+const byline = [
+  label,
+  `Published <time datetime="${iso(published)}">${fmt.format(published)}</time>`,
+  updated ? `updated <time datetime="${iso(updated)}">${fmt.format(updated)}</time>` : '',
+  `${minutes} min read`,
+]
+  .filter(Boolean)
+  .join(', ');
+
+// The two end cards: the sector page the post is about (or the work, when it has none) and Prices.
+const sp = sector ? sectorPage(sector) : undefined;
+const ends = [
+  sp
+    ? {
+        href: sectorPagePath(sp.sector)!,
+        pip: sp.label.slice(0, 1),
+        kicker: sp.label,
+        text: sp.linkText,
+        note: `The ${sp.label.toLowerCase()} I have built for, and how I go about it.`,
+      }
+    : {
+        href: '/work/',
+        pip: 'W',
+        kicker: 'Work',
+        text: 'The sites I have built',
+        note: 'Real client sites, each with the story of how it came together.',
+      },
+  {
+    href: '/services/',
+    pip: '$',
+    kicker: 'Prices',
+    text: 'What I charge, in full',
+    note: `Every tier, Hosting and care plan, as of ${pricesAsOf}.`,
+  },
+];
+
 const schemas = [
   {
     '@type': 'Article',
@@ -39,43 +129,136 @@ const schemas = [
     description: summary,
     url: canonical,
     mainEntityOfPage: { '@id': pageIds(canonical).webpage },
-    datePublished: published.toISOString(),
-    ...(updated ? { dateModified: updated.toISOString() } : {}),
+    datePublished: iso(published),
+    dateModified: iso(updated ?? published),
+    // Nathan, the Person node every page carries (schema.ts personNode: name, url, and sameAs
+    // LinkedIn and Instagram from site.ts). Referenced, not repeated: each @id is defined once.
     author: { '@id': ids.person },
     publisher: { '@id': ids.studio },
-    ...(coverImage ? { image: new URL(coverImage.src, site.url).toString() } : {}),
+    image,
+    ...(label ? { articleSection: label } : {}),
   },
 ];
 ---
 
 <BaseLayout
-  title={`${title} | ${site.studioName}`}
+  title={fitTitle([`${title} | ${site.studioName}`, `${metaTitle ?? title} | ${site.studioName}`])}
   description={summary}
   ogType="article"
   ogImage={coverImage?.src}
   schemas={schemas}
+  noindex={draft}
   breadcrumbs={[
     { name: 'Journal', path: '/journal/' },
-    { name: title, path: `/journal/${entry.id}/` },
+    { name: title, path },
   ]}
 >
-  <header class="page-head">
+  <header class="page-head post-head">
+    <nav class="post-crumbs label" aria-label="Breadcrumb">
+      <ol>
+        <li>
+          <a href="/">Home</a>
+        </li>
+        <li>
+          <a href="/journal/">Journal</a>
+        </li>
+        <li>
+          <span aria-current="page">{title}</span>
+        </li>
+      </ol>
+    </nav>
     <h1 aria-label={plainText(title)} set:html={wordSpans(title)} />
-    <p class="lede">{summary}</p>
-    <p class="updated">
-      <time datetime={published.toISOString().slice(0, 10)}>{fmt.format(published)}</time>,{' '}
-      {readingTime(entry.body ?? '')} min read
-    </p>
+    <div class="card post-by">
+      <img
+        class="post-by-me"
+        src="/assets/about/portrait-bw-520.webp"
+        alt=""
+        width="56"
+        height="56"
+        decoding="async"
+      />
+      <div class="post-by-t">
+        <p class="post-by-name">
+          Written by <a href="/about/">{site.ownerName}</a>
+        </p>
+        <p class="label" set:html={byline} />
+        {updated && changes && (
+          <p class="post-by-changes">
+            <b>What changed:</b> {changes}
+          </p>
+        )}
+      </div>
+      {updated && (
+        <span class="stamp post-stamp" aria-hidden="true">
+          <span class="stamp-word">Updated</span>
+          <span class="stamp-date">{fmt.format(updated)}</span>
+        </span>
+      )}
+    </div>
   </header>
-  {coverImage && (
-    <figure class="photo-card sub-cover">
-      <img src={coverImage.src} alt="" />
-    </figure>
-  )}
-  <div class="doc sub-doc">
-    <div class="prose">
-      <Content />
+
+  <div class="doc post-doc">
+    {toc.length > 1 && (
+      <nav class="toc post-toc" id="post-toc" popover="auto" aria-labelledby="toc-h" data-toc>
+        <p id="toc-h">On this page</p>
+        <ol>
+          {toc.map((t) => (
+            <li>
+              <a href={`#${t.slug}`}>{t.text}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
+    <div class="post-main">
+      <section class="card keyed post-short" aria-labelledby="sa-h">
+        <h2 id="sa-h" class="label">
+          The short answer
+        </h2>
+        <p class="post-sa">{shortAnswer}</p>
+        {receipt && <PostReceipt />}
+      </section>
+      {coverImage && (
+        <figure class="photo-card sub-cover">
+          <img src={coverImage.src} alt="" />
+        </figure>
+      )}
+      <div class="prose post-prose" data-prose>
+        <Content />
+      </div>
+      <section class="post-end" aria-labelledby="end-h">
+        <h2 id="end-h" class="label">
+          Where to next
+        </h2>
+        <ul class="post-ends">
+          {ends.map((e, i) => (
+            <li style={`--tilt:${i ? 2.2 : -1.8}deg`}>
+              <a class="card keyed post-endcard" href={e.href}>
+                <span class="pip" aria-hidden="true">
+                  {e.pip}
+                </span>
+                <span class="pip flip" aria-hidden="true">
+                  {e.pip}
+                </span>
+                <span class="label">{e.kicker}</span>
+                <span class="post-endcard-t">{e.text}</span>
+                <span class="post-endcard-n">{e.note}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   </div>
+  {toc.length > 1 && (
+    <button type="button" class="post-pill" popovertarget="post-toc" data-toc-pill>
+      <span class="post-pill-k">Contents</span>
+      <span class="post-pill-now" data-toc-now />
+    </button>
+  )}
   <Closing />
 </BaseLayout>
+
+<script>
+  import '../../scripts/journal-post.js';
+</script>

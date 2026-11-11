@@ -1,0 +1,94 @@
+---
+title: 'I run a Minecraft server for my family. It taught me how I watch your website.'
+metaTitle: 'My family Minecraft server and your site'
+summary: 'A family Minecraft server, a 5-minute uptime check and a phone alert taught me the rule for client sites: hear about an outage before anyone else does.'
+published: 2026-11-10
+cluster: lab
+sector: church
+shortAnswer: 'A tiny Cloudflare Worker checks my family Minecraft server every 5 minutes and sends my phone an alert when it goes down and again when it comes back. In November 2026 I pointed my client-site dashboard at the same alerts, and it checks every client site every 15 minutes. If your siblings, or your congregation, notice an outage before you do, your monitoring is wrong.'
+draft: false
+---
+
+This is a light one. I run a private Minecraft server for me and my siblings, all grown adults now, and looking after it changed how I look after the websites I build. If you are a church, school or small business with a website, the lesson at the end is for you. If you just came for Minecraft tips, I am sorry, there are none here, only a grown man with a phone alert for a block game.
+
+## Why does a family game server need monitoring?
+
+Because siblings are the fastest outage detectors ever built.
+
+If a game server goes down, the people who play on it find out first. They find out instantly, and they find out loudly, and the report arrives in the family group chat asking why it is broken and whether I broke it. As a monitoring system, that works. As a way to spend an evening, it is not ideal.
+
+So I did what I would do for a client. I set the server up so that I hear about a problem from a machine, quietly, on my phone, before anyone has to come and tell me.
+
+## How is the server set up?
+
+Boringly, which is the point.
+
+The server runs on a rented machine, not a computer in my house, so it does not care if my laptop is asleep. It is private, for family only. The mods are pinned to exact versions with checksums, so an update somewhere on the internet cannot quietly swap in a different file. And there is a backup every night, so the worst day is a day of lost building, not a lost world.
+
+| Piece                         | What it does                | Why it matters                                  |
+| ----------------------------- | --------------------------- | ----------------------------------------------- |
+| Rented server                 | Runs the game all day       | Does not depend on a home computer being on     |
+| Pinned mods with checksums    | Same exact files every time | No surprise breakage from someone else's update |
+| Nightly backup                | A fresh copy each night     | A bad day costs one day, not everything         |
+| Uptime check every 5 minutes  | Asks "are you there?"       | I know before my siblings do                    |
+| Phone alert, down and back up | Tells me both ways          | I know when to start and when to stop worrying  |
+
+Source: my own project notes.
+
+None of that is clever. It is the same short list I care about for any site I look after: it runs somewhere reliable, the parts do not change behind my back, there is a recent backup, and something is watching.
+
+## What does the uptime check actually do?
+
+It knocks on the door every 5 minutes and tells me if nobody answers.
+
+The check is a small [Cloudflare Worker](https://developers.cloudflare.com/workers/), a tiny bit of code that runs on Cloudflare's network on a timer. Every 5 minutes it checks whether the server is up. If it is down, my phone gets an alert. When it comes back, my phone gets a second alert saying so.
+
+That second alert is the one people forget. A "down" message on its own leaves you wondering for the rest of the evening. A "back up" message lets you put the phone away. It also tells you roughly how long the outage lasted, without anyone having to write it down.
+
+Running the check somewhere other than the server matters too. If the check lived on the same machine, it would go down with it and tell me nothing. A watcher has to stand outside the thing it is watching.
+
+## What does this have to do with client websites?
+
+The same rule, at a bigger scale: I should hear about a problem before the people who use the site do.
+
+I already had a dashboard for my client sites. It checks every client site every 15 minutes. In November 2026 I added phone alerts to it and pointed them at the same alert channel the Minecraft check uses. So now one phone gets one kind of message for anything I look after, whether it is a world full of block houses or a church website.
+
+That sounds like a small change, and it is. But it moved me from "I would see it next time I opened the dashboard" to "my phone tells me". The dashboard was useful. The alert is what makes it monitoring.
+
+## Why does Sunday morning matter so much for a church?
+
+Because that is when the most people look, all at once.
+
+For a church, Sunday morning is when people are most likely to be looking: checking the service time, finding the livestream, looking up the address before a first visit. If the site is down at 9:30 on a Sunday, the people who notice first are your visitors, and maybe a volunteer who texts the pastor. That is the church version of my family group chat lighting up. It works, sort of, but it is the wrong way round.
+
+If your siblings notice before you do, your monitoring is wrong. If your congregation notices before you do, same thing. Not your website, necessarily. Sites go down sometimes, for all sorts of reasons. The problem is who finds out first.
+
+## What should you check about your own website?
+
+A short checklist, the same one I use for my family server:
+
+- **Is something checking your site from outside it?** Not "someone looks now and then", an actual automatic check on a timer.
+- **Who gets told, and how?** An email to a shared inbox on a Sunday morning is not the same as a phone alert to the person who can fix it.
+- **Do you hear when it comes back?** Otherwise you will keep refreshing.
+- **Is there a recent backup, and has anyone tried restoring it?** A backup nobody has tested is a hope, not a plan.
+- **Are the parts pinned?** Plugins and themes that update themselves can break a site with nobody touching it.
+
+If you do not know the answers, that is very normal, and it is worth finding out.
+
+## What I'd do
+
+If I were looking after a church or school site on my own, I would set up an outside uptime check this week, send its alerts to a phone rather than an inbox, and make sure it reports both down and back up. Then I would check that a backup exists and try restoring it once, on a quiet weekday, so the first restore is not during an emergency.
+
+If you would rather not think about any of that, it is part of what I do. Every site on my [Hosting plan](/services/) gets a check every 15 minutes that it is up, plus daily backups and security updates, for $200 a year. The care plans add regular changes on top, and Care includes a yearly test that a backup actually restores. You can see the details on my [services page](/services/), or read more about how I work with [churches](/churches/).
+
+## Is 15 minutes fast enough for a website?
+
+For most church, school and small business sites, yes. An outage that lasts less than 15 minutes is often gone before anyone could act on it anyway. The family server checks every 5 minutes because it is a single machine I run myself, and it is cheap to check often.
+
+## Can I just use a free uptime service?
+
+Often, yes. Plenty of free and low-cost uptime checkers exist, and any of them is better than nothing. What matters is that the alert reaches a person who can do something about it, on a Sunday morning, without anyone having to go looking.
+
+## Why not run the server on a computer at home?
+
+A home computer gets turned off, updated and borrowed. A rented server just runs. It is the same reason I host client sites on Cloudflare rather than on a machine in someone's office.

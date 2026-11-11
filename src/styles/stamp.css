@@ -1,0 +1,66 @@
+/* ============================================================================
+   The rubber stamp: the "Received" mark on /contact (start.css) and the
+   "Updated" mark on a revised journal post (journal.css). Moved out of
+   pages/start.css unchanged so both read the same rules.
+   ============================================================================ */
+
+/* The "Received" stamp: a rubber-stamp mark in the studio blue, turned a little, floated beside the
+   heading. --accent clears 4.5:1 on the card on both sides (kit-tokens.test.ts), so it reads as text
+   and as a graphic. contact.js presses it in after a send; at rest it is just this. */
+.stamp {
+  float: right;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0.25rem 0.25rem 0.75rem 1.25rem;
+  padding: 0.45rem 0.9rem 0.5rem;
+  border: 0.25rem double var(--accent);
+  border-radius: 0.6rem;
+  color: var(--accent);
+  transform: rotate(-8deg);
+  transform-origin: 50% 60%;
+  pointer-events: none;
+  user-select: none;
+}
+.stamp-word {
+  font: 700 1.25rem/1 var(--body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.stamp-date {
+  font: 600 0.8125rem/1.1 var(--body);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.stamp-date:empty {
+  display: none;
+}
+/* The ink spreading once as it lands: a faint second edge that grows and fades. */
+.stamp::after {
+  content: '';
+  position: absolute;
+  inset: -0.25rem;
+  border-radius: 0.7rem;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 35%, transparent);
+  opacity: 0;
+}
+.stamp.inked::after {
+  animation: stamp-ink 0.55s var(--ease) both;
+}
+@keyframes stamp-ink {
+  from {
+    opacity: 1;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp.inked::after {
+    animation: none;
+  }
+}

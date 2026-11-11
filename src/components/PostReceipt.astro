@@ -1,0 +1,74 @@
+---
+/* ============================================================================
+   PostReceipt | the /services receipt, printed in a journal cost post
+   ============================================================================
+   A post with `receipt: true` prints two till slips inside its short answer
+   card: the smallest build on Hosting alone, and the anchor tier with its usual
+   care plan, both over five years. Same card, same lines and the same sums as
+   the live receipt on /services (LiveReceipt.astro), from src/lib/receipt.ts
+   and src/data/pricing.ts, so a post can never quote a price the Prices page
+   does not. It is printed, not interactive: the link under it goes to the one
+   you can work out yourself.
+   ============================================================================ */
+import '../styles/receipt.css';
+import { carePlans, pricesAsOf, webTiers } from '../data/pricing';
+import { dollars } from '../lib/money';
+import { carePerYear } from '../lib/tier-costs';
+import { receipt, receiptLines } from '../lib/receipt';
+
+const hosting = carePlans.find((p) => p.name === 'Hosting')!;
+const years = 5;
+const smallest = webTiers.find((t) => !t.needsCare) ?? webTiers[0];
+const anchor = webTiers.find((t) => t.highlighted) ?? webTiers[1];
+
+const slips = [
+  { tier: smallest, plan: '' },
+  { tier: anchor, plan: anchor.care },
+].map(({ tier, plan }, i) => {
+  const input = {
+    build: tier.priceFrom,
+    hostingPerYear: carePerYear(hosting),
+    carePerMonth: plan ? dollars(carePlans.find((p) => p.name === plan)!.price)[0] : 0,
+    years,
+  };
+  return {
+    id: `prc-${i}`,
+    title: plan ? `${tier.name} with ${plan}` : `${tier.name}, ${hosting.name} only`,
+    lines: receiptLines(
+      receipt(input),
+      { tier: tier.name, plan, hostingName: hosting.name, years },
+      input,
+    ),
+  };
+});
+---
+
+<div class="prc">
+  <div class="prc-slips">
+    {slips.map((s) => (
+      <div class="rcpt-out prc-out">
+        <div class="rcpt-slot" aria-hidden="true" />
+        <div class="card rcpt-card" role="group" aria-labelledby={s.id}>
+          <p class="label" id={s.id}>
+            {s.title}
+          </p>
+          <dl class="rcpt-lines">
+            {s.lines.map((l) => (
+              <div class={`rcpt-line rl-${l.key}`}>
+                <dt>
+                  <b>{l.label}</b>
+                  {l.note && <span>{l.note}</span>}
+                </dt>
+                <dd>{l.amount}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="prc-foot">
+    {`From each tier's starting price. Prices as of ${pricesAsOf}. `}
+    <a href="/services/#costs">Work out your own on my prices page</a>
+  </p>
+</div>

@@ -368,9 +368,15 @@ const journal = defineCollection({
       // Display title for the entry and its listing card.
       title: z.string(),
 
+      // Optional shorter title for the <title> tag, when `title` plus
+      // " | Nixon Creative Studio" runs past 64 characters (tests/metadata.spec.ts).
+      // The page uses the full title when it fits.
+      metaTitle: z.string().max(40).optional(),
+
       // One-sentence pitch. Shown on the journal index card and used as
-      // the meta description and og:description on the detail page.
-      summary: z.string().max(200),
+      // the meta description and og:description on the detail page, so it is
+      // sized for search results: 110 to 160 characters.
+      summary: z.string().min(110).max(160),
 
       // Publish date. Drives ordering on /journal (newest first).
       published: z.date(),
@@ -386,6 +392,29 @@ const journal = defineCollection({
       // Optional tags for filtering and topical grouping. Free-form
       // strings; light-touch taxonomy.
       tags: z.array(z.string()).optional(),
+
+      // The cluster the post belongs to: drives the ink-fill chips on /journal and
+      // the label on its card. Labels live in src/data/journal.ts. Optional, so an
+      // unfiled post still builds (it shows under "All" only).
+      cluster: z
+        .enum(['costs', 'churches', 'schools', 'nonprofits', 'accessibility', 'lab'])
+        .optional(),
+
+      // The sector page the post's first end card deals: church -> /churches/ and
+      // so on. Optional; without it the end card points at /work/.
+      sector: z.enum(['church', 'school', 'nonprofit', 'small-business']).optional(),
+
+      // The short answer printed in a card at the top of the post: 2 to 4 plain
+      // sentences with a real number or range. Plain text, no markdown.
+      shortAnswer: z.string().min(40).max(600),
+
+      // A cost post: the short answer card also prints the receipt from /services
+      // (PostReceipt.astro), with the real numbers from src/data/pricing.ts.
+      receipt: z.boolean().default(false),
+
+      // One line saying what changed, printed in the "What changed" stamp on the
+      // byline. Only with `updated`: src/lib/journal.ts checks the pair.
+      changes: z.string().max(240).optional(),
 
       // Draft flag. Entries with draft:true don't appear in production
       // builds (the listing page filters them out). Use to stage posts

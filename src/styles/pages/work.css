@@ -1,4 +1,5 @@
 /* Work: large windows of the real sites, a sector filter, a list, and the index by job. */
+@import '../seg-bar.css';
 .vh {
   position: absolute;
   width: 1px;
@@ -24,140 +25,6 @@
   max-width: 90rem;
   margin: 0 auto;
   padding: 0 var(--gut) clamp(2rem, 6vh, 4rem);
-}
-
-/* The filter and the view switch sit in the same white capsule as the menu. */
-html:not(.js) .dw-bar {
-  display: none;
-}
-.dw-bar {
-  /* The label on the blue pill: white on --fill on either side. */
-  --pill-ink: #fff;
-  position: relative;
-  z-index: 20;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.1rem 0.35rem;
-  width: fit-content;
-  max-width: 100%;
-  padding: 0.3rem;
-  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
-  border-radius: 1.6rem;
-  background: var(--card);
-  box-shadow:
-    var(--rim),
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 14px 34px -14px rgba(0, 0, 0, 0.28);
-}
-.dw-seg {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.1rem;
-  min-width: 0;
-}
-.dw-seg[data-views] {
-  flex-wrap: nowrap;
-  margin-inline: 0.35rem;
-  border-radius: 99rem;
-  background: var(--well);
-}
-.dw-bar button {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  min-height: 2.75rem;
-  padding: 0 0.95rem;
-  border: 0;
-  border-radius: 99rem;
-  background: none;
-  color: var(--ink);
-  font: 500 0.9375rem/1 var(--body);
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    color 0.22s,
-    background 0.2s,
-    transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-.dw-bar button .n {
-  opacity: 0.72;
-  font-variant-numeric: tabular-nums;
-}
-.dw-bar button[aria-pressed='true'] {
-  color: var(--pill-ink);
-}
-/* While the ink blooms, the label under it stays ink on the card (see .dw-ink below). */
-.dw-bar button.inking {
-  color: var(--ink);
-}
-.dw-bar button[aria-pressed='true'] .n {
-  opacity: 0.82;
-}
-.dw-bar button:active {
-  transform: scale(0.96);
-}
-.dw-bar button:focus-visible {
-  outline-offset: -3px;
-  border-radius: 99rem;
-}
-.dw-bar button[aria-pressed='true']:focus-visible {
-  outline: 2px solid var(--pill-ink);
-}
-.dw-pill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  border-radius: 99rem;
-  background: var(--fill);
-  transition:
-    transform 0.55s cubic-bezier(0.3, 1.35, 0.5, 1),
-    width 0.55s cubic-bezier(0.3, 1.35, 0.5, 1);
-}
-.dw-status {
-  padding: 0 0.85rem 0 0.75rem;
-  color: var(--soft);
-  font-size: 0.9375rem;
-  line-height: 1.25;
-}
-.dw-more {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  padding: 0 0.85rem 0 0;
-  color: var(--ink);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  text-underline-offset: 0.2em;
-}
-.dw-more[hidden] {
-  display: none;
-}
-.dw-more:focus-visible {
-  outline-offset: -2px;
-}
-@media (min-width: 52rem) and (min-height: 38rem) {
-  .dw-bar {
-    position: sticky;
-    top: 0.75rem;
-  }
-}
-@media (forced-colors: active) {
-  .dw-bar button[aria-pressed='true'] {
-    outline: 2px solid Highlight;
-  }
-  .dw-pill {
-    display: none;
-  }
-  .dw-bar button[aria-pressed='true'] {
-    color: ButtonText;
-  }
 }
 
 /* The windows: the real desktop page at a size you can judge it, two across from a tablet up,
@@ -402,19 +269,6 @@ html:not(.js) .dw-grid,
   background: var(--screen);
 }
 @media (max-width: 52rem) {
-  .dw-bar button {
-    padding: 0 0.8rem;
-  }
-  .dw-seg[data-views] {
-    margin: 0.15rem 0 0.15rem 0.15rem;
-  }
-  .dw-status {
-    flex: 1 1 7rem;
-    padding: 0.2rem 0.4rem 0.2rem 0.55rem;
-  }
-  .dw-more {
-    padding: 0 0.8rem 0.1rem;
-  }
   .dw-rows {
     padding: 0.35rem;
   }
@@ -520,37 +374,6 @@ html:not(.js) .dw-bar {
 @media (min-width: 52rem) {
   .dw-grid.one .dw-mark {
     grid-column: 1/-1;
-  }
-}
-
-/* ---- The ink in a filter button. A press blooms a circle of the pill's blue from the pointer (the
-   centre for a keyboard), and the label inside the circle is a white copy, so every letter is ink
-   on the card or white on the blue the whole way through. Once the pill has slid in under it, it
-   goes. work.js draws it; under reduced motion it never starts. ---- */
-.dw-ink {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  padding: 0 0.95rem;
-  border-radius: inherit;
-  background: var(--fill);
-  color: var(--pill-ink);
-  pointer-events: none;
-}
-.dw-ink .n {
-  opacity: 0.82;
-}
-@media (max-width: 52rem) {
-  .dw-ink {
-    padding: 0 0.8rem;
-  }
-}
-@media (forced-colors: active) {
-  .dw-ink {
-    display: none;
   }
 }
 

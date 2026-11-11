@@ -17,6 +17,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 ## Where things live
 
 - Case studies and journal entries: MDX in `src/content/case-studies/` and `src/content/journal/`, schemas in `src/content.config.ts`. The Lab cards on /work (my own projects, never case studies): JSON in `src/content/lab/`, drawn by `src/components/LabStrip.astro`. A study's footage, captures and stills are in `public/assets/` under its slug (see `.claude/rules/content.md`).
+- Journal: posts follow the template and frontmatter in `.claude/rules/content.md` (`shortAnswer`, `cluster`, `receipt`, `updated` with `changes`); clusters and the pure helpers are in `src/lib/journal.ts`. Drafts never reach a production build, the RSS feed or a share card.
 - Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts` (the one place a price lives; pages, FAQ, JSON-LD and `/llms.txt` read it). The client list and deck order: `src/lib/clients.ts`. Sector pages and tier situations: `src/data/sector-pages.ts`. The /work index by job: `src/data/jobs.ts`. The five-year sums: `src/lib/tier-costs.ts`.
 - Page titles, meta descriptions and JSON-LD: `.claude/rules/content.md` ("Metadata and structured data").
 - Pages: `src/pages/`. The shared shell (head, top line, dock, client sheet, analytics, Coming Soon gate): `src/layouts/BaseLayout.astro`.

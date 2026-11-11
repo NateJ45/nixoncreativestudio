@@ -1,0 +1,751 @@
+/* ============================================================================
+   Journal: the index (a deck of post cards along a date rail, or a ruled list)
+   and the post page (short answer card, byline, contents rail, price-card
+   tables, two dealt end cards). Tokens only, from kit.css. The chips are the
+   /work bar (seg-bar.css); the "Updated" mark is the contact stamp (stamp.css).
+   ============================================================================ */
+@import '../seg-bar.css';
+@import '../stamp.css';
+
+/* ---------------------------------------------------------------------------
+   The index
+   --------------------------------------------------------------------------- */
+.jx {
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 var(--gut) clamp(3rem, 8vh, 5rem);
+}
+/* No script: no bar and no deck, the list is the page. */
+html:not(.js) .jx-deck {
+  display: none;
+}
+/* Until someone picks a view, the screen picks: the deck on a wide screen with motion allowed,
+   the list on a phone or under reduced motion. A pick (or ?view= in the address) sets data-view. */
+.jx[data-view='deck'] .jx-list,
+.jx[data-view='list'] .jx-deck,
+.jx:not([data-view]) .jx-deck {
+  display: none;
+}
+@media (min-width: 40rem) and (prefers-reduced-motion: no-preference) {
+  .js .jx:not([data-view]) .jx-deck {
+    display: grid;
+  }
+  .js .jx:not([data-view]) .jx-list {
+    display: none;
+  }
+}
+.jx-deck {
+  overflow-x: clip;
+}
+
+/* The deck: the newest post on top, the older ones stacked behind it and receding up the table.
+   journal.js sets each card's place (--k: 0 on top, 1 behind it...) and deals the top one away. */
+.jx-deck {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+@media (min-width: 52rem) {
+  .jx-deck {
+    grid-template-columns: 10rem minmax(0, 46rem);
+  }
+}
+.jx-pile {
+  position: relative;
+  display: grid;
+  margin: 0;
+  padding: 2.5rem 0 0;
+  list-style: none;
+}
+.jx-pile > li {
+  --k: 0;
+  grid-area: 1 / 1;
+  z-index: calc(20 - var(--k));
+  transform: translateY(calc(var(--k) * -0.9rem)) scale(calc(1 - var(--k) * 0.045))
+    rotate(calc(var(--k) * var(--tilt, 0deg)));
+  transform-origin: 50% 0;
+  transition: transform 0.6s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+.jx-pile > li[hidden] {
+  display: none;
+}
+/* Only the top three show; the rest wait under them. */
+.jx-pile > li.deep {
+  visibility: hidden;
+}
+/* A card dealt away: off to the left and down, then out of sight once it has gone. "Newer" brings
+   it back on the same path. */
+.jx-pile > li.away {
+  z-index: 30;
+  visibility: hidden;
+  transform: translate(-115%, 2rem) rotate(-9deg);
+  transition:
+    transform 0.45s cubic-bezier(0.5, 0, 0.75, 0.3),
+    visibility 0s 0.45s;
+}
+.jx-card {
+  --cardr: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+  min-height: 19rem;
+  padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1.5rem, 4vw, 3rem) clamp(2.5rem, 5vw, 3.25rem);
+  border-radius: var(--cardr);
+  align-content: start;
+}
+.jx-card .pip {
+  --pips: 1.25rem;
+  color: var(--soft);
+}
+.jx-card h2 {
+  margin: 0.5rem 0 0;
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  max-width: 22em;
+}
+.jx-card h2 a {
+  text-decoration: none;
+}
+.jx-card h2 a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+}
+/* The whole card is the link's target, so a tap anywhere on it reads the post. */
+.jx-card h2 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.jx-card h2 a:focus-visible {
+  outline: none;
+}
+.jx-card:has(h3 a:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.jx-card .label {
+  margin: 0;
+  padding-left: 1.75rem;
+}
+.jx-card p {
+  margin: 0;
+  max-width: 38rem;
+}
+.jx-card .jx-sum {
+  color: var(--soft);
+}
+.jx-card .jx-sa {
+  font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
+  line-height: 1.45;
+}
+.jx-read {
+  justify-self: start;
+  margin-top: 0.5rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+/* Behind the top card, only the edges read; their links are out of reach (journal.js sets inert). */
+.jx-pile > li:not(.on-top) .jx-card > :not(.pip) {
+  opacity: 0.35;
+}
+.jx-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 1.75rem;
+}
+.jx-ctl button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--card);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+  color: var(--ink);
+  font: 500 0.9375rem/1 var(--body);
+  cursor: pointer;
+}
+.jx-ctl button:disabled {
+  color: var(--soft);
+  cursor: default;
+}
+.jx-ctl button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.jx-ctl p {
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+
+/* The date rail: one tick a post down a hairline, the month beside it, the one on top filled. */
+.jx-rail {
+  position: relative;
+  margin: 2.5rem 0 0;
+  padding: 0 0 0 1.25rem;
+  list-style: none;
+}
+.jx-rail::before {
+  content: '';
+  position: absolute;
+  left: 0.3rem;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 1px;
+  background: var(--line);
+}
+.jx-rail li {
+  position: relative;
+  padding: 0.3rem 0;
+  color: var(--soft);
+}
+.jx-rail li[hidden] {
+  display: none;
+}
+.jx-rail li::before {
+  content: '';
+  position: absolute;
+  left: -1.25rem;
+  top: 0.62rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1.5px solid var(--soft);
+  border-radius: 50%;
+  background: var(--card);
+  transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.jx-rail li.now {
+  color: var(--ink);
+}
+.jx-rail li.now::before {
+  border-color: var(--accent);
+  background: var(--accent);
+  transform: scale(1.35);
+}
+.jx-rail .label {
+  color: inherit;
+}
+@media (max-width: 52rem) {
+  /* A narrow deck: the rail runs across the top instead. */
+  .jx-rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.25rem;
+    margin: 0;
+    padding: 0;
+  }
+  .jx-rail::before {
+    display: none;
+  }
+  .jx-rail li {
+    padding-left: 1.1rem;
+  }
+  .jx-rail li::before {
+    left: 0;
+  }
+}
+
+/* The list: ruled rows, as the journal always had, with the cluster and the short answer. */
+.jx-list .sub-rows {
+  max-width: 52rem;
+}
+.jx-list .sub-rows h2 a {
+  text-decoration: none;
+}
+.jx-list .sub-rows h2 a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+}
+.sub-rows li[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jx-pile > li,
+  .jx-pile > li.away,
+  .jx-rail li::before {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .jx-card {
+    border: 1px solid CanvasText;
+  }
+  .jx-rail li.now::before {
+    background: Highlight;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The post
+   --------------------------------------------------------------------------- */
+/* The contents pill floats above the dock, so focus and jump links stop clear of both. */
+html:has(.post-pill) {
+  scroll-padding-block: 72px 9rem;
+}
+.post-head {
+  padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
+}
+.post-head h1 {
+  max-width: 18em;
+  font-size: clamp(2.25rem, 4.6vw, 4.5rem);
+  line-height: 1.02;
+}
+.post-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+.post-crumbs li {
+  min-width: 0;
+}
+.post-crumbs li + li::before {
+  content: '/';
+  margin: 0 0.55rem;
+  color: var(--soft);
+}
+.post-crumbs a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+/* The page's own crumb is the H1 just below, so it keeps to one line. */
+.post-crumbs li:last-child {
+  flex: 1 1 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The byline: a small card with the portrait, who wrote it and when. */
+.post-by {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem 1rem;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+  padding: 0.75rem 1.25rem 0.75rem 0.75rem;
+  border-radius: 1.25rem;
+}
+.post-by-me {
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  background: var(--well);
+}
+.post-by-t {
+  min-width: 0;
+}
+.post-by-t p {
+  margin: 0;
+}
+.post-by-name {
+  font-weight: 600;
+}
+.post-by-name a {
+  text-underline-offset: 0.2em;
+}
+.post-by .label {
+  margin-top: 0.2rem;
+}
+.post-by-changes {
+  margin-top: 0.35rem !important;
+  max-width: 34rem;
+  font-size: 0.9375rem;
+}
+.post-stamp {
+  float: none;
+  flex: none;
+  margin: 0 0 0 0.5rem;
+}
+@media (max-width: 36rem) {
+  .post-by {
+    flex-wrap: wrap;
+  }
+  .post-by-t {
+    flex: 1 1 12rem;
+  }
+  .post-stamp {
+    margin: 0.25rem 0 0.25rem auto;
+  }
+}
+
+/* The reading column beside its contents. legal.css sets the two columns from 64rem. */
+.post-doc {
+  padding-top: 0;
+}
+@media (min-width: 64rem) {
+  .post-doc {
+    grid-template-columns: 15rem minmax(0, 44rem);
+  }
+}
+.post-main {
+  min-width: 0;
+}
+
+/* The short answer: the first card on the table. */
+.post-short {
+  --cardr: 1.5rem;
+  padding: clamp(1.4rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.25rem) clamp(1.5rem, 3vw, 2.25rem);
+  border-radius: var(--cardr);
+}
+.post-short h2.label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+}
+.post-sa {
+  margin: 0.6rem 0 0;
+  font-size: clamp(1.1875rem, 1.7vw, 1.375rem);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+/* The receipts inside it (PostReceipt.astro): two slips side by side when there is room. */
+.prc {
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  padding-top: clamp(1.25rem, 3vw, 1.5rem);
+  border-top: 1px solid var(--line);
+}
+.prc-slips {
+  display: grid;
+  gap: 1.5rem 1.25rem;
+}
+@media (min-width: 40rem) {
+  .prc-slips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.prc .rcpt-card {
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 10px 24px -14px rgba(0, 0, 0, 0.3);
+}
+.prc-foot {
+  margin: 1rem 0 0;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+.prc-foot a {
+  color: var(--ink);
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+
+/* The post's own words. */
+.post-prose {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.post-prose h2 {
+  margin: 2.75rem 0 0.75rem;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  scroll-margin-top: 5rem;
+}
+.post-prose h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  scroll-margin-top: 5rem;
+}
+.post-prose p,
+.post-prose ul,
+.post-prose ol {
+  margin: 0 0 1.1rem;
+}
+.post-prose blockquote {
+  margin: 1.5rem 0;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  border-left: 3px solid var(--accent);
+}
+
+/* Tables, as the price cards: a white card, the head in the label voice, ruled rows, numbers that
+   line up. journal-post.js wraps each one in .tbl; with no script the table scrolls by itself. */
+.post-prose .tbl,
+html:not(.js) .post-prose table {
+  margin: 1.75rem 0 0;
+  overflow-x: auto;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 12px 28px -16px rgba(0, 0, 0, 0.28);
+}
+html:not(.js) .post-prose table {
+  display: block;
+}
+.post-prose .tbl:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.post-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.post-prose th,
+.post-prose td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+.post-prose th {
+  font: 500 0.75rem/1.25 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--soft);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.post-prose th:first-child,
+.post-prose td:first-child {
+  padding-left: 1.25rem;
+}
+.post-prose th:last-child,
+.post-prose td:last-child {
+  padding-right: 1.25rem;
+}
+.post-prose td {
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 16%, transparent);
+}
+.post-prose tr:first-child td {
+  border-top: 0;
+}
+.post-prose td:first-child {
+  font-weight: 600;
+}
+.post-prose .tbl-src {
+  margin: 0.6rem 0 1.75rem 1.25rem;
+  color: var(--soft);
+  font-size: 0.875rem;
+}
+
+/* The contents: a sticky rail on a wide screen with a blue mark at the heading you are in. */
+.post-toc ol {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.post-toc a {
+  padding: 0.35rem 0 0.35rem 0.85rem;
+  min-height: 2.75rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  line-height: 1.3;
+}
+.post-toc a[aria-current] {
+  color: var(--ink);
+}
+.toc-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 0;
+  border-radius: 2px;
+  background: var(--accent);
+  transition:
+    transform 0.45s cubic-bezier(0.3, 1.35, 0.5, 1),
+    height 0.3s;
+}
+.toc-mark.jump {
+  transition: none;
+}
+@media (min-width: 64rem) {
+  .post-toc[popover] {
+    position: sticky;
+    top: 1.5rem;
+    inset: auto;
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: calc(100vh - 3rem);
+    margin: 0;
+    padding: 0.8rem 0 0;
+    overflow: auto;
+    border: 0;
+    border-top: 1px solid var(--line);
+    background: none;
+    color: inherit;
+  }
+  .post-pill {
+    display: none;
+  }
+}
+
+/* On a phone and a tablet: the list opens from a pill that sits above the dock, on the left. */
+@media (max-width: 63.99rem) {
+  .post-toc[popover] {
+    position: fixed;
+    inset: auto var(--gut) calc(max(0.9rem, env(safe-area-inset-bottom)) + 7.25rem) var(--gut);
+    width: auto;
+    max-width: 28rem;
+    max-height: min(60vh, 30rem);
+    margin: 0;
+    padding: 1rem 1rem 0.75rem;
+    overflow: auto;
+    border: 0;
+    border-radius: 1.25rem;
+    background: var(--card);
+    color: var(--ink);
+    box-shadow:
+      var(--rim),
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      0 34px 60px -24px rgba(0, 0, 0, 0.55);
+  }
+  .post-toc[popover]::backdrop {
+    background: var(--wash);
+  }
+  .post-toc p {
+    margin-bottom: 0.25rem;
+  }
+}
+.post-pill {
+  position: fixed;
+  left: var(--gut);
+  bottom: calc(max(0.9rem, env(safe-area-inset-bottom)) + 3.85rem);
+  z-index: 39;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 2 * var(--gut)));
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--dock);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 10px 24px -12px rgba(0, 0, 0, 0.3);
+  color: var(--ink);
+  font: 600 0.9375rem/1 var(--body);
+  cursor: pointer;
+}
+.post-pill-now {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--soft);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.post-pill-now:empty {
+  display: none;
+}
+
+/* The end: two cards dealt onto the table, a little turned, that straighten under a pointer. */
+.post-end {
+  margin-top: clamp(3rem, 7vh, 4.5rem);
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.post-end h2.label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.post-ends {
+  display: grid;
+  gap: 1.5rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 40rem) {
+  .post-ends {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.post-ends li {
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+.post-ends li:hover,
+.post-ends li:focus-within {
+  transform: rotate(0deg) translateY(-0.35rem);
+}
+.post-endcard {
+  --cardr: 1.5rem;
+  display: grid;
+  gap: 0.4rem;
+  min-height: 12rem;
+  align-content: center;
+  padding: 2.5rem 2.75rem;
+  border-radius: var(--cardr);
+  color: var(--ink);
+  text-decoration: none;
+}
+.post-endcard .pip {
+  --pips: 1.25rem;
+  color: var(--accent);
+}
+.post-endcard-t {
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.post-endcard:hover .post-endcard-t {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+}
+.post-endcard-n {
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+.post-endcard:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: var(--cardr);
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-ends li,
+  .toc-mark {
+    transition: none;
+  }
+}
+@media print {
+  .post-pill,
+  .post-toc,
+  .post-end {
+    display: none !important;
+  }
+}
+
+/* The pill is for the narrow layout only: on a wide screen the contents are the rail. */
+@media (min-width: 64rem) {
+  .post-pill {
+    display: none;
+  }
+}
