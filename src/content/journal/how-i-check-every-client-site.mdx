@@ -1,19 +1,11 @@
 ---
-# CONFIRM before publishing (set draft: false only after every line is checked):
-# - The dashboard ("studio status") is a Cloudflare Worker and checks every client site every 15 minutes.
-# - It tracks uptime, deploys, CI runs, Lighthouse scores, domain expiry, certificate expiry and backups.
-# - Phone alerts fire when a site goes down AND when it comes back, and were added in November 2026.
-# - The dashboard is behind a login (no public link in the post).
-# - Lighthouse scores and CI runs are tracked for every client site, or only some? Post says every site.
-# - Offer to clients: "ask me and I will send you a screenshot" of their site history. Happy to promise that?
-# - Backups check: does it confirm a backup ran, or only that one exists? Post says "whether last night's backup ran".
 title: 'How I check every client site every 15 minutes'
 metaTitle: 'How I check every client site'
 summary: 'A small dashboard of mine checks every client site every 15 minutes and alerts my phone if one goes down. What it watches, and what to ask your web person.'
 published: 2026-11-10
 cluster: lab
-shortAnswer: 'A small Cloudflare Worker I wrote checks every client site every 15 minutes: is it up, did the last deploy work, did the tests pass, how it scores in Lighthouse, when the domain and certificate expire, and whether backups ran. Since November 2026 it sends my phone an alert when a site goes down and again when it comes back.'
-draft: true
+shortAnswer: 'A small Cloudflare Worker I wrote checks every client site every 15 minutes: is it up, did the last deploy work, did the tests pass, how it scores in Lighthouse, when the domain expires, and whether the backup ran. Since November 2026 it sends my phone an alert when a site goes down and again when it comes back.'
+draft: false
 ---
 
 This post is for anyone who pays someone to look after a website: a church office, a school, a nonprofit, a small business. It explains how I keep an eye on the sites I look after, and gives you a short list of questions to ask whoever looks after yours. If you run your own site on a platform like Squarespace and are happy with it, the questions at the end still apply, just aimed at the platform instead of a person.
@@ -26,14 +18,14 @@ Six things, every 15 minutes, for every client site.
 
 I call it "studio status". It is a small [Cloudflare Worker](https://developers.cloudflare.com/workers/), which is a tiny program that runs on Cloudflare's network instead of on a server I have to keep alive. A [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/) wakes it up on a timetable, it runs its checks, and it writes the results to one page I can open on my phone. That page sits behind a login, because it lists every site I look after, so I cannot link to it here.
 
-| Check                  | What it asks                         | Why it matters to you                            |
-| ---------------------- | ------------------------------------ | ------------------------------------------------ |
-| Uptime                 | Does the home page load right now?   | Visitors, donors and parents see an error page   |
-| Deploys                | Did the last change go live cleanly? | A broken update can quietly break one page       |
-| CI runs                | Did the automated tests pass?        | Catches mistakes before they reach the live site |
-| Lighthouse             | How fast and accessible is the page? | Slow drift is easy to miss without a number      |
-| Domain and certificate | When do they expire?                 | An expired one takes the whole site offline      |
-| Backups                | Did last night's backup run?         | A backup you never checked is a guess            |
+| Check      | What it asks                         | Why it matters to you                            |
+| ---------- | ------------------------------------ | ------------------------------------------------ |
+| Uptime     | Does the home page load right now?   | Visitors, donors and parents see an error page   |
+| Deploys    | Did the last change go live cleanly? | A broken update can quietly break one page       |
+| CI runs    | Did the automated tests pass?        | Catches mistakes before they reach the live site |
+| Lighthouse | How fast and accessible is the page? | Slow drift is easy to miss without a number      |
+| Domain     | When does it expire?                 | An expired one takes the whole site offline      |
+| Backups    | Did the backup run?                  | A backup you never checked is a guess            |
 
 Sources: [Cloudflare Workers](https://developers.cloudflare.com/workers/), [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), [Lighthouse overview](https://developer.chrome.com/docs/lighthouse/overview), [Let's Encrypt FAQ on certificate lifetimes](https://letsencrypt.org/docs/faq/).
 
@@ -91,7 +83,7 @@ No. A free uptime checking service that emails or texts you is plenty for one si
 
 ## Can I see the dashboard?
 
-Not publicly. It lists every site I look after, so it stays behind a login. If you are a client and want to see your own site's history, ask me and I will send you a screenshot.
+Not publicly. It lists every site I look after, so it stays behind a login. If you're a client and want to see your site's history, ask me.
 
 ## Does monitoring stop a site going down?
 
