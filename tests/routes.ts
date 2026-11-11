@@ -4,9 +4,9 @@
 // out with prerender = false), so that is every page it has.
 //
 // One case study stands in for all of them (`/work/[slug]` share one template),
-// the same choice lighthouserc.json makes. `/journal/[slug]` builds no pages
-// until the first entry lands in src/content/journal; add one here when it
-// does. `/coming-soon` is the standalone gate page (its own HTML document, not
+// the same choice lighthouserc.json makes. Two journal posts stand in for
+// `/journal/[slug]`: the cost post (with the receipt in its short answer card)
+// and the rota post (without). `/coming-soon` is the standalone gate page (its own HTML document, not
 // BaseLayout) and is always live, so it is swept too.
 //
 // First Presbyterian Church of Orangeburg is swept as well: its title is the
@@ -30,6 +30,8 @@ export const routes = [
   '/small-business',
   '/one-page',
   '/journal',
+  '/journal/how-much-does-a-church-website-cost',
+  '/journal/church-av-rota-that-fills-its-own-gaps',
   '/photography',
   '/contact',
   '/colophon',

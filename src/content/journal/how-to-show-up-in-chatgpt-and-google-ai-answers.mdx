@@ -1,0 +1,113 @@
+---
+# CONFIRM before publishing (set draft: false only after every line is checked):
+# - "My own site publishes an llms.txt file" (the repo has src/pages/llms.txt.ts). Keep only if it ships live.
+# - "On the sites I build, I allow Googlebot and OAI-SearchBot in robots.txt": true for every client site?
+# - "I set up Search Console" on the sites you build: true for every site? Cut if not.
+# - Google's guide mentions a Search Console setting called "Search generative AI features" that a site must be included in. Open the guide on publish day and confirm the wording; drop the sentence if it has changed.
+# - All Google and OpenAI statements were read on their own pages on 2026-11-10. Re-check on publish day.
+title: 'How do I get my church to show up in ChatGPT and Google AI answers?'
+metaTitle: 'Showing up in ChatGPT and AI answers'
+summary: 'What Google and OpenAI actually say about appearing in AI Overviews, AI Mode and ChatGPT search, what is evidence, and what is still guesswork.'
+published: 2026-11-10
+cluster: churches
+sector: church
+shortAnswer: "Google says AI Overviews and AI Mode use its normal ranking systems and have no extra requirements: your pages must be indexed and allowed to show a snippet. It does not use llms.txt and needs no special schema. For ChatGPT search, allow OpenAI's OAI-SearchBot in robots.txt. After that, plain, first-hand pages about your church do the work."
+draft: true
+---
+
+This is for pastors, church office staff and volunteers who have heard that "people search with AI now" and are wondering whether the church website needs something new. It is also for anyone who has been sold an "AI optimization" package and wants to know what it is worth. If your church has no website yet, start with that; none of this works without one.
+
+I will be careful in this post to separate what Google and OpenAI say in their own documentation from what is still a guess. There is a lot of confident advice online. Very little of it comes with a source.
+
+## What does Google say about AI Overviews?
+
+They run on the same ranking as normal search, and there are no extra requirements.
+
+Google's page on [AI features and your website](https://developers.google.com/search/docs/appearance/ai-features) says there are no additional requirements to appear in AI Overviews or AI Mode, and no special optimization is needed. A page must be indexed and eligible to show in Google Search with a snippet. That is the same bar as a normal search result.
+
+Google's newer guide, [Optimizing your website for generative AI features](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), goes further. It says these features are built on Google's core ranking and quality systems, and that "AEO" and "GEO" are, from Google's point of view, just SEO. It describes two mechanisms: the AI pulls relevant pages from the search index to support its answer, and it runs several related searches behind the scenes (Google calls this query fan-out) to gather a wider set of links.
+
+The guide also says a site must be included in a Search Console setting for generative AI features to be eligible. If you have never set up [Search Console](https://search.google.com/search-console/about) for your church site, that is a good reason to do it now.
+
+## What does Google say you do not need?
+
+No llms.txt, no special schema, no chunking, no rewriting for AI.
+
+This is the part that saves churches money. The same guide is direct about it.
+
+| Common advice                      | What Google's guide says                          | Verdict               |
+| ---------------------------------- | ------------------------------------------------- | --------------------- |
+| Add an llms.txt file               | Google Search does not use it                     | Not needed for Google |
+| Add special AI schema              | No special schema.org markup for AI               | Not needed            |
+| Break pages into small chunks      | Systems can find the relevant part of a long page | Not needed            |
+| Rewrite for every phrasing         | AI understands synonyms and meaning               | Not needed            |
+| Get mentions placed around the web | Inauthentic mentions do not help                  | Do not pay for it     |
+| Keep normal structured data        | Still useful for rich results                     | Fine to keep          |
+
+Sources: [Google, Optimizing your website for generative AI features](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), [Google, AI features and your website](https://developers.google.com/search/docs/appearance/ai-features).
+
+One related change: Google stopped showing FAQ rich results in search. Its [FAQ structured data page](https://developers.google.com/search/docs/appearance/structured-data/faqpage) said the feature would no longer appear from May 7, 2026, and in June 2026 Google removed the documentation for it. If someone tells you FAQ markup will get your church into AI answers, ask them for a source.
+
+## What actually helps, according to Google?
+
+First-hand, specific content that nobody else could have written.
+
+The guide's main point is to create what it calls non-commodity content: pages with a real point of view, like first-hand experience, rather than summaries of what is already online. It warns that mass-producing pages for every variation of a search is against Google's spam policies.
+
+For a church, that is good news. Nobody else can write your pages. Here is what first-hand looks like on a church site:
+
+- Service times, with what a first Sunday is actually like: where to park, which door, what the kids do, how long it lasts.
+- A page per ministry, written by someone who runs it, with when and where it meets.
+- Your beliefs, in your own words, with a link to any confession or statement you hold to.
+- Staff and elders with a short real bio.
+- Sermons with a title, passage and a few lines of summary, not just an embedded video.
+- Your address, phone and a [Google Business Profile](https://www.google.com/business/) that matches the site. The guide mentions Business Profiles as one way local organizations appear in AI responses.
+
+None of that is new. It is what makes a church site good for people, and it turns out that is what Google says the AI features use too.
+
+## What about ChatGPT?
+
+Allow OpenAI's search crawler, OAI-SearchBot, in your robots.txt file.
+
+OpenAI's [crawler documentation](https://developers.openai.com/api/docs/bots) lists three user agents. OAI-SearchBot is the one used to surface websites in ChatGPT's search features, and OpenAI says sites that opt out of it will not appear in ChatGPT search answers, though they may still show up as plain navigation links. GPTBot is a separate crawler for training OpenAI's models. ChatGPT-User visits a page when a person asks ChatGPT to look at it.
+
+Each setting is independent. You can block GPTBot from using your content for training and still allow OAI-SearchBot, and OpenAI says blocking GPTBot does not affect search. Changes to robots.txt for search can take about 24 hours to apply.
+
+| Crawler         | What it is for                                  | My default for a church |
+| --------------- | ----------------------------------------------- | ----------------------- |
+| Googlebot       | Google Search, including AI Overviews           | Allow                   |
+| OAI-SearchBot   | ChatGPT search answers                          | Allow                   |
+| GPTBot          | Training OpenAI models                          | Your choice             |
+| Google-Extended | Google AI training and grounding outside Search | Your choice             |
+
+Sources: [OpenAI crawlers](https://developers.openai.com/api/docs/bots), [Google, AI features and your website](https://developers.google.com/search/docs/appearance/ai-features).
+
+Google's page notes that Google-Extended is the control for its other AI systems, and that Googlebot's robots.txt rules are what control Search. Blocking Google-Extended does not take you out of normal search.
+
+## What is still guesswork?
+
+How ChatGPT picks which sites to cite.
+
+OpenAI tells you how to let its crawler in. I could not find any OpenAI page that explains how ChatGPT search ranks or chooses sources, so anyone promising a method is guessing. The same goes for tools that claim to measure your "AI visibility" score. Google's guide specifically cautions against third-party tools that claim access to internal Google metrics, and points you to its own reporting in Search Console instead. Google's AI features page says traffic from AI features is counted in the normal Performance report under the Web search type.
+
+My honest reading: if your pages are clear, specific and easy to crawl, you have done what is in your control. Everything past that is marketing.
+
+## What I'd do
+
+I would check four things, in this order. Is the site in Google's index, with Search Console set up? Does robots.txt allow Googlebot and OAI-SearchBot? Do the core pages (service times, what to expect, beliefs, ministries, contact) say specific, first-hand things in plain words? Does your Google Business Profile match the site?
+
+On the sites I build, I allow Googlebot and OAI-SearchBot in robots.txt, and I set up Search Console. My own site also publishes an llms.txt file, because some other tools read one, but Google says it ignores it, so I would not pay anyone to make one for you.
+
+If your church site needs more than a tidy-up, my Launch tier is from $3,500, usually $3,500 to $6,000, with year one hosting included, and Signature is from $6,500, usually $6,500 to $11,000, for sites a staff or volunteer team runs. Hosting is $200 a year from year two. There is more on my [churches page](/churches/), or [get in touch](/contact/) and I will look at your robots.txt and core pages with you.
+
+## Should I block AI crawlers to protect sermons?
+
+That is a fair choice for training crawlers like GPTBot and Google-Extended. Blocking Googlebot or OAI-SearchBot would take you out of the answers you are trying to appear in, so think about which one you mean.
+
+## Will this bring more visitors?
+
+I cannot promise that, and nobody else can either. AI answers sometimes answer the question without a click. A clear site still helps the people who do click, and they are often the ones deciding whether to visit on Sunday.
+
+## Do I need to change my site every time AI changes?
+
+No. Google's own guidance is to keep doing good SEO and write useful pages. Check the two Google pages and the OpenAI page linked above once a year, because those are the sources that matter.

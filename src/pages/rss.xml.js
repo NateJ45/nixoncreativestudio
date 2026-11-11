@@ -3,7 +3,8 @@
    ============================================================================
    Foundation, edit with care. Exposes /rss.xml for feed readers.
 
-   Pulls every case study from the content collection, sorts newest first,
+   Pulls every case study and every published journal post (drafts never,
+   in a production build: the same filter as /journal), sorts newest first,
    and renders an Atom-flavored RSS 2.0 document. Each item links back to
    its detail page on the live site (so readers see the real article
    when they click, not a stripped-down feed-only view).
@@ -23,23 +24,33 @@ import { site } from '../data/site';
 export const prerender = true;
 
 export async function GET(context) {
-  const entries = (await getCollection('case-studies')).sort(
-    (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
-  );
+  const studies = (await getCollection('case-studies')).map((entry) => ({
+    title: entry.data.title,
+    pubDate: entry.data.published,
+    description: entry.data.summary,
+    // categories double as a hint for filtering in some feed readers.
+    categories: [entry.data.sector, ...entry.data.services],
+    link: `/work/${entry.id}/`,
+  }));
+  const posts = (
+    await getCollection('journal', ({ data }) =>
+      import.meta.env.PROD ? data.draft !== true : true,
+    )
+  ).map((entry) => ({
+    title: entry.data.title,
+    pubDate: entry.data.published,
+    description: entry.data.summary,
+    categories: ['journal', ...(entry.data.cluster ? [entry.data.cluster] : [])],
+    link: `/journal/${entry.id}/`,
+  }));
+  const items = [...studies, ...posts].sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
 
   return rss({
-    title: `${site.studioName}: Case Studies`,
+    title: `${site.studioName}: Work and Journal`,
     description: site.tagline,
     site: context.site ?? site.url,
 
-    items: entries.map((entry) => ({
-      title: entry.data.title,
-      pubDate: entry.data.published,
-      description: entry.data.summary,
-      // categories double as a hint for filtering in some feed readers.
-      categories: [entry.data.sector, ...entry.data.services],
-      link: `/work/${entry.id}/`,
-    })),
+    items,
 
     customData: '<language>en-us</language>',
   });

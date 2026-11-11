@@ -1,0 +1,98 @@
+---
+# CONFIRM before publishing (set draft: false only after every line is checked):
+# - The dashboard ("studio status") is a Cloudflare Worker and checks every client site every 15 minutes.
+# - It tracks uptime, deploys, CI runs, Lighthouse scores, domain expiry, certificate expiry and backups.
+# - Phone alerts fire when a site goes down AND when it comes back, and were added in November 2026.
+# - The dashboard is behind a login (no public link in the post).
+# - Lighthouse scores and CI runs are tracked for every client site, or only some? Post says every site.
+# - Offer to clients: "ask me and I will send you a screenshot" of their site history. Happy to promise that?
+# - Backups check: does it confirm a backup ran, or only that one exists? Post says "whether last night's backup ran".
+title: 'How I check every client site every 15 minutes'
+metaTitle: 'How I check every client site'
+summary: 'A small dashboard of mine checks every client site every 15 minutes and alerts my phone if one goes down. What it watches, and what to ask your web person.'
+published: 2026-11-10
+cluster: lab
+shortAnswer: 'A small Cloudflare Worker I wrote checks every client site every 15 minutes: is it up, did the last deploy work, did the tests pass, how it scores in Lighthouse, when the domain and certificate expire, and whether backups ran. Since November 2026 it sends my phone an alert when a site goes down and again when it comes back.'
+draft: true
+---
+
+This post is for anyone who pays someone to look after a website: a church office, a school, a nonprofit, a small business. It explains how I keep an eye on the sites I look after, and gives you a short list of questions to ask whoever looks after yours. If you run your own site on a platform like Squarespace and are happy with it, the questions at the end still apply, just aimed at the platform instead of a person.
+
+The short version: if your site goes down, I should know before you do. Ideally I have already fixed it before anyone notices.
+
+## What does the dashboard actually check?
+
+Six things, every 15 minutes, for every client site.
+
+I call it "studio status". It is a small [Cloudflare Worker](https://developers.cloudflare.com/workers/), which is a tiny program that runs on Cloudflare's network instead of on a server I have to keep alive. A [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/) wakes it up on a timetable, it runs its checks, and it writes the results to one page I can open on my phone. That page sits behind a login, because it lists every site I look after, so I cannot link to it here.
+
+| Check                  | What it asks                         | Why it matters to you                            |
+| ---------------------- | ------------------------------------ | ------------------------------------------------ |
+| Uptime                 | Does the home page load right now?   | Visitors, donors and parents see an error page   |
+| Deploys                | Did the last change go live cleanly? | A broken update can quietly break one page       |
+| CI runs                | Did the automated tests pass?        | Catches mistakes before they reach the live site |
+| Lighthouse             | How fast and accessible is the page? | Slow drift is easy to miss without a number      |
+| Domain and certificate | When do they expire?                 | An expired one takes the whole site offline      |
+| Backups                | Did last night's backup run?         | A backup you never checked is a guess            |
+
+Sources: [Cloudflare Workers](https://developers.cloudflare.com/workers/), [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/), [Lighthouse overview](https://developer.chrome.com/docs/lighthouse/overview), [Let's Encrypt FAQ on certificate lifetimes](https://letsencrypt.org/docs/faq/).
+
+### Why check the boring things?
+
+Because the boring things are what take sites down. A site rarely breaks in a dramatic way. More often a domain renewal fails because the card on file expired, or a security certificate does not renew. [Let's Encrypt](https://letsencrypt.org/docs/faq/), a widely used free certificate authority, makes its default certificates last 90 days. That is a good thing for security, and it also means renewal has to happen automatically and someone has to notice if it does not.
+
+Lighthouse is Google's free tool that scores a page for performance, accessibility, best practices and SEO. One score on launch day tells you very little. A score tracked over months tells you when an extra script or a huge photo has started to slow things down.
+
+## What happens when a site goes down?
+
+My phone gets an alert, and it gets another one when the site comes back.
+
+I added phone alerts in November 2026. Before that, the dashboard showed a red row and I had to look at it. Now it comes to me. The "it is back" message matters as much as the "it is down" one. It tells me whether a blip fixed itself in a few minutes or whether I need to drop what I am doing.
+
+I first built this kind of alert for something much less serious: the Minecraft server my family plays on. I wrote about that in [the Minecraft post](/journal/minecraft-server-for-my-family-and-your-website/). Once it worked for a block world, pointing it at real websites was an easy step.
+
+### Is every 15 minutes often enough?
+
+For most church, school, nonprofit and small business sites, yes. A site that drops out for five minutes and comes back on its own is often gone before anyone could act anyway. What you want to avoid is the outage nobody notices for a whole weekend, and a check every 15 minutes rules that out.
+
+## What should you ask your web person?
+
+Ask who finds out first when the site breaks, and how.
+
+You do not need to understand the technical side to ask good questions. You only need honest answers. Here is the list I would hand to a church treasurer or a school office manager.
+
+| Question to ask                                           | A good answer sounds like                               |
+| --------------------------------------------------------- | ------------------------------------------------------- |
+| How will you know if my site goes down?                   | An automatic check, a named interval, alerts to a phone |
+| When do my domain and certificate expire?                 | Exact dates, and who renews them                        |
+| Where are the backups, and when did you last restore one? | A place, a schedule, and a date of a real test          |
+| What happens if an update breaks something?               | Changes are tested first, and can be rolled back        |
+| If you disappear, can someone else take over?             | The code, content and notes go with you if you leave    |
+
+Sources: [Let's Encrypt FAQ](https://letsencrypt.org/docs/faq/) for certificate renewal, and my own [Hosting and care plans](/services/) for the backup and restore terms I offer.
+
+If the answer to the first question is "you will email me", that is not monitoring. That is you doing the monitoring for free.
+
+### What about the last question?
+
+It is the one people forget. A good setup does not depend on one person's memory or one person's inbox. Whoever looks after your site should be able to hand the code, the content and the notes to someone else if you ever need them to.
+
+## What I'd do
+
+If you are a client of mine, you do not need to do anything. Every live site on my [Hosting plan](/services/) gets a check every 15 minutes that the site is up, daily backups, security updates, and domain and certificate renewals handled, for $200 a year from year two. Year one hosting is included in every build. If you want me to make changes for you each month, the care plans sit on top of that, and Care includes a yearly test that a backup actually restores. And if you ever move on, the code, content and documentation go with you.
+
+If you are not a client, take the questions above to whoever looks after your site this week. Write the domain and certificate expiry dates on the church or school calendar. Ask when a backup was last restored, not just taken. If you get vague answers, that is useful to know too.
+
+And if you would like a second opinion on how your site is looked after, [get in touch](/contact/). I am happy to have a look.
+
+## Do I need a dashboard like this for one site?
+
+No. A free uptime checking service that emails or texts you is plenty for one site. The dashboard earns its keep because I look after many sites and want one page that shows all of them.
+
+## Can I see the dashboard?
+
+Not publicly. It lists every site I look after, so it stays behind a login. If you are a client and want to see your own site's history, ask me and I will send you a screenshot.
+
+## Does monitoring stop a site going down?
+
+No. It shortens how long it stays down. Good hosting, tested updates and automatic renewals stop most outages. Monitoring catches the rest quickly.

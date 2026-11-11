@@ -324,24 +324,28 @@ function readTitle(file) {
 function collectionEntries(dir, prefix) {
   const base = resolve(projectRoot, dir);
   if (!existsSync(base)) return [];
-  return readdirSync(base)
-    .filter((f) => f.endsWith('.mdx'))
-    .map((f) => {
-      const slug = f.replace(/\.mdx$/, '');
-      const title = readTitle(join(base, f)) ?? slug;
-      const entry = { route: `${prefix}/${slug}`, title };
-      // Case study covers (real hero screenshots) drive the cover OG card.
-      if (prefix === 'work') {
-        for (const ext of ['png', 'jpg', 'jpeg', 'webp']) {
-          const c = resolve(projectRoot, 'src/assets/case-studies', `${slug}.${ext}`);
-          if (existsSync(c)) {
-            entry.cover = c;
-            break;
+  return (
+    readdirSync(base)
+      .filter((f) => f.endsWith('.mdx'))
+      // A draft journal post gets no card: public/og/ ships, and a draft's title is not public yet.
+      .filter((f) => !/^draft:\s*true/m.test(readFileSync(join(base, f), 'utf8')))
+      .map((f) => {
+        const slug = f.replace(/\.mdx$/, '');
+        const title = readTitle(join(base, f)) ?? slug;
+        const entry = { route: `${prefix}/${slug}`, title };
+        // Case study covers (real hero screenshots) drive the cover OG card.
+        if (prefix === 'work') {
+          for (const ext of ['png', 'jpg', 'jpeg', 'webp']) {
+            const c = resolve(projectRoot, 'src/assets/case-studies', `${slug}.${ext}`);
+            if (existsSync(c)) {
+              entry.cover = c;
+              break;
+            }
           }
         }
-      }
-      return entry;
-    });
+        return entry;
+      })
+  );
 }
 
 // --- Pages -----------------------------------------------------------------

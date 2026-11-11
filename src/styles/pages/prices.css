@@ -2248,54 +2248,6 @@ html:not(.js) .rcpt,
   background: currentColor;
 }
 
-/* The receipt itself: a white card, ruled like a till slip, with the total under a solid rule. */
-.rcpt-card {
-  padding: 1.25rem clamp(1.1rem, 2vw, 1.5rem) 1.1rem;
-}
-.rcpt-lines {
-  margin: 0.6rem 0 0;
-}
-.rcpt-line {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.2rem 1rem;
-  align-items: baseline;
-  padding: 0.7rem 0;
-  border-top: 1px dashed color-mix(in srgb, var(--ink) 22%, transparent);
-  /* A line that changes feeds back in from just above, so its text is clipped to the line while it moves. */
-  overflow: hidden;
-}
-.rcpt-line dt b {
-  display: block;
-  font-weight: 600;
-}
-.rcpt-line dt span {
-  display: block;
-  margin-top: 0.1rem;
-  color: var(--soft);
-  font-size: 0.9375rem;
-  line-height: 1.35;
-}
-.rcpt-line dd {
-  margin: 0;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-.rcpt-line.rl-total {
-  margin-top: 0.15rem;
-  border-top: 2px solid var(--ink);
-}
-.rcpt-line.rl-total dd {
-  font-size: clamp(1.375rem, 2vw, 1.625rem);
-  letter-spacing: -0.02em;
-}
-.rcpt-foot {
-  margin-top: 0.5rem;
-  color: var(--soft);
-  font-size: 0.875rem;
-}
-
 /* ---------------------------------------------------------------------------
    Life in weeks, in the care section (ClientWeeks.astro). One ruled row per
    client, one dot per week since the build began, ink where the week had
@@ -2490,45 +2442,6 @@ html:not(.js) .rcpt,
   }
 }
 
-/* ---------------------------------------------------------------------------
-   The printer slot (LiveReceipt.astro, prices.js). The receipt hangs from a drawn
-   slot, a little narrower than it, and prices.js clips the card along its bottom
-   edge while it feeds. At rest nothing is clipped. The slot is decoration.
-   --------------------------------------------------------------------------- */
-.rcpt-slot {
-  position: relative;
-  z-index: 1;
-  height: 0.875rem;
-  border-radius: 99rem;
-  background: var(--ink);
-}
-.rcpt-slot::after {
-  content: '';
-  position: absolute;
-  left: 0.9rem;
-  right: 0.9rem;
-  top: calc(50% - 1px);
-  height: 2px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--ground) 45%, transparent);
-}
-.rcpt-out .rcpt-card {
-  margin: -0.4375rem 0.875rem 0;
-  padding-top: 1.5rem;
-  border-radius: 0 0 0.75rem 0.75rem;
-}
-.rcpt-card:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
-}
-/* Waiting below the screen: only the heading is out. prices.js prints the rest as it arrives. */
-.rcpt-card.rcpt-wait {
-  clip-path: inset(-3rem -3rem calc(100% - 2.55rem) -3rem);
-}
-/* Reduced motion's answer to the feed: a changed line is tinted for a moment. */
-.rcpt-line.fresh {
-  background: color-mix(in srgb, var(--fill) 12%, transparent);
-}
 @media print {
   .rcpt-card {
     clip-path: none !important;
