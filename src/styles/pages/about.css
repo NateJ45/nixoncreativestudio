@@ -516,8 +516,12 @@ html:not(.js) .ps:is(:hover, :focus-within) .ps-pile {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 10;
+  /* 4:3, not wider: both photos are portrait, and a wider frame cannot
+     hold every head in the family photo. 45% keeps the three faces in
+     the picnic shot and both in the riverfront one. */
+  aspect-ratio: 4 / 3;
   object-fit: cover;
+  object-position: 50% 45%;
   border-radius: 0.9rem;
 }
 .otc-turn {
