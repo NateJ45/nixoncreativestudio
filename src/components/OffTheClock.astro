@@ -13,7 +13,7 @@ import type { ImageMetadata } from 'astro';
 import { journalPath, photoCount } from '../data/nav';
 import { photographyOpen } from '../data/photography-gate';
 import picnic from '../assets/about/family-picnic.jpg';
-import riverfront from '../assets/about/running-riverfront.jpg';
+import raceBibs from '../assets/about/running-race-bibs.jpg';
 
 interface Card {
   id: string;
@@ -23,7 +23,8 @@ interface Card {
   title: string;
   line: string;
   back: string;
-  photo?: { src: ImageMetadata; alt: string };
+  /** `position` overrides the crop focus (object-position) for a photo that needs it. */
+  photo?: { src: ImageMetadata; alt: string; position?: string };
   link?: { href: string; text: string } | null;
 }
 
@@ -73,8 +74,10 @@ const cards: Card[] = [
     line: 'Long runs, and a race now and then.',
     back: 'Mostly long runs around Cincinnati, and now and then I pin on a number for a local race.',
     photo: {
-      src: riverfront,
-      alt: 'Nathan and a friend by the Ohio River before a race, the Cincinnati skyline behind them.',
+      src: raceBibs,
+      alt: 'Nathan and a friend in race bibs before a local race.',
+      // Taller frame than the others: 30% keeps both heads in the 4:3 crop.
+      position: '50% 30%',
     },
     link: null,
   },
@@ -124,6 +127,7 @@ const cards: Card[] = [
                 class="otc-ph"
                 src={c.photo.src}
                 alt={c.photo.alt}
+                style={c.photo.position ? `object-position: ${c.photo.position}` : undefined}
                 widths={[360, 720]}
                 sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 18rem"
                 loading="lazy"
