@@ -1,0 +1,255 @@
+---
+/* The Lab, on /work under the client work: things I built for my own people (my church, my family,
+   my own desk). Each card is the same shape as a client window but on the back of the card, the
+   cobalt of the dark side, in both themes, so it reads as its own kind of card and never as a case
+   study. The entries are src/content/lab/*.json; they have no page, no sitemap entry and are never
+   counted with the client work.
+
+   On its front each card holds a small working demo on made-up data, run by a real button
+   (src/scripts/lab.js). "Turn it over" turns the card, with the same turn as the light and dark
+   switch (the page-out and page-in keyframes in kit.css), to the problem, the stack and "Read how
+   I built it". That link only shows when the journal entry exists and is not a draft, so a post
+   that is not out yet hides it by itself.
+
+   No script: both sides print one under the other and the demos sit in their first state. Reduced
+   motion: each demo shows its end state with a Replay button, and the card turns with no motion. */
+import { getCollection } from 'astro:content';
+import '../styles/pages/lab.css';
+
+const entries = (await getCollection('lab')).sort((a, b) => a.data.order - b.data.order);
+const posts = await getCollection('journal');
+const live = new Set(posts.filter((p) => p.data.draft !== true).map((p) => p.id));
+const n = entries.length;
+const pad = (v: number) => String(v).padStart(2, '0');
+
+const cards = entries.map((e, i) => ({
+  ...e.data,
+  id: e.id,
+  place: `Lab ${pad(i + 1)} / ${pad(n)}`,
+  storyHref: e.data.story && live.has(e.data.story) ? `/journal/${e.data.story}/` : undefined,
+}));
+
+/* The made-up rota: five Sundays, three jobs. A gap is { fill } (the name the rota finds) or
+   { open: true } (nobody free, so it stays a gap and the rota asks for help). One filled slot
+   carries a swap. */
+type Slot = string | { fill: string } | { open: true } | { name: string; swap: string };
+const ROLES = ['Sound', 'Slides', 'Stream'];
+const ROTA: { day: string; slots: Slot[] }[] = [
+  { day: 'Jan 4', slots: ['Ana', 'Ben', { name: 'Cal', swap: 'Eli' }] },
+  { day: 'Jan 11', slots: [{ fill: 'Dee' }, 'Faye', { fill: 'Gus' }] },
+  { day: 'Jan 18', slots: ['Hana', { fill: 'Ivy' }, 'Jon'] },
+  { day: 'Jan 25', slots: [{ fill: 'Ben' }, 'Ana', { open: true }] },
+  { day: 'Feb 1', slots: ['Eli', { fill: 'Cal' }, 'Dee'] },
+];
+const gaps = ROTA.flatMap((r) => r.slots).filter((s) => typeof s === 'object' && !('name' in s));
+
+/* The made-up sites for the check. The second one goes down and comes back. */
+const SITES = [
+  'Grace Chapel',
+  'Oak Street Preschool',
+  'Riverside Food Bank',
+  'Hillcrest Academy',
+  'Maple Lane Bakery',
+  'Cedar Point Church',
+  'Northside Youth Club',
+  'Willow Run Trust',
+];
+const DOWN = 1;
+
+const RUN: Record<string, string> = {
+  rota: 'Fill the gaps',
+  status: 'Run a check',
+  console: 'Refresh the console',
+};
+const URL_LINE: Record<string, string> = {
+  rota: 'AV rota · demo, made-up names',
+  status: 'Site check · demo, made-up sites',
+  console: 'Desk console · demo, made-up data',
+};
+---
+
+<section class="sec tight lab" id="lab" aria-labelledby="lab-h">
+  <div class="wrap">
+    <div class="lab-head">
+      <p class="label">Lab · Built for my own people</p>
+      <h2 id="lab-h">The lab</h2>
+      <p>Client work pays the bills. These I built for my church, my family and my own desk.</p>
+    </div>
+    <ul class="lab-grid">
+      {cards.map((c) => (
+        <li class="lab-item">
+          <p class="dw-mark" aria-hidden="true">
+            <span>{c.place}</span>
+            <span class="dw-ruler" />
+            <span>Made-up data</span>
+          </p>
+          <div class="lab-card" data-lab={c.demo} data-side="front">
+            <div class="lab-face lab-front" data-lab-face="front">
+              <p class="lab-top" aria-hidden="true">
+                <span>{URL_LINE[c.demo]}</span>
+              </p>
+              <div
+                class="lab-scr"
+                role="group"
+                aria-label={`Demo with made-up data: ${c.title}`}
+                data-lab-scr
+              >
+                {c.demo === 'rota' && (
+                  <div class="lr" data-rota>
+                    <p class="lr-head">
+                      <span class="label">Five Sundays</span>
+                      <span class="lr-count">
+                        <b data-lab-count>{gaps.length}</b> <span data-lab-word>gaps</span>
+                      </span>
+                    </p>
+                    <table class="lr-t">
+                      <caption class="vh">A made-up AV rota for five Sundays</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Sunday</th>
+                          {ROLES.map((r) => (
+                            <th scope="col">{r}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ROTA.map((row) => (
+                          <tr>
+                            <th scope="row">{row.day}</th>
+                            {row.slots.map((s) =>
+                              typeof s === 'string' ? (
+                                <td>
+                                  <span class="lr-n">{s}</span>
+                                </td>
+                              ) : 'name' in s ? (
+                                <td data-lab-swap={s.swap} data-lab-was={s.name}>
+                                  <span class="lr-n">{s.name}</span>
+                                </td>
+                              ) : 'fill' in s ? (
+                                <td class="gap" data-lab-fill={s.fill}>
+                                  <span class="lr-n">Gap</span>
+                                </td>
+                              ) : (
+                                <td class="gap" data-lab-open>
+                                  <span class="lr-n">Gap</span>
+                                </td>
+                              ),
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <p class="lr-ping" data-lab-ping aria-hidden="true" hidden>
+                      Swap sent: Cal to Eli, Jan 4
+                    </p>
+                  </div>
+                )}
+                {c.demo === 'status' && (
+                  <div class="ls" data-lab-status-demo>
+                    <div class="ls-alert" data-lab-alert aria-hidden="true">
+                      <span class="label">My phone</span>
+                      <p data-lab-alert-t>No alerts</p>
+                    </div>
+                    <ul class="ls-sites">
+                      {SITES.map((s, i) => (
+                        <li data-lab-site data-lab-down={i === DOWN ? '' : undefined}>
+                          <span class="ls-dot" aria-hidden="true" />
+                          <span class="ls-name">{s}</span>
+                          <span class="ls-st" data-lab-st>
+                            Not checked
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {c.demo === 'console' && (
+                  <div class="lc" data-console>
+                    <div class="lc-p lc-use">
+                      <p class="label">AI usage this week</p>
+                      <p class="lc-big">
+                        <span data-lab-pct>62</span>%
+                      </p>
+                      <span class="lc-bar" aria-hidden="true">
+                        <i data-lab-meter style="--v:0.62" />
+                      </span>
+                      <p class="lc-soft">Resets Monday</p>
+                    </div>
+                    <div class="lc-p">
+                      <p class="label">Next up</p>
+                      <ul class="lc-list" data-lab-lines>
+                        <li>
+                          <b>10:30</b> Call about a school site
+                        </li>
+                        <li>
+                          <b>2:00</b> Edit Sunday's photos
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="lc-p lc-sun">
+                      <p class="label">This Sunday</p>
+                      <dl class="lc-rota" data-lab-lines>
+                        <div>
+                          <dt>Sound</dt>
+                          <dd>Ben</dd>
+                        </div>
+                        <div>
+                          <dt>Slides</dt>
+                          <dd>Ivy</dd>
+                        </div>
+                        <div>
+                          <dt>Stream</dt>
+                          <dd>Gus</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div class="lab-ctl">
+                <button type="button" class="lab-run" data-lab-run data-label={RUN[c.demo]}>
+                  {RUN[c.demo]}
+                </button>
+                <button type="button" class="lab-turn" data-lab-turn>
+                  Turn it over<span class="vh">: about {c.title}</span>
+                </button>
+              </div>
+              <p class="vh" role="status" data-lab-say />
+            </div>
+            <div class="lab-face lab-back" data-lab-face="back">
+              <p class="label">The problem</p>
+              <p class="lab-say">{c.problem}</p>
+              <p class="label">What I built</p>
+              <p class="lab-say">{c.built}</p>
+              <p class="label">Made with</p>
+              <ul class="lab-stack">
+                {c.stack.map((s) => (
+                  <li>{s}</li>
+                ))}
+              </ul>
+              <div class="lab-ctl">
+                {c.storyHref && (
+                  <a class="lab-story" href={c.storyHref}>
+                    Read how I built it<span class="vh">: {c.title}</span>
+                  </a>
+                )}
+                <button type="button" class="lab-turn" data-lab-turn>
+                  Turn back<span class="vh"> to the demo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="dw-note">
+            <h3>{c.title}</h3>
+            <p class="label">{c.label}</p>
+            <p class="dw-out">{c.outcome}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<script>
+  import '../scripts/lab.js';
+</script>

@@ -16,7 +16,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 
 ## Where things live
 
-- Case studies and journal entries: MDX in `src/content/case-studies/` and `src/content/journal/`, schemas in `src/content.config.ts`. A study's footage, captures and stills are in `public/assets/` under its slug (see `.claude/rules/content.md`).
+- Case studies and journal entries: MDX in `src/content/case-studies/` and `src/content/journal/`, schemas in `src/content.config.ts`. The Lab cards on /work (my own projects, never case studies): JSON in `src/content/lab/`, drawn by `src/components/LabStrip.astro`. A study's footage, captures and stills are in `public/assets/` under its slug (see `.claude/rules/content.md`).
 - Contact and identity values: `src/data/site.ts`. Pricing tiers: `src/data/pricing.ts` (the one place a price lives; pages, FAQ, JSON-LD and `/llms.txt` read it). The client list and deck order: `src/lib/clients.ts`. Sector pages and tier situations: `src/data/sector-pages.ts`. The /work index by job: `src/data/jobs.ts`. The five-year sums: `src/lib/tier-costs.ts`.
 - Page titles, meta descriptions and JSON-LD: `.claude/rules/content.md` ("Metadata and structured data").
 - Pages: `src/pages/`. The shared shell (head, top line, dock, client sheet, analytics, Coming Soon gate): `src/layouts/BaseLayout.astro`.
@@ -80,7 +80,7 @@ Business context, decisions and the Work log live in `_vault/clients/nixon-creat
 Path-scoped rules (load automatically when you touch matching files):
 
 - `.claude/rules/homepage-and-pages.md`: the routes and what each page is made of (`src/pages`, `src/scripts`).
-- `.claude/rules/content.md`: site data, `mailto` fallback, gated links, the three collections, the case study body shape, retire-or-add checklist, routes table, metadata (`src/content`, `src/data`, `src/pages`).
+- `.claude/rules/content.md`: site data, `mailto` fallback, gated links, the four collections (case studies, journal, photos, lab), the case study body shape, retire-or-add checklist, routes table, metadata (`src/content`, `src/data`, `src/pages`).
 - `.claude/rules/styling.md`: `kit.css`, per-page CSS, tokens, the deck, big lines, color rules, motion (`src/styles`, `src/scripts`).
 - `.claude/rules/components.md`: the components, the study blocks, `src/lib` helpers, code conventions, images.
 - `.claude/rules/accessibility.md`: AA target, required patterns, token contrast, before-merging checks.
