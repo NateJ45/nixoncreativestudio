@@ -432,20 +432,20 @@ function enter(q, dir) {
   q.style.opacity = 0;
   requestAnimationFrame(f);
 }
-/* Funnel events: form_start on the first answer, form_step each time a new question is reached
+/* Funnel events: inquiry_start on the first answer, inquiry_step each time a new question is reached
    going forward, so GA4 shows where people stop. Step names are the fixed data-step keys. */
 var started = false,
   furthest = 0;
 function noteStart() {
   if (started) return;
   started = true;
-  track('form_start', { form: 'contact' });
+  track('inquiry_start', { form: 'contact' });
 }
 function show(i, dir, noFocus) {
   steps[cur].classList.remove('on');
   if (dir > 0 && i > furthest) {
     furthest = i;
-    track('form_step', {
+    track('inquiry_step', {
       form: 'contact',
       step_number: i + 1,
       step_name: i === checkAt ? 'check' : steps[i].dataset.step || 'step',
@@ -783,7 +783,7 @@ form.addEventListener('submit', function (e) {
     .then(function (res) {
       if (!res.ok) {
         errorEl.hidden = false;
-        track('form_error', { form: 'contact', error_type: 'http-' + res.status });
+        track('inquiry_error', { form: 'contact', error_type: 'http-' + res.status });
         return;
       }
       clearDraft();
@@ -794,7 +794,7 @@ form.addEventListener('submit', function (e) {
     })
     .catch(function () {
       errorEl.hidden = false;
-      track('form_error', { form: 'contact', error_type: 'network' });
+      track('inquiry_error', { form: 'contact', error_type: 'network' });
     })
     .then(function () {
       send.disabled = false;

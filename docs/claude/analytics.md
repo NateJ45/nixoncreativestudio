@@ -44,9 +44,9 @@ browsers):
 | Event               | When                                                 | Parameters                                                                                                                                    |
 | ------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `generate_lead`     | the contact form went through (key event)            | `lead_source`, `landing_page`, `org_type`, `budget`, `timeline`, `heard_from`, `runs`, `value` + `currency` (floor of the chosen budget band) |
-| `form_start`        | first answer typed or picked                         | `form`                                                                                                                                        |
-| `form_step`         | a question reached going forward                     | `step_number`, `step_name`                                                                                                                    |
-| `form_error`        | a send failed                                        | `error_type`                                                                                                                                  |
+| `inquiry_start`     | first answer typed or picked                         | `form`                                                                                                                                        |
+| `inquiry_step`      | a question reached going forward                     | `step_number`, `step_name`                                                                                                                    |
+| `inquiry_error`     | a send failed                                        | `error_type`                                                                                                                                  |
 | `contact_click`     | a mailto, sms or tel link, or Copy email (key event) | `method` (`mailto`, `text`, `call`, `copy`), `cta_location`                                                                                   |
 | `book_call_click`   | the calendar link (key event)                        | `cta_location`                                                                                                                                |
 | `visit_client_site` | a link out to a client's live site                   | `link_domain`, `cta_location`                                                                                                                 |
@@ -62,9 +62,9 @@ and a line on /privacy.
 
 Useful views in GA4:
 
-- **Funnel exploration**: `form_start` > `form_step` (step_name = budget) > `form_step` (step_name
+- **Funnel exploration**: `inquiry_start` > `inquiry_step` (step_name = budget) > `inquiry_step` (step_name
   = check) > `generate_lead`. Shows which question loses people.
-- **Free form**: rows `lead_source` or the "Channels with AI" channel group, values key events
+- **Free form**: rows `lead_source` or the "Channels with AI" custom channel group (AI assistants sits above Referral; GA's default group has its own "AI Assistant" channel below Referral, which misses some), values key events
   and `value`. The AI channel group splits ChatGPT, Perplexity and friends out of Referral.
 - **Events > tool_use** broken down by `tool_name`: which toys earn their place.
 
@@ -84,4 +84,4 @@ it. Bing Webmaster Tools matters as well: Bing's index feeds ChatGPT search and 
 - `/llms.txt` for AI tools: who, prices, studies, plus "good fit" and "common questions" blocks
   built from `site.ts` and `pricing.ts`.
 - robots.txt names and allows the AI crawlers.
-- Cloudflare Crawler Hints sends IndexNow pings to Bing and others when pages change.
+- Not yet on: Cloudflare Crawler Hints (IndexNow pings to Bing when pages change), Bing Webmaster Tools and a Google Business Profile. See docs/PENDING.md item 0b.

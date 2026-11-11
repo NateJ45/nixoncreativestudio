@@ -167,7 +167,7 @@ function onClick(event: Event): void {
    actually touch. The first click or change inside one sends tool_use once per
    page, with tool_name from the table below and tool_result saying what kind of
    control it was. Nothing typed is ever read. The contact form is left out on
-   purpose: it sends its own form_start and form_step events. */
+   purpose: it sends its own inquiry_start and inquiry_step events. */
 export const TOOLS: [selector: string, name: string][] = [
   ['[data-draw]', 'draw_card'],
   ['[data-sun]', 'first_sunday'],
