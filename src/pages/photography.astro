@@ -1,72 +1,259 @@
 ---
-// Safe to edit (copy). The gate itself lives in src/data/photography-gate.ts.
+// Safe to edit (copy). The gate lives in src/data/photography-gate.ts.
 /* ============================================================================
-   /photography | Photography  [gated]
+   /photography | Photography and film  [the light table]
    ============================================================================
-   The gallery is not ready, so this page says so plainly: one real photo, one
-   honest line, and a way to ask for samples. No placeholder images.
+   Every photo and short film in the `photos` collection (src/content/photos),
+   laid out as prints on an endless light table you can move around in any
+   direction: drag, scroll, the arrow keys, or the buttons under it. The table
+   repeats, so there is no edge. A film plays when it comes near the middle.
+   A print opens into a full view with its story, and Previous / Next walk the
+   table in order.
 
-   The gate. Until the `photos` collection (src/content/photos/*.json) holds
-   MIN_PHOTOS real photographs, this page is noindex, out of the sitemap (the
-   filter in astro.config.mjs) and out of the closing's links (src/data/nav.ts).
-   All three read photographyOpen() from src/data/photography-gate.ts, so they
-   open together. tests/photography-gate.spec.ts checks the closed state.
-   Ungating: docs/PENDING.md.
+   Real markup first. The server prints a plain grid of links (each one to its
+   full-size image), the filter bar and an empty full-view dialog. Without
+   JavaScript that grid IS the gallery. src/scripts/photo-table.js lays the
+   same prints out on the table and swaps the grid out; "Grid" in the view
+   switch brings it back, which is also the way through for a screen reader.
 
-   The photo. No photo in the repo is yet a confirmed frame of Nathan's own client
-   work, so this is the portrait from the About page, captioned for what it is.
+   The gate. While the collection holds fewer than MIN_PHOTOS photos the page
+   is noindex, out of the sitemap and out of the closing's index (see
+   src/data/photography-gate.ts). With the table filled it is open.
+
+   Order, filters and the words on each print: src/lib/photo-table.ts.
    ============================================================================ */
 
 import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import '../styles/pages/sub.css';
+import '../styles/pages/photography.css';
 import Closing from '../components/Closing.astro';
 import { photographyOpen } from '../data/photography-gate';
 import { addOns } from '../data/pricing';
 import { addOnNamed } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
+import { dealOrder, filtersFor, printLine } from '../lib/photo-table';
 
-// The photography price quoted in the meta description, from pricing.ts.
 const photography = addOnNamed(addOns, 'Photography');
+const all = await getCollection('photos');
+const open = photographyOpen(all.length);
 
-// Closed until the collection holds enough real photos (see the header note).
-const open = photographyOpen((await getCollection('photos')).length);
+// One print per entry, in the dealt order, with the two sizes the table needs:
+// a small one for the table and the grid, a large one for the full view.
+const prints = await Promise.all(
+  dealOrder(all.map((e) => ({ slug: e.id, ...e.data }))).map(async (p, i) => {
+    const small = await getImage({ src: p.image, width: 560, format: 'webp', quality: 72 });
+    const large = await getImage({
+      src: p.image,
+      widths: [1100, 1800],
+      format: 'webp',
+      quality: 80,
+    });
+    return {
+      i,
+      slug: p.slug,
+      title: p.title,
+      alt: p.alt,
+      kind: p.category,
+      line: printLine(p),
+      place: p.location ?? '',
+      caption: p.caption ?? '',
+      video: p.video ?? '',
+      w: p.image.width,
+      h: p.image.height,
+      small: small.src,
+      large: large.src,
+      largeSet: large.srcSet.attribute,
+    };
+  }),
+);
+const filters = filtersFor(all.map((e) => ({ slug: e.id, ...e.data })));
+const films = prints.filter((p) => p.video).length;
+const stills = prints.length - films;
 
-// Where every "ask" on this page goes: the contact form, preset to photography.
 const contactHref = '/contact/?service=photography';
 const heading = 'Photography that matches <b>the website it lives on.</b>';
 ---
 
 <BaseLayout
-  title="Photography in Cincinnati | Nixon Creative Studio"
-  description={`Headshots, events and environmental photos across the Cincinnati region, shot by the person who designs your website. Photography starts ${photography.price}.`}
+  title="Photography and film in Cincinnati | Nixon Creative Studio"
+  description={`Weddings, worship, events and portraits across Cincinnati, with short films to match, by the person who designs your website. Photography ${photography.price}.`}
   noindex={!open}
 >
-  <div class="photo-gate">
-    <header class="page-head">
-      <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
-      <p class="lede">
-        I photograph events, portraits and places across Cincinnati. The gallery is being assembled;
-        ask for samples.
-      </p>
-      <p>
-        <a class="chip go" href={contactHref}>
-          Ask for samples
-        </a>
-      </p>
-    </header>
-    <figure class="photo-card">
-      <img
-        src="/assets/about/portrait-bw.webp"
-        srcset="/assets/about/portrait-bw-520.webp 520w, /assets/about/portrait-bw.webp 960w"
-        sizes="(min-width: 60rem) 42vw, 100vw"
-        width="960"
-        height="1200"
-        alt="A black-and-white studio portrait of Nathan looking off to the side."
-        fetchpriority="high"
-      />
-      <figcaption>Me, from the other side of the lens.</figcaption>
-    </figure>
-  </div>
-  <Closing lead="Need photography <b>for your project?</b>" />
+  <header class="page-head pt-head">
+    <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+    <p class="lede">
+      Weddings, Sunday mornings, conferences and portraits across Cincinnati, and short films to go
+      with them. The same person designs the site and shows up with the camera, so the two look like
+      one piece of work.
+    </p>
+    <p class="pt-acts">
+      <a class="chip go" href={contactHref}>
+        Book a shoot
+      </a>
+      <span class="label">Photography {photography.price}</span>
+    </p>
+  </header>
+
+  <section class="pt" aria-labelledby="pt-title" data-table data-view="grid">
+    <h2 id="pt-title" class="pt-vh">
+      {stills} photos and {films} short films
+    </h2>
+
+    <div class="pt-bar-wrap">
+      <div class="dw-bar" data-bar>
+        <div class="dw-seg" role="group" aria-label="Show photos of" data-filters>
+          <span class="dw-pill" data-pill aria-hidden="true"></span>
+          <button type="button" aria-pressed="true" data-f="all">
+            All <span class="n">{prints.length}</span>
+          </button>
+          {filters.map((f) => (
+            <button type="button" aria-pressed="false" data-f={f.kind}>
+              {f.label} <span class="n">{f.count}</span>
+            </button>
+          ))}
+        </div>
+        <div class="dw-seg" role="group" aria-label="View photos as" data-views>
+          <span class="dw-pill" data-pill aria-hidden="true"></span>
+          <button type="button" aria-pressed="true" data-v="table">
+            Table
+          </button>
+          <button type="button" aria-pressed="false" data-v="grid">
+            Grid
+          </button>
+        </div>
+        <p class="dw-status" role="status" data-status>
+          Showing all {prints.length}.
+        </p>
+      </div>
+    </div>
+
+    {/* The table. Empty in the markup: the script fills it from the grid below. */}
+    <div class="pt-stage" data-stage hidden>
+      <div
+        class="pt-world"
+        data-world
+        tabindex="0"
+        role="region"
+        aria-roledescription="light table"
+        aria-label="Light table of photos. Arrow keys move around, Enter opens the print in the middle."
+      ></div>
+      <div class="pt-hud" aria-hidden="true">
+        <span class="label" data-coords>
+          0, 0
+        </span>
+        <span class="label pt-hint">Drag, scroll or use the arrow keys</span>
+      </div>
+      <div class="pt-nudge" role="group" aria-label="Move the table">
+        <button type="button" data-nudge="0,-1" aria-label="Move up">
+          <span aria-hidden="true">↑</span>
+        </button>
+        <button type="button" data-nudge="-1,0" aria-label="Move left">
+          <span aria-hidden="true">←</span>
+        </button>
+        <button type="button" data-nudge="1,0" aria-label="Move right">
+          <span aria-hidden="true">→</span>
+        </button>
+        <button type="button" data-nudge="0,1" aria-label="Move down">
+          <span aria-hidden="true">↓</span>
+        </button>
+      </div>
+      <p class="pt-vh" aria-live="polite" data-now></p>
+    </div>
+
+    {/* The grid: the gallery without JavaScript, and the Grid view with it. */}
+    <ul class="pt-grid" data-grid>
+      {prints.map((p) => (
+        <li data-kind={p.kind} data-i={p.i}>
+          <a
+            class="print"
+            href={p.large}
+            data-print={p.i}
+            aria-label={`${p.title}${p.video ? ', a short film' : ''}. ${p.alt}`}
+          >
+            <img
+              src={p.small}
+              width={560}
+              height={Math.round((560 * p.h) / p.w)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            {p.video && <span class="pt-film label">Film</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <script type="application/json" id="pt-data" set:html={JSON.stringify(prints)} />
+  </section>
+
+  {/* The full view. A native dialog the script fills; Escape and the close button shut it. */}
+  <dialog class="pt-open" aria-labelledby="pt-open-title" data-open>
+    <div class="pt-open-card card">
+      <figure class="pt-open-media" data-media></figure>
+      <div class="pt-open-text">
+        <p class="label" data-line></p>
+        <h2 id="pt-open-title" data-title></h2>
+        <p data-alt></p>
+        <p class="pt-open-place" data-place></p>
+        <div class="pt-open-acts">
+          <button type="button" class="chip" data-prev>
+            Previous
+          </button>
+          <button type="button" class="chip" data-next>
+            Next
+          </button>
+          <button type="button" class="chip go" data-close>
+            Close
+          </button>
+        </div>
+        <p class="label pt-open-count" data-count></p>
+      </div>
+    </div>
+  </dialog>
+
+  <section class="sec pt-what" aria-labelledby="pt-what-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="pt-what-title">What I shoot</h2>
+      </div>
+      <ul class="pt-rows">
+        <li>
+          <h3>Sundays and seasons</h3>
+          <p>
+            Ash Wednesday by candlelight, a full house at Easter, a baptism, Christmas Eve: the
+            services and seasons a church website needs all year.
+          </p>
+        </li>
+        <li>
+          <h3>Events and conferences</h3>
+          <p>
+            Speakers, panels, the hallway after. Enough of the room and the faces that next year's
+            page sells next year's event.
+          </p>
+        </li>
+        <li>
+          <h3>Portraits and weddings</h3>
+          <p>
+            Staff pages, headshots and weddings, in natural light where I can get it, with people
+            who look like themselves.
+          </p>
+        </li>
+        <li>
+          <h3>Short films</h3>
+          <p>
+            Loops for a homepage and the year-in-review film for a Vision Sunday, cut from the same
+            days as the photos.
+          </p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <Closing lead="Need photos <b>for your project?</b>" />
 </BaseLayout>
+
+<script>
+  import '../scripts/photo-table.js';
+</script>
