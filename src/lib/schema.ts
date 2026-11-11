@@ -72,7 +72,8 @@ export function studioNode(lowestPrice: number): Node {
       { '@type': 'Place', name: 'Greater Cincinnati region' },
       { '@type': 'Country', name: 'United States' },
     ],
-    sameAs: [site.social.instagram, site.social.linkedin],
+    // The Google Business Profile is the studio's, not the person's, so only this node lists it.
+    sameAs: [site.social.instagram, site.social.linkedin, site.social.googleBusiness],
   };
 }
 

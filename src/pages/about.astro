@@ -6,6 +6,15 @@ import '../styles/pages/about.css';
 import Tile from '../components/Tile.astro';
 import QuoteBand from '../components/QuoteBand.astro';
 import Closing from '../components/Closing.astro';
+import OffTheClock from '../components/OffTheClock.astro';
+import PhotoStack from '../components/PhotoStack.astro';
+import engagement from '../assets/about/family-engagement.jpg';
+import picnic from '../assets/about/family-picnic.jpg';
+import aquarium from '../assets/about/family-aquarium.jpg';
+import shoulders from '../assets/about/family-shoulders.jpg';
+import raceBibs from '../assets/about/running-race-bibs.jpg';
+import riverfront from '../assets/about/running-riverfront.jpg';
+import runSelfie from '../assets/about/running-selfie.jpg';
 import { getClients } from '../lib/clients';
 import { plainText, wordSpans } from '../lib/words';
 
@@ -18,6 +27,21 @@ const hand = [
   'theology-matters',
   'presbyterian-academy',
 ].flatMap((slug) => clients.filter((c) => c.slug === slug));
+/* The bio's photo stacks: plain descriptions, no names. */
+const familyPhotos = [
+  { src: engagement, alt: 'Nathan and his wife laughing by a lake on their wedding day.' },
+  { src: picnic, alt: 'Nathan and his wife with their little one on a picnic blanket in a park.' },
+  { src: aquarium, alt: 'Nathan, his wife and their little one in a tunnel at an aquarium.' },
+  { src: shoulders, alt: "A child in sunglasses riding on Nathan's shoulders on a sunny street." },
+];
+const runningPhotos = [
+  { src: raceBibs, alt: 'Nathan and a friend in race bibs before a local race.' },
+  {
+    src: riverfront,
+    alt: 'Nathan and a friend by the Ohio River before a race, the Cincinnati skyline behind them.',
+  },
+  { src: runSelfie, alt: 'Nathan in sunglasses and a running shirt, out on a run.' },
+];
 const heading = `A one-person studio for organizations that <b>take their work seriously.</b>`;
 ---
 
@@ -65,9 +89,24 @@ const heading = `A one-person studio for organizations that <b>take their work s
         </p>
         <p data-copy-ignore>
           I moved from Scotland to Cincinnati in 2017 to be with my wife, became a U.S. citizen in
-          2022, and these days the two of us are raising two kids here. When I'm away from a screen
-          I'm usually out on a long run, chasing landscapes with a camera, deep in an ambitious Lego
-          build with the kids, or a few episodes into a history drama.
+          2022, and these days the two of us are{' '}
+          <PhotoStack
+            id="family"
+            text="raising two kids here"
+            label="Family photos"
+            photos={familyPhotos}
+            tail="."
+          />
+          When I'm away from a screen I'm usually out on{' '}
+          <PhotoStack
+            id="running"
+            text="a long run"
+            label="Running photos"
+            photos={runningPhotos}
+            tail=","
+          />
+          chasing landscapes with a camera, deep in an ambitious Lego build with the kids, or a few
+          episodes into a history drama.
         </p>
       </section>
     </div>
@@ -185,9 +224,12 @@ const heading = `A one-person studio for organizations that <b>take their work s
     </p>
   </section>
 
+  <OffTheClock />
+
   <Closing lead="Want to talk about <b>a project?</b>" />
 </BaseLayout>
 
 <script>
   import '../scripts/about.js';
+  import '../scripts/off-the-clock.js';
 </script>

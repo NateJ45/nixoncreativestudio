@@ -1,0 +1,60 @@
+---
+/* /now: one dated card saying what I'm doing this month (the nownownow.com idea). The words and
+   the date live in src/data/now.ts, so an update is a two-minute edit there, not here. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/pages/now.css';
+import Closing from '../components/Closing.astro';
+import { now, nowUpdatedLabel } from '../data/now';
+import { getGatedNav } from '../data/nav';
+import { plainText, wordSpans } from '../lib/words';
+
+const heading = `What I'm doing <b>now.</b>`;
+const updated = nowUpdatedLabel();
+/* A link only shows when its page is open: the journal waits for its first published post. */
+const open = new Set((await getGatedNav()).map((l) => l.href));
+const isLive = (href: string) => !['/journal/', '/photography/'].includes(href) || open.has(href);
+---
+
+<BaseLayout
+  title="Now: what I'm working on | Nixon Creative Studio"
+  description={`What I'm focused on this month, updated ${updated}: the sites I'm building and looking after, Sunday AV at church, the journal, family and long runs.`}
+>
+  <header class="page-head">
+    <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+    <p class="lede">
+      A now page says what someone is focused on at the moment, rather than everything they have
+      ever done. I keep this one roughly current. The idea comes from
+      <a href="https://nownownow.com/about">nownownow.com</a>.
+    </p>
+  </header>
+
+  <section class="sec now-sec" aria-labelledby="nh">
+    <article class="card keyed now-card">
+      <span class="pip" aria-hidden="true">
+        N
+      </span>
+      <p class="label">
+        Updated <time datetime={now.updated}>{updated}</time>
+      </p>
+      <h2 id="nh">What I'm doing now</h2>
+      <ul>
+        {now.items.map((item) => (
+          <li>
+            {item.text}
+            {item.link && isLive(item.link.href) && (
+              <>
+                {' '}
+                <a href={item.link.href}>{item.link.label}</a>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </article>
+    <p class="now-more">
+      The longer story, and what I do away from the desk: <a href="/about/">About</a>
+    </p>
+  </section>
+
+  <Closing />
+</BaseLayout>

@@ -48,3 +48,13 @@ export async function getGatedNav(): Promise<NavLink[]> {
   const [journal, photos] = await Promise.all([journalCount(), photoCount()]);
   return [...(photographyOpen(photos) ? [PHOTOGRAPHY] : []), ...(journal > 0 ? [JOURNAL] : [])];
 }
+
+/** A journal post's address, or null while it is unwritten or still a draft. About and /now
+    link to a post only once it is real, so no link ever points at an empty page. */
+export async function journalPath(slug: string): Promise<string | null> {
+  const [entry] = await getCollection(
+    'journal',
+    ({ id, data }) => id === slug && data.draft !== true,
+  );
+  return entry ? `/journal/${entry.id}/` : null;
+}
