@@ -1,10 +1,4 @@
 ---
-# CONFIRM before publishing (set draft: false only after every line is checked):
-# - "My own site publishes an llms.txt file" (the repo has src/pages/llms.txt.ts). Keep only if it ships live.
-# - "On the sites I build, I allow Googlebot and OAI-SearchBot in robots.txt": true for every client site?
-# - "I set up Search Console" on the sites you build: true for every site? Cut if not.
-# - Google's guide mentions a Search Console setting called "Search generative AI features" that a site must be included in. Open the guide on publish day and confirm the wording; drop the sentence if it has changed.
-# - All Google and OpenAI statements were read on their own pages on 2026-11-10. Re-check on publish day.
 title: 'How do I get my church to show up in ChatGPT and Google AI answers?'
 metaTitle: 'Showing up in ChatGPT and AI answers'
 summary: 'What Google and OpenAI actually say about appearing in AI Overviews, AI Mode and ChatGPT search, what is evidence, and what is still guesswork.'
@@ -12,7 +6,7 @@ published: 2026-11-10
 cluster: churches
 sector: church
 shortAnswer: "Google says AI Overviews and AI Mode use its normal ranking systems and have no extra requirements: your pages must be indexed and allowed to show a snippet. It does not use llms.txt and needs no special schema. For ChatGPT search, allow OpenAI's OAI-SearchBot in robots.txt. After that, plain, first-hand pages about your church do the work."
-draft: true
+draft: false
 ---
 
 This is for pastors, church office staff and volunteers who have heard that "people search with AI now" and are wondering whether the church website needs something new. It is also for anyone who has been sold an "AI optimization" package and wants to know what it is worth. If your church has no website yet, start with that; none of this works without one.
@@ -27,7 +21,7 @@ Google's page on [AI features and your website](https://developers.google.com/se
 
 Google's newer guide, [Optimizing your website for generative AI features](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), goes further. It says these features are built on Google's core ranking and quality systems, and that "AEO" and "GEO" are, from Google's point of view, just SEO. It describes two mechanisms: the AI pulls relevant pages from the search index to support its answer, and it runs several related searches behind the scenes (Google calls this query fan-out) to gather a wider set of links.
 
-The guide also says a site must be included in a Search Console setting for generative AI features to be eligible. If you have never set up [Search Console](https://search.google.com/search-console/about) for your church site, that is a good reason to do it now.
+The guide also says a site must be included in "Search generative AI features" in Search Console to be eligible for display. If you have never set up [Search Console](https://search.google.com/search-console/about) for your church site, that is a good reason to do it now.
 
 ## What does Google say you do not need?
 
@@ -69,7 +63,7 @@ None of that is new. It is what makes a church site good for people, and it turn
 
 Allow OpenAI's search crawler, OAI-SearchBot, in your robots.txt file.
 
-OpenAI's [crawler documentation](https://developers.openai.com/api/docs/bots) lists three user agents. OAI-SearchBot is the one used to surface websites in ChatGPT's search features, and OpenAI says sites that opt out of it will not appear in ChatGPT search answers, though they may still show up as plain navigation links. GPTBot is a separate crawler for training OpenAI's models. ChatGPT-User visits a page when a person asks ChatGPT to look at it.
+OpenAI's [crawler documentation](https://developers.openai.com/api/docs/bots) lists four user agents. OAI-SearchBot is the one used to surface websites in ChatGPT's search features, and OpenAI says sites that opt out of it will not appear in ChatGPT search answers, though they may still show up as plain navigation links. GPTBot is a separate crawler for training OpenAI's models. ChatGPT-User visits a page when a person asks ChatGPT to look at it. OAI-AdsBot checks the safety of pages submitted as ads.
 
 Each setting is independent. You can block GPTBot from using your content for training and still allow OAI-SearchBot, and OpenAI says blocking GPTBot does not affect search. Changes to robots.txt for search can take about 24 hours to apply.
 
@@ -96,7 +90,7 @@ My honest reading: if your pages are clear, specific and easy to crawl, you have
 
 I would check four things, in this order. Is the site in Google's index, with Search Console set up? Does robots.txt allow Googlebot and OAI-SearchBot? Do the core pages (service times, what to expect, beliefs, ministries, contact) say specific, first-hand things in plain words? Does your Google Business Profile match the site?
 
-On the sites I build, I allow Googlebot and OAI-SearchBot in robots.txt, and I set up Search Console. My own site also publishes an llms.txt file, because some other tools read one, but Google says it ignores it, so I would not pay anyone to make one for you.
+The sites I build don't block Googlebot or OAI-SearchBot, and I set up Google Search Console on the sites I build. My own site also publishes an llms.txt file, because some other tools read one, but Google says it ignores it, so I would not pay anyone to make one for you.
 
 If your church site needs more than a tidy-up, my Launch tier is from $3,500, usually $3,500 to $6,000, with year one hosting included, and Signature is from $6,500, usually $6,500 to $11,000, for sites a staff or volunteer team runs. Hosting is $200 a year from year two. There is more on my [churches page](/churches/), or [get in touch](/contact/) and I will look at your robots.txt and core pages with you.
 

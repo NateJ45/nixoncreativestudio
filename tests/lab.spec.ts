@@ -61,9 +61,12 @@ test('a lab card turns over to its story and back, moving focus with it', async 
 
 test('the story link only shows for a published journal post', async ({ page }) => {
   await page.goto('/work/');
-  // The console has no story; the site check's post is a draft.
+  // The console has no story; the site check's post is published.
   await expect(page.locator('[data-lab="console"] .lab-story')).toHaveCount(0);
-  await expect(page.locator('[data-lab="status"] .lab-story')).toHaveCount(0);
+  await expect(page.locator('[data-lab="status"] .lab-story')).toHaveAttribute(
+    'href',
+    '/journal/how-i-check-every-client-site/',
+  );
   const rota = page.locator('[data-lab="rota"] .lab-story');
   if ((await rota.count()) > 0) {
     await expect(rota).toHaveAttribute('href', '/journal/church-av-rota-that-fills-its-own-gaps/');
