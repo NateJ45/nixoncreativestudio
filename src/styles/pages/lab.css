@@ -1,0 +1,456 @@
+/* The Lab strip on /work (src/components/LabStrip.astro): three cards on the back of the card, the
+   cobalt --back in both themes, each with a small demo on made-up data. The marks over each card and
+   the words under it borrow the client grid's .dw-mark and .dw-note from work.css, so the strip reads
+   as the same deck. Colors are the --back tokens in kit.css (pairs in kit-tokens.test.ts). */
+.lab .wrap {
+  max-width: calc(90rem - 2 * var(--gut));
+}
+.lab-head {
+  max-width: 44rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+.lab-head h2 {
+  margin-top: 0.5rem;
+  font-size: var(--type-h2);
+}
+.lab-head > p:last-child {
+  margin-top: 0.75rem;
+  color: var(--soft);
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 4.4vw, 4.25rem) clamp(1.25rem, 3vw, 2.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 48rem) {
+  .lab-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lab-item:last-child:nth-child(odd) {
+    grid-column: 1/-1;
+  }
+}
+@media (min-width: 68rem) {
+  .lab-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .lab-item:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+/* Each item is mark, card, words; the card takes the spare height so a row's cards line up. */
+.lab-item {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-width: 0;
+}
+.lab .dw-note h3 {
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+/* ---- The card. Same rounding and shadow as a desktop window, on the cobalt back. ---- */
+.lab-card {
+  --ink: var(--back-ink);
+  --soft: var(--back-soft);
+  --line: rgba(226, 228, 255, 0.15);
+  position: relative;
+  border-radius: clamp(0.75rem, 1.6vw, 1.25rem);
+  background: var(--back);
+  color: var(--back-ink);
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 228, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 26px 44px -22px rgba(0, 0, 0, 0.5);
+  transform-origin: 50% 50%;
+}
+.lab-card :focus-visible {
+  outline: 2px solid var(--back-ink);
+  outline-offset: 3px;
+}
+.lab-face {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 2vw, 1rem);
+}
+.lab-back {
+  gap: 0.35rem;
+  padding-top: clamp(1rem, 2.4vw, 1.5rem);
+}
+/* With a script the two sides share one place, so the card keeps the height of the taller one and
+   turning it never moves the page. The side facing away is hidden from everyone. */
+.js .lab-card {
+  display: grid;
+}
+.js .lab-face {
+  grid-area: 1/1;
+}
+.js .lab-card[data-side='front'] .lab-back,
+.js .lab-card[data-side='back'] .lab-front {
+  visibility: hidden;
+}
+html:not(.js) .lab-back {
+  border-top: 1px solid var(--line);
+}
+html:not(.js) .lab-ctl button {
+  display: none;
+}
+
+.lab-top {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+.lab-top span {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99rem;
+  background: rgba(0, 0, 0, 0.26);
+  font: 500 0.75rem/1.1 var(--body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lab-scr {
+  position: relative;
+  flex: 1 0 auto;
+  min-height: 15.5rem;
+  overflow: hidden;
+  padding: 0.875rem;
+  border-radius: 0.5rem;
+  background: var(--back-raise);
+}
+.lab-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+.lab-run,
+.lab-turn {
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: 99rem;
+  font: 600 0.9375rem/1 var(--body);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.lab-run {
+  background: var(--back-ink);
+  color: var(--back);
+}
+.lab-run:hover {
+  transform: scale(1.04);
+}
+.lab-run:active,
+.lab-turn:active {
+  transform: scale(0.97);
+}
+.lab-turn {
+  margin-left: auto;
+  background: transparent;
+  color: var(--back-ink);
+  box-shadow: inset 0 0 0 1px rgba(226, 228, 255, 0.4);
+}
+.lab-turn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.lab-story {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--back-accent);
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+.lab-back .label {
+  margin-top: 0.6rem;
+  color: var(--back-soft);
+}
+.lab-back .label:first-child {
+  margin-top: 0;
+}
+.lab-say {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.lab-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lab-stack li {
+  padding: 0.3rem 0.7rem;
+  border-radius: 99rem;
+  background: var(--back-raise);
+  font-size: 0.875rem;
+}
+
+/* ---- The rota: a ruled sheet, five Sundays by three jobs. A gap is a dashed slot. ---- */
+.lr-head,
+.lc-p .label {
+  color: var(--back-soft);
+}
+.lr-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+.lr-count {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--back-ink);
+}
+.lr-count b {
+  font-weight: 700;
+}
+.lr-t {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.8125rem;
+}
+.lr-t th,
+.lr-t td {
+  padding: 0.3rem 0.2rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-weight: 500;
+}
+.lr-t thead th {
+  color: var(--back-soft);
+  font-size: 0.6875rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.lr-t tbody th {
+  color: var(--back-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lr-n {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lr-t .gap .lr-n {
+  color: var(--back-soft);
+  box-shadow: inset 0 0 0 1px var(--back-soft);
+  outline: 1px dashed var(--back-raise);
+  outline-offset: -1px;
+}
+.lr-t .gap[data-lab-open] .lr-n {
+  box-shadow: inset 0 0 0 1px var(--back-warn);
+  color: var(--back-warn);
+}
+.lr-t .got .lr-n {
+  background: rgba(170, 179, 255, 0.16);
+}
+.lr-ping {
+  position: absolute;
+  right: 0.875rem;
+  bottom: 0.875rem;
+  left: 0.875rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.5rem;
+  background: var(--back-ink);
+  color: var(--back);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.lr-ping[hidden] {
+  display: none;
+}
+
+/* ---- The site check: one dot a site, each with its state in words. ---- */
+.ls-sites {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ls-sites li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.45rem;
+  align-items: center;
+  min-width: 0;
+}
+.ls-dot {
+  grid-row: span 2;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--back-soft);
+  transition:
+    background-color 0.25s,
+    box-shadow 0.25s,
+    transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.ls-name {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ls-st {
+  color: var(--back-soft);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+[data-lab-site].up .ls-dot {
+  background: var(--back-up);
+  box-shadow: none;
+}
+[data-lab-site].down .ls-dot {
+  background: var(--back-warn);
+  box-shadow: none;
+  transform: scale(1.25);
+}
+/* The phone: a slot over the sites that says "No alerts" until the check finds one, then turns into
+   the bone alert card, dropped in from above. */
+.ls-alert {
+  min-height: 3.6rem;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.75rem;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.ls-alert .label {
+  font-size: 0.6875rem;
+}
+.ls-alert.on {
+  background: var(--back-ink);
+  color: var(--back);
+  box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.6);
+}
+.ls-alert.on .label {
+  color: var(--back);
+}
+.ls-alert p {
+  margin-top: 0.15rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ---- The desk console: three panels, a meter that fills and this Sunday's names. ---- */
+.lc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.6rem;
+}
+.lc-p {
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.5rem;
+  background: var(--back);
+}
+.lc-use {
+  grid-column: 1/-1;
+}
+.lc-p .label {
+  font-size: 0.6875rem;
+}
+.lc-big {
+  margin-top: 0.2rem;
+  font: 700 2rem/1 var(--display);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.lc-bar {
+  display: block;
+  height: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 99rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--back-soft);
+}
+.lc-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--back-accent);
+  transform: scaleX(var(--v));
+  transform-origin: 0 50%;
+}
+.lc-soft {
+  margin-top: 0.4rem;
+  color: var(--back-soft);
+  font-size: 0.75rem;
+}
+.lc-list,
+.lc-rota {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+.lc-list li + li {
+  margin-top: 0.3rem;
+  color: var(--back-soft);
+}
+.lc-list b {
+  font-variant-numeric: tabular-nums;
+}
+.lc-rota div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.lc-rota dt {
+  color: var(--back-soft);
+}
+.lc-rota dd {
+  margin: 0;
+  font-weight: 600;
+}
+@media (max-width: 30rem) {
+  .ls-sites {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 22rem) {
+  .lc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (forced-colors: active) {
+  .lab-card {
+    border: 1px solid CanvasText;
+  }
+  .lab-run,
+  .lab-turn,
+  .ls-dot {
+    border: 1px solid ButtonText;
+  }
+}
+@media print {
+  .lab-ctl button {
+    display: none;
+  }
+}

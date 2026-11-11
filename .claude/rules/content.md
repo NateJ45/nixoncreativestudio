@@ -30,7 +30,7 @@ The nav is the dock (`src/components/Dock.astro`): Work, Prices (`/services/`), 
 
 ## Content collections
 
-Three collections live in `src/content/` with schemas declared in `src/content.config.ts`.
+Four collections live in `src/content/` with schemas declared in `src/content.config.ts`.
 
 **`case-studies`**: long-form portfolio entries as MDX files in `src/content/case-studies/`. Each page at `/work/{slug}/` is generated. Required frontmatter: `title`, `client`, `sector` (one of `church`, `school`, `nonprofit`, `small-business`), `services` (string array), `summary` (max 200 chars), `cover` (image path), `year` (int), `published` (date).
 
@@ -101,6 +101,8 @@ A client quote is only ever the client's own words. Record it verbatim in the va
 **`journal`**: short-form essays and process notes as MDX files in `src/content/journal/`. Each page at `/journal/{slug}/` is generated. Required frontmatter: `title`, `summary` (max 200 chars), `published` (date). Optional: `updated`, `cover`, `tags`, `draft` (drafts render in dev but are filtered out of production builds). The index is newest-first. The directory is empty today, so /journal/ has no entries and no nav link.
 
 **`photos`**: JSON entries in `src/content/photos/`. Required: `title`, `image` (path), `category` (`events`, `portraits`, `environments`), `year`. Optional: `caption`, `location`, `featured`. The directory is empty, so /photography/ is gated. A new, non-React gallery that reads this collection is still to be built (`docs/PENDING.md`).
+
+**`lab`**: JSON entries in `src/content/lab/`, the Lab strip on /work (`LabStrip.astro`): things I built for my own people, not client work. Required: `title`, `label`, `problem`, `built`, `stack` (1 to 6 names), `outcome`, `demo` (`rota`, `status` or `console`, each drawn in `LabStrip.astro`), `order`. Optional: `story`, a journal slug; "Read how I built it" shows only when that entry exists and is not a draft. A Lab entry has no page, no sitemap entry, no JSON-LD and is never counted with the case studies. Every demo runs on made-up names and data; never put a real volunteer, client or family name in one.
 
 ### Voice
 
