@@ -84,4 +84,6 @@ it. Bing Webmaster Tools (set up 2026-11-10 by GSC import) matters as well: Bing
 - `/llms.txt` for AI tools: who, prices, studies, plus "good fit" and "common questions" blocks
   built from `site.ts` and `pricing.ts`.
 - robots.txt names and allows the AI crawlers.
-- Not yet on: Cloudflare Crawler Hints (IndexNow pings to Bing when pages change), and a Google Business Profile. See docs/PENDING.md item 0b.
+- Cloudflare Crawler Hints is on (since 2026-04-11), so changed pages are pinged to Bing and
+  others through IndexNow.
+- Not yet: a Google Business Profile. See docs/PENDING.md item 0b.
