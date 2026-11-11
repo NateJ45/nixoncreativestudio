@@ -86,4 +86,7 @@ it. Bing Webmaster Tools (set up 2026-11-10 by GSC import) matters as well: Bing
 - robots.txt names and allows the AI crawlers.
 - Cloudflare Crawler Hints is on (since 2026-04-11), so changed pages are pinged to Bing and
   others through IndexNow.
-- Not yet: a Google Business Profile. See docs/PENDING.md item 0b.
+- Google Business Profile (studio Google account): services and prices match `src/data/pricing.ts`
+  as of 2026-11-10; update both together. Its website link carries
+  `utm_source=google&utm_medium=organic&utm_campaign=gbp`, so profile leads show as `google` in
+  `lead_source`. Reviews are the open item (docs/PENDING.md 0b).

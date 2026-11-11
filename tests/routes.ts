@@ -20,6 +20,7 @@
 export const routes = [
   '/',
   '/about',
+  '/now',
   '/services',
   '/work',
   '/work/stone-steps-50k',

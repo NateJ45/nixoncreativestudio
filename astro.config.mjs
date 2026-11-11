@@ -8,6 +8,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { journalOpen } from './src/data/journal-gate.ts';
 import { photographyOpen } from './src/data/photography-gate.ts';
 import { frontmatterLastmod } from './src/lib/sitemap-dates.ts';
+import { now } from './src/data/now.ts';
 
 // The /photography gate (overhaul 2.8). The sitemap filter runs before the
 // content layer exists, so count the photos collection's JSON files here, the
@@ -47,6 +48,8 @@ for (const [folder, base] of [
     if (date) lastmodByPath.set(`${base}${name.replace(/\.mdx$/, '')}/`, date);
   }
 }
+// /now carries its own date in src/data/now.ts (no imports, so this config can load it).
+lastmodByPath.set('/now/', now.updated);
 
 // =============================================================================
 // Astro config
@@ -75,10 +78,9 @@ export default defineConfig({
   compressHTML: false,
   // Astro 7's adapter no longer forces server mode; this site never used sessions.
   session: false,
-  // The standalone /now page was merged into the About page. Keep old links and
-  // bookmarks working with a static redirect.
+  // /now was once merged into About and redirected there; it is its own page again
+  // (src/pages/now.astro, 2026-11-10), so it has no redirect.
   redirects: {
-    '/now': '/about/',
     // A retired case study (2026-10-01). Send any old links or search results
     // to the work index instead of a 404.
     '/work/west-chester-preschool': '/work/',

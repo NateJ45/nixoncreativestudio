@@ -423,8 +423,44 @@ const journal = defineCollection({
     }),
 });
 
+/* ----------------------------------------------------------------------------
+   lab
+   ----------------------------------------------------------------------------
+   Things I built for my own people (my church, my family, my own desk), shown
+   as the Lab strip on /work below the case studies (src/components/LabStrip.astro).
+   They are NOT case studies: no page of their own, no sitemap entry, never
+   counted with the client work. Each entry is one small JSON file in
+   src/content/lab/. Every demo on the strip runs on made-up data.
+   ---------------------------------------------------------------------------- */
+
+const lab = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/lab' }),
+  schema: z.object({
+    // The card's name, a plain line about what it does.
+    title: z.string().max(60),
+    // The label voice line under the title, e.g. 'Crestview Church AV team'.
+    label: z.string().max(60),
+    // The problem it solved, one line, on the back of the card.
+    problem: z.string().max(200),
+    // What I built, a sentence or two, on the back of the card.
+    built: z.string().max(320),
+    // The tools it is made with, short names, on the back of the card.
+    stack: z.array(z.string()).min(1).max(6),
+    // The one-line result under the card. Only what is true.
+    outcome: z.string().max(160),
+    // Optional journal slug for 'Read how I built it'. The link shows only when
+    // that journal entry exists and is not a draft.
+    story: z.string().optional(),
+    // Which live demo the card holds. Each one is drawn in LabStrip.astro.
+    demo: z.enum(['rota', 'status', 'console']),
+    // Place on the strip, 1 first.
+    order: z.number().int().positive(),
+  }),
+});
+
 export const collections = {
   'case-studies': caseStudies,
   photos: photos,
   journal: journal,
+  lab: lab,
 };

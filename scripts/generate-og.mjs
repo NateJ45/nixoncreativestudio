@@ -354,6 +354,7 @@ const STATIC_PAGES = [
   { route: 'work', title: 'Case studies' },
   { route: 'services', title: 'Prices' },
   { route: 'about', title: 'About the studio' },
+  { route: 'now', title: "What I'm doing now" },
   { route: 'photography', title: 'Photography' },
   { route: 'journal', title: 'Journal' },
   // Sector pages (src/data/sector-pages.ts). Add one line per new sector page.

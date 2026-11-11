@@ -337,3 +337,247 @@
     order: 3;
   }
 }
+
+/* The bio's photo stacks (src/components/PhotoStack.astro). The word is an inline button with the
+   accent underline; its photos rise above it as a little fan of prints, nudged sideways by
+   src/scripts/off-the-clock.js (--nx) to stay on screen, and dropped below the word (.below) when
+   there is no room above. Closed, the stack is display: none, so it costs no layout and no bytes. */
+/* inline-flex drops the markup's whitespace, so no space creeps in around the words or before
+   the punctuation after them (the tail). */
+.ps {
+  --pw: clamp(5.5rem, 24vw, 8.5rem);
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+}
+.ps-w {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.ps-w:hover,
+.ps.open .ps-w {
+  color: var(--accent);
+}
+.ps-pile {
+  display: none;
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  bottom: 100%;
+  /* The bottom padding is a bridge: the pointer can cross from the word to the photos. */
+  width: calc(var(--pw) * (1.25 + (var(--n) - 1) * 0.42));
+  height: calc(var(--pw) * 4 / 3 + 1.5rem);
+  padding-bottom: 0.6rem;
+  transform: translateX(calc(-50% + var(--nx, 0px)));
+}
+.ps.below .ps-pile {
+  bottom: auto;
+  top: 100%;
+  padding: 0.6rem 0 0;
+}
+.ps.open .ps-pile {
+  display: block;
+}
+html:not(.js) .ps:is(:hover, :focus-within) .ps-pile {
+  display: block;
+}
+.ps-ph {
+  position: absolute;
+  left: 50%;
+  bottom: 0.6rem;
+  width: var(--pw);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  margin-left: calc(var(--pw) / -2);
+  object-fit: cover;
+  border: 0.25rem solid var(--card);
+  border-radius: 0.6rem;
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 18px 30px -16px rgba(0, 0, 0, 0.5);
+  transform-origin: 50% 100%;
+  transform: translateX(calc(var(--d) * 42%)) rotate(calc(var(--d) * 7deg));
+  transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+.ps.below .ps-ph {
+  bottom: auto;
+  top: 0.6rem;
+  transform-origin: 50% 0;
+  transform: translateX(calc(var(--d) * 42%)) rotate(calc(var(--d) * -7deg));
+}
+@starting-style {
+  .ps.open .ps-ph {
+    transform: translateY(0.75rem) scale(0.9);
+  }
+}
+/* Reduced motion: no fan and no rise, just a tidy pile that is simply there. */
+@media (prefers-reduced-motion: reduce) {
+  .ps-ph,
+  .ps.below .ps-ph {
+    transform: translate(calc(var(--d) * 0.4rem), calc(var(--d) * -0.2rem))
+      rotate(calc(var(--d) * 1.5deg));
+    transition: none;
+  }
+  @starting-style {
+    .ps.open .ps-ph {
+      transform: translate(calc(var(--d) * 0.4rem), calc(var(--d) * -0.2rem))
+        rotate(calc(var(--d) * 1.5deg));
+    }
+  }
+}
+
+/* Off the clock (src/components/OffTheClock.astro): four cards that turn over. The front is
+   paper, lettered in two corners; the back is the studio blue. Only the face you can see takes
+   focus (the script makes the other inert). Without JavaScript the back simply sits under the
+   front. */
+.otc-sec .sec-head p a {
+  color: var(--ink);
+}
+.otc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.75rem);
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.otc {
+  perspective: 1600px;
+}
+.otc:nth-child(odd) {
+  transform: rotate(-0.5deg);
+}
+.otc:nth-child(even) {
+  transform: rotate(0.5deg);
+}
+.otc-card {
+  display: grid;
+  min-height: 22rem;
+  transform-style: preserve-3d;
+  transition: transform 0.75s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+.otc.over .otc-card {
+  transform: rotateY(180deg);
+}
+.otc-face {
+  --cardr: 1.5rem;
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 3.4rem 1.6rem 1.6rem;
+  border-radius: var(--cardr);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 26px 44px -22px rgba(0, 0, 0, 0.42);
+}
+.otc-front {
+  --pips: 1.5rem;
+  --pipx: 1.1rem;
+  --pipy: 1rem;
+}
+.otc-front h3 {
+  font: 600 clamp(2rem, 3vw, 2.6rem) / 1 var(--display);
+  letter-spacing: -0.045em;
+}
+.otc-line {
+  color: var(--soft);
+}
+.otc-back {
+  padding-top: 1.6rem;
+  background: var(--fill);
+  color: #fff;
+  transform: rotateY(180deg);
+}
+.otc-back a {
+  color: #fff;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+.otc-back:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.otc-ph {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 0.9rem;
+}
+.otc-turn {
+  align-self: flex-start;
+  min-height: 2.75rem;
+  margin-top: auto;
+  padding: 0 1.15rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--fill);
+  color: #fff;
+  font: 600 1rem / 1 var(--body);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.otc-turn:hover {
+  transform: scale(1.04);
+}
+.otc-back .otc-turn {
+  background: rgba(255, 255, 255, 0.16);
+}
+.otc-front .otc-turn:focus-visible {
+  outline-color: var(--ink);
+}
+.otc-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html:not(.js) .otc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+html:not(.js) .otc-back {
+  transform: none;
+}
+html:not(.js) .otc-turn {
+  display: none;
+}
+@media (max-width: 64rem) {
+  .otc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 36rem) {
+  .otc-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .otc-card {
+    min-height: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .otc-card,
+  .otc-turn {
+    transition: none;
+  }
+}

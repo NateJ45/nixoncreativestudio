@@ -80,6 +80,33 @@ for (const [what, fg, bg] of NIGHT_PAIRS) {
   });
 }
 
+// The Lab cards on /work keep the cobalt back on either side, so their pairs hold in both themes.
+const BACK_TEXT: [string, string, string][] = [
+  ['lab card text', token('back-ink'), token('back')],
+  ['lab card text on its screen', token('back-ink'), token('back-raise')],
+  ['lab card soft text', token('back-soft'), token('back')],
+  ['lab card soft text on its screen', token('back-soft'), token('back-raise')],
+  ['lab card blue (links)', token('back-accent'), token('back')],
+  ['lab card blue on its screen', token('back-accent'), token('back-raise')],
+  ['lab card button (cobalt on bone)', token('back'), token('back-ink')],
+];
+
+for (const [what, fg, bg] of BACK_TEXT) {
+  test(`AA text, lab card: ${what}`, () => {
+    const ratio = contrastRatio(fg, bg);
+    assert.ok(ratio >= AA_BODY_TEXT, `${what}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1`);
+  });
+}
+
+test('the lab status marks and focus ring clear 3:1 on the card and its screen', () => {
+  for (const mark of ['back-up', 'back-warn', 'back-ink', 'back-soft']) {
+    for (const bg of [token('back'), token('back-raise')]) {
+      const ratio = contrastRatio(token(mark), bg);
+      assert.ok(ratio >= AA_NON_TEXT, `--${mark} on ${bg} is ${ratio.toFixed(2)}:1`);
+    }
+  }
+});
+
 test('the dark side focus outline (currentColor on the page) clears 3:1', () => {
   assert.ok(contrastRatio(night('ink'), night('ground')) >= AA_NON_TEXT);
 });

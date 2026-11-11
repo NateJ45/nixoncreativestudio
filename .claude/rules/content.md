@@ -30,7 +30,7 @@ The nav is the dock (`src/components/Dock.astro`): Work, Prices (`/services/`), 
 
 ## Content collections
 
-Three collections live in `src/content/` with schemas declared in `src/content.config.ts`.
+Four collections live in `src/content/` with schemas declared in `src/content.config.ts`.
 
 **`case-studies`**: long-form portfolio entries as MDX files in `src/content/case-studies/`. Each page at `/work/{slug}/` is generated. Required frontmatter: `title`, `client`, `sector` (one of `church`, `school`, `nonprofit`, `small-business`), `services` (string array), `summary` (max 200 chars), `cover` (image path), `year` (int), `published` (date).
 
@@ -102,6 +102,8 @@ A client quote is only ever the client's own words. Record it verbatim in the va
 
 **`photos`**: JSON entries in `src/content/photos/`. Required: `title`, `image` (path), `category` (`events`, `portraits`, `environments`), `year`. Optional: `caption`, `location`, `featured`. The directory is empty, so /photography/ is gated. A new, non-React gallery that reads this collection is still to be built (`docs/PENDING.md`).
 
+**`lab`**: JSON entries in `src/content/lab/`, the Lab strip on /work (`LabStrip.astro`): things I built for my own people, not client work. Required: `title`, `label`, `problem`, `built`, `stack` (1 to 6 names), `outcome`, `demo` (`rota`, `status` or `console`, each drawn in `LabStrip.astro`), `order`. Optional: `story`, a journal slug; "Read how I built it" shows only when that entry exists and is not a draft. A Lab entry has no page, no sitemap entry, no JSON-LD and is never counted with the case studies. Every demo runs on made-up names and data; never put a real volunteer, client or family name in one.
+
 ### Voice
 
 Site copy, pages, components and case-study MDX alike, is first person singular: "I", never "we", "our" or "us" about the studio. `npm run test:copy` enforces it on the built site (see `docs/TESTING.md`). A client's own words go in a `<blockquote>`, or behind `data-copy-ignore` with a comment, and stay verbatim. Do not claim capacity or scarcity ("a small number of projects each quarter") unless Nathan has confirmed it.
@@ -123,6 +125,7 @@ Static routes generated at build time:
 | `/services/`       | `src/pages/services.astro` (nav label Prices)                                                                |
 | `/contact/`        | `src/pages/contact.astro` (nav label Start a project; Web3Forms inquiry; prefill in `homepage-and-pages.md`) |
 | `/about/`          | `src/pages/about.astro`                                                                                      |
+| `/now/`            | `src/pages/now.astro` (words and date in `src/data/now.ts`)                                                  |
 | `/privacy/`        | `src/pages/privacy.astro`                                                                                    |
 | `/accessibility/`  | `src/pages/accessibility.astro`                                                                              |
 | `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                           |
@@ -135,12 +138,12 @@ Static routes generated at build time:
 | `/llms.txt`        | `src/pages/llms.txt.ts` (plain-text studio summary for AI tools, prerendered)                                |
 | `/robots.txt`      | `public/robots.txt` (allows everything; names the AI crawlers explicitly)                                    |
 
-Redirects: `/now` to `/about/` (Astro `redirects`), `/work/west-chester-preschool` to `/work/` (Astro `redirects`), and real 301s in `public/_redirects`: `/prices` to `/services/`, `/start` to `/contact/`, and the retired studies. There is no `[sector].astro` and no `/colophon/parts/` any more.
+Redirects: `/work/west-chester-preschool` to `/work/` (Astro `redirects`), and real 301s in `public/_redirects`: `/prices` to `/services/`, `/start` to `/contact/`, and the retired studies. There is no `[sector].astro` and no `/colophon/parts/` any more.
 
 ## Metadata and structured data
 
 - **Titles and descriptions.** Every page passes `title` and `description` to BaseLayout. Titles stay at or under 60 characters and carry the studio name (the smoke spec checks for it); descriptions run 120 to 160 characters, written for the buyer in Nathan's first-person voice, no em-dashes. Case-study titles are built by `studyTitle()` in `src/lib/seo.ts` (sector form, then shorter forms until it fits); their descriptions come from `metaDescription`. Never hard-code the study count: `/work` and `/llms.txt` compute it from the collection. Prices in any description come from `pricing.ts`. `tests/metadata.spec.ts` fails on a long, short or duplicate title or description.
-- **JSON-LD.** One `@graph` per page from `src/lib/schema.ts` (unit-tested in `schema.test.ts`). Fixed ids: `/#studio`, `/#website`, `/about/#nathan`; page ids hang off the canonical URL (`#webpage`, `#breadcrumb`, `#work`, `#article`). Nodes link with `{ '@id': ... }`. Every identity string comes from `site.ts`; the studio's telephone is `site.phone` exactly (Nathan's decision, 2026-10-30: keep the 256 number). Offers on /services are read from `pricing.ts`, and the spec checks each one appears on the page. Never add a rating, review or result that is not real and attributed. Nested pages pass `breadcrumbs` to BaseLayout. A sector page (`/churches/`) passes `pageType="CollectionPage"`, a Home > Churches trail and an ItemList of its studies by URL.
+- **JSON-LD.** One `@graph` per page from `src/lib/schema.ts` (unit-tested in `schema.test.ts`). Fixed ids: `/#studio`, `/#website`, `/about/#nathan`; page ids hang off the canonical URL (`#webpage`, `#breadcrumb`, `#work`, `#article`). Nodes link with `{ '@id': ... }`. Every identity string comes from `site.ts`; the studio node's `sameAs` adds the Google Business Profile (`site.social.googleBusiness`, its Maps link) to Instagram and LinkedIn, the Person node does not; the studio's telephone is `site.phone` exactly (Nathan's decision, 2026-10-30: keep the 256 number). Offers on /services are read from `pricing.ts`, and the spec checks each one appears on the page. Never add a rating, review or result that is not real and attributed. Nested pages pass `breadcrumbs` to BaseLayout. A sector page (`/churches/`) passes `pageType="CollectionPage"`, a Home > Churches trail and an ItemList of its studies by URL.
 - **Share cards.** `BaseLayout` maps the pathname to `/og/{slug}.png`, written by `npm run og:pages`; a new page needs a run of it.
-- **AI crawlers.** `public/robots.txt` names GPTBot, ClaudeBot, Claude-SearchBot, PerplexityBot, Google-Extended, Applebot-Extended and CCBot with `Allow: /` (Nathan's decision, "allow AI"). `/llms.txt` lists the studio, prices and every case study (title, `hook`, summary, URL) from the same sources the pages use.
+- **AI crawlers.** `public/robots.txt` names GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, PerplexityBot, Google-Extended, Applebot-Extended and CCBot with `Allow: /` (Nathan's decision, "allow AI"). `/llms.txt` lists the studio, prices and every case study (title, `hook`, summary, URL) from the same sources the pages use.
 - After a deploy, run the Rich Results test on `/`, `/services/` and one case study (`docs/PENDING.md` item 0).
