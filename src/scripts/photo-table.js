@@ -14,10 +14,33 @@
    - A print opens into a native <dialog>, growing out of where it lay on a spring. Previous and Next
      walk the prints in order; the film there has its own controls (WCAG 2.2.2).
    - The /work filter bar picks a kind, and Table / Grid switches to the plain grid, which is also the
-     way through for a screen reader. */
+     way through for a screen reader.
+
+   Depth, light and colour (2026-11-13), all on top of the above and all off under reduced motion
+   unless it says otherwise:
+
+   - Depth. Neighbouring columns slide at slightly different speeds (columnSpeed in
+     src/lib/photo-table.ts), every print trails the table by its own small amount, and the whole
+     table tips a couple of degrees toward the way it was thrown.
+   - The lens. Prints ease smaller toward the corners (lensScale) and the stage's own edge falls
+     into shade (CSS, .pt-stage::after), so the middle print is the subject. A print's opacity is
+     never touched: tests/first-viewport.spec.ts holds every image on the first screen at 1.
+   - The lamp. With a mouse, a pool of light follows the pointer, and prints near it lift, turn to
+     face it and catch a sheen. Touch screens have no hover, so they skip it.
+   - The wash. The table's own colour drifts toward the colour of the print in the middle
+     (src/data/photo-colors.json, written by `npm run photo-colors`). Under reduced motion it is
+     set without the drift.
+   - Zoom. Pinch with two fingers, the + and - keys while the table has focus, or the two buttons
+     (nothing needs a pinch). Ctrl + wheel is left to the browser's own zoom.
+   - A filter scatters the prints that are down before the new kind is dealt.
+   - The full view develops in from the print's own colour, the backdrop takes that colour, a
+     sideways swipe steps on a touch screen, and the table underneath follows to the print you
+     stepped to, so closing lands beside it.
+   - "Fill the screen" puts the bar and the table in the browser's full screen, where it has one. */
 
 import { ui } from './kit.js';
 import { bloom, setPill } from './seg-bar.js';
+import { columnSpeed, lensScale, hexToRgb } from '../lib/photo-table.ts';
 
 var doc = document;
 var sec = doc.querySelector('[data-table]');
@@ -28,17 +51,23 @@ function start(sec) {
   var DATA = JSON.parse(doc.getElementById('pt-data').textContent);
   var stage = sec.querySelector('[data-stage]'),
     world = sec.querySelector('[data-world]'),
+    lamp = sec.querySelector('[data-lamp]'),
     grid = sec.querySelector('[data-grid]'),
     bar = sec.querySelector('[data-bar]'),
     status = sec.querySelector('[data-status]'),
     nowEl = sec.querySelector('[data-now]'),
-    coordsEl = sec.querySelector('[data-coords]');
+    coordsEl = sec.querySelector('[data-coords]'),
+    zoomEl = sec.querySelector('[data-zoomed]');
   var dlg = doc.querySelector('[data-open]');
   var reduce = ui.reduce;
   var saveData = !!(navigator.connection && navigator.connection.saveData);
+  // The lamp and the lift follow a pointer that can hover; a finger cannot.
+  var canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   /* ---- Sizes ------------------------------------------------------------- */
   var W, GAP, MAT;
+  var ZMIN = 0.6,
+    ZMAX = 1.6;
   function measure() {
     var vw = innerWidth;
     W = vw < 520 ? 150 : vw < 900 ? 210 : vw < 1500 ? 250 : 280;
@@ -51,13 +80,17 @@ function start(sec) {
     var x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
     return x - Math.floor(x);
   }
+  function clamp(v, a, b) {
+    return Math.max(a, Math.min(b, v));
+  }
 
   /* ---- Layout ------------------------------------------------------------ */
   var kind = 'all',
     list = DATA, // the prints in the current filter, in order
-    cols = [], // [{ items: [{ p, y, h }], H, off }]
+    cols = [], // [{ items: [{ p, y, h }], H, off, sp }]
     C = 1,
-    colW = 0;
+    colW = 0,
+    wanted = 0; // the columns the table asked for when it was last laid
 
   function layout() {
     list = DATA.filter(function (p) {
@@ -72,10 +105,19 @@ function start(sec) {
       turn++;
     }
     colW = W + GAP;
-    var want = Math.ceil((stage.clientWidth * 1.5) / colW);
+    // Enough columns that the block is wider than the table at its furthest zoom out, where there
+    // are prints to fill them, so a print is not on screen twice.
+    var want = (wanted = Math.ceil((stage.clientWidth / ZMIN + 400) / colW));
     C = Math.max(2, Math.min(want, Math.floor(deck.length / 3)));
     cols = [];
-    for (var c = 0; c < C; c++) cols.push({ items: [], H: 0, off: Math.round(hash(c + 1) * 180) });
+    for (var c = 0; c < C; c++)
+      cols.push({
+        items: [],
+        H: 0,
+        off: Math.round(hash(c + 1) * 180),
+        // How fast this column slides compared with the table: the depth.
+        sp: reduce ? 1 : columnSpeed(c),
+      });
     deck.forEach(function (p) {
       // Shortest column first, so the columns come out near one height.
       var col = cols.reduce(function (a, b) {
@@ -89,18 +131,26 @@ function start(sec) {
 
   /* ---- Camera and motion --------------------------------------------------- */
   // cx, cy: the world point at the stage's top-left. vx, vy: px per second.
+  // A column's own camera is cy times its speed, which is all the depth is.
   var cx = 0,
     cy = 0,
     vx = 0,
     vy = 0;
-  var zoom = ui.spring(170, 22, 1); // eases out a little while moving fast
+  var zoomBase = 1; // what the visitor asked for; the spring eases to it
+  var zoom = ui.spring(170, 22, 1); // and eases out a little more while moving fast
   var lean = { x: 0, y: 0 }; // smoothed velocity, for the prints' lean
   var dragging = false,
     engaged = false, // the wheel moves the table only after a press on it
     lastTouch = performance.now(),
-    drift = 0; // 0..1, how much of the idle drift is running
+    drift = 0, // 0..1, how much of the idle drift is running
+    frameDt = 0.016;
+  // The pointer over the table, in stage pixels, for the lamp.
+  var ptr = { x: 0, y: 0, on: false, lit: 0 };
+  // The wash: the table's colour, drifting toward the middle print's.
+  var wash = null,
+    washTo = null;
 
-  var live = new Map(); // key -> { el, p, x, y, w, h, tilt, video }
+  var live = new Map(); // key -> { el, p, x, y, w, h, tilt, video, sp, k, sx, sy, f }
   var pool = [];
 
   function el(p) {
@@ -125,15 +175,20 @@ function start(sec) {
     }
     d.dataset.i = p.i;
     d.classList.remove('is-mid', 'is-playing');
+    d.style.zIndex = '';
+    d.style.removeProperty('--g');
     return d;
   }
 
-  function release(key, it) {
+  function stopFilm(it) {
     if (it.video) {
       it.video.pause();
       it.video.removeAttribute('src');
       it.video.load();
     }
+  }
+  function release(key, it) {
+    stopFilm(it);
     it.el.remove();
     pool.push(it.el);
     live.delete(key);
@@ -143,7 +198,8 @@ function start(sec) {
     return ((a % n) + n) % n;
   }
 
-  var mid = null; // the print nearest the middle
+  var mid = null, // the print nearest the middle
+    settling = false; // a print is still easing up or down under the lamp
   function paint() {
     var sw = stage.clientWidth,
       sh = stage.clientHeight,
@@ -152,19 +208,21 @@ function start(sec) {
     var vw = sw / s,
       vh = sh / s,
       ox = cx + (sw - vw) / 2,
-      oy = cy + (sh - vh) / 2,
       m = 200;
     var seen = new Set();
     var c0 = Math.floor((ox - m) / colW),
       c1 = Math.floor((ox + vw + m) / colW);
     var best = null,
       bestD = Infinity,
-      mx = cx + sw / 2,
-      my = cy + sh / 2;
+      mx = cx + sw / 2;
     for (var ci = c0; ci <= c1; ci++) {
       var col = cols[mod(ci, C)];
       if (!col || !col.H) continue;
       var x = ci * colW;
+      // This column's own camera.
+      var cyc = cy * col.sp,
+        oy = cyc + (sh - vh) / 2,
+        my = cyc + sh / 2;
       var k0 = Math.floor((oy - m - col.off - col.H) / col.H),
         k1 = Math.floor((oy + vh + m - col.off) / col.H);
       for (var k = k0; k <= k1; k++) {
@@ -177,6 +235,7 @@ function start(sec) {
           var it = live.get(key);
           if (!it) {
             var d = el(t.p);
+            var seed = ci * 31 + k * 17 + j;
             it = {
               el: d,
               p: t.p,
@@ -184,7 +243,13 @@ function start(sec) {
               y: y,
               w: W,
               h: t.h,
-              tilt: (hash(ci * 31 + k * 17 + j) - 0.5) * 3,
+              tilt: (hash(seed) - 0.5) * 3,
+              // How far this print trails the table, in seconds of the table's speed.
+              k: 0.004 + hash(seed + 0.5) * 0.016,
+              sp: col.sp,
+              sx: 0,
+              sy: 0,
+              f: 0,
               video: null,
               born: performance.now(),
             };
@@ -208,33 +273,117 @@ function start(sec) {
     });
 
     // Place every print: world to screen, scaled about the stage's middle, leaning with speed.
-    var lx = Math.max(-1, Math.min(1, lean.x / 2400)),
-      ly = Math.max(-1, Math.min(1, lean.y / 2400));
+    var lxp = clamp(lean.x, -2400, 2400),
+      lyp = clamp(lean.y, -2400, 2400),
+      lx = lxp / 2400,
+      ly = lyp / 2400,
+      half = Math.hypot(sw, sh) / 2,
+      reach = 300,
+      lit = ptr.lit,
+      ease = Math.min(1, frameDt * 11);
     live.forEach(function (it) {
-      var sx = (it.x - cx - sw / 2) * s + sw / 2,
-        sy = (it.y - cy - sh / 2) * s + sh / 2;
-      var r = reduce ? it.tilt * 0.5 : it.tilt + lx * 5 * (0.6 + Math.abs(it.tilt) / 3);
-      var skew = reduce ? 0 : -ly * 3;
-      it.el.style.transform =
+      // The print's middle on screen, before any of the effects below. The films, the deal and
+      // the lamp all measure from here.
+      var mxs = (it.x + it.w / 2 - cx - sw / 2) * s + sw / 2,
+        mys = (it.y + it.h / 2 - cy * it.sp - sh / 2) * s + sh / 2;
+      it.sx = mxs;
+      it.sy = mys;
+      if (reduce) {
+        it.el.style.transform =
+          'translate3d(' +
+          (mxs - it.w / 2).toFixed(1) +
+          'px,' +
+          (mys - it.h / 2).toFixed(1) +
+          'px,0) scale(' +
+          s.toFixed(4) +
+          ') rotate(' +
+          (it.tilt * 0.5).toFixed(2) +
+          'deg)';
+        return;
+      }
+      // Trail: loose paper keeps up with the table a moment late.
+      var px = mxs - lxp * it.k,
+        py = mys - lyp * it.k;
+      // Lens: smaller toward the corners.
+      var ls = lensScale(Math.hypot(px - sw / 2, py - sh / 2) / half);
+      // Lamp: how close the pointer is, eased so a print does not pop.
+      var want = 0,
+        ddx = 0,
+        ddy = 0;
+      if (lit > 0.01) {
+        ddx = ptr.x - px;
+        ddy = ptr.y - py;
+        var near = 1 - Math.hypot(ddx, ddy) / reach;
+        want = near > 0 ? near * near * lit : 0;
+      }
+      if (Math.abs(want - it.f) > 0.004) settling = true;
+      it.f += (want - it.f) * ease;
+      if (it.f < 0.002) it.f = 0;
+      var f = it.f;
+      var r = it.tilt * (1 - f * 0.7) + lx * 5 * (0.6 + Math.abs(it.tilt) / 3);
+      var tr =
         'translate3d(' +
-        sx.toFixed(1) +
+        (px - it.w / 2).toFixed(1) +
         'px,' +
-        sy.toFixed(1) +
-        'px,0) scale(' +
-        s.toFixed(4) +
+        (py - it.h / 2).toFixed(1) +
+        'px,' +
+        (f * 70).toFixed(1) +
+        'px)';
+      if (f) {
+        // Turn to face the pointer: at most nine degrees either way.
+        tr +=
+          ' rotateX(' +
+          (clamp(-ddy / (it.h * s), -1, 1) * -9 * f).toFixed(2) +
+          'deg) rotateY(' +
+          (clamp(-ddx / (it.w * s), -1, 1) * 9 * f).toFixed(2) +
+          'deg)';
+      }
+      it.el.style.transform =
+        tr +
+        ' scale(' +
+        (s * ls).toFixed(4) +
         ') rotate(' +
         r.toFixed(2) +
         'deg) skewY(' +
-        skew.toFixed(2) +
+        (-ly * 3).toFixed(2) +
         'deg)';
-      it.el.style.transformOrigin = '0 0';
+      if (f || it.lifted) {
+        it.lifted = f > 0;
+        it.el.style.zIndex = f > 0.15 ? '2' : '';
+        it.el.style.setProperty('--g', f.toFixed(3));
+        if (f) {
+          it.el.style.setProperty(
+            '--gx',
+            (50 + clamp(ddx / (it.w * s), -1, 1) * 50).toFixed(1) + '%',
+          );
+          it.el.style.setProperty(
+            '--gy',
+            (50 + clamp(ddy / (it.h * s), -1, 1) * 50).toFixed(1) + '%',
+          );
+        }
+      }
     });
+    if (!reduce) {
+      // The whole table tips toward the way it is moving.
+      world.style.transform =
+        'rotateX(' + (ly * 2.2).toFixed(2) + 'deg) rotateY(' + (-lx * 2.2).toFixed(2) + 'deg)';
+      if (lamp) {
+        lamp.style.transform =
+          'translate3d(' +
+          ptr.x.toFixed(1) +
+          'px,' +
+          ptr.y.toFixed(1) +
+          'px,0) translate(-50%,-50%)';
+        lamp.style.opacity = lit.toFixed(2);
+      }
+    }
 
     if (best !== mid) {
       if (mid) mid.el.classList.remove('is-mid');
       mid = best;
       if (mid) {
         mid.el.classList.add('is-mid');
+        washTo = hexToRgb(mid.p.c);
         if (doc.activeElement === world) say();
       }
     }
@@ -243,9 +392,29 @@ function start(sec) {
         n = Math.round(n / 10);
         return (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('en-US');
       };
-      coordsEl.textContent = 'x ' + fmt(mx) + '  y ' + fmt(-my);
+      coordsEl.textContent = 'x ' + fmt(mx) + '  y ' + fmt(-(cy + sh / 2));
     }
     films();
+  }
+
+  /* ---- The wash: the table takes the middle print's colour ------------------------------------ */
+  function paintWash(dt) {
+    if (!washTo) return false;
+    if (!wash || reduce) wash = washTo.slice();
+    var moving = false;
+    for (var i = 0; i < 3; i++) {
+      var d = washTo[i] - wash[i];
+      if (Math.abs(d) > 0.6) {
+        wash[i] += d * Math.min(1, dt * 1.6);
+        moving = true;
+      } else wash[i] = washTo[i];
+    }
+    var css = 'rgb(' + wash.map(Math.round).join(' ') + ')';
+    if (css !== paintWash.last) {
+      paintWash.last = css;
+      stage.style.setProperty('--wash', css);
+    }
+    return moving;
   }
 
   /* ---- Films: play the nearest three to the middle --------------------------------------------- */
@@ -253,13 +422,12 @@ function start(sec) {
     if (reduce || saveData) return;
     var sw = stage.clientWidth,
       sh = stage.clientHeight,
-      mx = cx + sw / 2,
-      my = cy + sh / 2,
+      s = zoom.x,
       reach = Math.hypot(sw, sh) * 0.42;
     var near = [];
     live.forEach(function (it) {
       if (!it.p.video) return;
-      var d = Math.hypot(it.x + it.w / 2 - mx, it.y + it.h / 2 - my);
+      var d = Math.hypot(it.sx - sw / 2, it.sy - sh / 2) / s;
       if (d < reach) near.push({ it: it, d: d });
     });
     near.sort(function (a, b) {
@@ -315,6 +483,7 @@ function start(sec) {
     raf = 0;
     var dt = Math.min(0.05, (now - last) / 1000);
     last = now;
+    frameDt = dt || 0.016;
     var busy = false;
 
     if (!dragging) {
@@ -332,17 +501,50 @@ function start(sec) {
       if (vx || vy || drift > 0.001) busy = true;
     }
     // The lean follows the speed, a little behind it.
-    var tx = dragging ? vx : vx,
-      ty = dragging ? vy : vy;
-    lean.x += (tx - lean.x) * Math.min(1, dt * 8);
-    lean.y += (ty - lean.y) * Math.min(1, dt * 8);
+    lean.x += (vx - lean.x) * Math.min(1, dt * 8);
+    lean.y += (vy - lean.y) * Math.min(1, dt * 8);
     if (Math.abs(lean.x) > 1 || Math.abs(lean.y) > 1) busy = true;
     var speed = Math.hypot(vx, vy);
-    if (!reduce && zoom.step(1 - Math.min(0.08, speed / 30000), dt)) busy = true;
+    if (reduce) zoom.x = zoomBase;
+    else if (zoom.step(zoomBase * (1 - Math.min(0.08, speed / 30000)), dt)) busy = true;
+    // The lamp comes up and goes down softly.
+    var litTo = ptr.on && !dragging && !reduce ? 1 : 0;
+    if (Math.abs(litTo - ptr.lit) > 0.005) {
+      ptr.lit += (litTo - ptr.lit) * Math.min(1, dt * 7);
+      busy = true;
+    } else ptr.lit = litTo;
+    if (paintWash(dt)) busy = true;
 
+    settling = false;
     paint();
+    if (settling) busy = true;
+    if (zoomEl) {
+      var pct = Math.round(zoom.x * 100) + '%';
+      if (zoomEl.textContent !== pct) zoomEl.textContent = pct;
+    }
     if ((busy || dragging) && visible) raf = requestAnimationFrame(tick);
   }
+
+  /* ---- Zoom --------------------------------------------------------------------------------- */
+  function setZoom(z, quiet) {
+    zoomBase = clamp(z, ZMIN, ZMAX);
+    lastTouch = performance.now();
+    drift = 0;
+    [].forEach.call(sec.querySelectorAll('[data-zoom]'), function (b) {
+      var out = b.dataset.zoom === 'out';
+      b.disabled = out ? zoomBase <= ZMIN + 0.001 : zoomBase >= ZMAX - 0.001;
+    });
+    if (!quiet && nowEl) nowEl.textContent = 'Zoom ' + Math.round(zoomBase * 100) + ' percent.';
+    wake();
+  }
+  [].forEach.call(sec.querySelectorAll('[data-zoom]'), function (b) {
+    b.addEventListener('click', function () {
+      var out = b.dataset.zoom === 'out';
+      setZoom(zoomBase * (out ? 1 / 1.3 : 1.3));
+      // A button that has just switched itself off would drop the focus on the floor.
+      if (b.disabled) (sec.querySelector('[data-zoom]:not(:disabled)') || world).focus();
+    });
+  });
 
   /* ---- Moving it -------------------------------------------------------------------------- */
   var pid = null,
@@ -351,8 +553,28 @@ function start(sec) {
     pt = 0,
     travel = 0,
     downOn = null;
+  // Two fingers down is a pinch: the distance between them sets the zoom.
+  var fingers = new Map(),
+    pinch = null;
+  function spread() {
+    var a = [];
+    fingers.forEach(function (f) {
+      a.push(f);
+    });
+    return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
+  }
   world.addEventListener('pointerdown', function (e) {
     if (e.button !== 0) return;
+    if (e.pointerType === 'touch') {
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (fingers.size === 2) {
+        pinch = { d: spread(), z: zoomBase };
+        travel = 99; // a pinch is never a tap
+        vx = vy = 0;
+        world.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
     pid = e.pointerId;
     px = e.clientX;
     py = e.clientY;
@@ -369,6 +591,12 @@ function start(sec) {
     wake();
   });
   world.addEventListener('pointermove', function (e) {
+    if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && fingers.size === 2) {
+      setZoom((pinch.z * spread()) / pinch.d, true);
+      lastTouch = performance.now();
+      return;
+    }
     if (e.pointerId !== pid) return;
     var now = performance.now(),
       dt = Math.max(1, now - pt) / 1000,
@@ -387,6 +615,20 @@ function start(sec) {
     wake();
   });
   function up(e) {
+    fingers.delete(e.pointerId);
+    if (pinch) {
+      // One finger left after a pinch: carry on dragging from where it is, with no jump or throw.
+      pinch = null;
+      var rest = fingers.entries().next().value;
+      if (rest) {
+        pid = rest[0];
+        px = rest[1].x;
+        py = rest[1].y;
+        pt = performance.now();
+        vx = vy = 0;
+        return;
+      }
+    }
     if (e.pointerId !== pid) return;
     pid = null;
     dragging = false;
@@ -405,7 +647,20 @@ function start(sec) {
   world.addEventListener('pointercancel', up);
   stage.addEventListener('pointerleave', function () {
     engaged = false;
+    ptr.on = false;
+    wake();
   });
+  // The lamp follows a mouse (or a pen that hovers), never a finger.
+  if (canHover && !reduce)
+    stage.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'touch') return;
+      var r = stage.getBoundingClientRect();
+      ptr.x = e.clientX - r.left;
+      ptr.y = e.clientY - r.top;
+      // Off while the pointer is on the buttons, so they are not lit from behind.
+      ptr.on = !e.target.closest('button');
+      wake();
+    });
 
   // A trackpad's sideways swipe always moves the table; an up-and-down wheel moves it only after a
   // press on it, so the page can still scroll past.
@@ -417,8 +672,8 @@ function start(sec) {
       if (!engaged && !sideways) return;
       e.preventDefault();
       var k = e.deltaMode === 1 ? 32 : 1;
-      cx += e.deltaX * k;
-      cy += e.deltaY * k;
+      cx += (e.deltaX * k) / zoom.x;
+      cy += (e.deltaY * k) / zoom.x;
       vx = vy = 0;
       lastTouch = performance.now();
       drift = 0;
@@ -454,13 +709,19 @@ function start(sec) {
     } else if ((e.key === 'Enter' || e.key === ' ') && mid) {
       e.preventDefault();
       openAt(mid.p.i, mid.el);
+    } else if (!e.ctrlKey && !e.metaKey && (e.key === '+' || e.key === '=')) {
+      e.preventDefault();
+      setZoom(zoomBase * 1.3);
+    } else if (!e.ctrlKey && !e.metaKey && (e.key === '-' || e.key === '_')) {
+      e.preventDefault();
+      setZoom(zoomBase / 1.3);
     }
   });
   world.addEventListener('focus', say);
   [].forEach.call(sec.querySelectorAll('[data-nudge]'), function (b) {
     b.addEventListener('click', function () {
       var d = b.dataset.nudge.split(',').map(Number);
-      push(d[0] * stage.clientWidth * 0.45, d[1] * stage.clientHeight * 0.45);
+      push((d[0] * stage.clientWidth * 0.45) / zoom.x, (d[1] * stage.clientHeight * 0.45) / zoom.x);
     });
   });
 
@@ -476,29 +737,62 @@ function start(sec) {
   }
 
   /* ---- The deal: on arrival the prints fly out from the middle into their places ---------- */
-  function deal() {
+  function deal(wait) {
     if (reduce || ui.restored()) return;
     var sw = stage.clientWidth,
       sh = stage.clientHeight;
     live.forEach(function (it) {
-      var sx = it.x - cx,
-        sy = it.y - cy;
-      var d = Math.hypot(sx + it.w / 2 - sw / 2, sy + it.h / 2 - sh / 2);
+      var d = Math.hypot(it.sx - sw / 2, it.sy - sh / 2);
       it.el.animate(
         [
           {
-            translate: sw / 2 - sx - it.w / 2 + 'px ' + (sh / 2 - sy - it.h / 2) + 'px',
+            translate: sw / 2 - it.sx + 'px ' + (sh / 2 - it.sy) + 'px',
             scale: '0.55',
           },
           { translate: '0 0', scale: '1' },
         ],
         {
           duration: 900,
-          delay: Math.min(500, d * 0.45),
+          delay: (wait || 0) + Math.min(500, d * 0.45),
           easing: 'cubic-bezier(.3,1.25,.5,1)',
           fill: 'backwards',
         },
       );
+    });
+  }
+
+  /* ---- The scatter: the prints that are down leave outward before a new kind is dealt ----- */
+  function scatter() {
+    var sw = stage.clientWidth,
+      sh = stage.clientHeight;
+    live.forEach(function (it, key) {
+      stopFilm(it);
+      live.delete(key);
+      var node = it.el;
+      if (reduce) {
+        node.remove();
+        pool.push(node);
+        return;
+      }
+      // Straight out from the middle, far enough to clear the table.
+      var ax = it.sx - sw / 2,
+        ay = it.sy - sh / 2,
+        len = Math.hypot(ax, ay) || 1,
+        far = Math.hypot(sw, sh) * 0.7;
+      node.style.pointerEvents = 'none';
+      var a = node.animate(
+        [
+          { translate: '0 0', opacity: 1 },
+          { translate: (ax / len) * far + 'px ' + (ay / len) * far + 'px', opacity: 0 },
+        ],
+        { duration: 420, easing: 'cubic-bezier(.5,0,.8,.3)', fill: 'forwards' },
+      );
+      a.finished
+        .catch(function () {})
+        .then(function () {
+          // A scattered print is not put back in the pool: its finished animation would ride along.
+          node.remove();
+        });
     });
   }
 
@@ -522,20 +816,21 @@ function start(sec) {
         ? 'Showing all ' + n + '.'
         : // The button's own word, without its count: "Weddings 12" says "Showing 12 weddings."
           'Showing ' + n + ' ' + b.firstChild.textContent.trim().toLowerCase() + '.';
-    live.forEach(function (it, key) {
-      release(key, it);
-    });
+    var onTable = sec.dataset.view === 'table' && live.size > 0;
+    scatter();
     mid = null;
     layout();
     // Centre the first print of the new set.
     var first = cols[0] && cols[0].items[0];
-    if (first) {
-      cx = W / 2 - stage.clientWidth / 2;
-      cy = cols[0].off + first.h / 2 - stage.clientHeight / 2;
-    }
+    if (first) centreOn(0, cols[0].off + first.y, first.h, cols[0].sp);
     paint();
-    deal();
+    deal(onTable && !reduce ? 180 : 0);
     wake();
+  }
+  // Put the camera so the print at (x, y) with height h, in a column of speed sp, is in the middle.
+  function centreOn(x, y, h, sp) {
+    cx = x + W / 2 - stage.clientWidth / 2;
+    cy = (y + h / 2 - stage.clientHeight / 2) / sp;
   }
   [].forEach.call(bar.querySelectorAll('[data-f]'), function (b) {
     b.addEventListener('click', function (e) {
@@ -563,6 +858,27 @@ function start(sec) {
       setView(b.dataset.v, e, b);
     });
   });
+
+  /* ---- Fill the screen ---------------------------------------------------------------------- */
+  var fullBtn = sec.querySelector('[data-full]');
+  if (fullBtn) {
+    if (!doc.fullscreenEnabled || !sec.requestFullscreen) fullBtn.hidden = true;
+    else {
+      fullBtn.addEventListener('click', function () {
+        if (doc.fullscreenElement) doc.exitFullscreen();
+        else {
+          var p = sec.requestFullscreen();
+          if (p && p.catch) p.catch(function () {});
+        }
+      });
+      doc.addEventListener('fullscreenchange', function () {
+        var on = doc.fullscreenElement === sec;
+        fullBtn.setAttribute('aria-pressed', String(on));
+        fullBtn.setAttribute('aria-label', on ? 'Leave full screen' : 'Fill the screen');
+        resized();
+      });
+    }
+  }
 
   /* ---- The full view ---------------------------------------------------------------------- */
   var media = dlg.querySelector('[data-media]'),
@@ -593,7 +909,15 @@ function start(sec) {
       img.width = p.w;
       img.height = p.h;
       media.appendChild(img);
+      if (!reduce && p.c) {
+        var dev = doc.createElement('span');
+        dev.className = 'pt-dev';
+        dev.setAttribute('aria-hidden', 'true');
+        media.appendChild(dev);
+      }
     }
+    if (p.c) dlg.style.setProperty('--tint', p.c);
+    else dlg.style.removeProperty('--tint');
     dlg.querySelector('[data-line]').textContent = p.line;
     dlg.querySelector('[data-title]').textContent = p.title;
     dlg.querySelector('[data-alt]').textContent = p.caption || p.alt;
@@ -601,11 +925,56 @@ function start(sec) {
     var pos = list.indexOf(p);
     dlg.querySelector('[data-count]').textContent = pos >= 0 ? pos + 1 + ' of ' + list.length : '';
   }
+  // Lay the developing sheet exactly over the picture (the dialog has to be open to measure it).
+  // A picture has no size until it has loaded, so the sheet waits for that, then starts to clear.
+  function placeDev() {
+    var dev = media.querySelector('.pt-dev'),
+      img = media.querySelector('img');
+    if (!dev || !img) return;
+    var go = function () {
+      if (!dev.isConnected || !img.offsetWidth) return;
+      dev.style.left = img.offsetLeft + 'px';
+      dev.style.top = img.offsetTop + 'px';
+      dev.style.width = img.offsetWidth + 'px';
+      dev.style.height = img.offsetHeight + 'px';
+      dev.classList.add('is-on');
+    };
+    if (img.complete && img.naturalWidth) go();
+    else img.addEventListener('load', go, { once: true });
+  }
+  // Bring the table, under the full view, to where this print lies nearest to where it is now.
+  function follow(p) {
+    if (sec.dataset.view !== 'table') return;
+    var sw = stage.clientWidth,
+      sh = stage.clientHeight,
+      best = null,
+      bestD = Infinity;
+    cols.forEach(function (col, c) {
+      col.items.forEach(function (t) {
+        if (t.p !== p) return;
+        // The nearest copy of this column across, and of this print down it.
+        var ci = c + C * Math.round((cx + sw / 2 - W / 2 - c * colW) / (C * colW));
+        var want = cy * col.sp + sh / 2 - t.h / 2 - col.off - t.y;
+        var y = Math.round(want / col.H) * col.H + col.off + t.y;
+        var d = Math.hypot(ci * colW + W / 2 - cx - sw / 2, y + t.h / 2 - cy * col.sp - sh / 2);
+        if (d < bestD) {
+          bestD = d;
+          best = { x: ci * colW, y: y, h: t.h, sp: col.sp };
+        }
+      });
+    });
+    if (!best) return;
+    centreOn(best.x, best.y, best.h, best.sp);
+    vx = vy = 0;
+    paint();
+  }
   function step(d) {
     var pos = list.indexOf(DATA[at]);
     if (pos < 0) pos = 0;
     var next = list[mod(pos + d, list.length)];
     fill(next.i);
+    placeDev();
+    follow(next);
     if (!reduce)
       media.animate(
         [
@@ -619,6 +988,7 @@ function start(sec) {
     returnTo = sec.dataset.view === 'grid' ? from : world;
     fill(i);
     dlg.showModal();
+    placeDev();
     lastTouch = performance.now();
     // Grow out of the print it came from, on the house spring.
     if (reduce || !from) return;
@@ -662,6 +1032,25 @@ function start(sec) {
     if (e.key === 'ArrowRight') step(1);
     if (e.key === 'ArrowLeft') step(-1);
   });
+  // A sideways swipe on the picture steps, on a touch screen. Previous and Next do the same
+  // without one (WCAG 2.5.1), and a film keeps its own controls.
+  var sw0 = null;
+  media.addEventListener('pointerdown', function (e) {
+    sw0 =
+      e.pointerType === 'touch' && !e.target.closest('video')
+        ? { x: e.clientX, y: e.clientY }
+        : null;
+  });
+  media.addEventListener('pointerup', function (e) {
+    if (!sw0) return;
+    var dx = e.clientX - sw0.x,
+      dy = e.clientY - sw0.y;
+    sw0 = null;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+  });
+  media.addEventListener('pointercancel', function () {
+    sw0 = null;
+  });
   // A click on the backdrop (outside the card) closes it.
   dlg.addEventListener('click', function (e) {
     if (e.target === dlg) dlg.close();
@@ -694,25 +1083,35 @@ function start(sec) {
     visible = !doc.hidden;
     if (visible) wake();
   });
+  // Keep the middle print in the middle when the table changes size, and lay it again if the
+  // print width or the number of columns the table needs has changed.
+  function resized() {
+    var keep = mid && { p: mid.p };
+    var oldW = W;
+    measure();
+    if (W !== oldW || Math.ceil((stage.clientWidth / ZMIN + 400) / (W + GAP)) !== wanted) {
+      live.forEach(function (it, key) {
+        release(key, it);
+      });
+      mid = null;
+      layout();
+    }
+    if (keep) follow(keep.p);
+    setPill(bar);
+    paint();
+    wake();
+  }
   var rt = 0;
   addEventListener('resize', function () {
     clearTimeout(rt);
-    rt = setTimeout(function () {
-      var mx = cx + stage.clientWidth / 2,
-        my = cy + stage.clientHeight / 2;
-      var oldW = W;
-      measure();
-      if (W !== oldW) {
-        live.forEach(function (it, key) {
-          release(key, it);
-        });
-        layout();
-      }
-      cx = mx - stage.clientWidth / 2;
-      cy = my - stage.clientHeight / 2;
-      setPill(bar);
-      paint();
-    }, 120);
+    rt = setTimeout(resized, 120);
+  });
+
+  // The prints reach past the stage's edge, and a clipped box can still be scrolled by focus or
+  // scrollIntoView, which would slide the table and its buttons out from under the frame. The CSS
+  // uses overflow: clip where it can; this puts it back anywhere that falls through.
+  stage.addEventListener('scroll', function () {
+    if (stage.scrollLeft || stage.scrollTop) stage.scrollTo(0, 0);
   });
 
   stage.hidden = false;
@@ -720,8 +1119,7 @@ function start(sec) {
   measure();
   layout();
   // Open centred on the first print (the featured one).
-  cx = W / 2 - stage.clientWidth / 2;
-  cy = cols[0].off + cols[0].items[0].h / 2 - stage.clientHeight / 2;
+  centreOn(0, cols[0].off + cols[0].items[0].y, cols[0].items[0].h, cols[0].sp);
   setPill(bar);
   // The pill measures its button, so measure again once the font is in and the page has settled.
   if (doc.fonts && doc.fonts.ready)
@@ -731,7 +1129,13 @@ function start(sec) {
   addEventListener('load', function () {
     setPill(bar);
   });
+  setZoom(1, true);
   paint();
+  // The table starts in its first print's colour, with no drift into it.
+  if (washTo) {
+    wash = washTo.slice();
+    paintWash(0);
+  }
   deal();
   lastTouch = performance.now() - 1500;
   wake();
