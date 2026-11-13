@@ -774,7 +774,14 @@ function tsRender() {
     },
   });
 }
-if (tsBox) {
+/* Loaded the first time someone starts on the form, not with the page: a reader who never
+   touches the form never downloads it (and /contact stays inside its weight budget,
+   tests/page-weight.spec.ts). Filling in the form takes longer than the check, so the token is
+   ready by Send. */
+var tsLoaded = false;
+function tsLoad() {
+  if (!tsBox || tsLoaded) return;
+  tsLoaded = true;
   window.ncsTurnstileReady = tsRender;
   var tsScript = document.createElement('script');
   tsScript.src =
@@ -782,9 +789,13 @@ if (tsBox) {
   tsScript.async = true;
   document.head.appendChild(tsScript);
 }
+['focusin', 'pointerdown', 'input'].forEach(function (type) {
+  form.addEventListener(type, tsLoad, { once: true, passive: true });
+});
 /* The token, waiting a few seconds for one if the check is still running. Never blocks the send
    for good: with no token the server decides, and a real person can try again. */
 function tsReady() {
+  tsLoad();
   return new Promise(function (resolve) {
     if (!tsBox || tsToken) return resolve();
     var waited = 0,
