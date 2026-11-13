@@ -118,3 +118,36 @@ describe('phoneHref', () => {
     assert.equal(phoneHref('call me'), null);
   });
 });
+
+describe('buildInquiryEmail: spam check and where it came from', () => {
+  const spam = {
+    score: 4,
+    verdict: 'flag' as const,
+    reasons: ['Sent from outside the US (NL) (+2)', 'Sent from a server network (+2)'],
+  };
+
+  it('marks a flagged inquiry in the subject, the text and the html', () => {
+    const e = buildInquiryEmail(full, { ...meta, spam });
+    assert.match(e.subject, /^\[Likely spam\] New inquiry: Grace Church/);
+    assert.match(e.text, /Spam check: 4 points\n- Sent from outside the US \(NL\) \(\+2\)/);
+    assert.match(e.html, /Likely spam: 4 points\./);
+  });
+
+  it('says nothing about spam when the score is ok', () => {
+    const e = buildInquiryEmail(full, {
+      ...meta,
+      spam: { score: 1, verdict: 'ok', reasons: ['x'] },
+    });
+    assert.doesNotMatch(e.subject, /Likely spam/);
+    assert.doesNotMatch(e.html, /Likely spam/);
+  });
+
+  it('names the rough place and network in the footer', () => {
+    const e = buildInquiryEmail(full, {
+      ...meta,
+      place: 'Cincinnati, Ohio',
+      network: 'Charter Communications',
+    });
+    assert.match(e.text, /from Cincinnati, Ohio, US on Charter Communications/);
+  });
+});
