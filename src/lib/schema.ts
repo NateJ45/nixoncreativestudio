@@ -66,7 +66,7 @@ export function studioNode(lowestPrice: number): Node {
       addressRegion: 'OH',
       addressCountry: 'US',
     },
-    // Based locally; web, strategy and brand work serve clients anywhere, and
+    // Based locally; web and strategy work serve clients anywhere, and
     // photography stays regional (see the per-Service areaServed on /services).
     areaServed: [
       { '@type': 'Place', name: 'Greater Cincinnati region' },
@@ -225,7 +225,7 @@ export function tierOffers(tiers: WebTier[]): Node[] {
 
 /**
  * An Offer read from an add-on's display price: 'from $900' becomes a
- * minPrice, '$500 to $2,000' a minPrice and maxPrice.
+ * minPrice, '$350 to $650' a minPrice and maxPrice.
  */
 export function addOnOffer(addOn: AddOn): Node {
   const [min, max] = dollars(addOn.price);

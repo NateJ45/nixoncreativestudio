@@ -57,7 +57,9 @@ The profile exists (on the studio Google account, signed in as the second accoun
 `authuser=1`): primary category Website designer, service area Cincinnati Metropolitan Area,
 no storefront. Brought up to date 2026-11-10: description, and every service priced from
 `src/data/pricing.ts` (Website design and Website migration from $3,500, Care plans from $59,
-Corporate and Headshot photography from $900, Brand and strategy from $500). When prices change,
+Corporate and Headshot photography from $900, Brand and strategy from $500). The add-ons changed
+on 2026-11-13 (photography from $1,000, no brand add-on; see `addOns`), so the profile's
+photography price needs raising and its Brand and strategy service removing. When prices change,
 change them there too. Still to do: ask two or three past clients for a Google review (the
 profile has none), and add photos. Delete this item when it has reviews.
 

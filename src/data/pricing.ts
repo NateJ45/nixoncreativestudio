@@ -135,22 +135,49 @@ export interface AddOn {
   name: string;
   /** Display price string (these are ranges/floors, not a single number). */
   price: string;
+  /** The unit shown small after the price, in words: 'a half day', 'one-time'. */
+  unit: string;
   note: string;
 }
 
-// Add to any project. Photography and standalone brand/strategy, each with its
-// own honest floor. Used by the /services add-on strip. Care after launch has
-// its own list below (carePlans).
+// Add to any project: the extras people ask for most, each with its own honest
+// price. Used by the /services add-on strip, /photography and /llms.txt. Every
+// price string must hold its dollar amounts lowest first ('$350 to $650'),
+// because the page's structured data reads them from the same string. There is
+// no drawn-logo or brand-identity add-on on purpose (decided 2026-11-13): the
+// wordmark is type and color only. Care after launch has its own list below
+// (carePlans). When a price here changes, change the Google Business Profile
+// services too (docs/PENDING.md).
 export const addOns: AddOn[] = [
   {
     name: 'Photography',
-    price: 'from $900',
-    note: 'Headshots, brand, and environmental photos shot for your site by the person who designed it. A half-day starts at $900 and a full day runs about $1,200, often folded into a build or booked on its own across the Cincinnati region.',
+    price: 'from $1,000',
+    unit: 'a half day',
+    note: 'Portraits, buildings and people at work, shot for your site by the person who designed it. A half day is $1,000 and a full day is $1,600, as part of a build or booked on its own across the Cincinnati region.',
   },
   {
-    name: 'Brand & strategy',
-    price: '$500 to $2,000',
-    note: 'Standalone strategy or brand-identity work for when you need it on its own. Strategy is already built into every website project.',
+    name: 'Writing your pages',
+    price: 'from $900',
+    unit: 'five core pages',
+    note: 'I interview you, write the pages in plain words, and you approve every one before it goes live. Each page after the first five is $180.',
+  },
+  {
+    name: 'Moving a large archive',
+    price: 'from $1,500',
+    unit: 'quoted by count',
+    note: 'Years of sermons, articles, results or documents moved across, tidied and made searchable, with old links redirected. Your core pages are already moved in every build.',
+  },
+  {
+    name: 'Simple wordmark',
+    price: '$600',
+    unit: 'one-time',
+    note: 'Your name set in type, with colors and a browser icon. Two options and one round of changes.',
+  },
+  {
+    name: 'Business listings',
+    price: '$350 to $650',
+    unit: 'one-time',
+    note: 'Your organization claimed and filled in on Google, Apple Maps, Bing and Yelp, all matching the site, for $650. Google alone is $350. You will need to answer a few verification codes.',
   },
 ];
 
