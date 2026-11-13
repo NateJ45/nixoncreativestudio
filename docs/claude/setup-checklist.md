@@ -6,6 +6,7 @@ Things that still need configuration before or during the public launch. Everyth
 
 ## Contact form
 
+- [ ] `TURNSTILE_SECRET` Worker secret (`npx wrangler secret put TURNSTILE_SECRET`): the secret key of the Turnstile widget "NCS studio contact form" (dashboard > Turnstile). Set it only AFTER a deploy that carries the widget, or every send fails the check. The site key is `site.turnstileSiteKey` in `src/data/site.ts`.
 - [ ] `WEB3FORMS_KEY` Worker secret (`npx wrangler secret put WEB3FORMS_KEY`): the fallback if Cloudflare Email Sending fails. Without it a failed send is still stored in D1, just not emailed. Detail: `deployment.md` "Contact form".
 
 ## Cloudflare env vars (Settings → Variables and Secrets)

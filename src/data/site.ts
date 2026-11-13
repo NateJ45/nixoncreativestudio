@@ -37,6 +37,7 @@ interface SiteData {
   email: string; // Primary inbox for inquiries.
   phone: string; // Display number (formatted for humans).
   address: string; // Public-facing locale, not a street address.
+  turnstileSiteKey: string; // Cloudflare Turnstile widget "NCS studio contact form". Public by design.
 
   // Web
   domain: string; // Bare host, e.g. for the form subject line.
@@ -101,6 +102,7 @@ export const site: SiteData = {
   email: _email,
   phone: _phone,
   address: 'Cincinnati, OH',
+  turnstileSiteKey: '0x4AAAAAAGAJNzYajt1y0_aG',
 
   domain: _domain,
   url: `https://${_domain}`,

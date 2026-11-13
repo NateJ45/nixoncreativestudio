@@ -20,6 +20,7 @@
     "parity": "node scripts/page-parity.mjs",
     "sync-check": "node scripts/sync-check.mjs",
     "contact:migration": "node --experimental-strip-types scripts/gen-contact-migration.mjs",
+    "contact:held": "wrangler d1 execute nixoncreativestudio-contact --remote --command \"SELECT id, received_at, name, email, country, city, as_org, spam_score, spam_reasons FROM contact_submissions WHERE held = 1 ORDER BY id DESC LIMIT 20\"",
     "check": "astro check && npm run lint",
     "check:full": "npm run check && npm run test:unit && npm run build",
     "lint": "eslint src/**/*.{ts,tsx,astro} scripts/**/*.mjs",
