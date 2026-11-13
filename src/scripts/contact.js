@@ -747,6 +747,76 @@ if (location.hash === '#sent') {
   sentH.focus({ preventScroll: true });
 }
 
+/* Turnstile: Cloudflare's bot check, rendered by script so the page decides the key. Off the
+   live host (local runs, previews, Playwright) it uses Cloudflare's always-pass test key, so only
+   the real site asks Cloudflare about real visitors. 'interaction-only' keeps it invisible unless
+   Cloudflare wants a click. The server checks the token only when TURNSTILE_SECRET is set
+   (src/contact-endpoint.ts); without the script the form still posts, and the server decides. */
+var tsBox = $('[data-turnstile]'),
+  tsToken = '',
+  tsId = null;
+function tsRender() {
+  if (!tsBox || !window.turnstile || tsId !== null) return;
+  var live = /(^|.)nixoncreativestudio.com$/.test(location.hostname);
+  tsId = window.turnstile.render(tsBox, {
+    sitekey: live ? tsBox.dataset.sitekey : '1x00000000000000000000AA',
+    action: 'contact',
+    appearance: 'interaction-only',
+    'refresh-expired': 'auto',
+    callback: function (t) {
+      tsToken = t;
+    },
+    'expired-callback': function () {
+      tsToken = '';
+    },
+    'error-callback': function () {
+      tsToken = '';
+    },
+  });
+}
+/* Loaded the first time someone starts on the form, not with the page: a reader who never
+   touches the form never downloads it (and /contact stays inside its weight budget,
+   tests/page-weight.spec.ts). Filling in the form takes longer than the check, so the token is
+   ready by Send. */
+var tsLoaded = false;
+function tsLoad() {
+  if (!tsBox || tsLoaded) return;
+  tsLoaded = true;
+  window.ncsTurnstileReady = tsRender;
+  var tsScript = document.createElement('script');
+  tsScript.src =
+    'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=ncsTurnstileReady';
+  tsScript.async = true;
+  document.head.appendChild(tsScript);
+}
+['focusin', 'pointerdown', 'input'].forEach(function (type) {
+  form.addEventListener(type, tsLoad, { once: true, passive: true });
+});
+/* The token, waiting a few seconds for one if the check is still running. Never blocks the send
+   for good: with no token the server decides, and a real person can try again. */
+function tsReady() {
+  tsLoad();
+  return new Promise(function (resolve) {
+    if (!tsBox || tsToken) return resolve();
+    var waited = 0,
+      t = setInterval(function () {
+        waited += 200;
+        if (tsToken || waited >= 6000) {
+          clearInterval(t);
+          resolve();
+        }
+      }, 200);
+  });
+}
+function tsReset() {
+  tsToken = '';
+  try {
+    if (tsId !== null) window.turnstile.reset(tsId);
+  } catch (err) {
+    /* the widget is gone; the next send goes without a token */
+  }
+}
+
 form.addEventListener('submit', function (e) {
   e.preventDefault();
   for (var i = 0; i < steps.length; i++) {
@@ -775,13 +845,20 @@ form.addEventListener('submit', function (e) {
   send.classList.add('is-spinning');
   var label = submitLabel.textContent;
   submitLabel.textContent = 'Sending...';
-  fetch(form.action, {
-    method: 'POST',
-    body: new FormData(form),
-    headers: { Accept: 'application/json' },
-  })
+  tsReady()
+    .then(function () {
+      var data = new FormData(form);
+      if (tsToken) data.set('cf-turnstile-response', tsToken);
+      return fetch(form.action, {
+        method: 'POST',
+        body: data,
+        headers: { Accept: 'application/json' },
+      });
+    })
     .then(function (res) {
       if (!res.ok) {
+        /* A used token cannot be spent twice: get a fresh one for the retry. */
+        tsReset();
         errorEl.hidden = false;
         track('inquiry_error', { form: 'contact', error_type: 'http-' + res.status });
         return;
@@ -793,6 +870,7 @@ form.addEventListener('submit', function (e) {
       showSuccess();
     })
     .catch(function () {
+      tsReset();
       errorEl.hidden = false;
       track('inquiry_error', { form: 'contact', error_type: 'network' });
     })

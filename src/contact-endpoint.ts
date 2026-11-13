@@ -25,6 +25,14 @@
    success panel shows through CSS :target) or, on a rejected answer, a short
    plain page saying what to fix.
 
+   SPAM. Four layers, in order: the shared honeypot and timing floor (silent),
+   this form's own rules (org type chosen, 30-letter message, the same rules the
+   form enforces in the browser), Turnstile when TURNSTILE_SECRET is set, and
+   a spam score (src/lib/spam-score.ts) on what passes. The
+   score decides the email: normal, "[Likely spam]" with the reasons, or held
+   in D1 with no email at all. Every row keeps the score, the reasons and the
+   rough place and network Cloudflare saw (migrations/0002).
+
    NOTIFY: Cloudflare Email Sending (EMAIL binding, CONTACT_TO, CONTACT_FROM)
    first, then Web3Forms with a SERVER-SIDE key (WEB3FORMS_KEY secret) if that
    fails. Every piece is optional: a visitor never hears about configuration,
@@ -38,11 +46,16 @@ import {
 import { inquiryToSubmission } from './lib/inquiry.ts';
 import { buildInquiryEmail, type InquiryEmail } from './lib/inquiry-email.ts';
 import { site } from './data/site.ts';
+import { orgTypes } from './data/inquiry-options.ts';
+import { scoreInquiry, inquiryRuleErrors, type SpamScore } from './lib/spam-score.ts';
 
 /** The slice of D1 this route uses, declared structurally (no workers-types dependency). */
 interface D1Lite {
   prepare(sql: string): {
-    bind(...values: unknown[]): { run(): Promise<{ meta?: { last_row_id?: number } }> };
+    bind(...values: unknown[]): {
+      run(): Promise<{ meta?: { last_row_id?: number } }>;
+      first<T = Record<string, unknown>>(): Promise<T | null>;
+    };
   };
 }
 
@@ -185,7 +198,50 @@ async function readFields(request: Request): Promise<Record<string, unknown> | n
   }
 }
 
-/** Store the row, then notify, then record whether the notification went out. */
+/** What Cloudflare knows about where a request came from. Rough: a VPN moves all of it. */
+export interface Whereabouts {
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  asn: number | null;
+  asOrg: string | null;
+}
+
+function cfString(v: unknown, max = 120): string | null {
+  return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null;
+}
+
+export function whereabouts(request: Request): Whereabouts {
+  const cf = ((request as Request & { cf?: Record<string, unknown> }).cf ?? {}) as Record<
+    string,
+    unknown
+  >;
+  return {
+    country: request.headers.get('cf-ipcountry') ?? cfString(cf.country, 4),
+    region: cfString(cf.region),
+    city: cfString(cf.city),
+    asn: typeof cf.asn === 'number' ? cf.asn : null,
+    asOrg: cfString(cf.asOrganization),
+  };
+}
+
+/** How many inquiries this address sent in the 30 days before now. 0 when it cannot tell. */
+async function recentFromSameEmail(e: ContactEnv, email: string, now: Date): Promise<number> {
+  if (!e.CONTACT_DB) return 0;
+  try {
+    const since = new Date(now.getTime() - 30 * 86_400_000).toISOString();
+    const row = await e.CONTACT_DB.prepare(
+      `SELECT COUNT(*) AS n FROM contact_submissions WHERE lower(email) = lower(?) AND received_at > ?`,
+    )
+      .bind(email, since)
+      .first<{ n: number }>();
+    return Number(row?.n ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
+/** Store the row, then notify (unless the spam score holds it), then record whether it went out. */
 async function storeAndNotify(
   e: ContactEnv,
   request: Request,
@@ -193,14 +249,22 @@ async function storeAndNotify(
   fields: Record<string, unknown>,
 ): Promise<{ stored: boolean; failure: string | null }> {
   const receivedAt = new Date();
-  const country = request.headers.get('cf-ipcountry') ?? null;
+  const where = whereabouts(request);
+  const country = where.country;
+  const spam: SpamScore = scoreInquiry({
+    fields,
+    country,
+    asOrg: where.asOrg,
+    recentFromSameEmail: await recentFromSameEmail(e, value.email, receivedAt),
+  });
   let rowId: number | null = null;
   if (e.CONTACT_DB) {
     try {
       const res = await e.CONTACT_DB.prepare(
         `INSERT INTO contact_submissions
-           (received_at, name, email, subject, message, user_agent, country)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+           (received_at, name, email, subject, message, user_agent, country,
+            region, city, asn, as_org, spam_score, spam_reasons, held)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
         .bind(
           receivedAt.toISOString(),
@@ -210,6 +274,13 @@ async function storeAndNotify(
           value.message,
           request.headers.get('user-agent')?.slice(0, 300) ?? null,
           country,
+          where.region,
+          where.city,
+          where.asn,
+          where.asOrg,
+          spam.score,
+          spam.reasons.length ? spam.reasons.join('; ') : null,
+          spam.verdict === 'hold' ? 1 : 0,
         )
         .run();
       rowId = res.meta?.last_row_id ?? null;
@@ -222,11 +293,29 @@ async function storeAndNotify(
   // `failure` decides `notified`; `note` is what notify_error keeps. A fallback
   // delivery still records why Email Sending failed: otherwise the row reads
   // notified = 1 with no error and a broken primary transport goes unnoticed.
+  // Held: stored with the reasons, no email. Only when the row really exists,
+  // so a database failure never swallows an inquiry, spam-looking or not.
+  if (spam.verdict === 'hold' && rowId !== null && e.CONTACT_DB) {
+    // notified stays 0, and notify_error says why, so it never reads as a failed send.
+    try {
+      await e.CONTACT_DB.prepare(`UPDATE contact_submissions SET notify_error = ? WHERE id = ?`)
+        .bind('held as likely spam, not emailed', rowId)
+        .run();
+    } catch (err) {
+      console.error('[contact] could not mark the held row:', err);
+    }
+    console.log(`[contact] held inquiry #${rowId} as likely spam (${spam.score} points)`);
+    return { stored: true, failure: null };
+  }
+
   // Built after the insert so the email can name its row (Inquiry #12).
   const email = buildInquiryEmail(fields, {
     id: rowId,
     receivedAt,
     country,
+    place: [where.city, where.region].filter(Boolean).join(', ') || null,
+    network: where.asOrg,
+    spam,
     siteUrl: site.url,
     studioName: site.studioName,
   });
@@ -275,8 +364,16 @@ export async function handleContact(request: Request, e: ContactEnv): Promise<Re
   // Silent on purpose: a bot gets the same answer a person does.
   if (looksAutomated(raw, Date.now()).automated) return done();
 
-  const { ok, errors, value } = validateSubmission(raw);
-  if (!ok || !value) {
+  const checked = validateSubmission(raw);
+  const errors = {
+    ...checked.errors,
+    ...inquiryRuleErrors(
+      fields,
+      orgTypes.map((o) => o.value),
+    ),
+  };
+  const value = checked.value;
+  if (!value || Object.keys(errors).length) {
     return wantsJson ? json({ ok: false, errors }, 422) : plainPage(422, Object.values(errors));
   }
 

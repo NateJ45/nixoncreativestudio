@@ -26,6 +26,12 @@ export interface InquiryMeta {
   receivedAt: Date;
   /** Cloudflare's two-letter country, when known. */
   country: string | null;
+  /** City and region from Cloudflare's IP lookup ("Cincinnati, Ohio"), when known. Rough, and a VPN moves it. */
+  place?: string | null;
+  /** The network the request came from ("Charter Communications"), when known. */
+  network?: string | null;
+  /** The spam score (src/lib/spam-score.ts). Shown only when it flagged the inquiry. */
+  spam?: { score: number; reasons: string[]; verdict: 'ok' | 'flag' | 'hold' } | null;
   /** Site origin, for links back to pages: https://nixoncreativestudio.com */
   siteUrl: string;
   studioName: string;
@@ -195,27 +201,44 @@ function origin(q: Inquiry, siteUrl: string): Array<[string, string, string | nu
   return out;
 }
 
+/** "Cincinnati, Ohio, US on Charter Communications", from whatever Cloudflare knew. */
+export function sentFrom(meta: InquiryMeta): string {
+  const where = [meta.place, meta.country].filter(Boolean).join(', ');
+  return [where, meta.network ? `on ${meta.network}` : ''].filter(Boolean).join(' ');
+}
+
+function flagged(meta: InquiryMeta): boolean {
+  return !!meta.spam && meta.spam.verdict !== 'ok';
+}
+
 function footerLine(meta: InquiryMeta): string {
+  const from = sentFrom(meta);
   return [
     meta.id !== null ? `Inquiry #${meta.id}` : 'Not stored (database error)',
     `received ${when(meta.receivedAt)}`,
-    meta.country ? `from ${meta.country}` : '',
+    from ? `from ${from}` : '',
   ]
     .filter(Boolean)
     .join(' · ');
 }
 
 function text(q: Inquiry, meta: InquiryMeta, subject: string): string {
-  const lines = [
-    subject,
-    '',
+  const lines = [subject, ''];
+  if (flagged(meta) && meta.spam) {
+    lines.push(
+      `Spam check: ${meta.spam.score} points`,
+      ...meta.spam.reasons.map((r) => `- ${r}`),
+      '',
+    );
+  }
+  lines.push(
     `${q.name}${q.organization ? `, ${q.organization}` : ''}`,
     `Email: ${q.email} (just hit Reply)`,
     ...facts(q).map(([k, v]) => `${k}: ${v}`),
     '',
     'What they wrote:',
     q.message,
-  ];
+  );
   const o = origin(q, meta.siteUrl);
   if (o.length) lines.push('', ...o.map(([k, v]) => `${k}: ${v}`));
   lines.push('', footerLine(meta), `Sent by the contact form on ${meta.studioName}.`);
@@ -306,6 +329,14 @@ function html(q: Inquiry, meta: InquiryMeta, subject: string): string {
       : '') +
     `<div style="font-family:${FONT};font-size:15px;line-height:22px;padding-top:6px;">${link(mailto, q.email)}</div>` +
     `</td></tr>` +
+    // The spam check, first, when it flagged this one.
+    (flagged(meta) && meta.spam
+      ? `<tr><td style="padding:18px 28px 0 28px;">` +
+        `<div style="background:#fff4e5;border-left:4px solid #b35c00;border-radius:0 8px 8px 0;padding:12px 16px;font-family:${FONT};font-size:14px;line-height:21px;color:${C.ink};">` +
+        `<strong>Likely spam: ${meta.spam.score} points.</strong> ` +
+        meta.spam.reasons.map(esc).join('; ') +
+        `</div></td></tr>`
+      : '') +
     // One-tap actions.
     `<tr><td style="padding:18px 28px 0 28px;">${buttons}</td></tr>` +
     // At a glance.
@@ -342,6 +373,6 @@ export function buildInquiryEmail(
   meta: InquiryMeta,
 ): InquiryEmail {
   const q = read(fields);
-  const subject = inquirySubject(q);
+  const subject = (flagged(meta) ? '[Likely spam] ' : '') + inquirySubject(q);
   return { subject, text: text(q, meta, subject), html: html(q, meta, subject) };
 }

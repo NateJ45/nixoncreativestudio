@@ -22,7 +22,8 @@
      src/data/pricing.ts. Then organization, phone, current_website, timeline
      and heard_from on the last step.
      Hidden: rendered_at (the script stamps the load time for the endpoint's
-     timing check), the botcheck honeypot, and four origin fields the script
+     timing check), the botcheck honeypot, the Turnstile slot (data-turnstile,
+     rendered by the script; spam layers in src/contact-endpoint.ts), and four origin fields the script
      fills from the URL:
      from (the page or study that sent the visitor), tier, service and
      origin_org_type (the org type the link carried; the visible radios are
@@ -356,6 +357,10 @@ const heading = 'Start a project, or just <b>say hello.</b>';
           <label for="botcheck">Leave this field empty</label>
           <input type="text" id="botcheck" name="botcheck" tabindex="-1" autocomplete="off" />
         </div>
+
+        <!-- Turnstile mounts here (src/scripts/contact.js). Invisible unless Cloudflare wants a
+             click; the site key is public by design. -->
+        <div class="ts" data-turnstile data-sitekey={site.turnstileSiteKey}></div>
 
         <div class="q-nav">
           <button type="button" class="b ghost" data-back>
