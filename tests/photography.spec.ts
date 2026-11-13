@@ -6,7 +6,9 @@ import { test, expect } from '@playwright/test';
 // The table is a script's view of a plain grid of links. These check the
 // keyboard path through it (WCAG 2.1.1 and 2.5.7: nothing needs a drag), the
 // full view, the filter and the Grid switch, and that the grid alone is a
-// working gallery with JavaScript off.
+// working gallery with JavaScript off. Then the depth and light added on top
+// (2026-11-13): zoom has buttons and keys, the table takes a colour, the frame
+// cannot be scrolled out from under it, and reduced motion still gets a table.
 // =============================================================================
 
 test.describe('with JavaScript', () => {
@@ -70,6 +72,79 @@ test.describe('with JavaScript', () => {
     // A link in the grid opens the same full view.
     await page.locator('[data-grid] > li:visible a').first().click();
     await expect(page.locator('dialog[data-open]')).toBeVisible();
+  });
+
+  test('the zoom buttons zoom the table without a pinch, and stop at the ends', async ({
+    page,
+  }) => {
+    const zoomed = page.locator('[data-zoomed]');
+    const out = page.getByRole('button', { name: 'Zoom out' });
+    const zin = page.getByRole('button', { name: 'Zoom in' });
+    await expect(zoomed).toHaveText('100%');
+    const before = await page.locator('.pt-p').count();
+    await out.click();
+    await out.click();
+    await expect(zoomed).toHaveText('60%');
+    await expect(out).toBeDisabled();
+    // Zoomed out, more of the table is laid.
+    expect(await page.locator('.pt-p').count()).toBeGreaterThan(before);
+    await zin.click();
+    await expect(out).toBeEnabled();
+    await expect(zoomed).not.toHaveText('60%');
+    // The keyboard path still works at any zoom.
+    await page.locator('[data-world]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('dialog[data-open]')).toBeVisible();
+  });
+
+  test('the + and - keys zoom while the table has focus', async ({ page }) => {
+    await page.locator('[data-world]').focus();
+    await page.keyboard.press('-');
+    await expect(page.locator('[data-zoomed]')).not.toHaveText('100%');
+    await page.keyboard.press('+');
+    await expect(page.locator('[data-zoomed]')).toHaveText('100%');
+  });
+
+  test('the table takes a colour from its prints, and the full view takes its own', async ({
+    page,
+  }) => {
+    const stage = page.locator('[data-stage]');
+    await expect
+      .poll(() => stage.evaluate((el) => (el as HTMLElement).style.getPropertyValue('--wash')))
+      .toMatch(/^rgb\(/);
+    await page.locator('[data-world]').focus();
+    await page.keyboard.press('Enter');
+    const tint = await page
+      .locator('dialog[data-open]')
+      .evaluate((el) => (el as HTMLElement).style.getPropertyValue('--tint'));
+    expect(tint).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  test('the stage cannot be scrolled out from under its frame', async ({ page }) => {
+    const stage = page.locator('[data-stage]');
+    await stage.evaluate((el) => el.scrollTo(120, 90));
+    await expect.poll(() => stage.evaluate((el) => el.scrollLeft + el.scrollTop)).toBe(0);
+  });
+});
+
+test.describe('with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('the table is still laid and still opens, with the lamp and the tilt off', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/photography/');
+    expect(await page.locator('.pt-p').count()).toBeGreaterThan(8);
+    await expect(page.locator('[data-lamp]')).toBeHidden();
+    await page.mouse.move(640, 500);
+    expect(
+      await page.locator('[data-world]').evaluate((el) => (el as HTMLElement).style.transform),
+    ).toBe('');
+    await page.locator('[data-world]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('dialog[data-open]')).toBeVisible();
+    await expect(page.locator('dialog[data-open] .pt-dev')).toHaveCount(0);
   });
 });
 

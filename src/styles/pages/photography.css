@@ -3,6 +3,9 @@
    Prints on an endless table (src/scripts/photo-table.js lays them out), the
    /work filter bar (seg-bar.css), a plain grid for no-JS and the Grid view,
    and a full view in a native dialog. Tokens only; both sides of the card.
+   Depth, the lamp, the wash, zoom and full screen are all driven from the
+   script through transforms and three custom properties (--wash on the stage,
+   --g / --gx / --gy on a print, --tint on the dialog).
    ============================================================================ */
 @import '../seg-bar.css';
 
@@ -66,9 +69,15 @@
   height: clamp(26rem, 80svh, 58rem);
   border-radius: 1.75rem;
   overflow: hidden;
+  /* clip, where the browser has it: a hidden box can still be scrolled by focus, a clipped one cannot. */
+  overflow: clip;
   background: var(--well);
+  /* The wash: the well, tinted by the print in the middle (--wash, set by the script). */
+  background: color-mix(in oklab, var(--well) 74%, var(--wash, var(--well)));
   box-shadow: inset 0 0 0 1px var(--line);
   isolation: isolate;
+  /* The table tips in 3D as it is thrown. */
+  perspective: 1400px;
 }
 /* On a touch screen the table never fills the screen, so a thumb can always scroll the page past it. */
 @media (pointer: coarse) {
@@ -84,9 +93,45 @@
     border-radius: 1.25rem;
   }
 }
+/* The lens, in shade: the table's edges fall away into its own colour, over the prints and under
+   the buttons, so the middle is the brightest part. The prints themselves stay at full opacity. */
+.pt-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 46%,
+    color-mix(
+        in srgb,
+        color-mix(in oklab, var(--well) 74%, var(--wash, var(--well))) 58%,
+        transparent
+      )
+      100%
+  );
+  pointer-events: none;
+}
+/* The lamp: a pool of light under the prints that follows the mouse. */
+.pt-lamp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(44rem, 90vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  /* White at low strength: lighter than the well on both sides of the card. */
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
 .pt-world {
   position: absolute;
   inset: 0;
+  /* Its prints lift toward you under the lamp. */
+  perspective: 1100px;
   touch-action: none;
   cursor: grab;
   outline: none;
@@ -133,6 +178,23 @@
   background: var(--screen);
   pointer-events: none;
   -webkit-user-drag: none;
+}
+/* The sheen a print catches under the lamp: --g is how near the pointer is (0 to 1), --gx and
+   --gy where on the print it falls. White at low strength, so it reads on any photo and on both
+   sides of the card. */
+.pt-p::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 50%),
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0) 62%
+  );
+  mix-blend-mode: soft-light;
+  opacity: var(--g, 0);
+  pointer-events: none;
 }
 /* The print in the middle, ringed while the keyboard is on the table. */
 .pt-world:focus-visible .pt-p.is-mid {
@@ -191,6 +253,11 @@
   min-width: 7.5rem;
   font-variant-numeric: tabular-nums;
 }
+.pt-hud [data-zoomed] {
+  min-width: 3.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 @media (max-width: 40rem) {
   .pt-hint {
     display: none;
@@ -206,7 +273,8 @@
   grid-template-rows: repeat(2, 2.75rem);
   gap: 0.25rem;
 }
-.pt-nudge button {
+.pt-nudge button,
+.pt-tools button {
   display: grid;
   place-items: center;
   width: 2.75rem;
@@ -225,11 +293,36 @@
     0 10px 20px -12px rgba(0, 0, 0, 0.35);
   transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
-.pt-nudge button:hover {
+.pt-nudge button:hover,
+.pt-tools button:hover {
   transform: scale(1.08);
 }
-.pt-nudge button:active {
+.pt-nudge button:active,
+.pt-tools button:active {
   transform: scale(0.94);
+}
+.pt-nudge button:focus-visible,
+.pt-tools button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Zoom and full screen, bottom right. */
+.pt-tools {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.25rem;
+}
+.pt-tools button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+.pt-tools [data-full][aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--ground);
 }
 .pt-nudge [data-nudge='0,-1'] {
   grid-column: 2;
@@ -255,10 +348,15 @@
     grid-template-columns: repeat(3, 2.25rem);
     grid-template-rows: repeat(2, 2.25rem);
   }
-  .pt-nudge button {
+  .pt-nudge button,
+  .pt-tools button {
     width: 2.25rem;
     height: 2.25rem;
     font-size: 0.9rem;
+  }
+  .pt-tools {
+    right: 0.6rem;
+    bottom: 0.6rem;
   }
   .pt-hud {
     left: 0.6rem;
@@ -324,6 +422,12 @@
 }
 .pt-open::backdrop {
   background: color-mix(in srgb, var(--ground) 82%, transparent);
+  /* The room takes the open print's colour (--tint, set on the dialog by the script). */
+  background: color-mix(
+    in srgb,
+    color-mix(in oklab, var(--ground) 68%, var(--tint, var(--ground))) 84%,
+    transparent
+  );
   backdrop-filter: blur(10px);
 }
 .pt-open-card {
@@ -339,6 +443,7 @@
   }
 }
 .pt-open-media {
+  position: relative;
   display: grid;
   place-items: center;
   margin: 0;
@@ -354,6 +459,48 @@
   height: auto;
   border-radius: 0.6rem;
   background: var(--screen);
+}
+/* Developing: a sheet of the print's own colour lies over it and clears from the middle out, the
+   way a print comes up in the tray. The script sizes the sheet to the picture. Where a browser
+   cannot animate the hole, the sheet just fades. */
+@property --pt-hole {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+.pt-dev {
+  position: absolute;
+  border-radius: 0.6rem;
+  background: var(--tint, transparent);
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent calc(var(--pt-hole) - 24%),
+    #000 var(--pt-hole)
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent calc(var(--pt-hole) - 24%),
+    #000 var(--pt-hole)
+  );
+  opacity: 0;
+}
+/* The script adds this once the picture has loaded and the sheet is laid over it. */
+.pt-dev.is-on {
+  animation: pt-develop 1.15s cubic-bezier(0.3, 0.6, 0.2, 1) both;
+}
+@keyframes pt-develop {
+  from {
+    --pt-hole: 0%;
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    --pt-hole: 140%;
+    opacity: 0;
+  }
 }
 .pt-open-text {
   padding: 0.25rem 0.5rem 0.5rem;
@@ -418,11 +565,34 @@
   }
 }
 
+/* ---- Full screen: the bar on top, the table takes the rest -------------- */
+.pt:fullscreen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block: 1rem;
+  background: var(--ground);
+  overflow: auto;
+}
+.pt:fullscreen .pt-stage {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+.pt:fullscreen[data-view='grid'] {
+  display: block;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pt-p,
   .print img,
-  .pt-nudge button {
+  .pt-nudge button,
+  .pt-tools button {
     transition: none;
+  }
+  .pt-lamp,
+  .pt-dev {
+    display: none;
   }
 }
 @media (forced-colors: active) {
