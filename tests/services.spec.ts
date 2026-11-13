@@ -45,7 +45,9 @@ test.describe('Prices', () => {
       // receipt, and the care section carries the weeks strip, one row per client.
       // Raised to 18500 (Nov 2026): each cost row has a "Show on the receipt" button, the cost
       // bars have their 1, 3 and 5 year radios, and the care section ends on the reply rows.
-      expect(height).toBeLessThan(18500);
+      // Raised to 18800 (Nov 2026): the add-ons are five cards instead of two, four of them
+      // stacked on a phone, so the always-open add-ons section is taller.
+      expect(height).toBeLessThan(18800);
     });
 
     test('a jump link and an address open the fold they point into', async ({ page }) => {
