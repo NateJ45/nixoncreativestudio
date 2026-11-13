@@ -89,11 +89,14 @@ export function filtersFor(prints: PrintIn[]): { kind: Kind; label: string; coun
   })).filter((f) => f.count > 0);
 }
 
-/** The small line on an open print: kind, who for, year. Missing parts are left out. */
-export function printLine(p: { category: Kind; client?: string; year: number; video?: string }) {
-  return [p.video ? 'Film' : KIND_LABEL[p.category], p.client, String(p.year)]
-    .filter(Boolean)
-    .join(' · ');
+/**
+ * The small line on an open print: kind and who for. Missing parts are left out.
+ * No year, on purpose (2026-11-13): a date on a photo invites the visitor to work
+ * out how long ago it was, and the work is not better or worse for its age. The
+ * `year` field stays in each entry for the studio's own records and is never printed.
+ */
+export function printLine(p: { category: Kind; client?: string; video?: string }) {
+  return [p.video ? 'Film' : KIND_LABEL[p.category], p.client].filter(Boolean).join(' · ');
 }
 
 /* ---- Depth ---------------------------------------------------------------- */

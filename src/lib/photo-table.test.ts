@@ -88,10 +88,10 @@ test('filtersFor lists only kinds in use, in KINDS order, with counts that add u
 
 test('printLine names a film as a film and leaves out what is missing', () => {
   assert.equal(
-    printLine({ category: 'worship', year: 2025, video: '/x.mp4', client: 'Crestview' }),
-    'Film · Crestview · 2025',
+    printLine({ category: 'worship', video: '/x.mp4', client: 'Crestview' }),
+    'Film · Crestview',
   );
-  assert.equal(printLine({ category: 'weddings', year: 2020 }), 'Weddings · 2020');
+  assert.equal(printLine({ category: 'weddings' }), 'Weddings');
 });
 
 test('every print has a colour for the wash (run `npm run photo-colors` after adding a photo)', () => {
@@ -133,4 +133,19 @@ test('hexToRgb reads a six-digit colour and refuses anything else', () => {
   assert.deepEqual(hexToRgb('#2f3fe6'), [47, 63, 230]);
   assert.equal(hexToRgb('blue'), null);
   assert.equal(hexToRgb(undefined), null);
+});
+
+test('nothing a visitor reads on a print carries a year', () => {
+  // The page shows no dates (2026-11-13). The year field itself is never printed;
+  // this keeps one from slipping in through a title, a caption or the alt text.
+  const year = /\b(19|20)\d{2}\b/;
+  for (const e of entries) {
+    for (const field of ['title', 'alt', 'caption', 'client', 'location'] as const) {
+      const value = (e as Record<string, unknown>)[field];
+      if (typeof value === 'string') {
+        assert.doesNotMatch(value, year, `${e.slug}: ${field} carries a year`);
+      }
+    }
+    assert.doesNotMatch(printLine(e as PrintIn & { client?: string }), year, `${e.slug}: line`);
+  }
 });
