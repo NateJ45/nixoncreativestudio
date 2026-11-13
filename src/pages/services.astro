@@ -60,7 +60,8 @@ const hourlyRate = hosting.rate;
 const careRate = lightCare.rate;
 const rateLine = `Rate for extra changes: ${money(hourlyRate)} an hour on ${hosting.name}, ${money(careRate)} an hour on any care plan.`;
 const photography = addOnNamed(addOns, 'Photography');
-const brandStrategy = addOnNamed(addOns, 'Brand & strategy');
+// Photography keeps its own larger card; the rest share one small-card row.
+const otherAddOns = addOns.filter((a) => a.name !== 'Photography');
 // "$200 per year", "$59 per month": a unit on every recurring price, in words.
 const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
 
@@ -117,6 +118,8 @@ const webBody =
 const strategyBody =
   'Strategy always comes first, because the design has to serve a plan. It starts with a working session together, then I write a short brief that the rest of the project follows.';
 
+const addOnsBody =
+  'Extras for any website project: writing the pages, moving a large archive, a simple wordmark, and business listings on Google, Apple Maps, Bing and Yelp.';
 const photoBody =
   'When the photographer and the designer are one person, the photos match the layout instead of fighting it. Images arrive edited, web-optimized, and ready to drop in.';
 
@@ -147,11 +150,11 @@ const faq = [
   },
   {
     q: 'Can you work with my existing brand?',
-    a: 'Yes. If you already have a logo, palette, and type system, I use it. If you do not, brand work can be folded into the strategy phase or scoped separately.',
+    a: 'Yes. If you already have a logo, palette, and type system, I use it. If you do not, I can set your name in type with colors as a simple wordmark, or work with your designer on a full logo.',
   },
   {
     q: 'Where are you based, and do you work with clients outside Cincinnati?',
-    a: "I'm based in Cincinnati, but web design, planning, and brand work happen with clients anywhere, fully remote when that is easier. Photography is the one piece that needs me on site, so that stays within the greater Cincinnati region.",
+    a: "I'm based in Cincinnati, but web design and planning happen with clients anywhere, fully remote when that is easier. Photography is the one piece that needs me on site, so that stays within the greater Cincinnati region.",
   },
 ];
 
@@ -168,11 +171,16 @@ const studio = (id: string, name: string, description: string, regional = false)
     : ['Greater Cincinnati region', 'United States'],
 });
 const schemas = [
-  { ...studio('strategy', 'Strategy', strategyBody), offers: [addOnOffer(brandStrategy)] },
+  // Strategy is part of every build and has no price of its own.
+  studio('strategy', 'Strategy', strategyBody),
   { ...studio('web-design', 'Web design', webBody), offers: tierOffers(tiers) },
   {
     ...studio('photography', 'Photography', photoBody, true),
     offers: [addOnOffer(photography)],
+  },
+  {
+    ...studio('add-ons', 'Add-ons', addOnsBody),
+    offers: otherAddOns.map(addOnOffer),
   },
   {
     ...studio(
@@ -771,49 +779,53 @@ const heading = `What I do, and <b>what it costs.</b>`;
     <div class="wrap">
       <div class="sec-head">
         <h2 id="addons-h">Add to any project</h2>
-        <p>Photos when needed, and brand work when you want it on its own.</p>
+        <p>The extras people ask for most. Add any of them to a build, or book one on its own.</p>
       </div>
-      <div class="pair pair-wide">
-        <div class="card panel keyed addon" id="photography">
-          <div class="line">
-            <h3>Photography</h3>
-            <p class="amt">
-              {photography.price}
-              <small>a half-day</small>
-            </p>
-          </div>
-          <p>{photography.note}</p>
-          <p>
-            When the photographer and the designer are one person, the photos match the layout
-            instead of fighting it. Images arrive edited, sized for the web, and ready to use.
-          </p>
-          <ul class="ticks">
-            <li>On-site Sunday or weekday coverage</li>
-            <li>Headshots for team and staff</li>
-            <li>Photos of your building and the people in it</li>
-            <li>Edited images, sized for the web, delivered with the website</li>
-          </ul>
-          <p class="t-go">
-            <a class="cta" href="/contact/?service=photography">
-              Ask about photography
-            </a>
+      <div class="card panel keyed addon" id="photography">
+        <div class="line">
+          <h3>Photography</h3>
+          <p class="amt">
+            {photography.price}
+            <small>{photography.unit}</small>
           </p>
         </div>
-        <div class="card panel keyed addon">
-          <div class="line">
-            <h3>Brand &amp; strategy</h3>
-            <p class="amt">
-              {brandStrategy.price}
-              <small>one-time</small>
-            </p>
-          </div>
-          <p>{brandStrategy.note}</p>
-          <p>
-            If you already have a logo, palette, and type system, I use it. If you do not, brand
-            work can be folded into the strategy phase or scoped separately.
-          </p>
-        </div>
+        <p>{photography.note}</p>
+        <p>
+          When the photographer and the designer are one person, the photos match the layout instead
+          of fighting it. Images arrive edited, sized for the web, and ready to use.
+        </p>
+        <ul class="ticks">
+          <li>On-site Sunday or weekday coverage</li>
+          <li>Headshots for team and staff</li>
+          <li>Photos of your building and the people in it</li>
+          <li>Edited images, sized for the web, delivered with the website</li>
+        </ul>
+        <p class="t-go">
+          <a class="cta" href="/contact/?service=photography">
+            {' '}
+            Ask about photography{' '}
+          </a>
+        </p>
       </div>
+      <div class="addon-row">
+        {otherAddOns.map((addOn) => (
+          <div class="card panel keyed addon">
+            <div class="line">
+              <h3>{addOn.name}</h3>
+              <p class="amt">
+                {addOn.price}
+                <small>{addOn.unit}</small>
+              </p>
+            </div>
+            <p>{addOn.note}</p>
+          </div>
+        ))}
+      </div>
+      <p class="addon-foot">
+        Need a full logo? I'll work with your designer, or help you find one. Not sure what you
+        need? <a href="/contact/">Tell me about the project</a> and I'll say which of these are
+        worth it, including if none are.
+      </p>
     </div>
   </section>
 
