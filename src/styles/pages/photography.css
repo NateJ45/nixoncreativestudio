@@ -1132,6 +1132,54 @@
   margin-right: 0.5rem;
 }
 
+/* Lighting: a full-width band, a strip of gel colours across its top. */
+.kit-light {
+  grid-column: 1 / -1;
+  padding-top: 0;
+}
+.kit-gels {
+  display: flex;
+  height: 0.6rem;
+  margin: 0 calc(-1 * clamp(1rem, 2vw, 1.4rem)) 0.4rem;
+}
+.kit-gels span {
+  flex: 1;
+  background: var(--gel);
+}
+.kit-light .kit-copy {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 40rem;
+}
+.kit-light-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.kit-light-items li {
+  padding: 0.4rem 0.8rem;
+  border-radius: 99rem;
+  background: var(--well);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+@media (min-width: 52rem) {
+  .kit-light {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 2rem;
+  }
+  .kit-gels {
+    grid-column: 1 / -1;
+  }
+  .kit-light-items {
+    justify-content: flex-end;
+  }
+}
+
 /* Software: two apps side by side. */
 .kit-apps {
   list-style: none;
