@@ -32,11 +32,8 @@ export const KIND_LABEL: Record<Kind, string> = {
 export const SETS = {
   'ash-wednesday': 'Ash Wednesday',
   'easter-sunday': 'Easter Sunday',
-  'christmas-eve': 'Christmas Eve',
   'hanging-greens': 'Hanging of the greens',
   rehearsal: 'Music rehearsal',
-  'kids-day-out': 'A kids’ day out',
-  shoeboxes: 'Packing shoeboxes',
   vbs: 'Vacation Bible School',
   'souper-bowl': 'The Souper Bowl',
   'last-day': 'The last day of preschool',
