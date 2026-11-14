@@ -61,11 +61,11 @@ test.describe('with JavaScript', () => {
   });
 
   test('a filter lays only that kind, and Grid shows the plain grid', async ({ page }) => {
-    const btn = page.locator('button[data-f="weddings"]');
+    const btn = page.locator('button[data-f="people"]');
     const n = Number(await btn.locator('.n').textContent());
     await btn.click();
     await expect(btn).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('[data-status]')).toHaveText(`Showing ${n} weddings.`);
+    await expect(page.locator('[data-status]')).toHaveText(`Showing ${n} people and places.`);
     await page.locator('button[data-v="grid"]').click();
     await expect(page.locator('[data-grid]')).toBeVisible();
     await expect(page.locator('[data-grid] > li:visible')).toHaveCount(n);
@@ -187,8 +187,8 @@ test.describe('around the table', () => {
 
   test('a "What I shoot" row sets its filter and brings the table up', async ({ page }) => {
     await page.goto('/photography/');
-    await page.locator('a[data-go="weddings"]').click();
-    await expect(page.locator('button[data-f="weddings"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('a[data-go="people"]').click();
+    await expect(page.locator('button[data-f="people"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-stage]')).toBeInViewport();
   });
 
