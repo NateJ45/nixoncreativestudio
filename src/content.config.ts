@@ -354,7 +354,8 @@ const photos = defineCollection({
       // Example: 'Crestview Presbyterian, West Chester'.
       location: z.string().optional(),
 
-      // Year the photo was taken.
+      // Year the photo was taken. Kept for the studio's own records and never
+      // printed: /photography shows no dates (src/lib/photo-table.ts, printLine).
       year: z.number().int(),
 
       // A short silent loop instead of a still: a public path to an mp4 under
