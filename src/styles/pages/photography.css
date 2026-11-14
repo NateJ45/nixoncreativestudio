@@ -997,17 +997,268 @@
   color: var(--soft);
 }
 
-/* How a shoot works: numbered rows, then the kit in one line. */
+/* How a shoot works: numbered rows. */
 .pt-steps h3 .label {
   margin-right: 0.5rem;
   vertical-align: 0.3em;
 }
-.pt-kit {
-  margin-top: 1.5rem;
+
+/* ---- The kit: a bento of tiles ------------------------------------------------ */
+.kit-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.kit-tile {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.4rem);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: var(--rim);
+  overflow: hidden;
+  transition:
+    translate 0.4s var(--ease),
+    box-shadow 0.4s var(--ease);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .kit-tile:hover {
+    translate: 0 -3px;
+    box-shadow:
+      var(--rim),
+      0 22px 40px -24px rgba(0, 0, 0, 0.45);
+  }
+}
+.kit-tile h3 {
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.kit-tile p:not(.label) {
   color: var(--soft);
 }
-.pt-kit .label {
-  margin-right: 0.75rem;
+.kit-camera,
+.kit-gimbal,
+.kit-soft {
+  grid-column: 1 / -1;
+}
+
+/* Camera and gimbal: the copy over a playing film, darkened at the foot so it reads. */
+.kit-camera,
+.kit-gimbal {
+  min-height: clamp(18rem, 42vw, 30rem);
+  align-content: end;
+  background: #111;
+  color: #fff;
+}
+.kit-gimbal {
+  min-height: clamp(14rem, 30vw, 20rem);
+}
+.kit-media {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+}
+.kit-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kit-camera::after,
+.kit-gimbal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.88),
+    rgba(0, 0, 0, 0.4) 65%,
+    rgba(0, 0, 0, 0.1)
+  );
+  pointer-events: none;
+}
+.kit-camera .kit-copy,
+.kit-gimbal .kit-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.kit-camera h3 {
+  font-size: clamp(1.8rem, 4.2vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.kit-camera .label,
+.kit-gimbal .label,
+.kit-camera p,
+.kit-gimbal p:not(.label) {
+  color: rgba(255, 255, 255, 0.82);
+}
+.kit-specs {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.kit-specs li {
+  padding: 0.35rem 0.75rem;
+  border-radius: 99rem;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Software: two apps side by side. */
+.kit-apps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.kit-maker {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+/* A lens: the numbers big, the wedge, then a photo shot on it. */
+.kit-num {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.35rem;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+.kit-num span {
+  font-size: 0.4em;
+  letter-spacing: 0;
+  color: var(--soft);
+}
+.kit-num .kit-f {
+  font-size: 0.45em;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+}
+.kit-role {
+  font-size: 0.9375rem;
+}
+.kit-fov {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.kit-fov-svg {
+  width: 5.5rem;
+  height: auto;
+  overflow: visible;
+}
+.kit-fov-wide {
+  fill: color-mix(in srgb, var(--accent) 18%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 45%, transparent);
+  stroke-width: 1;
+}
+.kit-fov-tele {
+  fill: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.kit-fov-deg {
+  color: var(--soft);
+}
+/* In view, each fan opens out from its apex. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .kit-fov-wide,
+    .kit-fov-tele {
+      transform-box: view-box;
+      transform-origin: 6px 70px;
+      animation: kit-open linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+}
+@keyframes kit-open {
+  from {
+    transform: scaleY(0.05) scaleX(0.4);
+    opacity: 0;
+  }
+}
+.kit-sample {
+  margin-top: auto;
+  aspect-ratio: 3 / 2;
+}
+.kit-sample img {
+  height: 100%;
+  object-fit: cover;
+}
+.kit-at {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99rem;
+  background: var(--chip);
+  color: var(--chip-ink);
+  font-size: 0.6875rem;
+}
+
+@media (min-width: 52rem) {
+  .kit-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-flow: dense;
+  }
+  .kit-camera {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .kit-gimbal,
+  .kit-soft {
+    grid-column: span 2;
+  }
+  .kit-apps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* The two everyday zooms get two columns, their photo beside the numbers. */
+  .kit-lens-wide {
+    grid-column: span 2;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 1rem;
+  }
+  .kit-lens-wide .kit-sample {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    margin: 0;
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+  .kit-lens-wide .kit-sample img {
+    position: absolute;
+    inset: 0;
+  }
+}
+@media (max-width: 40rem) {
+  .kit-lens {
+    grid-column: 1 / -1;
+  }
 }
 
 /* On a phone the wall runs two columns: one column of every frame was a very long scroll. */
@@ -1019,4 +1270,20 @@
   .pt-grid li {
     margin-bottom: 0.6rem;
   }
+}
+
+/* The macro has no sample here yet, so its tile carries what it does: life size. */
+.kit-macro {
+  margin-top: auto;
+  font-size: clamp(3.5rem, 7vw, 5.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--accent);
+}
+.kit-macro span {
+  display: block;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
 }

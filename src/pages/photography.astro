@@ -27,7 +27,8 @@
    best graded films; "Whole days" tells one shoot per chapter (CHAPTERS in
    src/lib/photo-table.ts); "Everything" opens on the grid with the films playing
    in place, and the light table is one press away (or ?view=table). The film
-   strip went; "How a shoot works" follows "What I shoot".
+   strip went; "How a shoot works" follows "What I shoot", then "The kit"
+   (src/data/photo-kit.ts): camera, lenses with a frame shot on each, gimbal, software.
 
    Real markup first. The server prints a plain grid of links (each one to its
    full-size image), the filter bar and an empty full-view dialog. Without
@@ -63,6 +64,7 @@ import {
   chapterFrames,
 } from '../lib/photo-table';
 import photoColors from '../data/photo-colors.json';
+import { CAMERA, GIMBAL, LENSES, SOFTWARE, fovDeg, focalLabel } from '../data/photo-kit';
 import reelPoster from '../assets/photography/reel-poster.jpg';
 
 const photography = addOnNamed(addOns, 'Photography');
@@ -193,14 +195,31 @@ const how = [
     body: 'A full gallery, plus short silent loops and crops sized for the web, so they drop straight onto your pages.',
   },
 ];
-const kit = [
-  'Canon EOS R6 Mark II',
-  '70–200mm f/2.8',
-  '35mm f/1.4',
-  'DJI gimbal',
-  'Lightroom',
-  'DaVinci Resolve',
-];
+// "The kit": the camera, lenses, gimbal and software (src/data/photo-kit.ts), each lens with a
+// photo on the page that was shot on it and the field of view it sees, drawn as a wedge.
+const bySlug = new Map(prints.map((p) => [p.slug, p]));
+const kitCamera = { ...CAMERA, print: bySlug.get(CAMERA.film) };
+const kitGimbal = { ...GIMBAL, print: bySlug.get(GIMBAL.film) };
+// A lens's view as a fan: apex at the left middle of a 120 x 140 box, radius 110, opening right.
+const fan = (deg: number) => {
+  const h = (deg / 2) * (Math.PI / 180);
+  const R = 110,
+    ax = 6,
+    ay = 70;
+  const x = (ax + R * Math.cos(h)).toFixed(1),
+    y1 = (ay - R * Math.sin(h)).toFixed(1),
+    y2 = (ay + R * Math.sin(h)).toFixed(1);
+  return `M${ax} ${ay} L${x} ${y1} A${R} ${R} 0 0 1 ${x} ${y2} Z`;
+};
+const kitLenses = LENSES.map((l) => ({
+  ...l,
+  label: focalLabel(l.focal),
+  // The wedge opens to the wide end; a zoom also draws its long end inside it.
+  wide: fovDeg(l.focal[0]),
+  tele: fovDeg(l.focal[1]),
+  zoom: l.focal[0] !== l.focal[1],
+  print: l.sample ? bySlug.get(l.sample.slug) : undefined,
+}));
 
 const contactHref = '/contact/?service=photography';
 const heading = 'Photography that matches <b>the website it lives on.</b>';
@@ -551,8 +570,7 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </div>
   </section>
 
-  {/* How a shoot works: the process first, the kit in one line under it. Clients book the
-       process; the kit is there for the ones who ask. */}
+  {/* How a shoot works: the process. The kit follows in its own section. */}
   <section class="sec pt-how" aria-labelledby="pt-how-title">
     <div class="wrap">
       <div class="sec-head">
@@ -568,9 +586,144 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
           </li>
         ))}
       </ol>
-      <p class="pt-kit">
-        <span class="label">Kit</span> {kit.join(' · ')}
-      </p>
+    </div>
+  </section>
+
+  {/* The kit, as a bento of tiles: the camera over a playing film, each lens with its numbers,
+       a wedge for how wide it sees and a photo on the page shot on it (the settings from the
+       file's EXIF), the gimbal over a moving shot, and the software. No product renders. Every
+       photo or film is a link that opens the full view. */}
+  <section class="sec pt-kit" aria-labelledby="pt-kit-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="pt-kit-title">The kit</h2>
+        <p>
+          Professional full-frame gear, chosen for churches: dim rooms, long aisles, moments that do
+          not happen twice.
+        </p>
+      </div>
+      <ul class="kit-grid">
+        <li class="kit-tile kit-camera">
+          {kitCamera.print && (
+            <a
+              class="print kit-media"
+              href={kitCamera.print.video}
+              data-print={kitCamera.print.i}
+              data-reel={kitCamera.print.video}
+              aria-label={`Film ${kitCamera.print.title}. ${kitCamera.print.alt}`}
+            >
+              <img
+                src={kitCamera.print.small}
+                width={560}
+                height={315}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+          )}
+          <div class="kit-copy">
+            <p class="label">Camera · {kitCamera.maker}</p>
+            <h3>{kitCamera.name}</h3>
+            <ul class="kit-specs">
+              {kitCamera.specs.map((s) => (
+                <li>{s}</li>
+              ))}
+            </ul>
+          </div>
+        </li>
+        <li class="kit-tile kit-gimbal">
+          {kitGimbal.print && (
+            <a
+              class="print kit-media"
+              href={kitGimbal.print.video}
+              data-print={kitGimbal.print.i}
+              data-reel={kitGimbal.print.video}
+              aria-label={`Film ${kitGimbal.print.title}. ${kitGimbal.print.alt}`}
+            >
+              <img
+                src={kitGimbal.print.small}
+                width={560}
+                height={315}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+          )}
+          <div class="kit-copy">
+            <p class="label">Gimbal · {kitGimbal.maker}</p>
+            <h3>{kitGimbal.name}</h3>
+            <p>{kitGimbal.line}</p>
+          </div>
+        </li>
+        <li class="kit-tile kit-soft">
+          <p class="label">Software</p>
+          <ul class="kit-apps">
+            {SOFTWARE.map((s) => (
+              <li>
+                <h3>
+                  <span class="kit-maker">{s.maker}</span> {s.name}
+                </h3>
+                <p>{s.line}</p>
+              </li>
+            ))}
+          </ul>
+        </li>
+        {kitLenses.map((l) => (
+          <li
+            class:list={['kit-tile', 'kit-lens', { 'kit-lens-wide': l.zoom && l.focal[1] >= 70 }]}
+          >
+            <div class="kit-copy">
+              <p class="label">Lens</p>
+              <p class="kit-num">
+                <b>{l.label}</b>
+                <span>mm</span> <b class="kit-f">{l.aperture}</b>
+              </p>
+              <h3>
+                {l.maker} {l.name}
+              </h3>
+              <p class="kit-role">{l.role}</p>
+            </div>
+            {/* How wide it sees: a wedge to scale, the long end of a zoom drawn inside it. */}
+            <div class="kit-fov" aria-hidden="true">
+              <svg viewBox="0 0 120 140" class="kit-fov-svg">
+                <path class="kit-fov-wide" d={fan(l.wide)} />
+                {l.zoom && <path class="kit-fov-tele" d={fan(l.tele)} />}
+              </svg>
+              <span class="kit-fov-deg label">
+                {Math.round(l.wide)}°{l.zoom ? `–${Math.round(l.tele)}°` : ''}
+              </span>
+            </div>
+            {!l.sample && l.macro && (
+              <p class="kit-macro">
+                {l.macro}
+                <span>Life-size macro</span>
+              </p>
+            )}
+            {l.print && l.sample && (
+              <a
+                class="print kit-sample"
+                href={l.print.large}
+                data-print={l.print.i}
+                aria-label={`${l.sample.at ? `Shot at ${l.sample.at}` : 'Shot on this lens'}: ${l.print.title}. ${l.print.alt}`}
+              >
+                <img
+                  src={l.print.small}
+                  width={560}
+                  height={Math.round((560 * l.print.h) / l.print.w)}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="kit-at label">
+                  {l.sample.at ? `Shot at ${l.sample.at}` : 'Shot on this lens'}
+                </span>
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
 
