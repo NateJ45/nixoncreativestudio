@@ -151,9 +151,11 @@ export interface AddOn {
 export const addOns: AddOn[] = [
   {
     name: 'Photography',
-    price: 'from $1,000',
+    price: 'from $1,200',
     unit: 'a half day',
-    note: 'Portraits, buildings and people at work, shot for your site by the person who designed it. A half day is $1,000 and a full day is $1,600, as part of a build or booked on its own across the Cincinnati region.',
+    // Film is a shoot of its own: filming and grading take their own time, and the photos and
+    // the film are not shot at once (2026-11-14).
+    note: 'Portraits, buildings and people at work, shot for your site by the person who designed it. A half day is $1,200 and a full day is $2,200. Short films are a shoot of their own, because filming and grading take their own time: a half day of film is $1,600 and a full day is $2,600. As part of a build or booked on its own across the Cincinnati region.',
   },
   {
     name: 'Writing your pages',
