@@ -57,7 +57,9 @@ The profile exists (on the studio Google account, signed in as the second accoun
 `authuser=1`): primary category Website designer, service area Cincinnati Metropolitan Area,
 no storefront. Brought up to date 2026-11-13 to match `src/data/pricing.ts`: Website design
 and Website migration from $3,500, Care plans from $59, Corporate and Headshot photography from
-$1,000, and under Website designer the add-ons Website copywriting from $900, Large archive
+$1,000 (raised on the site 2026-11-14 to from $1,200, a full day $2,200, and film its own shoot
+from $1,600 a half day, $2,600 a full day: change the profile to match, and add a video
+service if it offers one), and under Website designer the add-ons Website copywriting from $900, Large archive
 migration from $1,500, Simple wordmark $600 and Local business listings from $350. There is no
 brand or graphic-design category on purpose. When prices change, change them there too. Still to
 do: ask two or three past clients for a Google review (the profile has none), and add photos. Delete this item when it has reviews.
