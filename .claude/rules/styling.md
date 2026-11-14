@@ -48,7 +48,7 @@ Declared in `:root` at the top of `kit.css`:
 - Every moving thing has a reduced-motion answer: read `ui.reduce` in script, and add the selector to the `@media (prefers-reduced-motion: reduce)` blocks in CSS. Under reduce the view transition and smooth scroll are off, springs start at rest, footage stays a still, and nothing runs after load (`tests/reduced-motion.spec.ts`).
 - The dock's motion (puck, rail, hands) is its own block in `kit.js`. `ui.spring`'s `step` takes an optional third argument, a stiffness for that step, which the puck uses so the leading edge is the quicker one. Class names in the dock are prefixed `dk-` or `fc`: `.fan`, `.rail` and `.more` already mean something on the sheet and the case studies.
 - A hover that lifts its card uses `ui.stillHover` in `kit.js`, so the card cannot lift off the pointer and jitter.
-- There is no Pause motion button and no `data-motion` attribute (the client sheet's looping clip has its own pause button). Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves; nothing else loops by itself.
+- There is no Pause motion button and no `data-motion` attribute (the client sheet's looping clip and About's map each have their own pause button). Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves. The map is the one thing that loops by itself, only while on screen, and only under its `[data-live]` attribute.
 
 ## Forced colors and print
 

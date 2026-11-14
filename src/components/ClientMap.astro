@@ -1,0 +1,186 @@
+---
+/* ClientMap: About's "Based in Cincinnati" section. A dot map of the lower 48
+   (src/data/us-dots.json, from scripts/tools/us-dots.mjs) with the states the
+   selected clients are in (src/data/client-places.ts) picked out in the blue,
+   an arc of light from Cincinnati to each, and a ruled list of those clients
+   beside it. The list is the content: every name is a link to its case study,
+   and the whole map is aria-hidden decoration that follows the list.
+
+   Motion lives in src/scripts/client-map.js and about.css: the map opens on the
+   whole country and glides in to the East, a ripple runs out from Cincinnati,
+   light travels the arcs, and the highlight walks the states. It only runs on
+   screen, has its own Pause button (WCAG 2.2.2), and stands down entirely under
+   reduced motion or with no script, where the map is simply drawn. */
+import geo from '../data/us-dots.json';
+import { PLACES } from '../data/client-places';
+import { getClients } from '../lib/clients';
+
+const all = await getClients();
+const bySlug = new Map(all.map((c) => [c.slug, c]));
+const places = PLACES.map((p) => ({
+  ...p,
+  people: p.clients.map((slug) => {
+    const c = bySlug.get(slug);
+    if (!c) throw new Error(`ClientMap: no case study "${slug}" (src/data/client-places.ts)`);
+    return c;
+  }),
+}));
+
+const r1 = (n: number) => Math.round(n * 10) / 10;
+const ROW = (geo.step * Math.sqrt(3)) / 2;
+const [hx, hy] = geo.hub;
+const centers = geo.centers as Record<string, number[]>;
+const outlines = geo.outlines as Record<string, string>;
+const picked = new Set(places.map((p) => p.fips));
+
+// Dots: the rest of the country is split into rings by distance from Cincinnati, so the ripple can
+// light one ring after another; each picked state keeps its own dots. One path per group, each dot
+// a zero-length line with a round cap, written relative to the last so the HTML stays small.
+const RING = 64;
+const rings: number[][][] = [];
+const stateDots: Record<number, number[][]> = {};
+for (const [c, r, f] of geo.dots) {
+  const x = r1(c * geo.step + (r % 2 ? geo.step / 2 : 0));
+  const y = r1(r * ROW);
+  if (picked.has(f)) (stateDots[f] ??= []).push([x, y]);
+  else {
+    const i = Math.floor(Math.hypot(x - hx, y - hy) / RING);
+    (rings[i] ??= []).push([x, y]);
+  }
+}
+function dots(pts: number[][]) {
+  let d = '';
+  let px = 0;
+  let py = 0;
+  pts.forEach(([x, y], i) => {
+    d += i ? `m${r1(x - px)} ${r1(y - py)}h0` : `M${x} ${y}h0`;
+    px = x;
+    py = y;
+  });
+  return d;
+}
+const ringPaths = rings.map((pts) => (pts ? dots(pts) : '')).filter(Boolean);
+
+// Pins: the hub for the home state, the state's centre for the rest. Arcs bow up from the hub.
+const pins = places.map((p) => {
+  const [x, y] = p.home ? [hx, hy] : centers[p.fips];
+  if (x === undefined) throw new Error(`ClientMap: no outline for FIPS ${p.fips}; see us-dots.mjs`);
+  let arc = '';
+  if (!p.home) {
+    const dx = x - hx;
+    const dy = y - hy;
+    const len = Math.hypot(dx, dy);
+    let nx = -dy / len;
+    let ny = dx / len;
+    if (ny > 0) [nx, ny] = [-nx, -ny];
+    const bow = Math.max(18, len * 0.38);
+    const qx = r1((hx + x) / 2 + nx * bow);
+    const qy = r1((hy + y) / 2 + ny * bow);
+    arc = `M${hx} ${hy}Q${qx} ${qy} ${x} ${y}`;
+  }
+  return { ...p, x, y, arc };
+});
+
+// The resting view: the East, framed on the pins, at the full map's shape. The script opens on the
+// whole country (`full`) and glides to this one.
+const W = geo.w;
+const H = geo.h;
+const xs = pins.map((p) => p.x);
+const ys = pins.map((p) => p.y);
+const cw = Math.round(W * 0.56);
+const ch = Math.round((cw * H) / W);
+const cx = Math.min(Math.max((Math.min(...xs) + Math.max(...xs)) / 2 - cw / 2, 0), W - cw);
+const cy = Math.min(Math.max((Math.min(...ys) + Math.max(...ys)) / 2 - ch / 2 + 10, 0), H - ch);
+const crop = `${Math.round(cx)} ${Math.round(cy)} ${cw} ${ch}`;
+// A phone gets a closer view: the same middle, about two thirds the width.
+const pw = Math.round(W * 0.38);
+const ph = Math.round((pw * H) / W);
+const px = Math.min(Math.max(cx + (cw - pw) / 2, 0), W - pw);
+const py = Math.min(Math.max(cy + (ch - ph) / 2, 0), H - ph);
+const cropPhone = `${Math.round(px)} ${Math.round(py)} ${pw} ${ph}`;
+const full = `0 0 ${W} ${H}`;
+const first = places[0].fips;
+---
+
+<section class="sec ab-sec cm-sec" aria-labelledby="mh">
+  <div class="sec-head">
+    <h2 id="mh">Based in Cincinnati, working anywhere</h2>
+    <p>
+      I meet clients in person around the region and work with everyone else by call, email and
+      text. These are the states the selected case studies call home.
+    </p>
+  </div>
+  <div class="cm" data-cm data-on={first}>
+    <figure class="cm-map card">
+      <svg
+        class="cm-svg"
+        viewBox={crop}
+        data-full={full}
+        data-crop={crop}
+        data-crop-phone={cropPhone}
+        aria-hidden="true"
+        focusable="false"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <g class="cm-land">
+          {ringPaths.map((d, i) => (
+            <path class="cm-r" style={`--i: ${i}`} d={d} />
+          ))}
+        </g>
+        {pins.map((p) => (
+          <g class="cm-st" data-st={p.fips}>
+            <path class="cm-so" d={outlines[p.fips]} />
+            <path class="cm-sd" d={dots(stateDots[p.fips] ?? [])} />
+          </g>
+        ))}
+        <g class="cm-arcs">
+          {pins
+            .filter((p) => p.arc)
+            .map((p, i) => (
+              <g class="cm-arc" data-st={p.fips} style={`--i: ${i}`}>
+                <path class="cm-trail" d={p.arc} pathLength="1" />
+                <path class="cm-comet" d={p.arc} pathLength="1" />
+              </g>
+            ))}
+        </g>
+        {pins.map((p) => (
+          <g class:list={['cm-pin', { 'cm-hub': p.home }]} data-st={p.fips}>
+            <circle class="cm-ping" cx={p.x} cy={p.y} r="6" />
+            <circle class="cm-ping cm-ping-2" cx={p.x} cy={p.y} r="6" />
+            <circle class="cm-pt" cx={p.x} cy={p.y} r={p.home ? 5.5 : 4.5} />
+            {p.home ? (
+              <text class="cm-tag cm-tag-hub" x={p.x + 9} y={p.y + 17}>
+                Cincinnati
+              </text>
+            ) : (
+              <text class="cm-tag" x={p.x} y={p.y - 13} text-anchor="middle">
+                {p.state}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+      <figcaption class="cm-cap">
+        <span class="label">The studio is in Cincinnati</span>
+        <button type="button" class="cm-pause" data-cm-pause hidden>
+          Pause the map
+        </button>
+      </figcaption>
+    </figure>
+    <ol class="cm-list">
+      {places.map((p) => (
+        <li class="cm-row" data-st={p.fips}>
+          <span class="cm-state label">{p.home ? `${p.state}, home` : p.state}</span>
+          <ul class="cm-names">
+            {p.people.map((c) => (
+              <li>
+                <a href={c.study}>{c.name}</a>
+                <span class="cm-kind">{c.sector}</span>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

@@ -585,3 +585,318 @@ html:not(.js) .otc-turn {
     transition: none;
   }
 }
+
+/* ---- Based in Cincinnati: the client map (src/components/ClientMap.astro) --------------------
+   A card holding a dot map, with a ruled list of the selected clients by state beside it. Colors
+   are mixed from tokens so both sides of the card follow: faint ink dots, the picked states in a
+   pale blue, the one being shown in the full blue. The list is the content; the map is
+   decoration that follows it. Motion runs only under [data-live] (client-map.js sets it while the
+   map is on screen and not paused), so with no script, under reduced motion or after Pause it is
+   simply drawn. */
+.cm {
+  --cm-dot: color-mix(in srgb, var(--ink) 13%, var(--card));
+  --cm-lit: color-mix(in srgb, var(--ink) 46%, var(--card));
+  --cm-pick: color-mix(in srgb, var(--accent) 38%, var(--card));
+  --cm-on: var(--accent);
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3.5vw, 3.5rem);
+  align-items: start;
+}
+.cm-map {
+  margin: 0;
+  overflow: hidden;
+}
+.cm-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 914 / 586;
+}
+.cm-r,
+.cm-sd {
+  fill: none;
+  stroke-width: 4.2;
+  stroke-linecap: round;
+}
+.cm-r {
+  stroke: var(--cm-dot);
+}
+.cm-sd {
+  stroke: var(--cm-pick);
+  stroke-width: 5.2;
+  transition: stroke 0.6s var(--ease);
+}
+.cm-so {
+  fill: transparent;
+  stroke: var(--cm-pick);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  transition:
+    stroke 0.6s var(--ease),
+    fill 0.6s var(--ease);
+}
+.cm-st.on .cm-sd,
+.cm-st.on .cm-so {
+  stroke: var(--cm-on);
+}
+/* The state being shown takes a faint wash of the blue under its dots. */
+.cm-st.on .cm-so {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--card));
+}
+.cm-trail {
+  fill: none;
+  stroke: var(--cm-pick);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.001 0.03;
+  transition: stroke 0.6s var(--ease);
+}
+.cm-arc.on .cm-trail {
+  stroke: var(--cm-on);
+}
+.cm-comet {
+  fill: none;
+  stroke: var(--cm-on);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.08 1.2;
+  stroke-dashoffset: 0.08;
+  opacity: 0;
+}
+.cm-pt {
+  fill: var(--cm-pick);
+  stroke: var(--card);
+  stroke-width: 2;
+  transition: fill 0.5s var(--ease);
+}
+.cm-pin.on .cm-pt {
+  fill: var(--cm-on);
+}
+.cm-hub .cm-pt,
+.cm-hub.on .cm-pt {
+  fill: var(--ink);
+}
+.cm-ping {
+  fill: none;
+  stroke: var(--cm-on);
+  stroke-width: 1.4;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.cm-hub .cm-ping {
+  stroke: var(--ink);
+}
+.cm-tag {
+  font: 600 13px var(--body);
+  letter-spacing: -0.01em;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: translateY(5px);
+  transform-box: fill-box;
+  transition:
+    opacity 0.35s var(--ease),
+    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cm-pin.on .cm-tag,
+.cm-tag-hub {
+  opacity: 1;
+  transform: none;
+}
+.cm-tag-hub {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--soft);
+}
+.cm-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem clamp(1rem, 2vw, 1.5rem);
+  border-top: 1px solid var(--line);
+}
+.cm-cap .label {
+  color: var(--soft);
+}
+.cm-pause {
+  min-height: 2.25rem;
+  padding: 0.3rem 0.95rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--card);
+  color: var(--ink);
+  font: 500 0.875rem/1.2 var(--body);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.cm-pause:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 60%, transparent);
+}
+.cm-pause:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.cm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.cm-row {
+  position: relative;
+  padding: 1.1rem 0 1.15rem 1.65rem;
+  border-bottom: 1px solid var(--line);
+}
+.cm-row::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 1.35rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--cm-pick);
+  transition:
+    background 0.4s var(--ease),
+    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cm-row.on::before {
+  background: var(--cm-on);
+  transform: scale(1.35);
+}
+.cm-state {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--soft);
+  transition: color 0.4s var(--ease);
+}
+.cm-row.on .cm-state {
+  color: var(--ink);
+}
+.cm-names {
+  display: grid;
+  gap: 0.15rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cm-names li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.5rem;
+}
+.cm-names a {
+  display: inline-block;
+  padding-block: 0.15rem;
+  color: var(--ink);
+  font: 500 1.125rem/1.3 var(--body);
+  text-decoration-line: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 0.22em;
+}
+.cm-names a:hover {
+  text-decoration-color: currentColor;
+}
+.cm-kind {
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+
+/* Alive: only while on screen, visible and not paused. */
+@media (prefers-reduced-motion: no-preference) {
+  .cm[data-live] .cm-r {
+    animation: cm-ripple 6.4s linear infinite;
+    animation-delay: calc(var(--i) * 0.26s);
+  }
+  .cm[data-live] .cm-trail {
+    animation: cm-flow 1.8s linear infinite;
+  }
+  .cm[data-live] .cm-comet {
+    animation: cm-comet 2.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+    animation-delay: calc(var(--i) * 0.75s);
+  }
+  .cm[data-live] .cm-pin.on .cm-ping,
+  .cm[data-live] .cm-hub .cm-ping {
+    animation: cm-ping 2.6s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+  }
+  .cm[data-live] .cm-ping-2 {
+    animation-delay: 1.3s !important;
+  }
+}
+@keyframes cm-ripple {
+  0%,
+  34%,
+  100% {
+    stroke: var(--cm-dot);
+  }
+  10% {
+    stroke: var(--cm-lit);
+  }
+}
+@keyframes cm-flow {
+  to {
+    stroke-dashoffset: -0.031;
+  }
+}
+@keyframes cm-comet {
+  0% {
+    stroke-dashoffset: 0.08;
+    opacity: 0;
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -1;
+    opacity: 0;
+  }
+}
+@keyframes cm-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(4.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-sd,
+  .cm-so,
+  .cm-trail,
+  .cm-pt,
+  .cm-tag,
+  .cm-row::before,
+  .cm-state {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .cm-map {
+    border: 1px solid CanvasText;
+  }
+}
+@media (max-width: 52rem) {
+  .cm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .cm-tag {
+    font-size: 22px;
+    stroke-width: 6;
+  }
+  .cm-tag-hub {
+    font-size: 19px;
+  }
+}
