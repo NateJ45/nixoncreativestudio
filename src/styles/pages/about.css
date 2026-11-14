@@ -586,32 +586,45 @@ html:not(.js) .otc-turn {
   }
 }
 
-/* ---- Based in Cincinnati: the client map (src/components/ClientMap.astro) --------------------
-   A card holding a dot map, with a ruled list of the selected clients by state beside it. Colors
-   are mixed from tokens so both sides of the card follow: faint ink dots, the picked states in a
-   pale blue, the one being shown in the full blue. The list is the content; the map is
-   decoration that follows it. Motion runs only under [data-live] (client-map.js sets it while the
-   map is on screen and not paused), so with no script, under reduced motion or after Pause it is
-   simply drawn. */
+/* ---- Based in Cincinnati: the map and the state hand (src/components/ClientMap.astro) ---------
+   The map is the table: a wide card with a dot map on it. Along its foot lies a hand of four
+   playing cards, one a state, lettered in two corners with the state's postal code and holding its
+   clients, each a link to the study. The hand is the content; the map is decoration that follows
+   it. The card being shown lifts out of the hand and turns the studio blue, the same blue its
+   state wears on the map. Colors are mixed from tokens, so both sides of the page follow.
+
+   Motion runs only under [data-live] (client-map.js sets it while the map is on screen and not
+   paused). .cm-stacked holds the cards in one pile until the map opens, and .cm-walk makes a lift
+   wait for the light travelling its arc. With no script, under reduced motion or after Pause it is
+   all simply drawn, the hand already fanned. */
 .cm {
   --cm-dot: color-mix(in srgb, var(--ink) 13%, var(--card));
   --cm-lit: color-mix(in srgb, var(--ink) 46%, var(--card));
   --cm-pick: color-mix(in srgb, var(--accent) 38%, var(--card));
   --cm-on: var(--accent);
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
-  gap: clamp(1.5rem, 3.5vw, 3.5rem);
-  align-items: start;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .cm-map {
+  --cardr: 1.75rem;
+  position: relative;
   margin: 0;
   overflow: hidden;
+  border-radius: var(--cardr);
+}
+.cm-map::after {
+  content: '';
+  position: absolute;
+  inset: 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: calc(var(--cardr) - 0.55rem);
+  opacity: 0.13;
+  pointer-events: none;
 }
 .cm-svg {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 914 / 586;
+  aspect-ratio: 2.1;
 }
 .cm-r,
 .cm-sd {
@@ -658,10 +671,10 @@ html:not(.js) .otc-turn {
 .cm-comet {
   fill: none;
   stroke: var(--cm-on);
-  stroke-width: 3;
+  stroke-width: 3.2;
   stroke-linecap: round;
-  stroke-dasharray: 0.08 1.2;
-  stroke-dashoffset: 0.08;
+  stroke-dasharray: 0.1 1.2;
+  stroke-dashoffset: 0.1;
   opacity: 0;
 }
 .cm-pt {
@@ -701,7 +714,7 @@ html:not(.js) .otc-turn {
   transform-box: fill-box;
   transition:
     opacity 0.35s var(--ease),
-    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.6s var(--spring);
 }
 .cm-pin.on .cm-tag,
 .cm-tag-hub {
@@ -713,19 +726,11 @@ html:not(.js) .otc-turn {
   font-weight: 500;
   fill: var(--soft);
 }
-.cm-cap {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  padding: 0.75rem clamp(1rem, 2vw, 1.5rem);
-  border-top: 1px solid var(--line);
-}
-.cm-cap .label {
-  color: var(--soft);
-}
 .cm-pause {
+  position: absolute;
+  top: clamp(1rem, 1.6vw, 1.35rem);
+  right: clamp(1rem, 1.6vw, 1.35rem);
+  z-index: 1;
   min-height: 2.25rem;
   padding: 0.3rem 0.95rem;
   border: 0;
@@ -743,71 +748,135 @@ html:not(.js) .otc-turn {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.cm-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--line);
-}
-.cm-row {
+
+/* The hand: four cards fanned along the map's foot, a little over its edge. */
+.sc-hand {
   position: relative;
-  padding: 1.1rem 0 1.15rem 1.65rem;
-  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  margin: clamp(-5.5rem, -6vw, -3rem) 0 0;
+  padding: 0 clamp(0.5rem, 3vw, 3rem);
+  list-style: none;
 }
-.cm-row::before {
+.sc {
+  --cardr: clamp(1.1rem, 1.5vw, 1.4rem);
+  --lift: 0px;
+  position: relative;
+  flex: 0 1 17.5rem;
+  min-width: 0;
+  aspect-ratio: 5 / 7;
+  margin-inline: -0.7%;
+  container-type: inline-size;
+  transform-origin: 50% 92%;
+  transform: translateY(calc(var(--dip) - var(--lift))) rotate(var(--rot));
+  transition: transform 0.75s var(--spring);
+}
+.sc.on {
+  --lift: clamp(1.5rem, 2.6vw, 2.5rem);
+  z-index: 2;
+  transform: translateY(calc(var(--dip) - var(--lift))) rotate(calc(var(--rot) * 0.4));
+}
+/* A card the keyboard or the pointer is on comes to the top of the hand (WCAG 2.4.11). */
+.sc:hover,
+.sc:focus-within {
+  z-index: 3;
+}
+.sc-face {
+  --pipx: 6.5cqw;
+  --pipy: 5.5cqw;
+  --pips: 9.5cqw;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9cqw;
+  border-radius: var(--cardr);
+  background: var(--card);
+  color: var(--ink);
+  text-align: center;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 26px 44px -22px rgba(0, 0, 0, 0.5);
+  transition:
+    background 0.5s var(--ease),
+    color 0.5s var(--ease);
+}
+.sc-face::after {
   content: '';
   position: absolute;
-  left: 0.2rem;
-  top: 1.35rem;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: var(--cm-pick);
-  transition:
-    background 0.4s var(--ease),
-    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  inset: 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: calc(var(--cardr) - 0.45rem);
+  opacity: 0.13;
+  pointer-events: none;
 }
-.cm-row.on::before {
-  background: var(--cm-on);
-  transform: scale(1.35);
+.sc.on .sc-face {
+  background: var(--fill);
+  color: #fff;
 }
-.cm-state {
-  display: block;
-  margin-bottom: 0.4rem;
-  color: var(--soft);
-  transition: color 0.4s var(--ease);
+.sc-state {
+  margin: 0 0 4.5cqw;
+  font-size: clamp(0.75rem, 4.4cqw, 0.9375rem);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: inherit;
 }
-.cm-row.on .cm-state {
-  color: var(--ink);
-}
-.cm-names {
+.sc-names {
   display: grid;
-  gap: 0.15rem;
-  list-style: none;
+  gap: 3cqw;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
-.cm-names li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 0.5rem;
-}
-.cm-names a {
+.sc-names a {
   display: inline-block;
   padding-block: 0.15rem;
-  color: var(--ink);
-  font: 500 1.125rem/1.3 var(--body);
+  color: inherit;
+  font: 500 clamp(1rem, 6.6cqw, 1.25rem) / 1.2 var(--display);
+  letter-spacing: -0.02em;
   text-decoration-line: underline;
-  text-decoration-color: var(--line);
-  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 30%, transparent);
+  text-underline-offset: 0.2em;
+  text-wrap: balance;
 }
-.cm-names a:hover {
+.sc-names a:hover {
   text-decoration-color: currentColor;
 }
-.cm-kind {
+.sc-names a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+.sc-kind {
+  display: block;
   color: var(--soft);
-  font-size: 0.9375rem;
+  font-size: clamp(0.8125rem, 4.4cqw, 0.9375rem);
+  transition: color 0.5s var(--ease);
+}
+.sc.on .sc-kind {
+  color: var(--accent-soft);
+}
+
+/* Before the deal: one stack in the middle of the hand, nearly square. */
+.cm-stacked .sc {
+  transform: translate(calc(var(--off) * -98%), 1.5rem) rotate(calc(var(--off) * 1.5deg));
+  transition-delay: 0s;
+}
+/* The deal: each card leaves the stack a beat after the one before. */
+.cm-dealing .sc {
+  transition-delay: calc(var(--i) * 70ms);
+}
+/* After the deal the walk lifts a card as the light reaches its state; anything you point at or
+   focus lifts at once. Ohio has no arc, so its card does not wait. */
+.cm.cm-walk[data-live] .sc.on:not(.sc-home),
+.cm.cm-walk[data-live] .sc.on:not(.sc-home) .sc-face,
+.cm.cm-walk[data-live] .sc.on:not(.sc-home) .sc-kind {
+  transition-delay: 0.85s;
 }
 
 /* Alive: only while on screen, visible and not paused. */
@@ -819,9 +888,8 @@ html:not(.js) .otc-turn {
   .cm[data-live] .cm-trail {
     animation: cm-flow 1.8s linear infinite;
   }
-  .cm[data-live] .cm-comet {
-    animation: cm-comet 2.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
-    animation-delay: calc(var(--i) * 0.75s);
+  .cm[data-live] .cm-arc.fire .cm-comet {
+    animation: cm-comet 1.1s cubic-bezier(0.45, 0, 0.2, 1) both;
   }
   .cm[data-live] .cm-pin.on .cm-ping,
   .cm[data-live] .cm-hub .cm-ping {
@@ -848,11 +916,11 @@ html:not(.js) .otc-turn {
 }
 @keyframes cm-comet {
   0% {
-    stroke-dashoffset: 0.08;
+    stroke-dashoffset: 0.1;
     opacity: 0;
   }
-  10%,
-  80% {
+  12%,
+  78% {
     opacity: 1;
   }
   100% {
@@ -876,27 +944,91 @@ html:not(.js) .otc-turn {
   .cm-trail,
   .cm-pt,
   .cm-tag,
-  .cm-row::before,
-  .cm-state {
+  .sc,
+  .sc-face,
+  .sc-kind {
     transition: none;
   }
 }
 @media (forced-colors: active) {
-  .cm-map {
+  .cm-map,
+  .sc-face {
     border: 1px solid CanvasText;
   }
 }
+
+/* Narrower: the hand stops overlapping the map and the fan closes up. */
+@media (max-width: 64rem) {
+  .sc-hand {
+    margin-top: 1.25rem;
+    padding: 0 0.5rem;
+  }
+  .sc {
+    --dip: 0px;
+    transform: translateY(calc(0px - var(--lift))) rotate(calc(var(--rot) * 0.45));
+  }
+  .sc.on {
+    transform: translateY(calc(0px - var(--lift))) rotate(calc(var(--rot) * 0.15));
+  }
+}
+/* A phone: the cards become a ruled stack of wide cards with one corner mark each (a wide box
+   keeps one), and the walk turns the one being shown blue with no lift. */
 @media (max-width: 52rem) {
-  .cm {
-    grid-template-columns: minmax(0, 1fr);
+  .sc-hand {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0;
+  }
+  .sc,
+  .sc.on,
+  .cm-stacked .sc {
+    flex: none;
+    aspect-ratio: auto;
+    margin: 0;
+    container-type: normal;
+    transform: none;
+  }
+  .sc-face {
+    --pipx: 1.15rem;
+    --pipy: 1.05rem;
+    --pips: 1.25rem;
+    position: relative;
+    align-items: flex-start;
+    padding: 1.05rem 1.25rem 1.2rem 4.25rem;
+    text-align: left;
+  }
+  .sc-face .pip.flip {
+    display: none;
+  }
+  .sc-state {
+    margin-bottom: 0.45rem;
+    font-size: 0.8125rem;
+  }
+  .sc-names {
+    gap: 0.35rem;
+  }
+  .sc-names a {
+    font-size: 1.125rem;
+  }
+  .sc-kind {
+    font-size: 0.875rem;
   }
 }
 @media (max-width: 40rem) {
+  .cm-svg {
+    aspect-ratio: 4 / 3;
+  }
   .cm-tag {
     font-size: 22px;
     stroke-width: 6;
   }
   .cm-tag-hub {
     font-size: 19px;
+  }
+  .cm-pause {
+    top: auto;
+    right: 0.85rem;
+    bottom: 0.85rem;
   }
 }

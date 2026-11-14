@@ -1,7 +1,7 @@
 /* ============================================================================
    Where the selected clients are | About's map
    ============================================================================
-   One row per state, in the order the map walks them, each with the case
+   One card per state, in the order the map walks them, each with the case
    studies based there (slugs from src/lib/clients.ts DECK). State level only:
    never a street or a town that would point at a person. `fips` matches the
    state codes in src/data/us-dots.json, which only draws outlines for the
@@ -14,6 +14,8 @@
 export interface Place {
   /** The state's name, as the list prints it. */
   state: string;
+  /** The postal code, printed in the card's corners. */
+  abbr: string;
   /** The state's FIPS code, as in us-dots.json. */
   fips: number;
   /** True for the state the studio is in: its pin is the Cincinnati hub. */
@@ -23,11 +25,18 @@ export interface Place {
 }
 
 export const PLACES: Place[] = [
-  { state: 'Ohio', fips: 39, home: true, clients: ['stone-steps-50k', 'presbyterian-academy'] },
-  { state: 'Indiana', fips: 18, clients: ['first-baptist-muncie', 'reid-design'] },
-  { state: 'North Carolina', fips: 37, clients: ['foundation-for-reformed-theology'] },
+  {
+    state: 'Ohio',
+    abbr: 'OH',
+    fips: 39,
+    home: true,
+    clients: ['stone-steps-50k', 'presbyterian-academy'],
+  },
+  { state: 'Indiana', abbr: 'IN', fips: 18, clients: ['first-baptist-muncie', 'reid-design'] },
+  { state: 'North Carolina', abbr: 'NC', fips: 37, clients: ['foundation-for-reformed-theology'] },
   {
     state: 'South Carolina',
+    abbr: 'SC',
     fips: 45,
     clients: ['theology-matters', 'first-presbyterian-orangeburg', 'mas-monograms'],
   },

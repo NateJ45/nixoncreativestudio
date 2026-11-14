@@ -11,14 +11,14 @@ const running = () =>
   }).length;
 
 test.describe('About: the client map', () => {
-  test('lists every client by state, each a link to its study, with the map hidden from readers', async ({
+  test('deals a card per state, each client a link to its study, with the map hidden from readers', async ({
     page,
   }) => {
     await page.goto('/about/');
-    const rows = page.locator('.cm-row');
+    const rows = page.locator('.sc');
     await expect(rows).toHaveCount(4);
-    await expect(rows.first().locator('.cm-state')).toHaveText('Ohio, home');
-    const links = page.locator('.cm-names a');
+    await expect(rows.first().locator('.sc-state')).toHaveText('Ohio, home');
+    const links = page.locator('.sc-names a');
     await expect(links).toHaveCount(8);
     for (const href of await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))))
       expect(href).toMatch(/^\/work\/[a-z0-9-]+\/$/);
@@ -44,8 +44,18 @@ test.describe('About: the client map', () => {
     await expect.poll(() => map.getAttribute('data-on'), { timeout: 6000 }).not.toBe(first);
     expect(await page.evaluate(running)).toBeGreaterThan(0);
 
+    // The walked state's card lifts out of the hand and turns the studio blue once the light lands.
+    const walked = await map.getAttribute('data-on');
+    const card = page.locator(`.sc[data-st="${walked}"]`);
+    await expect(card).toHaveClass(/\bon\b/);
+    await expect
+      .poll(() => card.locator('.sc-face').evaluate((el) => getComputedStyle(el).backgroundColor), {
+        timeout: 3000,
+      })
+      .toBe('rgb(47, 63, 230)');
+
     // Hovering a row holds the highlight there.
-    const sc = page.locator('.cm-row[data-st="45"]');
+    const sc = page.locator('.sc[data-st="45"]');
     await sc.hover();
     await expect(map).toHaveAttribute('data-on', '45');
     await expect(sc).toHaveClass(/\bon\b/);
@@ -74,12 +84,13 @@ test.describe('About: the client map', () => {
       const svg = page.locator('.cm-svg');
       await page.locator('[data-cm]').scrollIntoViewIfNeeded();
       await page.waitForTimeout(1500);
+      await expect(page.locator('[data-cm]')).not.toHaveClass(/cm-stacked/);
       await expect(svg).toHaveAttribute('viewBox', (await svg.getAttribute('data-crop'))!);
       await expect(page.locator('[data-cm-pause]')).toBeHidden();
       await expect(page.locator('[data-cm]')).not.toHaveAttribute('data-live', '');
       expect(await page.evaluate(running)).toBe(0);
       // Focus still moves the highlight.
-      await page.locator('.cm-row[data-st="37"] a').first().focus();
+      await page.locator('.sc[data-st="37"] a').first().focus();
       await expect(page.locator('[data-cm]')).toHaveAttribute('data-on', '37');
     });
   });

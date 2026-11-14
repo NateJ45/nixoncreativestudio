@@ -1,16 +1,18 @@
 ---
 /* ClientMap: About's "Based in Cincinnati" section. A dot map of the lower 48
-   (src/data/us-dots.json, from scripts/tools/us-dots.mjs) with the states the
-   selected clients are in (src/data/client-places.ts) picked out in the blue,
-   an arc of light from Cincinnati to each, and a ruled list of those clients
-   beside it. The list is the content: every name is a link to its case study,
-   and the whole map is aria-hidden decoration that follows the list.
+   (src/data/us-dots.json, from scripts/tools/us-dots.mjs) on a wide card, the
+   table, with the states the selected clients are in (src/data/client-places.ts)
+   picked out in the blue and an arc from Cincinnati to each. Along its foot lies
+   a hand of playing cards, one a state, lettered with its postal code in two
+   corners and holding its clients. The hand is the content: every name is a
+   link to its case study, and the map is aria-hidden decoration that follows it.
 
-   Motion lives in src/scripts/client-map.js and about.css: the map opens on the
-   whole country and glides in to the East, a ripple runs out from Cincinnati,
-   light travels the arcs, and the highlight walks the states. It only runs on
-   screen, has its own Pause button (WCAG 2.2.2), and stands down entirely under
-   reduced motion or with no script, where the map is simply drawn. */
+   Motion lives in src/scripts/client-map.js and about.css: the map glides from
+   the whole country to the East as the hand is dealt, a ripple runs out from
+   Cincinnati, and the walk sends a point of light along an arc and lifts that
+   state's card as it lands. It only runs on screen, has its own Pause button
+   (WCAG 2.2.2), and stands down under reduced motion or with no script, where
+   the map rests on the East and the hand is already fanned. */
 import geo from '../data/us-dots.json';
 import { PLACES } from '../data/client-places';
 import { getClients } from '../lib/clients';
@@ -81,24 +83,35 @@ const pins = places.map((p) => {
   return { ...p, x, y, arc };
 });
 
-// The resting view: the East, framed on the pins, at the full map's shape. The script opens on the
-// whole country (`full`) and glides to this one.
+// The views. The map is a wide table on a big screen (WIDE) and nearer square on a phone (TALL),
+// matching .cm-svg's aspect-ratio in about.css. Each has a resting view framed on the pins, which
+// no script and reduced motion get, and a view of the whole country that the script opens on
+// before it glides in. The hand of cards covers the table's foot on a big screen, so the resting
+// view sits a little high there.
 const W = geo.w;
 const H = geo.h;
+const WIDE = 2.1;
+const TALL = 4 / 3;
 const xs = pins.map((p) => p.x);
 const ys = pins.map((p) => p.y);
-const cw = Math.round(W * 0.56);
-const ch = Math.round((cw * H) / W);
-const cx = Math.min(Math.max((Math.min(...xs) + Math.max(...xs)) / 2 - cw / 2, 0), W - cw);
-const cy = Math.min(Math.max((Math.min(...ys) + Math.max(...ys)) / 2 - ch / 2 + 10, 0), H - ch);
-const crop = `${Math.round(cx)} ${Math.round(cy)} ${cw} ${ch}`;
-// A phone gets a closer view: the same middle, about two thirds the width.
-const pw = Math.round(W * 0.38);
-const ph = Math.round((pw * H) / W);
-const px = Math.min(Math.max(cx + (cw - pw) / 2, 0), W - pw);
-const py = Math.min(Math.max(cy + (ch - ph) / 2, 0), H - ph);
-const cropPhone = `${Math.round(px)} ${Math.round(py)} ${pw} ${ph}`;
-const full = `0 0 ${W} ${H}`;
+const mx = (Math.min(...xs) + Math.max(...xs)) / 2;
+const my = (Math.min(...ys) + Math.max(...ys)) / 2;
+const clamp = (v: number, hi: number) => Math.min(Math.max(v, 0), hi);
+const box = (x: number, y: number, w: number, h: number) =>
+  [x, y, w, h].map((n) => Math.round(n * 10) / 10).join(' ');
+function rest(width: number, aspect: number, drop: number) {
+  const h = width / aspect;
+  return box(clamp(mx - width / 2, W - width), clamp(my - h / 2 + drop, H - h), width, h);
+}
+function whole(aspect: number) {
+  const w = Math.min(W, H * aspect);
+  const h = w / aspect;
+  return box((W - w) / 2, (H - h) / 2, w, h);
+}
+const crop = rest(W * 0.7, WIDE, 14);
+const full = whole(WIDE);
+const cropPhone = rest(W * 0.4, TALL, 4);
+const fullPhone = whole(TALL);
 const first = places[0].fips;
 ---
 
@@ -118,6 +131,7 @@ const first = places[0].fips;
         data-full={full}
         data-crop={crop}
         data-crop-phone={cropPhone}
+        data-full-phone={fullPhone}
         aria-hidden="true"
         focusable="false"
         preserveAspectRatio="xMidYMid slice"
@@ -160,27 +174,39 @@ const first = places[0].fips;
           </g>
         ))}
       </svg>
-      <figcaption class="cm-cap">
-        <span class="label">The studio is in Cincinnati</span>
-        <button type="button" class="cm-pause" data-cm-pause hidden>
-          Pause the map
-        </button>
-      </figcaption>
+      <button type="button" class="cm-pause" data-cm-pause hidden>
+        Pause the map
+      </button>
     </figure>
-    <ol class="cm-list">
-      {places.map((p) => (
-        <li class="cm-row" data-st={p.fips}>
-          <span class="cm-state label">{p.home ? `${p.state}, home` : p.state}</span>
-          <ul class="cm-names">
-            {p.people.map((c) => (
-              <li>
-                <a href={c.study}>{c.name}</a>
-                <span class="cm-kind">{c.sector}</span>
-              </li>
-            ))}
-          </ul>
-        </li>
-      ))}
-    </ol>
+    <ul class="sc-hand">
+      {places.map((p, i) => {
+        const off = i - (places.length - 1) / 2;
+        return (
+          <li
+            class:list={['sc', { 'sc-home': p.home }]}
+            data-st={p.fips}
+            style={`--i: ${i}; --off: ${off}; --rot: ${off * 6}deg; --dip: ${Math.abs(off) * 9}px`}
+          >
+            <div class="sc-face">
+              <span class="pip" aria-hidden="true">
+                {p.abbr}
+              </span>
+              <span class="pip flip" aria-hidden="true">
+                {p.abbr}
+              </span>
+              <h3 class="sc-state label">{p.home ? `${p.state}, home` : p.state}</h3>
+              <ul class="sc-names">
+                {p.people.map((c) => (
+                  <li>
+                    <a href={c.study}>{c.name}</a>
+                    <span class="sc-kind">{c.sector}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   </div>
 </section>
