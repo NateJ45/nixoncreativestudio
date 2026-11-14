@@ -6,7 +6,9 @@
    the order they are laid in, the filters, and the words on each print. The
    page renders the result as plain markup (a grid of buttons); the script in
    src/scripts/photo-table.js only lays that markup out on the endless table.
-   Unit tested in src/lib/photo-table.test.ts.
+   Also here: the two bits of maths that give the table its depth (how fast a
+   column slides, how much a print shrinks toward the edge) and the colour
+   helpers for the wash. Unit tested in src/lib/photo-table.test.ts.
    ============================================================================ */
 
 /** The kinds of work, in the order their filters appear. */
@@ -92,4 +94,40 @@ export function printLine(p: { category: Kind; client?: string; year: number; vi
   return [p.video ? 'Film' : KIND_LABEL[p.category], p.client, String(p.year)]
     .filter(Boolean)
     .join(' · ');
+}
+
+/* ---- Depth ---------------------------------------------------------------- */
+
+/**
+ * How fast a column slides up and down compared with the table itself (1 moves
+ * with it). Neighbours get different speeds, so the columns part and close as
+ * you travel and the table reads as having depth. All of them stay close to 1:
+ * a column that ran at half speed would look broken, not deep.
+ */
+const COLUMN_SPEEDS = [1, 0.86, 1.1, 0.92, 1.06, 0.88, 1.12, 0.95];
+export function columnSpeed(col: number): number {
+  const n = COLUMN_SPEEDS.length;
+  return COLUMN_SPEEDS[((Math.round(col) % n) + n) % n];
+}
+
+/** The smallest a print gets, out at the corners of the table. */
+export const LENS_MIN = 0.86;
+
+/**
+ * The lens: a print in the middle of the table is full size, and it eases
+ * smaller toward the corners, so the middle print is the subject. `d` is the
+ * distance from the middle, 0 at the centre and 1 at a corner. Never larger
+ * than 1, never smaller than LENS_MIN, and it only ever falls as d grows.
+ */
+export function lensScale(d: number): number {
+  const t = Math.max(0, Math.min(1, (Math.abs(d) - 0.3) / 0.8));
+  return 1 - (1 - LENS_MIN) * t * t * (3 - 2 * t);
+}
+
+/* ---- Colour ---------------------------------------------------------------- */
+
+/** "#rrggbb" to [r, g, b]. Anything else gives null, and the table keeps its own colour. */
+export function hexToRgb(hex: string | undefined): [number, number, number] | null {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? '');
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
 }

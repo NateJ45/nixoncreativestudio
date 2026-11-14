@@ -10,6 +10,12 @@
    A print opens into a full view with its story, and Previous / Next walk the
    table in order.
 
+   The table has depth and light: columns slide at different speeds, prints
+   ease smaller toward the corners, a lamp follows the mouse, the table takes
+   the colour of the print in its middle (src/data/photo-colors.json, written
+   by `npm run photo-colors`), and it zooms and fills the screen. All of that
+   is in src/scripts/photo-table.js, and none of it is needed to see a photo.
+
    Real markup first. The server prints a plain grid of links (each one to its
    full-size image), the filter bar and an empty full-view dialog. Without
    JavaScript that grid IS the gallery. src/scripts/photo-table.js lays the
@@ -33,6 +39,7 @@ import { addOns } from '../data/pricing';
 import { addOnNamed } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
 import { dealOrder, filtersFor, printLine } from '../lib/photo-table';
+import photoColors from '../data/photo-colors.json';
 
 const photography = addOnNamed(addOns, 'Photography');
 const all = await getCollection('photos');
@@ -59,6 +66,8 @@ const prints = await Promise.all(
       place: p.location ?? '',
       caption: p.caption ?? '',
       video: p.video ?? '',
+      // The photo's own colour, for the table's wash and the full view (npm run photo-colors).
+      c: (photoColors as Record<string, string>)[p.slug] ?? '',
       w: p.image.width,
       h: p.image.height,
       small: small.src,
@@ -130,6 +139,7 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
 
     {/* The table. Empty in the markup: the script fills it from the grid below. */}
     <div class="pt-stage" data-stage hidden>
+      <div class="pt-lamp" data-lamp aria-hidden="true" />
       <div
         class="pt-world"
         data-world
@@ -141,6 +151,9 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
       <div class="pt-hud" aria-hidden="true">
         <span class="label" data-coords>
           0, 0
+        </span>
+        <span class="label" data-zoomed>
+          100%
         </span>
         <span class="label pt-hint">Drag, scroll or use the arrow keys</span>
       </div>
@@ -156,6 +169,26 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
         </button>
         <button type="button" data-nudge="0,1" aria-label="Move down">
           <span aria-hidden="true">↓</span>
+        </button>
+      </div>
+      <div class="pt-tools" role="group" aria-label="Zoom and full screen">
+        <button type="button" data-zoom="out" aria-label="Zoom out">
+          <span aria-hidden="true">−</span>
+        </button>
+        <button type="button" data-zoom="in" aria-label="Zoom in">
+          <span aria-hidden="true">+</span>
+        </button>
+        <button type="button" data-full aria-label="Fill the screen" aria-pressed="false">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path
+              d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
         </button>
       </div>
       <p class="pt-vh" aria-live="polite" data-now></p>
@@ -186,32 +219,32 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </ul>
 
     <script type="application/json" id="pt-data" set:html={JSON.stringify(prints)} />
-  </section>
-
-  {/* The full view. A native dialog the script fills; Escape and the close button shut it. */}
-  <dialog class="pt-open" aria-labelledby="pt-open-title" data-open>
-    <div class="pt-open-card card">
-      <figure class="pt-open-media" data-media></figure>
-      <div class="pt-open-text">
-        <p class="label" data-line></p>
-        <h2 id="pt-open-title" data-title></h2>
-        <p data-alt></p>
-        <p class="pt-open-place" data-place></p>
-        <div class="pt-open-acts">
-          <button type="button" class="chip" data-prev>
-            Previous
-          </button>
-          <button type="button" class="chip" data-next>
-            Next
-          </button>
-          <button type="button" class="chip go" data-close>
-            Close
-          </button>
+    {/* The full view. A native dialog the script fills; Escape and the close button shut it.
+         It sits inside the section so it still shows when the section fills the screen. */}
+    <dialog class="pt-open" aria-labelledby="pt-open-title" data-open>
+      <div class="pt-open-card card">
+        <figure class="pt-open-media" data-media></figure>
+        <div class="pt-open-text">
+          <p class="label" data-line></p>
+          <h2 id="pt-open-title" data-title></h2>
+          <p data-alt></p>
+          <p class="pt-open-place" data-place></p>
+          <div class="pt-open-acts">
+            <button type="button" class="chip" data-prev>
+              Previous
+            </button>
+            <button type="button" class="chip" data-next>
+              Next
+            </button>
+            <button type="button" class="chip go" data-close>
+              Close
+            </button>
+          </div>
+          <p class="label pt-open-count" data-count></p>
         </div>
-        <p class="label pt-open-count" data-count></p>
       </div>
-    </div>
-  </dialog>
+    </dialog>
+  </section>
 
   <section class="sec pt-what" aria-labelledby="pt-what-title">
     <div class="wrap">

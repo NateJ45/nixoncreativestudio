@@ -115,7 +115,8 @@ people and places in them are fine being on a public portfolio, children above a
 own photo policy covers its own channels, not this site). To add one: optimize it into
 `src/assets/photography/canvas/<name>.jpg` (1800px long edge) and add
 `src/content/photos/<name>.json` (fields in `src/content.config.ts`); a film also needs a short
-silent mp4 in `public/photography/video/` with its poster as the image.
+silent mp4 in `public/photography/video/` with its poster as the image. Then run
+`npm run photo-colors` so the new photo has a colour for the table (the unit test fails without it).
 `src/lib/photo-table.test.ts` checks the files and the alt text.
 
 ### 2b. Testimonials still missing (added 2026-10-31, testimonials package)

@@ -1,7 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dealOrder, filtersFor, printLine, KINDS, type PrintIn } from './photo-table.ts';
+import {
+  dealOrder,
+  filtersFor,
+  printLine,
+  columnSpeed,
+  lensScale,
+  hexToRgb,
+  LENS_MIN,
+  KINDS,
+  type PrintIn,
+} from './photo-table.ts';
 
 const dir = new URL('../content/photos/', import.meta.url);
 const entries = readdirSync(dir)
@@ -82,4 +92,45 @@ test('printLine names a film as a film and leaves out what is missing', () => {
     'Film · Crestview · 2025',
   );
   assert.equal(printLine({ category: 'weddings', year: 2020 }), 'Weddings · 2020');
+});
+
+test('every print has a colour for the wash (run `npm run photo-colors` after adding a photo)', () => {
+  const colors = JSON.parse(
+    readFileSync(new URL('../data/photo-colors.json', import.meta.url), 'utf8'),
+  ) as Record<string, string>;
+  for (const e of entries) {
+    assert.ok(hexToRgb(colors[e.slug]), `${e.slug}: no colour in src/data/photo-colors.json`);
+  }
+  const slugs = new Set(entries.map((e) => e.slug));
+  for (const slug of Object.keys(colors)) {
+    assert.ok(slugs.has(slug), `${slug}: a colour with no photo, run npm run photo-colors`);
+  }
+});
+
+test('columnSpeed gives neighbours different speeds, all close to the table', () => {
+  for (let c = -3; c < 20; c++) {
+    const s = columnSpeed(c);
+    assert.ok(s >= 0.8 && s <= 1.2, `column ${c}: ${s}`);
+    assert.notEqual(s, columnSpeed(c + 1), `columns ${c} and ${c + 1} move together`);
+  }
+  assert.equal(columnSpeed(0), 1);
+});
+
+test('lensScale is full size in the middle and only ever falls toward the edge', () => {
+  assert.equal(lensScale(0), 1);
+  assert.equal(lensScale(0.3), 1);
+  let last = 1;
+  for (let d = 0; d <= 2; d += 0.05) {
+    const s = lensScale(d);
+    assert.ok(s <= last + 1e-9, `rises at ${d}`);
+    assert.ok(s >= LENS_MIN - 1e-9 && s <= 1);
+    last = s;
+  }
+  assert.ok(Math.abs(lensScale(5) - LENS_MIN) < 1e-9);
+});
+
+test('hexToRgb reads a six-digit colour and refuses anything else', () => {
+  assert.deepEqual(hexToRgb('#2f3fe6'), [47, 63, 230]);
+  assert.equal(hexToRgb('blue'), null);
+  assert.equal(hexToRgb(undefined), null);
 });
