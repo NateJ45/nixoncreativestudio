@@ -104,6 +104,17 @@ export const GIMBAL = {
   film: 'film-greens-garland',
 };
 
+/**
+ * Shooting since 2017 (Nathan, 2026-11-14). The page prints a count of years, never the year
+ * itself: /photography shows no dates, so a visitor never counts back from one.
+ */
+export const SHOOTING_SINCE = 2017;
+
+/** Whole years behind the camera, as of `now` (the build). */
+export function yearsShooting(now = new Date()): number {
+  return now.getFullYear() - SHOOTING_SINCE;
+}
+
 export const SOFTWARE = [
   { maker: 'Adobe', name: 'Lightroom Classic', line: 'Every photo picked, edited and graded' },
   { maker: 'Blackmagic', name: 'DaVinci Resolve', line: 'Every film cut and colour graded' },

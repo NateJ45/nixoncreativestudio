@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { CAMERA, GIMBAL, LENSES, focalLabel, fovDeg } from '../data/photo-kit.ts';
+import { CAMERA, GIMBAL, LENSES, focalLabel, fovDeg, yearsShooting } from '../data/photo-kit.ts';
 
 const photo = (slug: string) => new URL(`../content/photos/${slug}.json`, import.meta.url);
 
@@ -40,4 +40,9 @@ test('focalLabel prints a zoom as a range and a prime as one number', () => {
 
 test('the second body is named, so the camera tile can say a shoot has a backup', () => {
   assert.ok(CAMERA.second.name && CAMERA.second.maker, 'second body');
+});
+
+test('years shooting is a count from 2017, so the page never prints the year', () => {
+  assert.equal(yearsShooting(new Date(2026, 10, 14)), 9);
+  assert.equal(yearsShooting(new Date(2027, 0, 1)), 10);
 });
