@@ -23,6 +23,14 @@
 # visits (Publicity Board Report); Meta ads reached 46,026 people with 2,730
 # link clicks (3-10-26). Store gross sales of $2,544.64 to Nov 1, 2026 are
 # Nathan's own figure from Fourthwall.
+# Accessibility and build figures (added 2026-11-14, after the portfolio pass
+# that evening) come from the wcp-volunteer site-checks run and Lighthouse on
+# www.westchesterpreschool.org: axe (WCAG 2.2 AA rules) 0 violations on all 7
+# pages at 1440 and 390px with an empty exception list; no sideways scroll at
+# 320, 390 or 1440px; Lighthouse Accessibility 100 and SEO 100; 0 code blocks;
+# Preschool and ChildCare structured data with 0 errors and 0 warnings in the
+# Schema.org validator. Lighthouse mobile Performance is about 40 to 46 before
+# and after the pass, so the study claims no speed win.
 title: West Chester Preschool
 client: West Chester Preschool
 sector: school
@@ -99,7 +107,8 @@ When I took on publicity, the school was still called West Chester Cooperative N
     'The school’s first online store, with 49 products I designed, from toddler tees to hoodies, hats and a tote, made to order so the school holds no stock. It had sold $2,544.64 by November 2026.',
     'Instagram went from about six posts in three years to 111, with monthly recap reels and event posts in one consistent look.',
     'Hundreds of my own photos and videos, handed to the school for its advertising, site and social feed.',
-    'A seven-page website built only from native Squarespace blocks, with color contrast failures down from every page on the old site to none.',
+    'A seven-page website built only from native Squarespace blocks, with no code blocks at all and color contrast failures down from every page on the old site to none.',
+    'An accessibility scan against WCAG 2.2 AA finds no problems on any of the seven pages, on desktop or phone, with nothing set aside as an exception.',
   ]}
 />
 
@@ -128,7 +137,13 @@ When I took on publicity, the school was still called West Chester Cooperative N
 <Decision
   title="A website volunteers can keep"
   easy="Rebuild it on my own stack, the way I build client sites."
-  did="Stay on Squarespace, which the school already uses, and rebuild every page from native blocks so text, photos and buttons all edit in the normal page editor. The only code left is a short, commented block of CSS for finish."
+  did="Stay on Squarespace, which the school already uses, and rebuild every page from native blocks so text, photos and buttons all edit in the normal page editor. The finish is custom CSS where every rule follows a setting volunteers already use, like a section's color or whether a list shows cards, so a parent restyles a section by changing a setting, never by touching code. A short script adds behavior only, and the pages still work if it ever fails to load."
+/>
+
+<Decision
+  title="Accessible on Squarespace's terms"
+  easy="Write off the scan failures that come from Squarespace's own header and footer as platform problems."
+  did="Fix them anyway. The two menus and the social links now have names a screen reader can tell apart, the background video has a pause button, and every animation switches off for anyone whose device asks for less motion. The list of accepted exceptions is empty."
 />
 
 </Chapter>
@@ -187,9 +202,13 @@ Everything I made for the school:
 - **Fundraising site:** a [flyer maker](https://wcpfundraising.pages.dev/popcorn/) for the popcorn sale, the flower sale and Dine to Donate at City BBQ, where each family makes its own print, feed or story flyer with a QR code that opens its own shop
 - **Ads and inquiries:** Meta ad campaigns through enrollment season, Google Analytics and Search Console on the site, the Google, Apple Maps and Yelp listings brought up to date, and every inquiry form sent straight to the board's task board with an automatic reply to the family
 - **Website:** cut from 15 pages to 7, with the class facts, the state license number and inspection link, a longer FAQ, search titles and descriptions on every page, and 10 old addresses redirected to the page that now answers them
+- **Accessibility:** every text element and button, hover states included, meets its WCAG contrast level; the brand orange comes in two shades, a deeper one that carries white text and a bright one kept for decoration; no page scrolls sideways on a phone as narrow as 320 pixels; Lighthouse scores 100 for accessibility on every page
+- **Search:** Lighthouse scores 100 for SEO, and the school's details (address, phone, founding year and Ohio license number) are marked up as Preschool and ChildCare data that passes the Schema.org validator with no errors or warnings
 
 ### Behind the decisions
 
 The constraint that shaped everything was the next volunteer. Every choice had to pass one question: could a parent with no design background keep this going next year? That is why the store makes its own stock, the social pieces come from a template, and the website is all native blocks. The work I do for paying clients is the same, I just usually do it one piece at a time.
+
+Speed is the one place the site is not where I would want it. Squarespace loads a lot of its own script, and the homepage leads with a video, so its Lighthouse speed score on a phone sits in the 40s, about where it was before I started. That is the trade for a site any parent can edit.
 
 </FullBuild>
