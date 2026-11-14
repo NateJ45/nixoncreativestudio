@@ -209,6 +209,17 @@ test('chapterFrames leads with the named frame, then photos before films', () =>
   // With no lead named, the set's first film leads.
   assert.equal(chapterFrames(p, { set: 's', lead: '' })[0].slug, 'a');
   assert.deepEqual(chapterFrames(p, { set: 'none', lead: '' }), []);
+  // Landscape before portrait among the photos, and a portrait never leads while a
+  // landscape photo is there.
+  const q = [
+    { slug: 'tall', set: 'w', w: 2, h: 3 },
+    { slug: 'wide', set: 'w', w: 3, h: 2 },
+    { slug: 'wide2', set: 'w', w: 3, h: 2 },
+  ];
+  assert.deepEqual(
+    chapterFrames(q, { set: 'w', lead: '' }).map((x) => x.slug),
+    ['wide', 'wide2', 'tall'],
+  );
 });
 
 test('a client is only linked to a case study that exists', () => {

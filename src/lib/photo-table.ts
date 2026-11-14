@@ -105,26 +105,32 @@ export const CHAPTERS: { set: SetId; lead: string; line: string }[] = [
   },
   {
     set: 'hilltop-wedding',
-    lead: '',
+    lead: 'wedding-field-kiss-2',
     line: 'A wedding on a hilltop, in natural light.',
   },
 ];
 
 /**
  * A chapter's frames: the lead (or, with no lead given, the set's first film, else its
- * first photo), then up to `more` others from the set, photos before films, in the
- * order given. Empty when the set has no frames.
+ * first landscape photo, else its first photo), then up to `more` others from the set:
+ * photos before films, landscape before portrait (2026-11-14: the chapter boxes are
+ * landscape, and a portrait cropped into one lost its heads on a phone), otherwise in
+ * the order given. Empty when the set has no frames.
  */
-export function chapterFrames<T extends { slug: string; set?: string; video?: string }>(
-  prints: T[],
-  chapter: { set: string; lead: string },
-  more = 4,
-): T[] {
+export function chapterFrames<
+  T extends { slug: string; set?: string; video?: string; w?: number; h?: number },
+>(prints: T[], chapter: { set: string; lead: string }, more = 4): T[] {
   const inSet = prints.filter((p) => p.set === chapter.set);
-  const lead = inSet.find((p) => p.slug === chapter.lead) ?? inSet.find((p) => p.video) ?? inSet[0];
+  const tall = (p: T) => Boolean(p.w && p.h && p.h > p.w);
+  const lead =
+    inSet.find((p) => p.slug === chapter.lead) ??
+    inSet.find((p) => p.video) ??
+    inSet.find((p) => !tall(p)) ??
+    inSet[0];
   if (!lead) return [];
   const rest = inSet.filter((p) => p !== lead);
-  rest.sort((a, b) => Number(Boolean(a.video)) - Number(Boolean(b.video)));
+  const rank = (p: T) => Number(Boolean(p.video)) * 2 + Number(tall(p));
+  rest.sort((a, b) => rank(a) - rank(b));
   return [lead, ...rest.slice(0, more)];
 }
 
