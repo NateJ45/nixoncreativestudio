@@ -19,7 +19,7 @@ test.describe('About: the client map', () => {
     await expect(rows).toHaveCount(6);
     await expect(rows.first().locator('.sc-state')).toHaveText('Ohio, home');
     const links = page.locator('.sc-names a');
-    await expect(links).toHaveCount(8);
+    await expect(links).toHaveCount(9);
     for (const href of await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))))
       expect(href).toMatch(/^\/work\/[a-z0-9-]+\/$/);
     // Photography clients with no study are plain names, tagged, with no link.
@@ -130,7 +130,7 @@ test.describe('About: the client map', () => {
       page,
     }) => {
       await page.goto('/about/');
-      await expect(page.locator('.sc-mini img')).toHaveCount(8);
+      await expect(page.locator('.sc-mini img')).toHaveCount(9);
       await expect(page.locator('.sc-mini').first()).toBeVisible();
       await expect(page.locator('.cm-peek')).toBeHidden();
     });

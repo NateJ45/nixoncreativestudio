@@ -11,8 +11,8 @@ test('the lab sits after the client work and is not counted with it', async ({ p
   await page.goto('/work/');
   await expect(page.locator('#lab h2')).toHaveText('The lab');
   await expect(page.locator('#lab .lab-item')).toHaveCount(3);
-  await expect(page.locator('[data-grid] > li')).toHaveCount(8);
-  await expect(page.locator('[data-status]')).toHaveText('Showing all 8 case studies.');
+  await expect(page.locator('[data-grid] > li')).toHaveCount(9);
+  await expect(page.locator('[data-status]')).toHaveText('Showing all 9 case studies.');
   // After the case studies, the figures and the jobs index.
   const order = await page.evaluate(() => {
     const at = (s: string) =>

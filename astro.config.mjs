@@ -81,9 +81,8 @@ export default defineConfig({
   // /now was once merged into About and redirected there; it is its own page again
   // (src/pages/now.astro, 2026-11-10), so it has no redirect.
   redirects: {
-    // A retired case study (2026-10-01). Send any old links or search results
-    // to the work index instead of a 404.
-    '/work/west-chester-preschool': '/work/',
+    // /work/west-chester-preschool was retired 2026-10-01 and redirected here; the study
+    // is back (2026-11-14, board permission), so it has no redirect.
     // /work/cincy-table is a 301 in public/_redirects (a real status code, not a meta refresh).
   },
   prefetch: {

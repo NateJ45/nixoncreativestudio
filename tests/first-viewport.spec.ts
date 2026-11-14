@@ -144,7 +144,7 @@ for (const viewport of [
           );
         }).length,
     );
-    expect(onScreen).toBe(8);
+    expect(onScreen).toBe(9);
     await ctx.close();
   });
 }

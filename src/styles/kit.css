@@ -520,10 +520,29 @@ html:not(.js) .ledger-do {
   padding: 0;
   list-style: none;
 }
+/* Nine windows: five over four, the second row set in by half a window, like a dealt hand,
+   instead of a row of four, four and one. */
+@media (min-width: 52.0625rem) {
+  .grid:has(> li:nth-child(9):last-child) {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+  .grid:has(> li:nth-child(9):last-child) > li {
+    grid-column: span 2;
+  }
+  .grid:has(> li:nth-child(9):last-child) > li:nth-child(6) {
+    grid-column: 2 / span 2;
+  }
+}
 @media (max-width: 52rem) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.75rem 0.875rem;
+  }
+  /* An odd last window sits in the middle of its row, not alone on the left. */
+  .grid > li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 0.4375rem);
   }
 }
 

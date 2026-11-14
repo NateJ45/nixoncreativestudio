@@ -26,6 +26,7 @@ export const DECK = [
   'reid-design',
   'foundation-for-reformed-theology',
   'first-presbyterian-orangeburg',
+  'west-chester-preschool',
 ];
 
 // Moved to src/data/inquiry-options.ts so the Worker can read it; re-exported here.
