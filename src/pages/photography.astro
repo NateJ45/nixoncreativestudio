@@ -23,6 +23,12 @@
    card in the full view, and "What I shoot" rows that lead to their filter.
    The page shows no dates anywhere.
 
+   Motion first (prototype, 2026-11-14): the hero is a silent reel cut from the
+   best graded films; "Whole days" tells one shoot per chapter (CHAPTERS in
+   src/lib/photo-table.ts); "Everything" opens on the grid with the films playing
+   in place, and the light table is one press away (or ?view=table). The film
+   strip went; "How a shoot works" follows "What I shoot".
+
    Real markup first. The server prints a plain grid of links (each one to its
    full-size image), the filter bar and an empty full-view dialog. Without
    JavaScript that grid IS the gallery. src/scripts/photo-table.js lays the
@@ -53,8 +59,11 @@ import {
   SETS,
   STUDY_FOR_CLIENT,
   BOOKING_EVERY,
+  CHAPTERS,
+  chapterFrames,
 } from '../lib/photo-table';
 import photoColors from '../data/photo-colors.json';
+import reelPoster from '../assets/photography/reel-poster.jpg';
 
 const photography = addOnNamed(addOns, 'Photography');
 const all = await getCollection('photos');
@@ -105,14 +114,34 @@ const filmPrints = prints.filter((p) => p.video);
 const films = filmPrints.length;
 const stills = prints.length - films;
 
-// The hero: the featured photo (dealOrder puts it first), large, as the page's first image.
-const heroPrint = prints[0];
-const hero = await getImage({
-  src: dealt[0].image,
-  widths: [768, 1280, 1920],
+// The hero: a silent reel cut from the strongest graded films (public/photography/video/reel.mp4,
+// 1600x900, about 22 s), with its first frame as the poster and the page's first image.
+const reelStill = await getImage({
+  src: reelPoster,
+  widths: [768, 1280, 1600],
   format: 'webp',
-  quality: 78,
+  quality: 74,
 });
+
+// Chapters: whole days, each led by its best frame (src/lib/photo-table.ts, CHAPTERS). The lead
+// gets a larger image; a film lead plays while it is on screen.
+const chapters = await Promise.all(
+  CHAPTERS.map(async (c) => {
+    const frames = chapterFrames(prints, c);
+    const leadEntry = dealt.find((d) => d.slug === frames[0]?.slug);
+    const leadImg = leadEntry
+      ? await getImage({ src: leadEntry.image, widths: [640, 960], format: 'webp', quality: 76 })
+      : null;
+    return {
+      ...c,
+      name: SETS[c.set],
+      count: prints.filter((p) => p.set === c.set).length,
+      frames,
+      leadSrc: leadImg?.src ?? '',
+      leadSet: leadImg?.srcSet.attribute ?? '',
+    };
+  }),
+).then((list) => list.filter((c) => c.frames.length >= 3));
 
 // "What I shoot": each row names the filters it leads to and shows three of its frames.
 const rows = [
@@ -145,6 +174,34 @@ const rows = [
     .filter(Boolean),
 }));
 
+// "How a shoot works": the steps, then the kit in one line.
+const how = [
+  {
+    title: 'We talk about the day',
+    body: 'What matters most, who has to be in it, where the light is and when. For a church that is often the moments a website will need all year, not just the event itself.',
+  },
+  {
+    title: 'On the day',
+    body: 'Quiet and out of the way. Photos and slow-motion film from the same camera, so one visit covers both.',
+  },
+  {
+    title: 'The edit',
+    body: 'Every frame picked and colour graded by hand: Lightroom for the photos, DaVinci Resolve for the films.',
+  },
+  {
+    title: 'Ready for your site',
+    body: 'A full gallery, plus short silent loops and crops sized for the web, so they drop straight onto your pages.',
+  },
+];
+const kit = [
+  'Canon EOS R6 Mark II',
+  '70–200mm f/2.8',
+  '35mm f/1.4',
+  'DJI gimbal',
+  'Lightroom',
+  'DaVinci Resolve',
+];
+
 const contactHref = '/contact/?service=photography';
 const heading = 'Photography that matches <b>the website it lives on.</b>';
 ---
@@ -155,26 +212,36 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
   noindex={!open}
 >
   <header class="page-head pt-head">
-    {/* The hero frame: the featured photo, as the page's first and largest image. It opens the
-         full view like any print, and shrinks into a matted print as it scrolls away (CSS only). */}
-    <a
-      class="pt-hero"
-      href={heroPrint.large}
-      data-print={heroPrint.i}
-      aria-label={`${heroPrint.title}. ${heroPrint.alt}`}
-    >
+    {/* The hero reel: silent, looping, and decorative (the films themselves are below, each
+         named). The poster is the first image; the script starts the reel unless the visitor
+         asks for reduced motion or less data, and the button pauses it (WCAG 2.2.2). It still
+         settles into a matted print as it scrolls away (CSS only). */}
+    <div class="pt-hero pt-hero-reel">
       <img
-        src={hero.src}
-        srcset={hero.srcSet.attribute}
+        src={reelStill.src}
+        srcset={reelStill.srcSet.attribute}
         sizes="100vw"
-        width={heroPrint.w}
-        height={heroPrint.h}
+        width={1600}
+        height={900}
         alt=""
         loading="eager"
         fetchpriority="high"
         decoding="async"
       />
-    </a>
+      <video
+        data-hero-reel
+        data-src="/photography/video/reel.mp4"
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-hidden="true"
+        tabindex="-1"
+      ></video>
+      <button type="button" class="pt-hero-pause" data-hero-pause aria-pressed="false" hidden>
+        <span data-hero-pause-label>Pause the reel</span>
+      </button>
+    </div>
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
       Weddings, Sunday mornings, conferences and portraits across Cincinnati, and short films to go
@@ -189,10 +256,79 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </p>
   </header>
 
+  {/* Chapters: one day each, led by its best frame. Every frame is a link to its full-size image
+       and opens the full view (with that day's strip) like any print; a film lead plays while it
+       is on screen. */}
+  <section class="sec pt-days" aria-labelledby="pt-days-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="pt-days-title">Whole days</h2>
+        <p>One shoot at a time, the way a church or a couple would book it.</p>
+      </div>
+      <ol class="pt-chapters">
+        {chapters.map((c) => {
+          const [lead, ...rest] = c.frames;
+          return (
+            <li class="pt-chapter">
+              <div class="pt-chapter-head">
+                <h3>{c.name}</h3>
+                <p>{c.line}</p>
+                <p class="label">{c.count} frames</p>
+              </div>
+              <div class="pt-chapter-frames">
+                <a
+                  class="print pt-chapter-lead"
+                  href={lead.video || lead.large}
+                  data-print={lead.i}
+                  data-reel={lead.video || undefined}
+                  aria-label={`${lead.video ? 'Film ' : ''}${lead.title}. ${lead.alt}`}
+                >
+                  <img
+                    src={c.leadSrc}
+                    srcset={c.leadSet}
+                    sizes="(min-width: 52rem) 60vw, 100vw"
+                    width={lead.w}
+                    height={lead.h}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  {lead.video && <span class="pt-film label">Film</span>}
+                </a>
+                {rest.map((p) => (
+                  <a
+                    class="print"
+                    href={p.video || p.large}
+                    data-print={p.i}
+                    aria-label={`${p.video ? 'Film ' : ''}${p.title}. ${p.alt}`}
+                  >
+                    <img
+                      src={p.small}
+                      width={560}
+                      height={Math.round((560 * p.h) / p.w)}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {p.video && <span class="pt-film label">Film</span>}
+                  </a>
+                ))}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  </section>
+
   <section class="pt" aria-labelledby="pt-title" data-table data-view="grid">
-    <h2 id="pt-title" class="pt-vh">
-      {stills} photos and {films} short films
-    </h2>
+    <div class="pt-all-head">
+      <h2 id="pt-title">Everything</h2>
+      <p>
+        All {stills} photos and {films} short films, the films playing as you pass. Lay them out on
+        the table if you would rather wander.
+      </p>
+    </div>
 
     <div class="pt-bar-wrap">
       <div class="dw-bar" data-bar>
@@ -212,11 +348,11 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
         </div>
         <div class="dw-seg" role="group" aria-label="View photos as" data-views>
           <span class="dw-pill" data-pill aria-hidden="true"></span>
-          <button type="button" aria-pressed="true" data-v="table">
-            Table
-          </button>
-          <button type="button" aria-pressed="false" data-v="grid">
+          <button type="button" aria-pressed="true" data-v="grid">
             Grid
+          </button>
+          <button type="button" aria-pressed="false" data-v="table">
+            Table
           </button>
         </div>
         <p class="dw-status" role="status" data-status>
@@ -308,6 +444,7 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
             class="print"
             href={p.large}
             data-print={p.i}
+            data-reel={p.video || undefined}
             aria-label={`${p.title}${p.video ? ', a short film' : ''}. ${p.alt}`}
           >
             <img
@@ -377,52 +514,6 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </dialog>
   </section>
 
-  {/* The films, in a row of their own below the table (moved there 2026-11-14: above it they
-       pushed the table down and sat apart from the page's column). A link's name starts with the words printed on it
-       ("Film", then the title), which WCAG 2.5.3 and the axe gate both ask for. Each is a plain link to its mp4 without JavaScript; with it,
-       a film plays while it is on screen and opens the full view. */}
-  <section class="sec pt-films" aria-labelledby="pt-films-title">
-    <div class="wrap">
-      <div class="sec-head pt-films-head">
-        <h2 id="pt-films-title">Short films</h2>
-        <p class="label">{films} silent loops</p>
-        {/* Arrows for a mouse with no sideways wheel; shown by the script. */}
-        <div class="pt-films-step" data-reel-steps hidden>
-          <button type="button" data-reel-step="-1" aria-label="Earlier films">
-            <span aria-hidden="true">←</span>
-          </button>
-          <button type="button" data-reel-step="1" aria-label="Later films">
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
-      </div>
-    </div>
-    <ul class="pt-reels" data-reels>
-      {filmPrints.map((p) => (
-        <li>
-          <a
-            class="pt-reel"
-            href={p.video}
-            data-print={p.i}
-            data-reel={p.video}
-            aria-label={`Film ${p.title}. ${p.alt}`}
-          >
-            <img
-              src={p.small}
-              width={560}
-              height={Math.round((560 * p.h) / p.w)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-            <span class="pt-film label">Film</span>
-            <span class="pt-reel-title">{p.title}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </section>
-
   <section class="sec pt-what" aria-labelledby="pt-what-title">
     <div class="wrap">
       <div class="sec-head">
@@ -457,6 +548,29 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
           </li>
         ))}
       </ul>
+    </div>
+  </section>
+
+  {/* How a shoot works: the process first, the kit in one line under it. Clients book the
+       process; the kit is there for the ones who ask. */}
+  <section class="sec pt-how" aria-labelledby="pt-how-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="pt-how-title">How a shoot works</h2>
+      </div>
+      <ol class="pt-rows pt-steps">
+        {how.map((s, n) => (
+          <li>
+            <h3>
+              <span class="label">{String(n + 1).padStart(2, '0')}</span> {s.title}
+            </h3>
+            <p>{s.body}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="pt-kit">
+        <span class="label">Kit</span> {kit.join(' · ')}
+      </p>
     </div>
   </section>
 

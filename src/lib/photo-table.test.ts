@@ -12,6 +12,8 @@ import {
   byHue,
   inFilter,
   SETS,
+  CHAPTERS,
+  chapterFrames,
   STUDY_FOR_CLIENT,
   BOOKING_EVERY,
   LENS_MIN,
@@ -175,6 +177,38 @@ test('every set has a name and at least three frames, so its strip is worth show
   for (const id of Object.keys(SETS)) {
     assert.ok((counts.get(id) ?? 0) >= 3, `set ${id} has ${counts.get(id) ?? 0} frames`);
   }
+});
+
+test('every chapter is a real set, its lead is in that set, and it has frames to show', () => {
+  assert.equal(new Set(CHAPTERS.map((c) => c.set)).size, CHAPTERS.length, 'a set told twice');
+  for (const c of CHAPTERS) {
+    assert.ok(c.set in SETS, `chapter ${c.set} is not a set`);
+    if (c.lead) {
+      const lead = entries.find((e) => e.slug === c.lead);
+      assert.ok(lead, `chapter ${c.set}: no entry ${c.lead}`);
+      assert.equal(lead.set, c.set, `chapter ${c.set}: ${c.lead} is in ${lead.set}`);
+    }
+    const frames = chapterFrames(entries, c);
+    assert.ok(frames.length >= 3, `chapter ${c.set} has ${frames.length} frames`);
+    assert.ok(!/\b(19|20)\d{2}\b/.test(c.line), `chapter ${c.set}: no years on the page`);
+  }
+});
+
+test('chapterFrames leads with the named frame, then photos before films', () => {
+  const p = [
+    { slug: 'a', set: 's', video: '/a.mp4' },
+    { slug: 'b', set: 's' },
+    { slug: 'c', set: 't' },
+    { slug: 'd', set: 's', video: '/d.mp4' },
+    { slug: 'e', set: 's' },
+  ];
+  assert.deepEqual(
+    chapterFrames(p, { set: 's', lead: 'd' }).map((x) => x.slug),
+    ['d', 'b', 'e', 'a'],
+  );
+  // With no lead named, the set's first film leads.
+  assert.equal(chapterFrames(p, { set: 's', lead: '' })[0].slug, 'a');
+  assert.deepEqual(chapterFrames(p, { set: 'none', lead: '' }), []);
 });
 
 test('a client is only linked to a case study that exists', () => {

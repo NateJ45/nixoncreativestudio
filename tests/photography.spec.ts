@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 test.describe('with JavaScript', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/photography/');
+    await page.goto('/photography/?view=table');
   });
 
   test('the table is laid with prints and the grid steps aside', async ({ page }) => {
@@ -169,7 +169,7 @@ test.describe('around the table', () => {
   });
 
   test('a booking card comes up after a few steps, and Next passes it', async ({ page }) => {
-    await page.goto('/photography/');
+    await page.goto('/photography/?view=table');
     await page.locator('[data-world]').focus();
     await page.keyboard.press('Enter');
     const dlg = page.locator('dialog[data-open]');
@@ -182,15 +182,15 @@ test.describe('around the table', () => {
     await expect(dlg.locator('[data-media] img, [data-media] video')).toHaveCount(1);
   });
 
-  test('a "What I shoot" row sets its filter and brings the table up', async ({ page }) => {
+  test('a "What I shoot" row sets its filter and brings the wall up', async ({ page }) => {
     await page.goto('/photography/');
     await page.locator('a[data-go="people"]').click();
     await expect(page.locator('button[data-f="people"]')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('[data-stage]')).toBeInViewport();
+    await expect(page.locator('#pt-title')).toBeInViewport();
   });
 
   test('the tour starts, names its stop, and stops at a touch', async ({ page }) => {
-    await page.goto('/photography/');
+    await page.goto('/photography/?view=table');
     const tour = page.locator('[data-tour]');
     await tour.click();
     await expect(tour).toHaveAttribute('aria-pressed', 'true');
@@ -201,7 +201,7 @@ test.describe('around the table', () => {
   });
 
   test('Colour lays the table again in colour order, and back', async ({ page }) => {
-    await page.goto('/photography/');
+    await page.goto('/photography/?view=table');
     const colour = page.locator('[data-colour]');
     await colour.click();
     await expect(colour).toHaveAttribute('aria-pressed', 'true');
@@ -210,14 +210,31 @@ test.describe('around the table', () => {
     await expect(colour).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('the hero frame and a film in the strip open the full view', async ({ page }) => {
+  test('the page opens on the grid, with the reel, the chapters and Table one press away', async ({
+    page,
+  }) => {
+    await page.goto('/photography/');
+    await expect(page.locator('button[data-v="grid"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-grid]')).toBeVisible();
+    // The reel plays, and its button pauses it.
+    const reel = page.locator('[data-hero-reel]');
+    await expect.poll(() => reel.evaluate((v) => !(v as HTMLVideoElement).paused)).toBe(true);
+    await page.locator('[data-hero-pause]').click();
+    await expect.poll(() => reel.evaluate((v) => (v as HTMLVideoElement).paused)).toBe(true);
+    await page.locator('button[data-v="table"]').click();
+    expect(await page.locator('.pt-p').count()).toBeGreaterThan(8);
+  });
+
+  test('a chapter lead film and a film in the wall open the full view', async ({ page }) => {
     await page.goto('/photography/');
     const dlg = page.locator('dialog[data-open]');
-    await page.locator('a.pt-hero').click();
-    await expect(dlg).toBeVisible();
+    const lead = page.locator('.pt-chapter-lead[data-reel]').first();
+    await lead.click();
+    await expect(dlg.locator('video')).toHaveCount(1);
+    await expect(dlg.locator('[data-set-name]')).not.toBeEmpty();
     await page.keyboard.press('Escape');
-    await expect(page.locator('a.pt-hero')).toBeFocused();
-    await page.locator('a.pt-reel').first().click();
+    await expect(lead).toBeFocused();
+    await page.locator('[data-grid] a[data-reel]').first().click();
     await expect(dlg.locator('video')).toHaveCount(1);
   });
 });
@@ -229,7 +246,7 @@ test.describe('with reduced motion', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/photography/');
+    await page.goto('/photography/?view=table');
     expect(await page.locator('.pt-p').count()).toBeGreaterThan(8);
     await expect(page.locator('[data-lamp]')).toBeHidden();
     await page.mouse.move(640, 500);

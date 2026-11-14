@@ -64,6 +64,70 @@ export const STUDY_FOR_CLIENT: Record<string, string> = {
 /** After this many steps through the full view, one booking card. */
 export const BOOKING_EVERY = 6;
 
+/* ---- Chapters: whole days, near the top of the page ---------------------------- */
+
+/**
+ * The shoots the page tells as chapters, in order (prototype, 2026-11-14): a client is
+ * asking "will he cover our day well?", so each chapter shows one day, led by its best
+ * frame (a 6 s graded film where there is one) with a few more from the same set.
+ * `lead` is an entry's slug in that set; the unit test checks both.
+ */
+export const CHAPTERS: { set: SetId; lead: string; line: string }[] = [
+  {
+    set: 'hanging-greens',
+    lead: 'film-greens-star',
+    line: 'A day of garland, ladders and a star on top, with the Advent wreath ready for Sunday.',
+  },
+  {
+    set: 'vbs',
+    lead: 'film-vbs-arms',
+    line: 'A week of Vacation Bible School: the songs, the crews, the park ranger and the big finish.',
+  },
+  {
+    set: 'rehearsal',
+    lead: 'film-music-glass',
+    line: 'Choir and band rehearsals in the sanctuary, filmed slow so the light does the work.',
+  },
+  {
+    set: 'easter-sunday',
+    lead: 'film-easter-lilies',
+    line: 'Easter morning: a full choir, brass and a front of lilies.',
+  },
+  {
+    set: 'creek-day',
+    lead: 'film-creek-swim',
+    line: 'A young families picnic at the creek, in the last hour of sun.',
+  },
+  {
+    set: 'theology-matters',
+    lead: 'tm-podium',
+    line: 'A conference: the speakers, the panels and the conversations in between.',
+  },
+  {
+    set: 'hilltop-wedding',
+    lead: '',
+    line: 'A wedding on a hilltop, in natural light.',
+  },
+];
+
+/**
+ * A chapter's frames: the lead (or, with no lead given, the set's first film, else its
+ * first photo), then up to `more` others from the set, photos before films, in the
+ * order given. Empty when the set has no frames.
+ */
+export function chapterFrames<T extends { slug: string; set?: string; video?: string }>(
+  prints: T[],
+  chapter: { set: string; lead: string },
+  more = 4,
+): T[] {
+  const inSet = prints.filter((p) => p.set === chapter.set);
+  const lead = inSet.find((p) => p.slug === chapter.lead) ?? inSet.find((p) => p.video) ?? inSet[0];
+  if (!lead) return [];
+  const rest = inSet.filter((p) => p !== lead);
+  rest.sort((a, b) => Number(Boolean(a.video)) - Number(Boolean(b.video)));
+  return [lead, ...rest.slice(0, more)];
+}
+
 export interface PrintIn {
   slug: string;
   category: Kind;

@@ -907,6 +907,7 @@ function start(sec) {
       setKind(b.dataset.f, e, b);
     });
   });
+  var tableLaid = false;
   function setView(v, e, b) {
     stopTour();
     sec.dataset.view = v;
@@ -916,6 +917,13 @@ function start(sec) {
     if (!reduce && e && b) bloom(b, e);
     setPill(bar);
     if (v === 'table') {
+      var first = !tableLaid;
+      tableLaid = true;
+      resized();
+      if (first) {
+        centreOn(0, cols[0].off + cols[0].items[0].y, cols[0].items[0].h, cols[0].sp);
+        deal();
+      }
       paint();
       wake();
     } else {
@@ -1001,10 +1009,11 @@ function start(sec) {
       var b = bar.querySelector('[data-f="' + a.dataset.go + '"]');
       if (!b) return; // no such filter: let the link jump to the table as it would without script
       e.preventDefault();
-      if (sec.dataset.view !== 'table') setView('table');
       setKind(a.dataset.go, null, b);
-      stage.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
-      world.focus({ preventScroll: true });
+      if (sec.dataset.view === 'table') {
+        stage.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+        world.focus({ preventScroll: true });
+      } else sec.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     });
   });
 
@@ -1341,13 +1350,14 @@ function start(sec) {
   });
 
   /* ---- The film strip: a film plays while it is on screen, two at most --------------- */
+  var REELS_AT_ONCE = 4;
   var reels = [].slice.call(doc.querySelectorAll('[data-reel]')),
     reelsOn = new Set();
   function playReels() {
     if (reduce || saveData) return;
     var n = 0;
     reels.forEach(function (a) {
-      var on = reelsOn.has(a) && n < 2 && !dlg.open && !doc.hidden;
+      var on = reelsOn.has(a) && n < REELS_AT_ONCE && !dlg.open && !doc.hidden;
       if (on) n++;
       var v = a.querySelector('video');
       if (on && !v) {
@@ -1411,6 +1421,41 @@ function start(sec) {
     stepState();
   }
 
+  /* ---- The hero reel: plays while on screen, unless motion or data should be spared --------- */
+  var heroReel = doc.querySelector('[data-hero-reel]'),
+    heroPause = doc.querySelector('[data-hero-pause]');
+  if (heroReel && heroPause && !reduce && !saveData) {
+    var heroHeld = false,
+      heroSeen = true;
+    var heroRun = function () {
+      if (!heroReel.src) heroReel.src = heroReel.dataset.src;
+      if (heroHeld || !heroSeen || doc.hidden) heroReel.pause();
+      else {
+        var pr = heroReel.play();
+        if (pr && pr.catch) pr.catch(function () {});
+      }
+    };
+    heroReel.addEventListener('playing', function () {
+      heroReel.classList.add('is-on');
+    });
+    heroPause.hidden = false;
+    heroPause.addEventListener('click', function () {
+      heroHeld = !heroHeld;
+      heroPause.setAttribute('aria-pressed', String(heroHeld));
+      heroPause.querySelector('[data-hero-pause-label]').textContent = heroHeld
+        ? 'Play the reel'
+        : 'Pause the reel';
+      heroRun();
+    });
+    if ('IntersectionObserver' in window)
+      new IntersectionObserver(function (es) {
+        heroSeen = es[0].isIntersecting;
+        heroRun();
+      }).observe(heroReel);
+    doc.addEventListener('visibilitychange', heroRun);
+    heroRun();
+  }
+
   /* ---- Start ------------------------------------------------------------------------------ */
   // Only run while the table is on screen and the tab is showing.
   new IntersectionObserver(function (es) {
@@ -1457,7 +1502,7 @@ function start(sec) {
   });
 
   stage.hidden = false;
-  sec.dataset.view = 'table';
+  sec.dataset.view = 'grid';
   // Open on everything (2026-11-14: the Selects filter went), with the first print (the
   // featured one) in the middle.
   measure();
@@ -1482,6 +1527,10 @@ function start(sec) {
   deal();
   lastTouch = performance.now() - 1500;
   wake();
+
+  // ?view=table opens on the table (a link to share, and the way the table's tests get there).
+  if (new URLSearchParams(location.search).get('view') === 'table')
+    setView('table', null, bar.querySelector('[data-v="table"]'));
 
   // Arriving at a print's own address opens it, on the whole table if the filter does not hold it.
   var asked = new URLSearchParams(location.search).get('print');
