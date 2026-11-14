@@ -82,14 +82,15 @@ export const LENSES: KitLens[] = [
     sample: { slug: 'grad-chapel', at: '50mm, f/2.8' },
   },
   {
-    maker: 'Sigma',
-    name: '105mm f/2.8 DG OS HSM Macro',
-    focal: [105, 105],
+    maker: 'Tamron',
+    name: 'SP 90mm f/2.8 Di Macro 1:1 VC USD',
+    focal: [90, 90],
     aperture: 'f/2.8',
     role: 'Close detail: rings, hands, the small things',
     macro: '1:1',
-    // Nathan's word (2026-11-14): shot on this lens. The file is an Instagram export with no EXIF.
-    sample: { slug: 'ig-vintage-ring-rain' },
+    // From the raw file's EXIF (Nathan, 2026-11-14): 90mm, f/16. The page's copy is an
+    // Instagram export with no EXIF of its own.
+    sample: { slug: 'ig-vintage-ring-rain', at: '90mm, f/16' },
   },
 ];
 
