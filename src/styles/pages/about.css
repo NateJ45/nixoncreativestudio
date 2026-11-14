@@ -885,6 +885,34 @@ html:not(.js) .otc-turn {
   color: var(--accent-soft);
 }
 
+/* Under the hand: a nudge for anyone whose state is still grey. */
+.cm-more {
+  margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  color: var(--soft);
+  text-align: center;
+}
+.cm-more a {
+  color: var(--ink);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 0.2em;
+}
+.cm-more a:hover {
+  text-decoration-color: currentColor;
+}
+.cm-more a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+@media (max-width: 52rem) {
+  .cm-more {
+    margin-top: 1.5rem;
+    text-align: left;
+  }
+}
+
 /* Before the deal: one stack in the middle of the hand, nearly square. */
 .cm-stacked .sc {
   transform: translate(calc(var(--off) * -98%), 1.5rem) rotate(calc(var(--off) * 1.5deg));

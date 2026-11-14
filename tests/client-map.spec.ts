@@ -29,6 +29,8 @@ test.describe('About: the client map', () => {
       Array(3).fill('Photography'),
     );
     await expect(page.locator('.cm-svg')).toHaveAttribute('aria-hidden', 'true');
+    // A nudge under the hand for anyone whose state is still grey.
+    await expect(page.locator('.cm-more a')).toHaveAttribute('href', '/contact/');
   });
 
   test('glides in, walks the states, holds on hover, and Pause stops everything', async ({
