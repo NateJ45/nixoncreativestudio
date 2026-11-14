@@ -66,7 +66,7 @@ test.describe('Without JavaScript', () => {
 });
 
 test.describe('With JavaScript', () => {
-  test('the dock fits four 44px targets at 320px', async ({ page }) => {
+  test('the dock fits five 44px targets at 320px', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/work/');
     const fit = await page.evaluate(() => {
@@ -78,9 +78,9 @@ test.describe('With JavaScript', () => {
     });
     expect(fit.left).toBeGreaterThanOrEqual(4);
     expect(fit.right).toBeGreaterThanOrEqual(4);
-    // Work, Prices, About and Start. The light and dark switch needs its words, so on a phone
+    // Work, Photos, Prices, About and Start. The light and dark switch needs its words, so on a phone
     // it lives in the closing band (theme.spec.ts).
-    expect(fit.targets).toHaveLength(4);
+    expect(fit.targets).toHaveLength(5);
     for (const h of fit.targets) expect(h).toBeGreaterThanOrEqual(44);
     // The action reads Start here, and is still named in full.
     await expect(page.locator('nav.dock a[href="/contact/"]')).toHaveText('Start a project');

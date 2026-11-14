@@ -16,6 +16,8 @@ import { getClients } from '../lib/clients';
 import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
 import ThemeFlip from './ThemeFlip.astro';
+import { photoCount } from '../data/nav';
+import { photographyOpen } from '../data/photography-gate';
 
 const path = Astro.url.pathname;
 const current = (href: string) =>
@@ -23,6 +25,9 @@ const current = (href: string) =>
 const clients = await getClients();
 const faces = ['paper', 'blue', 'ink'];
 const deck = 'Eight selected case studies';
+// Photos sits in the dock only while /photography/ is open, by the same rule the page and the
+// sitemap read (src/data/photography-gate.ts), so the link never points at a noindex page.
+const photosOpen = photographyOpen(await photoCount());
 ---
 
 {/* The dock rises in on arrival, not on every page: a page reached from this site
@@ -77,6 +82,12 @@ const deck = 'Eight selected case studies';
       </a>
     ))}
   </div>
+
+  {photosOpen && (
+    <a href="/photography/" aria-current={current('/photography/')}>
+      Photos
+    </a>
+  )}
 
   <a href="/services/" aria-current={current('/services/')}>
     Prices
