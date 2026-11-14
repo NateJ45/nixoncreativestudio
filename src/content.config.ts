@@ -364,6 +364,8 @@ const photos = defineCollection({
         .enum([
           'ash-wednesday',
           'easter-sunday',
+          'commitment-sunday',
+          'trunk-or-treat',
           'hanging-greens',
           'rehearsal',
           'vbs',
