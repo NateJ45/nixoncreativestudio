@@ -64,7 +64,15 @@ import {
   chapterFrames,
 } from '../lib/photo-table';
 import photoColors from '../data/photo-colors.json';
-import { CAMERA, GIMBAL, LENSES, SOFTWARE, fovDeg, focalLabel } from '../data/photo-kit';
+import {
+  CAMERA,
+  GIMBAL,
+  LENSES,
+  SOFTWARE,
+  fovDeg,
+  focalLabel,
+  yearsShooting,
+} from '../data/photo-kit';
 import reelPoster from '../assets/photography/reel-poster.jpg';
 
 const photography = addOnNamed(addOns, 'Photography');
@@ -598,8 +606,8 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
       <div class="sec-head">
         <h2 id="pt-kit-title">The kit</h2>
         <p>
-          Professional full-frame gear, chosen for churches: dim rooms, long aisles, moments that do
-          not happen twice.
+          {yearsShooting()} years behind the camera, on professional full-frame gear chosen for
+          churches: dim rooms, long aisles, moments that do not happen twice.
         </p>
       </div>
       <ul class="kit-grid">
@@ -630,6 +638,10 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
                 <li>{s}</li>
               ))}
             </ul>
+            <p class="kit-second">
+              <span class="label">Second body</span> {kitCamera.second.maker}{' '}
+              {kitCamera.second.name} · {kitCamera.second.line}
+            </p>
           </div>
         </li>
         <li class="kit-tile kit-gimbal">

@@ -38,6 +38,9 @@ export const CAMERA = {
   ],
   /** The film that plays behind it. */
   film: 'film-music-glass',
+  // The second body (Nathan, 2026-11-14), so a shoot never rests on one camera. Many of the
+  // older photos on the page were shot on it (their EXIF says so).
+  second: { maker: 'Canon', name: 'EOS 6D Mark II', line: 'Full frame, 26.2 MP' },
 };
 
 export const LENSES: KitLens[] = [
@@ -100,6 +103,17 @@ export const GIMBAL = {
   line: 'A three-axis gimbal, for moving shots that glide instead of shake.',
   film: 'film-greens-garland',
 };
+
+/**
+ * Shooting since 2017 (Nathan, 2026-11-14). The page prints a count of years, never the year
+ * itself: /photography shows no dates, so a visitor never counts back from one.
+ */
+export const SHOOTING_SINCE = 2017;
+
+/** Whole years behind the camera, as of `now` (the build). */
+export function yearsShooting(now = new Date()): number {
+  return now.getFullYear() - SHOOTING_SINCE;
+}
 
 export const SOFTWARE = [
   { maker: 'Adobe', name: 'Lightroom Classic', line: 'Every photo picked, edited and graded' },
