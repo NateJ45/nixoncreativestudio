@@ -22,7 +22,13 @@
    Each frame waits for the page to finish reacting to the scroll before the picture. The first
    Theology Matters clip was filmed without that wait and caught its back-to-top button half way
    through fading on nearly every frame, so the button blinked in the footage (found 2026-11-10).
-   After filming, play the clip and watch anything fixed to the screen. */
+   After filming, play the clip and watch anything fixed to the screen.
+
+   Videos and looping animations on the page are held on the film's own clock: before filming they
+   are paused, and each frame moves them on by exactly 1/60 of a second. Without that they kept
+   playing in real time through every settle wait, so a site's hero video ran about 25 times too
+   fast in the footage (West Chester Preschool, found 2026-11-14). One-off transitions, such as a
+   button fading in, still run in real time, so the settle wait above still does its job. */
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdirSync, statSync } from 'node:fs';
@@ -131,6 +137,52 @@ const enc = spawn(
   { stdio: ['pipe', 'inherit', 'inherit'] },
 );
 
+/* Hold every video and looping animation, noting where each one was, so frame i can put it at
+   that point plus i/FPS seconds. */
+await page.evaluate(() => {
+  const held = { videos: [], animations: [] };
+  for (const v of document.querySelectorAll('video')) {
+    /* Rate 0 rather than pause(): a site's own play/pause button listens for the pause event and
+       would show "play" in every frame. At rate 0 the video still counts as playing. */
+    v.playbackRate = 0;
+    held.videos.push({ v, start: v.currentTime });
+  }
+  for (const a of document.getAnimations()) {
+    const t = a.effect?.getTiming?.();
+    if (t && t.iterations === Infinity) {
+      a.pause();
+      held.animations.push({ a, start: Number(a.currentTime) || 0 });
+    }
+  }
+  window.__filmHeld = held;
+});
+
+/* Move every held video and animation to frame i, and wait until each video has the frame. */
+async function stepClock(i) {
+  await page.evaluate(
+    async ({ seconds }) => {
+      const held = window.__filmHeld;
+      await Promise.all(
+        held.videos.map(({ v, start }) => {
+          const d = v.duration;
+          if (!Number.isFinite(d) || d <= 0) return Promise.resolve();
+          const t = (start + seconds) % d;
+          if (Math.abs(v.currentTime - t) < 0.001) return Promise.resolve();
+          return new Promise((resolve) => {
+            const done = () => resolve();
+            v.addEventListener('seeked', done, { once: true });
+            setTimeout(done, 2000);
+            v.currentTime = t;
+          });
+        }),
+      );
+      for (const { a, start } of held.animations) a.currentTime = start + seconds * 1000;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    },
+    { seconds: i / FPS },
+  );
+}
+
 let at = -1;
 for (let i = 0; i < FRAMES; i++) {
   /* Down and back on one cosine, so the turn at the bottom and the loop at the top are both soft. */
@@ -145,6 +197,7 @@ for (let i = 0; i < FRAMES; i++) {
        button that has just been told to show has finished showing. */
     await page.waitForTimeout(SETTLE_MS);
   }
+  await stepClock(i);
   const shot = await page.screenshot({ type: 'jpeg', quality: 95 });
   if (!enc.stdin.write(shot)) await once(enc.stdin, 'drain');
   if (i % 60 === 59) console.log(`[film-phone] ${i + 1}/${FRAMES}`);
