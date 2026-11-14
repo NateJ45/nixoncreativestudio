@@ -80,6 +80,8 @@ const phrase = SECTOR_PHRASE[d.sector] ?? d.sector.replace('-', ' ');
 
 // Published and updated dates are intentionally not displayed: they feed the sort
 // order, the RSS feed and the JSON-LD below.
+// Schema image only. og:image is the generated /og/work/<slug>.png (BaseLayout default),
+// which carries the studio name (scripts/generate-og.mjs).
 const ogCover = await getImage({ src: d.cover, width: 1200, format: 'jpg' });
 const ogCoverUrl = new URL(ogCover.src, site.url).toString();
 const pageTitle = studyTitle(d.title, d.sector, site.studioName);
@@ -119,10 +121,7 @@ const breadcrumbs = [
 <BaseLayout
   title={pageTitle}
   description={pageDescription}
-  ogImage={ogCover.src}
-  ogImageWidth={Number(ogCover.attributes.width)}
-  ogImageHeight={Number(ogCover.attributes.height)}
-  ogImageAlt={`The ${clientName} website`}
+  ogImageAlt={`${clientName}, a case study by ${site.studioName}`}
   ogType="article"
   schemas={schemas}
   breadcrumbs={breadcrumbs}

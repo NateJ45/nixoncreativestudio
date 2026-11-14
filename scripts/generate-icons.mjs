@@ -1,7 +1,7 @@
 // Foundation, edit with care. Standalone generator for the favicon / app-icon set.
 // Run `npm run icons` after changing public/favicon.svg, then commit the outputs
 // (they ship to visitors). Not part of the main build chain: the icons only change
-// when the brand does, exactly like scripts/generate-og-default.mjs.
+// when the brand does, unlike the share cards (scripts/generate-og.mjs), which rebuild on every build.
 /* ============================================================================
    Favicon / app-icon generator
    ============================================================================

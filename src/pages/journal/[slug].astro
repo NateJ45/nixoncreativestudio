@@ -80,7 +80,8 @@ const toc = tocItems(headings);
 const path = `/journal/${entry.id}/`;
 const canonical = new URL(path, site.url).toString();
 const coverImage = cover ? await getImage({ src: cover, width: 1200, format: 'jpg' }) : undefined;
-// The share card the build draws for every post (scripts/generate-og.mjs), unless it has a cover.
+// Schema image: the cover when there is one. The share card (og:image) is always the
+// generated /og/journal/<id>.png, which carries the studio name (scripts/generate-og.mjs).
 const image = new URL(coverImage?.src ?? `/og/journal/${entry.id}.png`, site.url).toString();
 const label = clusterLabel(cluster);
 // The byline's small line, built as one string so no stray space lands before a comma. Every
@@ -145,7 +146,6 @@ const schemas = [
   title={fitTitle([`${title} | ${site.studioName}`, `${metaTitle ?? title} | ${site.studioName}`])}
   description={summary}
   ogType="article"
-  ogImage={coverImage?.src}
   schemas={schemas}
   noindex={draft}
   breadcrumbs={[
