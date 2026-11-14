@@ -17,8 +17,8 @@
    is in src/scripts/photo-table.js, and none of it is needed to see a photo.
 
    Around the table (2026-11-13): a hero frame (the featured photo) that opens
-   the page, a strip of the films, Selects and Films filters (the page opens on
-   the selects), a tour, a colour order, an address for every print
+   the page, a strip of the films, a Films filter (the page opens on everything;
+   the Selects filter went 2026-11-14), a tour, a colour order, an address for every print
    (?print=<slug>), a set strip, a link to the client's case study and a booking
    card in the full view, and "What I shoot" rows that lead to their filter.
    The page shows no dates anywhere.
@@ -104,7 +104,6 @@ const filters = filtersFor(all.map((e) => ({ slug: e.id, ...e.data })));
 const filmPrints = prints.filter((p) => p.video);
 const films = filmPrints.length;
 const stills = prints.length - films;
-const selects = prints.filter((p) => p.select).length;
 
 // The hero: the featured photo (dealOrder puts it first), large, as the page's first image.
 const heroPrint = prints[0];
@@ -190,40 +189,6 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </p>
   </header>
 
-  {/* The films, in a row of their own. A link's name starts with the words printed on it
-       ("Film", then the title), which WCAG 2.5.3 and the axe gate both ask for. Each is a plain link to its mp4 without JavaScript; with it,
-       a film plays while it is on screen and opens the full view. */}
-  <section class="pt-films" aria-labelledby="pt-films-title">
-    <div class="pt-films-head">
-      <h2 id="pt-films-title">Short films</h2>
-      <p class="label">{films} silent loops</p>
-    </div>
-    <ul class="pt-reels" data-reels>
-      {filmPrints.map((p) => (
-        <li>
-          <a
-            class="pt-reel"
-            href={p.video}
-            data-print={p.i}
-            data-reel={p.video}
-            aria-label={`Film ${p.title}. ${p.alt}`}
-          >
-            <img
-              src={p.small}
-              width={560}
-              height={Math.round((560 * p.h) / p.w)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-            <span class="pt-film label">Film</span>
-            <span class="pt-reel-title">{p.title}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </section>
-
   <section class="pt" aria-labelledby="pt-title" data-table data-view="grid">
     <h2 id="pt-title" class="pt-vh">
       {stills} photos and {films} short films
@@ -233,9 +198,6 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
       <div class="dw-bar" data-bar>
         <div class="dw-seg" role="group" aria-label="Show photos of" data-filters>
           <span class="dw-pill" data-pill aria-hidden="true"></span>
-          <button type="button" aria-pressed="false" data-f="selects">
-            Selects <span class="n">{selects}</span>
-          </button>
           <button type="button" aria-pressed="true" data-f="all">
             All <span class="n">{prints.length}</span>
           </button>
@@ -413,6 +375,52 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
         </div>
       </div>
     </dialog>
+  </section>
+
+  {/* The films, in a row of their own below the table (moved there 2026-11-14: above it they
+       pushed the table down and sat apart from the page's column). A link's name starts with the words printed on it
+       ("Film", then the title), which WCAG 2.5.3 and the axe gate both ask for. Each is a plain link to its mp4 without JavaScript; with it,
+       a film plays while it is on screen and opens the full view. */}
+  <section class="sec pt-films" aria-labelledby="pt-films-title">
+    <div class="wrap">
+      <div class="sec-head pt-films-head">
+        <h2 id="pt-films-title">Short films</h2>
+        <p class="label">{films} silent loops</p>
+        {/* Arrows for a mouse with no sideways wheel; shown by the script. */}
+        <div class="pt-films-step" data-reel-steps hidden>
+          <button type="button" data-reel-step="-1" aria-label="Earlier films">
+            <span aria-hidden="true">←</span>
+          </button>
+          <button type="button" data-reel-step="1" aria-label="Later films">
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <ul class="pt-reels" data-reels>
+      {filmPrints.map((p) => (
+        <li>
+          <a
+            class="pt-reel"
+            href={p.video}
+            data-print={p.i}
+            data-reel={p.video}
+            aria-label={`Film ${p.title}. ${p.alt}`}
+          >
+            <img
+              src={p.small}
+              width={560}
+              height={Math.round((560 * p.h) / p.w)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="pt-film label">Film</span>
+            <span class="pt-reel-title">{p.title}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
   </section>
 
   <section class="sec pt-what" aria-labelledby="pt-what-title">

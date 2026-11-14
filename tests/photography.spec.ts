@@ -132,14 +132,11 @@ test.describe('around the table', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
-  test('the page opens on the selects, and All brings everything back', async ({ page }) => {
+  test('the page opens on everything, and there is no Selects filter', async ({ page }) => {
     await page.goto('/photography/');
-    const selects = page.locator('button[data-f="selects"]');
-    await expect(selects).toHaveAttribute('aria-pressed', 'true');
-    const n = Number(await selects.locator('.n').textContent());
-    await expect(page.locator('[data-status]')).toHaveText(`Showing ${n} selects.`);
-    await page.locator('button[data-f="all"]').click();
+    await expect(page.locator('button[data-f="all"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('[data-status]')).toContainText('Showing all');
+    await expect(page.locator('button[data-f="selects"]')).toHaveCount(0);
   });
 
   test('Films shows only the films', async ({ page }) => {
