@@ -39,17 +39,25 @@ export const KIND_LABEL: Record<Kind, string> = {
 /** A shoot's id (the `set` field on a photo) and the name the full view prints for it. */
 export const SETS = {
   'ash-wednesday': 'Ash Wednesday',
-  'maundy-thursday': 'Maundy Thursday',
   'easter-sunday': 'Easter Sunday',
-  'easter-fair': 'The Easter Fair',
   'christmas-eve': 'Christmas Eve',
-  'vision-sunday': 'Vision Sunday',
+  'hanging-greens': 'Hanging of the greens',
+  rehearsal: 'Music rehearsal',
+  'kids-day-out': 'A kids’ day out',
+  shoeboxes: 'Packing shoeboxes',
   vbs: 'Vacation Bible School',
   'souper-bowl': 'The Souper Bowl',
-  baptism: 'A baptism',
-  'backyard-party': 'A backyard party',
+  'last-day': 'The last day of preschool',
+  'farm-day': 'A day at the farm',
+  'creek-day': 'Creek day',
+  homecoming: 'A church homecoming',
   'theology-matters': 'The Theology Matters conference',
-  'garden-portraits': 'Garden portraits',
+  'world-christianity': 'A world Christianity conference',
+  graduation: 'Graduation day',
+  'hilltop-wedding': 'A hilltop wedding',
+  engagement: 'An engagement session',
+  'family-session': 'A family session',
+  headshots: 'Headshots',
 } as const;
 export type SetId = keyof typeof SETS;
 

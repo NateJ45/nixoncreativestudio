@@ -29,7 +29,7 @@ Things that still need configuration before or during the public launch. Everyth
 - [ ] **Before/after sliders** on the remaining redesign case studies (`<BeforeAfter>` in the study's "Before and after" chapter). Done on the Foundation for Reformed Theology, MAS Monograms, Stone Steps 50K and First Baptist Muncie. Each other one needs a real "before" screenshot saved when the project started (not the Wayback Machine, whose archives of these sites render broken). Add it to `public/assets/study/` and `src/data/study-images.json`.
 - [ ] Additional **case studies** in `src/content/case-studies/`: the checklist is in `.claude/rules/content.md` ("Adding a study").
 - [ ] First **journal entry** in `src/content/journal/` (until then /journal/ is empty and has no link).
-- [x] **Photographs** for /photography: 75 photos and 11 films on the light table (2026-11-11; 13 from Instagram added the same day). Adding more: `docs/PENDING.md` item 2f.
+- [x] **Photographs** for /photography: 159 photos and 37 films on the light table (synced from the curation folder 2026-11-13). Adding more: `docs/PENDING.md` item 2f.
 
 ## Capturing CMS screens
 
