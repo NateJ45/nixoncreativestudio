@@ -72,8 +72,14 @@ export function studioNode(lowestPrice: number): Node {
       { '@type': 'Place', name: 'Greater Cincinnati region' },
       { '@type': 'Country', name: 'United States' },
     ],
-    // The Google Business Profile is the studio's, not the person's, so only this node lists it.
-    sameAs: [site.social.instagram, site.social.linkedin, site.social.googleBusiness],
+    // The Google Business Profile and the Facebook Page are the studio's, not the person's,
+    // so only this node lists them.
+    sameAs: [
+      site.social.instagram,
+      site.social.linkedin,
+      site.social.facebook,
+      site.social.googleBusiness,
+    ],
     // What the studio does, in the words people search with. Helps search and
     // answer engines file the entity under the right topics.
     knowsAbout: KNOWS_ABOUT,
