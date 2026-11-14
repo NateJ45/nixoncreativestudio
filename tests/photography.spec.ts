@@ -37,7 +37,7 @@ test.describe('with JavaScript', () => {
     const dlg = page.locator('dialog[data-open]');
     await expect(dlg).toBeVisible();
     await expect(dlg.locator('[data-title]')).not.toBeEmpty();
-    await expect(dlg.locator('img, video')).toHaveCount(1);
+    await expect(dlg.locator('[data-media] img, [data-media] video')).toHaveCount(1);
     await page.keyboard.press('Escape');
     await expect(dlg).toBeHidden();
     await expect(world).toBeFocused();
@@ -153,18 +153,18 @@ test.describe('around the table', () => {
   });
 
   test('a print has its own address: it opens there, and closing clears it', async ({ page }) => {
-    await page.goto('/photography/?print=tm-journal');
+    await page.goto('/photography/?print=tm-podium');
     const dlg = page.locator('dialog[data-open]');
     await expect(dlg).toBeVisible();
     await expect(dlg.locator('[data-title]')).not.toBeEmpty();
-    expect(new URL(page.url()).searchParams.get('print')).toBe('tm-journal');
+    expect(new URL(page.url()).searchParams.get('print')).toBe('tm-podium');
     // It was shot for a client with a case study here, and it is one frame of a set.
     await expect(dlg.locator('[data-study]')).toHaveAttribute('href', '/work/theology-matters/');
     await expect(dlg.locator('[data-set-name]')).toContainText('Theology Matters');
     expect(await dlg.locator('[data-set-strip] button').count()).toBeGreaterThan(2);
     // The strip steps to another frame of the set, and the address follows.
     await dlg.locator('[data-set-strip] button:not([aria-current])').first().click();
-    await expect.poll(() => new URL(page.url()).searchParams.get('print')).not.toBe('tm-journal');
+    await expect.poll(() => new URL(page.url()).searchParams.get('print')).not.toBe('tm-podium');
     await page.keyboard.press('Escape');
     await expect(dlg).toBeHidden();
     // The dialog's close event lands a moment after it hides.
@@ -182,7 +182,7 @@ test.describe('around the table', () => {
     await expect(dlg.locator('.pt-book a')).toHaveAttribute('href', /contact/);
     await next.click();
     await expect(dlg.locator('.pt-book')).toHaveCount(0);
-    await expect(dlg.locator('img, video')).toHaveCount(1);
+    await expect(dlg.locator('[data-media] img, [data-media] video')).toHaveCount(1);
   });
 
   test('a "What I shoot" row sets its filter and brings the table up', async ({ page }) => {
