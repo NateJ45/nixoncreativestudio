@@ -16,6 +16,13 @@
    by `npm run photo-colors`), and it zooms and fills the screen. All of that
    is in src/scripts/photo-table.js, and none of it is needed to see a photo.
 
+   Around the table (2026-11-13): a hero frame (the featured photo) that opens
+   the page, a strip of the films, Selects and Films filters (the page opens on
+   the selects), a tour, a colour order, an address for every print
+   (?print=<slug>), a set strip, a link to the client's case study and a booking
+   card in the full view, and "What I shoot" rows that lead to their filter.
+   The page shows no dates anywhere.
+
    Real markup first. The server prints a plain grid of links (each one to its
    full-size image), the filter bar and an empty full-view dialog. Without
    JavaScript that grid IS the gallery. src/scripts/photo-table.js lays the
@@ -38,7 +45,15 @@ import { photographyOpen } from '../data/photography-gate';
 import { addOns } from '../data/pricing';
 import { addOnNamed } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
-import { dealOrder, filtersFor, printLine } from '../lib/photo-table';
+import {
+  dealOrder,
+  filtersFor,
+  printLine,
+  inFilter,
+  SETS,
+  STUDY_FOR_CLIENT,
+  BOOKING_EVERY,
+} from '../lib/photo-table';
 import photoColors from '../data/photo-colors.json';
 
 const photography = addOnNamed(addOns, 'Photography');
@@ -47,8 +62,9 @@ const open = photographyOpen(all.length);
 
 // One print per entry, in the dealt order, with the two sizes the table needs:
 // a small one for the table and the grid, a large one for the full view.
+const dealt = dealOrder(all.map((e) => ({ slug: e.id, ...e.data })));
 const prints = await Promise.all(
-  dealOrder(all.map((e) => ({ slug: e.id, ...e.data }))).map(async (p, i) => {
+  dealt.map(async (p, i) => {
     const small = await getImage({ src: p.image, width: 560, format: 'webp', quality: 72 });
     const large = await getImage({
       src: p.image,
@@ -66,6 +82,14 @@ const prints = await Promise.all(
       place: p.location ?? '',
       caption: p.caption ?? '',
       video: p.video ?? '',
+      // One of the best frames: the page opens on these (src/content.config.ts, `select`).
+      select: p.select ?? false,
+      // The shoot it came from, and that shoot's name, for the strip in the full view.
+      set: p.set ?? '',
+      setName: p.set ? SETS[p.set] : '',
+      // The client's case study on this site, when there is one, and who the client is.
+      client: p.client ?? '',
+      study: p.client && STUDY_FOR_CLIENT[p.client] ? `/work/${STUDY_FOR_CLIENT[p.client]}/` : '',
       // The photo's own colour, for the table's wash and the full view (npm run photo-colors).
       c: (photoColors as Record<string, string>)[p.slug] ?? '',
       w: p.image.width,
@@ -77,8 +101,58 @@ const prints = await Promise.all(
   }),
 );
 const filters = filtersFor(all.map((e) => ({ slug: e.id, ...e.data })));
-const films = prints.filter((p) => p.video).length;
+const filmPrints = prints.filter((p) => p.video);
+const films = filmPrints.length;
 const stills = prints.length - films;
+const selects = prints.filter((p) => p.select).length;
+
+// The hero: the featured photo (dealOrder puts it first), large, as the page's first image.
+const heroPrint = prints[0];
+const hero = await getImage({
+  src: dealt[0].image,
+  widths: [768, 1280, 1920],
+  format: 'webp',
+  quality: 78,
+});
+
+// "What I shoot": each row names the filters it leads to and shows three of its frames.
+const rows = [
+  {
+    title: 'Sundays and seasons',
+    body: 'Ash Wednesday by candlelight, a full house at Easter, a baptism, Christmas Eve: the services and seasons a church website needs all year.',
+    go: [{ filter: 'worship', label: 'See the worship photos' }],
+  },
+  {
+    title: 'Events and conferences',
+    body: "Speakers, panels, the hallway after. Enough of the room and the faces that next year's page sells next year's event.",
+    go: [{ filter: 'events', label: 'See the events' }],
+  },
+  {
+    title: 'Portraits and weddings',
+    body: 'Staff pages, headshots and weddings, in natural light where I can get it, with people who look like themselves.',
+    go: [
+      { filter: 'weddings', label: 'See the weddings' },
+      { filter: 'portraits', label: 'See the portraits' },
+    ],
+  },
+  {
+    title: 'Short films',
+    body: 'Loops for a homepage and the year-in-review film for a Vision Sunday, cut from the same days as the photos.',
+    go: [{ filter: 'films', label: 'See the films' }],
+  },
+].map((row) => ({
+  ...row,
+  // Three frames, taken in turn from the row's filters so a two-filter row shows both.
+  thumbs: [0, 1, 2]
+    .map((n) => {
+      const filter = row.go[n % row.go.length].filter;
+      // Stills for every row but the films row, whose frames are the films' own posters.
+      return prints.filter((p) => inFilter(p, filter) && (filter === 'films' || !p.video))[
+        Math.floor(n / row.go.length)
+      ];
+    })
+    .filter(Boolean),
+}));
 
 const contactHref = '/contact/?service=photography';
 const heading = 'Photography that matches <b>the website it lives on.</b>';
@@ -90,6 +164,26 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
   noindex={!open}
 >
   <header class="page-head pt-head">
+    {/* The hero frame: the featured photo, as the page's first and largest image. It opens the
+         full view like any print, and shrinks into a matted print as it scrolls away (CSS only). */}
+    <a
+      class="pt-hero"
+      href={heroPrint.large}
+      data-print={heroPrint.i}
+      aria-label={`${heroPrint.title}. ${heroPrint.alt}`}
+    >
+      <img
+        src={hero.src}
+        srcset={hero.srcSet.attribute}
+        sizes="100vw"
+        width={heroPrint.w}
+        height={heroPrint.h}
+        alt=""
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </a>
     <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
     <p class="lede">
       Weddings, Sunday mornings, conferences and portraits across Cincinnati, and short films to go
@@ -104,6 +198,40 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </p>
   </header>
 
+  {/* The films, in a row of their own. A link's name starts with the words printed on it
+       ("Film", then the title), which WCAG 2.5.3 and the axe gate both ask for. Each is a plain link to its mp4 without JavaScript; with it,
+       a film plays while it is on screen and opens the full view. */}
+  <section class="pt-films" aria-labelledby="pt-films-title">
+    <div class="pt-films-head">
+      <h2 id="pt-films-title">Short films</h2>
+      <p class="label">{films} silent loops</p>
+    </div>
+    <ul class="pt-reels" data-reels>
+      {filmPrints.map((p) => (
+        <li>
+          <a
+            class="pt-reel"
+            href={p.video}
+            data-print={p.i}
+            data-reel={p.video}
+            aria-label={`Film ${p.title}. ${p.alt}`}
+          >
+            <img
+              src={p.small}
+              width={560}
+              height={Math.round((560 * p.h) / p.w)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="pt-film label">Film</span>
+            <span class="pt-reel-title">{p.title}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
   <section class="pt" aria-labelledby="pt-title" data-table data-view="grid">
     <h2 id="pt-title" class="pt-vh">
       {stills} photos and {films} short films
@@ -113,6 +241,9 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
       <div class="dw-bar" data-bar>
         <div class="dw-seg" role="group" aria-label="Show photos of" data-filters>
           <span class="dw-pill" data-pill aria-hidden="true"></span>
+          <button type="button" aria-pressed="false" data-f="selects">
+            Selects <span class="n">{selects}</span>
+          </button>
           <button type="button" aria-pressed="true" data-f="all">
             All <span class="n">{prints.length}</span>
           </button>
@@ -121,6 +252,9 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
               {f.label} <span class="n">{f.count}</span>
             </button>
           ))}
+          <button type="button" aria-pressed="false" data-f="films">
+            Films <span class="n">{films}</span>
+          </button>
         </div>
         <div class="dw-seg" role="group" aria-label="View photos as" data-views>
           <span class="dw-pill" data-pill aria-hidden="true"></span>
@@ -172,6 +306,24 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
         </button>
       </div>
       <div class="pt-tools" role="group" aria-label="Zoom and full screen">
+        <button
+          type="button"
+          class="pt-pill"
+          data-tour
+          aria-pressed="false"
+          aria-label="Play a tour of the table"
+        >
+          Tour
+        </button>
+        <button
+          type="button"
+          class="pt-pill"
+          data-colour
+          aria-pressed="false"
+          aria-label="Sort the table by colour"
+        >
+          Colour
+        </button>
         <button type="button" data-zoom="out" aria-label="Zoom out">
           <span aria-hidden="true">−</span>
         </button>
@@ -219,6 +371,19 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </ul>
 
     <script type="application/json" id="pt-data" set:html={JSON.stringify(prints)} />
+    {/* The booking card the full view shows after every few steps (BOOKING_EVERY). */}
+    <template data-booking data-every={BOOKING_EVERY}>
+      <div class="pt-book">
+        <p class="label">Photography {photography.price}</p>
+        <p class="pt-book-line">
+          Day-of coverage, portraits and short films. Often booked with a website, sometimes on
+          their own.
+        </p>
+        <a class="chip go" href={contactHref}>
+          Book a shoot
+        </a>
+      </div>
+    </template>
     {/* The full view. A native dialog the script fills; Escape and the close button shut it.
          It sits inside the section so it still shows when the section fills the screen. */}
     <dialog class="pt-open" aria-labelledby="pt-open-title" data-open>
@@ -229,12 +394,24 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
           <h2 id="pt-open-title" data-title></h2>
           <p data-alt></p>
           <p class="pt-open-place" data-place></p>
+          <p class="pt-open-study" data-study-wrap hidden>
+            <a data-study href="/work/">
+              See the website
+            </a>
+          </p>
+          <div class="pt-set" data-set hidden>
+            <p class="label" data-set-name></p>
+            <div class="pt-set-strip" data-set-strip role="group" aria-label="More from this set" />
+          </div>
           <div class="pt-open-acts">
             <button type="button" class="chip" data-prev>
               Previous
             </button>
             <button type="button" class="chip" data-next>
               Next
+            </button>
+            <button type="button" class="chip" data-copy>
+              Copy link
             </button>
             <button type="button" class="chip go" data-close>
               Close
@@ -252,34 +429,33 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
         <h2 id="pt-what-title">What I shoot</h2>
       </div>
       <ul class="pt-rows">
-        <li>
-          <h3>Sundays and seasons</h3>
-          <p>
-            Ash Wednesday by candlelight, a full house at Easter, a baptism, Christmas Eve: the
-            services and seasons a church website needs all year.
-          </p>
-        </li>
-        <li>
-          <h3>Events and conferences</h3>
-          <p>
-            Speakers, panels, the hallway after. Enough of the room and the faces that next year's
-            page sells next year's event.
-          </p>
-        </li>
-        <li>
-          <h3>Portraits and weddings</h3>
-          <p>
-            Staff pages, headshots and weddings, in natural light where I can get it, with people
-            who look like themselves.
-          </p>
-        </li>
-        <li>
-          <h3>Short films</h3>
-          <p>
-            Loops for a homepage and the year-in-review film for a Vision Sunday, cut from the same
-            days as the photos.
-          </p>
-        </li>
+        {rows.map((row) => (
+          <li>
+            <h3>{row.title}</h3>
+            <div class="pt-row-body">
+              <p>{row.body}</p>
+              <div class="pt-row-more">
+                <span class="pt-row-thumbs" aria-hidden="true">
+                  {row.thumbs.map((t) => (
+                    <img
+                      src={t.small}
+                      width={560}
+                      height={Math.round((560 * t.h) / t.w)}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))}
+                </span>
+                {row.go.map((g) => (
+                  <a class="chip" href="#pt-title" data-go={g.filter}>
+                    {g.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </li>
+        ))}
       </ul>
     </div>
   </section>

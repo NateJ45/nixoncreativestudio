@@ -358,6 +358,31 @@ const photos = defineCollection({
       // printed: /photography shows no dates (src/lib/photo-table.ts, printLine).
       year: z.number().int(),
 
+      // One of the best frames. The page opens on the selects, dealt larger, and
+      // "Play a tour" travels between them. Keep it to a dozen or so: a select
+      // only means something while most photos are not one.
+      select: z.boolean().optional(),
+
+      // The shoot this frame belongs to, when several frames here come from the
+      // same day. The full view shows the set's name and its other frames. The
+      // ids and their names live in src/lib/photo-table.ts (SETS).
+      set: z
+        .enum([
+          'ash-wednesday',
+          'maundy-thursday',
+          'easter-sunday',
+          'easter-fair',
+          'christmas-eve',
+          'vision-sunday',
+          'vbs',
+          'souper-bowl',
+          'baptism',
+          'backyard-party',
+          'theology-matters',
+          'garden-portraits',
+        ])
+        .optional(),
+
       // A short silent loop instead of a still: a public path to an mp4 under
       // /photography/video/ (public/photography/video/). `image` is its poster.
       video: z

@@ -34,11 +34,45 @@ export const KIND_LABEL: Record<Kind, string> = {
   environments: 'Places',
 };
 
+/* ---- Sets: frames from the same shoot ----------------------------------------- */
+
+/** A shoot's id (the `set` field on a photo) and the name the full view prints for it. */
+export const SETS = {
+  'ash-wednesday': 'Ash Wednesday',
+  'maundy-thursday': 'Maundy Thursday',
+  'easter-sunday': 'Easter Sunday',
+  'easter-fair': 'The Easter Fair',
+  'christmas-eve': 'Christmas Eve',
+  'vision-sunday': 'Vision Sunday',
+  vbs: 'Vacation Bible School',
+  'souper-bowl': 'The Souper Bowl',
+  baptism: 'A baptism',
+  'backyard-party': 'A backyard party',
+  'theology-matters': 'The Theology Matters conference',
+  'garden-portraits': 'Garden portraits',
+} as const;
+export type SetId = keyof typeof SETS;
+
+/**
+ * A client whose website is a case study on this site: the full view links a
+ * photo shot for them to that study. Only real studies go here, and the unit
+ * test checks the file exists, so a link never points at nothing.
+ */
+export const STUDY_FOR_CLIENT: Record<string, string> = {
+  'Theology Matters': 'theology-matters',
+};
+
+/** After this many steps through the full view, one booking card. */
+export const BOOKING_EVERY = 6;
+
 export interface PrintIn {
   slug: string;
   category: Kind;
   featured?: boolean;
   video?: string;
+  select?: boolean;
+  set?: SetId;
+  client?: string;
 }
 
 /**
@@ -133,4 +167,43 @@ export function lensScale(d: number): number {
 export function hexToRgb(hex: string | undefined): [number, number, number] | null {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? '');
   return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
+}
+
+/* ---- The two filters that are not a kind ---------------------------------------- */
+
+/** Does this print belong under this filter? "selects" and "films" cut across the kinds. */
+export function inFilter(
+  p: { kind: string; select?: boolean; video?: string },
+  filter: string,
+): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'selects') return Boolean(p.select);
+  if (filter === 'films') return Boolean(p.video);
+  return p.kind === filter;
+}
+
+/* ---- Colour order ------------------------------------------------------------------ */
+
+/** A colour's hue in degrees, or null when it is too grey to have one worth sorting by. */
+export function hueOf(hex: string | undefined): number | null {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  const [r, g, b] = rgb.map((v) => v / 255);
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b),
+    d = max - min;
+  if (d < 0.08) return null;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+}
+
+/**
+ * The prints in colour order: round the wheel from red, with the greys (black
+ * and white frames) last. Stable, so equal hues keep the order they came in.
+ */
+export function byHue<T extends { c?: string }>(prints: T[]): T[] {
+  return prints
+    .map((p, i) => ({ p, i, h: hueOf(p.c) }))
+    .sort((a, b) => (a.h ?? 999) - (b.h ?? 999) || a.i - b.i)
+    .map((x) => x.p);
 }

@@ -8,6 +8,12 @@ import {
   columnSpeed,
   lensScale,
   hexToRgb,
+  hueOf,
+  byHue,
+  inFilter,
+  SETS,
+  STUDY_FOR_CLIENT,
+  BOOKING_EVERY,
   LENS_MIN,
   KINDS,
   type PrintIn,
@@ -148,4 +154,54 @@ test('nothing a visitor reads on a print carries a year', () => {
     }
     assert.doesNotMatch(printLine(e as PrintIn & { client?: string }), year, `${e.slug}: line`);
   }
+});
+
+test('the selects stay a short list, and every one is a real print', () => {
+  const selects = entries.filter((e) => e.select);
+  assert.ok(selects.length >= 8, 'too few selects for the page to open on');
+  assert.ok(
+    selects.length <= entries.length / 4,
+    `${selects.length} selects of ${entries.length}: a select only means something while most are not one`,
+  );
+});
+
+test('every set has a name and at least three frames, so its strip is worth showing', () => {
+  const counts = new Map<string, number>();
+  for (const e of entries) {
+    if (!e.set) continue;
+    assert.ok(e.set in SETS, `${e.slug}: unknown set ${e.set}`);
+    counts.set(e.set, (counts.get(e.set) ?? 0) + 1);
+  }
+  for (const id of Object.keys(SETS)) {
+    assert.ok((counts.get(id) ?? 0) >= 3, `set ${id} has ${counts.get(id) ?? 0} frames`);
+  }
+});
+
+test('a client is only linked to a case study that exists', () => {
+  const clients = new Set(entries.map((e) => e.client).filter(Boolean));
+  for (const [client, slug] of Object.entries(STUDY_FOR_CLIENT)) {
+    assert.ok(clients.has(client), `no photo is for ${client}`);
+    assert.ok(
+      existsSync(new URL(`../content/case-studies/${slug}.mdx`, import.meta.url)),
+      `no case study ${slug}`,
+    );
+  }
+});
+
+test('inFilter: selects and films cut across the kinds', () => {
+  const p = { kind: 'worship', select: true, video: '/x.mp4' };
+  assert.ok(inFilter(p, 'all') && inFilter(p, 'selects') && inFilter(p, 'films'));
+  assert.ok(inFilter(p, 'worship') && !inFilter(p, 'weddings'));
+  assert.ok(!inFilter({ kind: 'worship' }, 'selects') && !inFilter({ kind: 'worship' }, 'films'));
+});
+
+test('byHue runs round the colour wheel and puts the greys last', () => {
+  const out = byHue([{ c: '#808080' }, { c: '#3074cf' }, { c: '#c87637' }, { c: '#629d63' }, {}]);
+  assert.deepEqual(
+    out.map((p) => p.c),
+    ['#c87637', '#629d63', '#3074cf', '#808080', undefined],
+  );
+  assert.equal(hueOf('#808080'), null);
+  assert.equal(Math.round(hueOf('#ff0000') ?? -1), 0);
+  assert.ok(BOOKING_EVERY >= 4, 'a booking card every few steps, not every step');
 });

@@ -320,9 +320,21 @@
   cursor: default;
   transform: none;
 }
-.pt-tools [data-full][aria-pressed='true'] {
+.pt-tools [aria-pressed='true'] {
   background: var(--ink);
   color: var(--ground);
+}
+/* Tour and Colour: the same round buttons, wide enough for a word. */
+.pt-tools .pt-pill {
+  width: auto;
+  padding-inline: 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+/* On the tour the print it has stopped at is ringed, as it is for the keyboard. */
+.pt-world.is-touring .pt-p.is-mid {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 .pt-nudge [data-nudge='0,-1'] {
   grid-column: 2;
@@ -357,6 +369,11 @@
   .pt-tools {
     right: 0.6rem;
     bottom: 0.6rem;
+  }
+  .pt-tools .pt-pill {
+    width: auto;
+    padding-inline: 0.6rem;
+    font-size: 0.75rem;
   }
   .pt-hud {
     left: 0.6rem;
@@ -537,6 +554,183 @@
   margin-top: 0.9rem;
 }
 
+/* The client's case study, the rest of the shoot, and the booking card. */
+.pt-open-study a {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+.pt-set {
+  margin-top: 1rem;
+}
+.pt-set-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+.pt-set-strip button {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: var(--screen);
+  cursor: pointer;
+}
+.pt-set-strip img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pt-set-strip button[aria-current='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pt-set-strip button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.pt-book {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: start;
+  align-content: center;
+  width: min(34rem, 100%);
+  min-height: 16rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border-radius: 0.6rem;
+  background: var(--well);
+}
+.pt-book-line {
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* ---- The hero frame: the featured photo opens the page ------------------- */
+.pt-hero {
+  display: block;
+  height: clamp(16rem, 60svh, 40rem);
+  margin-bottom: clamp(1.25rem, 3vh, 2rem);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: var(--screen);
+  transform-origin: 50% 100%;
+}
+.pt-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Tuned to the featured frame: its two faces sit in the top fifth, so a wide crop keeps the top. */
+  object-position: 50% 12%;
+}
+.pt-hero:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+/* As it scrolls away it settles into a print: smaller, a degree or two off square, on its paper.
+   Scroll-driven, so it costs no script; a browser without it keeps the still frame. */
+@keyframes pt-hero-settle {
+  to {
+    scale: 0.8;
+    rotate: -2deg;
+    border-radius: 0.5rem;
+    box-shadow:
+      0 0 0 0.6rem var(--card),
+      0 30px 44px -22px rgba(0, 0, 0, 0.55);
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pt-hero {
+      animation: pt-hero-settle linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 90%;
+    }
+  }
+}
+
+/* ---- The film strip -------------------------------------------------------- */
+.pt-films {
+  padding-bottom: clamp(1.25rem, 4vh, 2.5rem);
+}
+.pt-films-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 1rem;
+  padding-inline: var(--edge);
+  margin-bottom: 0.9rem;
+}
+.pt-films-head h2 {
+  font-size: var(--type-h3);
+  line-height: 1.05;
+}
+.pt-reels {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.25rem var(--edge) 1rem;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--edge);
+  scrollbar-width: thin;
+}
+.pt-reels li {
+  flex: none;
+  scroll-snap-align: start;
+}
+.pt-reel {
+  --mat: 0rem;
+  position: relative;
+  display: block;
+  height: clamp(11rem, 34svh, 19rem);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: var(--screen);
+}
+.pt-reel img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: none;
+}
+.pt-reel video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pt-reel.is-playing .pt-film::before {
+  width: 0.45rem;
+  height: 0.56rem;
+  border: 0;
+  border-inline: 0.14rem solid currentColor;
+}
+.pt-reel-title {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  max-width: calc(100% - 1.2rem);
+  padding: 0.3rem 0.65rem;
+  border-radius: 99rem;
+  background: var(--chip);
+  color: var(--chip-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.pt-reel:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
 /* ---- What I shoot: ruled rows ------------------------------------------- */
 .pt-rows {
   list-style: none;
@@ -600,4 +794,32 @@
   .pt-stage {
     border: 1px solid CanvasText;
   }
+}
+
+/* Each row leads into the table: three of its frames and the way in. */
+.pt-row-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.pt-row-thumbs {
+  display: flex;
+  gap: 0.3rem;
+  margin-right: 0.4rem;
+}
+.pt-row-thumbs img {
+  width: 3.25rem;
+  height: 3.25rem;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  background: var(--screen);
+}
+.pt-rows .chip {
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow:
+    var(--rim),
+    inset 0 0 0 1px var(--line);
 }
