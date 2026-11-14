@@ -177,7 +177,7 @@ export const addOns: AddOn[] = [
     name: 'Business listings',
     price: '$350 to $650',
     unit: 'one-time',
-    note: 'Your organization claimed and filled in on Google, Apple Maps, Bing and Yelp, all matching the site, for $650. Google alone is $350. You will need to answer a few verification codes.',
+    note: 'Your organization claimed and filled in on Google, Apple Maps, Bing, Yelp and ChatGPT, all matching the site, for $650. Google alone is $350. You will need to answer a few verification codes and pass a quick ID check for ChatGPT.',
   },
 ];
 
