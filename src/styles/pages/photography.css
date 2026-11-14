@@ -847,3 +847,176 @@
     display: none;
   }
 }
+
+/* ==== Prototype (2026-11-14): motion first ================================= */
+
+/* The hero reel: the poster first, the film over it once it plays. */
+.pt-hero-reel {
+  position: relative;
+}
+.pt-hero-reel video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.pt-hero-reel video.is-on {
+  opacity: 1;
+}
+.pt-hero-reel img {
+  object-position: 50% 50%;
+}
+.pt-hero-pause {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--chip);
+  color: var(--chip-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pt-hero-pause[hidden] {
+  display: none;
+}
+.pt-hero-pause:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A film playing in place, in a chapter or the wall. */
+.print video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.print .pt-film {
+  --mat: 0rem;
+}
+.is-playing .pt-film::before {
+  width: 0.45rem;
+  height: 0.56rem;
+  border: 0;
+  border-inline: 0.14rem solid currentColor;
+}
+
+/* Whole days: a chapter a shoot, the lead large and the rest beside it. */
+.pt-days.sec {
+  padding-top: clamp(2rem, 6vh, 4rem);
+}
+.pt-chapters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(3rem, 8vh, 5.5rem);
+}
+.pt-chapter {
+  display: grid;
+  gap: 1rem;
+}
+.pt-chapter-head {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 44rem;
+}
+.pt-chapter-head h3 {
+  font-size: var(--type-h3);
+  line-height: 1.05;
+}
+.pt-chapter-head p:not(.label) {
+  color: var(--soft);
+}
+.pt-chapter-frames {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.pt-chapter-frames .print {
+  aspect-ratio: 3 / 2;
+}
+.pt-chapter-frames .print img {
+  height: 100%;
+  object-fit: cover;
+}
+.pt-chapter-lead {
+  grid-column: 1 / -1;
+}
+.pt-chapter-lead.print {
+  aspect-ratio: 16 / 9;
+}
+@media (min-width: 52rem) {
+  .pt-chapter {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pt-chapter-frames {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, auto);
+  }
+  .pt-chapter-lead {
+    grid-column: 1 / 3;
+    grid-row: 1 / 3;
+  }
+  /* The lead takes the height of the two rows beside it, whatever its own shape. */
+  .pt-chapter-lead.print {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 100%;
+  }
+  .pt-chapter-lead img {
+    position: absolute;
+    inset: 0;
+  }
+  /* Alternate the lead's side so the chapters do not stack like a list. */
+  .pt-chapter:nth-child(even) .pt-chapter-lead {
+    grid-column: 3 / 5;
+  }
+}
+
+/* Everything: a heading for the wall, in the page's column. */
+.pt-all-head {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0 var(--edge) 1rem;
+}
+.pt-all-head h2 {
+  font-size: var(--type-h2);
+}
+.pt-all-head p {
+  max-width: 40rem;
+  color: var(--soft);
+}
+
+/* How a shoot works: numbered rows, then the kit in one line. */
+.pt-steps h3 .label {
+  margin-right: 0.5rem;
+  vertical-align: 0.3em;
+}
+.pt-kit {
+  margin-top: 1.5rem;
+  color: var(--soft);
+}
+.pt-kit .label {
+  margin-right: 0.75rem;
+}
+
+/* On a phone the wall runs two columns: one column of every frame was a very long scroll. */
+@media (max-width: 40rem) {
+  .pt-grid {
+    columns: 2;
+    column-gap: 0.6rem;
+  }
+  .pt-grid li {
+    margin-bottom: 0.6rem;
+  }
+}
