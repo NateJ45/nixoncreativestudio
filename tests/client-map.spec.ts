@@ -33,6 +33,43 @@ test.describe('About: the client map', () => {
     await expect(page.locator('.cm-more a')).toHaveAttribute('href', '/contact/');
   });
 
+  test('resting on a state beside Cincinnati holds it through the pulse', async ({ page }) => {
+    await page.goto('/about/');
+    const map = page.locator('[data-cm]');
+    await map.scrollIntoViewIfNeeded();
+    await expect(map).toHaveAttribute('data-live', '');
+    const svg = page.locator('.cm-svg');
+    const crop = (await svg.getAttribute('data-crop'))!.split(' ').map(Number);
+    await expect
+      .poll(async () => (await svg.getAttribute('viewBox'))!.split(' ').map(Number), {
+        timeout: 5000,
+      })
+      .toEqual(crop);
+    // A point in Indiana a little west of the hub, well inside the reach of its growing rings.
+    const spot = await page.evaluate(() => {
+      const hub = document.querySelector('.cm-hub .cm-pt') as SVGCircleElement;
+      const m = (hub.ownerSVGElement as SVGSVGElement).getScreenCTM()!;
+      const cx = hub.cx.baseVal.value;
+      const cy = hub.cy.baseVal.value;
+      for (let dx = 6; dx < 30; dx += 2) {
+        const x = (cx - dx) * m.a + m.e;
+        const y = cy * m.d + m.f;
+        if (document.elementFromPoint(x, y)?.closest('.cm-st[data-st="18"]')) return { x, y };
+      }
+      return null;
+    });
+    expect(spot).not.toBeNull();
+    await page.mouse.move(spot!.x, spot!.y);
+    await expect(map).toHaveAttribute('data-on', '18');
+    // A full ping cycle is 2.6s; sample through more than one.
+    const seen = new Set<string>();
+    for (let i = 0; i < 30; i++) {
+      seen.add((await map.getAttribute('data-on'))!);
+      await page.waitForTimeout(100);
+    }
+    expect([...seen]).toEqual(['18']);
+  });
+
   test('glides in, walks the states, holds on hover, and Pause stops everything', async ({
     page,
   }) => {
