@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 // =============================================================================
 
 const LINES = [
-  { route: '/', name: 'Eight selected case studies.' },
+  { route: '/', name: 'Nine selected case studies.' },
   { route: '/about/', name: 'One person.' },
   { route: '/churches/', name: 'Churches I have built for' },
 ];

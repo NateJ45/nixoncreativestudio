@@ -16,7 +16,7 @@ test('the grid shows large desktop captures with their words and links', async (
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/work/');
   const cards = page.locator('[data-grid] > li');
-  await expect(cards).toHaveCount(8);
+  await expect(cards).toHaveCount(9);
   const first = cards.first();
   await expect(first.locator('a.tile.desk img')).toHaveAttribute('src', /-cover\.webp$/);
   await expect(first.locator('a.tile.desk video')).toHaveAttribute(
@@ -41,10 +41,10 @@ test('a window opens the client sheet', async ({ page }) => {
   await expect(sheet.locator('h2')).toHaveText('Stone Steps 50K');
 });
 
-test('a lone study shares its row with its words, and links its sector page', async ({ page }) => {
+test('a sector filter shows only its studies, and links its sector page', async ({ page }) => {
   await page.goto('/work/?sector=school');
-  await expect(page.locator('[data-grid] > li:visible')).toHaveCount(1);
-  await expect(page.locator('[data-grid]')).toHaveClass(/\bone\b/);
+  await expect(page.locator('[data-grid] > li:visible')).toHaveCount(2);
+  await expect(page.locator('[data-grid]')).not.toHaveClass(/\bone\b/);
   await expect(page.locator('[data-more]')).toHaveAttribute('href', '/schools/');
   await expect(page.locator('[data-more]')).toHaveText('How I build for schools');
 });
@@ -52,7 +52,7 @@ test('a lone study shares its row with its words, and links its sector page', as
 test('an unknown sector falls back to all', async ({ page }) => {
   await page.goto('/work/?sector=castles');
   await expect(page.locator('button[data-f="all"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('[data-status]')).toHaveText('Showing all 8 case studies.');
+  await expect(page.locator('[data-status]')).toHaveText('Showing all 9 case studies.');
 });
 
 test('a filter click updates the address, the status and the grid', async ({ page }) => {
@@ -68,7 +68,7 @@ test('a filter click updates the address, the status and the grid', async ({ pag
 test('?view=list shows the ruled rows', async ({ page }) => {
   await page.goto('/work/?view=list');
   await expect(page.locator('button[data-v="list"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('[data-rows] > li:visible')).toHaveCount(8);
+  await expect(page.locator('[data-rows] > li:visible')).toHaveCount(9);
   await expect(page.locator('[data-rows] a').first()).toHaveAttribute(
     'href',
     '/work/stone-steps-50k/',
@@ -77,7 +77,7 @@ test('?view=list shows the ruled rows', async ({ page }) => {
 
 test('counts come from the studies', async ({ page }) => {
   await page.goto('/work/');
-  await expect(page.locator('h1')).toHaveAttribute('aria-label', /^Eight selected/);
+  await expect(page.locator('h1')).toHaveAttribute('aria-label', /^Nine selected/);
   await expect(page.locator('button[data-f="small-business"] .n')).toHaveText('2');
 });
 
@@ -85,7 +85,7 @@ test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
   test('every client is there, as a ruled row with a link', async ({ page }) => {
     await page.goto('/work/?sector=church');
-    await expect(page.locator('[data-rows] > li')).toHaveCount(8);
+    await expect(page.locator('[data-rows] > li')).toHaveCount(9);
     await expect(page.locator('[data-rows] a').first()).toBeVisible();
     await expect(page.locator('[data-bar]')).toBeHidden();
   });

@@ -299,7 +299,7 @@ test.describe('2.5.8 Target Size (Minimum): 24 by 24 CSS px', () => {
           return { slug: t.dataset.slug, best };
         }),
       );
-      expect(squares).toHaveLength(8);
+      expect(squares).toHaveLength(9);
       for (const s of squares) expect(s.best, s.slug).toBeGreaterThanOrEqual(24);
       await ctx.close();
     });

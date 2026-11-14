@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
 // tiers and clients apart, and ends on the same call to action.
 
 const LEAN = [
-  { path: '/schools/', sector: 'school', studies: 1, closing: 'none does' },
+  { path: '/schools/', sector: 'school', studies: 2, closing: 'none does' },
   { path: '/nonprofits/', sector: 'nonprofit', studies: 3, closing: 'none does' },
   { path: '/small-business/', sector: 'small-business', studies: 2, closing: 'none does' },
 ];

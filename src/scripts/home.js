@@ -160,7 +160,10 @@ function frame(now) {
         s.av = 0;
       } else live = true;
     } else if (s.a !== 1) live = true;
-    var o = (st.length - 1 - s.i) * 0.045,
+    /* The stagger: the last window starts first. The whole spread stays 0.315 of the scroll
+       (0.045 a window when there were eight), so the first window still lands by the end of the
+       deal however many there are; a fixed step per window left a ninth one short of its spot. */
+    var o = ((st.length - 1 - s.i) / Math.max(1, st.length - 1)) * 0.315,
       tgt = reduce ? 1 : Math.min(1, Math.max(0, (p - o) / (1 - 0.32)));
     tgt = tgt * tgt * (3 - 2 * tgt);
     if (seed) {
