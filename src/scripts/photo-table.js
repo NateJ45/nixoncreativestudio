@@ -36,11 +36,24 @@
    - The full view develops in from the print's own colour, the backdrop takes that colour, a
      sideways swipe steps on a touch screen, and the table underneath follows to the print you
      stepped to, so closing lands beside it.
-   - "Fill the screen" puts the bar and the table in the browser's full screen, where it has one. */
+   - "Fill the screen" puts the bar and the table in the browser's full screen, where it has one.
+
+   Around the table (2026-11-13):
+
+   - Two filters cut across the kinds, Selects and Films (inFilter). The page opens on the selects,
+     and a small set like that is dealt on wider prints.
+   - "Colour" lays the table in hue order, column by column (byHue), so the wash runs round the
+     wheel as you travel. "Tour" glides from select to select and stops at a touch.
+   - Every print has an address, ?print=<slug>: opening one writes it, closing clears it, and
+     arriving with one opens that print.
+   - The full view also shows the print's set as a strip to step through, a link to the client's
+     case study when there is one, a Copy link button, and a booking card after every few steps.
+   - The hero frame, the film strip and the "What I shoot" rows sit outside the table and lead
+     into it: any link with data-print opens the full view, data-go sets the filter. */
 
 import { ui } from './kit.js';
 import { bloom, setPill } from './seg-bar.js';
-import { columnSpeed, lensScale, hexToRgb } from '../lib/photo-table.ts';
+import { columnSpeed, lensScale, hexToRgb, inFilter, byHue } from '../lib/photo-table.ts';
 
 var doc = document;
 var sec = doc.querySelector('[data-table]');
@@ -71,6 +84,8 @@ function start(sec) {
   function measure() {
     var vw = innerWidth;
     W = vw < 520 ? 150 : vw < 900 ? 210 : vw < 1500 ? 250 : 280;
+    // The selects are few and the best, so they are dealt larger.
+    if (kind === 'selects') W = Math.round(W * (vw < 520 ? 1.12 : 1.3));
     GAP = vw < 520 ? 16 : 26;
     MAT = parseFloat(getComputedStyle(stage).getPropertyValue('--mat')) * 16 || 8;
   }
@@ -85,6 +100,7 @@ function start(sec) {
   }
 
   /* ---- Layout ------------------------------------------------------------ */
+  var byColour = false; // lay the table in hue order
   var kind = 'all',
     list = DATA, // the prints in the current filter, in order
     cols = [], // [{ items: [{ p, y, h }], H, off, sp }]
@@ -94,7 +110,7 @@ function start(sec) {
 
   function layout() {
     list = DATA.filter(function (p) {
-      return kind === 'all' || p.kind === kind;
+      return inFilter(p, kind);
     });
     // A small set is dealt again (rotated) until there is enough to fill a table without repeats
     // standing side by side.
@@ -103,6 +119,14 @@ function start(sec) {
     while (deck.length < 28 && list.length) {
       deck = deck.concat(list.slice(turn % list.length).concat(list.slice(0, turn % list.length)));
       turn++;
+    }
+    if (byColour) {
+      // Round the colour wheel. A small set goes round it more than once, so no print sits
+      // beside its own copy.
+      var sorted = byHue(list),
+        times = Math.max(1, Math.ceil(28 / (sorted.length || 1)));
+      deck = [];
+      for (var r = 0; r < times; r++) deck = deck.concat(sorted);
     }
     colW = W + GAP;
     // Enough columns that the block is wider than the table at its furthest zoom out, where there
@@ -118,11 +142,15 @@ function start(sec) {
         // How fast this column slides compared with the table: the depth.
         sp: reduce ? 1 : columnSpeed(c),
       });
-    deck.forEach(function (p) {
-      // Shortest column first, so the columns come out near one height.
-      var col = cols.reduce(function (a, b) {
-        return b.H < a.H ? b : a;
-      });
+    // In colour order the columns are filled one after another, so the hue runs left to right.
+    var per = Math.ceil(deck.length / C);
+    deck.forEach(function (p, n) {
+      // Otherwise shortest column first, so the columns come out near one height.
+      var col = byColour
+        ? cols[Math.min(C - 1, Math.floor(n / per))]
+        : cols.reduce(function (a, b) {
+            return b.H < a.H ? b : a;
+          });
       var h = Math.round(((W - 2 * MAT) * p.h) / p.w + 2 * MAT);
       col.items.push({ p: p, y: col.H, h: h });
       col.H += h + GAP;
@@ -486,6 +514,21 @@ function start(sec) {
     frameDt = dt || 0.016;
     var busy = false;
 
+    if (tour) {
+      // Glide to this stop, wait there, then on to the next. No drift meanwhile.
+      busy = true;
+      lastTouch = now;
+      var tk = reduce ? 1 : Math.min(1, dt * 2.4);
+      cx += (tour.tx - cx) * tk;
+      cy += (tour.ty - cy) * tk;
+      if (Math.abs(tour.tx - cx) + Math.abs(tour.ty - cy) < 3) tour.dwell += dt;
+      if (tour.dwell > (reduce ? 3.5 : 2.6)) {
+        tour.n++;
+        if (tour.n >= tour.stops.length) stopTour();
+        else tourLeg();
+      }
+    }
+
     if (!dragging) {
       // Glide after a throw, then settle.
       var f = Math.exp(-dt * 3.2);
@@ -565,6 +608,7 @@ function start(sec) {
   }
   world.addEventListener('pointerdown', function (e) {
     if (e.button !== 0) return;
+    stopTour();
     if (e.pointerType === 'touch') {
       fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (fingers.size === 2) {
@@ -668,6 +712,7 @@ function start(sec) {
     'wheel',
     function (e) {
       if (e.ctrlKey) return; // leave browser zoom alone
+      stopTour();
       var sideways = Math.abs(e.deltaX) > Math.abs(e.deltaY);
       if (!engaged && !sideways) return;
       e.preventDefault();
@@ -684,6 +729,7 @@ function start(sec) {
 
   // Glide the camera by (dx, dy): a throw sized to land about there, or a jump under reduced motion.
   function push(dx, dy) {
+    stopTour();
     lastTouch = performance.now();
     drift = 0;
     if (reduce) {
@@ -798,7 +844,8 @@ function start(sec) {
 
   /* ---- Filters and views ------------------------------------------------------------------- */
   var items = [].slice.call(grid.querySelectorAll('li'));
-  function setKind(k, e, b) {
+  // Mark the bar, the grid and the status line for a filter, without touching the table.
+  function mark(k, e, b) {
     kind = k;
     [].forEach.call(bar.querySelectorAll('[data-f]'), function (x) {
       x.setAttribute('aria-pressed', String(x === b));
@@ -806,19 +853,24 @@ function start(sec) {
     if (!reduce && e) bloom(b, e);
     setPill(bar);
     items.forEach(function (li) {
-      li.hidden = !(k === 'all' || li.dataset.kind === k);
+      li.hidden = !inFilter(DATA[+li.dataset.i], k);
     });
     var n = DATA.filter(function (p) {
-      return k === 'all' || p.kind === k;
+      return inFilter(p, k);
     }).length;
     status.textContent =
       k === 'all'
         ? 'Showing all ' + n + '.'
         : // The button's own word, without its count: "Weddings 12" says "Showing 12 weddings."
           'Showing ' + n + ' ' + b.firstChild.textContent.trim().toLowerCase() + '.';
+  }
+  // Lay the table again for the filter and order in force: the old prints scatter, the new are dealt.
+  function relay() {
     var onTable = sec.dataset.view === 'table' && live.size > 0;
+    stopTour();
     scatter();
     mid = null;
+    measure();
     layout();
     // Centre the first print of the new set.
     var first = cols[0] && cols[0].items[0];
@@ -826,6 +878,10 @@ function start(sec) {
     paint();
     deal(onTable && !reduce ? 180 : 0);
     wake();
+  }
+  function setKind(k, e, b) {
+    mark(k, e, b);
+    relay();
   }
   // Put the camera so the print at (x, y) with height h, in a column of speed sp, is in the middle.
   function centreOn(x, y, h, sp) {
@@ -838,6 +894,7 @@ function start(sec) {
     });
   });
   function setView(v, e, b) {
+    stopTour();
     sec.dataset.view = v;
     [].forEach.call(bar.querySelectorAll('[data-v]'), function (x) {
       x.setAttribute('aria-pressed', String(x.dataset.v === v));
@@ -856,6 +913,84 @@ function start(sec) {
   [].forEach.call(bar.querySelectorAll('[data-v]'), function (b) {
     b.addEventListener('click', function (e) {
       setView(b.dataset.v, e, b);
+    });
+  });
+
+  /* ---- Colour order ---------------------------------------------------------------------- */
+  var colourBtn = sec.querySelector('[data-colour]');
+  if (colourBtn)
+    colourBtn.addEventListener('click', function () {
+      byColour = !byColour;
+      colourBtn.setAttribute('aria-pressed', String(byColour));
+      if (nowEl)
+        nowEl.textContent = byColour
+          ? 'The table is in colour order.'
+          : 'The table is dealt again.';
+      relay();
+    });
+
+  /* ---- The tour: glide from select to select ------------------------------------------- */
+  var tour = null, // { stops, n, tx, ty, dwell }
+    tourBtn = sec.querySelector('[data-tour]');
+  function tourLeg() {
+    var p = tour.stops[tour.n],
+      spot = locate(p);
+    if (!spot) return stopTour();
+    tour.tx = spot.x + W / 2 - stage.clientWidth / 2;
+    tour.ty = (spot.y + spot.h / 2 - stage.clientHeight / 2) / spot.sp;
+    tour.dwell = 0;
+    if (nowEl) nowEl.textContent = 'On the tour: ' + p.title + '. ' + p.alt + '.';
+  }
+  function startTour() {
+    // The selects on the table, or about eight prints spread through it when it has few selects.
+    var stops = list.filter(function (p) {
+      return p.select;
+    });
+    if (stops.length < 3) {
+      var gap = Math.max(1, Math.floor(list.length / 8));
+      stops = list.filter(function (p, i) {
+        return i % gap === 0;
+      });
+    }
+    if (!stops.length) return;
+    if (sec.dataset.view !== 'table') setView('table');
+    tour = { stops: stops, n: 0, tx: cx, ty: cy, dwell: 0 };
+    vx = vy = 0;
+    world.classList.add('is-touring');
+    if (tourBtn) {
+      tourBtn.setAttribute('aria-pressed', 'true');
+      tourBtn.setAttribute('aria-label', 'Stop the tour');
+      tourBtn.textContent = 'Stop';
+    }
+    tourLeg();
+    wake();
+  }
+  function stopTour() {
+    if (!tour) return;
+    tour = null;
+    world.classList.remove('is-touring');
+    if (tourBtn) {
+      tourBtn.setAttribute('aria-pressed', 'false');
+      tourBtn.setAttribute('aria-label', 'Play a tour of the table');
+      tourBtn.textContent = 'Tour';
+    }
+  }
+  if (tourBtn)
+    tourBtn.addEventListener('click', function () {
+      if (tour) stopTour();
+      else startTour();
+    });
+
+  /* ---- "What I shoot": a row's button sets the filter and brings the table up ---------- */
+  [].forEach.call(doc.querySelectorAll('[data-go]'), function (a) {
+    a.addEventListener('click', function (e) {
+      var b = bar.querySelector('[data-f="' + a.dataset.go + '"]');
+      if (!b) return; // no such filter: let the link jump to the table as it would without script
+      e.preventDefault();
+      if (sec.dataset.view !== 'table') setView('table');
+      setKind(a.dataset.go, null, b);
+      stage.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      world.focus({ preventScroll: true });
     });
   });
 
@@ -884,9 +1019,73 @@ function start(sec) {
   var media = dlg.querySelector('[data-media]'),
     at = 0,
     returnTo = null;
+  var setBox = dlg.querySelector('[data-set]'),
+    setName = dlg.querySelector('[data-set-name]'),
+    setStrip = dlg.querySelector('[data-set-strip]'),
+    studyWrap = dlg.querySelector('[data-study-wrap]'),
+    studyLink = dlg.querySelector('[data-study]'),
+    copyBtn = dlg.querySelector('[data-copy]'),
+    bookTpl = sec.querySelector('template[data-booking]'),
+    bookEvery = bookTpl ? +bookTpl.dataset.every || 6 : 0,
+    steps = 0, // steps taken since the view opened, for the booking card
+    onCard = false; // the booking card is up in place of a print
+  // The print's own address: ?print=<slug>, written without adding to the history.
+  function address(slug) {
+    try {
+      var u = new URL(location.href);
+      if (slug) u.searchParams.set('print', slug);
+      else u.searchParams.delete('print');
+      history.replaceState(history.state, '', u);
+    } catch (e) {
+      /* a sandboxed frame may refuse; the view still works */
+    }
+  }
+  // Show print i in the open view, from the set strip: no slide, the table follows.
+  function show(i) {
+    onCard = false;
+    fill(i);
+    placeDev();
+    follow(DATA[i]);
+  }
   function fill(i) {
     var p = DATA[i];
     at = i;
+    if (dlg.open) address(p.slug);
+    // The client's case study, when this site has one.
+    if (studyWrap) {
+      studyWrap.hidden = !p.study;
+      if (p.study) {
+        studyLink.href = p.study;
+        studyLink.textContent = 'See the website I built for ' + p.client;
+      }
+    }
+    // The rest of the shoot, as a strip of small frames.
+    if (setBox) {
+      setBox.hidden = !p.set;
+      setStrip.innerHTML = '';
+      if (p.set) {
+        var mates = DATA.filter(function (q) {
+          return q.set === p.set;
+        });
+        setName.textContent = p.setName + ' · ' + mates.length + ' frames';
+        mates.forEach(function (q) {
+          var b = doc.createElement('button');
+          b.type = 'button';
+          b.setAttribute('aria-label', q.title + (q.video ? ', a short film' : ''));
+          if (q === p) b.setAttribute('aria-current', 'true');
+          var im = doc.createElement('img');
+          im.src = q.small;
+          im.alt = '';
+          im.loading = 'lazy';
+          im.decoding = 'async';
+          b.appendChild(im);
+          b.addEventListener('click', function () {
+            show(q.i);
+          });
+          setStrip.appendChild(b);
+        });
+      }
+    }
     media.innerHTML = '';
     if (p.video) {
       var v = doc.createElement('video');
@@ -943,8 +1142,8 @@ function start(sec) {
     else img.addEventListener('load', go, { once: true });
   }
   // Bring the table, under the full view, to where this print lies nearest to where it is now.
-  function follow(p) {
-    if (sec.dataset.view !== 'table') return;
+  // Where print p lies on the table, nearest to the middle of what is showing now.
+  function locate(p) {
     var sw = stage.clientWidth,
       sh = stage.clientHeight,
       best = null,
@@ -963,18 +1162,31 @@ function start(sec) {
         }
       });
     });
+    return best;
+  }
+  function follow(p) {
+    if (sec.dataset.view !== 'table') return;
+    var best = locate(p);
     if (!best) return;
     centreOn(best.x, best.y, best.h, best.sp);
     vx = vy = 0;
     paint();
   }
-  function step(d) {
-    var pos = list.indexOf(DATA[at]);
-    if (pos < 0) pos = 0;
-    var next = list[mod(pos + d, list.length)];
-    fill(next.i);
-    placeDev();
-    follow(next);
+  // The booking card: after every few steps, one card with the price and the way to book.
+  function card() {
+    onCard = true;
+    media.innerHTML = '';
+    media.appendChild(bookTpl.content.cloneNode(true));
+    dlg.querySelector('[data-line]').textContent = 'Booking';
+    dlg.querySelector('[data-title]').textContent = 'Want photos like these?';
+    dlg.querySelector('[data-alt]').textContent =
+      'I photograph services, events, portraits and weddings across Cincinnati.';
+    dlg.querySelector('[data-place]').textContent = '';
+    dlg.querySelector('[data-count]').textContent = '';
+    if (setBox) setBox.hidden = true;
+    if (studyWrap) studyWrap.hidden = true;
+  }
+  function slide(d) {
     if (!reduce)
       media.animate(
         [
@@ -984,10 +1196,31 @@ function start(sec) {
         { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' },
       );
   }
+  function step(d) {
+    if (!onCard && bookEvery && ++steps % bookEvery === 0) {
+      card();
+      slide(d);
+      return;
+    }
+    onCard = false;
+    var pos = list.indexOf(DATA[at]);
+    if (pos < 0) pos = 0;
+    var next = list[mod(pos + d, list.length)];
+    fill(next.i);
+    placeDev();
+    follow(next);
+    slide(d);
+  }
   function openAt(i, from) {
-    returnTo = sec.dataset.view === 'grid' ? from : world;
+    stopTour();
+    // Focus goes back to where it came from: the table for one of its prints, else the link itself.
+    returnTo = from && !from.classList.contains('pt-p') ? from : world;
+    steps = 0;
+    onCard = false;
     fill(i);
     dlg.showModal();
+    address(DATA[i].slug);
+    playReels();
     placeDev();
     lastTouch = performance.now();
     // Grow out of the print it came from, on the house spring.
@@ -1055,19 +1288,89 @@ function start(sec) {
   dlg.addEventListener('click', function (e) {
     if (e.target === dlg) dlg.close();
   });
+  if (copyBtn)
+    copyBtn.addEventListener('click', function () {
+      var done = function (words) {
+        copyBtn.textContent = words;
+        setTimeout(function () {
+          copyBtn.textContent = 'Copy link';
+        }, 2200);
+      };
+      // The clipboard can refuse (an old browser, a frame); the address is in the bar either way.
+      try {
+        navigator.clipboard.writeText(location.href).then(
+          function () {
+            done('Link copied');
+          },
+          function () {
+            done('Copy it from the address bar');
+          },
+        );
+      } catch (e) {
+        done('Copy it from the address bar');
+      }
+    });
   dlg.addEventListener('close', function () {
     media.innerHTML = '';
+    address(null);
+    playReels();
     if (returnTo && returnTo.isConnected) returnTo.focus({ preventScroll: true });
     lastTouch = performance.now();
     wake();
   });
-  // The grid's links open the same view.
-  grid.addEventListener('click', function (e) {
+  // Any link to a print opens the same view: the grid's, the hero frame, a film in the strip.
+  doc.addEventListener('click', function (e) {
     var a = e.target.closest('[data-print]');
     if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
     e.preventDefault();
     openAt(+a.dataset.print, a);
   });
+
+  /* ---- The film strip: a film plays while it is on screen, two at most --------------- */
+  var reels = [].slice.call(doc.querySelectorAll('[data-reel]')),
+    reelsOn = new Set();
+  function playReels() {
+    if (reduce || saveData) return;
+    var n = 0;
+    reels.forEach(function (a) {
+      var on = reelsOn.has(a) && n < 2 && !dlg.open && !doc.hidden;
+      if (on) n++;
+      var v = a.querySelector('video');
+      if (on && !v) {
+        v = doc.createElement('video');
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.preload = 'auto';
+        v.src = a.dataset.reel;
+        a.insertBefore(v, a.firstChild);
+      }
+      if (v) {
+        if (on && v.paused) {
+          var pr = v.play();
+          if (pr && pr.catch) pr.catch(function () {});
+        } else if (!on && !v.paused) v.pause();
+      }
+      a.classList.toggle('is-playing', on);
+    });
+  }
+  if (reels.length && !reduce && !saveData && 'IntersectionObserver' in window) {
+    var reelWatch = new IntersectionObserver(
+      function (es) {
+        es.forEach(function (en) {
+          if (en.isIntersecting) reelsOn.add(en.target);
+          else reelsOn.delete(en.target);
+        });
+        playReels();
+      },
+      { threshold: 0.6 },
+    );
+    reels.forEach(function (a) {
+      reelWatch.observe(a);
+    });
+    doc.addEventListener('visibilitychange', playReels);
+  }
 
   /* ---- Start ------------------------------------------------------------------------------ */
   // Only run while the table is on screen and the tab is showing.
@@ -1116,9 +1419,18 @@ function start(sec) {
 
   stage.hidden = false;
   sec.dataset.view = 'table';
+  // Open on the selects when there are some, else on everything. Either way the first print
+  // (the featured one) is in the middle.
+  var openOn = bar.querySelector('[data-f="selects"]');
+  if (
+    openOn &&
+    DATA.some(function (p) {
+      return p.select;
+    })
+  )
+    mark('selects', null, openOn);
   measure();
   layout();
-  // Open centred on the first print (the featured one).
   centreOn(0, cols[0].off + cols[0].items[0].y, cols[0].items[0].h, cols[0].sp);
   setPill(bar);
   // The pill measures its button, so measure again once the font is in and the page has settled.
@@ -1139,4 +1451,17 @@ function start(sec) {
   deal();
   lastTouch = performance.now() - 1500;
   wake();
+
+  // Arriving at a print's own address opens it, on the whole table if the selects do not hold it.
+  var asked = new URLSearchParams(location.search).get('print');
+  var askedFor =
+    asked &&
+    DATA.find(function (p) {
+      return p.slug === asked;
+    });
+  if (askedFor) {
+    if (!inFilter(askedFor, kind)) setKind('all', null, bar.querySelector('[data-f="all"]'));
+    follow(askedFor);
+    openAt(askedFor.i, null);
+  }
 }

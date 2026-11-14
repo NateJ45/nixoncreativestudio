@@ -118,6 +118,9 @@ own photo policy covers its own channels, not this site). To add one: optimize i
 `src/content/photos/<name>.json` (fields in `src/content.config.ts`); a film also needs a short
 silent mp4 in `public/photography/video/` with its poster as the image. Then run
 `npm run photo-colors` so the new photo has a colour for the table (the unit test fails without it).
+Give it a `set` if it comes from a shoot that already has one (or add the shoot to `SETS`), and
+`"select": true` only if it displaces one of the current selects. No years in the title, caption
+or alt text: the page shows no dates.
 `src/lib/photo-table.test.ts` checks the files and the alt text.
 
 ### 2b. Testimonials still missing (added 2026-10-31, testimonials package)
