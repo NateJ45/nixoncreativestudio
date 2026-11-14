@@ -765,7 +765,7 @@ html:not(.js) .otc-turn {
   outline-offset: 2px;
 }
 
-/* The hand: four cards fanned along the map's foot, a little over its edge. */
+/* The hand: one card a state, fanned along the map's foot, a little over its edge. */
 .sc-hand {
   position: relative;
   display: flex;
@@ -780,7 +780,6 @@ html:not(.js) .otc-turn {
   position: relative;
   flex: 0 1 17.5rem;
   min-width: 0;
-  aspect-ratio: 5 / 7;
   margin-inline: -0.7%;
   container-type: inline-size;
   transform-origin: 50% 92%;
@@ -801,13 +800,16 @@ html:not(.js) .otc-turn {
   --pipx: 6.5cqw;
   --pipy: 5.5cqw;
   --pips: 9.5cqw;
-  position: absolute;
-  inset: 0;
+  /* A 5:7 card at least, taller when a state's names need it; the hand's row stretches every
+     card to the tallest, so the fan stays even. */
+  position: relative;
+  height: 100%;
+  min-height: 140cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 9cqw;
+  padding: 16cqw 9cqw;
   border-radius: var(--cardr);
   background: var(--card);
   color: var(--ink);
@@ -848,7 +850,8 @@ html:not(.js) .otc-turn {
   padding: 0;
   list-style: none;
 }
-.sc-names a {
+.sc-names a,
+.sc-plain {
   display: inline-block;
   padding-block: 0.15rem;
   color: inherit;
@@ -862,6 +865,10 @@ html:not(.js) .otc-turn {
 }
 .sc-names a:hover {
   text-decoration-color: currentColor;
+}
+/* A photography client with no case study: the same name, no link, so no underline. */
+.sc-plain {
+  text-decoration: none;
 }
 .sc-names a:focus-visible {
   outline: 2px solid currentColor;
@@ -1010,6 +1017,7 @@ html:not(.js) .otc-turn {
     --pipy: 1.05rem;
     --pips: 1.25rem;
     position: relative;
+    min-height: 0;
     align-items: flex-start;
     padding: 1.05rem 1.25rem 1.2rem 4.25rem;
     text-align: left;
@@ -1024,7 +1032,8 @@ html:not(.js) .otc-turn {
   .sc-names {
     gap: 0.35rem;
   }
-  .sc-names a {
+  .sc-names a,
+  .sc-plain {
     font-size: 1.125rem;
   }
   .sc-kind {

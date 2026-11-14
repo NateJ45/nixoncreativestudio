@@ -30,7 +30,7 @@ const d3 = await import(pathToFileURL(req.resolve('d3-geo')).href);
 // One dot step in albers units. Smaller means more dots and a heavier page.
 const S = 10.5;
 const SKIP = new Set(['02', '15']); // Alaska, Hawaii
-const OUTLINED = ['39', '18', '37', '45']; // Ohio, Indiana, North Carolina, South Carolina
+const OUTLINED = ['39', '18', '34', '51', '37', '45']; // OH, IN, NJ, VA, NC, SC
 const CINCINNATI = [-84.512, 39.103];
 
 const states = feature(topo, topo.objects.states).features.filter((f) => !SKIP.has(f.id));

@@ -11,17 +11,23 @@ const running = () =>
   }).length;
 
 test.describe('About: the client map', () => {
-  test('deals a card per state, each client a link to its study, with the map hidden from readers', async ({
+  test('deals a card per state, each studied client a link to its study, with the map hidden from readers', async ({
     page,
   }) => {
     await page.goto('/about/');
     const rows = page.locator('.sc');
-    await expect(rows).toHaveCount(4);
+    await expect(rows).toHaveCount(6);
     await expect(rows.first().locator('.sc-state')).toHaveText('Ohio, home');
     const links = page.locator('.sc-names a');
     await expect(links).toHaveCount(8);
     for (const href of await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))))
       expect(href).toMatch(/^\/work\/[a-z0-9-]+\/$/);
+    // Photography clients with no study are plain names, tagged, with no link.
+    const plain = page.locator('.sc-names .sc-plain');
+    await expect(plain).toHaveCount(3);
+    await expect(plain.locator('xpath=following-sibling::span[1]')).toHaveText(
+      Array(3).fill('Photography'),
+    );
     await expect(page.locator('.cm-svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
