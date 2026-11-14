@@ -37,3 +37,7 @@ test('focalLabel prints a zoom as a range and a prime as one number', () => {
   assert.equal(focalLabel([70, 200]), '70–200');
   assert.equal(focalLabel([35, 35]), '35');
 });
+
+test('the second body is named, so the camera tile can say a shoot has a backup', () => {
+  assert.ok(CAMERA.second.name && CAMERA.second.maker, 'second body');
+});

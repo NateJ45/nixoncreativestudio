@@ -38,6 +38,9 @@ export const CAMERA = {
   ],
   /** The film that plays behind it. */
   film: 'film-music-glass',
+  // The second body (Nathan, 2026-11-14), so a shoot never rests on one camera. Many of the
+  // older photos on the page were shot on it (their EXIF says so).
+  second: { maker: 'Canon', name: 'EOS 6D Mark II', line: 'Full frame, 26.2 MP' },
 };
 
 export const LENSES: KitLens[] = [
