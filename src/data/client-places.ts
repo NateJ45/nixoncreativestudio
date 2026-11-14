@@ -35,7 +35,7 @@ export const PLACES: Place[] = [
     abbr: 'OH',
     fips: 39,
     home: true,
-    clients: ['stone-steps-50k', 'presbyterian-academy'],
+    clients: ['stone-steps-50k', 'presbyterian-academy', 'west-chester-preschool'],
   },
   { state: 'Indiana', abbr: 'IN', fips: 18, clients: ['first-baptist-muncie', 'reid-design'] },
   {

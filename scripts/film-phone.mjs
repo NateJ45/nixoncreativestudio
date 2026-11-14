@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /* Film a client site's phone footage: public/assets/{slug}-m.mp4, the clip a phone window plays.
+   With --desk it films the desktop clip instead: public/assets/{slug}.mp4, 1120 by 700, from a
+   1440 by 900 window (the desk window on /work and the home deck).
 
      node scripts/film-phone.mjs <slug> <url> --to "Text near the lowest point"
      node scripts/film-phone.mjs <slug> <url> --depth 2400
@@ -13,6 +15,7 @@
    --depth  or give the lowest scroll position in CSS pixels
    --out    write somewhere other than public/assets (for a look before replacing a clip)
    --hide   a CSS selector to hide while filming (a chat bubble, a cookie bar)
+   --desk   film the desktop clip ({slug}.mp4) instead of the phone one
    --click  a CSS selector to click once before filming (the close button of a bar a visitor would
             dismiss, so the page lays itself out as it does after that)
 
@@ -37,6 +40,8 @@ const depthArg = flag('depth');
 const outDir = flag('out');
 const hide = flag('hide');
 const click = flag('click');
+const desk = args.includes('--desk');
+if (desk) args.splice(args.indexOf('--desk'), 1);
 const [slug, url] = args;
 if (!slug || !url || (!to && !depthArg)) {
   console.error('usage: node scripts/film-phone.mjs <slug> <url> (--to "text" | --depth px)');
@@ -46,18 +51,18 @@ if (!slug || !url || (!to && !depthArg)) {
 const FPS = 60;
 const SECONDS = 8;
 const FRAMES = FPS * SECONDS;
-const VIEW = { width: 390, height: 760 };
-const SIZE = { width: 584, height: 1138 };
+const VIEW = desk ? { width: 1440, height: 900 } : { width: 390, height: 760 };
+const SIZE = desk ? { width: 1120, height: 700 } : { width: 584, height: 1138 };
 /* Long enough for a 0.3s fade to finish, so a fixed button is either there or not in a frame. */
 const SETTLE_MS = 380;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const out = join(outDir ?? join(root, 'public', 'assets'), `${slug}-m.mp4`);
+const out = join(outDir ?? join(root, 'public', 'assets'), desk ? `${slug}.mp4` : `${slug}-m.mp4`);
 mkdirSync(dirname(out), { recursive: true });
 const ffmpeg = process.env.FFMPEG || 'ffmpeg';
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: VIEW, deviceScaleFactor: 2 });
+const page = await browser.newPage({ viewport: VIEW, deviceScaleFactor: desk ? 1 : 2 });
 await page.goto(url, { waitUntil: 'networkidle' });
 if (hide) await page.addStyleTag({ content: `${hide}{display:none!important}` });
 

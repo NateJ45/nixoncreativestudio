@@ -34,17 +34,17 @@ test.describe('Without JavaScript', () => {
       await expect(end.locator('h2')).toHaveCount(1);
       await expect(end.locator('a[href^="mailto:"]')).toHaveCount(1);
       await expect(end.locator('a[href^="sms:"]')).toHaveCount(1);
-      await expect(end.locator('.gc img')).toHaveCount(8);
+      await expect(end.locator('.gc img')).toHaveCount(9);
       await expect(end.locator('a[data-nine]')).toHaveAttribute('href', '/contact/');
       await expect(end.locator('.end-index a[href="/privacy/"]')).toHaveCount(1);
-      await expect(end.locator('.end-work a[data-pull]')).toHaveCount(8);
+      await expect(end.locator('.end-work a[data-pull]')).toHaveCount(9);
     });
   }
 
   test('/: the phones, ledger, quote and prices are in the markup', async ({ page }) => {
     await page.goto('/');
     const tiles = page.locator('[data-grid] a.tile');
-    await expect(tiles).toHaveCount(8);
+    await expect(tiles).toHaveCount(9);
     await expect(tiles.first()).toHaveAttribute('href', '/work/stone-steps-50k/');
     await expect(page.locator('[data-ledger] li').first()).toHaveText('Since 2020');
     // Every sector word on the home ledger is a link to its page, so none looks like the main one.
