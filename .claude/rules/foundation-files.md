@@ -21,7 +21,7 @@ Loads when source, scripts, public assets or config are touched.
 - Copy strings and `href` values in component files.
 - Footage, captures and study images in `public/assets/` and `public/assets/study/` (add the real size to `src/data/study-images.json` for any image under `study/`).
 - Page-specific CSS in `src/styles/pages/*.css`, when the change is that page's own.
-- Brand text and colors in `scripts/generate-og-default.mjs` (re-run `npm run og` after editing).
+- Share-card titles and pictures in the `PAGES` and `POST_PHOTO` lists of `scripts/generate-og.mjs` (re-run `npm run og` after editing).
 
 ## Foundation, edit with care (route through a planned Claude session)
 
@@ -32,7 +32,7 @@ Loads when source, scripts, public assets or config are touched.
 - Site chrome and shared pieces: `TopLine`, `Dock`, `Closing`, `ClientSheet`, `Tile`, `QuoteBand`, `PriceHand`, `DealtPrices`, `PageHead`, `ComingSoon`, `ComingSoonGate`, `StructuredData`, `Analytics` and `src/components/analytics/` (the conditional inline scripts), and `src/lib/clients.ts`, `words.ts`, `window-chrome.ts` and `study-markup.ts`.
 - `src/pages/contact.astro` with `src/scripts/contact.js`: the production inquiry pipeline (Web3Forms). Copy is safe to edit; the form structure, field names and wiring are not.
 - `src/lib/contrast.ts` (PORTABLE, canonical here) and the other PORTABLE files named in `PORTS.md`.
-- `scripts/generate-og.mjs`, `generate-og-default.mjs`, `generate-icons.mjs`, `finish-share-cards.mjs`, `write-csp.mjs`, `free-dist.mjs`, `with-workerd.mjs`, `sync-check.mjs`.
+- `scripts/generate-og.mjs`, `generate-icons.mjs`, `finish-share-cards.mjs`, `write-csp.mjs`, `free-dist.mjs`, `with-workerd.mjs`, `sync-check.mjs`.
 - `astro.config.mjs`, `package.json`, `tsconfig.json`, `eslint.config.js`, `.prettierrc`, `.prettierignore`, `playwright.config.ts`, `playwright.visual.config.ts`, `lighthouserc.json`, `wrangler.jsonc`, `.github/workflows/ci.yml` and `lighthouse.yml`.
 - `public/_headers` (security and cache headers), `public/_redirects` (real 301s), `public/robots.txt`.
 - `public/og-default.png`, the generated `public/og/*.png`, and `public/favicon.svg` with the icon set it generates (`npm run icons`) and `public/site.webmanifest`.
