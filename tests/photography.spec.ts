@@ -127,6 +127,104 @@ test.describe('with JavaScript', () => {
   });
 });
 
+test.describe('around the table', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+  });
+
+  test('the page opens on the selects, and All brings everything back', async ({ page }) => {
+    await page.goto('/photography/');
+    const selects = page.locator('button[data-f="selects"]');
+    await expect(selects).toHaveAttribute('aria-pressed', 'true');
+    const n = Number(await selects.locator('.n').textContent());
+    await expect(page.locator('[data-status]')).toHaveText(`Showing ${n} selects.`);
+    await page.locator('button[data-f="all"]').click();
+    await expect(page.locator('[data-status]')).toContainText('Showing all');
+  });
+
+  test('Films shows only the films', async ({ page }) => {
+    await page.goto('/photography/');
+    const films = page.locator('button[data-f="films"]');
+    const n = Number(await films.locator('.n').textContent());
+    await films.click();
+    await page.locator('button[data-v="grid"]').click();
+    await expect(page.locator('[data-grid] > li:visible')).toHaveCount(n);
+    await expect(page.locator('[data-grid] > li:visible .pt-film')).toHaveCount(n);
+  });
+
+  test('a print has its own address: it opens there, and closing clears it', async ({ page }) => {
+    await page.goto('/photography/?print=tm-journal');
+    const dlg = page.locator('dialog[data-open]');
+    await expect(dlg).toBeVisible();
+    await expect(dlg.locator('[data-title]')).not.toBeEmpty();
+    expect(new URL(page.url()).searchParams.get('print')).toBe('tm-journal');
+    // It was shot for a client with a case study here, and it is one frame of a set.
+    await expect(dlg.locator('[data-study]')).toHaveAttribute('href', '/work/theology-matters/');
+    await expect(dlg.locator('[data-set-name]')).toContainText('Theology Matters');
+    expect(await dlg.locator('[data-set-strip] button').count()).toBeGreaterThan(2);
+    // The strip steps to another frame of the set, and the address follows.
+    await dlg.locator('[data-set-strip] button:not([aria-current])').first().click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('print')).not.toBe('tm-journal');
+    await page.keyboard.press('Escape');
+    await expect(dlg).toBeHidden();
+    // The dialog's close event lands a moment after it hides.
+    await expect.poll(() => new URL(page.url()).searchParams.get('print')).toBeNull();
+  });
+
+  test('a booking card comes up after a few steps, and Next passes it', async ({ page }) => {
+    await page.goto('/photography/');
+    await page.locator('[data-world]').focus();
+    await page.keyboard.press('Enter');
+    const dlg = page.locator('dialog[data-open]');
+    const every = Number(await page.locator('template[data-booking]').getAttribute('data-every'));
+    const next = dlg.getByRole('button', { name: 'Next' });
+    for (let i = 0; i < every; i++) await next.click();
+    await expect(dlg.locator('.pt-book a')).toHaveAttribute('href', /contact/);
+    await next.click();
+    await expect(dlg.locator('.pt-book')).toHaveCount(0);
+    await expect(dlg.locator('img, video')).toHaveCount(1);
+  });
+
+  test('a "What I shoot" row sets its filter and brings the table up', async ({ page }) => {
+    await page.goto('/photography/');
+    await page.locator('a[data-go="weddings"]').click();
+    await expect(page.locator('button[data-f="weddings"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-stage]')).toBeInViewport();
+  });
+
+  test('the tour starts, names its stop, and stops at a touch', async ({ page }) => {
+    await page.goto('/photography/');
+    const tour = page.locator('[data-tour]');
+    await tour.click();
+    await expect(tour).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-now]')).toContainText('On the tour:');
+    await page.locator('[data-world]').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(tour).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('Colour lays the table again in colour order, and back', async ({ page }) => {
+    await page.goto('/photography/');
+    const colour = page.locator('[data-colour]');
+    await colour.click();
+    await expect(colour).toHaveAttribute('aria-pressed', 'true');
+    expect(await page.locator('.pt-p').count()).toBeGreaterThan(8);
+    await colour.click();
+    await expect(colour).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('the hero frame and a film in the strip open the full view', async ({ page }) => {
+    await page.goto('/photography/');
+    const dlg = page.locator('dialog[data-open]');
+    await page.locator('a.pt-hero').click();
+    await expect(dlg).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('a.pt-hero')).toBeFocused();
+    await page.locator('a.pt-reel').first().click();
+    await expect(dlg.locator('video')).toHaveCount(1);
+  });
+});
+
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 
