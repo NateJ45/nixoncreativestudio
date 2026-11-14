@@ -40,8 +40,8 @@
 
    Around the table (2026-11-13):
 
-   - Two filters cut across the kinds, Selects and Films (inFilter). The page opens on the selects,
-     and a small set like that is dealt on wider prints.
+   - Films cuts across the kinds (inFilter). The page opens on everything; the Selects filter went
+     on 2026-11-14, and the `select` flag now only marks the tour's stops.
    - "Colour" lays the table in hue order, column by column (byHue), so the wash runs round the
      wheel as you travel. "Tour" glides from select to select and stops at a touch.
    - Every print has an address, ?print=<slug>: opening one writes it, closing clears it, and
@@ -84,8 +84,6 @@ function start(sec) {
   function measure() {
     var vw = innerWidth;
     W = vw < 520 ? 150 : vw < 900 ? 210 : vw < 1500 ? 250 : 280;
-    // The selects are few and the best, so they are dealt larger.
-    if (kind === 'selects') W = Math.round(W * (vw < 520 ? 1.12 : 1.3));
     GAP = vw < 520 ? 16 : 26;
     MAT = parseFloat(getComputedStyle(stage).getPropertyValue('--mat')) * 16 || 8;
   }
@@ -144,11 +142,27 @@ function start(sec) {
       });
     // In colour order the columns are filled one after another, so the hue runs left to right.
     var per = Math.ceil(deck.length / C);
+    // Does column c, or a column beside it, already hold this print? The columns slide at their
+    // own speeds, so any two frames in neighbouring columns line up at some point: a copy has to
+    // keep at least one column between itself and the original, and the table wraps round.
+    function near(c, p) {
+      for (var d = -1; d <= 1; d++) {
+        var items = cols[mod(c + d, C)].items;
+        for (var q = 0; q < items.length; q++) if (items[q].p === p) return true;
+      }
+      return false;
+    }
     deck.forEach(function (p, n) {
-      // Otherwise shortest column first, so the columns come out near one height.
+      // Otherwise shortest column first, so the columns come out near one height, among the
+      // columns where this print has no copy close by (all of them, if none qualifies).
+      var open = byColour
+        ? []
+        : cols.filter(function (_, c) {
+            return !near(c, p);
+          });
       var col = byColour
         ? cols[Math.min(C - 1, Math.floor(n / per))]
-        : cols.reduce(function (a, b) {
+        : (open.length ? open : cols).reduce(function (a, b) {
             return b.H < a.H ? b : a;
           });
       var h = Math.round(((W - 2 * MAT) * p.h) / p.w + 2 * MAT);
@@ -1372,6 +1386,31 @@ function start(sec) {
     doc.addEventListener('visibilitychange', playReels);
   }
 
+  /* ---- The film strip's arrows: about a screen of films a press, greyed at either end ------- */
+  var reelRow = doc.querySelector('[data-reels]'),
+    reelSteps = doc.querySelector('[data-reel-steps]');
+  if (reelRow && reelSteps) {
+    var stepBtns = [].slice.call(reelSteps.querySelectorAll('[data-reel-step]'));
+    var stepState = function () {
+      var max = reelRow.scrollWidth - reelRow.clientWidth;
+      reelSteps.hidden = max < 8;
+      stepBtns[0].disabled = reelRow.scrollLeft < 8;
+      stepBtns[1].disabled = reelRow.scrollLeft > max - 8;
+    };
+    stepBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        reelRow.scrollBy({
+          left: +b.dataset.reelStep * reelRow.clientWidth * 0.8,
+          behavior: reduce ? 'auto' : 'smooth',
+        });
+      });
+    });
+    reelRow.addEventListener('scroll', stepState, { passive: true });
+    addEventListener('resize', stepState);
+    addEventListener('load', stepState);
+    stepState();
+  }
+
   /* ---- Start ------------------------------------------------------------------------------ */
   // Only run while the table is on screen and the tab is showing.
   new IntersectionObserver(function (es) {
@@ -1419,16 +1458,8 @@ function start(sec) {
 
   stage.hidden = false;
   sec.dataset.view = 'table';
-  // Open on the selects when there are some, else on everything. Either way the first print
-  // (the featured one) is in the middle.
-  var openOn = bar.querySelector('[data-f="selects"]');
-  if (
-    openOn &&
-    DATA.some(function (p) {
-      return p.select;
-    })
-  )
-    mark('selects', null, openOn);
+  // Open on everything (2026-11-14: the Selects filter went), with the first print (the
+  // featured one) in the middle.
   measure();
   layout();
   centreOn(0, cols[0].off + cols[0].items[0].y, cols[0].items[0].h, cols[0].sp);
@@ -1452,7 +1483,7 @@ function start(sec) {
   lastTouch = performance.now() - 1500;
   wake();
 
-  // Arriving at a print's own address opens it, on the whole table if the selects do not hold it.
+  // Arriving at a print's own address opens it, on the whole table if the filter does not hold it.
   var asked = new URLSearchParams(location.search).get('print');
   var askedFor =
     asked &&
