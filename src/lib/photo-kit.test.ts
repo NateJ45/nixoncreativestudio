@@ -1,7 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { CAMERA, GIMBAL, LENSES, focalLabel, fovDeg, yearsShooting } from '../data/photo-kit.ts';
+import {
+  CAMERA,
+  GIMBAL,
+  LENSES,
+  LIGHTING,
+  focalLabel,
+  fovDeg,
+  yearsShooting,
+} from '../data/photo-kit.ts';
 
 const photo = (slug: string) => new URL(`../content/photos/${slug}.json`, import.meta.url);
 
@@ -45,4 +53,9 @@ test('the second body is named, so the camera tile can say a shoot has a backup'
 test('years shooting is a count from 2017, so the page never prints the year', () => {
   assert.equal(yearsShooting(new Date(2026, 10, 14)), 9);
   assert.equal(yearsShooting(new Date(2027, 0, 1)), 10);
+});
+
+test('the lighting lists its kit and draws real colours', () => {
+  assert.ok(LIGHTING.items.length >= 3);
+  for (const c of LIGHTING.gels) assert.match(c, /^#[0-9a-f]{6}$/i);
 });

@@ -115,6 +115,16 @@ export function yearsShooting(now = new Date()): number {
   return now.getFullYear() - SHOOTING_SINCE;
 }
 
+/** Off-camera lighting (Nathan, 2026-11-14). */
+export const LIGHTING = {
+  maker: 'Godox',
+  title: 'Off-camera flash',
+  line: 'For portraits, headshots and rooms where the light is not enough: flash off the camera, shaped and coloured.',
+  items: ['Godox AD200 flashes', 'Godox V1', 'Light stands and softboxes', 'Colour gels'],
+  /** The strip of gel colours the tile draws (decoration, not a claim about any shot). */
+  gels: ['#ff8a2a', '#ff3d7f', '#9b5cff', '#2f6bff', '#16c6b6'],
+};
+
 export const SOFTWARE = [
   { maker: 'Adobe', name: 'Lightroom Classic', line: 'Every photo picked, edited and graded' },
   { maker: 'Blackmagic', name: 'DaVinci Resolve', line: 'Every film cut and colour graded' },

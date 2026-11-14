@@ -72,6 +72,7 @@ import {
   fovDeg,
   focalLabel,
   yearsShooting,
+  LIGHTING,
 } from '../data/photo-kit';
 import reelPoster from '../assets/photography/reel-poster.jpg';
 
@@ -735,6 +736,23 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
             )}
           </li>
         ))}
+        <li class="kit-tile kit-light">
+          <div class="kit-gels" aria-hidden="true">
+            {LIGHTING.gels.map((c) => (
+              <span style={`--gel: ${c}`} />
+            ))}
+          </div>
+          <div class="kit-copy">
+            <p class="label">Lighting · {LIGHTING.maker}</p>
+            <h3>{LIGHTING.title}</h3>
+            <p>{LIGHTING.line}</p>
+          </div>
+          <ul class="kit-light-items">
+            {LIGHTING.items.map((s) => (
+              <li>{s}</li>
+            ))}
+          </ul>
+        </li>
       </ul>
     </div>
   </section>
