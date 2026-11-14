@@ -185,4 +185,104 @@ if (root) {
       { threshold: 0.2 },
     ).observe(root);
   }
+
+  /* The preview: a client's home page in their desktop window, raised above its card while a name
+     is pointed at (a mouse) or has keyboard focus, wide screens only (the fanned hand). It plays
+     their clip (ui.play stands down under reduced motion and Save-Data) and stays while the
+     pointer is on the card or on the window; leaving both, blurring, or Escape puts it away
+     (WCAG 1.4.13). A click on it
+     opens the case study, like the name. Nothing in it is fetched until it is first shown. */
+  var peek = root.querySelector('[data-peek]'),
+    wide = matchMedia('(min-width: 52.01rem)'),
+    figs = {},
+    cur = null,
+    hideT = 0;
+  if (peek) {
+    [].forEach.call(peek.querySelectorAll('.pk'), function (f) {
+      figs[f.getAttribute('data-for')] = f;
+      f.addEventListener('pointerenter', function () {
+        clearTimeout(hideT);
+      });
+      f.addEventListener('pointerleave', function () {
+        hideSoon();
+      });
+      f.addEventListener('click', function () {
+        location.href = f.getAttribute('data-href');
+      });
+    });
+    var hideNow = function () {
+      clearTimeout(hideT);
+      if (!cur) return;
+      ui.play(cur.querySelector('.tile'), false);
+      cur.hidden = true;
+      cur = null;
+    };
+    var hideSoon = function () {
+      clearTimeout(hideT);
+      hideT = setTimeout(hideNow, 160);
+    };
+    // Centred over the card the name sits on, its foot just above the card's top edge, and kept
+    // inside the section.
+    var place = function (f, link) {
+      var card = link.closest('.sc').getBoundingClientRect(),
+        base = root.getBoundingClientRect(),
+        half = f.offsetWidth / 2,
+        x = card.left + card.width / 2 - base.left;
+      x = Math.min(Math.max(x, half), base.width - half);
+      f.style.left = x + 'px';
+      f.style.bottom = base.bottom - card.top + 14 + 'px';
+    };
+    var show = function (link) {
+      var f = figs[link.getAttribute('data-slug')];
+      if (!f || !wide.matches) return;
+      clearTimeout(hideT);
+      if (cur === f) return;
+      hideNow();
+      cur = f;
+      var img = f.querySelector('img');
+      if (!img.getAttribute('src')) img.setAttribute('src', img.getAttribute('data-src'));
+      f.hidden = false;
+      place(f, link);
+      if (!reduce)
+        f.animate(
+          [
+            { transform: 'translateX(-50%) translateY(22px) rotate(-1.4deg) scale(0.95)' },
+            { transform: 'translateX(-50%)' },
+          ],
+          { duration: 560, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+        );
+      ui.play(f.querySelector('.tile'), true);
+    };
+    // A name raises its window; it goes when the pointer leaves the whole card (not just the name:
+    // pointing at a name lifts its card, which moves the name out from under a still pointer).
+    cards.forEach(function (c) {
+      c.addEventListener('pointerleave', function (e) {
+        if (e.pointerType === 'mouse') hideSoon();
+      });
+    });
+    // Where the pointer last really was. Browsers send a move at the same spot when the page shifts
+    // under a still pointer; the names' handler (which runs first) ignores those.
+    var lastX = -1,
+      lastY = -1;
+    document.addEventListener('pointermove', function (e) {
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+    [].forEach.call(root.querySelectorAll('.sc-names a[data-slug]'), function (a) {
+      // A real move over a name, not pointerenter: the lifting card slides the next name under a
+      // still pointer, and that must not swap the window.
+      a.addEventListener('pointermove', function (e) {
+        if (e.pointerType !== 'mouse' || (e.clientX === lastX && e.clientY === lastY)) return;
+        show(a);
+      });
+      a.addEventListener('focus', function () {
+        show(a);
+      });
+      a.addEventListener('blur', hideSoon);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') hideNow();
+    });
+    wide.addEventListener('change', hideNow);
+  }
 }

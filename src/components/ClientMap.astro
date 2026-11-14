@@ -10,12 +10,15 @@
    Motion lives in src/scripts/client-map.js and about.css: the map glides from
    the whole country to the East as the hand is dealt, a ripple runs out from
    Cincinnati, and the walk sends a point of light along an arc and lifts that
-   state's card as it lands. It only runs on screen, has its own Pause button
+   state's card as it lands. Pointing at or focusing a name raises that client's
+   home page in their desktop window above the card (the preview stage at the
+   foot of this file); a phone shows small stills in each card instead. It only runs on screen, has its own Pause button
    (WCAG 2.2.2), and stands down under reduced motion or with no script, where
    the map rests on the East and the hand is already fanned. */
 import geo from '../data/us-dots.json';
 import { PLACES } from '../data/client-places';
 import { getClients } from '../lib/clients';
+import { LOCK } from '../lib/window-chrome';
 
 const all = await getClients();
 const bySlug = new Map(all.map((c) => [c.slug, c]));
@@ -200,15 +203,62 @@ const first = places[0].fips;
               <ul class="sc-names">
                 {p.people.map((c) => (
                   <li>
-                    <a href={c.study}>{c.name}</a>
+                    <a href={c.study} data-slug={c.slug}>
+                      {c.name}
+                    </a>
                     <span class="sc-kind">{c.sector}</span>
                   </li>
                 ))}
               </ul>
+              <span class="sc-mini" aria-hidden="true">
+                {p.people.map((c) => (
+                  <span style={`--c:${c.accent}`}>
+                    <img
+                      src={c.still}
+                      srcset={c.stillSet}
+                      sizes="3.25rem"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      width="584"
+                      height="1138"
+                    />
+                  </span>
+                ))}
+              </span>
             </div>
           </li>
         );
       })}
     </ul>
+    {/* The preview stage (client-map.js): pointing at or focusing a name raises that client's home
+      page in their desktop window above its card, playing their clip. The names are the links, so
+      the stage is decoration; nothing in it is fetched until it is first shown. */}
+    <div class="cm-peek" data-peek aria-hidden="true">
+      {all
+        .filter((c) => places.some((p) => p.clients.includes(c.slug)))
+        .map((c) => (
+          <figure
+            class="pk"
+            data-for={c.slug}
+            data-href={c.study}
+            hidden
+            style={`--c:${c.accent};--p:${c.paper}`}
+          >
+            <span class="tile desk">
+              <span class="b-top">
+                <span class="url">
+                  <Fragment set:html={LOCK} />
+                  <span>{c.host}</span>
+                </span>
+              </span>
+              <span class="scr">
+                <img data-src={c.deskStill} alt="" decoding="async" width="1000" height="750" />
+                <video muted loop playsinline preload="none" data-src={c.desk} />
+              </span>
+            </span>
+          </figure>
+        ))}
+    </div>
   </div>
 </section>

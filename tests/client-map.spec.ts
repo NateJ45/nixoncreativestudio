@@ -77,6 +77,57 @@ test.describe('About: the client map', () => {
     await expect(map).toHaveAttribute('data-live', '');
   });
 
+  test('a name raises its client home page above the card, and Escape or leaving puts it away', async ({
+    page,
+  }) => {
+    await page.goto('/about/');
+    await page.locator('[data-cm]').scrollIntoViewIfNeeded();
+    // Let the hand be dealt first, so the cards hold still under the pointer.
+    await expect(page.locator('[data-cm]')).not.toHaveClass(/cm-stacked|cm-dealing/, {
+      timeout: 5000,
+    });
+    const pk = page.locator('.pk[data-for="theology-matters"]');
+    await expect(pk).toBeHidden();
+    // Nothing in the stage is fetched before it is shown.
+    expect(await pk.locator('img').getAttribute('src')).toBeNull();
+    const link = page.locator('.sc-names a[data-slug="theology-matters"]');
+    await link.hover();
+    await expect(pk).toBeVisible();
+    await expect(pk.locator('img')).toHaveAttribute('src', /theology-matters/);
+    // It stays up after the card lifts the name out from under a still pointer.
+    await page.waitForTimeout(1200);
+    await expect(pk).toBeVisible();
+    // And the name that slides under the still pointer does not take over.
+    await expect(page.locator('.pk:not([hidden])')).toHaveCount(1);
+    await expect(page.locator('.pk[data-for="first-presbyterian-orangeburg"]')).toBeHidden();
+    // It sits above the card it came from and never covers the name.
+    const [l, w] = await Promise.all([link.boundingBox(), pk.boundingBox()]);
+    expect(w!.y + w!.height).toBeLessThanOrEqual(l!.y);
+    // The pointer can move onto it and it stays.
+    await page.mouse.move(w!.x + w!.width / 2, w!.y + w!.height / 2, { steps: 4 });
+    await page.waitForTimeout(400);
+    await expect(pk).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(pk).toBeHidden();
+    // Keyboard focus shows it too; leaving puts it away.
+    await page.locator('.sc-names a[data-slug="reid-design"]').focus();
+    await expect(page.locator('.pk[data-for="reid-design"]')).toBeVisible();
+    await page.locator('.sc-names a[data-slug="reid-design"]').blur();
+    await expect(page.locator('.pk[data-for="reid-design"]')).toBeHidden();
+  });
+
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+    test('each card shows its clients home pages, and there is no hover preview', async ({
+      page,
+    }) => {
+      await page.goto('/about/');
+      await expect(page.locator('.sc-mini img')).toHaveCount(8);
+      await expect(page.locator('.sc-mini').first()).toBeVisible();
+      await expect(page.locator('.cm-peek')).toBeHidden();
+    });
+  });
+
   test.describe('under reduced motion', () => {
     test.use({ reducedMotion: 'reduce' });
     test('rests on the East with no Pause button and nothing running', async ({ page }) => {

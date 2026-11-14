@@ -1048,3 +1048,69 @@ html:not(.js) .otc-turn {
     bottom: 0.85rem;
   }
 }
+
+/* ---- The preview over the hand (client-map.js) -------------------------------------------------
+   One stage over the whole section; each client's desktop window waits hidden in it and rises,
+   centred over the card whose name you point at or focus, its foot just above the card. It is
+   the client's own window (their color, their address), so their color is allowed out here. Wide
+   screens only: a phone gets the small stills in each card instead. */
+.cm {
+  position: relative;
+}
+.cm-peek {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.pk {
+  position: absolute;
+  width: clamp(18rem, 30vw, 29rem);
+  margin: 0;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.pk .tile {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 34px 60px -24px rgba(0, 0, 0, 0.55);
+}
+/* A phone: each card shows small stills of its clients' home pages, each framed in the client's
+   color like a tiny window. Decoration; the names are the links. */
+.sc-mini {
+  display: none;
+}
+@media (max-width: 52rem) {
+  .cm-peek {
+    display: none;
+  }
+  .sc-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+  .sc-mini span {
+    display: block;
+    width: 3.25rem;
+    padding: 3px;
+    border-radius: 0.65rem;
+    background: var(--c);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+  }
+  .sc-mini img {
+    display: block;
+    width: 100%;
+    height: 4.75rem;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 0.45rem;
+  }
+}
+@media (forced-colors: active) {
+  .sc-mini span {
+    border: 1px solid CanvasText;
+  }
+}
