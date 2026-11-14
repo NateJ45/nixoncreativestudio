@@ -94,10 +94,10 @@ test('filtersFor lists only kinds in use, in KINDS order, with counts that add u
 
 test('printLine names a film as a film and leaves out what is missing', () => {
   assert.equal(
-    printLine({ category: 'worship', video: '/x.mp4', client: 'Crestview' }),
+    printLine({ category: 'church', video: '/x.mp4', client: 'Crestview' }),
     'Film · Crestview',
   );
-  assert.equal(printLine({ category: 'weddings' }), 'Weddings');
+  assert.equal(printLine({ category: 'people' }), 'People and places');
 });
 
 test('every print has a colour for the wash (run `npm run photo-colors` after adding a photo)', () => {
@@ -189,10 +189,10 @@ test('a client is only linked to a case study that exists', () => {
 });
 
 test('inFilter: selects and films cut across the kinds', () => {
-  const p = { kind: 'worship', select: true, video: '/x.mp4' };
+  const p = { kind: 'church', select: true, video: '/x.mp4' };
   assert.ok(inFilter(p, 'all') && inFilter(p, 'selects') && inFilter(p, 'films'));
-  assert.ok(inFilter(p, 'worship') && !inFilter(p, 'weddings'));
-  assert.ok(!inFilter({ kind: 'worship' }, 'selects') && !inFilter({ kind: 'worship' }, 'films'));
+  assert.ok(inFilter(p, 'church') && !inFilter(p, 'people'));
+  assert.ok(!inFilter({ kind: 'church' }, 'selects') && !inFilter({ kind: 'church' }, 'films'));
 });
 
 test('byHue runs round the colour wheel and puts the greys last', () => {

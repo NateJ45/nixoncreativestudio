@@ -11,27 +11,19 @@
    helpers for the wash. Unit tested in src/lib/photo-table.test.ts.
    ============================================================================ */
 
-/** The kinds of work, in the order their filters appear. */
-export const KINDS = [
-  'weddings',
-  'worship',
-  'community',
-  'events',
-  'portraits',
-  'landscapes',
-  'environments',
-] as const;
+/**
+ * The kinds of work, in the order their filters appear. Two on purpose
+ * (2026-11-14, Nathan): church and events (services, seasons, community days,
+ * conferences) and people and places (weddings, portraits, landscapes, rooms).
+ * Finer kinds split the table into filters of a dozen frames each.
+ */
+export const KINDS = ['church', 'people'] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** The filter's words for each kind. */
 export const KIND_LABEL: Record<Kind, string> = {
-  weddings: 'Weddings',
-  worship: 'Worship',
-  community: 'Community',
-  events: 'Events',
-  portraits: 'Portraits',
-  landscapes: 'Landscapes',
-  environments: 'Places',
+  church: 'Church and events',
+  people: 'People and places',
 };
 
 /* ---- Sets: frames from the same shoot ----------------------------------------- */

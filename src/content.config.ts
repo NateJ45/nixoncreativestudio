@@ -336,15 +336,9 @@ const photos = defineCollection({
 
       // Which kind of work it is. The light table's filters are built from
       // the categories in use, in this order (src/lib/photo-table.ts).
-      category: z.enum([
-        'weddings',
-        'worship',
-        'community',
-        'events',
-        'portraits',
-        'landscapes',
-        'environments',
-      ]),
+      // church: services, seasons, community days, conferences.
+      // people: weddings, portraits, landscapes and places.
+      category: z.enum(['church', 'people']),
 
       // Who it was for, when it was for a client or a congregation.
       // Example: 'Theology Matters'. Printed on the open print.
