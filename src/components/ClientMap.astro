@@ -123,7 +123,7 @@ const first = places[0].fips;
     <h2 id="mh">Based in Cincinnati, working anywhere</h2>
     <p>
       I meet clients in person around the region and work with everyone else by call, email and
-      text. These are the states the selected case studies call home.
+      text. These are the states my clients call home.
     </p>
   </div>
   <div class="cm" data-cm data-on={first}>
@@ -209,23 +209,31 @@ const first = places[0].fips;
                     <span class="sc-kind">{c.sector}</span>
                   </li>
                 ))}
-              </ul>
-              <span class="sc-mini" aria-hidden="true">
-                {p.people.map((c) => (
-                  <span style={`--c:${c.accent}`}>
-                    <img
-                      src={c.still}
-                      srcset={c.stillSet}
-                      sizes="3.25rem"
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      width="584"
-                      height="1138"
-                    />
-                  </span>
+                {(p.photo ?? []).map((name) => (
+                  <li>
+                    <span class="sc-plain">{name}</span>
+                    <span class="sc-kind">Photography</span>
+                  </li>
                 ))}
-              </span>
+              </ul>
+              {p.people.length > 0 && (
+                <span class="sc-mini" aria-hidden="true">
+                  {p.people.map((c) => (
+                    <span style={`--c:${c.accent}`}>
+                      <img
+                        src={c.still}
+                        srcset={c.stillSet}
+                        sizes="3.25rem"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        width="584"
+                        height="1138"
+                      />
+                    </span>
+                  ))}
+                </span>
+              )}
             </div>
           </li>
         );

@@ -8,6 +8,9 @@
    states listed in scripts/tools/us-dots.mjs (OUTLINED); add a state there and
    regenerate before adding it here. ClientMap.astro throws on an unknown slug.
 
+   `photo` lists photography clients with no case study: the card prints the
+   name with a "Photography" tag, as plain text with no link or preview.
+
    Ohio is the studio's home state, so its pin is Cincinnati itself.
    ============================================================================ */
 
@@ -22,6 +25,8 @@ export interface Place {
   home?: boolean;
   /** Case study slugs, in the order the row lists them. */
   clients: string[];
+  /** Photography clients with no case study, listed after the case studies. */
+  photo?: string[];
 }
 
 export const PLACES: Place[] = [
@@ -33,11 +38,26 @@ export const PLACES: Place[] = [
     clients: ['stone-steps-50k', 'presbyterian-academy'],
   },
   { state: 'Indiana', abbr: 'IN', fips: 18, clients: ['first-baptist-muncie', 'reid-design'] },
+  {
+    state: 'New Jersey',
+    abbr: 'NJ',
+    fips: 34,
+    clients: [],
+    photo: ['Princeton Theological Seminary'],
+  },
+  {
+    state: 'Virginia',
+    abbr: 'VA',
+    fips: 51,
+    clients: [],
+    photo: ['New Dublin Presbyterian Church'],
+  },
   { state: 'North Carolina', abbr: 'NC', fips: 37, clients: ['foundation-for-reformed-theology'] },
   {
     state: 'South Carolina',
     abbr: 'SC',
     fips: 45,
     clients: ['theology-matters', 'first-presbyterian-orangeburg', 'mas-monograms'],
+    photo: ['Providence Presbyterian Church'],
   },
 ];
