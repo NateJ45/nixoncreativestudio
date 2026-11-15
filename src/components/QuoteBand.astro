@@ -18,6 +18,8 @@
    a quote with no phrase set is simply the quote. */
 import { getEntry } from 'astro:content';
 import Tile from './Tile.astro';
+import ReviewCite from './ReviewCite.astro';
+import { markedQuote } from '../lib/highlight';
 import { getClient, getClients, type Client } from '../lib/clients';
 
 interface Props {
@@ -44,7 +46,15 @@ const {
   cycle = false,
 } = Astro.props;
 
-type Quote = { quote: string; name: string; title: string; context?: string; highlight?: string };
+type Quote = {
+  quote: string;
+  name: string;
+  title: string;
+  context?: string;
+  highlight?: string;
+  photo?: string;
+  source?: { platform: 'google'; url: string; rating: number };
+};
 type Slide = { t: Quote; client: Client; tile: boolean };
 
 let slides: Slide[];
@@ -58,6 +68,9 @@ if (cycle) {
     (entry?.data.testimonials ?? []).forEach((t, i) => slides.push({ t, client, tile: i === 0 }));
   }
   if (!slides.length) throw new Error('No quotes on file');
+  // Public reviews lead (added 2026-11-15): a stranger can check those on Google, so they do the
+  // most for trust. The rest keep deck order behind them.
+  slides = [...slides.filter((x) => x.t.source), ...slides.filter((x) => !x.t.source)];
 } else {
   const entry = await getEntry('case-studies', slug);
   const quotes = entry?.data.testimonials ?? [];
@@ -65,21 +78,8 @@ if (cycle) {
   if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
   slides = [{ t, client: await getClient(slug), tile: true }];
 }
-/* The quote as HTML: the same characters, with the key phrase (when one is set) inside a <mark>.
-   Built as one string so no white space can slip in around the mark. */
-const esc = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const marked = (t: Quote) => {
-  const at = t.highlight ? t.quote.indexOf(t.highlight) : -1;
-  if (!t.highlight || at === -1) return esc(t.quote);
-  return (
-    esc(t.quote.slice(0, at)) +
-    '<mark class="hl">' +
-    esc(t.highlight) +
-    '</mark>' +
-    esc(t.quote.slice(at + t.highlight.length))
-  );
-};
+/* The quote as HTML, the key phrase marked (src/lib/highlight.ts). */
+const marked = (t: Quote) => markedQuote(t.quote, t.highlight);
 const first = slides[0].client;
 const many = slides.length > 1;
 ---
@@ -124,11 +124,22 @@ const many = slides.length > 1;
           inert={i ? true : undefined}
         >
           <blockquote set:html={marked(s.t)} />
-          <p class="cite">
-            <b>{s.t.name}</b>
-            {s.t.title}
-            {s.t.context && <span class="ctx">{s.t.context}</span>}
-          </p>
+          {s.t.source ? (
+            <ReviewCite
+              name={s.t.name}
+              title={s.t.title}
+              photo={s.t.photo}
+              url={s.t.source.url}
+              rating={s.t.source.rating}
+              context={s.t.context}
+            />
+          ) : (
+            <p class="cite">
+              <b>{s.t.name}</b>
+              {s.t.title}
+              {s.t.context && <span class="ctx">{s.t.context}</span>}
+            </p>
+          )}
         </div>
       ))}
     </div>
