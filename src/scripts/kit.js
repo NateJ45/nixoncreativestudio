@@ -1267,22 +1267,25 @@ var lines = builds.map(function (el) {
   };
 });
 if (lines.length) {
-  var braf = 0,
-    blast = 0;
-  var bwake = function () {
-    if (!braf) {
-      blast = performance.now();
-      braf = requestAnimationFrame(bframe);
+  /* Its own names (l for line). These blocks sit in one module scope, where `var` is shared: until
+     2026-11-15 this loop reused the quote bands' braf, bwake and bframe, so on a page with both (About)
+     the bands' scroll handler ran this frame instead and the band's color never opened out. */
+  var lraf = 0,
+    llast = 0;
+  var lwake = function () {
+    if (!lraf) {
+      llast = performance.now();
+      lraf = requestAnimationFrame(lframe);
     }
   };
   /* Each word gets a window of the line's progress, half of it wide, spaced in reading order. */
   var WIN = 0.5;
-  var bframe = function (now) {
-    braf = 0;
-    var dt = Math.min(0.033, (now - blast) / 1000 || 0.016),
+  var lframe = function (now) {
+    lraf = 0;
+    var dt = Math.min(0.033, (now - llast) / 1000 || 0.016),
       H = innerHeight,
       live = false;
-    blast = now;
+    llast = now;
     lines.forEach(function (l) {
       var top = l.el.getBoundingClientRect().top;
       var P = (H * l.from - top) / (H * (l.from - l.to));
@@ -1311,11 +1314,11 @@ if (lines.length) {
         }
       });
     });
-    if (live) braf = requestAnimationFrame(bframe);
+    if (live) lraf = requestAnimationFrame(lframe);
   };
-  addEventListener('scroll', bwake, { passive: true });
-  addEventListener('resize', bwake, { passive: true });
-  bwake();
+  addEventListener('scroll', lwake, { passive: true });
+  addEventListener('resize', lwake, { passive: true });
+  lwake();
 }
 
 /* The top line. Two things the markup cannot do by itself: both corners come back as pills when you
