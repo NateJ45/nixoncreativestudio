@@ -68,6 +68,12 @@ const VIEWS = {
     text: 'Send me the journal',
     y: 108,
   },
+  'west-chester-preschool': {
+    url: 'https://www.westchesterpreschool.org/',
+    text: 'What a year at WCP gives your child',
+    y: 50,
+    hideHeader: true,
+  },
 };
 
 const root = fileURLToPath(new URL('..', import.meta.url));
