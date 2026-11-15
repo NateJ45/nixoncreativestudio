@@ -41,8 +41,6 @@ import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
 import { sectorPage, sectorPagePath } from '../../data/sector-pages';
-import captureSizes from '../../data/capture-sizes.json';
-import { PHONE_STILL, sizeWords } from '../../lib/study-spec';
 
 export async function getStaticPaths() {
   const all = await getCollection('case-studies');
@@ -70,11 +68,6 @@ const facts: [string, string | undefined][] = [
   ['Sector', d.facts?.sector ?? s.sector],
   ['Role', d.facts?.role ?? d.role],
 ];
-// The sizing frame in the hero prints the real pixel size of the still it is drawn round: the
-// desktop one from capture-sizes.json, the phone one a constant, both held to the files by unit
-// tests. A study with no size on record gets no frame.
-const stills = (captureSizes as Record<string, { still: number[] } | undefined>)[entry.id];
-const frame = { desk: sizeWords(stills?.still), phone: sizeWords(PHONE_STILL) };
 // "Building for a church?" on a church study. Small business reads as two words.
 const phrase = SECTOR_PHRASE[d.sector] ?? d.sector.replace('-', ' ');
 
@@ -194,34 +187,6 @@ const breadcrumbs = [
           </div>
         </figure>
       </div>
-      {/* The sizing frame (study.js): a dashed frame sits round one window and prints the size of the
-        still inside it. These two buttons move it, so a keyboard and a tap do what a pointer does.
-        Both windows are real captures; nothing is resized or reflowed to fake a width. */}
-      {frame.desk && (
-        <div class="s-size" data-size>
-          <div class="s-size-seg" role="group" aria-label="Measure a window">
-            <button
-              type="button"
-              aria-pressed="true"
-              data-size-for="home"
-              data-size-px={frame.desk}
-            >
-              Desktop
-            </button>
-            <button
-              type="button"
-              aria-pressed="false"
-              data-size-for="phone"
-              data-size-px={frame.phone}
-            >
-              Phone
-            </button>
-          </div>
-          <p class="s-size-out" role="status" data-size-out>
-            Desktop still: {frame.desk} pixels
-          </p>
-        </div>
-      )}
     </div>
   </section>
   {/* Before the first paint: is a window from the last page growing into the desktop pane

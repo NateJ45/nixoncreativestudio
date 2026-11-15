@@ -171,7 +171,6 @@ function onClick(event: Event): void {
 export const TOOLS: [selector: string, name: string][] = [
   ['[data-draw]', 'draw_card'],
   ['[data-sun]', 'first_sunday'],
-  ['[data-size]', 'size_frame'],
   ['[data-rcpt]', 'live_receipt'],
   ['[data-reply]', 'reply_order'],
   ['[data-ba]', 'before_after'],
