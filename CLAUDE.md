@@ -24,7 +24,7 @@ This file holds what every session needs. Path-scoped rules in `.claude/rules/` 
 - Look and tokens: `DESIGN.md` (the rules) and `src/styles/kit.css` (the code; tokens in `:root`), with `elevate.css` (rolling digits, rising headings, grain, light, cursor label, first load) and `elevate-b.css` (link previews, command palette, sound switch) beside it. Page styles: `src/styles/pages/*.css`. Scripts: `src/scripts/kit.js`, the shared modules loaded by `BaseLayout.astro` and `SiteTools.astro`, plus one per page. Security and cache headers: `public/_headers`.
 - Browser storage keys are listed on /privacy (`src/pages/privacy.astro`); a new `localStorage` or `sessionStorage` key joins that list in the same change.
 - Open work and waiting-on-a-human items: `docs/PENDING.md`. Which gate covers what: `docs/TESTING.md`.
-- Gmail signatures (full and compact) with copy buttons: `docs/email-signature/index.html`. Their headshots are served from `public/email/`; keep those file names, every sent email points at them.
+- Gmail signatures (full, compact and dev) with copy buttons: `docs/email-signature/index.html`. Their headshots are served from `public/email/`; keep those file names, every sent email points at them.
 - Read the strategy doc (`docs/claude/strategy-and-audience.md`) before any design call.
 
 ## Vault
