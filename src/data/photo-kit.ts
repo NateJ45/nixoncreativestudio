@@ -37,7 +37,7 @@ export const CAMERA = {
     'Dual card slots',
   ],
   /** The film that plays behind it. */
-  film: 'film-music-glass',
+  film: 'film-greens-welcome',
   // The second body (Nathan, 2026-11-14), so a shoot never rests on one camera. Many of the
   // older photos on the page were shot on it (their EXIF says so).
   second: { maker: 'Canon', name: 'EOS 6D Mark II', line: 'Full frame, 26.2 MP' },
@@ -101,7 +101,7 @@ export const GIMBAL = {
   maker: 'DJI',
   name: 'RS 4',
   line: 'A three-axis gimbal, for moving shots that glide instead of shake.',
-  film: 'film-greens-garland',
+  film: 'film-greens-tree',
 };
 
 /**
