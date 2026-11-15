@@ -4,6 +4,9 @@
    /small-business/ are one line each around this; the copy is in
    src/data/sector-pages.ts, the situations in SITUATIONS, the prices in pricing.ts.
    No client is tied to a tier here: proof and tiers are separate sections on purpose.
+   Between the job and the proof sits "Try it": a few questions asked of one client's real
+   phone page, which scrolls to each answer (src/scripts/ask.js, shared with /churches/; the
+   questions, the answers and their stops are `page.ask` in sector-pages.ts).
    /churches/ is its own, larger build. */
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -22,7 +25,12 @@ interface Props {
 }
 const { page } = Astro.props;
 
-const clients = (await getClients()).filter((c) => c.sectorKey === page.sector);
+const everyClient = await getClients();
+const clients = everyClient.filter((c) => c.sectorKey === page.sector);
+// "Try it": the client whose real phone page answers the questions, and its long capture.
+const asked = everyClient.find((c) => c.slug === page.ask.slug);
+if (!asked) throw new Error(`SectorLean: no client "${page.ask.slug}" for the Try it tool`);
+const askLong = `/assets/study/${asked.slug}-mobile.webp`;
 const entries = await getCollection('case-studies');
 const studies = clients.map((s) => ({
   s,
@@ -90,6 +98,46 @@ const rich = (copy: Rich) => copy;
           </li>
         ))}
       </ul>
+    </div>
+  </section>
+
+  <section class="sec sun sl-sun" aria-labelledby="sun-h" data-sun>
+    <div class="sun-in">
+      <div class="sun-say">
+        <p class="label">Try it</p>
+        <h2 id="sun-h">
+          Ask what <b>{page.ask.who}</b> asks.
+        </h2>
+        <p class="sun-lede">
+          This is the real {asked.name} homepage on a phone. Tap a question and the page scrolls to
+          its answer, so you can see how far a visitor would have to look.
+        </p>
+      </div>
+      {/* On a phone the picture comes before the questions (the grid areas in sector.css), so a
+          tap never changes something hidden below the fold or behind the dock. */}
+      <div class="sun-ask">
+        <p class="label sun-hint" id="sun-hint">
+          Tap a question
+        </p>
+        <ul class="sun-qs" aria-labelledby="sun-hint">
+          {page.ask.questions.map((q, i) => (
+            <li>
+              <button type="button" data-sun-q={q.stop} aria-pressed={i === 0 ? 'true' : 'false'}>
+                <span>{q.q}</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                  <path d="M7.5 4.5 13 10l-5.5 5.5" />
+                </svg>
+              </button>
+              <p class="sun-a" data-sun-a>
+                <b>{q.where}</b> {q.a}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="sun-w" data-sun-w>
+        <Tile client={asked} long={askLong} lazy />
+      </div>
     </div>
   </section>
 

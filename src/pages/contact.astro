@@ -163,6 +163,15 @@ const heading = 'Start a project, or just <b>say hello.</b>';
         <input type="hidden" name="days_since_first" value="" data-attr="days_since_first" />
         <input type="hidden" name="pages_seen" value="" data-attr="pages_seen" />
 
+        {/* A paperclip slides onto the corner of the card as the "Check your answers" step opens
+            (start.css, no script: it is shown while that step is the open one). Decoration only.
+            The send then folds this card like a letter (foldAway in contact.js). */}
+        <span class="clip" aria-hidden="true">
+          <svg viewBox="0 0 28 64" focusable="false">
+            <path d="M19 15v29a6.5 6.5 0 0 1-13 0V13a9.5 9.5 0 0 1 19 0v35" />
+          </svg>
+        </span>
+
         <div class="q-count" data-count-box>
           <p data-count aria-hidden="true">
             Question 1 of 7
@@ -389,9 +398,14 @@ const heading = 'Start a project, or just <b>say hello.</b>';
       <div id="sent" class="card keyed sent" data-sent data-contact-thanks>
         {/* The rubber stamp: decoration only, since the heading already says it arrived. contact.js
             fills in today's date and presses it in; with no script it shows the word alone. */}
-        <span class="stamp" data-stamp aria-hidden="true">
-          <span class="stamp-word">Received</span>
-          <span class="stamp-date" data-stamp-date></span>
+        <span class="stamp peel" data-stamp aria-hidden="true">
+          <span class="stamp-face">
+            <span class="stamp-word">Received</span>
+            <span class="stamp-date" data-stamp-date></span>
+          </span>
+          {/* Under the stamp when its edge lifts (hover or a tap, stamp.css). It only repeats the
+              heading's thanks, so nothing is kept from a keyboard or a screen reader. */}
+          <span class="stamp-under">Thank you</span>
         </span>
         <h2 tabindex="-1" data-sent-h data-contact-thanks-heading>
           Thanks, your message is in.
@@ -462,6 +476,15 @@ const heading = 'Start a project, or just <b>say hello.</b>';
     </div>
     <p>
       {site.replyPromise} {site.firstConversation}
+    </p>
+    {/* The time where I am, filled in and kept right by src/scripts/light.js (the one clock on
+        the site). It states a fact and promises nothing: the reply promise above is the only
+        promise, and its words live in src/data/site.ts. Hidden until the script has a time. */}
+    <p class="direct-time" data-cincy hidden>
+      <span class="direct-dot" aria-hidden="true"></span>
+      <span>
+        Right now it is <span data-cincy-time></span> in Cincinnati, where I work.
+      </span>
     </p>
   </aside>
   <p class="st-legal">

@@ -1,7 +1,8 @@
 /* ============================================================================
    The rubber stamp: the "Received" mark on /contact (start.css) and the
    "Updated" mark on a revised journal post (journal.css). Moved out of
-   pages/start.css unchanged so both read the same rules.
+   pages/start.css unchanged so both read the same rules. At the foot of this
+   file: the stamp that peels (.stamp.peel), used on /about/ and /contact/.
    ============================================================================ */
 
 /* The "Received" stamp: a rubber-stamp mark in the studio blue, turned a little, floated beside the
@@ -62,5 +63,90 @@
 @media (prefers-reduced-motion: reduce) {
   .stamp.inked::after {
     animation: none;
+  }
+}
+
+/* A stamp that peels (.stamp.peel): the mark is a label whose lower edge lifts to show a second,
+   smaller line underneath. Used for the row of facts on /about/ (real buttons) and the
+   "Received" mark on /contact/ (decoration, so a plain span).
+
+     <button class="stamp peel">            or <span class="stamp peel" aria-hidden="true">
+       <span class="stamp-face"><span class="stamp-word">One person</span></span>
+       <span class="stamp-under">On every project</span>
+     </button>
+
+   The face is the stamp: it carries the double rule and a patch of the paper it sits on
+   (--stamp-paper, the page's ground unless the holder says otherwise), so it can cover the line
+   under it. It lifts on hover, on keyboard focus and while aria-pressed is true (a tap), swinging
+   up from its top edge with one corner a little higher than the other. Both lines are always in
+   the markup, so nothing is hidden from a screen reader or a page with no script. Reduced
+   motion: the face is simply up or down, with no swing. */
+.stamp.peel {
+  display: grid;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  perspective: 20rem;
+  pointer-events: auto;
+}
+button.stamp.peel {
+  cursor: pointer;
+}
+.stamp.peel .stamp-face,
+.stamp.peel .stamp-under {
+  grid-area: 1 / 1;
+}
+.stamp.peel .stamp-face {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.9rem 0.5rem;
+  border: 0.25rem double var(--accent);
+  border-radius: 0.6rem;
+  background: var(--stamp-paper, var(--ground));
+  transform-origin: 50% 0;
+  transition:
+    transform 0.55s cubic-bezier(0.3, 1.5, 0.5, 1),
+    box-shadow 0.4s var(--ease);
+}
+.stamp.peel .stamp-under {
+  align-self: end;
+  padding: 0 0.5rem 0.2rem;
+  font: 600 0.6875rem/1.1 var(--body);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.stamp.peel:hover .stamp-face,
+.stamp.peel:focus-visible .stamp-face,
+.stamp.peel[aria-pressed='true'] .stamp-face {
+  transform: rotate3d(1, -0.14, 0, 60deg);
+  box-shadow: 0 0.9rem 0.7rem -0.6rem rgba(0, 0, 0, 0.4);
+}
+/* Held down: the "Received" stamp lands under a mouse that has just pressed Send, so it stays
+   flat until that mouse moves (holdStampDown in contact.js). */
+.stamp.peel.down .stamp-face {
+  transform: none;
+  box-shadow: none;
+}
+.stamp.peel:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 5px;
+  border-radius: 0.6rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp.peel .stamp-face {
+    transition: none;
+  }
+}
+/* High contrast: the face keeps its own border, and needs a real ground to cover the line. */
+@media (forced-colors: active) {
+  .stamp.peel .stamp-face {
+    background: Canvas;
   }
 }

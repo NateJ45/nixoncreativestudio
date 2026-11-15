@@ -86,6 +86,19 @@
 .js .pcard.held {
   cursor: grabbing;
 }
+/* Depth: the photo and its caption are two planes above the card. about.js sets --depth (0 at
+   rest, so the type stays sharp; 1 while the card is being looked at or held), and because the
+   card's own transform carries the perspective, the caption slides a little over the photo as
+   the card leans. Under reduced motion the script never sets it, so both stay flat. */
+.js .pcard {
+  transform-style: preserve-3d;
+}
+.js .pcard img {
+  transform: translateZ(calc(var(--depth, 0) * 14px));
+}
+.js .pcard figcaption {
+  transform: translateZ(calc(var(--depth, 0) * 56px));
+}
 .pcard img {
   display: block;
   width: 100%;
@@ -584,6 +597,228 @@ html:not(.js) .otc-turn {
   .otc-turn {
     transition: none;
   }
+}
+
+/* The second, smaller sentence on a back (the Running card says what the line is). */
+.otc-note {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* The camera roll on the Photography back: one 4:3 frame, the prints side by side in a row that
+   snaps, so a swipe, the buttons and the arrow keys all land on a whole print. With no script it
+   is simply a row to scroll sideways. White on the blue back, like the rest of the card. */
+.otc-reel {
+  display: grid;
+  gap: 0.5rem;
+}
+.reel-strip {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  border-radius: 0.9rem;
+  scrollbar-width: none;
+}
+.reel-strip::-webkit-scrollbar {
+  display: none;
+}
+.reel-strip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.reel-f {
+  position: relative;
+  flex: 0 0 100%;
+  margin: 0;
+  scroll-snap-align: start;
+}
+.reel-f img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+/* The print's name on a dark foot, so it reads over any photograph. */
+.reel-f figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+  align-items: baseline;
+  padding: 1.4rem 0.7rem 0.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+  color: #fff;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+.reel-f figcaption b {
+  font-weight: 600;
+}
+.reel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.reel-n {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.86);
+}
+.reel-b {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 99rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.reel-b:hover {
+  transform: scale(1.08);
+}
+.reel-b:active {
+  transform: scale(0.94);
+}
+.reel-b svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+html:not(.js) .reel-bar {
+  display: none;
+}
+
+/* The course line on the Running back: the Stone Steps 50K course from above, white on the blue.
+   A faint copy of the whole line is always there; the bright one is drawn over it as the card
+   turns over (a dash the length of the path, slid to nothing), a beat after the turn starts.
+   .lifted is "Draw it again": the pen is back at the start with no transition. */
+.otc-course {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+.otc-course svg {
+  width: auto;
+  height: 92%;
+  max-width: 92%;
+  overflow: visible;
+}
+.oc-ghost,
+.oc-line {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+.oc-ghost {
+  opacity: 0.22;
+}
+.oc-line {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 0;
+}
+.oc-dot {
+  fill: #fff;
+}
+.js .otc:not(.over) .oc-line,
+.js .otc-course.lifted .oc-line {
+  stroke-dashoffset: 1;
+}
+.js .otc.over .otc-course:not(.lifted) .oc-line {
+  transition: stroke-dashoffset 2.8s cubic-bezier(0.45, 0, 0.2, 1) 0.5s;
+}
+.oc-again {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  min-height: 1.75rem;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: 99rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font: 600 0.75rem / 1 var(--body);
+  cursor: pointer;
+}
+.oc-again:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.reel-b:focus-visible,
+.oc-again:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+html:not(.js) .oc-again {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reel-strip {
+    scroll-behavior: auto;
+  }
+  .reel-b {
+    transition: none;
+  }
+  /* The line is simply there, so there is nothing to draw again. */
+  .js .otc .otc-course .oc-line {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+  .oc-again {
+    display: none;
+  }
+}
+@media (forced-colors: active) {
+  .oc-ghost,
+  .oc-line {
+    stroke: CanvasText;
+  }
+  .oc-dot {
+    fill: CanvasText;
+  }
+  .reel-b,
+  .oc-again {
+    border: 1px solid ButtonText;
+  }
+}
+
+/* The stamps under "One person." (the peel itself is in src/styles/stamp.css). A loose row,
+   each turned a little its own way, on the page's own ground. */
+.peels {
+  --stamp-paper: var(--ground);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem clamp(1rem, 3vw, 2.25rem);
+  max-width: 78rem;
+  margin: 0 auto clamp(1.75rem, 3.5vw, 3rem);
+  padding: 0;
+  list-style: none;
+}
+.peels .stamp {
+  float: none;
+  margin: 0;
+}
+.peels li:nth-child(odd) .stamp {
+  transform: rotate(-4deg);
+}
+.peels li:nth-child(even) .stamp {
+  transform: rotate(3deg);
 }
 
 /* ---- Based in Cincinnati: the map and the state hand (src/components/ClientMap.astro) ---------
