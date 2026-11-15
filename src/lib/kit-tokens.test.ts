@@ -161,3 +161,19 @@ test('the entrances stand down under reduced motion', () => {
 test('a card keeps an edge under forced colors', () => {
   assert.match(css, /forced-colors: active/);
 });
+
+// Review stars (Stars.astro, added 2026-11-15). The gold itself is too light to stand on white, so
+// the light side draws each star with an amber edge, and that edge carries the 3:1. On the dark
+// side the gold stands on its own.
+test('review stars: the amber edge clears 3:1 on a light card and the page', () => {
+  for (const bg of [token('card'), token('ground')]) {
+    const ratio = contrastRatio(token('star-edge'), bg);
+    assert.ok(ratio >= AA_NON_TEXT, `star edge on ${bg} is ${ratio.toFixed(2)}:1`);
+  }
+});
+test('review stars: the gold clears 3:1 on a dark card and the page', () => {
+  for (const bg of [night('card'), night('ground')]) {
+    const ratio = contrastRatio(night('star'), bg);
+    assert.ok(ratio >= AA_NON_TEXT, `star on ${bg} is ${ratio.toFixed(2)}:1`);
+  }
+});

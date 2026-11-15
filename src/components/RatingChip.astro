@@ -1,0 +1,50 @@
+---
+/* The rating chip under the home headline (added 2026-11-15): the faces of the people who reviewed
+   the studio on Google, five gold stars, the average and the count, all one link to the reviews on
+   Google. The numbers come from src/data/reviews.ts (typed in from the Business Profile); the faces
+   from the case studies' review quotes (src/lib/reviews.ts), so a face only appears next to a
+   review that is really there.
+
+   It sits in the first screen, so it is static: no entrance, nothing starting hidden (never-break
+   rule 3). Its height is counted in the hero sums in kit.css and home.js (the 616 and 559). It shows
+   the count on purpose: a rating with the number hidden reads as hiding something. */
+import Stars from './Stars.astro';
+import { googleReviews } from '../data/reviews';
+import { getReviews } from '../lib/reviews';
+
+const faces = (await getReviews()).filter((r) => r.photo).slice(0, 3);
+const { rating, count, url } = googleReviews;
+const shown = rating.toFixed(1);
+---
+
+<a class="rating" href={url} target="_blank" rel="noopener" data-cta="google_reviews_hero">
+  {faces.length > 0 && (
+    <span class="rating-faces" aria-hidden="true">
+      {faces.map((f) => (
+        <img
+          src={`${f.photo}-96.webp`}
+          width="32"
+          height="32"
+          alt=""
+          decoding="async"
+          fetchpriority="low"
+        />
+      ))}
+    </span>
+  )}
+  {/* The visible words are the link's name (a screen reader hears "5.0 out of 5, 2 Google reviews"), so
+      the stars are drawn only and the extra words are hidden text. */}
+  <Stars rating={Math.round(rating)} class="rating-stars" decorative />
+  <span class="rating-n">
+    <b>{shown}</b>
+    <span class="vh"> out of 5,</span>
+    <span class="rating-dot" aria-hidden="true">
+      ·
+    </span>
+    {count} Google {count === 1 ? 'review' : 'reviews'}
+    <span class="vh"> (opens Google Maps)</span>
+  </span>
+  <svg class="rating-go" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+    <path d="M5 3h8v8M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.8" />
+  </svg>
+</a>

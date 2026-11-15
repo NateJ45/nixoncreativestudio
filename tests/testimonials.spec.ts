@@ -23,7 +23,7 @@ for (const { slug, count } of studies) {
   });
 }
 
-test('the homepage band carries every quote, one at a time, starting with Theology Matters', async ({
+test('the homepage band carries every quote, one at a time, starting with the first public review (Reid Design)', async ({
   page,
 }) => {
   await page.goto('/');
@@ -32,7 +32,7 @@ test('the homepage band carries every quote, one at a time, starting with Theolo
   await expect(band.locator('[data-q]:not([inert])')).toHaveCount(1);
   await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
     'href',
-    '/work/theology-matters/',
+    '/work/reid-design/',
   );
 });
 

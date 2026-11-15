@@ -68,7 +68,7 @@ from $1,600 a half day, $2,600 a full day: change the profile to match, and add 
 service if it offers one), and under Website designer the add-ons Website copywriting from $900, Large archive
 migration from $1,500, Simple wordmark $600 and Local business listings from $350. There is no
 brand or graphic-design category on purpose. When prices change, change them there too. Still to
-do: ask two or three past clients for a Google review (the profile has none), and add photos. Delete this item when it has reviews.
+do: more reviews. Two are in (2026-11-15: Staci Perkins and Erin Schmerr, 5.0) and on the site. On each new one, update `src/data/reviews.ts` and, if it is quotable, add it to the study (`.claude/rules/content.md`, "Public reviews"). At about five reviews, add the rating to the top line on every page (`TopLine.astro`, held back until then so a small count is not on every page).
 
 ### 1. Set the `SITE_URL` repo variable
 
@@ -137,7 +137,8 @@ shown by `QuoteBand` and the study's `Quotes` chapter): Theology Matters, Founda
 Theology, Stone Steps 50K, First Baptist Muncie (two) and First Presbyterian
 Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
 
-- **Still missing: Presbyterian Academy, MAS Monograms, Reid Design.** Those
+- **Reid Design and West Chester Preschool** now carry their public Google reviews (2026-11-15).
+- **Still missing: Presbyterian Academy, MAS Monograms.** Those
   studies show no quote until a real one arrives. The ask is Nathan's to send
   (a short three-question email; it can be drafted for him, never sent for
   him).
