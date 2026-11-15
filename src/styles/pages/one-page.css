@@ -367,11 +367,15 @@ html:not(.js) [data-print] {
     font-size: 8pt;
   }
   .op-reach,
-  .op-table,
+  .op-table {
+    font-size: 8.5pt;
+  }
+  /* The care box and the last row match the add-ons at 8pt, so the sheet keeps room to spare on
+     Linux, whose fonts set it about 15px taller than Windows (CI, 2026-11-14). */
   .op-cover dd,
   .op-three ul,
   .op-three section > p {
-    font-size: 8.5pt;
+    font-size: 8pt;
   }
   .op-tier {
     font-size: 8pt;
@@ -476,7 +480,8 @@ html:not(.js) [data-print] {
 @media print {
   /* In print the four plans sit side by side, each with its "optional" note under the name. */
   .op-cover dl {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* Hosting carries the longest note, so its column is a little wider. */
+    grid-template-columns: 1.3fr repeat(3, minmax(0, 1fr));
     gap: 0.05in 0.16in;
   }
   .op-cover dt small {
