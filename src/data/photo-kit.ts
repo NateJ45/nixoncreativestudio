@@ -101,7 +101,7 @@ export const GIMBAL = {
   maker: 'DJI',
   name: 'RS 4',
   line: 'A three-axis gimbal, for moving shots that glide instead of shake.',
-  film: 'film-greens-tree',
+  film: 'film-music-violin',
 };
 
 /**
