@@ -138,10 +138,12 @@ export interface AddOn {
   /** The unit shown small after the price, in words: 'a half day', 'one-time'. */
   unit: string;
   note: string;
+  /** The same add-on in one short line, for the "Add to any project" row on /one-page/. */
+  short: string;
 }
 
 // Add to any project: the extras people ask for most, each with its own honest
-// price. Used by the /services add-on strip, /photography and /llms.txt. Every
+// price. Used by the /services add-on strip, /photography, /one-page/ and /llms.txt. Every
 // price string must hold its dollar amounts lowest first ('$350 to $650'),
 // because the page's structured data reads them from the same string. There is
 // no drawn-logo or brand-identity add-on on purpose (decided 2026-11-13): the
@@ -156,30 +158,35 @@ export const addOns: AddOn[] = [
     // Film is a shoot of its own: filming and grading take their own time, and the photos and
     // the film are not shot at once (2026-11-14).
     note: 'Portraits, buildings and people at work, shot for your site by the person who designed it. A half day is $1,200 and a full day is $2,200. Short films are a shoot of their own, because filming and grading take their own time: a half day of film is $1,600 and a full day is $2,600. As part of a build or booked on its own across the Cincinnati region.',
+    short: 'Half day $1,200, full day $2,200; film from $1,600.',
   },
   {
     name: 'Writing your pages',
     price: 'from $900',
     unit: 'five core pages',
     note: 'I interview you, write the pages in plain words, and you approve every one before it goes live. Each page after the first five is $180.',
+    short: 'From an interview. $180 a page after five.',
   },
   {
     name: 'Moving a large archive',
     price: 'from $1,500',
     unit: 'quoted by count',
     note: 'Years of sermons, articles, results or documents moved across, tidied and made searchable, with old links redirected. Your core pages are already moved in every build.',
+    short: 'Sermons or articles moved, old links redirected.',
   },
   {
     name: 'Simple wordmark',
     price: '$600',
     unit: 'one-time',
     note: 'Your name set in type, with colors and a browser icon. Two options and one round of changes.',
+    short: 'Your name in type, colors and a browser icon.',
   },
   {
     name: 'Business listings',
     price: '$350 to $650',
     unit: 'one-time',
     note: 'Your organization claimed and filled in on Google, Apple Maps, Bing, Yelp and ChatGPT, all matching the site, for $650. Google alone is $350. You will need to answer a few verification codes and pass a quick ID check for ChatGPT.',
+    short: 'Google $350; plus Apple, Bing, Yelp, ChatGPT $650.',
   },
 ];
 
@@ -237,7 +244,7 @@ export const carePlans: CarePlan[] = [
     support:
       'If the site goes down, I investigate and fix it. An outage at Cloudflare itself can be outside my control. If a change you made breaks it, I fix it at my hourly rate.',
     short:
-      'Hosting, security updates, daily backups and a check that the site is up. You make changes, or I do at $100 an hour.',
+      'Hosting, security updates, daily backups and uptime checks. You make changes, or I do at $100 an hour.',
     features: [
       'Fast, secure hosting',
       'Security updates when a known weakness in the software is patched',
@@ -257,8 +264,7 @@ export const carePlans: CarePlan[] = [
     rate: 85,
     support:
       'Email replies within 2 business days. Fixes when something breaks, at no extra charge.',
-    short:
-      '30 minutes of changes a month, software updates, fixes at no extra charge, replies within 2 business days.',
+    short: '30 minutes of changes a month, updates, free fixes, replies in 2 business days.',
     features: [
       "Software updates: WordPress, plugins and the site's code kept current",
       'Ask me how to do anything in the editor',
