@@ -73,6 +73,13 @@ export var ui = {
   /* A tiny sound or haptic at the moment something lands: ui.cue('deal' | 'tick' | 'turn' | ...).
      Always safe to call. It does nothing here; the sound module swaps in the real one. */
   cue: function () {},
+  /* ui.roll (roll.js) and ui.sheen (light.js) are replaced by their modules, which BaseLayout loads
+     straight after this file. These stand in for a component script that happens to run before
+     them: the figure's text is simply set, and there is no sheen yet. */
+  roll: function (el, text) {
+    if (el && text != null) el.textContent = text;
+  },
+  sheen: function () {},
   bySlug: function (slug) {
     return N.sites.find(function (s) {
       return s.slug === slug;

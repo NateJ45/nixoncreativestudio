@@ -21,6 +21,10 @@
       "_why": "The hero reel shows real client sites as images (about 13 small WebP captures, 2026-10-30). The WebGL hero and its 1237 KB of three.js were removed the same day, so scripts fall back to the default budget. Lowered from 770 by overhaul 4.4 (2026-10-31): the Selected Work frames below the reel became AVIF with honest `sizes`, and the page measured 325 KB of images in Playwright chromium at 1280x720 (446 before). The budget is that plus about 25%. The reel itself stays WebP (AVIF came out larger at its quality).",
       "maxImagesKb": 410
     },
+    "/about": {
+      "_why": "Raised for the elevate build (2026-11-14). The page sat just under the 150 KB default (its dot map, state hand and Off the clock cards are all inline markup), and the shared finish adds about 3 KB to every page: the head script that decides the first-load drawing and the price-card morph before first paint, the two progressive-blur holders, the local time, and data-sheen and data-cursor on every window. Measured 150.9 KB in Playwright chromium; the budget is that plus about 10%.",
+      "maxHtmlKb": 166
+    },
     "/photography": {
       "_why": "The light table is the page (2026-11-11): about 30 prints are on screen at once as 560px webp, and the table drifts on its own after a few seconds, so the count grows the longer the test sits there (measured 908 to 1509 KB of images in Playwright chromium at 1280x720 across two runs). Films stay unfetched until they come near the middle and are not counted. Nathan chose the visual over the weight (2026-11-07). The HTML carries the table's data for every print and film as inline JSON (about 550 bytes each), so it grows with the collection: 196 entries measured 247 KB decoded (2026-11-14), and the HTML budget is that plus about 25%.",
       "maxHtmlKb": 310,
