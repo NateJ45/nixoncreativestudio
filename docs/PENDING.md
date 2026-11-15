@@ -27,6 +27,12 @@ The Content-Security-Policy ships report-only (`docs/claude/deployment.md`). Eve
 
 Live, `/.well-known/security.txt` shows the personal Gmail, but no such file was in this repo: it appears to come from the Cloudflare zone's security.txt setting. The repo now ships `public/.well-known/security.txt` with the studio address. If the live file still shows the Gmail after a deploy, turn off or update that setting in the Cloudflare dashboard (Security Center).
 
+### A3. After the elevate pass (added 2026-11-15)
+
+- **Confirm the journal marker phrases.** Each of the eight posts now names one `highlight` phrase in its short answer, chosen by the agent that built the marker. Nathan reads them in the frontmatter and changes any that are not the key phrase.
+- **Prefetch twice in Chrome and Edge.** `astro.config.mjs` has `prefetch: { prefetchAll: true, defaultStrategy: 'hover' }`, and `SiteTools.astro` now adds Speculation Rules that prefetch the same links at the browser level, so a hovered link can be asked for twice there. Astro's stays useful for Safari and Firefox. Leave both, or switch Astro's off where `HTMLScriptElement.supports('speculationrules')` is true.
+- **Visual baselines.** Nearly every page changed; regenerate them once the branch is on `main` (as in A0).
+
 ### C. Repoint the capture scripts at `public/assets/` (added 2026-11-06)
 
 `scripts/capture-case-study.mjs` and `scripts/capture-cms.mjs` still write PNGs under `src/assets/case-studies/` and `shots/`. The site now serves webp copies from `public/assets/` (`{slug}-cover.webp`, `{slug}-m.webp`, `{slug}-cms.webp`, and the footage). Until the scripts write there, a re-capture needs a hand conversion (then `npm run stills` for the smaller phone-still copies), and `study-images.json` needs the new size for anything under `public/assets/study/`.
@@ -184,6 +190,10 @@ paste the printed `signatureClip` into the study.
 ---
 
 ## Open technical exposure (no human decision needed, just not done yet)
+
+### 3a. Fold `elevate-b.css` into the shared CSS (added 2026-11-15)
+
+`elevate-b.css` ships as its own 8.6 KB stylesheet on every page (imported by `SiteTools.astro`), one more small render-blocking request beside `kit.css`. Folding it into `kit.css` or `elevate.css` removes it. While there, `.peek` and `dialog.pal.card` could join the forced-colors list in `kit.css` instead of carrying their own border block.
 
 ### 3. `wrangler` is on a caret, and the generated config still carries
 

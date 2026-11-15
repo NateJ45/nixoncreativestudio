@@ -19,19 +19,37 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## The chrome (every page, from `BaseLayout.astro`)
 
-- `TopLine`: the name and the status, "Taking new projects · Call or email" (`site.bookingOpen`; "Call or email" alone on a phone), with the skip link before it. `onColor` flips it for pages that open on a client's color.
-- `Dock`: the floating nav, plain links, the one nav at every width (never-break rule 8). Labels: Work, Prices (`/services/`), About, Start a project (`/contact/`).
+- `TopLine`: the name and the status, "Taking new projects · Call or email" (`site.bookingOpen`; "Call or email" alone on a phone), with the skip link before it. `onColor` flips it for pages that open on a client's color. Its `.reach` card carries a `[data-cincy]` time and `<PaletteOpen where="reach" />`, and it renders a `.pblur` sibling for the top edge.
+- `Dock`: the floating nav, plain links, the one nav at every width (never-break rule 8). Labels: Work, Prices (`/services/`), About, Start a project (`/contact/`). The Prices hand ends in `<TierPicker part="card" />`, the theme hand in `<SoundSwitch where="dock" />`, the Work hand's caption spells the real study count with `countWord()`, and it renders a `.pblur` sibling for the bottom edge.
+- `TierPicker`: the tier picker's corner card (default `part="panel"`, placed by `BaseLayout` right after `Dock`, outside `<main>`), and with `part="card"` its opener in the dock. Script `tier-picker.js`, styles `tier-picker.css`, rule `src/lib/tier-pick.ts`.
 - `ClientSheet`: a native `<dialog>` that opens when a `Tile` is clicked. It also prints the client list as JSON in `#ncs-clients`, which `kit.js` reads.
-- `Closing`: the page's last section, on every page except /contact, the 404 and /coming-soon. Takes a `lead` string (HTML, heavy words in `<b>`). It reads `getClients()`, `getGatedNav()` and `site`.
+- `SiteTools`: the one tag (after `ClientSheet`) for the site-wide tools: `Palette`, the Speculation Rules (one inline `<script type="speculationrules">`: prefetch, never prerender, same-site document links at `moderate` eagerness, leaving out `/api/`, any address with a query string, files, and new-tab or nofollow links), `elevate-b.css`, and the scripts `sound.js` (first, because it installs `ui.cue`), `peek.js`, `palette.js` and `sheet-drag.js`.
+- `Palette` (the command palette's `<dialog>`) and `PaletteOpen` (the "Search" button with its key hint; `where="end"` in the closing's index, `where="reach"` in the top line's card). `SoundSwitch` (`where="end"` in the closing's fine print, `where="dock"` as a card in the dock's theme hand).
+- `Closing`: the page's last section, on every page except /contact, the 404 and /coming-soon. Takes a `lead` string (HTML, heavy words in `<b>`). It reads `getClients()`, `getGatedNav()` and `site`. It renders `<PaletteOpen where="end" />` at the end of "The studio" column, `<SoundSwitch where="end" />` after `ThemeFlip`, and a `[data-cincy]` time in its top row.
 - `Analytics`, `StructuredData`, `ComingSoon`, `ComingSoonGate`, `PageHead`: head and gate plumbing. `ComingSoonGate` and `src/components/analytics/` hold the conditional inline scripts, because `prettier-plugin-astro` cannot parse a `<script>` inside a template expression.
 
 ## The deck and shared pieces
 
-- `Tile`: a client's phone window, or with `desk` a large desktop browser window (a real link to the case study; `data-direct` keeps it a link). Takes a `Client` from `getClients()`. The footage is only fetched when something asks the window to play.
+- `Tile`: a client's phone window, or with `desk` a large desktop browser window (a real link to the case study; `data-direct` keeps it a link). Takes a `Client` from `getClients()`. The footage is only fetched when something asks the window to play. Every window carries `data-sheen` and `data-cursor="Open"`, and its screen shows the client's paper under a bar of their colour until its picture paints.
 - `Caption`: the name and sector under a window; pass `index` to number it.
 - `SectorLean`: the whole of a lean sector page (/schools/, /nonprofits/, /small-business/), drawn from `src/data/sector-pages.ts`.
 - `QuoteBand`: a client's quote on their own color, read from the study's `testimonials` (`slug`, `quote` index, `flip`). It throws if the quote does not exist.
-- `PriceHand` and `DealtPrices`: the three starting-price cards and the "Every price is public" section around them; both read `src/data/pricing.ts`.
+- `PriceHand` and `DealtPrices`: the three starting-price cards and the "Every price is public" section around them; both read `src/data/pricing.ts`. Each card has a "Turn over" button and a back with its tier's features (`price-turn.js`, `price-turn.css`, imported by `PriceHand`); the front stays the `a.pc-face` link.
+- `home/WhatChanged`, `home/EditDemo`, `home/PhotoStrip`, `home/ProcessBeats`: the home sections after the grid (`homepage-and-pages.md`).
+- `OffTheClock`: About's four turning cards; a card's `toy` (`'reel'` or `'course'`) puts the camera roll or the course line on its back.
+- `TierPicker`, `SiteTools`, `Palette`, `PaletteOpen`, `SoundSwitch`: see the chrome above.
+- `Aside` (a margin note, `.mnote`, `role="note"`) and `BarChart` (a chart read from the table it wraps): journal post blocks, passed to `<Content components>` in `src/pages/journal/[slug].astro`.
+
+## Shared scripts (`src/scripts/`)
+
+Imported once from `BaseLayout.astro` after `kit.js`, or from `SiteTools`, and used by attribute (`styling.md`, "Patterns to reuse"). Do not rebuild one in a page script.
+
+- `roll.js` (`data-roll`, `ui.roll`), `rise.js` (section headings), `light.js` (`--sun-x`, `--sun-y`, `data-cincy`, `data-sheen`, `ui.sheen`), `cursor.js` (`data-cursor`), `blueprint.js` (the first-load drawing, decided by an inline `<head>` script, sessionStorage `ncs-bp`), `price-morph.js` (`tier-card`).
+- `sound.js` (`cue()`, installed as `ui.cue`; `setSound()`, `soundOn()`; the switches), `peek.js` and `peek-data.js` (the link previews; the one fetch of `/peek.json`, shared with the palette), `palette.js`, `sheet-drag.js`.
+- `ask.js` (`wireAsk(section)`): the one "Try it" engine, for /churches/ and the lean pages.
+- `prices-plan.js` (`setPlan()`, `onPlan()`, `planFromUrl()`), `prices-turn.js`, `prices-chapters.js`, `prices-steps.js`: /services. `tier-picker.js`: the dock's tier picker. `edit-demo.js`, `home-more.js`: home. `colophon.js`: the colophon's live facts.
+- `kit.js` adds `ui.cue` (a no-op stand-in until `sound.js` loads), `ui.words(el, cls)` (the shared word splitter) and stand-ins for `ui.roll` and `ui.sheen`. Its own cues: `tick` when the dock's puck goes to a new link, `deal` as a hand opens, `open` and `close` for the client sheet.
+- `mailto-fallback.ts` also copies the address on a click for a `mailto:` link whose visible words are the address, and says "Copied" (`content.md`).
 - `window-chrome.ts` supplies the address-bar lock and the toolbar icons shared by `Tile`, the contact brief phone and the study windows.
 
 ## Case study blocks (used from the MDX body)
@@ -44,7 +62,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## `src/lib`
 
-`clients.ts` (`getClients`, `getClient`, `toClient`, `DECK` order, sector labels and counts), `words.ts` (`wordSpans`, `plainText`, for the H1 reveal), `window-chrome.ts`, `study-markup.ts`, `study.ts` (`nextInLoop`, `cmsShotProblem`), `closer.ts` (closing sector phrases), `seo.ts` (`studyTitle`), `schema.ts` (JSON-LD), `money.ts`, `tier-costs.ts` (the five-year sums), `href.ts` (`withTrailingSlash`), `track.ts` (GA4 events), `readingTime.ts`, `contrast.ts` (PORTABLE), `live-scores.ts` (still built and tested, but no page prints it). Each has a unit test beside it where it holds logic.
+`clients.ts` (`getClients`, `getClient`, `toClient`, `DECK` order, sector labels and counts), `words.ts` (`wordSpans`, `plainText`, for the H1 reveal), `window-chrome.ts`, `study-markup.ts`, `study.ts` (`nextInLoop`, `cmsShotProblem`), `closer.ts` (closing sector phrases), `seo.ts` (`studyTitle`), `schema.ts` (JSON-LD), `money.ts`, `tier-costs.ts` (the five-year sums), `href.ts` (`withTrailingSlash`), `track.ts` (GA4 events), `readingTime.ts`, `contrast.ts` (PORTABLE), `live-scores.ts` (still built and tested, but no page prints it), `tier-pick.ts` (the three questions, `suggestTier()`, `whyLine()`, `pickTiers()`, shared by /services and the dock's tier picker), `journal-art.ts` (`faceSvg()`, one line drawing per journal cluster), `table-chart.ts` (reads a post's table for `BarChart`), and `journal.ts` (now also `railDays()` and `splitHighlight()`). Each has a unit test beside it where it holds logic.
 
 ## Code conventions
 
