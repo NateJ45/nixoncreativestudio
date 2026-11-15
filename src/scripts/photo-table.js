@@ -1242,6 +1242,7 @@ function start(sec) {
     onCard = false;
     fill(i);
     dlg.showModal();
+    if (ui.cue) ui.cue('open');
     address(DATA[i].slug);
     playReels();
     placeDev();

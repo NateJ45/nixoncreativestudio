@@ -121,6 +121,7 @@ if (pick) {
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     torn = true;
+    if (ui.cue) ui.cue('deal');
     var href = go.href,
       swing = ui.spring(210, 9, 0),
       t0 = performance.now(),
@@ -561,6 +562,7 @@ if (rc) {
   };
   var print = function (i) {
     holdAt(i);
+    if (ui.cue) ui.cue('print');
     pr.due = performance.now() + 70;
     pr.last = performance.now();
     pr.raf = requestAnimationFrame(printFrame);

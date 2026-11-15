@@ -1,6 +1,7 @@
 /* About, below the fold: the "Off the clock" cards that turn over, and the bio's photo stacks.
    Both are real buttons with aria-expanded, so a screen reader hears what each one does and
    whether it is open. Reduced motion is handled in CSS (no turn, no fan). */
+import { cue } from './sound.js';
 
 /* ---- Off the clock (src/components/OffTheClock.astro) ----------------------------------------
    The face you can't see is inert, so Tab never lands on a link that is turned away. Turning a
@@ -12,6 +13,7 @@
     home = otc.querySelector('[data-otc-back]');
   function set(over, moveFocus) {
     otc.classList.toggle('over', over);
+    if (moveFocus) cue('turn');
     turn.setAttribute('aria-expanded', String(over));
     front.inert = over;
     back.inert = !over;

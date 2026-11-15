@@ -10,6 +10,8 @@ import { getClients } from '../lib/clients';
 import { getGatedNav } from '../data/nav';
 import { webTiers } from '../data/pricing';
 import ThemeFlip from './ThemeFlip.astro';
+import SoundSwitch from './SoundSwitch.astro';
+import PaletteOpen from './PaletteOpen.astro';
 
 interface Props {
   /** The line, as HTML with the heavy words in <b>. */
@@ -149,6 +151,7 @@ const elsewhere = [
       {gated.map((l) => (
         <a href={l.href}>{l.label}</a>
       ))}
+      <PaletteOpen where="end" />
     </div>
     <div>
       <span class="label">Elsewhere</span>
@@ -165,6 +168,7 @@ const elsewhere = [
       <a href="/accessibility/">Accessibility</a>
       <a href="/colophon/">How this site is built</a>
       <ThemeFlip where="end" />
+      <SoundSwitch where="end" />
     </div>
   </nav>
   <div class="end-name" data-name aria-hidden="true">

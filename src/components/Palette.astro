@@ -1,0 +1,72 @@
+---
+/* The command palette: Ctrl+K, Cmd+K or / opens it, and so does the "Search" button in the
+   closing's site index and in the top line's card (PaletteOpen.astro), so nobody needs the
+   keyboard to find it. Type to filter pages, case studies, sector pages, prices, journal posts
+   and a few actions; arrows, Enter and Escape work, and every row is a real link or button, so a
+   mouse or a finger works too.
+
+   It is a native <dialog>, so focus is trapped and handed back by the browser. The rows are built
+   by src/scripts/palette.js from /peek.json (the same file the link previews read), fetched the
+   first time it opens. It is a card from the kit: lettered K in two corners, hairline rows. The
+   look and the spring are in src/styles/elevate-b.css.
+
+   Without script nothing can open it, so its buttons are hidden then; every page it lists is in
+   the dock and the closing anyway. */
+---
+
+<dialog class="pal card keyed" data-pal aria-label="Search the site">
+  <span class="pip" aria-hidden="true">
+    K
+  </span>
+  <span class="pip flip" aria-hidden="true">
+    K
+  </span>
+  <div class="pal-top">
+    <label class="label" for="pal-q">
+      Search the site
+    </label>
+    <div class="pal-field">
+      <input
+        id="pal-q"
+        class="pal-q"
+        type="text"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="pal-list"
+        aria-autocomplete="list"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="go"
+        placeholder="A page, a client, a price"
+        data-pal-q
+      />
+      <button class="pal-x" type="button" data-pal-close>
+        Close
+      </button>
+    </div>
+  </div>
+  <div class="pal-list" id="pal-list" role="listbox" aria-label="Results" data-pal-list></div>
+  <p class="pal-none" data-pal-none hidden>
+    Nothing by that name. Try a client, a page or the word prices.
+  </p>
+  <p class="pal-say" aria-live="polite" data-pal-say></p>
+  <div class="pal-foot">
+    <span class="pal-keys label" aria-hidden="true">
+      <span>
+        <kbd>&uarr;</kbd>
+        <kbd>&darr;</kbd> Move
+      </span>
+      <span>
+        <kbd>Enter</kbd> Open
+      </span>
+      <span>
+        <kbd>Esc</kbd> Close
+      </span>
+    </span>
+    {/* A one-key shortcut has to be something a visitor can switch off (WCAG 2.1.4). */}
+    <button class="pal-slash label" type="button" aria-pressed="true" data-pal-slash>
+      <kbd>/</kbd> opens this
+    </button>
+  </div>
+</dialog>

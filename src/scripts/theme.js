@@ -1,6 +1,7 @@
 /* The flip. The theme itself is one attribute on <html>, set before paint by ThemeBoot.astro. This
    turns it over: the page rotates away on its vertical axis like a card and comes back showing the
    other side. Reduced motion, or a browser with no view transitions, simply swaps. */
+import { cue } from './sound.js';
 
 var root = document.documentElement;
 var KEY = 'ncs-theme';
@@ -52,6 +53,7 @@ function choose(next) {
   try {
     localStorage.setItem(KEY, next);
   } catch (e) {}
+  cue('turn');
   turn(next);
 }
 

@@ -703,6 +703,7 @@ function pressStamp() {
       stamp.style.opacity = String(Math.min(1, 0.15 + p * 1.7));
       if (!landed && p >= 0.98) {
         landed = true;
+        if (ui.cue) ui.cue('stamp');
         stamp.classList.add('inked');
       }
       if (going) requestAnimationFrame(frame);

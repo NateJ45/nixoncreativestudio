@@ -1,0 +1,50 @@
+---
+/* The quiet tools every page carries, in one tag for BaseLayout:
+
+   - the command palette (Palette.astro, src/scripts/palette.js)
+   - previews on links to a case study, the prices or a journal post (src/scripts/peek.js)
+   - sound, off until asked (src/scripts/sound.js; its switch is SoundSwitch.astro)
+   - drag to dismiss on the client sheet, touch only (src/scripts/sheet-drag.js)
+   - the Speculation Rules below
+
+   Their styles are src/styles/elevate-b.css. None of it is needed to read or use a page: with no
+   script the palette's buttons and the sound switch are hidden and every link is a plain link.
+
+   Speculation Rules: in a browser that has them (Chrome and Edge today), a link to another page
+   of this site is fetched ahead when the visitor shows intent ("moderate": about 200ms of hover,
+   or the press itself), so the page opens at once. PREFETCH only, never prerender: a prerendered
+   page would run analytics and the contact form's scripts for a visit that may never happen.
+   Left out: /api/ (the contact endpoint), any address with a query string (?client=, ?print=,
+   ?sent= and the like change what a page does, and each would be a second copy of the same
+   file), files (anything with a dot: the feed, PDFs, this site's JSON), and links that open
+   another tab or carry rel=nofollow. "/*" only ever matches this site, so other sites are out. */
+import '../styles/elevate-b.css';
+import Palette from './Palette.astro';
+
+const rules = {
+  prefetch: [
+    {
+      where: {
+        and: [
+          { href_matches: '/*' },
+          { not: { href_matches: '/api/*' } },
+          { not: { href_matches: '/*\\?*' } },
+          { not: { href_matches: '/*.*' } },
+          { not: { selector_matches: '[target=_blank], [rel~=nofollow], [download]' } },
+        ],
+      },
+      eagerness: 'moderate',
+    },
+  ],
+};
+---
+
+<Palette />
+<script type="speculationrules" is:inline set:html={JSON.stringify(rules)} />
+<script>
+  // Sound first: it installs ui.cue, which the others (and every page script) call.
+  import '../scripts/sound.js';
+  import '../scripts/peek.js';
+  import '../scripts/palette.js';
+  import '../scripts/sheet-drag.js';
+</script>
