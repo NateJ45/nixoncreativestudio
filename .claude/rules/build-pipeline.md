@@ -42,3 +42,7 @@ There is no placeholder step and no `coverPlaceholders.json` any more: covers ar
 ## Fonts and static assets
 
 The one font is `public/assets/fonts/hanken.woff2` (declared in `kit.css`, preloaded in `BaseLayout.astro`). Footage, captures and study images are plain files in `public/assets/` and clips in `public/media/`; `public/_headers` caches `/assets/*` for a month and `/media/*` and `/_astro/*` for a year.
+
+## Google Business Profile shots (on demand, not in the build)
+
+`node scripts/gbp-shots.mjs capture|render|all [slug ...]` makes device-frame photos of client sites for the Google Business Profile. `capture` opens every case study's `liveUrl` at 1440 (2x) and 390 (3x), hides cookie, donate and back-to-top popups, and saves the hero plus each big section into `gbp-shots/raw/<slug>/`. `render` draws CSS laptops and phones around them (key-light backdrop in the client's colour, contact shadows, a phone status bar that continues the site's header) and writes `gbp-shots/out/`: `<slug>-duo`, `-angle`, `-phones`, `-detail-N` and a 16:9 `cover-wall.jpg`. Devices stay inside the centre square because Google crops thumbnails to one, and nothing has text on it. Per-site colour, section picks, extra pages, hidden selectors, `motion` and `skip` live in `scripts/gbp-shots.config.mjs`. `gbp-shots/` is gitignored. Look at every output before uploading.
