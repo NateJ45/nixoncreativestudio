@@ -6,10 +6,12 @@ import '../styles/pages/colophon.css';
 import Closing from '../components/Closing.astro';
 import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
-import { getClient } from '../lib/clients';
+import { getClients } from '../lib/clients';
 import { plainText, wordSpans } from '../lib/words';
 
-const window = await getClient('mas-monograms');
+// Every client's window, stacked in the side column. colophon-deck.js shows one at a time and
+// moves to the next every few seconds; with no script only the first shows.
+const clients = await getClients();
 const heading = `How this site is <b>made.</b>`;
 // The build date, printed when the site is built (the deploy runs the build), so the live rows
 // below have one fact that needs no script.
@@ -151,8 +153,17 @@ const builtText = new Intl.DateTimeFormat('en-US', {
       </p>
     </div>
     <div class="colo-win" data-colo-win>
-      <Tile client={window} lazy />
-      <Caption client={window} />
+      <div class="colo-deck">
+        {clients.map((c, i) => (
+          <div class="colo-slide" data-colo-slide inert={i > 0 ? true : undefined}>
+            <Tile client={c} lazy={i > 0} />
+            <Caption client={c} />
+          </div>
+        ))}
+      </div>
+      <button class="colo-hold label" type="button" aria-pressed="false" data-colo-hold hidden>
+        Pause
+      </button>
     </div>
   </div>
   <Closing lead="Want a site built <b>the same way?</b>" />
@@ -161,5 +172,9 @@ const builtText = new Intl.DateTimeFormat('en-US', {
 <script>
   import { ui } from '../scripts/kit.js';
   import '../scripts/colophon.js';
-  ui.wireFootage(document.querySelector('[data-colo-win]'));
+  import '../scripts/colophon-deck.js';
+  /* Hover plays the window in front. Touch skips the play-on-scroll: the stacked windows all sit
+     at the middle together, and the deck already moves. */
+  if (!matchMedia('(hover: none)').matches)
+    ui.wireFootage(document.querySelector('[data-colo-win]'));
 </script>
