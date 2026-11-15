@@ -1467,8 +1467,7 @@ html:not(.js) .ba-l {
 @media (prefers-reduced-motion: reduce) {
   .zoom,
   .next-tile,
-  .print,
-  .strip-nav button,
+  .pg .zoom,
   .tbtn,
   .ba-h i,
   .more summary i {
@@ -1479,13 +1478,8 @@ html:not(.js) .ba-l {
   }
   .next-band:hover .next-tile,
   .next-tile:focus-visible,
-  .print,
-  .print:hover,
-  .print:focus-within {
+  .pg .zoom:hover {
     transform: none;
-  }
-  .strip-row {
-    scroll-behavior: auto;
   }
 }
 
@@ -1686,128 +1680,66 @@ html:not(.js) .ba-l {
     var(--lean, 0px) 40px 50px -22px rgba(0, 0, 0, 0.5);
 }
 
-/* The filmstrip over "What I built": the fold's screenshots as a row of prints, always in view.
-   It scrolls sideways by itself (touch, trackpad, the arrow buttons, or a mouse drag from
-   study.js); each print is the same Enlarge button as every other capture. */
-.strip {
-  position: relative;
-}
-.strip-row {
-  display: flex;
-  gap: clamp(0.9rem, 2vw, 1.5rem);
-  margin: 0 calc(var(--gut) * -1);
-  padding: 1rem var(--gut) 1.75rem;
+/* "What I built", page by page: the fold's screenshots as a numbered run of large screens, one
+   under another, each with its caption under it ("2 / 3", the feature's heading, its first
+   sentence). Every screen is the same Enlarge button as every other capture (ZoomImage). Added
+   2026-11-15 in place of the sideways filmstrip, so a visitor can judge the design at full size
+   without opening the fold. */
+.pages {
+  display: grid;
+  gap: clamp(2.25rem, 5vw, 3.75rem);
+  margin: clamp(1rem, 2vw, 1.5rem) 0 0;
+  padding: 0;
   list-style: none;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: var(--gut);
-  scroll-behavior: smooth;
-  scrollbar-width: none;
 }
-.strip-row::-webkit-scrollbar {
-  display: none;
-}
-.js .strip-row {
-  cursor: grab;
-}
-.strip-row.dragging {
-  cursor: grabbing;
-  scroll-snap-type: none;
-  scroll-behavior: auto;
-  user-select: none;
-}
-.print {
-  flex: none;
-  width: fit-content;
-  max-width: min(82vw, 34rem);
-  padding: 0.5rem 0.5rem 0;
-  border-radius: 0.5rem;
+.pg .zoom {
+  display: block;
+  width: 100%;
+  padding: clamp(0.4rem, 0.8vw, 0.6rem);
+  border-radius: 1.25rem;
   background-color: var(--card);
   box-shadow:
     var(--rim),
     0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.08),
-    var(--lean, 0px) 20px 34px -22px rgba(0, 0, 0, 0.42);
-  scroll-snap-align: start;
-  transform: rotate(-0.7deg);
+    var(--lean, 0px) 30px 50px -26px rgba(0, 0, 0, 0.45);
   transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
-.print:nth-child(even) {
-  transform: rotate(0.6deg) translateY(0.35rem);
-}
-.print:hover,
-.print:focus-within {
+.pg .zoom:hover {
   transform: translateY(-4px);
 }
-.print .zoom {
-  width: auto;
-  border-radius: 0.2rem;
-  box-shadow: none;
-  transition: none;
-}
-.print .zoom:hover {
-  transform: none;
-}
-.print .zoom img {
-  width: auto;
-  max-width: 100%;
-  height: clamp(9.5rem, 21vw, 14rem);
+.pg .zoom img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(78vh, 46rem);
   object-fit: cover;
-  object-position: 0 0;
-  /* A drag on the strip must not pick the picture up. */
-  -webkit-user-drag: none;
-  user-select: none;
+  object-position: 50% 0;
+  border-radius: 0.85rem;
 }
-.print-cap {
-  max-width: 22rem;
-  padding: 0.6rem 0.15rem 0.7rem;
-  font: 500 0.8125rem/1.3 var(--body);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+.pg-cap {
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  max-width: 44rem;
+  margin: 0.9rem 0.25rem 0;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.pg-n {
+  flex: none;
+  min-width: 2.75rem;
+  font: 600 0.8125rem/1 var(--body);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
   color: var(--soft);
 }
-.strip-nav {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: -0.5rem !important;
+.pg-t {
+  color: var(--soft);
 }
-.strip-nav[hidden] {
-  display: none;
-}
-.strip-nav button {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--wash);
+.pg-t b {
+  font-weight: 650;
   color: var(--ink);
-  cursor: pointer;
-  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-.strip-nav button:hover {
-  transform: scale(1.06);
-}
-.strip-nav button:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-.strip-nav button[disabled] {
-  opacity: 0.4;
-  cursor: default;
-  transform: none;
-}
-.strip-nav svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 .build .more {
   margin-top: clamp(1.25rem, 2.4vw, 2rem);
@@ -1817,7 +1749,7 @@ html:not(.js) .ba-l {
 @media (forced-colors: active) {
   .dec-easy,
   .dec-did,
-  .print,
+  .pg .zoom,
   .next-band {
     border: 1px solid CanvasText;
   }
@@ -1827,17 +1759,11 @@ html:not(.js) .ba-l {
   }
 }
 @media print {
-  /* On paper both halves of a decision lie flat, and the strip wraps instead of scrolling. */
-  .dec-easy,
-  .print,
-  .print:nth-child(even) {
+  /* On paper both halves of a decision lie flat. */
+  .dec-easy {
     transform: none;
   }
-  .strip-row {
-    flex-wrap: wrap;
-    overflow: visible;
-  }
-  .strip-nav {
-    display: none;
+  .pg {
+    break-inside: avoid;
   }
 }

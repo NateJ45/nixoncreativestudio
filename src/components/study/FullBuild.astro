@@ -8,7 +8,12 @@
    The prints are read from the fold's own content: this renders its slot once,
    picks every feature shot out of the markup (FeatureHighlight), and prints the
    same HTML inside the fold. So nothing is listed twice in a study's MDX, and a
-   study with no feature shot in here gets no strip at all. */
+   study with no feature shot in here gets no strip at all.
+
+   Since 2026-11-15 the strip is a numbered run of large screens, one under another, each with a
+   caption: "2 / 3", the feature's own heading, and the first sentence of its text. Big enough to
+   judge the design without opening anything, and every one still opens larger (ZoomImage). The
+   rest of each feature's text stays in the fold below. */
 import ZoomImage from './ZoomImage.astro';
 
 interface Props {
@@ -33,6 +38,13 @@ const plain = (v: string) =>
 const attr = (html: string, name: string) =>
   plain(new RegExp(`\\s${name}="([^"]*)"`).exec(html)?.[1] ?? '');
 
+/* The first sentence of a feature's text: up to the first stop that is followed by a space and
+   a capital or a digit, so a number like 3.6 never cuts it short. */
+const firstSentence = (html: string) => {
+  const m = /^[\s\S]*?[.!?](?=\s+[A-Z0-9"\u201c(])/.exec(html.trim());
+  return (m ? m[0] : html).trim();
+};
+
 const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/article>/g)].flatMap(
   ([, feat]) => {
     const img = /<img\s[^>]*>/.exec(feat)?.[0];
@@ -45,8 +57,11 @@ const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/ar
       {
         img: { url, w, h },
         alt: attr(img, 'alt'),
-        // The feature's own heading, markup and all, as the print's caption.
+        // The feature's own heading, markup and all, as the caption's lead.
         title: /<h3[^>]*>([\s\S]*?)<\/h3>/.exec(feat)?.[1] ?? '',
+        // The first sentence of its text, as the caption's second half.
+        // `<p(?:\s…)?>` so the `<path>` in the Enlarge icon is never taken for a paragraph.
+        line: firstSentence(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/.exec(feat)?.[1] ?? ''),
       },
     ];
   },
@@ -56,29 +71,22 @@ const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/ar
 <section class="chap build" id="what-i-built" aria-labelledby="cb">
   <h2 id="cb">What I built</h2>
   {shots.length > 0 && (
-    <div class="strip" data-strip>
-      <ul class="strip-row" data-strip-row data-cursor="Drag">
-        {shots.map((s) => (
-          <li class="print">
-            <ZoomImage img={s.img} alt={s.alt} />
-            <p class="print-cap" set:html={s.title} />
-          </li>
-        ))}
-      </ul>
-      {/* study.js shows these only when the strip is wider than its column. */}
-      <p class="strip-nav" data-strip-nav hidden>
-        <button type="button" data-strip-prev aria-label="Earlier screenshots">
-          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <path d="M12.5 4.5 7 10l5.5 5.5" />
-          </svg>
-        </button>
-        <button type="button" data-strip-next aria-label="More screenshots">
-          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <path d="M7.5 4.5 13 10l-5.5 5.5" />
-          </svg>
-        </button>
-      </p>
-    </div>
+    <ol class="pages" aria-label="Screens from the build">
+      {shots.map((s, i) => (
+        <li class="pg rv">
+          <ZoomImage img={s.img} alt={s.alt} />
+          <p class="pg-cap">
+            <span class="pg-n">
+              {i + 1} / {shots.length}
+            </span>
+            <span class="pg-t">
+              <b set:html={s.title} />
+              {s.line && <span set:html={' ' + s.line} />}
+            </span>
+          </p>
+        </li>
+      ))}
+    </ol>
   )}
   <details class="more" data-more>
     <summary>

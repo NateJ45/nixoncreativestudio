@@ -1047,3 +1047,105 @@ html:not(.js) .ed-go {
     transform: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The client marks (src/components/home/ClientMarks.astro): the real logos of the
+   organizations in the grid, one ink at rest, their own colours on point or focus.
+   --------------------------------------------------------------------------- */
+.logowall {
+  padding: clamp(2.5rem, 7vh, 4.5rem) var(--gut);
+  border-block: 1px solid var(--line);
+  text-align: center;
+}
+.logowall h2 {
+  margin-bottom: clamp(1.5rem, 4vh, 2.5rem);
+  color: var(--soft);
+}
+.lw-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(1.75rem, 4vw, 3.5rem) clamp(2rem, 5vw, 4.25rem);
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.lw {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border-radius: 0.5rem;
+  color: var(--ink);
+  text-decoration: none;
+  outline-offset: 6px;
+}
+/* One ink at rest: every mark is drawn in the page's ink (black in light, the pale ink in dark).
+   The alt text carries the name, so the picture is never the only way to know who it is. */
+.lw img {
+  display: block;
+  width: auto;
+  max-width: min(17rem, 70vw);
+  object-fit: contain;
+  filter: brightness(0);
+  opacity: 0.72;
+  transition:
+    filter 0.35s var(--ease),
+    opacity 0.35s var(--ease),
+    transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+:root[data-theme='dark'] .lw img {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+.lw.own img,
+:root[data-theme='dark'] .lw.own img {
+  filter: none;
+  opacity: 1;
+}
+.lw:hover img,
+.lw:focus-visible img,
+:root[data-theme='dark'] .lw:hover img,
+:root[data-theme='dark'] .lw:focus-visible img {
+  filter: none;
+  opacity: 1;
+  transform: translateY(-3px) scale(1.04);
+}
+/* The Academy's brand is its name in Instrument Serif; with the font not loaded here it falls
+   back to the closest serif on the device. */
+.lw-type {
+  font:
+    400 clamp(1.5rem, 2.4vw, 1.9rem) / 1 'Instrument Serif',
+    Georgia,
+    'Times New Roman',
+    serif;
+  letter-spacing: -0.01em;
+  opacity: 0.8;
+  transition: color 0.35s var(--ease);
+}
+.lw:hover .lw-type,
+.lw:focus-visible .lw-type {
+  opacity: 1;
+}
+/* The marks rise in one after another as the wall scrolls into view. Scroll-driven, so nothing
+   moves on its own, and only where the browser can and motion is allowed. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lw-row li {
+      animation: lw-rise linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i) * 4%) entry calc(60% + var(--i) * 4%);
+    }
+  }
+}
+@keyframes lw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
