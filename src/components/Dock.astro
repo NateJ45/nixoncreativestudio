@@ -3,9 +3,10 @@
    one nav: no drawer, no hamburger, and it works with no script at all.
 
    Each link can also deal a small hand of real shortcuts out of the pill: the
-   client phones from Work, the three prices from Prices, a way to reach me from
-   Start a project. A hand is plain markup, `hidden` until kit.js opens it on a
-   wide screen with a mouse, or from the keyboard with the up arrow. Nothing in a
+   client phones from Work, seven selected prints from Photos, the three prices
+   from Prices, a way to reach me from Start a project. A hand is plain markup,
+   `hidden` until kit.js opens it on a wide screen with a mouse, or from the
+   keyboard with the up arrow. Nothing in a
    hand is the only way to reach anything: each link's page has it all.
 
    On a page with chapters (a case study) kit.js puts one tick a chapter on the
@@ -16,6 +17,8 @@ import { getClients } from '../lib/clients';
 import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
 import ThemeFlip from './ThemeFlip.astro';
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
 import { photoCount } from '../data/nav';
 import { photographyOpen } from '../data/photography-gate';
 
@@ -28,6 +31,35 @@ const deck = 'Eight selected case studies';
 // Photos sits in the dock only while /photography/ is open, by the same rule the page and the
 // sitemap read (src/data/photography-gate.ts), so the link never points at a noindex page.
 const photosOpen = photographyOpen(await photoCount());
+// The Photos hand: seven selects, church and people in turn, each opening its own print on the
+// light table (?print=<slug>). A slug that stops being a select simply drops out of the hand.
+const PRINTS = [
+  'farm-field',
+  'engagement-hug',
+  'ash-candle',
+  'wedding-mountain-lift',
+  'vbs-song',
+  'portrait-autumn',
+  'choir-sing',
+];
+const selects = photosOpen
+  ? await getCollection('photos', ({ id, data }) => data.select === true && PRINTS.includes(id))
+  : [];
+const prints = await Promise.all(
+  selects
+    .sort((a, b) => PRINTS.indexOf(a.id) - PRINTS.indexOf(b.id))
+    .map(async (p) => ({
+      slug: p.id,
+      title: p.data.title,
+      thumb: await getImage({
+        src: p.data.image,
+        width: 240,
+        height: 300,
+        fit: 'cover',
+        format: 'webp',
+      }),
+    })),
+);
 ---
 
 {/* The dock rises in on arrival, not on every page: a page reached from this site
@@ -87,6 +119,25 @@ const photosOpen = photographyOpen(await photoCount());
     <a href="/photography/" aria-current={current('/photography/')}>
       Photos
     </a>
+  )}
+  {prints.length > 0 && (
+    <div class="dk-hand" data-fan hidden>
+      <p class="dk-cap" aria-hidden="true" data-fan-cap data-rest="Selected photographs">
+        Selected photographs
+      </p>
+      {prints.map((p) => (
+        <a
+          class="fc fc-print"
+          href={`/photography/?print=${p.slug}`}
+          aria-label={p.title}
+          data-cap={p.title}
+        >
+          <span class="fc-in">
+            <img src={p.thumb.src} alt="" loading="lazy" width="240" height="300" />
+          </span>
+        </a>
+      ))}
+    </div>
   )}
 
   <a href="/services/" aria-current={current('/services/')}>
