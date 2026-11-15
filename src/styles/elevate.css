@@ -29,12 +29,16 @@
   /* The grain: a small tile of noise, drawn once by the browser from an inline SVG. Dark specks on
      the light side, light specks on the dark side, both very faint. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .17 0 0 0 -.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* A fainter tile of the same noise for the page ground, about 60% of the cards' strength, so a
+     card still reads a touch more textured than the page it sits on. */
+  --grain-ground: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .1 0 0 0 -.03'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   /* The same grain for a surface that keeps its colour on either side (a client's window). */
   --grain-ink: var(--grain);
 }
 @media screen {
   :root[data-theme='dark'] {
     --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .13 0 0 0 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --grain-ground: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .08 0 0 0 -.025'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     --grain-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .17 0 0 0 -.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   /* The surfaces that keep the light tokens on the dark side keep the light grain too. */
@@ -191,6 +195,13 @@
    Light and paper
    --------------------------------------------------------------------------------------------- */
 
+/* The page itself sits on a fainter cut of the same grain (--grain-ground), so the ground reads as
+   paper rather than a flat void. It tiles down the body and scrolls with it; kit.css still sets
+   the colour (--ground), this only adds the image. Bands and sheets paint their own colour over
+   it. */
+body {
+  background-image: var(--grain-ground);
+}
 /* .paper: the grain on any surface that is not a .card (which has it already, kit.css). It only
    adds a background image, so the surface keeps its own colour. */
 .paper {
@@ -525,6 +536,7 @@ html.bp body::after {
 /* Forced colors keep background images, so the decoration is switched off by hand, and the cursor
    label gets a real edge because its shadow is gone. */
 @media (forced-colors: active) {
+  body,
   .card,
   .pc-face,
   .paper,
@@ -543,6 +555,7 @@ html.bp body::after {
   }
 }
 @media print {
+  body,
   .card,
   .pc-face,
   .paper,
