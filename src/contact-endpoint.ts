@@ -298,8 +298,8 @@ async function storeAndNotify(
       const res = await e.CONTACT_DB.prepare(
         `INSERT INTO contact_submissions
            (received_at, name, email, subject, message, user_agent, country,
-            region, city, asn, as_org, spam_score, spam_reasons, held, visitor_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            region, city, asn, as_org, spam_score, spam_reasons, held)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
         .bind(
           receivedAt.toISOString(),
@@ -316,10 +316,20 @@ async function storeAndNotify(
           spam.score,
           spam.reasons.length ? spam.reasons.join('; ') : null,
           spam.verdict === 'hold' ? 1 : 0,
-          visitorId,
         )
         .run();
       rowId = res.meta?.last_row_id ?? null;
+      // A separate write, so an inquiry still stores on a database that has not had
+      // migrations/0003 yet (the column is missing and only this update fails).
+      if (rowId !== null && visitorId) {
+        try {
+          await e.CONTACT_DB.prepare(`UPDATE contact_submissions SET visitor_id = ? WHERE id = ?`)
+            .bind(visitorId, rowId)
+            .run();
+        } catch (err) {
+          console.error('[contact] could not link the visitor trail (migration 0003?):', err);
+        }
+      }
     } catch (err) {
       // A database problem must not lose the message either: still try to email it.
       console.error('[contact] could not store submission:', err);
