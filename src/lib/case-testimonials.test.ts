@@ -23,7 +23,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /** The studies with a real quote on file (vault note, 2026-10-30). */
@@ -33,6 +33,9 @@ const WITH_QUOTES: Record<string, number> = {
   'stone-steps-50k': 1,
   'first-baptist-muncie': 2,
   'first-presbyterian-orangeburg': 1,
+  // Public Google reviews (2026-11-15), each with its link and photo.
+  'reid-design': 1,
+  'west-chester-preschool': 1,
 };
 
 const dir = fileURLToPath(new URL('../content/case-studies/', import.meta.url));
@@ -43,11 +46,12 @@ const studies = readdirSync(dir)
     text: readFileSync(dir + f, 'utf8').replace(/\r\n/g, '\n'),
   }));
 
-/** Undo YAML scalar quoting: 'it''s' and "plain" (no escapes are used). */
+/** Undo YAML scalar quoting: 'it''s' and "plain". The one escape used is backslash-n, a
+ *  paragraph break inside a long review. */
 function scalar(raw: string): string {
   const v = raw.trim();
   if (v.startsWith("'") && v.endsWith("'")) return v.slice(1, -1).replace(/''/g, "'");
-  if (v.startsWith('"') && v.endsWith('"')) return v.slice(1, -1);
+  if (v.startsWith('"') && v.endsWith('"')) return v.slice(1, -1).replace(/\\n/g, '\n');
   return v;
 }
 
@@ -62,6 +66,13 @@ function testimonials(text: string): Item[] | undefined {
   const items: Item[] = [];
   for (const line of lines.slice(start + 1)) {
     if (!line.startsWith('  ')) break;
+    // A nested `source:` block (a public review): its keys are read as source.platform and so on.
+    const nested = line.match(/^ {6}([A-Za-z]+):\s*(.*)$/);
+    if (nested) {
+      assert.ok(items.length > 0, 'testimonials: a nested field before the first item');
+      items[items.length - 1][`source.${nested[1]}`] = scalar(nested[2]);
+      continue;
+    }
     const m = line.match(/^ {2}(- | {2})([A-Za-z]+):\s*(.*)$/);
     assert.ok(m, `testimonials: cannot read this line:\n${line}`);
     if (m[1] === '- ') items.push({});
@@ -109,7 +120,19 @@ for (const { slug, text } of studies) {
       const d = new Date(`${t.date}T00:00:00Z`);
       assert.equal(d.toISOString().slice(0, 10), t.date, `${slug}: ${t.date} is not a real day`);
       assert.ok(t.date <= today, `${slug}: ${t.date} is in the future`);
-      const known = new Set(['quote', 'name', 'title', 'date', 'context', 'highlight']);
+      const known = new Set([
+        'quote',
+        'name',
+        'title',
+        'date',
+        'context',
+        'highlight',
+        'photo',
+        'source',
+        'source.platform',
+        'source.rating',
+        'source.url',
+      ]);
       for (const key of Object.keys(t)) assert.ok(known.has(key), `${slug}: unknown key ${key}`);
       // The optional key phrase (the quote band's marker) picks words out of the quote. It can
       // never add or change any, so it has to be in the quote exactly as written.
@@ -118,6 +141,29 @@ for (const { slug, text } of studies) {
           t.highlight.length > 0 && t.quote.includes(t.highlight),
           `${slug}: highlight must be copied exactly out of the quote`,
         );
+      }
+    }
+  });
+
+  test(`${slug}: a public review names its platform, its stars and a link to the original`, () => {
+    for (const t of list) {
+      if (t.source === undefined) continue;
+      assert.equal(t['source.platform'], 'google', `${slug}: only Google reviews carry stars`);
+      assert.match(t['source.rating'] ?? '', /^[1-5]$/, `${slug}: rating is a whole number 1 to 5`);
+      assert.match(
+        t['source.url'] ?? '',
+        /^https:\/\/(www\.google\.com\/maps|maps\.app\.goo\.gl)\//,
+        `${slug}: the link must open the review on Google Maps`,
+      );
+    }
+  });
+
+  test(`${slug}: a quote's photo exists at both sizes`, () => {
+    for (const t of list) {
+      if (t.photo === undefined) continue;
+      for (const size of [96, 192]) {
+        const file = fileURLToPath(new URL(`../../public${t.photo}-${size}.webp`, import.meta.url));
+        assert.ok(existsSync(file), `${slug}: missing ${t.photo}-${size}.webp`);
       }
     }
   });

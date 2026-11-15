@@ -1,0 +1,29 @@
+---
+/* Five stars for a public review. One SVG, read as one picture: "Rated 5 out of 5 on Google".
+   Gold (--star) with an amber edge (--star-edge) so the shape clears 3:1 on a white card; the edge
+   pair is asserted in kit-tokens.test.ts. On a client's color (the quote band) the stars take the
+   band's paper instead, so they sit with the words (.band .stars in kit.css).
+   An unfilled star is drawn as an outline, so a 4 never reads as a 5. */
+interface Props {
+  rating: number;
+  /** Who gave it, for the label. */
+  on?: string;
+  class?: string;
+  /** Drawn only, read by nothing: for stars inside a link whose words already say the rating. */
+  decorative?: boolean;
+}
+const { rating, on = 'Google', class: cls, decorative = false } = Astro.props;
+const star = 'M12 2.6l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17.2l-5.9 3.2 1.3-6.5L2.5 9.4l6.6-.8z';
+---
+
+<svg
+  class:list={['stars', cls]}
+  viewBox="0 0 120 24"
+  role={decorative ? undefined : 'img'}
+  aria-label={decorative ? undefined : `Rated ${rating} out of 5 on ${on}`}
+  aria-hidden={decorative ? 'true' : undefined}
+>
+  {[0, 1, 2, 3, 4].map((i) => (
+    <path d={star} transform={`translate(${i * 24} 0)`} class={i < rating ? 'on' : 'off'} />
+  ))}
+</svg>

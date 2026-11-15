@@ -1782,3 +1782,68 @@ html:not(.js) .ba-l {
     break-inside: avoid;
   }
 }
+
+/* A public review in "In their words" (added 2026-11-15): its key phrase is marked in the
+   client's paper, and the face, stars and Google link sit under it (ReviewCite, kit.css). */
+.q-review blockquote {
+  font-size: clamp(1.25rem, 1.8vw, 1.625rem);
+  line-height: 1.28;
+}
+.q-review .hl {
+  margin-inline: -0.12em;
+  padding: 0.02em 0.12em 0.06em;
+  border-radius: 0.14em;
+  background: var(--p);
+  color: var(--c);
+  font-weight: 700;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.q-review .rv-cite {
+  margin-top: 1.25rem;
+}
+@media (forced-colors: active) {
+  .q-review .hl {
+    background: Mark;
+    color: MarkText;
+  }
+}
+
+/* The review line in the opening: face, stars, "Staci's Google review", a jump to the chapter. */
+.s-rv {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+  padding: 0.3rem 0.95rem 0.3rem 0.3rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--p);
+  color: var(--p);
+  font: 600 0.9375rem/1 var(--body);
+  text-decoration: none;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.s-rv:not(:has(img)) {
+  padding-left: 0.85rem;
+}
+.s-rv img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.s-rv .stars {
+  font-size: 0.75rem;
+}
+.s-rv:hover,
+.s-rv:focus-visible {
+  background: var(--p);
+  color: var(--c);
+}
+.s-rv:hover .stars,
+.s-rv:focus-visible .stars {
+  --star: var(--c);
+  --star-edge: var(--c);
+}
