@@ -1195,6 +1195,131 @@ html:not(.js) .dk-spy {
   --fcb: var(--ink);
   --fci: var(--on-ink);
 }
+/* Home: one wide card in the studio blue, saying what the studio does. */
+.fc-home {
+  --fw: 21rem;
+  --fs: 0rem;
+  --fa: 0rem;
+  --fr: 0deg;
+}
+.fc-home .fc-in {
+  padding: 1.1rem 1.4rem 1.2rem;
+  border-radius: 1.25rem;
+  background: var(--fill);
+  color: #fff;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 22px 36px -18px rgba(0, 0, 0, 0.55);
+}
+.fc-home strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  font: 700 1.375rem/1.05 var(--display);
+  letter-spacing: -0.03em;
+}
+/* The theme hand: each side of the site as a small page in its own colors, kept whatever side the
+   page is on. The side you are on wears a ring. */
+.fc-theme {
+  --fw: 8.5rem;
+  --fs: 9.1rem;
+  --fa: 0rem;
+  --fr: 4deg;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* Its cards are short, so its caption sits lower, just over them. */
+.dk-cap:has(~ .fc-theme) {
+  bottom: 12.25rem;
+}
+.fc-theme-light {
+  --mg: #f5f5f3;
+  --mi: #121211;
+  --ms: #5c5c57;
+  --mc: #fff;
+  --mf: #2f3fe6;
+}
+.fc-theme-dark {
+  --mg: #14162f;
+  --mi: #f3f2ec;
+  --ms: #b2b4cc;
+  --mc: #1d2042;
+  --mf: #3345f0;
+}
+.fc-theme .fc-in {
+  padding: 0.55rem 0.55rem 0.6rem;
+  border-radius: 1rem;
+  background: var(--mg);
+  color: var(--mi);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 0 0 1px rgba(18, 18, 17, 0.12),
+    0 18px 30px -16px rgba(0, 0, 0, 0.55);
+}
+.fc-theme[aria-pressed='true'] .fc-in {
+  box-shadow:
+    0 0 0 2px var(--mg),
+    0 0 0 4px var(--accent),
+    0 18px 30px -16px rgba(0, 0, 0, 0.55);
+}
+.fc-mini {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 0.45rem;
+  padding: 0.6rem 0.55rem;
+  border-radius: 0.55rem;
+  background: var(--mg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mi) 12%, transparent);
+}
+.fc-mini i {
+  display: block;
+  height: 0.3rem;
+  margin-bottom: 0.3rem;
+  border-radius: 99rem;
+  background: var(--ms);
+  opacity: 0.55;
+}
+.fc-mini .m-h {
+  width: 85%;
+  height: 0.55rem;
+  margin-bottom: 0.4rem;
+  background: var(--mi);
+  opacity: 1;
+}
+.fc-mini .m-s {
+  width: 60%;
+}
+.fc-mini .m-b {
+  width: 2.2rem;
+  height: 0.6rem;
+  margin-top: 0.45rem;
+  background: var(--mf);
+  opacity: 1;
+}
+.fc-mini .m-d {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4rem;
+  width: 60%;
+  height: 0.55rem;
+  margin: 0 0 0 -30%;
+  background: var(--mc);
+  opacity: 1;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mi) 14%, transparent);
+}
+.fc-theme .label {
+  display: block;
+  padding-left: 0.15rem;
+  font: 600 0.9375rem/1 var(--body);
+  color: var(--mi);
+}
 /* One wide card: me, or the way to reach me. */
 .fc-me,
 .fc-yours {

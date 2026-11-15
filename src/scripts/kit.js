@@ -546,7 +546,8 @@ if (bands.length && !reduce) {
 var dock = $('.dock'),
   slide = $('[data-slide]'),
   scrim = $('[data-dock-scrim]'),
-  dockLinks = [].slice.call(dock.querySelectorAll(':scope > a'));
+  /* The links, and the theme switch, which deals a hand of its own. */
+  dockLinks = [].slice.call(dock.querySelectorAll(':scope > a, :scope > [data-theme-flip]'));
 
 /* The puck rests on the page you are on and goes to the link you are near. Each edge has its own
    spring and the leading edge is the quicker, so it stretches on the way and gathers on landing. */
@@ -806,7 +807,7 @@ dockLinks.forEach(function (a) {
     if (e.key !== 'ArrowUp' || !canDeal.matches) return;
     e.preventDefault();
     handShow(hand);
-    var first = fan.querySelector('a');
+    var first = fan.querySelector('a, button');
     if (first) first.focus({ preventScroll: true });
   });
   fan.addEventListener('keydown', function (e) {
@@ -816,7 +817,7 @@ dockLinks.forEach(function (a) {
       a.focus();
     }
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-      var all = [].slice.call(fan.querySelectorAll('a')),
+      var all = [].slice.call(fan.querySelectorAll('a, button')),
         at = all.indexOf(doc.activeElement);
       if (at < 0) return;
       e.preventDefault();
