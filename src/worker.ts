@@ -1,14 +1,16 @@
 /* The only Worker code on this site: video byte ranges, and the contact form
-   endpoint (POST /api/contact/, src/contact-endpoint.ts).
+   endpoint (POST /api/contact/, src/contact-endpoint.ts), the visitor trail
+   (POST /api/trail/, src/trail-endpoint.ts) and its daily clean-up (scheduled).
 
    Static assets answer a Range request with the whole file and a plain 200, and
    iPhones refuse to play a clip that way: Safari asks for the first bytes and
    gives up without a 206. scripts/add-video-worker.mjs adds this file to the
    deploy config after the build, with run_worker_first limited to *.mp4 and
-   *.webm (plus /api/contact/), so every other request is served as a plain
+   *.webm (plus /api/contact/ and /api/trail/), so every other request is served as a plain
    asset and never reaches this code. */
 
 import { handleContact, type ContactEnv } from './contact-endpoint.ts';
+import { handleTrail, pruneTrails } from './trail-endpoint.ts';
 
 type Assets = { fetch: (request: Request) => Promise<Response> };
 
@@ -41,6 +43,11 @@ export default {
   fetch(request: Request, env: { ASSETS: Assets } & ContactEnv): Promise<Response> {
     const path = new URL(request.url).pathname;
     if (path === '/api/contact/' || path === '/api/contact') return handleContact(request, env);
+    if (path === '/api/trail/' || path === '/api/trail') return handleTrail(request, env);
     return /\.(mp4|webm)$/.test(path) ? video(request, env.ASSETS) : env.ASSETS.fetch(request);
+  },
+  // The cron in wrangler.jsonc (added to the deploy config by scripts/add-video-worker.mjs).
+  async scheduled(_event: unknown, env: ContactEnv): Promise<void> {
+    await pruneTrails(env);
   },
 };

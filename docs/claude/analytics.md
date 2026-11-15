@@ -68,7 +68,60 @@ Useful views in GA4:
   and `value`. The AI channel group splits ChatGPT, Perplexity and friends out of Referral.
 - **Events > tool_use** broken down by `tool_name`: which toys earn their place.
 
-## 3. Search Console: "how do people find it?"
+## 3. The visitor trail: "what did this person read before they wrote?"
+
+Every real visitor's browser gets an anonymous id (`ncs-vid` in localStorage, made by
+`src/components/analytics/TrailHead.astro` in the head). `src/lib/trail.ts` sends one small beacon
+per page view to `POST /api/trail/` (`src/trail-endpoint.ts`, a `run_worker_first` path like the
+contact endpoint), again whenever the tab is hidden or left; the Worker upserts on (visit, page),
+so the last send wins. Table `trail_pages` in the same D1 database
+(`migrations/0003_visitor_trail.sql`):
+
+| Column                        | What it holds                                                                                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visitor_id`, `visit_id`      | the anonymous ids; a visit ends after 30 minutes without a page view                                                                                                               |
+| `page_index`, `path`, `title` | the page, in order within the visit                                                                                                                                                |
+| `visit_source`                | on a visit's first page only: a `lead_source` label for this visit (`search-google`, `social-instagram`)                                                                           |
+| `engaged_ms`, `scroll_pct`    | time the page was visible and in use (stops after 30s idle), furthest scroll                                                                                                       |
+| `events`                      | JSON labels: every `track()` event (`tool:tier_picker`, `form:budget`), `click:<button words>` for buttons and FAQ questions opened, `search:<words>` typed into the Ctrl+K search |
+| `city`, `region`, `device`    | from Cloudflare and the user agent ("iPhone, Safari"); never the IP                                                                                                                |
+
+The contact form sends the id as `visitor_id` (stored on `contact_submissions`), flushing the
+current page first, and the inquiry email gets a **Before they wrote** section
+(`src/lib/visitor-profile.ts`): first seen and from where, visits and reading time, each later
+visit's source, site searches, what they used, device and place, the pages they spent longest on,
+and visit by visit. A daily cron (`17 7 * * *`, `pruneTrails`) deletes trails older than 13 months
+that never became a lead.
+
+Same rules as GA4 for who counts: production hostname only, never WebDriver or headless browsers
+(Playwright forces it with `window.__ncsTrailForce`, `tests/trail.spec.ts`). Nothing typed into the
+contact form is ever read.
+
+**Mark your own browsers:** open `https://nixoncreativestudio.com/?me=1` once on each phone and
+computer. That browser then sends nothing: GA4 is switched off with `ga-disable-<id>`, and the trail
+and Clarity skip it. `?me=0` undoes it.
+
+Useful queries:
+
+```
+npx wrangler d1 execute nixoncreativestudio-contact --remote --command "SELECT path, COUNT(*) views, ROUND(AVG(engaged_ms)/1000) avg_s, ROUND(AVG(scroll_pct)) avg_scroll FROM trail_pages WHERE started_at > date('now','-30 day') GROUP BY path ORDER BY views DESC LIMIT 25"
+npx wrangler d1 execute nixoncreativestudio-contact --remote --command "SELECT value AS label, COUNT(*) n FROM trail_pages, json_each(trail_pages.events) WHERE value LIKE 'search:%' GROUP BY value ORDER BY n DESC LIMIT 30"
+npx wrangler d1 execute nixoncreativestudio-contact --remote --command "SELECT visitor_id, COUNT(DISTINCT visit_id) visits, MAX(started_at) last FROM trail_pages GROUP BY visitor_id HAVING visits > 1 ORDER BY last DESC LIMIT 20"
+```
+
+The same visitor id goes to GA4 as `user_id` (Explore > User explorer finds a lead) and to Clarity
+as its custom id.
+
+## 4. Microsoft Clarity: "where do people get stuck?"
+
+Session recordings, heatmaps, rage and dead clicks (`src/components/analytics/Clarity.astro`, only
+when `PUBLIC_CLARITY_ID` is set). Production hostname, real browsers, not before the first
+interaction or 6 seconds after load, never with Global Privacy Control or `?me=1`. The contact form
+has `data-clarity-mask`. Each session carries the visitor id (Recordings > Filters > Custom user ID)
+and tags `first_landing`, `first_source`. With `CLARITY_ID` set on the Worker, the inquiry email
+links to the recordings.
+
+## 5. Search Console: "how do people find it?"
 
 Queries, impressions and positions for nixoncreativestudio.com. Linked to GA4, so Reports >
 Search Console shows queries next to landing pages. The `ncs-studio:search-console` skill reads

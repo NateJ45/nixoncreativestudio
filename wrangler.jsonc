@@ -11,6 +11,9 @@
     // so a mistyped or old link showed a blank page instead of src/pages/404.astro.
     "not_found_handling": "404-page",
   },
+  // Daily at 07:17 UTC: forget visitor trails older than 13 months that never became a lead
+  // (src/trail-endpoint.ts pruneTrails).
+  "triggers": { "crons": ["17 7 * * *"] },
   "observability": {
     "enabled": true,
   },

@@ -19,7 +19,19 @@ config.main = '../../src/worker.ts';
 config.assets = {
   ...config.assets,
   binding: 'ASSETS',
-  run_worker_first: ['/**/*.mp4', '/**/*.webm', '/api/contact', '/api/contact/'],
+  run_worker_first: [
+    '/**/*.mp4',
+    '/**/*.webm',
+    '/api/contact',
+    '/api/contact/',
+    '/api/trail',
+    '/api/trail/',
+  ],
 };
+// The daily trail clean-up (src/trail-endpoint.ts pruneTrails). Set here as well as in
+// wrangler.jsonc so it survives the adapter rewriting the config.
+config.triggers = { crons: ['17 7 * * *'] };
 writeFileSync(path, JSON.stringify(config));
-console.log('[video-worker] added to the deploy config, for *.mp4, *.webm and /api/contact/ only.');
+console.log(
+  '[video-worker] added to the deploy config, for *.mp4, *.webm, /api/contact/ and /api/trail/ only.',
+);

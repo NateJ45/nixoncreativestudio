@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildInquiryEmail, phoneHref, websiteHref } from './inquiry-email.ts';
+import { buildProfile } from './visitor-profile.ts';
 
 const meta = {
   id: 12,
@@ -149,5 +150,43 @@ describe('buildInquiryEmail: spam check and where it came from', () => {
       network: 'Charter Communications',
     });
     assert.match(e.text, /from Cincinnati, Ohio, US on Charter Communications/);
+  });
+});
+
+describe('the visitor trail in the email', () => {
+  const profile = buildProfile('11111111-2222-4333-8444-555555555555', [
+    {
+      visit_id: 'a',
+      page_index: 1,
+      started_at: '2026-11-02T15:00:00Z',
+      path: '/churches/',
+      title: 'Churches',
+      visit_source: 'search-google',
+      engaged_ms: 95_000,
+      scroll_pct: 80,
+      events: JSON.stringify(['search:easter', 'tool:first_sunday']),
+      city: 'Cincinnati',
+      region: 'Ohio',
+      device: 'iPhone, Safari',
+    },
+  ]);
+
+  it('adds a Before they wrote section with pages, time and searches', () => {
+    const { html, text } = buildInquiryEmail(full, {
+      ...meta,
+      profile,
+      clarityUrl: 'https://clarity.microsoft.com/projects/view/abc123/impressions',
+    });
+    assert.match(html, /Before they wrote/);
+    assert.match(html, /\/churches\//);
+    assert.match(html, /1 min 35 s/);
+    assert.match(html, /Watch their sessions in Clarity/);
+    assert.match(text, /Searched the site for: "easter"/);
+    assert.match(text, /tried the first-Sunday tool/);
+  });
+
+  it('leaves the section out when there is no trail', () => {
+    const { html } = buildInquiryEmail(full, { ...meta, profile: null });
+    assert.doesNotMatch(html, /Before they wrote/);
   });
 });
