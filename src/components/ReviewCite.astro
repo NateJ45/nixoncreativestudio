@@ -1,0 +1,49 @@
+---
+/* Who said it, for a quote that is a public review: their face, their name and role, the stars, and
+   a link to the review itself on Google so anyone can check it is real. Used under the quote in the
+   home band (QuoteBand.astro) and in a case study's "In their words" chapter (study/Quotes.astro).
+   A quote with no `source` keeps its plain cite; this is only for reviews. */
+import Stars from './Stars.astro';
+
+interface Props {
+  name: string;
+  title: string;
+  photo?: string;
+  url: string;
+  rating: number;
+  context?: string;
+  /** Load the face straight away (only where it is in the first screen). */
+  eager?: boolean;
+}
+const { name, title, photo, url, rating, context, eager = false } = Astro.props;
+---
+
+<div class="rv-cite">
+  {photo && (
+    <img
+      class="rv-face"
+      src={`${photo}-96.webp`}
+      srcset={`${photo}-96.webp 96w, ${photo}-192.webp 192w`}
+      sizes="56px"
+      width="56"
+      height="56"
+      alt=""
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+  )}
+  <p class="rv-who">
+    <b>{name}</b>
+    <span>{title}</span>
+    {context && <span class="ctx">{context}</span>}
+  </p>
+  <p class="rv-proof">
+    <Stars rating={rating} />
+    <a class="rv-link" href={url} target="_blank" rel="noopener" data-cta="read_google_review">
+      Read it on Google<span class="vh"> (opens Google Maps)</span>
+      <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+        <path d="M5 3h8v8M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.8" />
+      </svg>
+    </a>
+  </p>
+</div>

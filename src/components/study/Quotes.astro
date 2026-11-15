@@ -1,20 +1,53 @@
 ---
-/* In their words: the client's own words from the frontmatter, character for
-   character. Never edit, tidy or paraphrase one here. */
+/* In their words: the client's own words from the frontmatter, character for character. Never
+   edit, tidy or paraphrase one here. A quote that is a public review (it has a `source`) also
+   shows the person's face, the stars and a link to the review on Google (ReviewCite), and its key
+   phrase is marked (src/lib/highlight.ts). Chapter gives the section id="in-their-words", which the
+   review line in the study's opening jumps to. */
 import Chapter from './Chapter.astro';
+import ReviewCite from '../ReviewCite.astro';
+import { markedQuote } from '../../lib/highlight';
 
+interface Quote {
+  quote: string;
+  name: string;
+  title: string;
+  context?: string;
+  highlight?: string;
+  photo?: string;
+  source?: { platform: 'google'; url: string; rating: number };
+}
 const { study } = Astro.props;
+const quotes: Quote[] = study.testimonials;
 ---
 
 <Chapter title="In their words">
-  {study.testimonials.map((t: { quote: string; name: string; title: string; context?: string }) => (
-    <figure class="q rv">
-      <blockquote>{t.quote}</blockquote>
-      <figcaption>
-        <b>{t.name}</b>
-        {t.title}
-        {t.context && <span class="q-ctx">{t.context}</span>}
-      </figcaption>
+  {quotes.map((t) => (
+    <figure class:list={['q rv', { 'q-review': t.source }]}>
+      {t.source ? (
+        <>
+          <blockquote set:html={markedQuote(t.quote, t.highlight)} />
+          <figcaption>
+            <ReviewCite
+              name={t.name}
+              title={t.title}
+              photo={t.photo}
+              url={t.source.url}
+              rating={t.source.rating}
+              context={t.context}
+            />
+          </figcaption>
+        </>
+      ) : (
+        <>
+          <blockquote>{t.quote}</blockquote>
+          <figcaption>
+            <b>{t.name}</b>
+            {t.title}
+            {t.context && <span class="q-ctx">{t.context}</span>}
+          </figcaption>
+        </>
+      )}
     </figure>
   ))}
 </Chapter>

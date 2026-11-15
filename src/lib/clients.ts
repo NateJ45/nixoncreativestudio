@@ -58,6 +58,34 @@ export interface Client {
   desk: string;
   deskStill: string;
   cms: string;
+  /** The client's words for the sheet: a public review first, else an emailed quote with a key
+   *  phrase. Only the key phrase is shown there, so a quote with none set is left out. */
+  review: SheetReview | null;
+}
+
+export interface SheetReview {
+  phrase: string;
+  name: string;
+  title: string;
+  /** Public path without size or extension (add -96.webp). */
+  photo: string;
+  /** Set for a public review: the link to it and its stars. */
+  url: string;
+  rating: number;
+}
+
+function sheetReview(d: CollectionEntry<'case-studies'>['data']): SheetReview | null {
+  const list = d.testimonials ?? [];
+  const t = list.find((q) => q.source && q.highlight) ?? list.find((q) => q.highlight);
+  if (!t || !t.highlight) return null;
+  return {
+    phrase: t.highlight,
+    name: t.name,
+    title: t.title,
+    photo: t.photo ?? '',
+    url: t.source?.url ?? '',
+    rating: t.source?.rating ?? 0,
+  };
 }
 
 export const hostOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
@@ -85,6 +113,7 @@ export function toClient(entry: CollectionEntry<'case-studies'>): Client {
     desk: stamped(`/assets/${slug}.mp4`),
     deskStill: `/assets/${slug}-cover.webp`,
     cms: d.cmsShot ? `/assets/${slug}-cms.webp` : '',
+    review: sheetReview(d),
   };
 }
 

@@ -960,6 +960,32 @@ var sheetUrl = function (slug) {
   else u.searchParams.delete('client');
   return u.pathname + u.search + u.hash;
 };
+/* The client's words in the sheet (ClientSheet.astro): the key phrase in quotes, their face, and
+   for a public review the stars and the link to it. Hidden when the client has none on file. */
+var fillReview = function (r) {
+  var box = $('[data-rv]');
+  if (!box) return;
+  box.hidden = !r;
+  if (!r) return;
+  $('[data-rv-q]').textContent = '“' + r.phrase + '”';
+  $('[data-rv-n]').textContent = r.name;
+  $('[data-rv-t]').textContent = r.title;
+  var face = $('[data-rv-face]');
+  face.hidden = !r.photo;
+  if (r.photo) face.src = r.photo + '-96.webp';
+  var stars = $('[data-rv-stars]');
+  stars.hidden = !r.rating;
+  if (r.rating) {
+    var svg = stars.querySelector('svg');
+    svg.setAttribute('aria-label', 'Rated ' + r.rating + ' out of 5 on Google');
+    svg.querySelectorAll('path').forEach(function (p, i) {
+      p.setAttribute('class', i < r.rating ? 'on' : 'off');
+    });
+  }
+  var a = $('[data-rv-link]');
+  a.hidden = !r.url;
+  if (r.url) a.href = r.url;
+};
 /* The sheet gets its own history entry, so the browser's Back closes it instead of leaving the page.
    restoring means that entry already exists: the visitor came back to it. */
 ui.openSheet = function (s, el, restoring) {
@@ -971,6 +997,7 @@ ui.openSheet = function (s, el, restoring) {
   $('[data-n]').textContent = s.name;
   $('[data-k]').textContent = s.hook;
   $('[data-m]').textContent = s.sector;
+  fillReview(s.review);
   $('[data-st]').href = s.study;
   var vi = $('[data-vi]');
   vi.href = s.live;
