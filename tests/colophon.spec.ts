@@ -27,10 +27,31 @@ test('every font this site loads is its own', async ({ page }) => {
   expect(fonts.every((h) => h === here)).toBe(true);
 });
 
-test('the window beside the text is a real link', async ({ page }) => {
+test('the windows beside the text are real links, one in front at a time', async ({ page }) => {
   await page.goto('/colophon/');
-  await expect(page.locator('[data-colo-win] a.tile')).toHaveAttribute(
-    'href',
-    '/work/mas-monograms/',
-  );
+  const slides = page.locator('[data-colo-slide]');
+  expect(await slides.count()).toBeGreaterThan(1);
+  // Every slide is a link to its case study; only the one in front can be reached.
+  const hrefs = await page
+    .locator('[data-colo-win] a.tile')
+    .evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+  expect(hrefs.every((h) => /^\/work\/[a-z0-9-]+\/$/.test(h ?? ''))).toBe(true);
+  await expect(page.locator('[data-colo-slide]:not([inert])')).toHaveCount(1);
+});
+
+test('the window deck moves on by itself and the Pause button stops it', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/colophon/');
+  const front = page.locator('[data-colo-slide].is-on .cap b');
+  const first = await front.textContent();
+  await page.mouse.move(0, 0);
+  await page.clock.runFor(5000);
+  await expect(front).not.toHaveText(first ?? '');
+  const hold = page.locator('[data-colo-hold]');
+  await hold.click();
+  await expect(hold).toHaveAttribute('aria-pressed', 'true');
+  await page.mouse.move(0, 0);
+  const held = await front.textContent();
+  await page.clock.runFor(10000);
+  await expect(front).toHaveText(held ?? '');
 });

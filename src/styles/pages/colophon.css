@@ -51,8 +51,54 @@ html:not(.js) .colo-win {
     margin: -12rem 0 0;
   }
 }
+/* Every client's window, stacked in one cell (colophon-deck.js). Until the script deals, only the
+   first shows; once it does, the one in front fades in and the rest fade out. */
+.colo-deck {
+  display: grid;
+}
+.colo-slide {
+  grid-area: 1 / 1;
+}
+.colo-slide + .colo-slide {
+  visibility: hidden;
+}
+.is-dealing .colo-slide {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s linear 0.6s;
+}
+.is-dealing .colo-slide.is-on {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity 0.6s ease,
+    visibility 0s;
+}
+.colo-hold {
+  display: block;
+  min-height: 2.75rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--soft);
+  cursor: pointer;
+}
+.colo-hold[hidden] {
+  display: none;
+}
+.colo-hold:hover {
+  color: var(--ink);
+}
+.colo-hold:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
 @media (prefers-reduced-motion: reduce) {
-  .colo-win .tile {
+  .colo-win .tile,
+  .is-dealing .colo-slide {
     transition: none;
   }
 }
