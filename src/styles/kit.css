@@ -2397,14 +2397,17 @@ h1.giant b {
   padding: clamp(3rem, 7vw, 6.5rem) clamp(1.5rem, 6vw, 6.5rem);
   color: var(--p);
 }
+/* The band's color opens out as it arrives (kit.js moves --bs from 0.9 to 1). It grows by a fixed
+   margin all round, not by a share of its size: scaled, a tall band on a phone (one long quote, about
+   1,400px) sat some 70px inside its own text at the top while you read the opening lines. The margin
+   is 0.75rem on a phone and up to 4rem on a wide screen, about what the scale gave there. */
 .band::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: calc((1 - var(--bs)) * 10 * clamp(0.75rem, 4vw, 4rem));
   z-index: -1;
   border-radius: 1.75rem;
   background: var(--c);
-  transform: scale(var(--bs));
 }
 .band .label {
   margin-bottom: 1.25rem;
@@ -2660,11 +2663,17 @@ h1.giant b {
   padding-inline: max(clamp(1.5rem, 6vw, 6.5rem), calc(var(--edge) - var(--bandm)));
 }
 @media (max-width: 52rem) {
+  /* A phone's band gets a little more room inside its color, so a long quote never reads as if
+     it runs to the card's edge. */
   .band,
   .band-flip {
     grid-template-columns: minmax(0, 1fr);
     gap: 2.25rem;
+    padding-top: 3.25rem;
     padding-bottom: 0;
+  }
+  .band:not(.home-band) {
+    padding-inline: 1.75rem;
   }
   .band-w,
   .band-flip .band-w {
