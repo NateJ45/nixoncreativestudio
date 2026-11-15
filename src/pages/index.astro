@@ -40,6 +40,29 @@ const sectors = [
   { name: 'Small businesses', href: '/small-business/', key: 'small-business' },
 ].map((s) => ({ ...s, cards: clients.filter((c) => c.sectorKey === s.key).slice(0, 3) }));
 
+/* Results under the phones: real counts from the case studies, each linking to the study that
+   sources it. */
+const proof = [
+  {
+    slug: 'west-chester-preschool',
+    figure: '26 to 41',
+    what: 'students, with 41 of 43 places filled',
+    who: 'West Chester Preschool',
+  },
+  {
+    slug: 'foundation-for-reformed-theology',
+    figure: 'About 60%',
+    what: 'more clicks from Google since the relaunch',
+    who: 'Foundation for Reformed Theology',
+  },
+  {
+    slug: 'stone-steps-50k',
+    figure: 'Next morning',
+    what: 'results, records and runner pages live after each race, with nobody touching them',
+    who: 'Stone Steps 50K',
+  },
+];
+
 const lead = ['I', 'build', 'websites'];
 const heavy = ['pull', 'their', 'weight.'];
 ---
@@ -125,6 +148,10 @@ const heavy = ['pull', 'their', 'weight.'];
             </span>
           ))}
         </p>
+        <p class="ledger-note">
+          I take on a handful of new builds a year, so each one gets my full attention. Three of
+          these {countWord(clients.length).toLowerCase()} came back to me for their second site.
+        </p>
       </div>
       <p class="ledger-do">
         Tap any phone to look inside, or{' '}
@@ -142,6 +169,19 @@ const heavy = ['pull', 'their', 'weight.'];
             sizes="(max-width: 52rem) calc(50vw - 27px), min(20vw, 290px)"
           />
           <Caption client={s} index={i} />
+        </li>
+      ))}
+    </ul>
+    {/* Each figure is sourced in its case study's frontmatter comments. Add one here only once the
+        client has seen it published there. */}
+    <ul class="proof" aria-label="What changed for clients">
+      {proof.map((p) => (
+        <li>
+          <a href={`/work/${p.slug}/`}>
+            <strong>{p.figure}</strong>
+            <span>{p.what}</span>
+            <span class="label">{p.who}</span>
+          </a>
         </li>
       ))}
     </ul>

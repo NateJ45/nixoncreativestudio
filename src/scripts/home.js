@@ -126,7 +126,11 @@ function layout() {
       midY = r.top + s.el.offsetTop + s.el.offsetHeight / 2,
       d = s.i - C;
     s.dx = cx + d * spread - (r.left + r.width / 2);
-    s.dy = cy + d * d * (narrow ? 2.2 : 3.6) - (midY + scrollY);
+    /* Under 360px the hand curves deeper. The outside-left window sits under its neighbour, so
+       what a finger can reach is a wedge between the screen edge and that neighbour's tilted
+       edge. At 2.2 the wedge held a 23 to 24px square (the 24px target check passed or failed on
+       sub-pixel rounding); at 4 it holds 26px. Spacing and tilt barely move it, measured. */
+    s.dy = cy + d * d * (narrow ? (W < 360 ? 4 : 2.2) : 3.6) - (midY + scrollY);
     s.rot = d * (narrow ? 4.2 : 3.8);
     s.sc = cardW / tw;
     s.d = d;

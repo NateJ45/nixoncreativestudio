@@ -35,7 +35,7 @@ import {
   pricesAsOf,
 } from '../data/pricing';
 import { SITUATIONS, sectorPagePath } from '../data/sector-pages';
-import { getClients } from '../lib/clients';
+import { countWord, getClients } from '../lib/clients';
 import { dollars, money } from '../lib/money';
 import { tierCosts } from '../lib/tier-costs';
 import {
@@ -131,6 +131,10 @@ const faq = [
   {
     q: 'What if I have been quoted less somewhere else?',
     a: 'You probably can find a cheaper quote, and for a very simple need that might be the right call. Ask what it includes: accessibility checks, an editor your team can actually use, a plan for who looks after the site after launch, and who answers the phone in a year. If it covers those, take it seriously.',
+  },
+  {
+    q: `Why only ${countWord(clients.length).toLowerCase()} sites on the Work page?`,
+    a: `Because one person builds every one of them, start to finish, and I would rather do a few properly than a lot quickly. A studio with a hundred sites since 2020 is finishing one every few weeks, and that usually means templates or a team you never meet. These ${countWord(clients.length).toLowerCase()} are the ones I can show you inside and out, and three of them came back to me for their second site.`,
   },
   {
     q: 'What happens if you are ever unavailable?',
