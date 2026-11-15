@@ -122,6 +122,16 @@ const breadcrumbs = [
   bodyStyle={`--c:${s.accent};--c-night:${s.night};--p:${s.paper};--oncolor:${s.paper};--long:${longest}`}
 >
   <section class="s-hero" aria-labelledby="sh">
+    {d.backdrop && (
+      <div class="s-bg" aria-hidden="true">
+        <img
+          src={d.backdrop.src}
+          alt=""
+          decoding="async"
+          style={d.backdrop.position ? `object-position:${d.backdrop.position}` : undefined}
+        />
+      </div>
+    )}
     <div class="s-hero-t">
       <h1 id="sh">{d.client}</h1>
       {d.outcome && <p class="s-out" set:html={inline(d.outcome)} />}
