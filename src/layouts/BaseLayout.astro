@@ -162,7 +162,30 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <script is:inline>
       document.documentElement.classList.add('js');
     </script>
-
+    {/* The page change is a deal (kit.css, "The deal"). The arriving page says how: going Back
+         deals the other way, and when a window is growing into this page (a study's hero, a price
+         card's tier) the deal stands down so only the plain fade sits under the morph. */}
+    <script is:inline>
+      addEventListener('pagereveal', function (e) {
+        var vt = e.viewTransition,
+          types = vt && vt.types,
+          root = document.documentElement;
+        if (!types || !types.has('deal')) return;
+        if (root.classList.contains('hero-morph') || root.classList.contains('tier-morph')) {
+          types.delete('deal');
+          return;
+        }
+        var act = window.navigation && navigation.activation;
+        if (
+          act &&
+          act.navigationType === 'traverse' &&
+          act.from &&
+          act.entry &&
+          act.from.index > act.entry.index
+        )
+          types.add('back');
+      });
+    </script>
     {/* Two decisions that have to be made before the first paint (elevate.css draws both).
          1. The first load of a visit shows for under a second as a cobalt drawing
             (src/scripts/blueprint.js): once per browser session, on a fresh navigation only,
@@ -224,7 +247,6 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
         } catch (_e) {}
       })();
     </script>
-
     <!-- The one typeface, self-hosted. Starts with the HTML so text is laid out in
          its real metrics from the first paint. -->
     <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/hanken.woff2" crossorigin />

@@ -86,17 +86,41 @@ const proof = [
   },
 ];
 
-/* The results line under the headline: one short figure per kind of client, each copied from the
-   sourced figure in that client's case study (never reworded, never rounded). The first is the one
-   that shows before any script and the one the line comes back to and rests on. Picked for what a
-   client hiring a site wants to see: more people (students, visitors, requests), more found on
-   Google, and money saved. */
+/* The results line under the headline: one short client figure at a time, on a loop. Every figure
+   is copied from the sourced figure in that client's case study (never reworded, never rounded; the
+   source is in each study's frontmatter comments), and the words beside it say only what the study
+   says. The first is the one that shows before any script. The order mixes the kinds of win (more
+   people, more found on Google, money, craft) and never puts one client twice in a row, the last
+   included, since the line wraps back to the first. Keep `what` to about 30 characters or less so
+   the line fits a 320px phone. */
 const heroProof = [
   { figure: '58%', what: 'more students', who: 'West Chester Preschool' },
   { figure: '100%', what: 'more clicks from Google', who: 'Reid Design' },
   { figure: '66%', what: 'more visitors a day', who: 'First Baptist Church Muncie' },
   { figure: '94', what: 'journal requests in four weeks', who: 'Theology Matters' },
   { figure: '$264', what: 'a year back from Squarespace', who: 'MAS Monograms' },
+  { figure: 'About 60%', what: 'more clicks from Google', who: 'Foundation for Reformed Theology' },
+  { figure: '2,345', what: 'finishes on file since 2003', who: 'Stone Steps 50K' },
+  { figure: '738%', what: 'more visits in enrollment season', who: 'West Chester Preschool' },
+  { figure: '179%', what: 'more appearances in search', who: 'Reid Design' },
+  { figure: '458', what: 'essays online, back to 1995', who: 'Theology Matters' },
+  { figure: '46,026', what: 'local people reached by ads', who: 'West Chester Preschool' },
+  { figure: 'Next morning', what: 'results, with nobody typing', who: 'Stone Steps 50K' },
+  {
+    figure: '90%',
+    what: 'of a library searchable word for word',
+    who: 'Foundation for Reformed Theology',
+  },
+  { figure: '0', what: 'accessibility problems found', who: 'West Chester Preschool' },
+  { figure: 'About 300', what: 'essays freed from old PDFs', who: 'Theology Matters' },
+  { figure: '$2,544.64', what: "from the school's first store", who: 'West Chester Preschool' },
+  { figure: 'About 5,200', what: 'feet of climbing, measured', who: 'Stone Steps 50K' },
+  {
+    figure: '37',
+    what: 'recordings, each with a transcript',
+    who: 'Foundation for Reformed Theology',
+  },
+  { figure: '111', what: 'Instagram posts, up from about six', who: 'West Chester Preschool' },
 ];
 
 const lead = ['I', 'build', 'websites'];
@@ -116,15 +140,17 @@ const heavy = ['pull', 'their', 'weight.'];
           </span>{' '}
         </>
       ))}
-      <span class="me" aria-hidden="true">
+      {/* The portrait links to the About page (2026-11-15). It is a real, focusable link, so it
+          is not aria-hidden like the words around it; its name comes from aria-label. */}
+      <a class="me" href="/about/" aria-label="About me">
         <img
           src="/assets/portrait.webp"
           srcset="/assets/portrait-160.webp 160w, /assets/portrait.webp 320w"
           sizes="(max-width: 768px) 80px, 160px"
           alt=""
         />
-        <span>Hi, that's me</span>
-      </span>
+        <span aria-hidden="true">Hi, that's me</span>
+      </a>
       <span class="w" aria-hidden="true" style="--n:3">
         that
       </span>
@@ -138,12 +164,34 @@ const heavy = ['pull', 'their', 'weight.'];
         </>
       ))}
     </h1>
-    {/* The results line (2026-11-15, replacing the blue vow stamp): one real client figure at a
-        time. The first is in place at load (nothing in the first screen starts hidden); after the
-        headline lands, hero-proof.js steps through the rest once, about a second and a half
-        each, and comes back to rest on the first. A screen reader hears the whole list instead,
-        once. Its height matches the old stamp, so the hero sums (616 and 559) are unchanged. */}
+    {/* The results line (2026-11-15, replacing the blue vow stamp; on a loop since 2026-11-15):
+        one real client figure at a time. The first is in place at load (nothing in the first
+        screen starts hidden); after the headline lands, hero-proof.js moves on to the next each
+        time the little ring beside it fills, which takes as long as that line takes to read. The
+        figure counts up as it arrives and the line narrows or widens to fit it. The ring is also
+        the Pause button (WCAG 2.2.2); a pointer resting on the line holds it too, and it waits
+        while the hero is off screen. A screen reader hears the whole list instead, once. Its
+        height matches the old stamp, so the hero sums (616 and 559) are unchanged. */}
     <div class="proof" data-proof>
+      <button
+        type="button"
+        class="proof-ring"
+        aria-pressed="false"
+        aria-label="Pause the client results"
+        data-proof-pause
+        hidden
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <circle class="ring-track" cx="10" cy="10" r="8"></circle>
+          <circle class="ring-fill" cx="10" cy="10" r="8" pathLength="100"></circle>
+          <rect class="ring-bar" x="7" y="6.5" width="2" height="7" rx="0.6"></rect>
+          <rect class="ring-bar" x="11" y="6.5" width="2" height="7" rx="0.6"></rect>
+          <path
+            class="ring-play"
+            d="M8 6.4v7.2a.5.5 0 0 0 .76.43l5.6-3.6a.5.5 0 0 0 0-.86l-5.6-3.6A.5.5 0 0 0 8 6.4z"
+          ></path>
+        </svg>
+      </button>
       <ul class="vh">
         {heroProof.map((p) => (
           <li>
