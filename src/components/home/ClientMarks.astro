@@ -1,0 +1,102 @@
+---
+/* Home, the client marks: a tile for each organization in the grid, in that client's own colour,
+   holding the logo their own people know them by, each a link to its case study. It sits between
+   the grid and What changed (added 2026-11-15, after a look at another designer's client strip).
+
+   Each mark is the client's own dark-ground version, shown in its real colours on its own accent,
+   the way it sits on their site: no recolouring, no filters. As the wall scrolls into view the
+   tiles rise in one after another (a CSS scroll-driven animation, home.css). Nothing moves on its
+   own, so there is no pause button to give: under reduced motion, or in a browser without
+   scroll-driven animations, the wall is simply there.
+
+   The files live in src/assets/clients/, named by the study slug, and come from the clients' own
+   repos and live sites:
+   - stone-steps-50k.svg: the race's hand-painted sign (logo-dark), which only exists at 108 by 180,
+     so it is never shown taller than 5.5rem.
+   - mas-monograms.svg: the brand kit's wordmark-color-dark.
+   - presbyterian-academy.png: the Academy's brand is live text in Instrument Serif, so this is a
+     4x capture of their header wordmark, set in the cream and pale green of their own footer.
+   - theology-matters.svg: TheologyMattersLogo-White.
+   - first-baptist-muncie.svg: the church's logo-dark (made for its indigo).
+   - reid-design.png: the site's header lockup rebuilt from the white files in its share-card
+     assets (scripts/og-assets): the RD emblem with its sprig above the REID DESIGN wordmark.
+   - foundation-for-reformed-theology.png: the site's logo-white.
+   - first-presbyterian-orangeburg.png: the church's white logo from its Wix site.
+   - west-chester-preschool.webp: the school's landscape logo for dark grounds, 1500px wide.
+   A client with no file is set as its name in type, never drawn or invented. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { Client } from '../../lib/clients';
+import { countWord } from '../../lib/clients';
+
+interface Props {
+  clients: Client[];
+}
+const { clients } = Astro.props;
+
+/* Every file in the folder, keyed by slug. A new client only needs its file dropped in. */
+const files = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/clients/*.{svg,png,webp}',
+  { eager: true },
+);
+const bySlug = new Map(
+  Object.entries(files).map(([path, mod]) => [
+    path
+      .split('/')
+      .pop()!
+      .replace(/\.\w+$/, ''),
+    mod.default,
+  ]),
+);
+
+/* How much of the tile's height each mark may fill (wide wordmarks are held by the tile's width
+   instead), so a sign, a seal and a long wordmark carry about the same weight. `max` caps a small
+   source so it never shows soft. */
+const FIT: Record<string, { h: number; max?: string }> = {
+  'stone-steps-50k': { h: 70, max: '5.5rem' },
+  'mas-monograms': { h: 30 },
+  'presbyterian-academy': { h: 26 },
+  'theology-matters': { h: 26 },
+  'first-baptist-muncie': { h: 52 },
+  'reid-design': { h: 76 },
+  'foundation-for-reformed-theology': { h: 23 },
+  'first-presbyterian-orangeburg': { h: 52 },
+  'west-chester-preschool': { h: 64 },
+};
+
+const marks = clients.map((c) => ({
+  ...c,
+  file: bySlug.get(c.slug),
+  fit: FIT[c.slug] ?? { h: 34 },
+}));
+---
+
+<section class="logowall" aria-labelledby="lw-h">
+  <h2 id="lw-h" class="label">
+    {countWord(clients.length)} organizations, one person
+  </h2>
+  <ul class="lw-row">
+    {marks.map((m, i) => (
+      <li style={`--i:${i}`}>
+        <a
+          href={m.study}
+          class="lw"
+          style={`--c:${m.accent};--lh:${m.fit.h}${m.fit.max ? `;--lmax:${m.fit.max}` : ''}`}
+          data-sheen
+        >
+          {m.file ? (
+            <Image
+              src={m.file}
+              alt={m.name}
+              width={Math.min(m.file.width, 640)}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span class="lw-type">{m.name}</span>
+          )}
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

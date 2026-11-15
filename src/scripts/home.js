@@ -105,8 +105,8 @@ function layout() {
   var narrow = W < 720,
     tw = tiles[0].offsetWidth;
   var cardW = narrow
-    ? Math.min(W * 0.42, Math.max(120, (H - 470) / 2.02), 200)
-    : Math.min(W * 0.142, Math.max(170, (H - 515) / 2.02), 250);
+    ? Math.min(W * 0.42, Math.max(120, (H - 515) / 2.02), 200)
+    : Math.min(W * 0.142, Math.max(170, (H - 560) / 2.02), 250);
   var cardH = cardW * 2.02,
     gap = narrow ? 26 : 30;
   space.style.setProperty('--stackh', cardH + (narrow ? 88 : 104) + 'px');

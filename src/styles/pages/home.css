@@ -1047,3 +1047,118 @@ html:not(.js) .ed-go {
     transform: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The client marks (src/components/home/ClientMarks.astro): a tile for each
+   client in its own accent, holding its own dark-ground logo in its real colours.
+   A client's colour stays in its own surface (the tile), as everywhere else.
+   --------------------------------------------------------------------------- */
+.logowall {
+  padding: clamp(3rem, 8vh, 5rem) var(--gut);
+  text-align: center;
+}
+.logowall h2 {
+  margin-bottom: clamp(1.25rem, 3.5vh, 2rem);
+  color: var(--soft);
+}
+.lw-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.6rem, 1.4vw, 1rem);
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.lw {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 1;
+  padding: 0 9%;
+  container-type: size;
+  overflow: hidden;
+  border-radius: var(--cardr, 1.25rem);
+  background-color: var(--c);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    var(--lean, 0px) 18px 30px -22px rgba(0, 0, 0, 0.5);
+  outline-offset: 4px;
+  text-decoration: none;
+  transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.lw:hover,
+.lw:focus-visible {
+  transform: translateY(-4px);
+}
+/* The tile's height drives the mark's (the tile is a size container, so 1cqh is a hundredth of
+   its height): --lh is its share, --lmax a cap for a small source, and
+   a wide wordmark is held by the tile's width instead (object-fit keeps its shape). */
+.lw img {
+  display: block;
+  width: auto;
+  height: calc(var(--lh) * 1cqh);
+  max-width: 100%;
+  max-height: var(--lmax, none);
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.lw:hover img,
+.lw:focus-visible img {
+  transform: scale(1.05);
+}
+.lw-type {
+  color: #fff;
+  font: 500 clamp(1rem, 1.8vw, 1.4rem) / 1.15 var(--display);
+}
+/* Two across on a phone, the last tile across both. */
+@media (max-width: 40rem) {
+  .lw-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lw-row li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .lw-row li:last-child:nth-child(odd) .lw {
+    aspect-ratio: 4 / 1;
+  }
+}
+/* The tiles rise in one after another as the wall scrolls into view. Scroll-driven, so nothing
+   moves on its own, and only where the browser can and motion is allowed. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lw-row li {
+      animation: lw-rise linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i) * 3%) entry calc(55% + var(--i) * 3%);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lw,
+  .lw img {
+    transition: none;
+  }
+  .lw:hover,
+  .lw:focus-visible,
+  .lw:hover img,
+  .lw:focus-visible img {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .lw {
+    border: 1px solid CanvasText;
+  }
+}
+@keyframes lw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

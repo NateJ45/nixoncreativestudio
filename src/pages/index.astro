@@ -3,10 +3,13 @@
    / | The homepage
    ============================================================================
    Top to bottom:
-     Hero        the headline, with the portrait inside the sentence, and the
+     Hero        the headline, with the portrait inside the sentence, the blue vow stamp
+                 under it ("Fast. Works on every phone. Gets results."), and the
                  empty space the hand of clients is dealt into.
      Work        the giant "Eight selected case studies.", the ledger, and the grid. Every
                  window has one spot here; scroll carries it from the hand.
+     Client marks  a tile per client in its own colour with its real logo, each a
+                 link to its study (home/ClientMarks.astro).
      What changed  the sourced figures (the `proof` list below), each a wide card on its
                  client's color (home/WhatChanged.astro).
      Quote band  every real client quote, one at a time, on its client's color with
@@ -33,6 +36,7 @@ import QuoteBand from '../components/QuoteBand.astro';
 import DealtPrices from '../components/DealtPrices.astro';
 import Closing from '../components/Closing.astro';
 import WhatChanged from '../components/home/WhatChanged.astro';
+import ClientMarks from '../components/home/ClientMarks.astro';
 import EditDemo from '../components/home/EditDemo.astro';
 import PhotoStrip from '../components/home/PhotoStrip.astro';
 import ProcessBeats from '../components/home/ProcessBeats.astro';
@@ -119,6 +123,12 @@ const heavy = ['pull', 'their', 'weight.'];
         </>
       ))}
     </h1>
+    {/* The vow: what a good site does, in three plain words, set as a tilted stamp under the
+        headline (added 2026-11-15). Static on purpose: nothing in the first screen starts hidden.
+        Every site here is built to these, so it is a promise, not a figure. */}
+    <p class="vow">
+      <span>Fast.</span> <span>Works on every phone.</span> <span>Gets results.</span>
+    </p>
     <p class="sub">
       Websites for churches, schools, nonprofits and small businesses, from{' '}
       {money(webTiers[0].priceFrom)}. One person does the design, the build and, when needed, the
@@ -190,6 +200,7 @@ const heavy = ['pull', 'their', 'weight.'];
       ))}
     </ul>
   </section>
+  <ClientMarks clients={clients} />
   <WhatChanged proof={proof} clients={clients} />
   <QuoteBand
     slug="theology-matters"

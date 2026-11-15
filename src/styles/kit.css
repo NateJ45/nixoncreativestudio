@@ -472,17 +472,40 @@ h1 b {
   font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
   line-height: 1.4;
 }
+/* The vow under the home headline: three plain promises on one blue stamp, tilted a little so it
+   reads as something put there by hand. White on --fill is asserted in kit-tokens.test.ts in both
+   themes. The space it takes is counted in the two hero sums below and in home.js. */
+.vow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2em 0.5em;
+  margin-top: clamp(1rem, 2.4vh, 1.5rem);
+  padding: 0.45em 1.05em 0.5em;
+  border-radius: 999px;
+  background: var(--fill);
+  color: #fff;
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  transform: rotate(-2deg);
+  box-shadow: var(--lean, 0px) 0.3em 0 rgba(0, 0, 0, 0.16);
+}
+.vow span {
+  white-space: nowrap;
+}
 .stackspace {
   /* The same sum home.js does, so the hero is its final height before any script runs. */
   height: var(
     --stackh,
-    calc(min(14.2vw, max(170px, (100vh - 515px) / 2.02), 250px) * 2.02 + 104px)
+    calc(min(14.2vw, max(170px, (100vh - 560px) / 2.02), 250px) * 2.02 + 104px)
   );
   width: 100%;
 }
 @media (max-width: 44.99rem) {
   .stackspace {
-    height: var(--stackh, calc(min(42vw, max(120px, (100vh - 470px) / 2.02), 200px) * 2.02 + 88px));
+    height: var(--stackh, calc(min(42vw, max(120px, (100vh - 515px) / 2.02), 200px) * 2.02 + 88px));
   }
 }
 /* No script, no hand: the grid is simply the grid, and there is no card to draw. */
