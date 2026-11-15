@@ -15,7 +15,9 @@
 
    Each slug's view lives in VIEWS below: the page, a piece of text to find,
    and where that text's top should sit in the 900px-tall window. Change the
-   `y` to nudge the framing. Saves src/assets/case-studies/backdrops/{slug}.webp
+   `y` to nudge the framing. `hideHeader` drops a bar fixed at the top, and
+   `hideText` makes every word see-through, for a chart or picture whose words
+   would only turn into stripes of dots in the halftone. Saves src/assets/case-studies/backdrops/{slug}.webp
    (or into --out, to look before overwriting).
 
    A slug is required: one client at a time, as with capture-case-study.mjs.
@@ -59,9 +61,10 @@ const VIEWS = {
   'reid-design': { url: 'https://reiddesignllc.com/', text: 'Concept room', y: 175 },
   'stone-steps-50k': {
     url: 'https://stonesteps50k.com/course/',
-    text: 'Fly the course',
-    y: 680,
+    text: 'Each loop returns you',
+    y: 500,
     hideHeader: true,
+    hideText: true,
   },
   'theology-matters': {
     url: 'https://theologymatters.com/print-edition/',
@@ -153,6 +156,14 @@ for (const slug of slugs) {
     found = true;
   }
   if (!found) console.warn(`${slug}: "${v.text}" not found, shooting from the top`);
+  // `hideText` turns every word see-through, for a view that is a picture or a chart: the halftone
+  // (scripts/halftones.mjs) turns each line of text into a stripe of dots, which reads as noise.
+  if (v.hideText) {
+    await page.addStyleTag({
+      content:
+        '*{color:transparent!important;text-shadow:none!important;-webkit-text-stroke:0!important}',
+    });
+  }
   await page.waitForTimeout(1500);
 
   const png = await page.screenshot({ type: 'png' });
