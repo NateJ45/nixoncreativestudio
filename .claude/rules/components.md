@@ -52,6 +52,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 - Template-expression comments are `{/* */}`, never `<!-- -->` (Gotcha 1).
 - Copy comes from `src/data/site.ts` and `src/data/pricing.ts`; do not hardcode contact strings or prices in a component.
 - Every internal href ends in a slash (`withTrailingSlash()` for computed ones; `npm run check:slashes` gates it).
+- Every link to another site opens in a new tab: `target="_blank" rel="noopener noreferrer"` in components, and `src/components/ProseLink.astro` (MDX's `a`, using `isExternalHref()` in `src/lib/external.ts`) for Markdown links in case studies and journal posts.
 - Hex values do not appear in components. Use the `:root` tokens, or `--c` and `--p` for a client.
 - Comment generously. The file header says what the file is for and what to leave alone.
 - Site copy is first person singular (`npm run test:copy`).
