@@ -7,6 +7,8 @@ var KEY = 'ncs-theme';
 var GROUND = { light: '#f5f5f3', dark: '#14162f' };
 var meta = document.querySelector('meta[name="theme-color"]');
 var buttons = document.querySelectorAll('[data-theme-flip]');
+/* The dock's theme hand: one card a side, which says which side you are on. */
+var picks = document.querySelectorAll('[data-theme-set]');
 var system = matchMedia('(prefers-color-scheme: dark)');
 var reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -23,6 +25,9 @@ function saved() {
 function show(theme) {
   root.dataset.theme = theme;
   if (meta) meta.content = GROUND[theme];
+  picks.forEach(function (p) {
+    p.setAttribute('aria-pressed', String(p.dataset.themeSet === theme));
+  });
 }
 
 function turn(theme) {
@@ -43,13 +48,22 @@ function turn(theme) {
 
 show(root.dataset.theme === 'dark' ? 'dark' : 'light');
 
+function choose(next) {
+  try {
+    localStorage.setItem(KEY, next);
+  } catch (e) {}
+  turn(next);
+}
+
 buttons.forEach(function (b) {
   b.addEventListener('click', function () {
-    var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    try {
-      localStorage.setItem(KEY, next);
-    } catch (e) {}
-    turn(next);
+    choose(root.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+});
+
+picks.forEach(function (p) {
+  p.addEventListener('click', function () {
+    if (p.dataset.themeSet !== root.dataset.theme) choose(p.dataset.themeSet);
   });
 });
 

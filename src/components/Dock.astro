@@ -2,9 +2,10 @@
 /* The floating menu. Always there, on every page and every width, so it is the
    one nav: no drawer, no hamburger, and it works with no script at all.
 
-   Each link can also deal a small hand of real shortcuts out of the pill: the
-   client phones from Work, seven selected prints from Photos, the three prices
-   from Prices, a way to reach me from Start a project. A hand is plain markup,
+   Each link can also deal a small hand of real shortcuts out of the pill: what
+   the studio does from Home, the client phones from Work, seven selected prints
+   from Photos, the three prices from Prices, me from About, a way to reach me
+   from Start a project, and both themes from the theme switch. A hand is plain markup,
    `hidden` until kit.js opens it on a wide screen with a mouse, or from the
    keyboard with the up arrow. Nothing in a
    hand is the only way to reach anything: each link's page has it all.
@@ -84,6 +85,14 @@ const prints = await Promise.all(
   <a class="home" href="/" aria-current={path === '/' ? 'page' : undefined}>
     Home
   </a>
+  <div class="dk-hand" data-fan hidden>
+    <a class="fc fc-home" href="/">
+      <span class="fc-in">
+        <strong>I build websites that pull their weight.</strong>
+        <span>{site.tagline}</span>
+      </span>
+    </a>
+  </div>
 
   <a href="/work/" aria-current={current('/work/')}>
     Work
@@ -197,4 +206,34 @@ const prints = await Promise.all(
   </div>
 
   <ThemeFlip where="dock" />
+  {/* The theme hand: the two sides of the site as small pages, painted in their own colors
+      whatever side you are on, so you can pick one rather than flip blind (src/scripts/theme.js). */}
+  <div class="dk-hand" data-fan hidden>
+    <p class="dk-cap" aria-hidden="true" data-fan-cap data-rest="Light or dark">
+      Light or dark
+    </p>
+    {[
+      { set: 'light', name: 'Light', cap: 'Light: paper and ink' },
+      { set: 'dark', name: 'Dark', cap: 'Dark: the studio navy' },
+    ].map((t) => (
+      <button
+        class={`fc fc-theme fc-theme-${t.set}`}
+        type="button"
+        data-theme-set={t.set}
+        aria-pressed="false"
+        data-cap={t.cap}
+      >
+        <span class="fc-in">
+          <span class="fc-mini" aria-hidden="true">
+            <i class="m-h" />
+            <i class="m-l" />
+            <i class="m-l m-s" />
+            <i class="m-b" />
+            <i class="m-d" />
+          </span>
+          <span class="label">{t.name}</span>
+        </span>
+      </button>
+    ))}
+  </div>
 </nav>
