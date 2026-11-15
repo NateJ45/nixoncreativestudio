@@ -275,6 +275,12 @@ test.describe('The top line', () => {
     await page.goto('/about/');
     const top = page.locator('[data-top]');
     await page.evaluate(() => scrollTo({ top: 1200, behavior: 'instant' }));
+    // Let the browser fire the scroll for 1200 before going back up. On a busy page the two jumps
+    // can otherwise merge into one scroll event that reads as scrolling down (0 to 1100), which no
+    // person can do inside one frame.
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
     await expect(top).not.toHaveClass(/float/);
     await page.evaluate(() => scrollTo({ top: 1100, behavior: 'instant' }));
     await expect(top).toHaveClass(/float/);
