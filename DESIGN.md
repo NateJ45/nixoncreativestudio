@@ -213,7 +213,7 @@ Shapes: cards 1.25rem, bands and the closing 1.75rem, buttons and the dock fully
 
 ## 7. Motion
 
-House motion is **springs, in JavaScript**. `ui.spring(k, c, v)` in `src/scripts/kit.js` returns a stepper (stiffness, damping, start); the closing deck, the price hand, the dock highlight, the client sheet, the 404's knock and the About and Churches stages all run on it, so everything settles with a small overshoot instead of an ease-out. CSS uses `--ease` (`cubic-bezier(0.2, 0.8, 0.2, 1)`) for entrances and a springy `cubic-bezier(0.3, 1.5, 0.5, 1)` on hover. A few things are scroll-driven CSS (`animation-timeline`): the photography hero frame, the study hero's settle, the Up next band and the home client marks rising in; with no support they are simply at rest.
+House motion is **springs, in JavaScript**. `ui.spring(k, c, v)` in `src/scripts/kit.js` returns a stepper (stiffness, damping, start); the closing deck, the price hand, the dock highlight, the client sheet, the 404's knock and the About and Churches stages all run on it, so everything settles with a small overshoot instead of an ease-out. CSS uses `--ease` (`cubic-bezier(0.2, 0.8, 0.2, 1)`) for entrances and a springy `cubic-bezier(0.3, 1.5, 0.5, 1)` on hover. A few things are scroll-driven CSS (`animation-timeline`): the photography hero frame, the study hero's settle, the Up next band and the home client marks being dealt out of one deck; with no support they are simply at rest.
 
 **Sound follows the same care.** Nothing plays unless the visitor switched sound on (section 6), so it needs no reduced-motion rule of its own. Haptics can fire with sound off (straight after a touch on Android), so they are off under reduced motion.
 
