@@ -505,7 +505,7 @@ $$('[data-course]').forEach(function (fig) {
   var range = fig.querySelector('[data-range]'),
     out = fig.querySelector('[data-readout]');
   var dot = fig.querySelector('[data-plan-dot]'),
-    cur = fig.querySelector('[data-cursor]'),
+    cur = fig.querySelector('[data-cl-cursor]'),
     pdot = fig.querySelector('[data-prof-dot]'),
     box = fig.querySelector('[data-profile]');
   var pts = prof.map(function (p, i) {

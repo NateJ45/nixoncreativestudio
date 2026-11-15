@@ -64,7 +64,7 @@ lastmodByPath.set('/now/', now.updated);
 //   - mdx       : powers the case-studies + journal content collections
 //   - sitemap   : emits sitemap-index.xml and sitemap-0.xml at build time
 //
-// prefetch: links preload as they enter the viewport, so a page load feels instant
+// prefetch: links preload when the pointer rests on them (the hover strategy), so a page load feels instant
 // and the cross-document view transition (kit.css) has the next page ready.
 // =============================================================================
 export default defineConfig({
