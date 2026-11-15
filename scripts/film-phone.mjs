@@ -28,7 +28,9 @@
    are paused, and each frame moves them on by exactly 1/60 of a second. Without that they kept
    playing in real time through every settle wait, so a site's hero video ran about 25 times too
    fast in the footage (West Chester Preschool, found 2026-11-14). One-off transitions, such as a
-   button fading in, still run in real time, so the settle wait above still does its job. */
+   button fading in, still run in real time, so the settle wait above still does its job.
+   Animated images (GIFs) get the same treatment: each is decoded in the page and shows the frame
+   for that moment, since a browser plays a GIF on a clock no script can stop. */
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdirSync, statSync } from 'node:fs';
@@ -139,8 +141,46 @@ const enc = spawn(
 
 /* Hold every video and looping animation, noting where each one was, so frame i can put it at
    that point plus i/FPS seconds. */
-await page.evaluate(() => {
-  const held = { videos: [], animations: [] };
+await page.evaluate(async () => {
+  const held = { videos: [], animations: [], images: [] };
+  /* Animated images (GIF, animated WebP or PNG) run on the browser's own clock, which no script
+     can pause. Decode each one here and, on every frame, show the image frame for that moment
+     (the WCP playground GIF raced in the footage, found 2026-11-14). The <img> keeps its own
+     sizing and fit; only its source changes. */
+  if ('ImageDecoder' in window) {
+    for (const img of document.querySelectorAll('img')) {
+      const src = img.currentSrc || img.src;
+      if (!src || src.startsWith('data:')) continue;
+      try {
+        const res = await fetch(src, { mode: 'cors' });
+        const type = (res.headers.get('content-type') || '').split(';')[0];
+        if (!/^image\/(gif|webp|png|apng)$/.test(type)) continue;
+        const dec = new ImageDecoder({ data: await res.arrayBuffer(), type });
+        await dec.tracks.ready;
+        const count = dec.tracks.selectedTrack.frameCount;
+        if (count < 2) continue;
+        const frames = [];
+        let total = 0;
+        for (let f = 0; f < count; f++) {
+          const { image } = await dec.decode({ frameIndex: f });
+          const canvas = new OffscreenCanvas(image.displayWidth, image.displayHeight);
+          canvas.getContext('2d').drawImage(image, 0, 0);
+          /* A frame with no stated duration plays for 0.1s, as browsers do. */
+          const ms = image.duration ? image.duration / 1000 : 100;
+          image.close();
+          const url = URL.createObjectURL(await canvas.convertToBlob({ type: 'image/png' }));
+          frames.push({ url, from: total });
+          total += Math.max(ms, 20);
+        }
+        img.removeAttribute('srcset');
+        img.removeAttribute('loading');
+        for (const s of img.closest('picture')?.querySelectorAll('source') ?? []) s.remove();
+        held.images.push({ img, frames, total, shown: -1 });
+      } catch {
+        /* Not readable from the page (no CORS): it keeps its own clock. */
+      }
+    }
+  }
   for (const v of document.querySelectorAll('video')) {
     /* Rate 0 rather than pause(): a site's own play/pause button listens for the pause event and
        would show "play" in every frame. At rate 0 the video still counts as playing. */
@@ -177,6 +217,17 @@ async function stepClock(i) {
         }),
       );
       for (const { a, start } of held.animations) a.currentTime = start + seconds * 1000;
+      await Promise.all(
+        held.images.map(async (h) => {
+          const t = (seconds * 1000) % h.total;
+          let f = h.frames.length - 1;
+          while (f > 0 && h.frames[f].from > t) f--;
+          if (f === h.shown) return;
+          h.shown = f;
+          h.img.src = h.frames[f].url;
+          await h.img.decode().catch(() => {});
+        }),
+      );
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     },
     { seconds: i / FPS },
