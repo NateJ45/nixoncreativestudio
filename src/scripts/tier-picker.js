@@ -22,7 +22,7 @@ var box = doc.querySelector('[data-tp]');
 var openers = [].slice.call(doc.querySelectorAll('[data-tp-open]'));
 
 if (box && openers.length) {
-  var tiers = JSON.parse(box.dataset.tiers || '[]');
+  var tiers = JSON.parse(box.dataset.tpTiers || '[]');
   var $ = function (s) {
     return box.querySelector(s);
   };

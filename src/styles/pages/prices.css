@@ -2986,12 +2986,18 @@ html:not(.js) .jump-prog {
     outline-color: #fff;
   }
 }
-/* Three across: the fronts line up row for row (name, who it fits, price, range, buttons), and a
-   card is as tall as its longer face, so nothing jumps when one turns. The spare room on a front
-   opens above its price. */
+/* Three across. At rest a card is its FRONT: the three fronts line up row for row (name, who it
+   fits, price, range, buttons) and are as tall as each other, with the price right under "Who it
+   fits". The back is laid over the front from the top and takes no room. When a card turns,
+   prices-turn.js springs --grow from 0 to (back's height - front's height): the front's paper
+   stretches down by that much while it turns away, the back is exactly that tall as it comes
+   round, and the list's foot (--tgrow, the largest grow of any turned card) moves the page below
+   on the same spring. The cards beside it stay as they are, top-aligned. */
 @media screen and (min-width: 60rem) {
   .js .tiers {
-    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-rows: repeat(5, auto);
+    align-items: start;
+    padding-bottom: var(--tgrow, 0px);
   }
   .js .tier,
   .js .t-card,
@@ -3001,13 +3007,23 @@ html:not(.js) .jump-prog {
     grid-row: span 5;
     grid-template-rows: subgrid;
   }
-  .js .t-front,
-  .js .t-back {
+  .js .t-front {
     grid-column: 1;
     grid-row: 1 / -1;
   }
-  .js .t-front .t-price {
-    align-self: end;
+  .js .t-front > .t-fbg {
+    bottom: calc(-1 * var(--grow, 0px));
+  }
+  .js .t-back {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(100% + var(--grow, 0px));
+  }
+  /* While the height is still on its way, the back's words stay inside its paper. The margin
+     keeps the paper's shadow (browsers without overflow-clip-margin clip it for that moment). */
+  .js .tier.growing .t-back {
+    overflow: clip;
+    overflow-clip-margin: 3rem;
   }
 }
 /* One to a row: the face turned away leaves the flow, so a card is only as tall as the face you

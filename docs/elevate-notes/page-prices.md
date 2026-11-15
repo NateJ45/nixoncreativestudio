@@ -43,8 +43,10 @@ copy changed; every number still comes from `src/data/pricing.ts`.
 - **Tier cards turn.** "Turn over" turns a card on About's Off the clock turn: front is name, who
   it fits, price and range, the buttons; back is what I take responsibility for, If you ever move
   on, what's included, and "Turn back". The face turned away is inert; focus goes to the back and
-  returns to the button; `ui.cue('turn')`. Three across, both faces share one height so nothing
-  jumps; one to a row, the card is as tall as the face showing and the height eases. Reduced motion:
+  returns to the button; `ui.cue('turn')`. At rest a card is as tall as its front (the three fronts
+  equal, rows lined up); three across, turning springs that card's height to its back (`--grow`)
+  while the page below follows on the same spring (`--tgrow` on the list) and the cards beside it
+  stay put; one to a row, the card is as tall as the face showing and the height eases. Reduced motion:
   the faces swap with no turn. No script and print: one open card, exactly as before.
 - **Your plan, everywhere.** A tier or plan picked in the receipt, a cost row's "Show on the
   receipt", the three questions, "How soon you hear back", a plan name at the head of the care table
