@@ -2,11 +2,13 @@
 /* ============================================================================
    gbp-shots.mjs: device-frame photos of client sites for Google Business Profile
    ============================================================================
-   Two steps, so you can look at the raw captures before rendering:
+   Two steps for the stills, so you can look at the raw captures before
+   rendering, plus a separate video step:
 
      node scripts/gbp-shots.mjs capture [slug ...]   shoot the live sites
      node scripts/gbp-shots.mjs render  [slug ...]   build the finished JPGs
-     node scripts/gbp-shots.mjs all     [slug ...]   both
+     node scripts/gbp-shots.mjs all     [slug ...]   capture + render
+     node scripts/gbp-shots.mjs video   [slug ...]   scrolling phone MP4s
 
    capture: for each case study with a liveUrl (plus extra pages listed in
    gbp-shots.config.mjs) it opens the live site at 1440 wide (2x) and 390 wide
@@ -24,6 +26,14 @@
      {slug}-{page}.jpg     1600 x 1200  laptop + phone on an extra page
      cover-wall.jpg        1920 x 1080  every site in a tilted wall (16:9 cover)
 
+   video: takes one tall phone capture of each homepage (about five and a
+   half screens, saved as raw/{slug}/phone-tall.png), puts it in the same CSS
+   phone on the same backdrop at 1080 x 1920, and films the screen holding on
+   the hero, easing down about four and a half screens and back up: 14 s,
+   30 fps, H.264, silent, written by ffmpeg (must be on PATH) to
+   gbp-shots/out/video/{slug}-scroll.mp4. Sticky headers scroll away with
+   the page, because the capture is one still.
+
    Every layout keeps the devices inside the centre square, because Google
    crops thumbnails to a square. There is no text on any image: Google shows
    your business name already, and text-heavy photos get demoted.
@@ -34,6 +44,7 @@
 
 import { readFileSync, mkdirSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { spawn } from 'node:child_process';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 import config from './gbp-shots.config.mjs';
@@ -58,8 +69,8 @@ const sites = readdirSync(csDir)
 
 const [step = 'all', ...only] = process.argv.slice(2);
 const todo = only.length ? sites.filter((s) => only.includes(s.slug)) : sites;
-if (!['capture', 'render', 'all'].includes(step)) {
-  console.log('usage: node scripts/gbp-shots.mjs capture|render|all [slug ...]');
+if (!['capture', 'render', 'video', 'all'].includes(step)) {
+  console.log('usage: node scripts/gbp-shots.mjs capture|render|video|all [slug ...]');
   process.exit(1);
 }
 
@@ -479,5 +490,172 @@ async function render() {
   await browser.close();
 }
 
+/* ------------------------------------------------------------------ video */
+
+const VIDEO = { W: 1080, H: 1920, fps: 30, phoneW: 720, screens: 5.5 };
+
+// Scroll position (0 = hero, 1 = deepest) at time t seconds: hold on the hero,
+// ease down, hold, ease back up, hold. 14 seconds in all.
+const TIMELINE = [
+  [2, 0, 0],
+  [6.5, 0, 1],
+  [1.5, 1, 1],
+  [3, 1, 0],
+  [1, 0, 0],
+];
+const SECONDS = TIMELINE.reduce((n, [d]) => n + d, 0);
+const ease = (x) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
+function scrollAt(t) {
+  for (const [d, from, to] of TIMELINE) {
+    if (t < d) return from + (to - from) * ease(t / d);
+    t -= d;
+  }
+  return 0;
+}
+
+// One tall phone capture of the homepage, about five and a half screens deep.
+// Stitched from viewport shots, because a fullPage shot leaves background
+// videos (and the tiles around them) unpainted. Anything fixed or sticky is
+// hidden after the first screen so a header or floating button never repeats.
+async function tallShot(browser, site, file) {
+  const context = await browser.newContext({
+    ...shapes.phone,
+    reducedMotion: config[site.slug]?.motion ? 'no-preference' : 'reduce',
+  });
+  context.setDefaultTimeout(30_000);
+  const page = await context.newPage();
+  const guard = setTimeout(() => context.close().catch(() => {}), 120_000);
+  let ok = false;
+  try {
+    await loadPage(page, site.url, config[site.slug]?.hide);
+    const vh = shapes.phone.viewport.height;
+    const full = await page.evaluate(() => document.documentElement.scrollHeight);
+    const height = Math.min(full, Math.round(vh * VIDEO.screens));
+    const dpr = shapes.phone.deviceScaleFactor;
+    const layers = [];
+    for (let y = 0; y < height; y += vh) {
+      await page.evaluate((v) => window.scrollTo(0, v), y);
+      await page.waitForTimeout(600);
+      // Checked on every screen after the first, because some headers only
+      // turn fixed once the page scrolls.
+      if (y > 0) {
+        await page.evaluate(() => {
+          for (const el of document.querySelectorAll('body *')) {
+            const p = getComputedStyle(el).position;
+            if (p === 'fixed' || p === 'sticky') {
+              el.style.setProperty('visibility', 'hidden', 'important');
+            }
+          }
+        });
+      }
+      const top = await page.evaluate(() => Math.round(window.scrollY));
+      const rows = Math.min(vh, height - top) * dpr;
+      let shot = await page.screenshot();
+      if (rows < vh * dpr) {
+        shot = await sharp(shot)
+          .extract({ left: 0, top: 0, width: 390 * dpr, height: rows })
+          .toBuffer();
+      }
+      layers.push({ input: shot, left: 0, top: top * dpr });
+    }
+    await sharp({
+      create: { width: 390 * dpr, height: height * dpr, channels: 3, background: '#fff' },
+    })
+      .composite(layers)
+      .png()
+      .toFile(file);
+    ok = true;
+  } catch (err) {
+    console.log(`FAILED ${site.slug} video capture: ${String(err).split('\n')[0]}`);
+  }
+  clearTimeout(guard);
+  await context.close().catch(() => {});
+  return ok;
+}
+
+// Feeds JPEG frames to ffmpeg on stdin and encodes a silent H.264 MP4.
+function encoder(out) {
+  const ff = spawn(
+    'ffmpeg',
+    [
+      ...['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(VIDEO.fps)],
+      ...['-c:v', 'mjpeg', '-i', '-', '-an', '-c:v', 'libx264', '-preset', 'slow', '-crf', '21'],
+      // JPEG frames are full range; convert to the TV range players expect.
+      ...[
+        '-vf',
+        'scale=in_range=pc:out_range=tv,format=yuv420p',
+        '-r',
+        String(VIDEO.fps),
+        '-movflags',
+        '+faststart',
+        out,
+      ],
+    ],
+    { stdio: ['pipe', 'inherit', 'inherit'] },
+  );
+  const done = new Promise((resolve, reject) => {
+    ff.on('error', reject);
+    ff.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`))));
+  });
+  const write = (buf) =>
+    ff.stdin.write(buf) ? Promise.resolve() : new Promise((r) => ff.stdin.once('drain', r));
+  return { write, end: () => (ff.stdin.end(), done) };
+}
+
+async function video() {
+  const dir = `${outDir}/video`;
+  mkdirSync(dir, { recursive: true });
+  const browser = await chromium.launch();
+  for (const site of todo) {
+    const tall = `${rawDir}/${site.slug}/phone-tall.png`;
+    mkdirSync(`${rawDir}/${site.slug}`, { recursive: true });
+    if (!(await tallShot(browser, site, tall))) continue;
+    const cfg = config[site.slug] ?? {};
+    const meta = siteFiles(site.slug)?.meta ?? {};
+    const bg = cfg.bg || meta.desktop?.themeColor || '#0a1628';
+    const { W, H, phoneW } = VIDEO;
+    // The phone() frame from the stills, centred. Its screen scrolls under a
+    // status bar that keeps the hero's top colour.
+    const phoneH = phoneW * 2.085;
+    const body = at(
+      (W - phoneW) / 2,
+      (H - phoneH) / 2 - 20,
+      (await phone(tall, phoneW)).replace('<img ', '<img id="feed" '),
+    );
+    const html = `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}
+.pscreen .status { background: inherit; }
+#feed { will-change: transform; }</style></head>
+<body style="--W:${W}px;--H:${H}px;--bg:${bg}"><div class="stage">${body}</div></body></html>`;
+    const file = `${tmpDir}/${site.slug}-video.html`;
+    writeFileSync(file, html);
+    const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+    const out = `${dir}/${site.slug}-scroll.mp4`;
+    try {
+      await page.goto(fileUrl(file));
+      await page.waitForLoadState('networkidle');
+      const travel = await page.evaluate(() => {
+        const img = document.getElementById('feed');
+        return Math.max(0, img.offsetHeight - img.parentElement.clientHeight * 0.944);
+      });
+      const enc = encoder(out);
+      const frames = Math.round(SECONDS * VIDEO.fps);
+      for (let i = 0; i < frames; i += 1) {
+        const y = -travel * scrollAt(i / VIDEO.fps);
+        await page.evaluate((v) => {
+          document.getElementById('feed').style.transform = `translate3d(0,${v}px,0)`;
+        }, y);
+        await enc.write(await page.screenshot({ type: 'jpeg', quality: 92 }));
+      }
+      await enc.end();
+      console.log(`filmed ${site.slug}-scroll.mp4 (${SECONDS}s, ${Math.round(travel)}px travel)`);
+    } catch (err) {
+      console.log(`FAILED ${site.slug} video: ${String(err).split('\n')[0]}`);
+    }
+    await page.close();
+  }
+  await browser.close();
+}
+
 if (step === 'capture' || step === 'all') await capture();
 if (step === 'render' || step === 'all') await render();
+if (step === 'video') await video();
