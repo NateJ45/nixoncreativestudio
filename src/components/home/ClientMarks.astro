@@ -4,10 +4,9 @@
    the grid and What changed (added 2026-11-15, after a look at another designer's client strip).
 
    Each mark is the client's own dark-ground version, shown in its real colours on its own accent,
-   the way it sits on their site: no recolouring, no filters. As the wall scrolls into view the
-   tiles rise in one after another (a CSS scroll-driven animation, home.css). Nothing moves on its
-   own, so there is no pause button to give: under reduced motion, or in a browser without
-   scroll-driven animations, the wall is simply there.
+   the way it sits on their site: no recolouring, no filters. Nothing moves on its own except the
+   footage a visitor asks for (or, on a phone, five seconds of it): under reduced motion, or in a
+   browser without scroll-driven animations, the wall is simply there.
 
    The files live in src/assets/clients/, named by the study slug, and come from the clients' own
    repos and live sites:
@@ -23,7 +22,12 @@
    - foundation-for-reformed-theology.png: the site's logo-white.
    - first-presbyterian-orangeburg.png: the church's white logo from its Wix site.
    - west-chester-preschool.webp: the school's landscape logo for dark grounds, 1500px wide.
-   A client with no file is set as its name in type, never drawn or invented. */
+   A client with no file is set as its name in type, never drawn or invented.
+
+   Motion (logo-wall.js, home.css; all off under reduced motion): the tiles are dealt out of one
+   deck as the wall scrolls in, a tile tips toward a mouse with its logo floating above the colour,
+   and reaching a tile slides its logo to a corner and plays the client's real homepage footage
+   (the same desktop clip as their window in the grid). */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Client } from '../../lib/clients';
@@ -75,7 +79,7 @@ const marks = clients.map((c) => ({
   <h2 id="lw-h" class="label">
     {countWord(clients.length)} organizations, one person
   </h2>
-  <ul class="lw-row">
+  <ul class="lw-row" data-lw>
     {marks.map((m, i) => (
       <li style={`--i:${i}`}>
         <a
@@ -83,20 +87,35 @@ const marks = clients.map((c) => ({
           class="lw"
           style={`--c:${m.accent};--lh:${m.fit.h}${m.fit.max ? `;--lmax:${m.fit.max}` : ''}`}
           data-sheen
+          data-cursor="Open"
+          data-peek="off"
         >
-          {m.file ? (
-            <Image
-              src={m.file}
-              alt={m.name}
-              width={Math.min(m.file.width, 640)}
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <span class="lw-type">{m.name}</span>
-          )}
+          {/* The client's real homepage, behind the logo: a still and the footage, both empty
+              until the tile is first reached (logo-wall.js). Decoration: the link's name is the
+              logo's alt text. */}
+          <span class="lw-screen" aria-hidden="true">
+            <img class="lw-still" data-src={m.deskStill} alt="" decoding="async" />
+            <video muted loop playsinline preload="none" data-src={m.desk} />
+          </span>
+          <span class="lw-mark">
+            {m.file ? (
+              <Image
+                src={m.file}
+                alt={m.name}
+                width={Math.min(m.file.width, 640)}
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <span class="lw-type">{m.name}</span>
+            )}
+          </span>
         </a>
       </li>
     ))}
   </ul>
 </section>
+
+<script>
+  import '../../scripts/logo-wall.js';
+</script>

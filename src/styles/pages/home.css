@@ -1049,19 +1049,23 @@ html:not(.js) .ed-go {
 }
 
 /* ---------------------------------------------------------------------------
-   The client marks (src/components/home/ClientMarks.astro): a tile for each
-   client in its own accent, holding its own dark-ground logo in its real colours.
-   A client's colour stays in its own surface (the tile), as everywhere else.
+   The client marks (src/components/home/ClientMarks.astro, logo-wall.js): a tile
+   for each client in its own accent, holding its own dark-ground logo in its real
+   colours. A client's colour stays in its own surface (the tile), as everywhere else.
+   Motion, all off under reduced motion: the deal out of one deck on scroll, the
+   tilt toward a mouse, and the logo giving way to the client's live footage.
    --------------------------------------------------------------------------- */
 .logowall {
   padding: clamp(3rem, 8vh, 5rem) var(--gut);
   text-align: center;
+  overflow-x: clip;
 }
 .logowall h2 {
   margin-bottom: clamp(1.25rem, 3.5vh, 2rem);
   color: var(--soft);
 }
 .lw-row {
+  position: relative; /* the offset parent logo-wall.js measures the deal from */
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(0.6rem, 1.4vw, 1rem);
@@ -1069,13 +1073,17 @@ html:not(.js) .ed-go {
   margin: 0 auto;
   padding: 0;
   list-style: none;
+  view-timeline: --lw block;
+}
+.lw-row li {
+  position: relative;
+  /* The middle of the deck lies on top. */
+  z-index: calc(10 - var(--i));
 }
 .lw {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: block;
   aspect-ratio: 2 / 1;
-  padding: 0 9%;
   container-type: size;
   overflow: hidden;
   border-radius: var(--cardr, 1.25rem);
@@ -1086,32 +1094,108 @@ html:not(.js) .ed-go {
     var(--lean, 0px) 18px 30px -22px rgba(0, 0, 0, 0.5);
   outline-offset: 4px;
   text-decoration: none;
-  transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+  /* --px and --py run from -0.5 to 0.5 across the tile (logo-wall.js, a mouse only). */
+  transform: perspective(900px) rotateX(calc(var(--py, 0) * -10deg))
+    rotateY(calc(var(--px, 0) * 10deg)) translateY(var(--lift, 0px));
+  transition:
+    transform 0.7s cubic-bezier(0.3, 1.5, 0.5, 1),
+    box-shadow 0.4s var(--ease);
 }
 .lw:hover,
 .lw:focus-visible {
-  transform: translateY(-4px);
+  --lift: -5px;
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    var(--lean, 0px) 30px 44px -24px rgba(0, 0, 0, 0.6);
+}
+/* While the mouse moves over it the tile follows at once; letting go springs it back. */
+.lw.tilting {
+  transition:
+    transform 0.12s linear,
+    box-shadow 0.4s var(--ease);
+}
+
+/* The logo, on its own layer across the whole tile so it can float and give way. With the tilt it
+   drifts the other way from the pointer, so it reads as sitting above the colour. */
+.lw-mark {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0 9%;
+  transform: translate(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -8px));
+  transform-origin: 7% 88%;
+  transition: transform 0.7s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.lw.tilting .lw-mark {
+  transition: transform 0.12s linear;
 }
 /* The tile's height drives the mark's (the tile is a size container, so 1cqh is a hundredth of
-   its height): --lh is its share, --lmax a cap for a small source, and
-   a wide wordmark is held by the tile's width instead (object-fit keeps its shape). */
-.lw img {
+   its height): --lh is its share, --lmax a cap for a small source, and a wide wordmark is held by
+   the tile's width instead (object-fit keeps its shape). */
+.lw-mark img {
   display: block;
   width: auto;
   height: calc(var(--lh) * 1cqh);
   max-width: 100%;
   max-height: var(--lmax, none);
   object-fit: contain;
-  transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, calc(0.12 + var(--lifted, 0) * 0.2)));
 }
-.lw:hover img,
-.lw:focus-visible img {
-  transform: scale(1.05);
+.lw:hover .lw-mark img,
+.lw:focus-visible .lw-mark img {
+  --lifted: 1;
 }
 .lw-type {
   color: #fff;
   font: 500 clamp(1rem, 1.8vw, 1.4rem) / 1.15 var(--display);
 }
+
+/* The live site behind the logo. Hidden until the tile is reached; then the logo shrinks to the
+   bottom-left corner over a pool of the client's colour and the footage plays across the tile. */
+.lw-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform: scale(1.08);
+  transition:
+    opacity 0.45s var(--ease),
+    transform 0.9s var(--ease);
+}
+.lw-screen img,
+.lw-screen video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+}
+.lw-screen img:not([src]) {
+  visibility: hidden;
+}
+.lw-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 55% 70% at 0% 100%,
+    var(--c) 0 32%,
+    color-mix(in srgb, var(--c) 55%, transparent) 52%,
+    transparent 78%
+  );
+}
+.lw.live .lw-screen {
+  opacity: 1;
+  transform: none;
+}
+.lw.live .lw-mark {
+  transform: scale(0.42);
+}
+
 /* Two across on a phone, the last tile across both. */
 @media (max-width: 40rem) {
   .lw-row {
@@ -1124,26 +1208,47 @@ html:not(.js) .ed-go {
     aspect-ratio: 4 / 1;
   }
 }
-/* The tiles rise in one after another as the wall scrolls into view. Scroll-driven, so nothing
-   moves on its own, and only where the browser can and motion is allowed. */
+
+/* The deal. As the wall scrolls in, the tiles leave one loose deck in its middle (each tile's
+   --dx and --dy, measured by logo-wall.js, and a turn of --r) and spring out to their places,
+   one after another. Scroll-driven, so it moves only while you scroll; with no script the
+   offsets are zero and the tiles simply rise. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .lw-row li {
-      animation: lw-rise linear both;
-      animation-timeline: view();
-      animation-range: entry calc(var(--i) * 3%) entry calc(55% + var(--i) * 3%);
+      animation: lw-deal linear both;
+      animation-timeline: --lw;
+      animation-range: cover calc(8% + var(--i) * 2.2%) cover calc(42% + var(--i) * 2.2%);
     }
   }
 }
+/* An overshoot on the way out, so each tile lands with the house spring. */
+@keyframes lw-deal {
+  from {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), calc(var(--dy, 0px) + 2.5rem)) rotate(var(--r, 0deg))
+      scale(0.82);
+    animation-timing-function: cubic-bezier(0.3, 1.32, 0.5, 1);
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lw,
-  .lw img {
+  .lw-mark,
+  .lw-screen {
     transition: none;
   }
+  .lw,
   .lw:hover,
   .lw:focus-visible,
-  .lw:hover img,
-  .lw:focus-visible img {
+  .lw-mark {
     transform: none;
   }
 }
@@ -1151,14 +1256,7 @@ html:not(.js) .ed-go {
   .lw {
     border: 1px solid CanvasText;
   }
-}
-@keyframes lw-rise {
-  from {
-    opacity: 0;
-    transform: translateY(1.25rem) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+  .lw-screen {
+    display: none;
   }
 }
