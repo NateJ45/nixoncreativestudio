@@ -112,7 +112,7 @@ export const site: SiteData = {
   social: {
     instagram: 'https://www.instagram.com/thenate_n/',
     linkedin: 'https://www.linkedin.com/in/nathannixon/',
-    facebook: 'https://www.facebook.com/profile.php?id=61596221085423',
+    facebook: 'https://www.facebook.com/nixoncreativestudio',
     googleBusiness: 'https://www.google.com/maps?cid=8761877824848034127',
   },
 
