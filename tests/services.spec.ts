@@ -47,7 +47,9 @@ test.describe('Prices', () => {
       // bars have their 1, 3 and 5 year radios, and the care section ends on the reply rows.
       // Raised to 18800 (Nov 2026): the add-ons are five cards instead of two, four of them
       // stacked on a phone, so the always-open add-ons section is taller.
-      expect(height).toBeLessThan(18800);
+      // Raised to 19100 (Nov 2026): a ninth question, "Why only nine sites on the Work page?",
+      // adds one closed FAQ row (about 22px over the old budget on CI).
+      expect(height).toBeLessThan(19100);
     });
 
     test('a jump link and an address open the fold they point into', async ({ page }) => {
@@ -375,7 +377,7 @@ test.describe('Prices', () => {
       await page.goto('/services/');
       await expect(page.locator('.tier')).toHaveCount(3);
       await expect(page.locator('.t-price').first()).toHaveText('$3,500+');
-      await expect(page.locator('.faq details')).toHaveCount(8);
+      await expect(page.locator('.faq details')).toHaveCount(9);
       await expect(page.locator('[data-sites] a.tile')).toHaveCount(4);
     });
   });

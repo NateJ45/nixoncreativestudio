@@ -238,7 +238,7 @@ test.describe('/services motion', () => {
       await expect(page.locator('.bars-parts:visible')).toHaveCount(3);
       await expect(page.locator('.bars-alt:visible')).toHaveCount(0);
       // The FAQ is still native details, with its answers in the markup.
-      await expect(page.locator('.faq details .faq-reply')).toHaveCount(8);
+      await expect(page.locator('.faq details .faq-reply')).toHaveCount(9);
     });
   });
 });
