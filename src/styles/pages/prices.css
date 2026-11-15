@@ -25,41 +25,7 @@
   max-width: 42rem;
 }
 
-/* Jump row */
-.jump {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: clamp(1.25rem, 3vh, 2rem);
-}
-.jump a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  padding: 0 1rem;
-  border-radius: 99rem;
-  background: var(--card);
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-.jump a:hover {
-  transform: translateY(-2px);
-}
-/* Ten links on one line from a laptop up. */
-@media (min-width: 80rem) {
-  .jump {
-    flex-wrap: nowrap;
-    gap: 0.3rem;
-  }
-  .jump a {
-    padding: 0 0.8rem;
-    font-size: 0.9375rem;
-    white-space: nowrap;
-  }
-}
+/* The jump row became the sticky chapter bar: its rules are in the elevate block at the end. */
 .tiers-sec {
   padding-top: clamp(1.5rem, 4vh, 3rem);
   padding-bottom: clamp(0.5rem, 2vh, 1rem);
@@ -863,10 +829,6 @@
     opacity: 1;
   }
 }
-.price-head .jump {
-  grid-column: 1/-1;
-  margin-top: clamp(1.25rem, 3vh, 2rem);
-}
 
 /* The tier cards: one paper, one blue, one ink, lettered in the corners like face cards. */
 .t-bg {
@@ -1072,21 +1034,6 @@
   }
 }
 @media (max-width: 40rem) {
-  .jump {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-left: calc(var(--gut) * -1);
-    margin-right: calc(var(--gut) * -1);
-    padding: 0.25rem var(--gut);
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
-  }
-  .jump::-webkit-scrollbar {
-    display: none;
-  }
-  .jump a {
-    flex: none;
-  }
   .page-head {
     padding-top: 5.5rem;
   }
@@ -1192,7 +1139,6 @@
     animation: none;
   }
   .steps li,
-  .jump a,
   .cta,
   .sites .tile,
   .faq summary i,
@@ -1268,9 +1214,6 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--ink);
-}
-.price-head .jump {
-  margin-top: clamp(0.5rem, 1.5vh, 1rem);
 }
 
 /* Corner marks line up with the text under them. */
@@ -1726,12 +1669,6 @@ html:not(.js) .jump a[href='#pick'] {
   .why-not-in {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* The giant price's box runs past its glyphs and sat over these links, which swallowed the click. */
-.jump {
-  position: relative;
-  z-index: 1;
 }
 
 /* Behind the site: what the team sees, and what the numbers can say. */
@@ -2726,5 +2663,665 @@ html:not(.js) .reply-rows li {
     margin-left: auto;
     margin-right: 3.5rem;
     transform-origin: 100% 0;
+  }
+}
+
+/* ============================================================================
+   The elevate pass (Nov 2026): chapters on a second ground, the sticky chapter
+   bar, tier cards that turn, "Your pick" marked across the page, the care
+   table's columns, and How it works beside one pinned drawing.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   Rhythm. Every other chapter sits on a quiet second ground (class `alt`): a
+   rounded panel that runs almost edge to edge, with its contents still on the
+   page's own left edge. The panel is --well on the light side, where white
+   cards stand up from it, and --sunk on the dark side, a half step up from the
+   page with the lit rim every dark card has. No new colour: both are tokens.
+   --------------------------------------------------------------------------- */
+.sec.alt {
+  --alt: var(--well);
+  --bandm: clamp(0.5rem, 1.2vw, 1rem);
+  margin: clamp(1.5rem, 5vh, 3.5rem) var(--bandm);
+  padding-inline: calc(var(--gut) - var(--bandm));
+  border-radius: 1.75rem;
+  background: var(--alt);
+  box-shadow: var(--rim);
+}
+/* The timeline's empty track is the well too, which would vanish on a well. */
+.sec.alt .bar {
+  background: var(--wash);
+}
+@media screen {
+  :root[data-theme='dark'] .sec.alt {
+    --alt: var(--sunk);
+  }
+}
+@media (min-width: 52.01rem) {
+  /* Room to breathe between chapters, so the page stops reading as one scroll of text. */
+  .sec.tight {
+    padding-top: clamp(3rem, 8vh, 5.5rem);
+    padding-bottom: clamp(3rem, 8vh, 5.5rem);
+  }
+  .tiers-sec {
+    padding-bottom: clamp(1.5rem, 4vh, 3rem);
+  }
+  /* "If this sounds like you" and the three questions are one chapter, so one panel. */
+  .sec.alt.fit {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-radius: 1.75rem 1.75rem 0 0;
+  }
+  .sec.alt.picker {
+    margin-top: 0;
+    border-radius: 0 0 1.75rem 1.75rem;
+    /* Its own lit top edge would draw a line through the middle of the panel. */
+    box-shadow: none;
+  }
+  .sec.folds {
+    padding-top: 0;
+  }
+}
+/* A section folded to its heading on a phone is a row in a ruled list, not a panel. */
+.sec.alt.shut {
+  margin: 0;
+  padding-inline: var(--gut);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+@media (max-width: 52rem) {
+  .sec.alt:not(.shut) {
+    margin-block: 1.25rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+@media (forced-colors: active) {
+  .sec.alt:not(.shut) {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .sec.alt {
+    margin: 0;
+    padding-inline: var(--gut);
+    background: none;
+    box-shadow: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The chapter bar. The row of links under the first screen, in one white
+   capsule like the /work filter. It sticks under the top of the screen for the
+   rest of the page; prices-chapters.js slides the blue pill (.dw-pill,
+   seg-bar.css) to the chapter you are in and fills the thin line. It sits
+   inside the page's scroll-padding (72px), so a focused control is never under
+   it. On a narrow screen the row scrolls sideways inside the capsule.
+   --------------------------------------------------------------------------- */
+.jump {
+  position: relative;
+  z-index: 20;
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--gut));
+  margin: 0 0 clamp(1rem, 3vh, 2rem) var(--edge);
+  padding: 0.3rem;
+  border-radius: 1.6rem;
+  background: var(--card);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s var(--ease);
+}
+/* Not on a very short screen (a phone on its side), where a bar would take too much of it. */
+@media (min-height: 30rem) {
+  .jump {
+    position: sticky;
+    top: 0.75rem;
+  }
+}
+.jump.stuck {
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 14px 34px -14px rgba(0, 0, 0, 0.28);
+}
+/* .jump .jump-row, not .jump-row: seg-bar.css loads after this file and its .dw-seg would win a tie. */
+.jump .jump-row {
+  flex-wrap: wrap;
+}
+.jump a {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.95rem;
+  border-radius: 99rem;
+  color: var(--ink);
+  font: 500 0.9375rem/1 var(--body);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.jump a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.jump a:focus-visible {
+  outline-offset: -3px;
+}
+/* The chapter you are in: white on the blue pill. The colour waits a beat for the pill to arrive. */
+.jump a[aria-current] {
+  color: #fff;
+  transition-delay: 0.18s;
+}
+.jump a[aria-current]:focus-visible {
+  outline: 2px solid #fff;
+}
+/* How far through the page: a hairline along the capsule's foot that fills from the left. */
+.jump-prog {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 0.05rem;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.jump-prog i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(var(--jp, 0));
+  transform-origin: left center;
+}
+html:not(.js) .jump-prog {
+  display: none;
+}
+/* Ten links on one line from a laptop up. */
+@media (min-width: 80rem) {
+  .jump .jump-row {
+    flex-wrap: nowrap;
+  }
+  .jump a {
+    padding: 0 0.8rem;
+  }
+}
+/* Narrower than that the row is one line that scrolls sideways inside the capsule. */
+@media (max-width: 79.99rem) {
+  .jump {
+    width: auto;
+    max-width: none;
+    margin-inline: clamp(0.5rem, 1.2vw, 1rem);
+  }
+  .jump .jump-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    border-radius: 1.3rem;
+  }
+  .jump-row::-webkit-scrollbar {
+    display: none;
+  }
+  .jump a {
+    flex: none;
+  }
+}
+@media (forced-colors: active) {
+  .jump {
+    border: 1px solid CanvasText;
+  }
+  .jump a[aria-current] {
+    color: LinkText;
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jump,
+  .jump a {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Tier cards that turn. In the markup a card is its front (name, who it fits,
+   price, range, the button) and then its back (what I take responsibility for,
+   If you ever move on, what's included). With no script, and in print, the two
+   faces dissolve (display: contents) and the card is the one open sheet it
+   always was. With script, on a screen, each face is its own sheet, back to
+   back, and prices-turn.js turns the card on the "Turn over" button: About's
+   Off the clock turn. The face turned away is inert.
+   --------------------------------------------------------------------------- */
+.t-turn,
+.t-face {
+  display: contents;
+}
+.t-fbg,
+.t-flip,
+.t-turn-back {
+  display: none;
+}
+@media screen {
+  .js .t-card {
+    padding: 0;
+    perspective: 1800px;
+  }
+  .js .t-card > .t-bg {
+    display: none;
+  }
+  .js .t-fbg {
+    display: block;
+  }
+  .js .t-turn {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.3, 1.2, 0.5, 1);
+  }
+  .js .tier.over .t-turn {
+    transform: rotateY(180deg);
+  }
+  .js .t-face {
+    position: relative;
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(1.25rem, 1.7vw, 1.5rem) 1.5rem;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  .js .t-back {
+    padding-top: 1.75rem;
+    transform: rotateY(180deg);
+  }
+  .js .t-back > .t-fits:first-of-type {
+    margin-top: 0;
+  }
+  .js .t-back:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 1.5rem;
+  }
+  /* The two buttons on the front share a line; "Turn back" sits at the foot of the back. */
+  .js .t-go {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .js .t-turn-back {
+    display: block;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    padding-bottom: 1.75rem;
+  }
+  .js .t-flip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 3rem;
+    padding: 0 1.15rem;
+    border: 0;
+    border-radius: 99rem;
+    background: none;
+    color: inherit;
+    font: 600 1rem/1 var(--body);
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 34%, transparent);
+    transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .js .t-flip:hover {
+    transform: scale(1.04);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 70%, transparent);
+  }
+  .js .t-flip:active {
+    transform: scale(0.97);
+  }
+  .js .t-ink .t-flip:focus-visible {
+    outline-color: #fff;
+  }
+}
+/* Three across. At rest a card is its FRONT: the three fronts line up row for row (name, who it
+   fits, price, range, buttons) and are as tall as each other, with the price right under "Who it
+   fits". The back is laid over the front from the top and takes no room. When a card turns,
+   prices-turn.js springs --grow from 0 to (back's height - front's height): the front's paper
+   stretches down by that much while it turns away, the back is exactly that tall as it comes
+   round, and the list's foot (--tgrow, the largest grow of any turned card) moves the page below
+   on the same spring. The cards beside it stay as they are, top-aligned. */
+@media screen and (min-width: 60rem) {
+  .js .tiers {
+    grid-template-rows: repeat(5, auto);
+    align-items: start;
+    padding-bottom: var(--tgrow, 0px);
+  }
+  .js .tier,
+  .js .t-card,
+  .js .t-turn,
+  .js .t-front {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+  }
+  .js .t-front {
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+  .js .t-front > .t-fbg {
+    bottom: calc(-1 * var(--grow, 0px));
+  }
+  .js .t-back {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(100% + var(--grow, 0px));
+  }
+  /* While the height is still on its way, the back's words stay inside its paper. The margin
+     keeps the paper's shadow (browsers without overflow-clip-margin clip it for that moment). */
+  .js .tier.growing .t-back {
+    overflow: clip;
+    overflow-clip-margin: 3rem;
+  }
+}
+/* One to a row: the face turned away leaves the flow, so a card is only as tall as the face you
+   are reading. prices-turn.js eases the height from one to the other. */
+@media screen and (max-width: 59.99rem) {
+  .js .tier:not(.over) .t-back,
+  .js .tier.over .t-front {
+    position: absolute;
+    inset: 0 0 auto;
+  }
+}
+@media screen and (prefers-reduced-motion: reduce) {
+  .js .t-turn,
+  .js .t-flip {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .js .t-flip {
+    border: 1px solid ButtonText;
+  }
+}
+/* The bone card on the dark side: its ghost button and focus ring follow its dark text. */
+@media screen {
+  :root[data-theme='dark'] .t-dark .t-flip:focus-visible {
+    outline-color: var(--on-ink);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Your pick, everywhere. A tier or care plan chosen anywhere on the page
+   (prices-plan.js) is marked on the tier's card, its row in the cost table and
+   the plan's column in the care table (its card on a phone). The mark is a
+   small tag in words, "Your pick", plus the blue: never colour alone.
+   --------------------------------------------------------------------------- */
+.yours-tag {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 99rem;
+  background: var(--fill);
+  color: #fff;
+  font: 600 0.75rem/1 var(--body);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.yours-tag[hidden] {
+  display: none;
+}
+/* On the blue and the ink card the tag is the white button's pair instead. */
+.t-ink .yours-tag {
+  background: #fff;
+  color: #111;
+}
+.tier.yours .t-bg {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.cost-table tr.yours > * {
+  background: var(--card);
+}
+.cost-table tr.yours > th {
+  padding-left: 0.9rem;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.cost-table tr.yours > td:last-child {
+  padding-right: 0.75rem;
+}
+.cost-table .yours-tag {
+  margin: 0 0 0.35rem;
+}
+@media (max-width: 40rem) {
+  .cost-table tbody tr.yours {
+    padding-inline: 0.9rem;
+    background: var(--card);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .cost-table tr.yours > th {
+    padding-left: 0;
+    box-shadow: none;
+  }
+}
+.care-card.yours {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.care-card .yours-tag {
+  margin: 0 0 0.6rem;
+}
+@media screen {
+  /* The bone card turns its tag back to the blue, like its button. */
+  :root[data-theme='dark'] .t-dark .yours-tag {
+    background: var(--fill);
+    color: #fff;
+  }
+}
+@media print {
+  .yours-tag {
+    display: none !important;
+  }
+  .tier.yours .t-bg,
+  .care-card.yours {
+    outline: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The care table's columns. The header row sticks under the chapter bar while
+   the table scrolls past (from 64rem, where the table never scrolls sideways).
+   The column under the pointer, or holding keyboard focus, lifts to the card
+   colour; the picked plan's column keeps it, between two blue rules, under its
+   "Your pick" tag. A plan's name is a button once the script runs, so a
+   keyboard can pick one here.
+   --------------------------------------------------------------------------- */
+@media (min-width: 64rem) {
+  .care thead th,
+  .care .corner {
+    top: 4.35rem;
+  }
+}
+.care th,
+.care td {
+  transition: background-color 0.2s;
+}
+.care:has(tr > :nth-child(2):is(:hover, :focus-within)) tr > :nth-child(2),
+.care:has(tr > :nth-child(3):is(:hover, :focus-within)) tr > :nth-child(3),
+.care:has(tr > :nth-child(4):is(:hover, :focus-within)) tr > :nth-child(4),
+.care:has(tr > :nth-child(5):is(:hover, :focus-within)) tr > :nth-child(5),
+.care[data-yours-col='1'] tr > :nth-child(2),
+.care[data-yours-col='2'] tr > :nth-child(3),
+.care[data-yours-col='3'] tr > :nth-child(4),
+.care[data-yours-col='4'] tr > :nth-child(5) {
+  background: var(--card);
+}
+.care[data-yours-col='1'] tr > :nth-child(2),
+.care[data-yours-col='2'] tr > :nth-child(3),
+.care[data-yours-col='3'] tr > :nth-child(4),
+.care[data-yours-col='4'] tr > :nth-child(5) {
+  box-shadow:
+    inset 2px 0 0 var(--accent),
+    inset -2px 0 0 var(--accent);
+}
+.care thead .yours-tag {
+  display: block;
+  margin: 0 0 0.5rem;
+}
+.care thead .yours-tag[hidden] {
+  display: none;
+}
+.care-pick {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin: -0.6rem 0 -0.2rem -0.6rem;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 99rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.care-pick .pl {
+  margin: 0;
+}
+.care-pick:hover .pl,
+.care-pick[aria-pressed='true'] .pl {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.care-pick:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .care th,
+  .care td {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .care[data-yours-col='1'] tr > :nth-child(2),
+  .care[data-yours-col='2'] tr > :nth-child(3),
+  .care[data-yours-col='3'] tr > :nth-child(4),
+  .care[data-yours-col='4'] tr > :nth-child(5) {
+    border-inline: 2px solid Highlight;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   How it works, pinned. From 62rem, with script and motion allowed, the four
+   steps are a ruled list down the left and one drawing stays on screen beside
+   them, building a step at a time as you read (prices-steps.js). Everywhere
+   else the drawing is not shown and the steps are the four cards above.
+   --------------------------------------------------------------------------- */
+.how-draw {
+  display: none;
+}
+@media screen and (min-width: 62rem) and (prefers-reduced-motion: no-preference) {
+  .js .how-in {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    column-gap: clamp(2.5rem, 6vw, 6rem);
+    align-items: start;
+  }
+  .js .how .steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin: 0;
+    padding-bottom: 18vh;
+  }
+  /* A step is a ruled row with room round it, so each one is read on its own. */
+  .js .how .steps li,
+  .js .how .steps li:hover {
+    min-height: 44vh;
+    padding: 1.5rem 0 3rem 4.5rem;
+    border-radius: 0;
+    border-top: 1px solid var(--line);
+    background: none;
+    box-shadow: none;
+    transform: none;
+  }
+  .js .how .steps li::before {
+    left: 0;
+    top: 1.35rem;
+    padding: 0;
+    background: none;
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    color: var(--soft);
+    transition: color 0.3s var(--ease);
+  }
+  .js .how .steps li.at::before {
+    color: var(--accent);
+  }
+  .js .how .steps li::after,
+  .js .how .steps .st-ic {
+    display: none;
+  }
+  .js .how .steps h3 {
+    font-size: var(--type-h2);
+  }
+  .js .how .steps p {
+    max-width: 34rem;
+    margin-top: 1rem;
+    font-size: clamp(1.0625rem, 1.25vw, 1.1875rem);
+  }
+  .js .how-draw {
+    position: sticky;
+    top: calc(50vh - min(21rem, 38vh));
+    display: block;
+  }
+  .how-card {
+    position: relative;
+    padding: clamp(1.25rem, 2vw, 2rem);
+    border-radius: 1.5rem;
+  }
+  .how-card svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(42rem, 76vh);
+  }
+  /* The step you are on, in the corner, the way a card is lettered. */
+  .how-n {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.15rem;
+    font: 600 1.5rem/1 var(--display);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--soft);
+  }
+  .how-card path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    transition: stroke 0.3s var(--ease);
+  }
+  /* The icons are drawn at four times their size, so their stroke is a quarter of the line's. */
+  .how-card .hw-ic path {
+    stroke-width: 0.5;
+  }
+  .how-card .hw-c {
+    stroke: var(--soft);
+    stroke-width: 1.25;
+  }
+  .how-card g.now path {
+    stroke: var(--accent);
+  }
+  /* Only while the script is driving are the lines held back. */
+  .how-live path {
+    stroke-dashoffset: 1;
   }
 }
