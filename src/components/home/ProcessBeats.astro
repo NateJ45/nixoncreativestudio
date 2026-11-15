@@ -1,0 +1,62 @@
+---
+/* Home, the four process beats before the closing: the four steps of "How it works" on the
+   Prices page (src/pages/services.astro, #how), with the same headings and the same icons. Each
+   line under a heading is that step's own first sentence, shortened only by cutting, so nothing
+   here says more than the Prices page does. Change a step there and here together.
+
+   As the row arrives each step's hairline runs to it and its icon draws, in order, the one
+   drawing now in the blue: the same drawing the Prices page does, written again in
+   src/scripts/home-more.js and home.css because that page's copy lives inside its own page
+   script. Reduced motion or no script: everything is simply drawn. */
+const beats = [
+  {
+    title: 'Start with a conversation',
+    line: "The first conversation is free: text me about what you actually need, and I'll come back with an honest ballpark before anyone is committed.",
+    /* A conversation: two speech bubbles. */
+    paths: [
+      'M4 4.5h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z',
+      'M18.5 8.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.5-3H12',
+    ],
+  },
+  {
+    title: 'Then the plan',
+    line: 'I write down who the site is for, how the pages fit together, and what you want visitors to do next.',
+    /* The plan: a written page. */
+    paths: ['M6 2.5h8.5l4 4v15H6z', 'M14.5 2.5v4h4', 'M9 11.5h6.5M9 15h6.5M9 18.5h4'],
+  },
+  {
+    title: 'Then I design and build',
+    line: 'I design and build the pages where you can see them. A link to the work so far lands in your inbox at each step.',
+    /* Design and build: a browser window with a layout in it. */
+    paths: ['M2.5 4.5h19v15h-19z', 'M2.5 8.5h19', 'M6 12h5.5v4H6z', 'M14.5 12.5h3.5M14.5 15.5h3.5'],
+  },
+  {
+    title: 'Launch, and follow-through',
+    line: 'I launch the site with you, then stay close for the first month to fix anything that surfaces.',
+    /* Launch: a flag planted. */
+    paths: ['M5.5 21.5v-18', 'M5.5 4h12l-2.75 4.25L17.5 12.5h-12'],
+  },
+];
+---
+
+<section class="sec beats" id="process" aria-labelledby="beats-h">
+  <div class="sec-head beats-head">
+    <h2 id="beats-h">How it works</h2>
+    <p>
+      Four steps. <a href="/services/#how">The whole process, with timelines</a>
+    </p>
+  </div>
+  <ol class="beats-list" data-beats>
+    {beats.map((b) => (
+      <li>
+        <svg class="bt-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          {b.paths.map((d) => (
+            <path d={d} pathLength="1" />
+          ))}
+        </svg>
+        <h3>{b.title}</h3>
+        <p>{b.line}</p>
+      </li>
+    ))}
+  </ol>
+</section>
