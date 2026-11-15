@@ -20,6 +20,10 @@
    would only turn into stripes of dots in the halftone. Saves src/assets/case-studies/backdrops/{slug}.webp
    (or into --out, to look before overwriting).
 
+   Since 2026-11-15 only Stone Steps' backdrop is shot here. The other studies'
+   are bold marks drawn by backdrop-marks.mjs, so shooting one of them replaces
+   its mark with a capture; use --out to look at a view without doing that.
+
    A slug is required: one client at a time, as with capture-case-study.mjs.
    Look at every file before committing (cookie bars, chat bubbles, a
    half-loaded image), and never commit a capture of anything but the client's
