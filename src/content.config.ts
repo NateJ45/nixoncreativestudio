@@ -88,6 +88,18 @@ const caseStudies = defineCollection({
       // a more general name that fits both the card and the detail use.
       cover: image(),
 
+      // The faint picture behind the case study hero: one of my photos or a
+      // part of the site worth showing off. A path under public/, usually
+      // /assets/study/<slug>-feature-*.webp. `position` is a CSS
+      // object-position for the crop. Optional: without it the hero stays on
+      // the plain client color.
+      backdrop: z
+        .object({
+          src: z.string().startsWith('/'),
+          position: z.string().optional(),
+        })
+        .optional(),
+
       // Project year. Number, not string, so listings can sort numerically.
       year: z.number().int(),
 
