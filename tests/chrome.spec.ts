@@ -131,6 +131,25 @@ test.describe('With JavaScript', () => {
     await expect(hands).toHaveCount(0);
   });
 
+  test('Photos deals seven prints, each opening its own print on the light table', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/work/');
+    const photos = page.locator('nav.dock > a[href="/photography/"]');
+    await photos.focus();
+    await photos.press('ArrowUp');
+    await expect(photos).toHaveAttribute('aria-expanded', 'true');
+    const prints = page.locator('nav.dock .fc-print');
+    await expect(prints).toHaveCount(7);
+    await expect(prints.first()).toBeFocused();
+    for (const href of await prints.evaluateAll((els) => els.map((a) => a.getAttribute('href'))))
+      expect(href).toMatch(/^\/photography\/\?print=[a-z0-9-]+$/);
+    await prints.first().press('Enter');
+    await expect(page).toHaveURL(/\/photography\/\?print=farm-field$/);
+    await expect(page.locator('dialog.pt-open')).toBeVisible();
+  });
+
   test('the link for the page you are on goes back to the top', async ({ page }) => {
     await page.goto('/work/');
     await page.evaluate(() => scrollTo({ top: 800, behavior: 'instant' }));
