@@ -69,6 +69,7 @@ const NIGHT_PAIRS: [string, string, string][] = [
   ['the lifted blue on a card', night('accent'), night('card')],
   ['white on the cobalt (buttons, the closing)', '#ffffff', night('fill')],
   ['the soft blue on the cobalt', token('accent-soft'), night('fill')],
+  ['ink on the cobalt (the marker on a post, journal.css)', night('ink'), night('fill')],
   ['text on the bone card', night('on-ink'), night('ink')],
   ['soft text on the bone card', night('on-ink-soft'), night('ink')],
 ];

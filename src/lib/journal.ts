@@ -67,3 +67,51 @@ export function changesProblem(data: { updated?: Date; changes?: string }): stri
     return 'updated is set but changes is not: say in one line what changed';
   return '';
 }
+
+/** A day on the deck's date rail, and the posts published on it, in deck order. */
+export interface RailDay<T> {
+  /** The day as YYYY-MM-DD: the key the rail and the cards share. */
+  day: string;
+  date: Date;
+  posts: T[];
+}
+
+/**
+ * The rail's rows: one a day, in the order the days first appear, so eight posts written on one
+ * day show that day once with its count instead of the same date eight times.
+ */
+export function railDays<T extends { day: string; date: Date }>(posts: T[]): RailDay<T>[] {
+  const days: RailDay<T>[] = [];
+  for (const p of posts) {
+    const row = days.find((d) => d.day === p.day);
+    if (row) row.posts.push(p);
+    else days.push({ day: p.day, date: p.date, posts: [p] });
+  }
+  return days;
+}
+
+/**
+ * The short answer split round its key phrase, for the marker on a post's card. `highlight` must
+ * be copied exactly from the short answer; a phrase that is not in it is a mistake, so `problem`
+ * says so and the page stops the build.
+ */
+export function splitHighlight(
+  text: string,
+  highlight: string | undefined,
+): { before: string; mark: string; after: string; problem: string } {
+  if (!highlight) return { before: text, mark: '', after: '', problem: '' };
+  const at = text.indexOf(highlight);
+  if (at < 0)
+    return {
+      before: text,
+      mark: '',
+      after: '',
+      problem: 'highlight is not in shortAnswer: copy the phrase exactly',
+    };
+  return {
+    before: text.slice(0, at),
+    mark: highlight,
+    after: text.slice(at + highlight.length),
+    problem: '',
+  };
+}

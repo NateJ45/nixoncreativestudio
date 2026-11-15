@@ -5,6 +5,12 @@
    is inside the deck. Only the top card can be reached: the ones behind are inert, so Tab goes from
    the top card's link to the buttons. Under reduced motion the cards simply change places.
 
+   Each card wears its cluster's drawing (src/lib/journal-art.ts). When a card comes to the front
+   its lines draw themselves in (the class "draw", journal.css); at load and under reduced motion
+   the drawing is simply there. The date rail shows a day once: the day of the card on top is the
+   filled one, its count says how many posts that day holds under the chosen chip, and one dot a
+   post shows which of them you are on.
+
    The chips filter both views at once, the view switch picks Deck or List, and the address keeps
    both (?cluster=lab&view=list), the way /work does. Until a view is picked the screen decides in
    CSS (journal.css), so nothing moves when the page loads. */
@@ -26,6 +32,7 @@ if (jx) {
     pile = jx.querySelector('[data-pile]'),
     cards = all(':scope > li', pile),
     railItems = all('li', jx.querySelector('[data-rail]')),
+    dots = all('[data-dot]', jx),
     rows = all('.sub-rows > li', jx),
     place = jx.querySelector('[data-place]'),
     deal = all('[data-deal]', jx),
@@ -66,8 +73,11 @@ if (jx) {
       li.inert = k !== 0;
     });
     var at = list[top];
-    railItems.forEach(function (r, i) {
-      r.classList.toggle('now', cards[i] === at);
+    railItems.forEach(function (r) {
+      r.classList.toggle('now', !!at && r.dataset.day === at.dataset.day);
+    });
+    dots.forEach(function (d) {
+      d.classList.toggle('on', !!at && d.dataset.dot === at.dataset.id);
     });
     place.textContent = list.length ? 'Post ' + (top + 1) + ' of ' + list.length : '';
     deal[0].disabled = top <= 0;
@@ -81,6 +91,41 @@ if (jx) {
     top = next;
     if (ui.cue) ui.cue('deal');
     layout();
+    draw(list[top]);
+  }
+
+  /* The card that has just come to the front draws its face: the class restarts the CSS
+     animation, and comes off when it ends so the next arrival can start it again. */
+  function draw(li) {
+    var face = li && li.querySelector('.jf');
+    if (!face || reduce) return;
+    face.classList.remove('draw');
+    void face.getBoundingClientRect();
+    face.classList.add('draw');
+  }
+  pile.addEventListener('animationend', function (e) {
+    if (e.animationName === 'jf-points') e.target.closest('.jf').classList.remove('draw');
+  });
+
+  /* The rail's days under the chosen chip: a day with nothing showing goes, and the count beside
+     the others says how many of its posts are in the pile now. */
+  function days(quiet) {
+    railItems.forEach(function (r) {
+      var n = 0;
+      cards.forEach(function (li) {
+        if (!li.hidden && li.dataset.day === r.dataset.day) n++;
+      });
+      r.hidden = n === 0;
+      var count = r.querySelector('[data-day-n]'),
+        text = n + (n === 1 ? ' post' : ' posts');
+      if (count && count.textContent.trim() !== text) ui.roll(count, text, { still: quiet });
+    });
+    dots.forEach(function (d) {
+      var li = cards.find(function (c) {
+        return c.dataset.id === d.dataset.dot;
+      });
+      d.hidden = !li || li.hidden;
+    });
   }
 
   function syncUrl() {
@@ -110,9 +155,7 @@ if (jx) {
     cards.forEach(function (li) {
       li.hidden = !matches(li);
     });
-    railItems.forEach(function (li) {
-      li.hidden = !matches(li);
-    });
+    days(quiet || reduce);
     rows.forEach(function (li) {
       li.hidden = !matches(li);
     });

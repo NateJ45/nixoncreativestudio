@@ -1,0 +1,62 @@
+---
+/* ============================================================================
+   BarChart | A table's amounts as bars, in a journal post
+   ============================================================================
+   Wrap a comparison table whose amounts are plainly comparable (one column of
+   totals in the same unit) and the same numbers are drawn above it as
+   horizontal bars on one shared scale. The table stays, underneath, as the
+   source and the accessible version.
+
+     <BarChart column="5-year total" mine="(me)">
+
+     | Option | Up front | Each year after | 5-year total |
+     | ...
+
+     </BarChart>
+
+   Nothing is typed twice: the bars are read out of the rendered table at build
+   (src/lib/table-chart.ts), so the chart cannot disagree with the table, and a
+   cell that is not a plain amount fails the build. `column` is the heading of
+   the column to chart (the last one when left out). `mine` is a piece of text
+   that marks my own rows ("(me)"): those bars take the studio blue, and the
+   words in the row's name still say whose they are.
+
+   The look is the cost bars on /services (prices.css `.bars`), restated in
+   journal.css as `.pchart`. journal-post.js draws the bars to length as the
+   chart arrives; the amounts carry data-roll. With no script, under reduced
+   motion and on the first screen it is simply drawn.
+   ============================================================================ */
+import { tableChart } from '../lib/table-chart';
+
+interface Props {
+  column?: string;
+  mine?: string;
+}
+const { column, mine } = Astro.props;
+const html = await Astro.slots.render('default');
+const chart = tableChart(html, column);
+// One caption id a chart, from the charted heading, in case a post ever carries two.
+const id = `pchart-${chart.valueHead.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+---
+
+<div class="pchart" data-pchart>
+  <figure class="pchart-fig" aria-labelledby={id}>
+    <figcaption id={id} class="label">
+      {chart.valueHead} by {chart.labelHead.toLowerCase()}, drawn from the table below
+    </figcaption>
+    <ul class="pchart-bars">
+      {chart.rows.map((r, i) => (
+        <li class={mine && r.label.includes(mine) ? 'is-mine' : undefined} style={`--i:${i}`}>
+          <p class="pchart-t">
+            <span>{r.label}</span>
+            <b data-roll>{r.text}</b>
+          </p>
+          <div class="pchart-bar" aria-hidden="true">
+            <i style={`width:${r.pct}%`} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  </figure>
+  <Fragment set:html={html} />
+</div>

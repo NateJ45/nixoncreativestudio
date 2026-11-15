@@ -9,7 +9,10 @@
 
      Deck   the post cards stacked along a date rail, newest on top. "Older"
             and "Newer" (and the arrow keys inside the deck) deal the next one
-            forward. The default on a wide screen.
+            forward. The default on a wide screen. Each card wears the drawing
+            of its cluster (src/lib/journal-art.ts), which draws itself in as
+            the card comes to the front. The rail shows a day once, with how
+            many posts it holds and a dot for each.
      List   ruled rows, as the journal always had. The default on a phone,
             under reduced motion, and the whole page with no JavaScript.
 
@@ -29,7 +32,8 @@ import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
 import { journalOpen } from '../../data/journal-gate';
 import { readingTime } from '../../lib/readingTime';
-import { clusterChips, clusterLabel, newestFirst } from '../../lib/journal';
+import { clusterChips, clusterLabel, newestFirst, railDays } from '../../lib/journal';
+import { faceSvg } from '../../lib/journal-art';
 import { plainText, wordSpans } from '../../lib/words';
 
 const entries = newestFirst(
@@ -61,11 +65,16 @@ const posts = entries.map((e, i) => ({
   cluster: e.data.cluster ?? '',
   label: clusterLabel(e.data.cluster),
   date: e.data.published,
+  day: iso(e.data.published),
+  // The cluster's drawing (src/lib/journal-art.ts): decoration, so it is hidden from a reader.
+  face: faceSvg(e.data.cluster),
   minutes: readingTime(e.body ?? ''),
   no: no(i),
   // Behind the top card the pile leans a little, alternately, like a stack dealt by hand.
   tilt: i % 2 ? 1.4 : -1.1,
 }));
+// The rail: one row a day, however many posts were published on it.
+const days = railDays(posts);
 ---
 
 <BaseLayout
@@ -118,9 +127,17 @@ const posts = entries.map((e, i) => ({
 
       <div class="jx-deck" data-deck>
         <ol class="jx-rail label" aria-hidden="true" data-rail>
-          {posts.map((p, i) => (
-            <li data-key={p.cluster} class={i === 0 ? 'now' : undefined}>
-              <span class="label">{fmt.format(p.date)}</span>
+          {days.map((d, i) => (
+            <li data-day={d.day} class={i === 0 ? 'now' : undefined}>
+              <span class="label">{fmt.format(d.date)}</span>
+              <span class="jx-day-n" data-day-n>
+                {`${d.posts.length} ${d.posts.length === 1 ? 'post' : 'posts'}`}
+              </span>
+              <span class="jx-dots">
+                {d.posts.map((p) => (
+                  <i data-dot={p.id} class={p.id === posts[0].id ? 'on' : undefined} />
+                ))}
+              </span>
             </li>
           ))}
         </ol>
@@ -134,6 +151,8 @@ const posts = entries.map((e, i) => ({
             {posts.map((p, i) => (
               <li
                 data-key={p.cluster}
+                data-day={p.day}
+                data-id={p.id}
                 class={i === 0 ? 'on-top' : i > 2 ? 'deep' : undefined}
                 style={`--k:${i};--tilt:${p.tilt}deg`}
               >
@@ -148,6 +167,7 @@ const posts = entries.map((e, i) => ({
                     {p.label && <span>{p.label}, </span>}
                     <time datetime={iso(p.date)}>{fmt.format(p.date)}</time>, {p.minutes} min read
                   </p>
+                  <Fragment set:html={p.face} />
                   <h2>
                     <a href={p.href}>{p.title}</a>
                   </h2>
@@ -175,6 +195,7 @@ const posts = entries.map((e, i) => ({
         <ol class="sub-rows">
           {posts.map((p) => (
             <li data-key={p.cluster}>
+              <Fragment set:html={p.face} />
               <p class="label">
                 {p.label && <span>{p.label}, </span>}
                 <time datetime={iso(p.date)}>{fmt.format(p.date)}</time>, {p.minutes} min read

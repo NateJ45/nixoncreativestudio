@@ -11,6 +11,15 @@ import { plainText, wordSpans } from '../lib/words';
 
 const window = await getClient('mas-monograms');
 const heading = `How this site is <b>made.</b>`;
+// The build date, printed when the site is built (the deploy runs the build), so the live rows
+// below have one fact that needs no script.
+const built = new Date();
+const builtText = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'America/New_York',
+}).format(built);
 ---
 
 <BaseLayout
@@ -45,6 +54,9 @@ const heading = `How this site is <b>made.</b>`;
           <a href="#performance">Performance</a>
         </li>
         <li>
+          <a href="#right-now">This page, right now</a>
+        </li>
+        <li>
           <a href="#screenshots">Screenshots</a>
         </li>
         <li>
@@ -75,6 +87,57 @@ const heading = `How this site is <b>made.</b>`;
       </p>
       <h2 id="performance">Performance</h2>
       <p>Every page is static HTML, so it stays fast on a phone and a slow connection.</p>
+      {/* Live facts about this page, measured in the visitor's browser (src/scripts/colophon.js).
+           The build row is printed at build; the rest need the script and hide without it. */}
+      <h2 id="right-now">This page, right now</h2>
+      <p>
+        Measured in your browser as this page loaded, so these are true of your visit, not numbers I
+        typed in.
+      </p>
+      <dl class="colo-live" data-live>
+        <div class="colo-m">
+          <dt class="label">Transferred</dt>
+          <dd>
+            <span data-roll data-live-kb>
+              0
+            </span>{' '}
+            KB
+          </dd>
+        </div>
+        <div class="colo-m">
+          <dt class="label">Requests</dt>
+          <dd>
+            <span data-roll data-live-req>
+              0
+            </span>
+          </dd>
+        </div>
+        <div class="colo-m">
+          <dt class="label">Fonts in use</dt>
+          <dd data-live-fonts>Measuring</dd>
+        </div>
+        <div class="colo-m">
+          <dt class="label">Theme</dt>
+          <dd data-live-theme>Measuring</dd>
+        </div>
+        <div class="colo-m">
+          <dt class="label">Motion</dt>
+          <dd data-live-motion>Measuring</dd>
+        </div>
+        <div>
+          <dt class="label">Built</dt>
+          <dd>
+            <time datetime={built.toISOString()}>{builtText}</time>
+          </dd>
+        </div>
+      </dl>
+      <p class="colo-live-note">
+        A file your browser already had costs nothing to fetch, so a second visit reads lighter.
+      </p>
+      <p class="colo-live-off">
+        The other rows are measured by a small script, and scripts are off, so only the build date
+        shows.
+      </p>
       <h2 id="screenshots">Screenshots</h2>
       <p>
         Every client site shown here is a real, live site. The screenshots and footage are captured
@@ -97,5 +160,6 @@ const heading = `How this site is <b>made.</b>`;
 
 <script>
   import { ui } from '../scripts/kit.js';
+  import '../scripts/colophon.js';
   ui.wireFootage(document.querySelector('[data-colo-win]'));
 </script>

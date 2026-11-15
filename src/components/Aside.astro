@@ -1,0 +1,28 @@
+---
+/* ============================================================================
+   Aside | A margin note in a journal post
+   ============================================================================
+   Wraps a line that is about the thing just above it, not part of the argument:
+   the "Sources:" line under a table. From 85rem, where there is room beside
+   the 44rem reading column, it sits in the right margin next to the table it
+   belongs to. Narrower than that it is the small grey line under the table,
+   as it always was. Styles: `.mnote` in journal.css. journal-post.js lifts it
+   level with the top of its table; without script it lines up with the foot.
+
+   Used in MDX with the blank lines, so the words stay Markdown (links and all):
+
+     <Aside>
+
+     Sources: [Wix plans](https://www.wix.com/plans), ...
+
+     </Aside>
+
+   The page passes it to <Content components={{ Aside }}>, so a post needs no
+   import. It is a `div role="note"`, not an <aside>: an aside inside <main> is
+   a nested landmark, which axe's best-practice rules flag.
+   ============================================================================ */
+---
+
+<div class="mnote" role="note" data-mnote>
+  <slot />
+</div>

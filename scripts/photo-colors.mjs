@@ -1,11 +1,17 @@
 // Safe to run any time: `npm run photo-colors`.
 /* ============================================================================
-   One colour per photo, for the light table (/photography)
+   Each photo's colours, for the light table (/photography)
    ============================================================================
    The table washes toward the colour of the print in its middle, and an open
    print develops in from its own colour. Working that colour out in the
    browser would mean reading pixels off every image, so it is done here, once,
-   and kept in src/data/photo-colors.json (slug -> "#rrggbb").
+   and kept in src/data/photo-colors.json:
+
+     slug -> { "wash": "#rrggbb", "swatches": ["#rrggbb" x 5] }
+
+   "wash" is the one colour the table and the full view tint with. "swatches"
+   are five colours that are really in the photo, darkest first, for the typed
+   card in the full view.
 
    Run it after adding or replacing a photo in src/content/photos/. The unit
    test in src/lib/photo-table.test.ts fails if a photo has no colour, so a
@@ -77,15 +83,71 @@ async function colorOf(file) {
   return `#${hex(ch(h + 1 / 3) * 255)}${hex(ch(h) * 255)}${hex(ch(h - 1 / 3) * 255)}`;
 }
 
+/* Five colours that are really in the photo. Every pixel of a small copy goes into a coarse bin
+   (16 steps a channel); the fullest bins are the photo's main colours. The fullest is taken, then
+   the next fullest that is far enough from every colour already taken, so the five are different
+   colours and not five shades of the same wall. If the photo has too few distinct colours the
+   distance asked for halves until five are found. Each swatch is the true average of its bin,
+   and the five are written darkest first. Nothing is random, so a rerun gives the same answer. */
+async function swatchesOf(file) {
+  const { data, info } = await sharp(file)
+    .resize(64, 64, { fit: 'inside' })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const bins = new Map();
+  for (let i = 0; i < data.length; i += info.channels) {
+    const r = data[i],
+      g = data[i + 1],
+      b = data[i + 2];
+    const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    const bin = bins.get(key) ?? { n: 0, r: 0, g: 0, b: 0, key };
+    bin.n++;
+    bin.r += r;
+    bin.g += g;
+    bin.b += b;
+    bins.set(key, bin);
+  }
+  const ranked = [...bins.values()]
+    .map((x) => ({ n: x.n, key: x.key, r: x.r / x.n, g: x.g / x.n, b: x.b / x.n }))
+    .sort((a, b) => b.n - a.n || a.key - b.key);
+  const picked = [];
+  for (let apart = 72; picked.length < 5 && apart >= 1; apart /= 2) {
+    for (const c of ranked) {
+      if (picked.length === 5) break;
+      if (picked.includes(c)) continue;
+      if (picked.every((p) => Math.hypot(p.r - c.r, p.g - c.g, p.b - c.b) >= apart)) picked.push(c);
+    }
+  }
+  // A flat frame (one colour edge to edge) cannot give five: repeat what there is.
+  while (picked.length < 5) picked.push(picked[picked.length - 1]);
+  const light = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  return picked
+    .sort((a, b) => light(a) - light(b))
+    .map((c) => `#${hex(c.r)}${hex(c.g)}${hex(c.b)}`);
+}
+
 const colors = {};
 for (const file of readdirSync(dir)
   .filter((f) => f.endsWith('.json'))
   .sort()) {
   const entry = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
-  colors[file.replace(/\.json$/, '')] = await colorOf(fileURLToPath(new URL(entry.image, dir)));
+  const image = fileURLToPath(new URL(entry.image, dir));
+  colors[file.replace(/\.json$/, '')] = {
+    wash: await colorOf(image),
+    swatches: await swatchesOf(image),
+  };
 }
 
-writeFileSync(out, JSON.stringify(colors, null, 2) + '\n');
+// Written the way prettier lays it out (each photo's five swatches on one line), so a rerun leaves
+// the file prettier-clean and the diff shows only colours that changed.
+writeFileSync(
+  out,
+  JSON.stringify(colors, null, 2).replace(
+    /\[\s+([^\]]*?)\s+\]/g,
+    (_, inner) => `[${inner.replace(/,\s+/g, ', ')}]`,
+  ) + '\n',
+);
 console.log(
-  `photo-colors: wrote ${Object.keys(colors).length} colours to src/data/photo-colors.json`,
+  `photo-colors: wrote the colours of ${Object.keys(colors).length} photos to src/data/photo-colors.json`,
 );

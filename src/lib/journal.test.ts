@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { changesProblem, clusterChips, clusterLabel, newestFirst, tocItems } from './journal.ts';
+import { readdirSync, readFileSync } from 'node:fs';
+import {
+  changesProblem,
+  clusterChips,
+  clusterLabel,
+  newestFirst,
+  railDays,
+  splitHighlight,
+  tocItems,
+} from './journal.ts';
 
 const post = (id: string, day: number, cluster?: string) => ({
   id,
@@ -48,4 +57,51 @@ test('changes and updated come as a pair', () => {
   assert.equal(changesProblem({ updated: new Date(), changes: 'New prices' }), '');
   assert.match(changesProblem({ changes: 'x' }), /updated is not/);
   assert.match(changesProblem({ updated: new Date() }), /changes is not/);
+});
+
+test('railDays shows a day once, with its posts in deck order', () => {
+  const d = (n: number) => new Date(Date.UTC(2026, 10, n));
+  const days = railDays([
+    { id: 'a', day: '2026-11-12', date: d(12) },
+    { id: 'b', day: '2026-11-10', date: d(10) },
+    { id: 'c', day: '2026-11-10', date: d(10) },
+  ]);
+  assert.deepEqual(
+    days.map((x) => [x.day, x.posts.map((p) => p.id)]),
+    [
+      ['2026-11-12', ['a']],
+      ['2026-11-10', ['b', 'c']],
+    ],
+  );
+});
+
+test('splitHighlight cuts the short answer round its phrase, and names a phrase that is not there', () => {
+  assert.deepEqual(splitHighlight('One. Two three. Four.', 'Two three.'), {
+    before: 'One. ',
+    mark: 'Two three.',
+    after: ' Four.',
+    problem: '',
+  });
+  assert.equal(splitHighlight('One.', undefined).mark, '');
+  assert.match(splitHighlight('One.', 'Two').problem, /not in shortAnswer/);
+});
+
+test('every post that names a highlight copied it exactly from its short answer', () => {
+  const dir = new URL('../content/journal/', import.meta.url);
+  let seen = 0;
+  for (const f of readdirSync(dir).filter((x) => x.endsWith('.mdx'))) {
+    const src = readFileSync(new URL(f, dir), 'utf8');
+    const field = (name: string) => {
+      const m = new RegExp('^' + name + ': (.*)$', 'm').exec(src);
+      if (!m) return undefined;
+      const raw = m[1].trim();
+      // YAML: a single-quoted scalar doubles its quotes, a double-quoted one reads like JSON.
+      return raw.startsWith("'") ? raw.slice(1, -1).replace(/''/g, "'") : JSON.parse(raw);
+    };
+    const hl = field('highlight');
+    if (!hl) continue;
+    seen++;
+    assert.equal(splitHighlight(field('shortAnswer'), hl).problem, '', f);
+  }
+  assert.ok(seen > 0, 'no post names a highlight');
 });

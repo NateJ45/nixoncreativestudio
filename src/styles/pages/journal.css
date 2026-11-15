@@ -749,3 +749,334 @@ html:not(.js) .post-prose table {
     display: none;
   }
 }
+/* ---------------------------------------------------------------------------
+   The drawn faces (src/lib/journal-art.ts): one small drawing a cluster, in the
+   404's line language. An ink outline on a paper fill, thinner ink lines inside,
+   and square blue anchor points with a paper centre. Sizes are the SVG's own
+   units (a 120 box), so --jf-w thickens the lines where the drawing is small.
+   --------------------------------------------------------------------------- */
+.jf {
+  --jf-w: 1;
+  display: block;
+  width: var(--jf, 5rem);
+  height: auto;
+  aspect-ratio: 1;
+  overflow: visible;
+  fill: none;
+  stroke: var(--ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.jf-o {
+  fill: var(--jf-fill, var(--ground));
+  stroke-width: calc(2.6 * var(--jf-w));
+}
+.jf-d {
+  stroke-width: calc(2 * var(--jf-w));
+}
+.jf-p {
+  stroke: var(--accent);
+  stroke-width: calc(8 * var(--jf-w));
+  stroke-linecap: square;
+}
+.jf-pi {
+  stroke: var(--jf-fill, var(--ground));
+  stroke-width: calc(3.6 * var(--jf-w));
+  stroke-linecap: square;
+}
+/* On the deck card it sits in the top right corner, beside the label and the title. */
+.jx-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: clamp(1rem, 3vw, 2rem);
+}
+.jx-card > * {
+  grid-column: 1 / -1;
+}
+.jx-card > .label,
+.jx-card > h2 {
+  grid-column: 1;
+}
+.jx-card > .jf {
+  --jf: clamp(4.5rem, 9vw, 6.75rem);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: start;
+}
+/* In the list it is small, at the end of the row. */
+.sub-rows .jf {
+  --jf: 3.5rem;
+  --jf-w: 1.5;
+  --jf-fill: var(--card);
+}
+/* On a post it stands beside the byline card, on the page itself. */
+.post-top {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+}
+.post-top .post-by {
+  min-width: 0;
+  margin-top: 0;
+}
+.post-face {
+  --jf: clamp(3.25rem, 6vw, 4.5rem);
+  --jf-w: 1.35;
+  --jf-fill: var(--card);
+  flex: none;
+}
+/* A card that has just come to the front draws its face: the outline, then the lines inside,
+   then the points land. journal.js adds .draw and takes it off when the points are down. At
+   rest, at load and under reduced motion there is no dash at all, so the drawing is whole. */
+@media (prefers-reduced-motion: no-preference) {
+  .jf.draw .jf-o,
+  .jf.draw .jf-d {
+    stroke-dasharray: 1;
+    animation: jf-line 0.7s var(--ease) both;
+  }
+  .jf.draw .jf-d {
+    animation-duration: 0.55s;
+    animation-delay: 0.22s;
+  }
+  .jf.draw .jf-p,
+  .jf.draw .jf-pi {
+    animation: jf-points 0.32s cubic-bezier(0.3, 1.5, 0.5, 1) 0.7s both;
+  }
+}
+@keyframes jf-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes jf-points {
+  from {
+    stroke-width: 0;
+  }
+}
+@media (forced-colors: active) {
+  .jf {
+    stroke: CanvasText;
+  }
+  .jf-o {
+    fill: Canvas;
+  }
+  .jf-p {
+    stroke: Highlight;
+  }
+  .jf-pi {
+    stroke: Canvas;
+  }
+}
+
+/* The rail, a day at a time: the date, how many posts it holds, and a dot for each. */
+.jx-rail li {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+}
+.jx-day-n {
+  color: var(--soft);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+.jx-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-width: 8rem;
+  margin-top: 0.3rem;
+}
+.jx-dots i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--field-edge);
+  transition:
+    transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1),
+    background-color 0.2s;
+}
+.jx-dots i[hidden] {
+  display: none;
+}
+.jx-dots i.on {
+  background: var(--accent);
+  transform: scale(1.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .jx-dots i {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .jx-dots i {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .jx-dots i.on {
+    background: Highlight;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The post: the marker, margin notes and the chart
+   --------------------------------------------------------------------------- */
+/* The marker on the short answer's key phrase: ink on the soft blue, and on the dark side ink on
+   the cobalt (both pairs are in kit-tokens.test.ts). Bold too, so colour is not the only mark.
+   --hl (registered in kit.css) is how far the marker has got; the words never change colour. */
+.post-sa .hl {
+  --hl: 100%;
+  --hl-ink: var(--accent-soft);
+  margin-inline: -0.12em;
+  padding: 0.02em 0.12em 0.06em;
+  border-radius: 0.14em;
+  background: linear-gradient(90deg, var(--hl-ink) var(--hl), transparent var(--hl));
+  color: var(--ink);
+  font-weight: 650;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@media screen {
+  :root[data-theme='dark'] .post-sa .hl {
+    --hl-ink: var(--fill);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .post-sa.hl-on .hl {
+    animation: hl-draw 0.6s steps(6, end) 0.5s both;
+  }
+}
+@media (forced-colors: active) {
+  .post-sa .hl {
+    background: Mark;
+    color: MarkText;
+    animation: none;
+  }
+}
+@media print {
+  .post-sa .hl {
+    background: none;
+  }
+}
+
+/* A margin note (Aside.astro). Under 85rem it is the small grey line under its table, as the
+   source lines always were. */
+.post-prose .mnote {
+  margin: 0.6rem 0 1.75rem 1.25rem;
+  color: var(--soft);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.post-prose .mnote > :last-child {
+  margin-bottom: 0;
+}
+/* From 85rem there is room beside the reading column (the contents rail, the gap and 44rem leave
+   at least 12rem), so the note moves into the right margin. It is taken out of the flow where it
+   stands, just under its table, then lifted: by its own height with no script (foot level with
+   the table's foot), or by the table's height once journal-post.js has measured it (level with
+   the table's top). */
+@media (min-width: 85rem) {
+  .post-prose {
+    position: relative;
+  }
+  .post-prose .mnote {
+    position: absolute;
+    left: calc(100% + 1.75rem);
+    width: min(
+      15rem,
+      calc(min(90rem, 100vw) - 2 * var(--gut) - 15rem - clamp(3rem, 6vw, 6rem) - 44rem - 1.75rem)
+    );
+    margin: 0;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.8125rem;
+    transform: translateY(calc(-1 * var(--note-up, 100%)));
+  }
+  /* What follows a note keeps the space the note used to hold. */
+  .post-prose .mnote + * {
+    margin-top: 1.75rem;
+  }
+}
+@media print {
+  .post-prose .mnote {
+    position: static;
+    width: auto;
+    transform: none;
+    border: 0;
+  }
+}
+
+/* The chart (BarChart.astro): the cost bars from /services (prices.css .bars), one bar a row of
+   the table under it, on one shared scale. My own rows take the studio blue; their names say
+   "(me)" as well. The bars are decoration (aria-hidden): the name and the amount are text. */
+.pchart {
+  margin-top: 1.75rem;
+}
+.pchart-fig {
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.pchart-fig figcaption {
+  display: block;
+  margin-bottom: 1rem;
+}
+.post-prose .pchart-bars {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.post-prose .pchart-bars li {
+  margin: 0;
+}
+.post-prose .pchart-t {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.1rem 0.75rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.pchart-t b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pchart-bar {
+  height: 1.125rem;
+}
+.pchart-bar i {
+  display: block;
+  min-width: 3px;
+  height: 100%;
+  border-radius: 0.3rem;
+  background: var(--ink);
+  transform-origin: 0 50%;
+}
+.pchart-bars .is-mine .pchart-bar i {
+  background: var(--fill);
+}
+/* Waiting below the fold (journal-post.js adds the class only then): each bar draws out to its
+   length as the chart arrives, one a beat after the one above. */
+@media (prefers-reduced-motion: no-preference) {
+  .pchart-wait .pchart-bar i {
+    transform: scaleX(0);
+  }
+  .pchart-wait.in .pchart-bar i {
+    transform: none;
+    transition: transform 0.9s var(--ease) calc(var(--i) * 70ms);
+  }
+}
+@media (forced-colors: active) {
+  .pchart-bar i {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .pchart-bars .is-mine .pchart-bar i {
+    background: Highlight;
+  }
+}
