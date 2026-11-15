@@ -70,7 +70,10 @@ test.describe('quote band: the key phrase', () => {
       // The mark adds no white space of its own around the words.
       expect(q.text).not.toMatch(/\s{2,}/);
     }
-    expect(quotes[0].text.startsWith('Nathan Nixon transformed our website')).toBe(true);
+    // Public reviews lead the band (2026-11-15): Staci Perkins's Google review is first.
+    expect(quotes[0].text.startsWith('Nathan at Nixon Creative Studio built the website')).toBe(
+      true,
+    );
   });
 
   test('the marker draws once the band is on screen', async ({ page }) => {

@@ -3,6 +3,7 @@
    stays closed until kit.js opens it, and the list below is what fills it. A
    window is still a plain link to its case study with no script. */
 import { getClients } from '../lib/clients';
+import Stars from './Stars.astro';
 
 const clients = await getClients();
 ---
@@ -16,7 +17,26 @@ const clients = await getClients();
       <h2 id="sn" class="fade" style="--d:0" data-n></h2>
       <p class="hook fade" style="--d:1" data-k></p>
       <p class="meta fade" style="--d:2" data-m></p>
-      <div class="sheet-links fade" style="--d:3">
+      {/* The client's own words (added 2026-11-15): the key phrase of their review or quote, their
+          face and, for a public review, the stars and a link to it on Google. kit.js fills it from
+          the client's `review` (lib/clients.ts) and hides it when there is none. */}
+      <figure class="sheet-rv fade" style="--d:3" data-rv hidden>
+        <img data-rv-face width="44" height="44" alt="" decoding="async" />
+        <div>
+          <blockquote data-rv-q></blockquote>
+          <figcaption>
+            <span data-rv-stars>
+              <Stars rating={5} />
+            </span>
+            <b data-rv-n></b>
+            <span data-rv-t></span>
+            <a data-rv-link href="/" target="_blank" rel="noopener" data-cta="read_google_review">
+              Read it on Google<span class="vh"> (opens Google Maps)</span>
+            </a>
+          </figcaption>
+        </div>
+      </figure>
+      <div class="sheet-links fade" style="--d:4">
         <a class="chip" data-st href="/work/">
           Read the case study
         </a>

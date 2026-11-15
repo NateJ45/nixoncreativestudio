@@ -156,6 +156,19 @@ const caseStudies = defineCollection({
       //            The quote band draws a marker across it (QuoteBand.astro).
       //            It picks words out, it never changes them, so it must be
       //            found in the quote as written or the build stops.
+      //   source   optional: set when the words are a PUBLIC review (added
+      //            2026-11-15 for the first Google reviews). The site then
+      //            shows the stars and links to the original so a stranger
+      //            can check it is real. `url` must open that one review on
+      //            Google (the long google.com/maps/reviews/... form opens
+      //            without a sign-in). Copy the review text from Google
+      //            exactly, curly apostrophes and paragraph breaks included.
+      //            Google only for now: Facebook reviews are yes/no
+      //            recommendations with no stars, so they need their own look.
+      //   photo    optional: the person's face, a public path to a square
+      //            webp made at 96 and 192px (`/assets/people/<name>` with no
+      //            size or extension; the -96.webp and -192.webp files must
+      //            exist). Only a photo the person is happy to have used.
       // src/lib/case-testimonials.test.ts checks the shape and which studies
       // carry one.
       testimonials: z
@@ -168,6 +181,28 @@ const caseStudies = defineCollection({
               date: z.date(),
               context: z.string().optional(),
               highlight: z.string().min(1).optional(),
+              source: z
+                .object({
+                  platform: z.literal('google'),
+                  url: z
+                    .string()
+                    .url()
+                    .refine(
+                      (u) => /^https:\/\/(www\.google\.com\/maps|maps\.app\.goo\.gl)\//.test(u),
+                      {
+                        message: 'a review link must open the review on Google Maps',
+                      },
+                    ),
+                  rating: z.number().int().min(1).max(5),
+                })
+                .optional(),
+              photo: z
+                .string()
+                .regex(
+                  /^\/assets\/people\/[a-z0-9-]+$/,
+                  'photo is /assets/people/<name>, no size or extension',
+                )
+                .optional(),
             })
             .refine((t) => !t.highlight || t.quote.includes(t.highlight), {
               message: 'highlight must be copied exactly out of the quote',

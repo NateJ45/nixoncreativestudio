@@ -40,6 +40,8 @@ import Prose from '../../components/study/Prose.astro';
 import ProseLink from '../../components/ProseLink.astro';
 import Quotes from '../../components/study/Quotes.astro';
 import Sub from '../../components/study/Sub.astro';
+import Stars from '../../components/Stars.astro';
+import { firstName } from '../../lib/reviews';
 import { hostOf, toClient } from '../../lib/clients';
 import { inline } from '../../lib/study-markup';
 import { LOCK, TOOLS } from '../../lib/window-chrome';
@@ -72,6 +74,8 @@ const nx = next ? toClient(next) : s;
 const clientName = d.client.replace(/^The /, '');
 const longest = Math.max(...d.client.split(' ').map((w) => w.length));
 const host = d.facts?.host ?? (d.liveUrl ? hostOf(d.liveUrl) : '');
+/** This client's public review, when there is one (the opening's review line). */
+const review = d.testimonials?.find((t) => t.source);
 const builtWith = (d.facts?.stack ?? d.stack)?.join(', ');
 const facts: [string, string | undefined][] = [
   ['Sector', d.facts?.sector ?? s.sector],
@@ -152,6 +156,20 @@ const breadcrumbs = [
       <div class="s-hero-t">
         <h1 id="sh">{d.client}</h1>
         {d.outcome && <p class="s-out" set:html={inline(d.outcome)} />}
+        {/* A public review from this client: their face, the stars, a jump to the full review
+            further down (study/Quotes.astro). Only shown when the frontmatter has one. */}
+        {review && (
+          <a class="s-rv" href="#in-their-words">
+            {review.photo && (
+              <img src={`${review.photo}-96.webp`} width="32" height="32" alt="" decoding="async" />
+            )}
+            <Stars rating={review.source!.rating} />
+            <span>
+              {firstName(review.name)}'s Google review
+              <span aria-hidden="true"> ↓</span>
+            </span>
+          </a>
+        )}
         <dl class="s-facts">
           {facts.map(
             ([k, v]) =>
