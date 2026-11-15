@@ -3916,11 +3916,14 @@ html.flipping::view-transition-group(dock) {
    On the blue the gold clears 3:1 by itself (kit-tokens.test.ts), so the stars drop the amber edge. */
 /* Icon and label on the first line, the stars and average under the label on the second, so the
    label never wraps in a narrow column. */
+/* The first row is the same 2.75rem as every other link, so the labels keep one even rhythm down
+   the column; the stars hang under the label as a short second row. */
 .end-index .social:has(.end-rating) {
   display: inline-grid;
   grid-template-columns: auto auto;
+  grid-template-rows: 2.75rem auto;
+  align-items: center;
   column-gap: 0.6rem;
-  align-content: center;
   white-space: nowrap;
 }
 .end-rating {
@@ -3928,7 +3931,8 @@ html.flipping::view-transition-group(dock) {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 0.1rem;
+  margin-top: -0.45rem;
+  padding-bottom: 0.5rem;
   font-weight: 700;
 }
 /* .end-index .social svg sizes the icons as small squares; the star row keeps its own shape. */
