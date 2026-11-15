@@ -4,7 +4,14 @@
    ============================================================================
    The hero on the client's color with the laptop and phone thrown onto the page,
    then the story beside a phone that scrolls through the real site as you read,
-   then Up next and the closing.
+   then the hand-off to the next client (a band in THEIR color that grows to fill
+   the screen), a short neutral row of links, and the closing.
+
+   The hero's first screen is tied to the scroll in CSS alone (study.css, --settle):
+   the two windows start a touch large and tilted and come level as you scroll, and
+   on a wide screen the hero holds still while they do (.s-pin). Behind the title is
+   a halftone of the client's own backdrop picture in their two colors, made at
+   build time by scripts/halftones.mjs.
 
    The story is the MDX body. Its chapters run in the page's order and its blocks
    render through the components below, so the study's words live in one place.
@@ -12,7 +19,7 @@
    on <body>, and nothing else on the page sets a color of its own.
    ============================================================================ */
 import { getCollection, render } from 'astro:content';
-import { getImage, Image } from 'astro:assets';
+import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/study.css';
 import Closing from '../../components/Closing.astro';
@@ -42,6 +49,7 @@ import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
 import { sectorPage, sectorPagePath } from '../../data/sector-pages';
+import halftones from '../../data/halftones.json';
 
 export async function getStaticPaths() {
   const all = await getCollection('case-studies');
@@ -69,6 +77,14 @@ const facts: [string, string | undefined][] = [
   ['Sector', d.facts?.sector ?? s.sector],
   ['Role', d.facts?.role ?? d.role],
 ];
+// The halftone behind the title (scripts/halftones.mjs): a mask of dots made from the study's
+// backdrop picture. The hash keeps a re-run past the month-long cache on /assets/. A study with
+// no backdrop has no entry, and its hero keeps the flat colour.
+const dots = (halftones as Record<string, string | undefined>)[entry.id];
+const halftone = dots ? `/assets/halftone/${entry.id}.webp?v=${dots}` : '';
+// "Photographs by me" goes only on a study that already lists Photography among the services I
+// delivered (its frontmatter). It is never guessed from the pictures.
+const myPhotos = d.services.some((v) => v.trim().toLowerCase() === 'photography');
 // "Building for a church?" on a church study. Small business reads as two words.
 const phrase = SECTOR_PHRASE[d.sector] ?? d.sector.replace('-', ' ');
 
@@ -122,89 +138,85 @@ const breadcrumbs = [
   onColor
   bodyStyle={`--c:${s.accent};--c-night:${s.night};--p:${s.paper};--oncolor:${s.paper};--long:${longest}`}
 >
-  <section class="s-hero" aria-labelledby="sh">
-    {d.backdrop && (
-      <div class="s-bg" aria-hidden="true">
-        <Image
-          src={d.backdrop.src}
-          alt=""
-          widths={[960, 1440, 1920, 2560, 2880]}
-          sizes="100vw"
-          quality={60}
-          loading="eager"
-          decoding="async"
-          fetchpriority="low"
-          style={d.backdrop.position ? `object-position:${d.backdrop.position}` : undefined}
+  {/* .s-pin is only a holder: on a wide screen, where scroll-driven animation exists, it is a
+      little taller than the hero so the hero can hold still while the windows settle. */}
+  <div class="s-pin">
+    <section class="s-hero" aria-labelledby="sh">
+      {halftone && (
+        <div
+          class="s-bg"
+          aria-hidden="true"
+          style={`--ht:url(${halftone})${d.backdrop?.position ? `;--ht-at:${d.backdrop.position}` : ''}`}
         />
+      )}
+      <div class="s-hero-t">
+        <h1 id="sh">{d.client}</h1>
+        {d.outcome && <p class="s-out" set:html={inline(d.outcome)} />}
+        <dl class="s-facts">
+          {facts.map(
+            ([k, v]) =>
+              v && (
+                <div>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ),
+          )}
+          {d.liveUrl && (
+            <div>
+              <dt>Live</dt>
+              <dd>
+                <a
+                  href={d.liveUrl}
+                  target="_blank"
+                  rel="noopener"
+                  data-cta="visit_client_site"
+                  data-cta-location="title"
+                >
+                  {host}
+                  <span class="sr"> (opens in a new tab)</span>
+                </a>
+              </dd>
+            </div>
+          )}
+        </dl>
       </div>
-    )}
-    <div class="s-hero-t">
-      <h1 id="sh">{d.client}</h1>
-      {d.outcome && <p class="s-out" set:html={inline(d.outcome)} />}
-      <dl class="s-facts">
-        {facts.map(
-          ([k, v]) =>
-            v && (
-              <div>
-                <dt>{k}</dt>
-                <dd>{v}</dd>
-              </div>
-            ),
-        )}
-        {d.liveUrl && (
-          <div>
-            <dt>Live</dt>
-            <dd>
-              <a
-                href={d.liveUrl}
-                target="_blank"
-                rel="noopener"
-                data-cta="visit_client_site"
-                data-cta-location="title"
-              >
-                {host}
-                <span class="sr"> (opens in a new tab)</span>
-              </a>
-            </dd>
-          </div>
-        )}
-      </dl>
-    </div>
-    <div class="s-stage">
-      <div
-        class="s-fan"
-        role="img"
-        aria-label={`The ${clientName} homepage on a laptop and a phone`}
-      >
-        <figure class="pane p-home" style="--d:0" data-pane>
-          <div>
-            <img src={s.deskStill} alt="" fetchpriority="high" />
-            <video muted loop playsinline preload="none" data-src={s.desk}></video>
-          </div>
-        </figure>
-        <figure class="pane p-phone" style="--d:1">
-          <div class="tile inv" style={`--c:${s.paper};--p:${s.accent}`}>
-            <span class="b-top" aria-hidden="true">
-              <span class="url">
-                <span data-lock set:html={LOCK} />
-                <span>{host}</span>
+      <div class="s-stage">
+        <div
+          class="s-fan"
+          role="img"
+          aria-label={`The ${clientName} homepage on a laptop and a phone`}
+        >
+          <figure class="pane p-home" style="--d:0" data-pane>
+            <div>
+              <img src={s.deskStill} alt="" fetchpriority="high" />
+              <video muted loop playsinline preload="none" data-src={s.desk}></video>
+            </div>
+          </figure>
+          <figure class="pane p-phone" style="--d:1">
+            <div class="tile inv" style={`--c:${s.paper};--p:${s.accent}`}>
+              <span class="b-top" aria-hidden="true">
+                <span class="url">
+                  <span data-lock set:html={LOCK} />
+                  <span>{host}</span>
+                </span>
               </span>
-            </span>
-            <span class="scr" aria-hidden="true">
-              <img
-                src={s.still}
-                srcset={s.stillSet}
-                sizes="(max-width: 480px) 60vw, 346px"
-                alt=""
-              />
-              <video muted loop playsinline preload="none" data-src={s.clip}></video>
-            </span>
-            <span class="b-bot" aria-hidden="true" data-tools set:html={TOOLS} />
-          </div>
-        </figure>
+              <span class="scr" aria-hidden="true">
+                <img
+                  src={s.still}
+                  srcset={s.stillSet}
+                  sizes="(max-width: 480px) 60vw, 346px"
+                  alt=""
+                />
+                <video muted loop playsinline preload="none" data-src={s.clip}></video>
+              </span>
+              <span class="b-bot" aria-hidden="true" data-tools set:html={TOOLS} />
+            </div>
+          </figure>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
   {/* Before the first paint: is a window from the last page growing into the desktop pane
       (src/scripts/hero-morph.js)? Then the pane shows at once, so the morph lands on it. If not,
       the pane gives up its view-transition name, so nothing fades in where the fan will land. */}
@@ -248,6 +260,14 @@ const breadcrumbs = [
           FullBuild,
         }}
       />
+      {myPhotos && (
+        <p class="s-photos">
+          Photographs by me.{' '}
+          <a href="/photography/">
+            See more<span class="sr"> of my photography</span>
+          </a>
+        </p>
+      )}
       {/* Tool names live only here, behind a plain lead, never in the client's path above. */}
       {builtWith && (
         <p class="s-built">For the technically curious, it is built with {builtWith}.</p>
@@ -261,55 +281,66 @@ const breadcrumbs = [
     </aside>
   </div>
 
-  <section class="next" aria-labelledby="nh">
-    <div class="next-t">
-      <p class="next-l">Up next</p>
-      <h2 id="nh">
-        <a href={nx.study}>{nx.name}</a>
-      </h2>
-      <p class="next-k">{nx.hook}</p>
-      <p>
-        <a class="tlink" href="/work/">
-          See all the work
-        </a>
-      </p>
-      {sectorPagePath(d.sector) && (
-        <p>
-          <a class="tlink" href={sectorPagePath(d.sector)}>
-            {sectorPage(d.sector)?.linkText}
-          </a>
-        </p>
-      )}
-    </div>
-    <div class="next-w">
-      <a
-        class="tile next-tile"
-        href={nx.study}
-        data-slug={nx.slug}
-        data-direct
-        aria-label={`${nx.name}, ${nx.host}: ${nx.hook}`}
-        style={`--c:${nx.accent};--p:${nx.paper}`}
-      >
-        <span class="b-top" aria-hidden="true">
-          <span class="url">
-            <span data-lock set:html={LOCK} />
-            <span>{nx.host}</span>
+  {/* The hand-off. A full-width band in the NEXT client's color, with their window, their name and
+      their one-line outcome. The name is the link and it is stretched over the whole band, so a
+      click anywhere (or Enter on it) opens their study, and their window grows into its hero by the
+      same `study-hero` morph as every other window (src/scripts/hero-morph.js finds the window on
+      screen). Scrolling only grows the band (study.css); it never changes the page for you. */}
+  <section
+    class="next"
+    aria-labelledby="nh"
+    data-cursor="Open"
+    style={`--c:${nx.accent};--p:${nx.paper}`}
+  >
+    <div class="next-band">
+      <div class="next-t">
+        <p class="next-l">Up next</p>
+        <h2 id="nh" data-rise="off">
+          <a href={nx.study}>{nx.name}</a>
+        </h2>
+        <p class="next-k">{nx.outcome || nx.hook}</p>
+      </div>
+      <div class="next-w">
+        <a
+          class="tile desk next-tile"
+          href={nx.study}
+          data-slug={nx.slug}
+          data-direct
+          data-sheen
+          aria-label={`${nx.name}, ${nx.host}: ${nx.hook}`}
+        >
+          <span class="b-top" aria-hidden="true">
+            <span class="url">
+              <Fragment set:html={LOCK} />
+              <span>{nx.host}</span>
+            </span>
           </span>
-        </span>
-        <span class="scr" aria-hidden="true">
-          <img
-            src={nx.still}
-            srcset={nx.stillSet}
-            sizes="(max-width: 480px) 60vw, 346px"
-            alt=""
-            loading="lazy"
-          />
-          <video muted loop playsinline preload="none" data-src={nx.clip}></video>
-        </span>
-        <span class="b-bot" aria-hidden="true" data-tools set:html={TOOLS} />
-      </a>
+          <span class="scr" aria-hidden="true">
+            <img
+              src={nx.deskStill}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              width="1000"
+              height="750"
+            />
+            <video muted loop playsinline preload="none" data-src={nx.desk}></video>
+          </span>
+        </a>
+      </div>
     </div>
   </section>
+  {/* A neutral row between the band and the closing: a color band never touches the closing. */}
+  <nav class="next-more" aria-label="More of the work">
+    <a class="tlink" href="/work/">
+      See all the work
+    </a>
+    {sectorPagePath(d.sector) && (
+      <a class="tlink" href={sectorPagePath(d.sector)}>
+        {sectorPage(d.sector)?.linkText}
+      </a>
+    )}
+  </nav>
   <Closing lead={`Building for a <b>${phrase}?</b>`} />
 </BaseLayout>
 

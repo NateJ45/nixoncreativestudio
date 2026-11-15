@@ -1,7 +1,17 @@
 /* Prices: the three questions that suggest a tier, the tiers that lift, the folding rows, the live
-   receipt, the weeks strip in the care section and the step icons in How it works. */
+   receipt, the weeks strip in the care section and the step icons in How it works.
+
+   Four smaller files sit beside this one and are loaded from here: prices-plan.js (the tier and
+   care plan the visitor picked, marked across the page), prices-turn.js (the tier cards turn
+   over), prices-chapters.js (the sticky chapter bar) and prices-steps.js (How it works as a pinned
+   drawing on a wide screen). */
 import { ui } from './kit.js';
 import { receipt, receiptLines, usd, yearsWord } from '../lib/receipt';
+import { QUESTIONS, suggestTier, whyLine } from '../lib/tier-pick';
+import { onPlan, planFromUrl, setPlan } from './prices-plan.js';
+import { stepsPinned } from './prices-steps.js';
+import './prices-turn.js';
+import './prices-chapters.js';
 var reduce = ui.reduce,
   doc = document;
 var all = function (a, r) {
@@ -22,41 +32,15 @@ all('[data-tier]').forEach(function (a) {
    else tops out at Signature. A "Why:" line under the card says which answers decided it. */
 var pick = doc.querySelector('[data-pick]');
 if (pick) {
-  var names = ['size', 'who', 'tools'];
+  /* The questions, the rule and the "Why:" line are src/lib/tier-pick.ts, shared with the dock's
+     corner card (tier-picker.js), so the two can never disagree. */
+  var names = QUESTIONS.map(function (q) {
+    return q.name;
+  });
   var card = doc.querySelector('[data-pick-card]'),
     go = doc.querySelector('[data-pick-go]');
   var tiers = JSON.parse(pick.dataset.tiers);
   var whyEl = doc.querySelector('[data-pick-why]');
-  /* What each answer means, in the words of a "Why:" line. */
-  var SAID = {
-    size: ['it holds the essential pages', 'it needs deeper sections', 'it is a large site'],
-    who: [
-      'your team keeps a few pages current',
-      'your team keeps several kinds of content current',
-      'your team keeps a lot current',
-    ],
-    tools: ['it mostly informs people', 'it connects to other services', 'it needs custom tools'],
-  };
-  var join = function (parts) {
-    return parts.length < 2
-      ? parts[0]
-      : parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
-  };
-  var why = function (vals, i) {
-    if (i === 2) return 'Why: you said ' + SAID.tools[2] + '.';
-    var parts = names
-      .map(function (n, k) {
-        return vals[k] >= i ? SAID[n][vals[k]] : '';
-      })
-      .filter(Boolean);
-    var capped = vals[0] === 2 || vals[1] === 2;
-    return (
-      'Why: you said ' +
-      join(parts) +
-      '.' +
-      (capped ? ' Flagship is for custom tools, so Signature is the place to start.' : '')
-    );
-  };
   /* The card's stub: a strip under a perforation, in the card's own color, naming the tier. It is
      there once there is an answer, and it is put back whole whenever the card is dealt again. */
   var stub = doc.querySelector('[data-pick-stub]'),
@@ -69,21 +53,23 @@ if (pick) {
       var c = pick.querySelector('input[name="' + n + '"]:checked');
       return c ? +c.value : -1;
     });
-    if (vals.indexOf(-1) !== -1) return;
-    var i = vals[2] === 2 ? 2 : Math.min(1, Math.max.apply(null, vals)),
-      t = tiers[i];
+    var i = suggestTier(vals);
+    if (i < 0) return;
+    var t = tiers[i];
     card.className = 'pc pick-card has-stub pc-' + ['paper', 'blue', 'ink'][i];
     stub.querySelector('[data-pick-stub-name]').textContent = t.name;
     stub.hidden = false;
     doc.querySelector('[data-pick-name]').textContent = t.name;
     doc.querySelector('[data-pick-price]').textContent = t.from;
     doc.querySelector('[data-pick-who]').textContent = t.range;
-    whyEl.textContent = why(vals, i);
+    whyEl.textContent = whyLine(vals, i);
     whyEl.hidden = false;
     doc.querySelector('[data-pick-go-name]').textContent = t.name;
     go.href = '/contact/?tier=' + t.name.toLowerCase();
     go.dataset.tier = t.name;
     go.hidden = false;
+    /* An answer the visitor just gave is a pick: the tier is marked across the page. */
+    if (animate) setPlan({ tier: t.name }, 'picker');
     if (animate && !reduce) {
       card.classList.remove('dealing');
       void card.offsetWidth;
@@ -121,6 +107,7 @@ if (pick) {
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     torn = true;
+    if (ui.cue) ui.cue('deal');
     var href = go.href,
       swing = ui.spring(210, 9, 0),
       t0 = performance.now(),
@@ -162,13 +149,16 @@ ui.wireFootage(sites);
    back a little. Nothing folds or hides. On a phone they are a plain stack with no transform, so cards
    never overlap, and with reduced motion none of this runs. */
 var list = doc.querySelector('[data-tiers]');
+/* A price card is growing into its tier (price-morph.js; the class is set in the <head>): the
+   tiers are laid out at once, because a card cannot grow into one that is still being dealt. */
+var morphIn = doc.documentElement.classList.contains('tier-morph');
 var st = all('.tier', list).map(function (li, i) {
   return {
     li: li,
     i: i,
     card: li.querySelector('.t-card'),
     l: ui.spring(240, 17, 0),
-    a: ui.spring(110, 14, 0),
+    a: ui.spring(110, 14, morphIn ? 1 : 0),
     side: 0,
   };
 });
@@ -208,7 +198,7 @@ function frame(now) {
     var l = s.l.x,
       back = Math.max(0, -l);
     /* On load the three cards deal out of one stack, then rest set slightly by hand. A card you reach for straightens. */
-    var aT = now - dealt > 350 + (s.i === 1 ? 0 : 130) ? 1 : 0;
+    var aT = morphIn || now - dealt > 350 + (s.i === 1 ? 0 : 130) ? 1 : 0;
     if (s.a.step(aT, dt) || aT === 0) live = true;
     else {
       s.a.x = 1;
@@ -558,6 +548,7 @@ if (rc) {
   };
   var print = function (i) {
     holdAt(i);
+    if (ui.cue) ui.cue('print');
     pr.due = performance.now() + 70;
     pr.last = performance.now();
     pr.raf = requestAnimationFrame(printFrame);
@@ -607,7 +598,8 @@ if (rc) {
      will change; held is that line's place among the pieces. */
   var held = 0;
 
-  var sayT = 0;
+  var sayT = 0,
+    rollAt = [];
   var update = function (animate) {
     var tier = byName(R.tiers, (checked('r-tier') || {}).value) || R.tiers[1];
     /* Only the plans this tier's cost table prints: Flagship's custom tools need Care or Care+. */
@@ -637,7 +629,11 @@ if (rc) {
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     var r = receipt(input),
-      changed = [];
+      changed = [],
+      /* A line whose words changed (another tier or plan) is reprinted. When only the amounts
+         moved (the years scrubber), the paper stays out and the digits roll where they are. */
+      reworded = false;
+    var rolls = animate && !reduce && !waiting && !held;
     receiptLines(
       r,
       {
@@ -658,16 +654,29 @@ if (rc) {
         dd.textContent === l.amount
       )
         return;
+      /* The total's label only counts the years, so it is not a rewording. */
+      if (b.textContent !== l.label && l.key !== 'total') reworded = true;
       b.textContent = l.label;
       if (sp) sp.textContent = l.note;
-      dd.textContent = l.amount;
+      /* Each digit rolls to its new value (ui.roll, roll.js): never counted through the numbers
+         in between. On a reprint the roll waits for its line to come out of the slot. */
+      if (rolls) rollAt.push([dd, l.amount, el]);
+      else ui.roll(dd, l.amount, { still: true });
       changed.push(el);
     });
     /* Reprint from the first line that changed. A receipt still waiting to arrive prints whole when it does. */
     var from = changed.length ? pieces.indexOf(changed[0]) : 0;
+    var reprint = rolls && from && reworded;
+    rollAt.splice(0).forEach(function (x) {
+      /* The printer feeds a piece every 95ms after a 70ms beat (printFrame). */
+      var wait = reprint ? 70 + 95 * Math.max(0, pieces.indexOf(x[2]) - from) : 0;
+      ui.roll(x[0], x[1], { delay: wait });
+    });
     if (animate && reduce) tint(changed);
     else if (animate && held) holdAt((held = Math.min(held, from || 1)));
-    else if (animate && from && !waiting) print(from);
+    else if (reprint) print(from);
+    /* The digits landing is the moment: one small tick, if sound is on (ui.cue is a no-op otherwise). */
+    if (rolls && changed.length && !reprint) ui.cue('tick');
     /* One short sentence for a screen reader, once the scrubber has settled, rather than one per step. */
     if (animate) {
       clearTimeout(sayT);
@@ -683,11 +692,34 @@ if (rc) {
       }, 450);
     }
   };
+  /* What the form says now, as a pick for the rest of the page (prices-plan.js). */
+  var tellPlan = function () {
+    setPlan(
+      { tier: (checked('r-tier') || {}).value, plan: (checked('r-plan') || {}).value },
+      'receipt',
+    );
+  };
   rform.addEventListener('input', function () {
     update(true);
   });
-  rform.addEventListener('change', function () {
+  rform.addEventListener('change', function (e) {
     update(true);
+    /* Choosing a tier or a plan here is a pick; moving the years is not. */
+    if (e.target.name === 'r-tier' || e.target.name === 'r-plan') tellPlan();
+  });
+  /* A pick made somewhere else on the page: the form follows it quietly (no print, no sound, the
+     receipt may be far off screen). A plan the tier cannot take is left to update(), which moves
+     to the nearest one it can, exactly as it does for a click. */
+  onPlan(function (p, source) {
+    if (source === 'receipt') return;
+    var t = p.tier && rform.querySelector('input[name="r-tier"][value="' + p.tier + '"]'),
+      pl = p.plan && rform.querySelector('input[name="r-plan"][value="' + p.plan + '"]');
+    if (t) t.checked = true;
+    if (pl) {
+      pl.disabled = false;
+      pl.checked = true;
+    }
+    if (t || pl) update(false);
   });
   /* Radios and the scrubber can come back set after a reload or Back, so the receipt is rebuilt from them. */
   update(false);
@@ -764,6 +796,7 @@ if (rc) {
       arrive(false);
       if (!reduce) held = pieces.length;
       update(true);
+      tellPlan();
       if (!reduce)
         slip(b.closest('tr'), b.dataset.sendLabel, function () {
           var i = held;
@@ -815,9 +848,17 @@ if (barsEl) {
     var c = barsEl.querySelector('input[name="bars-years"]:checked');
     if (!c) return;
     var k = views.indexOf(c.value);
+    /* What each bar's sum said before the swap, so the new one can roll away from it. */
+    var was = all('.bars-sum:not([hidden])', barsEl).map(function (el) {
+      return el.textContent;
+    });
     all('[data-v]', barsEl).forEach(function (el) {
       el.hidden = el.dataset.v !== c.value;
     });
+    if (animate && !reduce)
+      all('.bars-sum:not([hidden])', barsEl).forEach(function (el, i) {
+        if (was[i] && was[i] !== el.textContent) ui.roll(el, el.textContent, { from: was[i] });
+      });
     segs.forEach(function (g) {
       g.to = g.w[k];
       if (!animate || reduce) rest(g);
@@ -889,6 +930,17 @@ if (replyEl) {
   };
   replyEl.addEventListener('change', function () {
     place(true);
+    var c = replyEl.querySelector('input[name="reply-plan"]:checked');
+    if (c) setPlan({ plan: c.value }, 'reply');
+  });
+  /* A plan picked elsewhere on the page moves the slip too, without the spring or the sentence. */
+  onPlan(function (p, source) {
+    if (source === 'reply' || !p.plan) return;
+    var r = replyEl.querySelector('input[name="reply-plan"][value="' + p.plan + '"]');
+    if (r && !r.checked) {
+      r.checked = true;
+      place(false);
+    }
   });
   place(false);
   addEventListener('pageshow', function () {
@@ -918,9 +970,10 @@ if (weeksEl && !reduce && 'IntersectionObserver' in window) {
 
 /* How it works: as the list arrives, each step's stretch of hairline runs to it and its icon draws, in
    order, the one drawing in the blue. Same rule as the weeks: only from below the screen, never under
-   reduced motion. A step folded away on a phone has no box, so it is simply drawn. */
+   reduced motion. A step folded away on a phone has no box, so it is simply drawn. From 62rem the
+   steps sit beside one pinned drawing instead (prices-steps.js), and this stands down. */
 var stepsEl = doc.querySelector('[data-steps]');
-if (stepsEl && !reduce && 'IntersectionObserver' in window) {
+if (stepsEl && !reduce && 'IntersectionObserver' in window && !stepsPinned()) {
   if (stepsEl.getBoundingClientRect().top > innerHeight) {
     var stepLis = all('li', stepsEl);
     stepsEl.classList.add('st-wait');
@@ -951,3 +1004,7 @@ if (stepsEl && !reduce && 'IntersectionObserver' in window) {
     sio.observe(stepsEl);
   }
 }
+
+/* Last, once everything that listens is in place: an address that arrives carrying a pick
+   (?tier=signature, as the dock's corner card sends it, and ?plan=care). */
+planFromUrl();

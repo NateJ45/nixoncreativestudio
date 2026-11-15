@@ -6,6 +6,8 @@
    rest: the name takes on weight under the pointer, and both corners come back as small pills when
    you scroll up. The dock stays the one nav, so nothing here is a menu. */
 import { site } from '../data/site';
+import PaletteOpen from './PaletteOpen.astro';
+import ThemeFlip from './ThemeFlip.astro';
 
 interface Props {
   onColor?: boolean;
@@ -24,6 +26,8 @@ const [first, ...rest] = site.studioName.split(' ');
       <span>{rest.join(' ')}</span>
     </span>
   </a>
+  {/* Phones only (kit.css): the dock has no room for its switch there, so it sits up here. */}
+  <ThemeFlip where="top" />
   <button class="status" type="button" popovertarget="reach">
     {site.bookingOpen ? (
       <>
@@ -31,11 +35,16 @@ const [first, ...rest] = site.studioName.split(' ');
         <span class="nm-fold wide">
           <span>Taking new projects ·&nbsp;</span>
         </span>
-        <span>Text or email</span>
+        <span class="st-words">Text or email</span>
       </>
     ) : (
-      <span>Text or email</span>
+      <span class="st-words">Text or email</span>
     )}
+    {/* On a phone the words give their room to the theme switch and this speech bubble stands in
+        for them; the words stay for screen readers, so the button's name never changes. */}
+    <svg class="st-ico" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M3.5 5.5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-3.5 3v-3h0a2 2 0 0 1-2-2Z"></path>
+    </svg>
     <svg viewBox="0 0 12 12" aria-hidden="true">
       <path d="M2.5 4.5 6 8l3.5-3.5" />
     </svg>
@@ -57,9 +66,23 @@ const [first, ...rest] = site.studioName.split(' ');
         </a>
       </li>
     </ul>
+    {/* The time where I am, filled in and kept right by src/scripts/light.js. Hidden until then,
+        so with no script the card simply has no clock. */}
+    <p class="label reach-time" data-cincy hidden>
+      <span data-cincy-time />
+      {` in ${site.address.split(',')[0]}`}
+    </p>
     <p class="reach-say">{site.firstConversation}</p>
     <a class="chip go" href="/contact/">
       Start a project
     </a>
+    <PaletteOpen where="reach" />
   </div>
 </header>
+{/* A soft blur that fades the page out under the floating pills (elevate.css, .pblur). It is a
+    sibling of the header, never a child: see the note beside the dock's one in Dock.astro. */}
+<div class="pblur pblur-t" aria-hidden="true">
+  <i />
+  <i />
+  <i />
+</div>

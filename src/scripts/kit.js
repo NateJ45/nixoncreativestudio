@@ -70,6 +70,16 @@ var $ = function (a, r) {
 var N = { sites: JSON.parse(doc.getElementById('ncs-clients').textContent) };
 export var ui = {
   reduce: reduce,
+  /* A tiny sound or haptic at the moment something lands: ui.cue('deal' | 'tick' | 'turn' | ...).
+     Always safe to call. It does nothing here; the sound module swaps in the real one. */
+  cue: function () {},
+  /* ui.roll (roll.js) and ui.sheen (light.js) are replaced by their modules, which BaseLayout loads
+     straight after this file. These stand in for a component script that happens to run before
+     them: the figure's text is simply set, and there is no sheen yet. */
+  roll: function (el, text) {
+    if (el && text != null) el.textContent = text;
+  },
+  sheen: function () {},
   bySlug: function (slug) {
     return N.sites.find(function (s) {
       return s.slug === slug;
@@ -573,6 +583,7 @@ function puckFrame(t) {
   puckRaf = a || b ? requestAnimationFrame(puckFrame) : 0;
 }
 function puckGo(a, jump) {
+  if (!jump && ui.cue && (a || puckRest) !== puckTo) ui.cue('tick', 0.12);
   puckTo = a || puckRest;
   slide.style.opacity = puckTo && puckTo.offsetWidth ? 1 : 0;
   if (!puckTo) return;
@@ -858,6 +869,7 @@ function handShow(hand) {
   if (handOpen === hand) return;
   if (handOpen) handMark(handOpen, false);
   handOpen = hand;
+  if (ui.cue) ui.cue('deal');
   scrim.classList.add('on');
   handMark(hand, true);
   handWake();
@@ -982,6 +994,7 @@ ui.openSheet = function (s, el, restoring) {
   );
   sheet.scrollTop = 0;
   sheet.showModal();
+  if (ui.cue) ui.cue('open');
   $('[data-back]').focus({ preventScroll: true });
   doc.documentElement.style.overflow = 'hidden';
   pvPlay();
@@ -994,6 +1007,7 @@ ui.openSheet = function (s, el, restoring) {
 var shutSheet = function () {
   if (!sheet.open || closing) return;
   closing = true;
+  if (ui.cue) ui.cue('close');
   if (opener) sheet.style.setProperty('--from', clipFor(opener.getBoundingClientRect()));
   sheet.classList.remove('on');
   setTimeout(
@@ -1211,7 +1225,7 @@ var builds =
     : [].filter.call(doc.querySelectorAll('[data-build]'), function (el) {
         return el.getBoundingClientRect().top >= innerHeight;
       });
-var wordsOf = function (el) {
+var wordsOf = function (el, cls) {
   var words = [];
   var walk = function (node) {
     [].slice.call(node.childNodes).forEach(function (n) {
@@ -1222,7 +1236,7 @@ var wordsOf = function (el) {
         if (!part) return;
         if (/^\s+$/.test(part)) return frag.appendChild(doc.createTextNode(part));
         var s = doc.createElement('span');
-        s.className = 'bw';
+        s.className = cls || 'bw';
         s.textContent = part;
         words.push(s);
         frag.appendChild(s);
@@ -1235,6 +1249,10 @@ var wordsOf = function (el) {
   walk(el);
   return words;
 };
+/* Shared with the rising section headings (rise.js): ui.words(el, 'rw') wraps each word of `el`
+   in a span of that class, gives the heading its plain sentence as its accessible name, and
+   returns the spans in reading order. */
+ui.words = wordsOf;
 var lines = builds.map(function (el) {
   var range = (el.dataset.build || '').split(' ').map(Number);
   var words = wordsOf(el);
@@ -1308,7 +1326,7 @@ if (topLine) {
   var reach = doc.querySelector('[data-reach]');
   /* A page with its own bar stuck to the top of the screen keeps that spot: /work's filter, a legal
      page's contents. They are only sticky at wider sizes, so ask the browser. */
-  var topBar = doc.querySelector('.dw-bar, .toc');
+  var topBar = doc.querySelector('.dw-bar, .toc, .jump');
   var topClear = function () {
     return !topBar || getComputedStyle(topBar).position !== 'sticky';
   };

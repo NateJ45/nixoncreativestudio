@@ -26,6 +26,7 @@ Loads when source, scripts, public assets or config are touched.
 ## Foundation, edit with care (route through a planned Claude session)
 
 - `src/styles/kit.css`: the tokens in `:root`, the `@font-face`, the top line, dock, tiles, client sheet, closing, bands, price hand, `.label`, `.giant`, `.pip`, the view-transition rules, the reduced-motion and forced-colors blocks and print. Every page depends on it. `DESIGN.md` says what it should look like, and `src/lib/kit-tokens.test.ts` gates the colors.
+- `src/styles/elevate.css` and `src/styles/elevate-b.css`, and the shared modules they style (`roll.js`, `rise.js`, `light.js`, `cursor.js`, `blueprint.js`, `price-morph.js`, `sound.js`, `peek.js`, `peek-data.js`, `palette.js`, `sheet-drag.js`), with `SiteTools.astro` and `src/pages/peek.json.ts`: every page loads them.
 - `src/scripts/kit.js`: the shared behaviour (footage, the closing deck, bands, the dock highlight, the client sheet, the price hand, `[data-weigh]`) and the exported `ui` and `sites` the page scripts import.
 - `src/layouts/BaseLayout.astro` structure: head, font preload, canonical and OG meta, JSON-LD, the Coming Soon gate, analytics, the top line, dock and client sheet, and the scripts it loads. There is no router and no theme bootstrap in it.
 - `src/content.config.ts` (the schemas for case-studies, journal and photos).

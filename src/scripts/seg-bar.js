@@ -1,5 +1,8 @@
 /* The segmented bar (src/styles/seg-bar.css): the sliding pill under the pressed button in each
    .dw-seg, and the ink bloom a press draws. /work (work.js) and /journal (journal.js) both use it. */
+import { cue } from './sound.js';
+
+import { ui } from './kit.js';
 
 var $$ = function (a, r) {
   return [].slice.call(r.querySelectorAll(a));
@@ -8,7 +11,8 @@ var $$ = function (a, r) {
 /* Move each group's pill under its pressed button. */
 export function setPill(bar) {
   $$('.dw-seg', bar).forEach(function (seg) {
-    var on = seg.querySelector('button[aria-pressed=true]'),
+    /* A pressed button, or on /services the chapter link you are in (prices-chapters.js). */
+    var on = seg.querySelector('button[aria-pressed=true], a[aria-current]'),
       pill = seg.querySelector('[data-pill]');
     if (!on || !pill) return;
     pill.style.width = on.offsetWidth + 'px';
@@ -40,6 +44,12 @@ export function bloom(b, e) {
   ink.innerHTML = b.innerHTML;
   b.classList.add('inking');
   b.appendChild(ink);
+  /* The pressed chip's count rolls once in place (roll.js), in the chip and in its white copy,
+     so the two stay one number. Callers skip the whole bloom under reduced motion. */
+  if (ui.roll)
+    $$('.n', b).forEach(function (n) {
+      ui.roll(n);
+    });
   var at = function (rad) {
     return 'circle(' + rad.toFixed(1) + 'px at ' + x.toFixed(1) + 'px ' + y.toFixed(1) + 'px)';
   };
@@ -56,3 +66,8 @@ export function bloom(b, e) {
     b.classList.remove('inking');
   }, 640);
 }
+
+/* A pressed chip ticks, for a visitor who has switched sound on (sound.js). */
+document.addEventListener('click', function (e) {
+  if (e.target.closest && e.target.closest('.dw-seg button')) cue('tick');
+});

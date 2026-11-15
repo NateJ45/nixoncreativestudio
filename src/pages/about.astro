@@ -3,6 +3,7 @@
    longer story, the giant line, two real quotes, and what I do and don't do. */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/about.css';
+import '../styles/stamp.css';
 import Tile from '../components/Tile.astro';
 import QuoteBand from '../components/QuoteBand.astro';
 import Closing from '../components/Closing.astro';
@@ -42,6 +43,14 @@ const runningPhotos = [
     alt: 'Nathan and a friend by the Ohio River before a race, the Cincinnati skyline behind them.',
   },
   { src: runSelfie, alt: 'Nathan in sunglasses and a running shirt, out on a run.' },
+];
+/* The stamps under "One person.": a word, and the line under it when it lifts. Every one repeats
+   something this page already says (the ledger and the story), so add one only with its source. */
+const stamps = [
+  { word: 'One person', under: 'On every project' },
+  { word: 'Since 2020', under: 'Building websites' },
+  { word: 'Cincinnati', under: 'Web work anywhere' },
+  { word: 'From Scotland', under: 'Here since 2017' },
 ];
 const heading = `A one-person studio for organizations that <b>take their work seriously.</b>`;
 ---
@@ -155,6 +164,28 @@ const heading = `A one-person studio for organizations that <b>take their work s
         <dd>In person around the region, anywhere for web work.</dd>
       </div>
     </dl>
+    {/* Four stamps, each made from a fact already on this page (the ledger above, and the
+        story). Hover, focus or a tap lifts one to show a second line under it (stamp.css, a few
+        lines in about.js). Real buttons, and both lines are in the markup, so a screen reader
+        and a page with no script get every word. */}
+    <ul class="peels" aria-label="The same facts, stamped">
+      {stamps.map((s) => (
+        <li>
+          <button
+            type="button"
+            class="stamp peel"
+            data-peel
+            data-cursor="Lift"
+            aria-pressed="false"
+          >
+            <span class="stamp-face">
+              <span class="stamp-word">{s.word}</span>
+            </span>
+            <span class="stamp-under">{s.under}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
   </section>
 
   <ClientMap />

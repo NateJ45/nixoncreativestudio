@@ -49,7 +49,15 @@
    - The full view also shows the print's set as a strip to step through, a link to the client's
      case study when there is one, a Copy link button, and a booking card after every few steps.
    - The hero frame, the film strip and the "What I shoot" rows sit outside the table and lead
-     into it: any link with data-print opens the full view, data-go sets the filter. */
+     into it: any link with data-print opens the full view, data-go sets the filter.
+
+   In the full view (elevate, 2026-11-15):
+
+   - A typed card beside the print (under it on a phone): the lens and settings for the few photos
+     the kit names, the frame's shape, and five colours from the photo. It types a line at a time;
+     under reduced motion it is simply there. No date, no year.
+   - The photo zooms: pinch, wheel, double tap or double click, and the + and - buttons (or keys)
+     under it. Zoomed in, a drag pans. Stepping to the next print starts at full size again. */
 
 import { ui } from './kit.js';
 import { bloom, setPill } from './seg-bar.js';
@@ -1063,6 +1071,300 @@ function start(sec) {
       /* a sandboxed frame may refuse; the view still works */
     }
   }
+  /* ---- The typed card ------------------------------------------------------------------------
+     Beside the open print (under it on a phone): what is known about how the frame was made, in
+     the label voice, and five colours that are really in it (npm run photo-colors). The lens and
+     settings show only for the few photos the kit names (src/data/photo-kit.ts, from their EXIF);
+     every print gets its frame shape and its colours. Never a date or a year.
+
+     It types in a line at a time, then the swatches land one after another. A reader is given each
+     line whole (a hidden copy) while the visible one types, so nothing is read out letter by
+     letter. Under reduced motion it is simply there. */
+  var typeBox = dlg.querySelector('[data-type]'),
+    typeRows = dlg.querySelector('[data-type-rows]'),
+    swList = dlg.querySelector('[data-sw]'),
+    typeT = 0;
+  // The frame's shape in words: its orientation and the nearest common ratio.
+  function frameWords(w, h) {
+    if (!w || !h) return '';
+    var r = w / h,
+      shapes = [
+        [1, '1:1'],
+        [5 / 4, '5:4'],
+        [4 / 3, '4:3'],
+        [3 / 2, '3:2'],
+        [16 / 9, '16:9'],
+        [2, '2:1'],
+      ];
+    var flip = r < 1,
+      k = flip ? 1 / r : r,
+      best = shapes[0];
+    shapes.forEach(function (s) {
+      if (Math.abs(s[0] - k) < Math.abs(best[0] - k)) best = s;
+    });
+    var ratio = flip ? best[1].split(':').reverse().join(':') : best[1];
+    if (ratio === '1:1') return 'Square';
+    return (flip ? 'Portrait' : 'Landscape') + ', ' + ratio;
+  }
+  function typeCard(p) {
+    clearTimeout(typeT);
+    if (!typeBox) return;
+    if (!p) {
+      typeBox.hidden = true;
+      return;
+    }
+    var lines = [];
+    if (p.kit) {
+      lines.push(['Lens', p.kit.lens]);
+      if (p.kit.at) lines.push(['Settings', p.kit.at]);
+    }
+    lines.push([p.video ? 'Film' : 'Frame', frameWords(p.w, p.h)]);
+    typeRows.innerHTML = '';
+    var typed = [];
+    lines.forEach(function (l) {
+      if (!l[1]) return;
+      var dt = doc.createElement('dt'),
+        dd = doc.createElement('dd');
+      dt.className = 'label';
+      dt.textContent = l[0];
+      if (reduce) dd.textContent = l[1];
+      else {
+        // The whole line for a reader, and the visible one that types.
+        var whole = doc.createElement('span'),
+          shown = doc.createElement('span');
+        whole.className = 'vh';
+        whole.textContent = l[1];
+        shown.setAttribute('aria-hidden', 'true');
+        dd.appendChild(whole);
+        dd.appendChild(shown);
+        typed.push({ dt: dt, el: shown, text: l[1] });
+        dt.classList.add('pt-wait');
+      }
+      typeRows.appendChild(dt);
+      typeRows.appendChild(dd);
+    });
+    swList.innerHTML = '';
+    (p.sw || []).forEach(function (c, n) {
+      var li = doc.createElement('li');
+      li.style.setProperty('--c', c);
+      li.style.setProperty('--n', n);
+      li.title = c;
+      var name = doc.createElement('span');
+      name.className = 'vh';
+      name.textContent = c;
+      li.appendChild(name);
+      swList.appendChild(li);
+    });
+    swList.parentNode.hidden = !(p.sw && p.sw.length);
+    typeBox.hidden = false;
+    typeBox.classList.remove('is-done');
+    if (reduce || !typed.length) {
+      typeBox.classList.add('is-done');
+      return;
+    }
+    // A letter every 22ms, a short breath between lines, then the swatches.
+    var li = 0,
+      ci = 0;
+    (function next() {
+      var t = typed[li];
+      if (!t) {
+        typeBox.classList.add('is-done');
+        return;
+      }
+      t.dt.classList.remove('pt-wait');
+      ci++;
+      t.el.textContent = t.text.slice(0, ci);
+      if (ci >= t.text.length) {
+        li++;
+        ci = 0;
+        typeT = setTimeout(next, 140);
+      } else typeT = setTimeout(next, 22);
+    })();
+  }
+
+  /* ---- Zoom in the full view -----------------------------------------------------------------
+     A still photo zooms up to 4x: pinch on a touch screen, the wheel (or a trackpad pinch) on a
+     computer, a double tap or double click to go in at that spot and back out, and the + and -
+     buttons under it so nothing needs a gesture (WCAG 2.5.7). Zoomed in, dragging pans; a double
+     click picks a spot without dragging. The wheel only zooms out to the full photo, then the
+     view scrolls as usual. Stepping to another print starts it again at full size.
+
+     The photo is moved with one transform (translate, then scale about its middle), clamped so
+     its edges never come inside the frame. A pinch or a drag follows the fingers exactly; a click
+     or a wheel notch eases (CSS, .pt-zf img), and under reduced motion every change is instant. */
+  var zoomer = dlg.querySelector('[data-zoomer]'),
+    zLevel = dlg.querySelector('[data-pz-level]'),
+    zIn = dlg.querySelector('[data-pz="in"]'),
+    zOut = dlg.querySelector('[data-pz="out"]'),
+    Z_MAX = 4,
+    Z_STEP = 1.6,
+    Z_DOUBLE = 2.5,
+    z = null; // the zoom of the photo that is open: { frame, img, s, x, y, ... }
+  function zoomOff() {
+    z = null;
+    if (zoomer) zoomer.hidden = true;
+  }
+  function zClamp() {
+    var mx = ((z.s - 1) * z.frame.clientWidth) / 2,
+      my = ((z.s - 1) * z.frame.clientHeight) / 2;
+    z.x = clamp(z.x, -mx, mx);
+    z.y = clamp(z.y, -my, my);
+  }
+  function zPaint() {
+    if (z.s < 1.01) z.s = 1;
+    zClamp();
+    z.img.style.transform =
+      z.s === 1
+        ? ''
+        : 'translate(' +
+          z.x.toFixed(1) +
+          'px,' +
+          z.y.toFixed(1) +
+          'px) scale(' +
+          z.s.toFixed(3) +
+          ')';
+    z.frame.classList.toggle('is-zoomed', z.s > 1);
+    if (zLevel) zLevel.textContent = Math.round(z.s * 100) + '%';
+    if (zIn) zIn.disabled = z.s >= Z_MAX;
+    if (zOut) zOut.disabled = z.s <= 1;
+  }
+  // A point on the screen, as an offset from the middle of the frame.
+  function zPoint(cx, cy) {
+    var r = z.frame.getBoundingClientRect();
+    return { x: cx - r.left - r.width / 2, y: cy - r.top - r.height / 2 };
+  }
+  // Zoom to s2, keeping the bit of the photo under point p where it is.
+  function zoomAt(s2, p) {
+    s2 = clamp(s2, 1, Z_MAX);
+    z.x = p.x - ((p.x - z.x) * s2) / z.s;
+    z.y = p.y - ((p.y - z.y) * s2) / z.s;
+    z.s = s2;
+    zPaint();
+  }
+  function zToggle(p) {
+    if (z.s > 1) {
+      z.s = 1;
+      z.x = z.y = 0;
+      zPaint();
+    } else zoomAt(Z_DOUBLE, p);
+  }
+  function zoomOn(frame, img) {
+    z = { frame: frame, img: img, s: 1, x: 0, y: 0, ptrs: new Map(), pinch: null, pan: null };
+    if (zoomer) zoomer.hidden = false;
+    zPaint();
+    var me = z,
+      tap = null,
+      lastType = 'mouse';
+    frame.addEventListener(
+      'wheel',
+      function (e) {
+        if (z !== me) return;
+        // A trackpad pinch arrives as a wheel with ctrlKey, in much smaller steps.
+        var k = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0022));
+        if (k < 1 && z.s <= 1) return; // fully out: let the view scroll
+        e.preventDefault();
+        frame.classList.toggle('is-moving', e.ctrlKey);
+        zoomAt(z.s * k, zPoint(e.clientX, e.clientY));
+      },
+      { passive: false },
+    );
+    frame.addEventListener('pointerdown', function (e) {
+      if (z !== me || e.button) return;
+      lastType = e.pointerType;
+      z.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
+      try {
+        frame.setPointerCapture(e.pointerId);
+      } catch (err) {
+        /* an old browser: the gesture still works while the pointer stays on the photo */
+      }
+      if (z.ptrs.size === 2) {
+        // Two fingers: a pinch, and never a swipe to the next print.
+        sw0 = null;
+        var a = [].slice.call(z.ptrs.values());
+        z.pinch = {
+          d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1,
+          m: { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 },
+        };
+        z.pan = null;
+        frame.classList.add('is-moving');
+      } else if (z.ptrs.size === 1 && z.s > 1) {
+        z.pan = { x0: e.clientX, y0: e.clientY, tx: z.x, ty: z.y };
+        frame.classList.add('is-moving');
+      }
+    });
+    frame.addEventListener('pointermove', function (e) {
+      if (z !== me || !z.ptrs.has(e.pointerId)) return;
+      var at = z.ptrs.get(e.pointerId);
+      at.x = e.clientX;
+      at.y = e.clientY;
+      if (z.pinch && z.ptrs.size >= 2) {
+        var a = [].slice.call(z.ptrs.values()),
+          d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1,
+          m = { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 };
+        zoomAt(z.s * (d / z.pinch.d), zPoint(m.x, m.y));
+        // The two fingers moving together carry the photo with them.
+        z.x += m.x - z.pinch.m.x;
+        z.y += m.y - z.pinch.m.y;
+        zPaint();
+        z.pinch.d = d;
+        z.pinch.m = m;
+      } else if (z.pan) {
+        z.x = z.pan.tx + e.clientX - z.pan.x0;
+        z.y = z.pan.ty + e.clientY - z.pan.y0;
+        zPaint();
+      }
+    });
+    var lift = function (e) {
+      if (z !== me || !z.ptrs.has(e.pointerId)) return;
+      var down = z.ptrs.get(e.pointerId);
+      z.ptrs.delete(e.pointerId);
+      if (z.ptrs.size < 2) z.pinch = null;
+      if (z.ptrs.size === 0) {
+        z.pan = null;
+        frame.classList.remove('is-moving');
+      }
+      // A double tap on a touch screen: two quick taps close together.
+      if (e.type !== 'pointerup' || e.pointerType === 'mouse') return;
+      var now = performance.now(),
+        still = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 12;
+      if (!still || now - down.t > 300) {
+        tap = null;
+        return;
+      }
+      if (tap && now - tap.t < 330 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 32) {
+        tap = null;
+        sw0 = null;
+        zToggle(zPoint(e.clientX, e.clientY));
+      } else tap = { t: now, x: e.clientX, y: e.clientY };
+    };
+    frame.addEventListener('pointerup', lift);
+    frame.addEventListener('pointercancel', lift);
+    frame.addEventListener('dblclick', function (e) {
+      // A touch double tap is handled above; this is the mouse's.
+      if (z !== me || lastType !== 'mouse') return;
+      e.preventDefault();
+      zToggle(zPoint(e.clientX, e.clientY));
+    });
+  }
+  function zStep(dir) {
+    if (!z) return;
+    var s2 = dir > 0 ? z.s * Z_STEP : z.s / Z_STEP;
+    if (s2 < 1.05) s2 = 1;
+    zoomAt(s2, { x: 0, y: 0 });
+    if (s2 === 1) z.x = z.y = 0;
+    zPaint();
+  }
+  if (zIn)
+    zIn.addEventListener('click', function () {
+      zStep(1);
+      if (zIn.disabled) zOut.focus();
+    });
+  if (zOut)
+    zOut.addEventListener('click', function () {
+      zStep(-1);
+      if (zOut.disabled) zIn.focus();
+    });
+
   // Show print i in the open view, from the set strip: no slide, the table follows.
   function show(i) {
     onCard = false;
@@ -1110,6 +1412,8 @@ function start(sec) {
       }
     }
     media.innerHTML = '';
+    zoomOff();
+    typeCard(p);
     if (p.video) {
       var v = doc.createElement('video');
       v.src = p.video;
@@ -1130,13 +1434,20 @@ function start(sec) {
       img.alt = p.alt;
       img.width = p.w;
       img.height = p.h;
-      media.appendChild(img);
+      img.draggable = false;
+      // The frame the photo zooms inside: it clips to the photo's own edge, so a zoomed print
+      // never spills over the card. The developing sheet lies in it too, over the photo.
+      var frame = doc.createElement('div');
+      frame.className = 'pt-zf';
+      frame.appendChild(img);
+      media.appendChild(frame);
       if (!reduce && p.c) {
         var dev = doc.createElement('span');
         dev.className = 'pt-dev';
         dev.setAttribute('aria-hidden', 'true');
-        media.appendChild(dev);
+        frame.appendChild(dev);
       }
+      zoomOn(frame, img);
     }
     if (p.c) dlg.style.setProperty('--tint', p.c);
     else dlg.style.removeProperty('--tint');
@@ -1199,6 +1510,8 @@ function start(sec) {
   function card() {
     onCard = true;
     media.innerHTML = '';
+    zoomOff();
+    typeCard(null);
     media.appendChild(bookTpl.content.cloneNode(true));
     dlg.querySelector('[data-line]').textContent = 'Booking';
     dlg.querySelector('[data-title]').textContent = 'Want photos like these?';
@@ -1242,6 +1555,7 @@ function start(sec) {
     onCard = false;
     fill(i);
     dlg.showModal();
+    if (ui.cue) ui.cue('open');
     address(DATA[i].slug);
     playReels();
     placeDev();
@@ -1287,13 +1601,19 @@ function start(sec) {
     if (e.target.closest && e.target.closest('video')) return;
     if (e.key === 'ArrowRight') step(1);
     if (e.key === 'ArrowLeft') step(-1);
+    // + and - zoom the photo from the keyboard too (the buttons say the same).
+    if (z && (e.key === '+' || e.key === '=')) zStep(1);
+    if (z && (e.key === '-' || e.key === '_')) zStep(-1);
   });
   // A sideways swipe on the picture steps, on a touch screen. Previous and Next do the same
   // without one (WCAG 2.5.1), and a film keeps its own controls.
   var sw0 = null;
   media.addEventListener('pointerdown', function (e) {
+    // Zoomed in, a swipe pans the photo instead (see the zoom above).
     sw0 =
-      e.pointerType === 'touch' && !e.target.closest('video')
+      e.pointerType === 'touch' &&
+      !e.target.closest('video') &&
+      !(z && (z.s > 1 || z.ptrs.size > 1))
         ? { x: e.clientX, y: e.clientY }
         : null;
   });
@@ -1335,6 +1655,8 @@ function start(sec) {
     });
   dlg.addEventListener('close', function () {
     media.innerHTML = '';
+    clearTimeout(typeT);
+    zoomOff();
     address(null);
     playReels();
     if (returnTo && returnTo.isConnected) returnTo.focus({ preventScroll: true });

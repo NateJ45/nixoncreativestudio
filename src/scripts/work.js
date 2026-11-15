@@ -425,3 +425,154 @@ if (figCards.length) {
     });
   }
 }
+/* What the site has to do: a name in the index brings up that client's desktop window, the way
+   About's map raises one over a state card (same look, same house bounce).
+
+   - From 64rem the window lives in the stage, a column of its own beside the index (work.css), so
+     it never covers the words. At rest it shows the first client in the list. Pointing at a row or
+     focusing a name swaps it for that client's window on the house bounce, and it stays on the last
+     one you chose. A click on it opens that study, like the name.
+   - Below 64rem there is no stage. A name opens its window inside its own row, under the words,
+     and it goes when the pointer or focus moves on (a moment later for a mouse, so the pointer
+     can cross onto it, WCAG 1.4.13), or at once on Escape.
+   - Touch, at any width: the first tap on a name shows its window and the second follows the
+     link. A screen reader's activation sends no touch pointer first, so it follows the link.
+   Each window's still is the cover the grid above already uses. The first is on the page from the
+   start; the rest are only asked for the first time they are shown. Under reduced motion a window
+   appears with no bounce. With no script the first window stands in the stage and the names are
+   plain links. */
+(function () {
+  var stage = $('[data-job-peek]'),
+    rowsJ = $$('[data-job-row]');
+  if (!stage || !rowsJ.length) return;
+  var wide = matchMedia('(min-width: 64rem)'),
+    figs = {},
+    cur = null,
+    curRow = null,
+    hideT = 0,
+    lastPointer = 'mouse';
+  $$('.jp', stage).forEach(function (f) {
+    figs[f.dataset.for] = f;
+    f.addEventListener('pointerenter', function () {
+      clearTimeout(hideT);
+    });
+    f.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse' && !wide.matches) hideSoon();
+    });
+    f.addEventListener('click', function () {
+      location.href = f.dataset.href;
+    });
+  });
+  var firstFig = figs[rowsJ[0].dataset.slug];
+  function bounce(f, from) {
+    if (reduce || !f.animate) return;
+    f.animate(
+      [
+        { transform: 'translateY(' + from + 'px) rotate(-1.4deg) scale(0.95)' },
+        { transform: 'none' },
+      ],
+      { duration: 560, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+    );
+  }
+  function reveal(f) {
+    var img = $('img', f);
+    if (!img.getAttribute('src')) img.setAttribute('src', img.dataset.src);
+    f.hidden = false;
+  }
+  function unmark() {
+    if (curRow) curRow.classList.remove('on');
+    curRow = null;
+  }
+  /* Puts every window back in the stage, hidden, and (wide) shows the first one at rest. */
+  function reset() {
+    clearTimeout(hideT);
+    unmark();
+    Object.keys(figs).forEach(function (k) {
+      var f = figs[k];
+      f.hidden = true;
+      f.classList.remove('inline');
+      if (f.parentNode !== stage) stage.appendChild(f);
+    });
+    cur = null;
+    if (wide.matches && firstFig) {
+      reveal(firstFig);
+      cur = firstFig;
+    }
+  }
+  /* Below 64rem the window in the row goes away. On a wide screen the stage keeps the last window
+     chosen, and only the row loses its mark. */
+  function hideNow() {
+    clearTimeout(hideT);
+    if (!wide.matches && cur) {
+      cur.hidden = true;
+      cur.classList.remove('inline');
+      stage.appendChild(cur);
+      cur = null;
+    }
+    unmark();
+  }
+  function hideSoon() {
+    clearTimeout(hideT);
+    hideT = setTimeout(hideNow, 220);
+  }
+  function show(row) {
+    var f = figs[row.dataset.slug];
+    if (!f) return;
+    clearTimeout(hideT);
+    if (curRow === row) return;
+    unmark();
+    curRow = row;
+    row.classList.add('on');
+    if (f === cur && wide.matches) return;
+    if (cur && cur !== f) {
+      cur.hidden = true;
+      if (!wide.matches) {
+        cur.classList.remove('inline');
+        stage.appendChild(cur);
+      }
+    }
+    cur = f;
+    reveal(f);
+    if (!wide.matches) {
+      f.classList.add('inline');
+      row.appendChild(f);
+    }
+    bounce(f, wide.matches ? 14 : 22);
+  }
+  rowsJ.forEach(function (row) {
+    var a = $('a', row);
+    row.addEventListener('pointerenter', function (e) {
+      if (e.pointerType === 'mouse') show(row);
+    });
+    row.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse') hideSoon();
+    });
+    a.addEventListener('pointerdown', function (e) {
+      lastPointer = e.pointerType;
+    });
+    a.addEventListener('focus', function () {
+      /* A tap focuses the link too; the click below deals with a tap. */
+      if (lastPointer !== 'touch') show(row);
+    });
+    a.addEventListener('blur', function () {
+      if (lastPointer !== 'touch') hideSoon();
+    });
+    a.addEventListener('click', function (e) {
+      /* Touch only, and only the first tap: it shows the picture. The second tap, a mouse click,
+         Enter, and a screen reader's activation follow the link as usual. */
+      if (lastPointer !== 'touch' || curRow === row) return;
+      e.preventDefault();
+      show(row);
+    });
+  });
+  doc.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hideNow();
+  });
+  /* A tap anywhere else puts a tapped-open window away. */
+  doc.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'touch' || !curRow) return;
+    if (!e.target.closest('[data-job-row], .jp')) hideNow();
+  });
+  wide.addEventListener('change', reset);
+  reset();
+})();

@@ -71,7 +71,8 @@ test.describe('The theme', () => {
     const context = await browser.newContext({ javaScriptEnabled: false, colorScheme: 'dark' });
     const page = await context.newPage();
     await page.goto('/about/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('[data-theme-flip]')).toHaveCount(2);
+    // Three copies: the dock, the top line (phones) and the closing.
+    await expect(page.locator('[data-theme-flip]')).toHaveCount(3);
     for (const flip of await page.locator('[data-theme-flip]').all())
       await expect(flip).toBeHidden();
     await context.close();

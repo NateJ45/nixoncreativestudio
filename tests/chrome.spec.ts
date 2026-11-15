@@ -56,7 +56,9 @@ test.describe('Without JavaScript', () => {
     // One quote band, showing one quote at a time (the rest wait behind Next).
     await expect(page.locator('.band')).toHaveCount(1);
     await expect(page.locator('.band [data-q]:not([inert]) blockquote')).toHaveCount(1);
-    await expect(page.locator('[data-prices] li')).toHaveCount(3);
+    // Three cards. Each card's back carries its own list of what the tier includes, so count
+    // the hand's own items, not every li inside it.
+    await expect(page.locator('[data-prices] > li')).toHaveCount(3);
     await expect(page.locator('[data-prices] strong').first()).toHaveText('$3,500');
     await expect(page.locator('h1')).toHaveAttribute(
       'aria-label',
@@ -234,7 +236,9 @@ test.describe('The top line', () => {
   test('opened from the floating pill far down a page, the card is on the screen', async ({
     page,
   }) => {
-    await page.goto('/services/');
+    // /about, not /services: /services has its own sticky chapter bar now (elevate, 2026-11-15), and
+    // kit.js keeps the floating pill off a page whose own bar holds the top of the screen.
+    await page.goto('/about/');
     for (let i = 0; i < 12; i++) {
       await page.mouse.wheel(0, 400);
       await page.waitForTimeout(100);
@@ -271,6 +275,12 @@ test.describe('The top line', () => {
     await page.goto('/about/');
     const top = page.locator('[data-top]');
     await page.evaluate(() => scrollTo({ top: 1200, behavior: 'instant' }));
+    // Let the browser fire the scroll for 1200 before going back up. On a busy page the two jumps
+    // can otherwise merge into one scroll event that reads as scrolling down (0 to 1100), which no
+    // person can do inside one frame.
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
     await expect(top).not.toHaveClass(/float/);
     await page.evaluate(() => scrollTo({ top: 1100, behavior: 'instant' }));
     await expect(top).toHaveClass(/float/);

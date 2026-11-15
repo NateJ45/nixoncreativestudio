@@ -15,6 +15,17 @@
    rows, a cost table row sent to the receipt, the cost bars at 1, 3 and 5 years,
    the reply slip in the care section and the FAQ answers that open like a reply.
    Without it everything is simply open and every link works.
+
+   The page is cut into chapters: every other one sits on a quiet second ground
+   (class `alt`), and the row of chapter links under the first screen sticks to
+   the top once you pass it (src/scripts/prices-chapters.js marks where you are).
+   Each tier card turns over (prices-turn.js): its front says who it fits and
+   what it costs, its back what I take on and what is included. With no script
+   the two faces are one open card, exactly as before. A tier or care plan picked
+   anywhere is marked across the page (prices-plan.js; the hidden "Your pick"
+   tags are in the markup here). From 62rem "How it works" is a list beside one
+   drawing that builds as you scroll (prices-steps.js); below that, under reduced
+   motion and with no script it is the four cards.
    ============================================================================ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/prices.css';
@@ -49,6 +60,8 @@ import {
 import { yearsWord } from '../lib/receipt';
 import { addOnNamed, addOnOffer, careOffers, ids, tierOffers } from '../lib/schema';
 import { plainText, wordSpans } from '../lib/words';
+import { QUESTIONS, pickTiers as toPickTiers } from '../lib/tier-pick';
+import '../styles/seg-bar.css';
 
 const launch = tiers[0];
 const signature = tiers.find((t) => t.highlighted) ?? tiers[1];
@@ -66,11 +79,7 @@ const otherAddOns = addOns.filter((a) => a.name !== 'Photography');
 const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
 
 // What the three questions suggest: read by src/scripts/prices.js.
-const pickTiers = tiers.map((t) => ({
-  name: t.name,
-  from: money(t.priceFrom),
-  range: `${t.range}.`,
-}));
+const pickTiers = toPickTiers(tiers, money);
 
 // The honest sums, computed from pricing.ts: year one Hosting is included; care is billed from month one.
 // Flagship has no Hosting-only row: custom tools need Care or Care+.
@@ -258,7 +267,15 @@ const heading = `What I do, and <b>what it costs.</b>`;
         </li>
       </ul>
     </div>
-    <nav class="jump" aria-label="On this page">
+  </header>
+
+  {/* The chapter bar. A plain row of links with no script. It sticks under the top of the screen
+      (prices.css), and prices-chapters.js slides the pill to the chapter you are in, fills the
+      thin line with how far down the page you are, and on a phone keeps the current link in view.
+      The pill is the /work filter's (seg-bar.css, setPill in seg-bar.js). */}
+  <nav class="jump" aria-label="On this page" data-chapters>
+    <div class="jump-row dw-seg">
+      <span class="dw-pill" data-pill aria-hidden="true"></span>
       <a href="#fit">Help me choose</a>
       <a href="#costs">Five-year costs</a>
       <a href="#why-not">Why not a platform</a>
@@ -269,8 +286,11 @@ const heading = `What I do, and <b>what it costs.</b>`;
       <a href="#every-build">In every build</a>
       <a href="#why">Why one person</a>
       <a href="#faq">Questions</a>
-    </nav>
-  </header>
+    </div>
+    <span class="jump-prog" aria-hidden="true">
+      <i></i>
+    </span>
+  </nav>
 
   <section
     class="sec tiers-sec"
@@ -286,53 +306,86 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </div>
       <ul class="tiers" data-tiers>
         {tiers.map((t, i) => (
-          <li class="tier" id={t.name.toLowerCase()}>
+          <li class="tier" id={t.name.toLowerCase()} data-turn data-yours-tier={t.name}>
             <article class:list={['t-card', { 't-ink': i > 0, 't-dark': i === 2 }]}>
+              {/* With no script, and in print, the card is one sheet and this is its paper. With
+                  script each face carries its own (.t-fbg), because the two turn back to back. */}
               <div class="t-bg" aria-hidden="true"></div>
-              <div class="t-head">
-                <h3>{t.name}</h3>
-                <p>{t.badge ?? t.who}</p>
-              </div>
-              <div class="t-fits">
-                <h4 class="t-h">Who it fits</h4>
-                <p>{t.fits}</p>
-              </div>
-              <div class="t-fits">
-                <h4 class="t-h">What I take responsibility for</h4>
-                <p>{t.responsible}</p>
-              </div>
-              <p class="t-price">{`${money(t.priceFrom)}${t.priceSuffix}`}</p>
-              <p class="t-range">
-                {`One-time build. ${t.range}.`}
-                {t.needsCare && (
-                  <span class="t-need">
-                    Custom tools need {t.needsCare} or {carePlus.name} after launch.
-                  </span>
-                )}
-              </p>
-              <div class="t-keep">
-                <h4 class="t-h">If you ever move on</h4>
-                <ul>
-                  {freeToMove.map((line) => (
-                    <li>{line}</li>
-                  ))}
-                </ul>
-              </div>
-              <h4 class="t-inc">What's included</h4>
-              <ul class="t-list ticks">
-                {t.features.map((f, j) => (
-                  <li style={`--i:${j}`}>{f}</li>
-                ))}
-              </ul>
-              <p class="t-go">
-                <a
-                  class="cta"
-                  href={`/contact/?tier=${t.name.toLowerCase()}`}
-                  data-tier={t.name.toLowerCase()}
+              <div class="t-turn">
+                <div class="t-face t-front">
+                  <div class="t-bg t-fbg" aria-hidden="true"></div>
+                  <div class="t-head">
+                    <h3>{t.name}</h3>
+                    <p>{t.badge ?? t.who}</p>
+                    <span class="yours-tag" data-yours-tag hidden>
+                      Your pick
+                    </span>
+                  </div>
+                  <div class="t-fits">
+                    <h4 class="t-h">Who it fits</h4>
+                    <p>{t.fits}</p>
+                  </div>
+                  <p class="t-price">{`${money(t.priceFrom)}${t.priceSuffix}`}</p>
+                  <p class="t-range">
+                    {`One-time build. ${t.range}.`}
+                    {t.needsCare && (
+                      <span class="t-need">
+                        Custom tools need {t.needsCare} or {carePlus.name} after launch.
+                      </span>
+                    )}
+                  </p>
+                  <p class="t-go">
+                    <a
+                      class="cta"
+                      href={`/contact/?tier=${t.name.toLowerCase()}`}
+                      data-tier={t.name.toLowerCase()}
+                    >
+                      Start with {t.name}
+                    </a>
+                    <button
+                      type="button"
+                      class="t-flip"
+                      aria-expanded="false"
+                      aria-controls={`${t.name.toLowerCase()}-back`}
+                      data-otc-turn
+                    >
+                      Turn over <span class="vh">the {t.name} card</span>
+                    </button>
+                  </p>
+                </div>
+                <div
+                  class="t-face t-back"
+                  id={`${t.name.toLowerCase()}-back`}
+                  role="group"
+                  aria-label={`${t.name}, the back of the card`}
+                  tabindex="-1"
                 >
-                  Start with {t.name}
-                </a>
-              </p>
+                  <div class="t-bg t-fbg" aria-hidden="true"></div>
+                  <div class="t-fits">
+                    <h4 class="t-h">What I take responsibility for</h4>
+                    <p>{t.responsible}</p>
+                  </div>
+                  <div class="t-keep">
+                    <h4 class="t-h">If you ever move on</h4>
+                    <ul>
+                      {freeToMove.map((line) => (
+                        <li>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <h4 class="t-inc">What's included</h4>
+                  <ul class="t-list ticks">
+                    {t.features.map((f, j) => (
+                      <li style={`--i:${j}`}>{f}</li>
+                    ))}
+                  </ul>
+                  <p class="t-turn-back">
+                    <button type="button" class="t-flip" data-otc-back>
+                      Turn back <span class="vh">to the front of the {t.name} card</span>
+                    </button>
+                  </p>
+                </div>
+              </div>
             </article>
           </li>
         ))}
@@ -345,7 +398,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
     </div>
   </section>
 
-  <section class="sec tight fit" data-mfold id="fit" aria-labelledby="fit-h">
+  <section class="sec tight fit alt" data-mfold id="fit" aria-labelledby="fit-h">
     <div class="wrap">
       <div class="sec-head">
         <h2 id="fit-h">If this sounds like you</h2>
@@ -385,7 +438,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
     </div>
   </section>
 
-  <section class="sec tight picker" data-mfold id="pick" aria-labelledby="pick-h">
+  <section class="sec tight picker alt" data-mfold id="pick" aria-labelledby="pick-h">
     <div class="wrap">
       <div class="pick-in">
         <div class="pick-qs">
@@ -394,57 +447,21 @@ const heading = `What I do, and <b>what it costs.</b>`;
             Three questions to <b>suggest a tier.</b>
           </h2>
           <form data-pick data-tiers={JSON.stringify(pickTiers)}>
-            <fieldset class="pick-q">
-              <legend>How much does the site need to hold?</legend>
-              <div class="opts-row">
-                <label class="pick-o">
-                  <input type="radio" name="size" value="0" />
-                  <span>The essential pages</span>
-                </label>
-                <label class="pick-o">
-                  <input type="radio" name="size" value="1" />
-                  <span>Deeper sections</span>
-                </label>
-                <label class="pick-o">
-                  <input type="radio" name="size" value="2" />
-                  <span>A large, deep site</span>
-                </label>
-              </div>
-            </fieldset>
-            <fieldset class="pick-q">
-              <legend>What will your team keep up to date?</legend>
-              <div class="opts-row">
-                <label class="pick-o">
-                  <input type="radio" name="who" value="0" />
-                  <span>A few pages</span>
-                </label>
-                <label class="pick-o">
-                  <input type="radio" name="who" value="1" />
-                  <span>Several kinds of content</span>
-                </label>
-                <label class="pick-o">
-                  <input type="radio" name="who" value="2" />
-                  <span>A lot, across many kinds</span>
-                </label>
-              </div>
-            </fieldset>
-            <fieldset class="pick-q">
-              <legend>Does it need to do real work?</legend>
-              <div class="opts-row">
-                <label class="pick-o">
-                  <input type="radio" name="tools" value="0" />
-                  <span>Mostly inform people</span>
-                </label>
-                <label class="pick-o">
-                  <input type="radio" name="tools" value="1" />
-                  <span>Connect to other services</span>
-                </label>
-                <label class="pick-o">
-                  <input type="radio" name="tools" value="2" />
-                  <span>Custom tools, like bookings or sign-ups</span>
-                </label>
-              </div>
-            </fieldset>
+            {/* The questions and their answers are src/lib/tier-pick.ts, the list the dock's corner
+                card (TierPicker.astro) asks from too. */}
+            {QUESTIONS.map((q) => (
+              <fieldset class="pick-q">
+                <legend>{q.ask}</legend>
+                <div class="opts-row">
+                  {q.options.map((o, v) => (
+                    <label class="pick-o">
+                      <input type="radio" name={q.name} value={v} />
+                      <span>{o}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
           </form>
           <p class="pick-note">
             This points you at a starting place, not a quote. The first conversation, which is free,
@@ -497,9 +514,16 @@ const heading = `What I do, and <b>what it costs.</b>`;
         {costs.map((c) => (
           <tbody>
             {c.rows.map((r, j) => (
-              <tr class:list={{ 'with-care': j > 0 }}>
+              <tr
+                class:list={{ 'with-care': j > 0 }}
+                data-row-tier={c.tier.name}
+                data-row-plan={r.plan.name}
+              >
                 <th scope="row">
                   <b>{c.tier.name}</b>
+                  <i class="yours-tag" data-yours-tag hidden>
+                    Your pick
+                  </i>
                   <span>
                     {r.withCare
                       ? `Plus ${r.plan.name}, ${r.plan.price} ${perUnit(r.plan.period)}, on top of ${hosting.name}`
@@ -524,9 +548,15 @@ const heading = `What I do, and <b>what it costs.</b>`;
                     </span>
                   </button>
                 </th>
-                <td data-label="First year">{money(r.yearOne)}</td>
-                <td data-label="After 3 years">{money(r.threeYears)}</td>
-                <td data-label="After 5 years">{money(r.fiveYears)}</td>
+                <td data-label="First year" data-roll>
+                  {money(r.yearOne)}
+                </td>
+                <td data-label="After 3 years" data-roll>
+                  {money(r.threeYears)}
+                </td>
+                <td data-label="After 5 years" data-roll>
+                  {money(r.fiveYears)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -612,7 +642,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
     </div>
   </section>
 
-  <section class="sec tight why-not" data-mfold id="why-not" aria-labelledby="why-not-h">
+  <section class="sec tight why-not alt" data-mfold id="why-not" aria-labelledby="why-not-h">
     <div class="wrap">
       <div class="sec-head">
         <h2 id="why-not-h">Why not a cheaper platform?</h2>
@@ -779,7 +809,7 @@ const heading = `What I do, and <b>what it costs.</b>`;
     </div>
   </section>
 
-  <section class="sec tight" id="add-ons" aria-labelledby="addons-h">
+  <section class="sec tight alt" id="add-ons" aria-labelledby="addons-h">
     <div class="wrap">
       <div class="sec-head">
         <h2 id="addons-h">Add to any project</h2>
@@ -861,7 +891,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
       </p>
       <ul class="care-cards">
         {carePlans.map((c) => (
-          <li class="card keyed care-card">
+          <li class="card keyed care-card" data-yours-plan={c.name}>
+            <span class="yours-tag" data-yours-tag hidden>
+              Your pick
+            </span>
             <h3>{c.name}</h3>
             <p class="amt">
               {c.price}
@@ -904,7 +937,10 @@ const heading = `What I do, and <b>what it costs.</b>`;
             <tr>
               <td class="corner"></td>
               {carePlans.map((c) => (
-                <th scope="col">
+                <th scope="col" data-yours-plan={c.name}>
+                  <span class="yours-tag" data-yours-tag hidden>
+                    Your pick
+                  </span>
                   <span class="pl">{c.name}</span>
                   <span class="amt">
                     {c.price}
@@ -965,75 +1001,132 @@ const heading = `What I do, and <b>what it costs.</b>`;
     </div>
   </section>
 
-  <section class="sec tight" data-mfold id="how" aria-labelledby="how-h">
+  <section class="sec tight alt how" data-mfold id="how" aria-labelledby="how-h">
     <div class="wrap">
       <div class="sec-head">
         <h2 id="how-h">How it works</h2>
       </div>
-      <ol class="steps" data-steps>
-        <li>
-          {/* A conversation: two speech bubbles. */}
-          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path
-              d="M4 4.5h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
-              pathLength="1"
-            ></path>
-            <path
-              d="M18.5 8.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.5-3H12"
-              pathLength="1"
-            ></path>
-          </svg>
-          <h3>Start with a conversation</h3>
-          <p>
-            The first conversation is free: text me about what you actually need, and I'll come back
-            with an honest ballpark before anyone is committed. If you go ahead, the project opens
-            with a working session, an hour together in person or on video, that ends with a
-            one-page brief you sign off on.
-          </p>
-        </li>
-        <li>
-          {/* The plan: a written page. */}
-          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 2.5h8.5l4 4v15H6z" pathLength="1"></path>
-            <path d="M14.5 2.5v4h4" pathLength="1"></path>
-            <path d="M9 11.5h6.5M9 15h6.5M9 18.5h4" pathLength="1"></path>
-          </svg>
-          <h3>Then the plan</h3>
-          <p>
-            I write down who the site is for, how the pages fit together, and what you want visitors
-            to do next. You read it and push back, and I revise. Every design choice after that
-            follows this plan.
-          </p>
-        </li>
-        <li>
-          {/* Design and build: a browser window with a layout in it. */}
-          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M2.5 4.5h19v15h-19z" pathLength="1"></path>
-            <path d="M2.5 8.5h19" pathLength="1"></path>
-            <path d="M6 12h5.5v4H6z" pathLength="1"></path>
-            <path d="M14.5 12.5h3.5M14.5 15.5h3.5" pathLength="1"></path>
-          </svg>
-          <h3>Then I design and build</h3>
-          <p>
-            I design and build the pages where you can see them. A link to the work so far lands in
-            your inbox at each step, so you can react early instead of seeing the whole thing for
-            the first time at launch.
-          </p>
-        </li>
-        <li>
-          {/* Launch: a flag planted. */}
-          <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5.5 21.5v-18" pathLength="1"></path>
-            <path d="M5.5 4h12l-2.75 4.25L17.5 12.5h-12" pathLength="1"></path>
-          </svg>
-          <h3>Launch, and follow-through</h3>
-          <p>
-            I launch the site with you, then stay close for the first month to fix anything that
-            surfaces. After that you have a written guide and a simple way to reach me when
-            something comes up.
-          </p>
-        </li>
-      </ol>
+      <div class="how-in">
+        <ol class="steps" data-steps>
+          <li>
+            {/* A conversation: two speech bubbles. */}
+            <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M4 4.5h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                pathLength="1"
+              ></path>
+              <path
+                d="M18.5 8.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.5-3H12"
+                pathLength="1"
+              ></path>
+            </svg>
+            <h3>Start with a conversation</h3>
+            <p>
+              The first conversation is free: text me about what you actually need, and I'll come
+              back with an honest ballpark before anyone is committed. If you go ahead, the project
+              opens with a working session, an hour together in person or on video, that ends with a
+              one-page brief you sign off on.
+            </p>
+          </li>
+          <li>
+            {/* The plan: a written page. */}
+            <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6 2.5h8.5l4 4v15H6z" pathLength="1"></path>
+              <path d="M14.5 2.5v4h4" pathLength="1"></path>
+              <path d="M9 11.5h6.5M9 15h6.5M9 18.5h4" pathLength="1"></path>
+            </svg>
+            <h3>Then the plan</h3>
+            <p>
+              I write down who the site is for, how the pages fit together, and what you want
+              visitors to do next. You read it and push back, and I revise. Every design choice
+              after that follows this plan.
+            </p>
+          </li>
+          <li>
+            {/* Design and build: a browser window with a layout in it. */}
+            <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M2.5 4.5h19v15h-19z" pathLength="1"></path>
+              <path d="M2.5 8.5h19" pathLength="1"></path>
+              <path d="M6 12h5.5v4H6z" pathLength="1"></path>
+              <path d="M14.5 12.5h3.5M14.5 15.5h3.5" pathLength="1"></path>
+            </svg>
+            <h3>Then I design and build</h3>
+            <p>
+              I design and build the pages where you can see them. A link to the work so far lands
+              in your inbox at each step, so you can react early instead of seeing the whole thing
+              for the first time at launch.
+            </p>
+          </li>
+          <li>
+            {/* Launch: a flag planted. */}
+            <svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M5.5 21.5v-18" pathLength="1"></path>
+              <path d="M5.5 4h12l-2.75 4.25L17.5 12.5h-12" pathLength="1"></path>
+            </svg>
+            <h3>Launch, and follow-through</h3>
+            <p>
+              I launch the site with you, then stay close for the first month to fix anything that
+              surfaces. After that you have a written guide and a simple way to reach me when
+              something comes up.
+            </p>
+          </li>
+        </ol>
+        {/* The one drawing. The same four icons as the cards, four times the size, joined by a
+          hairline: conversation, plan, design and build, launch. Decoration only (the steps are
+          the list beside it), so it is aria-hidden, and it only shows from 62rem with script and
+          motion allowed (prices.css). prices-steps.js draws each stretch as its step is read;
+          left alone, every line is simply drawn. */}
+        <div class="how-draw" aria-hidden="true" data-how-draw>
+          <div class="card how-card">
+            <span class="how-n" data-how-n>
+              1
+            </span>
+            <svg viewBox="0 0 400 452" focusable="false">
+              <g data-step="0">
+                <g class="hw-ic" transform="translate(36 28) scale(4)">
+                  <path
+                    d="M4 4.5h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.500 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                    pathLength="1"
+                  ></path>
+                  <path
+                    d="M18.500 8.500H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.500-3H12"
+                    pathLength="1"
+                  ></path>
+                </g>
+              </g>
+              <g data-step="1">
+                <path class="hw-c" d="M128 80C196 80 204 144 282 144" pathLength="1"></path>
+                <g class="hw-ic" transform="translate(262 96) scale(4)">
+                  <path d="M6 2.500h8.500l4 4v15H6z" pathLength="1"></path>
+                  <path d="M14.500 2.500v4h4" pathLength="1"></path>
+                  <path d="M9 11.500h6.500M9 15h6.500M9 18.500h4" pathLength="1"></path>
+                </g>
+              </g>
+              <g data-step="2">
+                <path class="hw-c" d="M310 186C310 250 220 266 134 266" pathLength="1"></path>
+                <g class="hw-ic" transform="translate(44 218) scale(4)">
+                  <path d="M2.500 4.500h19v15h-19z" pathLength="1"></path>
+                  <path d="M2.500 8.500h19" pathLength="1"></path>
+                  <path d="M6 12h5.500v4H6z" pathLength="1"></path>
+                  <path d="M14.500 12.500h3.500M14.500 15.500h3.500" pathLength="1"></path>
+                </g>
+              </g>
+              <g data-step="3">
+                <path class="hw-c" d="M92 300C92 380 180 416 278 416" pathLength="1"></path>
+                <g class="hw-ic" transform="translate(256 330) scale(4)">
+                  <path d="M5.500 21.500v-18" pathLength="1"></path>
+                  <path d="M5.500 4h12l-2.750 4.250L17.500 12.500h-12" pathLength="1"></path>
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sec tight folds">
+    <div class="wrap rows">
       <details class="fold steps-fold" id="timelines">
         <summary>
           <h2>Timelines</h2>
@@ -1069,11 +1162,6 @@ const heading = `What I do, and <b>what it costs.</b>`;
           </div>
         </div>
       </details>
-    </div>
-  </section>
-
-  <div class="sec tight folds">
-    <div class="wrap rows">
       <details class="fold" id="every-build">
         <summary>
           <h2>In every build</h2>

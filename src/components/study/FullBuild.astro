@@ -1,17 +1,87 @@
 ---
-/* The long feature list stays closed until someone asks for it. Native details,
-   so keyboard and find-in-page come free; study.js springs the height a little. */
+/* "What I built". The long text stays closed until someone asks for it (native
+   details, so keyboard and find-in-page come free; study.js springs the height a
+   little). Its screenshots do not wait in the fold: they are laid out above it as
+   a filmstrip of prints you can scroll, drag or arrow through, and each one opens
+   in the same larger view as every other capture (ZoomImage, study.js).
+
+   The prints are read from the fold's own content: this renders its slot once,
+   picks every feature shot out of the markup (FeatureHighlight), and prints the
+   same HTML inside the fold. So nothing is listed twice in a study's MDX, and a
+   study with no feature shot in here gets no strip at all. */
+import ZoomImage from './ZoomImage.astro';
+
 interface Props {
   /** The study has extra before and afters in here. */
   more?: boolean;
 }
 const { more = false } = Astro.props;
+
+const body = await Astro.slots.render('default');
+
+/* Astro has already escaped the attribute values in the rendered slot, and it will escape them
+   again when they are passed on as props, so turn them back into plain text first. */
+const plain = (v: string) =>
+  v
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+const attr = (html: string, name: string) =>
+  plain(new RegExp(`\\s${name}="([^"]*)"`).exec(html)?.[1] ?? '');
+
+const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/article>/g)].flatMap(
+  ([, feat]) => {
+    const img = /<img\s[^>]*>/.exec(feat)?.[0];
+    if (!img) return [];
+    const url = attr(img, 'src');
+    const w = Number(attr(img, 'width'));
+    const h = Number(attr(img, 'height'));
+    if (!url || !w || !h) return [];
+    return [
+      {
+        img: { url, w, h },
+        alt: attr(img, 'alt'),
+        // The feature's own heading, markup and all, as the print's caption.
+        title: /<h3[^>]*>([\s\S]*?)<\/h3>/.exec(feat)?.[1] ?? '',
+      },
+    ];
+  },
+);
 ---
 
 <section class="chap build" id="what-i-built" aria-labelledby="cb">
+  <h2 id="cb">What I built</h2>
+  {shots.length > 0 && (
+    <div class="strip" data-strip>
+      <ul class="strip-row" data-strip-row data-cursor="Drag">
+        {shots.map((s) => (
+          <li class="print">
+            <ZoomImage img={s.img} alt={s.alt} />
+            <p class="print-cap" set:html={s.title} />
+          </li>
+        ))}
+      </ul>
+      {/* study.js shows these only when the strip is wider than its column. */}
+      <p class="strip-nav" data-strip-nav hidden>
+        <button type="button" data-strip-prev aria-label="Earlier screenshots">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M12.5 4.5 7 10l5.5 5.5" />
+          </svg>
+        </button>
+        <button type="button" data-strip-next aria-label="More screenshots">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M7.5 4.5 13 10l-5.5 5.5" />
+          </svg>
+        </button>
+      </p>
+    </div>
+  )}
   <details class="more" data-more>
     <summary>
-      <h2 id="cb">What I built</h2>
       <span class="more-l">
         The full build, with screenshots{more && ' and more before and afters'}
       </span>
@@ -19,7 +89,7 @@ const { more = false } = Astro.props;
     </summary>
     <div class="more-box">
       <div class="more-in">
-        <slot />
+        <Fragment set:html={body} />
       </div>
     </div>
   </details>

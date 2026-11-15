@@ -3,7 +3,9 @@
    page design. src/scripts/work.js filters by sector (?sector=church) and switches
    to the ruled list (?view=list). Without JavaScript the ruled list is the page.
    Under the windows, the same studies indexed by the job the site has to do
-   (src/data/jobs.ts). Counts come from the case studies, never typed.
+   (src/data/jobs.ts). Counts come from the case studies, never typed. From 64rem a column
+   beside that index holds one desktop window, swapped for whichever name is pointed at or focused;
+   below 64rem a name opens its window inside its own row (work.js).
    Beside the list on a wide screen, the row you are on shows its window and its outcome. */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/work.css';
@@ -50,6 +52,13 @@ const jobs = JOBS.map((job) => ({
     return client ? [{ client, why }] : [];
   }),
 })).filter((job) => job.studies.length > 0);
+// One window a client for the job index to raise, however many jobs name them, in the order the
+// index first names them: the first is the one the stage shows at rest.
+const jobClients = [
+  ...new Map(
+    jobs.flatMap((job) => job.studies.map(({ client }) => [client.slug, client] as const)),
+  ).values(),
+];
 ---
 
 <BaseLayout
@@ -242,24 +251,71 @@ const jobs = JOBS.map((job) => ({
           site was built to do, not a promise about the numbers.
         </p>
       </div>
-      <ul class="jobs-list">
-        {jobs.map((job) => (
-          <li class="job" id={`job-${job.id}`}>
-            <div class="job-say">
-              <h3>{job.title}</h3>
-              <p>{job.line}</p>
-            </div>
-            <ul class="job-studies">
-              {job.studies.map(({ client, why }) => (
-                <li>
-                  <a href={client.study}>{client.name}</a>
-                  <span>{why}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      <div class="jobs-body">
+        <ul class="jobs-list">
+          {jobs.map((job) => (
+            <li class="job" id={`job-${job.id}`}>
+              <div class="job-say">
+                <h3>{job.title}</h3>
+                <p>{job.line}</p>
+              </div>
+              <ul class="job-studies">
+                {job.studies.map(({ client, why }) => (
+                  <li data-job-row data-slug={client.slug}>
+                    {/* This row raises its own window (below), so the automatic preview stays off. */}
+                    <a href={client.study} data-peek="off">
+                      {client.name}
+                    </a>
+                    <span>{why}</span>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+        {/* The stage beside the index (work.js). From 64rem it is a column of its own, held in view
+            as you read: one desktop window, the first client in the list at rest, swapped on the house
+            bounce for whichever name is pointed at or focused. It never sits over the words. Below
+            64rem the stage is not shown, and a name opens its window inside its own row instead.
+            The stills are the covers the grid above already shows: the first is on the page from
+            the start, the rest are only asked for when first raised. The names are the links; this
+            is decoration, though a click on the window follows it too. */}
+        <div class="jp-stage" data-job-peek aria-hidden="true">
+          {jobClients.map((c, i) => (
+            <figure
+              class="jp"
+              data-for={c.slug}
+              data-href={c.study}
+              hidden={i > 0}
+              style={`--c:${c.accent};--p:${c.paper}`}
+            >
+              <span class="tile desk" data-slug={c.slug} data-direct>
+                <span class="b-top">
+                  <span class="url">
+                    <Fragment set:html={LOCK} />
+                    <span>{c.host}</span>
+                  </span>
+                </span>
+                <span class="scr">
+                  {i === 0 ? (
+                    <img
+                      src={c.deskStill}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      width="1000"
+                      height="750"
+                    />
+                  ) : (
+                    <img data-src={c.deskStill} alt="" decoding="async" width="1000" height="750" />
+                  )}
+                </span>
+              </span>
+              <figcaption>{c.name}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
     </div>
   </section>
 

@@ -1761,13 +1761,17 @@ html:not(.js) .dock > a[aria-current]:not(.go) {
 .top.on-color .status {
   color: var(--oncolor, #fff);
 }
+/* A card is paper under a light: a very faint grain (--grain), and a shadow that leans a few pixels
+   away from where the light is this hour (--lean and --sun-y, set by src/scripts/light.js; with no
+   script the shadow falls straight down, 22px, as it always did). Tokens: elevate.css. */
 .card {
-  background: var(--card);
+  background-color: var(--card);
+  background-image: var(--grain, none);
   border-radius: 1.25rem;
   box-shadow:
     var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.05),
-    0 22px 40px -28px rgba(0, 0, 0, 0.3);
+    var(--lean, 0px) calc(26px - var(--sun-y, 0.5) * 8px) 40px -28px rgba(0, 0, 0, 0.3);
 }
 
 /* The smallest phones: the floating menu must fit. */
@@ -1947,38 +1951,6 @@ h1 b,
   max-width: 38rem;
   margin: 0;
 }
-/* Home: results from the case studies, under the phones. */
-.proof {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  gap: 1rem clamp(1rem, 3vw, 2.5rem);
-  max-width: 78rem;
-  margin: clamp(2.5rem, 5vw, 4rem) auto 0;
-  padding: 1rem 0 0;
-  border-top: 1px solid var(--line);
-  list-style: none;
-}
-.proof a {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  color: var(--soft);
-  text-decoration: none;
-}
-.proof strong {
-  color: var(--ink);
-  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-.proof .label {
-  color: var(--ink);
-}
-.proof a:hover strong,
-.proof a:focus-visible strong {
-  color: var(--accent);
-}
 .ledger .ledger-for a {
   display: inline-flex;
   align-items: center;
@@ -2151,7 +2123,7 @@ h1 b,
   gap: 0;
   padding: 0 6cqw;
   border-radius: var(--cardr);
-  background: var(--pcb);
+  background: var(--pcb) var(--grain, none);
   color: var(--pci);
   text-align: center;
   text-decoration: none;
@@ -2204,8 +2176,10 @@ h1 b,
   outline-offset: 3px;
 }
 /* A card the keyboard is on comes to the top of the hand. On a phone the cards stick in one pile,
-   so Shift+Tab back up the page would otherwise land on a card the next one covers (WCAG 2.4.11). */
-.pc:has(> .pc-face:focus-visible) {
+   so Shift+Tab back up the page would otherwise land on a card the next one covers (WCAG 2.4.11).
+   Any focused control counts, so the Turn over button and the back's links lift their card too.
+   `.hand` gives it the weight to beat the phone pile's own `.pc:nth-child(n)` z-index further down. */
+.hand .pc:has(:focus-visible) {
   z-index: 3;
 }
 
@@ -3211,6 +3185,7 @@ html.ncs-gated .ncs-overlay {
   .reach,
   .top.float .mark,
   .top.float .status,
+  .top.float .turn-top,
   .fc {
     border: 1px solid CanvasText;
   }
@@ -3263,7 +3238,10 @@ html.ncs-gated .ncs-overlay {
     --sunk: #191b3a;
     --field-edge: #6e7196;
     --screen: #1d2042;
-    --rim: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(226, 228, 255, 0.08);
+    /* The lit edge leans a pixel toward the hour's light (--sun-x, src/scripts/light.js). */
+    --rim:
+      inset calc(var(--sun-x, 0) * 1px) 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 0 1px rgba(226, 228, 255, 0.08);
   }
   /* These surfaces keep their own color on either side, so what sits on them keeps the light
      tokens: the closing, a client's band or sheet, and anything set on a client's paper. */
@@ -3331,8 +3309,8 @@ html.ncs-gated .ncs-overlay {
 
 /* The light and dark switch (src/components/ThemeFlip.astro). It names what it will do, with an icon:
    "Dark mode" and a moon on the light side, "Light mode" and a sun on the dark side. One copy sits in
-   the dock on wide screens; a phone's dock has no room for the words, so there it lives only in the
-   closing band's fine print. */
+   the dock on wide screens; a phone's dock has no room for it, so there a round moon or sun sits in
+   the top line (.turn-top, below). The closing band's fine print has one at every width. */
 .turn {
   position: relative;
   z-index: 1;
@@ -3394,6 +3372,75 @@ html.ncs-gated .ncs-overlay {
 @media (max-width: 40rem) {
   .dock .turn-dock {
     display: none;
+  }
+}
+
+/* In the top line, phones only: where the dock drops its switch, a round moon (or sun on the dark
+   side) sits just left of the status, so the switch is at the top of every page and comes back with
+   the floating pills on the way up. The words stay for screen readers. To make the room, the status
+   shows a speech bubble in place of "Text or email" at the same width (its name is unchanged). */
+.top .turn-top {
+  display: none;
+}
+.turn-top .turn-w,
+.status .st-ico {
+  display: none;
+}
+@media (max-width: 40rem) {
+  .js .top .turn-top {
+    display: inline-flex;
+    justify-content: center;
+    /* The free space goes before the switch, so it sits beside the status, not mid-line. The
+       status pill is pulled 0.85rem outward (.status margins), so this keeps a gap between pills. */
+    margin-left: auto;
+    margin-right: 0.225rem;
+    width: 2.75rem;
+    padding: 0;
+    color: var(--soft);
+    transition:
+      background-color 0.25s,
+      box-shadow 0.25s;
+  }
+  .turn-top .turn-w {
+    display: inline;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .top .turn-top svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .js .status .st-words {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .js .status .st-ico {
+    display: block;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .top.on-color .turn-top {
+    color: var(--oncolor, #fff);
+  }
+  /* Floating: its own small pill, the same as the two corners. */
+  .top.float .turn-top {
+    pointer-events: auto;
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    color: var(--ink);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 1px 2px rgba(0, 0, 0, 0.08),
+      0 14px 34px -12px rgba(0, 0, 0, 0.34);
   }
 }
 

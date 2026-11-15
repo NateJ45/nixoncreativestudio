@@ -148,6 +148,121 @@ if (!reduce && 'IntersectionObserver' in window) {
   });
 }
 
+/* Decisions turn. Each card holds "The easy version" and "What I did". Both are always readable; with
+   motion allowed, "What I did" waits a little off its place (study.css, .rv-on .dec:not(.landed)) and
+   lands on its half with the house bounce when the card reaches the middle of the screen, with the
+   deal cue as it lands. A card already above the screen when the page loads (a reload half way
+   down) is simply in place, with no sound. No click needed, and under reduced motion none of this
+   runs: `.rv-on` is never set, so the card is laid out landed. */
+(function () {
+  var decs = $$('.dec');
+  if (!decs.length) return;
+  if (reduce || !('IntersectionObserver' in window)) return;
+  var dio = new IntersectionObserver(
+    function (es) {
+      es.forEach(function (e) {
+        var above = e.boundingClientRect.bottom < innerHeight * 0.55;
+        if (!e.isIntersecting && !above) return;
+        dio.unobserve(e.target);
+        e.target.classList.add('landed');
+        /* Scrolled past before it was ever seen: nothing landed, so nothing sounds. */
+        if (e.isIntersecting && e.boundingClientRect.bottom > 0) ui.cue('deal', 0.18);
+      });
+    },
+    /* The bottom 45% of the screen does not count, so "on screen" means its top passed the middle. */
+    { rootMargin: '0px 0px -45% 0px' },
+  );
+  decs.forEach(function (d) {
+    dio.observe(d);
+  });
+})();
+
+/* The filmstrip over "What I built" (FullBuild.astro). The row scrolls by itself, so touch, a
+   trackpad and the keyboard (Tab walks the prints, and the browser brings each into view) need
+   nothing from here. This adds three things for the rest:
+   - the two arrow buttons, shown only when the strip is wider than its column, each moving one
+     print along and switching off at its end;
+   - Left and Right on a focused print, which move to the print beside it;
+   - a mouse drag, because a mouse has no sideways wheel. A drag that moved must not also open the
+     print it started on, so the click that ends it is swallowed.
+   Under reduced motion the buttons and keys jump instead of gliding (study.css). */
+$$('[data-strip]').forEach(function (strip) {
+  var row = strip.querySelector('[data-strip-row]'),
+    nav = strip.querySelector('[data-strip-nav]'),
+    prev = strip.querySelector('[data-strip-prev]'),
+    next = strip.querySelector('[data-strip-next]'),
+    prints = $$('.print', row);
+  var sync = function () {
+    var max = row.scrollWidth - row.clientWidth;
+    nav.hidden = max < 8;
+    prev.disabled = row.scrollLeft < 4;
+    next.disabled = row.scrollLeft > max - 4;
+  };
+  /* One print along: the first one whose left edge is past the row's (or before it, going back). */
+  var step = function (dir) {
+    var edge = row.getBoundingClientRect().left + parseFloat(getComputedStyle(row).paddingLeft),
+      to = null;
+    prints.forEach(function (p) {
+      var x = p.getBoundingClientRect().left - edge;
+      if (dir > 0 && x > 8 && to === null) to = x;
+      if (dir < 0 && x < -8) to = x;
+    });
+    if (to === null) to = dir * row.clientWidth;
+    row.scrollBy({ left: to, behavior: reduce ? 'auto' : 'smooth' });
+  };
+  prev.addEventListener('click', function () {
+    step(-1);
+  });
+  next.addEventListener('click', function () {
+    step(1);
+  });
+  row.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var at = prints.indexOf(e.target.closest('.print')),
+      to = prints[at + (e.key === 'ArrowRight' ? 1 : -1)];
+    if (at < 0 || !to) return;
+    e.preventDefault();
+    to.querySelector('button').focus();
+  });
+  row.addEventListener('scroll', sync, { passive: true });
+  addEventListener('resize', sync);
+  addEventListener('load', sync);
+  sync();
+
+  var down = null,
+    dragged = false;
+  row.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = { x: e.clientX, left: row.scrollLeft };
+    dragged = false;
+  });
+  addEventListener('pointermove', function (e) {
+    if (!down) return;
+    var dx = e.clientX - down.x;
+    if (!dragged && Math.abs(dx) < 6) return;
+    dragged = true;
+    row.classList.add('dragging');
+    row.scrollLeft = down.left - dx;
+  });
+  var up = function () {
+    if (!down) return;
+    down = null;
+    row.classList.remove('dragging');
+  };
+  addEventListener('pointerup', up);
+  addEventListener('pointercancel', up);
+  row.addEventListener(
+    'click',
+    function (e) {
+      if (!dragged) return;
+      dragged = false;
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    true,
+  );
+});
+
 /* Long windows: the real capture slides inside the window, driven by native scroll through a spring. */
 var story = doc.querySelector('[data-story]'),
   longs = [];
@@ -390,7 +505,7 @@ $$('[data-course]').forEach(function (fig) {
   var range = fig.querySelector('[data-range]'),
     out = fig.querySelector('[data-readout]');
   var dot = fig.querySelector('[data-plan-dot]'),
-    cur = fig.querySelector('[data-cursor]'),
+    cur = fig.querySelector('[data-cl-cursor]'),
     pdot = fig.querySelector('[data-prof-dot]'),
     box = fig.querySelector('[data-profile]');
   var pts = prof.map(function (p, i) {

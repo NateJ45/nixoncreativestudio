@@ -17,9 +17,13 @@
    ============================================================================ */
 
 import '../styles/kit.css';
+// The shared finish (rolling digits, rising lines, grain, sheen, cursor label, first load).
+import '../styles/elevate.css';
 import TopLine from '../components/TopLine.astro';
 import Dock from '../components/Dock.astro';
+import TierPicker from '../components/TierPicker.astro';
 import ClientSheet from '../components/ClientSheet.astro';
+import SiteTools from '../components/SiteTools.astro';
 import ThemeBoot from '../components/ThemeBoot.astro';
 import Analytics from '../components/Analytics.astro';
 import StructuredData from '../components/StructuredData.astro';
@@ -159,6 +163,68 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       document.documentElement.classList.add('js');
     </script>
 
+    {/* Two decisions that have to be made before the first paint (elevate.css draws both).
+         1. The first load of a visit shows for under a second as a cobalt drawing
+            (src/scripts/blueprint.js): once per browser session, on a fresh navigation only,
+            never under reduced motion, a reload, Back, a prerender or a background tab.
+         2. Arriving on Prices from a price card, the tier it points at takes that card's
+            view-transition name for this one arrival (src/scripts/price-morph.js), and
+            html.tier-morph tells prices.js to lay the tiers out at once instead of dealing them. */}
+    <script is:inline>
+      (function () {
+        var d = document,
+          root = d.documentElement;
+        try {
+          var s = sessionStorage;
+          if (!s.getItem('ncs-bp')) {
+            s.setItem('ncs-bp', '1');
+            var nav = performance.getEntriesByType('navigation')[0];
+            if (
+              !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+              !d.prerendering &&
+              d.visibilityState === 'visible' &&
+              (!nav || nav.type === 'navigate')
+            ) {
+              window.__bp = performance.now();
+              root.classList.add('bp');
+            }
+          }
+          var tier = s.getItem('ncs-tier-morph');
+          if (tier) {
+            s.removeItem('ncs-tier-morph');
+            if (location.pathname === '/services/' && location.hash === '#' + tier) {
+              root.classList.add('tier-morph');
+              /* Hold the first paint until the tier itself has been parsed: the transition
+                 captures the new page at that paint, and a tier that is not there yet would
+                 leave the card with nothing to grow into. */
+              var wait = d.createElement('link');
+              wait.rel = 'expect';
+              wait.href = '#' + tier;
+              wait.setAttribute('blocking', 'render');
+              d.head.appendChild(wait);
+              addEventListener(
+                'pagereveal',
+                function (e) {
+                  /* The name goes on by hand, here: ':target' is not set yet at this point. */
+                  var li = d.getElementById(tier),
+                    card = li && li.querySelector('.t-card');
+                  var end = function () {
+                    root.classList.remove('tier-morph');
+                    if (card) card.style.viewTransitionName = '';
+                  };
+                  if (e.viewTransition && card) {
+                    card.style.viewTransitionName = 'tier-card';
+                    e.viewTransition.finished.then(end, end);
+                  } else end();
+                },
+                { once: true },
+              );
+            }
+          }
+        } catch (_e) {}
+      })();
+    </script>
+
     <!-- The one typeface, self-hosted. Starts with the HTML so text is laid out in
          its real metrics from the first paint. -->
     <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/hanken.woff2" crossorigin />
@@ -186,10 +252,12 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     {/* The dock is fixed, so nothing moves on screen: above main it comes straight after the
         skip link in the tab order, where a nav belongs, rather than dozens of stops down. */}
     <Dock />
+    <TierPicker />
     <main id="main">
       <slot />
     </main>
     <ClientSheet />
+    <SiteTools />
 
     {comingSoonEnabled && (
       <div class="ncs-overlay" aria-label="Launching soon">
@@ -200,6 +268,14 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <script>
       import '../scripts/kit.js';
       import '../scripts/theme.js';
+      // The shared finish, one small module each (styles in src/styles/elevate.css). They add to
+      // `ui`: ui.roll (digits that roll), ui.sheen (the pointer highlight).
+      import '../scripts/blueprint.js';
+      import '../scripts/roll.js';
+      import '../scripts/rise.js';
+      import '../scripts/light.js';
+      import '../scripts/cursor.js';
+      import '../scripts/price-morph.js';
       // The tab's N card turns over once when you come back after a few seconds away.
       import '../scripts/favicon.js';
       // Mailto fallback: a click with no mail app copies the address and says so.

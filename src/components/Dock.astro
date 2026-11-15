@@ -14,10 +14,12 @@
    progress rail and shows the chapter's name in `.dk-spy` for a moment as you
    reach it. Both are aria-hidden: the chapters are real headings on the page. */
 import { site } from '../data/site';
-import { getClients } from '../lib/clients';
+import { countWord, getClients } from '../lib/clients';
 import { webTiers } from '../data/pricing';
 import { money } from '../lib/money';
 import ThemeFlip from './ThemeFlip.astro';
+import SoundSwitch from './SoundSwitch.astro';
+import TierPicker from './TierPicker.astro';
 import { getCollection } from 'astro:content';
 import { getImage } from 'astro:assets';
 import { photoCount } from '../data/nav';
@@ -28,7 +30,8 @@ const current = (href: string) =>
   path === href ? 'page' : path.startsWith(href) ? 'true' : undefined;
 const clients = await getClients();
 const faces = ['paper', 'blue', 'ink'];
-const deck = 'Eight selected case studies';
+/* The hand's caption spells the real count, the way the home page's giant line does. */
+const deck = `${countWord(clients.length)} selected case studies`;
 // Photos sits in the dock only while /photography/ is open, by the same rule the page and the
 // sitemap read (src/data/photography-gate.ts), so the link never points at a noindex page.
 const photosOpen = photographyOpen(await photoCount());
@@ -70,6 +73,15 @@ const prints = await Promise.all(
     document.documentElement.classList.add('dock-here');
   }
 </script>
+{/* A soft blur that fades the page out under the dock (elevate.css, .pblur). It has to sit OUTSIDE
+    the nav: the dock holds a view-transition-name, and a backdrop-filter inside a named element
+    can only blur what that element paints, which is nothing
+    (_vault/gotchas/view-transition-name-kills-backdrop-blur-inside-it.md). */}
+<div class="pblur pblur-b" aria-hidden="true">
+  <i></i>
+  <i></i>
+  <i></i>
+</div>
 <span class="dock-scrim" data-dock-scrim aria-hidden="true"></span>
 <nav class="dock" aria-label="Primary">
   <span class="slide" data-slide></span>
@@ -174,6 +186,7 @@ const prints = await Promise.all(
         </span>
       </a>
     ))}
+    <TierPicker part="card" />
   </div>
 
   <a href="/about/" aria-current={current('/about/')}>
@@ -235,5 +248,6 @@ const prints = await Promise.all(
         </span>
       </button>
     ))}
+    <SoundSwitch where="dock" />
   </div>
 </nav>

@@ -179,6 +179,94 @@ html:not(.js) .dw-grid,
     margin-bottom: 0.5rem;
   }
 }
+/* The stage beside the job index (work.js): one desktop window, the same look as the one About's
+   map raises. From 64rem it has a column of its own, the right third, held in view as you read
+   (sticky, the way /churches/ keeps its phone beside the questions), so it never covers a word of
+   the index. The index takes the left two-thirds. Below 64rem there is no stage: a name opens its
+   window inside its own row, under the words (.jp.inline). */
+.jp-stage {
+  display: none;
+}
+.jp {
+  margin: 0;
+  cursor: pointer;
+}
+.jp[hidden] {
+  display: none;
+}
+.jp .tile {
+  display: flex;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 34px 60px -24px rgba(0, 0, 0, 0.55);
+}
+/* The client's name under the window, in label voice, so the picture always says whose it is. */
+.jp figcaption {
+  margin-top: 0.9rem;
+  font: 500 0.8125rem/1.3 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+@media (min-width: 64rem) {
+  .jobs-body {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
+    gap: clamp(2rem, 4vw, 4.5rem);
+    align-items: start;
+  }
+  /* Shown without script too: the first window is a plain picture, so the column is never empty. */
+  .jp-stage {
+    display: block;
+    position: sticky;
+    top: clamp(5rem, 14vh, 8rem);
+    padding-top: clamp(1.25rem, 2.2vw, 1.75rem);
+  }
+  /* Two-thirds of a 64rem screen is too narrow for the job beside its studies: the job heads
+     its studies until there is room. */
+  .job {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .job-studies li {
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  }
+}
+@media (min-width: 84rem) {
+  .job {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+  }
+  .job-studies li {
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  }
+}
+/* In the row, below 64rem: a small window under the words, in normal flow. */
+.jp.inline {
+  width: min(100%, 20rem);
+  margin: 0.25rem 0 1rem;
+}
+.jp.inline .tile {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 18px 30px -18px rgba(0, 0, 0, 0.5);
+}
+.jp.inline figcaption {
+  display: none;
+}
+/* The row whose window is up says so with weight, never colour alone. */
+.job-studies li.on > a {
+  text-decoration-thickness: 0.12em;
+}
+@media (forced-colors: active) {
+  .jp .tile {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .jp-stage {
+    display: none !important;
+  }
+}
 
 /* The same sites as rows. In the page from the start, so the links are there without script. */
 .dw-rows {

@@ -66,11 +66,23 @@ function pose(s, v) {
   };
 }
 
-/* The portrait: tilts with the pointer, comes up when held, and springs home when let go. */
+/* The portrait: tilts with the pointer, comes up when held, and springs home when let go.
+   The tilt is a few degrees at most (TILT_Y across, TILT_X up and down), and it has depth: the
+   photo and its caption sit on two planes above the card (--depth in about.css), so as the card
+   leans the caption slides a little over the photo. Hover goes through ui.stillHover and the
+   angle is measured against where the card RESTED when the pointer arrived, never against the
+   leaning card itself, so the card cannot chase the pointer and jitter.
+   A touch screen has no pointer to follow, so there the card leans a little with the scroll
+   instead: forward as it comes up the screen, back as it leaves (LEAN degrees at most).
+   Reduced motion: none of this runs and the card is still. */
+var TILT_Y = 4.5,
+  TILT_X = 3.5,
+  LEAN = 2.5;
+var touchOnly = matchMedia('(hover: none)');
 var mk = function (v) {
   return { x: v, v: 0 };
 };
-var c = { x: mk(0), y: mk(0), rx: mk(0), ry: mk(0), rz: mk(0), s: mk(1) };
+var c = { x: mk(0), y: mk(0), rx: mk(0), ry: mk(0), rz: mk(0), s: mk(1), dp: mk(0) };
 var held = false,
   hover = false,
   inStage = false,
@@ -166,8 +178,18 @@ function frame(now) {
       d = held ? 34 : 9.5;
     var a = go(c.x, held ? gx : 0, k, d, dt),
       b = go(c.y, held ? gy : 0, k, d, dt);
+    /* No pointer to follow: lean with the scroll, by where the stage sits on the screen. */
+    var leaning = touchOnly.matches && !held && !hover;
+    if (leaning) {
+      var sr = stage.getBoundingClientRect(),
+        off = (sr.top + sr.height / 2 - H / 2) / H;
+      tRx = Math.max(-1, Math.min(1, off * 1.6)) * LEAN;
+      tRy = 0;
+    }
     var e = go(c.rx, tRx, 170, 15, dt),
       f = go(c.ry, tRy, 170, 15, dt);
+    /* The planes come apart while the card is being looked at, and lie flat (and sharp) at rest. */
+    var dz = go(c.dp, held || hover ? 1 : leaning ? Math.abs(tRx) / LEAN : 0, 150, 16, dt);
     vx *= Math.pow(0.02, dt);
     var g = go(
       c.rz,
@@ -177,7 +199,8 @@ function frame(now) {
       dt,
     );
     var h = go(c.s, held ? 1.045 : hover ? 1.012 : 1, 300, 20, dt);
-    live = live || a || b || e || f || g || h || held;
+    live = live || a || b || e || f || g || h || dz || held;
+    card.style.setProperty('--depth', Math.max(0, c.dp.x).toFixed(3));
     card.style.setProperty('--lift', Math.max(0, Math.min(1, (c.s.x - 1) / 0.045)).toFixed(3));
     card.style.transform =
       'perspective(1100px) translate3d(' +
@@ -225,28 +248,39 @@ if (!reduce) {
   };
   addEventListener('pointerup', letGo);
   addEventListener('pointercancel', letGo);
+  /* Measured against the card's resting place (ui.stillHover keeps it, and measures again on
+     scroll), or where the card is now for a finger that has just picked it up. */
   var tilt = function (e) {
-    var r = card.getBoundingClientRect();
+    var r = (hover && card._still && card._still.rest) || card.getBoundingClientRect();
     var nx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)),
       ny = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
-    tRy = nx * 9;
-    tRx = -ny * 7;
+    tRy = nx * TILT_Y;
+    tRx = -ny * TILT_X;
   };
-  card.addEventListener('pointerenter', function (e) {
-    if (e.pointerType === 'mouse') {
-      hover = true;
+  /* While the mouse is "on" the card it may be a little outside the leaning card itself, so the
+     tilt follows the pointer from the document, not from the card. */
+  var follow = function (e) {
+    if (hover && !held && e.pointerType === 'mouse') {
+      tilt(e);
       wake();
     }
-  });
-  card.addEventListener('pointerleave', function (e) {
-    if (e.pointerType === 'mouse') {
+  };
+  ui.stillHover(
+    card,
+    function () {
+      hover = true;
+      doc.addEventListener('pointermove', follow, { passive: true });
+      wake();
+    },
+    function () {
       hover = false;
+      doc.removeEventListener('pointermove', follow);
       if (!held) {
         tRx = tRy = 0;
       }
       wake();
-    }
-  });
+    },
+  );
   card.addEventListener('pointermove', function (e) {
     if (held && e.pointerId === grab.id) {
       gx = band(e.clientX - grab.x, pw * 0.62);
@@ -257,9 +291,6 @@ if (!reduce) {
         lastX = e.clientX;
         lastT = t;
       }
-      tilt(e);
-      wake();
-    } else if (e.pointerType === 'mouse') {
       tilt(e);
       wake();
     }
@@ -321,6 +352,16 @@ st.forEach(function (s) {
     s.hov = 0;
     focusOpen = 0;
     wake();
+  });
+});
+
+/* The stamps under "One person." (src/styles/stamp.css). Hover and keyboard focus lift one in
+   CSS alone; a tap or a click holds it up, and the next one lets it down. */
+[].forEach.call(doc.querySelectorAll('[data-peel]'), function (b) {
+  b.addEventListener('click', function () {
+    var up = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(up));
+    if (ui.cue) ui.cue('tick');
   });
 });
 

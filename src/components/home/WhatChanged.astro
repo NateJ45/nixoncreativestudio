@@ -1,0 +1,65 @@
+---
+/* Home, "What changed": the sourced results from the case studies, each as a wide card on its
+   own client's colour (the quote band's pair, --c with --p, checked in case-palettes.test.ts).
+   The figure rolls as it arrives (data-roll, src/scripts/roll.js) and the cards are dealt in one
+   after another (src/scripts/home-more.js). Each card is one link to the study that sources its
+   figure.
+
+   The list of figures lives in index.astro (`proof`) and is passed in. Add one there only once
+   the client has seen it published in their case study; never reword a number here. */
+import type { Client } from '../../lib/clients';
+
+interface Proof {
+  slug: string;
+  figure: string;
+  what: string;
+  who: string;
+}
+interface Props {
+  proof: Proof[];
+  clients: Client[];
+}
+const { proof, clients } = Astro.props;
+
+const cards = proof.map((p) => {
+  const client = clients.find((c) => c.slug === p.slug);
+  if (!client) throw new Error(`What changed: no case study called ${p.slug}`);
+  return { ...p, client };
+});
+---
+
+<section class="sec chg" id="changed" aria-labelledby="chg-h">
+  <div class="chg-head">
+    <p class="label">Results</p>
+    <h2 id="chg-h">
+      What <b>changed.</b>
+    </h2>
+    <p>Counted by the clients, and sourced in each case study.</p>
+  </div>
+  <ul class="chg-list" data-chg>
+    {cards.map((p) => (
+      <li>
+        <a
+          class="chg-card"
+          href={p.client.study}
+          style={`--c:${p.client.accent};--p:${p.client.paper}`}
+          data-cursor="Read"
+        >
+          <strong class="chg-fig" data-roll>
+            {p.figure}
+          </strong>
+          <span class="chg-what">{p.what}</span>
+          <span class="chg-foot">
+            <span class="label">{p.who}</span>
+            <span class="chg-go">
+              Read the case study
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

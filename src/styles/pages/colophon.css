@@ -56,3 +56,51 @@ html:not(.js) .colo-win {
     transition: none;
   }
 }
+
+/* "This page, right now" (colophon.js): plain ruled rows, the name in the label voice on the
+   left and what was measured on the right. The figures are tabular so a roll never shifts them. */
+.colo-live {
+  margin: 1.25rem 0 0;
+  border-top: 1px solid var(--line);
+}
+.colo-live > div {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.colo-live dt {
+  margin: 0;
+}
+.colo-live dd {
+  margin: 0;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.colo-live-note {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--soft);
+}
+/* No script: only the build date can be known, and a line says why the rest are missing. */
+.colo-live-off {
+  display: none;
+}
+html:not(.js) .colo-m,
+html:not(.js) .colo-live-note {
+  display: none;
+}
+html:not(.js) .colo-live-off {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--soft);
+}
+@media (max-width: 30rem) {
+  .colo-live > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+}

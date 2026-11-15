@@ -30,6 +30,10 @@
    strip went; "How a shoot works" follows "What I shoot", then "The kit"
    (src/data/photo-kit.ts): camera, lenses with a frame shot on each, gimbal, software.
 
+   The full view (elevate, 2026-11-15) adds a typed card (lens and settings
+   only where the kit knows them, the frame's shape, five colours from
+   photo-colors.json) and zoom: pinch, wheel, double tap, and + and - buttons.
+
    Real markup first. The server prints a plain grid of links (each one to its
    full-size image), the filter bar and an empty full-view dialog. Without
    JavaScript that grid IS the gallery. src/scripts/photo-table.js lays the
@@ -77,6 +81,16 @@ import {
 import reelPoster from '../assets/photography/reel-poster.jpg';
 
 const photography = addOnNamed(addOns, 'Photography');
+
+// Each photo's colours (src/data/photo-colors.json): the wash, and five swatches.
+type PhotoColors = { wash: string; swatches: string[] };
+const colorsOf = (slug: string): PhotoColors =>
+  (photoColors as Record<string, PhotoColors>)[slug] ?? { wash: '', swatches: [] };
+// The typed card's lens rows, for the few photos that really carry them.
+const kitLineFor = (slug: string) => {
+  const l = LENSES.find((x) => x.sample?.slug === slug);
+  return l ? { lens: `${l.maker} ${l.name}`, at: l.sample?.at ?? '' } : undefined;
+};
 const all = await getCollection('photos');
 const open = photographyOpen(all.length);
 
@@ -110,8 +124,13 @@ const prints = await Promise.all(
       // The client's case study on this site, when there is one, and who the client is.
       client: p.client ?? '',
       study: p.client && STUDY_FOR_CLIENT[p.client] ? `/work/${STUDY_FOR_CLIENT[p.client]}/` : '',
-      // The photo's own colour, for the table's wash and the full view (npm run photo-colors).
-      c: (photoColors as Record<string, string>)[p.slug] ?? '',
+      // The photo's own colour, for the table's wash and the full view, and five colours that are
+      // really in it, largest first, for the typed card in the full view (npm run photo-colors).
+      c: colorsOf(p.slug).wash,
+      sw: colorsOf(p.slug).swatches,
+      // The lens and settings, only for a photo the kit names as shot on a lens (its EXIF, read
+      // in src/data/photo-kit.ts). Every other print says nothing about how it was made.
+      kit: kitLineFor(p.slug),
       w: p.image.width,
       h: p.image.height,
       small: small.src,
@@ -507,12 +526,39 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
          It sits inside the section so it still shows when the section fills the screen. */}
     <dialog class="pt-open" aria-labelledby="pt-open-title" data-open>
       <div class="pt-open-card card">
-        <figure class="pt-open-media" data-media></figure>
+        <div class="pt-open-look">
+          <figure class="pt-open-media" data-media></figure>
+          {/* Zoom without a gesture (WCAG 2.5.7): pinch, the wheel and a double tap do the
+               same. Shown for a still photo only; a film keeps its own controls. */}
+          <div class="pt-zoomer" role="group" aria-label="Zoom the photo" data-zoomer hidden>
+            <button type="button" data-pz="out" aria-label="Zoom out">
+              <span aria-hidden="true">−</span>
+            </button>
+            <span class="label" data-pz-level aria-hidden="true">
+              100%
+            </span>
+            <button type="button" data-pz="in" aria-label="Zoom in">
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+        </div>
         <div class="pt-open-text">
           <p class="label" data-line></p>
           <h2 id="pt-open-title" data-title></h2>
           <p data-alt></p>
           <p class="pt-open-place" data-place></p>
+          {/* The typed card: the lens and settings (only where the kit really knows them) and
+               five colours from the photo, in the label voice. The script fills it and types it
+               in a line at a time. No date and no year, ever. */}
+          <div class="pt-type paper" data-type hidden>
+            <dl class="pt-type-rows" data-type-rows></dl>
+            <div class="pt-type-sw">
+              <p class="label" id="pt-type-sw">
+                Colours in it
+              </p>
+              <ul class="pt-sw" data-sw aria-labelledby="pt-type-sw"></ul>
+            </div>
+          </div>
           <p class="pt-open-study" data-study-wrap hidden>
             <a data-study href="/work/">
               See the website
@@ -526,7 +572,8 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
             <button type="button" class="chip" data-prev>
               Previous
             </button>
-            <button type="button" class="chip" data-next>
+            {/* Focus lands here when the view opens, not on the zoom buttons that come first. */}
+            <button type="button" class="chip" data-next autofocus>
               Next
             </button>
             <button type="button" class="chip" data-copy>

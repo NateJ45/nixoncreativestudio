@@ -105,9 +105,13 @@ test('printLine names a film as a film and leaves out what is missing', () => {
 test('every print has a colour for the wash (run `npm run photo-colors` after adding a photo)', () => {
   const colors = JSON.parse(
     readFileSync(new URL('../data/photo-colors.json', import.meta.url), 'utf8'),
-  ) as Record<string, string>;
+  ) as Record<string, { wash: string; swatches: string[] }>;
   for (const e of entries) {
-    assert.ok(hexToRgb(colors[e.slug]), `${e.slug}: no colour in src/data/photo-colors.json`);
+    const c = colors[e.slug];
+    assert.ok(hexToRgb(c?.wash), `${e.slug}: no colour in src/data/photo-colors.json`);
+    // The typed card in the full view shows five colours from the photo.
+    assert.equal(c.swatches.length, 5, `${e.slug}: five swatches`);
+    for (const s of c.swatches) assert.ok(hexToRgb(s), `${e.slug}: swatch ${s}`);
   }
   const slugs = new Set(entries.map((e) => e.slug));
   for (const slug of Object.keys(colors)) {

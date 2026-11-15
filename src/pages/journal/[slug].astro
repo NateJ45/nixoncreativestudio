@@ -5,14 +5,18 @@
    ============================================================================
    Top to bottom: a visible breadcrumb (the same three crumbs the BreadcrumbList
    says), the H1, the byline card (portrait, "Written by Nathan Nixon", the
-   dates and, on a revised post, the "Updated" stamp with what changed), then
-   the reading column beside its table of contents:
+   dates and, on a revised post, the "Updated" stamp with what changed) with
+   the cluster's small drawing beside it (src/lib/journal-art.ts), then the
+   reading column beside its table of contents:
 
      - The short answer, in a card. A post with `receipt: true` prints the
-       /services receipt in it (PostReceipt.astro), from pricing.ts.
-     - The post itself. Tables are styled like the price cards, with the
-       "Source:" line under each (journal-post.js wraps them so a wide one
-       scrolls inside its card and never the page).
+       /services receipt in it (PostReceipt.astro), from pricing.ts. A post
+       with `highlight` gets the marker across that phrase (.hl).
+     - The post itself. Tables are styled like the price cards (journal-post.js
+       wraps them so a wide one scrolls inside its card and never the page).
+       The "Sources:" line under each is an <Aside>: a margin note beside its
+       table from 85rem, the small line under it below that. A table wrapped
+       in <BarChart> is also drawn as bars, read from the table itself.
      - Two dealt cards: the post's sector page and Prices.
 
    The table of contents is one <nav popover>: a sticky rail on a wide screen,
@@ -32,12 +36,15 @@ import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
 import PostReceipt from '../../components/PostReceipt.astro';
 import ProseLink from '../../components/ProseLink.astro';
+import Aside from '../../components/Aside.astro';
+import BarChart from '../../components/BarChart.astro';
 import { site } from '../../data/site';
 import { sectorPage, sectorPagePath } from '../../data/sector-pages';
 import { pricesAsOf } from '../../data/pricing';
 import { ids, pageIds } from '../../lib/schema';
 import { readingTime } from '../../lib/readingTime';
-import { changesProblem, clusterLabel, tocItems } from '../../lib/journal';
+import { changesProblem, clusterLabel, splitHighlight, tocItems } from '../../lib/journal';
+import { faceSvg } from '../../lib/journal-art';
 import { fitTitle } from '../../lib/seo';
 import { plainText, wordSpans } from '../../lib/words';
 
@@ -61,6 +68,7 @@ const {
   cluster,
   sector,
   shortAnswer,
+  highlight,
   receipt,
   draft,
 } = entry.data;
@@ -68,6 +76,14 @@ const {
 // A revised post says what changed; the pair is checked here so a half-done update fails the build.
 const problem = changesProblem(entry.data);
 if (problem) throw new Error(`journal/${entry.id}: ${problem}`);
+// The marker's phrase has to be in the short answer, word for word.
+const sa = splitHighlight(shortAnswer, highlight);
+if (sa.problem) throw new Error(`journal/${entry.id}: ${sa.problem}`);
+// Built as one string so no stray space lands between the marked phrase and a full stop.
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const saHtml = sa.mark
+  ? `${esc(sa.before)}<mark class="hl">${esc(sa.mark)}</mark>${esc(sa.after)}`
+  : esc(shortAnswer);
 
 const fmt = new Intl.DateTimeFormat('en-US', {
   month: 'long',
@@ -169,32 +185,35 @@ const schemas = [
       </ol>
     </nav>
     <h1 aria-label={plainText(title)} set:html={wordSpans(title)} />
-    <div class="card post-by">
-      <img
-        class="post-by-me"
-        src="/assets/about/portrait-bw-520.webp"
-        alt=""
-        width="56"
-        height="56"
-        decoding="async"
-      />
-      <div class="post-by-t">
-        <p class="post-by-name">
-          Written by <a href="/about/">{site.ownerName}</a>
-        </p>
-        <p class="label" set:html={byline} />
-        {updated && changes && (
-          <p class="post-by-changes">
-            <b>What changed:</b> {changes}
+    <div class="post-top">
+      <div class="card post-by">
+        <img
+          class="post-by-me"
+          src="/assets/about/portrait-bw-520.webp"
+          alt=""
+          width="56"
+          height="56"
+          decoding="async"
+        />
+        <div class="post-by-t">
+          <p class="post-by-name">
+            Written by <a href="/about/">{site.ownerName}</a>
           </p>
+          <p class="label" set:html={byline} />
+          {updated && changes && (
+            <p class="post-by-changes">
+              <b>What changed:</b> {changes}
+            </p>
+          )}
+        </div>
+        {updated && (
+          <span class="stamp post-stamp" aria-hidden="true">
+            <span class="stamp-word">Updated</span>
+            <span class="stamp-date">{fmt.format(updated)}</span>
+          </span>
         )}
       </div>
-      {updated && (
-        <span class="stamp post-stamp" aria-hidden="true">
-          <span class="stamp-word">Updated</span>
-          <span class="stamp-date">{fmt.format(updated)}</span>
-        </span>
-      )}
+      <Fragment set:html={faceSvg(cluster, 'post-face')} />
     </div>
   </header>
 
@@ -216,7 +235,7 @@ const schemas = [
         <h2 id="sa-h" class="label">
           The short answer
         </h2>
-        <p class="post-sa">{shortAnswer}</p>
+        <p class="post-sa" data-sa set:html={saHtml} />
         {receipt && <PostReceipt />}
       </section>
       {coverImage && (
@@ -225,7 +244,7 @@ const schemas = [
         </figure>
       )}
       <div class="prose post-prose" data-prose>
-        <Content components={{ a: ProseLink }} />
+        <Content components={{ a: ProseLink, Aside, BarChart }} />
       </div>
       <section class="post-end" aria-labelledby="end-h">
         <h2 id="end-h" class="label">

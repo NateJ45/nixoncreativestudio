@@ -683,8 +683,27 @@ if (stampDate) {
     /* An old browser without Intl: the stamp just says Received. */
   }
 }
+/* The stamp lands near where the Send button was, so a mouse that pressed Send is often already
+   over it, and its edge would lift (the peel, stamp.css) the moment it arrives. So it lands held
+   down (.down) and only peels once the pointer has really moved, a few pixels from where it was
+   when the stamp first saw it. */
+function holdStampDown() {
+  var from = null;
+  stamp.classList.add('down');
+  var move = function (e) {
+    if (!from) from = [e.clientX, e.clientY];
+    else if (Math.abs(e.clientX - from[0]) + Math.abs(e.clientY - from[1]) > 6) {
+      stamp.classList.remove('down');
+      doc.removeEventListener('pointermove', move);
+    }
+  };
+  doc.addEventListener('pointermove', move, { passive: true });
+}
+
 function pressStamp() {
-  if (!stamp || reduce) return;
+  if (!stamp) return;
+  holdStampDown();
+  if (reduce) return;
   var press = ui.spring(230, 13, 0),
     last = 0,
     landed = false;
@@ -703,6 +722,7 @@ function pressStamp() {
       stamp.style.opacity = String(Math.min(1, 0.15 + p * 1.7));
       if (!landed && p >= 0.98) {
         landed = true;
+        if (ui.cue) ui.cue('stamp');
         stamp.classList.add('inked');
       }
       if (going) requestAnimationFrame(frame);
@@ -714,8 +734,113 @@ function pressStamp() {
   }, 260);
 }
 
+/* The send folds the card like a letter before the sent card and its stamp arrive: the bottom
+   third folds up, the top third folds down over it, and the folded letter slips away. About 600ms.
+
+   The real form is never cut up. For the length of the fold it is made invisible (it keeps its
+   place, so nothing moves) and a stand-in sits exactly over it: three panes, each showing a third
+   of a lifeless copy of the card, hinged in CSS 3D (.letter in start.css). The copy has no ids
+   and no field names, is inert and hidden from screen readers, and is removed when the fold ends.
+
+   Skipped, going straight to `done`, under reduced motion, without the Web Animations API, when
+   less than a sliver of the card is on screen, and when the page was opened at #sent (that path
+   never calls this). */
+function foldAway(done) {
+  var card = form.getBoundingClientRect();
+  /* What gets folded is the part of the card on screen. On a phone the "Check your answers" card
+     is taller than the screen and the visitor is at its foot, by Send, so the letter is cut from
+     what they can see: its top edge is the screen's edge, and the fold still reads as a letter. */
+  var top = Math.max(0, card.top),
+    bottom = Math.min(innerHeight, card.bottom),
+    r = { left: card.left, top: top, width: card.width, height: bottom - top };
+  if (reduce || !form.animate || r.height < 120) return done();
+  var third = r.height / 3,
+    /* How far the card's own top sits above the letter's top (0 when it is all on screen). */
+    cut = top - card.top,
+    letter = doc.createElement('div'),
+    wings = [];
+  letter.className = 'letter';
+  letter.setAttribute('aria-hidden', 'true');
+  letter.inert = true;
+  letter.style.cssText =
+    'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+  for (var i = 0; i < 3; i++) {
+    var wing = doc.createElement('div'),
+      pane = doc.createElement('div'),
+      back = doc.createElement('div'),
+      copy = doc.createElement('div');
+    wing.className = 'letter-wing';
+    wing.style.top = (i * third).toFixed(2) + 'px';
+    wing.style.height = third.toFixed(2) + 'px';
+    pane.className = 'letter-pane';
+    back.className = 'letter-back';
+    /* The same classes as the form, so it looks the same, but a plain div with nothing to submit. */
+    copy.className = form.className + ' letter-copy';
+    copy.innerHTML = form.innerHTML;
+    [].forEach.call(copy.querySelectorAll('[id],[name],[for]'), function (el) {
+      el.removeAttribute('id');
+      el.removeAttribute('name');
+      el.removeAttribute('for');
+    });
+    [].forEach.call(copy.querySelectorAll('iframe,script,[data-turnstile]'), function (el) {
+      el.remove();
+    });
+    copy.style.height = card.height + 'px';
+    copy.style.top = (-cut - i * third).toFixed(2) + 'px';
+    pane.appendChild(copy);
+    wing.appendChild(pane);
+    wing.appendChild(back);
+    letter.appendChild(wing);
+    wings.push(wing);
+  }
+  doc.body.appendChild(letter);
+  form.style.visibility = 'hidden';
+  var ease = 'cubic-bezier(0.5, 0, 0.2, 1)';
+  /* Bottom third up and over the middle, from its top edge. */
+  wings[2].style.transformOrigin = '50% 0';
+  wings[2].animate(
+    [
+      { transform: 'translateZ(1px) rotateX(0deg)' },
+      { transform: 'translateZ(1px) rotateX(176deg)' },
+    ],
+    { duration: 300, easing: ease, fill: 'forwards' },
+  );
+  /* Then the top third down over both, from its bottom edge. */
+  wings[0].style.transformOrigin = '50% 100%';
+  wings[0].animate(
+    [
+      { transform: 'translateZ(2px) rotateX(0deg)' },
+      { transform: 'translateZ(2px) rotateX(-174deg)' },
+    ],
+    { duration: 300, delay: 190, easing: ease, fill: 'forwards' },
+  );
+  /* The folded letter slips up and away as the sent card takes its place. */
+  var away = letter.animate(
+    [
+      { opacity: 1, transform: 'translateY(0) scale(1)' },
+      { opacity: 0, transform: 'translateY(-1.25rem) scale(0.96)' },
+    ],
+    { duration: 150, delay: 470, easing: 'ease-in', fill: 'forwards' },
+  );
+  if (ui.cue) ui.cue('turn', 0.15);
+  var ended = false,
+    finish = function () {
+      if (ended) return;
+      ended = true;
+      letter.remove();
+      form.style.visibility = '';
+      done();
+    };
+  away.onfinish = finish;
+  /* A tab that goes to the background stops its animations: never leave the send hanging. */
+  setTimeout(finish, 900);
+}
+
 /* Sent: two studies from the visitor's sector, the status on the brief, focus on the heading. */
 function showSuccess() {
+  foldAway(showSent);
+}
+function showSent() {
   var sector = val('org_type') || val('origin_org_type');
   var sets = $$('[data-success-studies]');
   var match = sets.some(function (x) {
