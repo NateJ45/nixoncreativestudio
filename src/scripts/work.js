@@ -425,25 +425,27 @@ if (figCards.length) {
     });
   }
 }
-/* What the site has to do: a name in the index raises that client's desktop window beside its row,
-   the way About's map raises one over a state card (same look, same house bounce).
+/* What the site has to do: a name in the index brings up that client's desktop window, the way
+   About's map raises one over a state card (same look, same house bounce).
 
-   - A mouse: pointing at a row raises it. It stays while the pointer is on the row or on the
-     window, and goes a moment after it has left both, so the pointer can cross onto it
-     (WCAG 1.4.13). A click on the window opens the study, like the name.
-   - A keyboard: focusing a name raises it, moving on puts it away, and Escape puts it away at once.
-   - Touch: the first tap on a name shows the picture and the second follows the link. On a phone
-     the picture opens in the row, under the words; on a wide touch screen it rises beside the row
-     like a mouse's.
-   Each window's still is the cover the grid above already uses, and it is only asked for the
-   first time that window is raised. Under reduced motion it appears with no bounce. With no script
-   the stage stays hidden and the names are plain links. */
+   - From 64rem the window lives in the stage, a column of its own beside the index (work.css), so
+     it never covers the words. At rest it shows the first client in the list. Pointing at a row or
+     focusing a name swaps it for that client's window on the house bounce, and it stays on the last
+     one you chose. A click on it opens that study, like the name.
+   - Below 64rem there is no stage. A name opens its window inside its own row, under the words,
+     and it goes when the pointer or focus moves on (a moment later for a mouse, so the pointer
+     can cross onto it, WCAG 1.4.13), or at once on Escape.
+   - Touch, at any width: the first tap on a name shows its window and the second follows the
+     link. A screen reader's activation sends no touch pointer first, so it follows the link.
+   Each window's still is the cover the grid above already uses. The first is on the page from the
+   start; the rest are only asked for the first time they are shown. Under reduced motion a window
+   appears with no bounce. With no script the first window stands in the stage and the names are
+   plain links. */
 (function () {
   var stage = $('[data-job-peek]'),
     rowsJ = $$('[data-job-row]');
   if (!stage || !rowsJ.length) return;
-  var home = stage.parentNode,
-    narrow = matchMedia('(max-width: 52rem)'),
+  var wide = matchMedia('(min-width: 64rem)'),
     figs = {},
     cur = null,
     curRow = null,
@@ -455,64 +457,87 @@ if (figCards.length) {
       clearTimeout(hideT);
     });
     f.addEventListener('pointerleave', function (e) {
-      if (e.pointerType === 'mouse') hideSoon();
+      if (e.pointerType === 'mouse' && !wide.matches) hideSoon();
     });
     f.addEventListener('click', function () {
       location.href = f.dataset.href;
     });
   });
+  var firstFig = figs[rowsJ[0].dataset.slug];
+  function bounce(f, from) {
+    if (reduce || !f.animate) return;
+    f.animate(
+      [
+        { transform: 'translateY(' + from + 'px) rotate(-1.4deg) scale(0.95)' },
+        { transform: 'none' },
+      ],
+      { duration: 560, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+    );
+  }
+  function reveal(f) {
+    var img = $('img', f);
+    if (!img.getAttribute('src')) img.setAttribute('src', img.dataset.src);
+    f.hidden = false;
+  }
+  function unmark() {
+    if (curRow) curRow.classList.remove('on');
+    curRow = null;
+  }
+  /* Puts every window back in the stage, hidden, and (wide) shows the first one at rest. */
+  function reset() {
+    clearTimeout(hideT);
+    unmark();
+    Object.keys(figs).forEach(function (k) {
+      var f = figs[k];
+      f.hidden = true;
+      f.classList.remove('inline');
+      if (f.parentNode !== stage) stage.appendChild(f);
+    });
+    cur = null;
+    if (wide.matches && firstFig) {
+      reveal(firstFig);
+      cur = firstFig;
+    }
+  }
+  /* Below 64rem the window in the row goes away. On a wide screen the stage keeps the last window
+     chosen, and only the row loses its mark. */
   function hideNow() {
     clearTimeout(hideT);
-    if (!cur) return;
-    cur.hidden = true;
-    cur.classList.remove('inline');
-    cur.style.top = cur.style.left = '';
-    /* A window that opened inside a row goes back to the stage, so the row is as it was. */
-    if (cur.parentNode !== stage) stage.appendChild(cur);
-    if (curRow) curRow.classList.remove('on');
-    cur = curRow = null;
+    if (!wide.matches && cur) {
+      cur.hidden = true;
+      cur.classList.remove('inline');
+      stage.appendChild(cur);
+      cur = null;
+    }
+    unmark();
   }
   function hideSoon() {
     clearTimeout(hideT);
     hideT = setTimeout(hideNow, 220);
-  }
-  /* Beside the row: its foot just above the row, against the table's right edge, so the row you
-     are reading stays clear. With no room above (the row is at the top of the screen) it hangs
-     under the row instead. Positions are relative to the section's column, which the stage fills. */
-  function place(f, row) {
-    var r = row.getBoundingClientRect(),
-      base = home.getBoundingClientRect(),
-      h = f.offsetHeight,
-      above = r.top - h - 12 > 72;
-    f.style.left = base.width - f.offsetWidth + 'px';
-    f.style.top = (above ? r.top - h - 12 : r.bottom + 12) - base.top + 'px';
-    return above;
   }
   function show(row) {
     var f = figs[row.dataset.slug];
     if (!f) return;
     clearTimeout(hideT);
     if (curRow === row) return;
-    hideNow();
-    cur = f;
+    unmark();
     curRow = row;
     row.classList.add('on');
-    var img = $('img', f);
-    if (!img.getAttribute('src')) img.setAttribute('src', img.dataset.src);
-    f.hidden = false;
-    var from = 22;
-    if (narrow.matches) {
+    if (f === cur && wide.matches) return;
+    if (cur && cur !== f) {
+      cur.hidden = true;
+      if (!wide.matches) {
+        cur.classList.remove('inline');
+        stage.appendChild(cur);
+      }
+    }
+    cur = f;
+    reveal(f);
+    if (!wide.matches) {
       f.classList.add('inline');
       row.appendChild(f);
-    } else if (!place(f, row)) from = -22;
-    if (!reduce && f.animate)
-      f.animate(
-        [
-          { transform: 'translateY(' + from + 'px) rotate(-1.4deg) scale(0.95)' },
-          { transform: 'none' },
-        ],
-        { duration: 560, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
-      );
+    }
+    bounce(f, wide.matches ? 14 : 22);
   }
   rowsJ.forEach(function (row) {
     var a = $('a', row);
@@ -534,8 +559,7 @@ if (figCards.length) {
     });
     a.addEventListener('click', function (e) {
       /* Touch only, and only the first tap: it shows the picture. The second tap, a mouse click,
-         Enter, and a screen reader's activation (which sends no touch pointer first) follow the
-         link as usual. */
+         Enter, and a screen reader's activation follow the link as usual. */
       if (lastPointer !== 'touch' || curRow === row) return;
       e.preventDefault();
       show(row);
@@ -546,9 +570,9 @@ if (figCards.length) {
   });
   /* A tap anywhere else puts a tapped-open window away. */
   doc.addEventListener('pointerdown', function (e) {
-    if (e.pointerType !== 'touch' || !cur) return;
+    if (e.pointerType !== 'touch' || !curRow) return;
     if (!e.target.closest('[data-job-row], .jp')) hideNow();
   });
-  narrow.addEventListener('change', hideNow);
-  addEventListener('resize', hideNow);
+  wide.addEventListener('change', reset);
+  reset();
 })();
