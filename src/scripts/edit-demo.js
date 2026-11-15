@@ -120,6 +120,20 @@ var reduce = ui.reduce;
     band.setAttribute('aria-hidden', String(!on));
   }
 
+  /* The text fields are one-line textareas (so a long line can wrap on a phone). Enter publishes,
+     as it would in a one-line field, and a pasted line break becomes a space. */
+  [headline, hours].forEach(function (f) {
+    f.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      if (form.requestSubmit) form.requestSubmit();
+      else form.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+    f.addEventListener('input', function () {
+      if (/[\r\n]/.test(f.value)) f.value = f.value.replace(/[\r\n]+/g, ' ');
+    });
+  });
+
   headline.addEventListener('input', function () {
     text(outHeadline, headline.value);
     pop(outHeadline, 0.96);

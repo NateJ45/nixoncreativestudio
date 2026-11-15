@@ -260,7 +260,7 @@
 }
 /* The same field as /contact: a 3:1 edge at rest, a real outline with focus. 16px or more, so iOS
    does not zoom. */
-.ed-f input {
+.ed-f textarea {
   display: block;
   width: 100%;
   padding: 0.7rem 0.9rem;
@@ -272,22 +272,26 @@
   box-shadow: inset 0 0 0 1.5px var(--field-edge);
   -webkit-appearance: none;
   appearance: none;
+  /* One line, like a text input, unless the line is longer than the field (then it grows). */
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
 }
-.ed-f input:hover {
+.ed-f textarea:hover {
   box-shadow: inset 0 0 0 1.5px var(--ink);
 }
-.ed-f input:focus {
+.ed-f textarea:focus {
   outline: 2.5px solid var(--ink);
   outline-offset: 1px;
   box-shadow: none;
 }
 /* With no script the fields are disabled: keep the text fields readable, as a picture of the
    editor. Only the text fields: the radios and the switch stay invisible over their pictures. */
-.ed-fields:disabled .ed-f input {
+.ed-fields:disabled .ed-f textarea {
   opacity: 1;
   -webkit-text-fill-color: var(--ink);
 }
-.ed-fields:disabled .ed-f input:hover {
+.ed-fields:disabled .ed-f textarea:hover {
   box-shadow: inset 0 0 0 1.5px var(--field-edge);
 }
 
@@ -676,17 +680,71 @@ html:not(.js) .ed-go {
     padding-inline: 1rem;
   }
 }
-/* The narrowest phones have no room for two columns: the page first, then its editor. */
-@media (max-width: 23.5rem) {
+/* A narrow phone has no room for two columns without clipping the fields. The editor takes the
+   full width and the page becomes a small window pinned under the top line, so the visitor can
+   watch it change while typing further down.
+
+   - The window is a band the width of the screen in the page's own ground, with a hairline
+     under it, so the editor slides cleanly beneath it instead of showing through.
+   - It is sticky inside .try-grid, so it unpins on its own once the editor has scrolled past.
+   - The phone keeps its full chrome and "Demo, not a client"; it is only smaller. Everything in
+     it is sized in cqw, so it scales as one piece.
+   - Nothing hides behind it: while a control in the editor has focus, the page's top
+     scroll-padding grows by the band's height, so the browser brings a focused field to rest
+     below the band, not under it. */
+@media (max-width: 40rem) {
   .try-grid {
+    --pin-w: 7.75rem;
     grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
   }
   .try-stage {
-    position: static;
+    position: sticky;
+    top: 72px;
+    z-index: 3;
     order: -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    justify-items: start;
+    gap: 1rem;
+    margin-inline: calc(var(--gut) * -1);
+    padding: 0.5rem var(--gut) 0.75rem;
+    background: var(--ground);
+    box-shadow: 0 1px 0 var(--line);
+  }
+  .try-stage figcaption {
+    margin-top: 0.25rem;
+    text-align: left;
   }
   .tile.demo {
-    width: min(100%, 13rem);
+    width: var(--pin-w);
+  }
+  /* Where a textarea cannot size itself to its words, give it room for two lines here. */
+  @supports not (field-sizing: content) {
+    .ed-f textarea {
+      height: calc(2.5em + 1.4rem);
+    }
+  }
+  .demo-stamp .stamp-word {
+    font-size: 0.625rem;
+  }
+  .demo-stamp {
+    padding: 0.25rem 0.45rem;
+    border-width: 0.1875rem;
+  }
+  /* The band: the phone's height from its width (the Tile's 9 by 18.2, so 15.7rem), its padding
+     and a little air. Change it with --pin-w. */
+  html:has(.ed :focus) {
+    scroll-padding-top: calc(72px + 17.5rem);
+  }
+}
+/* A short screen gets a smaller window, so the fields still have room under it. */
+@media (max-width: 40rem) and (max-height: 44rem) {
+  .try-grid {
+    --pin-w: 6.25rem;
+  }
+  html:has(.ed :focus) {
+    scroll-padding-top: calc(72px + 14.5rem);
   }
 }
 

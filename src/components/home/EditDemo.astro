@@ -17,6 +17,9 @@
    swaps, the events band folds away, Publish presses the rubber stamp (src/styles/stamp.css)
    and plays ui.cue('stamp'), Reset puts it back. A polite live region says "Preview updated".
 
+   The two text fields are one-line textareas, so on a narrow phone a long line wraps onto a
+   second row instead of running out of sight (home.css). Enter still publishes (edit-demo.js).
+
    With no JavaScript the controls stay disabled (the fieldset is authored `disabled` and the
    script enables it), so the section is a still picture of an editor and the page it edits,
    with the sentence under it. */
@@ -85,27 +88,25 @@ const events = [
         <legend class="vh">The demo home page</legend>
         <label class="ed-f">
           <span class="ed-l">Headline</span>
-          <input
-            type="text"
+          <textarea
             name="headline"
-            value={HEADLINE}
+            rows="1"
             maxlength="44"
             autocomplete="off"
             enterkeyhint="done"
             data-ed-headline
-          />
+          >{HEADLINE}</textarea>
         </label>
         <label class="ed-f">
           <span class="ed-l">Opening hours</span>
-          <input
-            type="text"
+          <textarea
             name="hours"
-            value={HOURS}
+            rows="1"
             maxlength="36"
             autocomplete="off"
             enterkeyhint="done"
             data-ed-hours
-          />
+          >{HOURS}</textarea>
         </label>
         <fieldset class="ed-photos">
           <legend class="ed-l">Photo</legend>

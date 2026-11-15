@@ -66,6 +66,15 @@ process, closing. The quote band never touches the closing.
 - The price card's front stays the `a.pc-face` link so `price-morph.js` still grows it into its
   tier.
 
+## The edit demo on a narrow phone
+
+Under 40rem the editor takes the full width and the demo phone becomes a small window pinned under
+the top line (a band in `--ground` with a hairline, sticky inside `.try-grid`, so it unpins once
+the editor has scrolled past). While a control in the editor has focus, `html` gets a larger top
+`scroll-padding` so a focused field never rests under the band. The two text fields are one-line
+textareas (`field-sizing: content`), so a long line wraps instead of clipping; Enter still
+publishes. Wider than 40rem nothing changed.
+
 ## No JavaScript
 
 The editor ships with its fieldset `disabled` and Publish and Reset hidden, so it reads as a still
