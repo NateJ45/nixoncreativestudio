@@ -36,7 +36,7 @@ test.describe('/one-page/', () => {
     await expect(page.locator('.op-sheet')).toBeVisible();
     // The table stays a table in print, whatever the screen width.
     await expect(page.locator('.op-table thead')).toBeVisible();
-    await expect(page.locator('.op-table tbody tr')).toHaveCount(6);
+    await expect(page.locator('.op-table tbody tr')).toHaveCount(4);
     await expect(page.locator('.op-table tbody td').first()).toHaveCSS('display', 'table-cell');
     const fit = await page.locator('.op-sheet').evaluate((el) => el.getBoundingClientRect().height);
     expect(fit).toBeLessThanOrEqual(LETTER.height);
@@ -58,17 +58,16 @@ test.describe('/one-page/', () => {
       await expect(t).toContainText('What I take responsibility for');
     }
     await expect(tiers.nth(2)).toContainText('Custom tools need Care or Care+');
-    // The cost table: Hosting only first, then with care, and Flagship only with care.
+    // The cost table, four rows to leave room for the add-ons: Launch on Hosting alone, then
+    // each tier with its usual care plan (Flagship only with care). /services prints all six.
     // Hand-worked: build + $200 a year from year two + 12 x the care price each year.
     const rows = page.locator('.op-table tbody tr');
-    await expect(rows).toHaveCount(6);
+    await expect(rows).toHaveCount(4);
     const cells = (i: number) => rows.nth(i).locator('td').allInnerTexts();
     expect(await cells(0)).toEqual(['$3,500', '$3,900', '$4,300']);
     expect(await cells(1)).toEqual(['$4,208', '$6,024', '$7,840']);
-    expect(await cells(2)).toEqual(['$6,500', '$6,900', '$7,300']);
-    expect(await cells(3)).toEqual(['$8,048', '$11,544', '$15,040']);
-    expect(await cells(4)).toEqual(['$14,048', '$17,544', '$21,040']);
-    expect(await cells(5)).toEqual(['$15,608', '$22,224', '$28,840']);
+    expect(await cells(2)).toEqual(['$8,048', '$11,544', '$15,040']);
+    expect(await cells(3)).toEqual(['$15,608', '$22,224', '$28,840']);
     await expect(rows.first()).toContainText('Hosting only, $200 per year');
     await expect(rows.nth(1)).toContainText('Light Care, $59 per month');
     const flagship = page.locator('.op-table tbody').nth(2);
@@ -80,6 +79,12 @@ test.describe('/one-page/', () => {
       await expect(cover).toContainText(price);
     }
     await expect(cover).toContainText('free in year one');
+    // Add to any project: the five add-ons, photography first, each with its price.
+    const adds = page.locator('.op-adds dt');
+    await expect(adds).toHaveCount(5);
+    await expect(adds.first()).toContainText('Photography');
+    await expect(adds.first()).toContainText('from $1,200 a half day');
+    await expect(page.locator('.op-adds')).toContainText('$600 one-time');
     await expect(sheet).toContainText('Prices as of November 2026');
     await expect(sheet).toContainText('If you ever move on');
     await expect(page.locator('.op-sheet a[href^="mailto:"]')).toHaveCount(1);
@@ -111,7 +116,7 @@ test.describe('/one-page/', () => {
     test.use({ javaScriptEnabled: false });
     test('the sheet is all there, and the button that cannot work is not', async ({ page }) => {
       await page.goto('/one-page/');
-      await expect(page.locator('.op-table tbody tr')).toHaveCount(6);
+      await expect(page.locator('.op-table tbody tr')).toHaveCount(4);
       await expect(page.locator('[data-print]')).toBeHidden();
     });
   });
