@@ -1,3 +1,7 @@
+<a href="https://nixoncreativestudio.com/"><img src="https://raw.githubusercontent.com/NateJ45/NateJ45/main/assets/cards/nixoncreativestudio.png" alt="Nixon Creative Studio. I build websites that pull their weight." width="100%"></a>
+
+<p align="center"><a href="https://nixoncreativestudio.com/">Visit the site</a> · <a href="https://nixoncreativestudio.com/colophon/">How it is built</a></p>
+
 # Nixon Creative Studio
 
 **Web design, photography, and brand strategy for organizations that do real work in the world.** Churches, schools, nonprofits, and small businesses. Based in Cincinnati, Ohio; design and strategy for clients anywhere, photography across the region.
