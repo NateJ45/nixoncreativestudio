@@ -1778,6 +1778,8 @@ html:not(.js) .dk-spy {
 /* Shared additions */
 @view-transition {
   navigation: auto;
+  /* Every page change is a deal unless the arriving page says otherwise ("The deal", below). */
+  types: deal;
 }
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
@@ -1803,6 +1805,81 @@ html:not(.js) .dk-spy {
   from {
     opacity: 0;
     transform: translateY(14px);
+  }
+}
+
+/* The deal. The page you leave is picked up as a card: it shrinks onto the studio blue, rounds its
+   corners and dims, and the next page is dealt up over it from below, landing on a small spring
+   and squaring off as it fills the screen. Back plays it the other way: the page you leave is
+   thrown down off the bottom and the one you return to lifts back off the table. The dock keeps
+   its own name, so it stays put above the cards the whole time.
+   It runs only on the 'deal' type, set by @view-transition above, and the arriving page decides:
+   'back' is added for a Back that goes back (BaseLayout.astro, pagereveal), and 'deal' is dropped
+   when one window is growing into another (a study's hero, a price card's tier), so those keep the
+   plain fade underneath them. A browser with no view transition types keeps the plain fade too.
+   Reduced motion has no view transition at all. The blue is the one the theme flip shows, so
+   both moves happen over the same table, on either side. */
+html:active-view-transition-type(deal)::view-transition {
+  background: #3345f0;
+}
+html:active-view-transition-type(deal)::view-transition-old(root),
+html:active-view-transition-type(deal)::view-transition-new(root) {
+  mix-blend-mode: normal;
+  transform-origin: 50% 40%;
+}
+html:active-view-transition-type(deal)::view-transition-old(root) {
+  animation: deal-pick 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+html:active-view-transition-type(deal)::view-transition-new(root) {
+  animation: deal-land 0.74s 0.06s
+    linear(0, 0.2 8%, 0.55 18%, 0.84 28%, 1.01 38%, 1.04 46%, 1.025 56%, 1.003 70%, 1) both;
+}
+html:active-view-transition-type(back)::view-transition-old(root) {
+  z-index: 1;
+  animation: deal-throw 0.48s cubic-bezier(0.55, 0, 0.85, 0.4) both;
+}
+html:active-view-transition-type(back)::view-transition-new(root) {
+  animation: deal-lift 0.62s 0.04s var(--ease) both;
+}
+@keyframes deal-pick {
+  to {
+    transform: translate(-3%, -2%) scale(0.86) rotate(-2.5deg);
+    clip-path: inset(0 round 2rem);
+    filter: brightness(0.5);
+  }
+}
+@keyframes deal-land {
+  from {
+    transform: translateY(104%) rotate(5deg) scale(0.9);
+    clip-path: inset(0 round 2rem);
+  }
+  70% {
+    clip-path: inset(0 round 1rem);
+  }
+  to {
+    transform: none;
+    clip-path: inset(0 round 0);
+  }
+}
+@keyframes deal-throw {
+  from {
+    clip-path: inset(0 round 0);
+  }
+  to {
+    transform: translateY(106%) rotate(-6deg) scale(0.9);
+    clip-path: inset(0 round 2rem);
+  }
+}
+@keyframes deal-lift {
+  from {
+    transform: translate(-3%, -2%) scale(0.86) rotate(-2.5deg);
+    clip-path: inset(0 round 2rem);
+    filter: brightness(0.5);
+  }
+  to {
+    transform: none;
+    clip-path: inset(0 round 0);
+    filter: none;
   }
 }
 .skip {

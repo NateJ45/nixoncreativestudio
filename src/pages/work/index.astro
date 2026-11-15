@@ -233,6 +233,8 @@ const jobClients = [
         var r = el.getBoundingClientRect();
         if (r.bottom <= 0 || r.top >= innerHeight) return;
         el.style.viewTransitionName = 'study-hero';
+        /* The hero is the move here, so the page deal (kit.css) stands down under it. */
+        if (e.viewTransition.types) e.viewTransition.types.delete('deal');
         e.viewTransition.finished.finally(function () {
           el.style.viewTransitionName = '';
         });
