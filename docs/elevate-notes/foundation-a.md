@@ -45,7 +45,8 @@ The lines of a heading rise out of a mask as it arrives, one line a beat (80ms) 
 
 - **Automatic** for every `<h2>` inside `<main>`. Add `data-rise` to an `h3` to give it the same. `data-rise="off"` opts a heading out.
 - **Only below the fold**: a heading is touched only if its top is below the fold when the page loads. Never a page-head H1, a `.giant`, a `[data-build]` line, or anything on the first screen.
-- **Left alone**: a heading inside a `dialog`, a `[popover]`, a `form`, a live region or `[hidden]`; one inside a `.rv` block (study.js already reveals those); one that already holds `.w`, `.bw` or `[data-roll]`; and one that is not laid out at load (folded away on a phone).
+- **Left alone**: a heading inside a `dialog`, a `[popover]`, a `form`, a `summary` or `button` (the label of a control), a live region or `[hidden]`; one inside a `.rv` block (study.js already reveals those); one that already holds `.w`, `.bw` or `[data-roll]`; and one that is not laid out at load (folded away on a phone).
+- **Nothing shifts**: before wrapping, the module records which line every word is on as plain text, and the wrapped heading has to match it exactly (a hyphenated word is split at its hyphen so it can still break there). A heading that would not match is left alone and simply does not rise. Measured on 20 routes at 1440, 820 and 390: every wrapped heading matched.
 - **Lines are real lines**: words are grouped by where they actually fall, measured as the heading arrives and again if the window is resized part way up.
 - **If your script rewrites a heading** that is still waiting, the module lets go of it at once and it shows as plain text. Nothing to do on your side.
 - **Clean afterwards**: while it waits the heading carries its plain sentence as `aria-label`; once risen the word wrappers and that label are removed, so it ends as the markup it started as.

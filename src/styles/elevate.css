@@ -285,6 +285,14 @@ html:not(.js) .pblur-t {
 .end-time {
   white-space: nowrap;
 }
+/* On a phone the place and the time do not fit beside "Taking new projects". The place takes its
+   own line from the first paint (whenever script runs, so before the time is written), so
+   nothing below moves when the time arrives. With no script the row is one line, as it was. */
+@media (max-width: 30rem) {
+  .js .end-top:has([data-cincy]) > span:last-child {
+    flex-basis: 100%;
+  }
+}
 .reach-time {
   margin: 0.85rem 0 0;
 }

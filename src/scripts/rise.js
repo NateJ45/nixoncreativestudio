@@ -11,9 +11,12 @@
    loads is touched at all.
 
    What is left alone: a heading inside a dialog, a popover, a form or a live region (scripts
-   rewrite those), one inside a .rv block (study.js already reveals it), and one that is not laid
-   out when the page loads (folded away on a phone). If another script changes a waiting heading's
-   words, this lets go of it at once and it reads as plain text.
+   rewrite those), one that is the label of a control (inside a summary or a button), one inside a
+   .rv block (study.js already reveals it), and one that is not laid out when the page loads
+   (folded away on a phone). If another script changes a waiting heading's words, this lets go of
+   it at once and it reads as plain text. And a heading whose words would not sit exactly where
+   they do as plain text once wrapped (checked piece by piece at load) is left as it is, so
+   nothing ever shifts when the wrappers come out.
 
    Accessibility: the heading keeps its plain sentence as its accessible name while the words are
    wrapped, and once it has risen the wrappers are taken out again, so it ends as the markup it
@@ -25,7 +28,7 @@ var doc = document,
   /* A line starts this long after the one above it; the rise itself is 0.8s in elevate.css. */
   BEAT = 80,
   RISE = 800;
-var SKIP = 'dialog, [popover], form, [aria-live], [role="status"], .rv, [hidden]';
+var SKIP = 'dialog, [popover], form, summary, button, [aria-live], [role="status"], .rv, [hidden]';
 
 if (!ui.reduce && !ui.restored() && 'IntersectionObserver' in window && ui.words) {
   var H = innerHeight;
@@ -39,19 +42,51 @@ if (!ui.reduce && !ui.restored() && 'IntersectionObserver' in window && ui.words
     },
   );
   var live = [];
-  /* Group the words into the lines they fall on: a new top edge is a new line. */
-  var measure = function (h) {
+  /* A word, or a piece of one: "first-time" can break after its hyphen in plain text, so it is
+     two pieces here too. */
+  var PIECE = /\S*?-(?=[A-Za-z])|\S+/g;
+  /* Which line each of a list of top edges is on: a new top edge is a new line. */
+  var lineOf = function (tops) {
     var line = -1,
       top = null;
-    h.words.forEach(function (w) {
-      var t = w.offsetTop;
-      if (top === null || Math.abs(t - top) > 2) {
+    return tops.map(function (t) {
+      if (top === null || Math.abs(t - top) > 4) {
         line++;
         top = t;
       }
-      w.style.setProperty('--l', line);
+      return line;
     });
-    h.lines = line + 1;
+  };
+  /* The lines the heading's words fall on while it is still plain text, piece by piece. */
+  var plainLines = function (el) {
+    var tops = [],
+      walker = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT),
+      range = doc.createRange(),
+      node;
+    while ((node = walker.nextNode())) {
+      var m;
+      PIECE.lastIndex = 0;
+      while ((m = PIECE.exec(node.nodeValue))) {
+        range.setStart(node, m.index);
+        range.setEnd(node, m.index + m[0].length);
+        var r = range.getClientRects()[0];
+        tops.push(r ? r.top : 0);
+      }
+    }
+    return lineOf(tops);
+  };
+  /* Group the wrapped words into the lines they fall on, and tell each which line it is. */
+  var measure = function (h) {
+    var lines = lineOf(
+      h.words.map(function (w) {
+        return w.getBoundingClientRect().top;
+      }),
+    );
+    h.words.forEach(function (w, i) {
+      w.style.setProperty('--l', lines[i]);
+    });
+    h.lines = lines.length ? lines[lines.length - 1] + 1 : 1;
+    return lines;
   };
   /* Take the wrappers out again: each word span becomes its text, and the heading is as it was. */
   var release = function (h) {
@@ -92,21 +127,44 @@ if (!ui.reduce && !ui.restored() && 'IntersectionObserver' in window && ui.words
   );
   heads.forEach(function (el) {
     var h = { el: el, named: !el.hasAttribute('aria-label'), lines: 1, gone: false, t: 0 };
-    h.words = ui.words(el, 'rw');
+    /* How it breaks and how tall it is as plain text, to hold the wrapped heading to. */
+    var before = plainLines(el),
+      tall = el.offsetHeight;
+    h.words = [];
+    ui.words(el, 'rw').forEach(function (w) {
+      /* A hyphenated word becomes one mask a piece, side by side, so it can still break there. */
+      var pieces = w.textContent.match(PIECE) || [w.textContent];
+      pieces.forEach(function (text, k) {
+        var span = w;
+        if (k) {
+          span = doc.createElement('span');
+          span.className = 'rw';
+          h.words[h.words.length - 1].after(span);
+        }
+        /* The mask is the word's own box; what moves is the text inside it. */
+        var inner = doc.createElement('span');
+        inner.className = 'rw-i';
+        inner.textContent = text;
+        span.textContent = '';
+        span.appendChild(inner);
+        h.words.push(span);
+      });
+    });
     if (!h.words.length) {
       if (h.named) el.removeAttribute('aria-label');
       return;
     }
-    /* The mask is the word's own box; what moves is the text inside it. */
-    h.words.forEach(function (w) {
-      var inner = doc.createElement('span');
-      inner.className = 'rw-i';
-      inner.textContent = w.textContent;
-      w.textContent = '';
-      w.appendChild(inner);
-    });
     el._rise = h;
     el.classList.add('rise');
+    /* Wrapped words must sit exactly where the plain ones did, or the heading would shift when
+       the wrappers come out. If one moved to another line (rare: punctuation in its own element),
+       this heading simply does not rise. */
+    var after = measure(h);
+    if (after.join() !== before.join() || el.offsetHeight !== tall) {
+      h.mo = { disconnect: function () {} };
+      release(h);
+      return;
+    }
     /* Another script rewrote the heading while it waited: hand it back untouched. */
     h.mo = new MutationObserver(function () {
       h.words = [];
