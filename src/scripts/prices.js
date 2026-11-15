@@ -162,13 +162,16 @@ ui.wireFootage(sites);
    back a little. Nothing folds or hides. On a phone they are a plain stack with no transform, so cards
    never overlap, and with reduced motion none of this runs. */
 var list = doc.querySelector('[data-tiers]');
+/* A price card is growing into its tier (price-morph.js; the class is set in the <head>): the
+   tiers are laid out at once, because a card cannot grow into one that is still being dealt. */
+var morphIn = doc.documentElement.classList.contains('tier-morph');
 var st = all('.tier', list).map(function (li, i) {
   return {
     li: li,
     i: i,
     card: li.querySelector('.t-card'),
     l: ui.spring(240, 17, 0),
-    a: ui.spring(110, 14, 0),
+    a: ui.spring(110, 14, morphIn ? 1 : 0),
     side: 0,
   };
 });
@@ -208,7 +211,7 @@ function frame(now) {
     var l = s.l.x,
       back = Math.max(0, -l);
     /* On load the three cards deal out of one stack, then rest set slightly by hand. A card you reach for straightens. */
-    var aT = now - dealt > 350 + (s.i === 1 ? 0 : 130) ? 1 : 0;
+    var aT = morphIn || now - dealt > 350 + (s.i === 1 ? 0 : 130) ? 1 : 0;
     if (s.a.step(aT, dt) || aT === 0) live = true;
     else {
       s.a.x = 1;

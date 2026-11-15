@@ -57,22 +57,23 @@
   scrollbar-width: thin;
 }
 
-/* The giant line's box is trimmed to its capitals and its baseline, so the space over and under it
-   is the space you set and not the font's. Where the browser has no text-box the line is exactly
-   as it was. Descenders hang below the box as they always did (the line-height is under 1). */
-@supports (text-box: trim-both cap alphabetic) {
+/* The giant line's box starts at the top of its capitals, so the space over it is the space you
+   set and not the font's (about a tenth of the type size comes off). Only the top is trimmed: the
+   foot keeps its room, because descenders hang there and the next thing down was spaced against
+   it. Where the browser has no text-box the line is exactly as it was. */
+@supports (text-box: trim-start cap alphabetic) {
   .giant {
-    text-box: trim-both cap alphabetic;
+    text-box: trim-start cap alphabetic;
   }
 }
 
 /* Tabular figures on every price and figure, so digits sit in columns and a rolling digit never
-   changes a number's width. */
+   changes a number's width. The one giant price on /services (.from-num) is left alone: it is
+   sized to its own glyphs and stands in no column. */
 .proof strong,
 .pc-face strong,
 .fc-price strong,
 .t-price,
-.from-num,
 .glance-num,
 .cost-table td,
 .care td,
@@ -93,8 +94,9 @@
 }
 
 /* The email pill while its words say "Copied" (mailto-fallback.ts): a tick ahead of the word, so
-   the change is more than the letters. */
-a[data-copied]::before {
+   the change is more than the letters. Only on a chip; a row in the status card just changes its
+   words. */
+.chip[data-copied]::before {
   content: '';
   flex: none;
   display: inline-block;
@@ -142,12 +144,15 @@ a[data-copied]::before {
 .roll-c {
   display: inline-block;
 }
-/* The window is the digit's own line box, a hair taller so a tight line-height never shaves it. */
+/* The window is one em tall whatever the line-height around it, and a hair more so a digit is
+   never shaved: the old digit is gone as soon as it leaves the figure's own height. */
 .roll-d {
-  clip-path: inset(-0.04em -0.03em);
+  line-height: 1;
+  clip-path: inset(-0.05em -0.03em);
 }
 .roll-c {
   position: relative;
+  line-height: 1;
 }
 .roll-c::after,
 .roll-k::after {
@@ -171,7 +176,7 @@ a[data-copied]::before {
    the word so a descender and tight tracking are never cut, and it is gone once the line is home. */
 .rise .rw {
   display: inline-block;
-  clip-path: inset(-0.12em -0.3em -0.24em);
+  clip-path: inset(-0.12em -0.3em -0.1em);
 }
 .rise .rw-i {
   display: inline-block;
@@ -231,7 +236,7 @@ a[data-copied]::before {
   position: fixed;
   inset-inline: 0;
   z-index: 38;
-  height: 5.5rem;
+  height: 5rem;
   pointer-events: none;
 }
 .pblur-b {
@@ -265,8 +270,8 @@ a[data-copied]::before {
   mask-image: linear-gradient(var(--dir), transparent 40%, #000 75%);
 }
 .pblur i:nth-child(3) {
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   -webkit-mask-image: linear-gradient(var(--dir), transparent 65%, #000 100%);
   mask-image: linear-gradient(var(--dir), transparent 65%, #000 100%);
 }
@@ -467,11 +472,9 @@ html.bp body::after {
 /* ---------------------------------------------------------------------------------------------
    A price card grows into its tier (src/scripts/price-morph.js)
    ---------------------------------------------------------------------------------------------
-   For the one arrival that came from a price card, the tier it points at wears the card's name.
-   One short spring; the two pictures cross over quickly, so it reads as one card growing. */
-html.tier-morph .tier:target .t-card {
-  view-transition-name: tier-card;
-}
+   For the one arrival that came from a price card, the tier it points at wears the card's name
+   (set inline by the <head> script in BaseLayout.astro, taken off when the transition ends). One
+   short spring; the two pictures cross over quickly, so it reads as one card growing. */
 ::view-transition-group(tier-card) {
   z-index: 2;
   animation-duration: 0.62s;

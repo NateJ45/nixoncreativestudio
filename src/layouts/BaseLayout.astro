@@ -166,7 +166,8 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
             (src/scripts/blueprint.js): once per browser session, on a fresh navigation only,
             never under reduced motion, a reload, Back, a prerender or a background tab.
          2. Arriving on Prices from a price card, the tier it points at takes that card's
-            view-transition name for this one arrival (src/scripts/price-morph.js). -->
+            view-transition name for this one arrival (src/scripts/price-morph.js), and
+            html.tier-morph tells prices.js to lay the tiers out at once instead of dealing them. -->
     <script is:inline>
       (function () {
         var d = document,
@@ -191,14 +192,28 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
             s.removeItem('ncs-tier-morph');
             if (location.pathname === '/services/' && location.hash === '#' + tier) {
               root.classList.add('tier-morph');
+              /* Hold the first paint until the tier itself has been parsed: the transition
+                 captures the new page at that paint, and a tier that is not there yet would
+                 leave the card with nothing to grow into. */
+              var wait = d.createElement('link');
+              wait.rel = 'expect';
+              wait.href = '#' + tier;
+              wait.setAttribute('blocking', 'render');
+              d.head.appendChild(wait);
               addEventListener(
                 'pagereveal',
                 function (e) {
+                  /* The name goes on by hand, here: ':target' is not set yet at this point. */
+                  var li = d.getElementById(tier),
+                    card = li && li.querySelector('.t-card');
                   var end = function () {
                     root.classList.remove('tier-morph');
+                    if (card) card.style.viewTransitionName = '';
                   };
-                  if (e.viewTransition) e.viewTransition.finished.then(end, end);
-                  else end();
+                  if (e.viewTransition && card) {
+                    card.style.viewTransitionName = 'tier-card';
+                    e.viewTransition.finished.then(end, end);
+                  } else end();
                 },
                 { once: true },
               );
