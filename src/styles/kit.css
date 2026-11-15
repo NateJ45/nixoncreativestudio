@@ -3748,3 +3748,30 @@ html.flipping::view-transition-group(dock) {
 .sheet-rv .stars {
   font-size: 0.75rem;
 }
+
+/* The footer's Google reviews link carries the stars and the average (added 2026-11-15, Closing.astro).
+   On the blue the gold clears 3:1 by itself (kit-tokens.test.ts), so the stars drop the amber edge. */
+/* Icon and label on the first line, the stars and average under the label on the second, so the
+   label never wraps in a narrow column. */
+.end-index .social:has(.end-rating) {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  column-gap: 0.6rem;
+  align-content: center;
+  white-space: nowrap;
+}
+.end-rating {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+  font-weight: 700;
+}
+/* .end-index .social svg sizes the icons as small squares; the star row keeps its own shape. */
+.end-index .social .end-rating .stars {
+  --star-edge: var(--star);
+  width: 5em;
+  height: 1em;
+  font-size: 0.875rem;
+}

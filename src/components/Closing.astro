@@ -9,6 +9,8 @@ import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { getGatedNav } from '../data/nav';
 import { webTiers } from '../data/pricing';
+import { googleReviews } from '../data/reviews';
+import Stars from './Stars.astro';
 import ThemeFlip from './ThemeFlip.astro';
 import SoundSwitch from './SoundSwitch.astro';
 import PaletteOpen from './PaletteOpen.astro';
@@ -51,6 +53,8 @@ const elsewhere = [
     label: 'Google reviews',
     href: site.social.googleBusiness,
     rel: 'noopener',
+    // Shows the stars and the average from src/data/reviews.ts (added 2026-11-15).
+    rating: true,
     icon: '<path d="M18.4 5.6A9 9 0 1 0 21 12h-8.5"/>',
   },
 ];
@@ -159,6 +163,13 @@ const elsewhere = [
         <a class="social" href={s.href} target="_blank" rel={s.rel}>
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={s.icon} />
           {s.label}
+          {s.rating && (
+            <span class="end-rating">
+              <Stars rating={Math.round(googleReviews.rating)} decorative />
+              {googleReviews.rating.toFixed(1)}
+              <span class="vh"> out of 5</span>
+            </span>
+          )}
         </a>
       ))}
     </div>

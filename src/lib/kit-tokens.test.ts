@@ -177,3 +177,9 @@ test('review stars: the gold clears 3:1 on a dark card and the page', () => {
     assert.ok(ratio >= AA_NON_TEXT, `star on ${bg} is ${ratio.toFixed(2)}:1`);
   }
 });
+test('review stars: the gold clears 3:1 on the blue footer in both themes', () => {
+  for (const bg of [token('fill'), night('fill')]) {
+    const ratio = contrastRatio(token('star'), bg);
+    assert.ok(ratio >= AA_NON_TEXT, `star on ${bg} is ${ratio.toFixed(2)}:1`);
+  }
+});
