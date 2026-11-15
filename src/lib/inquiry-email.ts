@@ -18,6 +18,7 @@
 
 import { labelFor } from '../data/inquiry-options.ts';
 import { textHandoffUrl } from './text-handoff.ts';
+import { duration, profileFacts, sourceWords, type VisitorProfile } from './visitor-profile.ts';
 
 export interface InquiryMeta {
   /** The D1 row id, when the row was stored. */
@@ -35,6 +36,10 @@ export interface InquiryMeta {
   /** Site origin, for links back to pages: https://nixoncreativestudio.com */
   siteUrl: string;
   studioName: string;
+  /** What they did on the site before writing (src/lib/visitor-profile.ts). null: no trail. */
+  profile?: VisitorProfile | null;
+  /** Clarity's recordings page for this project, when CLARITY_ID is set on the Worker. */
+  clarityUrl?: string | null;
 }
 
 export interface InquiryEmail {
@@ -241,8 +246,82 @@ function text(q: Inquiry, meta: InquiryMeta, subject: string): string {
   );
   const o = origin(q, meta.siteUrl);
   if (o.length) lines.push('', ...o.map(([k, v]) => `${k}: ${v}`));
+  lines.push(...profileText(meta));
   lines.push('', footerLine(meta), `Sent by the contact form on ${meta.studioName}.`);
   return lines.join('\n');
+}
+
+/** The trail as plain text: the summary, the longest-read pages, then visit by visit. */
+function profileText(meta: InquiryMeta): string[] {
+  const p = meta.profile;
+  if (!p) return [];
+  const out = [
+    '',
+    'Before they wrote:',
+    ...profileFacts(p, meta.receivedAt, TIME_ZONE).map(([k, v]) => `${k}: ${v}`),
+  ];
+  out.push('', 'Longest on:');
+  for (const t of p.topPages.slice(0, 8))
+    out.push(
+      `- ${t.path} ${duration(t.seconds)}, ${t.scroll}% down${t.views > 1 ? `, ${t.views} times` : ''}`,
+    );
+  out.push('', 'Visit by visit:');
+  for (const v of p.visits) {
+    out.push(`${when(v.start)}, from ${sourceWords(v.source)}:`);
+    out.push(`  ${v.pages.map((pg) => `${pg.path} (${duration(pg.seconds)})`).join(' > ')}`);
+  }
+  if (meta.clarityUrl)
+    out.push('', `Recordings: ${meta.clarityUrl} (filter Custom user ID: ${p.visitorId})`);
+  return out;
+}
+
+/** The trail as an email section body. */
+function profileHtml(meta: InquiryMeta): string {
+  const p = meta.profile;
+  if (!p) return '';
+  const facts = profileFacts(p, meta.receivedAt, TIME_ZONE);
+  const factRows = facts.map(([k, v], i) => row(k, esc(v), i === facts.length - 1)).join('');
+  const small = `font-family:${FONT};font-size:14px;line-height:20px;color:${C.ink};`;
+  const muted = `font-family:${FONT};font-size:13px;line-height:18px;color:${C.muted};`;
+  const heading = (t: string) =>
+    `<div style="${muted}font-weight:600;padding:16px 0 6px 0;">${esc(t)}</div>`;
+  const top = p.topPages.slice(0, 8);
+  const longest = Math.max(1, ...top.map((t) => t.seconds));
+  const topRows = top
+    .map(
+      (t) =>
+        `<tr><td style="${small}padding:4px 8px 4px 0;">${link(meta.siteUrl + t.path, t.path)}</td>` +
+        `<td style="${muted}padding:4px 8px;white-space:nowrap;" align="right">${esc(duration(t.seconds))}</td>` +
+        `<td style="padding:4px 0;width:30%;"><div style="background:${C.accent};height:6px;border-radius:3px;width:${Math.max(4, Math.round((t.seconds / longest) * 100))}%;"></div></td>` +
+        `<td style="${muted}padding:4px 0 4px 8px;white-space:nowrap;" align="right">${t.scroll}% down</td></tr>`,
+    )
+    .join('');
+  const visitRows = p.visits
+    .map(
+      (v, i) =>
+        `<div style="${small}padding:6px 0;${i ? `border-top:1px solid ${C.line};` : ''}">` +
+        `<strong>${esc(when(v.start))}</strong> <span style="color:${C.muted};">from ${esc(sourceWords(v.source))}, ${esc(duration(v.seconds))}</span><br>` +
+        v.pages
+          .map(
+            (pg) =>
+              `${esc(pg.path)} <span style="color:${C.faint};">${esc(duration(pg.seconds))}</span>`,
+          )
+          .join(' &rarr; ') +
+        `</div>`,
+    )
+    .join('');
+  const replay = meta.clarityUrl
+    ? `<div style="padding-top:12px;">${button(meta.clarityUrl, 'Watch their sessions in Clarity', false)}</div>` +
+      `<div style="${muted}">Filter by Custom user ID: ${esc(p.visitorId)}</div>`
+    : '';
+  return (
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${factRows}</table>` +
+    heading('Longest on') +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${topRows}</table>` +
+    heading('Visit by visit') +
+    visitRows +
+    replay
+  );
 }
 
 function button(href: string, label: string, primary: boolean): string {
@@ -358,6 +437,8 @@ function html(q: Inquiry, meta: InquiryMeta, subject: string): string {
           `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${originHtml}</table>`,
         )
       : '') +
+    // Their trail on the site, when there is one.
+    (meta.profile ? section('Before they wrote', profileHtml(meta)) : '') +
     // Footer.
     `<tr><td style="padding:24px 28px 24px 28px;">` +
     `<div style="border-top:1px solid ${C.line};padding-top:14px;font-family:${FONT};font-size:12px;line-height:18px;color:${C.faint};">` +

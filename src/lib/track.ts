@@ -45,6 +45,7 @@
    ============================================================================ */
 
 import { noteVisit } from './attribution.ts';
+import { initTrail, noteEvent } from './trail.ts';
 
 export type TrackParams = Record<string, string | number | boolean>;
 
@@ -68,6 +69,12 @@ function gtagOf(win: unknown): Gtag | undefined {
  * click or a form. Params that are not short labels are dropped.
  */
 export function track(name: string, params: TrackParams = {}, win: unknown = globalThis): void {
+  // The visitor trail (src/lib/trail.ts) keeps the same events, whether or not GA4 is running.
+  try {
+    noteEvent(name, params);
+  } catch {
+    // Never in the way.
+  }
   const gtag = gtagOf(win);
   if (!gtag) return;
   const clean: TrackParams = {};
@@ -243,6 +250,8 @@ export function initTracking(): void {
   // First-touch attribution (src/lib/attribution.ts): stored in this browser only,
   // read by the contact form when someone chooses to send an inquiry.
   noteVisit();
+  // The visitor trail: this page opens, the last one is sent. A no-op off production.
+  initTrail();
   const w = window as unknown as { __ncsTrackBound?: boolean };
   if (!w.__ncsTrackBound) {
     w.__ncsTrackBound = true;
