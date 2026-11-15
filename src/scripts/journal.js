@@ -79,6 +79,7 @@ if (jx) {
       next = Math.min(list.length - 1, Math.max(0, top + step));
     if (next === top) return;
     top = next;
+    if (ui.cue) ui.cue('deal');
     layout();
   }
 

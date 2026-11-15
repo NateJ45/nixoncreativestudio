@@ -1,5 +1,6 @@
 /* The segmented bar (src/styles/seg-bar.css): the sliding pill under the pressed button in each
    .dw-seg, and the ink bloom a press draws. /work (work.js) and /journal (journal.js) both use it. */
+import { cue } from './sound.js';
 
 var $$ = function (a, r) {
   return [].slice.call(r.querySelectorAll(a));
@@ -56,3 +57,8 @@ export function bloom(b, e) {
     b.classList.remove('inking');
   }, 640);
 }
+
+/* A pressed chip ticks, for a visitor who has switched sound on (sound.js). */
+document.addEventListener('click', function (e) {
+  if (e.target.closest && e.target.closest('.dw-seg button')) cue('tick');
+});

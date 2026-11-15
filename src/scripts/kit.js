@@ -573,6 +573,7 @@ function puckFrame(t) {
   puckRaf = a || b ? requestAnimationFrame(puckFrame) : 0;
 }
 function puckGo(a, jump) {
+  if (!jump && ui.cue && (a || puckRest) !== puckTo) ui.cue('tick', 0.12);
   puckTo = a || puckRest;
   slide.style.opacity = puckTo && puckTo.offsetWidth ? 1 : 0;
   if (!puckTo) return;
@@ -858,6 +859,7 @@ function handShow(hand) {
   if (handOpen === hand) return;
   if (handOpen) handMark(handOpen, false);
   handOpen = hand;
+  if (ui.cue) ui.cue('deal');
   scrim.classList.add('on');
   handMark(hand, true);
   handWake();
@@ -982,6 +984,7 @@ ui.openSheet = function (s, el, restoring) {
   );
   sheet.scrollTop = 0;
   sheet.showModal();
+  if (ui.cue) ui.cue('open');
   $('[data-back]').focus({ preventScroll: true });
   doc.documentElement.style.overflow = 'hidden';
   pvPlay();
@@ -994,6 +997,7 @@ ui.openSheet = function (s, el, restoring) {
 var shutSheet = function () {
   if (!sheet.open || closing) return;
   closing = true;
+  if (ui.cue) ui.cue('close');
   if (opener) sheet.style.setProperty('--from', clipFor(opener.getBoundingClientRect()));
   sheet.classList.remove('on');
   setTimeout(

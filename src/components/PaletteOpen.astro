@@ -1,0 +1,21 @@
+---
+/* The way to the command palette without the keyboard: a "Search" button with a small key hint.
+   One sits in the closing's site index and one in the top line's "Text or email" card. The hint
+   reads Ctrl K, and src/scripts/palette.js changes it to the Mac's key on a Mac; on a touch screen
+   the hint is hidden, because there is no key to press. The palette needs script, so without it
+   the button is hidden (`.pal-open` in src/styles/elevate-b.css). */
+interface Props {
+  /** 'end' sits in the closing's site index; 'reach' sits in the top line's card. */
+  where?: 'end' | 'reach';
+}
+const { where = 'end' } = Astro.props;
+---
+
+<button class:list={['pal-open', `pal-open-${where}`]} type="button" data-pal-open>
+  <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+    <circle cx="8.8" cy="8.8" r="5.3"></circle>
+    <path d="m12.8 12.8 4.2 4.2"></path>
+  </svg>
+  <span>{where === 'reach' ? 'Search the site' : 'Search'}</span>
+  <kbd data-pal-key>Ctrl K</kbd>
+</button>

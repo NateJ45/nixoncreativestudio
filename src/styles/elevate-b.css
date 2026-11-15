@@ -1,0 +1,618 @@
+/* The quiet tools every page carries (src/components/SiteTools.astro imports this once):
+   previews on links, the sound switch, the command palette and its buttons, and the grip on the
+   client sheet. Colours are the tokens from kit.css, so every surface here turns over with the
+   theme, and a client's colour appears only round their own page in a preview. Each block ends
+   with its reduced-motion, forced-colors and print answers together at the foot of the file. */
+
+/* ==========================================================================
+   Previews on names (src/scripts/peek.js)
+   ==========================================================================
+   One card for the whole page, a manual popover, so it sits in the top layer. Where the browser
+   has anchor positioning it hangs over its link (`--peek` is put on the link by the script) and
+   the try list keeps it on the screen: over the link and centred first, then pushed to one side,
+   then under the link. Elsewhere the script writes left and top. It comes up on the house bounce,
+   from a little low and turned, like a card dealt up; it goes more quickly than it came. */
+.peek {
+  position: fixed;
+  inset: auto;
+  width: max-content;
+  max-width: min(23rem, calc(100vw - 1.5rem));
+  margin: 0.6rem 0;
+  padding: 1rem 1.1rem;
+  border: 0;
+  border-radius: 1.1rem;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 26px 44px -22px rgba(0, 0, 0, 0.5);
+  font: 400 0.9375rem/1.35 var(--body);
+  text-align: left;
+  cursor: pointer;
+  overflow: visible;
+  position-anchor: --peek;
+  position-area: top;
+  position-try-fallbacks:
+    top span-right,
+    top span-left,
+    bottom,
+    bottom span-right,
+    bottom span-left;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transform: translateY(0.35rem) scale(0.96);
+  transition:
+    opacity 0.12s,
+    transform 0.16s var(--ease),
+    overlay 0.16s allow-discrete,
+    display 0.16s allow-discrete;
+}
+/* Under its link it grows from its top edge instead. */
+.peek.below {
+  transform-origin: 50% 0;
+}
+/* No anchor positioning: the script places it, so the margin that made the gap comes off. */
+.peek.peek-js {
+  margin: 0;
+}
+.peek:popover-open {
+  display: block;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.14s,
+    transform 0.5s cubic-bezier(0.3, 1.45, 0.5, 1),
+    overlay 0.16s allow-discrete,
+    display 0.16s allow-discrete;
+}
+@starting-style {
+  .peek:popover-open {
+    opacity: 0;
+    transform: translateY(0.9rem) scale(0.82) rotate(-3deg);
+  }
+  .peek.below:popover-open {
+    transform: translateY(-0.9rem) scale(0.82) rotate(-3deg);
+  }
+}
+.peek span,
+.peek strong {
+  display: block;
+}
+.peek strong {
+  font: 500 1.25rem/1.08 var(--display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.peek .label {
+  margin-bottom: 0.35rem;
+}
+/* What sits under a card's main line: the outcome, the reading time, the date the prices hold. */
+.peek-out,
+.peek-foot {
+  margin-top: 0.4rem;
+  color: var(--soft);
+}
+
+/* A case study: the client's phone page in their own colour, the way the grid's windows wear it,
+   leaning a little like a card just dealt, and the name, sector and outcome beside it. */
+.peek-work {
+  padding: 0.85rem 1.1rem 0.85rem 0.95rem;
+}
+.peek-work:popover-open {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.peek-win {
+  flex: none;
+  width: 5.25rem;
+  aspect-ratio: 320 / 660;
+  padding: 0.32rem 0.22rem 0.38rem;
+  border-radius: 0.85rem;
+  background: var(--c);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 12px 20px -12px rgba(0, 0, 0, 0.5);
+  rotate: -3deg;
+}
+.peek-win img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.6rem;
+  background: var(--screen);
+  object-fit: cover;
+  object-position: top;
+}
+.peek-say {
+  min-width: 0;
+  max-width: 14.5rem;
+}
+.peek .peek-host {
+  margin: 0.6rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* The prices: three ruled rows, money on the right in even figures. A list, so it is ruled and
+   not boxed. */
+.peek-prices {
+  width: 21rem;
+}
+.peek-row {
+  border-top: 1px solid var(--line);
+}
+.peek .peek-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+.peek-tier strong {
+  font: 600 1rem/1.25 var(--body);
+  letter-spacing: 0;
+}
+.peek-tier span {
+  color: var(--soft);
+  font-size: 0.875rem;
+}
+.peek-from {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.peek-prices .peek-foot {
+  margin: 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.875rem;
+}
+
+/* A journal post: its cluster, its title, how long it takes to read. */
+.peek-post {
+  max-width: min(18.5rem, calc(100vw - 1.5rem));
+}
+
+/* ==========================================================================
+   The sound switch (src/components/SoundSwitch.astro, src/scripts/sound.js)
+   ==========================================================================
+   Both labels are in the markup; aria-pressed picks one. In the closing it is a `.turn`, the same
+   fine-print line as the light and dark switch. In the dock's theme hand it is a third small card
+   in the page's own colours, with five bars that lie flat when sound is off and stand when on. */
+[data-sound][aria-pressed='true'] .snd-off,
+[data-sound][aria-pressed='false'] .snd-on {
+  display: none;
+}
+.fc-snd {
+  --mg: var(--card);
+  --mi: var(--ink);
+  --ms: var(--soft);
+  --mf: var(--fill);
+}
+.fc-snd .fc-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.32rem;
+  background: var(--well);
+}
+.fc-snd .fc-bars i {
+  flex: none;
+  width: 0.32rem;
+  height: 0.32rem;
+  margin: 0;
+  transition:
+    height 0.45s cubic-bezier(0.3, 1.5, 0.5, 1),
+    background 0.2s;
+}
+.fc-snd[aria-pressed='true'] .fc-bars i {
+  height: 1.1rem;
+  background: var(--accent);
+  opacity: 1;
+}
+.fc-snd[aria-pressed='true'] .fc-bars i:nth-child(2) {
+  height: 1.9rem;
+  transition-delay: 40ms;
+}
+.fc-snd[aria-pressed='true'] .fc-bars i:nth-child(3) {
+  height: 2.5rem;
+  transition-delay: 80ms;
+}
+.fc-snd[aria-pressed='true'] .fc-bars i:nth-child(4) {
+  height: 1.5rem;
+  transition-delay: 120ms;
+}
+.fc-snd[aria-pressed='true'] .fc-bars i:nth-child(5) {
+  height: 0.8rem;
+  transition-delay: 160ms;
+}
+
+/* ==========================================================================
+   The command palette (src/components/Palette.astro, src/scripts/palette.js)
+   ==========================================================================
+   A card from the kit: lettered K in two corners, the faint inner rule, hairline rows. It drops in
+   from a little above on the house bounce and leaves more quickly. `dialog.pal.card` on purpose:
+   `.keyed` sets position: relative later in kit.css, which would take a dialog out of its place
+   in the top layer (the same trap `.reach.card` notes). */
+dialog.pal.card {
+  --cardr: 1.25rem;
+  --pips: 1.25rem;
+  --pipx: 1.2rem;
+  --pipy: 1.05rem;
+  position: fixed;
+  inset: min(12vh, 6rem) 0 auto;
+  width: min(38rem, calc(100vw - 1.5rem));
+  max-width: none;
+  max-height: calc(100dvh - min(12vh, 6rem) - 1.5rem);
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  overflow: hidden;
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 40px 70px -28px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateY(-0.5rem) scale(0.97);
+  transition:
+    opacity 0.14s,
+    transform 0.18s var(--ease),
+    overlay 0.18s allow-discrete,
+    display 0.18s allow-discrete;
+}
+dialog.pal.card[open] {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.14s,
+    transform 0.5s cubic-bezier(0.3, 1.4, 0.5, 1),
+    overlay 0.18s allow-discrete,
+    display 0.18s allow-discrete;
+}
+@starting-style {
+  dialog.pal.card[open] {
+    opacity: 0;
+    transform: translateY(-1.3rem) scale(0.9) rotate(-2deg);
+  }
+}
+/* The page steps back behind it. Plain shade, no blur. */
+.pal::backdrop {
+  background: rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transition:
+    opacity 0.18s,
+    overlay 0.18s allow-discrete,
+    display 0.18s allow-discrete;
+}
+.pal[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  .pal[open]::backdrop {
+    opacity: 0;
+  }
+}
+.pal .pip {
+  color: var(--accent);
+}
+.pal-top {
+  flex: none;
+  padding: 1.05rem 1.25rem 0.95rem;
+}
+/* Beside the corner letter, on its line. */
+.pal-top > .label {
+  display: block;
+  padding-left: 1.75rem;
+  line-height: 1.25rem;
+}
+.pal-field {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+/* 16px or more, so an iPhone does not zoom when it takes focus. The edge is the field edge, 3:1. */
+.pal-q {
+  flex: 1;
+  min-width: 0;
+  height: 3rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--field-edge);
+  border-radius: 0.8rem;
+  background: var(--sunk);
+  color: var(--ink);
+  font: 400 1.0625rem/1 var(--body);
+}
+.pal-q::placeholder {
+  color: var(--soft);
+  opacity: 1;
+}
+.pal-q:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pal-x {
+  flex: none;
+  height: 3rem;
+  padding: 0 1.05rem;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--wash);
+  color: var(--ink);
+  font: 500 0.9375rem/1 var(--body);
+  cursor: pointer;
+}
+.pal-list {
+  flex: 1;
+  min-height: 0;
+  padding: 0 0.7rem 0.6rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 0.6rem;
+}
+.pal-group > .label {
+  margin: 0;
+  padding: 0.85rem 0.55rem 0.4rem;
+}
+/* A row: the name, and a quieter word about it on the right. A link or a button, drawn the same. */
+.pal-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 1rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.55rem 0.6rem 0.85rem;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 1rem/1.3 var(--body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pal-s {
+  color: var(--soft);
+  font-weight: 400;
+  font-size: 0.9375rem;
+}
+/* The row the keyboard or the pointer is on: a wash, and a bar of the blue down its left, so it
+   is never colour alone. */
+.pal-row[aria-selected='true'] {
+  border-radius: 0.6rem;
+  border-top-color: transparent;
+  background: var(--wash);
+}
+.pal-row[aria-selected='true'] + .pal-row {
+  border-top-color: transparent;
+}
+.pal-row[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0.6rem;
+  bottom: 0.6rem;
+  width: 3px;
+  border-radius: 99rem;
+  background: var(--accent);
+}
+.pal-none {
+  margin: 0;
+  padding: 1.4rem 1.25rem 1.6rem;
+  color: var(--soft);
+}
+/* Said to a screen reader only: how many results, and that the email was copied. */
+.pal-say {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.pal-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  /* Room on the right for the upside-down corner letter. */
+  min-height: 2.9rem;
+  padding: 0.5rem 3.1rem 0.7rem 1.25rem;
+  border-top: 1px solid var(--line);
+}
+.pal-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+}
+.pal-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+/* A key: a small outlined cap in the label voice. */
+.pal kbd,
+.pal-open kbd {
+  display: inline-block;
+  min-width: 1.4rem;
+  padding: 0.22rem 0.36rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  font: 500 0.75rem/1 var(--body);
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: none;
+}
+/* The / switch. On: its key is filled. Off: struck through as well, so it is not colour alone. */
+.pal-slash {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.3rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: none;
+  cursor: pointer;
+}
+.pal-slash[aria-pressed='true'] kbd {
+  border-color: var(--fill);
+  background: var(--fill);
+  color: #fff;
+}
+.pal-slash[aria-pressed='false'] {
+  text-decoration: line-through;
+}
+
+/* The buttons that open it (PaletteOpen.astro). Hidden until script runs, like the theme switch. */
+.pal-open {
+  display: none;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.js .pal-open {
+  display: inline-flex;
+}
+.pal-open svg {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+/* In the closing's site index it is one more line of the column, white on the blue. */
+.pal-open-end {
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pal-open-end:hover {
+  transform: translateX(0.2rem);
+}
+.pal-open-end:hover span {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+/* In the top line's card it is a ruled row under the button, with its key at the far end. */
+.pal-open-reach {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+.pal-open-reach:hover {
+  color: var(--accent);
+}
+.pal-open-reach kbd {
+  margin-left: auto;
+  color: var(--soft);
+}
+/* No keyboard to press on a touch screen, so no key hints there, and no switch for the / key. */
+@media (hover: none) {
+  .pal-open kbd,
+  .pal-keys,
+  .pal-slash {
+    display: none;
+  }
+}
+/* A phone: nearer the top, so the list keeps some room above the keyboard. */
+@media (max-width: 40rem) {
+  dialog.pal.card {
+    inset: 0.75rem 0 auto;
+    max-height: calc(100dvh - 1.5rem);
+  }
+}
+
+/* ==========================================================================
+   Drag to dismiss on the client sheet (src/scripts/sheet-drag.js)
+   ==========================================================================
+   Touch only. A small grip at the top of the sheet says it can be pulled, in the client's own
+   text colour, and while a finger has the sheet its top corners round off like a card's. */
+@media (hover: none) and (pointer: coarse) {
+  .js .sheet::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0.5rem;
+    z-index: 3;
+    width: 2.5rem;
+    height: 0.3rem;
+    margin-left: -1.25rem;
+    border-radius: 99rem;
+    background: currentColor;
+    opacity: 0.4;
+  }
+}
+.sheet.on.dragging {
+  clip-path: inset(0 0 0 0 round 1.75rem 1.75rem 0 0);
+  transition: none;
+}
+
+/* ==========================================================================
+   Reduced motion, forced colors, print
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  /* A preview and the palette simply appear and go; the bars are just standing or flat. */
+  .peek,
+  .peek:popover-open,
+  dialog.pal.card,
+  dialog.pal.card[open],
+  .pal::backdrop,
+  .fc-snd .fc-bars i,
+  .pal-open-end {
+    transition: none;
+  }
+  .peek,
+  .peek:popover-open,
+  dialog.pal.card,
+  dialog.pal.card[open] {
+    transform: none;
+  }
+  .pal-open-end:hover {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  /* Edges that were only a shadow, and a chosen row that was only a wash. */
+  .peek,
+  .peek-win,
+  dialog.pal.card {
+    border: 1px solid CanvasText;
+  }
+  .pal-row[aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+@media print {
+  .peek,
+  .pal,
+  .pal-open {
+    display: none !important;
+  }
+}
