@@ -190,8 +190,23 @@ test.describe('Home', () => {
   test('a card keeps its hover while the pointer is near where it rested', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/#prices');
-    await page.waitForTimeout(1200);
     const card = page.locator('[data-prices] > li').nth(1);
+    // The hand is dealt on arrival; measure the card once it has come to rest, not at a fixed time
+    // (on a busy machine the deal can still be moving after a second, and the pointer then misses).
+    let last = '';
+    await expect
+      .poll(
+        async () => {
+          await page.waitForTimeout(150);
+          const b = (await card.boundingBox())!;
+          const now = [b.x, b.y, b.width, b.height].map(Math.round).join();
+          const still = now === last;
+          last = now;
+          return still;
+        },
+        { timeout: 8000 },
+      )
+      .toBe(true);
     const box = (await card.boundingBox())!;
     const x = box.x + box.width / 2;
     await page.mouse.move(x, box.y + box.height - 6);

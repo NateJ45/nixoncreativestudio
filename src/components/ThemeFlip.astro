@@ -5,11 +5,13 @@
    to change. Turning it turns the whole page over (src/scripts/theme.js). It does nothing without
    script, so it is hidden without script too.
 
-   Two copies: one in the dock (wide screens, where the dock has room for the words) and one in the
-   closing band's fine print (every width, and the only one on a phone). */
+   Three copies: one in the dock (wide screens, where the dock has room for the words), one in the
+   top line (phones, where the dock has no room: a round moon or sun, the words kept for screen
+   readers only, so it is at the top of every page and comes back with the floating pills), and one
+   in the closing band's fine print (every width). */
 interface Props {
-  /** 'dock' sits in the floating menu; 'end' sits in the closing band's fine print. */
-  where?: 'dock' | 'end';
+  /** 'dock' sits in the floating menu; 'top' in the top line on phones; 'end' in the closing band's fine print. */
+  where?: 'dock' | 'top' | 'end';
 }
 const { where = 'dock' } = Astro.props;
 ---
@@ -19,13 +21,13 @@ const { where = 'dock' } = Astro.props;
     <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
       <path d="M15.5 12.6A6.5 6.5 0 0 1 7.4 4.5a6.5 6.5 0 1 0 8.1 8.1Z"></path>
     </svg>
-    Dark mode
+    <span class="turn-w">Dark mode</span>
   </span>
   <span class="turn-to-light">
     <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
       <circle cx="10" cy="10" r="3.4"></circle>
       <path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1M4.2 4.2l1.5 1.5M14.3 14.3l1.5 1.5M4.2 15.8l1.5-1.5M14.3 5.7l1.5-1.5"></path>
     </svg>
-    Light mode
+    <span class="turn-w">Light mode</span>
   </span>
 </button>

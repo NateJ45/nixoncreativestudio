@@ -3185,6 +3185,7 @@ html.ncs-gated .ncs-overlay {
   .reach,
   .top.float .mark,
   .top.float .status,
+  .top.float .turn-top,
   .fc {
     border: 1px solid CanvasText;
   }
@@ -3308,8 +3309,8 @@ html.ncs-gated .ncs-overlay {
 
 /* The light and dark switch (src/components/ThemeFlip.astro). It names what it will do, with an icon:
    "Dark mode" and a moon on the light side, "Light mode" and a sun on the dark side. One copy sits in
-   the dock on wide screens; a phone's dock has no room for the words, so there it lives only in the
-   closing band's fine print. */
+   the dock on wide screens; a phone's dock has no room for it, so there a round moon or sun sits in
+   the top line (.turn-top, below). The closing band's fine print has one at every width. */
 .turn {
   position: relative;
   z-index: 1;
@@ -3371,6 +3372,75 @@ html.ncs-gated .ncs-overlay {
 @media (max-width: 40rem) {
   .dock .turn-dock {
     display: none;
+  }
+}
+
+/* In the top line, phones only: where the dock drops its switch, a round moon (or sun on the dark
+   side) sits just left of the status, so the switch is at the top of every page and comes back with
+   the floating pills on the way up. The words stay for screen readers. To make the room, the status
+   shows a speech bubble in place of "Text or email" at the same width (its name is unchanged). */
+.top .turn-top {
+  display: none;
+}
+.turn-top .turn-w,
+.status .st-ico {
+  display: none;
+}
+@media (max-width: 40rem) {
+  .js .top .turn-top {
+    display: inline-flex;
+    justify-content: center;
+    /* The free space goes before the switch, so it sits beside the status, not mid-line. The
+       status pill is pulled 0.85rem outward (.status margins), so this keeps a gap between pills. */
+    margin-left: auto;
+    margin-right: 0.225rem;
+    width: 2.75rem;
+    padding: 0;
+    color: var(--soft);
+    transition:
+      background-color 0.25s,
+      box-shadow 0.25s;
+  }
+  .turn-top .turn-w {
+    display: inline;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .top .turn-top svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .js .status .st-words {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .js .status .st-ico {
+    display: block;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .top.on-color .turn-top {
+    color: var(--oncolor, #fff);
+  }
+  /* Floating: its own small pill, the same as the two corners. */
+  .top.float .turn-top {
+    pointer-events: auto;
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    color: var(--ink);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 1px 2px rgba(0, 0, 0, 0.08),
+      0 14px 34px -12px rgba(0, 0, 0, 0.34);
   }
 }
 

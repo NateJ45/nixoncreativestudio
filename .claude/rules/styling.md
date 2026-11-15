@@ -74,7 +74,7 @@ A card is drawn with a shadow and a background, so `kit.css` gives `.tile`, `.ca
 
 ## Top line
 
-`TopLine.astro` is the name and the status button, plus the `.reach` popover. `kit.js` adds `.float` and a transform (the pills on scrolling up) and splits the name into `.lt` letters on first use. Colors are tokens, so it follows the theme; `.top.float.on-color` puts it back on `--ink` once it has left the client's color. A new bar that sticks to the top of the screen joins the `topBar` selector in `kit.js` (today `'.dw-bar, .toc, .jump'`), so the pills do not land on it.
+`TopLine.astro` is the name, the phone theme switch (`.turn-top`, shown at 40rem and under, its own pill when floating) and the status button, plus the `.reach` popover. `kit.js` adds `.float` and a transform (the pills on scrolling up) and splits the name into `.lt` letters on first use. Colors are tokens, so it follows the theme; `.top.float.on-color` puts it back on `--ink` once it has left the client's color. A new bar that sticks to the top of the screen joins the `topBar` selector in `kit.js` (today `'.dw-bar, .toc, .jump'`), so the pills do not land on it.
 
 ## Fixed elements
 
