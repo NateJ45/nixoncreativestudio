@@ -2940,6 +2940,22 @@ html:not(.js) .jump-prog {
     padding-top: 1.75rem;
     transform: rotateY(180deg);
   }
+  /* The face turned away is hidden once the turn has finished, not only turned. Otherwise, on a
+     phone, the back (taller than the front) hangs below the card while you read the front: unseen,
+     but still on top of the next section, where it took taps and read to contrast checkers as an
+     ink panel behind the "Three questions" heading. The face coming round shows at once; the one
+     leaving waits out the 0.8s turn. Under reduced motion the turn has no transition, so both
+     simply swap. */
+  .js .tier:not(.over) .t-back,
+  .js .tier.over .t-front {
+    visibility: hidden;
+    transition: visibility 0s 0.8s;
+  }
+  .js .tier.over .t-back,
+  .js .tier:not(.over) .t-front {
+    visibility: visible;
+    transition: visibility 0s;
+  }
   .js .t-back > .t-fits:first-of-type {
     margin-top: 0;
   }
@@ -3037,7 +3053,8 @@ html:not(.js) .jump-prog {
 }
 @media screen and (prefers-reduced-motion: reduce) {
   .js .t-turn,
-  .js .t-flip {
+  .js .t-flip,
+  .js .tier .t-face {
     transition: none;
   }
 }

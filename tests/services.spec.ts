@@ -283,7 +283,11 @@ test.describe('Prices', () => {
     page,
   }) => {
     await page.goto('/services/');
-    const blocks = await page.locator('.t-keep').allInnerTexts();
+    // The block is on each card's back, hidden until that card is turned, so read the words in the
+    // markup rather than the rendered text.
+    const blocks = (await page.locator('.t-keep').allTextContents()).map((t) =>
+      t.replace(/\s+/g, ' ').trim(),
+    );
     expect(blocks).toHaveLength(3);
     expect(new Set(blocks).size).toBe(1);
     expect(blocks[0]).toContain('I host it');
