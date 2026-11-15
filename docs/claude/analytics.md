@@ -81,8 +81,12 @@ it. Bing Webmaster Tools (set up 2026-11-10 by GSC import) matters as well: Bing
 - One connected JSON-LD `@graph` per page (`src/lib/schema.ts`): ProfessionalService +
   LocalBusiness with `knowsAbout`, Person with headshot and `knowsAbout`, Offers with real prices,
   FAQPage on /services, CreativeWork per case study, breadcrumbs.
-- `/llms.txt` for AI tools: who, prices, studies, plus "good fit" and "common questions" blocks
-  built from `site.ts` and `pricing.ts`.
+- `/llms.txt` for AI tools: who, prices, studies, every journal post with its `shortAnswer`, plus
+  "good fit" and "common questions" blocks built from `site.ts` and `pricing.ts`.
+- Sector pages link down to their journal answers ("Questions people ask first",
+  `src/components/SectorReading.astro`, matched on the post's `sector`, lab posts left out), and each
+  post's end card links back up. /journal/ is a `CollectionPage`. Audit and ranked next steps:
+  vault `projects/ncs-seo-aeo-audit-2026-11`.
 - robots.txt names and allows the AI crawlers.
 - Cloudflare Crawler Hints is on (since 2026-04-11), so changed pages are pinged to Bing and
   others through IndexNow.
