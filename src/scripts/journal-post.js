@@ -5,6 +5,18 @@
    reachable by keyboard, so the wrapper is a focusable region named after the table's first column.
    A paragraph straight after it that starts "Source" is its source line and sits under the card.
 
+   Margin notes (Aside.astro, .mnote). From 85rem a note sits in the right margin. CSS alone lines
+   its foot up with the foot of the table above it; here it is lifted level with the table's top
+   instead (--note-up), and kept there when the table changes size.
+
+   Charts (BarChart.astro, .pchart). A chart that starts below the fold waits with its bars at no
+   length, and they draw out to their real lengths as it arrives, one a beat after the last. The
+   lengths are in the markup, so with no script, on the first screen, on a page that loaded
+   scrolled and under reduced motion the chart is simply drawn.
+
+   The marker. The short answer's key phrase (.hl) is marked across once the card is on screen,
+   the way a quote band's is. The words are readable throughout; only the marker's ink waits.
+
    Contents. One <nav popover> is the sticky rail on a wide screen and, on a phone, the list the
    "Contents" pill opens (both work without this script). Here: the heading you are reading gets
    aria-current and the blue mark beside it, the pill shows its name, and choosing a link in the
@@ -38,6 +50,42 @@ if (prose) {
     }
   });
 }
+
+/* Margin notes: level with the top of the table or chart they follow. */
+all('[data-mnote]').forEach(function (note) {
+  var above = note.previousElementSibling;
+  if (!above || !/\b(tbl|pchart)\b/.test(above.className)) return;
+  var place = function () {
+    note.style.setProperty('--note-up', above.offsetHeight + 'px');
+  };
+  place();
+  if ('ResizeObserver' in window) new ResizeObserver(place).observe(above);
+});
+
+/* Charts and the marker wait only when they start below the fold, and only with motion allowed. */
+var canWait = !reduce && 'IntersectionObserver' in window && !(ui.restored && ui.restored());
+var arrive = function (el, waitClass, threshold) {
+  if (!canWait || el.getBoundingClientRect().top < innerHeight) return;
+  el.classList.add(waitClass);
+  var see = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        el.classList.add('in');
+        see.disconnect();
+      });
+    },
+    { threshold: threshold },
+  );
+  see.observe(el);
+};
+all('[data-pchart] .pchart-fig').forEach(function (fig) {
+  arrive(fig, 'pchart-wait', 0.35);
+});
+/* The marker is on the first screen on most windows, so it does not wait for a scroll: it is
+   drawn across shortly after load, and stays put under reduced motion. */
+var sa = doc.querySelector('[data-sa]');
+if (sa && sa.querySelector('.hl') && !reduce) sa.classList.add('hl-on');
 
 var toc = doc.querySelector('[data-toc]');
 if (toc && prose) {

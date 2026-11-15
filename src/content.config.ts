@@ -474,6 +474,11 @@ const journal = defineCollection({
       // sentences with a real number or range. Plain text, no markdown.
       shortAnswer: z.string().min(40).max(600),
 
+      // The one phrase in the short answer the marker draws across on the post's
+      // card. Copied exactly from shortAnswer (the page stops the build if it is
+      // not in it, and src/lib/journal.test.ts checks every post). Optional.
+      highlight: z.string().min(8).max(200).optional(),
+
       // A cost post: the short answer card also prints the receipt from /services
       // (PostReceipt.astro), with the real numbers from src/data/pricing.ts.
       receipt: z.boolean().default(false),
