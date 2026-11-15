@@ -1,0 +1,216 @@
+---
+/* Home, "Your team edits it. Try it.": a small editor beside a live preview, so a visitor can do
+   the thing every church and school asks about, change the site themselves, before they ask.
+
+   What is real and what is not:
+   - The organization is MADE UP (Maple Street Community Center) and says so twice in label voice:
+     "Demo" on the editor's bar and "Demo, not a client" over the phone. It wears no client's
+     colour: the phone is the page's own ink. Its events have weekdays and no dates.
+   - The three photographs are Nathan's own, from the `photos` collection, through astro:assets.
+     None shows a person who could be taken for the made-up organization's staff or members.
+   - The one sentence under it says only what the Prices page says: every build comes with an
+     editor and a written guide, on WordPress or Sanity (services.astro, "Behind the site" and
+     the tier features in src/data/pricing.ts). Do not go beyond that here.
+   - Nothing is saved or sent anywhere. Publish only presses the stamp.
+
+   src/scripts/edit-demo.js wires it: typing updates the preview with a small spring, the photo
+   swaps, the events band folds away, Publish presses the rubber stamp (src/styles/stamp.css)
+   and plays ui.cue('stamp'), Reset puts it back. A polite live region says "Preview updated".
+
+   With no JavaScript the controls stay disabled (the fieldset is authored `disabled` and the
+   script enables it), so the section is a still picture of an editor and the page it edits,
+   with the sentence under it. */
+import { getImage } from 'astro:assets';
+import { getEntry } from 'astro:content';
+import { LOCK, TOOLS } from '../../lib/window-chrome';
+import '../../styles/stamp.css';
+
+const NAME = 'Maple Street Community Center';
+const HEADLINE = 'A place for the whole neighborhood';
+const HOURS = 'Open Monday to Saturday, 9 to 6';
+
+/* Three of my own photographs. The label is what the editor calls each one. */
+const CHOICES = [
+  { id: 'library-dusk', label: 'Building' },
+  { id: 'ig-little-miami-river', label: 'River' },
+  { id: 'ig-hiker-ridge-view', label: 'Trail' },
+];
+const photos = await Promise.all(
+  CHOICES.map(async (c) => {
+    const entry = await getEntry('photos', c.id);
+    if (!entry) throw new Error(`Edit demo: no photo called ${c.id}`);
+    /* One 3:2 crop a photo, used by both the editor's thumbnail and the preview, so each is
+       fetched once. 600px covers the preview at twice its widest size. */
+    const img = await getImage({
+      src: entry.data.image,
+      width: 600,
+      height: 400,
+      fit: 'cover',
+      format: 'webp',
+    });
+    return { ...c, src: img.src, alt: entry.data.alt };
+  }),
+);
+
+/* Made-up events for the made-up centre: weekdays only, never a date. */
+const events = [
+  { day: 'Saturday', what: 'Pancake breakfast' },
+  { day: 'Tuesday', what: 'Chair yoga' },
+];
+---
+
+<section class="sec try" id="edit" aria-labelledby="try-h">
+  <div class="try-head">
+    <p class="label">Behind the site</p>
+    <h2 id="try-h">
+      Your team edits it. <b>Try it.</b>
+    </h2>
+    <p>
+      Change something in the editor and watch the page change. The organization is made up for this
+      demo.
+    </p>
+  </div>
+
+  <div class="try-grid" data-edit data-headline={HEADLINE} data-hours={HOURS}>
+    <form class="card ed" aria-label="Demo editor" data-ed-form>
+      <div class="ed-bar">
+        <p class="label">
+          Editor <i>Demo</i>
+        </p>
+        <p class="ed-state" data-ed-state>
+          Draft
+        </p>
+      </div>
+      <fieldset class="ed-fields" data-ed-fields disabled>
+        <legend class="vh">The demo home page</legend>
+        <label class="ed-f">
+          <span class="ed-l">Headline</span>
+          <input
+            type="text"
+            name="headline"
+            value={HEADLINE}
+            maxlength="44"
+            autocomplete="off"
+            enterkeyhint="done"
+            data-ed-headline
+          />
+        </label>
+        <label class="ed-f">
+          <span class="ed-l">Opening hours</span>
+          <input
+            type="text"
+            name="hours"
+            value={HOURS}
+            maxlength="36"
+            autocomplete="off"
+            enterkeyhint="done"
+            data-ed-hours
+          />
+        </label>
+        <fieldset class="ed-photos">
+          <legend class="ed-l">Photo</legend>
+          <div class="ed-ph-row">
+            {photos.map((p, i) => (
+              <label class="ed-ph">
+                <input type="radio" name="photo" value={i} checked={i === 0} data-ed-photo />
+                <img src={p.src} alt="" width="600" height="400" loading="lazy" decoding="async" />
+                <span>{p.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <label class="ed-sw">
+          <input type="checkbox" role="switch" name="events" checked data-ed-events />
+          <span class="ed-sw-track" aria-hidden="true" />
+          <span class="ed-sw-l">Events band</span>
+        </label>
+        <div class="ed-go">
+          <button type="submit" class="chip go" data-ed-publish>
+            Publish
+          </button>
+          <button type="button" class="chip ed-reset" data-ed-reset>
+            Reset
+          </button>
+        </div>
+      </fieldset>
+      <p class="ed-note" aria-live="polite" data-ed-note />
+    </form>
+
+    <figure class="try-stage">
+      <figcaption class="label">Demo, not a client</figcaption>
+      <div class="tile demo" data-ed-phone>
+        <span class="b-top" aria-hidden="true">
+          <span class="url">
+            <Fragment set:html={LOCK} />
+            <span>maplestreet.example</span>
+          </span>
+        </span>
+        <div class="scr demo-scr">
+          <div class="demo-page" role="group" aria-label={`Preview: the ${NAME} home page`}>
+            <p class="demo-nav">
+              <b>{NAME}</b>
+              <i aria-hidden="true" />
+            </p>
+            <div class="demo-photo" data-ed-shots>
+              {photos.map((p, i) => (
+                <img
+                  class:list={{ on: i === 0 }}
+                  src={p.src}
+                  alt={i === 0 ? p.alt : ''}
+                  data-alt={p.alt}
+                  width="600"
+                  height="400"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ))}
+            </div>
+            <div class="demo-body">
+              <p class="demo-h" data-ed-out-headline>
+                {HEADLINE}
+              </p>
+              <p class="demo-hours">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+                <span data-ed-out-hours>{HOURS}</span>
+              </p>
+              <p class="demo-btn">
+                <span>Plan a visit</span>
+              </p>
+            </div>
+            <div class="demo-events" data-ed-band>
+              <div>
+                <p class="demo-ev-l">Coming up</p>
+                <ul>
+                  {events.map((e) => (
+                    <li>
+                      <b>{e.day}</b>
+                      {e.what}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <span class="stamp demo-stamp" data-ed-stamp aria-hidden="true" hidden>
+            <span class="stamp-word">Published</span>
+          </span>
+        </div>
+        <span class="b-bot" aria-hidden="true">
+          <Fragment set:html={TOOLS} />
+        </span>
+      </div>
+    </figure>
+  </div>
+
+  <p class="try-true">
+    This one is a demo, so nothing is saved. Every build comes with an editor like it, on WordPress
+    or Sanity, and a written guide. <a href="/services/#behind">See what your staff see</a>
+  </p>
+</section>
+
+<script>
+  import '../../scripts/edit-demo.js';
+</script>

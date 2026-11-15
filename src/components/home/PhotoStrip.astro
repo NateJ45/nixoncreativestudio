@@ -1,0 +1,91 @@
+---
+/* Home, the photography strip: one full-width row of prints from the `photos` collection, so the
+   homepage shows that the person who builds the site also shoots for it. Each print is a link
+   to its own full view on the light table (/photography/?print=<slug>).
+
+   The row drifts sideways as the page scrolls and the prints bow a few degrees with the speed
+   of the scroll, then settle flat (src/scripts/home-more.js; transforms only). On a touch
+   screen, under reduced motion and with no script it is a still row that scrolls sideways by
+   hand, and every print is still a link the keyboard can reach.
+
+   No dates and no years, here or in any alt text (the photography rule). The pictures are lazy
+   and sized honestly, so they cost nothing until the row is near. The section only appears
+   while /photography/ is open (src/data/photography-gate.ts), so its links always lead
+   somewhere. Pick prints that differ: a wedding, a building, a portrait, children, a
+   wide view, a detail. */
+import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
+import { photoCount } from '../../data/nav';
+import { photographyOpen } from '../../data/photography-gate';
+
+const PICKS = [
+  'wedding-mountain-lift',
+  'ig-edinburgh-clock-tower',
+  'portrait-autumn',
+  'preschool-bubbles',
+  'ash-candle',
+  'library-dusk',
+  'family-meadow',
+  'school-run',
+  'ig-hiker-ridge-view',
+  'ig-little-miami-river',
+];
+
+const open = photographyOpen(await photoCount());
+const prints = open
+  ? await Promise.all(
+      PICKS.map(async (id) => {
+        const entry = await getEntry('photos', id);
+        if (!entry) throw new Error(`Photo strip: no photo called ${id}`);
+        const { image, alt } = entry.data;
+        /* Width over height: the row has one height, so this sets each print's width. */
+        const ar = image.width / image.height;
+        return { id, image, alt, ar };
+      }),
+    )
+  : [];
+
+/* The row's height is clamp(11rem, 20vw, 17rem) (home.css). So a print is 176px tall up to
+   880px wide, a fifth of the screen up to 1360px, then 272px. */
+const sizes = (ar: number) =>
+  `(max-width: 880px) ${Math.round(176 * ar)}px, (max-width: 1360px) ${(20 * ar).toFixed(1)}vw, ${Math.round(272 * ar)}px`;
+---
+
+{open && (
+  <section class="strip" aria-labelledby="strip-h" data-strip>
+    <div class="strip-head">
+      <div>
+        <p class="label">Photography</p>
+        <h2 id="strip-h">
+          I shoot the photos <b>too.</b>
+        </h2>
+      </div>
+      <div class="strip-say">
+        <p>
+          Portraits, buildings and people at work, shot for your site by the person who designed it.
+        </p>
+        <a class="chip go" href="/photography/">
+          See the photographs
+        </a>
+      </div>
+    </div>
+    <div class="strip-row" data-strip-row>
+      <ul class="strip-track" data-strip-track>
+        {prints.map((p, i) => (
+          <li style={`--ar:${p.ar.toFixed(4)};--n:${i}`}>
+            <a href={`/photography/?print=${p.id}`} data-cursor="Open" data-peek="off">
+              <Image
+                src={p.image}
+                alt={p.alt}
+                widths={[240, 360, 480, 640, 820]}
+                sizes={sizes(p.ar)}
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}

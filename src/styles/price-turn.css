@@ -1,0 +1,222 @@
+/* ============================================================================
+   The price cards turn over (src/components/PriceHand.astro, price-turn.js).
+   ============================================================================
+   Imported by PriceHand.astro, so it travels with the hand to every page that
+   deals it (Home and Churches). The hand itself, the faces and the deal are in
+   kit.css and are not restated here; this file only adds the turn.
+
+   The same turn as About's "Off the clock" (about.css, .otc): a holder that keeps
+   its children in 3D, a front and a back that each hide their far side, and one
+   rotateY on a spring-shaped curve. The back is the studio blue, like the back of
+   the deck, with white on it (the .chip.go pair, 7.1:1).
+
+   Selectors carry [data-pt] or sit under .pt-card so they outrank the kit.css
+   rules they adjust whichever file loads first.
+   ============================================================================ */
+.pc[data-pt] {
+  perspective: 1400px;
+}
+.pt-card {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.75s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+.pc.over .pt-card {
+  transform: rotateY(180deg);
+}
+/* The front keeps everything kit.css gave it. It only makes room at its foot for the button and
+   hides its far side. */
+.pt-card > .pc-face {
+  padding-bottom: 15cqw;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* The button. On the front it sits under the price, centred, in the card's own ink; on the back
+   it is the same pill on the blue. At least 36px tall and far wider, so it clears 24 by 24. */
+.pt-turn {
+  min-height: clamp(2.25rem, 13cqw, 2.75rem);
+  padding: 0 1.05rem;
+  border: 0;
+  border-radius: 99rem;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 34%, transparent);
+  color: var(--pci);
+  font: 600 clamp(0.875rem, 5cqw, 1rem) / 1 var(--body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pt-turn:hover {
+  transform: scale(1.04);
+}
+.pt-turn:active {
+  transform: scale(0.97);
+}
+.pt-turn:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 99rem;
+}
+.pt-card > .pt-turn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6.5cqw;
+  z-index: 1;
+  width: max-content;
+  margin-inline: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* The back: what the tier includes. It is at least the card's height and may run a little past
+   the foot on a narrow card, so a long list is never cut off. */
+.pt-back {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 100%;
+  padding: clamp(1.1rem, 8cqw, 1.6rem) clamp(1rem, 7.5cqw, 1.5rem);
+  border-radius: var(--cardr);
+  background-color: var(--fill);
+  background-image: var(--grain-ink, none);
+  color: #fff;
+  text-align: left;
+  transform: rotateY(180deg);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 26px 44px -22px rgba(0, 0, 0, 0.5);
+}
+.pt-back .label {
+  color: #fff;
+}
+.pt-back ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: clamp(0.8125rem, 4.9cqw, 0.9375rem);
+  line-height: 1.3;
+}
+.pt-back li {
+  padding: 0.42rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+}
+.pt-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  margin-top: auto;
+}
+.pt-foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  color: #fff;
+  font-weight: 600;
+  font-size: clamp(0.875rem, 5cqw, 1rem);
+  text-underline-offset: 0.2em;
+}
+.pt-back .pt-turn {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+  color: #fff;
+}
+.pt-back:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* No script: nothing can turn, so the card is the plain link it always was. What each tier
+   includes is one press away on the Prices page ("See what each one includes"). */
+html:not(.js) .pt-turn,
+html:not(.js) .pt-back {
+  display: none;
+}
+html:not(.js) .pt-card > .pc-face {
+  padding-bottom: 0;
+}
+
+/* Between the phone layout and a roomy desktop the hand shared a row with the copy, which left
+   each card about 11rem wide: too narrow for a list on its back. There the copy sits over the
+   hand, and the cards get the full width. */
+@media (min-width: 52.0625rem) and (max-width: 70rem) {
+  .dealt:has([data-pt]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A phone: kit.css stacks the cards as 15rem slabs that slide over each other. A slab has to be
+   able to grow to hold its back, so the two faces share one grid cell and the taller one sets
+   the height. */
+@media (max-width: 52rem) {
+  .pc[data-pt],
+  .pc[data-pt]:nth-child(n) {
+    height: auto;
+    min-height: 15rem;
+  }
+  .pt-card {
+    position: relative;
+    inset: auto;
+    display: grid;
+    min-height: 15rem;
+  }
+  .pt-card > .pc-face,
+  .pt-card > .pt-back {
+    position: relative;
+    inset: auto;
+    grid-area: 1 / 1;
+    min-height: 15rem;
+  }
+  .pt-card > .pc-face {
+    padding-bottom: 3.75rem;
+  }
+  .pt-card > .pt-turn {
+    bottom: 1rem;
+  }
+  .pt-turn {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+  .pt-back {
+    padding: 1.25rem 1.25rem 1.1rem;
+  }
+  .pt-back ul {
+    font-size: 0.9375rem;
+  }
+  .pt-foot a {
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-card,
+  .pt-turn {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .pt-back,
+  .pt-turn {
+    border: 1px solid CanvasText;
+    background-image: none;
+  }
+}
+@media print {
+  .pt-turn {
+    display: none;
+  }
+  .pt-back {
+    background-image: none;
+  }
+}

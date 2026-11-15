@@ -7,13 +7,24 @@
                  empty space the hand of clients is dealt into.
      Work        the giant "Eight selected case studies.", the ledger, and the grid. Every
                  window has one spot here; scroll carries it from the hand.
+     What changed  the sourced figures (the `proof` list below), each a wide card on its
+                 client's color (home/WhatChanged.astro).
      Quote band  every real client quote, one at a time, on its client's color with
                  their phone; Previous and Next step through them (quote-cycle.js).
-     Prices      the three cards, dealt out of a stack.
+     Edit it     "Your team edits it. Try it.": a demo editor beside a made-up
+                 organization's page in a phone (home/EditDemo.astro, edit-demo.js).
+     Photographs one row of my own prints that drifts with the scroll (home/PhotoStrip.astro).
+     Prices      the three cards, dealt out of a stack; each turns over (PriceHand.astro).
+     Process     the four steps of How it works, drawn in order (home/ProcessBeats.astro).
      Closing     the gathering deck and the "Start a project" card.
 
-   All of it is in the markup. src/scripts/home.js only moves the windows, so
-   with no JavaScript the hand's space collapses and the grid is simply the grid.
+   A quote band never touches the closing: the neutral sections after it keep them apart.
+
+   All of it is in the markup. src/scripts/home.js only moves the windows and
+   src/scripts/home-more.js the sections below them, so with no JavaScript the hand's
+   space collapses, the grid is simply the grid and every section is simply there.
+   The rules for the lower sections are in src/styles/pages/home.css; the hero, grid,
+   band and price hand stay in kit.css.
    ============================================================================ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Tile from '../components/Tile.astro';
@@ -21,6 +32,11 @@ import Caption from '../components/Caption.astro';
 import QuoteBand from '../components/QuoteBand.astro';
 import DealtPrices from '../components/DealtPrices.astro';
 import Closing from '../components/Closing.astro';
+import WhatChanged from '../components/home/WhatChanged.astro';
+import EditDemo from '../components/home/EditDemo.astro';
+import PhotoStrip from '../components/home/PhotoStrip.astro';
+import ProcessBeats from '../components/home/ProcessBeats.astro';
+import '../styles/pages/home.css';
 import { countWord, getClients } from '../lib/clients';
 import { webTiers } from '../data/pricing';
 import { site } from '../data/site';
@@ -40,8 +56,9 @@ const sectors = [
   { name: 'Small businesses', href: '/small-business/', key: 'small-business' },
 ].map((s) => ({ ...s, cards: clients.filter((c) => c.sectorKey === s.key).slice(0, 3) }));
 
-/* Results under the phones: real counts from the case studies, each linking to the study that
-   sources it. */
+/* What changed: real counts from the case studies, each linking to the study that sources it.
+   Each figure is sourced in its case study's frontmatter comments. Add one here only once the
+   client has seen it published there, and never reword a number. */
 const proof = [
   {
     slug: 'west-chester-preschool',
@@ -172,20 +189,8 @@ const heavy = ['pull', 'their', 'weight.'];
         </li>
       ))}
     </ul>
-    {/* Each figure is sourced in its case study's frontmatter comments. Add one here only once the
-        client has seen it published there. */}
-    <ul class="proof" aria-label="What changed for clients">
-      {proof.map((p) => (
-        <li>
-          <a href={`/work/${p.slug}/`}>
-            <strong data-roll>{p.figure}</strong>
-            <span>{p.what}</span>
-            <span class="label">{p.who}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
   </section>
+  <WhatChanged proof={proof} clients={clients} />
   <QuoteBand
     slug="theology-matters"
     label="In their words"
@@ -193,11 +198,15 @@ const heavy = ['pull', 'their', 'weight.'];
     cycle
     ariaLabel="What clients say"
   />
+  <EditDemo />
+  <PhotoStrip />
   <DealtPrices id="prices" />
+  <ProcessBeats />
   <Closing />
 </BaseLayout>
 
 <script>
   import '../scripts/home.js';
+  import '../scripts/home-more.js';
   import '../scripts/quote-cycle.js';
 </script>

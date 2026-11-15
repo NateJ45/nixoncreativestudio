@@ -1,0 +1,991 @@
+/* ============================================================================
+   Home, below the grid: What changed, "Your team edits it", the photography
+   strip and the four process beats.
+   ============================================================================
+   The hero, the work grid, the quote band and the price hand were built first
+   and their rules stay in kit.css. This file holds only the sections added
+   after them (src/components/home/*.astro), in page order. Scripts:
+   src/scripts/home-more.js and src/scripts/edit-demo.js.
+
+   Colours are tokens. A client's colour arrives as --c and --p on their own
+   card and nowhere else. The demo phone wears the page's ink, never a client's.
+   ============================================================================ */
+
+/* A section's head: a label, the heading, and a line beside or under it. */
+.chg-head,
+.try-head,
+.strip-head {
+  max-width: 78rem;
+  margin: 0 auto clamp(1.75rem, 3.5vw, 3rem);
+}
+.chg-head h2,
+.try-head h2,
+.strip-head h2 {
+  margin-top: 0.9rem;
+  font-size: var(--type-h2);
+  font-weight: 500;
+}
+.chg-head h2 b,
+.try-head h2 b,
+.strip-head h2 b {
+  font-weight: 700;
+}
+.chg-head > p:not(.label),
+.try-head > p:not(.label),
+.strip-say p {
+  max-width: 34rem;
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------------------
+   What changed: one wide card a figure, on its client's colour.
+   --------------------------------------------------------------------------- */
+.chg {
+  padding-top: clamp(1rem, 4vh, 3rem);
+}
+.chg-list {
+  display: grid;
+  gap: clamp(0.75rem, 1.4vw, 1.25rem);
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.chg-list li {
+  container-type: inline-size;
+}
+/* Set slightly by hand, like the cards elsewhere. */
+.chg-list li:nth-child(odd) {
+  --tilt: -0.35deg;
+}
+.chg-list li:nth-child(even) {
+  --tilt: 0.35deg;
+}
+.chg-card {
+  display: grid;
+  grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+  grid-template-areas:
+    'fig what'
+    'fig foot';
+  align-items: center;
+  gap: 0.75rem clamp(1.5rem, 4cqw, 4rem);
+  min-height: clamp(9rem, 17cqw, 13.5rem);
+  padding: clamp(1.4rem, 3.4cqw, 2.75rem) clamp(1.4rem, 4.2cqw, 3.5rem);
+  border-radius: 1.75rem;
+  background-color: var(--c);
+  background-image: var(--grain-ink, none);
+  color: var(--p);
+  text-decoration: none;
+  transform: rotate(var(--tilt, 0deg));
+  box-shadow:
+    var(--rim),
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    var(--lean, 0px) 24px 44px -28px rgba(0, 0, 0, 0.5);
+}
+.chg-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 1.75rem;
+}
+.chg-fig {
+  grid-area: fig;
+  font: 700 clamp(2.75rem, 10.4cqw, 7.25rem) / 0.95 var(--display);
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+.chg-what {
+  grid-area: what;
+  align-self: end;
+  font: 500 clamp(1.125rem, 2.1cqw, 1.625rem) / 1.25 var(--display);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.chg-foot {
+  grid-area: foot;
+  align-self: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--p) 34%, transparent);
+}
+.chg-foot .label {
+  color: var(--p);
+}
+.chg-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+.chg-go svg {
+  width: 1.15em;
+  height: 1.15em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+/* Reaching for a card: the arrow steps forward and the underline thickens, so it is never colour
+   alone. The card itself stays put, so it cannot lift off the pointer. */
+.chg-card:hover .chg-go,
+.chg-card:focus-visible .chg-go {
+  text-decoration-thickness: 2px;
+}
+.chg-card:hover .chg-go svg,
+.chg-card:focus-visible .chg-go svg {
+  transform: translateX(0.3em);
+}
+/* The deal (home-more.js adds .chg-wait to the list and .held to each card that started below
+   the fold, then takes .held off as the card arrives). */
+.chg-wait .chg-card {
+  transition:
+    transform 0.9s cubic-bezier(0.3, 1.35, 0.5, 1),
+    opacity 0.3s;
+}
+.chg-wait .chg-card.held {
+  opacity: 0;
+  transform: translateY(3.5rem) rotate(calc(var(--tilt, 0deg) * -7));
+}
+@media (max-width: 44rem) {
+  .chg-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'fig'
+      'what'
+      'foot';
+    align-items: start;
+    min-height: 0;
+    border-radius: 1.5rem;
+  }
+  .chg-fig {
+    font-size: clamp(2.75rem, 15cqw, 5rem);
+  }
+  .chg-what {
+    align-self: start;
+    margin-top: 0.35rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   "Your team edits it. Try it.": the editor card beside the demo phone.
+   --------------------------------------------------------------------------- */
+.try-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 5rem);
+  max-width: 68rem;
+  margin: 0 auto;
+}
+
+/* The editor: a card with a bar across its top, like the first screen after signing in. */
+.ed {
+  --cardr: 1.25rem;
+  margin: 0;
+  overflow: clip;
+}
+.ed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--sunk);
+}
+.ed-bar .label {
+  color: var(--ink);
+}
+/* "Demo", said in the label voice with a box round it so it reads as a tag and not a word. */
+.ed-bar .label i,
+.try-stage figcaption {
+  font-style: normal;
+}
+.ed-bar .label i {
+  margin-left: 0.5em;
+  padding: 0.15em 0.5em;
+  border: 1px solid var(--field-edge);
+  border-radius: 0.4em;
+}
+/* Draft or Published: the dot is hollow for a draft and solid once published, so the two differ
+   by shape as well as by word. */
+.ed-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.ed-state::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 2px solid var(--field-edge);
+  border-radius: 50%;
+}
+.ed-pub .ed-state::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.ed-fields {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem 1.25rem 0.5rem;
+  border: 0;
+}
+.ed-l {
+  display: block;
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.ed-f {
+  display: block;
+  min-width: 0;
+}
+/* The same field as /contact: a 3:1 edge at rest, a real outline with focus. 16px or more, so iOS
+   does not zoom. */
+.ed-f input {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 0;
+  border-radius: 0.8rem;
+  background: var(--ground);
+  color: var(--ink);
+  font: 500 1.0625rem/1.25 var(--body);
+  box-shadow: inset 0 0 0 1.5px var(--field-edge);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ed-f input:hover {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.ed-f input:focus {
+  outline: 2.5px solid var(--ink);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+/* With no script the fields are disabled: keep the text fields readable, as a picture of the
+   editor. Only the text fields: the radios and the switch stay invisible over their pictures. */
+.ed-fields:disabled .ed-f input {
+  opacity: 1;
+  -webkit-text-fill-color: var(--ink);
+}
+.ed-fields:disabled .ed-f input:hover {
+  box-shadow: inset 0 0 0 1.5px var(--field-edge);
+}
+
+/* Photo: three real radios, each drawn as its picture. The chosen one gets a heavy ring and a
+   bold name; focus gets the outline. */
+.ed-photos {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ed-ph-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.ed-ph {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+.ed-ph input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.ed-ph img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 0.6rem;
+  background: var(--well);
+  box-shadow: 0 0 0 1px var(--field-edge);
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.ed-ph span {
+  color: var(--soft);
+}
+.ed-ph input:checked + img {
+  box-shadow:
+    0 0 0 2px var(--card),
+    0 0 0 4.5px var(--ink);
+}
+.ed-ph input:checked ~ span {
+  color: var(--ink);
+  font-weight: 700;
+}
+.ed-ph input:focus-visible + img {
+  outline: 2.5px solid var(--ink);
+  outline-offset: 6px;
+}
+.ed-live .ed-ph:hover img {
+  transform: scale(1.03);
+}
+
+/* Events band: a real checkbox with role="switch". The knob slides and the track fills, so on and
+   off differ by position as well as colour. */
+.ed-sw {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ed-sw input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.ed-sw-track {
+  flex: none;
+  position: relative;
+  width: 3rem;
+  height: 1.75rem;
+  border-radius: 99rem;
+  background: var(--ground);
+  box-shadow: inset 0 0 0 1.5px var(--field-edge);
+  transition: background-color 0.2s;
+}
+.ed-sw-track::after {
+  content: '';
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--field-edge);
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.ed-sw input:checked + .ed-sw-track {
+  background: var(--fill);
+  box-shadow: none;
+}
+.ed-sw input:checked + .ed-sw-track::after {
+  background: #fff;
+  transform: translateX(1.25rem);
+}
+.ed-sw input:focus-visible + .ed-sw-track {
+  outline: 2.5px solid var(--ink);
+  outline-offset: 3px;
+}
+.ed-go {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-top: 0.25rem;
+}
+.ed-go .chip {
+  border: 0;
+  font: 600 1rem/1 var(--body);
+  cursor: pointer;
+}
+.ed-reset {
+  background: none;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--field-edge);
+}
+.ed-go .chip:focus-visible {
+  outline: 2.5px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 99rem;
+}
+/* No script: the buttons would do nothing, so they are not shown. */
+html:not(.js) .ed-go {
+  display: none;
+}
+.ed-fields:disabled :is(.ed-ph, .ed-sw) {
+  cursor: default;
+}
+/* The live note. It keeps its line whether or not it has words, so the card never changes height. */
+.ed-note {
+  min-height: 1.45em;
+  margin: 0.35rem 1.25rem 1.1rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+
+/* The stage: the demo's label over its phone. */
+.try-stage {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  margin: 0;
+}
+.try-stage figcaption {
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--field-edge);
+  border-radius: 0.5em;
+  color: var(--ink);
+}
+/* The phone is the Tile window (kit.css) in the page's own ink, so it is nobody's colour. It is
+   not a link, so it does not ask to be clicked. */
+.tile.demo {
+  --c: var(--ink);
+  --p: var(--on-ink);
+  width: clamp(14rem, 23vw, 18.5rem);
+  cursor: default;
+  will-change: auto;
+}
+.tile.demo > .demo-scr {
+  background: var(--card);
+}
+.demo-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 4.3cqw;
+  line-height: 1.3;
+}
+.demo-nav {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3cqw;
+  padding: 3.4cqw 5cqw;
+  background: var(--c);
+  color: var(--p);
+  font-size: 4cqw;
+  line-height: 1.15;
+}
+.demo-nav b {
+  font-weight: 600;
+}
+/* The menu mark: three short lines. */
+.demo-nav i {
+  flex: none;
+  width: 5.5cqw;
+  height: 4cqw;
+  background: linear-gradient(
+    currentColor 0 14%,
+    transparent 14% 43%,
+    currentColor 43% 57%,
+    transparent 57% 86%,
+    currentColor 86%
+  );
+}
+.demo-photo {
+  flex: none;
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--well);
+}
+/* .scr img in kit.css already lays each picture over the box; only the chosen one shows. */
+.demo-photo img {
+  object-position: 50% 50%;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.demo-photo img.on {
+  opacity: 1;
+}
+.demo-body {
+  flex: none;
+  display: grid;
+  gap: 3cqw;
+  padding: 5cqw 5cqw 5.5cqw;
+}
+.demo-h {
+  min-height: 2.04em;
+  font: 600 8.2cqw/1.02 var(--display);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  transform-origin: 0 50%;
+}
+.demo-hours {
+  display: flex;
+  align-items: center;
+  gap: 1.8cqw;
+  color: var(--soft);
+  transform-origin: 0 50%;
+}
+.demo-hours span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.demo-hours svg {
+  flex: none;
+  width: 4.6cqw;
+  height: 4.6cqw;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.demo-btn span {
+  display: inline-block;
+  padding: 2.2cqw 4.4cqw;
+  border-radius: 99rem;
+  background: var(--c);
+  color: var(--p);
+  font-weight: 600;
+}
+/* The events band folds by its grid row, so the page under it closes up. */
+.demo-events {
+  flex: none;
+  display: grid;
+  grid-template-rows: 1fr;
+  background: var(--well);
+  transition: grid-template-rows 0.55s cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+.demo-events.off {
+  grid-template-rows: 0fr;
+}
+.demo-events > div {
+  min-height: 0;
+  overflow: hidden;
+}
+.demo-ev-l {
+  padding: 4cqw 5cqw 1.5cqw;
+  font-size: 3.5cqw;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.demo-events ul {
+  margin: 0;
+  padding: 0 5cqw 4.5cqw;
+  list-style: none;
+}
+.demo-events li {
+  display: flex;
+  gap: 2.5cqw;
+  padding: 1.8cqw 0;
+  border-top: 1px solid var(--line);
+}
+.demo-events li b {
+  flex: none;
+  width: 22cqw;
+  font-weight: 600;
+}
+/* The stamp, pressed onto the phone's screen. stamp.css draws it; here it is only placed, with a
+   little of the page's paper behind it so the blue reads over whatever it lands on. */
+.demo-stamp {
+  float: none;
+  position: absolute;
+  right: 5cqw;
+  bottom: 9cqw;
+  z-index: 2;
+  margin: 0;
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+}
+.demo-stamp[hidden] {
+  display: none;
+}
+.demo-stamp .stamp-word {
+  font-size: clamp(0.875rem, 6.2cqw, 1.25rem);
+}
+
+/* The one true sentence under it. */
+.try-true {
+  max-width: 44rem;
+  margin: clamp(1.75rem, 3.5vw, 2.75rem) auto 0;
+  color: var(--soft);
+  text-align: center;
+  text-wrap: balance;
+}
+.try-true a {
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* A phone: the editor and a small copy of the page stay side by side, so a change can be seen as
+   it is typed. The page column sticks under the top line while the editor scrolls past; it is
+   in its own column, so it never covers a field. */
+@media (max-width: 52rem) {
+  .try-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(8.75rem, 37vw, 13rem);
+    align-items: start;
+    gap: 0.75rem;
+  }
+  .try-stage {
+    position: sticky;
+    top: 5rem;
+    gap: 0.6rem;
+  }
+  .try-stage figcaption {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .tile.demo {
+    width: 100%;
+  }
+  .ed-bar {
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+    padding: 0.7rem 0.9rem;
+  }
+  .ed-fields {
+    padding: 1rem 0.9rem 0.4rem;
+  }
+  .ed-note {
+    margin-inline: 0.9rem;
+  }
+  .ed-ph-row {
+    gap: 0.45rem;
+  }
+  .ed-ph {
+    font-size: 0.8125rem;
+  }
+  .ed-go .chip {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding-inline: 1rem;
+  }
+}
+/* The narrowest phones have no room for two columns: the page first, then its editor. */
+@media (max-width: 23.5rem) {
+  .try-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .try-stage {
+    position: static;
+    order: -1;
+  }
+  .tile.demo {
+    width: min(100%, 13rem);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The photography strip: one full-width row of prints.
+   --------------------------------------------------------------------------- */
+.strip {
+  padding-block: clamp(4rem, 10vh, 7rem) clamp(3rem, 7vh, 5rem);
+  overflow-x: clip;
+}
+.strip-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.25rem 3rem;
+  margin-bottom: clamp(1rem, 2vw, 1.75rem);
+  padding-inline: var(--gut);
+}
+.strip-say p {
+  margin-top: 0;
+}
+.strip-say .chip {
+  margin-top: 1.1rem;
+}
+/* The row. As it ships it is a sideways scroller you move by hand (touch, reduced motion, no
+   script), with its scrollbar put away because the prints running off the edge already say there
+   is more. home-more.js adds .drift for a mouse, which hands the movement to the page's scroll. */
+.strip-row {
+  --bow: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: clamp(1.5rem, 3vw, 2.5rem) var(--gut) clamp(2rem, 4vw, 3.25rem);
+}
+.strip-row::-webkit-scrollbar {
+  display: none;
+}
+.strip.drift .strip-row {
+  overflow-x: clip;
+}
+.strip-track {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 1.5vw, 1.4rem);
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.strip.drift .strip-track {
+  will-change: transform;
+}
+.strip-track li {
+  flex: none;
+  perspective: 56rem;
+}
+/* Laid down by hand: every other print sits a touch higher and a touch turned. */
+.strip-track li:nth-child(odd) {
+  --tilt: -0.7deg;
+  --drop: 0.5rem;
+}
+.strip-track li:nth-child(even) {
+  --tilt: 0.6deg;
+  --drop: -0.5rem;
+}
+.strip-track li:nth-child(3n) {
+  --tilt: 0.25deg;
+}
+/* A print: the photograph with a narrow paper edge. --bow is the lean the scroll gives it, in
+   degrees (home-more.js); at rest it is 0 and the print lies flat. */
+.strip-track a {
+  display: block;
+  height: clamp(11rem, 20vw, 17rem);
+  aspect-ratio: var(--ar);
+  padding: 0.3rem;
+  border-radius: 0.35rem;
+  background-color: var(--card);
+  background-image: var(--grain, none);
+  transform: translateY(var(--drop, 0)) rotateY(calc(var(--bow) * 1deg))
+    rotate(calc(var(--tilt, 0deg) + var(--bow) * 0.22deg));
+  box-shadow:
+    var(--rim),
+    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    var(--lean, 0px) 20px 34px -22px rgba(0, 0, 0, 0.5);
+}
+.strip-track a:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 0.35rem;
+}
+.strip-track img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.15rem;
+  background: var(--well);
+}
+
+/* ---------------------------------------------------------------------------
+   The four process beats: small ruled steps, drawn in order.
+   --------------------------------------------------------------------------- */
+.beats {
+  padding-top: clamp(1rem, 3vh, 2.5rem);
+}
+.beats-head,
+.beats-list {
+  max-width: 78rem;
+  margin-inline: auto;
+}
+.beats-head a {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+.beats-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1.75rem, 3vw, 3rem) clamp(1.25rem, 2.6vw, 2.75rem);
+  margin-block: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: bt;
+}
+.beats-list li {
+  position: relative;
+  counter-increment: bt;
+  padding-top: 1.1rem;
+}
+/* The hairline over each step. It is a pseudo-element so it can be drawn from the left. */
+.beats-list li::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 30%, transparent);
+  transform-origin: left center;
+}
+/* The step's number, in label voice, on the line with its icon. */
+.beats-list li::after {
+  content: counter(bt, decimal-leading-zero);
+  position: absolute;
+  top: 1.2rem;
+  left: 0;
+  font: 500 0.8125rem/2rem var(--body);
+  letter-spacing: 0.07em;
+  font-variant-numeric: tabular-nums;
+  color: var(--soft);
+}
+.bt-ic {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  margin-left: auto;
+  color: var(--ink);
+  transition: color 0.3s var(--ease);
+}
+.bt-ic path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.beats-list h3 {
+  margin-top: 1rem;
+  font-size: clamp(1.25rem, 1.7vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.beats-list p {
+  margin-top: 0.55rem;
+  color: var(--soft);
+  line-height: 1.45;
+}
+/* The drawing (home-more.js adds .bt-wait, then .drawn to each step in turn and .at to the one
+   drawing now). The words are never hidden: only the line and the icon wait. */
+.bt-wait li:not(.drawn)::before {
+  transform: scaleX(0);
+}
+.bt-wait li.drawn::before {
+  transition: transform 0.45s cubic-bezier(0.45, 0.1, 0.35, 1);
+}
+.bt-wait li:not(.drawn) .bt-ic path {
+  stroke-dashoffset: 1;
+}
+.bt-wait li.drawn .bt-ic path {
+  transition: stroke-dashoffset 0.7s var(--ease) 0.3s;
+}
+.bt-wait li.drawn .bt-ic path:nth-child(2) {
+  transition-delay: 0.42s;
+}
+.bt-wait li.drawn .bt-ic path:nth-child(3) {
+  transition-delay: 0.54s;
+}
+.bt-wait li.drawn .bt-ic path:nth-child(4) {
+  transition-delay: 0.66s;
+}
+.beats-list li.at .bt-ic {
+  color: var(--accent);
+}
+@media (max-width: 60rem) {
+  .beats-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 34rem) {
+  .beats-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The price hand used to follow the quote band and borrowed its margin. It follows the strip now,
+   which brings its own. */
+
+/* ---------------------------------------------------------------------------
+   Reduced motion, forced colors, print
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  /* The scripts already stand down; these are the belt to their braces. */
+  .chg-wait .chg-card,
+  .chg-wait .chg-card.held {
+    opacity: 1;
+    transform: rotate(var(--tilt, 0deg));
+    transition: none;
+  }
+  .chg-go svg,
+  .ed-ph img,
+  .ed-sw-track,
+  .ed-sw-track::after,
+  .demo-photo img,
+  .demo-events,
+  .bt-ic,
+  .bt-wait li.drawn::before,
+  .bt-wait li.drawn .bt-ic path {
+    transition: none;
+  }
+  .bt-wait li:not(.drawn)::before {
+    transform: none;
+  }
+  .bt-wait li:not(.drawn) .bt-ic path {
+    stroke-dashoffset: 0;
+  }
+  .strip-track a {
+    transform: translateY(var(--drop, 0)) rotate(var(--tilt, 0deg));
+  }
+}
+/* Forced colors drop shadows and backgrounds: every surface drawn with them gets a real edge, and
+   the states a fill alone was showing get one too. */
+@media (forced-colors: active) {
+  .chg-card,
+  .strip-track a,
+  .ed-ph img,
+  .ed-sw-track,
+  .demo-stamp {
+    border: 1px solid CanvasText;
+    background-image: none;
+  }
+  .ed-ph input:checked + img {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+  .ed-sw-track::after {
+    background: CanvasText;
+  }
+  .ed-sw input:checked + .ed-sw-track {
+    background: Highlight;
+  }
+  .ed-sw input:checked + .ed-sw-track::after {
+    background: HighlightText;
+  }
+  .beats-list li::before {
+    background: CanvasText;
+  }
+}
+@media print {
+  .chg-card,
+  .strip-track a {
+    background-image: none;
+  }
+  .chg-wait .chg-card.held {
+    opacity: 1;
+    transform: none;
+  }
+  .ed-go,
+  .ed-note {
+    display: none;
+  }
+  .strip-row {
+    overflow: visible;
+  }
+  .strip-track {
+    flex-wrap: wrap;
+    width: auto;
+    transform: none !important;
+  }
+}
