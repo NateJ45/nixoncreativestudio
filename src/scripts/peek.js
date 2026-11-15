@@ -177,8 +177,13 @@ function show(a, k, tries) {
     /* Inside an open dialog (the photo view) the card has to live in it, or it would be inert. */
     var home = a.closest('dialog[open]') || doc.body;
     if (box.parentNode !== home) home.appendChild(box);
-    if (canAnchor) a.style.anchorName = '--peek';
-    else box.classList.add('peek-js');
+    if (canAnchor) {
+      /* Only one link may carry the name, or the card hangs off whichever comes last in the page:
+         take it off the last link now (its card is being reused, so nothing is fading out). */
+      clearTimeout(unanchorT);
+      unanchor(a);
+      a.style.anchorName = '--peek';
+    } else box.classList.add('peek-js');
     box.showPopover();
     open = true;
     if (canAnchor) {
@@ -191,14 +196,26 @@ function show(a, k, tries) {
   });
 }
 
-/* Take the card down now, and give the link its anchor name back. */
+/* Take the anchor name off every link but `keep`. */
+var unanchorT = 0;
+function unanchor(keep) {
+  [].forEach.call(doc.querySelectorAll('a[style*="anchor-name"]'), function (a) {
+    if (a !== keep) a.style.anchorName = '';
+  });
+}
+
+/* Take the card down now, and give the link its anchor name back once the card has gone. The card
+   fades out for 0.16s after hidePopover() (elevate-b.css), and while it fades it is still placed
+   by the anchor: taking the name off at once dropped it at the top left of the page for those
+   few frames (fixed 2026-11-15). */
 function shut() {
   if (!open) return;
   open = false;
   box.hidePopover();
-  [].forEach.call(doc.querySelectorAll('a[style*="anchor-name"]'), function (a) {
-    a.style.anchorName = '';
-  });
+  clearTimeout(unanchorT);
+  unanchorT = setTimeout(function () {
+    if (!open) unanchor(null);
+  }, 240);
 }
 function hide() {
   clearTimeout(showT);
