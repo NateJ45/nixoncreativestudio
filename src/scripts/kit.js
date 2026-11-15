@@ -70,6 +70,9 @@ var $ = function (a, r) {
 var N = { sites: JSON.parse(doc.getElementById('ncs-clients').textContent) };
 export var ui = {
   reduce: reduce,
+  /* A tiny sound or haptic at the moment something lands: ui.cue('deal' | 'tick' | 'turn' | ...).
+     Always safe to call. It does nothing here; the sound module swaps in the real one. */
+  cue: function () {},
   bySlug: function (slug) {
     return N.sites.find(function (s) {
       return s.slug === slug;
@@ -1211,7 +1214,7 @@ var builds =
     : [].filter.call(doc.querySelectorAll('[data-build]'), function (el) {
         return el.getBoundingClientRect().top >= innerHeight;
       });
-var wordsOf = function (el) {
+var wordsOf = function (el, cls) {
   var words = [];
   var walk = function (node) {
     [].slice.call(node.childNodes).forEach(function (n) {
@@ -1222,7 +1225,7 @@ var wordsOf = function (el) {
         if (!part) return;
         if (/^\s+$/.test(part)) return frag.appendChild(doc.createTextNode(part));
         var s = doc.createElement('span');
-        s.className = 'bw';
+        s.className = cls || 'bw';
         s.textContent = part;
         words.push(s);
         frag.appendChild(s);
@@ -1235,6 +1238,10 @@ var wordsOf = function (el) {
   walk(el);
   return words;
 };
+/* Shared with the rising section headings (rise.js): ui.words(el, 'rw') wraps each word of `el`
+   in a span of that class, gives the heading its plain sentence as its accessible name, and
+   returns the spans in reading order. */
+ui.words = wordsOf;
 var lines = builds.map(function (el) {
   var range = (el.dataset.build || '').split(' ').map(Number);
   var words = wordsOf(el);

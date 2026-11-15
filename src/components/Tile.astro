@@ -3,7 +3,8 @@
    window showing the real page (/work/ and the lean sector pages). A real link to
    their case study; with JavaScript a click opens the client sheet instead, unless
    `direct` keeps it a plain link. The footage is only fetched when something asks
-   the window to play. */
+   the window to play. data-sheen is the soft highlight that follows a mouse across it
+   (src/scripts/light.js) and data-cursor the word beside the pointer (cursor.js). */
 import { LOCK, TOOLS } from '../lib/window-chrome';
 import type { Client } from '../lib/clients';
 
@@ -37,6 +38,8 @@ const {
   data-slug={s.slug}
   data-direct={direct ? '' : undefined}
   data-i={index}
+  data-sheen
+  data-cursor="Open"
   aria-label={`${s.name}, ${s.host}: ${s.hook}`}
   style={`--c:${s.accent};--p:${s.paper}`}
 >

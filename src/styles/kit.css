@@ -1761,13 +1761,17 @@ html:not(.js) .dock > a[aria-current]:not(.go) {
 .top.on-color .status {
   color: var(--oncolor, #fff);
 }
+/* A card is paper under a light: a very faint grain (--grain), and a shadow that leans a few pixels
+   away from where the light is this hour (--lean and --sun-y, set by src/scripts/light.js; with no
+   script the shadow falls straight down, 22px, as it always did). Tokens: elevate.css. */
 .card {
-  background: var(--card);
+  background-color: var(--card);
+  background-image: var(--grain, none);
   border-radius: 1.25rem;
   box-shadow:
     var(--rim),
     0 1px 2px rgba(0, 0, 0, 0.05),
-    0 22px 40px -28px rgba(0, 0, 0, 0.3);
+    var(--lean, 0px) calc(26px - var(--sun-y, 0.5) * 8px) 40px -28px rgba(0, 0, 0, 0.3);
 }
 
 /* The smallest phones: the floating menu must fit. */
@@ -2151,7 +2155,7 @@ h1 b,
   gap: 0;
   padding: 0 6cqw;
   border-radius: var(--cardr);
-  background: var(--pcb);
+  background: var(--pcb) var(--grain, none);
   color: var(--pci);
   text-align: center;
   text-decoration: none;
@@ -3263,7 +3267,10 @@ html.ncs-gated .ncs-overlay {
     --sunk: #191b3a;
     --field-edge: #6e7196;
     --screen: #1d2042;
-    --rim: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(226, 228, 255, 0.08);
+    /* The lit edge leans a pixel toward the hour's light (--sun-x, src/scripts/light.js). */
+    --rim:
+      inset calc(var(--sun-x, 0) * 1px) 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 0 1px rgba(226, 228, 255, 0.08);
   }
   /* These surfaces keep their own color on either side, so what sits on them keeps the light
      tokens: the closing, a client's band or sheet, and anything set on a client's paper. */

@@ -25,6 +25,15 @@
    (guarded by a window flag) so it survives View Transitions navigations
    without double-binding. With this script absent, the mailto links behave
    exactly as before for anyone who has a mail app.
+
+   Copy on click (added with the elevate build): a mailto link that SHOWS the
+   address as its words (the closing's email pill, the "Email" row in the top
+   line's card, the address on /contact) also copies the address the moment it
+   is clicked, and its words turn to "Copied" for two seconds. The mailto still
+   fires, so a visitor with a mail app gets their composer AND the address on
+   the clipboard. A link whose words are something else ("Email me") is left to
+   the fallback alone. If nothing opened, the toast below still explains it,
+   without copying a second time.
    ============================================================================ */
 
 const FOCUS_CHECK_DELAY = 800; // ms to wait before deciding nothing opened
@@ -39,6 +48,78 @@ function emailFromHref(href: string): string {
   } catch {
     return raw;
   }
+}
+
+const COPIED_FOR = 2000; // ms the "Copied" label stays up
+
+// The text node inside the link that holds the address, if the link shows it.
+function addressNode(link: HTMLAnchorElement, email: string): Text | null {
+  const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode() as Text | null;
+  while (node) {
+    if ((node.nodeValue || '').trim().toLowerCase() === email.toLowerCase()) return node;
+    node = walker.nextNode() as Text | null;
+  }
+  return null;
+}
+
+// One polite live region for "Copied", so a screen reader hears it once and the
+// link keeps its own name (the address) the whole time.
+let sayEl: HTMLSpanElement | null = null;
+function say(message: string): void {
+  if (!sayEl) {
+    sayEl = document.createElement('span');
+    sayEl.className = 'vh';
+    sayEl.setAttribute('role', 'status');
+    document.body.appendChild(sayEl);
+  }
+  sayEl.textContent = '';
+  // A fresh text node a beat later, so the same words are announced a second time too.
+  window.setTimeout(() => {
+    if (sayEl) sayEl.textContent = message;
+  }, 50);
+}
+
+// Links that copied on this click, so the fallback toast does not copy again.
+const justCopied = new WeakSet<HTMLAnchorElement>();
+const restoring = new WeakMap<HTMLAnchorElement, number>();
+
+// Copy now, inside the click (a clipboard write is most reliable while the click
+// is still the user's gesture), and turn the address into "Copied" for two
+// seconds. The link is held at its own width so nothing beside it moves, and it
+// keeps the address as its accessible name while the words are swapped.
+function copyOnClick(link: HTMLAnchorElement, email: string): void {
+  const node = addressNode(link, email);
+  // Mid-swap the words are "Copied", so there is no address node: copy again, quietly.
+  const swapped = restoring.has(link);
+  if (!node && !swapped) return;
+  if (!navigator.clipboard?.writeText) return;
+  navigator.clipboard.writeText(email).then(
+    () => {
+      justCopied.add(link);
+      say('Copied my email address');
+      if (!node) return;
+      const hadLabel = link.getAttribute('aria-label');
+      const hadWidth = link.style.minWidth;
+      link.style.minWidth = link.getBoundingClientRect().width + 'px';
+      if (hadLabel === null) link.setAttribute('aria-label', (link.textContent || '').trim());
+      node.nodeValue = 'Copied';
+      link.dataset.copied = '';
+      restoring.set(
+        link,
+        window.setTimeout(() => {
+          node.nodeValue = email;
+          link.style.minWidth = hadWidth;
+          if (hadLabel === null) link.removeAttribute('aria-label');
+          delete link.dataset.copied;
+          restoring.delete(link);
+        }, COPIED_FOR),
+      );
+    },
+    () => {
+      /* Clipboard blocked: the mailto and its fallback toast still stand. */
+    },
+  );
 }
 
 // A single reused toast element. role=status + aria-live=polite so a screen
@@ -66,10 +147,10 @@ function showToast(message: string): void {
   }, TOAST_DURATION);
 }
 
-async function offerFallback(email: string): Promise<void> {
-  let copied = false;
+async function offerFallback(email: string, already = false): Promise<void> {
+  let copied = already;
   try {
-    if (navigator.clipboard?.writeText) {
+    if (!already && navigator.clipboard?.writeText) {
       // Race the write against a short timeout so a hung or blocked clipboard
       // (no user activation, denied permission) can never swallow the toast.
       await Promise.race([
@@ -112,6 +193,10 @@ function onClick(event: MouseEvent): void {
   const email = emailFromHref(link.getAttribute('href') || '');
   if (!email) return;
 
+  // A link that shows the address copies it at once and says so in its own words.
+  justCopied.delete(link);
+  copyOnClick(link, email);
+
   // Let the default mailto fire. Then decide whether anything handled it: a mail
   // app or a webmail tab moves focus off this document. Watch for that blur
   // explicitly (more reliable than a single hasFocus() snapshot) and also check
@@ -125,7 +210,7 @@ function onClick(event: MouseEvent): void {
   window.setTimeout(() => {
     window.removeEventListener('blur', markLeft);
     if (focusLeft || !document.hasFocus()) return; // an app/tab took over: all good
-    void offerFallback(email);
+    void offerFallback(email, justCopied.has(link));
   }, FOCUS_CHECK_DELAY);
 }
 

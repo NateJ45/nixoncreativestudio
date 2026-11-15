@@ -1,0 +1,552 @@
+/* The shared finish, imported once by BaseLayout.astro straight after kit.css. Everything here is
+   used on more than one page and belongs to a small script module of its own in src/scripts/:
+
+     roll.js       [data-roll], ui.roll        digits that roll
+     rise.js       [data-rise]                 heading lines that rise from a mask
+     light.js      [data-sheen], --sun-x/y     the pointer sheen, the hour's light, the local time
+     cursor.js     [data-cursor]               the label beside the mouse
+     blueprint.js  html.bp, .bp                the first load of a visit, as a drawing
+
+   Plus the small finish list: thin scrollbars, the giant line's trimmed box, tabular figures on
+   every price, a window's colour while its picture loads, the grain on cards (.paper) and the
+   soft blur under the dock and the floating top line (.pblur).
+
+   Colours are tokens only. Every moving thing has its answer in the reduced-motion block at the
+   foot of the file, and forced colors and print switch the decoration off there too. The
+   attribute and API for each piece are written up in docs/elevate-notes/foundation-a.md. */
+
+/* ---------------------------------------------------------------------------------------------
+   Tokens
+   --------------------------------------------------------------------------------------------- */
+:root {
+  /* Where the light comes from this hour in Cincinnati (light.js). Unitless. --sun-x runs -1
+     (from the left, morning) to 1 (from the right, evening); --sun-y runs 0.35 (low) to 1 (high,
+     noon). With no script the light sits straight overhead at an ordinary height. */
+  --sun-x: 0;
+  --sun-y: 0.5;
+  /* A shadow falls away from the light: a few pixels sideways, never more than 6. */
+  --lean: calc(var(--sun-x) * -6px);
+  /* The grain: a small tile of noise, drawn once by the browser from an inline SVG. Dark specks on
+     the light side, light specks on the dark side, both very faint. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .17 0 0 0 -.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* The same grain for a surface that keeps its colour on either side (a client's window). */
+  --grain-ink: var(--grain);
+}
+@media screen {
+  :root[data-theme='dark'] {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .13 0 0 0 -.04'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --grain-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .17 0 0 0 -.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* The surfaces that keep the light tokens on the dark side keep the light grain too. */
+  :root[data-theme='dark'] :is(.end, .band, .sheet, .study) {
+    --grain: var(--grain-ink);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   The finish list
+   --------------------------------------------------------------------------------------------- */
+
+/* Thin scrollbars in the page's own colours, on both sides: the thumb is the field edge (3:1 on
+   the page), the track is the page. Anything that hides its scrollbar on purpose still does,
+   because a class beats this. */
+:root {
+  scrollbar-color: var(--field-edge) var(--ground);
+}
+* {
+  scrollbar-width: thin;
+}
+
+/* The giant line's box is trimmed to its capitals and its baseline, so the space over and under it
+   is the space you set and not the font's. Where the browser has no text-box the line is exactly
+   as it was. Descenders hang below the box as they always did (the line-height is under 1). */
+@supports (text-box: trim-both cap alphabetic) {
+  .giant {
+    text-box: trim-both cap alphabetic;
+  }
+}
+
+/* Tabular figures on every price and figure, so digits sit in columns and a rolling digit never
+   changes a number's width. */
+.proof strong,
+.pc-face strong,
+.fc-price strong,
+.t-price,
+.from-num,
+.glance-num,
+.cost-table td,
+.care td,
+.bars-sum,
+.rcpt-line dd,
+.wf-num,
+.op-table td,
+.end-index a,
+.dw-bar .n,
+[data-roll] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A window's screen wears its own client's colours while its picture loads: their paper, under a
+   bar of their colour where a site's header would be. The picture covers it the moment it paints. */
+.tile > .scr {
+  background: linear-gradient(var(--c, var(--screen)) 0 11%, var(--p, var(--screen)) 11%);
+}
+
+/* The email pill while its words say "Copied" (mailto-fallback.ts): a tick ahead of the word, so
+   the change is more than the letters. */
+a[data-copied]::before {
+  content: '';
+  flex: none;
+  display: inline-block;
+  width: 0.62em;
+  height: 0.34em;
+  margin: 0 0.5em 0.25em 0;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg);
+  vertical-align: middle;
+}
+
+/* Visually hidden, still read out. The page stylesheets each carry their own copy; this one is for
+   the shared scripts (the "Copied" announcement). */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Numbers that roll (src/scripts/roll.js)
+   ---------------------------------------------------------------------------------------------
+   While a figure rolls, the element holds a hidden copy of the plain value (.roll-sr, what a
+   screen reader and textContent see) and a row of cells that draw their glyphs from data
+   attributes: .roll-k is a character that stays put, .roll-d is one digit's window and .roll-c the
+   column inside it, the new digit in flow and the old one parked just above (or below, .down). */
+.roll-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.roll-v {
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+}
+.roll-d,
+.roll-k,
+.roll-c {
+  display: inline-block;
+}
+/* The window is the digit's own line box, a hair taller so a tight line-height never shaves it. */
+.roll-d {
+  clip-path: inset(-0.04em -0.03em);
+}
+.roll-c {
+  position: relative;
+}
+.roll-c::after,
+.roll-k::after {
+  content: attr(data-n);
+}
+.roll-c::before {
+  content: attr(data-o);
+  position: absolute;
+  inset: auto 0 100%;
+  text-align: center;
+}
+.roll-c.down::before {
+  inset: 100% 0 auto;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Headings that rise (src/scripts/rise.js)
+   ---------------------------------------------------------------------------------------------
+   Only ever set by script, on a heading that is below the fold: .rw is a word and its mask, .rw-i
+   the text that comes up through it, --l the line the word is on. The mask reaches a little past
+   the word so a descender and tight tracking are never cut, and it is gone once the line is home. */
+.rise .rw {
+  display: inline-block;
+  clip-path: inset(-0.12em -0.3em -0.24em);
+}
+.rise .rw-i {
+  display: inline-block;
+  transform: translateY(130%);
+}
+.rise.rise-in .rw-i {
+  transform: none;
+  transition: transform 0.8s var(--ease);
+  transition-delay: calc(var(--l, 0) * 80ms);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Light and paper
+   --------------------------------------------------------------------------------------------- */
+
+/* .paper: the grain on any surface that is not a .card (which has it already, kit.css). It only
+   adds a background image, so the surface keeps its own colour. */
+.paper {
+  background-image: var(--grain);
+}
+/* A client's window keeps its colour on either side, so its chrome takes the dark-speck grain. */
+.tile {
+  background-image: var(--grain-ink);
+}
+
+/* [data-sheen]: a soft pool of light that follows the mouse across a window or card (light.js
+   sets --mx and --my and the .sheen-on class). The element needs position: relative or absolute
+   and, if it has round corners, overflow: hidden or clip. It never loops and never takes a click. */
+[data-sheen]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    17rem circle at var(--mx, 50%) var(--my, 0%),
+    rgba(255, 255, 255, 0.32),
+    rgba(255, 255, 255, 0.1) 42%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+[data-sheen].sheen-on::after {
+  opacity: 1;
+}
+
+/* .pblur: the page softens as it passes under the dock and under the floating top line. Three
+   stacked layers, each a stronger blur shown only nearer the edge (a mask per layer), so the blur
+   grows smoothly instead of starting at a line. The layers sit outside the dock and the header on
+   purpose (see Dock.astro), and nothing above them may take an opacity, filter or mask: any of
+   those cuts a backdrop-filter off from the page behind it. That is why the top one slides in
+   rather than fading. */
+.pblur {
+  --dir: to bottom;
+  position: fixed;
+  inset-inline: 0;
+  z-index: 38;
+  height: 5.5rem;
+  pointer-events: none;
+}
+.pblur-b {
+  bottom: 0;
+}
+.pblur-t {
+  --dir: to top;
+  top: 0;
+  z-index: 29;
+  height: 5rem;
+  transform: translateY(-100%);
+  transition: transform 0.5s var(--ease);
+}
+.top.float ~ .pblur-t {
+  transform: none;
+}
+.pblur i {
+  position: absolute;
+  inset: 0;
+}
+.pblur i:nth-child(1) {
+  -webkit-backdrop-filter: blur(1px);
+  backdrop-filter: blur(1px);
+  -webkit-mask-image: linear-gradient(var(--dir), transparent 15%, #000 50%);
+  mask-image: linear-gradient(var(--dir), transparent 15%, #000 50%);
+}
+.pblur i:nth-child(2) {
+  -webkit-backdrop-filter: blur(2.5px);
+  backdrop-filter: blur(2.5px);
+  -webkit-mask-image: linear-gradient(var(--dir), transparent 40%, #000 75%);
+  mask-image: linear-gradient(var(--dir), transparent 40%, #000 75%);
+}
+.pblur i:nth-child(3) {
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(var(--dir), transparent 65%, #000 100%);
+  mask-image: linear-gradient(var(--dir), transparent 65%, #000 100%);
+}
+/* No script, no floating pills, and the plain top line needs nothing under it. */
+html:not(.js) .pblur-t {
+  display: none;
+}
+
+/* The local time (light.js fills it in). In the closing it follows the place name on one line; in
+   the status card it is a line of its own in the label voice. */
+.end-time {
+  white-space: nowrap;
+}
+.reach-time {
+  margin: 0.85rem 0 0;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   The cursor label (src/scripts/cursor.js)
+   ---------------------------------------------------------------------------------------------
+   One small pill, placed by transform from the screen's top left corner. Ink on card, the label
+   voice. It is a caption beside the real cursor, never a replacement for it. */
+.cur {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.16s,
+    visibility 0s 0.16s;
+  will-change: transform;
+}
+.cur.on {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.cur span {
+  display: block;
+  padding: 0.42rem 0.7rem;
+  border-radius: 99rem;
+  background: var(--card);
+  color: var(--ink);
+  font: 500 0.75rem/1 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow:
+    var(--rim),
+    0 0 0 1px var(--line),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 10px 24px -10px rgba(0, 0, 0, 0.4);
+  transform: scale(0.8);
+  transform-origin: 0 0;
+  transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+/* On a button it grows out of its own middle, since it sits centred over the button. */
+.cur.snap span {
+  transform-origin: 50% 100%;
+}
+.cur.on span {
+  transform: none;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   The first load, as a drawing (src/scripts/blueprint.js; html.bp is set in the <head>)
+   ---------------------------------------------------------------------------------------------
+   The ink: two layers over the whole screen that only blend with the page under them. The first
+   gives everything the blue's hue and keeps its own light and dark; the second lifts black to the
+   blue, so on the light side the page reads as a print in one ink on paper. On the dark side the
+   first alone does it: pale lines on cobalt, the way a blueprint is. Both hold, then fade on the
+   house ease, by themselves. The page under them is never hidden and they never take a click. */
+:root {
+  --bp-dur: 850ms;
+}
+html.bp body::before,
+html.bp body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 88;
+  pointer-events: none;
+  background: var(--fill);
+  mix-blend-mode: color;
+  animation: bp-ink var(--bp-dur) var(--ease) both;
+}
+html.bp body::after {
+  z-index: 89;
+  mix-blend-mode: screen;
+}
+@media screen {
+  /* The full blue here would be electric: the card's own quiet cobalt gives the hue instead. */
+  :root[data-theme='dark'].bp body::before {
+    background: var(--card);
+  }
+  :root[data-theme='dark'].bp body::after {
+    display: none;
+  }
+}
+@keyframes bp-ink {
+  0%,
+  44% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* The line work: a hairline box with a square on each corner round every main block, and a few
+   long guides. The squares are the 404's anchor points: blue, with a card middle. Each box draws
+   in from its left, holds, and goes as the ink goes. --bp-t starts them where the ink already is. */
+.bp-lines {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bp-lines.bp-out {
+  display: none;
+}
+.bp-box {
+  position: absolute;
+  border: 1px solid var(--accent);
+  animation: bp-box var(--bp-dur) var(--ease) both;
+  animation-delay: calc(var(--bp-t, 0ms) + var(--i, 0) * 16ms);
+}
+.bp-box i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  margin: -4px;
+  background: var(--card);
+  border: 2px solid var(--accent);
+}
+.bp-box i:nth-child(2) {
+  left: 100%;
+}
+.bp-box i:nth-child(3) {
+  top: 100%;
+}
+.bp-box i:nth-child(4) {
+  left: 100%;
+  top: 100%;
+}
+.bp-guide {
+  position: absolute;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  animation: bp-guide var(--bp-dur) var(--ease) both;
+  animation-delay: calc(var(--bp-t, 0ms) + var(--i, 0) * 40ms);
+}
+.bp-h {
+  inset: 0 0 auto;
+  height: 1px;
+  transform-origin: 0 50%;
+}
+.bp-v {
+  inset: 0 auto 0 0;
+  width: 1px;
+  transform-origin: 50% 0;
+}
+@keyframes bp-box {
+  0% {
+    opacity: 0;
+    clip-path: inset(-6px 100% -6px -6px);
+  }
+  30%,
+  52% {
+    opacity: 1;
+    clip-path: inset(-6px);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(-6px);
+  }
+}
+@keyframes bp-guide {
+  0% {
+    opacity: 1;
+    scale: 0;
+  }
+  34%,
+  52% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   A price card grows into its tier (src/scripts/price-morph.js)
+   ---------------------------------------------------------------------------------------------
+   For the one arrival that came from a price card, the tier it points at wears the card's name.
+   One short spring; the two pictures cross over quickly, so it reads as one card growing. */
+html.tier-morph .tier:target .t-card {
+  view-transition-name: tier-card;
+}
+::view-transition-group(tier-card) {
+  z-index: 2;
+  animation-duration: 0.62s;
+  animation-timing-function: cubic-bezier(0.3, 1.2, 0.45, 1);
+}
+::view-transition-old(tier-card),
+::view-transition-new(tier-card) {
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  animation-duration: 0.28s;
+  animation-timing-function: var(--ease);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Reduced motion, forced colors, print
+   --------------------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  /* The scripts already stand down (no roll, no rise, no sheen, no drawing); these are the belt to
+     their braces. The cursor label is simply placed, with no spring and no pop. */
+  .rise .rw-i,
+  .rise.rise-in .rw-i {
+    transform: none;
+    transition: none;
+  }
+  [data-sheen]::after,
+  .bp-lines,
+  html.bp body::before,
+  html.bp body::after {
+    display: none;
+  }
+  .cur,
+  .cur span,
+  .pblur-t {
+    transition: none;
+  }
+  .cur span {
+    transform: none;
+  }
+}
+/* Forced colors keep background images, so the decoration is switched off by hand, and the cursor
+   label gets a real edge because its shadow is gone. */
+@media (forced-colors: active) {
+  .card,
+  .pc-face,
+  .paper,
+  .tile {
+    background-image: none;
+  }
+  .pblur,
+  [data-sheen]::after,
+  .bp-lines,
+  html.bp body::before,
+  html.bp body::after {
+    display: none;
+  }
+  .cur span {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .card,
+  .pc-face,
+  .paper,
+  .tile {
+    background-image: none;
+  }
+  .pblur,
+  .cur,
+  .bp-lines,
+  html.bp body::before,
+  html.bp body::after {
+    display: none !important;
+  }
+  .rise .rw-i {
+    transform: none;
+  }
+}

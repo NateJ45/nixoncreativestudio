@@ -1,6 +1,8 @@
 /* The segmented bar (src/styles/seg-bar.css): the sliding pill under the pressed button in each
    .dw-seg, and the ink bloom a press draws. /work (work.js) and /journal (journal.js) both use it. */
 
+import { ui } from './kit.js';
+
 var $$ = function (a, r) {
   return [].slice.call(r.querySelectorAll(a));
 };
@@ -40,6 +42,12 @@ export function bloom(b, e) {
   ink.innerHTML = b.innerHTML;
   b.classList.add('inking');
   b.appendChild(ink);
+  /* The pressed chip's count rolls once in place (roll.js), in the chip and in its white copy,
+     so the two stay one number. Callers skip the whole bloom under reduced motion. */
+  if (ui.roll)
+    $$('.n', b).forEach(function (n) {
+      ui.roll(n);
+    });
   var at = function (rad) {
     return 'circle(' + rad.toFixed(1) + 'px at ' + x.toFixed(1) + 'px ' + y.toFixed(1) + 'px)';
   };

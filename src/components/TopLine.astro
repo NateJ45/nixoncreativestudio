@@ -57,9 +57,22 @@ const [first, ...rest] = site.studioName.split(' ');
         </a>
       </li>
     </ul>
+    {/* The time where I am, filled in and kept right by src/scripts/light.js. Hidden until then,
+        so with no script the card simply has no clock. */}
+    <p class="label reach-time" data-cincy hidden>
+      <span data-cincy-time />
+      {` in ${site.address.split(',')[0]}`}
+    </p>
     <p class="reach-say">{site.firstConversation}</p>
     <a class="chip go" href="/contact/">
       Start a project
     </a>
   </div>
 </header>
+{/* A soft blur that fades the page out under the floating pills (elevate.css, .pblur). It is a
+    sibling of the header, never a child: see the note beside the dock's one in Dock.astro. */}
+<div class="pblur pblur-t" aria-hidden="true">
+  <i />
+  <i />
+  <i />
+</div>

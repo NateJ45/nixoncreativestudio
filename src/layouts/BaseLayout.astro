@@ -17,6 +17,8 @@
    ============================================================================ */
 
 import '../styles/kit.css';
+// The shared finish (rolling digits, rising lines, grain, sheen, cursor label, first load).
+import '../styles/elevate.css';
 import TopLine from '../components/TopLine.astro';
 import Dock from '../components/Dock.astro';
 import ClientSheet from '../components/ClientSheet.astro';
@@ -159,6 +161,53 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       document.documentElement.classList.add('js');
     </script>
 
+    <!-- Two decisions that have to be made before the first paint (elevate.css draws both).
+         1. The first load of a visit shows for under a second as a cobalt drawing
+            (src/scripts/blueprint.js): once per browser session, on a fresh navigation only,
+            never under reduced motion, a reload, Back, a prerender or a background tab.
+         2. Arriving on Prices from a price card, the tier it points at takes that card's
+            view-transition name for this one arrival (src/scripts/price-morph.js). -->
+    <script is:inline>
+      (function () {
+        var d = document,
+          root = d.documentElement;
+        try {
+          var s = sessionStorage;
+          if (!s.getItem('ncs-bp')) {
+            s.setItem('ncs-bp', '1');
+            var nav = performance.getEntriesByType('navigation')[0];
+            if (
+              !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+              !d.prerendering &&
+              d.visibilityState === 'visible' &&
+              (!nav || nav.type === 'navigate')
+            ) {
+              window.__bp = performance.now();
+              root.classList.add('bp');
+            }
+          }
+          var tier = s.getItem('ncs-tier-morph');
+          if (tier) {
+            s.removeItem('ncs-tier-morph');
+            if (location.pathname === '/services/' && location.hash === '#' + tier) {
+              root.classList.add('tier-morph');
+              addEventListener(
+                'pagereveal',
+                function (e) {
+                  var end = function () {
+                    root.classList.remove('tier-morph');
+                  };
+                  if (e.viewTransition) e.viewTransition.finished.then(end, end);
+                  else end();
+                },
+                { once: true },
+              );
+            }
+          }
+        } catch (_e) {}
+      })();
+    </script>
+
     <!-- The one typeface, self-hosted. Starts with the HTML so text is laid out in
          its real metrics from the first paint. -->
     <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/hanken.woff2" crossorigin />
@@ -200,6 +249,14 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <script>
       import '../scripts/kit.js';
       import '../scripts/theme.js';
+      // The shared finish, one small module each (styles in src/styles/elevate.css). They add to
+      // `ui`: ui.roll (digits that roll), ui.sheen (the pointer highlight).
+      import '../scripts/blueprint.js';
+      import '../scripts/roll.js';
+      import '../scripts/rise.js';
+      import '../scripts/light.js';
+      import '../scripts/cursor.js';
+      import '../scripts/price-morph.js';
       // The tab's N card turns over once when you come back after a few seconds away.
       import '../scripts/favicon.js';
       // Mailto fallback: a click with no mail app copies the address and says so.

@@ -607,7 +607,8 @@ if (rc) {
      will change; held is that line's place among the pieces. */
   var held = 0;
 
-  var sayT = 0;
+  var sayT = 0,
+    rollAt = [];
   var update = function (animate) {
     var tier = byName(R.tiers, (checked('r-tier') || {}).value) || R.tiers[1];
     /* Only the plans this tier's cost table prints: Flagship's custom tools need Care or Care+. */
@@ -637,7 +638,11 @@ if (rc) {
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     var r = receipt(input),
-      changed = [];
+      changed = [],
+      /* A line whose words changed (another tier or plan) is reprinted. When only the amounts
+         moved (the years scrubber), the paper stays out and the digits roll where they are. */
+      reworded = false;
+    var rolls = animate && !reduce && !waiting && !held;
     receiptLines(
       r,
       {
@@ -658,16 +663,29 @@ if (rc) {
         dd.textContent === l.amount
       )
         return;
+      /* The total's label only counts the years, so it is not a rewording. */
+      if (b.textContent !== l.label && l.key !== 'total') reworded = true;
       b.textContent = l.label;
       if (sp) sp.textContent = l.note;
-      dd.textContent = l.amount;
+      /* Each digit rolls to its new value (ui.roll, roll.js): never counted through the numbers
+         in between. On a reprint the roll waits for its line to come out of the slot. */
+      if (rolls) rollAt.push([dd, l.amount, el]);
+      else ui.roll(dd, l.amount, { still: true });
       changed.push(el);
     });
     /* Reprint from the first line that changed. A receipt still waiting to arrive prints whole when it does. */
     var from = changed.length ? pieces.indexOf(changed[0]) : 0;
+    var reprint = rolls && from && reworded;
+    rollAt.splice(0).forEach(function (x) {
+      /* The printer feeds a piece every 95ms after a 70ms beat (printFrame). */
+      var wait = reprint ? 70 + 95 * Math.max(0, pieces.indexOf(x[2]) - from) : 0;
+      ui.roll(x[0], x[1], { delay: wait });
+    });
     if (animate && reduce) tint(changed);
     else if (animate && held) holdAt((held = Math.min(held, from || 1)));
-    else if (animate && from && !waiting) print(from);
+    else if (reprint) print(from);
+    /* The digits landing is the moment: one small tick, if sound is on (ui.cue is a no-op otherwise). */
+    if (rolls && changed.length && !reprint) ui.cue('tick');
     /* One short sentence for a screen reader, once the scrubber has settled, rather than one per step. */
     if (animate) {
       clearTimeout(sayT);
@@ -815,9 +833,17 @@ if (barsEl) {
     var c = barsEl.querySelector('input[name="bars-years"]:checked');
     if (!c) return;
     var k = views.indexOf(c.value);
+    /* What each bar's sum said before the swap, so the new one can roll away from it. */
+    var was = all('.bars-sum:not([hidden])', barsEl).map(function (el) {
+      return el.textContent;
+    });
     all('[data-v]', barsEl).forEach(function (el) {
       el.hidden = el.dataset.v !== c.value;
     });
+    if (animate && !reduce)
+      all('.bars-sum:not([hidden])', barsEl).forEach(function (el, i) {
+        if (was[i] && was[i] !== el.textContent) ui.roll(el, el.textContent, { from: was[i] });
+      });
     segs.forEach(function (g) {
       g.to = g.w[k];
       if (!animate || reduce) rest(g);
