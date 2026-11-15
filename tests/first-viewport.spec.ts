@@ -25,8 +25,10 @@ import { routes } from './routes';
 const CHECKED = 'h1, img, picture, canvas, iframe';
 // Exempt: anything in the closed sheet, and the small portrait inside the homepage
 // headline, which is decorative (aria-hidden), never the LCP, and arrives with the
-// words from opacity .02 like the rest of the sentence.
-const EXEMPT = 'dialog, .me';
+// words from opacity .02 like the rest of the sentence. Also the case study hero's
+// backdrop (.s-bg, aria-hidden): a faint texture whose low opacity is the design, and it
+// never waits on a script.
+const EXEMPT = 'dialog, .me, .s-bg';
 
 // Known failures, one line each, with the package that fixes them. Remove the
 // entry when that package lands; the test then runs for real. Empty since
