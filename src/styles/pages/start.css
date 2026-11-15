@@ -857,3 +857,139 @@ html:not(.js) .st-phone {
 .ln.sk.name dd {
   font-weight: 400;
 }
+
+/* ---- The elevate pass (Nov 2026): a paperclip, a folded letter, the local time ---------------- */
+
+/* The "Received" stamp peels on the card (stamp.css), so its face is the card's white. */
+.sent {
+  --stamp-paper: var(--card);
+}
+
+/* The paperclip. It sits over the top edge of the form card, a third of it above the paper, and
+   is only there while "Check your answers" is the open step: it slides down onto the corner as
+   the step opens. Soft grey wire, so it reads as an object and not as a control. */
+.clip {
+  position: absolute;
+  top: -1.1rem;
+  right: clamp(1.75rem, 7vw, 4rem);
+  z-index: 2;
+  display: none;
+  width: 1.35rem;
+  height: 3.1rem;
+  transform: rotate(7deg);
+  pointer-events: none;
+}
+.clip svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--soft);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+.js .q-form:has(.q-check.on) .clip {
+  display: block;
+  animation: clip-on 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 0.12s both;
+}
+/* In the folding copy of the card the clip is already on, and stays put. */
+.letter .clip {
+  display: block;
+  animation: none;
+}
+@keyframes clip-on {
+  from {
+    opacity: 0;
+    transform: translateY(-3.25rem) rotate(-12deg);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: rotate(7deg);
+  }
+}
+
+/* The folded letter (foldAway in contact.js): a stand-in laid exactly over the form card for the
+   length of the fold. Three wings, each a third of the card; a wing shows its third of a copy of
+   the card on the front and plain paper on the back, so a folded wing shows paper. */
+.letter {
+  position: fixed;
+  z-index: 45;
+  perspective: 1500px;
+  pointer-events: none;
+}
+.letter-wing {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform-style: preserve-3d;
+}
+.letter-pane,
+.letter-back {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.letter-back {
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transform: rotateX(180deg);
+}
+.letter-wing:first-child > * {
+  border-radius: 1.75rem 1.75rem 0 0;
+}
+.letter-wing:last-child > * {
+  border-radius: 0 0 1.75rem 1.75rem;
+}
+/* The crease: a hairline where each wing meets the next. */
+.letter-wing + .letter-wing .letter-pane {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+.letter .letter-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+/* The time in Cincinnati, under the reply promise. A small dot in the studio blue and one plain
+   line; light.js writes the time and takes `hidden` off. */
+/* The words sit in one span, so they wrap as a sentence beside the dot, not as three columns. */
+.direct .direct-time {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+.direct .direct-time[hidden] {
+  display: none;
+}
+.direct-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .q-form:has(.q-check.on) .clip {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .clip svg {
+    stroke: CanvasText;
+  }
+  .direct-dot {
+    background: CanvasText;
+  }
+}

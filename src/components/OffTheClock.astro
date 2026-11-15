@@ -6,14 +6,25 @@
    under the front, so every word and link is still there. Reduced motion swaps the faces with no
    turn.
 
+   Two backs carry something to play with (the script is src/scripts/off-the-clock.js):
+   - Photography: a camera roll, six of my own prints from the photos collection in one frame.
+     Step through with the two buttons or the arrow keys, or swipe. With no script it is a row
+     you scroll sideways.
+   - Running: the Stone Steps 50K course, drawn from the real trace in
+     src/data/stone-steps-course.ts (the same data the case study's CourseLine uses). The line
+     draws itself as the card turns over, and "Draw it again" replays it. I built that race's
+     website; nothing here says I ran it, so keep the words to what the data supports.
+   Neither shows a date or a year.
+
    Links that point at other pages only appear once that page is real: /photography/ while its
    gate is open, a journal post once it is published (src/data/nav.ts). */
 import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 import { journalPath, photoCount } from '../data/nav';
 import { photographyOpen } from '../data/photography-gate';
 import picnic from '../assets/about/family-picnic.jpg';
-import raceBibs from '../assets/about/running-race-bibs.jpg';
+import { courseBounds as B, courseLoops as L, coursePoints as P } from '../data/stone-steps-course';
 
 interface Card {
   id: string;
@@ -25,8 +36,41 @@ interface Card {
   back: string;
   /** `position` overrides the crop focus (object-position) for a photo that needs it. */
   photo?: { src: ImageMetadata; alt: string; position?: string };
+  /** Something to play with on the back: the camera roll or the course line. */
+  toy?: 'reel' | 'course';
+  /** A second, smaller sentence on the back, under the toy. */
+  note?: string;
   link?: { href: string; text: string } | null;
 }
+
+/* The camera roll: six prints from the photos collection, by id, in this order. Places only in
+   the captions, never a date. A print that leaves the collection simply drops out of the roll. */
+const REEL = [
+  'ig-little-miami-river',
+  'ig-calm-river',
+  'ig-farmland-clouds',
+  'ig-hiker-ridge-view',
+  'ig-canal-footbridge',
+  'ig-edinburgh-clock-tower',
+];
+const prints = await getCollection('photos');
+const reel = REEL.flatMap((id) => prints.filter((p) => p.id === id));
+
+/* The course from above, in the same projection CourseLine.astro uses, at a size that suits a
+   small card. Every other point of the trace is plenty at this size. */
+const CW = 280;
+const PAD = 12;
+const midLat = ((B.north + B.south) / 2) * (Math.PI / 180);
+const scale = (CW - PAD * 2) / ((B.east - B.west) * Math.cos(midLat));
+const CH = Math.round((B.north - B.south) * scale + PAD * 2);
+const cx = (lon: number) => +(PAD + (lon - B.west) * Math.cos(midLat) * scale).toFixed(1);
+const cy = (lat: number) => +(PAD + (B.north - lat) * scale).toFixed(1);
+const trace = P.filter((_, i) => i % 2 === 0 || i === P.length - 1).map((p) => [
+  cx(p[0]),
+  cy(p[1]),
+]);
+const courseD = trace.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join('');
+const courseLabel = `The Stone Steps 50K course from above: ${L.length} loops through Mt. Airy Forest.`;
 
 const [photosOpen, avPost, serverPost] = await Promise.all([
   photoCount().then(photographyOpen),
@@ -42,6 +86,7 @@ const cards: Card[] = [
     title: 'Photography',
     line: 'Where all of this started.',
     back: 'I still carry a camera for myself, mostly chasing landscapes around the region.',
+    toy: reel.length >= 3 ? 'reel' : undefined,
     link: photosOpen ? { href: '/photography/', text: 'See the photographs' } : null,
   },
   {
@@ -73,13 +118,10 @@ const cards: Card[] = [
     title: 'Running',
     line: 'Long runs, and a race now and then.',
     back: 'Mostly long runs around Cincinnati, and now and then I pin on a number for a local race.',
-    photo: {
-      src: raceBibs,
-      alt: 'Nathan and a friend in race bibs before a local race.',
-      // Taller frame than the others: 30% keeps both heads in the 4:3 crop.
-      position: '50% 30%',
-    },
-    link: null,
+    toy: 'course',
+    // Only what the data and the case study support: I built the site. Nothing says I ran it.
+    note: `That line is the Stone Steps 50K course in Mt. Airy Forest, ${L.length} loops traced from a recorded run. I built the race's website.`,
+    link: { href: '/work/stone-steps-50k/', text: 'Read the Stone Steps case study' },
   },
 ];
 ---
@@ -134,7 +176,70 @@ const cards: Card[] = [
                 decoding="async"
               />
             )}
+            {c.toy === 'reel' && (
+              <div class="otc-reel" data-reel>
+                <div
+                  class="reel-strip"
+                  data-reel-strip
+                  role="group"
+                  aria-label={`Camera roll: ${reel.length} of my photographs. Use the arrow keys or the buttons to step through.`}
+                  tabindex="0"
+                >
+                  {reel.map((p) => (
+                    <figure class="reel-f">
+                      <Image
+                        src={p.data.image}
+                        alt={p.data.alt}
+                        widths={[360, 720]}
+                        sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 18rem"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <figcaption>
+                        <b>{p.data.title}</b>
+                        {p.data.location && <span>{p.data.location}</span>}
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+                <div class="reel-bar">
+                  <button
+                    type="button"
+                    class="reel-b"
+                    data-reel-prev
+                    aria-label="Previous photograph"
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                      <path d="M12.5 4.5 7 10l5.5 5.5" />
+                    </svg>
+                  </button>
+                  <p class="reel-n" data-reel-n aria-live="polite">
+                    1 of {reel.length}
+                  </p>
+                  <button type="button" class="reel-b" data-reel-next aria-label="Next photograph">
+                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                      <path d="M7.5 4.5 13 10l-5.5 5.5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+            {c.toy === 'course' && (
+              <div class="otc-course" data-otc-course>
+                <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={courseLabel}>
+                  {/* The whole course, faint, so the shape is there before the line is drawn. */}
+                  <path class="oc-ghost" d={courseD} />
+                  <path class="oc-line" d={courseD} pathLength="1" />
+                  {/* Start and finish: every loop comes back to the aid station. */}
+                  <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
+                </svg>
+                <button type="button" class="oc-again" data-otc-again>
+                  Draw it again
+                </button>
+              </div>
+            )}
             <p>{c.back}</p>
+            {c.note && <p class="otc-note">{c.note}</p>}
             {c.link && <a href={c.link.href}>{c.link.text}</a>}
             <button type="button" class="otc-turn" data-otc-back>
               Turn back

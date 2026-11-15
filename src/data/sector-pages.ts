@@ -4,7 +4,8 @@
    Which sectors have their own page, and that page's title and description.
    /churches/ is its own build (src/pages/churches.astro). /schools/, /nonprofits/
    and /small-business/ are lean: one thin .astro file each, all drawn by
-   src/components/SectorLean.astro from the copy here, with no tools of their own.
+   src/components/SectorLean.astro from the copy here. Each carries one tool, "Try it": a few
+   questions asked of one client's real phone page (the `ask` block, see LeanAsk below).
    A study's sector line and the JSON-LD trail ask sectorPagePath() where to link.
    A new sector page gets its own .astro file, an entry here, a line in
    tests/routes.ts and one in scripts/generate-og.mjs.
@@ -38,6 +39,34 @@ export interface LeanPoint {
 /** A piece of copy with links in it: plain strings, or text and a href. */
 export type Rich = (string | { text: string; href: string })[];
 
+/** One question for "Try it", and where its answer sits on the client's real phone page. */
+export interface AskQuestion {
+  /** The question, in the visitor's words. */
+  q: string;
+  /** How far down it was found: "Found it on the first screen," or "Found it about 2 scrolls down,". */
+  where: string;
+  /** What is there. Name the page's own headings and buttons, never a detail that changes. */
+  a: string;
+  /** Where the window rests, in pixels of the 560-wide capture (one phone screen is about 1,090). */
+  stop: number;
+}
+
+/* "Try it" on a lean page: the questions a first-time visitor asks, answered by scrolling one
+   client's real homepage in a phone window (src/scripts/ask.js, the engine /churches/ uses).
+   The picture is the long phone capture every study already has,
+   public/assets/study/{slug}-mobile.webp, 560 by 4000. Every `where` and `a` below was written
+   by looking at that capture with a ruler on it, so each one is TRUE of the picture: re-check
+   them all whenever a capture is re-shot (npm run capture:study). A stop past about 2,900 cannot
+   be reached, since the capture ends at 4,000. If a page cannot honestly answer a question,
+   leave the question out. */
+export interface LeanAsk {
+  /** The case study whose capture is shown. */
+  slug: string;
+  /** Who is asking, for the heading: "Ask what a new student asks." */
+  who: string;
+  questions: AskQuestion[];
+}
+
 export interface LeanSector extends SectorPage {
   /** The H1, as HTML with the heavy words in <b>. */
   heading: string;
@@ -51,6 +80,8 @@ export interface LeanSector extends SectorPage {
   closest?: Rich;
   /** Under the tiers: anything this buyer should weigh, and when to walk away. */
   tierNotes: string[];
+  /** "Try it": questions asked of one client's real phone page. */
+  ask: LeanAsk;
 }
 
 export const CHURCHES: SectorPage = {
@@ -101,6 +132,36 @@ export const SCHOOLS: LeanSector = {
     'If you use an admissions or school management system, tell me early. What has to connect to it is part of what sets the tier.',
     'One way to weigh the cost: divide the first-year cost by a year of tuition. The answer is how many students, for one year each, would cover it. I cannot promise you a single student, so only you can judge whether that number looks reachable.',
   ],
+  ask: {
+    slug: 'presbyterian-academy',
+    who: 'a new student',
+    questions: [
+      {
+        q: 'Who is it for?',
+        where: 'Found it on the first screen,',
+        a: 'in the lines under the headline: who the school teaches, and how it meets.',
+        stop: 120,
+      },
+      {
+        q: 'What would I study?',
+        where: 'Found it about 1 scroll down,',
+        a: 'under Contents: every course by name, with who teaches it.',
+        stop: 1000,
+      },
+      {
+        q: 'What does it cost?',
+        where: 'Found it about 2 scrolls down,',
+        a: 'under The courses: each course shows its price beside its dates.',
+        stop: 2330,
+      },
+      {
+        q: 'Can I visit before I sign up?',
+        where: 'Found it on the first screen,',
+        a: 'twice: a Visit free link in the top bar, and a Book a free intro button.',
+        stop: 0,
+      },
+    ],
+  },
 };
 
 export const NONPROFITS: LeanSector = {
@@ -134,6 +195,36 @@ export const NONPROFITS: LeanSector = {
     'Need this for a board or a grant? I can prepare a short summary of your project: the scope, the three-year cost, the upkeep and what happens if you ever move on.',
     'If your budget is small, one of these tiers may be too large a share of it. Tell me the number and I will say so.',
   ],
+  ask: {
+    slug: 'theology-matters',
+    who: 'a new reader',
+    questions: [
+      {
+        q: 'What is in the current issue?',
+        where: 'Found it on the first screen,',
+        a: 'under the name of the issue: how many articles, to read on the page or in print.',
+        stop: 150,
+      },
+      {
+        q: 'What is each article about?',
+        where: 'Found it about 1 scroll down,',
+        a: 'under In this issue: each article with its author, its reading time and a short summary.',
+        stop: 950,
+      },
+      {
+        q: 'How long has this been going?',
+        where: 'Found it about 2 scrolls down,',
+        a: 'in one line under the articles: the year it began, and how many essays and issues since.',
+        stop: 2250,
+      },
+      {
+        q: 'Can I read past essays?',
+        where: 'Found it about 3 scrolls down,',
+        a: 'under Recent Dispatches: essays from earlier issues, with a row of topics to pick from.',
+        stop: 2830,
+      },
+    ],
+  },
 };
 
 export const SMALL_BUSINESS: LeanSector = {
@@ -167,6 +258,36 @@ export const SMALL_BUSINESS: LeanSector = {
     'If you need a few pages and enjoy doing it yourself, a site builder is probably enough, and I will tell you so.',
     'One way to weigh the cost: divide the first-year cost by what a typical job brings in. That is how many jobs would cover it. I cannot promise you those jobs, so only you can judge whether that number looks reachable.',
   ],
+  ask: {
+    slug: 'reid-design',
+    who: 'a new customer',
+    questions: [
+      {
+        q: 'Do you work near me?',
+        where: 'Found it on the first screen,',
+        a: 'in the line over the headline: the town, and the area the business serves.',
+        stop: 300,
+      },
+      {
+        q: 'Who would I be working with?',
+        where: 'Found it about 1 scroll down,',
+        a: 'in the owner’s own introduction: her photo, her name and why she started.',
+        stop: 1000,
+      },
+      {
+        q: 'What do other customers say?',
+        where: 'Found it about 2 scrolls down,',
+        a: 'under What clients say: the Google rating, then reviews with names.',
+        stop: 2150,
+      },
+      {
+        q: 'What will it cost?',
+        where: 'Found it on the first screen,',
+        a: 'on a See services and prices button, over a line saying you see the price before anything is ordered.',
+        stop: 420,
+      },
+    ],
+  },
 };
 
 export const SECTOR_PAGES: SectorPage[] = [CHURCHES, SCHOOLS, NONPROFITS, SMALL_BUSINESS];

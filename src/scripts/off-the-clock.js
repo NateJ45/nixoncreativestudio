@@ -1,4 +1,5 @@
-/* About, below the fold: the "Off the clock" cards that turn over, and the bio's photo stacks.
+/* About, below the fold: the "Off the clock" cards that turn over (two of their backs carry a
+   small toy: a camera roll and a course line that draws), and the bio's photo stacks.
    Both are real buttons with aria-expanded, so a screen reader hears what each one does and
    whether it is open. Reduced motion is handled in CSS (no turn, no fan). */
 import { cue } from './sound.js';
@@ -25,6 +26,74 @@ import { cue } from './sound.js';
   });
   home.addEventListener('click', function () {
     set(false, true);
+  });
+});
+
+/* ---- The camera roll on the Photography card's back ------------------------------------------
+   One frame, six prints side by side in a row that snaps (CSS scroll snap, so a swipe works and
+   so does the page with no script). The two buttons and the left and right arrow keys step one
+   print at a time and go round at the ends. The count under the frame is a polite live region,
+   so a screen reader hears "2 of 6: Still morning". Reduced motion: the step is a jump. */
+var noMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+[].forEach.call(document.querySelectorAll('[data-reel]'), function (reel) {
+  var strip = reel.querySelector('[data-reel-strip]'),
+    frames = [].slice.call(strip.children),
+    count = reel.querySelector('[data-reel-n]'),
+    n = frames.length,
+    at = 0,
+    busy = 0;
+  if (!n) return;
+  var say = function () {
+    var title = frames[at].querySelector('figcaption b');
+    count.textContent = at + 1 + ' of ' + n + (title ? ': ' + title.textContent : '');
+  };
+  var go = function (i) {
+    at = (i + n) % n;
+    strip.scrollTo({ left: frames[at].offsetLeft, behavior: noMotion ? 'auto' : 'smooth' });
+    say();
+    cue('tick');
+  };
+  reel.querySelector('[data-reel-prev]').addEventListener('click', function () {
+    go(at - 1);
+  });
+  reel.querySelector('[data-reel-next]').addEventListener('click', function () {
+    go(at + 1);
+  });
+  reel.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    go(at + (e.key === 'ArrowRight' ? 1 : -1));
+  });
+  /* A swipe or a drag of the scrollbar moves the row itself: read back which print it rests on. */
+  strip.addEventListener(
+    'scroll',
+    function () {
+      clearTimeout(busy);
+      busy = setTimeout(function () {
+        var i = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+        i = Math.max(0, Math.min(n - 1, i));
+        if (i !== at) {
+          at = i;
+          say();
+        }
+      }, 120);
+    },
+    { passive: true },
+  );
+});
+
+/* ---- The course line on the Running card's back ----------------------------------------------
+   The line draws itself in CSS when the card turns over (.otc.over, about.css). "Draw it again"
+   lifts the pen and replays it: the class puts the line back to undrawn with no transition, one
+   reflow makes that stick, and taking the class off lets it draw. Hidden under reduced motion,
+   where the line is simply there. */
+[].forEach.call(document.querySelectorAll('[data-otc-course]'), function (box) {
+  var again = box.querySelector('[data-otc-again]');
+  if (!again) return;
+  again.addEventListener('click', function () {
+    box.classList.add('lifted');
+    void box.offsetWidth;
+    box.classList.remove('lifted');
   });
 });
 

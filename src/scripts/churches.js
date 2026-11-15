@@ -1,6 +1,7 @@
 /* Churches: as you read the four points, the church's real phone page scrolls along in its window.
    Everything here is critically damped, so it eases to a stop and never bounces. */
 import { ui } from './kit.js';
+import { wireAsk } from './ask.js';
 
 (function () {
   var reduce = ui.reduce,
@@ -204,63 +205,10 @@ import { ui } from './kit.js';
     if (live) raf = requestAnimationFrame(frame);
   }
 
-  /* Try it: a question scrolls the church's real page to its answer, on the same damped ease as the
-     rest of this page. It is wired before the reduced-motion return below, so it works there too:
-     the page simply jumps to the answer. */
-  var sun = $('[data-sun]');
-  if (sun) {
-    var sunImg = $('.scr img', sun),
-      qs = $$('[data-sun-q]', sun),
-      answers = $$('[data-sun-a]', sun),
-      sunY = 0,
-      sunV = 0,
-      sunT = 0,
-      sunRaf = 0,
-      sunLast = 0;
-    var scale = function () {
-      return sunImg.offsetWidth / 560 || 0;
-    };
-    var sunPaint = function () {
-      sunImg.style.transform = 'translate3d(0,' + (-sunY * scale()).toFixed(2) + 'px,0)';
-    };
-    var sunFrame = function (now) {
-      sunRaf = 0;
-      var dt = Math.min(0.033, (now - sunLast) / 1000 || 0.016);
-      sunLast = now;
-      sunV += (42 * (sunT - sunY) - 13 * sunV) * dt;
-      sunY += sunV * dt;
-      if (Math.abs(sunT - sunY) < 0.5 && Math.abs(sunV) < 0.5) {
-        sunY = sunT;
-        sunV = 0;
-      } else sunRaf = requestAnimationFrame(sunFrame);
-      sunPaint();
-    };
-    var pick = function (btn) {
-      sunT = +btn.dataset.sunQ;
-      qs.forEach(function (b, i) {
-        var on = b === btn;
-        b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        answers[i].hidden = !on;
-      });
-      if (reduce) {
-        sunY = sunT;
-        sunPaint();
-      } else if (!sunRaf) {
-        sunLast = performance.now();
-        sunRaf = requestAnimationFrame(sunFrame);
-      }
-    };
-    qs.forEach(function (b) {
-      b.addEventListener('click', function () {
-        pick(b);
-      });
-    });
-    sunT = sunY = +qs[0].dataset.sunQ;
-    pick(qs[0]);
-    sunPaint();
-    addEventListener('resize', sunPaint);
-    sunImg.addEventListener('load', sunPaint);
-  }
+  /* Try it: a question scrolls the church's real page to its answer. The engine is shared with the
+     lean sector pages (src/scripts/ask.js). It is wired before the reduced-motion return below, so
+     it works there too: the page simply jumps to the answer. */
+  wireAsk($('[data-sun]'));
 
   if (reduce) {
     /* A still page: both windows at the part of the page that matters most, and all the words at full strength. */
