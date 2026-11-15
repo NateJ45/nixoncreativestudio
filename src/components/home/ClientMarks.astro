@@ -1,18 +1,28 @@
 ---
-/* Home, the client marks: one quiet wall of the real logos of the organizations in the grid, each a
-   link to its case study. It sits between the grid and What changed, so the names you just saw as
-   phones come back as the marks their own people know them by (added 2026-11-15, after a look at
-   another designer's client strip).
+/* Home, the client marks: a tile for each organization in the grid, in that client's own colour,
+   holding the logo their own people know them by, each a link to its case study. It sits between
+   the grid and What changed (added 2026-11-15, after a look at another designer's client strip).
 
-   The marks are set in one ink so the wall reads as one thing, and each one takes its own colours
-   back when you point at it or land on it with the keyboard. As the wall scrolls into view, the
-   marks rise in one after another (a CSS scroll-driven animation, home.css). Nothing moves on its
+   Each mark is the client's own dark-ground version, shown in its real colours on its own accent,
+   the way it sits on their site: no recolouring, no filters. As the wall scrolls into view the
+   tiles rise in one after another (a CSS scroll-driven animation, home.css). Nothing moves on its
    own, so there is no pause button to give: under reduced motion, or in a browser without
    scroll-driven animations, the wall is simply there.
 
-   The files are the clients' own (their repos and live sites), in src/assets/clients/ named by the
-   study slug. The Presbyterian Academy's brand is a text wordmark set in Instrument Serif, so it
-   is set as text here too. A client with no file is set as text, never drawn or invented. */
+   The files live in src/assets/clients/, named by the study slug, and come from the clients' own
+   repos and live sites:
+   - stone-steps-50k.svg: the race's hand-painted sign (logo-dark), which only exists at 108 by 180,
+     so it is never shown taller than 5.5rem.
+   - mas-monograms.svg: the brand kit's wordmark-color-dark.
+   - presbyterian-academy.png: the Academy's brand is live text in Instrument Serif, so this is a
+     4x capture of their header wordmark, set in the cream and pale green of their own footer.
+   - theology-matters.svg: TheologyMattersLogo-White.
+   - first-baptist-muncie.svg: the church's logo-dark (made for its indigo).
+   - reid-design.png: the white wordmark from the site's share-card assets.
+   - foundation-for-reformed-theology.png: the site's logo-white.
+   - first-presbyterian-orangeburg.png: the church's white logo from its Wix site.
+   - west-chester-preschool.webp: the school's landscape logo for dark grounds, 1500px wide.
+   A client with no file is set as its name in type, never drawn or invented. */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Client } from '../../lib/clients';
@@ -38,25 +48,25 @@ const bySlug = new Map(
   ]),
 );
 
-/* How tall each mark is set, in rem, so wide wordmarks and tall seals carry the same weight.
-   Anything not listed gets the default. `own: true` keeps the mark's own colours at rest: the
-   Stone Steps sign is a hand-painted picture, and one ink would turn it into a block. */
-const FIT: Record<string, { h?: number; own?: boolean }> = {
-  'stone-steps-50k': { h: 4.4, own: true },
-  'mas-monograms': { h: 1.9 },
-  'reid-design': { h: 1.35 },
-  'foundation-for-reformed-theology': { h: 1.5 },
-  'first-presbyterian-orangeburg': { h: 3.4 },
-  'west-chester-preschool': { h: 4 },
-  'first-baptist-muncie': { h: 3.4 },
+/* How much of the tile's height each mark may fill (wide wordmarks are held by the tile's width
+   instead), so a sign, a seal and a long wordmark carry about the same weight. `max` caps a small
+   source so it never shows soft. */
+const FIT: Record<string, { h: number; max?: string }> = {
+  'stone-steps-50k': { h: 70, max: '5.5rem' },
+  'mas-monograms': { h: 30 },
+  'presbyterian-academy': { h: 26 },
+  'theology-matters': { h: 26 },
+  'first-baptist-muncie': { h: 52 },
+  'reid-design': { h: 15 },
+  'foundation-for-reformed-theology': { h: 23 },
+  'first-presbyterian-orangeburg': { h: 52 },
+  'west-chester-preschool': { h: 64 },
 };
-const BASE = 2.4;
 
 const marks = clients.map((c) => ({
   ...c,
   file: bySlug.get(c.slug),
-  h: FIT[c.slug]?.h ?? BASE,
-  own: FIT[c.slug]?.own ?? false,
+  fit: FIT[c.slug] ?? { h: 34 },
 }));
 ---
 
@@ -67,13 +77,17 @@ const marks = clients.map((c) => ({
   <ul class="lw-row">
     {marks.map((m, i) => (
       <li style={`--i:${i}`}>
-        <a href={m.study} class:list={['lw', { own: m.own }]}>
+        <a
+          href={m.study}
+          class="lw"
+          style={`--c:${m.accent};--lh:${m.fit.h}${m.fit.max ? `;--lmax:${m.fit.max}` : ''}`}
+          data-sheen
+        >
           {m.file ? (
             <Image
               src={m.file}
               alt={m.name}
-              height={Math.round(m.h * 16 * 2)}
-              style={`height:${m.h}rem`}
+              width={Math.min(m.file.width, 640)}
               loading="lazy"
               decoding="async"
             />

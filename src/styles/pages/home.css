@@ -1049,100 +1049,113 @@ html:not(.js) .ed-go {
 }
 
 /* ---------------------------------------------------------------------------
-   The client marks (src/components/home/ClientMarks.astro): the real logos of the
-   organizations in the grid, one ink at rest, their own colours on point or focus.
+   The client marks (src/components/home/ClientMarks.astro): a tile for each
+   client in its own accent, holding its own dark-ground logo in its real colours.
+   A client's colour stays in its own surface (the tile), as everywhere else.
    --------------------------------------------------------------------------- */
 .logowall {
-  padding: clamp(2.5rem, 7vh, 4.5rem) var(--gut);
-  border-block: 1px solid var(--line);
+  padding: clamp(3rem, 8vh, 5rem) var(--gut);
   text-align: center;
 }
 .logowall h2 {
-  margin-bottom: clamp(1.5rem, 4vh, 2.5rem);
+  margin-bottom: clamp(1.25rem, 3.5vh, 2rem);
   color: var(--soft);
 }
 .lw-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: clamp(1.75rem, 4vw, 3.5rem) clamp(2rem, 5vw, 4.25rem);
-  max-width: 78rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.6rem, 1.4vw, 1rem);
+  max-width: 64rem;
   margin: 0 auto;
   padding: 0;
   list-style: none;
 }
 .lw {
-  display: flex;
-  align-items: center;
-  min-height: 2.75rem;
-  border-radius: 0.5rem;
-  color: var(--ink);
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 1;
+  padding: 0 9%;
+  container-type: size;
+  overflow: hidden;
+  border-radius: var(--cardr, 1.25rem);
+  background-color: var(--c);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    var(--lean, 0px) 18px 30px -22px rgba(0, 0, 0, 0.5);
+  outline-offset: 4px;
   text-decoration: none;
-  outline-offset: 6px;
+  transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
-/* One ink at rest: every mark is drawn in the page's ink (black in light, the pale ink in dark).
-   The alt text carries the name, so the picture is never the only way to know who it is. */
+.lw:hover,
+.lw:focus-visible {
+  transform: translateY(-4px);
+}
+/* The tile's height drives the mark's (the tile is a size container, so 1cqh is a hundredth of
+   its height): --lh is its share, --lmax a cap for a small source, and
+   a wide wordmark is held by the tile's width instead (object-fit keeps its shape). */
 .lw img {
   display: block;
   width: auto;
-  max-width: min(17rem, 70vw);
+  height: calc(var(--lh) * 1cqh);
+  max-width: 100%;
+  max-height: var(--lmax, none);
   object-fit: contain;
-  filter: brightness(0);
-  opacity: 0.72;
-  transition:
-    filter 0.35s var(--ease),
-    opacity 0.35s var(--ease),
-    transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-:root[data-theme='dark'] .lw img {
-  filter: brightness(0) invert(1);
-  opacity: 0.8;
-}
-.lw.own img,
-:root[data-theme='dark'] .lw.own img {
-  filter: none;
-  opacity: 1;
+  transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .lw:hover img,
-.lw:focus-visible img,
-:root[data-theme='dark'] .lw:hover img,
-:root[data-theme='dark'] .lw:focus-visible img {
-  filter: none;
-  opacity: 1;
-  transform: translateY(-3px) scale(1.04);
+.lw:focus-visible img {
+  transform: scale(1.05);
 }
-/* The Academy's brand is its name in Instrument Serif; with the font not loaded here it falls
-   back to the closest serif on the device. */
 .lw-type {
-  font:
-    400 clamp(1.5rem, 2.4vw, 1.9rem) / 1 'Instrument Serif',
-    Georgia,
-    'Times New Roman',
-    serif;
-  letter-spacing: -0.01em;
-  opacity: 0.8;
-  transition: color 0.35s var(--ease);
+  color: #fff;
+  font: 500 clamp(1rem, 1.8vw, 1.4rem) / 1.15 var(--display);
 }
-.lw:hover .lw-type,
-.lw:focus-visible .lw-type {
-  opacity: 1;
+/* Two across on a phone, the last tile across both. */
+@media (max-width: 40rem) {
+  .lw-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lw-row li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .lw-row li:last-child:nth-child(odd) .lw {
+    aspect-ratio: 4 / 1;
+  }
 }
-/* The marks rise in one after another as the wall scrolls into view. Scroll-driven, so nothing
+/* The tiles rise in one after another as the wall scrolls into view. Scroll-driven, so nothing
    moves on its own, and only where the browser can and motion is allowed. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .lw-row li {
       animation: lw-rise linear both;
       animation-timeline: view();
-      animation-range: entry calc(var(--i) * 4%) entry calc(60% + var(--i) * 4%);
+      animation-range: entry calc(var(--i) * 3%) entry calc(55% + var(--i) * 3%);
     }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lw,
+  .lw img {
+    transition: none;
+  }
+  .lw:hover,
+  .lw:focus-visible,
+  .lw:hover img,
+  .lw:focus-visible img {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .lw {
+    border: 1px solid CanvasText;
   }
 }
 @keyframes lw-rise {
   from {
     opacity: 0;
-    transform: translateY(1.25rem) scale(0.96);
+    transform: translateY(1.25rem) scale(0.97);
   }
   to {
     opacity: 1;
