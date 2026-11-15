@@ -3,9 +3,10 @@
    / | The homepage
    ============================================================================
    Top to bottom:
-     Hero        the headline, with the portrait inside the sentence, the blue vow stamp
-                 under it ("Fast. Works on every phone. Gets results."), and the
-                 empty space the hand of clients is dealt into.
+     Hero        the headline, with the portrait inside the sentence and a marker line drawn
+                 under "pull their weight.", the results line under it (one real client
+                 figure at a time, the `heroProof` list below), and the empty space the
+                 hand of clients is dealt into.
      Work        the giant "Eight selected case studies.", the ledger, and the grid. Every
                  window has one spot here; scroll carries it from the hand.
      What changed  the sourced figures (the `proof` list below), each a wide card on its
@@ -85,6 +86,19 @@ const proof = [
   },
 ];
 
+/* The results line under the headline: one short figure per kind of client, each copied from the
+   sourced figure in that client's case study (never reworded, never rounded). The first is the one
+   that shows before any script and the one the line comes back to and rests on. Picked for what a
+   client hiring a site wants to see: more people (students, visitors, requests), more found on
+   Google, and money saved. */
+const heroProof = [
+  { figure: '58%', what: 'more students', who: 'West Chester Preschool' },
+  { figure: '100%', what: 'more clicks from Google', who: 'Reid Design' },
+  { figure: '66%', what: 'more visitors a day', who: 'First Baptist Church Muncie' },
+  { figure: '94', what: 'journal requests in four weeks', who: 'Theology Matters' },
+  { figure: '$264', what: 'a year back from Squarespace', who: 'MAS Monograms' },
+];
+
 const lead = ['I', 'build', 'websites'];
 const heavy = ['pull', 'their', 'weight.'];
 ---
@@ -124,12 +138,27 @@ const heavy = ['pull', 'their', 'weight.'];
         </>
       ))}
     </h1>
-    {/* The vow: what a good site does, in three plain words, set as a tilted stamp under the
-        headline (added 2026-11-15). Static on purpose: nothing in the first screen starts hidden.
-        Every site here is built to these, so it is a promise, not a figure. */}
-    <p class="vow">
-      <span>Fast.</span> <span>Works on every phone.</span> <span>Gets results.</span>
-    </p>
+    {/* The results line (2026-11-15, replacing the blue vow stamp): one real client figure at a
+        time. The first is in place at load (nothing in the first screen starts hidden); after the
+        headline lands, hero-proof.js steps through the rest once, about a second and a half
+        each, and comes back to rest on the first. A screen reader hears the whole list instead,
+        once. Its height matches the old stamp, so the hero sums (616 and 559) are unchanged. */}
+    <div class="proof" data-proof>
+      <ul class="vh">
+        {heroProof.map((p) => (
+          <li>
+            {p.figure} {p.what}, {p.who}
+          </li>
+        ))}
+      </ul>
+      <p class="proof-run" aria-hidden="true">
+        {heroProof.map((p, i) => (
+          <span class={i === 0 ? 'proof-i on' : 'proof-i'}>
+            <b>{p.figure}</b> {p.what} <span class="proof-who">{p.who}</span>
+          </span>
+        ))}
+      </p>
+    </div>
     {/* The Google rating, with the reviewers' faces (added 2026-11-15, RatingChip.astro). */}
     <RatingChip />
     <p class="sub">
@@ -223,4 +252,5 @@ const heavy = ['pull', 'their', 'weight.'];
   import '../scripts/home.js';
   import '../scripts/home-more.js';
   import '../scripts/quote-cycle.js';
+  import '../scripts/hero-proof.js';
 </script>

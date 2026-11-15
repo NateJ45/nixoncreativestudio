@@ -13,7 +13,8 @@
    Since 2026-11-15 the strip is a numbered run of large screens, one under another, each with a
    caption: "2 / 3", the feature's own heading, and the first sentence of its text. Big enough to
    judge the design without opening anything, and every one still opens larger (ZoomImage). The
-   rest of each feature's text stays in the fold below. */
+   rest of each feature's text stays in the fold below, so with screens above it the fold's label
+   reads "How each of these works" rather than promising screenshots already on show. */
 import ZoomImage from './ZoomImage.astro';
 
 interface Props {
@@ -91,7 +92,9 @@ const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/ar
   <details class="more" data-more>
     <summary>
       <span class="more-l">
-        The full build, with screenshots{more && ' and more before and afters'}
+        {shots.length > 0
+          ? `How each of these works${more ? ', and more before and afters' : ''}`
+          : `The full build, with screenshots${more ? ' and more before and afters' : ''}`}
       </span>
       <i aria-hidden="true"></i>
     </summary>
