@@ -3,7 +3,8 @@
    page design. src/scripts/work.js filters by sector (?sector=church) and switches
    to the ruled list (?view=list). Without JavaScript the ruled list is the page.
    Under the windows, the same studies indexed by the job the site has to do
-   (src/data/jobs.ts). Counts come from the case studies, never typed.
+   (src/data/jobs.ts). Counts come from the case studies, never typed. Pointing at, focusing or
+   tapping a name in that index raises the client's desktop window beside its row (work.js).
    Beside the list on a wide screen, the row you are on shows its window and its outcome. */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/work.css';
@@ -50,6 +51,10 @@ const jobs = JOBS.map((job) => ({
     return client ? [{ client, why }] : [];
   }),
 })).filter((job) => job.studies.length > 0);
+// One window a client for the job index to raise, however many jobs name them.
+const jobClients = clients.filter((c) =>
+  jobs.some((job) => job.studies.some((st) => st.client.slug === c.slug)),
+);
 ---
 
 <BaseLayout
@@ -251,8 +256,11 @@ const jobs = JOBS.map((job) => ({
             </div>
             <ul class="job-studies">
               {job.studies.map(({ client, why }) => (
-                <li>
-                  <a href={client.study}>{client.name}</a>
+                <li data-job-row data-slug={client.slug}>
+                  {/* This row raises its own window (below), so the automatic preview stays off. */}
+                  <a href={client.study} data-peek="off">
+                    {client.name}
+                  </a>
                   <span>{why}</span>
                 </li>
               ))}
@@ -260,6 +268,33 @@ const jobs = JOBS.map((job) => ({
           </li>
         ))}
       </ul>
+      {/* The windows the index raises (work.js): one a client, hidden until its row is pointed at,
+          focused or tapped. The still is the cover the grid above already shows, and it is only
+          asked for when the window is first raised, so nothing new is fetched at load. The names
+          are the links; this is decoration, though a click on a raised window follows it too. */}
+      <div class="jp-stage" data-job-peek aria-hidden="true">
+        {jobClients.map((c) => (
+          <figure
+            class="jp"
+            data-for={c.slug}
+            data-href={c.study}
+            hidden
+            style={`--c:${c.accent};--p:${c.paper}`}
+          >
+            <span class="tile desk" data-slug={c.slug} data-direct>
+              <span class="b-top">
+                <span class="url">
+                  <Fragment set:html={LOCK} />
+                  <span>{c.host}</span>
+                </span>
+              </span>
+              <span class="scr">
+                <img data-src={c.deskStill} alt="" decoding="async" width="1000" height="750" />
+              </span>
+            </span>
+          </figure>
+        ))}
+      </div>
     </div>
   </section>
 

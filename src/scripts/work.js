@@ -425,3 +425,130 @@ if (figCards.length) {
     });
   }
 }
+/* What the site has to do: a name in the index raises that client's desktop window beside its row,
+   the way About's map raises one over a state card (same look, same house bounce).
+
+   - A mouse: pointing at a row raises it. It stays while the pointer is on the row or on the
+     window, and goes a moment after it has left both, so the pointer can cross onto it
+     (WCAG 1.4.13). A click on the window opens the study, like the name.
+   - A keyboard: focusing a name raises it, moving on puts it away, and Escape puts it away at once.
+   - Touch: the first tap on a name shows the picture and the second follows the link. On a phone
+     the picture opens in the row, under the words; on a wide touch screen it rises beside the row
+     like a mouse's.
+   Each window's still is the cover the grid above already uses, and it is only asked for the
+   first time that window is raised. Under reduced motion it appears with no bounce. With no script
+   the stage stays hidden and the names are plain links. */
+(function () {
+  var stage = $('[data-job-peek]'),
+    rowsJ = $$('[data-job-row]');
+  if (!stage || !rowsJ.length) return;
+  var home = stage.parentNode,
+    narrow = matchMedia('(max-width: 52rem)'),
+    figs = {},
+    cur = null,
+    curRow = null,
+    hideT = 0,
+    lastPointer = 'mouse';
+  $$('.jp', stage).forEach(function (f) {
+    figs[f.dataset.for] = f;
+    f.addEventListener('pointerenter', function () {
+      clearTimeout(hideT);
+    });
+    f.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse') hideSoon();
+    });
+    f.addEventListener('click', function () {
+      location.href = f.dataset.href;
+    });
+  });
+  function hideNow() {
+    clearTimeout(hideT);
+    if (!cur) return;
+    cur.hidden = true;
+    cur.classList.remove('inline');
+    cur.style.top = cur.style.left = '';
+    /* A window that opened inside a row goes back to the stage, so the row is as it was. */
+    if (cur.parentNode !== stage) stage.appendChild(cur);
+    if (curRow) curRow.classList.remove('on');
+    cur = curRow = null;
+  }
+  function hideSoon() {
+    clearTimeout(hideT);
+    hideT = setTimeout(hideNow, 220);
+  }
+  /* Beside the row: its foot just above the row, against the table's right edge, so the row you
+     are reading stays clear. With no room above (the row is at the top of the screen) it hangs
+     under the row instead. Positions are relative to the section's column, which the stage fills. */
+  function place(f, row) {
+    var r = row.getBoundingClientRect(),
+      base = home.getBoundingClientRect(),
+      h = f.offsetHeight,
+      above = r.top - h - 12 > 72;
+    f.style.left = base.width - f.offsetWidth + 'px';
+    f.style.top = (above ? r.top - h - 12 : r.bottom + 12) - base.top + 'px';
+    return above;
+  }
+  function show(row) {
+    var f = figs[row.dataset.slug];
+    if (!f) return;
+    clearTimeout(hideT);
+    if (curRow === row) return;
+    hideNow();
+    cur = f;
+    curRow = row;
+    row.classList.add('on');
+    var img = $('img', f);
+    if (!img.getAttribute('src')) img.setAttribute('src', img.dataset.src);
+    f.hidden = false;
+    var from = 22;
+    if (narrow.matches) {
+      f.classList.add('inline');
+      row.appendChild(f);
+    } else if (!place(f, row)) from = -22;
+    if (!reduce && f.animate)
+      f.animate(
+        [
+          { transform: 'translateY(' + from + 'px) rotate(-1.4deg) scale(0.95)' },
+          { transform: 'none' },
+        ],
+        { duration: 560, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+      );
+  }
+  rowsJ.forEach(function (row) {
+    var a = $('a', row);
+    row.addEventListener('pointerenter', function (e) {
+      if (e.pointerType === 'mouse') show(row);
+    });
+    row.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse') hideSoon();
+    });
+    a.addEventListener('pointerdown', function (e) {
+      lastPointer = e.pointerType;
+    });
+    a.addEventListener('focus', function () {
+      /* A tap focuses the link too; the click below deals with a tap. */
+      if (lastPointer !== 'touch') show(row);
+    });
+    a.addEventListener('blur', function () {
+      if (lastPointer !== 'touch') hideSoon();
+    });
+    a.addEventListener('click', function (e) {
+      /* Touch only, and only the first tap: it shows the picture. The second tap, a mouse click,
+         Enter, and a screen reader's activation (which sends no touch pointer first) follow the
+         link as usual. */
+      if (lastPointer !== 'touch' || curRow === row) return;
+      e.preventDefault();
+      show(row);
+    });
+  });
+  doc.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hideNow();
+  });
+  /* A tap anywhere else puts a tapped-open window away. */
+  doc.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'touch' || !cur) return;
+    if (!e.target.closest('[data-job-row], .jp')) hideNow();
+  });
+  narrow.addEventListener('change', hideNow);
+  addEventListener('resize', hideNow);
+})();

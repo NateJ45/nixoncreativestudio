@@ -179,6 +179,63 @@ html:not(.js) .dw-grid,
     margin-bottom: 0.5rem;
   }
 }
+/* The window a row of the job index raises (work.js): the client's desktop window, the same look
+   as the one About's map raises. On a wide screen it floats over the table beside the row; on a
+   phone it opens in the row, under the words. The stage that holds them takes no room. */
+.jobs .wrap {
+  position: relative;
+}
+.jp-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+html:not(.js) .jp-stage {
+  display: none;
+}
+.jp {
+  position: absolute;
+  width: clamp(15rem, 24vw, 22rem);
+  margin: 0;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.jp[hidden] {
+  display: none;
+}
+.jp .tile {
+  display: flex;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 34px 60px -24px rgba(0, 0, 0, 0.55);
+}
+/* In the row, on a phone: a small window under the words, in normal flow. */
+.jp.inline {
+  position: static;
+  width: min(100%, 20rem);
+  margin: 0.25rem 0 1rem;
+}
+.jp.inline .tile {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 18px 30px -18px rgba(0, 0, 0, 0.5);
+}
+/* The row whose window is up says so with weight, never colour alone. */
+.job-studies li.on > a {
+  text-decoration-thickness: 0.12em;
+}
+@media (forced-colors: active) {
+  .jp .tile {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .jp-stage {
+    display: none;
+  }
+}
 
 /* The same sites as rows. In the page from the start, so the links are there without script. */
 .dw-rows {
