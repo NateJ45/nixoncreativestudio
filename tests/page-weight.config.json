@@ -25,6 +25,10 @@
       "_why": "Raised for the elevate build (2026-11-14). The page sat just under the 150 KB default (its dot map, state hand and Off the clock cards are all inline markup), and the shared finish adds about 3 KB to every page: the head script that decides the first-load drawing and the price-card morph before first paint, the two progressive-blur holders, the local time, and data-sheen and data-cursor on every window. Measured 150.9 KB in Playwright chromium; the budget is that plus about 10%.",
       "maxHtmlKb": 166
     },
+    "/services": {
+      "_why": "Raised for the elevate build (2026-11-15). Every price, plan and step is real markup so the page reads with no script, and the elevate pass adds to it: the sticky chapter bar, the hidden 'Your pick' tags on each tier, cost row and care plan, the one How it works drawing beside the steps (inline SVG), and the dock's tier picker corner card that every page now carries (about 3 KB). Measured 153.2 KB in Playwright chromium; the budget is that plus about 10%.",
+      "maxHtmlKb": 168
+    },
     "/photography": {
       "_why": "The light table is the page (2026-11-11): about 30 prints are on screen at once as 560px webp, and the table drifts on its own after a few seconds, so the count grows the longer the test sits there (measured 908 to 1509 KB of images in Playwright chromium at 1280x720 across two runs). Films stay unfetched until they come near the middle and are not counted. Nathan chose the visual over the weight (2026-11-07). The HTML carries the table's data for every print and film as inline JSON (about 550 bytes each), so it grows with the collection: 196 entries measured 247 KB decoded (2026-11-14), and the HTML budget is that plus about 25%.",
       "maxHtmlKb": 310,

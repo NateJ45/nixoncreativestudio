@@ -11,7 +11,8 @@ var $$ = function (a, r) {
 /* Move each group's pill under its pressed button. */
 export function setPill(bar) {
   $$('.dw-seg', bar).forEach(function (seg) {
-    var on = seg.querySelector('button[aria-pressed=true]'),
+    /* A pressed button, or on /services the chapter link you are in (prices-chapters.js). */
+    var on = seg.querySelector('button[aria-pressed=true], a[aria-current]'),
       pill = seg.querySelector('[data-pill]');
     if (!on || !pill) return;
     pill.style.width = on.offsetWidth + 'px';

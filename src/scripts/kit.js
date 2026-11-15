@@ -1326,7 +1326,7 @@ if (topLine) {
   var reach = doc.querySelector('[data-reach]');
   /* A page with its own bar stuck to the top of the screen keeps that spot: /work's filter, a legal
      page's contents. They are only sticky at wider sizes, so ask the browser. */
-  var topBar = doc.querySelector('.dw-bar, .toc');
+  var topBar = doc.querySelector('.dw-bar, .toc, .jump');
   var topClear = function () {
     return !topBar || getComputedStyle(topBar).position !== 'sticky';
   };

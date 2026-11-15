@@ -1,0 +1,294 @@
+/* ============================================================================
+   The tier picker from anywhere (TierPicker.astro, src/scripts/tier-picker.js)
+   ============================================================================
+   Two pieces: the opener, a fourth card in the dock's Prices hand (it takes the
+   price cards' shape from kit.css, `.fc-price.fc-paper`, with a smaller title),
+   and the corner card it opens, which sits above the dock at the right of the
+   screen. Colours are the house tokens only; the answer wears the same three
+   faces as the price cards (paper, blue, ink), which are pairs kit-tokens.test.ts
+   already holds.
+   ============================================================================ */
+
+/* The opener in the hand: "Which tier fits?" is longer than a price, so it is set smaller. */
+.fc-pick {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fc-pick strong {
+  font: 600 1.25rem/1.05 var(--display);
+  letter-spacing: -0.025em;
+}
+
+/* ---------------------------------------------------------------------------
+   The corner card. Fixed above the dock at the right, with the safe areas
+   added the way the dock adds them. It rises on the house spring from just
+   above the dock and drops back, quicker, when put away.
+   --------------------------------------------------------------------------- */
+.tp {
+  position: fixed;
+  right: max(var(--gut), env(safe-area-inset-right));
+  bottom: calc(max(0.9rem, env(safe-area-inset-bottom)) + 4.75rem);
+  z-index: 41;
+  width: min(23.5rem, calc(100vw - 2 * var(--gut)));
+  max-height: calc(100dvh - 7rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 1.25rem;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow:
+    var(--rim),
+    0 0 0 1px rgba(18, 18, 17, 0.08),
+    0 28px 48px -22px rgba(0, 0, 0, 0.5);
+  transform-origin: 70% 100%;
+  transform: translateY(1.5rem) scale(0.94);
+  opacity: 0;
+  transition:
+    transform 0.26s cubic-bezier(0.4, 0, 1, 1),
+    opacity 0.2s;
+}
+.tp[hidden] {
+  display: none;
+}
+.tp.on {
+  transform: none;
+  opacity: 1;
+  transition:
+    transform 0.62s cubic-bezier(0.3, 1.4, 0.5, 1),
+    opacity 0.18s;
+}
+.tp-card {
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+.tp-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -0.25rem 0 0.35rem;
+}
+.tp-top .label {
+  margin: 0;
+}
+.tp-x {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 99rem;
+  background: none;
+  color: var(--soft);
+  cursor: pointer;
+}
+.tp-x:hover {
+  background: var(--well);
+  color: var(--ink);
+}
+.tp-x svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+.tp-h {
+  margin: 0 0 1rem;
+  font: 700 1.625rem/1.05 var(--display);
+  letter-spacing: -0.035em;
+}
+.tp-h:focus {
+  outline: none;
+}
+.tp-h:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}
+
+/* A question: its answers as three full-width rows you can press anywhere on. */
+.tp-q {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.tp-q[hidden] {
+  display: none;
+}
+.tp-q legend {
+  margin: 0 0 0.6rem;
+  padding: 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.tp-o {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.75rem;
+  margin: 0 0 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.85rem;
+  background: var(--well);
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tp-o:hover {
+  transform: translateX(0.2rem);
+}
+.tp-o input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.tp-o:has(input:checked) {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.tp-o:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.tp-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.tp-ghost,
+.tp-next {
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: 99rem;
+  font: 600 1rem/1 var(--body);
+  cursor: pointer;
+}
+.tp-ghost {
+  margin-right: auto;
+  background: none;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.tp-next {
+  background: var(--chip);
+  color: var(--chip-ink);
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tp-next:disabled {
+  background: var(--well);
+  color: var(--soft);
+  cursor: default;
+}
+.tp-next:not(:disabled):active {
+  transform: scale(0.97);
+}
+.tp-ghost:focus-visible,
+.tp-next:focus-visible,
+.tp-x:focus-visible,
+.tp-go:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* The answer: a small card in the tier's own face, then the reason and the way on. */
+.tp-out[hidden] {
+  display: none;
+}
+.tp-tier {
+  padding: 1rem 1.1rem 1.05rem;
+  border-radius: 1rem;
+  background: var(--tpb, var(--well));
+  color: var(--tpi, var(--ink));
+}
+.tp-paper {
+  --tpb: var(--well);
+  --tpi: var(--ink);
+}
+.tp-blue {
+  --tpb: var(--fill);
+  --tpi: #fff;
+}
+.tp-ink {
+  --tpb: var(--ink);
+  --tpi: var(--on-ink);
+}
+.tp-tier .label {
+  margin: 0 0 0.35rem;
+  color: inherit;
+  opacity: 0.85;
+}
+.tp-name {
+  margin: 0;
+  font: 700 2rem/1 var(--display);
+  letter-spacing: -0.04em;
+}
+.tp-price {
+  margin: 0.5rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.tp-price b {
+  font: 600 1.25rem/1 var(--display);
+  letter-spacing: -0.02em;
+}
+.tp-range {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+}
+.tp-why {
+  margin: 0.9rem 0 0;
+  line-height: 1.4;
+}
+.tp-note {
+  margin: 0.35rem 0 0;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+.tp-go {
+  min-height: 2.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp,
+  .tp.on,
+  .tp-o,
+  .tp-next {
+    transition: none;
+  }
+  .tp,
+  .tp.on,
+  .tp-o:hover {
+    transform: none;
+  }
+}
+/* Its edge is only a shadow, so under forced colors it gets a real border, like `.card` in kit.css. */
+@media (forced-colors: active) {
+  .tp,
+  .tp-tier,
+  .tp-o {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .tp {
+    display: none;
+  }
+}

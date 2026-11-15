@@ -1,0 +1,126 @@
+---
+/* The tier picker from anywhere. The three questions from /services, asked one at a time in a small
+   corner card that rises out of the dock on any page, then the tier they suggest with its "Why:"
+   line and a link to /services/ with that tier chosen (?tier=signature#signature, which
+   src/scripts/prices-plan.js reads and marks across the page).
+
+   Two parts, because the button lives in the dock and the card cannot:
+   - part="card" is the fourth card in the dock's Prices hand ("Which tier fits?"). Dock.astro.
+   - part="panel" is the corner card itself. BaseLayout.astro, after the dock and OUTSIDE <main>:
+     <main> and the dock both carry a view-transition-name, so each is its own stacking context and
+     a fixed card inside either could sit under the other
+     (_vault/gotchas/view-transition-name-caps-fixed-children-under-later-named-siblings.md).
+
+   The questions, the rule and the "Why:" line are src/lib/tier-pick.ts, the same module the picker
+   on /services reads, so the two can never disagree. No price is written here: the names and the
+   starting prices come from src/data/pricing.ts.
+
+   It does nothing without script, so both parts are hidden without it (the hand never opens with no
+   script, and the panel is `hidden` until src/scripts/tier-picker.js shows it). Every answer is on
+   /services, where the same three questions sit in the page. */
+import { webTiers } from '../data/pricing';
+import { money } from '../lib/money';
+import { QUESTIONS, pickTiers } from '../lib/tier-pick';
+import '../styles/tier-picker.css';
+
+interface Props {
+  /** 'card' is the opener in the dock's Prices hand; 'panel' is the corner card (once a page). */
+  part?: 'card' | 'panel';
+}
+const { part = 'panel' } = Astro.props;
+const tiers = pickTiers(webTiers, money);
+---
+
+{part === 'card' ? (
+  <button
+    class="fc fc-price fc-paper fc-pick"
+    type="button"
+    data-tp-open
+    aria-controls="tier-picker"
+    aria-expanded="false"
+    data-cap="Three questions, one suggestion"
+  >
+    <span class="fc-in">
+      <span class="label">Not sure?</span>
+      <strong>Which tier fits?</strong>
+    </span>
+  </button>
+) : (
+  <section
+    class="tp"
+    id="tier-picker"
+    data-tp
+    data-tiers={JSON.stringify(tiers)}
+    aria-labelledby="tp-h"
+    hidden
+  >
+    <div class="tp-card">
+      <div class="tp-top">
+        <p class="label" data-tp-count aria-live="polite">
+          Question 1 of {QUESTIONS.length}
+        </p>
+        <button class="tp-x" type="button" data-tp-close>
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="m5 5 10 10M15 5 5 15" />
+          </svg>
+          <span class="vh">Close the tier picker</span>
+        </button>
+      </div>
+      <h2 class="tp-h" id="tp-h" tabindex="-1">
+        Which tier fits?
+      </h2>
+      {/* One question at a time: the others are `hidden` (tier-picker.js). A pointer's pick moves
+          on by itself; a keyboard chooses with the arrows and moves on with Next or Enter, so the
+          arrows never skip a question. */}
+      <form class="tp-form" data-tp-form>
+        {QUESTIONS.map((q, k) => (
+          <fieldset class="tp-q" data-tp-q={k} hidden={k > 0}>
+            <legend>{q.ask}</legend>
+            {q.options.map((o, v) => (
+              <label class="tp-o">
+                <input type="radio" name={`tp-${q.name}`} value={v} />
+                <span>{o}</span>
+              </label>
+            ))}
+          </fieldset>
+        ))}
+        <div class="tp-nav">
+          <button class="tp-ghost" type="button" data-tp-back hidden>
+            Back
+          </button>
+          <button class="tp-next" type="submit" data-tp-next disabled>
+            Next
+          </button>
+        </div>
+      </form>
+      {/* The answer, dealt in once all three are in. */}
+      <div class="tp-out" data-tp-out hidden>
+        <div class="tp-tier" data-tp-tier>
+          <p class="label">Start with</p>
+          <p class="tp-name" data-tp-name></p>
+          <p class="tp-price">
+            From <b data-tp-price></b>
+          </p>
+          <p class="tp-range" data-tp-range></p>
+        </div>
+        <p class="tp-why" data-tp-why></p>
+        <p class="tp-note">A starting place, not a quote.</p>
+        <div class="tp-nav">
+          <button class="tp-ghost" type="button" data-tp-again>
+            Start again
+          </button>
+          <a class="chip go tp-go" href="/services/" data-tp-go>
+            {/* One span round the words: the chip is a flex box, which would drop their spaces. */}
+            <span>
+              See <span data-tp-go-name>it</span> on Prices
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<script>
+  import '../scripts/tier-picker.js';
+</script>

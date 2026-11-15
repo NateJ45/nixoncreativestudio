@@ -234,7 +234,9 @@ test.describe('The top line', () => {
   test('opened from the floating pill far down a page, the card is on the screen', async ({
     page,
   }) => {
-    await page.goto('/services/');
+    // /about, not /services: /services has its own sticky chapter bar now (elevate, 2026-11-15), and
+    // kit.js keeps the floating pill off a page whose own bar holds the top of the screen.
+    await page.goto('/about/');
     for (let i = 0; i < 12; i++) {
       await page.mouse.wheel(0, 400);
       await page.waitForTimeout(100);
