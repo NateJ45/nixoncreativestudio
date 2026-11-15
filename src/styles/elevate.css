@@ -191,6 +191,12 @@
    Light and paper
    --------------------------------------------------------------------------------------------- */
 
+/* The page itself sits on the same grain, so the ground reads as paper rather than a flat void.
+   It is the cards' tile, tiled down the body and scrolling with it; kit.css still sets the colour
+   (--ground), this only adds the image. Bands and sheets paint their own colour over it. */
+body {
+  background-image: var(--grain);
+}
 /* .paper: the grain on any surface that is not a .card (which has it already, kit.css). It only
    adds a background image, so the surface keeps its own colour. */
 .paper {
@@ -525,6 +531,7 @@ html.bp body::after {
 /* Forced colors keep background images, so the decoration is switched off by hand, and the cursor
    label gets a real edge because its shadow is gone. */
 @media (forced-colors: active) {
+  body,
   .card,
   .pc-face,
   .paper,
@@ -543,6 +550,7 @@ html.bp body::after {
   }
 }
 @media print {
+  body,
   .card,
   .pc-face,
   .paper,
