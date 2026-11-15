@@ -1,0 +1,19 @@
+---
+/* MDX's `a` in journal posts and case studies. A link to another site opens in
+   a new tab with rel="noopener noreferrer"; internal links render unchanged.
+   Astro 7's default Markdown engine takes no rehype plugins without an extra
+   package, so the mapping lives here instead. */
+import { externalRel, isExternalHref } from '../lib/external';
+
+const { href, rel, target, ...rest } = Astro.props;
+const external = isExternalHref(href);
+---
+
+<a
+  href={href}
+  target={external ? '_blank' : target}
+  rel={external ? externalRel(rel) : rel}
+  {...rest}
+>
+  <slot />
+</a>
