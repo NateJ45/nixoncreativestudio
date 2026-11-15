@@ -123,7 +123,7 @@ async function mark({ file, svg, crop, h, at }) {
     .toBuffer();
   return sharp({ create: { width: W * X, height: H * X, channels: 3, background: '#000' } })
     .composite([{ input: part, left: Math.max(0, left), top: Math.max(0, top) }])
-    .webp({ lossless: true })
+    .png()
     .toBuffer();
 }
 
