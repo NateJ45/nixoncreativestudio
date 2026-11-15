@@ -89,13 +89,15 @@ const caseStudies = defineCollection({
       cover: image(),
 
       // The faint picture behind the case study hero: one of my photos or a
-      // part of the site worth showing off. A path under public/, usually
-      // /assets/study/<slug>-feature-*.webp. `position` is a CSS
-      // object-position for the crop. Optional: without it the hero stays on
-      // the plain client color.
+      // part of the site worth showing off. An image under
+      // src/assets/case-studies/backdrops/, shot at 2x (2880 x 1800) by
+      // scripts/capture-backdrop.mjs because the hero draws it full width,
+      // 2500px or more on a big screen. `position` is a CSS object-position
+      // for the crop. Optional: without it the hero stays on the plain client
+      // color.
       backdrop: z
         .object({
-          src: z.string().startsWith('/'),
+          src: image(),
           position: z.string().optional(),
         })
         .optional(),
