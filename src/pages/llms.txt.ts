@@ -12,6 +12,8 @@
      - prices from src/data/pricing.ts
      - case studies from the case-studies collection (title, hook when the
        study has one, summary, URL), in the same order as /work
+     - journal answers from the journal collection (title, URL and the post's
+       own shortAnswer), newest first, drafts left out
 
    robots.txt explicitly allows the AI crawlers that read this file (Nathan's
    decision, 2026-10-30).
@@ -23,6 +25,7 @@ import { site } from '../data/site';
 import { addOns, carePlans, webTiers } from '../data/pricing';
 import { money } from '../lib/money';
 import { photographyOpen } from '../data/photography-gate';
+import { newestFirst } from '../lib/journal';
 
 // Static endpoint: written to dist as a plain file at build time.
 export const prerender = true;
@@ -40,6 +43,10 @@ export const GET: APIRoute = async () => {
       ? (a.data.order ?? 0) - (b.data.order ?? 0)
       : b.data.published.valueOf() - a.data.published.valueOf(),
   );
+
+  // Journal posts, so an answer engine finds the studio's plain answers (cost,
+  // platform choice, Ad Grants) and not only its sales pages (SEO/AEO audit 2026-11).
+  const posts = newestFirst(await getCollection('journal', ({ data }) => data.draft !== true));
 
   const url = (path: string) => new URL(path, site.url).toString();
 
@@ -73,6 +80,16 @@ export const GET: APIRoute = async () => {
       return `- [${s.data.title}](${url(`/work/${s.id}/`)}): ${hook}${s.data.summary}`;
     }),
     '',
+    ...(posts.length
+      ? [
+          '## Answers from the journal',
+          '',
+          ...posts.map(
+            (p) => `- [${p.data.title}](${url(`/journal/${p.id}/`)}): ${p.data.shortAnswer}`,
+          ),
+          '',
+        ]
+      : []),
     // Plain answers to the questions people ask AI assistants about hiring a web
     // designer, so an answer engine can quote the studio accurately. Every line
     // is built from site.ts and pricing.ts, or says something the site already says.
@@ -96,6 +113,7 @@ export const GET: APIRoute = async () => {
     `- [About ${site.ownerName}](${url('/about/')})`,
     `- [Services and pricing](${url('/services/')})`,
     `- [All case studies](${url('/work/')})`,
+    ...(posts.length ? [`- [Journal](${url('/journal/')})`] : []),
     `- [Church website design](${url('/churches/')})`,
     `- [School website design](${url('/schools/')})`,
     `- [Nonprofit website design](${url('/nonprofits/')})`,

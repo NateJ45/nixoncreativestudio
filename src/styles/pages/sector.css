@@ -343,3 +343,33 @@ html:not(.js) .sun-qs button:hover {
 .sun h2 b {
   white-space: nowrap;
 }
+
+/* "Questions people ask first" (src/components/SectorReading.astro): the
+   sector's journal answers, one ruled row each. */
+.sl-reading {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 0 clamp(1.5rem, 3vw, 3rem);
+  margin: clamp(1.25rem, 2.5vw, 2rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sl-reading li {
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+.sl-reading h3 {
+  font-size: var(--type-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.sl-reading h3 a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+.sl-reading p {
+  margin-top: 0.5rem;
+  color: var(--soft);
+  line-height: 1.45;
+}

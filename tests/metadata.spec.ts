@@ -148,6 +148,32 @@ test('/llms.txt is plain text and lists every case study', async ({ page, reques
   for (const path of studies) expect(text, `llms.txt lists ${path}`).toContain(path);
 });
 
+// The journal's answers are linked from llms.txt and from their sector pages, so
+// AI tools and readers on a sector page both reach them (SEO/AEO audit 2026-11).
+test('/llms.txt and the sector pages link the journal answers', async ({ page, request }) => {
+  await page.goto('/journal/');
+  const posts = await page
+    .locator('main a[href^="/journal/"]')
+    .evaluateAll((as) => [
+      ...new Set(as.map((a) => a.getAttribute('href')!).filter((h) => h !== '/journal/')),
+    ]);
+  expect(posts.length).toBeGreaterThan(0);
+  const text = await (await request.get('/llms.txt')).text();
+  expect(text).toContain('## Answers from the journal');
+  for (const path of posts) expect(text, `llms.txt lists ${path}`).toContain(path);
+  for (const [sector, post] of [
+    ['/churches/', '/journal/how-much-does-a-church-website-cost/'],
+    ['/schools/', '/journal/what-parents-look-for-on-a-preschool-website/'],
+    ['/nonprofits/', '/journal/google-ad-grants-does-your-nonprofit-website-qualify/'],
+  ]) {
+    await page.goto(sector);
+    await expect(
+      page.locator(`main a[href="${post}"]`).first(),
+      `${sector} links ${post}`,
+    ).toBeAttached();
+  }
+});
+
 test('/robots.txt allows the AI crawlers and keeps the sitemap', async ({ request }) => {
   const text = await (await request.get('/robots.txt')).text();
   for (const bot of [

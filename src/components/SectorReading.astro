@@ -1,0 +1,56 @@
+---
+/* ============================================================================
+   SectorReading | "Questions people ask first" on a sector page
+   ============================================================================
+   Safe to edit. Lists the published journal posts written for this sector
+   (frontmatter `sector`), with each post's short answer, so the sector page
+   links down to the answers and the answers link back up (every post's end
+   card already deals its sector page). The SEO/AEO audit of 2026-11 found the
+   posts reachable from only two or three pages each; this is the fix.
+
+   Lab posts (cluster `lab`, things I built for my own people) are left out:
+   this block is for the questions a buyer asks before hiring. Renders nothing
+   when the sector has no posts yet (small business, today).
+   ============================================================================ */
+import { getCollection } from 'astro:content';
+import { newestFirst } from '../lib/journal';
+
+interface Props {
+  sector: 'church' | 'school' | 'nonprofit' | 'small-business';
+}
+
+const { sector } = Astro.props;
+const posts = newestFirst(
+  await getCollection(
+    'journal',
+    ({ data }) =>
+      data.sector === sector &&
+      data.cluster !== 'lab' &&
+      (import.meta.env.PROD ? data.draft !== true : true),
+  ),
+);
+const id = `sr-${sector}`;
+---
+
+{posts.length > 0 && (
+  <section class="sec tight" aria-labelledby={id}>
+    <div class="wrap">
+      <h2 id={id} class="sl-h">
+        Questions people ask first
+      </h2>
+      <ul class="sl-reading">
+        {posts.map((p) => (
+          <li>
+            <h3>
+              <a href={`/journal/${p.id}/`}>{p.data.title}</a>
+            </h3>
+            <p>{p.data.shortAnswer}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="sl-note">
+        More plain answers, with the sources linked, in <a href="/journal/">the journal</a>.
+      </p>
+    </div>
+  </section>
+)}
