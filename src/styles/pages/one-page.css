@@ -421,7 +421,7 @@ html:not(.js) [data-print] {
   }
   .op-table th,
   .op-table td {
-    padding: 0.035in 0.09in 0.035in 0;
+    padding: 0.025in 0.09in 0.025in 0;
   }
   .op-table tbody tr + tr > * {
     padding-top: 0;
@@ -466,7 +466,7 @@ html:not(.js) [data-print] {
 }
 @media print {
   .op-sheet {
-    gap: 0.09in;
+    gap: 0.06in;
   }
   .op-cap {
     margin-bottom: 0.03in;
@@ -482,5 +482,45 @@ html:not(.js) [data-print] {
   .op-cover dt small {
     display: block;
     margin-left: 0;
+  }
+}
+
+/* Add to any project: the five add-ons, photography first, as a plain list under the cover box.
+   Two columns on a screen, one on a phone, five across in print. */
+.op-adds dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem clamp(1rem, 3vw, 2rem);
+}
+.op-adds dt {
+  font-weight: 600;
+}
+.op-adds dt small {
+  display: block;
+  color: var(--soft);
+  font-weight: 400;
+}
+.op-adds dd {
+  margin: 0.15rem 0 0;
+  color: var(--soft);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+@media screen and (max-width: 44rem) {
+  .op-adds dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media print {
+  .op-adds dl {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.05in 0.14in;
+  }
+  .op-adds dt,
+  .op-adds dd {
+    font-size: 8pt;
+  }
+  .op-adds dt small {
+    font-size: 7.5pt;
   }
 }

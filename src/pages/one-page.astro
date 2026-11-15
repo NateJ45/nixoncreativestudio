@@ -1,9 +1,10 @@
 ---
 /* /one-page: the summary a staff member can send to a board or committee. It answers, in
    order: what I do, the three tiers (who each fits, the usual price, what I take on), what it
-   costs over five years (Hosting first, then with care; Flagship only with care, because custom
-   tools need it), what Hosting and care cover, what is in every build, what happens if you move
-   on, and how to reach me. Every price and sum reads src/data/pricing.ts and
+   costs over five years (four rows: Launch on Hosting alone, then each tier with its usual care
+   plan; /services prints all six), what Hosting and care cover, the add-ons (photography
+   first), what is in every build, what happens if you move on, and how to reach me. Every
+   price and sum reads src/data/pricing.ts and
    src/lib/tier-costs.ts, and the date reads `pricesAsOf`.
 
    The sheet prints on one US Letter page: src/styles/pages/one-page.css has the print
@@ -12,12 +13,22 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/one-page.css';
 import Closing from '../components/Closing.astro';
-import { carePlans, customWorkRate, freeToMove, perWords, pricesAsOf } from '../data/pricing';
+import {
+  addOns,
+  carePlans,
+  customWorkRate,
+  freeToMove,
+  perWords,
+  pricesAsOf,
+} from '../data/pricing';
 import { site } from '../data/site';
 import { money } from '../lib/money';
 import { tierCosts } from '../lib/tier-costs';
 
 const costs = tierCosts();
+// The sheet's table is four rows, not /services' six, to leave room for the add-ons: the smallest
+// tier on Hosting alone, then every tier with its usual care plan (2026-11-14).
+const sheetRows = (c: (typeof costs)[number], i: number) => (i === 0 ? c.rows : [c.usual]);
 const [hosting, lightCare, care, carePlus] = carePlans;
 const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
 const servicesUrl = `${site.domain}/services/`;
@@ -58,7 +69,8 @@ const usually = (t: (typeof costs)[number]['tier']) =>
         <p>
           I plan, design and build websites for churches, schools, nonprofits and small businesses,
           on my own, so you always talk to the person doing the work. Every site is custom, with an
-          editor and a written guide for your people, and works for people with disabilities.
+          editor and a written guide for your people, and works for people with disabilities. I also
+          photograph and film for the sites I build, so the pictures fit the pages.
         </p>
       </section>
 
@@ -94,7 +106,6 @@ const usually = (t: (typeof costs)[number]['tier']) =>
         <table class="op-table">
           <caption id="op-cost">
             <span class="op-cap">What it costs over five years</span>
-            {`Totals from each tier's starting price: ${hosting.name} only first, then with care on top.`}
           </caption>
           <thead>
             <tr>
@@ -110,9 +121,9 @@ const usually = (t: (typeof costs)[number]['tier']) =>
               </th>
             </tr>
           </thead>
-          {costs.map((c) => (
+          {costs.map((c, i) => (
             <tbody>
-              {c.rows.map((r) => (
+              {sheetRows(c, i).map((r) => (
                 <tr>
                   <th scope="row">
                     <b>{c.tier.name}</b>
@@ -164,6 +175,21 @@ const usually = (t: (typeof costs)[number]['tier']) =>
         <p class="op-note">
           {`Extra changes are ${money(lightCare.rate)} an hour on any care plan. Custom development is ${money(customWorkRate)} an hour, quoted first.`}
         </p>
+      </section>
+
+      <section class="op-adds" aria-labelledby="op-adds">
+        <h2 id="op-adds">Add to any project</h2>
+        <dl>
+          {addOns.map((a) => (
+            <div>
+              <dt>
+                {a.name}
+                <small>{`${a.price} ${a.unit}`}</small>
+              </dt>
+              <dd>{a.short}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <div class="op-three">
