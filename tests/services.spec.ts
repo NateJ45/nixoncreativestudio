@@ -64,10 +64,13 @@ test.describe('Prices', () => {
       page,
     }) => {
       await page.goto('/');
+      // The face is the card's one link to its tier (the back has a second, read once turned).
       for (const tier of ['launch', 'signature', 'flagship']) {
-        await expect(page.locator(`[data-prices] a[href="/services/#${tier}"]`)).toHaveCount(1);
+        await expect(
+          page.locator(`[data-prices] a.pc-face[href="/services/#${tier}"]`),
+        ).toHaveCount(1);
       }
-      await page.locator('[data-prices] a[href="/services/#flagship"]').click();
+      await page.locator('[data-prices] a.pc-face[href="/services/#flagship"]').click();
       await expect(page).toHaveURL(/\/services\/#flagship$/);
       const top = () =>
         page.locator('#flagship').evaluate((el) => Math.round(el.getBoundingClientRect().top));
@@ -194,15 +197,19 @@ test.describe('Prices', () => {
     }
   });
 
-  test('the price cards show every list, with no toggle and no corner letters', async ({
+  test('the price cards keep every list a turn away, with no other toggle and no corner letters', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/services/');
-    await expect(page.locator('#websites button')).toHaveCount(0);
+    // The only buttons on the tier cards turn them over and back (the Off the clock turn).
+    await expect(page.locator('#websites button:not(.t-flip)')).toHaveCount(0);
     await expect(page.locator('#websites .pip, #add-ons .pip, #behind .pip')).toHaveCount(0);
-    await page.locator('#signature').hover();
-    for (const item of await page.locator('.t-list li').all()) await expect(item).toBeVisible();
+    // Every list is in the markup; turning a card shows all of its items.
+    await expect(page.locator('.t-list li').first()).toBeAttached();
+    await page.locator('#signature [data-otc-turn]').click();
+    for (const item of await page.locator('#signature .t-list li').all())
+      await expect(item).toBeVisible();
     await expect(page.locator('#flagship .t-range')).toContainText(
       'Custom tools need Care or Care+',
     );

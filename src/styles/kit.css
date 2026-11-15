@@ -2176,8 +2176,10 @@ h1 b,
   outline-offset: 3px;
 }
 /* A card the keyboard is on comes to the top of the hand. On a phone the cards stick in one pile,
-   so Shift+Tab back up the page would otherwise land on a card the next one covers (WCAG 2.4.11). */
-.pc:has(> .pc-face:focus-visible) {
+   so Shift+Tab back up the page would otherwise land on a card the next one covers (WCAG 2.4.11).
+   Any focused control counts, so the Turn over button and the back's links lift their card too.
+   `.hand` gives it the weight to beat the phone pile's own `.pc:nth-child(n)` z-index further down. */
+.hand .pc:has(:focus-visible) {
   z-index: 3;
 }
 

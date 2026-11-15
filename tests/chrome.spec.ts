@@ -56,7 +56,9 @@ test.describe('Without JavaScript', () => {
     // One quote band, showing one quote at a time (the rest wait behind Next).
     await expect(page.locator('.band')).toHaveCount(1);
     await expect(page.locator('.band [data-q]:not([inert]) blockquote')).toHaveCount(1);
-    await expect(page.locator('[data-prices] li')).toHaveCount(3);
+    // Three cards. Each card's back carries its own list of what the tier includes, so count
+    // the hand's own items, not every li inside it.
+    await expect(page.locator('[data-prices] > li')).toHaveCount(3);
     await expect(page.locator('[data-prices] strong').first()).toHaveText('$3,500');
     await expect(page.locator('h1')).toHaveAttribute(
       'aria-label',
