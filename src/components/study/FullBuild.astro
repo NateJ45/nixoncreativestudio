@@ -11,10 +11,12 @@
    study with no feature shot in here gets no strip at all.
 
    Since 2026-11-15 the strip is a numbered run of large screens, one under another, each with a
-   caption: "2 / 3", the feature's own heading, and the first sentence of its text. Big enough to
-   judge the design without opening anything, and every one still opens larger (ZoomImage). The
-   rest of each feature's text stays in the fold below, so with screens above it the fold's label
-   reads "How each of these works" rather than promising screenshots already on show. */
+   caption: "2 / 3", the feature's own heading and its whole text. Big enough to judge the design
+   without opening anything, and every one still opens larger (ZoomImage). Since 2026-11-16 each
+   feature is said once: a feature that made it into the strip is taken out of the fold, so the
+   fold ("The rest of the build") holds only the list, the notes and any more before and afters,
+   and with nothing left over there is no fold. Before, the fold printed each feature again under
+   the same picture, heading and first sentence. */
 import ZoomImage from './ZoomImage.astro';
 
 interface Props {
@@ -39,30 +41,26 @@ const plain = (v: string) =>
 const attr = (html: string, name: string) =>
   plain(new RegExp(`\\s${name}="([^"]*)"`).exec(html)?.[1] ?? '');
 
-/* The first sentence of a feature's text: up to the first stop that is followed by a space and
-   a capital or a digit, so a number like 3.6 never cuts it short. */
-const firstSentence = (html: string) => {
-  const m = /^[\s\S]*?[.!?](?=\s+[A-Z0-9"\u201c(])/.exec(html.trim());
-  return (m ? m[0] : html).trim();
-};
-
+/* What is left for the fold once the strip has taken its features. */
+let rest = body;
 const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/article>/g)].flatMap(
-  ([, feat]) => {
+  ([whole, feat]) => {
     const img = /<img\s[^>]*>/.exec(feat)?.[0];
     if (!img) return [];
     const url = attr(img, 'src');
     const w = Number(attr(img, 'width'));
     const h = Number(attr(img, 'height'));
     if (!url || !w || !h) return [];
+    rest = rest.replace(whole, '');
     return [
       {
         img: { url, w, h },
         alt: attr(img, 'alt'),
         // The feature's own heading, markup and all, as the caption's lead.
         title: /<h3[^>]*>([\s\S]*?)<\/h3>/.exec(feat)?.[1] ?? '',
-        // The first sentence of its text, as the caption's second half.
+        // Its whole text, as the caption's second half.
         // `<p(?:\s…)?>` so the `<path>` in the Enlarge icon is never taken for a paragraph.
-        line: firstSentence(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/.exec(feat)?.[1] ?? ''),
+        line: (/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/.exec(feat)?.[1] ?? '').trim(),
       },
     ];
   },
@@ -89,19 +87,21 @@ const shots = [...body.matchAll(/<article class="feat[^"]*"[^>]*>([\s\S]*?)<\/ar
       ))}
     </ol>
   )}
-  <details class="more" data-more>
-    <summary>
-      <span class="more-l">
-        {shots.length > 0
-          ? `How each of these works${more ? ', and more before and afters' : ''}`
-          : `The full build, with screenshots${more ? ' and more before and afters' : ''}`}
-      </span>
-      <i aria-hidden="true"></i>
-    </summary>
-    <div class="more-box">
-      <div class="more-in">
-        <Fragment set:html={body} />
+  {rest.trim() && (
+    <details class="more" data-more>
+      <summary>
+        <span class="more-l">
+          {shots.length > 0
+            ? `The rest of the build${more ? ', and more before and afters' : ''}`
+            : `The full build, with screenshots${more ? ' and more before and afters' : ''}`}
+        </span>
+        <i aria-hidden="true"></i>
+      </summary>
+      <div class="more-box">
+        <div class="more-in">
+          <Fragment set:html={rest} />
+        </div>
       </div>
-    </div>
-  </details>
+    </details>
+  )}
 </section>
