@@ -27,6 +27,10 @@ const overflowOf = (page: Parameters<typeof settle>[0]) =>
 test.describe('Reflow: no horizontal overflow at 320px', () => {
   // On the dark side, because that is the theme with extra rules; the layout is the same in both.
   test.use({ viewport: { width: 320, height: 720 }, colorScheme: 'dark' });
+  // Dark is chosen, not inherited from the device (light is the default since 2026-11-16).
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('ncs-theme', 'dark'));
+  });
 
   for (const route of routes) {
     test(`${route} does not overflow at 320px`, async ({ page }) => {
