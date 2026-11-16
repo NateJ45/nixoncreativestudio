@@ -36,6 +36,7 @@ export const PLACES: Place[] = [
     fips: 39,
     home: true,
     clients: ['stone-steps-50k', 'presbyterian-academy', 'west-chester-preschool'],
+    photo: ['Crestview Presbyterian Church'],
   },
   { state: 'Indiana', abbr: 'IN', fips: 18, clients: ['first-baptist-muncie', 'reid-design'] },
   {
