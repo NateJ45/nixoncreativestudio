@@ -1,9 +1,14 @@
 # Cloth-sim flag render for About's postcard (src/components/Crossing.astro). Run headless:
 #   blender -b --factory-startup --python scripts/flags/flag.py -- <saltire|us> <outdir> 301 600 40
 # then: npm run flags:loop -- <outdir> flag-saltire src/assets/photography/canvas/edinburgh-skyline.jpg day
-#   (or flag-us with src/assets/about/cincinnati-skyline.jpg night)
+# The Stars and Stripes is rendered differently (2026-11-16): in gusts its fly end lifted and showed
+# the night behind it, and the cloth never repeated closely enough to loop without a jump. It flies
+# in a steady breeze with no gusts, swing or noise, framed close on the canton near the hoist, which
+# keeps the sky covered in every frame and settles into a rolling wave that repeats well:
+#   PERIOD=300 NOISE=0 SWING=0 GUST=0 SWAY=0 TURB=80 SELF=0 TX=0.95 TZ=-0.15 FRAME=0.34 #     blender -b --factory-startup --python scripts/flags/flag.py -- us <outdir> 901 1500 40
+#   FLAG_MIN=4 FLAG_COVER=0.99 npm run flags:loop -- <outdir> flag-us src/assets/about/cincinnati-skyline.jpg night
 # Bakes a cloth simulation of the flag (textures beside this file, real proportions) pinned at the
-# hoist in gusting wind, and renders first..last close up, the cloth filling a 1116 x 840 frame, as
+# hoist in wind, and renders first..last close up, the cloth filling a 1116 x 840 frame, as
 # RGBA PNGs on a transparent film with Cycles on the GPU and motion blur. Saltire by day, the Stars
 # and Stripes floodlit at night. Every setting can be overridden by an environment variable of the same
 # name (E('WIND', 20000) and so on); the defaults are the ones the shipped loops were rendered with.
@@ -106,9 +111,22 @@ def drive(obj, path, idx, expr):
     d.expression = expr
 SW = E('SWING', 2)
 T = E('TIME', 0.25)  # gusts slow down with the cloth
-drive(wind, 'rotation_euler', 2, f'radians({E('ANG', 4)}) + radians({SW}) * (0.6*sin(frame*{T}*0.21) + 0.4*sin(frame*{T}*0.083 + 1.3))')
-drive(wind, 'field.strength', -1, f'{E('WIND', 20000)} * (1 + 0.15*sin(frame*{T}*0.13) + 0.08*sin(frame*{T}*0.37))')
-drive(turb, 'location', 0, f'-2 + frame * {T} * {E("DRIFT", 0.08)} % 8')
+# PERIOD (frames, 0 = off) makes every gust repeat exactly: the swing, the strength and the
+# turbulence (which then sways back and forth instead of drifting) all run at whole multiples of
+# one period, so after a few periods the cloth settles into a cycle and any stretch of exactly one
+# period loops on itself. Used for the Stars and Stripes, whose fly end lifts with every gust and
+# never repeated closely enough for a seamless loop.
+PERIOD = E('PERIOD', 0)
+GUST = E('GUST', 1)
+if PERIOD:
+    w = f'(2*pi*frame/{PERIOD})'
+    drive(wind, 'rotation_euler', 2, f'radians({E('ANG', 4)}) + radians({SW}) * (0.6*sin(3*{w}) + 0.4*sin({w} + 1.3))')
+    drive(wind, 'field.strength', -1, f'{E('WIND', 20000)} * (1 + {GUST}*(0.15*sin(2*{w}) + 0.08*sin(4*{w})))')
+    drive(turb, 'location', 0, f'-2 + {E("SWAY", 1.5)} * sin({w})')
+else:
+    drive(wind, 'rotation_euler', 2, f'radians({E('ANG', 4)}) + radians({SW}) * (0.6*sin(frame*{T}*0.21) + 0.4*sin(frame*{T}*0.083 + 1.3))')
+    drive(wind, 'field.strength', -1, f'{E('WIND', 20000)} * (1 + {GUST}*(0.15*sin(frame*{T}*0.13) + 0.08*sin(frame*{T}*0.37)))')
+    drive(turb, 'location', 0, f'-2 + frame * {T} * {E("DRIFT", 0.08)} % 8')
 
 # ---- material: woven nylon, slightly translucent ---------------------------------------
 mat = bpy.data.materials.new('Cloth')
@@ -191,7 +209,8 @@ sc.camera = cam
 cam.data.lens = 50
 cam.data.sensor_fit = 'HORIZONTAL'  # the frame's width is set by the flag, whatever its height
 # Close in, a touch below and to the side, so the folds have depth and the cloth fills the frame.
-target = Vector((W * 0.5, 0, -E('TZ', 0.15)))
+# TX moves the aim along the flag from the hoist (default its middle); TZ lowers it.
+target = Vector((E('TX', W * 0.5), 0, -E('TZ', 0.15)))
 # The cloth fills the frame: its height takes 72% of the flag's, its width follows the frame shape.
 frame_w = H * E('FRAME', 0.55) * sc.render.resolution_x / sc.render.resolution_y
 dist = frame_w * cam.data.lens / cam.data.sensor_width
