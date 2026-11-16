@@ -23,6 +23,7 @@ import { getGatedNav } from '../data/nav';
 import { pricesAsOf, webTiers } from '../data/pricing';
 import { SECTOR_PAGES } from '../data/sector-pages';
 import { clusterLabel, newestFirst } from '../lib/journal';
+import { isLive } from '../data/journal-gate';
 import { money } from '../lib/money';
 import { readingTime } from '../lib/readingTime';
 
@@ -34,9 +35,7 @@ export const GET: APIRoute = async () => {
   const gated = await getGatedNav();
   // The same filter as the journal index: drafts show in dev and never in a production build.
   const posts = newestFirst(
-    await getCollection('journal', ({ data }) =>
-      import.meta.env.PROD ? data.draft !== true : true,
-    ),
+    await getCollection('journal', ({ data }) => (import.meta.env.PROD ? isLive(data) : true)),
   );
 
   const body = {

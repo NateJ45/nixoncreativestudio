@@ -1,0 +1,40 @@
+# =============================================================================
+# Journal publish: a weekly production build, so scheduled posts go live
+# =============================================================================
+# Posts are written ahead with a future `published` date and are left out of
+# every build until that day has come in Cincinnati (isLive in
+# src/data/journal-gate.ts). Production only builds on a push to main, so this
+# fires the Worker's Cloudflare deploy hook once a week to rebuild main as it
+# is. Posts are dated Tuesdays (decided 2026-11-15), and 11:17 UTC is 06:17 or
+# 07:17 in Cincinnati, after the day has turned there in both seasons.
+#
+# The hook URL is the repo secret CF_DEPLOY_HOOK (Cloudflare: Workers & Pages >
+# nixoncreativestudio > Settings > Builds > Deploy Hooks, branch main). The URL
+# itself is the credential, so it never goes in a file. With no secret set the
+# job fails, so a missing hook shows up as a red run, not a silent skip.
+# Run it by hand from the Actions tab to publish a post on another day.
+# =============================================================================
+name: Journal publish
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 11 * * 2'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fire the deploy hook
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::CF_DEPLOY_HOOK is not set; no build was started."
+            exit 1
+          fi
+          curl --fail-with-body -sS -X POST "$HOOK"
