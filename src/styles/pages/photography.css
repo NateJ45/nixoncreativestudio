@@ -942,6 +942,7 @@
 @media (prefers-reduced-motion: reduce) {
   .pt-p,
   .print img,
+  .print video,
   .pt-nudge button,
   .pt-tools button,
   .pt-zf img {
@@ -1049,12 +1050,20 @@
 .print video {
   position: absolute;
   inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.6s var(--ease);
+}
+/* The still's hover zoom makes it a transformed layer that would paint over the video, so the
+   video sits above it and takes the same slight zoom: the film keeps playing as it grows. */
+.print:hover video {
+  transform: scale(1.035);
 }
 .print .pt-film {
   --mat: 0rem;
+  z-index: 2;
 }
 .is-playing .pt-film::before {
   width: 0.45rem;
@@ -1230,6 +1239,7 @@
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: linear-gradient(
     to top,
     rgba(0, 0, 0, 0.88),
