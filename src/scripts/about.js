@@ -48,7 +48,40 @@ function layout() {
   tiles.forEach(function (t, i) {
     ui.put(t, 'zIndex', String(10 - Math.round(Math.abs(st[i].d) * 2)));
   });
+  cssMode = cssOk && wide;
+  stage.classList.toggle('ab-css', cssMode);
+  if (cssMode) placeCss();
   wake();
+}
+/* The hand tied to the scroll (about.css, .ab-css): on a wide screen the browser moves the
+   windows, and this only measures, on load and resize. On a phone the frame loop below moves them
+   as before: there the CSS hand restyled the windows every frame and measured slower than the
+   script (2026-11-16). Off too under reduced motion and where scroll-driven animation is missing. */
+var cssOk =
+    !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()')),
+  cssMode = false;
+function px(v) {
+  return v.toFixed(1) + 'px';
+}
+function placeCss() {
+  var q = pose({ d: 1 }, 1),
+    base = pose({ d: 1 }, 0).x,
+    S = Math.max(240, (storyEnd - H) * 0.72);
+  wins.style.setProperty('--ab-pw', px(pw));
+  wins.style.setProperty('--ab-base', px(base));
+  wins.style.setProperty('--ab-span', px(q.x - base));
+  st.forEach(function (s) {
+    /* The hand opens over the story, by the page's scroll, the middle windows first. */
+    var ad = Math.abs(s.d),
+      o = (C - ad) * 0.05,
+      e = s.el.style;
+    e.setProperty('--ab-d', String(s.d));
+    e.setProperty('--ab-ad', String(ad));
+    e.setProperty('--ab-k', (1 - ad * ad * 0.11).toFixed(4));
+    e.setProperty('--ab-v0', (-0.1 - ad * 0.12).toFixed(3));
+    e.setProperty('--ab-r0', px(o * S));
+    e.setProperty('--ab-r1', px((o + 0.9) * S));
+  });
 }
 /* The spread stops inside the stage, so a window never reaches the text. */
 function pose(s, v) {
@@ -132,52 +165,60 @@ function frame(now) {
   else p = (H * 0.86 - ui.top(stage)) / Math.max(200, H * 0.68);
   p = Math.min(1, Math.max(0, p));
   var open = focusOpen || (!reduce && (inStage || pressed || held));
-  st.forEach(function (s) {
-    var tgt = open
-      ? 1
-      : reduce
-        ? REST
-        : REST + READ * Math.min(1, Math.max(0, (p - (C - Math.abs(s.d)) * 0.05) / 0.9));
-    if (reduce) {
-      s.v = tgt;
-      s.vv = 0;
-    } else {
-      s.vv += (140 * (tgt - s.v) - 14 * s.vv) * dt;
-      s.v += s.vv * dt;
-      if (Math.abs(tgt - s.v) < 0.0006 && Math.abs(s.vv) < 0.004) {
+  if (cssMode) {
+    /* Only the numbers the keyframes read change here, and only when the pointer or focus does. */
+    st.forEach(function (s) {
+      ui.put(s.el, '--ab-open', open ? '1' : '0');
+      ui.put(s.el, '--ab-lift', s.hov ? '1' : '0');
+      ui.put(s.el, 'zIndex', String(s.hov ? 15 : 10 - Math.round(Math.abs(s.d) * 2)));
+    });
+  } else
+    st.forEach(function (s) {
+      var tgt = open
+        ? 1
+        : reduce
+          ? REST
+          : REST + READ * Math.min(1, Math.max(0, (p - (C - Math.abs(s.d)) * 0.05) / 0.9));
+      if (reduce) {
         s.v = tgt;
         s.vv = 0;
-      } else live = true;
-    }
-    var lt = s.hov ? 1 : 0;
-    if (reduce) {
-      s.lift = lt;
-      s.liftv = 0;
-    } else {
-      s.liftv += (260 * (lt - s.lift) - 20 * s.liftv) * dt;
-      s.lift += s.liftv * dt;
-      if (Math.abs(lt - s.lift) > 0.001 || Math.abs(s.liftv) > 0.01) live = true;
-      else {
+      } else {
+        s.vv += (140 * (tgt - s.v) - 14 * s.vv) * dt;
+        s.v += s.vv * dt;
+        if (Math.abs(tgt - s.v) < 0.0006 && Math.abs(s.vv) < 0.004) {
+          s.v = tgt;
+          s.vv = 0;
+        } else live = true;
+      }
+      var lt = s.hov ? 1 : 0;
+      if (reduce) {
         s.lift = lt;
         s.liftv = 0;
+      } else {
+        s.liftv += (260 * (lt - s.lift) - 20 * s.liftv) * dt;
+        s.lift += s.liftv * dt;
+        if (Math.abs(lt - s.lift) > 0.001 || Math.abs(s.liftv) > 0.01) live = true;
+        else {
+          s.lift = lt;
+          s.liftv = 0;
+        }
       }
-    }
-    var q = pose(s, s.v);
-    ui.put(s.el, 'zIndex', String(s.hov ? 15 : 10 - Math.round(Math.abs(s.d) * 2)));
-    ui.put(
-      s.el,
-      'transform',
-      'translate3d(' +
-        q.x.toFixed(2) +
-        'px,' +
-        (q.y - s.lift * pw * 0.05).toFixed(2) +
-        'px,0) rotate(' +
-        q.r.toFixed(3) +
-        'deg) scale(' +
-        (1 + s.lift * 0.02).toFixed(4) +
-        ')',
-    );
-  });
+      var q = pose(s, s.v);
+      ui.put(s.el, 'zIndex', String(s.hov ? 15 : 10 - Math.round(Math.abs(s.d) * 2)));
+      ui.put(
+        s.el,
+        'transform',
+        'translate3d(' +
+          q.x.toFixed(2) +
+          'px,' +
+          (q.y - s.lift * pw * 0.05).toFixed(2) +
+          'px,0) rotate(' +
+          q.r.toFixed(3) +
+          'deg) scale(' +
+          (1 + s.lift * 0.02).toFixed(4) +
+          ')',
+      );
+    });
   if (!reduce) {
     /* Tight in the hand, soft when let go. */
     var k = held ? 420 : 105,
@@ -418,8 +459,22 @@ if (crossing && 'IntersectionObserver' in window) {
   ).observe(crossing);
 }
 
-addEventListener('scroll', wake, { passive: true });
+/* With the hand in CSS, only a touch screen's lean (on a sticky stage) still needs the scroll here. */
+addEventListener(
+  'scroll',
+  function () {
+    if (!cssMode || touchOnly.matches) wake();
+  },
+  { passive: true },
+);
 addEventListener('resize', layout);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
 addEventListener('load', layout);
 layout();
+if (cssMode) {
+  stage.classList.add('ab-intro');
+  /* The hand fans out of a tight stack on arrival, once. */
+  setTimeout(function () {
+    stage.classList.remove('ab-intro');
+  }, 1000);
+}

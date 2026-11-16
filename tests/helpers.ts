@@ -34,7 +34,11 @@ export async function settle(page: Page): Promise<void> {
 // The home hand, the About fan and the price cards are placed by spring code that
 // writes inline transforms each frame. settle() stops CSS motion but not these, and
 // a measure taken mid-spring sees cards overlapping more than they ever rest. So:
-// wait for every inline transform to hold still for ten frames (at most 4s).
+// wait for every inline transform to hold still for ten frames.
+// The limit counts frames, not seconds: the springs step at most 33ms a frame, and a
+// loaded CI runner gave WebKit 14 frames in 4s, so a 4s cap let axe measure the About
+// fan mid-arrival, still stacked (#386). 240 frames is about 8s of spring time; the
+// 15s wall clock (inside the 30s test timeout) only guards against endless motion.
 // =============================================================================
 export async function springsAtRest(page: Page): Promise<void> {
   await page.evaluate(
@@ -45,13 +49,14 @@ export async function springsAtRest(page: Page): Promise<void> {
             .map((e) => e.style.transform)
             .join('|');
         let last = read();
-        let still = 0;
+        let still = 0,
+          frames = 0;
         const t0 = performance.now();
         const tick = () => {
           const now = read();
           still = now === last ? still + 1 : 0;
           last = now;
-          if (still >= 10 || performance.now() - t0 > 4000) done();
+          if (still >= 10 || ++frames > 240 || performance.now() - t0 > 15000) done();
           else requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
