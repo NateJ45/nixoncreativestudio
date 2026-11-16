@@ -11,6 +11,7 @@ import OffTheClock from '../components/OffTheClock.astro';
 import PhotoStack from '../components/PhotoStack.astro';
 import ClientMap from '../components/ClientMap.astro';
 import Crossing from '../components/Crossing.astro';
+import Facts from '../components/Facts.astro';
 import engagement from '../assets/about/family-engagement.jpg';
 import picnic from '../assets/about/family-picnic.jpg';
 import aquarium from '../assets/about/family-aquarium.jpg';
@@ -44,21 +45,6 @@ const runningPhotos = [
     alt: 'Nathan and a friend by the Ohio River before a race, the Cincinnati skyline behind them.',
   },
   { src: runSelfie, alt: 'Nathan in sunglasses and a running shirt, out on a run.' },
-];
-/* The facts under "One person.", each with its stamp: a word, and the line under it when it
-   lifts. Every one repeats something this page already says (the story), so add one only with
-   its source. */
-const facts = [
-  {
-    label: 'On every project',
-    line: 'Strategy, design, the build and, when needed, the photos.',
-    stamp: { word: 'One person', under: 'Start to finish' },
-  },
-  {
-    label: 'Building websites since 2020',
-    line: 'After years behind a camera.',
-    stamp: { word: 'Since 2020', under: 'Building websites' },
-  },
 ];
 const heading = `A one-person studio for organizations that <b>take their work seriously.</b>`;
 ---
@@ -158,31 +144,10 @@ const heading = `A one-person studio for organizations that <b>take their work s
         <span>One person.</span>
       </h2>
     </div>
-    {/* The facts as two cards, each with its stamp, beside the postcard (Crossing.astro).
-        Hover, focus or a tap lifts a stamp to show a second line under it (stamp.css, a few
-        lines in about.js). Real buttons, and both lines are in the markup, so a screen reader
-        and a page with no script get every word. */}
+    {/* The facts as two cards (Facts.astro), a crew list and a film strip, each with its stamp,
+        beside the postcard (Crossing.astro). */}
     <div class="place">
-      <ul class="facts">
-        {facts.map((f) => (
-          <li class="fact">
-            <p class="label">{f.label}</p>
-            <p class="fact-line">{f.line}</p>
-            <button
-              type="button"
-              class="stamp peel"
-              data-peel
-              data-cursor="Lift"
-              aria-pressed="false"
-            >
-              <span class="stamp-face">
-                <span class="stamp-word">{f.stamp.word}</span>
-              </span>
-              <span class="stamp-under">{f.stamp.under}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <Facts />
       <Crossing />
     </div>
   </section>

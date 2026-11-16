@@ -1,35 +1,40 @@
-/* About, below the fold: the "Off the clock" cards that turn over (two of their backs carry a
-   small toy: a camera roll and a course line that draws), and the bio's photo stacks.
-   Both are real buttons with aria-expanded, so a screen reader hears what each one does and
-   whether it is open. Reduced motion is handled in CSS (no turn, no fan). */
+/* About, below the fold: the "Off the clock" cards (a camera roll, a program monitor and a course
+   line that draws), and the bio's photo stacks, whose words are real buttons with aria-expanded.
+   Reduced motion is handled in CSS (no drawing, no meters, no fan). */
 import { cue } from './sound.js';
 
 /* ---- Off the clock (src/components/OffTheClock.astro) ----------------------------------------
-   The face you can't see is inert, so Tab never lands on a link that is turned away. Turning a
-   card moves focus to its back, and "Turn back" returns focus to the button that turned it. */
-[].forEach.call(document.querySelectorAll('[data-otc]'), function (otc) {
-  var front = otc.querySelector('.otc-front'),
-    back = otc.querySelector('.otc-back'),
-    turn = otc.querySelector('[data-otc-turn]'),
-    home = otc.querySelector('[data-otc-back]');
-  function set(over, moveFocus) {
-    otc.classList.toggle('over', over);
-    if (moveFocus) cue('turn');
-    turn.setAttribute('aria-expanded', String(over));
-    front.inert = over;
-    back.inert = !over;
-    if (moveFocus) (over ? back : turn).focus({ preventScroll: true });
-  }
-  set(false, false);
-  turn.addEventListener('click', function () {
-    set(true, true);
+   The cards are open: everything is on the face. A card is .seen once it is well on screen (the
+   course line draws then) and .alive while any of it is on screen (the program monitor's meters
+   and tally move only then). Without IntersectionObserver both are simply on. */
+var otcs = [].slice.call(document.querySelectorAll('[data-otc]'));
+if ('IntersectionObserver' in window) {
+  var seenIo = new IntersectionObserver(
+    function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('seen');
+          seenIo.unobserve(e.target);
+        }
+      });
+    },
+    { threshold: 0.45 },
+  );
+  var aliveIo = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      e.target.classList.toggle('alive', e.isIntersecting);
+    });
   });
-  home.addEventListener('click', function () {
-    set(false, true);
+  otcs.forEach(function (o) {
+    seenIo.observe(o);
+    aliveIo.observe(o);
   });
-});
+} else
+  otcs.forEach(function (o) {
+    o.classList.add('seen', 'alive');
+  });
 
-/* ---- The camera roll on the Photography card's back ------------------------------------------
+/* ---- The camera roll on the Photography card ------------------------------------------
    One frame, six prints side by side in a row that snaps (CSS scroll snap, so a swipe works and
    so does the page with no script). The two buttons and the left and right arrow keys step one
    print at a time and go round at the ends. The count under the frame is a polite live region,
@@ -82,8 +87,8 @@ var noMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   );
 });
 
-/* ---- The course line on the Running card's back ----------------------------------------------
-   The line draws itself in CSS when the card turns over (.otc.over, about.css). "Draw it again"
+/* ---- The course line on the Running card -----------------------------------------------------
+   The line draws itself in CSS once the card is well on screen (.otc.seen, about.css). "Draw it again"
    lifts the pen and replays it: the class puts the line back to undrawn with no transition, one
    reflow makes that stick, and taking the class off lets it draw. Hidden under reduced motion,
    where the line is simply there. */

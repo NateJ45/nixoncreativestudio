@@ -1,7 +1,6 @@
 /* Prices: the tier cards turn over. The front says who a tier fits and what it costs; the back
    says what I take responsibility for, what happens if you ever move on, and what is included.
-   It is About's "Off the clock" turn (off-the-clock.js), copied small because that file also runs
-   About's photo stacks: a real button with aria-expanded, the face you cannot see is inert so Tab
+   It began as About's old "Off the clock" turn, copied small (those cards are open now): a real button with aria-expanded, the face you cannot see is inert so Tab
    never lands on something turned away, turning moves focus to the back, and "Turn back" returns
    it to the button that turned the card. The buttons carry data-otc-turn and data-otc-back, so
    the cursor caption says "Turn" over them (cursor.js).
