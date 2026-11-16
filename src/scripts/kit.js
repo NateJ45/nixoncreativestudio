@@ -900,6 +900,9 @@ function handFrame(t) {
         moving = true;
       }
       c.el.style.setProperty('--v', c.s.x.toFixed(4));
+      /* A card on its way up starts on top of the dock's links, so it takes no clicks until it is
+         nearly in its place: a quick click on the link you just pointed at still reaches the link. */
+      c.el.style.pointerEvents = c.s.x < 0.9 ? 'none' : '';
     });
     if (moving) alive = true;
     /* A folded hand leaves the tab order and the page's way. */
