@@ -373,12 +373,41 @@ st.forEach(function (s) {
   });
 });
 
-/* The postcard's flags wave only while the card is on screen (about.css, "The flags wave"). */
+/* The postcard's flags wave (about.css, "The flags tint the sky only"): the loop gets its source
+   only as the card comes near the screen, plays while the card is on screen and pauses when it
+   leaves. Never with reduced motion or Data Saver; the still drawing shows instead. */
 var crossing = doc.querySelector('.crossing');
-if (crossing && 'IntersectionObserver' in window) {
-  new IntersectionObserver(function (es) {
-    crossing.classList.toggle('cx-off', !es[0].isIntersecting);
-  }).observe(crossing);
+var saveData = navigator.connection && navigator.connection.saveData;
+if (crossing && !reduce && !saveData && 'IntersectionObserver' in window) {
+  var waves = [].slice.call(crossing.querySelectorAll('.cx-wave'));
+  new IntersectionObserver(
+    function (es) {
+      var on = es[0].isIntersecting;
+      waves.forEach(function (v) {
+        if (on && !v.dataset.loaded) {
+          v.dataset.loaded = '1';
+          [
+            ['webm', 'video/webm'],
+            ['mp4', 'video/mp4'],
+          ].forEach(function (t) {
+            var s = doc.createElement('source');
+            s.src = v.dataset[t[0]];
+            s.type = t[1];
+            v.appendChild(s);
+          });
+          v.addEventListener('playing', function () {
+            v.classList.add('is-on');
+          });
+          v.load();
+        }
+        if (on) {
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        } else v.pause();
+      });
+    },
+    { rootMargin: '150px 0px' },
+  ).observe(crossing);
 }
 
 addEventListener('scroll', wake, { passive: true });

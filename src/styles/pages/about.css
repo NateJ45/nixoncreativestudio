@@ -895,101 +895,55 @@ html:not(.js) .oc-again {
   -webkit-mask-image: linear-gradient(to right, transparent, #000 36%);
   mask-image: linear-gradient(to right, transparent, #000 36%);
 }
-/* The flags tint the sky only: laid over the photos in overlay, fading out before the skylines. */
-.cx-flags {
+/* The flags tint the sky only, fading out before the skylines. They are laid on in hard-light,
+   which lifts the near-black night sky (the stripes and stars show) and tints the day sky (the
+   Saltire shows); its neutral is mid grey. The still drawings (1200 x 640 images, the sky box plus
+   40 units above and below) show with reduced motion and until the waving loop is playing. */
+.cx-flags,
+.cx-wave {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  mix-blend-mode: overlay;
-  opacity: 0.55;
+  mix-blend-mode: hard-light;
+  opacity: 0.6;
   -webkit-mask-image: linear-gradient(#000 15%, transparent 68%);
   mask-image: linear-gradient(#000 15%, transparent 68%);
 }
+.cx-flags {
+  background: var(--flag) center / 100% calc(640 / 560 * 100%) no-repeat;
+  transition: opacity 0.6s var(--ease);
+}
+/* The Stars and Stripes fades in over the Saltire between 45% and 65% across, and the Saltire
+   fades out across the same span, as in the loop. */
+.cx-flags.cx-saltire {
+  -webkit-mask-image:
+    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, #000 45%, transparent 65%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, #000 45%, transparent 65%);
+  mask-composite: intersect;
+}
 .cx-flags.cx-us {
-  mix-blend-mode: screen;
-  opacity: 0.38;
+  -webkit-mask-image:
+    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, transparent 45%, #000 65%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, transparent 45%, #000 65%);
+  mask-composite: intersect;
 }
-/* The cloth: the sky box plus 40 of 560 units above and below (the flag images are 1200 x 640),
-   so a strip that rises or falls never shows an edge. The Stars and Stripes fades in over the
-   Saltire between 45% and 65% across. */
-.cx-cloth {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(-40 / 560 * 100%);
-  height: calc(640 / 560 * 100%);
+/* The waving loop (scripts/render-flags.mjs): both flags and their crossfade in one video, the sky
+   box exactly, grey off the cloth. about.js adds .is-on once it plays, and the stills step back. */
+.cx-wave {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
 }
-.cx-us .cx-cloth {
-  -webkit-mask-image: linear-gradient(to right, transparent 45%, #000 65%);
-  mask-image: linear-gradient(to right, transparent 45%, #000 65%);
+.cx-wave.is-on {
+  opacity: 0.6;
 }
-/* One strip in 80, showing its own slice of the flag: the image is 80 strips wide, and strip i
-   sits at i/79 of the way along it. A 30% stretch overlaps each strip on its neighbours, so the GPU leaves no hairline seams. */
-.cx-cloth > i:not(.cx-folds) {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--i) * 100% / 80);
-  width: calc(100% / 80);
-  background: var(--flag) no-repeat;
-  background-size: 8000% 100%;
-  background-position: calc(var(--i) * 100% / 79) 0;
-  transform: scaleX(1.3);
-  /* The swing: 3 units at the left edge growing to 12 at the right, of the 640-unit cloth. */
-  --a: calc((3 + var(--i) * 9 / 79) / 6.4 * 1%);
-}
-/* Light and shade for the folds, one ripple (480 of 1200 units, 40% of the cloth) per repeat.
-   The band is 140% wide and slides one repeat (28.57% of itself) each cycle. */
-.cx-folds {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -40%;
-  width: 140%;
-  background: repeating-linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0.14) 0,
-    transparent 8.57%,
-    rgba(0, 0, 0, 0.22) 15.71%,
-    transparent 22.86%,
-    rgba(255, 255, 255, 0.14) 28.57%
-  );
-}
-/* The flags wave: every strip rises and falls on the same beat, each a little later than the one
-   to its left, so the ripple runs towards the free end, and the folds slide along at the same
-   speed. Only transforms move, so the browser shifts layers rather than repainting. about.js adds
-   .cx-off while the card is off screen, which pauses it. Still with reduced motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .cx-cloth > i:not(.cx-folds) {
-    will-change: transform;
-    animation: cx-wave 2.4s ease-in-out infinite;
-    animation-delay: calc((80 - var(--i)) * -0.075s);
-  }
-  .cx-folds {
-    will-change: transform;
-    animation: cx-folds 2.4s linear infinite;
-  }
-  .cx-off .cx-cloth > i:not(.cx-folds),
-  .cx-off .cx-folds {
-    animation-play-state: paused;
-  }
-}
-@keyframes cx-wave {
-  0%,
-  100% {
-    transform: translateY(calc(var(--a) * -1)) scaleX(1.3);
-  }
-  50% {
-    transform: translateY(var(--a)) scaleX(1.3);
-  }
-}
-@keyframes cx-folds {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(28.5714%);
-  }
+.cx-art:has(.cx-wave.is-on) .cx-flags {
+  opacity: 0;
 }
 /* The night at the foot, so the place names read and the art settles into the copy. */
 .cx-art::after {
