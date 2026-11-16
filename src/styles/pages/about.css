@@ -1828,3 +1828,215 @@ html:not(.js) .oc-again {
     border: 1px solid CanvasText;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   The hand, tied to the scroll (about.js turns it on with .ab-css on the stage)
+   ---------------------------------------------------------------------------------------------
+   The hand of windows opens as you read, as a scroll-driven animation, so the browser moves it in
+   step with the scroll itself. Done in script, every frame read the scroll and then moved every
+   window, a frame behind a phone's own scrolling. about.js only measures: on load and resize it
+   writes the hand's size (--ab-pw, the card; --ab-base and --ab-span, how far apart the windows
+   sit, closed to open) and, on each window, its place in the hand (--ab-d, --ab-ad, --ab-k) and
+   the stretch of scroll it opens over (--ab-r0 to --ab-r1), the middle ones first.
+
+   A window's pose is a straight line in how open it is: from 0.5 at the top of the page to 0.7
+   by the end of the story, and 1 under the pointer, a press or keyboard focus. Three numbers the
+   keyframes read move it off that line, each on a spring written out as a linear() easing: the
+   hand opening wide (--ab-open, on the hand), the window you point at lifting (--ab-lift, on the
+   window) and, on arrival, the hand fanning out of a tight stack (--ab-in, from where each window
+   starts, --ab-v0).
+
+   On a touch screen, the portrait leans with the stage's place on the screen instead of with a
+   pointer (ab-lean): forward as it comes up, back as it leaves, its two planes apart as it leans.
+   While a finger holds the card, and until it has sprung home, about.js moves it (.busy). A
+   sticky stage, on a wide touch screen, leans from the script as before.
+
+   Without scroll-driven animation (Firefox today), or under reduced motion, none of this applies
+   and about.js moves it all itself, as before. */
+@property --ab-open {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --ab-lift {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --ab-in {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --depth {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* The script's two springs, written out: the hand (k 140, d 14) and a lift (k 260, d 20). */
+    .ab-css {
+      --ab-hand: linear(
+        0,
+        0.067 3.6%,
+        0.217 7.1%,
+        0.402 10.7%,
+        0.589 14.3%,
+        0.755 17.9%,
+        0.889 21.4%,
+        0.987 25%,
+        1.051 28.6%,
+        1.086 32.1%,
+        1.098 35.7%,
+        1.095 39.3%,
+        1.082 42.9%,
+        1.064 46.4%,
+        1.045 50%,
+        1.028 53.6%,
+        1.014 57.1%,
+        1.004 60.7%,
+        0.996 64.3%,
+        0.992 67.9%,
+        0.99 71.4%,
+        0.99 75%,
+        0.992 78.6%,
+        0.993 82.1%,
+        0.995 85.7%,
+        0.997 89.3%,
+        0.998 92.9%,
+        0.999 96.4%,
+        1
+      );
+      --ab-spring: linear(
+        0,
+        0.071 3.6%,
+        0.225 7.1%,
+        0.404 10.7%,
+        0.589 14.3%,
+        0.751 17.9%,
+        0.881 21.4%,
+        0.975 25%,
+        1.036 28.6%,
+        1.068 32.1%,
+        1.081 35.7%,
+        1.079 39.3%,
+        1.069 42.9%,
+        1.055 46.4%,
+        1.039 50%,
+        1.026 53.6%,
+        1.014 57.1%,
+        1.005 60.7%,
+        0.999 64.3%,
+        0.995 67.9%,
+        0.994 71.4%,
+        0.993 75%,
+        0.994 78.6%,
+        0.995 82.1%,
+        0.996 85.7%,
+        0.998 89.3%,
+        0.999 92.9%,
+        0.999 96.4%,
+        1
+      );
+    }
+    .ab-css .fan-wins {
+      transition: --ab-open 0.9s var(--ab-hand);
+    }
+    .ab-css .fan-wins .tile {
+      --ab-vf: calc(0.5 + 0.5 * var(--ab-open));
+      --ab-vt: calc(0.7 + 0.3 * var(--ab-open));
+      --ab-f: calc(var(--ab-vf) + (var(--ab-v0) - var(--ab-vf)) * var(--ab-in));
+      --ab-t: calc(var(--ab-vt) + (var(--ab-v0) - var(--ab-vt)) * var(--ab-in));
+      transition: --ab-lift 0.67s var(--ab-spring);
+      animation: ab-fan linear both;
+      animation-timeline: scroll(root block);
+      animation-range: var(--ab-r0) var(--ab-r1);
+    }
+    :root[data-theme='dark'] .ab-css .fan-wins .tile {
+      transition:
+        --ab-lift 0.67s var(--ab-spring),
+        box-shadow 0.5s var(--ease);
+    }
+    .ab-css.ab-intro .fan-wins .tile {
+      animation:
+        ab-fan linear both,
+        ab-in 0.9s var(--ab-hand) backwards;
+      animation-timeline: scroll(root block), auto;
+      animation-range:
+        var(--ab-r0) var(--ab-r1),
+        normal;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) and (hover: none) and (max-width: 60rem) {
+    .ab-css .pcard:not(.busy) {
+      animation:
+        ab-lean linear both,
+        ab-depth linear both;
+      animation-timeline: scroll(root block), scroll(root block);
+      animation-range:
+        var(--ab-l0) var(--ab-l1),
+        var(--ab-l0) var(--ab-l1);
+    }
+  }
+}
+@keyframes ab-fan {
+  from {
+    transform: translate3d(
+        calc(var(--ab-d) * (var(--ab-base) + var(--ab-span) * var(--ab-f))),
+        calc(
+          var(--ab-pw) *
+            (
+              var(--ab-ad) * 0.02 - (0.05 + 0.33 * var(--ab-f)) * var(--ab-k) - var(--ab-lift) *
+                0.05
+            )
+        ),
+        0
+      )
+      rotate(calc(var(--ab-d) * (2deg + 9deg * var(--ab-f)))) scale(calc(1 + var(--ab-lift) * 0.02));
+  }
+  to {
+    transform: translate3d(
+        calc(var(--ab-d) * (var(--ab-base) + var(--ab-span) * var(--ab-t))),
+        calc(
+          var(--ab-pw) *
+            (
+              var(--ab-ad) * 0.02 - (0.05 + 0.33 * var(--ab-t)) * var(--ab-k) - var(--ab-lift) *
+                0.05
+            )
+        ),
+        0
+      )
+      rotate(calc(var(--ab-d) * (2deg + 9deg * var(--ab-t)))) scale(calc(1 + var(--ab-lift) * 0.02));
+  }
+}
+@keyframes ab-in {
+  from {
+    --ab-in: 1;
+  }
+  to {
+    --ab-in: 0;
+  }
+}
+@keyframes ab-lean {
+  from {
+    transform: perspective(1100px) rotateX(2.5deg);
+  }
+  50% {
+    transform: perspective(1100px) rotateX(0deg);
+  }
+  to {
+    transform: perspective(1100px) rotateX(-2.5deg);
+  }
+}
+@keyframes ab-depth {
+  from {
+    --depth: 1;
+  }
+  50% {
+    --depth: 0;
+  }
+  to {
+    --depth: 1;
+  }
+}
