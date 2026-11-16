@@ -91,14 +91,20 @@ addEventListener('beforeprint', function () {
    - The drift. With a mouse, the row slides sideways as the section crosses the screen, far
      enough that every print passes through. The row stops being a sideways scroller for that
      (`.drift`, overflow clipped), so a print the keyboard lands on is nudged into view instead.
+     Where the browser has scroll-driven animation the drift is CSS (`.drift-css`, home.css), so
+     it moves in step with the scroll itself: this only measures how far the row has to travel
+     (--sd-over) on load and resize, and writes the keyboard's nudge (--sd-nudge). Elsewhere (Firefox
+     today) the spring below follows the scroll, as before.
    A touch screen keeps the row as a thing you scroll by hand and gets only the bow. Reduced
-   motion gets neither: a still row. */
+   motion gets neither: a still row. The bow stays in script on every browser, because it follows
+   the scroll's speed, which CSS cannot see; a frame of it reads only scrollY and writes one number. */
 var strip = doc.querySelector('[data-strip]');
 if (strip && !reduce) {
   var row = strip.querySelector('[data-strip-row]'),
     track = strip.querySelector('[data-strip-track]'),
     fine = matchMedia('(hover: hover) and (pointer: fine)'),
     drifting = false,
+    cssDrift = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()')),
     bow = ui.spring(170, 16, 0),
     slide = ui.spring(140, 22, 0),
     seeded = false,
@@ -109,12 +115,19 @@ if (strip && !reduce) {
     raf = 0,
     near = false;
 
+  /* The CSS drift's one measurement: how far the row travels from first print to last. */
+  var measure = function () {
+    if (cssDrift && drifting)
+      ui.put(strip, '--sd-over', Math.max(0, track.scrollWidth - row.clientWidth) + 'px');
+  };
   var setMode = function () {
     drifting = fine.matches;
     strip.classList.toggle('drift', drifting);
+    strip.classList.toggle('drift-css', drifting && cssDrift);
     if (!drifting) track.style.transform = '';
     else row.scrollLeft = 0;
     seeded = false;
+    measure();
   };
   /* Where the row should be: 0 as the section's top meets the foot of the screen, all the way
      across as its foot leaves the top. */
@@ -136,8 +149,8 @@ if (strip && !reduce) {
     if (Math.abs(speed) < 0.002) speed = 0;
     var lean = Math.max(-7, Math.min(7, speed * 4.2)),
       live = bow.step(lean, dt) || speed !== 0;
-    row.style.setProperty('--bow', bow.x.toFixed(3));
-    if (drifting) {
+    ui.put(row, '--bow', bow.x.toFixed(3));
+    if (drifting && !cssDrift) {
       var to = target();
       if (!seeded) {
         slide.x = to;
@@ -150,7 +163,7 @@ if (strip && !reduce) {
     if (live && near) raf = requestAnimationFrame(frame);
     else {
       lastT = 0;
-      if (!live) row.style.setProperty('--bow', '0');
+      if (!live) ui.put(row, '--bow', '0');
     }
   };
   var wake = function () {
@@ -178,8 +191,10 @@ if (strip && !reduce) {
   addEventListener('scroll', wake, { passive: true });
   addEventListener('resize', function () {
     seeded = false;
+    measure();
     wake();
   });
+  addEventListener('load', measure);
 
   /* The keyboard on a print the drift has left off screen: slide the row just far enough to show
      it, and let go when focus leaves. */
@@ -189,11 +204,17 @@ if (strip && !reduce) {
       m = 24;
     if (r.left < m) nudge += m - r.left;
     else if (r.right > innerWidth - m) nudge -= r.right - (innerWidth - m);
-    wake();
+    setNudge();
   });
   track.addEventListener('focusout', function (e) {
     if (track.contains(e.relatedTarget)) return;
     nudge = 0;
-    wake();
+    setNudge();
   });
+  /* The CSS drift takes the nudge as its own small slide (translate, eased in home.css); the
+     spring takes it as part of where the row should be. */
+  var setNudge = function () {
+    if (cssDrift) ui.put(track, '--sd-nudge', nudge.toFixed(1) + 'px');
+    else wake();
+  };
 }
