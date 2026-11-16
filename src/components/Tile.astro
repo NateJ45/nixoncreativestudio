@@ -20,6 +20,9 @@ interface Props {
   desk?: boolean;
   /** The phone still's `sizes`: the tile's CSS width where it sits. The default is a loose fit. */
   sizes?: string;
+  /** 'low' for a still on the first screen that is not the page's main picture: it still loads at
+   once, but after the stylesheets and the font, so the page paints sooner on a slow connection. */
+  priority?: 'low';
 }
 const {
   client: s,
@@ -29,6 +32,7 @@ const {
   long,
   desk = false,
   sizes = '(max-width: 480px) 60vw, 346px',
+  priority,
 } = Astro.props;
 ---
 
@@ -72,6 +76,7 @@ const {
           sizes={sizes}
           alt=""
           loading={lazy ? 'lazy' : 'eager'}
+          fetchpriority={priority}
           width="584"
           height="1138"
         />
