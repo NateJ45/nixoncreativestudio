@@ -48,51 +48,40 @@ function layout() {
   tiles.forEach(function (t, i) {
     ui.put(t, 'zIndex', String(10 - Math.round(Math.abs(st[i].d) * 2)));
   });
+  cssMode = cssOk && wide;
+  stage.classList.toggle('ab-css', cssMode);
   if (cssMode) placeCss();
   wake();
 }
-/* The hand tied to the scroll (about.css, .ab-css): the browser moves the windows, and on a touch
-   screen the portrait's lean; this only measures, on load and resize. Off under reduced motion and
-   where scroll-driven animation is missing, where the frame loop below moves them as before. */
-var cssMode =
-  !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+/* The hand tied to the scroll (about.css, .ab-css): on a wide screen the browser moves the
+   windows, and this only measures, on load and resize. On a phone the frame loop below moves them
+   as before: there the CSS hand restyled the windows every frame and measured slower than the
+   script (2026-11-16). Off too under reduced motion and where scroll-driven animation is missing. */
+var cssOk =
+    !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()')),
+  cssMode = false;
 function px(v) {
   return v.toFixed(1) + 'px';
 }
 function placeCss() {
   var q = pose({ d: 1 }, 1),
     base = pose({ d: 1 }, 0).x,
-    top = stage.getBoundingClientRect().top + scrollY,
-    L = Math.max(200, H * 0.68),
     S = Math.max(240, (storyEnd - H) * 0.72);
   wins.style.setProperty('--ab-pw', px(pw));
   wins.style.setProperty('--ab-base', px(base));
   wins.style.setProperty('--ab-span', px(q.x - base));
   st.forEach(function (s) {
+    /* The hand opens over the story, by the page's scroll, the middle windows first. */
     var ad = Math.abs(s.d),
       o = (C - ad) * 0.05,
-      /* Wide, the hand opens over the story by the page's scroll; narrow, as the stage crosses
-         the screen. */
-      r0 = wide ? o * S : top - H * 0.86 + o * L,
-      r1 = r0 + 0.9 * (wide ? S : L),
       e = s.el.style;
     e.setProperty('--ab-d', String(s.d));
     e.setProperty('--ab-ad', String(ad));
     e.setProperty('--ab-k', (1 - ad * ad * 0.11).toFixed(4));
     e.setProperty('--ab-v0', (-0.1 - ad * 0.12).toFixed(3));
-    e.setProperty('--ab-r0', px(r0));
-    e.setProperty('--ab-r1', px(r1));
+    e.setProperty('--ab-r0', px(o * S));
+    e.setProperty('--ab-r1', px((o + 0.9) * S));
   });
-  /* The lean: full forward with the stage's middle an eighth of a screen below the foot, full back
-     an eighth above the top, flat in the middle (the script's LEAN, on the same terms). */
-  var mid = top + stage.offsetHeight / 2;
-  card.style.setProperty('--ab-l0', px(mid - H * 1.125));
-  card.style.setProperty('--ab-l1', px(mid + H * 0.125));
-  /* The script's own lean starts from the same angle, so nothing moves when it hands over. */
-  if (touchOnly.matches && !held) {
-    c.rx.x = leanNow();
-    c.dp.x = Math.abs(c.rx.x) / LEAN;
-  }
 }
 /* The spread stops inside the stage, so a window never reaches the text. */
 function pose(s, v) {
@@ -141,11 +130,6 @@ var held = false,
   lastX = 0,
   lastT = 0,
   focusOpen = 0;
-/* How far the card leans for where the stage sits on the screen. */
-function leanNow() {
-  var off = (ui.top(stage) + ui.height(stage) / 2 - H / 2) / H;
-  return Math.max(-1, Math.min(1, off * 1.6)) * LEAN;
-}
 var band = function (d, max) {
   var a = Math.abs(d);
   return (d < 0 ? -1 : 1) * max * (1 - Math.exp(-a / max));
@@ -183,8 +167,8 @@ function frame(now) {
   var open = focusOpen || (!reduce && (inStage || pressed || held));
   if (cssMode) {
     /* Only the numbers the keyframes read change here, and only when the pointer or focus does. */
-    ui.put(wins, '--ab-open', open ? '1' : '0');
     st.forEach(function (s) {
+      ui.put(s.el, '--ab-open', open ? '1' : '0');
       ui.put(s.el, '--ab-lift', s.hov ? '1' : '0');
       ui.put(s.el, 'zIndex', String(s.hov ? 15 : 10 - Math.round(Math.abs(s.d) * 2)));
     });
@@ -244,7 +228,8 @@ function frame(now) {
     /* No pointer to follow: lean with the scroll, by where the stage sits on the screen. */
     var leaning = touchOnly.matches && !held && !hover;
     if (leaning) {
-      tRx = leanNow();
+      var off = (ui.top(stage) + ui.height(stage) / 2 - H / 2) / H;
+      tRx = Math.max(-1, Math.min(1, off * 1.6)) * LEAN;
       tRy = 0;
     }
     var e = go(c.rx, tRx, 170, 15, dt),
@@ -261,9 +246,6 @@ function frame(now) {
     );
     var h = go(c.s, held ? 1.045 : hover ? 1.012 : 1, 300, 20, dt);
     live = live || a || b || e || f || g || h || dz || held;
-    /* While the card is held or springing home it is the script's; at rest, on a narrow touch
-       screen, the CSS lean takes it back from the same angle. */
-    if (cssMode) card.classList.toggle('busy', live);
     ui.put(card, '--depth', Math.max(0, c.dp.x).toFixed(3));
     ui.put(card, '--lift', Math.max(0, Math.min(1, (c.s.x - 1) / 0.045)).toFixed(3));
     ui.put(
@@ -365,12 +347,6 @@ if (!reduce) {
   card.addEventListener('pointerdown', function (e) {
     if (e.button) return;
     grab = { id: e.pointerId, x: e.clientX, y: e.clientY };
-    /* Picked up out of the CSS lean: start from the angle it shows. */
-    if (cssMode && touchOnly.matches && !card.classList.contains('busy')) {
-      c.rx.x = leanNow();
-      c.dp.x = Math.abs(c.rx.x) / LEAN;
-      card.classList.add('busy');
-    }
     held = true;
     gx = gy = 0;
     lastX = e.clientX;
@@ -483,11 +459,11 @@ if (crossing && 'IntersectionObserver' in window) {
   ).observe(crossing);
 }
 
-/* With the hand in CSS, only a sticky stage on a wide touch screen still leans the card from here. */
+/* With the hand in CSS, only a touch screen's lean (on a sticky stage) still needs the scroll here. */
 addEventListener(
   'scroll',
   function () {
-    if (!cssMode || (wide && touchOnly.matches)) wake();
+    if (!cssMode || touchOnly.matches) wake();
   },
   { passive: true },
 );
@@ -496,7 +472,7 @@ if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
 addEventListener('load', layout);
 layout();
 if (cssMode) {
-  stage.classList.add('ab-css', 'ab-intro');
+  stage.classList.add('ab-intro');
   /* The hand fans out of a tight stack on arrival, once. */
   setTimeout(function () {
     stage.classList.remove('ab-intro');

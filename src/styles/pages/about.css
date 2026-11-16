@@ -1834,7 +1834,7 @@ html:not(.js) .oc-again {
    ---------------------------------------------------------------------------------------------
    The hand of windows opens as you read, as a scroll-driven animation, so the browser moves it in
    step with the scroll itself. Done in script, every frame read the scroll and then moved every
-   window, a frame behind a phone's own scrolling. about.js only measures: on load and resize it
+   window, a frame behind the scrolling. about.js only measures: on load and resize it
    writes the hand's size (--ab-pw, the card; --ab-base and --ab-span, how far apart the windows
    sit, closed to open) and, on each window, its place in the hand (--ab-d, --ab-ad, --ab-k) and
    the stretch of scroll it opens over (--ab-r0 to --ab-r1), the middle ones first.
@@ -1842,35 +1842,37 @@ html:not(.js) .oc-again {
    A window's pose is a straight line in how open it is: from 0.5 at the top of the page to 0.7
    by the end of the story, and 1 under the pointer, a press or keyboard focus. Three numbers the
    keyframes read move it off that line, each on a spring written out as a linear() easing: the
-   hand opening wide (--ab-open, on the hand), the window you point at lifting (--ab-lift, on the
-   window) and, on arrival, the hand fanning out of a tight stack (--ab-in, from where each window
-   starts, --ab-v0).
+   hand opening wide (--ab-open), the window you point at lifting (--ab-lift) and, on arrival,
+   the hand fanning out of a tight stack (--ab-in, from where each window starts, --ab-v0). All of
+   them, and the pose they make (--ab-f, --ab-t), live on each window and do not inherit: inherited,
+   each frame of a spring restyled everything inside every window.
 
-   On a touch screen, the portrait leans with the stage's place on the screen instead of with a
-   pointer (ab-lean): forward as it comes up, back as it leaves, its two planes apart as it leans.
-   While a finger holds the card, and until it has sprung home, about.js moves it (.busy). A
-   sticky stage, on a wide touch screen, leans from the script as before.
-
-   Without scroll-driven animation (Firefox today), or under reduced motion, none of this applies
-   and about.js moves it all itself, as before. */
+   about.js turns this on for wide screens only. On a phone the windows still moved on the main
+   thread here, and measured slower than the script, so there, and without scroll-driven
+   animation (Firefox today) or under reduced motion, about.js moves the hand itself, as before. */
 @property --ab-open {
   syntax: '<number>';
-  inherits: true;
+  inherits: false;
   initial-value: 0;
 }
 @property --ab-lift {
   syntax: '<number>';
-  inherits: true;
+  inherits: false;
   initial-value: 0;
 }
 @property --ab-in {
   syntax: '<number>';
-  inherits: true;
+  inherits: false;
   initial-value: 0;
 }
-@property --depth {
+@property --ab-f {
   syntax: '<number>';
-  inherits: true;
+  inherits: false;
+  initial-value: 0;
+}
+@property --ab-t {
+  syntax: '<number>';
+  inherits: false;
   initial-value: 0;
 }
 @supports (animation-timeline: scroll()) {
@@ -1940,21 +1942,23 @@ html:not(.js) .oc-again {
         1
       );
     }
-    .ab-css .fan-wins {
-      transition: --ab-open 0.9s var(--ab-hand);
-    }
     .ab-css .fan-wins .tile {
-      --ab-vf: calc(0.5 + 0.5 * var(--ab-open));
-      --ab-vt: calc(0.7 + 0.3 * var(--ab-open));
-      --ab-f: calc(var(--ab-vf) + (var(--ab-v0) - var(--ab-vf)) * var(--ab-in));
-      --ab-t: calc(var(--ab-vt) + (var(--ab-v0) - var(--ab-vt)) * var(--ab-in));
-      transition: --ab-lift 0.67s var(--ab-spring);
+      --ab-f: calc(
+        0.5 + 0.5 * var(--ab-open) + (var(--ab-v0) - 0.5 - 0.5 * var(--ab-open)) * var(--ab-in)
+      );
+      --ab-t: calc(
+        0.7 + 0.3 * var(--ab-open) + (var(--ab-v0) - 0.7 - 0.3 * var(--ab-open)) * var(--ab-in)
+      );
+      transition:
+        --ab-open 0.9s var(--ab-hand),
+        --ab-lift 0.67s var(--ab-spring);
       animation: ab-fan linear both;
       animation-timeline: scroll(root block);
       animation-range: var(--ab-r0) var(--ab-r1);
     }
     :root[data-theme='dark'] .ab-css .fan-wins .tile {
       transition:
+        --ab-open 0.9s var(--ab-hand),
         --ab-lift 0.67s var(--ab-spring),
         box-shadow 0.5s var(--ease);
     }
@@ -1966,17 +1970,6 @@ html:not(.js) .oc-again {
       animation-range:
         var(--ab-r0) var(--ab-r1),
         normal;
-    }
-  }
-  @media (prefers-reduced-motion: no-preference) and (hover: none) and (max-width: 60rem) {
-    .ab-css .pcard:not(.busy) {
-      animation:
-        ab-lean linear both,
-        ab-depth linear both;
-      animation-timeline: scroll(root block), scroll(root block);
-      animation-range:
-        var(--ab-l0) var(--ab-l1),
-        var(--ab-l0) var(--ab-l1);
     }
   }
 }
@@ -2016,27 +2009,5 @@ html:not(.js) .oc-again {
   }
   to {
     --ab-in: 0;
-  }
-}
-@keyframes ab-lean {
-  from {
-    transform: perspective(1100px) rotateX(2.5deg);
-  }
-  50% {
-    transform: perspective(1100px) rotateX(0deg);
-  }
-  to {
-    transform: perspective(1100px) rotateX(-2.5deg);
-  }
-}
-@keyframes ab-depth {
-  from {
-    --depth: 1;
-  }
-  50% {
-    --depth: 0;
-  }
-  to {
-    --depth: 1;
   }
 }
