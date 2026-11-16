@@ -27,9 +27,17 @@ if (!dir || !name || !photo || !['day', 'night'].includes(kind)) {
   process.exit(1);
 }
 const FPS = 30;
-const MIN = 5 * FPS;
+// The shortest loop, in seconds (FLAG_MIN, default 5). The Stars and Stripes in a steady breeze
+// repeats best at about 4 s.
+const MIN = Number(process.env.FLAG_MIN || 5) * FPS;
 const MAX = 10 * FPS;
-const BLEND = 24; // frames of crossfade at the seam (slow cloth hides a long one)
+// Frames of crossfade at the seam (slow cloth hides a long one); FLAG_BLEND overrides.
+const BLEND = Number(process.env.FLAG_BLEND || 24);
+// FLAG_COVER (0 to 1, off by default): only loops in which the cloth covers at least this share of
+// the upper sky in every frame, so the night never shows round a lifting fly end. The Stars and
+// Stripes use 0.99: its fly end lifts with every gust, and a loop that showed the sky behind it
+// jumped visibly at the seam.
+const COVER = Number(process.env.FLAG_COVER || 0);
 const W = 1116;
 const H = 840;
 // How strongly the flag shows, and its grade: a share of its colour kept, and a brightness.
@@ -98,6 +106,24 @@ const small = await Promise.all(
       .toBuffer(),
   ),
 );
+// How much of the upper sky (the top 62% of the frame, where the flag shows) the cloth covers.
+const cover = COVER
+  ? await Promise.all(
+      files.map(async (f) => {
+        const a = await sharp(`${dir}/${f}`)
+          .ensureAlpha()
+          .extractChannel(3)
+          .resize(186, 140)
+          .raw()
+          .toBuffer();
+        const n = Math.round(140 * 0.62) * 186;
+        let k = 0;
+        for (let q = 0; q < n; q++) if (a[q] > 200) k++;
+        return k / n;
+      }),
+    )
+  : null;
+const covered = (from, to) => !cover || cover.slice(from, to).every((c) => c >= COVER);
 const diff = (a, b) => {
   let d = 0;
   for (let i = 0; i < a.length; i++) d += Math.abs(a[i] - b[i]);
@@ -106,9 +132,16 @@ const diff = (a, b) => {
 let best = { d: Infinity };
 for (let i = BLEND; i < files.length - MIN; i++)
   for (let j = i + MIN; j <= Math.min(files.length - 1, i + MAX); j++) {
+    if (!covered(i - BLEND, j)) continue;
     const d = diff(small[i], small[j]);
     if (d < best.d) best = { d, i, j };
   }
+if (best.d === Infinity) {
+  console.error(
+    `no loop of ${MIN / FPS} to ${MAX / FPS} s keeps the sky covered (FLAG_COVER ${COVER})`,
+  );
+  process.exit(1);
+}
 const { i, j } = best;
 console.log(
   `loop ${files[i]}..${files[j - 1]} (${((j - i) / FPS).toFixed(1)} s), seam difference ${best.d.toFixed(2)}`,

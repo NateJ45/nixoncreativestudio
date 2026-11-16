@@ -1,5 +1,5 @@
 /* The price cards turn over (src/components/PriceHand.astro, src/styles/price-turn.css). The same
-   rules as About's "Off the clock" cards (off-the-clock.js): a real button with aria-expanded
+   rules as the tier cards on /services (prices-turn.js): a real button with aria-expanded
    turns the card, the face you cannot see is inert so Tab never lands on something turned away,
    turning moves focus to the back, and "Turn back" returns it to the button that turned it.
    Escape on the back turns it home too. The turn itself is CSS, so reduced motion is answered

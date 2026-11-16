@@ -448,167 +448,282 @@ html:not(.js) .ps:is(:hover, :focus-within) .ps-pile {
   }
 }
 
-/* Off the clock (src/components/OffTheClock.astro): four cards that turn over. The front is
-   paper, lettered in two corners; the back is the studio blue. Only the face you can see takes
-   focus (the script makes the other inert). Without JavaScript the back simply sits under the
-   front. */
+/* Off the clock (src/components/OffTheClock.astro): four open cards, no turning. A twelve-column
+   bento: Photography wide beside Sunday AV, then Family beside Running, which lays its course map
+   and its words side by side. Each card leads with its picture, then a kicker, a title, every word
+   and its link, lettered in the corner. */
 .otc-sec .sec-head p a {
   color: var(--ink);
 }
 .otc-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(1rem, 2vw, 1.75rem);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
   max-width: 78rem;
   margin: 0 auto;
   padding: 0;
   list-style: none;
 }
 .otc {
-  perspective: 1600px;
-}
-.otc:nth-child(odd) {
-  transform: rotate(-0.5deg);
-}
-.otc:nth-child(even) {
-  transform: rotate(0.5deg);
-}
-.otc-card {
-  display: grid;
-  min-height: 22rem;
-  transform-style: preserve-3d;
-  transition: transform 0.75s cubic-bezier(0.3, 1.2, 0.5, 1);
-}
-.otc.over .otc-card {
-  transform: rotateY(180deg);
-}
-.otc-face {
   --cardr: 1.5rem;
-  grid-area: 1 / 1;
+  --pips: 1.35rem;
+  --pipx: 1.3rem;
+  --pipy: 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  padding: 3.4rem 1.6rem 1.6rem;
+  gap: 1.1rem;
+  padding: 0.75rem 0.75rem 1.4rem;
   border-radius: var(--cardr);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  background: var(--card);
   box-shadow:
     var(--rim),
-    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 26px 44px -22px rgba(0, 0, 0, 0.42);
+    0 0 0 1px color-mix(in srgb, var(--ink) 7%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 24px 40px -26px rgba(0, 0, 0, 0.38);
 }
-.otc-front {
-  --pips: 1.5rem;
-  --pipx: 1.1rem;
-  --pipy: 1rem;
+.otc-photo,
+.otc-run {
+  grid-column: span 7;
 }
-.otc-front h3 {
-  font: 600 clamp(2rem, 3vw, 2.6rem) / 1 var(--display);
-  letter-spacing: -0.045em;
+.otc-av,
+.otc-family {
+  grid-column: span 5;
 }
-.otc-line {
+.otc-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--cardr) - 0.6rem);
+}
+.otc-words {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0 0.85rem;
+}
+.otc-words .pip {
+  top: 0;
+  left: auto;
+  right: 0.85rem;
   color: var(--soft);
 }
-.otc-back {
-  padding-top: 1.6rem;
-  background: var(--fill);
-  color: #fff;
-  transform: rotateY(180deg);
+.otc h3 {
+  font: 600 clamp(1.9rem, 2.8vw, 2.4rem) / 1 var(--display);
+  letter-spacing: -0.045em;
 }
-.otc-back a {
-  color: #fff;
+.otc-words > p:not(.label) {
+  max-width: 36rem;
+  color: var(--soft);
+  text-wrap: pretty;
+}
+.otc-words a {
+  margin-top: 0.2rem;
+  color: var(--ink);
   font-weight: 600;
   text-underline-offset: 0.2em;
-}
-.otc-back:focus-visible {
-  outline: 3px solid var(--ink);
-  outline-offset: 3px;
 }
 .otc-ph {
   display: block;
   width: 100%;
   height: auto;
-  /* 4:3, not wider: both photos are portrait, and a wider frame cannot
-     hold every head in the family photo. 45% keeps the three faces in
-     the picnic shot; the race photo sets its own focus inline. */
+  /* 4:3, not wider: the photo is portrait, and a wider frame cannot hold every head in the
+     family photo. 45% keeps the three faces in the picnic shot. */
   aspect-ratio: 4 / 3;
   object-fit: cover;
   object-position: 50% 45%;
-  border-radius: 0.9rem;
 }
-.otc-turn {
-  align-self: flex-start;
-  min-height: 2.75rem;
-  margin-top: auto;
-  padding: 0 1.15rem;
-  border: 0;
-  border-radius: 99rem;
-  background: var(--fill);
-  color: #fff;
-  font: 600 1rem / 1 var(--body);
-  cursor: pointer;
-  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+/* Running: the course on the studio blue to the left, the words beside it. */
+.otc-run {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  padding-bottom: 0.75rem;
 }
-.otc-turn:hover {
-  transform: scale(1.04);
+.otc-run .otc-media {
+  align-self: stretch;
+  display: grid;
 }
-.otc-back .otc-turn {
-  background: rgba(255, 255, 255, 0.16);
+.otc-run .otc-course {
+  aspect-ratio: auto;
+  min-height: 18rem;
 }
-.otc-front .otc-turn:focus-visible {
-  outline-color: var(--ink);
-}
-.otc-vh {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-html:not(.js) .otc-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-height: 0;
-}
-html:not(.js) .otc-back {
-  transform: none;
-}
-html:not(.js) .otc-turn {
-  display: none;
+.otc-run .otc-words {
+  padding: 1rem 0.85rem 1rem 0.4rem;
 }
 @media (max-width: 64rem) {
-  .otc-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .otc-grid > .otc {
+    grid-column: span 6;
   }
 }
-@media (max-width: 36rem) {
-  .otc-grid {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 48rem) {
+  .otc-run {
+    display: flex;
+    padding-bottom: 1.4rem;
   }
-  .otc-card {
+  .otc-run .otc-words {
+    padding: 0 0.85rem;
+  }
+  .otc-run .otc-course {
+    aspect-ratio: 4 / 3;
     min-height: 0;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .otc-card,
-  .otc-turn {
-    transition: none;
+@media (max-width: 36rem) {
+  .otc-grid > .otc {
+    grid-column: 1 / -1;
+  }
+  .reel-f figcaption {
+    padding-right: 6.5rem;
   }
 }
 
-/* The second, smaller sentence on a back (the Running card says what the line is). */
-.otc-note {
-  font-size: 0.9375rem;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.86);
+/* Sunday AV: a program monitor. A Sunday at Crestview on the screen, the red tally and "Live" in
+   one corner, the program label in the other, a lower third with the service, and two audio
+   meters bouncing at the right edge. The tally breathes and the meters move only while the card
+   is on screen (.alive); with reduced motion they rest. */
+.otc-air {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #0d0e14;
+  color: #fff;
+}
+.otc-air img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.04);
+}
+.otc-air::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(8, 9, 16, 0.55), transparent 40%),
+    linear-gradient(to bottom, rgba(8, 9, 16, 0.45), transparent 22%);
+  pointer-events: none;
+}
+.air-tally,
+.air-pgm {
+  position: absolute;
+  z-index: 1;
+  top: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.35rem;
+  font: 700 0.6875rem / 1 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.air-tally {
+  left: 0.7rem;
+  background: #d92d20;
+}
+.air-tally i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #fff;
+}
+.air-pgm {
+  right: 0.7rem;
+  background: rgba(10, 11, 18, 0.6);
+  color: rgba(255, 255, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.air-third {
+  position: absolute;
+  z-index: 1;
+  left: 0.7rem;
+  bottom: 0.8rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.45rem 0.8rem 0.5rem 0.7rem;
+  border-left: 3px solid var(--fill);
+  background: rgba(10, 11, 18, 0.72);
+  line-height: 1.1;
+}
+.air-third b {
+  font: 600 0.9375rem / 1.1 var(--display);
+}
+.air-third span {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+.air-meters {
+  position: absolute;
+  z-index: 1;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  display: flex;
+  gap: 0.2rem;
+  height: 38%;
+  padding: 0.25rem;
+  border-radius: 0.3rem;
+  background: rgba(10, 11, 18, 0.6);
+}
+.air-meters i {
+  width: 0.4rem;
+  border-radius: 0.1rem;
+  background: linear-gradient(to top, #3ccf6e 0 60%, #f2c94c 60% 85%, #eb5a46 85%);
+  -webkit-mask: linear-gradient(#000, #000) bottom / 100% var(--lvl, 55%) no-repeat;
+  mask: linear-gradient(#000, #000) bottom / 100% var(--lvl, 55%) no-repeat;
+}
+@property --lvl {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 55%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .otc.alive .air-meters i {
+    animation: air-lvl 1.3s ease-in-out infinite alternate;
+  }
+  .otc.alive .air-meters i + i {
+    animation-duration: 1.05s;
+    animation-delay: -0.4s;
+  }
+  .otc.alive .air-tally i {
+    animation: air-tally 2.4s ease-in-out infinite;
+  }
+}
+@keyframes air-lvl {
+  0% {
+    --lvl: 38%;
+  }
+  22% {
+    --lvl: 72%;
+  }
+  41% {
+    --lvl: 51%;
+  }
+  63% {
+    --lvl: 86%;
+  }
+  80% {
+    --lvl: 47%;
+  }
+  100% {
+    --lvl: 66%;
+  }
+}
+@keyframes air-tally {
+  50% {
+    opacity: 0.35;
+  }
 }
 
-/* The camera roll on the Photography back: one 4:3 frame, the prints side by side in a row that
+/* The second, smaller sentence (the Running card says what the line is). */
+.otc-words > .otc-note {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+/* The camera roll on the Photography card: one 16:10 frame, the prints side by side in a row that
    snaps, so a swipe, the buttons and the arrow keys all land on a whole print. With no script it
-   is simply a row to scroll sideways. White on the blue back, like the rest of the card. */
+   is simply a row to scroll sideways. The buttons and the count sit over the foot of the frame. */
 .otc-reel {
   display: grid;
   gap: 0.5rem;
@@ -625,8 +740,11 @@ html:not(.js) .otc-turn {
   display: none;
 }
 .reel-strip:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+.otc-reel {
+  position: relative;
 }
 .reel-f {
   position: relative;
@@ -638,7 +756,7 @@ html:not(.js) .otc-turn {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
 }
 /* The print's name on a dark foot, so it reads over any photograph. */
@@ -649,7 +767,7 @@ html:not(.js) .otc-turn {
   flex-wrap: wrap;
   gap: 0 0.5rem;
   align-items: baseline;
-  padding: 1.4rem 0.7rem 0.5rem;
+  padding: 2.2rem 10rem 0.85rem 0.9rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
   color: #fff;
   font-size: 0.8125rem;
@@ -659,16 +777,21 @@ html:not(.js) .otc-turn {
   font-weight: 600;
 }
 .reel-bar {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
+/* The count, for a screen reader (a polite live region); the frame shows the print's own name. */
 .reel-n {
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.86);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .reel-b {
   display: grid;
@@ -678,7 +801,9 @@ html:not(.js) .otc-turn {
   height: 2.5rem;
   border: 0;
   border-radius: 99rem;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: #fff;
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
@@ -702,17 +827,17 @@ html:not(.js) .reel-bar {
   display: none;
 }
 
-/* The course line on the Running back: the Stone Steps 50K course from above, white on the blue.
-   A faint copy of the whole line is always there; the bright one is drawn over it as the card
-   turns over (a dash the length of the path, slid to nothing), a beat after the turn starts.
+/* The course line on the Running card: the Stone Steps 50K course from above, white on the studio
+   blue. A faint copy of the whole line is always there; the bright one is drawn over it once the
+   card is well on screen (.seen; a dash the length of the path, slid to nothing).
    .lifted is "Draw it again": the pen is back at the start with no transition. */
 .otc-course {
   position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 4 / 3;
-  border-radius: 0.9rem;
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(90% 80% at 20% 10%, rgba(255, 255, 255, 0.14), transparent 60%), var(--fill);
 }
 .otc-course svg {
   width: auto;
@@ -737,17 +862,17 @@ html:not(.js) .reel-bar {
 .oc-dot {
   fill: #fff;
 }
-.js .otc:not(.over) .oc-line,
+.js .otc:not(.seen) .oc-line,
 .js .otc-course.lifted .oc-line {
   stroke-dashoffset: 1;
 }
-.js .otc.over .otc-course:not(.lifted) .oc-line {
-  transition: stroke-dashoffset 2.8s cubic-bezier(0.45, 0, 0.2, 1) 0.5s;
+.js .otc.seen .otc-course:not(.lifted) .oc-line {
+  transition: stroke-dashoffset 2.8s cubic-bezier(0.45, 0, 0.2, 1) 0.3s;
 }
 .oc-again {
   position: absolute;
-  right: 0.4rem;
-  bottom: 0.4rem;
+  right: 0.6rem;
+  bottom: 0.6rem;
   min-height: 1.75rem;
   padding: 0 0.7rem;
   border: 0;
@@ -811,22 +936,25 @@ html:not(.js) .oc-again {
 }
 .facts {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 1fr 1fr;
   gap: inherit;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+/* ---- The facts (src/components/Facts.astro) ----------------------------------------------------
+   Two lettered cards that carry their fact as a picture: a crew list with the same name against
+   every role, and a strip of film whose frames turn from photographs into websites at a splice
+   marked 2020. Each wears its peeling stamp half over the picture. */
 .fact {
   --stamp-paper: var(--card);
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 0.4rem;
   min-height: 12rem;
   padding: clamp(1.25rem, 2.2vw, 1.75rem);
-  padding-top: 5rem;
   border-radius: 1rem;
   background: var(--card);
   box-shadow: var(--rim);
@@ -842,16 +970,204 @@ html:not(.js) .oc-again {
 }
 .fact .stamp {
   position: absolute;
-  top: 1.1rem;
-  right: 1.1rem;
   float: none;
   margin: 0;
 }
-.fact:nth-child(odd) .stamp {
-  transform: rotate(-5deg);
+
+/* The crew list: a manifest of every role, the same name in each row, ruled in hairlines. */
+.fact-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--ink);
+  font: 600 0.6875rem / 1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
 }
-.fact:nth-child(even) .stamp {
+.crew-rows {
+  display: grid;
+  margin: 0 0 3.5rem;
+  padding: 0;
+  list-style: none;
+}
+.crew-rows li {
+  display: grid;
+  grid-template-columns: auto minmax(0.75rem, 1fr) auto;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: clamp(0.6rem, 1.1vw, 0.8rem) 0;
+  border-bottom: 1px solid var(--line);
+}
+.crew-role {
+  color: var(--soft);
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+}
+.crew-dots {
+  align-self: end;
+  margin-bottom: 0.35em;
+  border-bottom: 2px dotted color-mix(in srgb, var(--ink) 28%, transparent);
+}
+.crew-name {
+  font: 600 clamp(1rem, 1.3vw, 1.125rem) / 1.1 var(--display);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.crew .stamp {
+  right: 1.2rem;
+  bottom: 1.1rem;
+  transform: rotate(-6deg);
+}
+
+/* The film: a dark strip with sprocket holes along both edges and an edge print over each frame.
+   Four of my photographs, a taped splice marked 2020, then four client home pages, each in a
+   small browser frame. As the card crosses the screen the strip drifts left, so the camera gives
+   way to the websites; without scroll-driven animations, or with reduced motion, it rests on the
+   splice. Its colours are fixed, the same on both sides of the page. */
+.film-wrap {
+  position: relative;
+  margin-bottom: auto;
+}
+.reel-fact .stamp {
+  right: -0.4rem;
+  bottom: -1.6rem;
+  z-index: 3;
   transform: rotate(4deg);
+}
+.film {
+  --hole: #ece5d3;
+  --edge: #f2a33a;
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  padding: 2.4rem 0;
+  border-radius: 0.55rem;
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 190, 120, 0.08), transparent 60%), #1b1712;
+  box-shadow: 0 1rem 1.6rem -1.1rem rgba(0, 0, 0, 0.55);
+}
+.film::before,
+.film::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  height: 0.5rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8'%3E%3Crect x='4' y='0.5' width='8' height='7' rx='1.6' fill='%23ece5d3'/%3E%3C/svg%3E")
+    0 0 / 1rem 0.5rem repeat-x;
+  opacity: 0.92;
+}
+.film::before {
+  top: 0.3rem;
+}
+.film::after {
+  bottom: 0.3rem;
+}
+.film-run {
+  display: flex;
+  gap: 0.4rem;
+  width: max-content;
+  padding-inline: 0.4rem;
+  transform: translateX(-34%);
+}
+.film-f {
+  position: relative;
+  flex: none;
+  width: clamp(6.5rem, 9.5vw, 8.5rem);
+  aspect-ratio: 4 / 3;
+  border-radius: 0.2rem;
+  background: #000;
+}
+.film-f img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.film-f:not(.web) img {
+  filter: sepia(0.22) saturate(1.1) contrast(1.04);
+}
+/* The edge print: a frame number and what is on the frame, in the film's orange. */
+.film-f::after {
+  content: attr(data-edge);
+  position: absolute;
+  left: 0.1rem;
+  bottom: -1.35rem;
+  font: 700 0.5rem / 1 var(--body);
+  letter-spacing: 0.16em;
+  color: var(--edge);
+  white-space: nowrap;
+}
+/* A client page in a small browser frame: a light bar with three dots over the top of the page. */
+.film-f.web {
+  display: grid;
+  grid-template-rows: 0.6rem 1fr;
+  background: #f4f3ef;
+}
+.film-f.web img {
+  min-height: 0;
+  border-radius: 0;
+}
+.film-bar {
+  border-radius: 0.2rem 0.2rem 0 0;
+  background:
+    radial-gradient(circle, #e2564b 0.09rem, transparent 0.11rem) 0.2rem 50% / 0.3rem 0.3rem
+      no-repeat,
+    radial-gradient(circle, #e6b13a 0.09rem, transparent 0.11rem) 0.5rem 50% / 0.3rem 0.3rem
+      no-repeat,
+    radial-gradient(circle, #5cb85c 0.09rem, transparent 0.11rem) 0.8rem 50% / 0.3rem 0.3rem
+      no-repeat,
+    #e9e7e0;
+}
+/* The splice: a strip of clear tape across the cut, with the year on it. */
+.film-splice {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  margin-block: -2.4rem;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 248, 225, 0.32) 45%,
+    rgba(255, 255, 255, 0.1)
+  );
+  box-shadow:
+    inset 1px 0 rgba(255, 255, 255, 0.25),
+    inset -1px 0 rgba(255, 255, 255, 0.25);
+}
+.film-splice b {
+  font: 800 0.75rem / 1 var(--body);
+  letter-spacing: 0.18em;
+  color: var(--edge);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.reel-fact .label {
+  margin-top: 2.4rem;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .film-run {
+      animation: film-drift linear both;
+      animation-timeline: view();
+      animation-range: entry 10% exit 10%;
+    }
+  }
+}
+@keyframes film-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-62%);
+  }
 }
 
 /* The postcard: Edinburgh by day crossfading into Cincinnati by night, each with its flag in the
@@ -1201,7 +1517,6 @@ html:not(.js) .oc-again {
   }
   .fact {
     min-height: 0;
-    padding-top: 4.75rem;
   }
 }
 @media (forced-colors: active) {

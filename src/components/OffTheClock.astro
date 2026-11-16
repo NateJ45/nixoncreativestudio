@@ -1,20 +1,18 @@
 ---
-/* About's "Off the clock": four cards from the rest of my week, each one turned over by a real
-   button to show its back (src/scripts/off-the-clock.js). The front is a paper card lettered in
-   two corners; the back is the studio blue, like the back of the deck. Turning a card moves
-   focus to its back, and "Turn back" returns it. Without JavaScript nothing turns: the back sits
-   under the front, so every word and link is still there. Reduced motion swaps the faces with no
-   turn.
-
-   Two backs carry something to play with (the script is src/scripts/off-the-clock.js):
+/* About's "Off the clock": four open cards from the rest of my week, everything on the face, no
+   turning. Each leads with its own picture, then its words:
    - Photography: a camera roll, six of my own prints from the photos collection in one frame.
      Step through with the two buttons or the arrow keys, or swipe. With no script it is a row
      you scroll sideways.
+   - Sunday AV: a program monitor showing a Sunday at Crestview (my photograph), with the tally
+     light, a lower third and the audio meters moving while it is on screen.
+   - Family: the picnic photograph.
    - Running: the Stone Steps 50K course, drawn from the real trace in
      src/data/stone-steps-course.ts (the same data the case study's CourseLine uses). The line
-     draws itself as the card turns over, and "Draw it again" replays it. I built that race's
-     website; nothing here says I ran it, so keep the words to what the data supports.
-   Neither shows a date or a year.
+     draws itself as the card comes into view, and "Draw it again" replays it. I built that race's
+     website and the note says plainly that I have not run it (my longest race is the Flying Pig 10K).
+   No photograph shows a date or a year. Script: src/scripts/off-the-clock.js. Styles: about.css
+   under "Off the clock".
 
    Links that point at other pages only appear once that page is real: /photography/ while its
    gate is open, a journal post once it is published (src/data/nav.ts). */
@@ -24,6 +22,7 @@ import type { ImageMetadata } from 'astro';
 import { journalPath, photoCount } from '../data/nav';
 import { photographyOpen } from '../data/photography-gate';
 import picnic from '../assets/about/family-picnic.jpg';
+import sanctuary from '../assets/photography/canvas/sanctuary-band.jpg';
 import { courseBounds as B, courseLoops as L, coursePoints as P } from '../data/stone-steps-course';
 
 interface Card {
@@ -32,13 +31,13 @@ interface Card {
   pip: string;
   kicker: string;
   title: string;
-  line: string;
+  /** The words under the picture. */
   back: string;
   /** `position` overrides the crop focus (object-position) for a photo that needs it. */
   photo?: { src: ImageMetadata; alt: string; position?: string };
-  /** Something to play with on the back: the camera roll or the course line. */
-  toy?: 'reel' | 'course';
-  /** A second, smaller sentence on the back, under the toy. */
+  /** The picture that leads the card, when it is not a plain photo. */
+  toy?: 'reel' | 'course' | 'air';
+  /** A second, smaller sentence under the first. */
   note?: string;
   link?: { href: string; text: string } | null;
 }
@@ -84,7 +83,6 @@ const cards: Card[] = [
     pip: 'P',
     kicker: 'Behind the camera',
     title: 'Photography',
-    line: 'Where all of this started.',
     back: 'I still carry a camera for myself, mostly chasing landscapes around the region.',
     toy: reel.length >= 3 ? 'reel' : undefined,
     link: photosOpen ? { href: '/photography/', text: 'See the photographs' } : null,
@@ -94,8 +92,8 @@ const cards: Card[] = [
     pip: 'A',
     kicker: 'At church',
     title: 'Sunday AV',
-    line: 'On the media team at Crestview.',
     back: "I'm one of the volunteers on the media team at Crestview Presbyterian Church. I run the weekly livestream and help plan the equipment upgrades.",
+    toy: 'air',
     link: avPost ? { href: avPost, text: 'How the rota fills its own gaps' } : null,
   },
   {
@@ -103,7 +101,6 @@ const cards: Card[] = [
     pip: 'F',
     kicker: 'At home',
     title: 'Family',
-    line: 'Cincinnati, with my wife and family.',
     back: 'Cincinnati has been home since 2017. I also run a small Minecraft server for my siblings.',
     photo: {
       src: picnic,
@@ -116,11 +113,10 @@ const cards: Card[] = [
     pip: 'R',
     kicker: 'On foot',
     title: 'Running',
-    line: 'Long runs, and a race now and then.',
     back: 'Mostly long runs around Cincinnati, and now and then I pin on a number for a local race.',
     toy: 'course',
-    // Only what the data and the case study support: I built the site. Nothing says I ran it.
-    note: `That line is the Stone Steps 50K course in Mt. Airy Forest, ${L.length} loops traced from a recorded run. I built the race's website.`,
+    // I built the site; I have not run it, and the note says so. The Flying Pig 10K is my longest race.
+    note: `That line is the Stone Steps 50K course in Mt. Airy Forest, ${L.length} loops traced from a recorded run. I built the website, but I won't be running any 50Ks any time soon. The Flying Pig 10K is my longest race so far.`,
     link: { href: '/work/stone-steps-50k/', text: 'Read the Stone Steps case study' },
   },
 ];
@@ -135,116 +131,122 @@ const cards: Card[] = [
   </div>
   <ul class="otc-grid">
     {cards.map((c) => (
-      <li class="otc" data-otc>
-        <div class="otc-card">
-          <div class="otc-face otc-front card keyed">
-            <span class="pip" aria-hidden="true">
-              {c.pip}
-            </span>
-            <span class="pip flip" aria-hidden="true">
-              {c.pip}
-            </span>
-            <p class="label">{c.kicker}</p>
-            <h3>{c.title}</h3>
-            <p class="otc-line">{c.line}</p>
-            <button
-              type="button"
-              class="otc-turn"
-              aria-expanded="false"
-              aria-controls={`otc-${c.id}`}
-              data-otc-turn
-            >
-              Turn over <span class="otc-vh">the {c.title} card</span>
-            </button>
-          </div>
-          <div
-            class="otc-face otc-back keyed"
-            id={`otc-${c.id}`}
-            role="group"
-            aria-label={`${c.title}, the back of the card`}
-            tabindex="-1"
-          >
-            {c.photo && (
+      <li class={`otc otc-${c.id} keyed`} data-otc>
+        <div class="otc-media">
+          {c.photo && (
+            <Image
+              class="otc-ph"
+              src={c.photo.src}
+              alt={c.photo.alt}
+              style={c.photo.position ? `object-position: ${c.photo.position}` : undefined}
+              widths={[480, 960]}
+              sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 32rem"
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          {c.toy === 'reel' && (
+            <div class="otc-reel" data-reel>
+              <div
+                class="reel-strip"
+                data-reel-strip
+                role="group"
+                aria-label={`Camera roll: ${reel.length} of my photographs. Use the arrow keys or the buttons to step through.`}
+                tabindex="0"
+              >
+                {reel.map((p) => (
+                  <figure class="reel-f">
+                    <Image
+                      src={p.data.image}
+                      alt={p.data.alt}
+                      widths={[560, 1120]}
+                      sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 44rem"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <figcaption>
+                      <b>{p.data.title}</b>
+                      {p.data.location && <span>{p.data.location}</span>}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+              <div class="reel-bar">
+                <button
+                  type="button"
+                  class="reel-b"
+                  data-reel-prev
+                  aria-label="Previous photograph"
+                >
+                  <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                    <path d="M12.5 4.5 7 10l5.5 5.5" />
+                  </svg>
+                </button>
+                <p class="reel-n" data-reel-n aria-live="polite">
+                  1 of {reel.length}
+                </p>
+                <button type="button" class="reel-b" data-reel-next aria-label="Next photograph">
+                  <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                    <path d="M7.5 4.5 13 10l-5.5 5.5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+          {c.toy === 'air' && (
+            <div class="otc-air" data-otc-air>
               <Image
-                class="otc-ph"
-                src={c.photo.src}
-                alt={c.photo.alt}
-                style={c.photo.position ? `object-position: ${c.photo.position}` : undefined}
-                widths={[360, 720]}
-                sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 18rem"
+                src={sanctuary}
+                alt="A Sunday morning at Crestview: the congregation in a white sanctuary as the band leads worship."
+                widths={[480, 960]}
+                sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 32rem"
                 loading="lazy"
                 decoding="async"
               />
-            )}
-            {c.toy === 'reel' && (
-              <div class="otc-reel" data-reel>
-                <div
-                  class="reel-strip"
-                  data-reel-strip
-                  role="group"
-                  aria-label={`Camera roll: ${reel.length} of my photographs. Use the arrow keys or the buttons to step through.`}
-                  tabindex="0"
-                >
-                  {reel.map((p) => (
-                    <figure class="reel-f">
-                      <Image
-                        src={p.data.image}
-                        alt={p.data.alt}
-                        widths={[360, 720]}
-                        sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 18rem"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <figcaption>
-                        <b>{p.data.title}</b>
-                        {p.data.location && <span>{p.data.location}</span>}
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
-                <div class="reel-bar">
-                  <button
-                    type="button"
-                    class="reel-b"
-                    data-reel-prev
-                    aria-label="Previous photograph"
-                  >
-                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                      <path d="M12.5 4.5 7 10l5.5 5.5" />
-                    </svg>
-                  </button>
-                  <p class="reel-n" data-reel-n aria-live="polite">
-                    1 of {reel.length}
-                  </p>
-                  <button type="button" class="reel-b" data-reel-next aria-label="Next photograph">
-                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                      <path d="M7.5 4.5 13 10l-5.5 5.5" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-            {c.toy === 'course' && (
-              <div class="otc-course" data-otc-course>
-                <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={courseLabel}>
-                  {/* The whole course, faint, so the shape is there before the line is drawn. */}
-                  <path class="oc-ghost" d={courseD} />
-                  <path class="oc-line" d={courseD} pathLength="1" />
-                  {/* Start and finish: every loop comes back to the aid station. */}
-                  <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
-                </svg>
-                <button type="button" class="oc-again" data-otc-again>
-                  Draw it again
-                </button>
-              </div>
-            )}
-            <p>{c.back}</p>
-            {c.note && <p class="otc-note">{c.note}</p>}
-            {c.link && <a href={c.link.href}>{c.link.text}</a>}
-            <button type="button" class="otc-turn" data-otc-back>
-              Turn back
-            </button>
-          </div>
+              <span class="air-tally" aria-hidden="true">
+                <i></i>Live
+              </span>
+              <span class="air-pgm" aria-hidden="true">
+                PGM 1
+              </span>
+              <span class="air-third" aria-hidden="true">
+                <b>Sunday worship</b>
+                <span>Crestview Presbyterian</span>
+              </span>
+              <span class="air-meters" aria-hidden="true">
+                <i></i>
+                <i></i>
+              </span>
+            </div>
+          )}
+          {c.toy === 'course' && (
+            <div class="otc-course" data-otc-course>
+              <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={courseLabel}>
+                {/* The whole course, faint, so the shape is there before the line is drawn. */}
+                {/* The trace once, drawn twice: <use> keeps the page light (the HTML budget). */}
+                <defs>
+                  <path id="oc-trace" d={courseD} pathLength="1" />
+                </defs>
+                <use class="oc-ghost" href="#oc-trace" />
+                <use class="oc-line" href="#oc-trace" />
+                {/* Start and finish: every loop comes back to the aid station. */}
+                <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
+              </svg>
+              <button type="button" class="oc-again" data-otc-again>
+                Draw it again
+              </button>
+            </div>
+          )}
+        </div>
+        <div class="otc-words">
+          <span class="pip" aria-hidden="true">
+            {c.pip}
+          </span>
+          <p class="label">{c.kicker}</p>
+          <h3>{c.title}</h3>
+          <p>{c.back}</p>
+          {c.note && <p class="otc-note">{c.note}</p>}
+          {c.link && <a href={c.link.href}>{c.link.text}</a>}
         </div>
       </li>
     ))}
