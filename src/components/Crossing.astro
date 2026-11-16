@@ -27,6 +27,17 @@ const H = 560;
 const FLIGHT = 'M262 92Q700 -40 1138 96';
 const sizes = '(max-width: 60rem) 62vw, 34rem';
 
+/* The barcode on the stub: bars of one to three units with gaps of one or two, from a fixed seed
+   so every build draws the same code. */
+let seed = 20170;
+const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+const barcode = { w: 0, bars: [] as [number, number][] };
+while (barcode.w < 120) {
+  const w = 1 + Math.floor(rand() * 3);
+  barcode.bars.push([barcode.w, w]);
+  barcode.w += w + 1 + Math.floor(rand() * 2);
+}
+
 const photos = [
   { side: 'from', src: edinburgh, loop: loops['flag-saltire'] },
   { side: 'to', src: cincinnati, loop: loops['flag-us'] },
@@ -92,29 +103,83 @@ const photos = [
     <p class="cx-place cx-place-from">Edinburgh</p>
     <p class="cx-place cx-place-to">Cincinnati</p>
   </div>
+  {/* The words below the pictures, as a paper boarding pass: Edinburgh to Cincinnati, one way,
+      with a tear-off stub carrying the two stamps and a barcode. Styles in about.css under
+      "The boarding pass". */}
   <figcaption class="cx-copy">
-    <div>
-      <p class="label">Based in Cincinnati</p>
-      <h3>From Scotland, here since 2017</h3>
-      <p>A U.S. citizen since 2022. In person around the region, anywhere for web work.</p>
+    <div class="pass">
+      <div class="pass-main">
+        <p class="pass-head">
+          <span>Boarding pass</span>
+          <span>One way</span>
+        </p>
+        <p class="pass-route">
+          <span class="pass-port">
+            <b>EDI</b> <span>Edinburgh</span>
+          </span>
+          <span class="pass-plane" aria-hidden="true">
+            <svg viewBox="86 0 33 24">
+              <path d="M118 12c0-1.4-1.6-2.3-3.4-2.3h-6.7L99.6.6h-3.3l4 9.1h-7.4l-2.6-3.4h-2.6l1.7 5.7-1.7 5.7h2.6l2.6-3.4h7.4l-4 9.1h3.3l8.3-9.1h6.7c1.8 0 3.4-.9 3.4-2.3Z"></path>
+            </svg>
+          </span>
+          <span class="pass-port">
+            <b>CVG</b> <span>Cincinnati</span>
+          </span>
+        </p>
+        <h3>From Scotland, here since 2017</h3>
+        <dl class="pass-fields">
+          <div>
+            <dt>Passenger</dt>
+            <dd>Nathan Nixon</dd>
+          </div>
+          <div>
+            <dt>Departed</dt>
+            <dd>2017</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>U.S. citizen since 2022</dd>
+          </div>
+          <div>
+            <dt>Based in</dt>
+            <dd>Cincinnati</dd>
+          </div>
+        </dl>
+        <p class="pass-note">In person around the region, anywhere for web work.</p>
+      </div>
+      <div class="pass-stub">
+        <ul class="cx-stamps" aria-label="Stamped">
+          {stamps.map((s) => (
+            <li>
+              <button
+                type="button"
+                class="stamp peel"
+                data-peel
+                data-cursor="Lift"
+                aria-pressed="false"
+              >
+                <span class="stamp-face">
+                  <span class="stamp-word">{s.word}</span>
+                </span>
+                <span class="stamp-under">{s.under}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p class="pass-stub-route" aria-hidden="true">
+          EDI <span>to</span> CVG
+        </p>
+        <svg
+          class="pass-code"
+          viewBox={`0 0 ${barcode.w} 40`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {barcode.bars.map(([x, w]) => (
+            <rect x={x} width={w} height="40" />
+          ))}
+        </svg>
+      </div>
     </div>
-    <ul class="cx-stamps" aria-label="Stamped">
-      {stamps.map((s) => (
-        <li>
-          <button
-            type="button"
-            class="stamp peel"
-            data-peel
-            data-cursor="Lift"
-            aria-pressed="false"
-          >
-            <span class="stamp-face">
-              <span class="stamp-word">{s.word}</span>
-            </span>
-            <span class="stamp-under">{s.under}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
   </figcaption>
 </figure>
