@@ -24,7 +24,14 @@ for (const page of pages) {
 }
 
 const path = join(ROOT, '_headers');
-writeFileSync(path, fillPolicy(readFileSync(path, 'utf8'), scripts, styles));
+const headers = readFileSync(path, 'utf8');
+// CI and local builds have no PUBLIC_GA_ID, so they lack the GA snippet's hash that the
+// production build adds, and once passed CI at 1,984 characters while production failed at
+// 2,037 (2026-11-15). Check the line as production will see it: fillPolicy throws over 2,000.
+if (!(process.env.PUBLIC_GA_ID ?? '').trim()) {
+  fillPolicy(headers, new Set([...scripts, `'sha256-${'A'.repeat(43)}='`]), styles);
+}
+writeFileSync(path, fillPolicy(headers, scripts, styles));
 console.log(
   `[csp] ${scripts.size} inline scripts and ${styles.size} inline styles hashed across ${pages.length} pages.`,
 );

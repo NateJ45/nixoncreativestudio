@@ -114,7 +114,7 @@ as its custom id.
 
 ## 4. Microsoft Clarity: "where do people get stuck?"
 
-Session recordings, heatmaps, rage and dead clicks (`src/components/analytics/Clarity.astro`, only
+Session recordings, heatmaps, rage and dead clicks (`src/lib/clarity.ts`, run from the layout bundle; `src/components/analytics/Clarity.astro` prints its id as a meta tag, only
 when `PUBLIC_CLARITY_ID` is set). Production hostname, real browsers, not before the first
 interaction or 6 seconds after load, never with Global Privacy Control or `?me=1`. The contact form
 has `data-clarity-mask`. Each session carries the visitor id (Recordings > Filters > Custom user ID)

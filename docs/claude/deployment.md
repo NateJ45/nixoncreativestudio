@@ -68,7 +68,7 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 It ships **report-only**: the browser logs what it would have blocked and blocks nothing. There is no reporting endpoint, so reports only appear in a browser's console (and as `securitypolicyviolation` events).
 
-Inline scripts and `<style>` blocks are allowed by sha256 hash. `public/_headers` holds two markers, and `scripts/write-csp.mjs` (a build step) fills them from the built pages in `dist/client`. So a new inline script is picked up by itself, and the production build's hashes include the GA snippet, whose text depends on `PUBLIC_GA_ID`. Style attributes need `style-src-attr 'unsafe-inline'`, because a client's colors arrive as `style="--c: ..."`.
+Inline scripts and `<style>` blocks are allowed by sha256 hash. `public/_headers` holds two markers, and `scripts/write-csp.mjs` (a build step) fills them from the built pages in `dist/client`. So a new inline script is picked up by itself, and the production build's hashes include the GA snippet, whose text depends on `PUBLIC_GA_ID`. **Cloudflare rejects a `_headers` line over 2,000 characters**, and each inline script or style adds about 53, so keep new code out of `is:inline` scripts where you can (the layout bundle and `src/lib/*.ts` cost nothing). A build without `PUBLIC_GA_ID` (CI, local) checks the line with a stand-in GA hash, so it fails where production would. 2026-11-15: production reached 2,037 and stopped deploying; folding three scripts brought it to 1,929 with GA and Clarity. Style attributes need `style-src-attr 'unsafe-inline'`, because a client's colors arrive as `style="--c: ..."`.
 
 From other hosts, the policy allows what the site really loads:
 
