@@ -30,7 +30,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/sub.css';
 import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
-import { journalOpen } from '../../data/journal-gate';
+import { isLive, journalOpen } from '../../data/journal-gate';
+
 import { readingTime } from '../../lib/readingTime';
 import { clusterChips, clusterLabel, newestFirst, railDays } from '../../lib/journal';
 import { faceSvg } from '../../lib/journal-art';
@@ -40,7 +41,7 @@ const entries = newestFirst(
   await getCollection('journal', ({ data }) =>
     // Drop drafts in production. import.meta.env.PROD is true on `astro build`,
     // false on `astro dev`, so drafts stay visible locally.
-    import.meta.env.PROD ? data.draft !== true : true,
+    import.meta.env.PROD ? isLive(data) : true,
   ),
 );
 const chips = clusterChips(entries);

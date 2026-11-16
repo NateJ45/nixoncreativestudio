@@ -3,6 +3,7 @@
 Moved out of CLAUDE.md. Read when changing deploys, env vars, the Coming Soon gate or security headers.
 
 - Production: pushes to `main` trigger a Cloudflare Workers Builds deploy (Worker `nixoncreativestudio`) that serves `nixoncreativestudio.com`. The apex is canonical; `www` 301s to it.
+- Weekly rebuild for scheduled journal posts: the Worker has a deploy hook `journal-weekly-publish` (branch `main`, Settings > Builds > Deploy Hooks, created 2026-11-15). `.github/workflows/journal-publish.yml` POSTs it every Tuesday at 11:17 UTC from the repo secret `CF_DEPLOY_HOOK` (the URL is the credential; never put it in a file). Run the workflow by hand to publish on another day. The run fails red if the secret is missing.
 - Previews: any other branch gets its own `*-nixoncreativestudio.nathanjnixon86.workers.dev` URL.
 - Build command: `npm run build`. Output directory: `dist`.
 - Unknown URLs: `wrangler.jsonc` sets `assets.not_found_handling: "404-page"`, so a path with no file gets `dist/client/404.html` (from `src/pages/404.astro`) with a 404 status. Without it Cloudflare answers with an empty body, which is what the live site did until 2026-10-18.

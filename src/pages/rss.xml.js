@@ -17,6 +17,7 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 import { site } from '../data/site';
+import { isLive } from '../data/journal-gate';
 
 // Static endpoint: prerendered at build time, served as a static file.
 // Without this, output:'static' projects with the Cloudflare adapter
@@ -33,9 +34,7 @@ export async function GET(context) {
     link: `/work/${entry.id}/`,
   }));
   const posts = (
-    await getCollection('journal', ({ data }) =>
-      import.meta.env.PROD ? data.draft !== true : true,
-    )
+    await getCollection('journal', ({ data }) => (import.meta.env.PROD ? isLive(data) : true))
   ).map((entry) => ({
     title: entry.data.title,
     pubDate: entry.data.published,

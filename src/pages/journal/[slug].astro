@@ -40,6 +40,7 @@ import Aside from '../../components/Aside.astro';
 import BarChart from '../../components/BarChart.astro';
 import { site } from '../../data/site';
 import { sectorPage, sectorPagePath } from '../../data/sector-pages';
+import { isLive } from '../../data/journal-gate';
 import { pricesAsOf } from '../../data/pricing';
 import { ids, pageIds } from '../../lib/schema';
 import { readingTime } from '../../lib/readingTime';
@@ -50,7 +51,7 @@ import { plainText, wordSpans } from '../../lib/words';
 
 export async function getStaticPaths() {
   const entries = await getCollection('journal', ({ data }) =>
-    import.meta.env.PROD ? data.draft !== true : true,
+    import.meta.env.PROD ? isLive(data) : true,
   );
   return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
