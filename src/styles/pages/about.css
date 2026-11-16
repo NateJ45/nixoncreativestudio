@@ -1646,8 +1646,36 @@ html:not(.js) .oc-again {
     0 2px 4px rgba(0, 0, 0, 0.12),
     0 34px 60px -24px rgba(0, 0, 0, 0.55);
 }
+/* A photography client's photograph: a print on white paper, raised like the windows. At night
+   the paper is the dimmed bone, so it does not light the room. */
+/* Narrower than a window: a photograph can be upright, and a tall print would leave the screen. */
+.pk-print {
+  width: clamp(12rem, 17vw, 17rem);
+}
+.pk-paper {
+  display: block;
+  padding: 0.6rem 0.6rem 1.9rem;
+  border-radius: 0.3rem;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 34px 60px -24px rgba(0, 0, 0, 0.55);
+  rotate: -1.2deg;
+}
+.pk-paper img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media screen {
+  :root[data-theme='dark'] .pk-paper {
+    background: var(--bone);
+  }
+}
 /* A phone: each card shows small stills of its clients' home pages, each framed in the client's
-   color like a tiny window. Decoration; the names are the links. */
+   color like a tiny window, and small prints of a photography client's shots. Decoration; the
+   names are the links. */
 .sc-mini {
   display: none;
 }
@@ -1676,6 +1704,20 @@ html:not(.js) .oc-again {
     object-fit: cover;
     object-position: top;
     border-radius: 0.45rem;
+  }
+  .sc-mini .sc-print {
+    width: 4.25rem;
+    padding: 3px 3px 9px;
+    border-radius: 2px;
+    background: #fff;
+  }
+  :root[data-theme='dark'] .sc-mini .sc-print {
+    background: var(--bone);
+  }
+  .sc-mini .sc-print img {
+    height: 3.1rem;
+    object-position: center;
+    border-radius: 0;
   }
 }
 @media (forced-colors: active) {

@@ -1,7 +1,8 @@
 ---
 /* Sets the theme before the first paint, so a dark page never flashes paper. A choice made with the
-   flip wins; with no choice the page follows the device. Runs inline for that reason, and
-   write-csp.mjs hashes it like every other inline script. Without script the page stays light. */
+   flip wins; with no choice the page is light, whatever the device prefers (decided 2026-11-16:
+   light is the face of the card, the one a first visit should see). Runs inline for that reason,
+   and write-csp.mjs hashes it like every other inline script. Without script the page stays light. */
 ---
 
 <script is:inline>
@@ -10,9 +11,7 @@
     try {
       theme = localStorage.getItem('ncs-theme');
     } catch (e) {}
-    if (theme !== 'light' && theme !== 'dark') {
-      theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
+    if (theme !== 'dark') theme = 'light';
     document.documentElement.dataset.theme = theme;
     if (theme === 'dark') {
       document.querySelector('meta[name="theme-color"]').content = '#14162f';

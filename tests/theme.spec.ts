@@ -3,21 +3,23 @@ import { settle } from './helpers';
 
 // =============================================================================
 // The two sides: the theme is chosen before paint, the flip turns it over, the
-// choice sticks, and with no choice the page follows the device.
+// choice sticks, and with no choice the page is light, whatever the device says.
 // =============================================================================
 
 const theme = (page: import('@playwright/test').Page) =>
   page.evaluate(() => document.documentElement.dataset.theme);
 
 test.describe('The theme', () => {
-  test('follows the device until a choice is made', async ({ page }) => {
+  test('opens light even on a dark device, until dark is chosen', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/about/', { waitUntil: 'domcontentloaded' });
-    expect(await theme(page)).toBe('dark');
-    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#14162f');
+    expect(await theme(page)).toBe('light');
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#f5f5f3');
 
+    // The device changing its mind does not turn the page over either.
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
-    await expect.poll(() => theme(page)).toBe('light');
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+    expect(await theme(page)).toBe('light');
   });
 
   test('the flip turns it over, and the choice outlives the page and the device', async ({

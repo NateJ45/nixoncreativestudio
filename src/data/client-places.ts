@@ -9,7 +9,11 @@
    regenerate before adding it here. ClientMap.astro throws on an unknown slug.
 
    `photo` lists photography clients with no case study: the card prints the
-   name with a "Photography" tag, as plain text with no link or preview.
+   name with a "Photography" tag. A plain name has no link or preview. A client
+   given as { name, shots } with photo ids from src/content/photos/ links to the
+   first shot's print on /photography/ (?print=<id>); on a wide screen pointing
+   at it raises that photograph above the card, and on a phone the card shows
+   small prints of the shots.
 
    Ohio is the studio's home state, so its pin is Cincinnati itself.
    ============================================================================ */
@@ -26,8 +30,11 @@ export interface Place {
   /** Case study slugs, in the order the row lists them. */
   clients: string[];
   /** Photography clients with no case study, listed after the case studies. */
-  photo?: string[];
+  photo?: PhotoClient[];
 }
+
+/** A photography client: a plain name, or a name with photo ids (src/content/photos/) to show. */
+export type PhotoClient = string | { name: string; shots: string[] };
 
 export const PLACES: Place[] = [
   {
@@ -36,6 +43,9 @@ export const PLACES: Place[] = [
     fips: 39,
     home: true,
     clients: ['stone-steps-50k', 'presbyterian-academy', 'west-chester-preschool'],
+    photo: [
+      { name: 'Crestview Presbyterian Church', shots: ['ash-candle', 'choir-sing', 'vbs-song'] },
+    ],
   },
   { state: 'Indiana', abbr: 'IN', fips: 18, clients: ['first-baptist-muncie', 'reid-design'] },
   {

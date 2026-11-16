@@ -10,16 +10,7 @@ var meta = document.querySelector('meta[name="theme-color"]');
 var buttons = document.querySelectorAll('[data-theme-flip]');
 /* The dock's theme hand: one card a side, which says which side you are on. */
 var picks = document.querySelectorAll('[data-theme-set]');
-var system = matchMedia('(prefers-color-scheme: dark)');
 var reduce = matchMedia('(prefers-reduced-motion: reduce)');
-
-function saved() {
-  try {
-    return localStorage.getItem(KEY);
-  } catch (e) {
-    return null;
-  }
-}
 
 /* The switches name what they will do ("Dark mode" or "Light mode"); CSS picks the label from the
    theme attribute, so turning the page over is all this has to do. */
@@ -69,8 +60,5 @@ picks.forEach(function (p) {
   });
 });
 
-/* With no choice made, the page keeps following the device. */
-system.addEventListener('change', function (e) {
-  var choice = saved();
-  if (choice !== 'light' && choice !== 'dark') turn(e.matches ? 'dark' : 'light');
-});
+/* The device's own light or dark setting is not followed: the page opens light, and dark is a
+   choice made with the flip (ThemeBoot.astro). */

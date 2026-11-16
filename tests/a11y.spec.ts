@@ -25,8 +25,12 @@ const WCAG_22_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'bes
 
 for (const colorScheme of ['light', 'dark'] as const)
   test.describe(`Accessibility: no axe violations, ${colorScheme}`, () => {
-    // ThemeBoot follows the device when no choice has been made.
     test.use({ colorScheme });
+    // Dark is chosen, not inherited from the device (light is the default since 2026-11-16).
+    test.beforeEach(async ({ page }) => {
+      if (colorScheme === 'dark')
+        await page.addInitScript(() => localStorage.setItem('ncs-theme', 'dark'));
+    });
     for (const route of routes) {
       test(`${route} passes axe`, async ({ page }) => {
         await page.goto(route, { waitUntil: 'domcontentloaded' });
