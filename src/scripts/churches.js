@@ -73,6 +73,13 @@ import { wireAsk } from './ask.js';
     mark.s1 = r[2].t - H * 0.5;
     mark.b0 = mark.s1 - H * 0.1;
     mark.b1 = r[3].c - H * 0.45;
+    /* The sizes the frame needs, taken here and not every frame: read mid-frame, straight after the
+       last window moved, each one made the browser lay the page out again. */
+    stands.forEach(function (st) {
+      st.w = st.scr.offsetWidth;
+      st.h = st.scr.offsetHeight;
+      st.ew = st.el.offsetWidth;
+    });
     wake();
   }
   function along(st, t) {
@@ -82,12 +89,15 @@ import { wireAsk } from './ask.js';
     return st.stops[i] + (st.stops[i + 1] - st.stops[i]) * (f - i);
   }
   function panTo(st) {
-    var w = st.scr.offsetWidth,
+    var w = st.w || st.scr.offsetWidth,
       fac = w / 560,
       y = along(st, st.p) * fac,
-      max = st.long * fac - st.scr.offsetHeight;
-    st.img.style.transform =
-      'translate3d(0,' + (-Math.min(y, Math.max(0, max))).toFixed(1) + 'px,0)';
+      max = st.long * fac - (st.h || st.scr.offsetHeight);
+    ui.put(
+      st.img,
+      'transform',
+      'translate3d(0,' + (-Math.min(y, Math.max(0, max))).toFixed(1) + 'px,0)',
+    );
   }
   var raf = 0,
     last = 0;
@@ -147,7 +157,7 @@ import { wireAsk } from './ask.js';
     } else if (intro !== 1) live = true;
 
     if (big) {
-      var W = A.el.offsetWidth,
+      var W = A.ew || A.el.offsetWidth,
         s = swap,
         apart = Math.sin(Math.PI * s) * 0.3 * W,
         rest = 0.19 * W;
@@ -155,37 +165,43 @@ import { wireAsk } from './ask.js';
          hidden), then the second slides out from behind it. */
       var rise = (1 - intro) * 46,
         out = clamp((intro - 0.35) / 0.65);
-      A.el.style.transform =
+      ui.put(
+        A.el,
+        'transform',
         'translate3d(' +
-        (-rest * s - apart).toFixed(1) +
-        'px,' +
-        rise.toFixed(1) +
-        'px,0) rotate(' +
-        (-2.6 * s).toFixed(2) +
-        'deg) scale(' +
-        (1 - 0.075 * s).toFixed(4) +
-        ')';
-      B.el.style.transform =
+          (-rest * s - apart).toFixed(1) +
+          'px,' +
+          rise.toFixed(1) +
+          'px,0) rotate(' +
+          (-2.6 * s).toFixed(2) +
+          'deg) scale(' +
+          (1 - 0.075 * s).toFixed(4) +
+          ')',
+      );
+      ui.put(
+        B.el,
+        'transform',
         'translate3d(' +
-        (rest * out * (1 - s) + apart).toFixed(1) +
-        'px,' +
-        rise.toFixed(1) +
-        'px,0) rotate(' +
-        (2.6 * out * (1 - s)).toFixed(2) +
-        'deg) scale(' +
-        (1 - 0.075 * (1 - s)).toFixed(4) +
-        ')';
-      A.el.style.zIndex = s < 0.5 ? 2 : 1;
-      B.el.style.zIndex = s < 0.5 ? 1 : 2;
-      A.cap.style.setProperty('--co', clamp(1 - s * 3).toFixed(3));
-      B.cap.style.setProperty('--co', clamp(s * 3 - 2).toFixed(3));
+          (rest * out * (1 - s) + apart).toFixed(1) +
+          'px,' +
+          rise.toFixed(1) +
+          'px,0) rotate(' +
+          (2.6 * out * (1 - s)).toFixed(2) +
+          'deg) scale(' +
+          (1 - 0.075 * (1 - s)).toFixed(4) +
+          ')',
+      );
+      ui.put(A.el, 'zIndex', s < 0.5 ? '2' : '1');
+      ui.put(B.el, 'zIndex', s < 0.5 ? '1' : '2');
+      ui.put(A.cap, '--co', clamp(1 - s * 3).toFixed(3));
+      ui.put(B.cap, '--co', clamp(s * 3 - 2).toFixed(3));
       /* The point you are reading sits on a white card. */
       var best = -1,
         bd = 1e9;
       pts.forEach(function (p, i) {
-        var r = p.getBoundingClientRect(),
-          d = Math.abs(r.top + r.height / 2 - H * 0.45);
-        if (d < bd && r.top < H * 0.8) {
+        var top = ui.top(p),
+          d = Math.abs(top + ui.height(p) / 2 - H * 0.45);
+        if (d < bd && top < H * 0.8) {
           bd = d;
           best = i;
         }
@@ -195,8 +211,10 @@ import { wireAsk } from './ask.js';
       });
     } else {
       stands.forEach(function (st) {
-        st.el.style.transform = st.el.style.opacity = st.el.style.zIndex = '';
-        st.cap.style.removeProperty('--co');
+        ui.put(st.el, 'transform', '');
+        ui.put(st.el, 'zIndex', '');
+        st.el.style.opacity = '';
+        ui.put(st.cap, '--co', '');
       });
       pts.forEach(function (p) {
         p.classList.remove('on');

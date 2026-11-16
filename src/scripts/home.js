@@ -94,6 +94,10 @@ var C = (tiles.length - 1) / 2,
   st = tiles.map(function (el, i) {
     return {
       el: el,
+      li: el.parentNode,
+      /* The caption fades in as its window lands. --capo goes on the caption itself: set on the
+         list item, it restyled the whole window inside it every frame as well. */
+      cap: el.parentNode.querySelector('.cap'),
       i: i,
       v: reduce ? 1 : 0,
       vv: 0,
@@ -214,19 +218,24 @@ function frame(now) {
     var rot = s.rot * k * (0.25 + 0.75 * a) + hand * px * 2.5;
     var sc =
       (s.sc + (1 - s.sc) * s.v) * (0.35 + 0.65 * a) * (1 + s.lift * (k > 0.5 ? 0.07 : 0.012));
-    s.el.parentNode.style.setProperty('--capo', Math.max(0, (s.v - 0.82) / 0.18).toFixed(3));
-    s.el.style.transform =
+    /* Written only when they change (ui.put): once a window has landed, a scroll frame works out
+       the same numbers again and leaves the page alone. */
+    if (s.cap) ui.put(s.cap, '--capo', Math.max(0, (s.v - 0.82) / 0.18).toFixed(3));
+    ui.put(
+      s.el,
+      'transform',
       'translate3d(' +
-      tx.toFixed(2) +
-      'px,' +
-      ty.toFixed(2) +
-      'px,0) rotate(' +
-      rot.toFixed(3) +
-      'deg) scale(' +
-      sc.toFixed(4) +
-      ')';
-    s.el.parentNode.style.zIndex = s.hov ? 30 : k > 0.02 ? 20 - Math.round(Math.abs(s.d) * 2) : 1;
-    s.el.parentNode.style.position = 'relative';
+        tx.toFixed(2) +
+        'px,' +
+        ty.toFixed(2) +
+        'px,0) rotate(' +
+        rot.toFixed(3) +
+        'deg) scale(' +
+        sc.toFixed(4) +
+        ')',
+    );
+    ui.put(s.li, 'zIndex', String(s.hov ? 30 : k > 0.02 ? 20 - Math.round(Math.abs(s.d) * 2) : 1));
+    ui.put(s.li, 'position', 'relative');
   });
   if (live) raf = requestAnimationFrame(frame);
 }

@@ -31,7 +31,7 @@ if (nav) {
       now = null;
     spots.forEach(function (s) {
       /* A section folded away on a phone still has a box (its heading), so this holds there too. */
-      if (s.el.getBoundingClientRect().top <= line) now = s;
+      if (ui.top(s.el) <= line) now = s;
     });
     /* Stuck: the bar has reached its resting place at the top, so it gets its shadow. */
     var stuck =
@@ -39,11 +39,11 @@ if (nav) {
     nav.classList.toggle('stuck', stuck);
     /* How far through the chapters: from the first one's top to the end of the last. */
     if (spots.length) {
-      var first = spots[0].el.getBoundingClientRect().top + scrollY - line,
+      var first = ui.top(spots[0].el) + scrollY - line,
         lastBox = spots[spots.length - 1].el.getBoundingClientRect(),
         end = lastBox.bottom + scrollY - innerHeight * 0.6,
         p = end > first ? (scrollY - first) / (end - first) : 0;
-      nav.style.setProperty('--jp', Math.min(1, Math.max(0, p)).toFixed(4));
+      ui.put(nav, '--jp', Math.min(1, Math.max(0, p)).toFixed(4));
     }
     if (now === at) return;
     at = now;

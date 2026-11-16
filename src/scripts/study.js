@@ -219,7 +219,10 @@ function measure() {
       h = l.win.clientHeight;
     l.on = w > 0 && h > 0;
     l.travel = l.on ? Math.max(0, w * l.ratio - h) : 0;
-    if (l.thumb && l.on) l.thumb.style.height = Math.max(18, (h * h) / (w * l.ratio)) + 'px';
+    if (l.thumb && l.on) {
+      l.th = Math.max(18, (h * h) / (w * l.ratio));
+      l.thumb.style.height = l.th + 'px';
+    }
     l.h = h;
   });
   wake();
@@ -234,22 +237,26 @@ function frame(now) {
   raf = 0;
   var dt = Math.min(0.033, (now - last) / 1000 || 0.016);
   last = now;
+  /* Where things are comes from ui.top and ui.height, not the browser: asked straight after the
+     last window's picture moved, each answer made it lay the page out again. */
   var live = false,
-    sr = story.getBoundingClientRect();
+    srTop = ui.top(story),
+    srH = ui.height(story);
   longs.forEach(function (l) {
     if (!l.on) return;
     var p;
     if (l.self) {
-      var r = l.win.getBoundingClientRect();
-      p = clamp((H - r.top) / (H + r.height), 0, 1);
-      if (r.bottom < -200 || r.top > H + 200) {
+      var rTop = ui.top(l.win),
+        rH = ui.height(l.win);
+      p = clamp((H - rTop) / (H + rH), 0, 1);
+      if (rTop + rH < -200 || rTop > H + 200) {
         l.sp.x = (l.from + (l.to - l.from) * p) * l.travel;
         l.sp.v = 0;
         apply(l);
         return;
       }
     } else {
-      p = clamp(-sr.top / Math.max(1, sr.height - H), 0, 1);
+      p = clamp(-srTop / Math.max(1, srH - H), 0, 1);
     }
     var moving = l.sp.step((l.from + (l.to - l.from) * p) * l.travel, dt);
     if (moving) live = true;
@@ -260,19 +267,22 @@ function frame(now) {
 }
 function apply(l) {
   var y = clamp(l.sp.x, 0, l.travel);
-  l.img.style.transform = 'translate3d(0,' + (-y).toFixed(1) + 'px,0)';
+  ui.put(l.img, 'transform', 'translate3d(0,' + (-y).toFixed(1) + 'px,0)');
   var speed = Math.abs(l.sp.v);
   if (l.thumb) {
-    l.thumb.style.transform =
+    ui.put(
+      l.thumb,
+      'transform',
       'translate3d(0,' +
-      (l.travel ? (y / l.travel) * (l.h - l.thumb.offsetHeight) : 0).toFixed(1) +
-      'px,0)';
+        (l.travel ? (y / l.travel) * (l.h - (l.th || l.thumb.offsetHeight)) : 0).toFixed(1) +
+        'px,0)',
+    );
     if (speed > 30) l.thumb.classList.add('on');
     else if (speed < 6) l.thumb.classList.remove('on');
   }
   /* The whole phone leans a little with the speed of the page, then settles. */
   if (l.tile && !l.self)
-    l.tile.style.transform = 'rotate(' + clamp(l.sp.v / 420, -1.8, 1.8).toFixed(3) + 'deg)';
+    ui.put(l.tile, 'transform', 'rotate(' + clamp(l.sp.v / 420, -1.8, 1.8).toFixed(3) + 'deg)');
 }
 if (longs.length) {
   addEventListener('scroll', wake, { passive: true });
