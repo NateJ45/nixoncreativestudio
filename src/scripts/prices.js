@@ -205,24 +205,30 @@ function frame(now) {
       s.a.v = 0;
     }
     var k = 1 - s.a.x,
-      cw = s.card.offsetWidth,
+      /* Only the deal needs the width. Read every frame, it made the browser restyle the cards
+         written a moment before, once per card. */
+      cw = k ? s.card.offsetWidth : 0,
       rest = (s.i - 1) * 0.7;
     var y = (l > 0 ? -l * 16 : back * 10) + k * 90,
       sc = 1 + l * 0.026,
       x = s.side * back * 8 - (s.i - 1) * cw * k,
       r = s.side * back * 0.5 + rest * (1 - Math.max(0, l)) + (s.i - 1) * -4 * k;
-    s.card.style.transform =
+    /* Written only when they change (ui.put): a settled hand costs a scroll frame nothing. */
+    ui.put(
+      s.card,
+      'transform',
       'translate3d(' +
-      x.toFixed(2) +
-      'px,' +
-      y.toFixed(2) +
-      'px,0) rotate(' +
-      r.toFixed(3) +
-      'deg) scale(' +
-      sc.toFixed(4) +
-      ')';
-    s.card.style.setProperty('--l', l.toFixed(3));
-    s.li.style.zIndex = s.i === a ? 3 : 1;
+        x.toFixed(2) +
+        'px,' +
+        y.toFixed(2) +
+        'px,0) rotate(' +
+        r.toFixed(3) +
+        'deg) scale(' +
+        sc.toFixed(4) +
+        ')',
+    );
+    ui.put(s.card, '--l', l.toFixed(3));
+    ui.put(s.li, 'zIndex', s.i === a ? '3' : '1');
   });
   if (live) raf = requestAnimationFrame(frame);
 }
@@ -234,9 +240,9 @@ function setMode() {
     list.classList.toggle('live', mode === 'wide');
     if (!mode)
       st.forEach(function (s) {
-        s.card.style.transform = '';
-        s.card.style.removeProperty('--l');
-        s.li.style.zIndex = '';
+        ui.put(s.card, 'transform', '');
+        ui.put(s.card, '--l', '');
+        ui.put(s.li, 'zIndex', '');
       });
   }
   wake();

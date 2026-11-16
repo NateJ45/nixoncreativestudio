@@ -2733,9 +2733,19 @@ h1.giant b {
 }
 
 /* A quote band: one client's color, with their phone breaking out of it. The only full-width color besides the closing. */
+/* --bs and --bk move every frame while a band arrives (kit.js), so they are not inherited: each one
+   is set on the one element that uses it (.band-bg, .band-w), and a change restyles only that. */
+@property --bs {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+@property --bk {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
 .band {
-  --bs: 1;
-  --bk: 0;
   position: relative;
   isolation: isolate;
   display: grid;
@@ -2745,14 +2755,13 @@ h1.giant b {
   padding: clamp(3rem, 7vw, 6.5rem) clamp(1.5rem, 6vw, 6.5rem);
   color: var(--p);
 }
-/* The band's color opens out as it arrives (kit.js moves --bs from 0.9 to 1). It grows by a fixed
+/* The band's color opens out as it arrives (kit.js moves --bs on .band-bg from 0.9 to 1). It grows by a fixed
    margin all round, not by a share of its size: scaled, a tall band on a phone (one long quote, about
    1,400px) sat some 70px inside its own text at the top while you read the opening lines. The margin
    is 0.75rem on a phone and up to 4rem on a wide screen, about what the scale gave there. */
-.band::before {
-  content: '';
+.band-bg {
   position: absolute;
-  inset: calc((1 - var(--bs)) * 10 * clamp(0.75rem, 4vw, 4rem));
+  inset: calc((1 - var(--bs, 1)) * 10 * clamp(0.75rem, 4vw, 4rem));
   z-index: -1;
   border-radius: 1.75rem;
   background: var(--c);
@@ -2852,7 +2861,7 @@ h1.giant b {
 }
 .band-w {
   margin-block: clamp(-7rem, -7vw, -3.5rem);
-  transform: rotate(calc(3deg + var(--bk) * 9deg)) translateY(calc(var(--bk) * 3rem));
+  transform: rotate(calc(3deg + var(--bk, 0) * 9deg)) translateY(calc(var(--bk, 0) * 3rem));
 }
 .band-w .tile {
   box-shadow:
@@ -2870,7 +2879,7 @@ h1.giant b {
 }
 .band-flip .band-w {
   order: -1;
-  transform: rotate(calc(-3deg - var(--bk) * 9deg)) translateY(calc(var(--bk) * 3rem));
+  transform: rotate(calc(-3deg - var(--bk, 0) * 9deg)) translateY(calc(var(--bk, 0) * 3rem));
 }
 .band-flip .band-w .tile:hover,
 .band-flip .band-w .tile:focus-visible {
@@ -2893,7 +2902,7 @@ h1.giant b {
 .band-cycle {
   transition: color 0.5s var(--ease);
 }
-.band-cycle::before {
+.band-cycle .band-bg {
   transition: background-color 0.5s var(--ease);
 }
 .band-cycle.stepped .band-s:not([inert]),
@@ -2949,7 +2958,7 @@ h1.giant b {
   .band-cycle .band-w {
     width: min(100%, 32rem);
     margin-block: 0 -2.5rem;
-    transform: rotate(calc(1.5deg + var(--bk) * 5deg)) translateY(calc(var(--bk) * 2rem));
+    transform: rotate(calc(1.5deg + var(--bk, 0) * 5deg)) translateY(calc(var(--bk, 0) * 2rem));
   }
   .band-cycle .band-w .tile:hover,
   .band-cycle .band-w .tile:focus-visible {
@@ -2996,7 +3005,7 @@ h1.giant b {
 }
 @media (prefers-reduced-motion: reduce) {
   .band-cycle,
-  .band-cycle::before,
+  .band-cycle .band-bg,
   .band-nav button {
     transition: none;
   }

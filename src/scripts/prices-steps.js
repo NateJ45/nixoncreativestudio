@@ -70,7 +70,7 @@ if (draw && list && !ui.reduce) {
   var paint = function (p) {
     parts.forEach(function (x) {
       var t = Math.min(1, Math.max(0, (p - x.a) / (x.b - x.a)));
-      x.el.style.strokeDashoffset = (1 - t).toFixed(4);
+      ui.put(x.el, 'strokeDashoffset', (1 - t).toFixed(4));
     });
     /* The step being read: its number and its strokes take the blue. */
     var now = Math.min(lis.length - 1, Math.floor(target));
@@ -121,7 +121,7 @@ if (draw && list && !ui.reduce) {
     } else {
       /* Back to the cards: every line whole, nothing marked by this file. */
       parts.forEach(function (x) {
-        x.el.style.strokeDashoffset = '';
+        ui.put(x.el, 'strokeDashoffset', '');
       });
       lis.forEach(function (li) {
         li.classList.remove('at');

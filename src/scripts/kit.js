@@ -67,6 +67,39 @@ var $ = function (a, r) {
   return (r || doc).querySelector(a);
 };
 /* The clients, printed by ClientSheet.astro from the case study frontmatter. */
+/* The measuring round for ui.top and ui.pageH: a new number means every remembered position is
+   out of date. */
+/* The places ui.top remembers, measured again all together when the page may have changed: the
+   page changing size (a ResizeObserver, which reports just after the browser has laid the page
+   out, so measuring there costs nothing), a resize, the fonts and the last picture arriving, and
+   whenever the scrolling stops, so anything that moved without the page changing size is caught.
+   Never in the middle of a frame, after something has already moved: that is the costly moment. */
+var geo = { els: new Set(), h: -1 },
+  geoIdle = 0,
+  geoStale = function () {
+    geo.h = doc.documentElement.scrollHeight;
+    geo.els.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      el._geo.y = r.top + scrollY;
+      el._geo.h = r.height;
+    });
+  };
+addEventListener(
+  'scroll',
+  function () {
+    clearTimeout(geoIdle);
+    geoIdle = setTimeout(geoStale, 180);
+  },
+  { passive: true },
+);
+addEventListener('resize', geoStale);
+addEventListener('load', geoStale);
+if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(geoStale);
+if ('ResizeObserver' in window) {
+  var geoRO = new ResizeObserver(geoStale);
+  geoRO.observe(doc.documentElement);
+  if (doc.body) geoRO.observe(doc.body);
+}
 var N = { sites: JSON.parse(doc.getElementById('ncs-clients').textContent) };
 export var ui = {
   reduce: reduce,
@@ -80,6 +113,52 @@ export var ui = {
     if (el && text != null) el.textContent = text;
   },
   sheen: function () {},
+  /* ui.put(el, '--x' | 'transform' | 'zIndex', value): an inline style written only when it has
+     changed. A frame loop runs on every scroll event, and most of those frames work out the same
+     numbers as the last one; writing them again still makes the browser restyle the element and
+     everything inside it. '' clears the property. Anything that writes a property through ui.put
+     must clear it through ui.put too, or the remembered value goes stale. */
+  put: function (el, k, v) {
+    var c = el._put || (el._put = {});
+    if (c[k] === v) return;
+    c[k] = v;
+    if (k.charCodeAt(0) === 45) el.style.setProperty(k, v);
+    else el.style[k] = v;
+  },
+  /* ui.top(el): el's top edge on the screen, like el.getBoundingClientRect().top, for a frame loop
+     that follows the scroll. Each loop asking the browser directly, straight after another loop
+     has moved something, made the page lay itself out again several times a frame; this works it
+     out from where el sat on the page last time it was measured and how far the page has scrolled
+     since. Everything is measured again when the page changes size, when the fonts or the last
+     picture arrive, and whenever the scrolling stops. Anything inside a sticky or fixed box moves
+     on its own as you scroll, so it is always measured. ui.pageH() is the page's scrollHeight on
+     the same terms. */
+  top: function (el) {
+    var g = el._geo;
+    if (!g) {
+      var r = el.getBoundingClientRect();
+      g = el._geo = { y: r.top + scrollY, h: r.height, live: false };
+      for (var n = el; n && n !== doc.body; n = n.parentElement) {
+        var pos = getComputedStyle(n).position;
+        if (pos === 'sticky' || pos === 'fixed') {
+          g.live = true;
+          break;
+        }
+      }
+      if (!g.live) geo.els.add(el);
+    }
+    if (g.live) return el.getBoundingClientRect().top;
+    return g.y - scrollY;
+  },
+  /* ui.height(el): el's height, remembered on the same terms as ui.top. */
+  height: function (el) {
+    ui.top(el);
+    return el._geo.live ? el.getBoundingClientRect().height : el._geo.h;
+  },
+  pageH: function () {
+    if (geo.h < 0) geo.h = doc.documentElement.scrollHeight;
+    return geo.h;
+  },
   bySlug: function (slug) {
     return N.sites.find(function (s) {
       return s.slug === slug;
@@ -327,7 +406,7 @@ export var ui = {
       H = innerHeight,
       live = false;
     last = now;
-    var p = Math.min(1, Math.max(0, (H * 0.92 - stage.getBoundingClientRect().top) / (H * 0.55)));
+    var p = Math.min(1, Math.max(0, (H * 0.92 - ui.top(stage)) / (H * 0.55)));
     gcs.forEach(function (c, i) {
       var t = Math.min(1, Math.max(0, (p - Math.abs(c.d) * 0.03) / 0.72));
       t = t * t * (3 - 2 * t);
@@ -370,9 +449,8 @@ export var ui = {
       }
     }
     if (glyphs.length) {
-      var box = nameEl.getBoundingClientRect();
       /* Done by the time the name is most of the way up, so it always finishes above the page's end. */
-      var q = Math.min(1, Math.max(0, (H - box.top) / (box.height * 0.8)));
+      var q = Math.min(1, Math.max(0, (H - ui.top(nameEl)) / (ui.height(nameEl) * 0.8)));
       glyphs.forEach(function (c) {
         var t = Math.min(1, Math.max(0, q * 1.6 - (c.i / glyphs.length) * 0.6));
         if (c.s.step(t, dt)) live = true;
@@ -525,6 +603,13 @@ if (bands.length && !reduce) {
   var bstate = bands.map(function () {
     return 0;
   });
+  /* The two numbers go on the two things that use them, not on the band: a custom property set on
+     the band is inherited by every element inside it (some 300 on the home page's band of every
+     quote), and the browser restyles all of them each frame. --bs and --bk are registered as not
+     inherited (kit.css), so each write restyles one element. */
+  var bparts = bands.map(function (el) {
+    return { bg: el.querySelector(':scope > .band-bg'), w: el.querySelector(':scope > .band-w') };
+  });
   var bframe = function (now) {
     braf = 0;
     var dt = Math.min(0.033, (now - blast) / 1000 || 0.016),
@@ -532,13 +617,14 @@ if (bands.length && !reduce) {
       live = false;
     blast = now;
     bands.forEach(function (el, i) {
-      var t = Math.min(1, Math.max(0, (H * 1.02 - el.getBoundingClientRect().top) / (H * 0.62)));
+      var t = Math.min(1, Math.max(0, (H * 1.02 - ui.top(el)) / (H * 0.62)));
       t = t * t * (3 - 2 * t);
       bstate[i] += (t - bstate[i]) * (1 - Math.pow(0.002, dt));
       if (Math.abs(t - bstate[i]) > 0.001) live = true;
       else bstate[i] = t;
-      el.style.setProperty('--bs', (0.9 + bstate[i] * 0.1).toFixed(4));
-      el.style.setProperty('--bk', (1 - bstate[i]).toFixed(4));
+      var bp = bparts[i];
+      if (bp.bg) ui.put(bp.bg, '--bs', (0.9 + bstate[i] * 0.1).toFixed(4));
+      if (bp.w) ui.put(bp.w, '--bk', (1 - bstate[i]).toFixed(4));
     });
     if (live) braf = requestAnimationFrame(bframe);
   };
@@ -652,7 +738,7 @@ function railShape() {
   );
 }
 function railPaint() {
-  var range = doc.documentElement.scrollHeight - innerHeight,
+  var range = ui.pageH() - innerHeight,
     /* A page with no real length has no distance to show. */
     p = range > innerHeight * 0.25 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
   if (p === railSeen) return;
@@ -691,7 +777,7 @@ ticks.forEach(function (t) {
 if (ticks.length) rail.classList.add('has-ticks');
 function spyMeasure() {
   if (!ticks.length) return;
-  spyTall = doc.documentElement.scrollHeight;
+  spyTall = ui.pageH();
   var range = Math.max(1, spyTall - innerHeight),
     len = railPath.getTotalLength();
   ticks.forEach(function (t) {
@@ -706,7 +792,7 @@ function spyMeasure() {
 function spyPaint() {
   if (!ticks.length) return;
   /* Pictures loading further up move every chapter down the page. */
-  if (doc.documentElement.scrollHeight !== spyTall) spyMeasure();
+  if (ui.pageH() !== spyTall) spyMeasure();
   var at = -1;
   ticks.forEach(function (t, i) {
     var past = railSeen > 0.002 && railSeen >= t.p;
@@ -1229,7 +1315,7 @@ if (weighs.length && !reduce) {
       live = false;
     wlast = now;
     weighs.forEach(function (w) {
-      var p = (H * w.from - w.el.getBoundingClientRect().top) / (H * (w.from - w.to));
+      var p = (H * w.from - ui.top(w.el)) / (H * (w.from - w.to));
       p = Math.min(1, Math.max(0, p));
       var t = 200 + 500 * p * p * (3 - 2 * p);
       w.g += (t - w.g) * (1 - Math.pow(0.0015, dt));
@@ -1323,7 +1409,7 @@ if (lines.length) {
       live = false;
     llast = now;
     lines.forEach(function (l) {
-      var top = l.el.getBoundingClientRect().top;
+      var top = ui.top(l.el);
       var P = (H * l.from - top) / (H * (l.from - l.to));
       P = Math.min(1, Math.max(0, P));
       var n = l.words.length;
@@ -1501,8 +1587,13 @@ if (topLine) {
           live = true;
         }
       }
-      letters.forEach(function (l) {
-        var r = l.el.getBoundingClientRect();
+      /* Every letter is measured before any of them changes: measuring one straight after its
+         neighbour had moved made the browser lay the line out again for each letter. */
+      var rects = letters.map(function (l) {
+        return l.el.getBoundingClientRect();
+      });
+      letters.forEach(function (l, i) {
+        var r = rects[i];
         var d = at === null || !r.width ? 1e3 : (r.left + r.width / 2 - at) / 30;
         if (l.s.step(Math.exp(-d * d), dt)) live = true;
         var w = Math.round(Math.min(900, Math.max(100, l.rest + (880 - l.rest) * l.s.x)));
@@ -1510,8 +1601,11 @@ if (topLine) {
           l.shown = w;
           l.el.style.fontWeight = w;
         }
-        l.el.style.transform =
-          Math.abs(l.s.x) > 0.002 ? 'translateY(' + (-l.s.x * 0.07).toFixed(3) + 'em)' : '';
+        ui.put(
+          l.el,
+          'transform',
+          Math.abs(l.s.x) > 0.002 ? 'translateY(' + (-l.s.x * 0.07).toFixed(3) + 'em)' : '',
+        );
       });
       if (live) markRaf = requestAnimationFrame(markFrame);
     };
