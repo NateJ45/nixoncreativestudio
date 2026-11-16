@@ -1251,7 +1251,8 @@
 .kit-camera .kit-copy,
 .kit-gimbal .kit-copy {
   position: relative;
-  z-index: 1;
+  /* Above the scrim: ::after comes last in the tile, so at an equal z-index it paints over the copy. */
+  z-index: 2;
   display: grid;
   gap: 0.5rem;
   pointer-events: none;
