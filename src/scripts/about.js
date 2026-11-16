@@ -363,7 +363,7 @@ st.forEach(function (s) {
   });
 });
 
-/* The stamps under "One person." (src/styles/stamp.css). Hover and keyboard focus lift one in
+/* The stamps on the fact cards and the postcard under "One person." (src/styles/stamp.css). Hover and keyboard focus lift one in
    CSS alone; a tap or a click holds it up, and the next one lets it down. */
 [].forEach.call(doc.querySelectorAll('[data-peel]'), function (b) {
   b.addEventListener('click', function () {

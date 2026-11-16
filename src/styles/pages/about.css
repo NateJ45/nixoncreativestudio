@@ -798,27 +798,278 @@ html:not(.js) .oc-again {
   }
 }
 
-/* The stamps under "One person." (the peel itself is in src/styles/stamp.css). A loose row,
-   each turned a little its own way, on the page's own ground. */
-.peels {
-  --stamp-paper: var(--ground);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.1rem clamp(1rem, 3vw, 2.25rem);
+/* ---- Under "One person.": two fact cards and the postcard (src/components/Crossing.astro) ----
+   A grid: the facts stacked on the left, the postcard filling the right. Each fact wears its own
+   stamp (the peel is in src/styles/stamp.css), turned a little, half off the card's corner. Under
+   60rem the facts sit side by side above the postcard; under 36rem, one column. */
+.place {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr);
+  gap: clamp(0.75rem, 1.4vw, 1.25rem);
   max-width: 78rem;
-  margin: 0 auto clamp(1.75rem, 3.5vw, 3rem);
+  margin: clamp(1.25rem, 2.5vw, 2rem) auto clamp(1.75rem, 3.5vw, 3rem);
+}
+.facts {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: inherit;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-.peels .stamp {
+.fact {
+  --stamp-paper: var(--card);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  min-height: 12rem;
+  padding: clamp(1.25rem, 2.2vw, 1.75rem);
+  padding-top: 5rem;
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: var(--rim);
+}
+.fact .label {
+  color: var(--ink);
+}
+.fact-line {
+  color: var(--soft);
+  font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.fact .stamp {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
   float: none;
   margin: 0;
 }
-.peels li:nth-child(odd) .stamp {
-  transform: rotate(-4deg);
+.fact:nth-child(odd) .stamp,
+.cx-stamps li:nth-child(odd) .stamp {
+  transform: rotate(-5deg);
 }
-.peels li:nth-child(even) .stamp {
-  transform: rotate(3deg);
+.fact:nth-child(even) .stamp,
+.cx-stamps li:nth-child(even) .stamp {
+  transform: rotate(4deg);
+}
+
+/* The postcard: Edinburgh by day crossfading into Cincinnati by night, the flags laid over the
+   sky, the 2017 flight drawn across it, the copy below on the night. Always dark on both sides of
+   the page. The art box keeps one shape (1200 x 560) at every width so the flight's two ends stay
+   on the monument and the tower. The stamps ride the copy, lighter blue for the dark card. */
+.crossing {
+  --night: #0b0e1f;
+  --accent: #a9b4ff;
+  --stamp-paper: var(--night);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--night);
+  color: #fff;
+  container-type: inline-size;
+}
+.cx-art {
+  position: relative;
+  aspect-ratio: 1200 / 560;
+  overflow: hidden;
+  isolation: isolate;
+}
+.cx-photo {
+  position: absolute;
+  top: 0;
+  width: 62%;
+  height: 100%;
+  object-fit: cover;
+}
+.cx-from {
+  left: 0;
+}
+.cx-to {
+  right: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 36%);
+  mask-image: linear-gradient(to right, transparent, #000 36%);
+}
+/* The flags tint the sky only: laid over the photos in overlay, fading out before the skylines. */
+.cx-flags {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(#000 15%, transparent 68%);
+  mask-image: linear-gradient(#000 15%, transparent 68%);
+}
+.cx-flags.cx-us {
+  mix-blend-mode: screen;
+  opacity: 0.38;
+}
+/* The night at the foot, so the place names read and the art settles into the copy. */
+.cx-art::after {
+  content: '';
+  position: absolute;
+  inset: 55% 0 0;
+  background: linear-gradient(transparent, var(--night));
+  pointer-events: none;
+}
+.cx-trip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cx-flight {
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-dasharray: 0.003 0.012;
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+.cx-end {
+  fill: #fff;
+}
+.cx-year {
+  fill: #fff;
+  font: 600 26px/1 var(--body);
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 4px;
+}
+/* The flight draws itself in from Edinburgh as the card comes up the screen, where scroll-driven
+   animation is supported; everywhere else (and with reduced motion) it is simply there. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .crossing {
+      view-timeline: --cx block;
+    }
+    .cx-reveal {
+      stroke-dasharray: 1;
+      animation: cx-fly linear both;
+      animation-timeline: --cx;
+      animation-range: entry 20% cover 45%;
+    }
+    .cx-year,
+    .cx-end + .cx-end {
+      animation: cx-land linear both;
+      animation-timeline: --cx;
+      animation-range: cover 38% cover 46%;
+    }
+  }
+}
+@keyframes cx-fly {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes cx-land {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.cx-place {
+  position: absolute;
+  bottom: clamp(0.6rem, 2cqi, 1.1rem);
+  z-index: 1;
+  font: 500 clamp(0.625rem, 1.3cqi, 0.75rem) / 1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+}
+.cx-place-from {
+  left: clamp(0.9rem, 2.4cqi, 1.75rem);
+}
+.cx-place-to {
+  right: clamp(0.9rem, 2.4cqi, 1.75rem);
+}
+.cx-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  padding: clamp(1.1rem, 2.2vw, 1.75rem);
+  padding-top: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+.cx-copy > div {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 30rem;
+}
+.cx-copy .label {
+  color: rgba(255, 255, 255, 0.7);
+}
+.cx-copy h3 {
+  font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.cx-copy p:not(.label) {
+  color: rgba(255, 255, 255, 0.78);
+  text-wrap: pretty;
+}
+.cx-stamps {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.9rem 1.25rem;
+  margin: 0;
+  padding: 0 0.25rem 0.25rem;
+  list-style: none;
+}
+.cx-stamps .stamp {
+  float: none;
+  margin: 0;
+}
+.crossing .stamp.peel:focus-visible {
+  outline-color: #fff;
+}
+
+@media (max-width: 44rem) {
+  .cx-stamps {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+@media (max-width: 60rem) {
+  .place {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .facts {
+    grid-template-rows: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 36rem) {
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fact {
+    min-height: 0;
+    padding-top: 4.75rem;
+  }
+}
+@media (forced-colors: active) {
+  .crossing {
+    border: 1px solid CanvasText;
+  }
 }
 
 /* ---- Based in Cincinnati: the map and the state hand (src/components/ClientMap.astro) ---------
