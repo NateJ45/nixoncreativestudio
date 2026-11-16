@@ -1,80 +1,12 @@
 ---
-/* ============================================================================
-   Microsoft Clarity: session replays, heatmaps, rage and dead clicks
-   ============================================================================
-   Site-owned. Rendered by Analytics.astro only when PUBLIC_CLARITY_ID is set.
-
-   Same rules as the GA4 tag (GoogleAnalytics.astro): production hostname
-   only, never in an automated browser, and the script element is built at
-   runtime. Two more of its own:
-     - Not before the visitor does something (first scroll, tap, key or mouse
-       move) or 6 seconds after load, so it never sits in front of the LCP.
-     - Never when the browser sends Global Privacy Control, or is marked as
-       Nathan's (?me=1, TrailHead.astro).
-   The contact form carries data-clarity-mask, so nothing typed into it is
-   recorded; Clarity's own masking covers other inputs.
-
-   Each session is tagged with the visitor id (clarity('identify')), which is
-   the same id the trail and the inquiry email use, plus where the visitor
-   first came from. In Clarity: Recordings > Filters > Custom user ID.
-   ============================================================================ */
+/* Microsoft Clarity's project id, for src/lib/clarity.ts (run from BaseLayout's script bundle).
+   Rendered by Analytics.astro only when PUBLIC_CLARITY_ID is set. A meta tag rather than an
+   inline script: every inline script costs a hash in the CSP line, which Cloudflare caps at
+   2,000 characters. The rules for when Clarity runs live in src/lib/clarity.ts. */
 interface Props {
   clarityId: string;
 }
 const { clarityId } = Astro.props;
-const siteHost = Astro.site?.hostname ?? '';
-const apex = siteHost.replace(/^www./, '');
-const hosts: string[] = apex ? [apex, `www.${apex}`] : [];
 ---
 
-<script is:inline define:vars={{ clarityId, hosts }}>
-  (function () {
-    var automated =
-      navigator.webdriver ||
-      /HeadlessChrome|Lighthouse|PTST|GTmetrix|Speed Insights/i.test(navigator.userAgent);
-    var me = false;
-    var vid = '';
-    try {
-      me = localStorage.getItem('ncs-me') === '1';
-      vid = localStorage.getItem('ncs-vid') || '';
-    } catch (_e) {
-      me = false;
-    }
-    if (automated || me || navigator.globalPrivacyControl === true) return;
-    if (hosts.indexOf(location.hostname) === -1) return;
-
-    window.clarity =
-      window.clarity ||
-      function () {
-        // eslint-disable-next-line prefer-rest-params
-        (window.clarity.q = window.clarity.q || []).push(arguments);
-      };
-    if (vid) window.clarity('identify', vid);
-    try {
-      var touch = JSON.parse(localStorage.getItem('ncs-first-touch') || 'null');
-      if (touch) {
-        window.clarity('set', 'first_landing', touch.landing || '/');
-        window.clarity('set', 'first_source', touch.utm_source || touch.referrer || 'direct');
-      }
-    } catch (_e) {
-      // No first touch yet: nothing to tag.
-    }
-
-    var loaded = false;
-    function load() {
-      if (loaded) return;
-      loaded = true;
-      var s = document.createElement('script');
-      s.async = true;
-      s.src = 'https://www.clarity.ms/tag/' + clarityId;
-      document.head.appendChild(s);
-    }
-    var events = ['scroll', 'pointerdown', 'pointermove', 'keydown', 'touchstart'];
-    events.forEach(function (t) {
-      addEventListener(t, load, { once: true, passive: true });
-    });
-    addEventListener('load', function () {
-      setTimeout(load, 6000);
-    });
-  })();
-</script>
+<meta name="ncs-clarity" content={clarityId} />

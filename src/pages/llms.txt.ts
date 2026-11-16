@@ -26,6 +26,7 @@ import { addOns, carePlans, webTiers } from '../data/pricing';
 import { money } from '../lib/money';
 import { photographyOpen } from '../data/photography-gate';
 import { newestFirst } from '../lib/journal';
+import { isLive } from '../data/journal-gate';
 
 // Static endpoint: written to dist as a plain file at build time.
 export const prerender = true;
@@ -46,7 +47,7 @@ export const GET: APIRoute = async () => {
 
   // Journal posts, so an answer engine finds the studio's plain answers (cost,
   // platform choice, Ad Grants) and not only its sales pages (SEO/AEO audit 2026-11).
-  const posts = newestFirst(await getCollection('journal', ({ data }) => data.draft !== true));
+  const posts = newestFirst(await getCollection('journal', ({ data }) => isLive(data)));
 
   const url = (path: string) => new URL(path, site.url).toString();
 

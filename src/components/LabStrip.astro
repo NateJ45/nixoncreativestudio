@@ -15,10 +15,11 @@
    motion: each demo shows its end state with a Replay button, and the card turns with no motion. */
 import { getCollection } from 'astro:content';
 import '../styles/pages/lab.css';
+import { isLive } from '../data/journal-gate';
 
 const entries = (await getCollection('lab')).sort((a, b) => a.data.order - b.data.order);
 const posts = await getCollection('journal');
-const live = new Set(posts.filter((p) => p.data.draft !== true).map((p) => p.id));
+const live = new Set(posts.filter((p) => isLive(p.data)).map((p) => p.id));
 const n = entries.length;
 const pad = (v: number) => String(v).padStart(2, '0');
 

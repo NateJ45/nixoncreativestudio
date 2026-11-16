@@ -21,6 +21,7 @@
 
 import { getCollection } from 'astro:content';
 import { MIN_PHOTOS, photographyOpen } from './photography-gate';
+import { isLive } from './journal-gate';
 
 export { MIN_PHOTOS };
 
@@ -35,7 +36,7 @@ const PHOTOGRAPHY: NavLink = { label: 'Photography', href: '/photography/' };
 
 async function journalCount(): Promise<number> {
   const entries = await getCollection('journal', ({ data }) =>
-    import.meta.env.PROD ? data.draft !== true : true,
+    import.meta.env.PROD ? isLive(data) : true,
   );
   return entries.length;
 }
@@ -53,9 +54,6 @@ export async function getGatedNav(): Promise<NavLink[]> {
 /** A journal post's address, or null while it is unwritten or still a draft. About and /now
     link to a post only once it is real, so no link ever points at an empty page. */
 export async function journalPath(slug: string): Promise<string | null> {
-  const [entry] = await getCollection(
-    'journal',
-    ({ id, data }) => id === slug && data.draft !== true,
-  );
+  const [entry] = await getCollection('journal', ({ id, data }) => id === slug && isLive(data));
   return entry ? `/journal/${entry.id}/` : null;
 }

@@ -3,6 +3,7 @@
 Moved out of CLAUDE.md. Read when changing deploys, env vars, the Coming Soon gate or security headers.
 
 - Production: pushes to `main` trigger a Cloudflare Workers Builds deploy (Worker `nixoncreativestudio`) that serves `nixoncreativestudio.com`. The apex is canonical; `www` 301s to it.
+- Weekly rebuild for scheduled journal posts: the Worker has a deploy hook `journal-weekly-publish` (branch `main`, Settings > Builds > Deploy Hooks, created 2026-11-15). `.github/workflows/journal-publish.yml` POSTs it every Tuesday at 11:17 UTC from the repo secret `CF_DEPLOY_HOOK` (the URL is the credential; never put it in a file). Run the workflow by hand to publish on another day. The run fails red if the secret is missing.
 - Previews: any other branch gets its own `*-nixoncreativestudio.nathanjnixon86.workers.dev` URL.
 - Build command: `npm run build`. Output directory: `dist`.
 - Unknown URLs: `wrangler.jsonc` sets `assets.not_found_handling: "404-page"`, so a path with no file gets `dist/client/404.html` (from `src/pages/404.astro`) with a 404 status. Without it Cloudflare answers with an empty body, which is what the live site did until 2026-10-18.
@@ -67,7 +68,7 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 It ships **report-only**: the browser logs what it would have blocked and blocks nothing. There is no reporting endpoint, so reports only appear in a browser's console (and as `securitypolicyviolation` events).
 
-Inline scripts and `<style>` blocks are allowed by sha256 hash. `public/_headers` holds two markers, and `scripts/write-csp.mjs` (a build step) fills them from the built pages in `dist/client`. So a new inline script is picked up by itself, and the production build's hashes include the GA snippet, whose text depends on `PUBLIC_GA_ID`. Style attributes need `style-src-attr 'unsafe-inline'`, because a client's colors arrive as `style="--c: ..."`.
+Inline scripts and `<style>` blocks are allowed by sha256 hash. `public/_headers` holds two markers, and `scripts/write-csp.mjs` (a build step) fills them from the built pages in `dist/client`. So a new inline script is picked up by itself, and the production build's hashes include the GA snippet, whose text depends on `PUBLIC_GA_ID`. **Cloudflare rejects a `_headers` line over 2,000 characters**, and each inline script or style adds about 53, so keep new code out of `is:inline` scripts where you can (the layout bundle and `src/lib/*.ts` cost nothing). A build without `PUBLIC_GA_ID` (CI, local) checks the line with a stand-in GA hash, so it fails where production would. 2026-11-15: production reached 2,037 and stopped deploying; folding three scripts brought it to 1,929 with GA and Clarity. Style attributes need `style-src-attr 'unsafe-inline'`, because a client's colors arrive as `style="--c: ..."`.
 
 From other hosts, the policy allows what the site really loads:
 

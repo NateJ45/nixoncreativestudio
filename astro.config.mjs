@@ -85,6 +85,15 @@ export default defineConfig({
     // is back (2026-11-14, board permission), so it has no redirect.
     // /work/cincy-table is a 301 in public/_redirects (a real status code, not a meta refresh).
   },
+  // Ship every processed <script> as a /_astro/ file, never inline (2026-11-15). Vite
+  // inlines anything under 4 KB by default, and each inline script needs its own sha256
+  // in the CSP line of _headers; with the analytics scripts of the production build
+  // that line reached 2,037 characters and Cloudflare refuses one over 2,000, so the
+  // deploy failed (scripts/lib/csp-hashes.mjs throws). Only is:inline scripts need a
+  // hash now. Vault gotcha cloudflare-headers-line-limit-breaks-hashed-csp.
+  vite: {
+    build: { assetsInlineLimit: 0 },
+  },
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'hover',
