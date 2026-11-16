@@ -1267,3 +1267,98 @@ html:not(.js) .ed-go {
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   The deal, tied to the scroll (home.js turns it on with .deal-css on the grid)
+   ---------------------------------------------------------------------------------------------
+   Each window travels from its place in the hand to its cell in the grid as a scroll-driven
+   animation, so the browser moves it in step with the scroll itself, off the main thread. Done
+   in script, every frame read the scroll and then moved nine windows, always a frame behind a
+   phone's own scrolling, and it juddered (measured 2026-11-16). home.js only measures: on load
+   and resize it writes where each window starts (--dl-dx, --dl-dy, --dl-rot, --dl-sc), its place
+   in the hand (--dl-d) and the stretch of scroll it lands over (--dl-r0 to --dl-r1; the caption
+   fades in over the last part, from --dl-c0).
+
+   Three things ride on the same motion as numbers the keyframes read, so they fade out as the
+   window lands: the hand leaning toward the mouse (--dl-sway, on the grid), and the lift of the
+   window you reach for (--dl-lift, on its cell, eased by a transition), big in the hand and small
+   in the grid. The deal-in on first load is a second animation added on top (deal-in).
+
+   Without scroll-driven animation (Firefox today), or under reduced motion, none of this applies
+   and home.js runs the deal itself, as before. */
+@property --dl-sway {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --dl-lift {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .deal-css > li {
+      transition: --dl-lift 0.45s cubic-bezier(0.3, 1.45, 0.5, 1);
+    }
+    .deal-css .tile {
+      animation: deal-land linear both;
+      animation-timeline: scroll(root block);
+      animation-range: var(--dl-r0) var(--dl-r1);
+    }
+    .deal-css.deal-intro .tile {
+      animation:
+        deal-land linear both,
+        deal-in 0.95s linear(0, 0.32 9%, 0.76 20%, 1.04 31%, 1.09 40%, 1.04 51%, 0.99 64%, 1 80%, 1)
+          backwards;
+      animation-timeline: scroll(root block), auto;
+      animation-range:
+        var(--dl-r0) var(--dl-r1),
+        normal;
+      animation-delay: 0s, calc(260ms + var(--dl-i) * 62ms);
+      animation-composition: replace, add;
+    }
+    .deal-css .cap {
+      transition: none;
+      animation: deal-cap linear both;
+      animation-timeline: scroll(root block);
+      animation-range: var(--dl-c0) var(--dl-r1);
+    }
+  }
+}
+@keyframes deal-land {
+  from {
+    transform: translate3d(
+        calc(var(--dl-dx) + var(--dl-sway) * var(--dl-d) * 16px),
+        calc(var(--dl-dy) - var(--dl-lift) * 34px),
+        0
+      )
+      rotate(calc(var(--dl-rot) + var(--dl-sway) * 2.5deg))
+      scale(calc(var(--dl-sc) * (1 + var(--dl-lift) * 0.07)));
+    animation-timing-function: cubic-bezier(0.33, 0, 0.67, 1);
+  }
+  to {
+    transform: translate3d(0, calc(var(--dl-lift) * -7px), 0)
+      scale(calc(1 + var(--dl-lift) * 0.012));
+  }
+}
+/* Out of one stack: each window starts small and turned back toward straight, and springs into
+   its place in the hand. Added to the deal's own transform, so it turns and grows where it is. */
+@keyframes deal-in {
+  from {
+    transform: rotate(calc(var(--dl-rot) * -0.75)) scale(0.35);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes deal-cap {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

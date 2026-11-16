@@ -74,6 +74,8 @@ Search before naming a class. Collisions that have bitten: `.dealt` is the dealt
   - Anything that changes text size (a font weight, a font size) lays the page out each time it changes. `[data-weigh]` moves in steps of 20, not 1.
   - A scroll-driven CSS animation should animate `transform`, `scale`, `rotate`, `translate` or `opacity` on the element itself, which the browser runs off the main thread, not a custom property that children read (the case-study opening, `s-settle-*` in `study.css`).
   - Looping decoration that animates SVG (About's map) holds still while the page scrolls (`.cm-hold`, client-map.js) and carries on when it stops.
+  - Anything that moves with the scroll itself should be a scroll-driven CSS animation (`animation-timeline: scroll()`), with script only measuring, as the home deal and the case-study opening are. A frame loop always lands a frame behind a phone's own scrolling.
+  - Hover waits while the page scrolls (`ui.stillHover` in kit.js): cards sliding under a still mouse used to lift and start their clips mid-scroll. The card under the pointer is taken on the first real move after the scroll stops.
 - There is no Pause motion button and no `data-motion` attribute (the client sheet's looping clip and About's map each have their own pause button). Footage starts only on hover or, on a touch screen, while a window is centred, and stops when it leaves. The map is the one thing that loops by itself, only while on screen, and only under its `[data-live]` attribute.
 
 ## Forced colors and print
