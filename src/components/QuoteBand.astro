@@ -18,12 +18,17 @@
    a quote with no phrase set is simply the quote.
 
    The cycle also carries the quotes that are not about a website (src/data/quotes.ts): those take
-   their own colours, and where a website quote shows the client's site they show one of my
-   photographs from that client, as a print. */
+   their own colours, and where a website quote shows the client's site they show a small fan of my
+   photographs from that client (PrintFan.astro).
+
+   The band fits the quote in front of you (changed 2026-11-16): it used to stack every quote in
+   one cell and hold the longest one's height, which left the short ones floating in a band cut
+   for the longest. quote-cycle.js eases the height across as you step. */
 import { getEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import { QUOTES } from '../data/quotes';
 import Tile from './Tile.astro';
+import PrintFan from './PrintFan.astro';
 import ReviewCite from './ReviewCite.astro';
 import { markedQuote } from '../lib/highlight';
 import { getClient, getClients, type Client } from '../lib/clients';
@@ -61,7 +66,7 @@ type Quote = {
   photo?: string;
   source?: { platform: 'google'; url: string; rating: number };
 };
-type Shot = { src: ImageMetadata; alt: string };
+type Shot = { ids: string[]; src: ImageMetadata; alt: string };
 type Slide = {
   t: Quote;
   client: Pick<Client, 'slug' | 'accent' | 'paper'> & Partial<Client>;
@@ -85,13 +90,13 @@ if (cycle) {
   // most for trust. Then the quotes that are not about a website, then the rest in deck order.
   const standalone: Slide[] = [];
   for (const q of QUOTES) {
-    const shot = await getEntry('photos', q.shot);
-    if (!shot) throw new Error(`quotes.ts: no photograph ${q.shot}`);
+    const shot = await getEntry('photos', q.shots[0]);
+    if (!shot) throw new Error(`quotes.ts: no photograph ${q.shots[0]}`);
     standalone.push({
       t: q,
       client: { slug: q.id, accent: q.accent, paper: q.paper },
       tile: true,
-      shot: { src: shot.data.image, alt: shot.data.alt },
+      shot: { ids: q.shots, src: shot.data.image, alt: shot.data.alt },
     });
   }
   slides = [
@@ -182,14 +187,10 @@ const many = slides.length > 1;
           {s.shot ? (
             <>
               <span class="band-ph">
-                <Image
-                  class="band-print band-print-tall"
-                  src={s.shot.src}
-                  alt={s.shot.alt}
-                  widths={[336, 672]}
-                  sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
-                  loading="lazy"
-                  decoding="async"
+                <PrintFan
+                  ids={s.shot.ids}
+                  printClass="band-print band-print-tall"
+                  sizes="(max-width: 60rem) min(60vw, 224px), min(21vw, 312px)"
                 />
               </span>
               {many && (
@@ -198,7 +199,7 @@ const many = slides.length > 1;
                     class="band-print"
                     src={s.shot.src}
                     alt=""
-                    widths={[512, 1024]}
+                    widths={[512, 1024, 1536]}
                     sizes="min(100vw, 32rem)"
                     loading="lazy"
                     decoding="async"

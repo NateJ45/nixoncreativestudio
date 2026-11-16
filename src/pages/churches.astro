@@ -3,9 +3,9 @@
    phone page scrolls along in its window (src/scripts/churches.js). The two
    studies, their outcomes and the quotes all come from the case studies. Title
    and description live in src/data/sector-pages.ts with the sector path. */
-import { getCollection, getEntry } from 'astro:content';
-import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import ReviewCite from '../components/ReviewCite.astro';
+import PrintFan from '../components/PrintFan.astro';
 import { QUOTES } from '../data/quotes';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/sector.css';
@@ -73,14 +73,9 @@ const studies = entries
   }));
 const n = entries.length;
 /* The churches I photograph for rather than build for: a quote that is not about a website
-   (src/data/quotes.ts), with one of my photographs from them in place of their site. */
-const cameraQuotes = await Promise.all(
-  QUOTES.filter((q) => q.sectors.includes(CHURCHES.path)).map(async (q) => {
-    const shot = await getEntry('photos', q.shot);
-    if (!shot) throw new Error(`quotes.ts: no photograph ${q.shot}`);
-    return { q, shot };
-  }),
-);
+   (src/data/quotes.ts), with a fan of my photographs from them in place of their site
+   (PrintFan.astro, which throws on a photograph id that does not exist). */
+const cameraQuotes = QUOTES.filter((q) => q.sectors.includes(CHURCHES.path)).map((q) => ({ q }));
 // Which tier usually fits, the same list the lean sector pages carry (SectorLean.astro), from the
 // church row of SITUATIONS. Situations only: no church is tied to a tier here.
 const situation = SITUATIONS.find((row) => row.sector === CHURCHES.sector);
@@ -309,17 +304,13 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
           </p>
         </div>
         <ul class="ch-studies-cam">
-          {cameraQuotes.map(({ q, shot }) => (
+          {cameraQuotes.map(({ q }) => (
             <li class="study study-cam" style={`--c:${q.accent};--c-night:#8fc7aa;--p:${q.paper}`}>
               <div class="study-w">
-                <Image
-                  class="study-print"
-                  src={shot.data.image}
-                  alt={shot.data.alt}
-                  widths={[400, 800]}
+                <PrintFan
+                  ids={q.shots}
+                  printClass="study-print"
                   sizes="(max-width: 60rem) min(62vw, 15rem), 19rem"
-                  loading="lazy"
-                  decoding="async"
                 />
               </div>
               <div class="study-t">
@@ -334,7 +325,7 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
                   rating={q.source?.rating}
                 />
                 <div class="study-links">
-                  <a class="chip" href={`/photography/?print=${q.shot}`}>
+                  <a class="chip" href={`/photography/?print=${q.shots[0]}`}>
                     See the photographs
                   </a>
                 </div>
