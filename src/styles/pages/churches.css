@@ -437,3 +437,418 @@ html:not(.js) .stand {
 
 /* "Try it" (the questions and the phone that scrolls to each answer) is styled in sector.css,
    which this page imports too, because the lean sector pages carry the same tool. */
+
+/* ---------------------------------------------------------------------------------------------
+   The windows, tied to the scroll (churches.js turns it on with .ch-css on the section)
+   ---------------------------------------------------------------------------------------------
+   The swap, each phone page panning down its stops and the captions trading places are
+   scroll-driven animations, so the browser moves them in step with the scroll itself. Done in
+   script, every frame read the scroll and then moved both windows and both pages, a frame behind
+   a phone's own scrolling. churches.js only measures: on load and resize it writes the stretch of
+   scroll the swap takes (--ch-s0 to --ch-s1) and, on each page, where it sits at each stop
+   (--ch-y0 to --ch-y2) and the scroll that reaches it (--ch-p0 to --ch-p2). A page that would run
+   past the foot of its capture stops there, so the last stretch ends where it does.
+
+   The swap eases in and out (a smoothstep), baked into the keyframes below, as is the arc the two
+   windows take round each other (--tw is the window's width). On arrival the first window rises
+   and the second slides out from behind it, on the individual translate and rotate properties so
+   it adds to the swap instead of replacing it (ch-rise, ch-rise-out; the slide only plays on a
+   page opened above the swap, where it starts from).
+
+   Without scroll-driven animation (Firefox today), or under reduced motion, none of this applies
+   and churches.js runs the windows itself, as before. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ch-css .stand .scr img {
+      animation:
+        ch-pan-1 linear both,
+        ch-pan-2 linear forwards;
+      animation-timeline: scroll(root block), scroll(root block);
+      animation-range:
+        var(--ch-p0) var(--ch-p1),
+        var(--ch-p1) var(--ch-p2);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) and (min-width: 62.01rem) {
+    .ch-css .stand {
+      animation:
+        ch-swap-a linear both,
+        ch-z-a linear both;
+      animation-timeline: scroll(root block), scroll(root block);
+      animation-range:
+        var(--ch-s0) var(--ch-s1),
+        var(--ch-s0) var(--ch-s1);
+    }
+    .ch-css .stand.b {
+      animation-name: ch-swap-b, ch-z-b;
+    }
+    .ch-css .stand .cap {
+      animation: ch-cap-a linear both;
+      animation-timeline: scroll(root block);
+      animation-range: var(--ch-s0) var(--ch-s1);
+    }
+    .ch-css .stand.b .cap {
+      animation-name: ch-cap-b;
+    }
+    .ch-css.ch-intro .stand {
+      animation:
+        ch-swap-a linear both,
+        ch-z-a linear both,
+        ch-rise 1.1s linear 240ms backwards;
+      animation-timeline: scroll(root block), scroll(root block), auto;
+      animation-range:
+        var(--ch-s0) var(--ch-s1),
+        var(--ch-s0) var(--ch-s1),
+        normal;
+    }
+    .ch-css.ch-intro .stand.b {
+      animation-name: ch-swap-b, ch-z-b, ch-rise;
+    }
+    .ch-css.ch-intro.ch-out .stand.b {
+      animation-name: ch-swap-b, ch-z-b, ch-rise-out;
+    }
+  }
+}
+@keyframes ch-pan-1 {
+  from {
+    transform: translate3d(0, var(--ch-y0), 0);
+  }
+  to {
+    transform: translate3d(0, var(--ch-y1), 0);
+  }
+}
+@keyframes ch-pan-2 {
+  from {
+    transform: translate3d(0, var(--ch-y1), 0);
+  }
+  to {
+    transform: translate3d(0, var(--ch-y2), 0);
+  }
+}
+/* The window in front changes halfway, on its own track: a z-index would hold the swap back on
+   the main thread. */
+@keyframes ch-z-a {
+  0%,
+  50% {
+    z-index: 2;
+  }
+  50.01%,
+  100% {
+    z-index: 1;
+  }
+}
+@keyframes ch-z-b {
+  0%,
+  50% {
+    z-index: 1;
+  }
+  50.01%,
+  100% {
+    z-index: 2;
+  }
+}
+@keyframes ch-swap-a {
+  0% {
+    transform: translate3d(calc(var(--tw) * 0), 0, 0) rotate(0deg) scale(1);
+  }
+  5% {
+    transform: translate3d(calc(var(--tw) * -0.0082), 0, 0) rotate(-0.019deg) scale(0.9995);
+  }
+  10% {
+    transform: translate3d(calc(var(--tw) * -0.0317), 0, 0) rotate(-0.073deg) scale(0.9979);
+  }
+  15% {
+    transform: translate3d(calc(var(--tw) * -0.0685), 0, 0) rotate(-0.158deg) scale(0.9954);
+  }
+  20% {
+    transform: translate3d(calc(var(--tw) * -0.116), 0, 0) rotate(-0.27deg) scale(0.9922);
+  }
+  25% {
+    transform: translate3d(calc(var(--tw) * -0.1711), 0, 0) rotate(-0.406deg) scale(0.9883);
+  }
+  30% {
+    transform: translate3d(calc(var(--tw) * -0.2293), 0, 0) rotate(-0.562deg) scale(0.9838);
+  }
+  35% {
+    transform: translate3d(calc(var(--tw) * -0.2857), 0, 0) rotate(-0.733deg) scale(0.9789);
+  }
+  40% {
+    transform: translate3d(calc(var(--tw) * -0.335), 0, 0) rotate(-0.915deg) scale(0.9736);
+  }
+  45% {
+    transform: translate3d(calc(var(--tw) * -0.3726), 0, 0) rotate(-1.106deg) scale(0.9681);
+  }
+  50% {
+    transform: translate3d(calc(var(--tw) * -0.395), 0, 0) rotate(-1.3deg) scale(0.9625);
+  }
+  55% {
+    transform: translate3d(calc(var(--tw) * -0.401), 0, 0) rotate(-1.494deg) scale(0.9569);
+  }
+  60% {
+    transform: translate3d(calc(var(--tw) * -0.3913), 0, 0) rotate(-1.685deg) scale(0.9514);
+  }
+  65% {
+    transform: translate3d(calc(var(--tw) * -0.3687), 0, 0) rotate(-1.867deg) scale(0.9461);
+  }
+  70% {
+    transform: translate3d(calc(var(--tw) * -0.3373), 0, 0) rotate(-2.038deg) scale(0.9412);
+  }
+  75% {
+    transform: translate3d(calc(var(--tw) * -0.3017), 0, 0) rotate(-2.194deg) scale(0.9367);
+  }
+  80% {
+    transform: translate3d(calc(var(--tw) * -0.2665), 0, 0) rotate(-2.33deg) scale(0.9328);
+  }
+  85% {
+    transform: translate3d(calc(var(--tw) * -0.2354), 0, 0) rotate(-2.442deg) scale(0.9296);
+  }
+  90% {
+    transform: translate3d(calc(var(--tw) * -0.211), 0, 0) rotate(-2.527deg) scale(0.9271);
+  }
+  95% {
+    transform: translate3d(calc(var(--tw) * -0.1955), 0, 0) rotate(-2.581deg) scale(0.9255);
+  }
+  100% {
+    transform: translate3d(calc(var(--tw) * -0.19), 0, 0) rotate(-2.6deg) scale(0.925);
+  }
+}
+@keyframes ch-swap-b {
+  0% {
+    transform: translate3d(calc(var(--tw) * 0.19), 0, 0) rotate(2.6deg) scale(0.925);
+  }
+  5% {
+    transform: translate3d(calc(var(--tw) * 0.1955), 0, 0) rotate(2.581deg) scale(0.9255);
+  }
+  10% {
+    transform: translate3d(calc(var(--tw) * 0.211), 0, 0) rotate(2.527deg) scale(0.9271);
+  }
+  15% {
+    transform: translate3d(calc(var(--tw) * 0.2354), 0, 0) rotate(2.442deg) scale(0.9296);
+  }
+  20% {
+    transform: translate3d(calc(var(--tw) * 0.2665), 0, 0) rotate(2.33deg) scale(0.9328);
+  }
+  25% {
+    transform: translate3d(calc(var(--tw) * 0.3017), 0, 0) rotate(2.194deg) scale(0.9367);
+  }
+  30% {
+    transform: translate3d(calc(var(--tw) * 0.3373), 0, 0) rotate(2.038deg) scale(0.9412);
+  }
+  35% {
+    transform: translate3d(calc(var(--tw) * 0.3687), 0, 0) rotate(1.867deg) scale(0.9461);
+  }
+  40% {
+    transform: translate3d(calc(var(--tw) * 0.3913), 0, 0) rotate(1.685deg) scale(0.9514);
+  }
+  45% {
+    transform: translate3d(calc(var(--tw) * 0.401), 0, 0) rotate(1.494deg) scale(0.9569);
+  }
+  50% {
+    transform: translate3d(calc(var(--tw) * 0.395), 0, 0) rotate(1.3deg) scale(0.9625);
+  }
+  55% {
+    transform: translate3d(calc(var(--tw) * 0.3726), 0, 0) rotate(1.106deg) scale(0.9681);
+  }
+  60% {
+    transform: translate3d(calc(var(--tw) * 0.335), 0, 0) rotate(0.915deg) scale(0.9736);
+  }
+  65% {
+    transform: translate3d(calc(var(--tw) * 0.2857), 0, 0) rotate(0.733deg) scale(0.9789);
+  }
+  70% {
+    transform: translate3d(calc(var(--tw) * 0.2293), 0, 0) rotate(0.562deg) scale(0.9838);
+  }
+  75% {
+    transform: translate3d(calc(var(--tw) * 0.1711), 0, 0) rotate(0.406deg) scale(0.9883);
+  }
+  80% {
+    transform: translate3d(calc(var(--tw) * 0.116), 0, 0) rotate(0.27deg) scale(0.9922);
+  }
+  85% {
+    transform: translate3d(calc(var(--tw) * 0.0685), 0, 0) rotate(0.158deg) scale(0.9954);
+  }
+  90% {
+    transform: translate3d(calc(var(--tw) * 0.0317), 0, 0) rotate(0.073deg) scale(0.9979);
+  }
+  95% {
+    transform: translate3d(calc(var(--tw) * 0.0082), 0, 0) rotate(0.019deg) scale(0.9995);
+  }
+  100% {
+    transform: translate3d(calc(var(--tw) * 0), 0, 0) rotate(0deg) scale(1);
+  }
+}
+@keyframes ch-cap-a {
+  0% {
+    opacity: 1;
+  }
+  6.45% {
+    opacity: 0.964;
+  }
+  12.9% {
+    opacity: 0.863;
+  }
+  19.35% {
+    opacity: 0.707;
+  }
+  25.8% {
+    opacity: 0.504;
+  }
+  32.25% {
+    opacity: 0.265;
+  }
+  38.7% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes ch-cap-b {
+  0% {
+    opacity: 0;
+  }
+  61.3% {
+    opacity: 0;
+  }
+  67.75% {
+    opacity: 0.265;
+  }
+  74.2% {
+    opacity: 0.504;
+  }
+  80.65% {
+    opacity: 0.707;
+  }
+  87.1% {
+    opacity: 0.863;
+  }
+  93.55% {
+    opacity: 0.964;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes ch-rise {
+  0% {
+    translate: 0 46px;
+  }
+  6.25% {
+    translate: 0 41.14px;
+  }
+  12.5% {
+    translate: 0 32.16px;
+  }
+  18.75% {
+    translate: 0 23.41px;
+  }
+  25% {
+    translate: 0 16.31px;
+  }
+  31.25% {
+    translate: 0 11.03px;
+  }
+  37.5% {
+    translate: 0 7.3px;
+  }
+  43.75% {
+    translate: 0 4.75px;
+  }
+  50% {
+    translate: 0 3.05px;
+  }
+  56.25% {
+    translate: 0 1.94px;
+  }
+  62.5% {
+    translate: 0 1.22px;
+  }
+  68.75% {
+    translate: 0 0.76px;
+  }
+  75% {
+    translate: 0 0.48px;
+  }
+  81.25% {
+    translate: 0 0.29px;
+  }
+  87.5% {
+    translate: 0 0.18px;
+  }
+  93.75% {
+    translate: 0 0.11px;
+  }
+  100% {
+    translate: 0 0px;
+  }
+}
+@keyframes ch-rise-out {
+  0% {
+    translate: calc(var(--tw) * -0.1898) calc(46px - var(--tw) * -0.00862);
+    rotate: -2.6deg;
+  }
+  6.25% {
+    translate: calc(var(--tw) * -0.1898) calc(41.14px - var(--tw) * -0.00862);
+    rotate: -2.6deg;
+  }
+  12.5% {
+    translate: calc(var(--tw) * -0.1898) calc(32.16px - var(--tw) * -0.00862);
+    rotate: -2.6deg;
+  }
+  18.75% {
+    translate: calc(var(--tw) * -0.14864) calc(23.41px - var(--tw) * -0.00675);
+    rotate: -2.036deg;
+  }
+  25% {
+    translate: calc(var(--tw) * -0.10359) calc(16.31px - var(--tw) * -0.0047);
+    rotate: -1.418deg;
+  }
+  31.25% {
+    translate: calc(var(--tw) * -0.07005) calc(11.03px - var(--tw) * -0.00318);
+    rotate: -0.959deg;
+  }
+  37.5% {
+    translate: calc(var(--tw) * -0.04635) calc(7.3px - var(--tw) * -0.0021);
+    rotate: -0.634deg;
+  }
+  43.75% {
+    translate: calc(var(--tw) * -0.03016) calc(4.75px - var(--tw) * -0.00137);
+    rotate: -0.413deg;
+  }
+  50% {
+    translate: calc(var(--tw) * -0.01938) calc(3.05px - var(--tw) * -0.00088);
+    rotate: -0.265deg;
+  }
+  56.25% {
+    translate: calc(var(--tw) * -0.01232) calc(1.94px - var(--tw) * -0.00056);
+    rotate: -0.169deg;
+  }
+  62.5% {
+    translate: calc(var(--tw) * -0.00776) calc(1.22px - var(--tw) * -0.00035);
+    rotate: -0.106deg;
+  }
+  68.75% {
+    translate: calc(var(--tw) * -0.00486) calc(0.76px - var(--tw) * -0.00022);
+    rotate: -0.066deg;
+  }
+  75% {
+    translate: calc(var(--tw) * -0.00302) calc(0.48px - var(--tw) * -0.00014);
+    rotate: -0.041deg;
+  }
+  81.25% {
+    translate: calc(var(--tw) * -0.00187) calc(0.29px - var(--tw) * -0.00008);
+    rotate: -0.026deg;
+  }
+  87.5% {
+    translate: calc(var(--tw) * -0.00115) calc(0.18px - var(--tw) * -0.00005);
+    rotate: -0.016deg;
+  }
+  93.75% {
+    translate: calc(var(--tw) * -0.00071) calc(0.11px - var(--tw) * -0.00003);
+    rotate: -0.01deg;
+  }
+  100% {
+    translate: calc(var(--tw) * 0) calc(0px - var(--tw) * 0);
+    rotate: 0deg;
+  }
+}

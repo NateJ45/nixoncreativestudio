@@ -83,7 +83,82 @@ import { wireAsk } from './ask.js';
       st.h = st.scr.offsetHeight;
       st.ew = st.el.offsetWidth;
     });
-    wake();
+    if (cssMode) placeCss(H, r);
+    else wake();
+  }
+  /* The windows tied to the scroll (churches.css, .ch-css): the browser moves them; this only
+     measures, on load and resize. Off under reduced motion and where scroll-driven animation is
+     missing, where the frame loop below runs them as before. */
+  var cssMode =
+    !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+  var box = $('.ch'),
+    marks = [];
+  function px(v) {
+    return v.toFixed(1) + 'px';
+  }
+  function placeCss(H, r) {
+    var big = wide.matches;
+    box.style.setProperty('--ch-s0', px(mark.s0));
+    box.style.setProperty('--ch-s1', px(Math.max(mark.s0 + 1, mark.s1)));
+    stands.forEach(function (st) {
+      var a, b;
+      if (big) {
+        a = st === A ? mark.a0 : mark.b0;
+        b = st === A ? mark.a1 : mark.b1;
+      } else {
+        /* On a phone each window sits in the page, and its screen moves as it crosses yours. */
+        a = pageY(st.el) - H * 0.6;
+        b = a + H * 0.6 + st.el.offsetHeight * 0.15;
+      }
+      /* Each stop as a place on the page and a point in the scroll. A page that would run past
+         the foot of its capture stops at the foot, and the stretch that reaches it ends there. */
+      var fac = st.w / 560,
+        max = Math.max(0, st.long * fac - st.h),
+        n = st.stops.length - 1,
+        ys = [],
+        ps = [];
+      for (var i = 0; i <= n; i++) {
+        ys.push(st.stops[i] * fac);
+        ps.push(a + ((b - a) * i) / n);
+      }
+      for (i = 1; i <= n; i++) {
+        if (ys[i] > max) {
+          var k = ys[i - 1] >= max ? 0 : (max - ys[i - 1]) / (ys[i] - ys[i - 1]);
+          ps[i] = ps[i - 1] + (ps[i] - ps[i - 1]) * k;
+          ys[i] = max;
+        }
+        if (ys[i - 1] > max) ys[i - 1] = max;
+      }
+      for (i = 0; i <= n; i++) {
+        st.img.style.setProperty('--ch-y' + i, px(-ys[i]));
+        st.img.style.setProperty('--ch-p' + i, px(Math.max(i ? ps[i - 1] + 1 : -1e5, ps[i])));
+      }
+    });
+    /* The point you are reading sits on a white card: where each one's middle is on the page,
+       for the scroll listener below to compare against. */
+    marks = r;
+    readNow();
+  }
+  /* The one whose middle is nearest 45% of the way down the screen, once its top is above 80%. */
+  function readNow() {
+    var H = innerHeight,
+      y = scrollY,
+      best = -1,
+      bd = 1e9;
+    if (wide.matches)
+      marks.forEach(function (m, i) {
+        var d = Math.abs(m.c - y - H * 0.45);
+        if (d < bd && m.t - y < H * 0.8) {
+          bd = d;
+          best = i;
+        }
+      });
+    pts.forEach(function (p, i) {
+      if (p._on !== (i === best)) {
+        p._on = i === best;
+        p.classList.toggle('on', p._on);
+      }
+    });
   }
   function along(st, t) {
     var n = st.stops.length - 1,
@@ -245,12 +320,26 @@ import { wireAsk } from './ask.js';
     still();
     return;
   }
-  stands.forEach(function (st) {
-    st.img.addEventListener('load', wake);
-  });
-  addEventListener('scroll', wake, { passive: true });
+  if (cssMode) {
+    box.classList.add('ch-css');
+    addEventListener('scroll', readNow, { passive: true });
+  } else {
+    stands.forEach(function (st) {
+      st.img.addEventListener('load', wake);
+    });
+    addEventListener('scroll', wake, { passive: true });
+  }
   addEventListener('resize', layout);
   addEventListener('load', layout);
   if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
   layout();
+  if (cssMode) {
+    /* On arrival the first window rises and the second slides out from behind it. The slide only
+       on a page opened above the swap, the one place it starts from. */
+    box.classList.add('ch-intro');
+    if (scrollY < mark.s0) box.classList.add('ch-out');
+    setTimeout(function () {
+      box.classList.remove('ch-intro', 'ch-out');
+    }, 1500);
+  }
 })();
