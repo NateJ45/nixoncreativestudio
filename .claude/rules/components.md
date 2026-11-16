@@ -30,7 +30,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 
 ## The deck and shared pieces
 
-- `Tile`: a client's phone window, or with `desk` a large desktop browser window (a real link to the case study; `data-direct` keeps it a link). Takes a `Client` from `getClients()`. The footage is only fetched when something asks the window to play. Every window carries `data-sheen` and `data-cursor="Open"`, and its screen shows the client's paper under a bar of their colour until its picture paints.
+- `Tile`: a client's phone window, or with `desk` a large desktop browser window (a real link to the case study; `data-direct` keeps it a link). Takes a `Client` from `getClients()`. The footage is only fetched when something asks the window to play. Every window carries `data-sheen` and `data-cursor="Open"`, and its screen shows the client's paper under a bar of their colour until its picture paints. `priority="low"` (Home's dealt hand) gives the phone still `fetchpriority="low"`, so a first-screen window that is not the page's main picture loads after the stylesheets and the font; never put it on a window that is a page's largest picture.
 - `Caption`: the name and sector under a window; pass `index` to number it.
 - `SectorLean`: the whole of a lean sector page (/schools/, /nonprofits/, /small-business/), drawn from `src/data/sector-pages.ts`.
 - `QuoteBand`: a client's quote on their own color, read from the study's `testimonials` (`slug`, `quote` index, `flip`). It throws if the quote does not exist.
