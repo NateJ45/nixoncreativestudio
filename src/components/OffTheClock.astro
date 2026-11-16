@@ -139,7 +139,7 @@ const cards: Card[] = [
               src={c.photo.src}
               alt={c.photo.alt}
               style={c.photo.position ? `object-position: ${c.photo.position}` : undefined}
-              widths={[360, 720, 1080]}
+              widths={[480, 960]}
               sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 32rem"
               loading="lazy"
               decoding="async"
@@ -159,7 +159,7 @@ const cards: Card[] = [
                     <Image
                       src={p.data.image}
                       alt={p.data.alt}
-                      widths={[480, 800, 1200]}
+                      widths={[560, 1120]}
                       sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 44rem"
                       loading="lazy"
                       decoding="async"
@@ -198,7 +198,7 @@ const cards: Card[] = [
               <Image
                 src={sanctuary}
                 alt="A Sunday morning at Crestview: the congregation in a white sanctuary as the band leads worship."
-                widths={[480, 800, 1200]}
+                widths={[480, 960]}
                 sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 32rem"
                 loading="lazy"
                 decoding="async"
@@ -223,8 +223,12 @@ const cards: Card[] = [
             <div class="otc-course" data-otc-course>
               <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={courseLabel}>
                 {/* The whole course, faint, so the shape is there before the line is drawn. */}
-                <path class="oc-ghost" d={courseD} />
-                <path class="oc-line" d={courseD} pathLength="1" />
+                {/* The trace once, drawn twice: <use> keeps the page light (the HTML budget). */}
+                <defs>
+                  <path id="oc-trace" d={courseD} pathLength="1" />
+                </defs>
+                <use class="oc-ghost" href="#oc-trace" />
+                <use class="oc-line" href="#oc-trace" />
                 {/* Start and finish: every loop comes back to the aid station. */}
                 <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
               </svg>
