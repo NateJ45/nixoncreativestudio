@@ -3028,6 +3028,36 @@ h1.giant b {
 .band-print-tall {
   aspect-ratio: 3 / 4;
 }
+/* A hand of prints (PrintFan.astro): the first on top, up to two behind it at an angle, which fan
+   wider on hover. The top print keeps its own class's tilt; the two behind take the fan's. */
+.fan {
+  display: grid;
+}
+.fan > .fan-p {
+  grid-area: 1 / 1;
+  transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.fan > .fan-p:first-child {
+  z-index: 2;
+}
+.fan > .fan-p:nth-child(2) {
+  transform: translate(-16%, -7%) rotate(-10deg);
+}
+.fan > .fan-p:nth-child(3) {
+  z-index: 1;
+  transform: translate(15%, 8%) rotate(9deg);
+}
+.fan:hover > .fan-p:nth-child(2) {
+  transform: translate(-24%, -9%) rotate(-14deg);
+}
+.fan:hover > .fan-p:nth-child(3) {
+  transform: translate(23%, 10%) rotate(13deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fan > .fan-p {
+    transition: none;
+  }
+}
 .band-flip {
   grid-template-columns: clamp(11rem, 18vw, 16.5rem) minmax(0, 1fr);
 }
@@ -3040,8 +3070,10 @@ h1.giant b {
 .band-flip .band-w .tile:focus-visible {
   transform: rotate(3deg) scale(1.03);
 }
-/* A band with every quote (QuoteBand `cycle`): the quotes and phones stack in one cell each, so the
-   band holds the longest one's height, and the color eases across as you step. */
+/* A band with every quote (QuoteBand `cycle`): the quotes and phones stack in one cell each, and the
+   color eases across as you step. The phones all hold one size, but the quotes do not: the hidden
+   ones leave the layout (below), so the band fits the quote in front of you and quote-cycle.js eases
+   its height across as you step. */
 .band-q,
 .band-w {
   display: grid;
@@ -3153,12 +3185,11 @@ h1.giant b {
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
-/* On a phone the band stacks, so holding the longest quote's height leaves a hole above the phone.
-   There it fits the quote in front of you; the buttons are above it, so they still never move. */
-@media (max-width: 52rem) {
-  .band-cycle .band-s[inert] {
-    display: none;
-  }
+/* The band fits the quote in front of you (changed 2026-11-16, on a phone since before): holding
+   the longest quote's height left the short ones floating in a band cut for Staci's. The buttons
+   sit above the quote, so they still never move. */
+.band-cycle .band-s[inert] {
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .band-cycle,

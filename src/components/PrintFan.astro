@@ -1,0 +1,47 @@
+---
+/* A small hand of my photographs from one client, for a quote that is not about a website (the
+   home band's carousel and /churches). The first is the print on top; up to two more peek out
+   behind it at an angle and fan wider on hover (.fan in kit.css).
+
+   Each print is cut to 3:4 at build time (fit cover), not cropped by the browser out of a 3:2
+   file. The browser crop is what made the print soft on a big screen (fixed 2026-11-16): a
+   400px-wide landscape file cropped to a portrait 300px wide shows only about 270 of its pixels,
+   stretched over 300 or more. */
+import { getEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+
+interface Props {
+  /** Ids from src/content/photos, the top print first. Only the first three are used. */
+  ids: string[];
+  /** The print's class, for its corners, shadow and tilt (.band-print, .study-print). */
+  printClass: string;
+  sizes: string;
+}
+const { ids, printClass, sizes } = Astro.props;
+
+const shots = await Promise.all(
+  ids.slice(0, 3).map(async (id) => {
+    const entry = await getEntry('photos', id);
+    if (!entry) throw new Error(`PrintFan: no photograph ${id}`);
+    return entry.data;
+  }),
+);
+---
+
+<span class="fan" data-n={shots.length}>
+  {shots.map((s, i) => (
+    <Image
+      class:list={['fan-p', printClass]}
+      style={`--i:${i}`}
+      src={s.image}
+      alt={i ? '' : s.alt}
+      width={960}
+      height={1280}
+      fit="cover"
+      widths={[320, 480, 640, 960]}
+      sizes={sizes}
+      loading="lazy"
+      decoding="async"
+    />
+  ))}
+</span>

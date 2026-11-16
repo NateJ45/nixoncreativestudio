@@ -4,9 +4,9 @@
 // The same rules hold: never fabricate one (CLAUDE.md never-break rule 9). Every quote is copied
 // character for character from the client's own words and recorded in the vault note
 // projects/ncs-testimonials.md. `photo` is the person's face (`/assets/people/<name>`, with the
-// -96.webp and -192.webp files beside it), used only with their blessing. `shot` is one of the
-// photographs on /photography (an id in src/content/photos), shown where a website quote shows the
-// client's site. `accent` and `paper` colour the home band while the quote is up, the same as a
+// -96.webp and -192.webp files beside it), used only with their blessing. `shots` are photographs
+// on /photography (ids in src/content/photos), shown as a small fan of prints (PrintFan.astro) where
+// a website quote shows the client's site; the first is the print on top. `accent` and `paper` colour the home band while the quote is up, the same as a
 // client's palette; `paper` must read on `accent`.
 //
 // Shown in the home band's carousel (QuoteBand.astro) and, for a church, on /churches.
@@ -28,8 +28,8 @@ export interface StandaloneQuote {
   /** Set when the words are a public Google review: the stars and a link to the review itself
    *  (the long google.com/maps/reviews/... form, which opens without a sign-in). */
   source?: { platform: 'google'; url: string; rating: number };
-  /** A photograph from src/content/photos. */
-  shot: string;
+  /** Up to three photographs from src/content/photos, the top print first. */
+  shots: string[];
   accent: string;
   paper: string;
   /** The sector pages it belongs on, by their path (e.g. 'churches'). */
@@ -54,7 +54,7 @@ export const QUOTES: StandaloneQuote[] = [
       url: 'https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT20xeVQyaDZMV1l3TldaTVIySnlURmt0WVhsS2RtYxAB!2m1!1s0x0:0x799871759370794f!3m1!1s2@1:CAIQACodChtycF9oOm1yT2h6LWYwNWZMR2JyTFktYXlKdmc%7C%7C',
       rating: 5,
     },
-    shot: 'vbs-song',
+    shots: ['vbs-song', 'vbs-hug', 'choir-sing'],
     accent: '#24453a',
     paper: '#f3eee2',
     sectors: ['churches'],

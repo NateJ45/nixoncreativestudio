@@ -140,7 +140,8 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
 - **Reid Design and West Chester Preschool** now carry their public Google reviews (2026-11-15).
 - **Crestview Presbyterian (2026-11-16):** Jessica Sams's Google review is about photography, not a
   website, so it lives in `src/data/quotes.ts` (quotes with no case study) and shows in the home
-  band and on /churches with one of the VBS photographs, its stars and its Google link.
+  band and on /churches with a fan of three Crestview photographs (`shots`, PrintFan.astro), its
+  stars and its Google link.
 - **Still missing: Presbyterian Academy, MAS Monograms.** Those
   studies show no quote until a real one arrives. The ask is Nathan's to send
   (a short three-question email; it can be drafted for him, never sent for
