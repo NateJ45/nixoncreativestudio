@@ -58,8 +58,7 @@
     0 0;
   mask-repeat: no-repeat;
   mask-composite: intersect;
-  /* It eases back a touch as the windows settle (--settle, below). */
-  scale: calc(1.07 - 0.07 * var(--settle, 1));
+  /* It eases back a touch as the windows settle (s-settle-bg, below). */
 }
 @supports not (mask-composite: intersect) {
   .s-bg {
@@ -84,44 +83,88 @@
 }
 
 /* The opening scrubs. Where the browser has scroll-driven animation, the first two thirds of a
-   screen of scrolling carry one number, --settle, from 0 to 1, and the windows read it: they start
-   a touch large and tilted and come level and to size. It is a registered property so it can be
-   animated, and it starts at 1, so with no support (or reduced motion) the hero is simply
-   settled, as it always was. Nothing is hidden at any point, and the desktop pane keeps its
-   `study-hero` name: a window growing in from the last page lands on the pane as it stands at the
-   top of the page, tilt and all. The throw-in (study.js) uses `transform`; this uses `scale`,
-   `rotate` and `translate`, so the two add up instead of fighting. */
-@property --settle {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
-@keyframes s-settle {
+   screen of scrolling bring the windows level and to size: they start a touch large and tilted.
+   Each one runs its own animation of `scale`, `rotate` and `translate` on the scroll, which the
+   browser can run off the main thread; one animated number on the whole hero, read by each
+   window, restyled the hero every frame instead (the 60 fps pass, November 2026). With no support
+   (or reduced motion) the hero is simply settled, as it always was. Nothing is hidden at any
+   point, and the desktop pane keeps its `study-hero` name: a window growing in from the last page
+   lands on the pane as it stands at the top of the page, tilt and all. The throw-in (study.js)
+   uses `transform`; this uses the separate properties, so the two add up instead of fighting.
+   A pane also carries fan-safe (below) while the script has not thrown it, so the panes list
+   both animations, with selectors strong enough to win over that rule. */
+@keyframes s-settle-bg {
   from {
-    --settle: 0;
+    scale: 1.07;
   }
   to {
-    --settle: 1;
+    scale: 1;
+  }
+}
+@keyframes s-settle-home {
+  from {
+    scale: 1.06;
+    rotate: -2.2deg;
+    translate: 0 2.5%;
+  }
+  to {
+    scale: 1;
+    rotate: 0deg;
+    translate: 0 0;
+  }
+}
+@keyframes s-settle-phone {
+  from {
+    scale: 1.1;
+    rotate: 4deg;
+    translate: 0 -5%;
+  }
+  to {
+    scale: 1;
+    rotate: 0deg;
+    translate: 0 0;
   }
 }
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .s-hero {
-      animation: s-settle cubic-bezier(0.3, 0, 0.3, 1) both;
+    .s-bg,
+    .s-fan .pane.p-home,
+    .s-fan .pane.p-phone,
+    .js.hero-morph .s-fan .pane.p-home {
+      animation: s-settle-home cubic-bezier(0.3, 0, 0.3, 1) both;
+      animation-timeline: scroll(root block);
+      animation-range: 0px 68vh;
+    }
+    .s-bg {
+      animation-name: s-settle-bg;
+    }
+    .s-fan .pane.p-phone {
+      animation-name: s-settle-phone;
+    }
+    .js .s-fan .pane.p-home,
+    .js .s-fan .pane.p-phone {
+      animation:
+        fan-safe 0s 3s forwards,
+        s-settle-home cubic-bezier(0.3, 0, 0.3, 1) both;
+      animation-timeline: auto, scroll(root block);
+      animation-range:
+        normal,
+        0px 68vh;
+    }
+    .js .s-fan .pane.p-phone {
+      animation-name: fan-safe, s-settle-phone;
+    }
+    /* A morph is landing on the pane: no fan-safe, the settle still runs. */
+    .js.hero-morph .s-fan .pane.p-home {
+      animation: s-settle-home cubic-bezier(0.3, 0, 0.3, 1) both;
       animation-timeline: scroll(root block);
       animation-range: 0px 68vh;
     }
     .s-fan .p-home {
       transform-origin: 0% 60%;
-      scale: calc(1.06 - 0.06 * var(--settle));
-      rotate: calc(-2.2deg * (1 - var(--settle)));
-      translate: 0 calc(2.5% * (1 - var(--settle)));
     }
     .s-fan .p-phone {
       transform-origin: 100% 40%;
-      scale: calc(1.1 - 0.1 * var(--settle));
-      rotate: calc(4deg * (1 - var(--settle)));
-      translate: 0 calc(-5% * (1 - var(--settle)));
     }
     /* A wide screen that the hero exactly fills: the hero holds still while the windows settle,
        then lets go and the story takes over. The holder is taller by the same distance the

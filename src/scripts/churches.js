@@ -73,6 +73,9 @@ import { wireAsk } from './ask.js';
     mark.s1 = r[2].t - H * 0.5;
     mark.b0 = mark.s1 - H * 0.1;
     mark.b1 = r[3].c - H * 0.45;
+    pts.forEach(function (p) {
+      ui.top(p);
+    });
     /* The sizes the frame needs, taken here and not every frame: read mid-frame, straight after the
        last window moved, each one made the browser lay the page out again. */
     stands.forEach(function (st) {

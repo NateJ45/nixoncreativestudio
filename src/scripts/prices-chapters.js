@@ -24,6 +24,9 @@ if (nav) {
       }),
     at = null,
     raf = 0;
+  spots.forEach(function (s) {
+    ui.top(s.el);
+  });
   var paint = function () {
     raf = 0;
     /* A chapter is the current one once its top has passed under the bar. */

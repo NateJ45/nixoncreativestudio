@@ -10,6 +10,9 @@
    - `data-live` lets the CSS run the ripple, the pings, the flowing arcs and the light. It is set
      only while the map is on screen, the tab is visible and nobody has pressed Pause.
    - "Pause the map" stops all of it (WCAG 2.2.2) and "Play the map" starts it again.
+   - While the page is being scrolled the looping animations hold still (.cm-hold) and carry on
+     from where they were once it stops. Every frame of them makes the browser lay the map out
+     again, which on a phone cost more than the scroll itself.
 
    Under reduced motion none of that runs and the Pause button stays hidden: the map rests on the
    East, the hand is already fanned, and hover and focus still move the highlight, with no
@@ -78,6 +81,20 @@ if (root) {
     root.toggleAttribute('data-live', running());
     tick();
   };
+
+  var holdT = 0;
+  addEventListener(
+    'scroll',
+    function () {
+      if (!onScreen) return;
+      root.classList.add('cm-hold');
+      clearTimeout(holdT);
+      holdT = setTimeout(function () {
+        root.classList.remove('cm-hold');
+      }, 160);
+    },
+    { passive: true },
+  );
 
   /* Holding the highlight on what you point at or focus, then walking on after a pause. */
   var hold = function (st) {

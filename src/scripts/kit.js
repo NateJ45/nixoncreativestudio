@@ -79,6 +79,7 @@ var geo = { els: new Set(), h: -1 },
   geoStale = function () {
     geo.h = doc.documentElement.scrollHeight;
     geo.els.forEach(function (el) {
+      if (el._geo.live) return;
       var r = el.getBoundingClientRect();
       el._geo.y = r.top + scrollY;
       el._geo.h = r.height;
@@ -92,7 +93,15 @@ addEventListener(
   },
   { passive: true },
 );
-addEventListener('resize', geoStale);
+/* A resize can change what is sticky (About's stage is sticky only on a wide screen), so every
+   remembered place is forgotten and worked out afresh the next time it is asked for. */
+addEventListener('resize', function () {
+  geo.els.forEach(function (el) {
+    el._geo = null;
+  });
+  geo.els.clear();
+  geo.h = -1;
+});
 addEventListener('load', geoStale);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(geoStale);
 if ('ResizeObserver' in window) {
@@ -145,7 +154,7 @@ export var ui = {
           break;
         }
       }
-      if (!g.live) geo.els.add(el);
+      geo.els.add(el);
     }
     if (g.live) return el.getBoundingClientRect().top;
     return g.y - scrollY;
@@ -347,10 +356,28 @@ export var ui = {
     lift = ui.spring(240, 19, 0),
     onCard = 0,
     raf = 0,
-    last = 0;
+    last = 0,
+    deckW = 0,
+    deckGw = 0;
+  /* The deck's widths, taken when they change, not every frame: read after the cards had moved,
+     they made the browser lay the page out again. Where the stage and the name sit is measured
+     now, before any scrolling, for the same reason (ui.top). */
+  var deckSize = function () {
+    deckW = stage.offsetWidth;
+    deckGw = gcs.length ? gcs[0].g.offsetWidth : 0;
+  };
+  deckSize();
+  if ('ResizeObserver' in window)
+    new ResizeObserver(function () {
+      deckSize();
+      paint();
+    }).observe(stage);
+  else addEventListener('resize', deckSize);
+  ui.top(stage);
+  if (nameEl) ui.top(nameEl);
   function paint() {
-    var W = stage.offsetWidth,
-      gw = gcs.length ? gcs[0].g.offsetWidth : 0,
+    var W = deckW,
+      gw = deckGw,
       /* Out to the right of the deck, as far as the panel leaves room. */
       reach = Math.min(gw * 0.4, (W - gw) / 2 + 24),
       spread = Math.min(W * 0.1, 46);
@@ -608,6 +635,7 @@ if (bands.length && !reduce) {
      quote), and the browser restyles all of them each frame. --bs and --bk are registered as not
      inherited (kit.css), so each write restyles one element. */
   var bparts = bands.map(function (el) {
+    ui.top(el);
     return { bg: el.querySelector(':scope > .band-bg'), w: el.querySelector(':scope > .band-w') };
   });
   var bframe = function (now) {
@@ -1300,6 +1328,10 @@ var weighs = [].map.call(doc.querySelectorAll('[data-weigh]'), function (el) {
   };
 });
 if (weighs.length && !reduce) {
+  /* Measured now, before any scrolling (ui.top), not on the first frame after something moved. */
+  weighs.forEach(function (w) {
+    ui.top(w.el);
+  });
   var wraf = 0,
     wlast = 0;
   var wwake = function () {
@@ -1321,7 +1353,10 @@ if (weighs.length && !reduce) {
       w.g += (t - w.g) * (1 - Math.pow(0.0015, dt));
       if (Math.abs(t - w.g) > 0.8) live = true;
       else w.g = t;
-      var n = Math.round(w.g);
+      /* In steps of 20: every new weight makes the browser lay the page out again, and at one
+         step a frame that was most of a phone's frame. Twenty-five steps from 200 to 700 still
+         read as one smooth gain, and the spring carries it. */
+      var n = Math.round(w.g / 20) * 20;
       if (n !== w.shown) {
         w.shown = n;
         w.el.style.fontWeight = n;
@@ -1389,6 +1424,9 @@ var lines = builds.map(function (el) {
   };
 });
 if (lines.length) {
+  lines.forEach(function (l) {
+    ui.top(l.el);
+  });
   /* Its own names (l for line). These blocks sit in one module scope, where `var` is shared: until
      2026-11-15 this loop reused the quote bands' braf, bwake and bframe, so on a page with both (About)
      the bands' scroll handler ran this frame instead and the band's color never opened out. */

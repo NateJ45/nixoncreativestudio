@@ -224,7 +224,9 @@ function measure() {
       l.thumb.style.height = l.th + 'px';
     }
     l.h = h;
+    if (l.self) ui.top(l.win);
   });
+  ui.top(story);
   wake();
 }
 function wake() {
