@@ -2840,6 +2840,26 @@ html:not(.js) .reply-rows li {
 html:not(.js) .jump-prog {
   display: none;
 }
+/* Tied to the scroll where the browser can (prices-chapters.js adds .jump-css and measures the
+   stretch, --jp0 to --jp1): the browser fills the line in step with the scroll. Elsewhere the
+   script writes --jp as before. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jump-css .jump-prog i {
+      animation: jump-fill linear both;
+      animation-timeline: scroll(root block);
+      animation-range: var(--jp0) var(--jp1);
+    }
+  }
+}
+@keyframes jump-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
 /* Ten links on one line from a laptop up. */
 @media (min-width: 80rem) {
   .jump .jump-row {
@@ -3340,5 +3360,25 @@ html:not(.js) .jump-prog {
   /* Only while the script is driving are the lines held back. */
   .how-live path {
     stroke-dashoffset: 1;
+  }
+}
+/* Tied to the scroll where the browser can (prices-steps.js adds .how-css and gives each line its
+   stretch, --hw-a to --hw-b): the browser draws each line in step with the scroll. Elsewhere the
+   script draws them as before. */
+@supports (animation-timeline: scroll()) {
+  @media screen and (min-width: 62rem) and (prefers-reduced-motion: no-preference) {
+    .how-css path {
+      animation: how-line linear both;
+      animation-timeline: scroll(root block);
+      animation-range: var(--hw-a) var(--hw-b);
+    }
+  }
+}
+@keyframes how-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
