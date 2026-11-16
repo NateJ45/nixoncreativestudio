@@ -856,14 +856,12 @@ html:not(.js) .oc-again {
   transform: rotate(4deg);
 }
 
-/* The postcard: Edinburgh by day crossfading into Cincinnati by night, the flags laid over the
-   sky, the 2017 flight drawn across it, the copy below on the night. Always dark on both sides of
-   the page. The art box keeps one shape (1200 x 560) at every width so the flight's two ends stay
-   on the monument and the tower. The stamps ride the copy, lighter blue for the dark card. */
+/* The postcard: Edinburgh by day crossfading into Cincinnati by night, each with its flag in the
+   sky, the 2017 flight drawn across it, and the boarding pass below on the night. Always dark on
+   both sides of the page. The art box keeps one shape (1200 x 560) at every width so the flight's
+   two ends stay on the monument and the tower. */
 .crossing {
   --night: #0b0e1f;
-  --accent: #a9b4ff;
-  --stamp-paper: var(--night);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -992,57 +990,226 @@ html:not(.js) .oc-again {
 .cx-place-to {
   right: clamp(0.9rem, 2.4cqi, 1.75rem);
 }
+/* ---- The boarding pass: the words under the postcard's pictures (Crossing.astro) ------------
+   A cream paper ticket on the night card: the route in big airport codes with a plane between,
+   the fields in small capitals, and a tear-off stub behind a perforation carrying the two stamps
+   (studio blue ink on the paper) and a barcode. The notches at either end of the perforation are
+   circles in the card's own night, so they read as bites out of the paper. Its colours are fixed,
+   like the card's, so the ticket is the same on both sides of the page. Under 44rem the stub drops
+   below the main part and the perforation turns horizontal. */
 .cx-copy {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1.25rem 2rem;
-  padding: clamp(1.1rem, 2.2vw, 1.75rem);
-  padding-top: clamp(0.75rem, 1.5vw, 1.25rem);
+  padding: clamp(0.9rem, 2vw, 1.5rem);
+  padding-top: clamp(0.4rem, 1vw, 0.75rem);
 }
-.cx-copy > div {
+.pass {
+  --paper: #f3eee2;
+  --ink: #1b1d2a;
+  --faint: #6b6a63;
+  --rule: rgba(27, 29, 42, 0.16);
+  --accent: #2f3fe6;
+  --stamp-paper: var(--paper);
+  --notch: 0.85rem;
+  position: relative;
   display: grid;
-  gap: 0.4rem;
-  max-width: 30rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 255, 255, 0.55), transparent 55%), var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1.4rem 2.2rem -1.6rem rgba(0, 0, 0, 0.7);
 }
-.cx-copy .label {
-  color: rgba(255, 255, 255, 0.7);
+.pass-main {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: clamp(1rem, 2.2vw, 1.6rem);
 }
-.cx-copy h3 {
-  font-size: clamp(1.4rem, 2.6vw, 2.1rem);
-  line-height: 1.05;
+.pass-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  font: 600 0.6875rem / 1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.pass-route {
+  display: grid;
+  grid-template-columns: auto minmax(2.5rem, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.6rem, 1.6vw, 1.25rem);
+}
+.pass-port {
+  display: grid;
+  gap: 0.25rem;
+}
+.pass-port:last-child {
+  text-align: right;
+}
+.pass-port b {
+  font: 700 clamp(2.2rem, 5.5vw, 3.6rem) / 0.9 var(--display);
   letter-spacing: -0.02em;
-  color: #fff;
 }
-.cx-copy p:not(.label) {
-  color: rgba(255, 255, 255, 0.78);
+.pass-port span {
+  font: 500 0.75rem / 1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+/* The plane at the end of a dotted track that stretches to fill the gap between the codes. */
+.pass-plane {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.pass-plane::before {
+  content: '';
+  flex: 1;
+  border-top: 2px dotted rgba(27, 29, 42, 0.35);
+}
+.pass-plane svg {
+  flex: none;
+  width: 1.75rem;
+  height: 1.3rem;
+  fill: var(--accent);
+}
+.pass h3 {
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.pass-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, auto));
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--rule);
+}
+.pass-fields dt {
+  margin-bottom: 0.3rem;
+  font: 600 0.625rem / 1 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.pass-fields dd {
+  margin: 0;
+  font: 600 0.9375rem / 1.25 var(--body);
+}
+.pass-note {
+  font-size: 0.875rem;
+  color: var(--faint);
   text-wrap: pretty;
+}
+/* The stub, behind the perforation, with a notch bitten out at each end of it. */
+.pass-stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: clamp(12rem, 22vw, 15rem);
+  padding: clamp(1rem, 2.2vw, 1.6rem) clamp(0.9rem, 1.8vw, 1.25rem);
+  border-left: 2px dashed var(--rule);
+}
+.pass-stub::before,
+.pass-stub::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--notch) * -1 - 1px);
+  width: calc(var(--notch) * 2);
+  height: calc(var(--notch) * 2);
+  border-radius: 50%;
+  background: var(--night);
+}
+.pass-stub::before {
+  top: calc(var(--notch) * -1);
+}
+.pass-stub::after {
+  bottom: calc(var(--notch) * -1);
 }
 .cx-stamps {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 0.9rem 1.25rem;
+  align-items: center;
+  gap: 0.8rem;
   margin: 0;
-  padding: 0 0.25rem 0.25rem;
+  padding: 0;
   list-style: none;
 }
 .cx-stamps .stamp {
   float: none;
   margin: 0;
 }
+.cx-stamps .stamp-word {
+  font-size: 1.05rem;
+}
 .crossing .stamp.peel:focus-visible {
-  outline-color: #fff;
+  outline-color: var(--ink);
+}
+.pass-stub-route {
+  margin-top: auto;
+  font: 700 1.05rem / 1 var(--display);
+  letter-spacing: 0.06em;
+}
+.pass-stub-route span {
+  font: 500 0.625rem / 1 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.pass-code {
+  width: 100%;
+  height: 2.6rem;
+  fill: var(--ink);
+  opacity: 0.85;
 }
 
 @media (max-width: 44rem) {
+  .pass {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pass-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pass-stub {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+    border-left: 0;
+    border-top: 2px dashed var(--rule);
+  }
+  .pass-stub::before,
+  .pass-stub::after {
+    top: calc(var(--notch) * -1 - 1px);
+    bottom: auto;
+  }
+  .pass-stub::before {
+    left: calc(var(--notch) * -1);
+  }
+  .pass-stub::after {
+    left: auto;
+    right: calc(var(--notch) * -1);
+  }
   .cx-stamps {
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
+    justify-content: center;
+  }
+  .pass-code {
+    height: 2.2rem;
   }
 }
+
 @media (max-width: 60rem) {
   .place {
     grid-template-columns: minmax(0, 1fr);
