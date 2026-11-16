@@ -10,6 +10,7 @@ import Closing from '../components/Closing.astro';
 import OffTheClock from '../components/OffTheClock.astro';
 import PhotoStack from '../components/PhotoStack.astro';
 import ClientMap from '../components/ClientMap.astro';
+import Crossing from '../components/Crossing.astro';
 import engagement from '../assets/about/family-engagement.jpg';
 import picnic from '../assets/about/family-picnic.jpg';
 import aquarium from '../assets/about/family-aquarium.jpg';
@@ -44,13 +45,24 @@ const runningPhotos = [
   },
   { src: runSelfie, alt: 'Nathan in sunglasses and a running shirt, out on a run.' },
 ];
-/* The stamps under "One person.": a word, and the line under it when it lifts. Every one repeats
-   something this page already says (the ledger and the story), so add one only with its source. */
-const stamps = [
-  { word: 'One person', under: 'On every project' },
-  { word: 'Since 2020', under: 'Building websites' },
-  { word: 'Cincinnati', under: 'Web work anywhere' },
+/* The facts under "One person.", each with its stamp: a word, and the line under it when it
+   lifts. Every one repeats something this page already says (the story), so add one only with
+   its source. The last two stamp the postcard (Crossing.astro). */
+const facts = [
+  {
+    label: 'On every project',
+    line: 'Strategy, design, the build and, when needed, the photos.',
+    stamp: { word: 'One person', under: 'Start to finish' },
+  },
+  {
+    label: 'Building websites since 2020',
+    line: 'After years behind a camera.',
+    stamp: { word: 'Since 2020', under: 'Building websites' },
+  },
+];
+const placeStamps = [
   { word: 'From Scotland', under: 'Here since 2017' },
+  { word: 'Cincinnati', under: 'Web work anywhere' },
 ];
 const heading = `A one-person studio for organizations that <b>take their work seriously.</b>`;
 ---
@@ -150,42 +162,33 @@ const heading = `A one-person studio for organizations that <b>take their work s
         <span>One person.</span>
       </h2>
     </div>
-    <dl class="ledger ledger-facts">
-      <div>
-        <dt class="label">On every project</dt>
-        <dd>Strategy, design, the build and, when needed, the photos.</dd>
-      </div>
-      <div>
-        <dt class="label">Building websites since 2020</dt>
-        <dd>After years behind a camera.</dd>
-      </div>
-      <div>
-        <dt class="label">Based in Cincinnati</dt>
-        <dd>In person around the region, anywhere for web work.</dd>
-      </div>
-    </dl>
-    {/* Four stamps, each made from a fact already on this page (the ledger above, and the
-        story). Hover, focus or a tap lifts one to show a second line under it (stamp.css, a few
+    {/* The facts as two cards, each with its stamp, beside the postcard (Crossing.astro).
+        Hover, focus or a tap lifts a stamp to show a second line under it (stamp.css, a few
         lines in about.js). Real buttons, and both lines are in the markup, so a screen reader
         and a page with no script get every word. */}
-    <ul class="peels" aria-label="The same facts, stamped">
-      {stamps.map((s) => (
-        <li>
-          <button
-            type="button"
-            class="stamp peel"
-            data-peel
-            data-cursor="Lift"
-            aria-pressed="false"
-          >
-            <span class="stamp-face">
-              <span class="stamp-word">{s.word}</span>
-            </span>
-            <span class="stamp-under">{s.under}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div class="place">
+      <ul class="facts">
+        {facts.map((f) => (
+          <li class="fact">
+            <p class="label">{f.label}</p>
+            <p class="fact-line">{f.line}</p>
+            <button
+              type="button"
+              class="stamp peel"
+              data-peel
+              data-cursor="Lift"
+              aria-pressed="false"
+            >
+              <span class="stamp-face">
+                <span class="stamp-word">{f.stamp.word}</span>
+              </span>
+              <span class="stamp-under">{f.stamp.under}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <Crossing stamps={placeStamps} />
+    </div>
   </section>
 
   <ClientMap />

@@ -363,7 +363,7 @@ st.forEach(function (s) {
   });
 });
 
-/* The stamps under "One person." (src/styles/stamp.css). Hover and keyboard focus lift one in
+/* The stamps on the fact cards and the postcard under "One person." (src/styles/stamp.css). Hover and keyboard focus lift one in
    CSS alone; a tap or a click holds it up, and the next one lets it down. */
 [].forEach.call(doc.querySelectorAll('[data-peel]'), function (b) {
   b.addEventListener('click', function () {
@@ -372,6 +372,51 @@ st.forEach(function (s) {
     if (ui.cue) ui.cue('tick');
   });
 });
+
+/* The postcard's flags (about.css, "The flags"): each loop gets its poster and sources only as the
+   card comes near the screen, plays while the card is on screen and pauses when it leaves. With
+   reduced motion or Data Saver, only the poster: the flags still show, standing still. */
+var crossing = doc.querySelector('.crossing');
+var saveData = navigator.connection && navigator.connection.saveData;
+if (crossing && 'IntersectionObserver' in window) {
+  var waves = [].slice.call(crossing.querySelectorAll('.cx-wave'));
+  var still = reduce || saveData;
+  new IntersectionObserver(
+    function (es) {
+      var on = es[0].isIntersecting;
+      waves.forEach(function (v) {
+        if (on && !v.dataset.loaded) {
+          v.dataset.loaded = '1';
+          v.poster = v.dataset.poster;
+          if (still) {
+            // A poster shows once the video has nothing to play; make that visible now.
+            v.classList.add('is-on');
+            return;
+          }
+          [
+            ['webm', 'video/webm'],
+            ['mp4', 'video/mp4'],
+          ].forEach(function (t) {
+            var s = doc.createElement('source');
+            s.src = v.dataset[t[0]];
+            s.type = t[1];
+            v.appendChild(s);
+          });
+          v.addEventListener('playing', function () {
+            v.classList.add('is-on');
+          });
+          v.load();
+        }
+        if (still) return;
+        if (on) {
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        } else v.pause();
+      });
+    },
+    { rootMargin: '150px 0px' },
+  ).observe(crossing);
+}
 
 addEventListener('scroll', wake, { passive: true });
 addEventListener('resize', layout);

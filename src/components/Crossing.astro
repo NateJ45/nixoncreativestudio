@@ -1,0 +1,120 @@
+---
+/* Crossing: About's postcard under "One person.". Two photographs crossfade into each other:
+   Edinburgh by day from Calton Hill (Nathan's own) on the left, Cincinnati by night across the
+   Ohio on the right (Tim Thorn, Unsplash License, credited on /colophon/). A flag flies in each,
+   the Saltire and the Stars and Stripes, and the 2017 flight arcs from the monument to the Great
+   American Tower. The words are all in the HTML below the pictures. Styles in
+   src/styles/pages/about.css under "The postcard". */
+import { Image } from 'astro:assets';
+import edinburgh from '../assets/photography/canvas/edinburgh-skyline.jpg';
+import cincinnati from '../assets/about/cincinnati-skyline.jpg';
+import loops from '../data/flag-loops.json';
+
+interface Stamp {
+  word: string;
+  under: string;
+}
+interface Props {
+  stamps: Stamp[];
+}
+const { stamps } = Astro.props;
+
+/* The art box is 1200 x 560 at every width (aspect-ratio in about.css), so the drawing over the
+   photos lines up with them: each photo covers 62% of the width, overlapping in the middle. */
+const W = 1200;
+const H = 560;
+// From the Dugald Stewart monument's dome (left photo) to the Great American Tower's (right).
+const FLIGHT = 'M262 92Q700 -40 1138 96';
+const sizes = '(max-width: 60rem) 62vw, 34rem';
+
+const photos = [
+  { side: 'from', src: edinburgh, loop: loops['flag-saltire'] },
+  { side: 'to', src: cincinnati, loop: loops['flag-us'] },
+];
+---
+
+<figure class="crossing">
+  <div
+    class="cx-art"
+    role="img"
+    aria-label="Edinburgh's skyline by day from Calton Hill, fading into Cincinnati's by night across the Ohio River, the Saltire flying over Edinburgh and the Stars and Stripes over Cincinnati. A dotted flight path joins the two."
+  >
+    {/* Each photograph, then its flag: the same photograph as a short loop with the flag flying
+        in it on a pole, a Blender cloth simulation in gusting wind (scripts/flags/) composited in
+        and looped by `npm run flags:loop`. Each video sits exactly over its photo, with the same
+        crop and crossfade, and fades in once it plays. about.js gives it its poster and sources
+        only as the card comes near; with reduced motion, only the poster (the flag, still). */}
+    {photos.map((p) => (
+      <Fragment>
+        <Image
+          class={`cx-photo cx-${p.side}`}
+          src={p.src}
+          alt=""
+          widths={[480, 800, 1200]}
+          {sizes}
+          loading="lazy"
+          decoding="async"
+        />
+        <video
+          class={`cx-photo cx-${p.side} cx-wave`}
+          aria-hidden="true"
+          muted
+          loop
+          playsinline
+          preload="none"
+          disablepictureinpicture
+          data-poster={p.loop.poster}
+          data-mp4={p.loop.mp4}
+          data-webm={p.loop.webm}
+        />
+      </Fragment>
+    ))}
+    <svg class="cx-trip" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+      <defs>
+        <mask id="cx-fly" maskUnits="userSpaceOnUse" x="0" y="-60" width={W} height={H + 60}>
+          <path
+            class="cx-reveal"
+            d={FLIGHT}
+            fill="none"
+            stroke="#fff"
+            stroke-width="14"
+            pathLength="1"
+          ></path>
+        </mask>
+      </defs>
+      <path class="cx-flight" d={FLIGHT} fill="none" pathLength="1" mask="url(#cx-fly)"></path>
+      <circle cx="262" cy="92" r="6" class="cx-end"></circle>
+      <circle cx="1138" cy="96" r="6" class="cx-end"></circle>
+      <text x="700" y="58" class="cx-year">
+        2017
+      </text>
+    </svg>
+    <p class="cx-place cx-place-from">Edinburgh</p>
+    <p class="cx-place cx-place-to">Cincinnati</p>
+  </div>
+  <figcaption class="cx-copy">
+    <div>
+      <p class="label">Based in Cincinnati</p>
+      <h3>From Scotland, here since 2017</h3>
+      <p>A U.S. citizen since 2022. In person around the region, anywhere for web work.</p>
+    </div>
+    <ul class="cx-stamps" aria-label="Stamped">
+      {stamps.map((s) => (
+        <li>
+          <button
+            type="button"
+            class="stamp peel"
+            data-peel
+            data-cursor="Lift"
+            aria-pressed="false"
+          >
+            <span class="stamp-face">
+              <span class="stamp-word">{s.word}</span>
+            </span>
+            <span class="stamp-under">{s.under}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </figcaption>
+</figure>
