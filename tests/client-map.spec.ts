@@ -166,13 +166,27 @@ test.describe('About: the client map', () => {
     await expect(page.locator('.pk[data-for="reid-design"]')).toBeHidden();
   });
 
+  test("a photography client's name raises its photograph, as a print", async ({ page }) => {
+    await page.goto('/about/');
+    await page.locator('[data-cm]').scrollIntoViewIfNeeded();
+    const name = page.locator('.sc-names a.sc-photo');
+    await name.focus();
+    const print = page.locator('.pk-print[data-for="photo-crestview-presbyterian-church"]');
+    await expect(print).toBeVisible();
+    await expect(print.locator('img')).toHaveAttribute('src', /.webp$/);
+    await name.blur();
+    await expect(print).toBeHidden();
+  });
+
   test.describe('on a phone', () => {
     test.use({ viewport: { width: 390, height: 844 } });
     test('each card shows its clients home pages, and there is no hover preview', async ({
       page,
     }) => {
       await page.goto('/about/');
-      await expect(page.locator('.sc-mini img')).toHaveCount(9);
+      // Nine home-page stills, and three small prints of Crestview's photographs.
+      await expect(page.locator('.sc-mini > span:not(.sc-print) img')).toHaveCount(9);
+      await expect(page.locator('.sc-mini .sc-print img')).toHaveCount(3);
       await expect(page.locator('.sc-mini').first()).toBeVisible();
       await expect(page.locator('.cm-peek')).toBeHidden();
     });

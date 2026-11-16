@@ -3675,7 +3675,7 @@ html.ncs-gated .ncs-overlay {
       0 28px 46px -24px rgba(0, 0, 0, 0.75),
       0 26px 120px -8px color-mix(in oklab, var(--cast) 88%, transparent);
   }
-  :root[data-theme='dark'] .scr img {
+  :root[data-theme='dark'] :is(.scr img, .fc-phone img) {
     filter: brightness(0.75);
     transition: filter 0.5s var(--ease);
   }
@@ -3716,7 +3716,9 @@ html.ncs-gated .ncs-overlay {
   :root[data-theme='dark'] :is(.pc-blue, .t-ink .t-bg, .otc-back) {
     --pcb: var(--fill-deep);
   }
-  :root[data-theme='dark'] :is(.t-ink .t-bg, .otc-back) {
+  /* Every blue card face: the blue tier, a price card's back, About's card backs and the map's
+     lit state card. */
+  :root[data-theme='dark'] :is(.t-ink .t-bg, .otc-back, .pt-back, .sc.on .sc-face) {
     background-color: var(--fill-deep);
   }
   /* The bone cards (the ink price card, the dark tier, the Mine card, the Do card) were the bright
