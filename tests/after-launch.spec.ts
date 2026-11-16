@@ -228,11 +228,20 @@ test.describe('Home', () => {
     await page.reload();
     await page.waitForFunction(() => scrollY > 0);
     await page.waitForTimeout(150);
+    // The window is already in its cell: whether the deal runs in script (an inline transform)
+    // or tied to the scroll in CSS (home.css .deal-css), it shows no movement at all, and the
+    // first-load deal-in does not play.
     const t = await page
       .locator('[data-grid] .tile')
       .first()
-      .evaluate((el) => (el as HTMLElement).style.transform);
-    expect(t).toMatch(/translate3d\(0px, 0px/);
+      .evaluate((el) => {
+        const m = new DOMMatrix(getComputedStyle(el).transform);
+        return { x: m.e, y: m.f, s: m.a };
+      });
+    expect(Math.abs(t.x)).toBeLessThan(1);
+    expect(Math.abs(t.y)).toBeLessThan(1);
+    expect(Math.abs(t.s - 1)).toBeLessThan(0.01);
+    await expect(page.locator('[data-grid]')).not.toHaveClass(/deal-intro/);
   });
 });
 

@@ -157,7 +157,46 @@ function layout() {
     s.sc = cardW / tw;
     s.d = d;
   });
+  if (cssDeal) placeCss();
   wake();
+}
+/* The deal tied to the scroll (home.css, .deal-css): the browser moves the windows; this only
+   measures them. Off under reduced motion and where scroll-driven animation is missing, where the
+   spring below runs the deal as before. */
+var cssDeal =
+  !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+if (cssDeal) {
+  grid.classList.add('deal-css');
+  /* The deal-in plays once, on a page opened at the top. A reload or Back lands where it was. */
+  if (!ui.restored() && scrollY < 2) {
+    grid.classList.add('deal-intro');
+    setTimeout(
+      function () {
+        grid.classList.remove('deal-intro');
+      },
+      260 + st.length * 62 + 1100,
+    );
+  }
+}
+function placeCss() {
+  var S = Math.max(200, gridTop - dealEnd);
+  st.forEach(function (s) {
+    var o = ((st.length - 1 - s.i) / Math.max(1, st.length - 1)) * 0.315,
+      r0 = o * S,
+      r1 = (o + 0.68) * S,
+      li = s.li.style;
+    li.setProperty('--dl-dx', s.dx.toFixed(2) + 'px');
+    li.setProperty('--dl-dy', s.dy.toFixed(2) + 'px');
+    li.setProperty('--dl-rot', s.rot.toFixed(3) + 'deg');
+    li.setProperty('--dl-sc', s.sc.toFixed(4));
+    li.setProperty('--dl-d', String(s.d));
+    li.setProperty('--dl-i', String(s.i));
+    li.setProperty('--dl-r0', r0.toFixed(1) + 'px');
+    li.setProperty('--dl-r1', r1.toFixed(1) + 'px');
+    /* The caption: over the last stretch, where the eased landing passes 0.82. */
+    li.setProperty('--dl-c0', (r0 + 0.72 * (r1 - r0)).toFixed(1) + 'px');
+    ui.put(s.li, 'zIndex', String(s.hov ? 30 : 20 - Math.round(Math.abs(s.d) * 2)));
+  });
 }
 var raf = 0,
   last = performance.now();
@@ -171,6 +210,18 @@ function frame(now) {
   raf = 0;
   var dt = Math.min(0.033, (now - last) / 1000 || 0.016);
   last = now;
+  if (cssDeal) {
+    /* Only the lean toward the mouse moves here, as one number the keyframes read. */
+    px += (pxT - px) * (1 - Math.pow(0.002, dt));
+    if (Math.abs(pxT - px) > 0.001) raf = requestAnimationFrame(frame);
+    else px = pxT;
+    ui.put(grid, '--dl-sway', px.toFixed(3));
+    st.forEach(function (s) {
+      ui.put(s.li, '--dl-lift', s.hov ? '1' : '0');
+      ui.put(s.li, 'zIndex', String(s.hov ? 30 : 20 - Math.round(Math.abs(s.d) * 2)));
+    });
+    return;
+  }
   var p = Math.min(1, Math.max(0, scrollY / Math.max(200, gridTop - dealEnd)));
   px += (pxT - px) * (1 - Math.pow(0.002, dt));
   var live = Math.abs(pxT - px) > 0.001;
@@ -239,7 +290,7 @@ function frame(now) {
   });
   if (live) raf = requestAnimationFrame(frame);
 }
-addEventListener('scroll', wake, { passive: true });
+if (!cssDeal) addEventListener('scroll', wake, { passive: true });
 /* A phone's URL bar sliding away is a height-only resize, and the grid must not move for it. */
 var laidW = innerWidth;
 addEventListener('resize', function () {

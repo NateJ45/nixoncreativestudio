@@ -21,6 +21,19 @@ var moved = false;
   );
 });
 /* The one thing a mouse can be holding, see ui.stillHover below. */
+/* While the page scrolls, cards slide under a mouse that has not moved, and each one it crossed
+   would lift and start its clip: a burst of work mid-scroll that showed as stutter (measured
+   2026-11-16, a 446ms frame in the home deal). Hover waits until the scrolling has stopped; the
+   next real mouse move then takes the card under it. */
+var scrollQuietAt = 0,
+  hoverMissed = false;
+addEventListener(
+  'scroll',
+  function () {
+    scrollQuietAt = performance.now() + 180;
+  },
+  { passive: true },
+);
 var held = null,
   heldX = 0,
   heldY = 0,
@@ -41,6 +54,13 @@ addEventListener(
   function (e) {
     heldX = e.clientX;
     heldY = e.clientY;
+    /* A card that slid under the pointer during a scroll is taken on the first move after it. */
+    if (hoverMissed && e.pointerType === 'mouse' && performance.now() >= scrollQuietAt) {
+      hoverMissed = false;
+      var under = doc.elementFromPoint(heldX, heldY),
+        card = under && under.closest('[data-still]');
+      if (card && card._still && (!held || held.el !== card)) card._still.take();
+    }
     if (!held || e.pointerType !== 'mouse') return;
     if (outside(held.rest, heldX, heldY, HOLD_PAD)) letGo();
     else if (outside(held.rest, heldX, heldY, 0)) {
@@ -200,6 +220,10 @@ export var ui = {
       });
       el.addEventListener('pointerenter', function (e) {
         if (e.pointerType !== 'mouse') return;
+        if (performance.now() < scrollQuietAt) {
+          hoverMissed = true;
+          return;
+        }
         heldX = e.clientX;
         heldY = e.clientY;
         if (held === s) {
