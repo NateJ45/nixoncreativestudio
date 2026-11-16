@@ -29,16 +29,41 @@ const FLIGHT = 'M262 92Q700 -40 1138 96';
 const US = { x: 480, w: 720 };
 const stripe = H / 13;
 const canton = { w: US.w * 0.4, h: stripe * 7 };
-const stars: [number, number][] = [];
-for (let r = 0; r < 9; r++) {
-  const y = (canton.h / 10) * (r + 1);
-  const n = r % 2 ? 5 : 6;
-  for (let c = 0; c < n; c++) {
-    const x = US.x + (canton.w / 12) * (r % 2 ? 2 * c + 2 : 2 * c + 1);
-    stars.push([+x.toFixed(1), +y.toFixed(1)]);
-  }
-}
 const sizes = '(max-width: 60rem) 62vw, 34rem';
+
+/* The flags as two small SVG images (data URIs), 1200 x 640: the sky box plus 40 units above and
+   below, so a strip that rises or falls never shows an edge. Only the characters a data URI needs
+   escaped are escaped, which keeps the page light. */
+const SALTIRE_END = US.x + 320;
+const r = (n: number) => +n.toFixed(2);
+const svg = (body: string) =>
+  `url("data:image/svg+xml,${`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -40 ${W} ${H + 80}' preserveAspectRatio='none'>${body}</svg>`.replace(/[%#<>"]/g, encodeURIComponent)}")`;
+const saltire = svg(
+  `<rect y='-40' width='${SALTIRE_END}' height='${H + 80}' fill='#005eb8'/>` +
+    `<path d='M0 0 ${SALTIRE_END} ${H}M0 ${H} ${SALTIRE_END} 0' stroke='#fff' stroke-width='80'/>`,
+);
+/* Stripes and stars as two patterns. The stars: rows of 6 and 5 interleave, so one tile a sixth
+   of the canton wide and two rows tall holds a star at its middle and one at its corner. The
+   filled box stops 10 units inside the canton's edges, which keeps the 50 stars whole and leaves
+   out the corner stars that would fall on the edge. */
+const tile = { w: canton.w / 6, h: (canton.h / 10) * 2 };
+const STAR =
+  'm0-7.5 1.76 5.08 5.37.1-4.28 3.24 1.56 5.15-4.41-3.07-4.41 3.07 1.56-5.15-4.28-3.24 5.37-.1z';
+const usFlag = svg(
+  `<defs><pattern id='t' width='${W}' height='${r(stripe * 2)}' patternUnits='userSpaceOnUse'>` +
+    `<rect y='${r(stripe)}' width='${W}' height='${r(stripe)}' fill='#fff'/></pattern>` +
+    `<pattern id='s' x='${US.x}' width='${r(tile.w)}' height='${r(tile.h)}' patternUnits='userSpaceOnUse'>` +
+    `<path fill='#fff' d='M${r(tile.w / 2)} ${r(tile.h / 2)}${STAR}M0 0${STAR}M${r(tile.w)} 0${STAR}M0 ${r(tile.h)}${STAR}M${r(tile.w)} ${r(tile.h)}${STAR}'/></pattern></defs>` +
+    `<rect x='${US.x}' y='-40' width='${US.w}' height='${H + 80}' fill='#b22234'/>` +
+    `<rect x='${US.x}' width='${US.w}' height='${H}' fill='url(#t)'/>` +
+    `<rect x='${US.x}' y='-40' width='${r(canton.w)}' height='${r(canton.h + 40)}' fill='#4d5cc4'/>` +
+    `<rect x='${US.x + 10}' y='10' width='${r(canton.w - 20)}' height='${r(canton.h - 20)}' fill='url(#s)'/>`,
+);
+
+/* The wave: 80 strips, one ripple every 480 units (32 strips). The swing grows towards the right,
+   where the cloth is free; about.css works it out from each strip's --i. */
+const N = 80;
+const strips = Array.from({ length: N }, (_, i) => ({ i, x: (i * W) / N }));
 ---
 
 <figure class="crossing">
@@ -65,63 +90,33 @@ const sizes = '(max-width: 60rem) 62vw, 34rem';
       loading="lazy"
       decoding="async"
     />
-    <svg
-      class="cx-flags cx-saltire"
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient
-          id="cx-merge"
-          x1={US.x + 60}
-          x2={US.x + 300}
-          y1="0"
-          y2="0"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop offset="0" stop-color="#fff" stop-opacity="0"></stop>
-          <stop offset="1" stop-color="#fff"></stop>
-        </linearGradient>
-        <mask id="cx-us" maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
-          <rect width={W} height={H} fill="url(#cx-merge)"></rect>
-        </mask>
-        <path
-          id="cx-star"
-          d="M0-7.5 1.76-2.42 7.13-2.32 2.85.92 4.41 6.07 0 3 -4.41 6.07-2.85.92-7.13-2.32-1.76-2.42Z"
-        ></path>
-      </defs>
-      <rect width={US.x + 320} height={H} fill="#005eb8"></rect>
-      <path
-        d={`M0 0 ${US.x + 320} ${H}M0 ${H} ${US.x + 320} 0`}
-        stroke="#fff"
-        stroke-width="80"
-      ></path>
-    </svg>
+    {/* The flags wave: each is cut into 80 thin strips, every strip showing its own slice of the
+        flag and rising and falling a beat after the one to its left (about.css, "The flags
+        wave"), so a ripple runs towards the free end. A band of light and shade slides with it
+        for the folds. Strips move by transform alone, so the browser only shifts layers. Still
+        with reduced motion, and paused while the card is off screen (about.js). */}
+    <div class="cx-flags cx-saltire" aria-hidden="true" style={`--flag:${saltire}`}>
+      <div class="cx-cloth">
+        {strips
+          .filter((s) => s.x < SALTIRE_END)
+          .map((s) => (
+            <i style={`--i:${s.i}`} />
+          ))}
+        <i class="cx-folds" />
+      </div>
+    </div>
     {/* The Stars and Stripes on a layer of its own: the night sky is near black, which an overlay
         cannot lift, so this one is screened on, faint, like a flag lit against the dark. */}
-    <svg
-      class="cx-flags cx-us"
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <g mask="url(#cx-us)">
-        {Array.from({ length: 13 }, (_, i) => (
-          <rect
-            x={US.x}
-            y={(i * stripe).toFixed(1)}
-            width={US.w}
-            height={(stripe + 0.5).toFixed(1)}
-            fill={i % 2 ? '#fff' : '#b22234'}
-          />
-        ))}
-        <rect x={US.x} y="0" width={canton.w} height={canton.h.toFixed(1)} fill="#4d5cc4"></rect>
-        {stars.map(([x, y]) => (
-          <use href="#cx-star" x={x} y={y} fill="#fff" />
-        ))}
-      </g>
-    </svg>
+    <div class="cx-flags cx-us" aria-hidden="true" style={`--flag:${usFlag}`}>
+      <div class="cx-cloth">
+        {strips
+          .filter((s) => s.x + W / N > US.x)
+          .map((s) => (
+            <i style={`--i:${s.i}`} />
+          ))}
+        <i class="cx-folds" />
+      </div>
+    </div>
     <svg class="cx-trip" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
       <defs>
         <mask id="cx-fly" maskUnits="userSpaceOnUse" x="0" y="-60" width={W} height={H + 60}>

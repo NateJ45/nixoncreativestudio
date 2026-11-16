@@ -373,6 +373,14 @@ st.forEach(function (s) {
   });
 });
 
+/* The postcard's flags wave only while the card is on screen (about.css, "The flags wave"). */
+var crossing = doc.querySelector('.crossing');
+if (crossing && 'IntersectionObserver' in window) {
+  new IntersectionObserver(function (es) {
+    crossing.classList.toggle('cx-off', !es[0].isIntersecting);
+  }).observe(crossing);
+}
+
 addEventListener('scroll', wake, { passive: true });
 addEventListener('resize', layout);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(layout);
