@@ -895,55 +895,15 @@ html:not(.js) .oc-again {
   -webkit-mask-image: linear-gradient(to right, transparent, #000 36%);
   mask-image: linear-gradient(to right, transparent, #000 36%);
 }
-/* The flags tint the sky only, fading out before the skylines. They are laid on in hard-light,
-   which lifts the near-black night sky (the stripes and stars show) and tints the day sky (the
-   Saltire shows); its neutral is mid grey. The still drawings (1200 x 640 images, the sky box plus
-   40 units above and below) show with reduced motion and until the waving loop is playing. */
-.cx-flags,
+/* The flags: each photograph's loop (the same photograph with its flag flying in it) sits over
+   it with the same placement and crossfade (.cx-photo, .cx-from, .cx-to), and fades in once it
+   plays, or once its poster is up with reduced motion (about.js adds .is-on). */
 .cx-wave {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: hard-light;
-  opacity: 0.6;
-  -webkit-mask-image: linear-gradient(#000 15%, transparent 68%);
-  mask-image: linear-gradient(#000 15%, transparent 68%);
-}
-.cx-flags {
-  background: var(--flag) center / 100% calc(640 / 560 * 100%) no-repeat;
-  transition: opacity 0.6s var(--ease);
-}
-/* The Stars and Stripes fades in over the Saltire between 45% and 65% across, and the Saltire
-   fades out across the same span, as in the loop. */
-.cx-flags.cx-saltire {
-  -webkit-mask-image:
-    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, #000 45%, transparent 65%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, #000 45%, transparent 65%);
-  mask-composite: intersect;
-}
-.cx-flags.cx-us {
-  -webkit-mask-image:
-    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, transparent 45%, #000 65%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(#000 15%, transparent 68%), linear-gradient(to right, transparent 45%, #000 65%);
-  mask-composite: intersect;
-}
-/* The waving loop (scripts/render-flags.mjs): both flags and their crossfade in one video, the sky
-   box exactly, grey off the cloth. about.js adds .is-on once it plays, and the stills step back. */
-.cx-wave {
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
   opacity: 0;
-  transition: opacity 0.6s var(--ease);
+  transition: opacity 0.8s var(--ease);
 }
 .cx-wave.is-on {
-  opacity: 0.6;
-}
-.cx-art:has(.cx-wave.is-on) .cx-flags {
-  opacity: 0;
+  opacity: 1;
 }
 /* The night at the foot, so the place names read and the art settles into the copy. */
 .cx-art::after {
