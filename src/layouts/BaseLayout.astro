@@ -170,6 +170,30 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
         var vt = e.viewTransition,
           types = vt && vt.types,
           root = document.documentElement;
+        if (!vt) return;
+        /* While a transition plays, Chrome sends every click to <html>, so a tap on the dock just
+           after a page lands did nothing. A press now ends the transition at once, and the click
+           that follows goes to whatever is under the pointer on the page that has arrived. */
+        var skipped = false,
+          press = function () {
+            skipped = true;
+            vt.skipTransition();
+          },
+          tap = function (ev) {
+            if (!skipped || ev.target !== root) return;
+            var el = document.elementFromPoint(ev.clientX, ev.clientY);
+            el = el && el.closest('a[href], button, summary, label, [role="button"]');
+            if (el) el.click();
+          },
+          done = function () {
+            removeEventListener('pointerdown', press, true);
+            setTimeout(function () {
+              removeEventListener('click', tap, true);
+            }, 1000);
+          };
+        addEventListener('pointerdown', press, true);
+        addEventListener('click', tap, true);
+        vt.finished.then(done, done);
         if (!types || !types.has('deal')) return;
         if (root.classList.contains('hero-morph') || root.classList.contains('tier-morph')) {
           types.delete('deal');
