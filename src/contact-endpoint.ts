@@ -48,6 +48,7 @@ import { buildInquiryEmail, type InquiryEmail } from './lib/inquiry-email.ts';
 import { site } from './data/site.ts';
 import { orgTypes } from './data/inquiry-options.ts';
 import { scoreInquiry, inquiryRuleErrors, type SpamScore } from './lib/spam-score.ts';
+import { buildProfile, type TrailPageRow, type VisitorProfile } from './lib/visitor-profile.ts';
 
 /** The slice of D1 this route uses, declared structurally (no workers-types dependency). */
 interface D1Lite {
@@ -55,6 +56,7 @@ interface D1Lite {
     bind(...values: unknown[]): {
       run(): Promise<{ meta?: { last_row_id?: number } }>;
       first<T = Record<string, unknown>>(): Promise<T | null>;
+      all<T = Record<string, unknown>>(): Promise<{ results?: T[] }>;
     };
   };
 }
@@ -72,6 +74,8 @@ export interface ContactEnv {
   TURNSTILE_SECRET?: string;
   /** Server-side Web3Forms key, the fallback when Email Sending fails. */
   WEB3FORMS_KEY?: string;
+  /** Microsoft Clarity project id, for the "Watch their sessions" link. Optional. */
+  CLARITY_ID?: string;
 }
 
 const SENT_URL = '/contact/?sent=1#sent';
@@ -241,6 +245,36 @@ async function recentFromSameEmail(e: ContactEnv, email: string, now: Date): Pro
   }
 }
 
+const VISITOR_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** The visitor id the form sent, or null when it isn't one. */
+export function visitorIdOf(fields: Record<string, unknown>): string | null {
+  const v = typeof fields.visitor_id === 'string' ? fields.visitor_id.trim().toLowerCase() : '';
+  return VISITOR_ID.test(v) ? v : null;
+}
+
+/** Everything this visitor's trail holds (migrations/0003), as a profile. null on any trouble. */
+async function loadProfile(
+  e: ContactEnv,
+  visitorId: string | null,
+): Promise<VisitorProfile | null> {
+  if (!e.CONTACT_DB || !visitorId) return null;
+  try {
+    const res = await e.CONTACT_DB.prepare(
+      `SELECT visit_id, page_index, started_at, path, title, visit_source, engaged_ms, scroll_pct,
+              events, city, region, device
+       FROM trail_pages WHERE visitor_id = ? ORDER BY started_at LIMIT 400`,
+    )
+      .bind(visitorId)
+      .all<TrailPageRow>();
+    return buildProfile(visitorId, res.results ?? []);
+  } catch (err) {
+    // The email matters more than the trail: send it without.
+    console.error('[contact] could not read the visitor trail:', err);
+    return null;
+  }
+}
+
 /** Store the row, then notify (unless the spam score holds it), then record whether it went out. */
 async function storeAndNotify(
   e: ContactEnv,
@@ -257,6 +291,7 @@ async function storeAndNotify(
     asOrg: where.asOrg,
     recentFromSameEmail: await recentFromSameEmail(e, value.email, receivedAt),
   });
+  const visitorId = visitorIdOf(fields);
   let rowId: number | null = null;
   if (e.CONTACT_DB) {
     try {
@@ -284,6 +319,17 @@ async function storeAndNotify(
         )
         .run();
       rowId = res.meta?.last_row_id ?? null;
+      // A separate write, so an inquiry still stores on a database that has not had
+      // migrations/0003 yet (the column is missing and only this update fails).
+      if (rowId !== null && visitorId) {
+        try {
+          await e.CONTACT_DB.prepare(`UPDATE contact_submissions SET visitor_id = ? WHERE id = ?`)
+            .bind(visitorId, rowId)
+            .run();
+        } catch (err) {
+          console.error('[contact] could not link the visitor trail (migration 0003?):', err);
+        }
+      }
     } catch (err) {
       // A database problem must not lose the message either: still try to email it.
       console.error('[contact] could not store submission:', err);
@@ -318,6 +364,10 @@ async function storeAndNotify(
     spam,
     siteUrl: site.url,
     studioName: site.studioName,
+    profile: await loadProfile(e, visitorId),
+    clarityUrl: e.CLARITY_ID
+      ? `https://clarity.microsoft.com/projects/view/${encodeURIComponent(e.CLARITY_ID)}/impressions`
+      : null,
   });
   let failure = await notifyByEmail(e, value, email);
   let note = failure;

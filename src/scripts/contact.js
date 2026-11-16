@@ -5,6 +5,7 @@
 import { ui } from './kit.js';
 import { track } from '../lib/track';
 import { attributionFields } from '../lib/attribution';
+import { flush as flushTrail, visitorId } from '../lib/trail';
 
 var reduce = ui.reduce,
   doc = document;
@@ -963,6 +964,9 @@ form.addEventListener('submit', function (e) {
   /* Copy the first-touch note into the hidden fields, so the stored inquiry says where this
      person first found the site. */
   var attr = attributionFields();
+  /* The anonymous visitor id ties this inquiry to their trail (src/lib/trail.ts), so the email can
+     show what they read first. '' when the trail is off. */
+  attr.visitor_id = visitorId();
   $$('[data-attr]', form).forEach(function (el) {
     el.value = attr[el.dataset.attr] || '';
   });
@@ -970,7 +974,14 @@ form.addEventListener('submit', function (e) {
   send.classList.add('is-spinning');
   var label = submitLabel.textContent;
   submitLabel.textContent = 'Sending...';
-  tsReady()
+  /* Send this page's trail first (at most a second), so the email includes it. */
+  Promise.race([
+    flushTrail(true),
+    new Promise(function (r) {
+      setTimeout(r, 1000);
+    }),
+  ])
+    .then(tsReady)
     .then(function () {
       var data = new FormData(form);
       if (tsToken) data.set('cf-turnstile-response', tsToken);

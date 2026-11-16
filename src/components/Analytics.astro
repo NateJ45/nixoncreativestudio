@@ -28,6 +28,8 @@
 
 import CloudflareBeacon from './analytics/CloudflareBeacon.astro';
 import GoogleAnalytics from './analytics/GoogleAnalytics.astro';
+import TrailHead from './analytics/TrailHead.astro';
+import Clarity from './analytics/Clarity.astro';
 
 // PUBLIC_ prefix is required because the script tag runs in the browser.
 // The value is inlined at build time (this is a prerendered layout), so
@@ -43,7 +45,15 @@ const hasToken = token.length > 0;
 // means no GA4 at all, same as the beacon above.
 const gaId = (import.meta.env.PUBLIC_GA_ID ?? '').trim();
 const hasGa = /^G-[A-Z0-9]+$/.test(gaId);
+
+// Microsoft Clarity (replays and heatmaps): the project id from clarity.microsoft.com,
+// Settings > Overview. Empty means no Clarity. See analytics/Clarity.astro.
+const clarityId = (import.meta.env.PUBLIC_CLARITY_ID ?? '').trim();
+const hasClarity = /^[a-z0-9]{6,20}$/i.test(clarityId);
 ---
 
+{/* First: the visitor id and the ?me=1 switch, which GA4 and Clarity both read. */}
+<TrailHead gaId={hasGa ? gaId : ''} />
 {hasToken && <CloudflareBeacon token={token} />}
 {hasGa && <GoogleAnalytics gaId={gaId} />}
+{hasClarity && <Clarity clarityId={clarityId} />}
