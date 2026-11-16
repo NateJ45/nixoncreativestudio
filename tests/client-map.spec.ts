@@ -18,16 +18,21 @@ test.describe('About: the client map', () => {
     const rows = page.locator('.sc');
     await expect(rows).toHaveCount(6);
     await expect(rows.first().locator('.sc-state')).toHaveText('Ohio, home');
-    const links = page.locator('.sc-names a');
+    const links = page.locator('.sc-names a:not(.sc-photo)');
     await expect(links).toHaveCount(9);
     for (const href of await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))))
       expect(href).toMatch(/^\/work\/[a-z0-9-]+\/$/);
-    // Photography clients with no study are plain names, tagged, with no link.
+    // Photography clients with no study are plain names, tagged, with no link...
     const plain = page.locator('.sc-names .sc-plain');
-    await expect(plain).toHaveCount(4);
+    await expect(plain).toHaveCount(3);
     await expect(plain.locator('xpath=following-sibling::span[1]')).toHaveText(
-      Array(4).fill('Photography'),
+      Array(3).fill('Photography'),
     );
+    // ...unless their photographs are on the site: then the name opens the first one's print.
+    const photo = page.locator('.sc-names a.sc-photo');
+    await expect(photo).toHaveText(['Crestview Presbyterian Church']);
+    await expect(photo).toHaveAttribute('href', '/photography/?print=ash-candle');
+    await expect(photo.locator('xpath=following-sibling::span[1]')).toHaveText('Photography');
     await expect(page.locator('.cm-svg')).toHaveAttribute('aria-hidden', 'true');
     // A nudge under the hand for anyone whose state is still grey.
     await expect(page.locator('.cm-more a')).toHaveAttribute('href', '/contact/');
