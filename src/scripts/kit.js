@@ -6,6 +6,11 @@
 
 var doc = document;
 var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* Scroll-driven CSS animation, and motion allowed: then the quote bands, the big lines' words, the
+   closing's deck and name and the dock's line are moved by the browser in step with the scroll
+   (kit.css), and this file only measures them. Otherwise (Firefox today, reduced motion) the frame
+   loops below run them as before. kit.css asks the same two questions of the browser. */
+var sda = !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'));
 /* Data Saver on: a window stays on its poster still, and no clip is fetched. */
 var saveData = !!(navigator.connection && navigator.connection.saveData);
 /* Anything the visitor does that could scroll the page. Until one happens, a page that is already
@@ -382,13 +387,33 @@ export var ui = {
     raf = 0,
     last = 0,
     deckW = 0,
-    deckGw = 0;
+    deckGw = 0,
+    deckH = 0,
+    /* Where the browser ties the deck and the name to the scroll (kit.css, .end-css), this only
+       says where each card and letter sits, once, and keeps the springs for the pointer. */
+    css = sda && !!stage,
+    /* The stage's top is above 48 percent of the screen: the deck has squared up and Yours is
+       dealt. Worked out each frame from the scroll below; told by an observer on the CSS path. */
+    deckIn = false;
+  if (css) {
+    el.classList.add('end-css');
+    gcs.forEach(function (c) {
+      c.g.style.setProperty('--gd', String(c.d));
+      c.g.style.setProperty('--gad', String(Math.abs(c.d)));
+    });
+    glyphs.forEach(function (c) {
+      c.g.style.setProperty('--gq', (c.i / glyphs.length).toFixed(4));
+      c.g.style.setProperty('--gt', c.i % 2 ? '7deg' : '-7deg');
+    });
+  }
   /* The deck's widths, taken when they change, not every frame: read after the cards had moved,
      they made the browser lay the page out again. Where the stage and the name sit is measured
      now, before any scrolling, for the same reason (ui.top). */
   var deckSize = function () {
     deckW = stage.offsetWidth;
     deckGw = gcs.length ? gcs[0].g.offsetWidth : 0;
+    deckH = stage.offsetHeight;
+    if (css) ui.put(stage, '--gc-sw', deckW + 'px');
   };
   deckSize();
   if ('ResizeObserver' in window)
@@ -406,6 +431,11 @@ export var ui = {
       reach = Math.min(gw * 0.4, (W - gw) / 2 + 24),
       spread = Math.min(W * 0.1, 46);
     gcs.forEach(function (c) {
+      if (css) {
+        ui.put(c.g, '--gp', c.pull.x.toFixed(4));
+        ui.put(c.g, 'zIndex', c.pull.x > 0.02 ? '5' : '');
+        return;
+      }
       var v = c.s.x,
         k = 1 - v;
       c.g.style.transform =
@@ -426,6 +456,7 @@ export var ui = {
       slide.style.opacity = slideO;
     }
     glyphs.forEach(function (c) {
+      if (css) return ui.put(c.g, '--gh', c.h.x.toFixed(4));
       var v = c.s.x,
         h = c.h.x;
       c.g.style.transform =
@@ -441,7 +472,7 @@ export var ui = {
       l = lift.x;
     nine.style.transform =
       'translate3d(0,' +
-      ((1 - m) * stage.offsetHeight * 0.85 - l * 16).toFixed(2) +
+      ((1 - m) * deckH * 0.85 - l * 16).toFixed(2) +
       'px,0) translateX(' +
       (moved.x * gw * -0.13).toFixed(2) +
       'px) rotate(' +
@@ -457,8 +488,10 @@ export var ui = {
       H = innerHeight,
       live = false;
     last = now;
-    var p = Math.min(1, Math.max(0, (H * 0.92 - ui.top(stage)) / (H * 0.55)));
+    var p = css ? 0 : Math.min(1, Math.max(0, (H * 0.92 - ui.top(stage)) / (H * 0.55)));
+    if (!css) deckIn = p >= 0.8;
     gcs.forEach(function (c, i) {
+      if (css) return;
       var t = Math.min(1, Math.max(0, (p - Math.abs(c.d) * 0.03) / 0.72));
       t = t * t * (3 - 2 * t);
       if (c.s.step(t, dt)) live = true;
@@ -467,7 +500,7 @@ export var ui = {
         c.s.v = 0;
       }
     });
-    var nt = p >= 0.8 || onCard ? 1 : 0;
+    var nt = deckIn || onCard ? 1 : 0;
     if (n.step(nt, dt)) live = true;
     else {
       n.x = nt;
@@ -499,7 +532,15 @@ export var ui = {
         slideY.v = 0;
       }
     }
-    if (glyphs.length) {
+    if (glyphs.length && css) {
+      glyphs.forEach(function (c) {
+        if (c.h.step(c.t, dt)) live = true;
+        else {
+          c.h.x = c.t;
+          c.h.v = 0;
+        }
+      });
+    } else if (glyphs.length) {
       /* Done by the time the name is most of the way up, so it always finishes above the page's end. */
       var q = Math.min(1, Math.max(0, (H - ui.top(nameEl)) / (ui.height(nameEl) * 0.8)));
       glyphs.forEach(function (c) {
@@ -589,7 +630,19 @@ export var ui = {
         wake();
       });
     }
-    addEventListener('scroll', wake, { passive: true });
+    if (css && 'IntersectionObserver' in window)
+      new IntersectionObserver(
+        function (entries) {
+          var r = entries[entries.length - 1].boundingClientRect;
+          deckIn = r.top <= innerHeight * 0.48;
+          wake();
+        },
+        { rootMargin: '0px 0px -52% 0px' },
+      ).observe(stage);
+    else {
+      if (css) deckIn = true;
+      addEventListener('scroll', wake, { passive: true });
+    }
     addEventListener('resize', wake);
     ui.stillHover(
       nine,
@@ -648,7 +701,9 @@ if (hlBands.length) {
     });
   }
 }
-if (bands.length && !reduce) {
+/* Where the browser has scroll-driven animation, kit.css opens the band and settles its phone
+   itself, tied to the scroll (band-open, band-settle), and none of this runs. */
+if (bands.length && !reduce && !sda) {
   var braf = 0,
     blast = 0;
   var bstate = bands.map(function () {
@@ -796,7 +851,10 @@ function railPaint() {
   if (p === railSeen) return;
   railSeen = p;
   rail.classList.toggle('on', p > 0.002);
-  railPath.style.strokeDashoffset = 1 - p;
+  /* The line itself is drawn by the scroll where it can be (kit.css, dk-run); this only says when
+     the page is too short to have one. */
+  if (sda) rail.classList.toggle('flat', !(range > innerHeight * 0.25));
+  else railPath.style.strokeDashoffset = 1 - p;
   spyPaint();
 }
 addEventListener('scroll', railPaint, { passive: true });
@@ -1447,7 +1505,36 @@ var lines = builds.map(function (el) {
     spans: words,
   };
 });
-if (lines.length) {
+/* Tied to the scroll by the browser where it can be (kit.css, .bd-css): each word's window is
+   written once as a stretch of scroll past the line's top reaching the bottom edge, in vh, and the
+   line is marked .bd-seen while it is in sight, so the words only fade once you can see them. */
+if (lines.length && sda) {
+  var bdSee =
+    'IntersectionObserver' in window
+      ? new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            e.target.classList.toggle(
+              'bd-seen',
+              e.boundingClientRect.top < (e.rootBounds ? e.rootBounds.height : innerHeight),
+            );
+          });
+        })
+      : null;
+  lines.forEach(function (l) {
+    var n = l.spans.length,
+      at = function (P) {
+        return ((1 - l.from + P * (l.from - l.to)) * 100).toFixed(3) + 'vh';
+      };
+    l.spans.forEach(function (sp, i) {
+      var start = n > 1 ? (i * 0.5) / (n - 1) : 0;
+      sp.style.setProperty('--b0', at(start));
+      sp.style.setProperty('--b1', at(start + 0.5));
+    });
+    l.el.classList.add('bd-css');
+    if (bdSee) bdSee.observe(l.el);
+    else l.el.classList.add('bd-seen');
+  });
+} else if (lines.length) {
   lines.forEach(function (l) {
     ui.top(l.el);
   });

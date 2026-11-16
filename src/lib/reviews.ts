@@ -1,11 +1,13 @@
-// Safe to edit. The public reviews quoted on the site, gathered from the case studies.
+// Safe to edit. The public reviews quoted on the site, gathered from the case studies and the
+// quotes with no case study (src/data/quotes.ts).
 //
 // A review is a `testimonials` item with a `source` (see src/content.config.ts). This file turns
 // them into one flat list for the pieces that show more than one study's review at once: the home
 // hero's rating chip (the faces) and the client sheet (via clients.ts). The words themselves stay in
-// the case study frontmatter, so there is one copy of each review.
+// the case study frontmatter or quotes.ts, so there is one copy of each review.
 
 import { getCollection } from 'astro:content';
+import { QUOTES } from '../data/quotes';
 
 export interface Review {
   slug: string;
@@ -38,6 +40,20 @@ export async function getReviews(): Promise<Review[]> {
         date: t.date,
       });
     }
+  }
+  for (const q of QUOTES) {
+    if (!q.source) continue;
+    out.push({
+      slug: q.id,
+      name: q.name,
+      title: q.title,
+      quote: q.quote,
+      highlight: q.highlight,
+      photo: q.photo,
+      url: q.source.url,
+      rating: q.source.rating,
+      date: new Date(`${q.date}T00:00:00Z`),
+    });
   }
   return out.sort((a, b) => b.date.valueOf() - a.date.valueOf()).map(({ date: _d, ...r }) => r);
 }

@@ -8,7 +8,13 @@
 
    Under 62rem, under reduced motion and with no script none of this runs: the section is the four
    cards, whose own icons draw once (prices.js). If this file never runs on a wide screen the
-   drawing is simply whole, because a path is only held back under .how-live. */
+   drawing is simply whole, because a path is only held back under .how-live.
+
+   Where the browser has scroll-driven animation (prices.css, .how-css), each line draws as one,
+   tied to the scroll, so it moves in step with it rather than a frame behind: this only works out
+   the stretch of scroll each line draws over, on load and whenever the page changes size, and
+   marks the step being read from those same numbers. That drawing has no spring; it follows the
+   scroll exactly. Elsewhere the spring below draws it as before. */
 import { ui } from './kit.js';
 
 var pinQ = matchMedia('(min-width: 62rem)');
@@ -39,6 +45,10 @@ if (draw && list && !ui.reduce) {
       parts.push({ el: el, a: t0 + i * each, b: t0 + (i + 2) * each });
     });
   });
+  var css = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()')),
+    /* Where each step's progress starts, in scroll from the top of the page (place()): knots[k] is
+       where step k begins, knots[4] where the last ends. */
+    knots = [];
   var sp = ui.spring(90, 20, 0),
     target = 0,
     raf = 0,
@@ -67,11 +77,41 @@ if (draw && list && !ui.reduce) {
     }
     return Math.min(lis.length, Math.max(0, p));
   };
-  var paint = function (p) {
+  /* The same progress as measure(), from the scroll alone: nothing on the page is read. */
+  var fromScroll = function () {
+    var y = scrollY,
+      n = knots.length - 1;
+    if (n < 1 || y <= knots[0]) return 0;
+    for (var k = 0; k < n; k++)
+      if (y < knots[k + 1]) return k + (y - knots[k]) / (knots[k + 1] - knots[k]);
+    return n;
+  };
+  var place = function () {
+    var line = innerHeight * 0.62,
+      mids = lis.map(function (li) {
+        var r = li.getBoundingClientRect();
+        return r.top + r.height / 2 + scrollY;
+      });
+    knots = [mids[0] - (mids[1] - mids[0]) - line].concat(
+      mids.map(function (m) {
+        return m - line;
+      }),
+    );
+    /* Every window sits inside one step, so its stretch of progress is a straight stretch of scroll. */
     parts.forEach(function (x) {
-      var t = Math.min(1, Math.max(0, (p - x.a) / (x.b - x.a)));
-      ui.put(x.el, 'strokeDashoffset', (1 - t).toFixed(4));
+      var k = Math.floor(x.a),
+        s0 = knots[k],
+        len = knots[k + 1] - s0;
+      ui.put(x.el, '--hw-a', (s0 + (x.a - k) * len).toFixed(1) + 'px');
+      ui.put(x.el, '--hw-b', (s0 + (x.b - k) * len).toFixed(1) + 'px');
     });
+  };
+  var paint = function (p) {
+    if (!css)
+      parts.forEach(function (x) {
+        var t = Math.min(1, Math.max(0, (p - x.a) / (x.b - x.a)));
+        ui.put(x.el, 'strokeDashoffset', (1 - t).toFixed(4));
+      });
     /* The step being read: its number and its strokes take the blue. */
     var now = Math.min(lis.length - 1, Math.floor(target));
     if (target <= 0) now = -1;
@@ -100,6 +140,15 @@ if (draw && list && !ui.reduce) {
   };
   var wake = function () {
     if (!live) return;
+    if (css) {
+      if (!raf)
+        raf = requestAnimationFrame(function () {
+          raf = 0;
+          target = fromScroll();
+          paint(target);
+        });
+      return;
+    }
     target = measure();
     if (!raf) {
       last = performance.now();
@@ -111,7 +160,13 @@ if (draw && list && !ui.reduce) {
     if (on === live) return;
     live = on;
     draw.classList.toggle('how-live', on);
-    if (on) {
+    draw.classList.toggle('how-css', on && css);
+    if (on && css) {
+      place();
+      shown = -2;
+      target = fromScroll();
+      paint(target);
+    } else if (on) {
       /* Start where the page already is, with no run-up: a reload half way down is half drawn. */
       target = measure();
       sp.x = target;
@@ -122,6 +177,8 @@ if (draw && list && !ui.reduce) {
       /* Back to the cards: every line whole, nothing marked by this file. */
       parts.forEach(function (x) {
         ui.put(x.el, 'strokeDashoffset', '');
+        ui.put(x.el, '--hw-a', '');
+        ui.put(x.el, '--hw-b', '');
       });
       lis.forEach(function (li) {
         li.classList.remove('at');
@@ -131,7 +188,20 @@ if (draw && list && !ui.reduce) {
   addEventListener('scroll', wake, { passive: true });
   addEventListener('resize', function () {
     setLive();
+    if (live && css) place();
     wake();
   });
+  /* The steps move when the page changes height (a question opening, the pictures and fonts
+     arriving): measured again then, just after the browser has laid the page out. */
+  var again = function () {
+    if (!live || !css) return;
+    place();
+    wake();
+  };
+  if (css) {
+    if ('ResizeObserver' in window) new ResizeObserver(again).observe(document.body);
+    addEventListener('load', again);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(again);
+  }
   setLive();
 }

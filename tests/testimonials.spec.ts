@@ -13,6 +13,12 @@ const studies = readdirSync(dir)
     const text = readFileSync(dir + f, 'utf8');
     return { slug: f.replace(/\.mdx$/, ''), count: (text.match(/^\s*- quote:/gm) ?? []).length };
   });
+// Quotes that are not about a website (src/data/quotes.ts): in the home band with a photograph
+// where a study's quote has the client's site.
+const standalone = [
+  ...readFileSync('src/data/quotes.ts', 'utf8').matchAll(/^\s{4}id: '([a-z0-9-]+)'/gm),
+].map((m) => m[1]);
+const bandTotal = studies.reduce((n, s) => n + s.count, 0) + standalone.length;
 
 for (const { slug, count } of studies) {
   test(`/work/${slug}/ shows ${count} quote(s) with a name`, async ({ page }) => {
@@ -28,7 +34,7 @@ test('the homepage band carries every quote, one at a time, starting with the fi
 }) => {
   await page.goto('/');
   const band = page.locator('.home-band');
-  await expect(band.locator('blockquote')).toHaveCount(studies.reduce((n, s) => n + s.count, 0));
+  await expect(band.locator('blockquote')).toHaveCount(bandTotal);
   await expect(band.locator('[data-q]:not([inert])')).toHaveCount(1);
   await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
     'href',
@@ -41,7 +47,7 @@ test('Next and Previous step the home band through each client, color and window
 }) => {
   await page.goto('/');
   const band = page.locator('.home-band');
-  const n = studies.reduce((n, s) => n + s.count, 0);
+  const n = bandTotal;
   const count = band.locator('[data-q-count]');
   await expect(count).toHaveText(`1 / ${n}`);
   const accent = () => band.evaluate((el) => el.style.getPropertyValue('--c'));
@@ -53,10 +59,13 @@ test('Next and Previous step the home band through each client, color and window
     const live = band.locator('[data-q]:not([inert])');
     await expect(live).toHaveCount(1);
     const slug = await live.getAttribute('data-slug');
-    await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
-      'href',
-      `/work/${slug}/`,
-    );
+    if (standalone.includes(slug!))
+      await expect(band.locator('[data-tw]:not([inert]) .band-print').first()).toBeVisible();
+    else
+      await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
+        'href',
+        `/work/${slug}/`,
+      );
     expect(await accent()).toBe(await live.getAttribute('data-c'));
     seen.add(slug!);
   }
@@ -66,6 +75,15 @@ test('Next and Previous step the home band through each client, color and window
   expect(await accent()).toBe(first);
   await band.locator('[data-q-prev]').click();
   await expect(count).toHaveText(`${n} / ${n}`);
+});
+
+test('/churches/ shows the churches I photograph for, quote, name and face', async ({ page }) => {
+  await page.goto('/churches/');
+  const card = page.locator('.study-cam');
+  await expect(card).toHaveCount(standalone.length);
+  await expect(card.first().locator('blockquote')).toContainText('Nathan is exceptional');
+  await expect(card.first().locator('.rv-who b')).toHaveText('Jessica Sams');
+  await expect(card.first().locator('.rv-face')).toHaveAttribute('src', /jessica-sams-96\.webp$/);
 });
 
 test('/about/ shows two quote bands', async ({ page }) => {

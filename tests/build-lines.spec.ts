@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test';
 // =============================================================================
 // [data-build]: a big line below the fold builds, word by word, as you scroll
 // =============================================================================
-// kit.js wraps the words in .bw spans and lifts them in, tied to the scroll. The
+// kit.js wraps the words in .bw spans and lifts them in, tied to the scroll (by the
+// browser where it has scroll-driven animation, kit.css .bd-css; by a frame loop
+// elsewhere), so these read the computed style, which both paths set. The
 // heading keeps its plain sentence as its accessible name. Words never start at
 // opacity 0 (they start at .15), and they are all home once the line's top has
 // reached 40 percent of the screen. Reduced motion and a page that loads already
@@ -30,17 +32,16 @@ for (const { route, name } of LINES) {
     const words = line.locator('.bw');
     expect(await words.count()).toBe(name.split(' ').length);
     // Below the fold the words wait low but at full ink, so an audit at load meets no faded text.
-    await expect
-      .poll(() => words.last().evaluate((w) => (w as HTMLElement).style.transform))
-      .toContain('translateY');
-    expect(await words.last().evaluate((w) => (w as HTMLElement).style.opacity)).toBe('');
+    const low = (w: Element) => new DOMMatrix(getComputedStyle(w).transform).m42;
+    await expect.poll(() => words.last().evaluate(low)).toBeGreaterThan(1);
+    expect(await words.last().evaluate((w) => getComputedStyle(w).opacity)).toBe('1');
     // Just in sight: the last word is faint, from .15 and never 0.
     await page.evaluate(() => {
       const el = document.querySelector('[data-build]')!;
       scrollTo(0, el.getBoundingClientRect().top + scrollY - innerHeight * 0.97);
     });
     await expect
-      .poll(() => words.last().evaluate((w) => Number((w as HTMLElement).style.opacity)))
+      .poll(() => words.last().evaluate((w) => Number(getComputedStyle(w).opacity)))
       .toBeCloseTo(0.15, 2);
     // Scroll the line's top to 35 percent of the screen: every word is home.
     await page.evaluate(() => {
@@ -49,7 +50,13 @@ for (const { route, name } of LINES) {
     });
     await expect
       .poll(() =>
-        words.evaluateAll((ws) => ws.every((w) => (w as HTMLElement).style.opacity === '')),
+        words.evaluateAll((ws) =>
+          ws.every(
+            (w) =>
+              getComputedStyle(w).opacity === '1' &&
+              new DOMMatrix(getComputedStyle(w).transform).m42 === 0,
+          ),
+        ),
       )
       .toBe(true);
     await ctx.close();

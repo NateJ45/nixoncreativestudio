@@ -138,6 +138,9 @@ Theology, Stone Steps 50K, First Baptist Muncie (two) and First Presbyterian
 Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
 
 - **Reid Design and West Chester Preschool** now carry their public Google reviews (2026-11-15).
+- **Crestview Presbyterian (2026-11-16):** Jessica Sams's Google review is about photography, not a
+  website, so it lives in `src/data/quotes.ts` (quotes with no case study) and shows in the home
+  band and on /churches with one of the VBS photographs, its stars and its Google link.
 - **Still missing: Presbyterian Academy, MAS Monograms.** Those
   studies show no quote until a real one arrives. The ask is Nathan's to send
   (a short three-question email; it can be drafted for him, never sent for
@@ -146,7 +149,8 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
   study says so under it. A fresh quote about the 2026 rebuild would replace
   it.
 - When a quote arrives: record it verbatim in the vault note
-  `projects/ncs-testimonials.md` first, then add it to the study's frontmatter
+  `projects/ncs-testimonials.md` first, then add it to `src/data/quotes.ts` if it is not about a
+  website, or else to the study's frontmatter
   (`quote`, `name`, `title`, `date`) and the slug to `WITH_QUOTES` in
   `src/lib/case-testimonials.test.ts`, which fails on a quote in any other
   study.
