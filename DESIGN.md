@@ -93,12 +93,12 @@ Dark is the back of the card, not light with the values inverted. The tokens are
 | ---------- | ---------- | ----------------------------------------------- |
 | `--ground` | `#14162f`  | The page: the deck's printed ink, a deep cobalt |
 | `--card`   | `#1d2042`  | Cards                                           |
-| `--ink`    | `#f3f2ec`  | Text, and the bone card in the price hand       |
+| `--ink`    | `#e6e4dc`  | Text, and the bone card in the price hand       |
 | `--soft`   | `#b2b4cc`  | Supporting text                                 |
 | `--accent` | `#aab3ff`  | The blue as text, lifted so it reads            |
-| `--fill`   | `#3345f0`  | The blue as a surface: buttons and the closing  |
+| `--fill`   | `#2c3bd2`  | The blue as a surface: buttons and small marks  |
 
-`--fill` equals the studio blue on the light side. Use `--accent` for blue text and `--fill` for a blue surface, and every new pair goes in `src/lib/kit-tokens.test.ts`, which checks both sides.
+`--fill-deep` (`#2532a8`) is the blue for the big panels (the closing, the blue price cards) and `--bone` (`#d6d3ca`) the bone for the big bone cards, so a panel the height of the screen does not light a dark room. `--table` (`#1f2675`) shows for the moment a page turns or deals. `--fill` equals the studio blue on the light side. Use `--accent` for blue text and `--fill` for a blue surface, and every new pair goes in `src/lib/kit-tokens.test.ts`, which checks both sides.
 
 What only the dark side does:
 
@@ -107,7 +107,8 @@ What only the dark side does:
 - **The hand turns over too.** `--ink` is bone, so the ink card in the price hand becomes the bright one, with its text in `--on-ink`.
 - **Client marks use the client's own second color.** A deep accent would vanish, so a study's chapter marks, figures and rules use `--cm`, set from `nightMark()` (`src/lib/night-mark.ts`): `palette.markDark` where the client has one, most often a gold, otherwise the accent lifted as little as it takes to clear AA. Write `var(--cm, var(--c))` for a client's color on the neutral page, and plain `--c` on the client's own paper. The phone in a study's opening fan has a `--screen` frame, dark on the dark side, so its address bar takes `--cm` there too.
 - **The lights come up.** A `[data-weigh]` line brightens as it gains weight, through `--lit` from `kit.js`.
-- **The closing is the back of the deck,** and it is the one full-strength color on the page.
+- **The closing is the back of the deck,** and the strongest color on the page, in `--fill-deep`.
+- **Comfortable in the dark (2026-11-16).** The ink is a warm off-white, not near-white. Where a client's color or paper fills a large surface (a study's hero, the sheet, a quote band, the results cards, the quote and Up next bands, the church cards) it takes its night strength: `--cd`, the color with some of the ground mixed in, and `--pd`, the paper dimmed a little, both worked out in `kit.css` from the inline `--c` and `--p`. Screens rest at 80% and captures of client sites at 86%. Every client's paper sits on a darker accent, so a darker accent only raises the contrast; the dimmed paper is held to 4.5:1 for the light side's soft grey by the axe test. A new large client surface joins that list.
 
 Surfaces that keep their color on either side get the light tokens back: `.end`, `.band`, `.sheet` and anything set on a client's paper. A new one joins that `:is()` list in `kit.css`.
 

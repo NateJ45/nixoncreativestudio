@@ -1518,10 +1518,10 @@ html:not(.js) .dk-spy {
 }
 .fc-theme-dark {
   --mg: #14162f;
-  --mi: #f3f2ec;
+  --mi: #e6e4dc;
   --ms: #b2b4cc;
   --mc: #1d2042;
-  --mf: #3345f0;
+  --mf: #2c3bd2;
 }
 .fc-theme .fc-in {
   padding: 0.55rem 0.55rem 0.6rem;
@@ -1979,7 +1979,7 @@ html:not(.js) .dk-spy {
    Reduced motion has no view transition at all. The blue is the one the theme flip shows, so
    both moves happen over the same table, on either side. */
 html:active-view-transition-type(deal)::view-transition {
-  background: #3345f0;
+  background: var(--table, #3345f0);
 }
 html:active-view-transition-type(deal)::view-transition-old(root),
 html:active-view-transition-type(deal)::view-transition-new(root) {
@@ -3577,7 +3577,12 @@ html.ncs-gated .ncs-overlay {
    Light is the face of the card: paper, ink, the blue used sparingly. Dark is its back, the deck's
    printed ink, and the room has gone quiet: the cards carry a lit edge rather than a shadow, the
    screens sit a little dim until you reach for one, and a window that wakes casts its client's color
-   on the table under it. The blue closing is the one full-strength color on the page.
+   on the table under it. The blue closing is the strongest color on the page.
+
+   Comfortable in a dark room (2026-11-16): the ink is a warm off-white, not near-white, and the
+   cobalt a step deeper, so text and the big blue panels do not glare; a client's color and their
+   paper, where they fill a large surface, go down to their night strength (--cd and --pd, below);
+   and a screenshot rests a little dim, like the windows' screens.
 
    Screen only: paper is paper, so print always takes the light tokens. The one-page sheet relies on
    this. Every pair is asserted in src/lib/kit-tokens.test.ts. */
@@ -3585,12 +3590,20 @@ html.ncs-gated .ncs-overlay {
   :root[data-theme='dark'] {
     color-scheme: dark;
     --ground: #14162f;
-    --ink: #f3f2ec;
+    --ink: #e6e4dc;
     --soft: #b2b4cc;
     --card: #1d2042;
     --line: rgba(226, 228, 255, 0.15);
     --accent: #aab3ff;
-    --fill: #3345f0;
+    --fill: #2c3bd2;
+    /* What shows for the moment a page turns or deals (the view transitions): the studio blue,
+       but at night a deep one, so changing page in the dark is not a flash of bright blue. */
+    --table: #1f2675;
+    /* The big blue panels (the closing, the blue price cards) and the big bone cards (the ink price
+       card, the Do card) at night: a deeper cobalt and a dimmer bone, so a panel the height of the
+       screen does not light the room. Buttons and small marks keep --fill and --ink. */
+    --fill-deep: #2532a8;
+    --bone: #d6d3ca;
     --star: #f5b301;
     --star-edge: #f5b301;
     --on-ink: #14162f;
@@ -3598,7 +3611,7 @@ html.ncs-gated .ncs-overlay {
     --soft-2: #a4a6bf;
     --soft-3: #a4a6bf;
     --chip: #272b55;
-    --chip-ink: #f3f2ec;
+    --chip-ink: #e6e4dc;
     --dock: rgba(29, 32, 66, 0.82);
     --wash: rgba(226, 228, 255, 0.13);
     --well: #272b55;
@@ -3660,12 +3673,52 @@ html.ncs-gated .ncs-overlay {
       0 26px 120px -8px color-mix(in oklab, var(--cast) 88%, transparent);
   }
   :root[data-theme='dark'] .scr img {
-    filter: brightness(0.84);
+    filter: brightness(0.8);
     transition: filter 0.5s var(--ease);
   }
   :root[data-theme='dark'] .tile:is(:hover, :focus-visible, :has(video.on)) .scr img,
   :root[data-theme='dark'] :is(.band, .sheet) .scr img {
     filter: none;
+  }
+
+  /* Night strength. A client's color (--c) or paper (--p) is set inline where it applies, so the
+     same element works out its night versions from it: --cd, the color with some of the dark
+     ground mixed in, and --pd, the paper a little dimmed. The surfaces big enough to light a dark
+     room take them: a study's hero, the client sheet, a quote band's color, the results cards,
+     the quote and Up next bands, and the church cards. Every client's paper sits on a darker
+     accent (case-palettes.test.ts), so a darker accent only raises the contrast of the paper on
+     it; on the dimmed paper the darkest text is the light side's soft grey, which axe holds to 4.5:1. */
+  :root[data-theme='dark'] [style*='--c:'] {
+    --cd: color-mix(in oklab, var(--c) 70%, #0b0c1f);
+  }
+  :root[data-theme='dark'] [style*='--p:'] {
+    --pd: color-mix(in oklab, var(--p) 92%, #14162f);
+  }
+  :root[data-theme='dark'] :is(.s-hero, .sheet, .band-bg, .chg-card, .wf-card, .q, .next-band) {
+    background-color: var(--cd, var(--c));
+  }
+  :root[data-theme='dark'] .study {
+    background-color: var(--pd, var(--p));
+  }
+  :root[data-theme='dark'] .end {
+    background-color: var(--fill-deep);
+  }
+  :root[data-theme='dark'] .pc-blue {
+    --pcb: var(--fill-deep);
+  }
+  :root[data-theme='dark'] .pc-ink {
+    --pcb: var(--bone);
+  }
+  :root[data-theme='dark'] :is(.t-ink .t-bg, .otc-back) {
+    background-color: var(--fill-deep);
+  }
+  :root[data-theme='dark'] :is(.t-dark .t-bg, .see-mine, .do-ink, .nine) {
+    background-color: var(--bone);
+  }
+  /* Captures of client sites are mostly white pages: they rest a little dim too, and come up to
+     full strength when opened (the larger view is its own dialog). */
+  :root[data-theme='dark'] :is(.zoom img, .ba img, .walk img) {
+    filter: brightness(0.86);
   }
 
   /* The one big line: the lights come up as it gains its weight. --lit comes from kit.js and stays
@@ -3815,7 +3868,7 @@ html.ncs-gated .ncs-overlay {
 /* The page turning over. The old side rotates to edge-on, the new one comes round from the other
    edge and settles with a small overshoot, over the studio blue for the moment nothing faces you. */
 html.flipping::view-transition {
-  background: #3345f0;
+  background: var(--table, #3345f0);
 }
 html.flipping::view-transition-group(root) {
   animation: none;

@@ -81,6 +81,14 @@
   box-shadow: 0 0 2.5rem 2rem var(--c);
   pointer-events: none;
 }
+/* At night the hero is the client's color at its night strength (--cd, kit.css), and the patch
+   under the words has to match it or it shows as a lighter block. */
+@media screen {
+  :root[data-theme='dark'] .s-hero-t::before {
+    background: var(--cd, var(--c));
+    box-shadow: 0 0 2.5rem 2rem var(--cd, var(--c));
+  }
+}
 
 /* The opening scrubs. Where the browser has scroll-driven animation, the first two thirds of a
    screen of scrolling bring the windows level and to size: they start a touch large and tilted.

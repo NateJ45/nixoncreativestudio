@@ -72,6 +72,10 @@ const NIGHT_PAIRS: [string, string, string][] = [
   ['ink on the cobalt (the marker on a post, journal.css)', night('ink'), night('fill')],
   ['text on the bone card', night('on-ink'), night('ink')],
   ['soft text on the bone card', night('on-ink-soft'), night('ink')],
+  ['white on the deep cobalt (the closing, the blue price cards)', '#ffffff', night('fill-deep')],
+  ['the soft blue on the deep cobalt', token('accent-soft'), night('fill-deep')],
+  ['text on the dimmed bone (the big bone cards)', night('on-ink'), night('bone')],
+  ['soft text on the dimmed bone', night('on-ink-soft'), night('bone')],
 ];
 
 for (const [what, fg, bg] of NIGHT_PAIRS) {
