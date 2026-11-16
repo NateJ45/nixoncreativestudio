@@ -57,6 +57,22 @@ test('a window plays its footage under the pointer', async ({ page }) => {
   const band = page.locator('.band a.tile').first();
   await band.scrollIntoViewIfNeeded();
   await band.hover();
+  // Hover waits until the scrolling has stopped (ui.stillHover): a card that slid under the pointer
+  // is taken on the first real move after it. hover() can scroll the page itself, and the band's
+  // phone used to settle on a frame loop, so Playwright's wait for it to hold still covered that
+  // pause; the browser now settles it with the scroll, so wait for quiet and move, as a person would.
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        let t = setTimeout(done, 300);
+        addEventListener('scroll', () => {
+          clearTimeout(t);
+          t = setTimeout(done, 300);
+        });
+      }),
+  );
+  const box = (await band.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2 + 2, box.y + box.height / 2);
   await expect
     .poll(() =>
       band.locator('video').evaluate((v: HTMLVideoElement) => v.getAttribute('src') ?? ''),

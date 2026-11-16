@@ -1170,6 +1170,29 @@ blockquote {
 html:not(.js) .dk-rail {
   display: none;
 }
+/* The line drawn by the scroll itself where the browser can (kit.js only shows the rail and keeps
+   the chapter ticks): the root scroller's whole run is the line's whole length, which is what
+   kit.js worked out from scrollY on every scroll event. A page with no real length (.flat, set by
+   kit.js) shows none of it. Reduced motion and older browsers keep the script's line. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .js .dk-rail path {
+      animation: dk-run linear both;
+      animation-timeline: scroll(root block);
+    }
+    .js .dk-rail.flat path {
+      animation: none;
+    }
+  }
+}
+@keyframes dk-run {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
 /* A case study's chapters, as ticks on the rail (kit.js). A tick is hollow until the line reaches
    it, filled once it has, and the chapter you are in is the larger one, so the state is a shape as
    well as a color. */
@@ -2673,6 +2696,58 @@ h1 b,
 .big .giant .bw {
   display: inline-block;
 }
+/* The words rising, tied to the scroll (kit.js adds .bd-css to the line where the browser has
+   scroll-driven animation and motion is allowed). The line is the timeline, so a word that has
+   moved never moves its own range. kit.js writes each word's stretch once, as --b0 and --b1 past
+   the line's top reaching the bottom edge (the same windows its frame loop used: half the line's
+   progress wide, spaced in reading order), and the browser does the rest in step with the scroll.
+   The words fade from .15 only once the line is in sight (.bd-seen, an IntersectionObserver), so
+   an audit of the page as it loads still meets them at full ink, only low. */
+@supports (animation-timeline: view()) {
+  .bd-css {
+    view-timeline-name: --bline;
+    view-timeline-inset: 0px;
+  }
+  .bd-css .bw {
+    animation: bw-lift linear both;
+    animation-timeline: --bline;
+    animation-range: cover var(--b0) cover var(--b1);
+    animation-timing-function: linear(
+      0,
+      0.028 10%,
+      0.104 20%,
+      0.216 30%,
+      0.352 40%,
+      0.5 50%,
+      0.648 60%,
+      0.784 70%,
+      0.896 80%,
+      0.972 90%,
+      1
+    );
+  }
+  .bd-css.bd-seen .bw {
+    animation-name: bw-rise;
+  }
+}
+@keyframes bw-lift {
+  from {
+    transform: translateY(0.4em);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes bw-rise {
+  from {
+    transform: translateY(0.4em);
+    opacity: 0.15;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
 h1.giant {
   font-weight: 500;
   max-width: none;
@@ -2765,6 +2840,62 @@ h1.giant b {
   z-index: -1;
   border-radius: 1.75rem;
   background: var(--c);
+}
+/* The band arriving, tied to the scroll. Where the browser has scroll-driven animation, it opens
+   the color and settles the phone itself, in step with the scroll and with no script at all:
+   kit.js used to work both out each frame and write --bs and --bk, a frame behind a phone's own
+   scrolling. The stretch is the script's: from the band's top 2 percent of a screen below the
+   bottom edge (cover -2vh) to its top at 40 percent of the screen (cover 60vh), eased by the same
+   smoothstep. Every view timeline here sets view-timeline-inset: 0px: left on auto it takes the
+   page's scroll-padding (72px and 96px, for the top line and the dock) and starts late. The color
+   closes in with clip-path rather than inset, so nothing is laid out again:
+   inset(m round 1.75rem) on the full box is the same rounded rectangle the inset drew. Without
+   scroll-driven animation (Firefox today), or under reduced motion, kit.js runs it as before. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .js .band {
+      view-timeline-name: --band;
+      view-timeline-inset: 0px;
+    }
+    .js .band-bg,
+    .js .band-w {
+      animation: band-open linear both;
+      animation-timeline: --band;
+      animation-range: cover -2vh cover 60vh;
+      animation-timing-function: linear(
+        0,
+        0.028 10%,
+        0.104 20%,
+        0.216 30%,
+        0.352 40%,
+        0.5 50%,
+        0.648 60%,
+        0.784 70%,
+        0.896 80%,
+        0.972 90%,
+        1
+      );
+    }
+    .js .band-w {
+      animation-name: band-settle;
+    }
+  }
+}
+@keyframes band-open {
+  from {
+    clip-path: inset(clamp(0.75rem, 4vw, 4rem) round 1.75rem);
+  }
+  to {
+    clip-path: inset(0 round 1.75rem);
+  }
+}
+@keyframes band-settle {
+  from {
+    transform: rotate(calc(var(--bw-r) + var(--bw-s))) translateY(var(--bw-y));
+  }
+  to {
+    transform: rotate(var(--bw-r)) translateY(0);
+  }
 }
 .band .label {
   margin-bottom: 1.25rem;
@@ -2859,9 +2990,15 @@ h1.giant b {
   margin-top: 0.35rem;
   font-size: 0.9375rem;
 }
+/* The phone's tilt and drop as the band arrives: --bk runs 1 to 0, so it settles from --bw-r plus
+   --bw-s, and --bw-y lower, to --bw-r. The flipped band and a phone-sized cycle band set their own. */
 .band-w {
+  --bw-r: 3deg;
+  --bw-s: 9deg;
+  --bw-y: 3rem;
   margin-block: clamp(-7rem, -7vw, -3.5rem);
-  transform: rotate(calc(3deg + var(--bk, 0) * 9deg)) translateY(calc(var(--bk, 0) * 3rem));
+  transform: rotate(calc(var(--bw-r) + var(--bk, 0) * var(--bw-s)))
+    translateY(calc(var(--bk, 0) * var(--bw-y)));
 }
 .band-w .tile {
   box-shadow:
@@ -2878,8 +3015,9 @@ h1.giant b {
   grid-template-columns: clamp(11rem, 18vw, 16.5rem) minmax(0, 1fr);
 }
 .band-flip .band-w {
+  --bw-r: -3deg;
+  --bw-s: -9deg;
   order: -1;
-  transform: rotate(calc(-3deg - var(--bk, 0) * 9deg)) translateY(calc(var(--bk, 0) * 3rem));
 }
 .band-flip .band-w .tile:hover,
 .band-flip .band-w .tile:focus-visible {
@@ -2958,7 +3096,9 @@ h1.giant b {
   .band-cycle .band-w {
     width: min(100%, 32rem);
     margin-block: 0 -2.5rem;
-    transform: rotate(calc(1.5deg + var(--bk, 0) * 5deg)) translateY(calc(var(--bk, 0) * 2rem));
+    --bw-r: 1.5deg;
+    --bw-s: 5deg;
+    --bw-y: 2rem;
   }
   .band-cycle .band-w .tile:hover,
   .band-cycle .band-w .tile:focus-visible {
@@ -3351,6 +3491,93 @@ html:not(.js) .end-work li a:hover {
 .end-name i {
   display: inline-block;
   font-style: normal;
+}
+/* The deck gathering and the name rising, tied to the scroll. kit.js adds .end-css to the closing
+   where the browser has scroll-driven animation and motion is allowed, and from then on only
+   measures: the stage's width (--gc-sw, on a resize), each card's place in the fan (--gd, and
+   --gad its distance from the middle) and each letter's place in the name (--gq, 0 to 1, and --gt
+   its lean). The stage and the name are the two timelines.
+   A card squares up over the script's own stretch: from the stage's top at 92 percent of the
+   screen, plus a little more for each card out from the middle, over 72 percent of the next 55
+   percent of a screen. A letter rises over the name's entry, from the bottom edge to 80 percent
+   of its height in sight, later for each letter in reading order.
+   What the pointer does still runs on springs in kit.js, as one number each that the keyframes
+   read: --gp pulls a card out of the deck for the name you point at, --gh lifts the letters by
+   the pointer. Both are registered and not inherited, so a write restyles one element. The last
+   card, Yours, stays in kit.js: it is dealt once as the deck squares up, not tied to the scroll. */
+@property --gp {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+@property --gh {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+@supports (animation-timeline: view()) {
+  .end-css {
+    timeline-scope: --gather, --gname;
+  }
+  .end-css .gather {
+    view-timeline-name: --gather;
+    view-timeline-inset: 0px;
+  }
+  .end-css .end-name {
+    view-timeline-name: --gname;
+    view-timeline-inset: 0px;
+  }
+  .end-css .gc {
+    --gc-sp: min(var(--gc-sw, 0px) * 0.1, 46px);
+    --gc-re: min(var(--gw) * 0.4, (var(--gc-sw, 0px) - var(--gw)) / 2 + 24px);
+    animation: gc-gather linear both;
+    animation-timeline: --gather;
+    animation-range: cover calc(8vh + var(--gad) * 1.65vh) cover calc(47.6vh + var(--gad) * 1.65vh);
+    animation-timing-function: linear(
+      0,
+      0.028 10%,
+      0.104 20%,
+      0.216 30%,
+      0.352 40%,
+      0.5 50%,
+      0.648 60%,
+      0.784 70%,
+      0.896 80%,
+      0.972 90%,
+      1
+    );
+  }
+  .end-css .end-name i {
+    animation: gl-rise linear both;
+    animation-timeline: --gname;
+    animation-range: entry calc(var(--gq) * 30%) entry calc(50% + var(--gq) * 30%);
+  }
+}
+@keyframes gc-gather {
+  from {
+    transform: translate3d(
+        calc(var(--gd) * var(--gc-sp) + var(--gp) * var(--gc-re)),
+        calc(var(--gd) * var(--gd) * 3px - var(--gp) * var(--gw) * 0.14),
+        0
+      )
+      rotate(calc(var(--gd) * 6deg + var(--gp) * 7deg)) scale(calc(1 + var(--gp) * 0.06));
+  }
+  to {
+    transform: translate3d(
+        calc(var(--gd) * 1.4px + var(--gp) * var(--gc-re)),
+        calc(var(--gp) * var(--gw) * -0.14),
+        0
+      )
+      rotate(calc(var(--gd) * 0.9deg + var(--gp) * 7deg)) scale(calc(1 + var(--gp) * 0.06));
+  }
+}
+@keyframes gl-rise {
+  from {
+    transform: translate3d(0, calc(108% - var(--gh) * 9%), 0) rotate(var(--gt));
+  }
+  to {
+    transform: translate3d(0, calc(var(--gh) * -9%), 0) rotate(0deg);
+  }
 }
 .end-base {
   display: flex;
