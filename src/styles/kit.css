@@ -5,6 +5,49 @@
   font-display: swap;
   src: url(/assets/fonts/hanken.woff2) format('woff2');
 }
+/* Drawn while Hanken loads: Arial (or its Linux twins Liberation Sans and Arimo) scaled to
+   Hanken's letter widths and line metrics, so a line breaks where the real font will and nothing
+   jumps when it arrives (2026-11-16: /now shifted 0.14 on a phone on a slow load). Hanken's width
+   changes with weight far more than Arial's, so there are three bands, each on the real Arial face
+   (a single regular face makes the browser fake bold, which is too narrow): 100 to 599 against
+   Arial, 600 to 749 and 750 to 900 against Arial Bold. Widths measured in the browser at 400, 500,
+   600, 700 and 800 (the 100 to 599 band uses 500, the headline weight; checked against the /about,
+   /now and home headlines with the font blocked); line metrics from @capsizecss/unpack on hanken.woff2 (ascent 1000, descent
+   303, per 1000). Recompute if the font file changes. Vault gotcha
+   metric-fallback-fonts-need-linux-twins. */
+@font-face {
+  font-family: 'Hanken Grotesk Fallback';
+  font-weight: 100 599;
+  src:
+    local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
+    local('Arimo');
+  size-adjust: 101.51%;
+  ascent-override: 98.51%;
+  descent-override: 29.85%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Hanken Grotesk Fallback';
+  font-weight: 600 749;
+  src:
+    local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'),
+    local('LiberationSans-Bold'), local('Arimo Bold'), local('Arimo-Bold');
+  size-adjust: 94.05%;
+  ascent-override: 106.33%;
+  descent-override: 32.22%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Hanken Grotesk Fallback';
+  font-weight: 750 900;
+  src:
+    local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'),
+    local('LiberationSans-Bold'), local('Arimo Bold'), local('Arimo-Bold');
+  size-adjust: 83.13%;
+  ascent-override: 120.29%;
+  descent-override: 36.45%;
+  line-gap-override: 0%;
+}
 /* A calm page. Each client brings one rich color in their own tile; the wow is how things move. */
 :root {
   --ground: #f5f5f3;
@@ -39,8 +82,8 @@
   --screen: #fff;
   /* Cards have a shadow on paper. On the dark side a shadow can't be seen, so they get a lit edge. */
   --rim: 0 0 transparent;
-  --display: 'Hanken Grotesk', system-ui, sans-serif;
-  --body: 'Hanken Grotesk', system-ui, sans-serif;
+  --display: 'Hanken Grotesk', 'Hanken Grotesk Fallback', system-ui, sans-serif;
+  --body: 'Hanken Grotesk', 'Hanken Grotesk Fallback', system-ui, sans-serif;
   --gut: clamp(1.25rem, 4vw, 4rem);
   /* Where a full-bleed block's contents start, so its left edge meets the 90rem page. */
   --edge: max(var(--gut), calc((100% - 90rem) / 2 + var(--gut)));
