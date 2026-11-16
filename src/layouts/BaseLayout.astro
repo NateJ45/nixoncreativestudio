@@ -157,15 +157,15 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
 
-    <!-- Marks that scripts run, before first paint, so CSS can gate the entrances
-         on .js. Without JavaScript the class is absent and everything is simply there. -->
+    {/* One inline script for two jobs, because each inline script costs a hash in the CSP line
+         (Cloudflare caps a _headers line at 2,000 characters).
+         1. Marks that scripts run, before first paint, so CSS can gate the entrances on .js.
+            Without JavaScript the class is absent and everything is simply there.
+         2. The page change is a deal (kit.css, "The deal"). The arriving page says how: going Back
+            deals the other way, and when a window is growing into this page (a study's hero, a
+            price card's tier) the deal stands down so only the plain fade sits under the morph. */}
     <script is:inline>
       document.documentElement.classList.add('js');
-    </script>
-    {/* The page change is a deal (kit.css, "The deal"). The arriving page says how: going Back
-         deals the other way, and when a window is growing into this page (a study's hero, a price
-         card's tier) the deal stands down so only the plain fade sits under the morph. */}
-    <script is:inline>
       addEventListener('pagereveal', function (e) {
         var vt = e.viewTransition,
           types = vt && vt.types,
@@ -305,9 +305,12 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
       // GA4 events: a no-op unless the GA tag defined window.gtag. See src/lib/track.ts.
       import { initTracking } from '../lib/track';
       initTracking();
-    </script>
-    <!-- A quiet hello in the console for anyone who opens dev tools. -->
-    <script is:inline>
+      // Microsoft Clarity, only when Analytics.astro printed its meta tag. See src/lib/clarity.ts.
+      import { initClarity } from '../lib/clarity';
+      initClarity();
+      // A quiet hello in the console for anyone who opens dev tools. Here rather than in an
+      // inline script of its own: every inline script costs a hash in the CSP line, which
+      // Cloudflare caps at 2,000 characters (vault gotcha cloudflare-headers-line-limit-breaks-hashed-csp).
       console.log(
         '%cNixon Creative Studio',
         'font: 600 16px ui-sans-serif, system-ui; color: #2f3fe6;',
