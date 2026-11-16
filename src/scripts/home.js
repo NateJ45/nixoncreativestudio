@@ -14,22 +14,40 @@ tiles.forEach(function (t) {
 ui.wireFootage(grid);
 
 /* Draw a card: a random client opens from its own place in the grid, never the same one twice running.
-   It draws from the windows you can see, so the sheet visibly grows out of one, and from all of them
-   when none is on the screen. */
-var lastDraw = null;
+   It draws from every window, not just the ones on screen: on a phone only one or two show at a time,
+   which made the draw alternate between them. A window whose cell is off screen is scrolled to the middle
+   first and the sheet grows out of it once the page settles (at once under reduced motion). */
+var lastDraw = null,
+  drawing = false;
 $('[data-draw]').addEventListener('click', function () {
-  var inView = tiles.filter(function (t) {
-    var r = t.getBoundingClientRect();
-    return t !== lastDraw && r.bottom > 40 && r.top < innerHeight - 40;
+  if (drawing) return;
+  var pool = tiles.filter(function (t) {
+    return t !== lastDraw;
   });
-  var pool = inView.length
-    ? inView
-    : tiles.filter(function (t) {
-        return t !== lastDraw;
-      });
   var tile = pool[Math.floor(Math.random() * pool.length)];
   lastDraw = tile;
-  ui.openSheet(ui.bySlug(tile.dataset.slug), tile);
+  var open = function () {
+    drawing = false;
+    ui.openSheet(ui.bySlug(tile.dataset.slug), tile);
+  };
+  /* Measure the cell, not the window: a window not yet dealt is still drawn small up in the hand. */
+  var cell = tile.parentNode,
+    r = cell.getBoundingClientRect();
+  if (r.top >= 40 && r.bottom <= innerHeight - 40) return open();
+  drawing = true;
+  cell.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+  if (reduce) return requestAnimationFrame(open);
+  /* scrollend where it exists; the timer covers browsers without it and a scroll that never starts. */
+  var done = false,
+    finish = function () {
+      if (done) return;
+      done = true;
+      removeEventListener('scrollend', finish);
+      clearTimeout(timer);
+      open();
+    },
+    timer = setTimeout(finish, 900);
+  addEventListener('scrollend', finish);
 });
 
 /* "Websites for:" in the ledger. Reaching for a sector with a mouse, or landing on it with the

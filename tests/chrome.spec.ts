@@ -197,6 +197,23 @@ test.describe('With JavaScript', () => {
     await expect(page.locator('dialog[data-sheet]')).toBeHidden();
   });
 
+  test('on a phone, the draw can pick a window off screen and scrolls to it', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const draw = page.locator('[data-draw]');
+    await draw.scrollIntoViewIfNeeded();
+    const last = page.locator('[data-grid] .tile').last();
+    await expect(last).not.toBeInViewport();
+    /* Force the pick to the last window, which is never on screen beside the button. */
+    await page.evaluate(() => {
+      Math.random = () => 0.999;
+    });
+    await draw.click();
+    await expect(page.locator('dialog[data-sheet] h2')).not.toHaveText('');
+    await page.keyboard.press('Escape');
+    await expect(last).toBeInViewport();
+  });
+
   test('cross-document view transitions, and no client router', async ({ page }) => {
     await page.goto('/');
     expect(await page.locator('meta[name="astro-view-transitions-enabled"]').count()).toBe(0);

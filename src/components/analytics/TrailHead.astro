@@ -1,0 +1,53 @@
+---
+/* ============================================================================
+   Visitor id and "this is me" (runs first, before GA4 and Clarity)
+   ============================================================================
+   Site-owned. Rendered by Analytics.astro ahead of the GA4 tag, because both
+   things it does have to happen before that tag reads the dataLayer.
+
+   1. ?me=1 marks this browser as Nathan's (?me=0 undoes it). A marked browser
+      sends nothing anywhere: GA4 is switched off with Google's own
+      ga-disable-<id> flag, and the visitor trail (src/lib/trail.ts) and Clarity
+      both check the same localStorage key. Do it once on each of your phones
+      and computers.
+   2. Everyone else gets an anonymous visitor id (a random UUID in
+      localStorage, ncs-vid). It ties a person's visits together for the trail,
+      goes to GA4 as user_id (so a lead can be found in User explorer) and to
+      Clarity as its custom id. It is never a name, address or IP.
+   ============================================================================ */
+interface Props {
+  /** The GA4 Measurement ID, or '' when GA4 is off. */
+  gaId: string;
+}
+const { gaId } = Astro.props;
+---
+
+<script is:inline define:vars={{ gaId }}>
+  try {
+    var meParam = /[?&]me=([01])(?:&|$)/.exec(location.search);
+    if (meParam) {
+      if (meParam[1] === '1') localStorage.setItem('ncs-me', '1');
+      else localStorage.removeItem('ncs-me');
+    }
+    if (localStorage.getItem('ncs-me') === '1') {
+      if (gaId) window['ga-disable-' + gaId] = true;
+      if (meParam) console.log('This browser is marked as yours: no analytics, trail or replays.');
+    } else {
+      var vid = localStorage.getItem('ncs-vid') || '';
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(vid)) {
+        vid = crypto.randomUUID();
+        localStorage.setItem('ncs-vid', vid);
+      }
+      if (gaId) {
+        window.dataLayer = window.dataLayer || [];
+        // gtag needs a real arguments object, the same shape GoogleAnalytics.astro uses.
+        (function () {
+          // eslint-disable-next-line prefer-rest-params
+          window.dataLayer.push(arguments);
+        })('set', { user_id: vid });
+      }
+    }
+  } catch (_e) {
+    // Storage blocked: no id, so no trail, and GA4 runs exactly as before.
+  }
+</script>
