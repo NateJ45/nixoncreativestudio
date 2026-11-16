@@ -22,7 +22,7 @@ const heading = `What this site <b>collects.</b>`;
       Clarity, with anything typed hidden), and the things any web server logs. No advertising
       trackers. If you have questions, email <a href={site.emailHref}>{site.email}</a>.
     </p>
-    <p class="updated">Last updated November 15, 2026</p>
+    <p class="updated">Last updated November 16, 2026</p>
   </header>
   <div class="doc">
     <nav class="toc card" aria-label="On this page">
@@ -69,7 +69,9 @@ const heading = `What this site <b>collects.</b>`;
         brought you to the form carried them: <code>from</code> (the page or case study you came
         from), <code>tier</code> (a price tier you picked), <code>service</code> (a service you
         picked) and <code>origin_org_type</code> (the kind of organization that link named). They
-        tell me where an inquiry started, nothing more.
+        tell me where an inquiry started, nothing more. Two more things go with every message, both
+        explained under <a href="#analytics">Analytics</a>: the note about how you first found the
+        site, and your browser's random visitor number.
       </p>
       <p>
         The form also includes a hidden "honeypot" field that real visitors never fill in. If a bot
@@ -153,16 +155,26 @@ const heading = `What this site <b>collects.</b>`;
         goes with your message, along with how many pages you looked at, so I can see how you found
         me. Clearing your browser's site data removes it.
       </p>
+      <p>
+        Those campaign tags are why links I post on Instagram, Facebook, LinkedIn, my email
+        signature or a proposal end in something like <code>?utm_source=instagram</code>. They are
+        plain labels that say which link you followed; no code runs and nobody else sees them. The
+        social sites may add tracking of their own to links you tap there (Facebook and Instagram
+        add an <code>fbclid</code> code, for example); that is theirs, covered by their privacy
+        policies, and this site does not use it. The site itself loads no advertising trackers: no
+        Meta Pixel, no LinkedIn Insight Tag, no ad network tags.
+      </p>
       <h3 id="visit-history">Pages you looked at</h3>
       <p>
         This site keeps its own record of visits, on its own server, so I can see what people
         actually read. Your browser gets a random visitor number (<code>ncs-vid</code>), and for
         each page it sends that number with the page's address and title, where the visit came from,
         how long the page was open and in use, how far down you scrolled, and short notes of what
-        you used there: the site's tools, the buttons and questions you opened, and words you typed
-        into the site's search box. It never includes anything typed into the contact form. The
-        server adds the rough city and region Cloudflare sees and the kind of device (for example
-        "iPhone, Safari"), and it does not keep your IP address.
+        you used there: the site's tools, the buttons and questions you opened, words you typed into
+        the site's search box, and which contact-form question you reached (its name, like "budget",
+        never your answer). It never includes anything typed into the contact form. The server adds
+        the rough city and region Cloudflare sees and the kind of device (for example "iPhone,
+        Safari"), and it does not keep your IP address.
       </p>
       <p>
         On its own that record is anonymous: a number, not a name. If you send the contact form, the
@@ -181,6 +193,14 @@ const heading = `What this site <b>collects.</b>`;
         It is not used for advertising. It does not run at all if your browser sends a Global
         Privacy Control signal, which several browsers and extensions can turn on, and blocking
         clarity.ms in a tracker blocker stops it too.
+      </p>
+      <h3 id="opt-out">Turning it all off</h3>
+      <p>
+        To stop all of it in one go, open <a href="/?me=1">this link</a>, or add
+        <code>?me=1</code> to the address of any page on the site. That browser then sends nothing
+        to Google Analytics, keeps no record of pages and runs no recordings, until you visit with{' '}
+        <code>?me=0</code> or clear the site's data. It is the same switch I use on my own devices
+        so my visits don't count.
       </p>
       <h2 id="server-logs">Server logs</h2>
       <p>
@@ -213,9 +233,15 @@ const heading = `What this site <b>collects.</b>`;
         drawing has already played), <code>ncs-hero</code> and <code>ncs-tier-morph</code> (the
         window or price card you followed), <code>ncs-tier</code> (a tier you chose on the Prices
         page), <code>ncs-mark-wave</code> (the name in the top line has already waved) and the page
-        count mentioned above. <code>ncs-vid</code> is the visitor number described under Pages you
-        looked at, and <code>ncs-visit</code> (for as long as the tab is open) says which visit a
-        page belongs to. Clearing your browser's site data removes all of them.
+        count mentioned above.
+      </p>
+      <p>
+        Three more are different, because they do leave your device. <code>ncs-vid</code> is the
+        visitor number described under Pages you looked at, sent with each page and with the contact
+        form; <code>ncs-visit</code> (for as long as the tab is open) says which visit a page
+        belongs to and is sent with it; and <code>ncs-me</code> is the off switch described under
+        Turning it all off, which is never sent anywhere. Clearing your browser's site data removes
+        all of them.
       </p>
       <h2 id="your-data">Your data</h2>
       <p>

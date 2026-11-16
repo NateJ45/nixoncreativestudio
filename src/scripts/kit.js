@@ -573,6 +573,12 @@ function puckPaint() {
   slide.style.transform = 'translateX(' + puckL.x + 'px)';
 }
 function puckFrame(t) {
+  /* A page with no current link in the dock (Contact) has nowhere to rest, so a slide still in
+     flight when the pointer leaves simply stops where puckGo hid it. */
+  if (!puckTo) {
+    puckRaf = 0;
+    return;
+  }
   var dt = Math.min((t - puckLast) / 1000, 0.032),
     left = puckTo.offsetLeft,
     right = left + puckTo.offsetWidth,
