@@ -44,8 +44,9 @@ function layout() {
   tw = tiles[0].offsetWidth;
   stageW = stage.offsetWidth;
   storyEnd = story.getBoundingClientRect().bottom + scrollY;
+  ui.top(stage);
   tiles.forEach(function (t, i) {
-    t.style.zIndex = 10 - Math.round(Math.abs(st[i].d) * 2);
+    ui.put(t, 'zIndex', String(10 - Math.round(Math.abs(st[i].d) * 2)));
   });
   wake();
 }
@@ -126,7 +127,9 @@ function frame(now) {
   var live = false,
     p;
   if (wide) p = scrollY / Math.max(240, (storyEnd - H) * 0.72);
-  else p = (H * 0.86 - stage.getBoundingClientRect().top) / Math.max(200, H * 0.68);
+  /* Where the stage is comes from ui.top and ui.height: asked of the browser after the windows
+     below had moved, it laid the page out again, twice a frame. */
+  else p = (H * 0.86 - ui.top(stage)) / Math.max(200, H * 0.68);
   p = Math.min(1, Math.max(0, p));
   var open = focusOpen || (!reduce && (inStage || pressed || held));
   st.forEach(function (s) {
@@ -160,17 +163,20 @@ function frame(now) {
       }
     }
     var q = pose(s, s.v);
-    s.el.style.zIndex = s.hov ? 15 : 10 - Math.round(Math.abs(s.d) * 2);
-    s.el.style.transform =
+    ui.put(s.el, 'zIndex', String(s.hov ? 15 : 10 - Math.round(Math.abs(s.d) * 2)));
+    ui.put(
+      s.el,
+      'transform',
       'translate3d(' +
-      q.x.toFixed(2) +
-      'px,' +
-      (q.y - s.lift * pw * 0.05).toFixed(2) +
-      'px,0) rotate(' +
-      q.r.toFixed(3) +
-      'deg) scale(' +
-      (1 + s.lift * 0.02).toFixed(4) +
-      ')';
+        q.x.toFixed(2) +
+        'px,' +
+        (q.y - s.lift * pw * 0.05).toFixed(2) +
+        'px,0) rotate(' +
+        q.r.toFixed(3) +
+        'deg) scale(' +
+        (1 + s.lift * 0.02).toFixed(4) +
+        ')',
+    );
   });
   if (!reduce) {
     /* Tight in the hand, soft when let go. */
@@ -181,8 +187,7 @@ function frame(now) {
     /* No pointer to follow: lean with the scroll, by where the stage sits on the screen. */
     var leaning = touchOnly.matches && !held && !hover;
     if (leaning) {
-      var sr = stage.getBoundingClientRect(),
-        off = (sr.top + sr.height / 2 - H / 2) / H;
+      var off = (ui.top(stage) + ui.height(stage) / 2 - H / 2) / H;
       tRx = Math.max(-1, Math.min(1, off * 1.6)) * LEAN;
       tRy = 0;
     }
@@ -200,22 +205,25 @@ function frame(now) {
     );
     var h = go(c.s, held ? 1.045 : hover ? 1.012 : 1, 300, 20, dt);
     live = live || a || b || e || f || g || h || dz || held;
-    card.style.setProperty('--depth', Math.max(0, c.dp.x).toFixed(3));
-    card.style.setProperty('--lift', Math.max(0, Math.min(1, (c.s.x - 1) / 0.045)).toFixed(3));
-    card.style.transform =
+    ui.put(card, '--depth', Math.max(0, c.dp.x).toFixed(3));
+    ui.put(card, '--lift', Math.max(0, Math.min(1, (c.s.x - 1) / 0.045)).toFixed(3));
+    ui.put(
+      card,
+      'transform',
       'perspective(1100px) translate3d(' +
-      c.x.x.toFixed(2) +
-      'px,' +
-      c.y.x.toFixed(2) +
-      'px,0) rotateX(' +
-      c.rx.x.toFixed(3) +
-      'deg) rotateY(' +
-      c.ry.x.toFixed(3) +
-      'deg) rotate(' +
-      c.rz.x.toFixed(3) +
-      'deg) scale(' +
-      c.s.x.toFixed(4) +
-      ')';
+        c.x.x.toFixed(2) +
+        'px,' +
+        c.y.x.toFixed(2) +
+        'px,0) rotateX(' +
+        c.rx.x.toFixed(3) +
+        'deg) rotateY(' +
+        c.ry.x.toFixed(3) +
+        'deg) rotate(' +
+        c.rz.x.toFixed(3) +
+        'deg) scale(' +
+        c.s.x.toFixed(4) +
+        ')',
+    );
   }
   if (live) raf = requestAnimationFrame(frame);
 }
