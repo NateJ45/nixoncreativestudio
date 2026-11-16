@@ -252,6 +252,23 @@ body {
 .pblur-b {
   bottom: 0;
 }
+/* On arrival the dock rises from below the screen (kit.css, @keyframes dock: 1s delay, 1s rise).
+   While it rises it passes behind this blur and comes out smeared, so the blur waits until the dock
+   has landed and then fades in. A page reached from this site (dock-here) finds the dock already in
+   place and keeps the blur from the first frame. */
+@media (prefers-reduced-motion: no-preference) {
+  .js:not(.dock-here) .pblur-b {
+    animation: pblur-in 0.6s ease 2s both;
+  }
+}
+@keyframes pblur-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .pblur-t {
   --dir: to top;
   top: 0;
