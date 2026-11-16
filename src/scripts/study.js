@@ -177,9 +177,17 @@ if (!reduce && 'IntersectionObserver' in window) {
   });
 })();
 
-/* Long windows: the real capture slides inside the window, driven by native scroll through a spring. */
+/* Long windows: the real capture slides inside the window as you scroll. Where the browser has
+   scroll-driven animation it does the sliding itself (study.css, .study-sd), in step with the
+   scroll; this only measures how far each picture and its scroll thumb travel, and keeps the two
+   things that follow the speed of the scroll, which CSS cannot see: the thumb showing while the
+   picture moves, and the rail phone's lean. Elsewhere (Firefox today) native scroll drives the
+   picture through a spring, as before. Under reduced motion none of it runs. */
 var story = doc.querySelector('[data-story]'),
   longs = [];
+var cssLong =
+  !reduce && !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'));
+if (cssLong) doc.documentElement.classList.add('study-sd');
 var add = function (win, img, o) {
   var thumb = win.querySelector('.thumb');
   longs.push({
@@ -211,6 +219,7 @@ if (!reduce) {
 }
 var raf = 0,
   last = 0,
+  lastY = scrollY,
   H = innerHeight;
 function measure() {
   H = innerHeight;
@@ -224,6 +233,10 @@ function measure() {
       l.thumb.style.height = l.th + 'px';
     }
     l.h = h;
+    if (cssLong) {
+      ui.put(l.img, '--lg-y', l.travel.toFixed(1) + 'px');
+      if (l.thumb) ui.put(l.thumb, '--lg-ty', (l.on ? h - l.th : 0).toFixed(1) + 'px');
+    }
     if (l.self) ui.top(l.win);
   });
   ui.top(story);
@@ -244,6 +257,29 @@ function frame(now) {
   var live = false,
     srTop = ui.top(story),
     srH = ui.height(story);
+  if (cssLong) {
+    /* The browser moves the pictures. Here only their speed is followed, from how far the page
+       went since the last frame, eased over about a tenth of a second the way the spring eased
+       it, and only for a picture whose stretch of scroll is under way. A jump of more than a
+       screen in one frame (a restored scroll, a jump link) is not a speed, so it does not count. */
+    var y = scrollY,
+      dy = Math.abs(y - lastY) > H ? 0 : y - lastY,
+      ease = 1 - Math.exp(-dt / 0.12);
+    lastY = y;
+    longs.forEach(function (l) {
+      if (!l.on) return;
+      var top = l.self ? ui.top(l.win) : srTop,
+        span = l.self ? H + ui.height(l.win) : srH - H,
+        under = l.self ? top < H && top > H - span : top < 0 && top > -span,
+        vT = under ? ((dy / dt) * l.travel) / Math.max(1, span) : 0;
+      l.sp.v += (vT - l.sp.v) * ease;
+      if (Math.abs(l.sp.v) < 0.5 && !dy) l.sp.v = 0;
+      else live = true;
+      lean(l);
+    });
+    if (live) raf = requestAnimationFrame(frame);
+    return;
+  }
   longs.forEach(function (l) {
     if (!l.on) return;
     var p;
@@ -270,8 +306,7 @@ function frame(now) {
 function apply(l) {
   var y = clamp(l.sp.x, 0, l.travel);
   ui.put(l.img, 'transform', 'translate3d(0,' + (-y).toFixed(1) + 'px,0)');
-  var speed = Math.abs(l.sp.v);
-  if (l.thumb) {
+  if (l.thumb)
     ui.put(
       l.thumb,
       'transform',
@@ -279,10 +314,16 @@ function apply(l) {
         (l.travel ? (y / l.travel) * (l.h - (l.th || l.thumb.offsetHeight)) : 0).toFixed(1) +
         'px,0)',
     );
+  lean(l);
+}
+/* The thumb shows while the picture moves. The whole phone leans a little with the speed of the
+   page, then settles: a style written only when it changes, with nothing read from the page. */
+function lean(l) {
+  var speed = Math.abs(l.sp.v);
+  if (l.thumb) {
     if (speed > 30) l.thumb.classList.add('on');
     else if (speed < 6) l.thumb.classList.remove('on');
   }
-  /* The whole phone leans a little with the speed of the page, then settles. */
   if (l.tile && !l.self)
     ui.put(l.tile, 'transform', 'rotate(' + clamp(l.sp.v / 420, -1.8, 1.8).toFixed(3) + 'deg)');
 }
@@ -580,11 +621,12 @@ $$('[data-zoom]').forEach(function (b) {
 
 /* The walk grows as it arrives: the window of the real homepage starts a little small and scales up
    to its full size as you scroll it to the middle of the screen, and back if you scroll away. It is
-   tied to the scroll position, transform only, so nothing runs when the page is still. Under
-   reduced motion it is simply full size. */
+   tied to the scroll position, transform only, so nothing runs when the page is still. Where the
+   browser has scroll-driven animation it does this itself (study.css, walk-grow) and none of this
+   runs. Under reduced motion it is simply full size. */
 (function () {
   var wins = $$('.walk .win, .walk .walk-ph');
-  if (reduce || !wins.length) return;
+  if (reduce || cssLong || !wins.length) return;
   var FROM = 0.86,
     tick = 0;
   function size() {
