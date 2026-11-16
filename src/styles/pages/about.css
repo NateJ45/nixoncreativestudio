@@ -819,6 +819,65 @@ html:not(.js) .reel-bar {
   display: none;
 }
 
+/* The family album on the Family card: the same stepping row as the camera roll, dressed as a
+   page of prints. Each photo is whole (no crop, so a portrait never loses a head), in a white
+   border with a soft shadow, turned a degree or two, on a paper mat. The caption and the buttons
+   sit on the mat under the print, in ink, since there is no photo behind them to darken. */
+.otc-album .reel-strip {
+  /* Square: as kind to a portrait print as to a landscape one, and it fills the card's height
+     beside the Running card. */
+  aspect-ratio: 1;
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.5), transparent 70%),
+    color-mix(in srgb, var(--ink) 6%, var(--card));
+}
+.otc-album .reel-f {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  align-items: center;
+  height: 100%;
+  padding: 1.1rem 1.1rem 0;
+}
+.otc-album .reel-f img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  border: 0.4rem solid #fff;
+  border-radius: 0.2rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 10px 22px -10px rgba(0, 0, 0, 0.35);
+  transform: rotate(-1.2deg);
+}
+.otc-album .reel-f:nth-child(3n + 2) img {
+  transform: rotate(1.4deg);
+}
+.otc-album .reel-f:nth-child(3n) img {
+  transform: rotate(-0.5deg);
+}
+.otc-album .reel-f figcaption {
+  position: static;
+  justify-self: stretch;
+  min-height: 3.6rem;
+  padding: 0.7rem 6.5rem 0.75rem 0.1rem;
+  background: none;
+  color: var(--ink);
+}
+.otc-album .reel-b {
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: var(--ink);
+}
+.otc-album .reel-b:focus-visible {
+  outline-color: var(--ink);
+}
+
 /* The Running card's activity log: my Flying Pig 10K laid out the way a running app shows a run.
    A header, the headline numbers, the route on a pale map, the elevation and the mile splits. The
    route is drawn three times from one path: a wide card-coloured casing, a faint copy so the shape

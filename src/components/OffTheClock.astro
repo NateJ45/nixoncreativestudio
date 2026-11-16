@@ -6,7 +6,9 @@
      you scroll sideways.
    - Sunday AV: a program monitor showing a Sunday at Crestview (my photograph), with the tally
      light, a lower third and the audio meters moving while it is on screen.
-   - Family: the picnic photograph.
+   - Family: a family album, sixteen of our own photos as prints on a paper mat, each whole (no
+     crop, so no one loses their head) and turned a little. It steps exactly like the camera roll
+     (the same script), with a caption per print and never a date.
    - Running: my Flying Pig 10K as an activity log (header, stats, map, elevation, splits), from
      my own watch export in src/data/flying-pig-10k.ts (scripts/build-run-trace.mjs). The route
      draws itself as the card comes into view, and "Draw it again" replays it. No date on it. The
@@ -22,6 +24,21 @@ import type { ImageMetadata } from 'astro';
 import { journalPath, photoCount } from '../data/nav';
 import { photographyOpen } from '../data/photography-gate';
 import picnic from '../assets/about/family-picnic.jpg';
+import aquarium from '../assets/about/family/aquarium.jpg';
+import ballpark from '../assets/about/family/ballpark.jpg';
+import baptism from '../assets/about/family/baptism.jpg';
+import churchWedding from '../assets/about/family/church-wedding.jpg';
+import couchSelfie from '../assets/about/family/couch-selfie.jpg';
+import eveningOut from '../assets/about/family/evening-out.jpg';
+import firstDay from '../assets/about/family/first-day.jpg';
+import livingRoom from '../assets/about/family/living-room.jpg';
+import orchard from '../assets/about/family/orchard.jpg';
+import raceMorning from '../assets/about/family/race-morning.jpg';
+import rhododendrons from '../assets/about/family/rhododendrons.jpg';
+import shoulders from '../assets/about/family/shoulders.jpg';
+import sleigh from '../assets/about/family/sleigh.jpg';
+import turkeyTrot from '../assets/about/family/turkey-trot.jpg';
+import weddingLake from '../assets/about/family/wedding-lake.jpg';
 import sanctuary from '../assets/photography/canvas/sanctuary-band.jpg';
 import {
   runBounds as B,
@@ -30,6 +47,13 @@ import {
   runSplits,
   runStats,
 } from '../data/flying-pig-10k';
+
+interface Frame {
+  src: ImageMetadata;
+  alt: string;
+  title: string;
+  sub?: string;
+}
 
 interface Card {
   id: string;
@@ -41,8 +65,10 @@ interface Card {
   back: string;
   /** `position` overrides the crop focus (object-position) for a photo that needs it. */
   photo?: { src: ImageMetadata; alt: string; position?: string };
+  /** The prints for a camera roll or the family album: a caption (never a date) and its alt text. */
+  frames?: Frame[];
   /** The picture that leads the card, when it is not a plain photo. */
-  toy?: 'reel' | 'log' | 'air';
+  toy?: 'reel' | 'album' | 'log' | 'air';
   /** A second, smaller sentence under the first. */
   note?: string;
   link?: { href: string; text: string } | null;
@@ -60,6 +86,90 @@ const REEL = [
 ];
 const prints = await getCollection('photos');
 const reel = REEL.flatMap((id) => prints.filter((p) => p.id === id));
+
+/* The family album, in this order. Captions say what is happening, never when. */
+const ALBUM: Frame[] = [
+  {
+    src: picnic,
+    title: 'Picnic in the park',
+    alt: 'Nathan and his wife on a picnic blanket in a park, their little one eating watermelon.',
+  },
+  {
+    src: weddingLake,
+    title: 'Wedding day',
+    alt: 'Nathan in a dark suit hugging his bride from behind by a lake, both laughing.',
+  },
+  {
+    src: rhododendrons,
+    title: 'Under the rhododendrons',
+    alt: 'Nathan and his wife sharing a kiss beside a flowering rhododendron.',
+  },
+  {
+    src: eveningOut,
+    title: 'An evening out',
+    alt: 'A selfie of a young Nathan and his wife at dusk, a bright light behind them.',
+  },
+  {
+    src: ballpark,
+    title: 'At the ballpark',
+    alt: 'A selfie of Nathan, his wife and their baby son in the stands at a baseball game.',
+  },
+  {
+    src: aquarium,
+    title: 'At the aquarium',
+    alt: 'Nathan, his wife and their baby son in a carrier, in front of an aquarium tank.',
+  },
+  {
+    src: shoulders,
+    title: 'Shoulder rides',
+    alt: 'Nathan in sunglasses carrying his son on his shoulders on a sunny street.',
+  },
+  {
+    src: firstDay,
+    title: 'First day of school',
+    alt: 'Nathan, his wife and their son in front of a first day of school backdrop.',
+  },
+  {
+    src: sleigh,
+    title: 'A red sleigh in the snow',
+    alt: 'Nathan, his wife, their son and baby daughter in a red sleigh on a snowy lawn.',
+  },
+  {
+    src: baptism,
+    title: 'Baptism Sunday',
+    alt: 'Nathan and his wife holding their baby in a christening gown at the front of a church, their son beside them.',
+  },
+  {
+    src: orchard,
+    title: 'A day at the farm',
+    alt: 'Family on hay bales by an old tractor at a farm, Nathan with a camera round his neck.',
+  },
+  {
+    src: couchSelfie,
+    title: 'Couch selfie',
+    alt: 'A selfie on the couch: Nathan, his wife, their son and family.',
+  },
+  {
+    src: livingRoom,
+    title: 'The whole family',
+    alt: 'Nathan and his wife with their wider family in a bright living room.',
+  },
+  {
+    src: churchWedding,
+    title: 'A family wedding',
+    alt: 'Nathan and his wife with the wedding party outside a stone church.',
+  },
+  {
+    src: raceMorning,
+    title: 'Race morning',
+    alt: 'Nathan in a race bib and compression socks before a 5K, next to another runner.',
+  },
+  {
+    src: turkeyTrot,
+    title: 'Turkey Trot',
+    alt: 'Nathan and two others in race bibs before a Thanksgiving Turkey Trot.',
+  },
+];
 
 /* The route from above, in an equirectangular projection (fine at city scale), sized for the card. */
 const CW = 280;
@@ -128,6 +238,12 @@ const cards: Card[] = [
     title: 'Photography',
     back: 'I still carry a camera for myself, mostly chasing landscapes around the region.',
     toy: reel.length >= 3 ? 'reel' : undefined,
+    frames: reel.map((p) => ({
+      src: p.data.image,
+      alt: p.data.alt,
+      title: p.data.title,
+      sub: p.data.location,
+    })),
     link: photosOpen ? { href: '/photography/', text: 'See the photographs' } : null,
   },
   {
@@ -145,10 +261,8 @@ const cards: Card[] = [
     kicker: 'At home',
     title: 'Family',
     back: 'Cincinnati has been home since 2017. I also run a small Minecraft server for my siblings.',
-    photo: {
-      src: picnic,
-      alt: 'Nathan and his wife with their little one on a picnic blanket in a park.',
-    },
+    toy: 'album',
+    frames: ALBUM,
     link: serverPost ? { href: serverPost, text: 'How the server works' } : null,
   },
   {
@@ -187,28 +301,32 @@ const cards: Card[] = [
               decoding="async"
             />
           )}
-          {c.toy === 'reel' && (
-            <div class="otc-reel" data-reel>
+          {(c.toy === 'reel' || c.toy === 'album') && c.frames && (
+            <div class={c.toy === 'album' ? 'otc-reel otc-album' : 'otc-reel'} data-reel>
               <div
                 class="reel-strip"
                 data-reel-strip
                 role="group"
-                aria-label={`Camera roll: ${reel.length} of my photographs. Use the arrow keys or the buttons to step through.`}
+                aria-label={`${c.toy === 'album' ? 'Family album' : 'Camera roll'}: ${c.frames.length} photographs. Use the arrow keys or the buttons to step through.`}
                 tabindex="0"
               >
-                {reel.map((p) => (
+                {c.frames.map((p) => (
                   <figure class="reel-f">
                     <Image
-                      src={p.data.image}
-                      alt={p.data.alt}
-                      widths={[560, 1120]}
-                      sizes="(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 44rem"
+                      src={p.src}
+                      alt={p.alt}
+                      widths={c.toy === 'album' ? [400, 800] : [560, 1120]}
+                      sizes={
+                        c.toy === 'album'
+                          ? '(max-width: 36rem) 80vw, (max-width: 64rem) 40vw, 26rem'
+                          : '(max-width: 36rem) 90vw, (max-width: 64rem) 45vw, 44rem'
+                      }
                       loading="lazy"
                       decoding="async"
                     />
                     <figcaption>
-                      <b>{p.data.title}</b>
-                      {p.data.location && <span>{p.data.location}</span>}
+                      <b>{p.title}</b>
+                      {p.sub && <span>{p.sub}</span>}
                     </figcaption>
                   </figure>
                 ))}
@@ -225,7 +343,7 @@ const cards: Card[] = [
                   </svg>
                 </button>
                 <p class="reel-n" data-reel-n aria-live="polite">
-                  1 of {reel.length}
+                  1 of {c.frames.length}
                 </p>
                 <button type="button" class="reel-b" data-reel-next aria-label="Next photograph">
                   <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
