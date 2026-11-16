@@ -15,8 +15,14 @@
    exactly out of the quote). The band then draws a marker across those words as
    it arrives: the client's paper sweeping in behind them in a few hard steps
    (`.hl` in kit.css, `hl-on` from kit.js). The words themselves never change, and
-   a quote with no phrase set is simply the quote. */
+   a quote with no phrase set is simply the quote.
+
+   The cycle also carries the quotes that are not about a website (src/data/quotes.ts): those take
+   their own colours, and where a website quote shows the client's site they show one of my
+   photographs from that client, as a print. */
 import { getEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import { QUOTES } from '../data/quotes';
 import Tile from './Tile.astro';
 import ReviewCite from './ReviewCite.astro';
 import { markedQuote } from '../lib/highlight';
@@ -55,7 +61,14 @@ type Quote = {
   photo?: string;
   source?: { platform: 'google'; url: string; rating: number };
 };
-type Slide = { t: Quote; client: Client; tile: boolean };
+type Shot = { src: ImageMetadata; alt: string };
+type Slide = {
+  t: Quote;
+  client: Pick<Client, 'slug' | 'accent' | 'paper'> & Partial<Client>;
+  tile: boolean;
+  /** A photograph instead of the client's site (a standalone quote). */
+  shot?: Shot;
+};
 
 let slides: Slide[];
 if (cycle) {
@@ -69,8 +82,23 @@ if (cycle) {
   }
   if (!slides.length) throw new Error('No quotes on file');
   // Public reviews lead (added 2026-11-15): a stranger can check those on Google, so they do the
-  // most for trust. The rest keep deck order behind them.
-  slides = [...slides.filter((x) => x.t.source), ...slides.filter((x) => !x.t.source)];
+  // most for trust. Then the quotes that are not about a website, then the rest in deck order.
+  const standalone: Slide[] = [];
+  for (const q of QUOTES) {
+    const shot = await getEntry('photos', q.shot);
+    if (!shot) throw new Error(`quotes.ts: no photograph ${q.shot}`);
+    standalone.push({
+      t: q,
+      client: { slug: q.id, accent: q.accent, paper: q.paper },
+      tile: true,
+      shot: { src: shot.data.image, alt: shot.data.alt },
+    });
+  }
+  slides = [
+    ...slides.filter((x) => x.t.source),
+    ...standalone,
+    ...slides.filter((x) => !x.t.source),
+  ];
 } else {
   const entry = await getEntry('case-studies', slug);
   const quotes = entry?.data.testimonials ?? [];
@@ -126,13 +154,13 @@ const many = slides.length > 1;
           inert={i ? true : undefined}
         >
           <blockquote set:html={marked(s.t)} />
-          {s.t.source ? (
+          {s.t.source || s.t.photo ? (
             <ReviewCite
               name={s.t.name}
               title={s.t.title}
               photo={s.t.photo}
-              url={s.t.source.url}
-              rating={s.t.source.rating}
+              url={s.t.source?.url}
+              rating={s.t.source?.rating}
               context={s.t.context}
             />
           ) : (
@@ -151,17 +179,48 @@ const many = slides.length > 1;
       .filter((s) => s.tile)
       .map((s, i) => (
         <div class="band-tw" data-tw={s.client.slug} inert={i ? true : undefined}>
-          <span class="band-ph">
-            <Tile
-              client={s.client}
-              lazy
-              sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
-            />
-          </span>
-          {many && (
-            <span class="band-dk">
-              <Tile client={s.client} desk lazy />
-            </span>
+          {s.shot ? (
+            <>
+              <span class="band-ph">
+                <Image
+                  class="band-print band-print-tall"
+                  src={s.shot.src}
+                  alt={s.shot.alt}
+                  widths={[336, 672]}
+                  sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+              {many && (
+                <span class="band-dk">
+                  <Image
+                    class="band-print"
+                    src={s.shot.src}
+                    alt=""
+                    widths={[512, 1024]}
+                    sizes="min(100vw, 32rem)"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <span class="band-ph">
+                <Tile
+                  client={s.client as Client}
+                  lazy
+                  sizes="(max-width: 60rem) min(60vw, 224px), min(23vw, 336px)"
+                />
+              </span>
+              {many && (
+                <span class="band-dk">
+                  <Tile client={s.client as Client} desk lazy />
+                </span>
+              )}
+            </>
           )}
         </div>
       ))}
