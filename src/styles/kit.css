@@ -3029,32 +3029,33 @@ h1.giant b {
   aspect-ratio: 3 / 4;
 }
 /* A hand of prints (PrintFan.astro): the first on top, up to two behind it at an angle, which fan
-   wider on hover. The top print keeps its own class's tilt; the two behind take the fan's. */
-.fan {
+   wider on hover. The top print keeps its own class's tilt; the two behind take the fan's. Not
+   .fan: that is the client sheet's row of views. */
+.pfan {
   display: grid;
 }
-.fan > .fan-p {
+.pfan > .fan-p {
   grid-area: 1 / 1;
   transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
-.fan > .fan-p:first-child {
+.pfan > .fan-p:first-child {
   z-index: 2;
 }
-.fan > .fan-p:nth-child(2) {
+.pfan > .fan-p:nth-child(2) {
   transform: translate(-16%, -7%) rotate(-10deg);
 }
-.fan > .fan-p:nth-child(3) {
+.pfan > .fan-p:nth-child(3) {
   z-index: 1;
   transform: translate(15%, 8%) rotate(9deg);
 }
-.fan:hover > .fan-p:nth-child(2) {
+.pfan:hover > .fan-p:nth-child(2) {
   transform: translate(-24%, -9%) rotate(-14deg);
 }
-.fan:hover > .fan-p:nth-child(3) {
+.pfan:hover > .fan-p:nth-child(3) {
   transform: translate(23%, 10%) rotate(13deg);
 }
 @media (prefers-reduced-motion: reduce) {
-  .fan > .fan-p {
+  .pfan > .fan-p {
     transition: none;
   }
 }

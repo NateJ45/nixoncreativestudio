@@ -1199,9 +1199,11 @@ ui.openSheet = function (s, el, restoring) {
   if (!restoring) history.pushState({ ncsSheet: s.slug }, '', sheetUrl(s.slug));
   sheet.style.setProperty('--c', s.accent);
   sheet.style.setProperty('--p', s.paper);
-  $('[data-n]').textContent = s.name;
-  $('[data-k]').textContent = s.hook;
-  $('[data-m]').textContent = s.sector;
+  /* Looked up inside the sheet: data-n is a short name, and the first one on the page was once a
+     print fan's in the home band, which left the sheet with no title (2026-11-16). */
+  $('[data-n]', sheet).textContent = s.name;
+  $('[data-k]', sheet).textContent = s.hook;
+  $('[data-m]', sheet).textContent = s.sector;
   fillReview(s.review);
   $('[data-st]').href = s.study;
   var vi = $('[data-vi]');
