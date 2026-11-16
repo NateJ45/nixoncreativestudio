@@ -25,6 +25,9 @@ export interface StandaloneQuote {
   highlight?: string;
   context?: string;
   photo?: string;
+  /** Set when the words are a public Google review: the stars and a link to the review itself
+   *  (the long google.com/maps/reviews/... form, which opens without a sign-in). */
+  source?: { platform: 'google'; url: string; rating: number };
   /** A photograph from src/content/photos. */
   shot: string;
   accent: string;
@@ -46,6 +49,11 @@ export const QUOTES: StandaloneQuote[] = [
     highlight: "He is THE best that we've ever worked with!",
     context: 'Photography and video for the church',
     photo: '/assets/people/jessica-sams',
+    source: {
+      platform: 'google',
+      url: 'https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT20xeVQyaDZMV1l3TldaTVIySnlURmt0WVhsS2RtYxAB!2m1!1s0x0:0x799871759370794f!3m1!1s2@1:CAIQACodChtycF9oOm1yT2h6LWYwNWZMR2JyTFktYXlKdmc%7C%7C',
+      rating: 5,
+    },
     shot: 'vbs-song',
     accent: '#24453a',
     paper: '#f3eee2',
@@ -53,6 +61,9 @@ export const QUOTES: StandaloneQuote[] = [
   },
 ];
 
-for (const q of QUOTES)
+for (const q of QUOTES) {
   if (q.highlight && !q.quote.includes(q.highlight))
     throw new Error(`quotes.ts: ${q.id}'s highlight must be copied exactly out of its quote`);
+  if (q.source && !/^https:\/\/(www\.google\.com\/maps|maps\.app\.goo\.gl)\//.test(q.source.url))
+    throw new Error(`quotes.ts: ${q.id}'s review link must open the review on Google Maps`);
+}

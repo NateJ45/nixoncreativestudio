@@ -12,8 +12,8 @@
 //   2. Change `rating`, `count` and `checked` below.
 //   3. If the review is good enough to quote, add it to the client's case
 //      study `testimonials:` with its `source` link (src/content.config.ts
-//      explains the fields) and record it in the vault note
-//      projects/ncs-testimonials.md.
+//      explains the fields), or to src/data/quotes.ts if it is not about a
+//      website, and record it in the vault note projects/ncs-testimonials.md.
 //
 // src/lib/reviews.test.ts checks the numbers make sense and that the count is
 // never lower than the number of Google reviews quoted on the site.
@@ -36,7 +36,7 @@ export interface ReviewTotals {
 export const googleReviews: ReviewTotals = {
   platform: 'google',
   rating: 5.0,
-  count: 2,
+  count: 3,
   url: site.social.googleBusiness,
-  checked: '2026-11-15',
+  checked: '2026-11-16',
 };

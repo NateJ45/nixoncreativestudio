@@ -1,7 +1,7 @@
 // Safe to edit. Site-owned: checks the hand-typed Google review totals in
 // src/data/reviews.ts against what the case studies quote.
 //
-// The hero chip says "5.0 on Google, 2 reviews". Those numbers are typed in by
+// The hero chip says "5.0 on Google, 3 reviews". Those numbers are typed in by
 // hand, so this catches the two easy slips: a rating or date that cannot be
 // right, and a count lower than the number of Google reviews the site itself
 // quotes (which would mean the count was not updated when a review was added).
@@ -13,10 +13,17 @@ import { fileURLToPath } from 'node:url';
 import { googleReviews } from '../data/reviews.ts';
 
 const dir = fileURLToPath(new URL('../content/case-studies/', import.meta.url));
-const quotedOnGoogle = readdirSync(dir)
-  .filter((f) => f.endsWith('.mdx'))
-  .map((f) => readFileSync(dir + f, 'utf8').split(/\r?\n---\r?\n/)[0])
-  .reduce((n, front) => n + (front.match(/^ {6}platform: google\s*$/gm) ?? []).length, 0);
+const quotedOnGoogle =
+  readdirSync(dir)
+    .filter((f) => f.endsWith('.mdx'))
+    .map((f) => readFileSync(dir + f, 'utf8').split(/\r?\n---\r?\n/)[0])
+    .reduce((n, front) => n + (front.match(/^ {6}platform: google\s*$/gm) ?? []).length, 0) +
+  // and the quotes with no case study
+  (
+    readFileSync(fileURLToPath(new URL('../data/quotes.ts', import.meta.url)), 'utf8').match(
+      /^\s+platform: 'google',$/gm,
+    ) ?? []
+  ).length;
 
 test('the Google rating is between 1 and 5, to one decimal place', () => {
   const r = googleReviews.rating;
