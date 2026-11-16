@@ -3581,7 +3581,7 @@ html.ncs-gated .ncs-overlay {
 
    Comfortable in a dark room (2026-11-16): the ink is a warm off-white, not near-white, and the
    cobalt a step deeper, so text and the big blue panels do not glare; a client's color and their
-   paper, where they fill a large surface, go down to their night strength (--cd and --pd, below);
+   paper, where they fill a large surface, go dark (--cd and the raised cards, below);
    and a screenshot rests a little dim, like the windows' screens.
 
    Screen only: paper is paper, so print always takes the light tokens. The one-page sheet relies on
@@ -3604,6 +3604,9 @@ html.ncs-gated .ncs-overlay {
        screen does not light the room. Buttons and small marks keep --fill and --ink. */
     --fill-deep: #2532a8;
     --bone: #d6d3ca;
+    /* A raised card (a step above --card, for the cards that were bone) and the closing's blue. */
+    --raise: #262b5c;
+    --end-night: #1c2580;
     --star: #f5b301;
     --star-edge: #f5b301;
     --on-ink: #14162f;
@@ -3626,7 +3629,7 @@ html.ncs-gated .ncs-overlay {
   }
   /* These surfaces keep their own color on either side, so what sits on them keeps the light
      tokens: the closing, a client's band or sheet, and anything set on a client's paper. */
-  :root[data-theme='dark'] :is(.end, .band, .sheet, .study, .dw-rows li:is(:hover, :focus-within)) {
+  :root[data-theme='dark'] :is(.end, .band, .sheet, .dw-rows li:is(:hover, :focus-within)) {
     --ink: #121211;
     --soft: #5c5c57;
     --card: #fff;
@@ -3639,7 +3642,7 @@ html.ncs-gated .ncs-overlay {
     --rim: 0 0 transparent;
   }
   /* Text is inherited from the page, so a client's paper has to take it back too. */
-  :root[data-theme='dark'] :is(.study, .dw-rows li:is(:hover, :focus-within)) {
+  :root[data-theme='dark'] .dw-rows li:is(:hover, :focus-within) {
     color: var(--ink);
   }
   /* A client's marks on the neutral page: their own second color where they have one. */
@@ -3673,7 +3676,7 @@ html.ncs-gated .ncs-overlay {
       0 26px 120px -8px color-mix(in oklab, var(--cast) 88%, transparent);
   }
   :root[data-theme='dark'] .scr img {
-    filter: brightness(0.8);
+    filter: brightness(0.75);
     transition: filter 0.5s var(--ease);
   }
   :root[data-theme='dark'] .tile:is(:hover, :focus-visible, :has(video.on)) .scr img,
@@ -3681,44 +3684,70 @@ html.ncs-gated .ncs-overlay {
     filter: none;
   }
 
-  /* Night strength. A client's color (--c) or paper (--p) is set inline where it applies, so the
-     same element works out its night versions from it: --cd, the color with some of the dark
-     ground mixed in, and --pd, the paper a little dimmed. The surfaces big enough to light a dark
-     room take them: a study's hero, the client sheet, a quote band's color, the results cards,
-     the quote and Up next bands, and the church cards. Every client's paper sits on a darker
-     accent (case-palettes.test.ts), so a darker accent only raises the contrast of the paper on
-     it; on the dimmed paper the darkest text is the light side's soft grey, which axe holds to 4.5:1. */
+  /* Night strength: the dark side is a dark room, so nothing large is lit. Light-colored
+     surfaces turn dark and keep their character in an edge and their text; a client's color stays
+     theirs, deep; the studio blue is a night blue wherever it fills a panel.
+
+     A client's color (--c) and paper (--p) are set inline where they apply, so the same element
+     works out the night version from them: --cd, the color with the dark ground half mixed in. The
+     surfaces that take it: a study's hero, the client sheet, a quote band's color, the results
+     cards, and the quote and Up next bands. Every client's paper sits on a darker accent
+     (case-palettes.test.ts), so a deeper accent only raises the contrast of the paper on it. */
   :root[data-theme='dark'] [style*='--c:'] {
-    --cd: color-mix(in oklab, var(--c) 70%, #0b0c1f);
-  }
-  :root[data-theme='dark'] [style*='--p:'] {
-    --pd: color-mix(in oklab, var(--p) 92%, #14162f);
+    --cd: color-mix(in oklab, var(--c) 52%, #0b0c1f);
   }
   :root[data-theme='dark'] :is(.s-hero, .sheet, .band-bg, .chg-card, .wf-card, .q, .next-band) {
     background-color: var(--cd, var(--c));
   }
+  /* The church cards were paper: now a card of the page, the church's own night mark (--cm, set
+     from its --c-night) on the heading, and a faint edge of its paper. */
   :root[data-theme='dark'] .study {
-    background-color: var(--pd, var(--p));
+    background-color: var(--card);
+    outline: 1px solid color-mix(in oklab, var(--p) 22%, transparent);
+    outline-offset: -1px;
   }
+  :root[data-theme='dark'] .study h3 {
+    color: var(--cm, var(--c));
+  }
+  /* The closing: the back of the deck in the night blue, still the strongest color on the page. */
   :root[data-theme='dark'] .end {
-    background-color: var(--fill-deep);
+    background-color: var(--end-night);
   }
-  :root[data-theme='dark'] .pc-blue {
+  :root[data-theme='dark'] :is(.pc-blue, .t-ink .t-bg, .otc-back) {
     --pcb: var(--fill-deep);
-  }
-  :root[data-theme='dark'] .pc-ink {
-    --pcb: var(--bone);
   }
   :root[data-theme='dark'] :is(.t-ink .t-bg, .otc-back) {
     background-color: var(--fill-deep);
   }
-  :root[data-theme='dark'] :is(.t-dark .t-bg, .see-mine, .do-ink, .nine) {
+  /* The bone cards (the ink price card, the dark tier, the Mine card, the Do card) were the bright
+     card of each hand. At night they are raised cards: a step lighter than a card, a bone edge, and
+     bone text, which is what --on-ink means inside them now. */
+  :root[data-theme='dark'] .pc-ink {
+    --pcb: var(--raise);
+    --pci: var(--ink);
+    --pcs: var(--soft);
+  }
+  :root[data-theme='dark'] :is(.t-dark, .see-mine, .do-ink) {
+    --on-ink: var(--ink);
+    --on-ink-soft: var(--soft);
+  }
+  :root[data-theme='dark'] :is(.t-dark .t-bg, .see-mine, .do-ink) {
+    background-color: var(--raise);
+  }
+  :root[data-theme='dark']
+    :is(.pc-ink .pc-face, .t-dark .t-bg, .see-mine, .do-ink):not(:focus-visible) {
+    outline: 1px solid rgba(230, 228, 220, 0.3);
+    outline-offset: -1px;
+  }
+  /* The last card in the closing deck says "Your site could be next": it stays the one light card
+     at night, in the dimmed bone, so it still reads as the card left for you. */
+  :root[data-theme='dark'] .nine {
     background-color: var(--bone);
   }
-  /* Captures of client sites are mostly white pages: they rest a little dim too, and come up to
-     full strength when opened (the larger view is its own dialog). */
+  /* Captures of client sites are mostly white pages: they rest dim, like the windows' screens, and
+     come up to full strength when opened (the larger view is its own dialog). */
   :root[data-theme='dark'] :is(.zoom img, .ba img, .walk img) {
-    filter: brightness(0.86);
+    filter: brightness(0.8);
   }
 
   /* The one big line: the lights come up as it gains its weight. --lit comes from kit.js and stays

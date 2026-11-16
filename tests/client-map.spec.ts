@@ -24,9 +24,9 @@ test.describe('About: the client map', () => {
       expect(href).toMatch(/^\/work\/[a-z0-9-]+\/$/);
     // Photography clients with no study are plain names, tagged, with no link.
     const plain = page.locator('.sc-names .sc-plain');
-    await expect(plain).toHaveCount(3);
+    await expect(plain).toHaveCount(4);
     await expect(plain.locator('xpath=following-sibling::span[1]')).toHaveText(
-      Array(3).fill('Photography'),
+      Array(4).fill('Photography'),
     );
     await expect(page.locator('.cm-svg')).toHaveAttribute('aria-hidden', 'true');
     // A nudge under the hand for anyone whose state is still grey.
