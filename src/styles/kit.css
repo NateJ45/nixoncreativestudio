@@ -571,14 +571,28 @@ h1 b {
   font-weight: 750;
   font-variant-numeric: tabular-nums;
 }
+/* A client's own words (index.astro `voices`): the phrase in quotes, a little lighter than a
+   figure so a whole phrase does not shout. */
+.proof-q b {
+  font-weight: 600;
+  font-variant-numeric: normal;
+}
 .proof-who {
   margin-left: 0.35em;
   color: var(--soft);
   font-size: 0.8em;
 }
+/* On a phone there is no room for the name beside the figure, so it sits under it, smaller (2026-11-16;
+   it used to be hidden there, which left a figure with no client). Both lines fit the line's fixed
+   height: about 18.7px and 13.5px at a phone's 17px, inside its 34px, so the hero sums hold. */
 @media (max-width: 30rem) {
+  .proof-run {
+    line-height: 1.1;
+  }
   .proof-who {
-    display: none;
+    display: block;
+    margin-left: 0;
+    font-size: 0.72em;
   }
 }
 /* The ring: a hairline track and an accent arc that fills over --dwell, restarted for each figure

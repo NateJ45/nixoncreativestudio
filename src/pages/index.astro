@@ -5,7 +5,7 @@
    Top to bottom:
      Hero        the headline, with the portrait inside the sentence and "pull their
                  weight." gaining weight and landing, the results line under it (one real client
-                 figure at a time, the `heroProof` list below), and the empty space the
+                 figure or a client's own words at a time, the `heroProof` list below), and the empty space the
                  hand of clients is dealt into.
      Work        the giant "Eight selected case studies.", the ledger, and the grid. Every
                  window has one spot here; scroll carries it from the hand.
@@ -44,6 +44,8 @@ import PhotoStrip from '../components/home/PhotoStrip.astro';
 import ProcessBeats from '../components/home/ProcessBeats.astro';
 import '../styles/pages/home.css';
 import { countWord, getClients } from '../lib/clients';
+import { getCollection } from 'astro:content';
+import { QUOTES } from '../data/quotes';
 import { webTiers } from '../data/pricing';
 import { site } from '../data/site';
 import { money } from '../lib/money';
@@ -93,7 +95,7 @@ const proof = [
    people, more found on Google, money, craft) and never puts one client twice in a row, the last
    included, since the line wraps back to the first. Keep `what` to about 30 characters or less so
    the line fits a 320px phone. */
-const heroProof = [
+const figures = [
   { figure: '58%', what: 'more students', who: 'West Chester Preschool' },
   { figure: '100%', what: 'more clicks from Google', who: 'Reid Design' },
   { figure: '66%', what: 'more visitors a day', who: 'First Baptist Church Muncie' },
@@ -122,6 +124,32 @@ const heroProof = [
   },
   { figure: '111', what: 'Instagram posts, up from about six', who: 'West Chester Preschool' },
 ];
+/* The best few words of every client quote (added 2026-11-16): each quote's `highlight`, the key
+   phrase already copied exactly out of the quote and marked in the home band, from the case studies
+   and from src/data/quotes.ts. They go in quotation marks, one after every two figures, so the line
+   reads as results and voices in turn. A new quote with a highlight joins on its own.
+   A phrase too long for a phone's line (hero-proof.js would shrink it below about 12px at 320px
+   wide) gets a shorter cut here, still the client's exact words, checked against the quote. */
+const heroCut: Record<string, string> = {
+  'first-presbyterian-orangeburg': 'delivered impressive results promptly',
+};
+const voices: { figure: string; what: string; who: string }[] = [];
+for (const study of await getCollection('case-studies')) {
+  const who = clients.find((c) => c.slug === study.id)?.name;
+  for (const t of study.data.testimonials ?? []) {
+    if (!t.highlight || !who) continue;
+    const words = heroCut[study.id] ?? t.highlight;
+    if (!t.quote.includes(words)) throw new Error(`heroCut for ${study.id} is not in the quote`);
+    voices.push({ figure: `“${words}”`, what: '', who });
+  }
+}
+for (const q of QUOTES)
+  if (q.highlight) voices.push({ figure: `“${q.highlight}”`, what: '', who: q.org });
+const heroProof = figures.flatMap((p, i) => {
+  const v = i % 2 ? voices[(i - 1) / 2] : undefined;
+  return v ? [p, v] : [p];
+});
+heroProof.push(...voices.slice(Math.floor(figures.length / 2)));
 
 const lead = ['I', 'build', 'websites'];
 const heavy = ['pull', 'their', 'weight.'];
@@ -197,14 +225,17 @@ const heavy = ['pull', 'their', 'weight.'];
       </button>
       <ul class="vh">
         {heroProof.map((p) => (
-          <li>
-            {p.figure} {p.what}, {p.who}
+          <li data-copy-ignore={p.what ? undefined : ''}>
+            {p.what ? `${p.figure} ${p.what}, ${p.who}` : `${p.figure}, ${p.who}`}
           </li>
         ))}
       </ul>
       <p class="proof-run" aria-hidden="true">
         {heroProof.map((p, i) => (
-          <span class={i === 0 ? 'proof-i on' : 'proof-i'}>
+          <span
+            class:list={['proof-i', { on: i === 0, 'proof-q': !p.what }]}
+            data-copy-ignore={p.what ? undefined : ''}
+          >
             <b>{p.figure}</b> {p.what} <span class="proof-who">{p.who}</span>
           </span>
         ))}
