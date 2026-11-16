@@ -18,16 +18,21 @@ test.describe('About: the client map', () => {
     const rows = page.locator('.sc');
     await expect(rows).toHaveCount(6);
     await expect(rows.first().locator('.sc-state')).toHaveText('Ohio, home');
-    const links = page.locator('.sc-names a');
+    const links = page.locator('.sc-names a:not(.sc-photo)');
     await expect(links).toHaveCount(9);
     for (const href of await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))))
       expect(href).toMatch(/^\/work\/[a-z0-9-]+\/$/);
-    // Photography clients with no study are plain names, tagged, with no link.
+    // Photography clients with no study are plain names, tagged, with no link...
     const plain = page.locator('.sc-names .sc-plain');
     await expect(plain).toHaveCount(3);
     await expect(plain.locator('xpath=following-sibling::span[1]')).toHaveText(
       Array(3).fill('Photography'),
     );
+    // ...unless their photographs are on the site: then the name opens the first one's print.
+    const photo = page.locator('.sc-names a.sc-photo');
+    await expect(photo).toHaveText(['Crestview Presbyterian Church']);
+    await expect(photo).toHaveAttribute('href', '/photography/?print=ash-candle');
+    await expect(photo.locator('xpath=following-sibling::span[1]')).toHaveText('Photography');
     await expect(page.locator('.cm-svg')).toHaveAttribute('aria-hidden', 'true');
     // A nudge under the hand for anyone whose state is still grey.
     await expect(page.locator('.cm-more a')).toHaveAttribute('href', '/contact/');
@@ -161,13 +166,27 @@ test.describe('About: the client map', () => {
     await expect(page.locator('.pk[data-for="reid-design"]')).toBeHidden();
   });
 
+  test("a photography client's name raises its photograph, as a print", async ({ page }) => {
+    await page.goto('/about/');
+    await page.locator('[data-cm]').scrollIntoViewIfNeeded();
+    const name = page.locator('.sc-names a.sc-photo');
+    await name.focus();
+    const print = page.locator('.pk-print[data-for="photo-crestview-presbyterian-church"]');
+    await expect(print).toBeVisible();
+    await expect(print.locator('img')).toHaveAttribute('src', /.webp$/);
+    await name.blur();
+    await expect(print).toBeHidden();
+  });
+
   test.describe('on a phone', () => {
     test.use({ viewport: { width: 390, height: 844 } });
     test('each card shows its clients home pages, and there is no hover preview', async ({
       page,
     }) => {
       await page.goto('/about/');
-      await expect(page.locator('.sc-mini img')).toHaveCount(9);
+      // Nine home-page stills, and three small prints of Crestview's photographs.
+      await expect(page.locator('.sc-mini > span:not(.sc-print) img')).toHaveCount(9);
+      await expect(page.locator('.sc-mini .sc-print img')).toHaveCount(3);
       await expect(page.locator('.sc-mini').first()).toBeVisible();
       await expect(page.locator('.cm-peek')).toBeHidden();
     });

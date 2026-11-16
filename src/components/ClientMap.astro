@@ -19,6 +19,8 @@ import geo from '../data/us-dots.json';
 import { PLACES } from '../data/client-places';
 import { getClients } from '../lib/clients';
 import { LOCK } from '../lib/window-chrome';
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
 
 const all = await getClients();
 const bySlug = new Map(all.map((c) => [c.slug, c]));
@@ -30,6 +32,55 @@ const places = PLACES.map((p) => ({
     return c;
   }),
 }));
+
+/* Photography clients. A plain name stays plain; one with shots gets a link to its first print,
+   a photograph for the preview stage and small prints for a phone, made at build time. */
+const shotsById = new Map((await getCollection('photos')).map((e) => [e.id, e]));
+const photoKey = (name: string) => 'photo-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+interface PlainPhoto {
+  name: string;
+}
+interface ShownPhoto extends PlainPhoto {
+  key: string;
+  href: string;
+  big: { src: string; w: number; h: number };
+  minis: string[];
+}
+const shown = (ph: PlainPhoto | ShownPhoto): ph is ShownPhoto => 'key' in ph;
+const photoOf = async (
+  pc: string | { name: string; shots: string[] },
+): Promise<PlainPhoto | ShownPhoto> => {
+  if (typeof pc === 'string') return { name: pc };
+  const shots = pc.shots.map((id) => {
+    const e = shotsById.get(id);
+    if (!e) throw new Error(`ClientMap: no photo "${id}" (src/data/client-places.ts)`);
+    return e;
+  });
+  const lead = shots[0];
+  const big = await getImage({ src: lead.data.image, width: 720, format: 'webp' });
+  const minis = await Promise.all(
+    shots.map((e) => getImage({ src: e.data.image, width: 180, format: 'webp' })),
+  );
+  return {
+    name: pc.name,
+    key: photoKey(pc.name),
+    href: `/photography/?print=${lead.id}`,
+    big: {
+      src: big.src,
+      w: 720,
+      h: Math.round((720 * lead.data.image.height) / lead.data.image.width),
+    },
+    minis: minis.map((m) => m.src),
+  };
+};
+const photoPlaces = await Promise.all(
+  places.map(async (p) => ({
+    fips: p.fips,
+    list: await Promise.all((p.photo ?? []).map(photoOf)),
+  })),
+);
+const photosFor = (fips: number) => photoPlaces.find((x) => x.fips === fips)?.list ?? [];
+const photoPeeks = photoPlaces.flatMap((x) => x.list).filter(shown);
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const ROW = (geo.step * Math.sqrt(3)) / 2;
@@ -209,14 +260,20 @@ const first = places[0].fips;
                     <span class="sc-kind">{c.sector}</span>
                   </li>
                 ))}
-                {(p.photo ?? []).map((name) => (
+                {photosFor(p.fips).map((ph) => (
                   <li>
-                    <span class="sc-plain">{name}</span>
+                    {shown(ph) ? (
+                      <a href={ph.href} data-slug={ph.key} class="sc-photo">
+                        {ph.name}
+                      </a>
+                    ) : (
+                      <span class="sc-plain">{ph.name}</span>
+                    )}
                     <span class="sc-kind">Photography</span>
                   </li>
                 ))}
               </ul>
-              {p.people.length > 0 && (
+              {(p.people.length > 0 || photosFor(p.fips).some(shown)) && (
                 <span class="sc-mini" aria-hidden="true">
                   {p.people.map((c) => (
                     <span style={`--c:${c.accent}`}>
@@ -232,6 +289,15 @@ const first = places[0].fips;
                       />
                     </span>
                   ))}
+                  {photosFor(p.fips).flatMap((ph) =>
+                    shown(ph)
+                      ? ph.minis.map((src) => (
+                          <span class="sc-print">
+                            <img src={src} alt="" loading="lazy" decoding="async" />
+                          </span>
+                        ))
+                      : [],
+                  )}
                 </span>
               )}
             </div>
@@ -267,6 +333,14 @@ const first = places[0].fips;
             </span>
           </figure>
         ))}
+      {/* A photography client's photograph, as a print, raised the same way. */}
+      {photoPeeks.map((ph) => (
+        <figure class="pk pk-print" data-for={ph.key} data-href={ph.href} hidden>
+          <span class="pk-paper">
+            <img data-src={ph.big.src} alt="" decoding="async" width={ph.big.w} height={ph.big.h} />
+          </span>
+        </figure>
+      ))}
     </div>
   </div>
   <p class="cm-more">

@@ -230,7 +230,9 @@ if (root) {
     var hideNow = function () {
       clearTimeout(hideT);
       if (!cur) return;
-      ui.play(cur.querySelector('.tile'), false);
+      // A photograph has no window and no clip to stop.
+      var was = cur.querySelector('.tile');
+      if (was) ui.play(was, false);
       cur.hidden = true;
       cur = null;
     };
@@ -268,7 +270,8 @@ if (root) {
           ],
           { duration: 560, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
         );
-      ui.play(f.querySelector('.tile'), true);
+      var tile = f.querySelector('.tile');
+      if (tile) ui.play(tile, true);
     };
     // A name raises its window; it goes when the pointer leaves the whole card (not just the name:
     // pointing at a name lifts its card, which moves the name out from under a still pointer).

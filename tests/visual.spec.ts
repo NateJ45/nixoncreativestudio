@@ -68,6 +68,11 @@ for (const vp of viewports) {
   for (const theme of themes) {
     test.describe(`${vp.name} ${theme}`, () => {
       test.use({ viewport: { width: vp.width, height: vp.height }, colorScheme: theme });
+      // Dark is chosen, not inherited from the device (light is the default since 2026-11-16).
+      test.beforeEach(async ({ page }) => {
+        if (theme === 'dark')
+          await page.addInitScript(() => localStorage.setItem('ncs-theme', 'dark'));
+      });
 
       for (const route of routes) {
         test(route, async ({ page }) => {
