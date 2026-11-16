@@ -1,5 +1,5 @@
 # Cloth-sim flag render for About's postcard (src/components/Crossing.astro). Run headless:
-#   blender -b --factory-startup --python scripts/flags/flag.py -- <saltire|us> <outdir> 151 420 48
+#   blender -b --factory-startup --python scripts/flags/flag.py -- <saltire|us> <outdir> 301 600 40
 # then: npm run flags:loop -- <outdir> flag-saltire src/assets/photography/canvas/edinburgh-skyline.jpg day
 #   (or flag-us with src/assets/about/cincinnati-skyline.jpg night)
 # Bakes a cloth simulation of the flag (textures beside this file, real proportions) pinned at the
@@ -8,7 +8,9 @@
 # and Stripes floodlit at night. Every setting can be overridden by an environment variable of the same
 # name (E('WIND', 20000) and so on); the defaults are the ones the shipped loops were rendered with.
 # Blender's cloth mass is per vertex and its air damping and stiffness do not scale with it, so the
-# wind is large to match a standard 0.3 mass, not a real-world figure.
+# wind is large to match a standard 0.3 mass, not a real-world figure. The cloth runs at a quarter
+# speed (TIME) with stiff bending and broad, gentle turbulence, so it reads as a huge flag rolling
+# slowly in a steady breeze rather than a small one snapping in a gale.
 import bpy, sys, math, os
 from mathutils import Vector
 
@@ -65,11 +67,13 @@ pin.add([v.index for v in flag.data.vertices if v.co.x < 1e-3], 1.0, 'REPLACE')
 cloth = flag.modifiers.new('Cloth', 'CLOTH')
 cs = cloth.settings
 cs.quality = 10
+# Below 1 the cloth moves in slow motion: a huge flag's folds roll slowly and heavily.
+cs.time_scale = E('TIME', 0.25)
 cs.mass = E('MASS', 0.3)  # kg per vertex: about 0.3 kg for the flag, like real nylon
 cs.air_damping = E('AIR', 1.0)
 cs.tension_stiffness = cs.compression_stiffness = E('TENS', 15)
 cs.shear_stiffness = 4
-cs.bending_stiffness = E('BEND', 0.5)
+cs.bending_stiffness = E('BEND', 4)
 cs.bending_damping = 0.4
 cs.vertex_group_mass = 'pin'
 cc = cloth.collision_settings
@@ -86,12 +90,12 @@ bpy.ops.object.effector_add(type='WIND', location=(-1.5, 0, 0), rotation=(0, mat
 wind = bpy.context.active_object
 wind.field.strength = E('WIND', 20000)
 wind.field.flow = 0.6
-wind.field.noise = E('NOISE', 3)
+wind.field.noise = E('NOISE', 1)
 wind.field.seed = 7 if FLAG == 'saltire' else 23
 bpy.ops.object.effector_add(type='TURBULENCE', location=(W / 2, -0.5, 0))
 turb = bpy.context.active_object
-turb.field.strength = E('TURB', 1500)
-turb.field.size = E('TSIZE', 1.5)
+turb.field.strength = E('TURB', 400)
+turb.field.size = E('TSIZE', 5)
 turb.field.flow = 0.5
 turb.field.seed = 3 if FLAG == 'saltire' else 11
 # Gusts: the wind swings side to side, and the turbulence drifts downwind with it, so the cloth
@@ -100,10 +104,11 @@ def drive(obj, path, idx, expr):
     d = obj.driver_add(path, idx).driver
     d.type = 'SCRIPTED'
     d.expression = expr
-SW = E('SWING', 4)
-drive(wind, 'rotation_euler', 2, f'radians({E('ANG', 4)}) + radians({SW}) * (0.6*sin(frame*0.21) + 0.4*sin(frame*0.083 + 1.3))')
-drive(wind, 'field.strength', -1, f'{E('WIND', 20000)} * (1 + 0.15*sin(frame*0.13) + 0.08*sin(frame*0.37))')
-drive(turb, 'location', 0, f'-2 + frame * {E("DRIFT", 0.08)} % 8')
+SW = E('SWING', 2)
+T = E('TIME', 0.25)  # gusts slow down with the cloth
+drive(wind, 'rotation_euler', 2, f'radians({E('ANG', 4)}) + radians({SW}) * (0.6*sin(frame*{T}*0.21) + 0.4*sin(frame*{T}*0.083 + 1.3))')
+drive(wind, 'field.strength', -1, f'{E('WIND', 20000)} * (1 + 0.15*sin(frame*{T}*0.13) + 0.08*sin(frame*{T}*0.37))')
+drive(turb, 'location', 0, f'-2 + frame * {T} * {E("DRIFT", 0.08)} % 8')
 
 # ---- material: woven nylon, slightly translucent ---------------------------------------
 mat = bpy.data.materials.new('Cloth')
@@ -186,9 +191,9 @@ sc.camera = cam
 cam.data.lens = 50
 cam.data.sensor_fit = 'HORIZONTAL'  # the frame's width is set by the flag, whatever its height
 # Close in, a touch below and to the side, so the folds have depth and the cloth fills the frame.
-target = Vector((W * 0.5, 0, -E('TZ', 0.0)))
+target = Vector((W * 0.5, 0, -E('TZ', 0.15)))
 # The cloth fills the frame: its height takes 72% of the flag's, its width follows the frame shape.
-frame_w = H * E('FRAME', 0.72) * sc.render.resolution_x / sc.render.resolution_y
+frame_w = H * E('FRAME', 0.55) * sc.render.resolution_x / sc.render.resolution_y
 dist = frame_w * cam.data.lens / cam.data.sensor_width
 yaw = math.radians(E('YAW', 8))
 cam.location = target + Vector((-math.sin(yaw) * dist, -math.cos(yaw) * dist, -E('LOW', 0.15)))
