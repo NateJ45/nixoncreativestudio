@@ -420,6 +420,93 @@
 .thumb.on {
   opacity: 1;
 }
+/* The long windows, tied to the scroll (study.js turns it on with .study-sd on the page). The
+   browser slides each capture inside its window as a scroll-driven animation, in step with the
+   scroll itself. Done in script, every frame read the scroll and moved the pictures a frame
+   behind it (measured 2026-11-16). study.js only measures how far each picture travels (--lg-y)
+   and how far its thumb runs (--lg-ty); the thumb showing and the rail phone's lean follow the
+   speed of the scroll and stay in script.
+
+   The rail phone's picture runs over the story: from its top reaching the top of the screen to
+   its foot reaching the foot (contain), read from the story's own timeline (--story). A window in
+   the walk runs over its own crossing of the screen (cover, --long on the window, since the window
+   clips its picture and a plain view() would look inside it). The walk's window and phone grow
+   from 0.86 to full size as they arrive at the middle of the screen (walk-grow). The window and
+   the phone clip with overflow: clip, not hidden, so they are not scroll boxes the timelines
+   would look inside.
+
+   A view timeline measures against the screen less the page's scroll-padding (kit.css, html:
+   72px at the top, 96px at the foot), so each range is pushed back out to the real edges of the
+   screen by those two numbers. Change them together.
+
+   Without scroll-driven animation, or under reduced motion, none of this applies and study.js
+   moves them, as before. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .study-sd .story {
+      view-timeline: --story block;
+    }
+    .study-sd :is(.wp .scr, .walk-s) {
+      view-timeline: --long block;
+    }
+    .study-sd :is(.walk .win, .wp) {
+      overflow: clip;
+    }
+    .study-sd :is(.scr, .walk-s) img.long {
+      animation: long-pan linear both;
+      animation-timeline: --long;
+      animation-range: cover -96px cover calc(100% + 72px);
+    }
+    .study-sd :is(.scr, .walk-s) .thumb {
+      animation: long-thumb linear both;
+      animation-timeline: --long;
+      animation-range: cover -96px cover calc(100% + 72px);
+    }
+    .study-sd .rp :is(img.long, .thumb) {
+      animation-timeline: --story;
+      animation-range: contain 72px contain calc(100% - 96px);
+    }
+    .study-sd .walk :is(.win, .walk-ph) {
+      animation: walk-grow linear both;
+      animation-timeline: view();
+      animation-range: cover -96px cover calc(50% - 12px);
+    }
+  }
+}
+@keyframes long-pan {
+  to {
+    transform: translate3d(0, calc(var(--lg-y, 0px) * -1), 0);
+  }
+}
+@keyframes long-thumb {
+  to {
+    transform: translate3d(0, var(--lg-ty, 0px), 0);
+  }
+}
+@keyframes walk-grow {
+  from {
+    scale: 0.86;
+    /* Quick at first, then settling: 1 - (1 - p) cubed, as the script had it. */
+    animation-timing-function: linear(
+      0,
+      0.143 5%,
+      0.271 10%,
+      0.386 15%,
+      0.488 20%,
+      0.657 30%,
+      0.784 40%,
+      0.875 50%,
+      0.936 60%,
+      0.973 70%,
+      0.992 80%,
+      0.999 90%,
+      1
+    );
+  }
+  to {
+    scale: 1;
+  }
+}
 .rail-cap {
   margin-top: 0.8rem;
   text-align: center;
