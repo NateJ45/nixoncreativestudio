@@ -225,12 +225,17 @@ const heavy = ['pull', 'their', 'weight.'];
       </button>
       <ul class="vh">
         {heroProof.map((p) => (
-          <li>{p.what ? `${p.figure} ${p.what}, ${p.who}` : `${p.figure}, ${p.who}`}</li>
+          <li data-copy-ignore={p.what ? undefined : ''}>
+            {p.what ? `${p.figure} ${p.what}, ${p.who}` : `${p.figure}, ${p.who}`}
+          </li>
         ))}
       </ul>
       <p class="proof-run" aria-hidden="true">
         {heroProof.map((p, i) => (
-          <span class:list={['proof-i', { on: i === 0, 'proof-q': !p.what }]}>
+          <span
+            class:list={['proof-i', { on: i === 0, 'proof-q': !p.what }]}
+            data-copy-ignore={p.what ? undefined : ''}
+          >
             <b>{p.figure}</b> {p.what} <span class="proof-who">{p.who}</span>
           </span>
         ))}
