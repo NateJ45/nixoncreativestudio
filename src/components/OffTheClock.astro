@@ -7,10 +7,10 @@
    - Sunday AV: a program monitor showing a Sunday at Crestview (my photograph), with the tally
      light, a lower third and the audio meters moving while it is on screen.
    - Family: the picnic photograph.
-   - Running: the Stone Steps 50K course, drawn from the real trace in
-     src/data/stone-steps-course.ts (the same data the case study's CourseLine uses). The line
-     draws itself as the card comes into view, and "Draw it again" replays it. I built that race's
-     website and the note says plainly that I have not run it (my longest race is the Flying Pig 10K).
+   - Running: my Flying Pig 10K as an activity log (header, stats, map, elevation, splits), from
+     my own watch export in src/data/flying-pig-10k.ts (scripts/build-run-trace.mjs). The route
+     draws itself as the card comes into view, and "Draw it again" replays it. No date on it. The
+     note still points at the Stone Steps 50K, the race site I built.
    No photograph shows a date or a year. Script: src/scripts/off-the-clock.js. Styles: about.css
    under "Off the clock".
 
@@ -23,7 +23,13 @@ import { journalPath, photoCount } from '../data/nav';
 import { photographyOpen } from '../data/photography-gate';
 import picnic from '../assets/about/family-picnic.jpg';
 import sanctuary from '../assets/photography/canvas/sanctuary-band.jpg';
-import { courseBounds as B, courseLoops as L, coursePoints as P } from '../data/stone-steps-course';
+import {
+  runBounds as B,
+  runElevation as E,
+  runPoints as P,
+  runSplits,
+  runStats,
+} from '../data/flying-pig-10k';
 
 interface Card {
   id: string;
@@ -36,7 +42,7 @@ interface Card {
   /** `position` overrides the crop focus (object-position) for a photo that needs it. */
   photo?: { src: ImageMetadata; alt: string; position?: string };
   /** The picture that leads the card, when it is not a plain photo. */
-  toy?: 'reel' | 'course' | 'air';
+  toy?: 'reel' | 'log' | 'air';
   /** A second, smaller sentence under the first. */
   note?: string;
   link?: { href: string; text: string } | null;
@@ -55,21 +61,58 @@ const REEL = [
 const prints = await getCollection('photos');
 const reel = REEL.flatMap((id) => prints.filter((p) => p.id === id));
 
-/* The course from above, in the same projection CourseLine.astro uses, at a size that suits a
-   small card. Every other point of the trace is plenty at this size. */
+/* The route from above, in an equirectangular projection (fine at city scale), sized for the card. */
 const CW = 280;
-const PAD = 12;
+const PAD = 10;
 const midLat = ((B.north + B.south) / 2) * (Math.PI / 180);
 const scale = (CW - PAD * 2) / ((B.east - B.west) * Math.cos(midLat));
 const CH = Math.round((B.north - B.south) * scale + PAD * 2);
-const cx = (lon: number) => +(PAD + (lon - B.west) * Math.cos(midLat) * scale).toFixed(1);
-const cy = (lat: number) => +(PAD + (B.north - lat) * scale).toFixed(1);
-const trace = P.filter((_, i) => i % 2 === 0 || i === P.length - 1).map((p) => [
-  cx(p[0]),
-  cy(p[1]),
+const cx = (lon: number) => Math.round(PAD + (lon - B.west) * Math.cos(midLat) * scale);
+const cy = (lat: number) => Math.round(PAD + (B.north - lat) * scale);
+const trace = P.map((p) => [cx(p[0]), cy(p[1])]);
+/* Whole units and relative moves ("l3-2") keep both paths short: the page has an HTML budget, and
+   at this size a unit is about one screen pixel. */
+const rel = (pts: number[][]) =>
+  pts
+    .map(([x, y], i) => {
+      if (!i) return `M${x} ${y}`;
+      const dy = y - pts[i - 1][1];
+      return `l${x - pts[i - 1][0]}${dy < 0 ? '' : ' '}${dy}`;
+    })
+    .join('');
+const routeD = rel(trace);
+const runLabel = `Map of my Flying Pig 10K through downtown Cincinnati: ${runStats.miles} miles in ${runStats.time}.`;
+
+/* The elevation profile: miles across, feet up, with a little headroom so the line never touches
+   the top. The fill closes the line down to the baseline. */
+const EW = 280;
+const EH = 44;
+const lastMile = P[P.length - 1][3];
+const lo = E.lowFt - 10;
+const hi = E.highFt + 10;
+const ex = (mile: number) => Math.round((mile / lastMile) * EW);
+const ey = (ft: number) => Math.round(EH - ((ft - lo) / (hi - lo)) * EH);
+// Every third point (about 120 m apart) is plenty for a strip this small.
+const elevPts = P.filter((_, i) => i % 3 === 0 || i === P.length - 1).map((p) => [
+  ex(p[3]),
+  ey(p[2]),
 ]);
-const courseD = trace.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join('');
-const courseLabel = `The Stone Steps 50K course from above: ${L.length} loops through Mt. Airy Forest.`;
+const elevLine = rel(elevPts);
+const elevFill = `${elevLine}L${EW} ${EH}L0 ${EH}Z`;
+
+/* Splits: one bar per lap, taller for faster, so the strong last mile stands out. */
+const secs = (pace: string) => {
+  const [m, s] = pace.split(':').map(Number);
+  return m * 60 + s;
+};
+const paces = runSplits.map((l) => secs(l.pace));
+const slow = Math.max(...paces);
+const fast = Math.min(...paces);
+const splits = runSplits.map((l, i) => ({
+  ...l,
+  label: l.miles === 1 ? String(i + 1) : String(l.miles).replace(/^0/, ''),
+  h: Math.round(30 + (70 * (slow - paces[i])) / (slow - fast || 1)),
+}));
 
 const [photosOpen, avPost, serverPost] = await Promise.all([
   photoCount().then(photographyOpen),
@@ -114,9 +157,8 @@ const cards: Card[] = [
     kicker: 'On foot',
     title: 'Running',
     back: 'Mostly long runs around Cincinnati, and now and then I pin on a number for a local race.',
-    toy: 'course',
-    // I built the site; I have not run it, and the note says so. The Flying Pig 10K is my longest race.
-    note: `That line is the Stone Steps 50K course in Mt. Airy Forest, ${L.length} loops traced from a recorded run. I built the website, but I won't be running any 50Ks any time soon. The Flying Pig 10K is my longest race so far.`,
+    toy: 'log',
+    note: "That's my Flying Pig 10K, straight off my watch, and my longest race so far. I know, I'm a slow runner. Luckily I'm much quicker at making fast websites, like the one for the Stone Steps 50K, a race I won't be running any time soon.",
     link: { href: '/work/stone-steps-50k/', text: 'Read the Stone Steps case study' },
   },
 ];
@@ -219,22 +261,85 @@ const cards: Card[] = [
               </span>
             </div>
           )}
-          {c.toy === 'course' && (
-            <div class="otc-course" data-otc-course>
-              <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={courseLabel}>
-                {/* The whole course, faint, so the shape is there before the line is drawn. */}
-                {/* The trace once, drawn twice: <use> keeps the page light (the HTML budget). */}
-                <defs>
-                  <path id="oc-trace" d={courseD} pathLength="1" />
-                </defs>
-                <use class="oc-ghost" href="#oc-trace" />
-                <use class="oc-line" href="#oc-trace" />
-                {/* Start and finish: every loop comes back to the aid station. */}
-                <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
-              </svg>
-              <button type="button" class="oc-again" data-otc-again>
-                Draw it again
-              </button>
+          {c.toy === 'log' && (
+            <div class="otc-log" data-otc-course>
+              <div class="log-head">
+                <span class="log-av" aria-hidden="true">
+                  N
+                </span>
+                <p>
+                  <b>Nathan Nixon</b>
+                  <span>Race · Cincinnati, Ohio</span>
+                </p>
+              </div>
+              <p class="log-title">Flying Pig 10K</p>
+              <dl class="log-stats">
+                <div>
+                  <dt>Distance</dt>
+                  <dd>
+                    {runStats.miles} <small>mi</small>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Pace</dt>
+                  <dd>
+                    {runStats.pace} <small>/mi</small>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Time</dt>
+                  <dd>{runStats.time}</dd>
+                </div>
+              </dl>
+              <div class="log-map">
+                <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={runLabel}>
+                  {/* The route once, drawn three times: <use> keeps the page light (the HTML budget). */}
+                  <defs>
+                    <path id="oc-trace" d={routeD} pathLength="1" />
+                  </defs>
+                  <use class="oc-casing" href="#oc-trace" />
+                  <use class="oc-ghost" href="#oc-trace" />
+                  <use class="oc-line" href="#oc-trace" />
+                  <circle
+                    class="oc-end"
+                    cx={trace[trace.length - 1][0]}
+                    cy={trace[trace.length - 1][1]}
+                    r="4.5"
+                  />
+                  <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
+                </svg>
+                <button type="button" class="oc-again" data-otc-again>
+                  Draw it again
+                </button>
+              </div>
+              <div class="log-elev">
+                <p>
+                  <span>Elevation</span>
+                  <span>{runStats.climbFt} ft climb</span>
+                </p>
+                <svg viewBox={`0 0 ${EW} ${EH}`} preserveAspectRatio="none" aria-hidden="true">
+                  <path class="le-fill" d={elevFill} />
+                  <path class="le-line" d={elevLine} pathLength="1" />
+                </svg>
+              </div>
+              <div class="log-splits">
+                <p>
+                  <span>Splits</span>
+                  <span>min/mi</span>
+                </p>
+                <ol>
+                  {splits.map((l) => (
+                    <li style={`--h: ${l.h}%`}>
+                      <span class="ls-pace">{l.pace}</span>
+                      <i aria-hidden="true"></i>
+                      <span class="ls-mi">
+                        <span class="vh">Mile </span>
+                        {l.label}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
           )}
         </div>

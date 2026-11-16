@@ -87,8 +87,8 @@ var noMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   );
 });
 
-/* ---- The course line on the Running card -----------------------------------------------------
-   The line draws itself in CSS once the card is well on screen (.otc.seen, about.css). "Draw it again"
+/* ---- The route on the Running card ----------------------------------------------------------
+   The route draws itself in CSS once the card is well on screen (.otc.seen, about.css). "Draw it again"
    lifts the pen and replays it: the class puts the line back to undrawn with no transition, one
    reflow makes that stick, and taking the class off lets it draw. Hidden under reduced motion,
    where the line is simply there. */
