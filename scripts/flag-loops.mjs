@@ -5,7 +5,7 @@
 //
 // The renders come from scripts/flags/flag.py: a close-up cloth simulation of the flag in gusting
 // wind, one transparent PNG a frame, 1116 x 840 (the shape of the photograph's 62% of the
-// postcard). A simulation never repeats, so this finds the stretch of 5 to 8 seconds whose last
+// postcard). A simulation never repeats, so this finds the stretch of 5 to 10 seconds whose last
 // frame looks most like its first (compared small and in grey), then blends its last few frames
 // into the frames just before its start, so the end runs straight into the beginning.
 //
@@ -28,8 +28,8 @@ if (!dir || !name || !photo || !['day', 'night'].includes(kind)) {
 }
 const FPS = 30;
 const MIN = 5 * FPS;
-const MAX = 8 * FPS;
-const BLEND = 12; // frames of crossfade at the seam
+const MAX = 10 * FPS;
+const BLEND = 24; // frames of crossfade at the seam (slow cloth hides a long one)
 const W = 1116;
 const H = 840;
 // How strongly the flag shows, and its grade: a share of its colour kept, and a brightness.

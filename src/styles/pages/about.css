@@ -847,12 +847,10 @@ html:not(.js) .oc-again {
   float: none;
   margin: 0;
 }
-.fact:nth-child(odd) .stamp,
-.cx-stamps li:nth-child(odd) .stamp {
+.fact:nth-child(odd) .stamp {
   transform: rotate(-5deg);
 }
-.fact:nth-child(even) .stamp,
-.cx-stamps li:nth-child(even) .stamp {
+.fact:nth-child(even) .stamp {
   transform: rotate(4deg);
 }
 
@@ -992,8 +990,8 @@ html:not(.js) .oc-again {
 }
 /* ---- The boarding pass: the words under the postcard's pictures (Crossing.astro) ------------
    A cream paper ticket on the night card: the route in big airport codes with a plane between,
-   the fields in small capitals, and a tear-off stub behind a perforation carrying the two stamps
-   (studio blue ink on the paper) and a barcode. The notches at either end of the perforation are
+   the fields in small capitals, and a tear-off stub behind a perforation carrying the route, the
+   passenger and a barcode. The notches at either end of the perforation are
    circles in the card's own night, so they read as bites out of the paper. Its colours are fixed,
    like the card's, so the ticket is the same on both sides of the page. Under 44rem the stub drops
    below the main part and the perforation turns horizontal. */
@@ -1113,9 +1111,8 @@ html:not(.js) .oc-again {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.6rem;
   width: clamp(12rem, 22vw, 15rem);
   padding: clamp(1rem, 2.2vw, 1.6rem) clamp(0.9rem, 1.8vw, 1.25rem);
   border-left: 2px dashed var(--rule);
@@ -1136,27 +1133,14 @@ html:not(.js) .oc-again {
 .pass-stub::after {
   bottom: calc(var(--notch) * -1);
 }
-.cx-stamps {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.cx-stamps .stamp {
-  float: none;
-  margin: 0;
-}
-.cx-stamps .stamp-word {
-  font-size: 1.05rem;
-}
-.crossing .stamp.peel:focus-visible {
-  outline-color: var(--ink);
+.pass-stub-name {
+  margin-bottom: auto; /* the barcode sits at the foot of the stub */
+  font: 600 0.8125rem / 1 var(--body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
 }
 .pass-stub-route {
-  margin-top: auto;
   font: 700 1.05rem / 1 var(--display);
   letter-spacing: 0.06em;
 }
@@ -1181,9 +1165,6 @@ html:not(.js) .oc-again {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .pass-stub {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
     width: auto;
     border-left: 0;
     border-top: 2px dashed var(--rule);
@@ -1199,11 +1180,6 @@ html:not(.js) .oc-again {
   .pass-stub::after {
     left: auto;
     right: calc(var(--notch) * -1);
-  }
-  .cx-stamps {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
   }
   .pass-code {
     height: 2.2rem;
