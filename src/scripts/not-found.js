@@ -1,5 +1,5 @@
 /* The 404: the numerals as a drawing whose points give when you reach for them, and one client
-   window, knocked askew, that stands up when you reach for it, with its luggage tag swinging. */
+   window, knocked askew, that stands up when you reach for it. */
 import { ui } from './kit.js';
 import { POINTS, VIEW, artPaths } from '../lib/not-found-art.ts';
 var doc = document;
@@ -105,13 +105,9 @@ var REST = -13,
   target = REST,
   raf = 0,
   last = 0;
-/* The luggage tag tied to the window turns back against it (--tag-turn, in luggage-tag.css), so
-   it hangs nearly straight while the window leans, and swings on the same spring as it stands up. */
-var tag = host.querySelector('.tag');
 var apply = function () {
   host.style.transform =
     'translateY(' + lift.x.toFixed(2) + 'px) rotate(' + rot.x.toFixed(2) + 'deg)';
-  if (tag) tag.style.setProperty('--tag-turn', (rot.x * -0.8).toFixed(2));
 };
 var tick = function (t) {
   var dt = Math.min(0.032, (t - last) / 1000 || 0.016);

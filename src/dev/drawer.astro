@@ -12,7 +12,6 @@ import Stamp from '../components/ephemera/Stamp.astro';
 import Ticket from '../components/ephemera/Ticket.astro';
 import PortraitCard from '../components/ephemera/PortraitCard.astro';
 import WorkStub from '../components/ephemera/WorkStub.astro';
-import LuggageTag from '../components/ephemera/LuggageTag.astro';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
 import tm from '../assets/case-studies/shots/theology-matters-home.png';
@@ -93,28 +92,6 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
         </div>
       </div>
     </section>
-
-    <section>
-      <h2>Luggage tag</h2>
-      <div class="row tags">
-        <LuggageTag head={['Lost property', '404']}>
-          <p class="tag-field">
-            <b>Not found</b>
-            <span>/an-old-link/</span>
-          </p>
-          <div class="tag-field">
-            <b>Forward to</b>
-            <div class="tag-links">
-              <a href="/work/">See the work</a>
-              <a href="/">Back to home</a>
-            </div>
-          </div>
-        </LuggageTag>
-        <div class="card-ish">
-          <LuggageTag head={['Lost property', 'Turned']} style="--tag-turn: 8" />
-        </div>
-      </div>
-    </section>
   </div>
 </BaseLayout>
 
@@ -143,13 +120,8 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     background: var(--card);
     box-shadow: var(--rim);
   }
-  .stub-on-card,
-  .tags .card-ish {
+  .stub-on-card {
     --stub-ground: var(--card);
-    --tag-ground: var(--card);
-  }
-  .tags {
-    padding-top: 3rem;
   }
   .narrow {
     max-width: 24rem;
