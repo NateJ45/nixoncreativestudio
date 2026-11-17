@@ -83,7 +83,6 @@ export const GET: APIRoute = async () => {
       { t: 'Prices', href: '/services/', k: 'services cost pricing tiers care hosting' },
       { t: 'About', href: '/about/', k: 'nathan nixon who bio' },
       { t: 'Start a project', href: '/contact/', k: 'contact form hire quote' },
-      { t: "What I'm doing now", href: '/now/', k: 'now current' },
       { t: 'The one-page summary', href: '/one-page/', k: 'board committee print forward' },
       ...gated.map((l) => ({
         t: l.label,
