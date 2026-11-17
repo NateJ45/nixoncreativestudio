@@ -1,10 +1,11 @@
 /* The signature writes itself (src/components/ephemera/Signature.astro, src/styles/ephemera/signature.css).
-   Each signature that is not on screen yet is set to "wait" (no ink), and the first time it comes
-   into view it is set to "go": the CSS then draws each stroke in order. Once only. With no script,
-   under reduced motion, or with no IntersectionObserver, nothing is set and the signature is
-   simply there, drawn. A signature already on screen when the page loads stays drawn too, so
-   nothing ever blinks out. data-sig-after (ms) holds the pen a moment longer, for a signature that
-   sits on something that is still arriving (the printing receipt). */
+   Each signature not on screen yet is set to "wait" (blank), and the first time it comes into view
+   it is set to "go" with the moving drawing (its data-sig-src, public/assets/signature.svg?at=...),
+   which draws its strokes in order from the moment it loads. Once only. With no script, under
+   reduced motion, or with no IntersectionObserver, nothing is set and the finished drawing simply
+   stays. A signature already on screen when the page loads stays drawn too, so nothing ever blinks
+   out. data-sig-after (ms) holds the pen a moment longer, for a signature that sits on something
+   that is still arriving (the printing receipt, the closing's last card). */
 (function () {
   if (!('IntersectionObserver' in window)) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -17,6 +18,7 @@
         var el = e.target;
         io.unobserve(el);
         setTimeout(function () {
+          el.style.setProperty('--sig-go', 'url("' + el.dataset.sigSrc + '")');
           el.dataset.sig = 'go';
         }, +el.dataset.sigAfter || 0);
       });

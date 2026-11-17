@@ -1,20 +1,24 @@
 ---
 /* Nathan's signature, "Nathan Nixon" in a quick, confident hand: a big looped N, joined
-   lowercase, the t crossed and the i dotted after, and a sweeping line under it all. It is a
-   design mark for this site, drawn for it as plain SVG strokes (Nathan asked for a made-up one,
-   2026-11-16). It is not his legal signature and is not a scan of one.
+   lowercase, the t and x crossed and the i dotted after, and a sweeping line under it all. It is
+   a design mark for this site, drawn for it as single SVG strokes (Nathan asked for a made-up
+   one, 2026-11-16). It is not his legal signature and is not a scan of one.
 
-   It writes itself: src/scripts/signature.js waits until it comes into view, then each stroke
-   draws in pen order (src/styles/ephemera/signature.css). With no script, under reduced motion
-   and on paper it is simply there, drawn.
+   The drawing lives in one cached file, public/assets/signature.svg, so a page only carries this
+   small span (the closing has one on every page). The page shows it as a CSS mask over the ink
+   colour, so it takes the theme's tokens (src/styles/ephemera/signature.css). With no script,
+   under reduced motion and on paper it is the finished drawing (signature.svg#still). With a
+   script, src/scripts/signature.js keeps an off-screen signature blank until it comes into view,
+   then swaps in the moving file, whose own CSS draws each stroke in pen order. Each placement
+   asks for the file with its own `?at=` so each one writes from its own start.
 
-   The drawing is aria-hidden. The name is in the markup as visually hidden text ("Signed,
-   Nathan Nixon" by default, from site.ownerName); pass `said={false}` where the name is
-   already said beside it or would muddle a link's name, and say it there instead.
+   The drawing is decoration. The name is in the markup as visually hidden text ("Signed, Nathan
+   Nixon" by default, from site.ownerName); pass `said={false}` where the name would muddle a
+   link's name, and say it beside it instead.
 
-   Size and ink come from the holder: --sig-w (width), --sig-ink (colour token, the studio blue
-   by default) and --sig-pen (pen width in drawing units). Place it with `class`. `after` holds
-   the pen a moment once it is in view (ms), for a signature on something still arriving. */
+   Size and ink come from the holder: --sig-w (width) and --sig-ink (a colour token, the studio
+   blue by default). Place it with `class`. `after` holds the pen a moment once it is in view
+   (ms), for a signature on something still arriving. */
 import '../../styles/ephemera/signature.css';
 import { site } from '../../data/site';
 
@@ -25,56 +29,18 @@ interface Props {
   class?: string;
   /** Wait this many milliseconds after it comes into view before the pen starts. */
   after?: number;
+  /** A short word naming the placement, so each placement's drawing runs on its own clock. */
+  at?: string;
 }
-const { said = `Signed, ${site.ownerName}`, class: extra, after } = Astro.props;
-
-/* The strokes, in the order the pen makes them. Drawn on an upright grid (baseline at 70),
-   slanted, and rounded to one decimal. dur and at are seconds: longer strokes run faster per
-   unit of length, with a lift of the pen between the words and before each light stroke. */
-const strokes = [
-  {
-    d: 'M47.8 24C45.5 25 38.6 29 34 30C29.4 31 22.8 31.7 20 30C17.2 28.3 16 23.5 17 20C18.1 16.5 22.5 11.7 26.3 9C30.1 6.3 35.8 4.5 39.8 4C43.8 3.5 48.6 4.2 50.2 6C51.8 7.8 51.6 10.3 49.5 15C47.4 19.7 42.3 27.2 37.8 34C33.3 40.8 26.5 50 22.2 56C17.9 62 13.7 67.7 12 70C14.9 66 22.8 54.7 29.2 46C35.6 37.3 44.6 24.7 50.6 18C56.6 11.3 61.4 7.5 65.2 6C69 4.5 73.1 4.7 73.3 9C73.5 13.3 69.7 23.8 66.4 32C63.1 40.2 55.7 51.7 53.6 58C51.5 64.3 52.7 68.7 54 70C55.3 71.3 60 66.7 61.2 66C62.5 64.3 66.8 58.3 69.2 56C71.6 53.7 75.4 52.7 75.4 52C75.4 51.3 72 51 69.4 52C66.8 53 61.7 55.5 59.6 58C57.5 60.5 56.7 65 56.9 67C57.1 69 59.1 70.2 61 70C62.9 69.8 65.7 68.7 68.2 66C70.7 63.3 74.5 56 75.8 54C75 56 71.5 63.3 71.2 66C70.9 68.7 72.2 70.3 74 70C75.8 69.7 80.5 65 81.8 64C83.8 60.7 90.6 49.7 93.8 44C97 38.3 99.8 32.3 101 30C99.2 33.7 93 46 90.4 52C87.8 58 85.6 63 85.2 66C84.8 69 86.2 70.3 88 70C89.8 69.7 94.5 65 95.8 64C97.7 61 103.3 52.3 107.2 46C111.1 39.7 117.2 30.3 119.2 26C121.2 21.7 120.3 20 119 20C117.7 20 114 21.7 111.2 26C108.4 30.3 105.2 38.7 102.2 46C99.2 53.3 94.5 66 93 70C94.3 68 98.1 60.8 100.6 58C103.1 55.2 106.2 53.3 108.1 53C110 52.7 112 53.8 112.2 56C112.4 58.2 109.2 63.7 109.2 66C109.2 68.3 110.2 70.5 112 70C113.8 69.5 118.8 64.2 120.1 63C121.9 61.3 130.2 54.8 131.1 53C132 51.2 127.8 51.2 125.4 52C123 52.8 118.5 55.5 116.6 58C114.7 60.5 113.7 65 113.9 67C114.1 69 116.1 70.2 118 70C119.9 69.8 122.7 68.7 125.2 66C127.7 63.3 131.5 56 132.8 54C132 56 128.5 63.3 128.2 66C127.9 68.7 129.6 70.3 131 70C132.4 69.7 135.8 65 136.8 64C137.8 62.5 140.7 57 142.5 55C144.3 53 146.3 51.8 147.4 52C148.5 52.2 149.6 53 149.2 56C148.8 59 145.7 67.7 145 70C146.1 68 149.4 61 151.6 58C153.8 55 156.8 52.3 158.4 52C160 51.7 161.2 53.7 161.2 56C161.2 58.3 158.1 63.7 158.2 66C158.3 68.3 159.4 70.3 162 70C164.6 69.7 171.8 65 173.8 64',
-    dur: 1.07,
-    at: 0,
-  },
-  {
-    d: 'M231.6 20.3C229.1 21.4 221.7 25.7 216.7 26.8C211.7 27.9 204.7 28.6 201.6 26.8C198.5 25 197.2 19.8 198.4 16C199.5 12.2 204.3 7 208.4 4.1C212.5 1.2 218.7-0.7 223-1.3C227.3-1.8 232.5-1.1 234.2 0.9C236 2.9 235.7 5.6 233.5 10.6C231.2 15.6 225.7 23.7 220.8 31.1C215.9 38.5 208.6 48.4 204 54.9C199.3 61.4 194.8 67.5 193 70C196.1 65.7 204.6 53.4 211.5 44.1C218.5 34.7 228.2 21 234.6 13.8C241.1 6.6 246.3 2.5 250.4 0.9C254.5-0.7 258.9-0.6 259.2 4.1C259.4 8.8 255.3 20.1 251.7 29C248.2 37.8 240.1 50.2 237.9 57C235.7 63.9 237 68.6 238.3 70C239.7 71.4 244.8 66.4 246.1 65.7C244.9 65 248.8 62.2 251 60C253.2 57.8 256.1 54.2 257.1 53C256.1 55.2 251.7 63.2 251.2 66C250.7 68.8 252.2 70.5 254 70C255.8 69.5 260.8 64.2 262.1 63C265.1 61.5 268.1 55.8 269.8 54C271.5 52.2 273.4 51.3 274.4 52C275.4 52.7 275.8 55.7 275.6 58C275.4 60.3 272.8 64 273.2 66C273.6 68 275.7 70.3 278 70C280.3 69.7 285.3 65 286.8 64C288.4 62.5 295.4 57 296.5 55C297.6 53 295.2 51.7 293.4 52C291.6 52.3 287.6 54.7 285.9 57C284.2 59.3 283 63.8 283.2 66C283.4 68.2 285 70 287 70C289 70 293 68.3 295.2 66C297.4 63.7 300 58.2 300.2 56C300.4 53.8 296.4 52.7 296.1 53C295.8 53.3 296.5 57.2 298.6 58C300.7 58.8 306.9 58 308.6 58C309.4 57.2 312 53.5 313.1 53C314.3 52.5 315.9 52.2 315.5 55C315.2 57.8 311.8 67.5 311 70C312.1 68 315.4 61 317.6 58C319.8 55 322.8 52.3 324.4 52C326 51.7 327.2 53.7 327.2 56C327.2 58.3 323.9 63.7 324.2 66C324.5 68.3 326.1 70.7 329 70C331.9 69.3 337.3 65.7 341.4 62C345.5 58.3 351.6 50.3 353.6 48',
-    dur: 0.92,
-    at: 1.31,
-  },
-  {
-    d: 'M82.4 42C84.6 41.4 91.2 39.4 95.5 38.5C99.7 37.6 104.6 36.8 108.1 36.5C111.5 36.2 114.7 36.5 116.1 36.5',
-    dur: 0.26,
-    at: 2.37,
-    cls: 'sig-lt',
-  },
-  {
-    d: 'M262.7 71C264.1 69.7 268.1 65.7 271.1 63C274.1 60.3 277.4 57.5 280.5 55C283.6 52.5 288.1 49.2 289.6 48',
-    dur: 0.26,
-    at: 2.75,
-    cls: 'sig-lt',
-  },
-  {
-    d: 'M261.4 42C261.6 41.9 262.2 41.4 262.4 41.4C262.5 41.4 262.3 42.1 262.3 42.2',
-    dur: 0.11,
-    at: 3.11,
-    cls: 'sig-dot',
-  },
-  {
-    d: 'M27.7 91C40.6 90.3 75.3 88 104.9 87C134.5 86 175.2 86 205.5 85C235.8 84 264.4 83.2 286.7 81C309 78.8 326.9 75.8 339.4 72C351.9 68.2 357.9 60.3 361.6 58',
-    dur: 0.47,
-    at: 3.42,
-    cls: 'sig-lt',
-  },
-];
+const { said = `Signed, ${site.ownerName}`, class: extra, after, at = 'here' } = Astro.props;
 ---
 
-<span class={['sig', extra].filter(Boolean).join(' ')} data-sig data-sig-after={after}>
-  <svg viewBox="-6 -2 384 98" aria-hidden="true" focusable="false">
-    {strokes.map((s) => (
-      <path d={s.d} pathLength="1" class={s.cls} style={`--d:${s.dur}s;--at:${s.at}s`} />
-    ))}
-  </svg>
+<span
+  class={['sig', extra].filter(Boolean).join(' ')}
+  data-sig
+  data-sig-src={`/assets/signature.svg?at=${at}`}
+  data-sig-after={after}
+>
   {said && <span class="vh">{said}</span>}
 </span>
 
