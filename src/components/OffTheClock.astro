@@ -10,8 +10,9 @@
      crop, so no one loses their head) and turned a little. It steps exactly like the camera roll
      (the same script), with a caption per print and never a date.
    - Running: my Flying Pig 10K as an activity log (header, stats, map, elevation, splits), from
-     my own watch export in src/data/flying-pig-10k.ts (scripts/build-run-trace.mjs). The route
-     draws itself as the card comes into view, and "Draw it again" replays it. No date on it. The
+     my own watch export in src/data/flying-pig-10k.ts (scripts/build-run-trace.mjs), over real
+     Cincinnati streets from OpenStreetMap (public/assets/about/flying-pig-map.svg, baked by
+     scripts/build-run-map.mjs; the card credits OSM). The route draws itself as the card comes into view, and "Draw it again" replays it. No date on it. The
      note still points at the Stone Steps 50K, the race site I built.
    No photograph shows a date or a year. Script: src/scripts/off-the-clock.js. Styles: about.css
    under "Off the clock".
@@ -411,6 +412,10 @@ const cards: Card[] = [
               </dl>
               <div class="log-map">
                 <svg viewBox={`0 0 ${CW} ${CH}`} role="img" aria-label={runLabel}>
+                  {/* The streets underneath: OpenStreetMap roads and rivers baked to a cached file by
+                      scripts/build-run-map.mjs in this same projection, so they sit exactly under
+                      the route and cost the HTML nothing. */}
+                  <use class="oc-map" href="/assets/about/flying-pig-map.svg#map" />
                   {/* The route once, drawn three times: <use> keeps the page light (the HTML budget). */}
                   <defs>
                     <path id="oc-trace" d={routeD} pathLength="1" />
@@ -426,6 +431,9 @@ const cards: Card[] = [
                   />
                   <circle class="oc-dot" cx={trace[0][0]} cy={trace[0][1]} r="4.5" />
                 </svg>
+                <a class="oc-osm" href="https://www.openstreetmap.org/copyright" rel="noopener">
+                  © OpenStreetMap
+                </a>
                 <button type="button" class="oc-again" data-otc-again>
                   Draw it again
                 </button>

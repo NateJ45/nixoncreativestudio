@@ -971,18 +971,33 @@ html:not(.js) .reel-bar {
   padding: 0.75rem;
   overflow: hidden;
   border-radius: 0.6rem;
-  background:
-    repeating-linear-gradient(
-      28deg,
-      transparent 0 22px,
-      color-mix(in srgb, var(--ink) 6%, transparent) 22px 23px
-    ),
-    repeating-linear-gradient(
-      118deg,
-      transparent 0 30px,
-      color-mix(in srgb, var(--ink) 6%, transparent) 30px 31px
-    ),
-    color-mix(in srgb, var(--ink) 5%, var(--card));
+  /* The real streets (OpenStreetMap, scripts/build-run-map.mjs) paint with these, so the map
+     follows the theme. Opaque mixes, not alpha, so overlapping road pieces do not darken. */
+  --map-water: color-mix(in srgb, var(--accent) 14%, var(--card));
+  --map-road-minor: color-mix(in srgb, var(--ink) 10%, var(--card));
+  --map-road-mid: color-mix(in srgb, var(--ink) 15%, var(--card));
+  --map-road-major: color-mix(in srgb, var(--ink) 21%, var(--card));
+  background: color-mix(in srgb, var(--ink) 5%, var(--card));
+}
+.oc-osm {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.5rem;
+  /* Small type, full-size target: as tall as "Draw it again" beside it. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  font-size: 0.625rem;
+  color: var(--soft);
+  text-decoration: none;
+}
+.oc-osm:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.oc-osm:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .log-map svg {
   width: 100%;
