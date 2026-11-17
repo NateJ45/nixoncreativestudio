@@ -1,0 +1,178 @@
+/* ============================================================================
+   The press pass (PressPass.astro): a journal post's byline, on a clip
+   ============================================================================
+   A fixed piece of card, the same in both themes, so its colours are its own
+   (the Ticket's paper and ink, ephemera.css). The pairs clear AA on the paper:
+   ink 14.4:1, faint 4.7:1, blue 6.1:1, white on the band 7.1:1
+   (kit-tokens.test.ts, "the drawer's fixed paper"). Where it sits on a page is
+   the page's business; this file says what it looks like. */
+.press {
+  min-width: 0;
+  --paper: #f3eee2;
+  --ink: #1b1d2a;
+  --faint: #6b6a63;
+  --rule: rgba(27, 29, 42, 0.16);
+  --accent: #2f3fe6;
+  --stamp-paper: var(--paper);
+  position: relative;
+  display: grid;
+  gap: 0.7rem;
+  width: fit-content;
+  max-width: 100%;
+  padding: 1.35rem 1.1rem 0.85rem;
+  border-radius: 0.8rem;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 255, 255, 0.55), transparent 55%), var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.08),
+    0 1.2rem 1.8rem -1.3rem rgba(0, 0, 0, 0.65);
+  /* It hangs from the slot, a little crooked, and straightens under a pointer on a spring. */
+  transform: rotate(var(--press-tilt, -1.2deg));
+  transform-origin: 50% 0.5rem;
+  transition: transform 0.7s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.press:hover,
+.press:focus-within {
+  transform: rotate(0deg);
+}
+/* The slot the clip goes through: a rounded hole, darker than the card. */
+.press-slot {
+  position: absolute;
+  top: 0.42rem;
+  left: 50%;
+  width: 2.4rem;
+  height: 0.42rem;
+  border-radius: 0.3rem;
+  background: rgba(27, 29, 42, 0.22);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  translate: -50% 0;
+}
+/* The band: white on the blue, the two small words at either end. */
+.press-band {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: 0 -1.1rem;
+  padding: 0.4rem 1.1rem;
+  background: var(--accent);
+  color: #fff;
+  font: 700 0.6875rem / 1.1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.press-band span:last-child {
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.press-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+/* The pass photo: the portrait, square-cornered like an ID card. No date ever goes on it. */
+.press-photo {
+  flex: none;
+  width: 4.5rem;
+  height: 5.6rem;
+  border-radius: 0.3rem;
+  object-fit: cover;
+  object-position: 50% 20%;
+  background: #e2dccd;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.press-t {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.press-t p {
+  margin: 0;
+}
+.press-name {
+  font: 600 1.0625rem / 1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+.press-name a {
+  color: var(--ink);
+  text-underline-offset: 0.2em;
+}
+.press-name a:hover {
+  color: var(--accent);
+}
+.press-name a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+/* The fields: a small capital label over each value, two to a row. */
+.press-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, auto));
+  gap: 0.45rem 1.25rem;
+  margin: 0;
+}
+.press-fields dt {
+  font: 600 0.625rem / 1.1 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.press-fields dd {
+  margin: 0.15rem 0 0;
+  font: 600 0.875rem / 1.25 var(--body);
+  font-variant-numeric: tabular-nums;
+}
+.press-note {
+  max-width: 30rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.press-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 1.2rem;
+}
+.press-code {
+  width: 7.5rem;
+  height: 1.2rem;
+  fill: var(--ink);
+  opacity: 0.8;
+}
+/* A rubber stamp in the stamp slot lands in the pass's bottom corner, clear of every word. */
+.press-foot .stamp {
+  float: none;
+  margin: 0 -0.25rem 0 auto;
+}
+
+@media (max-width: 26rem) {
+  .press-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .press {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .press {
+    border: 1px solid CanvasText;
+  }
+  .press-band {
+    border-bottom: 1px solid CanvasText;
+  }
+}
+@media print {
+  .press {
+    transform: none;
+    box-shadow: none;
+    border: 1px solid #999;
+  }
+}

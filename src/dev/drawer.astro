@@ -10,6 +10,10 @@ import CrewList from '../components/ephemera/CrewList.astro';
 import FilmStrip from '../components/ephemera/FilmStrip.astro';
 import Stamp from '../components/ephemera/Stamp.astro';
 import Ticket from '../components/ephemera/Ticket.astro';
+import PressPass from '../components/ephemera/PressPass.astro';
+import MarginNote from '../components/ephemera/MarginNote.astro';
+import PaperPrint from '../components/ephemera/PaperPrint.astro';
+import NotebookPage from '../components/ephemera/NotebookPage.astro';
 import PortraitCard from '../components/ephemera/PortraitCard.astro';
 import WorkStub from '../components/ephemera/WorkStub.astro';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
@@ -25,7 +29,7 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     <h1>The drawer</h1>
     <p>
       The paper objects any page can borrow. Dev only. Components in src/components/ephemera/, looks
-      in src/styles/ephemera.css, stamp.css and src/styles/ephemera/.
+      in src/styles/ephemera.css, src/styles/ephemera/ and stamp.css.
     </p>
 
     <section>
@@ -73,6 +77,73 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
       </div>
     </section>
 
+    {/* The journal's objects. The words are the church cost post's own (its date, its sources). */}
+    <section>
+      <h2>Press pass</h2>
+      <div class="row">
+        <PressPass photo="/assets/about/portrait-bw-520.webp" seed={20261110}>
+          <dl class="press-fields">
+            <div>
+              <dt>Published</dt>
+              <dd>November 10, 2026</dd>
+            </div>
+            <div>
+              <dt>Section</dt>
+              <dd>Costs</dd>
+            </div>
+          </dl>
+        </PressPass>
+        <PressPass photo="/assets/about/portrait-bw-520.webp" seed={20261111}>
+          <dl class="press-fields">
+            <div>
+              <dt>Published</dt>
+              <dd>November 10, 2026</dd>
+            </div>
+          </dl>
+          <span slot="stamp" class="stamp" aria-hidden="true">
+            <span class="stamp-word">Stamp</span>
+            <span class="stamp-date">slot</span>
+          </span>
+        </PressPass>
+      </div>
+    </section>
+
+    <section>
+      <h2>Margin note</h2>
+      <div class="row">
+        <MarginNote class="narrow">
+          <p>
+            Sources: <a href="https://www.wix.com/plans">Wix plans</a> and
+            <a href="https://www.squarespace.com/pricing">Squarespace pricing</a>, as of November
+            2026.
+          </p>
+        </MarginNote>
+        <div class="card-ish">
+          <MarginNote tilt={1.5}>
+            <p>On a card</p>
+          </MarginNote>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Print</h2>
+      <div class="row">
+        <div class="narrow">
+          <PaperPrint>
+            <img src={stream.src} alt="" width="320" height="214" style="width:100%;height:auto" />
+          </PaperPrint>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Notebook page</h2>
+      <NotebookPage as="article" class="nb-demo">
+        <p class="label">Costs</p>
+        <h3>How much does a church website cost in 2026?</h3>
+      </NotebookPage>
+    </section>
     <section>
       <h2>Portrait card, small</h2>
       <div class="row">
@@ -82,7 +153,6 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
         </div>
       </div>
     </section>
-
     <section>
       <h2>Work-order stub</h2>
       <div class="row">
@@ -120,16 +190,20 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     background: var(--card);
     box-shadow: var(--rim);
   }
-  .stub-on-card {
-    --stub-ground: var(--card);
-  }
   .narrow {
     max-width: 24rem;
+  }
+  .drawer :global(.nb-demo) {
+    max-width: 36rem;
+    padding: 2rem 2rem 2.5rem 4rem;
   }
   .night {
     --ticket-ground: #0b0e1f;
     padding: 1.5rem;
     border-radius: 1rem;
     background: #0b0e1f;
+  }
+  .stub-on-card {
+    --stub-ground: var(--card);
   }
 </style>

@@ -70,10 +70,11 @@ test.describe('quote band: the key phrase', () => {
       // The mark adds no white space of its own around the words.
       expect(q.text).not.toMatch(/\s{2,}/);
     }
-    // Public reviews lead the band (2026-11-15): Staci Perkins's Google review is first.
-    expect(quotes[0].text.startsWith('Nathan at Nixon Creative Studio built the website')).toBe(
-      true,
-    );
+    // Public reviews lead the band (2026-11-15): the first slide links to its review on Google.
+    // (Which review comes first follows the deck order, so it is not named here.)
+    await expect(
+      page.locator('.home-band [data-q]').first().locator('a[href*="google.com/maps"]'),
+    ).toHaveCount(1);
   });
 
   test('the marker draws once the band is on screen', async ({ page }) => {

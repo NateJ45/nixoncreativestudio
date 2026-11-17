@@ -1,6 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
 import { routes } from './routes';
-import { now } from '../src/data/now';
 
 // =============================================================================
 // Metadata: titles, descriptions, JSON-LD, llms.txt and robots.txt
@@ -193,16 +192,15 @@ test('/robots.txt allows the AI crawlers and keeps the sitemap', async ({ reques
   expect(text).toContain('Sitemap: https://nixoncreativestudio.com/sitemap-index.xml');
 });
 
-test('the sitemap dates case studies from their frontmatter, /now from its data, and invents nothing else', async ({
+test('the sitemap dates case studies from their frontmatter and invents nothing else', async ({
   request,
 }) => {
   const xml = await (await request.get('/sitemap-0.xml')).text();
   const urls = [...xml.matchAll(/<url>(.*?)<\/url>/gs)].map((m) => m[1]);
   const dated = urls.filter((url) => url.includes('<lastmod>'));
-  // Every dated URL is a case study (or, once open, a journal entry) or /now, and every study is
-  // dated. /now carries the `updated` date from src/data/now.ts.
-  for (const url of dated) expect(url).toMatch(/\/((work|journal)\/[a-z0-9-]+|now)\//);
-  expect(urls.find((url) => url.includes('/now/'))).toContain(`<lastmod>${now.updated}`);
+  // Every dated URL is a case study (or, once open, a journal entry), and every study is dated.
+  for (const url of dated) expect(url).toMatch(/\/(work|journal)\/[a-z0-9-]+\//);
+  expect(urls.some((url) => url.includes('/now/'))).toBe(false);
   const studies = urls.filter((url) => /\/work\/[a-z0-9-]+\/</.test(url));
   expect(studies.length).toBeGreaterThan(0);
   for (const url of studies) expect(url).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}/);
