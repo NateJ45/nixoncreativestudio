@@ -1,47 +1,271 @@
-/* /now: one dated card on the page, a wide box, so one corner mark (DESIGN.md). */
+/* /now: the things on my desk this month (now.astro, words in src/data/now.ts).
+
+   The desk is the page itself: each line of the list is an object lying on it at its own small
+   angle (--r), a card in the theme's own colours, so it turns over with the page like every other
+   card. What sits on each card depends on the line's `object` in now.ts: a client's window, one of
+   my prints, an index card with the latest journal post, the weeks sheet or the route card. The
+   sentence is always the card's own text, underneath.
+
+   --lift (0 to 1) is set by the spring in now.astro's script while an object is pointed at or
+   focused: it straightens and rises. With no script it stays 0. The arrival as the desk scrolls in
+   is a CSS scroll-driven `translate`, kept apart from `transform` so the two never fight, and off
+   under reduced motion. Nothing starts hidden (never-break rule 3). */
 .now-sec {
   padding-top: 0;
 }
-.now-card {
-  --cardr: 1.5rem;
-  max-width: 44rem;
+.now-head {
+  max-width: 64rem;
   margin: 0 auto;
-  padding: clamp(3.25rem, 6vw, 4rem) clamp(1.5rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem);
-  border-radius: var(--cardr);
-  transform: rotate(-0.3deg);
-  --pips: 1.5rem;
-  --pipx: 1.25rem;
-  --pipy: 1.1rem;
 }
-.now-card .pip {
-  color: var(--accent);
-}
-.now-card h2 {
-  margin-top: 0.5rem;
+.now-head h2 {
+  margin-top: 0.4rem;
   font-size: var(--type-h3);
 }
-.now-card ul {
-  margin: 1.25rem 0 0;
+
+/* ---- The desk ------------------------------------------------------------ */
+.desk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2rem);
+  max-width: 64rem;
+  margin: clamp(1.25rem, 3vw, 2rem) auto 0;
   padding: 0;
   list-style: none;
 }
-.now-card li {
-  padding: 0.85rem 0;
-  border-top: 1px solid var(--line);
+@media (min-width: 40rem) {
+  .desk {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 64rem) {
+  .desk {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: start;
+  }
+  /* The first two lines (what I'm building, what I look after) lie wide; the rest sit in a row. */
+  .obj {
+    grid-column: span 2;
+  }
+  .obj:nth-child(1),
+  .obj:nth-child(2) {
+    grid-column: span 3;
+  }
+}
+
+/* ---- One object ---------------------------------------------------------- */
+.obj {
+  --r: -0.8deg;
+  --lift: 0;
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  padding: clamp(1rem, 2.5vw, 1.35rem);
+  border-radius: 1rem;
+  background-color: var(--card);
+  color: var(--ink);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 calc(18px + var(--lift) * 14px) calc(30px + var(--lift) * 18px) -24px rgba(0, 0, 0, 0.32);
+  transform: translateY(calc(var(--lift) * -0.4rem)) rotate(calc(var(--r) * (1 - var(--lift))));
+}
+.obj:nth-child(2) {
+  --r: 0.6deg;
+}
+.obj:nth-child(3) {
+  --r: 1.1deg;
+}
+.obj:nth-child(4) {
+  --r: -0.5deg;
+}
+.obj:nth-child(5) {
+  --r: 0.9deg;
+}
+.obj-text {
+  margin: 0;
   font-size: 1.125rem;
   line-height: 1.45;
 }
-.now-card li:last-child {
-  border-bottom: 1px solid var(--line);
-}
-.now-card li a {
+.obj-text a,
+.note-t a {
   font-weight: 600;
 }
+/* A plain line is the words alone, set a little larger, like a card written on. */
+.obj-plain .obj-text {
+  font-size: clamp(1.2rem, 2.2vw, 1.4rem);
+  line-height: 1.35;
+}
+.obj-plain {
+  min-height: 9rem;
+  align-content: end;
+}
+/* The small caps-free label on a sheet or card (the journal, the weeks, the route). */
+.note-k {
+  margin: 0;
+  color: var(--soft);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ---- A client's window ---------------------------------------------------- */
+.win {
+  overflow: hidden;
+  border-radius: 0.6rem;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.win-bar {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--soft);
+  font-size: 0.75rem;
+}
+.win-bar i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--line);
+}
+.win-bar span {
+  margin-left: 0.4rem;
+}
+.win img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- A print ---------------------------------------------------------------
+   The photograph is left true in both themes. Its title is written in the margin under it, never a
+   date or a year. */
+.print {
+  margin: 0;
+}
+.print img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+.print figcaption {
+  margin-top: 0.5rem;
+  color: var(--soft);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* ---- The index card: the latest journal post ------------------------------ */
+.note {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem 1rem;
+  border-top: 3px solid var(--accent);
+  border-radius: 0.4rem;
+  /* Ruled like an index card: hairlines every line of text. */
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(1.6rem - 1px),
+    var(--line) calc(1.6rem - 1px) 1.6rem
+  );
+  box-shadow: 0 0 0 1px var(--line);
+}
+.note-t {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.6rem;
+}
+
+/* ---- The weeks sheet: one row of dots per site I look after ---------------- */
+.weeks-sheet {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 0.4rem;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.weeks-sheet .note-k {
+  margin-bottom: 0.25rem;
+}
+.wk-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin: 0;
+}
+.wk-row i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--soft);
+}
+.wk-row i.on {
+  background: var(--ink);
+  box-shadow: none;
+}
+
+/* ---- The route card -------------------------------------------------------- */
+.route {
+  display: grid;
+  gap: 0.5rem;
+}
+.route svg {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: auto;
+}
+.route-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.route-end {
+  fill: var(--accent);
+}
+
+/* ---- Under the desk -------------------------------------------------------- */
 .now-more {
-  max-width: 44rem;
-  margin: clamp(1.5rem, 3vw, 2rem) auto 0;
+  max-width: 64rem;
+  margin: clamp(1.75rem, 3.5vw, 2.5rem) auto 0;
   color: var(--soft);
 }
 .now-more a {
   color: var(--ink);
+}
+
+/* ---- Motion ----------------------------------------------------------------
+   As the desk scrolls in, each object slides the last little way into place. `translate` only, so
+   it never fights the spring's `transform`, and nothing starts hidden. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .obj {
+      animation: obj-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
+@keyframes obj-settle {
+  from {
+    translate: 0 1.25rem;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+/* Forced colors: the cards keep an edge. */
+@media (forced-colors: active) {
+  .obj {
+    border: 1px solid CanvasText;
+  }
 }

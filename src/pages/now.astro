@@ -1,18 +1,89 @@
 ---
-/* /now: one dated card saying what I'm doing this month (the nownownow.com idea). The words and
-   the date live in src/data/now.ts, so an update is a two-minute edit there, not here. */
+/* /now: what I'm doing this month, as the things on my desk (the nownownow.com idea). The words,
+   the date and which object each line sits on live in src/data/now.ts, so an update is a
+   two-minute edit there, not here.
+
+   Each line is still one <li> in one list, with its sentence in the markup, so the page reads as a
+   short list with no CSS or script. The objects are made only from real things already in the
+   repo (a case study, one of my photos, the journal, the weeks data, the Flying Pig route), and a
+   line whose thing is missing falls back to a plain card. Drawings are aria-hidden. No photograph
+   shows a date. The one date on the page is the "Updated" line.
+
+   Touch: pointing at an object (or tabbing to its link) lifts it off the desk on a spring
+   (src/scripts/spring.js). No script, or reduced motion, and the objects simply lie still.
+   Styles: src/styles/pages/now.css. */
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/pages/now.css';
 import Closing from '../components/Closing.astro';
-import { now, nowUpdatedLabel } from '../data/now';
+import { now, nowUpdatedLabel, type NowItem } from '../data/now';
 import { getGatedNav } from '../data/nav';
+import { isLive as postIsLive } from '../data/journal-gate';
+import { getClients } from '../lib/clients';
+import { newestFirst } from '../lib/journal';
 import { plainText, wordSpans } from '../lib/words';
+import weeksData from '../data/client-weeks.json';
+import { runBounds as B, runPoints as P, runStats } from '../data/flying-pig-10k';
 
 const heading = `What I'm doing <b>now.</b>`;
 const updated = nowUpdatedLabel();
 /* A link only shows when its page is open: the journal waits for its first published post. */
 const open = new Set((await getGatedNav()).map((l) => l.href));
 const isLive = (href: string) => !['/journal/', '/photography/'].includes(href) || open.has(href);
+
+const items: NowItem[] = now.items;
+const kinds = new Set(items.map((i) => i.object?.kind ?? 'plain'));
+
+/* What each kind needs, fetched once and only when a line asks for it. */
+const clients = kinds.has('window') ? await getClients() : [];
+const photos = kinds.has('print') ? await getCollection('photos') : [];
+const [latest] = kinds.has('note')
+  ? newestFirst(await getCollection('journal', ({ data }) => postIsLive(data)))
+  : [];
+
+/* The weeks sheet: one row of dots per site, filled where that week had changes. */
+const weekRows = weeksData.map((w) => {
+  const on = new Set(w.active);
+  return Array.from({ length: w.weeks }, (_, i) => on.has(i));
+});
+
+/* The route from above, the same projection About uses, sized for a small card. Whole units and
+   relative moves keep the path short. */
+const CW = 200;
+const PAD = 8;
+const midLat = ((B.north + B.south) / 2) * (Math.PI / 180);
+const scale = (CW - PAD * 2) / ((B.east - B.west) * Math.cos(midLat));
+const CH = Math.round((B.north - B.south) * scale + PAD * 2);
+const trace = P.map((p) => [
+  Math.round(PAD + (p[0] - B.west) * Math.cos(midLat) * scale),
+  Math.round(PAD + (B.north - p[1]) * scale),
+]);
+const routeD = trace
+  .map(([x, y], i) => {
+    if (!i) return `M${x} ${y}`;
+    const dy = y - trace[i - 1][1];
+    return `l${x - trace[i - 1][0]}${dy < 0 ? '' : ' '}${dy}`;
+  })
+  .join('');
+const end = trace[trace.length - 1];
+
+/* Each line, resolved to the object it can really sit on. */
+const desk = items.map((item) => {
+  const o = item.object ?? { kind: 'plain' as const };
+  if (o.kind === 'window') {
+    const client = clients.find((c) => c.slug === o.client);
+    if (client) return { item, kind: 'window' as const, client };
+  }
+  if (o.kind === 'print') {
+    const photo = photos.find((p) => p.id === o.photo);
+    if (photo) return { item, kind: 'print' as const, photo };
+  }
+  if (o.kind === 'note' && latest) return { item, kind: 'note' as const, post: latest };
+  if (o.kind === 'weeks' && weekRows.length) return { item, kind: 'weeks' as const };
+  if (o.kind === 'route') return { item, kind: 'route' as const };
+  return { item, kind: 'plain' as const };
+});
 ---
 
 <BaseLayout
@@ -30,28 +101,79 @@ const isLive = (href: string) => !['/journal/', '/photography/'].includes(href) 
   </header>
 
   <section class="sec now-sec" aria-labelledby="nh">
-    <article class="card keyed now-card">
-      <span class="pip" aria-hidden="true">
-        N
-      </span>
+    <div class="now-head">
       <p class="label">
         Updated <time datetime={now.updated}>{updated}</time>
       </p>
       <h2 id="nh">What I'm doing now</h2>
-      <ul>
-        {now.items.map((item) => (
-          <li>
-            {item.text}
-            {item.link && isLive(item.link.href) && (
+    </div>
+    <ul class="desk" data-desk>
+      {desk.map((d) => (
+        <li class={`obj obj-${d.kind}`} data-obj>
+          {d.kind === 'window' && (
+            <div class="win" aria-hidden="true">
+              <p class="win-bar">
+                <i />
+                <i />
+                <i />
+                <span>{d.client.host}</span>
+              </p>
+              <img src={d.client.deskStill} alt="" width="640" height="400" loading="lazy" />
+            </div>
+          )}
+          {d.kind === 'print' && (
+            <figure class="print">
+              <Image
+                src={d.photo.data.image}
+                alt={d.photo.data.alt}
+                widths={[320, 640]}
+                sizes="(max-width: 40rem) 80vw, 20rem"
+                loading="lazy"
+              />
+              <figcaption aria-hidden="true">{d.photo.data.title}</figcaption>
+            </figure>
+          )}
+          {d.kind === 'note' && (
+            <div class="note">
+              <p class="note-k">Latest in the journal</p>
+              <p class="note-t">
+                <a href={`/journal/${d.post.id}/`}>{d.post.data.title}</a>
+              </p>
+            </div>
+          )}
+          {d.kind === 'weeks' && (
+            <div class="weeks-sheet" aria-hidden="true">
+              <p class="note-k">Week by week</p>
+              {weekRows.map((row) => (
+                <p class="wk-row">
+                  {row.map((on) => (
+                    <i class={on ? 'on' : undefined} />
+                  ))}
+                </p>
+              ))}
+            </div>
+          )}
+          {d.kind === 'route' && (
+            <div class="route">
+              <svg viewBox={`0 0 ${CW} ${CH}`} aria-hidden="true" focusable="false">
+                <path class="route-line" d={routeD} />
+                <circle class="route-end" cx={end[0]} cy={end[1]} r="4" />
+              </svg>
+              <p class="note-k">Flying Pig 10K, {runStats.miles} miles. My longest race so far.</p>
+            </div>
+          )}
+          <p class="obj-text">
+            {d.item.text}
+            {d.item.link && isLive(d.item.link.href) && (
               <>
                 {' '}
-                <a href={item.link.href}>{item.link.label}</a>
+                <a href={d.item.link.href}>{d.item.link.label}</a>
               </>
             )}
-          </li>
-        ))}
-      </ul>
-    </article>
+          </p>
+        </li>
+      ))}
+    </ul>
     <p class="now-more">
       The longer story, and what I do away from the desk: <a href="/about/">About</a>
     </p>
@@ -59,3 +181,45 @@ const isLive = (href: string) => !['/journal/', '/photography/'].includes(href) 
 
   <Closing />
 </BaseLayout>
+
+<script>
+  /* Lift an object off the desk on a spring while it is pointed at or holds focus. Reduced motion,
+     or no script, and nothing moves. */
+  import { spring } from '../scripts/spring.js';
+
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const objs = [...document.querySelectorAll<HTMLElement>('[data-obj]')];
+  const springs = new Map(objs.map((el) => [el, { x: 0, v: 0, to: 0 }]));
+  let running = false;
+  let last = 0;
+
+  function tick(t: number) {
+    const dt = Math.min(0.032, (t - last) / 1000 || 0.016);
+    last = t;
+    let moving = false;
+    for (const [el, sp] of springs) {
+      if (spring(sp, sp.to, 260, 18, dt)) moving = true;
+      el.style.setProperty('--lift', sp.x.toFixed(3));
+    }
+    running = moving;
+    if (moving) requestAnimationFrame(tick);
+  }
+
+  function aim(el: HTMLElement, to: number) {
+    const sp = springs.get(el);
+    if (!sp || still.matches) return;
+    sp.to = to;
+    if (!running) {
+      running = true;
+      last = performance.now();
+      requestAnimationFrame(tick);
+    }
+  }
+
+  for (const el of objs) {
+    el.addEventListener('pointerenter', () => aim(el, 1));
+    el.addEventListener('pointerleave', () => aim(el, 0));
+    el.addEventListener('focusin', () => aim(el, 1));
+    el.addEventListener('focusout', () => aim(el, 0));
+  }
+</script>
