@@ -1,0 +1,25 @@
+---
+/* A sticky note: the journal's margin notes (Aside.astro), stuck beside the table they are about.
+   Pale yellow paper in fixed colours, the same in both themes, with the darker band where the glue
+   is, a little turned, and lifted a touch under a pointer on a spring. Still under reduced motion.
+
+   It is a `div role="note"`, never an <aside>: inside <main> an aside is a nested landmark. Any
+   other attribute (data-mnote, a class) passes through to it, so a page can place it. Where it
+   sits is the page's business; this file only gives the paper. Looks:
+   src/styles/ephemera/margin-note.css. Named MarginNote so it never collides with a StickyNote
+   another page may bring. */
+import '../../styles/ephemera/margin-note.css';
+
+interface Props {
+  /** The turn, in degrees. */
+  tilt?: number;
+  class?: string;
+  [attr: string]: unknown;
+}
+
+const { tilt = -1.2, class: cls, ...rest } = Astro.props;
+---
+
+<div class:list={['sticky-note', cls]} role="note" style={`--note-tilt:${tilt}deg`} {...rest}>
+  <slot />
+</div>

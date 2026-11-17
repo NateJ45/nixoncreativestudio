@@ -22,11 +22,13 @@
    words in the row's name still say whose they are.
 
    The look is the cost bars on /services (prices.css `.bars`), restated in
-   journal.css as `.pchart`. journal-post.js draws the bars to length as the
+   journal.css as `.pchart`, printed on the drawer's PaperPrint so it sits on
+   the page the way About's prints do. journal-post.js draws the bars to length as the
    chart arrives; the amounts carry data-roll. With no script, under reduced
    motion and on the first screen it is simply drawn.
    ============================================================================ */
 import { tableChart } from '../lib/table-chart';
+import PaperPrint from './ephemera/PaperPrint.astro';
 
 interface Props {
   column?: string;
@@ -40,23 +42,25 @@ const id = `pchart-${chart.valueHead.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 ---
 
 <div class="pchart" data-pchart>
-  <figure class="pchart-fig" aria-labelledby={id}>
-    <figcaption id={id} class="label">
-      {chart.valueHead} by {chart.labelHead.toLowerCase()}, drawn from the table below
-    </figcaption>
-    <ul class="pchart-bars">
-      {chart.rows.map((r, i) => (
-        <li class={mine && r.label.includes(mine) ? 'is-mine' : undefined} style={`--i:${i}`}>
-          <p class="pchart-t">
-            <span>{r.label}</span>
-            <b data-roll>{r.text}</b>
-          </p>
-          <div class="pchart-bar" aria-hidden="true">
-            <i style={`width:${r.pct}%`} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  </figure>
+  <PaperPrint class="pchart-print">
+    <figure class="pchart-fig" aria-labelledby={id}>
+      <figcaption id={id} class="label">
+        {chart.valueHead} by {chart.labelHead.toLowerCase()}, drawn from the table below
+      </figcaption>
+      <ul class="pchart-bars">
+        {chart.rows.map((r, i) => (
+          <li class={mine && r.label.includes(mine) ? 'is-mine' : undefined} style={`--i:${i}`}>
+            <p class="pchart-t">
+              <span>{r.label}</span>
+              <b data-roll>{r.text}</b>
+            </p>
+            <div class="pchart-bar" aria-hidden="true">
+              <i style={`width:${r.pct}%`} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </figure>
+  </PaperPrint>
   <Fragment set:html={html} />
 </div>

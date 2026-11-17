@@ -1,0 +1,60 @@
+---
+/* A press pass on a clip: the journal post's byline. Cream card in fixed colours, the same in both
+   themes (like the Ticket), with a blue band across the top, a slot punched for the clip, the
+   portrait as the pass photo, and who wrote it beside it. It hangs a touch crooked and straightens
+   under a pointer, on a spring; it holds still under reduced motion.
+
+   The fields are yours: put a <dl class="press-fields"> (and a .press-note, if there is one) in
+   the default slot, with real dates and numbers only. Dates go on the pass, never on the
+   photograph. The `stamp` slot takes a rubber stamp (stamp.css) that lands on the pass's corner,
+   so --stamp-paper and --accent are the pass's own. The barcode is decoration (aria-hidden): give
+   each pass its own seed. Looks: src/styles/ephemera/press-pass.css. */
+import '../../styles/ephemera/press-pass.css';
+import Barcode from './Barcode.astro';
+import { site } from '../../data/site';
+
+interface Props {
+  /** The pass photo: the same portrait the byline has always used. Decoration, so alt is empty. */
+  photo: string;
+  /** The two small words on the band, left and right. */
+  head?: [string, string];
+  /** The words before the name, and where the name links. */
+  lead?: string;
+  href?: string;
+  name?: string;
+  /** The barcode's seed. */
+  seed: number;
+  class?: string;
+}
+
+const {
+  photo,
+  head = ['Press', site.studioName],
+  lead = 'Written by',
+  href = '/about/',
+  name = site.ownerName,
+  seed,
+  class: cls,
+} = Astro.props;
+---
+
+<div class:list={['press', cls]}>
+  <span class="press-slot" aria-hidden="true"></span>
+  <p class="press-band">
+    <span>{head[0]}</span>
+    <span>{head[1]}</span>
+  </p>
+  <div class="press-body">
+    <img class="press-photo" src={photo} alt="" width="72" height="90" decoding="async" />
+    <div class="press-t">
+      <p class="press-name">
+        {lead} <a href={href}>{name}</a>
+      </p>
+      <slot />
+    </div>
+  </div>
+  <div class="press-foot">
+    <Barcode seed={seed} units={90} class="press-code" />
+    <slot name="stamp" />
+  </div>
+</div>
