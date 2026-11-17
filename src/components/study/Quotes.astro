@@ -1,53 +1,75 @@
 ---
 /* In their words: the client's own words from the frontmatter, character for character. Never
    edit, tidy or paraphrase one here. A quote that is a public review (it has a `source`) also
-   shows the person's face, the stars and a link to the review on Google (ReviewCite), and its key
-   phrase is marked (src/lib/highlight.ts). Chapter gives the section id="in-their-words", which the
-   review line in the study's opening jumps to. */
+   shows the person's face, the stars and a link to the review on Google (ReviewCite). Every
+   quote's key phrase (`highlight`) is marked (src/lib/highlight.ts; on all quotes since
+   2026-11-16, not just reviews). Chapter gives the section id="in-their-words", which the
+   review line in the study's opening jumps to.
+
+   One card per person (added 2026-11-16): when the same person wrote more than once (Richard
+   Burnett's 2025 email quote and his 2026 Google review), their words share a card, oldest first,
+   each under a small dated note, with their name, face, stars and Google link once at the foot.
+   That shows a client who came back. People are matched by samePerson (src/lib/study-quotes.ts). */
 import Chapter from './Chapter.astro';
 import ReviewCite from '../ReviewCite.astro';
 import { markedQuote } from '../../lib/highlight';
+import { byPerson, monthYear } from '../../lib/study-quotes';
 
 interface Quote {
   quote: string;
   name: string;
   title: string;
+  date: Date;
   context?: string;
   highlight?: string;
   photo?: string;
   source?: { platform: 'google'; url: string; rating: number };
 }
 const { study } = Astro.props;
-const quotes: Quote[] = study.testimonials;
+const cards: Quote[][] = byPerson(study.testimonials as Quote[]);
+/* The cite goes with the newest words: their title as it is now, and the review link if any. */
+const footOf = (card: Quote[]) =>
+  [...card].reverse().find((t) => t.source) ?? card[card.length - 1];
 ---
 
 <Chapter title="In their words">
-  {quotes.map((t) => (
-    <figure class:list={['q rv', { 'q-review': t.source }]}>
-      {t.source ? (
-        <>
-          <blockquote set:html={markedQuote(t.quote, t.highlight)} />
-          <figcaption>
+  {cards.map((card) => {
+    const foot = footOf(card);
+    const many = card.length > 1;
+    return (
+      <figure class:list={['q rv', { 'q-review': foot.source, 'q-thread': many }]}>
+        {card.map((t) =>
+          many ? (
+            <div class="q-part">
+              <p class="q-when">
+                <time datetime={t.date.toISOString().slice(0, 10)}>{monthYear(t.date)}</time>
+                {t.context && <span>{t.context}</span>}
+              </p>
+              <blockquote set:html={markedQuote(t.quote, t.highlight)} />
+            </div>
+          ) : (
+            <blockquote set:html={markedQuote(t.quote, t.highlight)} />
+          ),
+        )}
+        <figcaption>
+          {foot.source ? (
             <ReviewCite
-              name={t.name}
-              title={t.title}
-              photo={t.photo}
-              url={t.source.url}
-              rating={t.source.rating}
-              context={t.context}
+              name={foot.name}
+              title={foot.title}
+              photo={foot.photo}
+              url={foot.source.url}
+              rating={foot.source.rating}
+              context={many ? undefined : foot.context}
             />
-          </figcaption>
-        </>
-      ) : (
-        <>
-          <blockquote>{t.quote}</blockquote>
-          <figcaption>
-            <b>{t.name}</b>
-            {t.title}
-            {t.context && <span class="q-ctx">{t.context}</span>}
-          </figcaption>
-        </>
-      )}
-    </figure>
-  ))}
+          ) : (
+            <>
+              <b>{foot.name}</b>
+              {foot.title}
+              {!many && foot.context && <span class="q-ctx">{foot.context}</span>}
+            </>
+          )}
+        </figcaption>
+      </figure>
+    );
+  })}
 </Chapter>

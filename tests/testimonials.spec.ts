@@ -7,12 +7,27 @@ import { readdirSync, readFileSync } from 'node:fs';
 // src/lib/case-testimonials.test.ts guards the data; this guards the page.
 
 const dir = 'src/content/case-studies/';
-const studies = readdirSync(dir)
+const files = readdirSync(dir)
   .filter((f) => f.endsWith('.mdx'))
-  .map((f) => {
-    const text = readFileSync(dir + f, 'utf8');
-    return { slug: f.replace(/\.mdx$/, ''), count: (text.match(/^\s*- quote:/gm) ?? []).length };
-  });
+  .map((f) => ({ slug: f.replace(/\.mdx$/, ''), text: readFileSync(dir + f, 'utf8') }));
+// `count` is the study's own quotes (each counted once site-wide, as in the home band); `onPage`
+// adds the quotes other studies share onto it with `alsoOn` (src/lib/study-quotes.ts).
+const sharedOnto = (slug: string) =>
+  files.reduce(
+    (n, f) =>
+      n +
+      [...f.text.matchAll(/^\s+alsoOn: \[(.*)\]\s*$/gm)].filter((m) =>
+        m[1]
+          .split(',')
+          .map((x) => x.trim())
+          .includes(slug),
+      ).length,
+    0,
+  );
+const studies = files.map(({ slug, text }) => {
+  const count = (text.match(/^\s*- quote:/gm) ?? []).length;
+  return { slug, count, onPage: count + sharedOnto(slug) };
+});
 // Quotes that are not about a website (src/data/quotes.ts): in the home band with a photograph
 // where a study's quote has the client's site.
 const standalone = [
@@ -20,12 +35,14 @@ const standalone = [
 ].map((m) => m[1]);
 const bandTotal = studies.reduce((n, s) => n + s.count, 0) + standalone.length;
 
-for (const { slug, count } of studies) {
-  test(`/work/${slug}/ shows ${count} quote(s) with a name`, async ({ page }) => {
+for (const { slug, onPage } of studies) {
+  test(`/work/${slug}/ shows ${onPage} quote(s) with a name`, async ({ page }) => {
     await page.goto(`/work/${slug}/`);
-    await expect(page.locator('figure.q blockquote')).toHaveCount(count);
-    await expect(page.locator('figure.q figcaption b')).toHaveCount(count);
-    if (count === 0) await expect(page.locator('#in-their-words')).toHaveCount(0);
+    await expect(page.locator('figure.q blockquote')).toHaveCount(onPage);
+    // One card per person (study/Quotes.astro), so one name per card, never per quote.
+    const cards = await page.locator('figure.q').count();
+    await expect(page.locator('figure.q figcaption b')).toHaveCount(cards);
+    if (onPage === 0) await expect(page.locator('#in-their-words')).toHaveCount(0);
   });
 }
 

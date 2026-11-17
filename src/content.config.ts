@@ -196,6 +196,10 @@ const caseStudies = defineCollection({
                   rating: z.number().int().min(1).max(5),
                 })
                 .optional(),
+              // Other studies this quote is also about (their slugs). The words stay here, once;
+              // src/lib/study-quotes.ts shows them on those study pages too, and nothing that
+              // gathers quotes across the site counts them twice.
+              alsoOn: z.array(z.string().min(1)).optional(),
               photo: z
                 .string()
                 .regex(
