@@ -4,11 +4,13 @@
    Ohio on the right (Tim Thorn, Unsplash License, credited on /colophon/). A flag flies in each,
    the Saltire and the Stars and Stripes, and the 2017 flight arcs from the monument to the Great
    American Tower. The words are all in the HTML below the pictures. Styles in
-   src/styles/pages/about.css under "The postcard". */
+   src/styles/pages/about.css under "The postcard"; the boarding pass is the drawer's Ticket. */
 import { Image } from 'astro:assets';
 import edinburgh from '../assets/photography/canvas/edinburgh-skyline.jpg';
 import cincinnati from '../assets/about/cincinnati-skyline.jpg';
 import loops from '../data/flag-loops.json';
+import Ticket from './ephemera/Ticket.astro';
+import { site } from '../data/site';
 
 /* The art box is 1200 x 560 at every width (aspect-ratio in about.css), so the drawing over the
    photos lines up with them: each photo covers 62% of the width, overlapping in the middle. */
@@ -17,17 +19,6 @@ const H = 560;
 // From the Dugald Stewart monument's dome (left photo) to the Great American Tower's (right).
 const FLIGHT = 'M262 92Q700 -40 1138 96';
 const sizes = '(max-width: 60rem) 62vw, 34rem';
-
-/* The barcode on the stub: bars of one to three units with gaps of one or two, from a fixed seed
-   so every build draws the same code. */
-let seed = 20170;
-const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-const barcode = { w: 0, bars: [] as [number, number][] };
-while (barcode.w < 120) {
-  const w = 1 + Math.floor(rand() * 3);
-  barcode.bars.push([barcode.w, w]);
-  barcode.w += w + 1 + Math.floor(rand() * 2);
-}
 
 const photos = [
   { side: 'from', src: edinburgh, loop: loops['flag-saltire'] },
@@ -94,68 +85,44 @@ const photos = [
     <p class="cx-place cx-place-from">Edinburgh</p>
     <p class="cx-place cx-place-to">Cincinnati</p>
   </div>
-  {/* The words below the pictures, as a paper boarding pass: Edinburgh to Cincinnati, one way,
-      with a tear-off stub carrying the route, the passenger and a barcode. Styles in about.css under
-      "The boarding pass". */}
+  {/* The words below the pictures, as a paper boarding pass from the drawer (ephemera/Ticket.astro):
+      Edinburgh to Cincinnati, one way, with a tear-off stub carrying the route, the passenger and
+      a barcode. The notches take the card's --night. */}
   <figcaption class="cx-copy">
-    <div class="pass">
-      <div class="pass-main">
-        <p class="pass-head">
-          <span>Boarding pass</span>
-          <span>One way</span>
-        </p>
-        <p class="pass-route">
-          <span class="pass-port">
-            <b>EDI</b> <span>Edinburgh</span>
-          </span>
-          <span class="pass-plane" aria-hidden="true">
-            <svg viewBox="86 0 33 24">
-              <path d="M118 12c0-1.4-1.6-2.3-3.4-2.3h-6.7L99.6.6h-3.3l4 9.1h-7.4l-2.6-3.4h-2.6l1.7 5.7-1.7 5.7h2.6l2.6-3.4h7.4l-4 9.1h3.3l8.3-9.1h6.7c1.8 0 3.4-.9 3.4-2.3Z"></path>
-            </svg>
-          </span>
-          <span class="pass-port">
-            <b>CVG</b> <span>Cincinnati</span>
-          </span>
-        </p>
-        <h3>From Scotland, in the U.S. since 2017</h3>
-        <dl class="pass-fields">
-          <div>
-            <dt>Passenger</dt>
-            <dd>Nathan Nixon</dd>
-          </div>
-          <div>
-            <dt>Departed</dt>
-            <dd>2017</dd>
-          </div>
-          <div>
-            <dt>Status</dt>
-            <dd>U.S. citizen since 2022</dd>
-          </div>
-          <div>
-            <dt>Based in</dt>
-            <dd>Cincinnati since 2022</dd>
-          </div>
-        </dl>
-        <p class="pass-note">In person around the region, anywhere for web work.</p>
-      </div>
-      <div class="pass-stub">
-        <p class="pass-stub-route" aria-hidden="true">
-          EDI <span>to</span> CVG
-        </p>
-        <p class="pass-stub-name" aria-hidden="true">
-          Nathan Nixon
-        </p>
-        <svg
-          class="pass-code"
-          viewBox={`0 0 ${barcode.w} 40`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          {barcode.bars.map(([x, w]) => (
-            <rect x={x} width={w} height="40" />
-          ))}
-        </svg>
-      </div>
-    </div>
+    <Ticket head={['Boarding pass', 'One way']} route={['EDI', 'CVG']} seed={20170}>
+      <p class="pass-route">
+        <span class="pass-port">
+          <b>EDI</b> <span>Edinburgh</span>
+        </span>
+        <span class="pass-plane" aria-hidden="true">
+          <svg viewBox="86 0 33 24">
+            <path d="M118 12c0-1.4-1.6-2.3-3.4-2.3h-6.7L99.6.6h-3.3l4 9.1h-7.4l-2.6-3.4h-2.6l1.7 5.7-1.7 5.7h2.6l2.6-3.4h7.4l-4 9.1h3.3l8.3-9.1h6.7c1.8 0 3.4-.9 3.4-2.3Z"></path>
+          </svg>
+        </span>
+        <span class="pass-port">
+          <b>CVG</b> <span>Cincinnati</span>
+        </span>
+      </p>
+      <h3>From Scotland, in the U.S. since 2017</h3>
+      <dl class="pass-fields">
+        <div>
+          <dt>Passenger</dt>
+          <dd>{site.ownerName}</dd>
+        </div>
+        <div>
+          <dt>Departed</dt>
+          <dd>2017</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>U.S. citizen since 2022</dd>
+        </div>
+        <div>
+          <dt>Based in</dt>
+          <dd>Cincinnati since 2022</dd>
+        </div>
+      </dl>
+      <p class="pass-note">In person around the region, anywhere for web work.</p>
+    </Ticket>
   </figcaption>
 </figure>

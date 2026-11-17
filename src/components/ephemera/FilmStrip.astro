@@ -1,0 +1,54 @@
+---
+/* A strip of film: sprocket holes along both edges, an edge print under each frame, and a taped
+   splice with a label where the frames turn from photographs into websites. Pass the frames in
+   order; a frame with `web` is a client page in a small browser frame, and the splice goes in
+   front of the first one. The strip drifts sideways as it crosses the screen (scroll-driven in
+   ephemera.css) and rests on the splice without support or with reduced motion.
+
+   It is decoration, so the whole strip is aria-hidden: say the same thing in words beside it.
+   Its colours are fixed, the same in both themes. Never a date on a photograph frame: the splice
+   label marks when the work changed, not when a picture was taken. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import '../../styles/ephemera.css';
+
+interface Props {
+  frames: { src: ImageMetadata; web?: boolean }[];
+  /** The word on the splice tape. */
+  splice?: string;
+  /** The first frame's number in the edge print. */
+  start?: number;
+}
+
+const { frames, splice = '', start = 14 } = Astro.props;
+---
+
+<div class="film" aria-hidden="true">
+  <div class="film-run">
+    {frames.map((f, i) => (
+      <Fragment>
+        {f.web && !frames[i - 1]?.web && splice && (
+          <span class="film-splice">
+            <b>{splice}</b>
+          </span>
+        )}
+        <span
+          class={f.web ? 'film-f web' : 'film-f'}
+          data-edge={`${i + start}${f.web ? ' ▸ WEB' : ' ▸ CAMERA'}`}
+        >
+          {f.web && <span class="film-bar" />}
+          <Image
+            src={f.src}
+            alt=""
+            width={240}
+            height={180}
+            fit="cover"
+            position={f.web ? 'top' : 'center'}
+            loading="lazy"
+            decoding="async"
+          />
+        </span>
+      </Fragment>
+    ))}
+  </div>
+</div>

@@ -1,0 +1,27 @@
+---
+/* A barcode for a ticket stub: bars of one to three units with gaps of one or two, from a fixed
+   seed so every build draws the same code. Decoration only (aria-hidden). Give each ticket its
+   own seed so no two codes on the site match. */
+interface Props {
+  seed: number;
+  /** Width of the code in bar units. */
+  units?: number;
+  class?: string;
+}
+
+const { seed: start, units = 120, class: cls = 'pass-code' } = Astro.props;
+let seed = start;
+const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+const code = { w: 0, bars: [] as [number, number][] };
+while (code.w < units) {
+  const w = 1 + Math.floor(rand() * 3);
+  code.bars.push([code.w, w]);
+  code.w += w + 1 + Math.floor(rand() * 2);
+}
+---
+
+<svg class={cls} viewBox={`0 0 ${code.w} 40`} preserveAspectRatio="none" aria-hidden="true">
+  {code.bars.map(([x, w]) => (
+    <rect x={x} width={w} height="40" />
+  ))}
+</svg>

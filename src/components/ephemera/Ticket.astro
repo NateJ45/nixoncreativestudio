@@ -1,0 +1,48 @@
+---
+/* A paper ticket with a tear-off stub: About's boarding pass, and later the CV's stack of
+   tickets and the contact page's "what happens next". Cream paper in fixed colours, the same in
+   both themes, with a perforation and a notch bitten out at each end of it. Under 44rem the stub
+   drops below and the perforation turns horizontal.
+
+   The main part is yours: put the ticket's real content in the default slot (route, heading,
+   fields; the .pass-route, .pass-fields and .pass-note classes in ephemera.css are there to use).
+   The stub repeats a line or two of it, so it is aria-hidden, and carries a barcode.
+
+   The notches are circles in the colour behind the ticket, so set --ticket-ground on the holder
+   to match it (About's postcard sets --night, which the notches fall back to). */
+import '../../styles/ephemera.css';
+import Barcode from './Barcode.astro';
+import { site } from '../../data/site';
+
+interface Props {
+  /** The two small words across the top, left and right. */
+  head: [string, string];
+  /** The stub's first line: [from, to], printed "FROM to TO". */
+  route: [string, string];
+  /** The stub's second line. */
+  name?: string;
+  /** The barcode's seed: a number of its own per ticket. */
+  seed: number;
+}
+
+const { head, route, name = site.ownerName, seed } = Astro.props;
+---
+
+<div class="pass">
+  <div class="pass-main">
+    <p class="pass-head">
+      <span>{head[0]}</span>
+      <span>{head[1]}</span>
+    </p>
+    <slot />
+  </div>
+  <div class="pass-stub">
+    <p class="pass-stub-route" aria-hidden="true">
+      {route[0]} <span>to</span> {route[1]}
+    </p>
+    <p class="pass-stub-name" aria-hidden="true">
+      {name}
+    </p>
+    <Barcode seed={seed} />
+  </div>
+</div>
