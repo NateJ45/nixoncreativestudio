@@ -38,22 +38,39 @@ export function cmsShotProblem(d: CmsShotSource): string | undefined {
   return undefined;
 }
 
+// One study's own words for a job, put in About's vocabulary: nouns for the work, not the person.
+// Only what a study says is mapped; nothing is added. A word with no entry here is kept as written.
+const WORK_NOUN: Record<string, string> = {
+  'web design': 'Design',
+  designer: 'Design',
+  developer: 'The build',
+  photography: 'Photos',
+  photographer: 'Photos',
+};
+
+/** "Publicity Chair (volunteer)" becomes "Publicity (volunteer)"; a plain "Designer" becomes "Design". */
+function workNoun(raw: string): string {
+  const volunteer = /\(volunteer\)/i.test(raw) ? ' (volunteer)' : '';
+  const bare = raw.replace(/\(volunteer\)/i, '').trim();
+  const mapped = WORK_NOUN[bare.toLowerCase()];
+  if (mapped) return mapped + volunteer;
+  return bare.replace(/\s+chair$/i, '') + volunteer;
+}
+
 /**
- * The crew list for a study's work order: the roles the study itself credits, in its own words.
- * First the services from its frontmatter, then the parts of its `role` ("Designer, Developer"),
- * with no role said twice. "Web Design" is the service and "Designer" the role for the same work,
- * so when the role names a designer the service steps aside rather than repeat it.
+ * The crew list for a study's work order, as nouns for the work (About's vocabulary: Strategy,
+ * Design, The build, Photos). It maps only what the study's own `services` and `role` say, in that
+ * order, with no job said twice: "Web Design" and "Designer" are both Design, "Developer" is The
+ * build, and a job with no entry above (Brand identity, Online store, Social media) stays as written.
  */
 export function crewFor(services: string[], role?: string): string[] {
   const parts = (role ?? '')
     .split(',')
     .map((r) => r.trim())
     .filter(Boolean);
-  const designer = parts.some((r) => /^designer$/i.test(r));
-  const all = [...services.filter((s) => !(designer && /^web design$/i.test(s.trim()))), ...parts];
   const seen = new Set<string>();
-  return all.filter((r) => {
-    const k = r.trim().toLowerCase();
+  return [...services, ...parts].map(workNoun).filter((r) => {
+    const k = r.toLowerCase();
     if (!k || seen.has(k)) return false;
     seen.add(k);
     return true;
