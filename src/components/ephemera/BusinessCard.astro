@@ -1,0 +1,28 @@
+---
+/* A business card on heavy cream stock: the studio's name set large, then your content in the
+   default slot (who, what), and the domain and the town along the foot. The name, the domain and
+   the town come from src/data/site.ts, so the card can never print a stale one.
+
+   Fixed colours, the same in both themes (src/styles/ephemera/business-card.css), and printed in
+   the studio blue the way a letterpress card would be. Every word on it is real text. Where it
+   sits and how it is turned is the page's job. */
+import '../../styles/ephemera/business-card.css';
+import { site } from '../../data/site';
+
+interface Props {
+  class?: string;
+}
+
+const { class: extra } = Astro.props;
+---
+
+<div class:list={['bcard', extra]}>
+  <p class="bcard-studio">{site.studioName}</p>
+  <div class="bcard-main">
+    <slot />
+  </div>
+  <p class="bcard-foot">
+    <span>{site.domain}</span>
+    <span>{site.address}</span>
+  </p>
+</div>

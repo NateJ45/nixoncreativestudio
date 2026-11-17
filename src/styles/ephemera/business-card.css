@@ -1,0 +1,56 @@
+/* ---- Business card (BusinessCard.astro): cream stock, blue ink -----------
+   A fixed piece of card, the same in both themes. The studio blue #2f3fe6 on the cream #f8f5ec is
+   6.4:1, the ink #1b1d2a on it 15:1 and the faint #5f5e58 on it 6.1:1. */
+.bcard {
+  --bcard-stock: #f8f5ec;
+  --bcard-blue: #2f3fe6;
+  --bcard-ink: #1b1d2a;
+  --bcard-faint: #5f5e58;
+  display: grid;
+  gap: 1.1rem;
+  width: min(100%, 24rem);
+  aspect-ratio: 1.75;
+  min-height: 12.5rem;
+  padding: clamp(1rem, 2.2vw, 1.4rem) clamp(1.1rem, 2.4vw, 1.6rem);
+  border-radius: 0.35rem;
+  background:
+    radial-gradient(130% 120% at 100% 0%, rgba(255, 255, 255, 0.6), transparent 60%),
+    var(--bcard-stock);
+  color: var(--bcard-ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.06),
+    0 1.2rem 2rem -1.4rem rgba(0, 0, 0, 0.7);
+}
+.bcard-studio {
+  font: 700 clamp(1.15rem, 2.2vw, 1.4rem) / 1.05 var(--display);
+  letter-spacing: -0.02em;
+  color: var(--bcard-blue);
+}
+.bcard-main {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+}
+.bcard-main h3 {
+  font-size: clamp(1.05rem, 1.7vw, 1.2rem);
+  line-height: 1.2;
+  color: var(--bcard-ink);
+}
+.bcard-main p {
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--bcard-faint);
+}
+.bcard-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-self: end;
+  gap: 0.25rem 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(47, 63, 230, 0.35);
+  font: 600 0.6875rem / 1.2 var(--body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bcard-blue);
+}

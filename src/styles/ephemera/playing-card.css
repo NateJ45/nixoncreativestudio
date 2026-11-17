@@ -1,0 +1,60 @@
+/* ---- Playing card (PlayingCard.astro): one client, one card --------------
+   White stock in fixed colours, the same in both themes. The ink #1b1d2a on #fffdf8 is 16:1 and
+   the faint #5f5e58 6.4:1. The band is the client's --c with their --p on it, a pair
+   case-palettes.test.ts checks for every study. */
+.pkc {
+  --pkc-stock: #fffdf8;
+  --pkc-ink: #1b1d2a;
+  --pkc-faint: #5f5e58;
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  height: 100%;
+  padding: 2rem 1rem 2.2rem;
+  border-radius: 0.8rem;
+  background: var(--pkc-stock);
+  color: var(--pkc-ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.1),
+    0 1rem 1.6rem -1.2rem rgba(0, 0, 0, 0.6);
+}
+.pkc-pip {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.7rem;
+  font: 700 0.8125rem / 1 var(--display);
+  letter-spacing: 0.04em;
+  color: var(--pkc-ink);
+}
+.pkc-flip {
+  top: auto;
+  left: auto;
+  right: 0.7rem;
+  bottom: 0.55rem;
+  rotate: 180deg;
+}
+.pkc-name {
+  margin: 0 -0.3rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.4rem;
+  background: var(--c);
+  color: var(--p);
+  font-size: 1.05rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.pkc-main {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.pkc-main p {
+  color: var(--pkc-faint);
+}
+.pkc-main a {
+  color: var(--pkc-ink);
+  font-weight: 600;
+}

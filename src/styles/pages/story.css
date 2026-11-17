@@ -1,0 +1,530 @@
+/* ============================================================================
+   /story: the record (src/pages/story.astro)
+   ============================================================================
+   Six chapters, each a paragraph beside its piece of paper; the clients as a
+   hand of playing cards; the kit as three packing lists; and a print block that
+   turns the whole page into a plain one-page CV.
+
+   The paper objects come from the drawer (src/components/ephemera/) and bring
+   their own looks. This file only places them: the tilt, the pile, the fan.
+   Colours are tokens, except the passport page, which is a fixed piece of
+   paper like the drawer's (the same in both themes). */
+
+/* Words for screen readers only: the section name over the chapters, and the client's name
+   after each "Read the case study". */
+.sy-visually {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- The head ------------------------------------------------------------- */
+.sy-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+/* The button needs story.js; without it the browser's own Print still gives the CV. */
+html:not(.js) [data-print] {
+  display: none;
+}
+/* How to reach me: only on the printed sheet. */
+.sy-reach {
+  display: none;
+}
+
+/* ---- The chapters ----------------------------------------------------------- */
+.sy-sec {
+  max-width: 90rem;
+  margin: 0 auto;
+}
+.sy-sec:first-of-type {
+  padding-top: clamp(1rem, 4vh, 2.5rem);
+}
+.sy-deck {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* Tilted paper must never push the page sideways. */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+.sy-ch {
+  --tilt: -2deg;
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  padding: clamp(2rem, 6vh, 3.5rem) 0;
+  border-top: 1px solid var(--line);
+  background: var(--ground);
+}
+.sy-ch:nth-child(even) {
+  --tilt: 2deg;
+}
+.sy-text {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 34rem;
+}
+.sy-text h3 {
+  font-size: var(--type-h3);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.sy-text p:not(.label) {
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.25vw, 1.1875rem);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.sy-obj {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 30rem);
+  display: grid;
+  justify-items: center;
+  rotate: var(--tilt);
+}
+/* Paper you can pick up (story.js): a hand for a mouse, and a lifted shadow while it is held. */
+.js .sy-obj[data-lift] {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sy-obj.is-held {
+  z-index: 2;
+  cursor: grabbing;
+}
+.sy-obj :is(.pass, .idc, .bcard, .sy-page, .sy-rota-card) {
+  transition: box-shadow 0.3s var(--ease);
+}
+.sy-obj.is-held :is(.pass, .idc, .bcard, .sy-page) {
+  box-shadow: 0 2.4rem 3rem -1.8rem rgba(0, 0, 0, 0.6);
+}
+/* The ticket keeps its notches the colour of the page under it. */
+.sy-pass {
+  --ticket-ground: var(--ground);
+  width: min(100%, 40rem);
+}
+.sy-pass .pass {
+  width: 100%;
+}
+.sy-obj-title {
+  font: 700 clamp(1.05rem, 1.7vw, 1.25rem) / 1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+.bcard .sy-obj-title {
+  color: var(--bcard-ink);
+}
+
+/* The passport page: fixed paper, the same in both themes, with a faint printed pattern. Ink
+   #1b1d2a on #eef0e6 is 14.6:1 and the faint #55584e on it 6.4:1. The stamp on it is the studio
+   blue, set here because the page's --accent is lifted on the dark side. */
+.sy-visa {
+  --stamp-paper: #eef0e6;
+  --accent: #2f3fe6;
+}
+.sy-page {
+  width: min(100%, 24rem);
+  min-height: 15rem;
+  padding: 1.2rem 1.3rem;
+  border-radius: 0.5rem;
+  background:
+    repeating-radial-gradient(
+      circle at 80% 110%,
+      transparent 0 9px,
+      rgba(60, 90, 70, 0.07) 9px 10px
+    ),
+    #eef0e6;
+  color: #1b1d2a;
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.08),
+    0 1.2rem 2rem -1.4rem rgba(0, 0, 0, 0.7);
+}
+.sy-page-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(27, 29, 42, 0.16);
+  font: 600 0.6875rem / 1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #55584e;
+}
+.sy-page-fields {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+  max-width: 13rem;
+}
+.sy-page-fields dt {
+  margin-bottom: 0.2rem;
+  font: 600 0.625rem / 1.3 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #55584e;
+}
+.sy-page-fields dd {
+  margin: 0;
+  font: 600 0.9375rem / 1.3 var(--body);
+}
+.sy-visa .sy-stamp {
+  position: absolute;
+  right: max(0.5rem, calc(50% - 11.5rem));
+  bottom: 1.4rem;
+  float: none;
+  margin: 0;
+}
+
+/* The media team's crew list, on a card. */
+.sy-rota {
+  width: min(100%, 24rem);
+  padding: 1.25rem 1.4rem 0.25rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 26px 40px -28px rgba(0, 0, 0, 0.3);
+}
+.sy-rota .crew-rows {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.sy-rota .crew-head {
+  width: 100%;
+}
+
+@media (min-width: 52rem) {
+  .sy-ch {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  }
+}
+
+/* The pile: on a screen wide and tall enough for a chapter to fit, each one sticks a little lower
+   than the last, so scrolling deals the next chapter over the one before. The shadow above each
+   is the edge of the paper landing. */
+@media screen and (min-width: 60rem) and (min-height: 46rem) {
+  .sy-deck {
+    overflow-x: visible;
+  }
+  .sy-ch {
+    position: sticky;
+    top: calc(4.5rem + var(--i) * 0.9rem);
+    min-height: min(30rem, calc(100vh - 12rem));
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding-inline: clamp(1rem, 3vw, 2.5rem);
+    box-shadow: 0 -1.5rem 2rem -2rem rgba(0, 0, 0, 0.35);
+  }
+  .sy-ch:first-child {
+    box-shadow: none;
+  }
+}
+
+/* Dealt in: each piece of paper lands as it comes up the screen, turning from a steeper angle to
+   its resting tilt. Scroll-driven, so it holds still where that is not supported and under
+   reduced motion. Nothing starts hidden. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .sy-obj {
+      animation: sy-deal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+    .sy-hand li {
+      animation: sy-fan linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
+@keyframes sy-deal {
+  from {
+    translate: 0 3rem;
+    rotate: calc(var(--tilt) * 4);
+  }
+  to {
+    translate: 0 0;
+    rotate: var(--tilt);
+  }
+}
+@keyframes sy-fan {
+  from {
+    translate: 0 2rem;
+    rotate: calc(var(--fan) * 3);
+  }
+  to {
+    translate: 0 0;
+    rotate: var(--fan);
+  }
+}
+
+/* ---- The clients: a hand of playing cards ---------------------------------- */
+.sy-clients .sec-head p {
+  color: var(--soft);
+}
+.sy-hand {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sy-hand li {
+  --fan: -1.2deg;
+  rotate: var(--fan);
+  transition: translate 0.35s var(--ease);
+}
+.sy-hand li:nth-child(even) {
+  --fan: 1.2deg;
+}
+.sy-hand li:nth-child(3n) {
+  --fan: 0.4deg;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .sy-hand li:is(:hover, :focus-within) {
+    translate: 0 -0.4rem;
+  }
+}
+.sy-kind {
+  color: var(--pkc-faint);
+}
+.sy-hand .pkc-main a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ---- The kit: three packing lists ------------------------------------------ */
+.sy-kit .sec-head p {
+  color: var(--soft);
+}
+.sy-lists {
+  display: grid;
+  gap: clamp(1rem, 2.5vw, 2rem);
+}
+@media (min-width: 60rem) {
+  .sy-lists {
+    grid-template-columns: 0.8fr 1fr 1.3fr;
+    align-items: start;
+  }
+}
+.sy-list {
+  padding: 1.25rem 1.4rem 1.4rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 26px 40px -28px rgba(0, 0, 0, 0.3);
+}
+.sy-list h3 {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--ink);
+  font: 600 0.75rem / 1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.sy-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sy-list li {
+  display: grid;
+  grid-template-columns: 0.9rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+/* A ticked box at the start of each line, the way a packing list is checked off. */
+.sy-list li::before {
+  content: '';
+  align-self: center;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 1.5px solid var(--soft);
+  border-radius: 0.2rem;
+  background: linear-gradient(45deg, transparent 45%, var(--accent) 45% 60%, transparent 60%)
+    no-repeat center / 70% 70%;
+}
+.sy-n {
+  color: var(--soft);
+  font-size: 0.8125rem;
+  text-align: right;
+}
+.sy-note {
+  margin-top: 0.9rem;
+  color: var(--soft);
+  font-size: 0.9375rem;
+}
+
+/* ============================================================================
+   Print: a plain one-page CV
+   ============================================================================
+   None of the paper: the headings, the paragraphs, the clients and the kit as
+   plain text on one US Letter page, with how to reach me at the top.
+   tests/story.spec.ts prints it and counts the pages. */
+@page {
+  size: Letter;
+  margin: 0.45in 0.55in;
+}
+@media print {
+  html,
+  body {
+    background: #fff;
+    overflow: visible;
+  }
+  .top,
+  .dock,
+  .skip,
+  dialog,
+  .sy-bar,
+  .sy-obj,
+  .pkc-pip,
+  .sy-hand a,
+  .sy-note,
+  .sec-head p,
+  [data-end] {
+    display: none !important;
+  }
+  body {
+    font-size: 8.5pt;
+    color: #121211;
+  }
+  .page-head,
+  .sec,
+  .sy-sec,
+  .sy-sec:first-of-type {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .page-head h1 {
+    max-width: none;
+    font-size: 18pt;
+  }
+  .page-head .lede {
+    max-width: none;
+    margin-top: 0.04in;
+    font-size: 9pt;
+  }
+  .sy-reach {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.18in;
+    margin: 0.06in 0 0.1in;
+    padding-bottom: 0.08in;
+    border-bottom: 1px solid #121211;
+    font-size: 8.5pt;
+  }
+  .sy-deck {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.07in 0.3in;
+    overflow: visible;
+  }
+  .sy-ch {
+    display: block;
+    position: static;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: none;
+    break-inside: avoid;
+  }
+  .sy-text {
+    gap: 0.02in;
+    max-width: none;
+  }
+  .sy-text .label {
+    display: none;
+  }
+  .sy-text h3 {
+    font-size: 9.5pt;
+  }
+  .sy-text p:not(.label) {
+    color: #121211;
+    font-size: 8pt;
+    line-height: 1.3;
+  }
+  .sy-sec h2:not(.sy-visually) {
+    margin: 0.12in 0 0.04in;
+    font-size: 8pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .sec-head {
+    margin: 0;
+  }
+  .sy-hand {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.05in 0.25in;
+  }
+  .sy-hand li {
+    rotate: none;
+    animation: none !important;
+  }
+  .pkc {
+    display: block;
+    padding: 0;
+    box-shadow: none;
+    background: none;
+  }
+  .pkc-name {
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: #121211;
+    font-size: 8.5pt;
+  }
+  .pkc-main {
+    gap: 0;
+    font-size: 7.5pt;
+    line-height: 1.25;
+  }
+  .pkc-main p,
+  .sy-kind {
+    color: #121211;
+    font-size: 7.5pt;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .sy-lists {
+    grid-template-columns: 0.7fr 1fr 1.5fr;
+    gap: 0.25in;
+  }
+  .sy-list {
+    padding: 0;
+    box-shadow: none;
+    background: none;
+  }
+  .sy-list h3 {
+    padding-bottom: 0.02in;
+    font-size: 7.5pt;
+  }
+  .sy-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.1in;
+    padding: 0.01in 0;
+    border: 0;
+    font-size: 7.5pt;
+  }
+  .sy-list li::before {
+    display: none;
+  }
+  .sy-n {
+    font-size: 7pt;
+  }
+}

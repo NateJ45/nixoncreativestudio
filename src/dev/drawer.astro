@@ -10,11 +10,16 @@ import CrewList from '../components/ephemera/CrewList.astro';
 import FilmStrip from '../components/ephemera/FilmStrip.astro';
 import Stamp from '../components/ephemera/Stamp.astro';
 import Ticket from '../components/ephemera/Ticket.astro';
+import IdCard from '../components/ephemera/IdCard.astro';
+import BusinessCard from '../components/ephemera/BusinessCard.astro';
+import PlayingCard from '../components/ephemera/PlayingCard.astro';
+import { getClient } from '../lib/clients';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
 import tm from '../assets/case-studies/shots/theology-matters-home.png';
 import mas from '../assets/case-studies/shots/mas-monograms-home.png';
 
+const steps = await getClient('stone-steps-50k');
 const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src: mas, web: true }];
 ---
 
@@ -68,6 +73,50 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
           </dl>
           <p class="pass-note">In person around the region, anywhere for web work.</p>
         </Ticket>
+      </div>
+    </section>
+
+    <section>
+      <h2>ID card</h2>
+      <div class="row">
+        <IdCard band="Student" head={['Student card', 'Edinburgh']} seed={1583}>
+          <dl class="idc-fields">
+            <div>
+              <dt>Course</dt>
+              <dd>Mechanical engineering</dd>
+            </div>
+          </dl>
+        </IdCard>
+        <IdCard
+          band="Press"
+          tone="blue"
+          head={['Photographer', 'Portraits']}
+          seed={2431}
+          print={{ src: stones, alt: '' }}
+        >
+          <dl class="idc-fields">
+            <div>
+              <dt>Shoots</dt>
+              <dd>Portraits, families, weddings, events</dd>
+            </div>
+          </dl>
+        </IdCard>
+      </div>
+    </section>
+
+    <section>
+      <h2>Business card</h2>
+      <BusinessCard>
+        <p>Building websites since 2020</p>
+      </BusinessCard>
+    </section>
+
+    <section>
+      <h2>Playing card</h2>
+      <div class="narrow">
+        <PlayingCard corner="OH" name={steps.name} accent={steps.accent} paper={steps.paper}>
+          <p>{steps.hook}</p>
+        </PlayingCard>
       </div>
     </section>
   </div>

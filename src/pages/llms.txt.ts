@@ -112,6 +112,7 @@ export const GET: APIRoute = async () => {
     '## Pages',
     '',
     `- [About ${site.ownerName}](${url('/about/')})`,
+    `- [${site.ownerName}'s CV, the whole story](${url('/story/')})`,
     `- [Services and pricing](${url('/services/')})`,
     `- [All case studies](${url('/work/')})`,
     ...(posts.length ? [`- [Journal](${url('/journal/')})`] : []),

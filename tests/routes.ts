@@ -15,11 +15,13 @@
 // /churches is the first sector page (src/data/sector-pages.ts); /schools,
 // /nonprofits and /small-business are the lean ones. Add each new sector page here
 // too. /one-page is the forwardable summary, with its own print stylesheet.
+// /story is the CV (linked from About), which prints as a plain one page too.
 //
 // Add a route here when a new PRERENDERED page ships.
 export const routes = [
   '/',
   '/about',
+  '/story',
   '/now',
   '/services',
   '/work',

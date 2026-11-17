@@ -1,0 +1,389 @@
+---
+/* /story: the record, where About is the story. (The name is provisional: /story, /cv or a
+   section of About is still Nathan's call. To rename it, rename this file and change the path in
+   tests/routes.ts, tests/page-weight.config.json, scripts/generate-og.mjs, src/pages/llms.txt.ts
+   and the link at the end of About's longer story.)
+
+   Six chapters, each told twice: a short paragraph under a real heading, and the piece of paper
+   it belongs on (a student card, a boarding pass, a press pass with a print, a business card, a
+   passport page with a stamp, a media team's crew list). On a wide, tall screen the chapters pile
+   up as you scroll, each one dealt over the last (sticky, in story.css); everywhere else they are
+   a plain list. Then the clients as a hand of playing cards, one each from getClients(), and the
+   kit as a packing list: the camera bag from src/data/photo-kit.ts and the web tools from the
+   case studies' own "Built with" lists and the colophon.
+
+   Only facts the site already states (About, Crossing, Facts, the studies). No degree year, no
+   business names, no employers: those wait on Nathan. No date or year on the photograph.
+
+   It prints as a plain one-page CV (the print block in story.css, tests/story.spec.ts). With no
+   script it reads top to bottom; the objects are the presentation of the headings, lists and
+   text in the markup. story.js adds the print button and lets you pick a piece of paper up. */
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/stamp.css';
+import '../styles/pages/story.css';
+import Closing from '../components/Closing.astro';
+import Ticket from '../components/ephemera/Ticket.astro';
+import Stamp from '../components/ephemera/Stamp.astro';
+import CrewList from '../components/ephemera/CrewList.astro';
+import IdCard from '../components/ephemera/IdCard.astro';
+import BusinessCard from '../components/ephemera/BusinessCard.astro';
+import PlayingCard from '../components/ephemera/PlayingCard.astro';
+import { getClients, countWord } from '../lib/clients';
+import { PLACES } from '../data/client-places';
+import { CAMERA, LENSES, GIMBAL, LIGHTING, SOFTWARE } from '../data/photo-kit';
+import { photoCount } from '../data/nav';
+import { photographyOpen } from '../data/photography-gate';
+import { site } from '../data/site';
+import { plainText, wordSpans } from '../lib/words';
+
+const heading = `The whole story, <b>on paper.</b>`;
+
+/* The clients, one card each, in the deck's order, with the state each is based in. */
+const clients = await getClients();
+const placeOf = new Map(PLACES.flatMap((p) => p.clients.map((slug) => [slug, p] as const)));
+
+/* The web tools: every name in the studies' "Built with" lists (the same list each study page
+   prints), with how many client sites use it. Lower-case entries ("a custom theme") are
+   descriptions, not tools, and are left out. */
+const studies = await getCollection('case-studies');
+const toolCount = new Map<string, number>();
+for (const s of studies) {
+  for (const t of s.data.facts?.stack ?? s.data.stack ?? []) {
+    if (!/^[A-Z]/.test(t)) continue;
+    toolCount.set(t, (toolCount.get(t) ?? 0) + 1);
+  }
+}
+const webTools = [...toolCount].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+const sites = (n: number) => `${countWord(n)} client ${n === 1 ? 'site' : 'sites'}`;
+
+/* The press pass's print: one of my portraits from the photos collection. No date on it. */
+const portrait = await getEntry('photos', 'portrait-bench');
+const print = portrait ? { src: portrait.data.image, alt: portrait.data.alt } : undefined;
+
+/* The kit links to /photography only while that page is open. */
+const photosOpen = photographyOpen(await photoCount());
+
+/* The skills: the crew list's roles (About's Facts), the standard every build meets, and the
+   Sunday work at Crestview. */
+const skills = [
+  'Strategy',
+  'Design',
+  'The build',
+  'Photography and film',
+  'Accessibility, to WCAG 2.2 AA',
+  'Livestream and AV',
+];
+---
+
+<BaseLayout
+  title={`The whole story: ${site.ownerName}'s CV | ${site.studioName}`}
+  description={`${site.ownerName}'s CV: engineering in Edinburgh, years behind a camera, the move to the U.S., websites since 2020, every client so far and the kit, on one page.`}
+  breadcrumbs={[
+    { name: 'About', path: '/about/' },
+    { name: 'The whole story', path: '/story/' },
+  ]}
+>
+  <header class="page-head sy-head">
+    <h1 aria-label={plainText(heading)} set:html={wordSpans(heading)} />
+    <p class="lede">
+      <a href="/about/">About</a> tells it as a story. This is the record: each chapter on the piece
+      of paper it belongs on, every client so far, and the kit I work with.
+    </p>
+    <p class="sy-bar">
+      <button type="button" class="chip" data-print>
+        Print a plain CV
+      </button>
+      <span>It prints on one page, with none of the paper.</span>
+    </p>
+    {/* Only in print: how to reach me, at the top of the sheet. */}
+    <p class="sy-reach">
+      <b>{site.ownerName}</b>
+      <span>{site.email}</span>
+      <span>{site.phone}</span>
+      <span>{`${site.domain}, ${site.address}`}</span>
+    </p>
+  </header>
+
+  <section class="sec sy-sec" aria-labelledby="sy-record">
+    <h2 id="sy-record" class="sy-visually">
+      The record
+    </h2>
+    <ol class="sy-deck">
+      <li class="sy-ch" style="--i: 0">
+        <div class="sy-text">
+          <p class="label">Chapter one</p>
+          <h3>Mechanical engineering in Edinburgh</h3>
+          <p>
+            I studied mechanical engineering at the University of Edinburgh, back home in Scotland.
+            It taught me to take a thing apart, understand why each piece is there, and put it back
+            together so it holds. I still build websites that way: structure first, surface second.
+          </p>
+        </div>
+        <div class="sy-obj" data-lift aria-hidden="true">
+          <IdCard band="Student" head={['Student card', 'Edinburgh']} seed={1583}>
+            <p class="sy-obj-title">The University of Edinburgh</p>
+            <dl class="idc-fields">
+              <div>
+                <dt>Name</dt>
+                <dd>{site.ownerName}</dd>
+              </div>
+              <div>
+                <dt>Course</dt>
+                <dd>Mechanical engineering</dd>
+              </div>
+              <div>
+                <dt>Home</dt>
+                <dd>Scotland</dd>
+              </div>
+            </dl>
+          </IdCard>
+        </div>
+      </li>
+
+      <li class="sy-ch" style="--i: 1">
+        <div class="sy-text">
+          <p class="label">Chapter two</p>
+          <h3>Scotland to the U.S., 2017</h3>
+          <p data-copy-ignore>
+            {/* "We" is my wife and me, honestly plural, as on About. */}I moved from Scotland to
+            the U.S. in 2017 to be with my wife. We lived in Alabama, New Jersey and Virginia before
+            we settled.
+          </p>
+        </div>
+        <div class="sy-obj sy-pass" data-lift aria-hidden="true">
+          <Ticket head={['Boarding pass', 'One way']} route={['EDI', 'USA']} seed={20171}>
+            <p class="pass-route">
+              <span class="pass-port">
+                <b>EDI</b> <span>Edinburgh</span>
+              </span>
+              <span class="pass-plane">
+                <svg viewBox="86 0 33 24">
+                  <path d="M118 12c0-1.4-1.6-2.3-3.4-2.3h-6.7L99.6.6h-3.3l4 9.1h-7.4l-2.6-3.4h-2.6l1.7 5.7-1.7 5.7h2.6l2.6-3.4h7.4l-4 9.1h3.3l8.3-9.1h6.7c1.8 0 3.4-.9 3.4-2.3Z"></path>
+                </svg>
+              </span>
+              <span class="pass-port">
+                <b>USA</b> <span>The U.S.</span>
+              </span>
+            </p>
+            <dl class="pass-fields">
+              <div>
+                <dt>Passenger</dt>
+                <dd>{site.ownerName}</dd>
+              </div>
+              <div>
+                <dt>Departed</dt>
+                <dd>2017</dd>
+              </div>
+              <div>
+                <dt>Stops</dt>
+                <dd>Alabama, New Jersey, Virginia</dd>
+              </div>
+            </dl>
+          </Ticket>
+        </div>
+      </li>
+
+      <li class="sy-ch" style="--i: 2">
+        <div class="sy-text">
+          <p class="label">Chapter three</p>
+          <h3>Years behind a camera</h3>
+          <p>
+            For years I photographed portraits, families, weddings and events, the moments people
+            most want to remember. The part I loved was helping someone show up at their best, and I
+            still shoot the photos when a project needs them.
+          </p>
+        </div>
+        <div class="sy-obj" data-lift aria-hidden="true">
+          <IdCard
+            band="Press"
+            tone="blue"
+            head={['Photographer', site.ownerName]}
+            seed={2431}
+            print={print}
+          >
+            <dl class="idc-fields">
+              <div>
+                <dt>Shoots</dt>
+                <dd>Portraits, families, weddings, events</dd>
+              </div>
+              <div>
+                <dt>Camera</dt>
+                <dd>{`${CAMERA.maker} ${CAMERA.name}`}</dd>
+              </div>
+            </dl>
+          </IdCard>
+        </div>
+      </li>
+
+      <li class="sy-ch" style="--i: 3">
+        <div class="sy-text">
+          <p class="label">Chapter four</p>
+          <h3>Websites, since 2020</h3>
+          <p>
+            When the shoots dried up in 2020, I started building websites for a few of those same
+            clients. It turned out to be the same job in a new medium: work out what someone is
+            really trying to say, then make it clear. It's the studio's main work now, and I do all
+            of it myself.
+          </p>
+        </div>
+        <div class="sy-obj" data-lift aria-hidden="true">
+          <BusinessCard>
+            <p class="sy-obj-title">{site.ownerName}</p>
+            <p>Strategy, design, the build, and photos when needed</p>
+            <p>Building websites since 2020</p>
+          </BusinessCard>
+        </div>
+      </li>
+
+      <li class="sy-ch" style="--i: 4">
+        <div class="sy-text">
+          <p class="label">Chapter five</p>
+          <h3>Cincinnati, and citizenship, 2022</h3>
+          <p data-copy-ignore>
+            {/* "We" is my family, as on About. */}
+            We settled in Cincinnati in 2022, the same year I became a U.S. citizen. Ohio is where
+            we've stayed longest, and it's home for a long time to come.
+          </p>
+        </div>
+        <div class="sy-obj sy-visa" data-lift>
+          <div class="sy-page" aria-hidden="true">
+            <p class="sy-page-head">
+              <span>Citizenship</span>
+              <span>United States</span>
+            </p>
+            <dl class="sy-page-fields">
+              <div>
+                <dt>Home</dt>
+                <dd>Cincinnati, Ohio, since 2022</dd>
+              </div>
+              <div>
+                <dt>Citizen</dt>
+                <dd>United States, since 2022</dd>
+              </div>
+            </dl>
+          </div>
+          <Stamp word="Citizen" under="U.S., since 2022" class="sy-stamp" />
+        </div>
+      </li>
+
+      <li class="sy-ch" style="--i: 5">
+        <div class="sy-text">
+          <p class="label">Chapter six</p>
+          <h3>Sundays on the media team</h3>
+          <p>
+            I volunteer on the media team at Crestview Presbyterian Church. I run the weekly
+            livestream, plan and buy the equipment upgrades, and shoot the photo and video the
+            church uses for its website and its socials.
+          </p>
+        </div>
+        <div class="sy-obj sy-rota" data-lift aria-hidden="true">
+          <CrewList
+            head={['Media team', 'Crestview Presbyterian']}
+            roles={['Weekly livestream', 'Equipment upgrades', 'Photo and video']}
+          />
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="sec sy-sec sy-clients" aria-labelledby="sy-hand">
+    <div class="sec-head">
+      <h2 id="sy-hand">The clients so far</h2>
+      <p>{`${countWord(clients.length)} sites, one card each.`}</p>
+    </div>
+    <ul class="sy-hand">
+      {clients.map((c, i) => {
+        const place = placeOf.get(c.slug);
+        return (
+          <li style={`--i: ${i}`}>
+            <PlayingCard corner={place?.abbr ?? ''} name={c.name} accent={c.accent} paper={c.paper}>
+              <p class="label sy-kind">
+                {c.sector}
+                {place && `, ${place.state}`}
+              </p>
+              {c.hook && <p>{c.hook}</p>}
+              <a href={c.study}>
+                Read the case study<span class="sy-visually">: {c.name}</span>
+              </a>
+            </PlayingCard>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+
+  <section class="sec sy-sec sy-kit" aria-labelledby="sy-kit">
+    <div class="sec-head">
+      <h2 id="sy-kit">The kit</h2>
+      <p>What I bring to a job, packed the way I'd pack it.</p>
+    </div>
+    <div class="sy-lists">
+      <section class="sy-list" aria-labelledby="sy-skills">
+        <h3 id="sy-skills">Skills</h3>
+        <ul>
+          {skills.map((s) => (
+            <li>{s}</li>
+          ))}
+        </ul>
+      </section>
+      <section class="sy-list" aria-labelledby="sy-web">
+        <h3 id="sy-web">Web</h3>
+        <ul>
+          {webTools.map(([name, n]) => (
+            <li>
+              <span>{name}</span>
+              <span class="sy-n">{sites(n)}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="sy-note">
+          This site is Astro and TypeScript on Cloudflare. How it's made is on{' '}
+          <a href="/colophon/">the colophon</a>.
+        </p>
+      </section>
+      <section class="sy-list" aria-labelledby="sy-bag">
+        <h3 id="sy-bag">Camera bag</h3>
+        <ul>
+          <li>
+            <span>{`${CAMERA.maker} ${CAMERA.name}`}</span>
+            <span class="sy-n">Main body</span>
+          </li>
+          <li>
+            <span>{`${CAMERA.second.maker} ${CAMERA.second.name}`}</span>
+            <span class="sy-n">Second body</span>
+          </li>
+          {LENSES.map((l) => (
+            <li>
+              <span>{`${l.maker} ${l.name}`}</span>
+            </li>
+          ))}
+          <li>
+            <span>{`${GIMBAL.maker} ${GIMBAL.name}`}</span>
+            <span class="sy-n">Gimbal</span>
+          </li>
+          <li>
+            <span>{LIGHTING.items.join(', ')}</span>
+            <span class="sy-n">{LIGHTING.title}</span>
+          </li>
+          {SOFTWARE.map((s) => (
+            <li>
+              <span>{`${s.maker} ${s.name}`}</span>
+            </li>
+          ))}
+        </ul>
+        {photosOpen && (
+          <p class="sy-note">
+            What each lens is for is on <a href="/photography/">the photography page</a>.
+          </p>
+        )}
+      </section>
+    </div>
+  </section>
+
+  <Closing lead="Want to be <b>the next card?</b>" />
+</BaseLayout>
+
+<script>
+  import '../scripts/story.js';
+</script>

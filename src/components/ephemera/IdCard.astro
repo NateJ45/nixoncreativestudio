@@ -1,0 +1,56 @@
+---
+/* An ID card on a lanyard clip: a student card, a press pass, a volunteer badge. A coloured band
+   across the top with one big word on it, the two small words under it, then your content in the
+   default slot (a heading and a .idc-fields list), and a barcode along the foot. A press pass can
+   carry one print clipped to it: a real photograph of mine, with its own alt text and no date.
+
+   Fixed colours, the same in both themes (src/styles/ephemera/id-card.css): it is a piece of
+   laminated card, not a surface of the page. The band word repeats the heading, so it is
+   aria-hidden; everything that matters is in the slot. Placement and tilt are the page's job. */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import '../../styles/ephemera/id-card.css';
+import Barcode from './Barcode.astro';
+
+interface Props {
+  /** The big word on the band, in capitals by CSS ("Student", "Press"). */
+  band: string;
+  /** The two small words under the band, left and right. */
+  head: [string, string];
+  /** The band colour: ink for a student card, the studio blue for a press pass. */
+  tone?: 'ink' | 'blue';
+  /** One print clipped to the card. Never a date on it. */
+  print?: { src: ImageMetadata; alt: string };
+  /** The barcode's seed: a number of its own per card. */
+  seed: number;
+  class?: string;
+}
+
+const { band, head, tone = 'ink', print, seed, class: extra } = Astro.props;
+---
+
+<div class:list={['idc', `idc-${tone}`, print && 'idc-has-print', extra]}>
+  <span class="idc-band" aria-hidden="true">
+    {band}
+  </span>
+  <div class="idc-main">
+    <p class="idc-head">
+      <span>{head[0]}</span>
+      <span>{head[1]}</span>
+    </p>
+    <slot />
+  </div>
+  {print && (
+    <figure class="idc-print">
+      <Image
+        src={print.src}
+        alt={print.alt}
+        widths={[200, 400]}
+        sizes="10rem"
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
+  )}
+  <Barcode seed={seed} units={90} class="idc-code" />
+</div>

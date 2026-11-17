@@ -1,0 +1,115 @@
+/* ---- ID card (IdCard.astro): a laminated card on a lanyard clip ----------
+   A fixed piece of card, the same in both themes, so its colours are its own (the drawer's rule
+   in src/styles/ephemera.css). Ink #1b1d2a on the card #f7f5ef is 15:1, the faint #5f5e58 on it
+   is 6.1:1, and white on either band clears 4.5:1 (the blue band is the studio blue). */
+.idc {
+  --idc-card: #f7f5ef;
+  --idc-ink: #1b1d2a;
+  --idc-faint: #5f5e58;
+  --idc-rule: rgba(27, 29, 42, 0.16);
+  --idc-band: #1b1d2a;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 23rem);
+  padding-top: 1.1rem; /* room for the clip's slot */
+  border-radius: 0.9rem;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.7), transparent 40%), var(--idc-card);
+  color: var(--idc-ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.08),
+    0 1.4rem 2.2rem -1.6rem rgba(0, 0, 0, 0.7);
+}
+.idc-blue {
+  --idc-band: #2f3fe6;
+}
+/* The slot the lanyard clip goes through, punched near the top edge. */
+.idc::before {
+  content: '';
+  position: absolute;
+  top: 0.45rem;
+  left: 50%;
+  width: 2.6rem;
+  height: 0.45rem;
+  border-radius: 99rem;
+  translate: -50% 0;
+  background: var(--ticket-ground, var(--ground));
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.idc-band {
+  display: block;
+  padding: 0.55rem 1.1rem 0.5rem;
+  background: var(--idc-band);
+  color: #fff;
+  font: 800 clamp(1.6rem, 3.4vw, 2.1rem) / 1 var(--display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.idc-main {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem 1.1rem 0.6rem;
+}
+.idc-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--idc-rule);
+  font: 600 0.6875rem / 1.2 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--idc-faint);
+}
+.idc h3 {
+  font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--idc-ink);
+}
+.idc-fields {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+.idc-fields div {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.idc-fields dt {
+  font: 600 0.625rem / 1.3 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--idc-faint);
+}
+.idc-fields dd {
+  margin: 0;
+  font: 600 0.9375rem / 1.3 var(--body);
+}
+/* A print clipped to the card: a white border, a little turned, a strip of tape over its top. */
+.idc-print {
+  justify-self: end;
+  width: 9rem;
+  margin: 0 1.1rem 0.2rem 0;
+  padding: 0.35rem 0.35rem 1.1rem;
+  background: #fff;
+  rotate: 3deg;
+  box-shadow: 0 0.6rem 1rem -0.6rem rgba(0, 0, 0, 0.55);
+}
+.idc-print img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+.idc-code {
+  width: calc(100% - 2.2rem);
+  height: 1.9rem;
+  margin: 0.4rem 1.1rem 1rem;
+  fill: var(--idc-ink);
+  opacity: 0.85;
+}

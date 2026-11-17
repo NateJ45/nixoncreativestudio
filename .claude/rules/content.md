@@ -129,6 +129,7 @@ Static routes generated at build time:
 | `/services/`       | `src/pages/services.astro` (nav label Prices)                                                                   |
 | `/contact/`        | `src/pages/contact.astro` (nav label Start a project; Web3Forms inquiry; prefill in `homepage-and-pages.md`)    |
 | `/about/`          | `src/pages/about.astro`                                                                                         |
+| `/story/`          | `src/pages/story.astro` (the CV, linked from About; prints on one US Letter page)                               |
 | `/now/`            | `src/pages/now.astro` (words and date in `src/data/now.ts`)                                                     |
 | `/privacy/`        | `src/pages/privacy.astro`                                                                                       |
 | `/accessibility/`  | `src/pages/accessibility.astro`                                                                                 |

@@ -350,6 +350,13 @@ const PAGES = [
     images: [{ file: about('running-race-bibs'), position: 'north' }],
   },
   {
+    route: 'story',
+    title: 'The whole story',
+    eyebrow: 'CV',
+    layout: 'one',
+    images: [P('edinburgh-skyline')],
+  },
+  {
     route: 'now',
     title: "What I'm doing now",
     layout: 'one',

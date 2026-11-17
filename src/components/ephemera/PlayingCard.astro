@@ -1,0 +1,38 @@
+---
+/* A playing card for one client, from the same deck as About's hand of states: a letter in two
+   corners (the state's postal code), the client's own colour as a band across the face with their
+   name on it in their paper colour, then your content in the default slot (what they are, a line
+   about the work, a link to the study). The colour arrives only through --c and --p, the pair
+   src/lib/case-palettes.test.ts already checks.
+
+   White stock in fixed colours, the same in both themes (src/styles/ephemera/playing-card.css).
+   The corner letters repeat what the card says, so they are aria-hidden. Tilt and fan are the
+   page's job. */
+import '../../styles/ephemera/playing-card.css';
+
+interface Props {
+  /** The two corner letters ("OH"). */
+  corner: string;
+  /** The name on the band: the card's heading. */
+  name: string;
+  /** The client's accent and the paper colour that reads on it. */
+  accent: string;
+  paper: string;
+  class?: string;
+}
+
+const { corner, name, accent, paper, class: extra } = Astro.props;
+---
+
+<div class:list={['pkc', extra]} style={`--c: ${accent}; --p: ${paper}`}>
+  <span class="pkc-pip" aria-hidden="true">
+    {corner}
+  </span>
+  <span class="pkc-pip pkc-flip" aria-hidden="true">
+    {corner}
+  </span>
+  <h3 class="pkc-name">{name}</h3>
+  <div class="pkc-main">
+    <slot />
+  </div>
+</div>
