@@ -1,0 +1,49 @@
+---
+/* A rubber stamp that peels (src/styles/stamp.css): the face carries the word in a double rule,
+   and its lower edge lifts to show a second, smaller line underneath. Hover and keyboard focus
+   lift it in CSS alone; a tap or a click holds it up and the next one lets it down
+   (src/scripts/peel.js). Both lines are always in the markup.
+
+   As a button by default, since lifting it is something you do. Pass `decor` for a stamp that is
+   only decoration (the words repeat something the page already says): it becomes a plain span,
+   hidden from screen readers, and does not respond to a click.
+
+   Where it sits (corner, tilt, the card under it) is the page's job: pass a class and place it
+   in the page's stylesheet. The paper behind the face is --stamp-paper, so set that on the
+   holder when the stamp sits on a card. */
+import '../../styles/stamp.css';
+
+interface Props {
+  /** The word on the face, in capitals by CSS. */
+  word: string;
+  /** The line under the face, shown when it lifts. */
+  under: string;
+  /** Plain decoration: a span, aria-hidden, no click. */
+  decor?: boolean;
+  /** Extra classes, for placing it. */
+  class?: string;
+}
+
+const { word, under, decor = false, class: extra } = Astro.props;
+const cls = ['stamp', 'peel', extra].filter(Boolean).join(' ');
+---
+
+{decor ? (
+  <span class={cls} aria-hidden="true">
+    <span class="stamp-face">
+      <span class="stamp-word">{word}</span>
+    </span>
+    <span class="stamp-under">{under}</span>
+  </span>
+) : (
+  <button type="button" class={cls} data-peel data-cursor="Lift" aria-pressed="false">
+    <span class="stamp-face">
+      <span class="stamp-word">{word}</span>
+    </span>
+    <span class="stamp-under">{under}</span>
+  </button>
+)}
+
+<script>
+  import '../../scripts/peel.js';
+</script>

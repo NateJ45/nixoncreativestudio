@@ -1,15 +1,18 @@
 ---
 /* Facts: the two cards beside About's postcard (Crossing.astro), under "One person.". Each states
-   something the page already says in the story, and each wears a peeling stamp (stamp.css; the
-   lift is a few lines in about.js).
+   something the page already says in the story, and each wears a peeling stamp.
    - The crew list: every role on a project, and the same name against each one.
    - The film strip: frames of my own photographs that become client websites at a splice marked
-     2020, drifting sideways as the page scrolls (scroll-driven in about.css; still without
-     support or with reduced motion). The frames are decoration, so the strip is hidden from
-     screen readers and the sentence under it says the same thing in words.
-   Styles in src/styles/pages/about.css under "The facts". No photograph carries a date. */
-import { Image } from 'astro:assets';
+     2020, drifting sideways as the page scrolls (still without support or with reduced motion).
+     The frames are decoration, so the strip is hidden from screen readers and the sentence under
+     it says the same thing in words.
+   The crew list, the film strip and the stamps come from the drawer (src/components/ephemera/,
+   looks in src/styles/ephemera.css and stamp.css). Where they sit on the cards is in
+   src/styles/pages/about.css under "The facts". No photograph carries a date. */
 import type { ImageMetadata } from 'astro';
+import CrewList from './ephemera/CrewList.astro';
+import FilmStrip from './ephemera/FilmStrip.astro';
+import Stamp from './ephemera/Stamp.astro';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
 import crossing from '../assets/photography/canvas/river-crossing.jpg';
@@ -34,63 +37,13 @@ const film: { src: ImageMetadata; web?: boolean }[] = [
 
 <ul class="facts">
   <li class="fact crew">
-    <p class="fact-head">
-      <span>Crew list</span>
-      <span>Every project</span>
-    </p>
-    <ol class="crew-rows">
-      {crew.map((role) => (
-        <li>
-          <span class="crew-role">{role}</span>
-          <span class="crew-dots" aria-hidden="true" />
-          <span class="crew-name">Nathan Nixon</span>
-        </li>
-      ))}
-    </ol>
-    <button type="button" class="stamp peel" data-peel data-cursor="Lift" aria-pressed="false">
-      <span class="stamp-face">
-        <span class="stamp-word">One person</span>
-      </span>
-      <span class="stamp-under">Start to finish</span>
-    </button>
+    <CrewList roles={crew} />
+    <Stamp word="One person" under="Start to finish" />
   </li>
   <li class="fact reel-fact">
     <div class="film-wrap">
-      <div class="film" aria-hidden="true">
-        <div class="film-run">
-          {film.map((f, i) => (
-            <Fragment>
-              {f.web && !film[i - 1]?.web && (
-                <span class="film-splice">
-                  <b>2020</b>
-                </span>
-              )}
-              <span
-                class={f.web ? 'film-f web' : 'film-f'}
-                data-edge={`${i + 14}${f.web ? ' ▸ WEB' : ' ▸ CAMERA'}`}
-              >
-                {f.web && <span class="film-bar" />}
-                <Image
-                  src={f.src}
-                  alt=""
-                  width={240}
-                  height={180}
-                  fit="cover"
-                  position={f.web ? 'top' : 'center'}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </span>
-            </Fragment>
-          ))}
-        </div>
-      </div>
-      <button type="button" class="stamp peel" data-peel data-cursor="Lift" aria-pressed="false">
-        <span class="stamp-face">
-          <span class="stamp-word">Since 2020</span>
-        </span>
-        <span class="stamp-under">Building websites</span>
-      </button>
+      <FilmStrip frames={film} splice="2020" />
+      <Stamp word="Since 2020" under="Building websites" />
     </div>
     <p class="label">Building websites since 2020</p>
     <p class="fact-line">After years behind a camera.</p>

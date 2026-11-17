@@ -114,6 +114,18 @@ export default defineConfig({
   },
   integrations: [
     mdx(),
+    // /drawer/: every object in src/components/ephemera/ on one page, for checking them side by
+    // side. Injected in `astro dev` only, so it is never built, swept or deployed.
+    {
+      name: 'dev-drawer',
+      hooks: {
+        'astro:config:setup': ({ command, injectRoute }) => {
+          if (command === 'dev') {
+            injectRoute({ pattern: '/drawer', entrypoint: './src/dev/drawer.astro' });
+          }
+        },
+      },
+    },
     // /coming-soon/ is the pre-launch gate page, not content: it is noindex
     // (see src/pages/coming-soon.astro), and a sitemap must not list a
     // noindex page (Search Console flags the mismatch).

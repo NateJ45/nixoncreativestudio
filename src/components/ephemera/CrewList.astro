@@ -1,0 +1,35 @@
+---
+/* A crew list: a manifest of every role on a job, ruled in hairlines, with the same name against
+   each one. On About it says "one person" without saying it; a case study can use it for the
+   roles on that project. Real roles only.
+
+   Renders the header and the rows, nothing around them, so it drops into whatever card holds it
+   (About's fact card, a study's work order). Styles in src/styles/ephemera.css under "Crew list". */
+import '../../styles/ephemera.css';
+import { site } from '../../data/site';
+
+interface Props {
+  /** The roles, top to bottom. */
+  roles: string[];
+  /** The two small words across the top, left and right. */
+  head?: [string, string];
+  /** The name against every role. */
+  name?: string;
+}
+
+const { roles, head = ['Crew list', 'Every project'], name = site.ownerName } = Astro.props;
+---
+
+<p class="crew-head">
+  <span>{head[0]}</span>
+  <span>{head[1]}</span>
+</p>
+<ol class="crew-rows">
+  {roles.map((role) => (
+    <li>
+      <span class="crew-role">{role}</span>
+      <span class="crew-dots" aria-hidden="true" />
+      <span class="crew-name">{name}</span>
+    </li>
+  ))}
+</ol>

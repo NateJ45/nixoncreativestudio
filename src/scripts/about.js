@@ -1,5 +1,6 @@
 /* About: the portrait you can pick up, and the hand of clients behind it. */
 import { ui } from './kit.js';
+import { spring } from './spring.js';
 var reduce = ui.reduce,
   doc = document;
 var $ = function (a, r) {
@@ -143,16 +144,8 @@ function wake() {
     raf = requestAnimationFrame(frame);
   }
 }
-function go(sp, to, k, d, dt) {
-  sp.v += (k * (to - sp.x) - d * sp.v) * dt;
-  sp.x += sp.v * dt;
-  if (Math.abs(to - sp.x) < 0.002 && Math.abs(sp.v) < 0.01) {
-    sp.x = to;
-    sp.v = 0;
-    return false;
-  }
-  return true;
-}
+/* The springs are the drawer's shared helper (src/scripts/spring.js). */
+var go = spring;
 function frame(now) {
   raf = 0;
   var dt = Math.min(0.033, (now - last) / 1000 || 0.016);
@@ -404,15 +397,7 @@ st.forEach(function (s) {
   });
 });
 
-/* The stamps on the fact cards and the postcard under "One person." (src/styles/stamp.css). Hover and keyboard focus lift one in
-   CSS alone; a tap or a click holds it up, and the next one lets it down. */
-[].forEach.call(doc.querySelectorAll('[data-peel]'), function (b) {
-  b.addEventListener('click', function () {
-    var up = b.getAttribute('aria-pressed') !== 'true';
-    b.setAttribute('aria-pressed', String(up));
-    if (ui.cue) ui.cue('tick');
-  });
-});
+/* The stamps on the fact cards peel by src/scripts/peel.js, which Stamp.astro brings with it. */
 
 /* The postcard's flags (about.css, "The flags"): each loop gets its poster and sources only as the
    card comes near the screen, plays while the card is on screen and pauses when it leaves. With
