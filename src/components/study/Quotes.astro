@@ -1,8 +1,9 @@
 ---
 /* In their words: the client's own words from the frontmatter, character for character. Never
    edit, tidy or paraphrase one here. A quote that is a public review (it has a `source`) also
-   shows the person's face, the stars and a link to the review on Google (ReviewCite), and its key
-   phrase is marked (src/lib/highlight.ts). Chapter gives the section id="in-their-words", which the
+   shows the person's face, the stars and a link to the review on Google (ReviewCite). Every
+   quote's key phrase (`highlight`) is marked (src/lib/highlight.ts; on all quotes since
+   2026-11-16, not just reviews). Chapter gives the section id="in-their-words", which the
    review line in the study's opening jumps to.
 
    One card per person (added 2026-11-16): when the same person wrote more than once (Richard
@@ -44,12 +45,10 @@ const footOf = (card: Quote[]) =>
                 <time datetime={t.date.toISOString().slice(0, 10)}>{monthYear(t.date)}</time>
                 {t.context && <span>{t.context}</span>}
               </p>
-              <blockquote set:html={markedQuote(t.quote, t.source ? t.highlight : undefined)} />
+              <blockquote set:html={markedQuote(t.quote, t.highlight)} />
             </div>
-          ) : t.source ? (
-            <blockquote set:html={markedQuote(t.quote, t.highlight)} />
           ) : (
-            <blockquote>{t.quote}</blockquote>
+            <blockquote set:html={markedQuote(t.quote, t.highlight)} />
           ),
         )}
         <figcaption>
