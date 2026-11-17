@@ -51,6 +51,7 @@ import { inline } from '../../lib/study-markup';
 import { LOCK, TOOLS } from '../../lib/window-chrome';
 import { SECTOR_PHRASE, SECTOR_PLURAL } from '../../lib/closer';
 import { cmsShotProblem, nextInLoop } from '../../lib/study';
+import { quotesFor } from '../../lib/study-quotes';
 import { site } from '../../data/site';
 import { studyTitle } from '../../lib/seo';
 import { ids, pageIds } from '../../lib/schema';
@@ -78,8 +79,10 @@ const nx = next ? toClient(next) : s;
 const clientName = d.client.replace(/^The /, '');
 const longest = Math.max(...d.client.split(' ').map((w) => w.length));
 const host = d.facts?.host ?? (d.liveUrl ? hostOf(d.liveUrl) : '');
+/** Its own quotes, then any another study shares onto it (`alsoOn`, src/lib/study-quotes.ts). */
+const quotes = quotesFor(await getCollection('case-studies'), entry.id);
 /** This client's public review, when there is one (the opening's review line). */
-const review = d.testimonials?.find((t) => t.source);
+const review = quotes.find((t) => t.source);
 const builtWith = (d.facts?.stack ?? d.stack)?.join(', ');
 const facts: [string, string | undefined][] = [
   ['Sector', d.facts?.sector ?? s.sector],
@@ -258,7 +261,6 @@ const breadcrumbs = [
       }
     })();
   </script>
-
   <div class="story" data-story>
     <div class="chaps">
       {/* The project folder: the work order and the client's paint chips, before the story. */}
@@ -274,7 +276,7 @@ const breadcrumbs = [
         typeface={d.palette?.typeface}
       />
       <Content
-        study={{ ...d, slug: entry.id }}
+        study={{ ...d, slug: entry.id, testimonials: quotes }}
         components={{
           p: Prose,
           a: ProseLink,

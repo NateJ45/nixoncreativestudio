@@ -155,6 +155,11 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
   (`quote`, `name`, `title`, `date`) and the slug to `WITH_QUOTES` in
   `src/lib/case-testimonials.test.ts`, which fails on a quote in any other
   study.
+- A quote about more than one site (Richard Burnett's Google review covers
+  Theology Matters and the Foundation for Reformed Theology) goes on ONE study,
+  with the others in its `alsoOn: [slug]`. Never paste it into a second study:
+  `src/lib/study-quotes.ts` shows it on those pages, and the home band, hero and
+  review count read each quote once.
 
 ### 2c. CMS screens: captured 2026-10-31 (overhaul 3.6)
 
