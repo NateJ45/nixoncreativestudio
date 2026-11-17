@@ -75,7 +75,7 @@ export default defineConfig({
   compressHTML: false,
   // Astro 7's adapter no longer forces server mode; this site never used sessions.
   session: false,
-  // /now was retired 2026-11-17 (Nathan would not keep it current); its 301 to /about/ is in
+  // /now was retired 2026-11-16 (Nathan would not keep it current); its 301 to /about/ is in
   // public/_redirects.
   redirects: {
     // /work/west-chester-preschool was retired 2026-10-01 and redirected here; the study

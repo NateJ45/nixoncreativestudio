@@ -52,7 +52,7 @@ The script saves the token to `localStorage["ncs-preview"]` and reloads the page
 
 ## Security headers
 
-`public/_redirects` holds real 301s: retired URLs with no live equivalent (`/work/cincy-table` and `/work/second-presbyterian-chicago`, both forms, to `/work/`) the short names the nav no longer uses (`/prices` to `/services/`, `/start` to `/contact/`), and `/now` to `/about/` (the now page was retired 2026-11-17). Astro `redirects` in `astro.config.mjs` only emit a meta-refresh page, so use `_redirects` when Search Console needs a true 301.
+`public/_redirects` holds real 301s: retired URLs with no live equivalent (`/work/cincy-table` and `/work/second-presbyterian-chicago`, both forms, to `/work/`) the short names the nav no longer uses (`/prices` to `/services/`, `/start` to `/contact/`), and `/now` to `/about/` (the now page was retired 2026-11-16). Astro `redirects` in `astro.config.mjs` only emit a meta-refresh page, so use `_redirects` when Search Console needs a true 301.
 
 `public/_headers` ships with the deploy. Site-wide headers Cloudflare applies to every route:
 
