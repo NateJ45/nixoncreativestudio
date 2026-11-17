@@ -1,0 +1,62 @@
+---
+/* A postmark: a double ring with the town round the top and the state round the foot, and four
+   wavy cancel lines running off to the left. On the contact page's envelope it reads "Cincinnati",
+   from site.address, so it says only where I work, which the page already says in words.
+
+   Decoration only (aria-hidden). The ink is --soft, so it reads on the card in both themes. No
+   date in the middle: the "Received" stamp beside it carries the day. Size it with --pm-width. */
+import '../../styles/ephemera/postmark.css';
+import { site } from '../../data/site';
+
+interface Props {
+  /** The town, round the top of the ring. */
+  city?: string;
+  /** The state, round the foot. */
+  region?: string;
+  /** Extra classes, for placing it. */
+  class?: string;
+  /** A prefix for the two arc ids, unique on the page when it carries more than one postmark. */
+  id?: string;
+}
+
+const [defaultCity, defaultRegion] = site.address.split(', ');
+const { city = defaultCity, region = defaultRegion, class: extra, id = 'pm' } = Astro.props;
+
+// The ring is centred at (84, 36). The town runs along an arc inside the outer ring, left to
+// right over the top; the state along a wider arc under the foot, so it reads upright too.
+const cx = 84;
+const cy = 36;
+const top = 24.5;
+const foot = 30.5;
+// Four cancel lines, each a gentle wave from the left edge up to the ring.
+const waves = [18, 29, 43, 54].map((y) => {
+  let d = `M2 ${y}`;
+  for (let x = 2; x < 50; x += 12) d += ` q3 -3.2 6 0 t6 0`;
+  return d;
+});
+---
+
+<span class:list={['postmark', extra]} aria-hidden="true">
+  <svg viewBox="0 0 120 72" focusable="false">
+    <defs>
+      <path id={`${id}-top`} d={`M${cx - top} ${cy} A${top} ${top} 0 0 1 ${cx + top} ${cy}`} />
+      <path id={`${id}-foot`} d={`M${cx - foot} ${cy} A${foot} ${foot} 0 0 0 ${cx + foot} ${cy}`} />
+    </defs>
+    {waves.map((d) => (
+      <path class="pm-wave" d={d} />
+    ))}
+    <circle class="pm-ring" cx={cx} cy={cy} r="34" />
+    <circle class="pm-ring pm-inner" cx={cx} cy={cy} r="20.5" />
+    <text class="pm-town">
+      <textPath href={`#${id}-top`} startOffset="50%" text-anchor="middle">
+        {city}
+      </textPath>
+    </text>
+    <text class="pm-state">
+      <textPath href={`#${id}-foot`} startOffset="50%" text-anchor="middle">
+        {region}
+      </textPath>
+    </text>
+    <path class="pm-bar" d={`M${cx - 12} ${cy - 3}h24M${cx - 12} ${cy + 3}h24`} />
+  </svg>
+</span>

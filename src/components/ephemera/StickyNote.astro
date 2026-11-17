@@ -1,0 +1,27 @@
+---
+/* A sticky note: a square of the client's paper tinted with their color, held on by a strip of
+   tape, turned a little off square. On a case study each Decision is one (the "why" stuck beside
+   the page's "what"). Your words go in the slot, so they stay plain, readable markup; the tape and
+   the curl are drawn in CSS and say nothing to a screen reader.
+
+   The note's colors come from --c and --p, the client pair every study already sets, and it is a
+   fixed piece of paper: it looks the same on both sides of the page. With motion allowed, a page
+   can lift it off its place and let it land (study.css does this for the Decisions); under reduced
+   motion it simply sits. Looks in src/styles/ephemera/sticky-note.css. */
+import '../../styles/ephemera/sticky-note.css';
+
+interface Props {
+  /** The element the note is. A Decision is an article; a margin note is an aside. */
+  as?: 'article' | 'aside' | 'div';
+  /** Extra classes for the page's own hooks (a Decision keeps `dec rv`). */
+  class?: string;
+  /** Degrees off square. Small numbers: a note leans, it does not fall over. */
+  tilt?: number;
+}
+
+const { as: Tag = 'div', class: cls, tilt } = Astro.props;
+---
+
+<Tag class:list={['sticky', cls]} style={tilt === undefined ? undefined : `--tilt:${tilt}deg`}>
+  <slot />
+</Tag>

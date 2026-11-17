@@ -1,0 +1,25 @@
+---
+/* A page torn out of a spiral notebook: the journal's post cards and its list. The top edge is
+   bitten where the page came off the wire, the paper is ruled in faint blue with a margin line,
+   and the corners at the foot stay round. It is the card of the page (var(--card)), so it follows
+   the theme; only the rules and the tear are its own.
+
+   The tear is a CSS mask, which also clips a box-shadow, so a page that needs a shadow takes it as
+   a drop-shadow filter on its holder (journal.css does this for the deck). Set --nb-left to move
+   the margin line, or --nb-margin: transparent to leave it off. The content is yours; the paper
+   is decoration and adds no words. Looks: src/styles/ephemera/notebook-page.css. */
+import '../../styles/ephemera/notebook-page.css';
+
+interface Props {
+  /** The element to render: an article for a post card, a div for a holder. */
+  as?: 'article' | 'div' | 'section';
+  class?: string;
+  [attr: string]: unknown;
+}
+
+const { as: Tag = 'div', class: cls, ...rest } = Astro.props;
+---
+
+<Tag class:list={['nb-page', cls]} {...rest}>
+  <slot />
+</Tag>

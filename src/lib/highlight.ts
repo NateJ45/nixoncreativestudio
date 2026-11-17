@@ -24,3 +24,21 @@ export function markedQuote(quote: string, highlight?: string): string {
     esc(quote.slice(at + highlight.length))
   );
 }
+
+/** The one sentence that holds the key phrase, word for word, with an ellipsis where the quote
+ *  goes on before or after it (added 2026-11-17). For an earlier quote on a slide that carries
+ *  more than one from the same person (QuoteBand.astro), so that slide stays a sensible height;
+ *  the whole quote stays on the study page. Without a phrase, or when the phrase is not found,
+ *  the quote comes back whole. */
+export function excerpt(quote: string, highlight?: string): string {
+  const at = highlight ? quote.indexOf(highlight) : -1;
+  if (!highlight || at === -1) return quote;
+  const ends = [...quote.matchAll(/[.!?]+["'”’]?(\s+|$)/g)].map((m) => ({
+    stop: m.index + m[0].trimEnd().length,
+    next: m.index + m[0].length,
+  }));
+  const start = [...ends].reverse().find((e) => e.next <= at)?.next ?? 0;
+  const stop = ends.find((e) => e.stop >= at + highlight.length)?.stop ?? quote.length;
+  const body = quote.slice(start, stop);
+  return (start > 0 ? '… ' : '') + body + (stop < quote.length ? ' …' : '');
+}

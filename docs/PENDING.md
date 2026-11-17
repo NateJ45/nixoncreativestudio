@@ -160,6 +160,13 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
   with the others in its `alsoOn: [slug]`. Never paste it into a second study:
   `src/lib/study-quotes.ts` shows it on those pages, and the home band, hero and
   review count read each quote once.
+- When the same person wrote more than once (Richard's 2025 email quote and his
+  2026 review), give each quote its own `date` and the same first and last
+  name. The study page and the home band then put both on one card or slide,
+  oldest first under their month and year (`byPerson` in
+  `src/lib/study-quotes.ts`). In the band the earlier words show only the
+  sentence holding their `highlight`, cut with an ellipsis (`excerpt` in
+  `src/lib/highlight.ts`).
 
 ### 2c. CMS screens: captured 2026-10-31 (overhaul 3.6)
 

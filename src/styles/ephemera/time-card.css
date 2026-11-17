@@ -1,0 +1,109 @@
+/* ---- Time card (TimeCard.astro) -------------------------------------------
+   A buff punch card: a ruled header in small capitals, a title, then a row of week squares, each
+   a printed box, punched solid in the client's color where the week had work. Fixed paper, the
+   same on both sides of the page, so it keeps its own ink. A notch at the top edge, like a real
+   card's, is drawn in CSS. Placement is the page's business. */
+.tcard {
+  --tc-paper: #f1ead8;
+  --tc-ink: #1b1d2a;
+  --tc-soft: #55554f;
+  --tc-box: rgba(27, 29, 42, 0.32);
+  --tc-hit: var(--c, var(--tc-ink));
+  position: relative;
+  padding: clamp(1.1rem, 2.6vw, 1.6rem);
+  border-radius: 0.3rem;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(255, 255, 255, 0.5), transparent 55%),
+    var(--tc-paper);
+  color: var(--tc-ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 1.2rem 1.8rem -1.3rem rgba(0, 0, 0, 0.45);
+}
+/* The notch: a half circle cut from the top edge, in the ground behind the card. */
+.tcard::before {
+  content: '';
+  position: absolute;
+  top: -0.55rem;
+  right: 2.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--tcard-ground, var(--ground));
+}
+.tcard-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--tc-ink);
+  font: 600 0.6875rem / 1.2 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.tcard-title {
+  margin: 0.9rem 0 0.8rem;
+  font: 600 clamp(1.25rem, 2vw, 1.5rem) / 1.15 var(--display);
+  letter-spacing: -0.02em;
+}
+.tcard-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.tcard-cells i {
+  width: 1.1rem;
+  height: 1.4rem;
+  border-radius: 0.15rem;
+  box-shadow: inset 0 0 0 1px var(--tc-box);
+}
+.tcard-cells i.hit {
+  background: var(--tc-hit);
+  box-shadow: inset 0 -0.2rem 0 rgba(0, 0, 0, 0.18);
+}
+.tcard-say {
+  margin-top: 0.9rem;
+  color: var(--tc-soft);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+.tcard-say > * + * {
+  margin-top: 0.35rem;
+}
+.tcard-say b {
+  color: var(--tc-ink);
+  font-weight: 600;
+}
+/* The punches land one after another as the card crosses the screen. Scale only: a punched box is
+   always painted, so a card that arrives in the first screen is never empty. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tcard-cells i.hit {
+      animation: tcard-punch linear both;
+      animation-timeline: view();
+      animation-range: entry calc(20% + var(--i) * 2%) cover calc(30% + var(--i) * 2%);
+    }
+  }
+}
+@keyframes tcard-punch {
+  from {
+    scale: 0.55;
+  }
+  to {
+    scale: 1;
+  }
+}
+@media (forced-colors: active) {
+  .tcard {
+    border: 1px solid CanvasText;
+  }
+  .tcard-cells i {
+    border: 1px solid CanvasText;
+  }
+  .tcard-cells i.hit {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}

@@ -1,0 +1,76 @@
+/* ---- Project folder (FolderTab.astro) -------------------------------------
+   An open folder: a tab on the top edge in the client's color with their name on it, the folder's
+   board under the papers, and a slim pocket line near the foot. The board is a surface of the page
+   (the sunk well, tinted a touch toward the client's mark), so it follows the theme; the tab is the
+   client's own pair, fixed on both sides. The papers inside are the drawer's fixed paper. */
+.folder {
+  --board: color-mix(in srgb, var(--cm, var(--c, var(--accent))) 7%, var(--well));
+  position: relative;
+  margin-top: 2.6rem;
+}
+.folder-tab {
+  position: absolute;
+  bottom: 100%;
+  left: clamp(1rem, 3vw, 1.75rem);
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  padding: 0.55rem 1.1rem 0.5rem;
+  border-radius: 0.7rem 0.7rem 0 0;
+  background: var(--c, var(--accent));
+  color: var(--p, #fff);
+  font: 600 0.75rem / 1.25 var(--body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.folder-tab span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.folder-in {
+  position: relative;
+  padding: clamp(1rem, 3vw, 2rem);
+  padding-bottom: clamp(1.5rem, 4vw, 2.75rem);
+  border-radius: 0.4rem 1rem 1rem 1rem;
+  border-top: 0.3rem solid var(--c, var(--accent));
+  background: var(--board);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 1.6rem 2.4rem -2rem rgba(0, 0, 0, 0.4);
+  container-type: inline-size;
+}
+/* The pocket: a soft fold line near the foot, drawn, so it says nothing. */
+.folder-in::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: clamp(0.6rem, 1.6vw, 1rem);
+  left: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  pointer-events: none;
+}
+/* The papers slide up out of the pocket as the folder arrives: translate only, so a paper is
+   always painted, and only where the browser ties animation to the scroll. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .folder-in > * {
+      animation: folder-out linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 40%;
+    }
+  }
+}
+@keyframes folder-out {
+  from {
+    translate: 0 2rem;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@media (forced-colors: active) {
+  .folder-tab,
+  .folder-in {
+    border: 1px solid CanvasText;
+  }
+}

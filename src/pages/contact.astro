@@ -61,6 +61,8 @@ import { money } from '../lib/money';
 import { orgTypes, runs, budgets, timelines, heardFromOptions } from '../data/inquiry-options';
 import { LOCK, TOOLS } from '../lib/window-chrome';
 import { plainText, wordSpans } from '../lib/words';
+import Envelope from '../components/ephemera/Envelope.astro';
+import Ticket from '../components/ephemera/Ticket.astro';
 
 // The form's choices live in src/data/inquiry-options.ts, shared with the
 // inquiry email so it shows the same words a visitor picked. The `value`s are
@@ -89,6 +91,8 @@ const nextSteps = [
   site.replyPromise,
   'If it looks like a fit, I text you to talk it through, or call if you would rather.',
 ];
+// The count across the top of the boarding pass, in words, so it follows the list.
+const stepCount = `${['One', 'Two', 'Three', 'Four'][nextSteps.length - 1] ?? nextSteps.length} ${nextSteps.length === 1 ? 'step' : 'steps'}`;
 
 // Case studies, for two things: the brief names the study a visitor came from
 // (?from=<slug>), and the success panel links two studies from the visitor's
@@ -397,10 +401,14 @@ const heading = 'Start a project, or just <b>say hello.</b>';
 
       <!-- Success panel. Shown when data-state="sent" (the script) or when #sent is the
            URL target (the no-JS redirect). The heading takes focus after a script submit. -->
-      <div id="sent" class="card keyed sent" data-sent data-contact-thanks>
+      {/* The sent card is an envelope (src/components/ephemera/Envelope.astro): an airmail edge, and
+          in its corner the "Received" stamp, a postmark that reads Cincinnati and two postage
+          stamps, the Saltire and the Stars and Stripes. All of the post is aria-hidden decoration;
+          the heading and the steps carry the words. */}
+      <Envelope id="sent" class="card keyed sent" data-sent data-contact-thanks>
         {/* The rubber stamp: decoration only, since the heading already says it arrived. contact.js
             fills in today's date and presses it in; with no script it shows the word alone. */}
-        <span class="stamp peel" data-stamp aria-hidden="true">
+        <span class="stamp peel" data-stamp aria-hidden="true" slot="post">
           <span class="stamp-face">
             <span class="stamp-word">Received</span>
             <span class="stamp-date" data-stamp-date></span>
@@ -416,11 +424,17 @@ const heading = 'Start a project, or just <b>say hello.</b>';
           If you don't hear back, check your spam folder for a reply from {site.domain}, then try
           the email address on this page.
         </p>
-        <ol>
-          {nextSteps.map((step) => (
-            <li>{step}</li>
-          ))}
-        </ol>
+        {/* What happens next, printed as a boarding pass (the drawer's Ticket). The same two steps,
+            in order, as a real list; the stub only repeats the route and my name. */}
+        <div class="sent-pass">
+          <Ticket head={['What happens next', stepCount]} route={['You', 'Me']} seed={45202}>
+            <ol class="sent-steps">
+              {nextSteps.map((step) => (
+                <li>{step}</li>
+              ))}
+            </ol>
+          </Ticket>
+        </div>
         <h3 class="sent-more">While you wait, two sites I built</h3>
         {successSets.map((set) => (
           <div class="sent-links" data-success-studies={set.key} hidden={set.key !== 'any'}>
@@ -431,7 +445,7 @@ const heading = 'Start a project, or just <b>say hello.</b>';
             ))}
           </div>
         ))}
-      </div>
+      </Envelope>
     </div>
 
     <aside class="st-phone" aria-labelledby="brief-h" data-phone-wrap>

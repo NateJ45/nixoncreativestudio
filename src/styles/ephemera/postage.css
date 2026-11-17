@@ -1,0 +1,82 @@
+/* ---- PostageStamp (PostageStamp.astro): a flag on perforated stamp paper ------------------------
+   Fixed colours, the same on both sides of the page: white stamp paper, near-black print, and each
+   flag's own colours (the Saltire's blue, Old Glory red and blue). Decoration only, so none of
+   these carry text a reader needs; the country name is a printed detail, aria-hidden with the rest.
+
+   The perforation: a mask punches half-circles out of the paper's margin all the way round, so
+   whatever is behind the stamp shows through the holes. The shadow sits on the outer span, since a
+   mask would clip a shadow drawn on the paper itself. */
+.pstamp {
+  --ps-paper: #fbfaf6;
+  --ps-ink: #1b1d2a;
+  --ps-blue: #005eb8;
+  --ps-red: #b31942;
+  --ps-navy: #0a3161;
+  --ps-white: #fff;
+  --ps-hole: 0.12rem;
+  --ps-step: 0.34rem;
+  display: inline-block;
+  flex: none;
+  width: var(--ps-width, 3.3rem);
+  transform: rotate(var(--tilt, 0deg));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+  user-select: none;
+}
+.pstamp-paper {
+  display: block;
+  padding: 0.28rem;
+  background: var(--ps-paper);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    radial-gradient(circle, transparent var(--ps-hole), #000 calc(var(--ps-hole) + 0.5px))
+      calc(var(--ps-step) / -2) calc(var(--ps-step) / -2) / var(--ps-step) var(--ps-step) round;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    radial-gradient(circle, transparent var(--ps-hole), #000 calc(var(--ps-hole) + 0.5px))
+      calc(var(--ps-step) / -2) calc(var(--ps-step) / -2) / var(--ps-step) var(--ps-step) round;
+}
+/* The printed face: a hairline frame round the flag and the name. */
+.pstamp-face {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.16rem 0.16rem 0.2rem;
+  border: 1px solid rgba(27, 29, 42, 0.22);
+}
+.pstamp-face svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pstamp-name {
+  font: 700 0.375rem/1 var(--body);
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ps-ink);
+}
+.ps-blue {
+  fill: var(--ps-blue);
+}
+.ps-cross {
+  fill: none;
+  stroke: var(--ps-white);
+  stroke-width: 6;
+}
+.ps-red {
+  fill: var(--ps-red);
+}
+.ps-navy {
+  fill: var(--ps-navy);
+}
+.ps-white {
+  fill: var(--ps-white);
+}
+@media (forced-colors: active) {
+  .pstamp {
+    filter: none;
+  }
+  .pstamp-face {
+    border-color: CanvasText;
+  }
+}

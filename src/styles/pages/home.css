@@ -785,3 +785,67 @@
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Who's behind it (home/BehindIt.astro): the small portrait you can pick up, About's crew list,
+   one line and the link to /about/. A neutral section between the client marks and the closing.
+   The card and the list look as they do on About (src/styles/ephemera/); this only places them.
+   --------------------------------------------------------------------------------------------- */
+.bh {
+  padding: clamp(3rem, 8vh, 5.5rem) var(--gut) clamp(4rem, 10vh, 7rem);
+}
+.bh-in {
+  display: grid;
+  grid-template-columns: auto minmax(0, 34rem);
+  justify-content: center;
+  align-items: center;
+  gap: clamp(2rem, 6vw, 5.5rem);
+  max-width: 78rem;
+  margin: 0 auto;
+}
+.bh .pmini {
+  --pm-w: 14rem;
+}
+.bh-say h2 {
+  margin-top: 0.9rem;
+  font-size: var(--type-h2);
+  font-weight: 500;
+}
+.bh-say h2 b {
+  font-weight: 700;
+}
+.bh-line {
+  max-width: 32rem;
+  margin-top: 1rem;
+  color: var(--soft);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.bh-crew {
+  max-width: 24rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+/* The crew list keeps a deep foot for About's stamp; here the link comes next instead. */
+.bh-crew .crew-rows {
+  margin-bottom: 0;
+}
+.bh-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+@media (max-width: 40rem) {
+  .bh-in {
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+  .bh .pmini {
+    --pm-w: 11rem;
+    margin-left: 0.5rem;
+  }
+}

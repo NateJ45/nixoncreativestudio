@@ -9,13 +9,32 @@ import '../styles/stamp.css';
 import CrewList from '../components/ephemera/CrewList.astro';
 import FilmStrip from '../components/ephemera/FilmStrip.astro';
 import Stamp from '../components/ephemera/Stamp.astro';
-import Signature from '../components/ephemera/Signature.astro';
 import Ticket from '../components/ephemera/Ticket.astro';
+import PressPass from '../components/ephemera/PressPass.astro';
+import MarginNote from '../components/ephemera/MarginNote.astro';
+import PaperPrint from '../components/ephemera/PaperPrint.astro';
+import NotebookPage from '../components/ephemera/NotebookPage.astro';
+import PortraitCard from '../components/ephemera/PortraitCard.astro';
+import WorkStub from '../components/ephemera/WorkStub.astro';
+import FolderTab from '../components/ephemera/FolderTab.astro';
+import WorkOrder from '../components/ephemera/WorkOrder.astro';
+import PaintChips from '../components/ephemera/PaintChips.astro';
+import StickyNote from '../components/ephemera/StickyNote.astro';
+import TimeCard from '../components/ephemera/TimeCard.astro';
+import PostageStamp from '../components/ephemera/PostageStamp.astro';
+import Postmark from '../components/ephemera/Postmark.astro';
+import Envelope from '../components/ephemera/Envelope.astro';
+import SpecimenCard from '../components/ephemera/SpecimenCard.astro';
+import Signature from '../components/ephemera/Signature.astro';
+import { site } from '../data/site';
+import weeks from '../data/client-weeks.json';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
 import tm from '../assets/case-studies/shots/theology-matters-home.png';
 import mas from '../assets/case-studies/shots/mas-monograms-home.png';
 
+const ss = weeks.find((w) => w.slug === 'stone-steps-50k')!;
+const ssChips = ['#FBF6EA', '#1A1712', '#A83C26', '#2E5738', '#FFEBBB'].map((hex) => ({ hex }));
 const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src: mas, web: true }];
 ---
 
@@ -24,7 +43,7 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     <h1>The drawer</h1>
     <p>
       The paper objects any page can borrow. Dev only. Components in src/components/ephemera/, looks
-      in src/styles/ephemera.css, stamp.css and src/styles/ephemera/.
+      in src/styles/ephemera.css, src/styles/ephemera/ and stamp.css.
     </p>
 
     <section>
@@ -72,6 +91,188 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
       </div>
     </section>
 
+    {/* The journal's objects. The words are the church cost post's own (its date, its sources). */}
+    <section>
+      <h2>Press pass</h2>
+      <div class="row">
+        <PressPass photo="/assets/about/portrait-bw-520.webp" seed={20261110}>
+          <dl class="press-fields">
+            <div>
+              <dt>Published</dt>
+              <dd>November 10, 2026</dd>
+            </div>
+            <div>
+              <dt>Section</dt>
+              <dd>Costs</dd>
+            </div>
+          </dl>
+        </PressPass>
+        <PressPass photo="/assets/about/portrait-bw-520.webp" seed={20261111}>
+          <dl class="press-fields">
+            <div>
+              <dt>Published</dt>
+              <dd>November 10, 2026</dd>
+            </div>
+          </dl>
+          <span slot="stamp" class="stamp" aria-hidden="true">
+            <span class="stamp-word">Stamp</span>
+            <span class="stamp-date">slot</span>
+          </span>
+        </PressPass>
+      </div>
+    </section>
+
+    <section>
+      <h2>Margin note</h2>
+      <div class="row">
+        <MarginNote class="narrow">
+          <p>
+            Sources: <a href="https://www.wix.com/plans">Wix plans</a> and
+            <a href="https://www.squarespace.com/pricing">Squarespace pricing</a>, as of November
+            2026.
+          </p>
+        </MarginNote>
+        <div class="card-ish">
+          <MarginNote tilt={1.5}>
+            <p>On a card</p>
+          </MarginNote>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Print</h2>
+      <div class="row">
+        <div class="narrow">
+          <PaperPrint>
+            <img src={stream.src} alt="" width="320" height="214" style="width:100%;height:auto" />
+          </PaperPrint>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Notebook page</h2>
+      <NotebookPage as="article" class="nb-demo">
+        <p class="label">Costs</p>
+        <h3>How much does a church website cost in 2026?</h3>
+      </NotebookPage>
+    </section>
+    <section>
+      <h2>Portrait card, small</h2>
+      <div class="row">
+        <PortraitCard />
+        <div class="card-ish">
+          <PortraitCard />
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Work-order stub</h2>
+      <div class="row">
+        <WorkStub no={1} seed={4101} />
+        <div class="card-ish stub-on-card">
+          <WorkStub no={2} seed={4498} />
+        </div>
+      </div>
+    </section>
+
+    <div class="client" style="--c:#A83C26;--p:#FBF6EA">
+      <section>
+        <h2>Folder, work order and crew list</h2>
+        <FolderTab tab="Stone Steps 50K" labelledby="dr-wo">
+          <WorkOrder
+            title="Work order"
+            titleId="dr-wo"
+            head={['Project file', 'stonesteps50k.com']}
+            fields={[
+              { label: 'Client', lines: [{ text: 'Stone Steps 50K' }] },
+              { label: 'Sector', lines: [{ text: 'Nonprofit' }] },
+              {
+                label: 'The job',
+                lines: [
+                  {
+                    lead: 'Fill events and sign-ups',
+                    text: 'Race date, fees, start times and registration on the home page.',
+                  },
+                  {
+                    lead: 'Take office work off staff',
+                    text: 'Results, records and runner pages update themselves after each race.',
+                  },
+                ],
+              },
+            ]}
+          >
+            <CrewList
+              roles={['Strategy', 'Designer', 'Developer']}
+              head={['Crew list', 'This project']}
+            />
+          </WorkOrder>
+        </FolderTab>
+      </section>
+
+      <section>
+        <h2>Paint chips</h2>
+        <PaintChips chips={ssChips} label="Stone Steps 50K's colors" />
+      </section>
+
+      <section>
+        <h2>Sticky note</h2>
+        <div class="narrow">
+          <StickyNote as="aside" tilt={-1}>
+            <p>
+              <b>Records from the results.</b>
+            </p>
+            <p>
+              Start from the results. Every finish since 2003 is its own entry, and the records are
+              calculated from those entries.
+            </p>
+          </StickyNote>
+        </div>
+      </section>
+
+      <section>
+        <h2>Time card</h2>
+        <div class="narrow">
+          <TimeCard
+            weeks={ss.weeks}
+            active={ss.active}
+            head={['Time card', 'Stone Steps 50K']}
+            title="The build, week by week"
+          >
+            <p>{`${ss.active.length} of ${ss.weeks} weeks had changes.`}</p>
+          </TimeCard>
+        </div>
+      </section>
+    </div>
+    <section>
+      <h2>Postage stamps and postmark</h2>
+      <div class="row">
+        <PostageStamp flag="saltire" />
+        <PostageStamp flag="us" />
+        <Postmark id="pm-drawer" />
+        <div class="card-ish row">
+          <PostageStamp flag="saltire" />
+          <PostageStamp flag="us" />
+          <Postmark id="pm-drawer-card" />
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Envelope</h2>
+      <Envelope class="card-ish narrow-ish" postmarkId="pm-drawer-env">
+        <Stamp word="Received" under="Thank you" decor slot="post" />
+        <h3>Thanks, your message is in.</h3>
+        <p>{site.replyPromise}</p>
+      </Envelope>
+    </section>
+    <section>
+      <h2>Specimen card</h2>
+      <div class="row specs">
+        <SpecimenCard weight={500} role="Every headline" sample="How this site is made." />
+        <SpecimenCard weight={400} role="Everything you read" sample={site.tagline} />
+      </div>
+    </section>
     <section>
       <h2>Signature</h2>
       <p>
@@ -90,9 +291,6 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
 </BaseLayout>
 
 <style>
-  .drawer :global(.sig-small) {
-    --sig-w: 6rem;
-  }
   .drawer {
     max-width: 64rem;
     margin: 0 auto;
@@ -120,10 +318,31 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
   .narrow {
     max-width: 24rem;
   }
+  .drawer :global(.nb-demo) {
+    max-width: 36rem;
+    padding: 2rem 2rem 2.5rem 4rem;
+  }
   .night {
     --ticket-ground: #0b0e1f;
     padding: 1.5rem;
     border-radius: 1rem;
     background: #0b0e1f;
+  }
+  .stub-on-card {
+    --stub-ground: var(--card);
+  }
+  .client {
+    display: grid;
+    gap: 3rem;
+    container-type: inline-size;
+  }
+  .narrow-ish {
+    max-width: 40rem;
+  }
+  .specs > :global(.spec) {
+    width: 15rem;
+  }
+  .drawer :global(.sig-small) {
+    --sig-w: 6rem;
   }
 </style>
