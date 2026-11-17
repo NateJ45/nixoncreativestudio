@@ -298,10 +298,7 @@ const skills = [
         return (
           <li style={`--i: ${i}`}>
             <PlayingCard corner={place?.abbr ?? ''} name={c.name} accent={c.accent} paper={c.paper}>
-              <p class="label sy-kind">
-                {c.sector}
-                {place && `, ${place.state}`}
-              </p>
+              <p class="label sy-kind">{place ? `${c.sector}, ${place.state}` : c.sector}</p>
               {c.hook && <p>{c.hook}</p>}
               <a href={c.study}>
                 Read the case study<span class="sy-visually">: {c.name}</span>

@@ -60,6 +60,8 @@ html:not(.js) [data-print] {
 .sy-ch {
   --tilt: -2deg;
   display: grid;
+  /* One column that can shrink below its content, so nothing is cut off on a phone. */
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1.5rem, 4vw, 3rem);
   align-items: center;
   padding: clamp(2rem, 6vh, 3.5rem) 0;
@@ -414,6 +416,12 @@ html:not(.js) [data-print] {
     max-width: none;
     font-size: 18pt;
   }
+  /* The H1's words rise in on screen; on paper they are simply there. */
+  .page-head h1 .w {
+    opacity: 1 !important;
+    transform: none !important;
+    translate: none !important;
+  }
   .page-head .lede {
     max-width: none;
     margin-top: 0.04in;
@@ -476,13 +484,14 @@ html:not(.js) [data-print] {
     rotate: none;
     animation: none !important;
   }
-  .pkc {
+  .sy-hand .pkc {
     display: block;
+    height: auto;
     padding: 0;
     box-shadow: none;
     background: none;
   }
-  .pkc-name {
+  .sy-hand .pkc-name {
     margin: 0;
     padding: 0;
     background: none;
@@ -514,17 +523,33 @@ html:not(.js) [data-print] {
     padding-bottom: 0.02in;
     font-size: 7.5pt;
   }
-  .sy-list li {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.1in;
-    padding: 0.01in 0;
-    border: 0;
+  /* Each list runs on as one line of text, comma by comma, to fit the page. */
+  .sy-list ul {
+    margin-top: 0.03in;
     font-size: 7.5pt;
+    line-height: 1.35;
+  }
+  .sy-list li {
+    display: inline;
+    padding: 0;
+    border: 0;
+  }
+  .sy-list li:not(:last-child)::after {
+    content: ', ';
+  }
+  .sy-list li span + .sy-n::before {
+    content: ' (';
+  }
+  .sy-list li span + .sy-n::after {
+    content: ')';
   }
   .sy-list li::before {
     display: none;
   }
+  .sy-list li > span {
+    display: inline;
+  }
   .sy-n {
-    font-size: 7pt;
+    font-size: 7.5pt;
   }
 }
