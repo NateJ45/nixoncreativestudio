@@ -7,19 +7,23 @@
    src/data/nav.ts uses to gate the Journal link, so the link appears with the
    first published entry). Two views of the same posts:
 
-     Deck   the post cards stacked along a date rail, newest on top. "Older"
+     Deck   the post cards stacked along a date rail, newest on top, each
+            a page torn from a notebook (the drawer's NotebookPage). "Older"
             and "Newer" (and the arrow keys inside the deck) deal the next one
             forward. The default on a wide screen. Each card wears the drawing
             of its cluster (src/lib/journal-art.ts), which draws itself in as
             the card comes to the front. The rail shows a day once, with how
             many posts it holds and a dot for each.
-     List   ruled rows, as the journal always had. The default on a phone,
-            under reduced motion, and the whole page with no JavaScript.
+     List   ruled rows, as the journal always had, on one notebook page.
+            The default on a phone, under reduced motion, and the whole page
+            with no JavaScript.
 
-   The chips over both are the /work sector bar (seg-bar.css): one per cluster
-   that has a post (src/lib/journal.ts), and they work on either view. The
-   address keeps the choice: /journal/?cluster=lab&view=list. src/scripts/
-   journal.js does the dealing; with no script the list is the page.
+   Over both, the notebook's divider tabs: one per cluster that has a post
+   (src/lib/journal.ts, the groups the posts already carry), and they work on
+   either view. The Deck and List switch beside the count is the /work bar
+   (seg-bar.css). The address keeps the choice: /journal/?cluster=lab&view=list.
+   src/scripts/journal.js does the dealing; with no script the list is the
+   page and every title is a plain link.
 
    Empty state: one plain line and two onward links. While that is the state,
    the page is noindex and out of the sitemap (src/data/journal-gate.ts).
@@ -30,6 +34,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/sub.css';
 import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
+import NotebookPage from '../../components/ephemera/NotebookPage.astro';
 import { isLive, journalOpen } from '../../data/journal-gate';
 
 import { readingTime } from '../../lib/readingTime';
@@ -105,14 +110,6 @@ const days = railDays(posts);
   ) : (
     <section class="jx" aria-label="Journal posts" data-jx>
       <div class="dw-bar" data-bar>
-        <div class="dw-seg" role="group" aria-label="Show posts about" data-filters>
-          <span class="dw-pill" data-pill aria-hidden="true" />
-          {chips.map((c, i) => (
-            <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-f={c.key}>
-              {c.label} <span class="n">{c.n}</span>
-            </button>
-          ))}
-        </div>
         <div class="dw-seg" role="group" aria-label="View posts as" data-views>
           <span class="dw-pill" data-pill aria-hidden="true" />
           <button type="button" aria-pressed="false" data-v="deck">
@@ -125,6 +122,14 @@ const days = railDays(posts);
         <p class="dw-status" role="status" data-status>
           {`Showing all ${n} ${n === 1 ? 'post' : 'posts'}.`}
         </p>
+      </div>
+
+      <div class="jx-tabs" role="group" aria-label="Show posts about" data-filters>
+        {chips.map((c, i) => (
+          <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-f={c.key}>
+            {c.label} <span class="n">{c.n}</span>
+          </button>
+        ))}
       </div>
 
       <div class="jx-deck" data-deck>
@@ -158,11 +163,8 @@ const days = railDays(posts);
                 class={i === 0 ? 'on-top' : i > 2 ? 'deep' : undefined}
                 style={`--k:${i};--tilt:${p.tilt}deg`}
               >
-                <article class="card keyed jx-card">
+                <NotebookPage as="article" class="jx-card">
                   <span class="pip" aria-hidden="true">
-                    {p.no}
-                  </span>
-                  <span class="pip flip" aria-hidden="true">
                     {p.no}
                   </span>
                   <p class="label">
@@ -177,7 +179,7 @@ const days = railDays(posts);
                   <p class="jx-read" aria-hidden="true">
                     Read it
                   </p>
-                </article>
+                </NotebookPage>
               </li>
             ))}
           </ol>
@@ -193,7 +195,7 @@ const days = railDays(posts);
         </div>
       </div>
 
-      <div class="jx-list" data-list>
+      <NotebookPage class="jx-list" data-list>
         <ol class="sub-rows">
           {posts.map((p) => (
             <li data-key={p.cluster}>
@@ -209,7 +211,7 @@ const days = railDays(posts);
             </li>
           ))}
         </ol>
-      </div>
+      </NotebookPage>
     </section>
   )}
   <Closing />

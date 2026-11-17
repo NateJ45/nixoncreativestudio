@@ -1,0 +1,66 @@
+---
+/* The project folder, at the top of the story (below the hero, never in the first screen): the
+   folder a job's papers live in, laid open. On it:
+   - The work order: the client, the sector, what the site had to do, and the crew list.
+     "What the site had to do" is the study's own lines in src/data/jobs.ts (the /work index by
+     job), or the study's `hook` where it is under no job. The crew list is the roles the study
+     itself credits: the services in its frontmatter and its `role`, the same name against each.
+   - Paint chips: the palette's `swatches`, copied from the client's shipped tokens, with the
+     typefaces named under them. The tokens have no color names, so the chips print the hex.
+   No launch stamp: no study's data holds a launch month yet, and a stamp is never guessed.
+   Every fact here is already in the study's data; nothing is written for the folder alone. */
+import FolderTab from '../ephemera/FolderTab.astro';
+import WorkOrder, { type WorkField } from '../ephemera/WorkOrder.astro';
+import CrewList from '../ephemera/CrewList.astro';
+import PaintChips from '../ephemera/PaintChips.astro';
+import { JOBS } from '../../data/jobs';
+import { crewFor } from '../../lib/study';
+
+interface Props {
+  slug: string;
+  client: string;
+  sector: string;
+  hook?: string;
+  host?: string;
+  services: string[];
+  role?: string;
+  swatches?: string[];
+  typeface?: string;
+}
+const { slug, client, sector, hook, host, services, role, swatches, typeface } = Astro.props;
+
+// What the site had to do: every job on the /work index that lists this study, with its reason.
+const jobs = JOBS.flatMap((j) =>
+  j.studies.filter((s) => s.slug === slug).map((s) => ({ lead: j.title, text: s.why })),
+);
+const job = jobs.length ? jobs : hook ? [{ text: `${hook}.` }] : [];
+
+const fields: WorkField[] = [
+  { label: 'Client', lines: [{ text: client }] },
+  { label: 'Sector', lines: [{ text: sector }] },
+  ...(job.length ? [{ label: 'The job', lines: job }] : []),
+];
+const crew = crewFor(services, role);
+const chips = (swatches ?? []).map((hex) => ({ hex }));
+---
+
+<FolderTab tab={client} labelledby="file-h" class="s-file">
+  <WorkOrder
+    title="Work order"
+    titleId="file-h"
+    head={['Project file', host ?? sector]}
+    fields={fields}
+  >
+    {crew.length > 0 && (
+      <div class="s-file-crew">
+        <CrewList roles={crew} head={['Crew list', 'This project']} />
+      </div>
+    )}
+  </WorkOrder>
+  {chips.length > 1 && (
+    <div class="s-file-chips">
+      <PaintChips chips={chips} label={`${client}'s colors`} />
+      {typeface && <p class="s-file-type">Set in {typeface.replaceAll(' / ', ', ')}</p>}
+    </div>
+  )}
+</FolderTab>

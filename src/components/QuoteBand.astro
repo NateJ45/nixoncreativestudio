@@ -23,14 +23,22 @@
 
    The band fits the quote in front of you (changed 2026-11-16): it used to stack every quote in
    one cell and hold the longest one's height, which left the short ones floating in a band cut
-   for the longest. quote-cycle.js eases the height across as you step. */
+   for the longest. quote-cycle.js eases the height across as you step.
+
+   One slide per person (added 2026-11-17), as on the study page: when the same person wrote more
+   than once (Richard Burnett's 2025 email quote and his 2026 Google review), their words share a
+   slide, oldest first, each under its month and year, with the name, face, stars and Google link
+   once at the foot. The earlier words show only the sentence that holds their key phrase, with an
+   ellipsis where the quote goes on (excerpt in src/lib/highlight.ts), so the slide stays a sensible
+   height; the newest words show whole. A slide with a public review among its words leads. */
 import { getEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import { QUOTES } from '../data/quotes';
 import Tile from './Tile.astro';
 import PrintFan from './PrintFan.astro';
 import ReviewCite from './ReviewCite.astro';
-import { markedQuote } from '../lib/highlight';
+import { excerpt, markedQuote } from '../lib/highlight';
+import { byPerson, monthYear } from '../lib/study-quotes';
 import { getClient, getClients, type Client } from '../lib/clients';
 
 interface Props {
@@ -61,6 +69,7 @@ type Quote = {
   quote: string;
   name: string;
   title: string;
+  date?: Date | string;
   context?: string;
   highlight?: string;
   photo?: string;
@@ -68,7 +77,8 @@ type Quote = {
 };
 type Shot = { ids: string[]; src: ImageMetadata; alt: string };
 type Slide = {
-  t: Quote;
+  /** One person's words, oldest first (more than one when they wrote again). */
+  parts: Quote[];
   client: Pick<Client, 'slug' | 'accent' | 'paper'> & Partial<Client>;
   tile: boolean;
   /** A photograph instead of the client's site (a standalone quote). */
@@ -83,7 +93,9 @@ if (cycle) {
   slides = [];
   for (const client of order) {
     const entry = await getEntry('case-studies', client.slug);
-    (entry?.data.testimonials ?? []).forEach((t, i) => slides.push({ t, client, tile: i === 0 }));
+    byPerson(entry?.data.testimonials ?? []).forEach((parts, i) =>
+      slides.push({ parts, client, tile: i === 0 }),
+    );
   }
   if (!slides.length) throw new Error('No quotes on file');
   // Public reviews lead (added 2026-11-15): a stranger can check those on Google, so they do the
@@ -93,26 +105,30 @@ if (cycle) {
     const shot = await getEntry('photos', q.shots[0]);
     if (!shot) throw new Error(`quotes.ts: no photograph ${q.shots[0]}`);
     standalone.push({
-      t: q,
+      parts: [q],
       client: { slug: q.id, accent: q.accent, paper: q.paper },
       tile: true,
       shot: { ids: q.shots, src: shot.data.image, alt: shot.data.alt },
     });
   }
   slides = [
-    ...slides.filter((x) => x.t.source),
+    ...slides.filter((x) => x.parts.some((t) => t.source)),
     ...standalone,
-    ...slides.filter((x) => !x.t.source),
+    ...slides.filter((x) => !x.parts.some((t) => t.source)),
   ];
 } else {
   const entry = await getEntry('case-studies', slug);
   const quotes = entry?.data.testimonials ?? [];
   const t = by ? quotes.find((q) => q.name.includes(by)) : quotes[0];
   if (!t) throw new Error(`No quote${by ? ` by ${by}` : ''} on ${slug}`);
-  slides = [{ t, client: await getClient(slug), tile: true }];
+  slides = [{ parts: [t], client: await getClient(slug), tile: true }];
 }
 /* The quote as HTML, the key phrase marked (src/lib/highlight.ts). */
 const marked = (t: Quote) => markedQuote(t.quote, t.highlight);
+/* The cite goes with the newest words: their title as it is now, and the review link if any. */
+const footOf = (parts: Quote[]) =>
+  [...parts].reverse().find((t) => t.source) ?? parts[parts.length - 1];
+const dayOf = (d: Date) => d.toISOString().slice(0, 10);
 const first = slides[0].client;
 const many = slides.length > 1;
 ---
@@ -158,23 +174,45 @@ const many = slides.length > 1;
           data-slug={s.client.slug}
           inert={i ? true : undefined}
         >
-          <blockquote set:html={marked(s.t)} />
-          {s.t.source || s.t.photo ? (
-            <ReviewCite
-              name={s.t.name}
-              title={s.t.title}
-              photo={s.t.photo}
-              url={s.t.source?.url}
-              rating={s.t.source?.rating}
-              context={s.t.context}
-            />
+          {s.parts.length > 1 ? (
+            s.parts.map((t, j) => (
+              <div class="band-part">
+                {t.date instanceof Date && (
+                  <p class="band-when">
+                    <time datetime={dayOf(t.date)}>{monthYear(t.date)}</time>
+                  </p>
+                )}
+                <blockquote
+                  set:html={marked(
+                    j < s.parts.length - 1 ? { ...t, quote: excerpt(t.quote, t.highlight) } : t,
+                  )}
+                />
+              </div>
+            ))
           ) : (
-            <p class="cite">
-              <b>{s.t.name}</b>
-              {s.t.title}
-              {s.t.context && <span class="ctx">{s.t.context}</span>}
-            </p>
+            <blockquote set:html={marked(s.parts[0])} />
           )}
+          {(() => {
+            const t = footOf(s.parts);
+            const many = s.parts.length > 1;
+            const photo = t.photo ?? s.parts.find((p) => p.photo)?.photo;
+            return t.source || photo ? (
+              <ReviewCite
+                name={t.name}
+                title={t.title}
+                photo={photo}
+                url={t.source?.url}
+                rating={t.source?.rating}
+                context={many ? undefined : t.context}
+              />
+            ) : (
+              <p class="cite">
+                <b>{t.name}</b>
+                {t.title}
+                {!many && t.context && <span class="ctx">{t.context}</span>}
+              </p>
+            );
+          })()}
         </div>
       ))}
     </div>

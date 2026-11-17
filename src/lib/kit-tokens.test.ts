@@ -192,3 +192,35 @@ test('review stars: the gold clears 3:1 on the blue footer in both themes', () =
     assert.ok(ratio >= AA_NON_TEXT, `star on ${bg} is ${ratio.toFixed(2)}:1`);
   }
 });
+
+// The drawer's fixed paper (src/styles/ephemera/): the journal's press pass, sticky note and
+// print look the same in both themes, so their own ink and paper are read from their stylesheets.
+function fixed(file: string, name: string): string {
+  const src = readFileSync(resolve(root, 'src/styles/ephemera', file), 'utf8');
+  const value = new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})\\s*;`).exec(src)?.[1];
+  assert.ok(value, `${file} has no hex --${name}`);
+  return value;
+}
+const FIXED_PAPER: [string, string, string][] = [
+  ['press pass ink', fixed('press-pass.css', 'ink'), fixed('press-pass.css', 'paper')],
+  ['press pass labels', fixed('press-pass.css', 'faint'), fixed('press-pass.css', 'paper')],
+  [
+    'press pass blue (the stamp)',
+    fixed('press-pass.css', 'accent'),
+    fixed('press-pass.css', 'paper'),
+  ],
+  ['white on the press pass band', '#ffffff', fixed('press-pass.css', 'accent')],
+  [
+    'sticky note ink and links',
+    fixed('margin-note.css', 'note-ink'),
+    fixed('margin-note.css', 'note'),
+  ],
+  ['ink on the print', fixed('paper-print.css', 'ink'), fixed('paper-print.css', 'print')],
+  ['soft text on the print', fixed('paper-print.css', 'soft'), fixed('paper-print.css', 'print')],
+];
+for (const [what, fg, bg] of FIXED_PAPER) {
+  test(`the drawer's fixed paper: ${what} clears AA`, () => {
+    const ratio = contrastRatio(fg, bg);
+    assert.ok(ratio >= AA_BODY_TEXT, `${what}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1`);
+  });
+}

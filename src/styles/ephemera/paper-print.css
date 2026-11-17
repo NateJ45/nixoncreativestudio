@@ -1,0 +1,45 @@
+/* ============================================================================
+   The print (PaperPrint.astro)
+   ============================================================================
+   White paper with a border, deeper at the foot, like the light table's prints
+   (kit.css .fc-print). Fixed in both themes, so it restates the tokens that
+   whatever is printed on it reads: the light side's ink, soft grey, hairline
+   and blue (the same values as kit.css :root, so their pairs are already in
+   kit-tokens.test.ts). */
+.paper-print {
+  --print: #fbfaf7;
+  --ink: #121211;
+  --soft: #5c5c57;
+  --line: rgba(18, 18, 17, 0.12);
+  --fill: #2f3fe6;
+  --accent: #2f3fe6;
+  --card: var(--print);
+  padding: 1rem 1rem 1.5rem;
+  border-radius: 0.2rem;
+  background: var(--print);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 1.1rem 1.8rem -1.1rem rgba(0, 0, 0, 0.5);
+  rotate: var(--print-tilt, 0.5deg);
+  transition: rotate 0.7s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.paper-print:hover {
+  rotate: 0deg;
+}
+@media (prefers-reduced-motion: reduce) {
+  .paper-print {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .paper-print {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .paper-print {
+    rotate: none;
+    box-shadow: none;
+  }
+}

@@ -350,12 +350,6 @@ const PAGES = [
     images: [{ file: about('running-race-bibs'), position: 'north' }],
   },
   {
-    route: 'now',
-    title: "What I'm doing now",
-    layout: 'one',
-    images: [{ file: about('family-picnic') }],
-  },
-  {
     route: 'photography',
     title: 'Photography',
     eyebrow: 'Cincinnati region',

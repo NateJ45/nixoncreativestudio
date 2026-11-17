@@ -18,6 +18,8 @@
      Process     the four steps of How it works, drawn in order (home/ProcessBeats.astro).
      Client marks  a tile per client in its own colour with its real logo, each a
                  link to its study (home/ClientMarks.astro).
+     Who's behind it  the small portrait you can pick up, About's crew list, one line and a link
+                 to /about/ (home/BehindIt.astro). Neutral, so it also parts the marks and the closing.
      Closing     the gathering deck and the "Start a project" card.
 
    A quote band never touches the closing: the neutral sections after it keep them apart.
@@ -39,6 +41,7 @@ import WhatChanged from '../components/home/WhatChanged.astro';
 import ClientMarks from '../components/home/ClientMarks.astro';
 import PhotoStrip from '../components/home/PhotoStrip.astro';
 import ProcessBeats from '../components/home/ProcessBeats.astro';
+import BehindIt from '../components/home/BehindIt.astro';
 import '../styles/pages/home.css';
 import { countWord, getClients } from '../lib/clients';
 import { getCollection } from 'astro:content';
@@ -325,6 +328,7 @@ const heavy = ['pull', 'their', 'weight.'];
   <DealtPrices id="prices" />
   <ProcessBeats />
   <ClientMarks clients={clients} />
+  <BehindIt />
   <Closing />
 </BaseLayout>
 
