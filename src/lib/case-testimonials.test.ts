@@ -128,6 +128,7 @@ for (const { slug, text } of studies) {
         'context',
         'highlight',
         'photo',
+        'alsoOn',
         'source',
         'source.platform',
         'source.rating',
@@ -174,3 +175,31 @@ for (const { slug, text } of studies) {
     }
   });
 }
+
+// A quote about more than one site is written once and shared with `alsoOn` (src/lib/study-quotes.ts),
+// never pasted into a second study, so the site-wide lists never show or count it twice.
+test('every alsoOn names another real study', () => {
+  const slugs = new Set(studies.map((s) => s.slug));
+  for (const { slug, text } of studies) {
+    for (const t of testimonials(text) ?? []) {
+      if (t.alsoOn === undefined) continue;
+      const m = t.alsoOn.match(/^\[(.*)\]$/);
+      assert.ok(m, `${slug}: write alsoOn as [slug, slug]`);
+      for (const other of m[1].split(',').map((x) => x.trim())) {
+        assert.ok(slugs.has(other), `${slug}: alsoOn names no study ${other}`);
+        assert.notEqual(other, slug, `${slug}: alsoOn names its own study`);
+      }
+    }
+  }
+});
+
+test('no quote is pasted into two studies (share it with alsoOn instead)', () => {
+  const seen = new Map<string, string>();
+  for (const { slug, text } of studies) {
+    for (const t of testimonials(text) ?? []) {
+      const other = seen.get(t.quote);
+      assert.equal(other, undefined, `${slug} repeats a quote from ${other}: use alsoOn`);
+      seen.set(t.quote, slug);
+    }
+  }
+});
