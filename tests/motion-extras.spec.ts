@@ -85,14 +85,19 @@ test.describe('quote band: the key phrase', () => {
     await band.scrollIntoViewIfNeeded();
     await page.mouse.wheel(0, 400);
     await expect(band).toHaveClass(/hl-on/);
-    // Drawn: the marker has reached the end of the phrase.
+    // Drawn: the marker has reached the end of every phrase on the slide (a slide can carry two
+    // quotes from one person, each with its own phrase).
     await expect
       .poll(() =>
         band
           .locator('.band-s:not([inert]) .hl')
-          .evaluate((el) => getComputedStyle(el).getPropertyValue('--hl').trim()),
+          .evaluateAll(
+            (els) =>
+              els.length > 0 &&
+              els.every((el) => getComputedStyle(el).getPropertyValue('--hl').trim() === '100%'),
+          ),
       )
-      .toBe('100%');
+      .toBe(true);
   });
 });
 

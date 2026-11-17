@@ -11,7 +11,8 @@
    filled one, its count says how many posts that day holds under the chosen chip, and one dot a
    post shows which of them you are on.
 
-   The chips filter both views at once, the view switch picks Deck or List, and the address keeps
+   The notebook's divider tabs filter both views at once (a pressed tab stands up, in CSS; the
+   ink bloom belongs to the bar's switch), the view switch picks Deck or List, and the address keeps
    both (?cluster=lab&view=list), the way /work does. Until a view is picked the screen decides in
    CSS (journal.css), so nothing moves when the page loads. */
 import { ui } from './kit.js';
@@ -177,9 +178,8 @@ if (jx) {
   }
 
   chips.forEach(function (b) {
-    b.addEventListener('click', function (e) {
+    b.addEventListener('click', function () {
       if (b.dataset.f === current) return;
-      if (!reduce) bloom(b, e);
       choose(b.dataset.f);
     });
   });

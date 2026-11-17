@@ -5,7 +5,8 @@
    Under the windows, the same studies indexed by the job the site has to do
    (src/data/jobs.ts). Counts come from the case studies, never typed. From 64rem a column
    beside that index holds one desktop window, swapped for whichever name is pointed at or focused;
-   below 64rem a name opens its window inside its own row (work.js).
+   below 64rem a name opens its window inside its own row (work.js). Each job wears a small
+   work-order stub from the drawer (WorkStub: its number, my name on the crew, its own barcode).
    Beside the list on a wide screen, the row you are on shows its window and its outcome. */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/work.css';
@@ -13,6 +14,7 @@ import Tile from '../../components/Tile.astro';
 import Closing from '../../components/Closing.astro';
 import WorkFigures from '../../components/WorkFigures.astro';
 import LabStrip from '../../components/LabStrip.astro';
+import WorkStub from '../../components/ephemera/WorkStub.astro';
 import captureSizes from '../../data/capture-sizes.json';
 import { countWord, getClients, SECTOR_LABEL } from '../../lib/clients';
 import { JOBS } from '../../data/jobs';
@@ -255,11 +257,14 @@ const jobClients = [
       </div>
       <div class="jobs-body">
         <ul class="jobs-list">
-          {jobs.map((job) => (
+          {jobs.map((job, i) => (
             <li class="job" id={`job-${job.id}`}>
               <div class="job-say">
                 <h3>{job.title}</h3>
                 <p>{job.line}</p>
+                {/* The row's work-order stub, from the drawer: its place in the list, the one name
+                    on the crew and a barcode of its own (decoration, aria-hidden). */}
+                <WorkStub no={i + 1} seed={4101 + i * 397} class="job-stub" />
               </div>
               <ul class="job-studies">
                 {job.studies.map(({ client, why }) => (

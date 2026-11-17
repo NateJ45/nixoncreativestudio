@@ -1,0 +1,22 @@
+---
+/* A print: something drawn or photographed, on its white paper border with the deeper margin at
+   the foot, the way the light table's prints sit (kit.css .fc-print). The journal's drawn charts
+   (BarChart.astro) come out on one. Fixed paper and ink, the same in both themes, so whatever is
+   inside reads the print's own --ink, --soft, --line and --fill instead of the page's.
+
+   It straightens a little under a pointer and holds still under reduced motion. A photograph on a
+   print never carries a date. Looks: src/styles/ephemera/paper-print.css. */
+import '../../styles/ephemera/paper-print.css';
+
+interface Props {
+  /** The turn, in degrees. */
+  tilt?: number;
+  class?: string;
+}
+
+const { tilt = 0.5, class: cls } = Astro.props;
+---
+
+<div class:list={['paper-print', cls]} style={`--print-tilt:${tilt}deg`}>
+  <slot />
+</div>

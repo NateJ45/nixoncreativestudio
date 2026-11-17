@@ -1,0 +1,88 @@
+/* ---- Work-order stub (WorkStub.astro) -------------------------------------
+   A small cream slip in the Ticket's fixed colours, the same in both themes:
+   the order on the left, a dashed perforation, and a barcode on the tear-off end,
+   with a notch bitten out of each edge at the perforation in the colour behind it
+   (--stub-ground). Small and quiet on purpose: it sits beside words people are
+   reading, so it never competes with them. */
+.wstub {
+  --paper: #f3eee2;
+  --ink: #1b1d2a;
+  --faint: #6b6a63;
+  --rule: rgba(27, 29, 42, 0.18);
+  --notch: 0.45rem;
+  display: inline-grid;
+  grid-template-columns: auto 3.6rem;
+  border-radius: 0.45rem;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 255, 255, 0.55), transparent 55%), var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.08),
+    0 0.7rem 1.1rem -0.9rem rgba(0, 0, 0, 0.55);
+}
+/* The slip's own ink, whatever the page sets on the paragraphs around it. */
+.wstub p {
+  margin: 0;
+  max-width: none;
+  color: var(--ink);
+}
+.wstub-main {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.55rem 0.8rem 0.6rem 0.75rem;
+}
+.wstub .wstub-head,
+.wstub-no span,
+.wstub-crew span {
+  font: 600 0.5625rem / 1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.wstub-no {
+  font: 700 1.05rem / 1 var(--display);
+  letter-spacing: 0.02em;
+}
+.wstub-crew {
+  font: 600 0.75rem / 1.1 var(--body);
+  white-space: nowrap;
+}
+.wstub-crew span,
+.wstub-no span {
+  margin-right: 0.3em;
+}
+/* The tear-off end, behind the perforation, with a notch at the top and bottom of it. */
+.wstub-tear {
+  position: relative;
+  display: flex;
+  padding: 0.55rem 0.55rem;
+  border-left: 1.5px dashed var(--rule);
+}
+.wstub-tear::before,
+.wstub-tear::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--notch) * -1 - 1px);
+  width: calc(var(--notch) * 2);
+  height: calc(var(--notch) * 2);
+  border-radius: 50%;
+  background: var(--stub-ground, var(--ground));
+}
+.wstub-tear::before {
+  top: calc(var(--notch) * -1);
+}
+.wstub-tear::after {
+  bottom: calc(var(--notch) * -1);
+}
+.wstub-code {
+  width: 100%;
+  height: 100%;
+  min-height: 2.4rem;
+  fill: var(--ink);
+  opacity: 0.8;
+}
+@media (forced-colors: active) {
+  .wstub {
+    border: 1px solid CanvasText;
+  }
+}

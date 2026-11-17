@@ -1,0 +1,64 @@
+/* ---- Portrait card, small (PortraitCard.astro) ----------------------------
+   About's pick-up portrait at a size another page can hold: the photo on a card
+   in the site's own card colour (so it follows the theme like About's), at a
+   slight tilt. pick-up.js writes four numbers while it is held: --pm-x and --pm-y
+   (how far it has been carried, in px), --pm-r (its turn, in degrees) and
+   --pm-up (0 at rest, 1 lifted). With no script, or under reduced motion, they
+   stay at rest and the card is a still picture. */
+.pmini {
+  --pm-w: 14rem;
+  --pm-tilt: -3deg;
+  width: var(--pm-w);
+  max-width: 100%;
+  margin: 0;
+  padding: 0.45rem 0.45rem 0;
+  border-radius: 1.2rem;
+  background: var(--card);
+  box-shadow:
+    var(--rim),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 calc(14px + var(--pm-up, 0) * 22px) calc(28px + var(--pm-up, 0) * 26px) -18px
+      rgba(0, 0, 0, calc(0.35 + var(--pm-up, 0) * 0.15));
+  transform: translate(
+      calc(var(--pm-x, 0) * 1px),
+      calc(var(--pm-y, 0) * 1px - var(--pm-up, 0) * 8px)
+    )
+    rotate(calc(var(--pm-tilt) + var(--pm-r, 0) * 1deg)) scale(calc(1 + var(--pm-up, 0) * 0.04));
+}
+.js .pmini {
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.js .pmini.held {
+  cursor: grabbing;
+}
+.pmini img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 0.85rem;
+  -webkit-user-drag: none;
+}
+.pmini figcaption {
+  display: flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.35rem 0.4rem 0.45rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .pmini {
+    cursor: default;
+  }
+}
+@media (forced-colors: active) {
+  .pmini {
+    border: 1px solid CanvasText;
+  }
+}
