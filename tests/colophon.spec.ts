@@ -16,6 +16,18 @@ test('the colophon names the font and hosting this build really uses', async ({ 
   expect(pkg.dependencies.astro).toMatch(/^\^7\./);
 });
 
+test('the colophon names every analytics tool the site loads', async ({ page }) => {
+  // Analytics: src/components/Analytics.astro. Clarity: src/lib/clarity.ts. The privacy page
+  // carries the detail; the colophon must not leave one out.
+  expect(readdirSync('src/lib')).toContain('clarity.ts');
+  await page.goto('/colophon/');
+  const privacy = page.locator('.prose #privacy + p');
+  for (const name of ['Cloudflare', 'Google Analytics', 'Microsoft Clarity']) {
+    await expect(privacy).toContainText(name);
+  }
+  await expect(privacy).toContainText('own anonymous record');
+});
+
 test('every font this site loads is its own', async ({ page }) => {
   const fonts: string[] = [];
   page.on('request', (r) => {
