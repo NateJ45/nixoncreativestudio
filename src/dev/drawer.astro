@@ -14,6 +14,8 @@ import PressPass from '../components/ephemera/PressPass.astro';
 import MarginNote from '../components/ephemera/MarginNote.astro';
 import PaperPrint from '../components/ephemera/PaperPrint.astro';
 import NotebookPage from '../components/ephemera/NotebookPage.astro';
+import PortraitCard from '../components/ephemera/PortraitCard.astro';
+import WorkStub from '../components/ephemera/WorkStub.astro';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
 import tm from '../assets/case-studies/shots/theology-matters-home.png';
@@ -142,6 +144,24 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
         <h3>How much does a church website cost in 2026?</h3>
       </NotebookPage>
     </section>
+    <section>
+      <h2>Portrait card, small</h2>
+      <div class="row">
+        <PortraitCard />
+        <div class="card-ish">
+          <PortraitCard />
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Work-order stub</h2>
+      <div class="row">
+        <WorkStub no={1} seed={4101} />
+        <div class="card-ish stub-on-card">
+          <WorkStub no={2} seed={4498} />
+        </div>
+      </div>
+    </section>
   </div>
 </BaseLayout>
 
@@ -182,5 +202,8 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     padding: 1.5rem;
     border-radius: 1rem;
     background: #0b0e1f;
+  }
+  .stub-on-card {
+    --stub-ground: var(--card);
   }
 </style>

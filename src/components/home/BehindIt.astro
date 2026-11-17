@@ -1,0 +1,39 @@
+---
+/* Home, "Who's behind it": the last thing before the closing. A small version of About's portrait
+   card that you can pick up (PortraitCard, from the drawer), the same crew list About uses with my
+   name against every role (CrewList), one line in About's own words, and a real link to /about/.
+   Every word is About's already: the line is its lede and meta description, the roles are its
+   crew list, the caption is its portrait's.
+
+   It sits after the client marks and before the closing, well below the first screen, so the lazy
+   portrait never touches the first paint. It is a neutral section, so it also keeps the quote band
+   and the closing apart. Styles: the "Who's behind it" block in src/styles/pages/home.css. */
+import CrewList from '../ephemera/CrewList.astro';
+import PortraitCard from '../ephemera/PortraitCard.astro';
+import { site } from '../../data/site';
+
+const first = site.ownerName.split(' ')[0];
+const crew = ['Strategy', 'Design', 'The build', 'Photos, when needed'];
+---
+
+<section class="bh" aria-labelledby="bh-h">
+  <div class="bh-in">
+    <PortraitCard sizes="(max-width: 40rem) 11rem, 14rem" />
+    <div class="bh-say">
+      <p class="label">Who's behind it</p>
+      <h2 id="bh-h">
+        One person, <b>start to finish.</b>
+      </h2>
+      <p class="bh-line">
+        I'm {first}. I plan, design and build every site myself, so the person you meet on day one
+        is the same person who hands you the finished site.
+      </p>
+      <div class="bh-crew">
+        <CrewList roles={crew} />
+      </div>
+      <a class="bh-more" href="/about/">
+        More about me
+      </a>
+    </div>
+  </div>
+</section>

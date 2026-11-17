@@ -1,0 +1,44 @@
+---
+/* A work-order stub: the small tear-off slip a job gets in a workshop, in the Ticket's cream paper
+   and fixed colours (the same in both themes). On the left, "Work order" over the order's number
+   and the crew, which is always the one name (site.ownerName); behind a perforation with a notch
+   bitten out at each end, a barcode from its own seed. On /work it sits on each row of "What the
+   site has to do".
+
+   The stub repeats what the page already says (the row's place in the list, and that one person
+   does the job), so it is decoration and aria-hidden. The number is only the row's place in the
+   list, never a count of anything. Looks in src/styles/ephemera/work-stub.css; set --stub-ground
+   on the holder to the colour behind the stub so the notches match it. */
+import '../../styles/ephemera/work-stub.css';
+import Barcode from './Barcode.astro';
+import { site } from '../../data/site';
+
+interface Props {
+  /** The order's number: the row's place in its list, from 1. */
+  no: number;
+  /** The barcode's seed: one of its own per stub. */
+  seed: number;
+  /** The name against "Crew". */
+  name?: string;
+  /** The small words across the top. */
+  head?: string;
+  class?: string;
+}
+
+const { no, seed, name = site.ownerName, head = 'Work order', class: cls } = Astro.props;
+---
+
+<div class:list={['wstub', cls]} aria-hidden="true">
+  <div class="wstub-main">
+    <p class="wstub-head">{head}</p>
+    <p class="wstub-no">
+      <span>No.</span> {String(no).padStart(2, '0')}
+    </p>
+    <p class="wstub-crew">
+      <span>Crew</span> {name}
+    </p>
+  </div>
+  <div class="wstub-tear">
+    <Barcode seed={seed} units={60} class="wstub-code" />
+  </div>
+</div>
