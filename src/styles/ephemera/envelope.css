@@ -1,0 +1,95 @@
+/* ---- Envelope (Envelope.astro): a card with an airmail edge and the post in its corner ----------
+   The card itself is the holder's (its background, radius and shadow). This adds two things:
+
+   The airmail edge, a band of red and blue diagonal dashes round the card's rim, in the colours of
+   the two flags on the stamps. Fixed colours on both sides of the page, drawn by a ring-shaped mask
+   over a striped background, so the card under it shows through the gaps.
+
+   The post, floated top right beside the first lines: whatever the page puts first (contact's
+   "Received" stamp), then the postmark, then the two stamps, slightly askew the way a hand sticks
+   them on. On a phone the corner drops above the words, right-aligned, and the stamps shrink. */
+.envelope {
+  --air-red: #b31942;
+  --air-blue: #005eb8;
+  --air-band: 0.4rem;
+  position: relative;
+}
+.envelope::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: var(--air-band);
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--air-red) 0 0.95rem,
+    transparent 0 1.4rem,
+    var(--air-blue) 0 2.35rem,
+    transparent 0 2.8rem
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0.9;
+  pointer-events: none;
+}
+.env-post {
+  position: relative;
+  z-index: 1;
+  float: right;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: -0.35rem -0.4rem 0.75rem 1.5rem;
+}
+/* A stamp from the page (contact's "Received") sits in the row like the rest, not floated. */
+.env-post .stamp {
+  float: none;
+  margin: 0 0.6rem 0 0;
+}
+/* The postmark's ring overlaps the first stamp's edge a little, the way a strike lands. */
+.env-mark {
+  --pm-width: 7rem;
+  margin-right: -0.45rem;
+}
+.env-stamps {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+.env-stamp:first-child {
+  --tilt: -2deg;
+}
+.env-stamp:last-child {
+  --tilt: 3deg;
+  margin-top: 0.2rem;
+}
+@media (max-width: 30rem) {
+  .env-post {
+    float: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 0.75rem;
+    margin: 0 0 1rem;
+  }
+  .env-post .stamp {
+    margin: 0 0.25rem 0 0;
+  }
+  .env-mark {
+    --pm-width: 5.6rem;
+    margin-right: -0.35rem;
+  }
+  .env-stamp {
+    --ps-width: 2.75rem;
+  }
+}
+@media (forced-colors: active) {
+  .envelope::before {
+    display: none;
+  }
+}

@@ -998,3 +998,44 @@ html:not(.js) .st-phone {
     background: CanvasText;
   }
 }
+
+/* ---- The touches pass (Nov 2026): the sent card is an envelope, its steps a boarding pass ------- */
+
+/* The envelope (src/components/ephemera/Envelope.astro and ephemera/envelope.css) brings the
+   airmail edge and the post in the corner. Here: the notches of the boarding pass are bitten out
+   in the card's own colour, so they read as holes in the ticket. */
+.sent {
+  --ticket-ground: var(--card);
+}
+.sent-pass {
+  clear: both;
+  max-width: 40rem;
+  margin-top: 1.4rem;
+}
+/* The two steps as the pass's fields: a small-capitals "Step 1" over each, ruled between. */
+.sent .sent-steps {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  font-size: 1rem;
+}
+.sent-steps li {
+  counter-increment: step;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--rule);
+  text-wrap: pretty;
+}
+.sent-steps li + li {
+  margin-top: 0.8rem;
+}
+.sent-steps li::before {
+  content: 'Step ' counter(step);
+  display: block;
+  margin-bottom: 0.35rem;
+  font: 600 0.625rem / 1 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}

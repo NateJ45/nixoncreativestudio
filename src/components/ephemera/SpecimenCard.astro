@@ -1,0 +1,43 @@
+---
+/* A type specimen card: one face at one weight, the way a foundry prints them. The family and
+   weight across the top, a big "Aa", a line of real words from the site set in it, the alphabet
+   and figures, and what the site uses that weight for at the foot.
+
+   Fixed colours, cream card and near-black print, the same on both sides of the page (the paper
+   of the drawer, like the ticket). Every word that matters is in the markup; the big "Aa" and the
+   alphabet are aria-hidden, since they only show the letters.
+
+   `of` names the element on the page that really is set this way (a CSS selector, read by
+   tests/colophon.spec.ts), so the card can only ever say what the stylesheet does. */
+import '../../styles/ephemera/specimen.css';
+
+interface Props {
+  /** The weight, 100 to 900. */
+  weight: number;
+  /** What the site sets at this weight, in a few words. */
+  role: string;
+  /** A line of real copy from the site, set at this weight. */
+  sample: string;
+  /** The selector of an element on the page set at this weight (for the colophon test). */
+  of?: string;
+  /** The family. */
+  family?: string;
+}
+
+const { weight, role, sample, of, family = 'Hanken Grotesk' } = Astro.props;
+---
+
+<div class="spec" style={`--spec-w: ${weight}`} data-spec-weight={weight} data-spec-of={of}>
+  <p class="spec-head">
+    <span>{family}</span>
+    <span>{weight}</span>
+  </p>
+  <p class="spec-glyph" aria-hidden="true">
+    Aa
+  </p>
+  <p class="spec-sample">{sample}</p>
+  <p class="spec-set" aria-hidden="true">
+    ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
+  </p>
+  <p class="spec-role">{role}</p>
+</div>

@@ -1,0 +1,53 @@
+/* ---- Postmark (Postmark.astro): a ringed town mark with wavy cancel lines -----------------------
+   Ink in --soft, a little faded, so it sits on the card it is stamped on in either theme and never
+   competes with the words beside it. The lines are a touch uneven in weight, like a real strike. */
+.postmark {
+  display: inline-block;
+  flex: none;
+  width: var(--pm-width, 6.4rem);
+  color: var(--soft);
+  opacity: 0.85;
+  transform: rotate(var(--tilt, -6deg));
+  pointer-events: none;
+  user-select: none;
+}
+.postmark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.pm-wave,
+.pm-ring,
+.pm-bar {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+.pm-wave {
+  stroke-width: 1.8;
+}
+.pm-ring {
+  stroke-width: 1.9;
+}
+.pm-inner {
+  stroke-width: 1.1;
+}
+.pm-bar {
+  stroke-width: 1.3;
+}
+.pm-town,
+.pm-state {
+  fill: currentColor;
+  font: 700 7.5px var(--body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pm-state {
+  font-size: 7px;
+}
+@media (forced-colors: active) {
+  .postmark {
+    color: CanvasText;
+  }
+}
