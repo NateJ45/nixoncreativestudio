@@ -215,11 +215,12 @@ const elsewhere = [
   </div>
 </section>
 
-<style>
-  /* The signature on the last card: across its foot, a little askew, in the card's blue (which
-     stays the blue on the bone card at night). Sized from the card (.nine is an inline-size
-     container), so it scales with the deck down to 320 px. */
-  .nine :global(.end-sig) {
+<style is:global>
+  /* Global on purpose: a scoped style would stamp a data-astro-cid attribute on every element of
+     the closing (about 1.4 KB on every page). The signature on the last card: across its foot, a
+     little askew, in the card's blue (which stays the blue on the bone card at night). Sized
+     from the card (.nine is an inline-size container), so it scales with the deck to 320 px. */
+  .nine .end-sig {
     --sig-w: 72cqw;
     --sig-ink: var(--fill);
     position: absolute;
