@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url';
 
 /** The studies with a real quote on file (vault note, 2026-10-30). */
 const WITH_QUOTES: Record<string, number> = {
-  'theology-matters': 1,
+  'theology-matters': 2, // plus Richard's Google review (2026-11-16)
   'foundation-for-reformed-theology': 1,
   'stone-steps-50k': 1,
   'first-baptist-muncie': 2,

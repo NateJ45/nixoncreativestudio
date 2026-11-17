@@ -36,7 +36,7 @@ export interface ReviewTotals {
 export const googleReviews: ReviewTotals = {
   platform: 'google',
   rating: 5.0,
-  count: 3,
+  count: 4,
   url: site.social.googleBusiness,
   checked: '2026-11-16',
 };
