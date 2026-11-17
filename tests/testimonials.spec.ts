@@ -24,9 +24,16 @@ const sharedOnto = (slug: string) =>
       ).length,
     0,
   );
+// One slide per person in the home band (QuoteBand.astro), matched as samePerson does: first and
+// last name, credentials after the comma ignored.
+const person = (n: string) => {
+  const w = n.split(',')[0].trim().toLowerCase().split(/\s+/);
+  return `${w[0]} ${w[w.length - 1]}`;
+};
 const studies = files.map(({ slug, text }) => {
   const count = (text.match(/^\s*- quote:/gm) ?? []).length;
-  return { slug, count, onPage: count + sharedOnto(slug) };
+  const names = [...text.matchAll(/^\s+name: ['"]?(.+?)['"]?\s*$/gm)].map((m) => person(m[1]));
+  return { slug, count, people: new Set(names).size, onPage: count + sharedOnto(slug) };
 });
 // Quotes that are not about a website (src/data/quotes.ts): in the home band with a photograph
 // where a study's quote has the client's site.
@@ -34,6 +41,7 @@ const standalone = [
   ...readFileSync('src/data/quotes.ts', 'utf8').matchAll(/^\s{4}id: '([a-z0-9-]+)'/gm),
 ].map((m) => m[1]);
 const bandTotal = studies.reduce((n, s) => n + s.count, 0) + standalone.length;
+const slideTotal = studies.reduce((n, s) => n + s.people, 0) + standalone.length;
 
 for (const { slug, onPage } of studies) {
   test(`/work/${slug}/ shows ${onPage} quote(s) with a name`, async ({ page }) => {
@@ -46,16 +54,22 @@ for (const { slug, onPage } of studies) {
   });
 }
 
-test('the homepage band carries every quote, one at a time, starting with the first public review (Reid Design)', async ({
+test('the homepage band carries every quote, one at a time, starting with a public review', async ({
   page,
 }) => {
   await page.goto('/');
   const band = page.locator('.home-band');
   await expect(band.locator('blockquote')).toHaveCount(bandTotal);
+  await expect(band.locator('[data-q]')).toHaveCount(slideTotal);
   await expect(band.locator('[data-q]:not([inert])')).toHaveCount(1);
+  // One name per slide, even where one person wrote twice (Richard Burnett, 2025 and 2026).
+  await expect(band.locator('[data-q] .cite b, [data-q] .rv-who b')).toHaveCount(slideTotal);
+  // Public reviews lead, and the window beside the first slide is that client's site.
+  const lead = band.locator('[data-q]').first();
+  await expect(lead.locator('a[href*="google.com/maps"]')).toHaveCount(1);
   await expect(band.locator('[data-tw]:not([inert]) a.tile').first()).toHaveAttribute(
     'href',
-    '/work/reid-design/',
+    `/work/${await lead.getAttribute('data-slug')}/`,
   );
 });
 
@@ -64,7 +78,7 @@ test('Next and Previous step the home band through each client, color and window
 }) => {
   await page.goto('/');
   const band = page.locator('.home-band');
-  const n = bandTotal;
+  const n = slideTotal;
   const count = band.locator('[data-q-count]');
   await expect(count).toHaveText(`1 / ${n}`);
   const accent = () => band.evaluate((el) => el.style.getPropertyValue('--c'));

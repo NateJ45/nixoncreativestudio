@@ -53,9 +53,11 @@ test.describe('Without JavaScript', () => {
     for (const href of ['/churches/', '/schools/', '/nonprofits/', '/small-business/'])
       await expect(page.locator(`.ledger-for a[href="${href}"]`)).toHaveCount(1);
     await expect(page.locator('[data-draw]')).toHaveText('Show me a random one');
-    // One quote band, showing one quote at a time (the rest wait behind Next).
+    // One quote band, showing one slide at a time (the rest wait behind Next). A slide can hold
+    // two quotes from one person (Richard Burnett, 2025 and 2026), so count slides, not quotes.
     await expect(page.locator('.band')).toHaveCount(1);
-    await expect(page.locator('.band [data-q]:not([inert]) blockquote')).toHaveCount(1);
+    await expect(page.locator('.band [data-q]:not([inert])')).toHaveCount(1);
+    await expect(page.locator('.band [data-q]:not([inert]) blockquote').first()).toBeVisible();
     // Three cards. Each card's back carries its own list of what the tier includes, so count
     // the hand's own items, not every li inside it.
     await expect(page.locator('[data-prices] > li')).toHaveCount(3);
