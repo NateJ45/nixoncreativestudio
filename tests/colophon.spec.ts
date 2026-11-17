@@ -106,7 +106,19 @@ test('the flag making-of is true of the scripts that made the flags', async ({ p
   const sim = readFileSync('scripts/flags/flag.py', 'utf8');
   expect(sim).toContain('import bpy');
   expect(sim).toContain("modifiers.new('Cloth', 'CLOTH')");
-  expect(readFileSync('scripts/flag-loops.mjs', 'utf8')).toContain('sky mask');
+  const loopScript = readFileSync('scripts/flag-loops.mjs', 'utf8');
+  expect(loopScript).toContain('sky mask');
+  // Saltire: gusting wind. Gusts are on by default (GUST 1) and drive the wind's strength.
+  expect(sim).toContain("GUST = E('GUST', 1)");
+  expect(sim).toContain("drive(wind, 'field.strength', -1, f'{E('WIND', 20000)} * (1 + {GUST}");
+  // Stars and Stripes: a steady breeze, rendered with gusts, swing and noise all switched off.
+  expect(sim).toMatch(/steady breeze with no gusts, swing or noise/);
+  expect(sim).toMatch(/NOISE=0 SWING=0 GUST=0/);
+  // Fade towards the horizon: the flag's weight falls to zero over the lower half of the frame.
+  expect(loopScript).toContain('const fade = Math.min(1, Math.max(0, (0.62 - y / H) / 0.42));');
+  // Seam: the script searches for the pair of frames that differ least, then crossfades the join.
+  expect(loopScript).toContain('if (d < best.d) best = { d, i, j };');
+  expect(loopScript).toContain('const BLEND = Number(process.env.FLAG_BLEND');
   const loops = JSON.parse(readFileSync('src/data/flag-loops.json', 'utf8'));
   expect(Object.keys(loops).sort()).toEqual(['flag-saltire', 'flag-us']);
   await page.goto('/colophon/');

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { site } from '../src/data/site';
 
 // =============================================================================
 // /contact: the real form, one question at a time
@@ -80,6 +81,15 @@ test.describe('Without JavaScript', () => {
     await expect(page.getByRole('heading', { name: 'Thanks, your message is in.' })).toBeVisible();
     await expect(page.locator('form[data-contact-form]')).toBeHidden();
     await expect(page.locator('[data-success-studies="any"] a')).toHaveCount(2);
+  });
+
+  test('the sent card keeps the reply promise and the next steps as a list', async ({ page }) => {
+    await page.goto('/contact/?sent=1#sent');
+    const steps = page.locator('#sent ol.sent-steps');
+    await expect(steps).toHaveCount(1);
+    await expect(steps.locator('li')).toHaveCount(2);
+    await expect(steps.locator('li').first()).toHaveText(site.replyPromise);
+    await expect(steps.locator('li').nth(1)).toContainText('I text you to talk it through');
   });
 });
 
