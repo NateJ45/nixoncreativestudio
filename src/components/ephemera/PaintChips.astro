@@ -1,0 +1,43 @@
+---
+/* Paint chips: a client's palette as the paper chips you pick up at a paint counter, a block of
+   the color over a white strip with its name printed on it. Real colors only: a case study passes
+   the `swatches` from its own frontmatter palette (copied from the client's shipped tokens), so the
+   chips are the site's actual colors. A chip shows a name only when the data has one; otherwise
+   the strip carries the hex, which is the name a developer would use.
+
+   The list and its words are in the markup; the color block is aria-hidden. The chips are fixed
+   pieces of paper, the same on both sides of the page. Each one lifts a little under the pointer
+   (CSS only), and holds still under reduced motion. Looks in src/styles/ephemera/paint-chips.css. */
+import '../../styles/ephemera/paint-chips.css';
+
+interface Chip {
+  /** Six-digit hex, from the study's palette. */
+  hex: string;
+  /** The client's own name for it, only when their tokens have one. */
+  name?: string;
+}
+interface Props {
+  chips: Chip[];
+  /** A short label for the list, read by screen readers (the strip has no heading of its own). */
+  label?: string;
+}
+
+const { chips, label = 'The colors' } = Astro.props;
+---
+
+<ul class="pchips" aria-label={label}>
+  {chips.map((c, i) => (
+    <li class="pchip" style={`--chip:${c.hex};--i:${i}`}>
+      <span class="pchip-c" aria-hidden="true" />
+      <span class="pchip-n">
+        {c.name ? (
+          <>
+            {c.name} <span class="pchip-x">{c.hex.toUpperCase()}</span>
+          </>
+        ) : (
+          c.hex.toUpperCase()
+        )}
+      </span>
+    </li>
+  ))}
+</ul>

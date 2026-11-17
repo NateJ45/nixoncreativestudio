@@ -1,0 +1,31 @@
+---
+/* A project folder: the folder a job's papers live in, with a tab along the top edge that carries
+   its label in the client's color. The papers go in the slot (a work order, paint chips, notes),
+   laid on the open folder. On a case study the tab is the client's name.
+
+   The folder itself is a surface of the page (the sunk well, with the card's lit edge at night),
+   so it follows the theme; the tab is the client's pair (--c with --p on it, already checked at AA
+   in case-palettes.test.ts) and the papers inside are fixed paper. With scroll-driven animation
+   and motion allowed, the papers slide up out of the folder's pocket as it comes into view, using
+   translate only, so nothing starts hidden. Looks in src/styles/ephemera/folder-tab.css. */
+import '../../styles/ephemera/folder-tab.css';
+
+interface Props {
+  /** The words on the tab. */
+  tab: string;
+  /** The section's accessible name comes from a heading inside, by id. */
+  labelledby?: string;
+  class?: string;
+}
+
+const { tab, labelledby, class: cls } = Astro.props;
+---
+
+<section class:list={['folder', cls]} aria-labelledby={labelledby}>
+  <p class="folder-tab">
+    <span>{tab}</span>
+  </p>
+  <div class="folder-in">
+    <slot />
+  </div>
+</section>

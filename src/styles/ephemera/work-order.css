@@ -1,0 +1,87 @@
+/* ---- Work order (WorkOrder.astro) -----------------------------------------
+   A typed sheet: a ruled header in small capitals, a heading, then label and value rows on
+   hairlines, like a form someone filled in. Fixed paper, the same on both sides of the page, so it
+   redefines --ink, --soft and --line for anything inside it (the crew list prints in its ink).
+   The paper is the same warm stock as the boarding pass (Ticket), so the drawer reads as one
+   person's things. Placement is the page's business. */
+.wo {
+  --wo-paper: #f6f2e8;
+  --ink: #1b1d2a;
+  --soft: #55554f;
+  --line: rgba(27, 29, 42, 0.14);
+  position: relative;
+  padding: clamp(1.1rem, 2.6vw, 1.75rem);
+  border-radius: 0.35rem;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 255, 255, 0.6), transparent 55%), var(--wo-paper);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(27, 29, 42, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 1.2rem 1.8rem -1.3rem rgba(0, 0, 0, 0.45);
+}
+.wo-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--ink);
+  font: 600 0.6875rem / 1.2 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.wo-title {
+  margin: 0.9rem 0 0.4rem;
+  font: 600 clamp(1.375rem, 2.2vw, 1.75rem) / 1.1 var(--display);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.wo-rows {
+  display: grid;
+  margin: 0;
+}
+.wo-rows > div {
+  display: grid;
+  gap: 0.2rem 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.wo-rows dt {
+  color: var(--soft);
+  font: 500 0.75rem / 1.5 var(--body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wo-rows dd {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+.wo-rows dd b {
+  font-weight: 600;
+}
+@container (min-width: 26rem) {
+  .wo-rows > div {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+  }
+  .wo-rows dt {
+    grid-row: 1 / span var(--n, 1);
+    padding-top: 0.15rem;
+  }
+  .wo-rows dd {
+    grid-column: 2;
+  }
+}
+@media (forced-colors: active) {
+  .wo {
+    border: 1px solid CanvasText;
+  }
+}
+/* A long host name keeps itself together, on its own line if it has to. */
+.wo-head span:last-child {
+  letter-spacing: 0.1em;
+  overflow-wrap: normal;
+}

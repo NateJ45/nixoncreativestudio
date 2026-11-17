@@ -1,0 +1,45 @@
+---
+/* "The build in commits": a time card of this client's real weeks, after the story, so "I look
+   after it" has evidence. The weeks are src/data/client-weeks.json, the same file ClientWeeks
+   reads on /services (`npm run weeks` from the client repo's git history: week numbers and counts
+   only). A client with no entry there (no repo the script can read) gets no card. Every word on
+   the card is worked out from that entry: the count, the week the history starts, and the date
+   the file was last brought up to date. */
+import TimeCard from '../ephemera/TimeCard.astro';
+import weeks from '../../data/client-weeks.json';
+
+interface Props {
+  slug: string;
+  client: string;
+}
+const { slug, client } = Astro.props;
+const w = weeks.find((r) => r.slug === slug);
+
+const words = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+const weekWord = (n: number) => `${n} ${n === 1 ? 'week' : 'weeks'}`;
+---
+
+{w && (
+  <section class="s-weeks" aria-labelledby="weeks-h">
+    <TimeCard
+      weeks={w.weeks}
+      active={w.active}
+      head={['Time card', client]}
+      title="The build, week by week"
+      titleId="weeks-h"
+    >
+      <p>
+        <b>{`${w.active.length} of ${weekWord(w.weeks)} had changes`}</b>, from the week of{' '}
+        {words(w.firstWeek)}.
+      </p>
+      <p>
+        {`One square for each week of the site's change history, filled where something changed. As of ${words(w.asOf)}.`}
+      </p>
+    </TimeCard>
+  </section>
+)}

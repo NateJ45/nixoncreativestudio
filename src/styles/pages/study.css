@@ -644,51 +644,110 @@ figure {
   transition: transform 0.9s cubic-bezier(0.25, 1.45, 0.4, 1);
 }
 
-/* Decisions */
+/* Decisions: sticky notes beside the story (added 2026-11-16, the project folder). Each Decision is
+   the drawer's StickyNote (ephemera/sticky-note.css draws the paper and the tape): the note is the
+   "why", the page around it the "what". They lean a little, each its own way, and on a wide column
+   they stick at alternate sides, as if put up by hand. A number in the corner counts them. Inside,
+   "The easy version" in the note's soft ink beside "What I did" in its full ink, under a short rule
+   in the client's color. With motion allowed (.rv-on, study.js), a note waits lifted off its place
+   and lands on the house bounce when it reaches the middle of the screen (.landed); under reduced
+   motion, or with no script, it is simply stuck there. */
 .dec {
-  padding: clamp(1.25rem, 2.4vw, 2rem);
-  background: var(--card);
-  border-radius: 1.25rem;
-  box-shadow:
-    var(--rim),
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 22px 40px -28px rgba(0, 0, 0, 0.3);
+  --tilt: -0.9deg;
+  counter-increment: dec;
+  max-width: 44rem;
+}
+.dec:nth-of-type(2n) {
+  --tilt: 0.75deg;
+}
+.dec:nth-of-type(3n) {
+  --tilt: -0.35deg;
+}
+.dec::before {
+  position: absolute;
+  top: 0.8rem;
+  left: clamp(1.1rem, 2.4vw, 1.75rem);
+  color: var(--note-soft);
+  font: 600 1.375rem/1 var(--display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  content: counter(dec);
+  content: counter(dec) / '';
 }
 .dec h3 {
+  margin-top: 0.5rem;
   font-size: var(--type-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.1;
+  text-wrap: balance;
 }
 .dec dl {
   display: grid;
   gap: 1rem;
-  margin: 1rem 0 0;
+  margin: 1.1rem 0 0;
 }
 .dec dt {
-  font-weight: 600;
-  font-size: 0.9375rem;
-  margin-bottom: 0.25rem;
+  width: fit-content;
+  margin-bottom: 0.35rem;
+  font: 500 0.8125rem/1.5 var(--body);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 .dec dd {
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .dec-easy {
-  color: var(--soft);
+  color: var(--note-soft);
 }
 .dec-did dt {
-  color: var(--cm, var(--c));
+  padding-bottom: 0.1rem;
+  border-bottom: 0.2rem solid var(--c);
 }
-.dec-did {
-  padding-left: 0.9rem;
-  border-left: 2px solid var(--cm, var(--c));
-}
-@container (min-width:40rem) {
+@container (min-width: 40rem) {
+  .dec {
+    width: 92%;
+  }
+  .dec:nth-of-type(2n) {
+    margin-left: auto;
+  }
   .dec dl {
     grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
-    gap: clamp(1.25rem, 3vw, 2.5rem);
+    gap: clamp(1.25rem, 3vw, 2.25rem);
   }
+  /* A pencil line between the two halves. */
+  .dec-did {
+    padding-left: clamp(1.25rem, 3vw, 2.25rem);
+    margin-left: calc(-1 * clamp(1.25rem, 3vw, 2.25rem) / 2);
+    border-left: 1px solid var(--note-rule);
+  }
+}
+/* On a phone the notes lean less, so the words keep the width. */
+@container (max-width: 39.99rem) {
+  .dec {
+    --tilt: -0.4deg;
+  }
+  .dec:nth-of-type(2n) {
+    --tilt: 0.4deg;
+  }
+}
+.rv-on .chap .dec.rv {
+  transition:
+    transform 0.9s cubic-bezier(0.25, 1.45, 0.4, 1),
+    translate 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
+    rotate 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.5s var(--ease);
+}
+.rv-on .chap .dec:not(.landed) {
+  translate: 0.5rem -0.6rem;
+  rotate: calc(var(--tilt) + 2.2deg);
+  scale: 1.025;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.06),
+    0 1rem 1.4rem -0.8rem rgba(0, 0, 0, 0.26),
+    -0.6rem 2.8rem 2.6rem -1.8rem rgba(0, 0, 0, 0.38);
 }
 
 /* Feature shots */
@@ -1629,33 +1688,6 @@ html:not(.js) .ba-l {
 .chap {
   counter-increment: chap;
 }
-.dec {
-  --cardr: 1.25rem;
-  position: relative;
-  counter-increment: dec;
-  padding-top: 3.5rem;
-  padding-bottom: 3.5rem;
-  outline: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
-  outline-offset: -0.45rem;
-  box-shadow:
-    var(--rim),
-    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 22px 40px -24px rgba(0, 0, 0, 0.34);
-}
-.dec::before {
-  position: absolute;
-  color: var(--cm, var(--c));
-  font: 600 1.625rem/1 var(--display);
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  content: counter(dec);
-}
-.dec::before {
-  left: clamp(1.25rem, 2.4vw, 2rem);
-  top: 1.1rem;
-}
-.dec dt,
 .s-facts dt {
   font: 500 0.8125rem/1.5 var(--body);
   letter-spacing: 0.07em;
@@ -1763,76 +1795,6 @@ html:not(.js) .ba-l {
   margin-top: 0.25rem;
 }
 
-/* A decision is two cards on one. "The easy version" is dealt first: it lies a little back, on the
-   sunk well, in the soft text color, turned a hair. "What I did" is a card of its own on top of its
-   half, with the client's color along its head. Both are always there to read.
-   With motion allowed (.rv-on, study.js), "What I did" waits a little off its place, lifted and
-   turned, and lands on the house bounce when its card reaches the middle of the screen (.landed). */
-.dec dl {
-  align-items: start;
-}
-.dec-easy {
-  padding: 1rem 1.1rem 1.15rem;
-  border-radius: 0.9rem;
-  background: var(--well);
-  color: var(--soft);
-  transform: rotate(-0.6deg);
-}
-.dec-did {
-  position: relative;
-  z-index: 1;
-  padding: 1rem 1.1rem 1.15rem;
-  border: 0;
-  border-top: 0.25rem solid var(--cm, var(--c));
-  border-radius: 0.9rem;
-  background-color: var(--card);
-  box-shadow:
-    var(--rim),
-    0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    var(--lean, 0px) 16px 28px -18px rgba(0, 0, 0, 0.4);
-}
-@container (min-width:40rem) {
-  /* Side by side, "What I did" overlaps the edge of the easy version: it lies on top of it. */
-  .dec dl {
-    gap: 0;
-  }
-  .dec-easy {
-    padding-right: 2.1rem;
-  }
-  .dec-did {
-    margin: 0.9rem 0 0 -1rem;
-  }
-}
-/* Stacked, on a phone, the outer card steps back: no inset line and only a slim margin round the
-   two inner cards, so the page is not three boxes deep and the words get the width. The number
-   and heading keep the card's usual inset. Added 2026-11-15. */
-@container (max-width:39.99rem) {
-  .dec {
-    padding: 3.25rem 0.6rem 0.6rem;
-    outline: 0;
-  }
-  .dec::before {
-    left: 1rem;
-  }
-  .dec h3 {
-    padding-inline: 0.4rem;
-  }
-}
-.rv-on .dec .dec-did {
-  transition:
-    transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.5s var(--ease);
-}
-.rv-on .dec:not(.landed) .dec-did {
-  transform: translate3d(0.9rem, 1.5rem, 0) rotate(2.4deg) scale(1.045);
-  box-shadow:
-    var(--rim),
-    0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent),
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    var(--lean, 0px) 40px 50px -22px rgba(0, 0, 0, 0.5);
-}
-
 /* "What I built", page by page: the fold's screenshots as a numbered run of large screens, one
    under another, each with its caption under it ("2 / 3", the feature's heading, its first
    sentence). Every screen is the same Enlarge button as every other capture (ZoomImage). Added
@@ -1900,8 +1862,6 @@ html:not(.js) .ba-l {
 
 /* Forced colors drop backgrounds and shadows, so every surface drawn with only those gets a line. */
 @media (forced-colors: active) {
-  .dec-easy,
-  .dec-did,
   .pg .zoom,
   .next-band {
     border: 1px solid CanvasText;
@@ -1912,9 +1872,11 @@ html:not(.js) .ba-l {
   }
 }
 @media print {
-  /* On paper both halves of a decision lie flat. */
-  .dec-easy {
-    transform: none;
+  /* On paper the notes lie flat. */
+  .dec {
+    rotate: none;
+    translate: none;
+    scale: none;
   }
   .pg {
     break-inside: avoid;
@@ -1984,4 +1946,55 @@ html:not(.js) .ba-l {
 .s-rv:focus-visible .stars {
   --star: var(--c);
   --star-edge: var(--c);
+}
+
+/* The project folder (study/Folder.astro, added 2026-11-16): the work order and the client's paint
+   chips laid on an open folder with the client's name on its tab, at the head of the story. The
+   objects are the drawer's (ephemera/folder-tab.css, work-order.css, paint-chips.css); this is only
+   where they sit. On a wide column the chips lie to the right of the sheet, turned a little; on a
+   phone they follow it in a row. */
+.s-file {
+  margin-bottom: clamp(1rem, 3vh, 2rem);
+}
+.s-file .folder-in {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  align-items: start;
+}
+.s-file .wo {
+  rotate: -0.5deg;
+}
+.s-file-crew {
+  margin-top: 1.4rem;
+}
+.s-file-crew .crew-rows {
+  margin-bottom: 0;
+}
+.s-file-chips {
+  display: grid;
+  gap: 0.9rem;
+}
+.s-file-type {
+  color: var(--soft);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+@container (min-width: 46rem) {
+  .s-file .folder-in {
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  }
+  .s-file-chips {
+    padding-top: 1.5rem;
+    rotate: 1deg;
+  }
+}
+
+/* The time card (study/BuildWeeks.astro, added 2026-11-16): the client's real commit weeks after
+   the story, on the plain ground, the width of a card. */
+.s-weeks {
+  max-width: 34rem;
+  margin: clamp(1.5rem, 4vh, 2.5rem) 0 clamp(1.5rem, 4vh, 2.5rem);
+}
+.s-weeks .tcard {
+  rotate: 0.4deg;
 }

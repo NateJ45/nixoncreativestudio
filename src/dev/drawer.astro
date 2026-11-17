@@ -3,18 +3,28 @@
    it is never built or deployed). Every object in the drawer (src/components/ephemera/) on one
    page, each on the plain ground and on a card, so a change to one shows up next to the others.
    Flip the theme in the dock to check both sides. Add each new object here when it joins the
-   drawer. The example words are About's own, so nothing here is made up. */
+   drawer. The example words are About's own, so nothing here is made up. The case-study objects
+   (folder, work order, paint chips, sticky note, time card) show Stone Steps 50K's real study data:
+   its palette, its job lines from src/data/jobs.ts, a decision from its MDX and its weeks. */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/stamp.css';
 import CrewList from '../components/ephemera/CrewList.astro';
 import FilmStrip from '../components/ephemera/FilmStrip.astro';
 import Stamp from '../components/ephemera/Stamp.astro';
 import Ticket from '../components/ephemera/Ticket.astro';
+import FolderTab from '../components/ephemera/FolderTab.astro';
+import WorkOrder from '../components/ephemera/WorkOrder.astro';
+import PaintChips from '../components/ephemera/PaintChips.astro';
+import StickyNote from '../components/ephemera/StickyNote.astro';
+import TimeCard from '../components/ephemera/TimeCard.astro';
+import weeks from '../data/client-weeks.json';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
 import tm from '../assets/case-studies/shots/theology-matters-home.png';
 import mas from '../assets/case-studies/shots/mas-monograms-home.png';
 
+const ss = weeks.find((w) => w.slug === 'stone-steps-50k')!;
+const ssChips = ['#FBF6EA', '#1A1712', '#A83C26', '#2E5738', '#FFEBBB'].map((hex) => ({ hex }));
 const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src: mas, web: true }];
 ---
 
@@ -70,6 +80,75 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
         </Ticket>
       </div>
     </section>
+
+    <div class="client" style="--c:#A83C26;--p:#FBF6EA">
+      <section>
+        <h2>Folder, work order and crew list</h2>
+        <FolderTab tab="Stone Steps 50K" labelledby="dr-wo">
+          <WorkOrder
+            title="Work order"
+            titleId="dr-wo"
+            head={['Project file', 'stonesteps50k.com']}
+            fields={[
+              { label: 'Client', lines: [{ text: 'Stone Steps 50K' }] },
+              { label: 'Sector', lines: [{ text: 'Nonprofit' }] },
+              {
+                label: 'The job',
+                lines: [
+                  {
+                    lead: 'Fill events and sign-ups',
+                    text: 'Race date, fees, start times and registration on the home page.',
+                  },
+                  {
+                    lead: 'Take office work off staff',
+                    text: 'Results, records and runner pages update themselves after each race.',
+                  },
+                ],
+              },
+            ]}
+          >
+            <CrewList
+              roles={['Strategy', 'Designer', 'Developer']}
+              head={['Crew list', 'This project']}
+            />
+          </WorkOrder>
+        </FolderTab>
+      </section>
+
+      <section>
+        <h2>Paint chips</h2>
+        <PaintChips chips={ssChips} label="Stone Steps 50K's colors" />
+      </section>
+
+      <section>
+        <h2>Sticky note</h2>
+        <div class="narrow">
+          <StickyNote as="aside" tilt={-1}>
+            <p>
+              <b>Records from the results.</b>
+            </p>
+            <p>
+              Start from the results. Every finish since 2003 is its own entry, and the records are
+              calculated from those entries.
+            </p>
+          </StickyNote>
+        </div>
+      </section>
+
+      <section>
+        <h2>Time card</h2>
+        <div class="narrow">
+          <TimeCard
+            weeks={ss.weeks}
+            active={ss.active}
+            head={['Time card', 'Stone Steps 50K']}
+            title="The build, week by week"
+          >
+            <p>{`${ss.active.length} of ${ss.weeks} weeks had changes.`}</p>
+          </TimeCard>
+        </div>
+      </section>
+    </div>
   </div>
 </BaseLayout>
 
@@ -97,6 +176,11 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     border-radius: 1rem;
     background: var(--card);
     box-shadow: var(--rim);
+  }
+  .client {
+    display: grid;
+    gap: 3rem;
+    container-type: inline-size;
   }
   .narrow {
     max-width: 24rem;

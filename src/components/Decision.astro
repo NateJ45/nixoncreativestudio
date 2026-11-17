@@ -1,6 +1,11 @@
 ---
 /* "The easy version" against "what I did". Taken from the study's own approach
-   text and designer note, in the MDX. */
+   text and designer note, in the MDX. Each decision is a sticky note from the
+   drawer (ephemera/StickyNote.astro), stuck beside the story: the note is the
+   "why", the page around it is the "what". The words are the same markup as
+   before (a heading and a definition list), so it reads the same with no styles.
+   Where each note sticks and how it lands: study.css under "Decisions". */
+import StickyNote from './ephemera/StickyNote.astro';
 import { inline } from '../lib/study-markup';
 
 interface Props {
@@ -11,7 +16,7 @@ interface Props {
 const { title, easy, did } = Astro.props;
 ---
 
-<article class="dec rv">
+<StickyNote as="article" class="dec rv">
   <h3 set:html={inline(title)} />
   <dl>
     <div class="dec-easy">
@@ -23,4 +28,4 @@ const { title, easy, did } = Astro.props;
       <dd set:html={inline(did)} />
     </div>
   </dl>
-</article>
+</StickyNote>

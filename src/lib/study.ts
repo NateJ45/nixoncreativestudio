@@ -37,3 +37,25 @@ export function cmsShotProblem(d: CmsShotSource): string | undefined {
   }
   return undefined;
 }
+
+/**
+ * The crew list for a study's work order: the roles the study itself credits, in its own words.
+ * First the services from its frontmatter, then the parts of its `role` ("Designer, Developer"),
+ * with no role said twice. "Web Design" is the service and "Designer" the role for the same work,
+ * so when the role names a designer the service steps aside rather than repeat it.
+ */
+export function crewFor(services: string[], role?: string): string[] {
+  const parts = (role ?? '')
+    .split(',')
+    .map((r) => r.trim())
+    .filter(Boolean);
+  const designer = parts.some((r) => /^designer$/i.test(r));
+  const all = [...services.filter((s) => !(designer && /^web design$/i.test(s.trim()))), ...parts];
+  const seen = new Set<string>();
+  return all.filter((r) => {
+    const k = r.trim().toLowerCase();
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}

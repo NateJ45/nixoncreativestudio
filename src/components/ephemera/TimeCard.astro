@@ -1,0 +1,48 @@
+---
+/* A time card: the punched card a job is clocked on, one square for every week, punched where that
+   week had work. On a case study it is "the build in commits": the weeks come from
+   src/data/client-weeks.json (`npm run weeks`, the client repo's git history: week numbers and
+   counts only, never a message or an author), the same data as ClientWeeks on /services.
+
+   The squares are aria-hidden; the sentence in the slot says the same thing in words, so the card
+   reads with no picture at all. Punched squares take the client's color (--c, fixed on both sides);
+   the card is fixed paper. With motion allowed and scroll-driven animation, the punches land one
+   after another as the card crosses the screen; otherwise they are simply punched.
+   Looks in src/styles/ephemera/time-card.css. */
+import '../../styles/ephemera/time-card.css';
+
+interface Props {
+  /** How many weeks the card covers. */
+  weeks: number;
+  /** The weeks (0 = the first) that had changes. */
+  active: number[];
+  /** The two small words across the top, left and right. */
+  head: [string, string];
+  /** The card's heading. */
+  title: string;
+  /** An id for the heading, so a figure or section can be labelled by it. */
+  titleId?: string;
+}
+
+const { weeks, active, head, title, titleId } = Astro.props;
+const on = new Set(active);
+const cells = Array.from({ length: weeks }, (_, i) => on.has(i));
+---
+
+<div class="tcard">
+  <p class="tcard-head">
+    <span>{head[0]}</span>
+    <span>{head[1]}</span>
+  </p>
+  <p class="tcard-title" id={titleId}>
+    {title}
+  </p>
+  <span class="tcard-cells" aria-hidden="true">
+    {cells.map((hit, i) => (
+      <i class:list={{ hit }} style={`--i:${i}`} />
+    ))}
+  </span>
+  <div class="tcard-say">
+    <slot />
+  </div>
+</div>

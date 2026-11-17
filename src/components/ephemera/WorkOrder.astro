@@ -1,0 +1,60 @@
+---
+/* A work order: the sheet a job starts on, typed on paper with a ruled header, a heading, and its
+   fields as label and value rows. On a case study it holds the client, the sector, what the site
+   had to do and the crew list (the crew list goes in the slot, under the rows). Real facts only,
+   copied from the study's own data.
+
+   A fixed piece of paper, the same on both sides of the page: it sets its own ink, soft and line
+   colors, so a CrewList or anything else dropped into the slot prints in the sheet's ink. The
+   words are all in the markup. Looks in src/styles/ephemera/work-order.css. */
+import '../../styles/ephemera/work-order.css';
+
+/** One line of a field: an optional lead in bold, then plain text. */
+export interface WorkLine {
+  lead?: string;
+  text: string;
+}
+export interface WorkField {
+  label: string;
+  lines: WorkLine[];
+}
+interface Props {
+  /** The heading, e.g. "Work order". */
+  title: string;
+  /** An id for the heading, so a section can be labelled by it. */
+  titleId?: string;
+  /** Heading level: 2 on a page whose next headings are h2. */
+  level?: 2 | 3;
+  /** The two small words across the top, left and right. */
+  head?: [string, string];
+  fields: WorkField[];
+}
+
+const { title, titleId, level = 2, head, fields } = Astro.props;
+const H = `h${level}` as 'h2' | 'h3';
+---
+
+<div class="wo">
+  {head && (
+    <p class="wo-head">
+      <span>{head[0]}</span>
+      <span>{head[1]}</span>
+    </p>
+  )}
+  <H class="wo-title" id={titleId}>
+    {title}
+  </H>
+  <dl class="wo-rows">
+    {fields.map((f) => (
+      <div style={`--n:${f.lines.length}`}>
+        <dt>{f.label}</dt>
+        {f.lines.map((l) => (
+          <dd>
+            {l.lead && <b>{l.lead}.</b>} {l.text}
+          </dd>
+        ))}
+      </div>
+    ))}
+  </dl>
+  <slot />
+</div>

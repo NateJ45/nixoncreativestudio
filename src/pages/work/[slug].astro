@@ -15,6 +15,8 @@
 
    The story is the MDX body. Its chapters run in the page's order and its blocks
    render through the components below, so the study's words live in one place.
+   Above the story sits the project folder (study/Folder.astro: the work order and the client's
+   paint chips), and after it the time card of real commit weeks (study/BuildWeeks.astro).
    src/scripts/study.js adds the motion. Client colors arrive through --c and --p
    on <body>, and nothing else on the page sets a color of its own.
    ============================================================================ */
@@ -31,6 +33,8 @@ import CourseLine from '../../components/CourseLine.astro';
 import SiteShowcase from '../../components/SiteShowcase.astro';
 import WhatYouEdit from '../../components/WhatYouEdit.astro';
 import Chapter from '../../components/study/Chapter.astro';
+import BuildWeeks from '../../components/study/BuildWeeks.astro';
+import Folder from '../../components/study/Folder.astro';
 import FullBuild from '../../components/study/FullBuild.astro';
 import FullList from '../../components/study/FullList.astro';
 import Idea from '../../components/study/Idea.astro';
@@ -257,6 +261,18 @@ const breadcrumbs = [
 
   <div class="story" data-story>
     <div class="chaps">
+      {/* The project folder: the work order and the client's paint chips, before the story. */}
+      <Folder
+        slug={entry.id}
+        client={d.client}
+        sector={d.facts?.sector ?? s.sector}
+        hook={d.hook}
+        host={host}
+        services={d.services}
+        role={d.facts?.role ?? d.role}
+        swatches={d.palette?.swatches}
+        typeface={d.palette?.typeface}
+      />
       <Content
         study={{ ...d, slug: entry.id }}
         components={{
@@ -278,6 +294,8 @@ const breadcrumbs = [
           FullBuild,
         }}
       />
+      {/* The build in commits: this client's real weeks, where the weeks data has them. */}
+      <BuildWeeks slug={entry.id} client={d.client} />
       {myPhotos && (
         <p class="s-photos">
           Photographs by me.{' '}

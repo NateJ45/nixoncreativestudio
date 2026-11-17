@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cmsShotProblem, nextInLoop } from './study.ts';
+import { cmsShotProblem, crewFor, nextInLoop } from './study.ts';
 
 const shot = 'shots/x-cms.png';
 
@@ -25,4 +25,18 @@ test('cmsShotProblem requires alt text whenever a cmsShot is set', () => {
   assert.equal(cmsShotProblem({ cmsShot: shot, cmsShotAlt: 'The Home page form' }), undefined);
   assert.match(cmsShotProblem({ cmsShot: shot }) ?? '', /cmsShotAlt is required/);
   assert.match(cmsShotProblem({ cmsShot: shot, cmsShotAlt: '   ' }) ?? '', /cmsShotAlt/);
+});
+
+test('crewFor lists the services then the role, and drops Web Design beside a Designer', () => {
+  assert.deepEqual(crewFor(['Strategy', 'Web Design'], 'Designer, Developer'), [
+    'Strategy',
+    'Designer',
+    'Developer',
+  ]);
+  assert.deepEqual(crewFor(['Photography', 'Web Design'], 'Publicity Chair (volunteer)'), [
+    'Photography',
+    'Web Design',
+    'Publicity Chair (volunteer)',
+  ]);
+  assert.deepEqual(crewFor(['Strategy', 'strategy'], undefined), ['Strategy']);
 });
