@@ -8,6 +8,8 @@ import Tile from '../components/Tile.astro';
 import Caption from '../components/Caption.astro';
 import { getClients } from '../lib/clients';
 import { plainText, wordSpans } from '../lib/words';
+import SpecimenCard from '../components/ephemera/SpecimenCard.astro';
+import { site } from '../data/site';
 
 // Every client's window, stacked in the side column. colophon-deck.js shows one at a time and
 // moves to the next every few seconds; with no script only the first shows.
@@ -22,6 +24,21 @@ const builtText = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   timeZone: 'America/New_York',
 }).format(built);
+
+// The kit list's one number: the Playwright test files that live with the code, counted when the
+// site is built, so it can never drift from the tests folder (tests/colophon.spec.ts checks it).
+// Vite lists the files at build (the prerender runs in workerd, which has no node:fs); the glob is
+// lazy and raw, so nothing from the tests is ever loaded or sent to a browser.
+const testFiles = Object.keys(import.meta.glob('/tests/*.spec.ts', { query: '?raw' })).length;
+
+// The type specimens: one card per weight the site really sets, each naming an element on this
+// page set that way (tests/colophon.spec.ts reads the computed weight and compares). The sample
+// lines are the site's own words: this page's headline and the studio's one-line description.
+const specimens = [
+  { weight: 500, role: 'Every headline', sample: plainText(heading), of: 'h1' },
+  { weight: 700, role: 'The one bold word in a headline', sample: 'made.', of: 'h1 b' },
+  { weight: 400, role: 'Everything you read', sample: site.tagline, of: 'body' },
+];
 ---
 
 <BaseLayout
@@ -34,7 +51,7 @@ const builtText = new Intl.DateTimeFormat('en-US', {
       How this site is made, and the standards behind it. Custom-built, so the same care that goes
       into client work goes into my own.
     </p>
-    <p class="updated">Last updated November 15, 2026</p>
+    <p class="updated">Last updated November 16, 2026</p>
   </header>
   <div class="doc">
     <nav class="toc card" aria-label="On this page">
@@ -62,6 +79,9 @@ const builtText = new Intl.DateTimeFormat('en-US', {
           <a href="#screenshots">Screenshots</a>
         </li>
         <li>
+          <a href="#flags">The flags on the postcard</a>
+        </li>
+        <li>
           <a href="#privacy">Privacy</a>
         </li>
       </ul>
@@ -73,6 +93,33 @@ const builtText = new Intl.DateTimeFormat('en-US', {
         ahead of time as plain HTML, and the case studies are text files that live with the code. No
         page builder, no stock template, no lock-in.
       </p>
+      {/* The kit list: what the site is made with, one ruled row each. Every row is true of the
+          code (tests/colophon.spec.ts); the test count is counted at build. */}
+      <dl class="colo-kit">
+        <div>
+          <dt class="label">Framework</dt>
+          <dd>Astro 7, with TypeScript</dd>
+        </div>
+        <div>
+          <dt class="label">Hosting</dt>
+          <dd>Cloudflare, every page built ahead of time as plain HTML</dd>
+        </div>
+        <div>
+          <dt class="label">Type</dt>
+          <dd>Hanken Grotesk, one font file served from this site</dd>
+        </div>
+        <div>
+          <dt class="label">In the browser</dt>
+          <dd>A few small plain scripts, and no React</dd>
+        </div>
+        <div>
+          <dt class="label">Tests</dt>
+          <dd>
+            <span data-kit-tests>{testFiles}</span> Playwright test files that open the pages in a
+            real browser, with axe checking accessibility
+          </dd>
+        </div>
+      </dl>
       <p>
         The night view of Cincinnati on the About page is by
         <a href="https://unsplash.com/@timthorn">Tim Thorn on Unsplash</a>. The Edinburgh view
@@ -80,11 +127,27 @@ const builtText = new Intl.DateTimeFormat('en-US', {
       </p>
       <h2 id="typography">Typography</h2>
       <p>Everything is set in Hanken Grotesk, served from this site, not from a font service.</p>
+      <p>
+        It is one variable font file holding every weight from 100 to 900, and the site leans on a
+        few of them. The three cards below show the ones you read most: 400 for body text, 500 for
+        headlines and 700 for the one bold word. While it loads, Arial stands in, scaled to Hanken's
+        letter widths, so a line breaks where the real font will and nothing jumps when it arrives.
+      </p>
+      <div class="colo-specs">
+        {specimens.map((s) => (
+          <SpecimenCard {...s} />
+        ))}
+      </div>
       <h2 id="color">Color</h2>
       <p>
         A near-white page, near-black ink and one blue of my own, for headlines, buttons, one price
         card and the closing panel. Every other color on the site is a client's, inside the window,
         sheet or section that shows their work.
+      </p>
+      <p>
+        The paper things keep their own colors on both sides of the page: the boarding pass on the
+        About page, the type cards above, and the envelope on the contact page, whose two stamps are
+        the Saltire and the Stars and Stripes in the flags' own colors.
       </p>
       <h2 id="accessibility">Accessibility</h2>
       <p>
@@ -149,6 +212,39 @@ const builtText = new Intl.DateTimeFormat('en-US', {
       <p>
         Every client site shown here is a real, live site. The screenshots and footage are captured
         from the live pages by a script that lives with the code, not mocked up.
+      </p>
+      {/* The making-of for About's postcard flags. Every step is true of scripts/flags/flag.py and
+          scripts/flag-loops.mjs (tests/colophon.spec.ts checks the files are there). */}
+      <h2 id="flags">The flags on the postcard</h2>
+      <p>
+        The two flags waving in the sky of the postcard on the <a href="/about/">About page</a> are
+        cloth I simulated in Blender: the Saltire over Edinburgh in gusting wind, and the Stars and
+        Stripes over Cincinnati in a steady breeze, framed close on its stars.
+      </p>
+      <ol class="colo-steps">
+        <li>
+          <span>
+            <b>Simulate.</b> A sheet of cloth in the flag's real proportions, pinned along the pole
+            and blown by wind, rendered frame by frame on a clear background.
+          </span>
+        </li>
+        <li>
+          <span>
+            <b>Composite.</b> Each frame is laid into the sky of the photograph through a mask cut
+            from the photograph itself, so the flag sits behind the buildings, toned down and fading
+            towards the horizon.
+          </span>
+        </li>
+        <li>
+          <span>
+            <b>Loop.</b> A simulation never repeats, so a script finds the stretch whose last frame
+            looks most like its first and blends the seam, and the flag waves on without a jump.
+          </span>
+        </li>
+      </ol>
+      <p>
+        The loops load only when the postcard comes near, and with reduced motion or Data Saver on
+        they hold still as a single frame.
       </p>
       <h2 id="privacy">Privacy</h2>
       <p>

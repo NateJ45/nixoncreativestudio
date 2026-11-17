@@ -1,0 +1,60 @@
+---
+/* A postage stamp: a flag drawn simply on white stamp paper with a perforated edge, and the
+   country's name in small capitals under it. The two flags of About's postcard, the Saltire and
+   the Stars and Stripes, so the contact page's envelope carries the same crossing.
+
+   Decoration only: it is aria-hidden, and it never states anything the page does not already say
+   in words. Fixed colours (the flags' own and white paper), the same in both themes, in
+   src/styles/ephemera/postage.css. Where it sits and how it tilts is the holder's job: pass a class
+   and place it in the page's stylesheet, or set --tilt on it. */
+import '../../styles/ephemera/postage.css';
+
+interface Props {
+  /** Which flag: the Saltire or the Stars and Stripes. */
+  flag: 'saltire' | 'us';
+  /** Extra classes, for placing it. */
+  class?: string;
+}
+
+const { flag, class: extra } = Astro.props;
+const name = flag === 'saltire' ? 'Scotland' : 'USA';
+
+// The Stars and Stripes at its real 19:10 proportions: thirteen stripes, a canton over the top
+// seven, and fifty stars in nine rows of six and five. Drawn small, so the stars are dots.
+const stripe = 10 / 13;
+const reds = Array.from({ length: 7 }, (_, i) => i * 2 * stripe);
+const canton = { w: 7.6, h: 7 * stripe };
+const stars: [number, number][] = [];
+for (let row = 0; row < 9; row++) {
+  const count = row % 2 === 0 ? 6 : 5;
+  for (let col = 0; col < count; col++) {
+    const x = ((row % 2 === 0 ? 1 : 2) + col * 2) * (canton.w / 12);
+    stars.push([x, (row + 1) * (canton.h / 10)]);
+  }
+}
+---
+
+<span class:list={['pstamp', `pstamp-${flag}`, extra]} aria-hidden="true">
+  <span class="pstamp-paper">
+    <span class="pstamp-face">
+      {flag === 'saltire' ? (
+        <svg viewBox="0 0 50 30" focusable="false">
+          <rect class="ps-blue" width="50" height="30" />
+          <path class="ps-cross" d="M0 0L50 30M50 0L0 30" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 19 10" focusable="false">
+          <rect class="ps-white" width="19" height="10" />
+          {reds.map((y) => (
+            <rect class="ps-red" y={y.toFixed(3)} width="19" height={stripe.toFixed(3)} />
+          ))}
+          <rect class="ps-navy" width={canton.w} height={canton.h.toFixed(3)} />
+          {stars.map(([x, y]) => (
+            <circle class="ps-white" cx={x.toFixed(3)} cy={y.toFixed(3)} r="0.2" />
+          ))}
+        </svg>
+      )}
+      <span class="pstamp-name">{name}</span>
+    </span>
+  </span>
+</span>

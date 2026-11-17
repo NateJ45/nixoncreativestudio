@@ -150,3 +150,76 @@ html:not(.js) .colo-live-off {
     gap: 0.2rem;
   }
 }
+
+/* ---- The maker's page (Nov 2026): the kit list, the type specimens, the flag making-of -------- */
+
+/* The kit list under "Built with": the same ruled rows as "This page, right now". */
+.colo-kit {
+  margin: 1.25rem 0 0;
+  border-top: 1px solid var(--line);
+}
+.colo-kit > div {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.colo-kit dt,
+.colo-kit dd {
+  margin: 0;
+}
+.colo-kit dd {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The specimen cards (src/components/ephemera/SpecimenCard.astro), dealt in a row, each turned a
+   degree or so the way cards lie on a desk. One column on a phone. */
+.colo-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+.colo-specs .spec:nth-child(1) {
+  --tilt: -1.2deg;
+}
+.colo-specs .spec:nth-child(2) {
+  --tilt: 0.8deg;
+}
+.colo-specs .spec:nth-child(3) {
+  --tilt: -0.5deg;
+}
+
+/* The flag making-of: three numbered steps, the step's name in bold leading its sentence. */
+.prose .colo-steps {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: colo-step;
+}
+.prose .colo-steps li {
+  counter-increment: colo-step;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  margin: 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+}
+.prose .colo-steps li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.colo-steps li::before {
+  content: counter(colo-step);
+  font: 600 0.8125rem / 1.6 var(--body);
+  font-variant-numeric: tabular-nums;
+  color: var(--soft);
+}
+@media (max-width: 30rem) {
+  .colo-kit > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+}

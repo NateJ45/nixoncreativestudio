@@ -1,0 +1,43 @@
+---
+/* An envelope: a card with an airmail edge and, in its top corner, the post: a postmark and two
+   postage stamps, the Saltire and the Stars and Stripes (About's crossing, carried over). The
+   contact page's sent card is one, with its "Received" stamp beside the postmark.
+
+   The envelope is the holder's own card, in the page's colours on both sides of the page, so
+   everything you put in it (headings, links, buttons) keeps its usual look. Only the airmail edge
+   and the stamps keep fixed colours. Every attribute you pass (id, data-*) lands on the outer
+   element, so a page can use it as the card itself.
+
+   Slots: the default slot is the letter (your words); `post` goes first in the corner, before the
+   postmark (contact puts its dated "Received" stamp there). The corner floats right beside the
+   first lines, and drops above them, right-aligned, on a phone. Everything in the corner is
+   aria-hidden decoration. Set --stamp-paper on the holder when a peeling stamp sits in it. */
+import '../../styles/ephemera/envelope.css';
+import PostageStamp from './PostageStamp.astro';
+import Postmark from './Postmark.astro';
+
+interface Props {
+  /** Extra classes for the outer element (the card's own classes, for one). */
+  class?: string;
+  /** The postmark's town and state. Defaults to site.address (Postmark.astro). */
+  postmark?: [string, string];
+  /** A prefix for the postmark's arc ids, when a page has more than one envelope. */
+  postmarkId?: string;
+  [attr: string]: unknown;
+}
+
+const { class: extra, postmark, postmarkId, ...rest } = Astro.props;
+const [city, region] = postmark ?? [];
+---
+
+<div class:list={['envelope', extra]} {...rest}>
+  <div class="env-post">
+    <slot name="post" />
+    <Postmark class="env-mark" city={city} region={region} id={postmarkId} />
+    <span class="env-stamps">
+      <PostageStamp flag="saltire" class="env-stamp" />
+      <PostageStamp flag="us" class="env-stamp" />
+    </span>
+  </div>
+  <slot />
+</div>
