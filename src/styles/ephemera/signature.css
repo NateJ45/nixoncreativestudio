@@ -1,0 +1,80 @@
+/* ============================================================================
+   Signature | the hand-drawn "Nathan Nixon" (src/components/ephemera/Signature.astro)
+   ============================================================================
+   Single-stroke paths, round pen. At rest, with no script, under reduced motion and
+   on paper it is simply drawn. src/scripts/signature.js sets data-sig="wait" on a
+   signature that is still off screen, and "go" once it comes into view: each path
+   then draws itself in order, on its own --d (duration) after its own --at (start).
+   Every path carries pathLength="1", so one dash pattern fits them all.
+
+   Ink: --sig-ink, the studio blue by default. Size: set the width on the holder
+   (--sig-w); the height follows the drawing. --sig-pen is the pen width in drawing
+   units (the drawing is about 384 units wide), so a small signature takes a heavier
+   pen to stay a real line.
+   ============================================================================ */
+.sig {
+  position: relative;
+  display: inline-block;
+  width: var(--sig-w, 11rem);
+  max-width: 100%;
+  color: var(--sig-ink, var(--accent));
+  line-height: 0;
+}
+.sig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.sig path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--sig-pen, 3);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The crossings, the dot and the underline go on with a lighter hand. */
+.sig .sig-lt {
+  stroke-width: calc(var(--sig-pen, 3) * 0.8);
+}
+.sig .sig-dot {
+  stroke-width: calc(var(--sig-pen, 3) * 1.3);
+}
+
+/* Waiting off screen: no ink yet. The offset runs a hair past the path so a round cap
+   does not leave a dot at the start. */
+.sig[data-sig='wait'] path,
+.sig[data-sig='go'] path {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1.01;
+}
+.sig[data-sig='go'] path {
+  /* Quick off the mark, easing as the pen comes to the end of a stroke. */
+  animation: sig-write var(--d, 0.5s) cubic-bezier(0.3, 0.1, 0.35, 1) var(--at, 0s) forwards;
+}
+@keyframes sig-write {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Still, whole and finished: reduced motion, and on paper. */
+@media (prefers-reduced-motion: reduce) {
+  .sig[data-sig] path {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+@media print {
+  .sig[data-sig] path {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+@media (forced-colors: active) {
+  .sig {
+    color: CanvasText;
+  }
+}

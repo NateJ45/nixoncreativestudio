@@ -9,6 +9,7 @@ import '../styles/stamp.css';
 import CrewList from '../components/ephemera/CrewList.astro';
 import FilmStrip from '../components/ephemera/FilmStrip.astro';
 import Stamp from '../components/ephemera/Stamp.astro';
+import Signature from '../components/ephemera/Signature.astro';
 import Ticket from '../components/ephemera/Ticket.astro';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
 import stones from '../assets/photography/canvas/old-stones.jpg';
@@ -23,7 +24,7 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
     <h1>The drawer</h1>
     <p>
       The paper objects any page can borrow. Dev only. Components in src/components/ephemera/, looks
-      in src/styles/ephemera.css and stamp.css.
+      in src/styles/ephemera.css, stamp.css and src/styles/ephemera/.
     </p>
 
     <section>
@@ -70,10 +71,29 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
         </Ticket>
       </div>
     </section>
+
+    <section>
+      <h2>Signature</h2>
+      <p>
+        Writes itself when it comes into view (scroll it out and reload to watch again). On the
+        ground, on a card, and small with a heavier pen.
+      </p>
+      <div class="row">
+        <Signature />
+        <div class="card-ish">
+          <Signature />
+        </div>
+        <Signature class="sig-small" />
+      </div>
+    </section>
   </div>
 </BaseLayout>
 
 <style>
+  .drawer :global(.sig-small) {
+    --sig-w: 6rem;
+    --sig-pen: 4.4;
+  }
   .drawer {
     max-width: 64rem;
     margin: 0 auto;

@@ -158,6 +158,7 @@ Shapes: cards 1.25rem, bands and the closing 1.75rem, buttons and the dock fully
 
 ## 6. Components
 
+- **The signature** (`ephemera/Signature.astro`): "Nathan Nixon" in a made-up, quick hand (a big looped N, joined lowercase, the t crossed and the i dotted after, a sweeping underline), in the studio blue. It writes itself once, in pen order, when it comes into view; with no script or reduced motion it is simply drawn. It signs the last card of the closing on every page and the foot of the /services receipt. A design mark, not Nathan's legal signature.
 - **The page edge.** Everything starts on one left edge, the 90rem page. A full-bleed block (the top line, the closing, a case study hero, the home quote band) keeps its color edge to edge and pads its contents with `--edge` so they meet it.
 - **Top line** (`TopLine.astro`): two working corners, positioned over the hero and on a client's color flipped with `onColor`. It is not a menu; the dock is the one nav.
   - **The name** is the way home. It takes on weight under the pointer, one letter at a time, each letter locked to its resting width so the name never shifts. One wave runs through it the first time a visit opens at the top of a page, and when it takes keyboard focus. Under reduced motion it stays still.
