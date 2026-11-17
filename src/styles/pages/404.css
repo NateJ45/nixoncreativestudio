@@ -1,5 +1,6 @@
 /* 404: the numerals as a drawing with its points showing, and a knocked-askew phone window that
-   springs upright when you reach for it. */
+   springs upright when you reach for it, with a lost-luggage tag (LuggageTag.astro) tied to it
+   that holds the address that failed and the two ways on. */
 .nf {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -17,35 +18,8 @@
 .nf .page-head h1 {
   max-width: 9em;
 }
-.lost {
-  margin-top: 1rem;
-  color: var(--soft);
-  font-size: 0.9375rem;
-  overflow-wrap: anywhere;
-}
-.lost span {
-  font-weight: 600;
-  color: var(--ink);
-}
-.nf-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1.75rem;
-}
-.nf .chip {
-  background: var(--card);
-  color: var(--ink);
-  box-shadow:
-    var(--rim),
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 14px 28px -18px rgba(0, 0, 0, 0.35);
-}
-.nf .chip.dark {
-  background: var(--fill);
-  color: #fff;
-}
 .knock {
+  position: relative;
   justify-self: center;
   width: min(15rem, 62vw);
   margin: 1rem 0 2rem;
@@ -53,6 +27,14 @@
   box-sizing: content-box;
   transform-origin: 50% 90%;
   will-change: transform;
+}
+/* The tag hangs off the window: under it, overlapping its foot, on a phone; over its lower half
+   from 56rem; off its left side, out into the gap beside it, from 90rem. It sits over the window, so the links are never under
+   the screen's picture. */
+.knock .nf-tag {
+  position: relative;
+  z-index: 2;
+  margin: -3.5rem auto 0;
 }
 .knock .tile {
   box-shadow:
@@ -72,6 +54,20 @@
     width: min(17rem, 100%);
     padding: 0;
     margin: clamp(5rem, 12vh, 8rem) 0 0;
+  }
+  /* Until there is a wide gap beside the window, the tag hangs over the window's lower half, so it
+     never reaches the numerals or the heading (checked from 56rem to 90rem). */
+  .knock .nf-tag {
+    position: absolute;
+    top: 14rem;
+    left: -1rem;
+    margin: 0;
+  }
+}
+@media (min-width: 90rem) {
+  .knock .nf-tag {
+    top: 4.5rem;
+    left: -9rem;
   }
 }
 

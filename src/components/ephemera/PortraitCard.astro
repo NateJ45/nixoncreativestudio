@@ -1,0 +1,45 @@
+---
+/* A small version of About's portrait card: the same black-and-white photo on a card, with the same
+   caption, sat at a slight tilt. You can pick it up: a press (or a mouse over it) lifts it, a drag
+   carries it a little way on a rubber band, and letting go springs it home (pick-up.js, on the
+   drawer's shared spring). It never leaves its place in the layout, so nothing reflows.
+
+   The photo and caption are real markup, so the card reads the same with no script. Under reduced
+   motion it holds still. It is lazy-loaded, so use it below the first screen only (About keeps the
+   full-size card above the fold). Looks in src/styles/ephemera/portrait-card.css; where it sits and
+   how wide it is (--pm-w) is the page's business. */
+import '../../styles/ephemera/portrait-card.css';
+
+interface Props {
+  /** The caption under the photo. */
+  caption?: string;
+  /** The `sizes` for the photo, for the width the page gives the card. */
+  sizes?: string;
+  class?: string;
+}
+
+const {
+  caption = 'From the other side of the lens',
+  sizes = '(max-width: 40rem) 11rem, 14rem',
+  class: cls,
+} = Astro.props;
+---
+
+<figure class:list={['pmini', cls]} data-pickup>
+  <img
+    src="/assets/about/portrait-bw-520.webp"
+    srcset="/assets/about/portrait-bw-520.webp 520w, /assets/about/portrait-bw.webp 960w"
+    sizes={sizes}
+    width="520"
+    height="650"
+    alt="A black-and-white studio portrait of Nathan looking off to the side, one hand behind his neck."
+    loading="lazy"
+    decoding="async"
+    draggable="false"
+  />
+  <figcaption>{caption}</figcaption>
+</figure>
+
+<script>
+  import '../../scripts/pick-up.js';
+</script>

@@ -1,0 +1,36 @@
+---
+/* A lost-luggage tag: a manila-cut card in the Ticket's cream paper and fixed colours (the same in
+   both themes), with its top corners clipped, a reinforced hole and a loop of string that runs up
+   out of the hole to whatever it is tied to. On the 404 it hangs off the knocked-askew window and
+   holds the address that failed and the ways on.
+
+   The tag is a real container: put its content in the default slot (the .tag-field and .tag-links
+   classes in luggage-tag.css are there to use), and every word in it is read as normal. The hole
+   and the string are drawn, so they are aria-hidden. The page decides where it hangs and can turn
+   it with --tag-turn (degrees, a plain number), which is what lets the 404's window swing it, and
+   set --tag-ground to the colour behind the hole when it is not the page ground.
+   Looks in src/styles/ephemera/luggage-tag.css. */
+import '../../styles/ephemera/luggage-tag.css';
+
+interface Props {
+  /** The two small words across the top, left and right. */
+  head: [string, string];
+  class?: string;
+  /** Inline style, for --tag-turn or --tag-ground. */
+  style?: string;
+}
+
+const { head, class: cls, style } = Astro.props;
+---
+
+<div class:list={['tag', cls]} style={style}>
+  <svg class="tag-string" viewBox="0 0 60 90" aria-hidden="true" focusable="false">
+    <path d="M30 80c-9-8-12-24-4-40s4-30-6-38M30 80c8-9 10-26 3-41s-2-28 9-37" />
+  </svg>
+  <span class="tag-hole" aria-hidden="true"></span>
+  <p class="tag-head">
+    <span>{head[0]}</span>
+    <span>{head[1]}</span>
+  </p>
+  <slot />
+</div>
