@@ -1,8 +1,11 @@
 /* ============================================================================
-   Journal: the index (a deck of post cards along a date rail, or a ruled list)
-   and the post page (short answer card, byline, contents rail, price-card
-   tables, two dealt end cards). Tokens only, from kit.css. The chips are the
-   /work bar (seg-bar.css); the "Updated" mark is the contact stamp (stamp.css).
+   Journal: the index (a notebook: divider tabs by cluster over a deck of torn
+   pages along a date rail, or one ruled page of rows) and the post page (short
+   answer card, press pass byline, contents rail, price-card tables with sticky
+   note sources and printed charts, two dealt end cards). Tokens only, from
+   kit.css; the paper objects are the drawer's (src/components/ephemera/). The
+   Deck and List switch is the /work bar (seg-bar.css); the "Updated" mark is
+   the contact stamp (stamp.css).
    ============================================================================ */
 @import '../seg-bar.css';
 @import '../stamp.css';
@@ -38,6 +41,89 @@ html:not(.js) .jx-deck {
   overflow-x: clip;
 }
 
+/* The notebook's divider tabs, one per cluster: paper tabs standing on a hairline, the pressed one
+   taller and on the page's own card, the rest a step back on the well. With no script they cannot
+   filter, so they go with the bar and the list shows every post. */
+html:not(.js) .jx-tabs {
+  display: none;
+}
+.jx-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.35rem 0.3rem;
+  margin: 0 0 clamp(1.25rem, 3vw, 2rem);
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+/* On a phone the tabs keep to one row, like real dividers, and the row scrolls sideways inside
+   itself (never the page). The padding keeps a raised tab and its focus ring inside the row. */
+@media (max-width: 40rem) {
+  .jx-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding: 0.35rem 0.5rem 0;
+    margin-inline: calc(var(--gut) * -1);
+    padding-inline: var(--gut);
+  }
+  .jx-tabs button {
+    flex: none;
+  }
+}
+/* Over the deck the tabs stand on the pages, not on the date rail beside them. */
+@media (min-width: 52rem) {
+  .jx[data-view='deck'] .jx-tabs {
+    padding-left: calc(10rem + clamp(1.5rem, 4vw, 3.5rem) + 0.5rem);
+  }
+}
+@media (min-width: 52rem) and (prefers-reduced-motion: no-preference) {
+  .js .jx:not([data-view]) .jx-tabs {
+    padding-left: calc(10rem + clamp(1.5rem, 4vw, 3.5rem) + 0.5rem);
+  }
+}
+.jx-tabs button {
+  position: relative;
+  min-height: 2.5rem;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.95rem 0.45rem;
+  border: 1px solid var(--line);
+  border-bottom-color: transparent;
+  border-radius: 0.7rem 0.7rem 0 0;
+  background: var(--well);
+  color: var(--ink);
+  font: 600 0.875rem / 1.2 var(--body);
+  cursor: pointer;
+  translate: 0 0.3rem;
+  transition:
+    translate 0.5s cubic-bezier(0.3, 1.6, 0.5, 1),
+    background-color 0.2s;
+}
+.jx-tabs button .n {
+  margin-left: 0.2rem;
+  color: var(--soft);
+  font-variant-numeric: tabular-nums;
+}
+.jx-tabs button:hover {
+  translate: 0 0.1rem;
+}
+/* The pressed tab stands up out of the row, on the card, and its count goes blue. */
+.jx-tabs button[aria-pressed='true'] {
+  z-index: 1;
+  background: var(--card);
+  border-bottom-color: var(--card);
+  translate: 0 0;
+  box-shadow: var(--rim);
+}
+.jx-tabs button[aria-pressed='true'] .n {
+  color: var(--accent);
+}
+.jx-tabs button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 /* The deck: the newest post on top, the older ones stacked behind it and receding up the table.
    journal.js sets each card's place (--k: 0 on top, 1 behind it...) and deals the top one away. */
 .jx-deck {
@@ -65,6 +151,9 @@ html:not(.js) .jx-deck {
     rotate(calc(var(--k) * var(--tilt, 0deg)));
   transform-origin: 50% 0;
   transition: transform 0.6s cubic-bezier(0.3, 1.35, 0.5, 1);
+  /* The page's torn edge is a mask, which hides a box-shadow, so the shadow is the holder's. */
+  filter: drop-shadow(0 1.1rem 1.1rem rgba(0, 0, 0, 0.12))
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
 }
 .jx-pile > li[hidden] {
   display: none;
@@ -83,17 +172,25 @@ html:not(.js) .jx-deck {
     transform 0.45s cubic-bezier(0.5, 0, 0.75, 0.3),
     visibility 0s 0.45s;
 }
-.jx-card {
+/* Each post is a notebook page (ephemera/notebook-page.css): the words start past the margin line,
+   and the post's number sits in the margin, the way you would number a page by hand. The drawer's stylesheet loads after this one, so the paper's settings are
+   doubled up (.nb-page) to win. */
+.nb-page.jx-card {
   --cardr: 1.5rem;
+  --nb-left: clamp(2.4rem, 5vw, 3.4rem);
   display: grid;
   gap: 0.75rem;
   min-height: 19rem;
-  padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1.5rem, 4vw, 3rem) clamp(2.5rem, 5vw, 3.25rem);
-  border-radius: var(--cardr);
+  padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1.25rem, 4vw, 3rem) clamp(2.5rem, 5vw, 3.25rem)
+    calc(var(--nb-left) + clamp(0.9rem, 2.5vw, 2rem));
   align-content: start;
 }
 .jx-card .pip {
-  --pips: 1.25rem;
+  --pips: 1rem;
+  --pipx: 0;
+  --pipy: clamp(1.9rem, 4.2vw, 2.95rem);
+  width: var(--nb-left);
+  text-align: center;
   color: var(--soft);
 }
 .jx-card h2 {
@@ -122,13 +219,13 @@ html:not(.js) .jx-deck {
 .jx-card h2 a:focus-visible {
   outline: none;
 }
-.jx-card:has(h3 a:focus-visible) {
+/* The ring sits inside the page: the torn edge's mask would cut off one drawn outside it. */
+.jx-card:has(h2 a:focus-visible) {
   outline: 2px solid var(--ink);
-  outline-offset: 4px;
+  outline-offset: -0.6rem;
 }
 .jx-card .label {
   margin: 0;
-  padding-left: 1.75rem;
 }
 .jx-card p {
   margin: 0;
@@ -253,9 +350,22 @@ html:not(.js) .jx-deck {
   }
 }
 
-/* The list: ruled rows, as the journal always had, with the cluster and the short answer. */
+/* The list: ruled rows, as the journal always had, with the cluster and the short answer, on one
+   notebook page. The rows' own hairlines are its rules, so the paper's are left off. */
+.nb-page.jx-list {
+  --nb-rule: transparent;
+  --nb-left: clamp(1rem, 4vw, 2.6rem);
+  --cardr: 1.25rem;
+  max-width: 56rem;
+  padding: 1.25rem clamp(0.75rem, 3vw, 2rem) 0.75rem
+    calc(var(--nb-left) + clamp(0.6rem, 2.5vw, 1.75rem));
+}
 .jx-list .sub-rows {
   max-width: 52rem;
+  border-top: 0;
+}
+.jx-list .sub-rows li:last-child {
+  border-bottom: 0;
 }
 .jx-list .sub-rows h2 a {
   text-decoration: none;
@@ -272,13 +382,17 @@ html:not(.js) .jx-deck {
 @media (prefers-reduced-motion: reduce) {
   .jx-pile > li,
   .jx-pile > li.away,
-  .jx-rail li::before {
+  .jx-rail li::before,
+  .jx-tabs button {
     transition: none;
   }
 }
 @media (forced-colors: active) {
   .jx-card {
     border: 1px solid CanvasText;
+  }
+  .jx-tabs button[aria-pressed='true'] {
+    outline: 2px solid Highlight;
   }
   .jx-rail li.now::before {
     background: Highlight;
@@ -328,63 +442,14 @@ html:has(.post-pill) {
   white-space: nowrap;
 }
 
-/* The byline: a small card with the portrait, who wrote it and when. */
+/* The byline: the drawer's press pass (ephemera/press-pass.css), clipped on beside the cluster's
+   drawing. The "Updated" stamp is the contact stamp (stamp.css), on the pass's own paper. */
 .post-by {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem 1rem;
-  width: fit-content;
-  max-width: 100%;
   margin-top: clamp(1.25rem, 3vh, 2rem);
-  padding: 0.75rem 1.25rem 0.75rem 0.75rem;
-  border-radius: 1.25rem;
-}
-.post-by-me {
-  flex: none;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: 50% 20%;
-  background: var(--well);
-}
-.post-by-t {
-  min-width: 0;
-}
-.post-by-t p {
-  margin: 0;
-}
-.post-by-name {
-  font-weight: 600;
-}
-.post-by-name a {
-  text-underline-offset: 0.2em;
-}
-.post-by .label {
-  margin-top: 0.2rem;
-}
-.post-by-changes {
-  margin-top: 0.35rem !important;
-  max-width: 34rem;
-  font-size: 0.9375rem;
 }
 .post-stamp {
-  float: none;
   flex: none;
-  margin: 0 0 0 0.5rem;
 }
-@media (max-width: 36rem) {
-  .post-by {
-    flex-wrap: wrap;
-  }
-  .post-by-t {
-    flex: 1 1 12rem;
-  }
-  .post-stamp {
-    margin: 0.25rem 0 0.25rem auto;
-  }
-}
-
 /* The reading column beside its contents. legal.css sets the two columns from 64rem. */
 .post-doc {
   padding-top: 0;
@@ -792,6 +857,10 @@ html:not(.js) .post-prose table {
 .jx-card > * {
   grid-column: 1 / -1;
 }
+/* The number is placed against the whole page, padding and all, so it is out of the grid. */
+.jx-card > .pip {
+  grid-column: auto;
+}
 .jx-card > .label,
 .jx-card > h2 {
   grid-column: 1;
@@ -809,9 +878,10 @@ html:not(.js) .post-prose table {
   --jf-fill: var(--card);
 }
 /* On a post it stands beside the byline card, on the page itself. */
+/* The press pass hangs from its clip, so the drawing beside it keeps to the top too. */
 .post-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: clamp(0.75rem, 2vw, 1.5rem);
   margin-top: clamp(1.25rem, 3vh, 2rem);
 }
@@ -961,11 +1031,12 @@ html:not(.js) .post-prose table {
   }
 }
 
-/* A margin note (Aside.astro). Under 85rem it is the small grey line under its table, as the
-   source lines always were. */
+/* A margin note (Aside.astro): the drawer's sticky note (ephemera/margin-note.css). Under 85rem
+   it is stuck just under its table, the width of its words, in small type. */
 .post-prose .mnote {
-  margin: 0.6rem 0 1.75rem 1.25rem;
-  color: var(--soft);
+  width: fit-content;
+  max-width: min(34rem, 100%);
+  margin: 0.9rem 0 1.9rem 0.6rem;
   font-size: 0.875rem;
   line-height: 1.45;
 }
@@ -988,9 +1059,8 @@ html:not(.js) .post-prose table {
       15rem,
       calc(min(90rem, 100vw) - 2 * var(--gut) - 15rem - clamp(3rem, 6vw, 6rem) - 44rem - 1.75rem)
     );
+    max-width: none;
     margin: 0;
-    padding-top: 0.6rem;
-    border-top: 1px solid var(--line);
     font-size: 0.8125rem;
     transform: translateY(calc(-1 * var(--note-up, 100%)));
   }
@@ -1014,10 +1084,12 @@ html:not(.js) .post-prose table {
 .pchart {
   margin-top: 1.75rem;
 }
+/* The chart is printed on the drawer's print (ephemera/paper-print.css), which brings its own ink. */
+.pchart-print {
+  margin-bottom: 1.5rem;
+}
 .pchart-fig {
   margin: 0;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
 }
 .pchart-fig figcaption {
   display: block;

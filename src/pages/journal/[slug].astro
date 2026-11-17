@@ -4,8 +4,10 @@
    /journal/{slug} | A journal post
    ============================================================================
    Top to bottom: a visible breadcrumb (the same three crumbs the BreadcrumbList
-   says), the H1, the byline card (portrait, "Written by Nathan Nixon", the
-   dates and, on a revised post, the "Updated" stamp with what changed) with
+   says), the H1, the byline as a press pass on a clip (the drawer's PressPass:
+   the portrait as the pass photo, "Written by Nathan Nixon", the post's dates,
+   reading time and section on the pass itself, never on the photo, and on a
+   revised post the "Updated" stamp across its corner with what changed) with
    the cluster's small drawing beside it (src/lib/journal-art.ts), then the
    reading column beside its table of contents:
 
@@ -14,9 +16,9 @@
        with `highlight` gets the marker across that phrase (.hl).
      - The post itself. Tables are styled like the price cards (journal-post.js
        wraps them so a wide one scrolls inside its card and never the page).
-       The "Sources:" line under each is an <Aside>: a margin note beside its
-       table from 85rem, the small line under it below that. A table wrapped
-       in <BarChart> is also drawn as bars, read from the table itself.
+       The "Sources:" line under each is an <Aside>: a sticky note beside its
+       table from 85rem, stuck under it below that. A table wrapped in
+       <BarChart> is also drawn as bars on a print, read from the table itself.
      - Two dealt cards: the post's sector page and Prices.
 
    The table of contents is one <nav popover>: a sticky rail on a wide screen,
@@ -34,6 +36,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/pages/legal.css';
 import '../../styles/pages/journal.css';
 import Closing from '../../components/Closing.astro';
+import PressPass from '../../components/ephemera/PressPass.astro';
 import PostReceipt from '../../components/PostReceipt.astro';
 import ProseLink from '../../components/ProseLink.astro';
 import Aside from '../../components/Aside.astro';
@@ -102,16 +105,16 @@ const coverImage = cover ? await getImage({ src: cover, width: 1200, format: 'jp
 // generated /og/journal/<id>.png, which carries the studio name (scripts/generate-og.mjs).
 const image = new URL(coverImage?.src ?? `/og/journal/${entry.id}.png`, site.url).toString();
 const label = clusterLabel(cluster);
-// The byline's small line, built as one string so no stray space lands before a comma. Every
-// part is a date, a number or a cluster name from src/lib/journal.ts, never free text.
-const byline = [
-  label,
-  `Published <time datetime="${iso(published)}">${fmt.format(published)}</time>`,
-  updated ? `updated <time datetime="${iso(updated)}">${fmt.format(updated)}</time>` : '',
-  `${minutes} min read`,
-]
-  .filter(Boolean)
-  .join(', ');
+// The press pass's fields. Every value is a date, a number or a cluster name from
+// src/lib/journal.ts, never free text.
+const fields = [
+  { k: 'Published', v: fmt.format(published), dt: iso(published) },
+  ...(updated ? [{ k: 'Updated', v: fmt.format(updated), dt: iso(updated) }] : []),
+  { k: 'Reading', v: `${minutes} min` },
+  ...(label ? [{ k: 'Section', v: label }] : []),
+];
+// The barcode's seed: the day it was published, so every post's pass has its own code.
+const seed = Number(iso(published).replace(/-/g, ''));
 
 // The two end cards: the sector page the post is about (or the work, when it has none) and Prices.
 const sp = sector ? sectorPage(sector) : undefined;
@@ -187,33 +190,27 @@ const schemas = [
     </nav>
     <h1 aria-label={plainText(title)} set:html={wordSpans(title)} />
     <div class="post-top">
-      <div class="card post-by">
-        <img
-          class="post-by-me"
-          src="/assets/about/portrait-bw-520.webp"
-          alt=""
-          width="56"
-          height="56"
-          decoding="async"
-        />
-        <div class="post-by-t">
-          <p class="post-by-name">
-            Written by <a href="/about/">{site.ownerName}</a>
+      <PressPass class="post-by" photo="/assets/about/portrait-bw-520.webp" seed={seed}>
+        <dl class="press-fields">
+          {fields.map((f) => (
+            <div>
+              <dt>{f.k}</dt>
+              <dd>{f.dt ? <time datetime={f.dt}>{f.v}</time> : f.v}</dd>
+            </div>
+          ))}
+        </dl>
+        {updated && changes && (
+          <p class="press-note post-by-changes">
+            <b>What changed:</b> {changes}
           </p>
-          <p class="label" set:html={byline} />
-          {updated && changes && (
-            <p class="post-by-changes">
-              <b>What changed:</b> {changes}
-            </p>
-          )}
-        </div>
+        )}
         {updated && (
-          <span class="stamp post-stamp" aria-hidden="true">
+          <span slot="stamp" class="stamp post-stamp" aria-hidden="true">
             <span class="stamp-word">Updated</span>
             <span class="stamp-date">{fmt.format(updated)}</span>
           </span>
         )}
-      </div>
+      </PressPass>
       <Fragment set:html={faceSvg(cluster, 'post-face')} />
     </div>
   </header>

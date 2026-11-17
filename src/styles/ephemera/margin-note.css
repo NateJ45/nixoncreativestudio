@@ -1,0 +1,73 @@
+/* ============================================================================
+   The sticky note (MarginNote.astro)
+   ============================================================================
+   A fixed piece of paper, the same in both themes, so its colours are its own.
+   Ink on the yellow clears 12.9:1 and links are the ink, underlined
+   (kit-tokens.test.ts, "the drawer's fixed paper"). The turn is the `rotate`
+   property and the lift is `translate`, so a page can still place the note
+   with `transform` without undoing either. */
+.sticky-note {
+  --note: #fbf0a4;
+  --note-ink: #2b2714;
+  --note-glue: rgba(120, 100, 10, 0.09);
+  /* The prose underlines links in --accent: on this paper, the light side's blue. */
+  --accent: #2f3fe6;
+  position: relative;
+  padding: 0.85rem 0.95rem 0.95rem;
+  border-radius: 0.15rem 0.15rem 0.2rem 1.1rem / 0.15rem 0.15rem 0.2rem 0.5rem;
+  background:
+    linear-gradient(var(--note-glue), var(--note-glue)) 0 0 / 100% 1.35rem no-repeat,
+    linear-gradient(170deg, rgba(255, 255, 255, 0.35), transparent 45%),
+    var(--note);
+  color: var(--note-ink);
+  box-shadow:
+    0 0 0 1px rgba(80, 66, 0, 0.08),
+    0 0.55rem 0.9rem -0.6rem rgba(0, 0, 0, 0.45),
+    0.15rem 1.1rem 1rem -1rem rgba(0, 0, 0, 0.35);
+  rotate: var(--note-tilt, -1.2deg);
+  transition:
+    rotate 0.6s cubic-bezier(0.3, 1.6, 0.5, 1),
+    translate 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.sticky-note:hover,
+.sticky-note:focus-within {
+  rotate: 0deg;
+  translate: 0 -2px;
+}
+.sticky-note a {
+  color: var(--note-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+.sticky-note a:hover {
+  text-decoration-thickness: 2px;
+}
+.sticky-note a:focus-visible {
+  outline: 2px solid var(--note-ink);
+  outline-offset: 2px;
+}
+.sticky-note > :first-child {
+  margin-top: 0;
+}
+.sticky-note > :last-child {
+  margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky-note {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .sticky-note {
+    border: 1px solid CanvasText;
+  }
+}
+@media print {
+  .sticky-note {
+    rotate: none;
+    box-shadow: none;
+    border: 1px solid #999;
+  }
+}
