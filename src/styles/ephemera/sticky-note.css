@@ -1,0 +1,48 @@
+/* ---- Sticky note (StickyNote.astro) ---------------------------------------
+   A square of the client's own paper, tinted with their color so it reads as theirs, a strip of
+   tape across the top and a slight curl at the bottom corner. A fixed piece of paper: the same on
+   both sides of the page, so it carries its own ink and never the page's --ink. The tint is light
+   enough that the ink on it clears AA whatever the client's color (the mix is at most a fifth
+   color). Placement (where it sticks, which way it leans) is the page's business. */
+.sticky {
+  --note: color-mix(in srgb, var(--c, #e8c547) 16%, var(--p, #fffbea));
+  --note-ink: #1b1d2a;
+  --note-soft: #4a4a44;
+  --note-rule: rgba(27, 29, 42, 0.18);
+  position: relative;
+  padding: 2.4rem clamp(1.1rem, 2.4vw, 1.75rem) clamp(1.25rem, 2.4vw, 1.75rem);
+  border-radius: 0.2rem 0.2rem 0.35rem 1.4rem / 0.2rem 0.2rem 0.35rem 0.9rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 3.2rem),
+    linear-gradient(200deg, transparent 70%, rgba(0, 0, 0, 0.04)), var(--note);
+  color: var(--note-ink);
+  rotate: var(--tilt, -0.8deg);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.08),
+    0 0.6rem 1rem -0.6rem rgba(0, 0, 0, 0.28),
+    -0.4rem 1.6rem 1.8rem -1.4rem rgba(0, 0, 0, 0.35);
+}
+/* The tape: a strip of matte tape across the top, a little crooked. */
+.sticky::after {
+  content: '';
+  position: absolute;
+  top: -0.65rem;
+  left: 50%;
+  width: min(7.5rem, 40%);
+  height: 1.5rem;
+  translate: -50% 0;
+  rotate: 2.5deg;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 5px),
+    rgba(236, 233, 222, 0.72);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+@media (forced-colors: active) {
+  .sticky {
+    border: 1px solid CanvasText;
+  }
+  .sticky::after {
+    display: none;
+  }
+}
