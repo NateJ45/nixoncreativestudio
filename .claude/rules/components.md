@@ -35,7 +35,7 @@ Loads when components, layouts, scripts or `src/lib` are touched. Look and motio
 - `SectorLean`: the whole of a lean sector page (/schools/, /nonprofits/, /small-business/), drawn from `src/data/sector-pages.ts`.
 - `QuoteBand`: a client's quote on their own color, read from the study's `testimonials` (`slug`, `quote` index, `flip`). It throws if the quote does not exist.
 - `PriceHand` and `DealtPrices`: the three starting-price cards and the "Every price is public" section around them; both read `src/data/pricing.ts`. Each card has a "Turn over" button and a back with its tier's features (`price-turn.js`, `price-turn.css`, imported by `PriceHand`); the front stays the `a.pc-face` link.
-- `home/WhatChanged`, `home/EditDemo`, `home/PhotoStrip`, `home/ProcessBeats`: the home sections after the grid (`homepage-and-pages.md`).
+- `home/WhatChanged`, `home/PhotoStrip`, `home/ProcessBeats`: the home sections after the grid (`homepage-and-pages.md`).
 - `OffTheClock`: About's four turning cards; a card's `toy` (`'reel'` or `'course'`) puts the camera roll or the course line on its back.
 - `TierPicker`, `SiteTools`, `Palette`, `PaletteOpen`, `SoundSwitch`: see the chrome above.
 - `Aside` (a margin note, `.mnote`, `role="note"`) and `BarChart` (a chart read from the table it wraps): journal post blocks, passed to `<Content components>` in `src/pages/journal/[slug].astro`.
@@ -47,7 +47,7 @@ Imported once from `BaseLayout.astro` after `kit.js`, or from `SiteTools`, and u
 - `roll.js` (`data-roll`, `ui.roll`), `rise.js` (section headings), `light.js` (`--sun-x`, `--sun-y`, `data-cincy`, `data-sheen`, `ui.sheen`), `cursor.js` (`data-cursor`), `blueprint.js` (the first-load drawing, decided by an inline `<head>` script, sessionStorage `ncs-bp`), `price-morph.js` (`tier-card`).
 - `sound.js` (`cue()`, installed as `ui.cue`; `setSound()`, `soundOn()`; the switches), `peek.js` and `peek-data.js` (the link previews; the one fetch of `/peek.json`, shared with the palette), `palette.js`, `sheet-drag.js`.
 - `ask.js` (`wireAsk(section)`): the one "Try it" engine, for /churches/ and the lean pages.
-- `prices-plan.js` (`setPlan()`, `onPlan()`, `planFromUrl()`), `prices-turn.js`, `prices-chapters.js`, `prices-steps.js`: /services. `tier-picker.js`: the dock's tier picker. `edit-demo.js`, `home-more.js`: home. `colophon.js`: the colophon's live facts. `colophon-deck.js`: the colophon's window deck.
+- `prices-plan.js` (`setPlan()`, `onPlan()`, `planFromUrl()`), `prices-turn.js`, `prices-chapters.js`, `prices-steps.js`: /services. `tier-picker.js`: the dock's tier picker. `home-more.js`: home. `colophon.js`: the colophon's live facts. `colophon-deck.js`: the colophon's window deck.
 - `kit.js` adds `ui.cue` (a no-op stand-in until `sound.js` loads), `ui.words(el, cls)` (the shared word splitter) and stand-ins for `ui.roll` and `ui.sheen`. Its own cues: `tick` when the dock's puck goes to a new link, `deal` as a hand opens, `open` and `close` for the client sheet.
 - `mailto-fallback.ts` also copies the address on a click for a `mailto:` link whose visible words are the address, and says "Copied" (`content.md`).
 - `window-chrome.ts` supplies the address-bar lock and the toolbar icons shared by `Tile`, the contact brief phone and the study windows.
