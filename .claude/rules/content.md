@@ -116,32 +116,32 @@ Site copy, pages, components and case-study MDX alike, is first person singular:
 
 Static routes generated at build time:
 
-| Path               | Source                                                                                                                   |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| `/`                | `src/pages/index.astro` (hero hand, work grid, What changed, quote band, Edit it, photo strip, prices, process, closing) |
-| `/work/`           | `src/pages/work/index.astro` (sector filter, `?sector=`, `?view=list`)                                                   |
-| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                                           |
-| `/churches/`       | `src/pages/churches.astro` (the large sector page; copy and metadata in `src/data/sector-pages.ts`)                      |
-| `/schools/`        | `src/pages/schools.astro`, drawn by `src/components/SectorLean.astro` from `sector-pages.ts`                             |
-| `/nonprofits/`     | `src/pages/nonprofits.astro`, the same                                                                                   |
-| `/small-business/` | `src/pages/small-business.astro`, the same                                                                               |
-| `/one-page/`       | `src/pages/one-page.astro` (the printable summary, one US Letter page)                                                   |
-| `/services/`       | `src/pages/services.astro` (nav label Prices)                                                                            |
-| `/contact/`        | `src/pages/contact.astro` (nav label Start a project; Web3Forms inquiry; prefill in `homepage-and-pages.md`)             |
-| `/about/`          | `src/pages/about.astro`                                                                                                  |
-| `/now/`            | `src/pages/now.astro` (words and date in `src/data/now.ts`)                                                              |
-| `/privacy/`        | `src/pages/privacy.astro`                                                                                                |
-| `/accessibility/`  | `src/pages/accessibility.astro`                                                                                          |
-| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                                       |
-| `/photography/`    | `src/pages/photography.astro` (the light table; gated until 6 photos, open since 2026-11-11)                             |
-| `/journal/`        | `src/pages/journal/index.astro` (deck and list, cluster chips)                                                           |
-| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                                             |
-| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                                  |
-| `/404`             | `src/pages/404.astro`                                                                                                    |
-| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                               |
-| `/llms.txt`        | `src/pages/llms.txt.ts` (plain-text studio summary for AI tools, prerendered)                                            |
-| `/peek.json`       | `src/pages/peek.json.ts` (the link previews' and palette's data: clients, prices, posts, pages, sector pages)            |
-| `/robots.txt`      | `public/robots.txt` (allows everything; names the AI crawlers explicitly)                                                |
+| Path               | Source                                                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `/`                | `src/pages/index.astro` (hero hand, work grid, What changed, quote band, photo strip, prices, process, closing) |
+| `/work/`           | `src/pages/work/index.astro` (sector filter, `?sector=`, `?view=list`)                                          |
+| `/work/{slug}/`    | `src/pages/work/[slug].astro` (per case study)                                                                  |
+| `/churches/`       | `src/pages/churches.astro` (the large sector page; copy and metadata in `src/data/sector-pages.ts`)             |
+| `/schools/`        | `src/pages/schools.astro`, drawn by `src/components/SectorLean.astro` from `sector-pages.ts`                    |
+| `/nonprofits/`     | `src/pages/nonprofits.astro`, the same                                                                          |
+| `/small-business/` | `src/pages/small-business.astro`, the same                                                                      |
+| `/one-page/`       | `src/pages/one-page.astro` (the printable summary, one US Letter page)                                          |
+| `/services/`       | `src/pages/services.astro` (nav label Prices)                                                                   |
+| `/contact/`        | `src/pages/contact.astro` (nav label Start a project; Web3Forms inquiry; prefill in `homepage-and-pages.md`)    |
+| `/about/`          | `src/pages/about.astro`                                                                                         |
+| `/now/`            | `src/pages/now.astro` (words and date in `src/data/now.ts`)                                                     |
+| `/privacy/`        | `src/pages/privacy.astro`                                                                                       |
+| `/accessibility/`  | `src/pages/accessibility.astro`                                                                                 |
+| `/colophon/`       | `src/pages/colophon.astro` (how the site is built)                                                              |
+| `/photography/`    | `src/pages/photography.astro` (the light table; gated until 6 photos, open since 2026-11-11)                    |
+| `/journal/`        | `src/pages/journal/index.astro` (deck and list, cluster chips)                                                  |
+| `/journal/{slug}/` | `src/pages/journal/[slug].astro` (per entry)                                                                    |
+| `/coming-soon/`    | `src/pages/coming-soon.astro` (always live, standalone)                                                         |
+| `/404`             | `src/pages/404.astro`                                                                                           |
+| `/rss.xml`         | `src/pages/rss.xml.js` (case studies feed)                                                                      |
+| `/llms.txt`        | `src/pages/llms.txt.ts` (plain-text studio summary for AI tools, prerendered)                                   |
+| `/peek.json`       | `src/pages/peek.json.ts` (the link previews' and palette's data: clients, prices, posts, pages, sector pages)   |
+| `/robots.txt`      | `public/robots.txt` (allows everything; names the AI crawlers explicitly)                                       |
 
 Redirects: `/work/west-chester-preschool` to `/work/` (Astro `redirects`), and real 301s in `public/_redirects`: `/prices` to `/services/`, `/start` to `/contact/`, and the retired studies. There is no `[sector].astro` and no `/colophon/parts/` any more.
 
