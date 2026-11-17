@@ -6,11 +6,11 @@
 
    The drawing lives in one cached file, public/assets/signature.svg, so a page only carries this
    small span (the closing has one on every page). The page shows it as a CSS mask over the ink
-   colour, so it takes the theme's tokens (src/styles/ephemera/signature.css). With no script,
-   under reduced motion and on paper it is the finished drawing (signature.svg#still). With a
-   script, src/scripts/signature.js keeps an off-screen signature blank until it comes into view,
-   then swaps in the moving file, whose own CSS draws each stroke in pen order. Each placement
-   asks for the file with its own `?at=` so each one writes from its own start.
+   colour, so it takes the theme's tokens (src/styles/ephemera/signature.css), and fetches it only
+   when it is wanted. src/scripts/signature.js swaps in the moving file once the signature comes
+   into view, and the file's own CSS draws each stroke in pen order. Each placement asks for it
+   with its own `?at=`, so each one writes from its own start. Already on screen at load, under
+   reduced motion, with no script and on paper it is the finished drawing (signature.svg#still).
 
    The drawing is decoration. The name is in the markup as visually hidden text ("Signed, Nathan
    Nixon" by default, from site.ownerName); pass `said={false}` where the name would muddle a

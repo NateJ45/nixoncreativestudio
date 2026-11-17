@@ -2,10 +2,11 @@
    Signature | the hand-drawn "Nathan Nixon" (src/components/ephemera/Signature.astro)
    ============================================================================
    The drawing is public/assets/signature.svg, used as a mask over the ink colour, so
-   it follows the theme's tokens. At rest, with no script, under reduced motion and on
-   paper it is the finished drawing (#still). src/scripts/signature.js sets
-   data-sig="wait" (blank) on a signature that is still off screen, then "go" with
-   --sig-go set to the moving file once it comes into view: the file draws itself.
+   it follows the theme's tokens. Nothing is fetched until it is wanted:
+   src/scripts/signature.js sets data-sig="go" and --sig-go to the moving file once a
+   signature comes into view (it draws itself), or straight to the finished drawing
+   (#still) when it is already on screen at load or motion is reduced. With no script
+   and on paper the finished drawing comes from the rules below.
 
    Size: --sig-w on the holder; the height follows the drawing (384 by 98).
    Ink: --sig-ink, the studio blue by default.
@@ -16,32 +17,29 @@
   width: var(--sig-w, 11rem);
   max-width: 100%;
   aspect-ratio: 384 / 98;
-  background-color: var(--sig-ink, var(--accent));
-  -webkit-mask: url('/assets/signature.svg#still') center / 100% 100% no-repeat;
-  mask: url('/assets/signature.svg#still') center / 100% 100% no-repeat;
+  -webkit-mask: var(--sig-go, none) center / 100% 100% no-repeat;
+  mask: var(--sig-go, none) center / 100% 100% no-repeat;
   /* The ink is a background, so ask for it on paper too. */
   print-color-adjust: exact;
 }
-.sig[data-sig='wait'] {
-  background-color: transparent;
-}
 .sig[data-sig='go'] {
-  -webkit-mask-image: var(--sig-go);
-  mask-image: var(--sig-go);
+  background-color: var(--sig-ink, var(--accent));
+}
+@media (scripting: none) {
+  .sig {
+    --sig-go: url('/assets/signature.svg#still');
+    background-color: var(--sig-ink, var(--accent));
+  }
 }
 @media print {
-  .sig[data-sig] {
+  .sig {
+    --sig-go: url('/assets/signature.svg#still');
     background-color: var(--sig-ink, var(--accent));
-    -webkit-mask-image: url('/assets/signature.svg#still');
-    mask-image: url('/assets/signature.svg#still');
   }
 }
 @media (forced-colors: active) {
-  .sig[data-sig] {
+  .sig[data-sig='go'] {
     forced-color-adjust: none;
     background-color: CanvasText;
-  }
-  .sig[data-sig='wait'] {
-    background-color: transparent;
   }
 }
