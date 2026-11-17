@@ -1,0 +1,49 @@
+---
+/* Nathan's signature, "Nathan Nixon" in a quick, confident hand: a big looped N, joined
+   lowercase, the t and x crossed and the i dotted after, and a sweeping line under it all. It is
+   a design mark for this site, drawn for it as single SVG strokes (Nathan asked for a made-up
+   one, 2026-11-16). It is not his legal signature and is not a scan of one.
+
+   The drawing lives in one cached file, public/assets/signature.svg, so a page only carries this
+   small span (the closing has one on every page). The page shows it as a CSS mask over the ink
+   colour, so it takes the theme's tokens (src/styles/ephemera/signature.css), and fetches it only
+   when it is wanted. src/scripts/signature.js swaps in the moving file once the signature comes
+   into view, and the file's own CSS draws each stroke in pen order. Each placement asks for it
+   with its own `?at=`, so each one writes from its own start. Already on screen at load, under
+   reduced motion, with no script and on paper it is the finished drawing (signature.svg#still).
+
+   The drawing is decoration. The name is in the markup as visually hidden text ("Signed, Nathan
+   Nixon" by default, from site.ownerName); pass `said={false}` where the name would muddle a
+   link's name, and say it beside it instead.
+
+   Size and ink come from the holder: --sig-w (width) and --sig-ink (a colour token, the studio
+   blue by default). Place it with `class`. `after` holds the pen a moment once it is in view
+   (ms), for a signature on something still arriving. */
+import '../../styles/ephemera/signature.css';
+import { site } from '../../data/site';
+
+interface Props {
+  /** The visually hidden words that stand for the drawing, or false when they are said elsewhere. */
+  said?: string | false;
+  /** Extra classes, for placing it. */
+  class?: string;
+  /** Wait this many milliseconds after it comes into view before the pen starts. */
+  after?: number;
+  /** A short word naming the placement, so each placement's drawing runs on its own clock. */
+  at?: string;
+}
+const { said = `Signed, ${site.ownerName}`, class: extra, after, at = 'here' } = Astro.props;
+---
+
+<span
+  class={['sig', extra].filter(Boolean).join(' ')}
+  data-sig
+  data-sig-src={`/assets/signature.svg?at=${at}`}
+  data-sig-after={after}
+>
+  {said && <span class="vh">{said}</span>}
+</span>
+
+<script>
+  import '../../scripts/signature.js';
+</script>

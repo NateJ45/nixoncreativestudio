@@ -1,0 +1,66 @@
+/* ============================================================================
+   Signature | the hand-drawn "Nathan Nixon" (src/components/ephemera/Signature.astro)
+   ============================================================================
+   The drawing is public/assets/signature.svg, used as a mask over the ink colour, so
+   it follows the theme's tokens. Nothing is fetched until it is wanted:
+   src/scripts/signature.js sets data-sig="go" and --sig-go to the moving file once a
+   signature comes into view (it draws itself), or straight to the finished drawing
+   (#still) when it is already on screen at load or motion is reduced. With no script
+   and on paper the finished drawing comes from the rules below.
+
+   Size: --sig-w on the holder; the height follows the drawing (384 by 98).
+   Ink: --sig-ink, the studio blue by default.
+   ============================================================================ */
+.sig {
+  position: relative;
+  display: inline-block;
+  width: var(--sig-w, 11rem);
+  max-width: 100%;
+  aspect-ratio: 384 / 98;
+  -webkit-mask: var(--sig-go, none) center / 100% 100% no-repeat;
+  mask: var(--sig-go, none) center / 100% 100% no-repeat;
+  /* The ink is a background, so ask for it on paper too. */
+  print-color-adjust: exact;
+}
+.sig[data-sig='go'] {
+  background-color: var(--sig-ink, var(--accent));
+}
+@media (scripting: none) {
+  .sig {
+    --sig-go: url('/assets/signature.svg#still');
+    background-color: var(--sig-ink, var(--accent));
+  }
+}
+@media print {
+  .sig {
+    --sig-go: url('/assets/signature.svg#still');
+    background-color: var(--sig-ink, var(--accent));
+  }
+}
+/* High contrast: the ink is CanvasText in every state that paints it (drawn by the script,
+   no script, and on paper), so the forced palette can never blank it to the page colour. */
+@media (forced-colors: active) {
+  .sig {
+    forced-color-adjust: none;
+  }
+  .sig[data-sig='go'] {
+    background-color: CanvasText;
+  }
+}
+@media (forced-colors: active) and (scripting: none) {
+  .sig {
+    background-color: CanvasText;
+  }
+}
+@media print and (forced-colors: active) {
+  .sig {
+    background-color: CanvasText;
+  }
+}
+/* A browser with no CSS masks would paint the ink as a solid block, so it shows nothing; the
+   name is still in the text beside it. */
+@supports not ((mask: none) or (-webkit-mask: none)) {
+  .sig {
+    background-color: transparent !important;
+  }
+}

@@ -25,6 +25,7 @@ import PostageStamp from '../components/ephemera/PostageStamp.astro';
 import Postmark from '../components/ephemera/Postmark.astro';
 import Envelope from '../components/ephemera/Envelope.astro';
 import SpecimenCard from '../components/ephemera/SpecimenCard.astro';
+import Signature from '../components/ephemera/Signature.astro';
 import { site } from '../data/site';
 import weeks from '../data/client-weeks.json';
 import stream from '../assets/photography/canvas/fall-stream.jpg';
@@ -272,6 +273,20 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
         <SpecimenCard weight={400} role="Everything you read" sample={site.tagline} />
       </div>
     </section>
+    <section>
+      <h2>Signature</h2>
+      <p>
+        Writes itself when it comes into view (scroll it out and reload to watch again). On the
+        ground, on a card, and small.
+      </p>
+      <div class="row">
+        <Signature at="drawer1" />
+        <div class="card-ish">
+          <Signature at="drawer2" />
+        </div>
+        <Signature class="sig-small" at="drawer3" />
+      </div>
+    </section>
   </div>
 </BaseLayout>
 
@@ -326,5 +341,8 @@ const frames = [{ src: stream }, { src: stones }, { src: tm, web: true }, { src:
   }
   .specs > :global(.spec) {
     width: 15rem;
+  }
+  .drawer :global(.sig-small) {
+    --sig-w: 6rem;
   }
 </style>

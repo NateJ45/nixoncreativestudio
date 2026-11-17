@@ -17,13 +17,14 @@
    row and drops a slip into the slot. Under reduced motion nothing feeds or
    travels and the changed lines are tinted for a moment. Without JavaScript the form and the receipt are
    hidden and a note points back at the table, which has every total for 1, 3 and
-   5 years.
+   5 years. The slip is signed at the foot (ephemera/Signature.astro), the name in the markup.
    ============================================================================ */
 import '../styles/receipt.css';
 import { carePlans, perWords, pricesAsOf, webTiers } from '../data/pricing';
 import { dollars, money } from '../lib/money';
 import { carePerYear, costRows } from '../lib/tier-costs';
 import { receipt, receiptLines, yearsWord } from '../lib/receipt';
+import Signature from './ephemera/Signature.astro';
 
 const hosting = carePlans.find((p) => p.name === 'Hosting')!;
 const perUnit = (period: string) => perWords(period).replace(/^a /, 'per ');
@@ -155,6 +156,11 @@ const needLine = needy
           ))}
         </dl>
         <p class="rcpt-foot">{`From each tier's starting price. Prices as of ${pricesAsOf}.`}</p>
+        {/* Signed at the foot of the slip, on a short rule. It writes itself once the slip has
+            fed out (prices.js prints the footnote last; the pen waits for the paper). */}
+        <div class="rcpt-sign">
+          <Signature class="rcpt-sig" at="receipt" after={900} />
+        </div>
       </div>
       <p class="vh" aria-live="polite" data-rcpt-say></p>
     </div>
