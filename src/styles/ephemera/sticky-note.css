@@ -1,9 +1,11 @@
 /* ---- Sticky note (StickyNote.astro) ---------------------------------------
    A square of the client's own paper, tinted with their color so it reads as theirs, a strip of
    tape across the top and a slight curl at the bottom corner. A fixed piece of paper: the same on
-   both sides of the page, so it carries its own ink and never the page's --ink. The tint is light
-   enough that the ink on it clears AA whatever the client's color (the mix is at most a fifth
-   color). Placement (where it sticks, which way it leans) is the page's business. */
+   both sides of the page, so it carries its own ink and never the page's --ink. The tint is the
+   client's hue at a fixed pale lightness, so the ink on it clears AA whatever the client's color.
+   (Decided 2026-11-17: mixing a dark color like WCP's navy into cream paper only darkened it and
+   the notes came out flat grey. The srgb mix stays for browsers without relative colors.)
+   Placement (where it sticks, which way it leans) is the page's business. */
 .sticky {
   --note: color-mix(in srgb, var(--c, #e8c547) 16%, var(--p, #fffbea));
   --note-ink: #1b1d2a;
@@ -21,6 +23,11 @@
     0 1px 1px rgba(0, 0, 0, 0.08),
     0 0.6rem 1rem -0.6rem rgba(0, 0, 0, 0.28),
     -0.4rem 1.6rem 1.8rem -1.4rem rgba(0, 0, 0, 0.35);
+}
+@supports (color: oklch(from red l c h)) {
+  .sticky {
+    --note: oklch(from var(--c, #e8c547) 0.955 0.035 h);
+  }
 }
 /* The tape: a strip of matte tape across the top, a little crooked. */
 .sticky::after {
