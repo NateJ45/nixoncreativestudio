@@ -90,29 +90,81 @@
   margin-top: 0.6rem;
   line-height: 1.4;
 }
-.sl-t blockquote {
-  margin: 1rem 0 0;
-  padding-left: 0.9rem;
-  border-left: 2px solid var(--line);
-  color: var(--soft);
-  font: 400 1rem/1.45 var(--body);
-  letter-spacing: 0;
+/* A review on a study (2026-11-20): the sentence with the key phrase in bigger type, the phrase
+   marked, the full review folded under it, then the same face, stars and Google link as the home
+   band (ReviewCite, kit.css), recoloured for a light page as /churches/ does. */
+.sl-rv {
+  margin: 1.25rem 0 0;
 }
-.sl-by {
-  margin-top: 0.5rem;
-  padding-left: 0.9rem;
-  color: var(--soft);
-  font-size: 0.9375rem;
-  line-height: 1.35;
+.sl-rv + .sl-rv {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
 }
-.sl-by b {
-  display: block;
+.sl-rv blockquote {
+  margin: 0;
+  color: var(--ink);
+  font: 600 clamp(1.125rem, 1.5vw, 1.3125rem) / 1.35 var(--display);
+  letter-spacing: -0.01em;
+}
+.sl-rv .hl {
+  margin-inline: -0.1em;
+  padding: 0.02em 0.1em 0.06em;
+  border-radius: 0.14em;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--ink);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.sl-more {
+  margin-top: 0.6rem;
+}
+.sl-more summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--ink);
   font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  list-style: none;
 }
-.sl-by span {
-  display: block;
-  margin-top: 0.15rem;
+.sl-more summary::-webkit-details-marker {
+  display: none;
+}
+.sl-more summary::after {
+  content: '+';
+  margin-left: 0.4rem;
+  text-decoration: none;
+}
+.sl-more[open] summary::after {
+  content: '−';
+}
+.sl-more p {
+  margin-top: 0.25rem;
+  color: var(--soft);
+  font: 400 1rem/1.5 var(--body);
+}
+.sl-rv .rv-cite {
+  margin-top: 1rem;
+  color: var(--soft);
+}
+.sl-rv .rv-who b {
+  color: var(--ink);
+}
+.sl-rv .rv-face {
+  box-shadow: 0 0 0 2px var(--card);
+}
+.sl-rv .rv-proof {
+  margin-top: 0.6rem;
+}
+@media (forced-colors: active) {
+  .sl-rv .hl {
+    background: Mark;
+    color: MarkText;
+  }
 }
 .sl-go {
   display: flex;
