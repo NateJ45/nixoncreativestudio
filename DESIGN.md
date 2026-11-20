@@ -156,7 +156,7 @@ Shapes: cards 1.25rem, bands and the closing 1.75rem, buttons and the dock fully
 
 **The page softens under the chrome.** Content blurs progressively over the bottom 5rem, under the dock, and over the top 5rem while the top line's pills float (`.pblur`, three stacked `backdrop-filter` layers, each masked toward its edge). The layers are siblings of the dock and the top line, never children, because a backdrop filter inside the named dock blurs nothing.
 
-**The bottom edge goes soft.** A fixed progressive blur (Details Vault "Progressive Blur", `.progressive-blur` in `kit.css`, markup in `BaseLayout.astro`) runs along the bottom 200px of the screen (160px on phones): eight masked `backdrop-filter` layers whose blur doubles each step, so the page softens as it passes under the dock. It is CSS only, never takes a pointer, sits under the dock (z-index 35), carries no colour of its own, and is hidden in print. It does not move, so reduced motion keeps it.
+**The bottom edge goes soft.** A fixed progressive blur (Details Vault "Progressive Blur", `.progressive-blur` in `kit.css`, markup in `BaseLayout.astro`) runs along the bottom 200px of the screen (160px under 680px wide) wherever there is a fine pointer that hovers; touch screens go without it, since on a phone it covers a fifth of the screen and is costly to composite: eight masked `backdrop-filter` layers whose blur doubles each step, so the page softens as it passes under the dock. It is CSS only, never takes a pointer, sits under the dock (z-index 35), carries no colour of its own, and is hidden in print. It does not move, so reduced motion keeps it.
 
 ## 6. Components
 
