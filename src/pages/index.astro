@@ -135,16 +135,27 @@ const heroCut: Record<string, string> = {
   'efficient, responsive, and delivered impressive results promptly':
     'delivered impressive results promptly',
 };
-const voices: { figure: string; what: string; who: string }[] = [];
+/* Public Google reviews come first, newest first (2026-11-20), as they lead the home band: a
+   stranger can check those, and the newest reviews are the ones to see early in the loop. */
+const studyVoices: { figure: string; what: string; who: string; pub: number; date: number }[] = [];
 for (const study of await getCollection('case-studies')) {
   const who = clients.find((c) => c.slug === study.id)?.name;
   for (const t of study.data.testimonials ?? []) {
     if (!t.highlight || !who) continue;
     const words = heroCut[t.highlight] ?? t.highlight;
     if (!t.quote.includes(words)) throw new Error(`heroCut for ${study.id} is not in the quote`);
-    voices.push({ figure: `“${words}”`, what: '', who });
+    studyVoices.push({
+      figure: `“${words}”`,
+      what: '',
+      who,
+      pub: t.source ? 1 : 0,
+      date: t.date.valueOf(),
+    });
   }
 }
+const voices: { figure: string; what: string; who: string }[] = studyVoices
+  .sort((a, b) => b.pub - a.pub || (a.pub ? b.date - a.date : 0))
+  .map(({ figure, what, who }) => ({ figure, what, who }));
 for (const q of QUOTES)
   if (q.highlight) voices.push({ figure: `“${q.highlight}”`, what: '', who: q.org });
 const heroProof = figures.flatMap((p, i) => {
