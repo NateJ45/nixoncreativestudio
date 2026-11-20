@@ -14,11 +14,14 @@ import '../styles/pages/sector.css';
 import Tile from './Tile.astro';
 import Closing from './Closing.astro';
 import SectorReading from './SectorReading.astro';
+import ReviewCite from './ReviewCite.astro';
+import RatingChip from './RatingChip.astro';
 import { webTiers } from '../data/pricing';
 import { SITUATIONS, type LeanSector, type Rich } from '../data/sector-pages';
 import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { money } from '../lib/money';
+import { excerpt, markedQuote } from '../lib/highlight';
 import { plainText, wordSpans } from '../lib/words';
 
 interface Props {
@@ -35,14 +38,26 @@ const askLong = `/assets/study/${asked.slug}-mobile.webp`;
 const entries = await getCollection('case-studies');
 /* Public Google reviews lead (2026-11-20): every one a study has, newest first, up to two, so a
    second review from the same client (Lisa Cortez's, West Chester Preschool) shows here too. A
-   study with none keeps its first quote. */
+   study with none keeps its first quote.
+   Each one reads like the home band (2026-11-20): the sentence that holds its key phrase, in
+   bigger type with the phrase marked, then the full review behind "Read the whole review", then
+   the face, stars and Google link (ReviewCite). Nothing is reworded: the sentence is cut out of
+   the quote word for word (lib/highlight.ts), and a quote that is one sentence shows whole. */
 const studies = clients.map((s) => {
   const all = entries.find((e) => e.id === s.slug)?.data.testimonials ?? [];
   const google = all
     .filter((t) => t.source)
     .sort((x, y) => y.date.valueOf() - x.date.valueOf())
     .slice(0, 2);
-  return { s, quotes: google.length ? google : all.slice(0, 1) };
+  const quotes = (google.length ? google : all.slice(0, 1)).map((t) => {
+    const key = excerpt(t.quote, t.highlight);
+    return {
+      ...t,
+      key: markedQuote(key, t.highlight),
+      whole: key === t.quote ? '' : markedQuote(t.quote, t.highlight),
+    };
+  });
+  return { s, quotes };
 });
 
 const situation = SITUATIONS.find((row) => row.sector === page.sector);
@@ -159,6 +174,7 @@ const rich = (copy: Rich) => copy;
           typeof part === 'string' ? part : <a href={part.href}>{part.text}</a>,
         )}
       </p>
+      <RatingChip cta="google_reviews_sector" />
       <ul class="sl-studies" data-sl-studies>
         {studies.map(({ s, quotes }) => (
           <li>
@@ -170,21 +186,25 @@ const rich = (copy: Rich) => copy;
               <p class="label">{s.sector}</p>
               <p class="sl-out">{s.outcome}</p>
               {quotes.map((quote) => (
-                <>
-                  <blockquote>{quote.quote}</blockquote>
-                  <p class="sl-by">
-                    <b>{quote.name}</b>
-                    {quote.title}
-                    {quote.context && <span>{quote.context}</span>}
-                    {quote.source && (
-                      <span>
-                        <a href={quote.source.url} target="_blank" rel="noopener">
-                          Read it on Google<span class="vh"> (opens in a new tab)</span>
-                        </a>
-                      </span>
-                    )}
-                  </p>
-                </>
+                <figure class="sl-rv">
+                  <blockquote set:html={quote.key} />
+                  {quote.whole && (
+                    <details class="sl-more" data-copy-ignore>
+                      <summary>Read the whole review</summary>
+                      <p set:html={quote.whole} />
+                    </details>
+                  )}
+                  <figcaption>
+                    <ReviewCite
+                      name={quote.name}
+                      title={quote.title}
+                      context={quote.context}
+                      photo={quote.photo}
+                      url={quote.source?.url}
+                      rating={quote.source?.rating}
+                    />
+                  </figcaption>
+                </figure>
               ))}
               <p class="sl-go">
                 <a href={s.study}>

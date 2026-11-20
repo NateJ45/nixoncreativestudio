@@ -12,6 +12,12 @@ import Stars from './Stars.astro';
 import { googleReviews } from '../data/reviews';
 import { getReviews } from '../lib/reviews';
 
+interface Props {
+  /** The analytics label for the click (the hero's by default; the sector pages pass their own). */
+  cta?: string;
+}
+const { cta = 'google_reviews_hero' } = Astro.props;
+
 /* One face per review: a review quoted in parts on two studies (Clark Remsburg's) shows once. */
 const faces = (await getReviews())
   .filter((r, i, all) => r.photo && all.findIndex((o) => o.url === r.url) === i)
@@ -20,7 +26,7 @@ const { rating, count, url } = googleReviews;
 const shown = rating.toFixed(1);
 ---
 
-<a class="rating" href={url} target="_blank" rel="noopener" data-cta="google_reviews_hero">
+<a class="rating" href={url} target="_blank" rel="noopener" data-cta={cta}>
   {faces.length > 0 && (
     <span class="rating-faces" aria-hidden="true">
       {faces.map((f) => (
