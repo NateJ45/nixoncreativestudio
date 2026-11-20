@@ -33,10 +33,17 @@ const asked = everyClient.find((c) => c.slug === page.ask.slug);
 if (!asked) throw new Error(`SectorLean: no client "${page.ask.slug}" for the Try it tool`);
 const askLong = `/assets/study/${asked.slug}-mobile.webp`;
 const entries = await getCollection('case-studies');
-const studies = clients.map((s) => ({
-  s,
-  quote: entries.find((e) => e.id === s.slug)?.data.testimonials?.[0],
-}));
+/* Public Google reviews lead (2026-11-20): every one a study has, newest first, up to two, so a
+   second review from the same client (Lisa Cortez's, West Chester Preschool) shows here too. A
+   study with none keeps its first quote. */
+const studies = clients.map((s) => {
+  const all = entries.find((e) => e.id === s.slug)?.data.testimonials ?? [];
+  const google = all
+    .filter((t) => t.source)
+    .sort((x, y) => y.date.valueOf() - x.date.valueOf())
+    .slice(0, 2);
+  return { s, quotes: google.length ? google : all.slice(0, 1) };
+});
 
 const situation = SITUATIONS.find((row) => row.sector === page.sector);
 const fits = situation
@@ -153,7 +160,7 @@ const rich = (copy: Rich) => copy;
         )}
       </p>
       <ul class="sl-studies" data-sl-studies>
-        {studies.map(({ s, quote }) => (
+        {studies.map(({ s, quotes }) => (
           <li>
             <div class="sl-w">
               <Tile client={s} lazy desk />
@@ -162,14 +169,23 @@ const rich = (copy: Rich) => copy;
               <h3>{s.name}</h3>
               <p class="label">{s.sector}</p>
               <p class="sl-out">{s.outcome}</p>
-              {quote && <blockquote>{quote.quote}</blockquote>}
-              {quote && (
-                <p class="sl-by">
-                  <b>{quote.name}</b>
-                  {quote.title}
-                  {quote.context && <span>{quote.context}</span>}
-                </p>
-              )}
+              {quotes.map((quote) => (
+                <>
+                  <blockquote>{quote.quote}</blockquote>
+                  <p class="sl-by">
+                    <b>{quote.name}</b>
+                    {quote.title}
+                    {quote.context && <span>{quote.context}</span>}
+                    {quote.source && (
+                      <span>
+                        <a href={quote.source.url} target="_blank" rel="noopener">
+                          Read it on Google<span class="vh"> (opens in a new tab)</span>
+                        </a>
+                      </span>
+                    )}
+                  </p>
+                </>
+              ))}
               <p class="sl-go">
                 <a href={s.study}>
                   Read the case study<span class="vh">: {s.name}</span>
