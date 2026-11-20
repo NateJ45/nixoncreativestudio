@@ -12,7 +12,10 @@ import Stars from './Stars.astro';
 import { googleReviews } from '../data/reviews';
 import { getReviews } from '../lib/reviews';
 
-const faces = (await getReviews()).filter((r) => r.photo).slice(0, 3);
+/* One face per review: a review quoted in parts on two studies (Clark Remsburg's) shows once. */
+const faces = (await getReviews())
+  .filter((r, i, all) => r.photo && all.findIndex((o) => o.url === r.url) === i)
+  .slice(0, 3);
 const { rating, count, url } = googleReviews;
 const shown = rating.toFixed(1);
 ---

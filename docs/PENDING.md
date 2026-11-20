@@ -160,6 +160,12 @@ Orangeburg. The homepage shows Richard Burnett's (Theology Matters).
   with the others in its `alsoOn: [slug]`. Never paste it into a second study:
   `src/lib/study-quotes.ts` shows it on those pages, and the home band, hero and
   review count read each quote once.
+- A long review about more than one site can instead be SPLIT (Clark Remsburg's
+  Google review, 2026-11-20): each study gets the sentences about it, cut with
+  `…`, the same `source.url`, a `context` line saying it is shortened, and no
+  `alsoOn`. Only the client's own sentences, never reworded; the Google link
+  opens the whole review. The review count test and the rating chip's faces
+  count a review once by its link.
 - When the same person wrote more than once (Richard's 2025 email quote and his
   2026 review), give each quote its own `date` and the same first and last
   name. The study page and the home band then put both on one card or slide,

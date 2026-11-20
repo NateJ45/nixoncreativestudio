@@ -13,11 +13,14 @@ import { fileURLToPath } from 'node:url';
 import { googleReviews } from '../data/reviews.ts';
 
 const dir = fileURLToPath(new URL('../content/case-studies/', import.meta.url));
+// One review can be quoted in parts on more than one study (Clark Remsburg's, split between
+// Orangeburg and Theology Matters on 2026-11-20), so reviews are counted by their Google link.
+const caseLinks = readdirSync(dir)
+  .filter((f) => f.endsWith('.mdx'))
+  .map((f) => readFileSync(dir + f, 'utf8').split(/\r?\n---\r?\n/)[0])
+  .flatMap((front) => [...front.matchAll(/^ {6}url: '([^']+)'\s*$/gm)].map((m) => m[1]));
 const quotedOnGoogle =
-  readdirSync(dir)
-    .filter((f) => f.endsWith('.mdx'))
-    .map((f) => readFileSync(dir + f, 'utf8').split(/\r?\n---\r?\n/)[0])
-    .reduce((n, front) => n + (front.match(/^ {6}platform: google\s*$/gm) ?? []).length, 0) +
+  new Set(caseLinks).size +
   // and the quotes with no case study
   (
     readFileSync(fileURLToPath(new URL('../data/quotes.ts', import.meta.url)), 'utf8').match(

@@ -28,11 +28,11 @@ import { fileURLToPath } from 'node:url';
 
 /** The studies with a real quote on file (vault note, 2026-10-30). */
 const WITH_QUOTES: Record<string, number> = {
-  'theology-matters': 2, // plus Richard's Google review (2026-11-16)
+  'theology-matters': 3, // plus Richard's Google review (2026-11-16) and the TM half of Clark's (2026-11-20)
   'foundation-for-reformed-theology': 1,
   'stone-steps-50k': 1, // now with David's Google review link (2026-11-19)
   'first-baptist-muncie': 2,
-  'first-presbyterian-orangeburg': 2, // plus Clark Remsburg's Google review (2026-11-19)
+  'first-presbyterian-orangeburg': 2, // plus the Orangeburg half of Clark Remsburg's Google review (2026-11-19, split 2026-11-20)
   // Public Google reviews (2026-11-15), each with its link and photo.
   'reid-design': 1,
   'west-chester-preschool': 1,
