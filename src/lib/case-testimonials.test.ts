@@ -35,7 +35,7 @@ const WITH_QUOTES: Record<string, number> = {
   'first-presbyterian-orangeburg': 2, // plus the Orangeburg half of Clark Remsburg's Google review (2026-11-19, split 2026-11-20)
   // Public Google reviews (2026-11-15), each with its link and photo.
   'reid-design': 1,
-  'west-chester-preschool': 1,
+  'west-chester-preschool': 2, // plus Lisa Cortez's Google review (2026-11-20)
 };
 
 const dir = fileURLToPath(new URL('../content/case-studies/', import.meta.url));
