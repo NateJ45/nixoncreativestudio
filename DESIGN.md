@@ -156,6 +156,8 @@ Shapes: cards 1.25rem, bands and the closing 1.75rem, buttons and the dock fully
 
 **The page softens under the chrome.** Content blurs progressively over the bottom 5rem, under the dock, and over the top 5rem while the top line's pills float (`.pblur`, three stacked `backdrop-filter` layers, each masked toward its edge). The layers are siblings of the dock and the top line, never children, because a backdrop filter inside the named dock blurs nothing.
 
+**The bottom edge goes soft.** A fixed progressive blur (Details Vault "Progressive Blur", `.progressive-blur` in `kit.css`, markup in `BaseLayout.astro`) runs along the bottom 200px of the screen (160px on phones): eight masked `backdrop-filter` layers whose blur doubles each step, so the page softens as it passes under the dock. It is CSS only, never takes a pointer, sits under the dock (z-index 35), carries no colour of its own, and is hidden in print. It does not move, so reduced motion keeps it.
+
 ## 6. Components
 
 - **The signature** (`ephemera/Signature.astro`): "Nathan Nixon" in a made-up, quick hand (a big looped N, joined lowercase, the t crossed and the i dotted after, a sweeping underline), in the studio blue. It writes itself once, in pen order, when it comes into view; with no script or reduced motion it is simply drawn. It signs the last card of the closing on every page and the foot of the /services receipt. A design mark, not Nathan's legal signature.
