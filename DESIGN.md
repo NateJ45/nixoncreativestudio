@@ -120,7 +120,7 @@ One family, set in weight and spacing rather than in different faces.
 
 - **Headings** (h1 to h3, `.end h2`, `blockquote`, `.mark`): weight 500, `letter-spacing: -0.04em`, line-height about 1, `text-wrap: balance`. Emphasis is a `<b>` at weight 700, never a colour alone and never capitals.
 - **The display scale** is three tokens in `:root`: `--type-h1` for a page's H1 and the closing's line, `--type-h2` for a section, `--type-h3` for a card. Peer headings use the same token. A case study H1 is `--type-h1` unless the client's name is long enough to need less room. The homepage headline, the `.giant` lines and the long-form `.prose` headings sit outside it on purpose.
-- **Body**: 400 at 1.0625rem and 1.45 line-height, tracked `-0.01em`. Every `p` takes `text-wrap: pretty` so no word sits alone on a last line.
+- **Body**: 400 at 1.0625rem and 1.45 line-height, tracked `-0.01em`. Every `p` takes `text-wrap: pretty` so no word sits alone on a last line. Text inside a card or a chip is one step smaller, 1rem, so it reads as held by its container.
 - **`.label`**: the small label voice for figures, counts and facts. 0.8125rem, weight 500, uppercase, `0.07em` tracking, tabular numbers, `--soft`. Still Hanken, set small and even so numbers line up.
 - **The wordmark** is the whole name in Hanken, with "Nixon" at 700 and the rest at 500 (`.mark`). The OG cards and the favicon draw the same name from the two static weights in `brand/fonts/`.
 
