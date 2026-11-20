@@ -111,6 +111,7 @@ for (const [what, fg, bg] of UNFOLD_BACKS) {
 }
 
 // The Lab cards on /work keep the cobalt back on either side, so their pairs hold in both themes.
+// The /photography mosaic uses the same back, so it holds in both themes too.
 const BACK_TEXT: [string, string, string][] = [
   ['lab card text', token('back-ink'), token('back')],
   ['lab card text on its screen', token('back-ink'), token('back-raise')],
@@ -119,6 +120,10 @@ const BACK_TEXT: [string, string, string][] = [
   ['lab card blue (links)', token('back-accent'), token('back')],
   ['lab card blue on its screen', token('back-accent'), token('back-raise')],
   ['lab card button (cobalt on bone)', token('back'), token('back-ink')],
+  // The /photography mosaic ("Whole days") is staged on the same back: its headline at rest, on
+  // the stage and on a tile still loading, and the tile focus ring (bone with a cobalt edge).
+  ['photography mosaic headline on its stage', token('back-ink'), token('back')],
+  ['photography mosaic headline on a loading tile', token('back-ink'), token('back-raise')],
 ];
 
 for (const [what, fg, bg] of BACK_TEXT) {

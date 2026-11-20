@@ -67,10 +67,15 @@ export const BOOKING_EVERY = 6;
 /* ---- Chapters: whole days, near the top of the page ---------------------------- */
 
 /**
- * The shoots the page tells as chapters, in order (prototype, 2026-11-14): a client is
- * asking "will he cover our day well?", so each chapter shows one day, led by its best
- * frame (a 6 s graded film where there is one) with a few more from the same set.
- * `lead` is an entry's slug in that set; the unit test checks both.
+ * The shoots the page tells as "Whole days", one frame a day (2026-11-20: the section is now
+ * the mosaic reveal, `[data-mosaic-reveal]` in photography.astro). A client is asking "will he
+ * cover our day well?", so each tile is one whole day, named by its set and its line.
+ *
+ * The order is the mosaic's, tile by tile: two across the top, then a tall frame, the
+ * featured frame and another tall frame, then two across the bottom. So the third and fifth
+ * leads are portrait photos, and the fourth (the frame that fills the screen first and keeps
+ * the headline over it) is a dark landscape photo, not a film poster. The unit test checks
+ * all of that, and that `lead` is an entry's slug in that set.
  */
 export const CHAPTERS: { set: SetId; lead: string; line: string }[] = [
   {
@@ -80,42 +85,43 @@ export const CHAPTERS: { set: SetId; lead: string; line: string }[] = [
   },
   {
     set: 'vbs',
-    lead: 'film-vbs-arms',
+    lead: 'vbs-song',
     line: 'A week of Vacation Bible School: the songs, the crews, the park ranger and the big finish.',
+  },
+  {
+    set: 'hilltop-wedding',
+    lead: 'wedding-sky',
+    line: 'A wedding on a hilltop, in natural light.',
+  },
+  {
+    set: 'theology-matters',
+    lead: 'tm-lectern-bw',
+    line: 'A conference: the speakers, the panels and the conversations in between.',
+  },
+  {
+    set: 'easter-sunday',
+    lead: 'easter-pews',
+    line: 'Easter morning: a full choir, brass and a front of lilies.',
+  },
+  {
+    set: 'creek-day',
+    lead: 'creek-splash',
+    line: 'A young families picnic at the creek, in the last hour of sun.',
   },
   {
     set: 'rehearsal',
     lead: 'film-music-glass',
     line: 'Choir and band rehearsals in the sanctuary, filmed slow so the light does the work.',
   },
-  {
-    set: 'easter-sunday',
-    lead: 'film-easter-lilies',
-    line: 'Easter morning: a full choir, brass and a front of lilies.',
-  },
-  {
-    set: 'creek-day',
-    lead: 'film-creek-swim',
-    line: 'A young families picnic at the creek, in the last hour of sun.',
-  },
-  {
-    set: 'theology-matters',
-    lead: 'tm-podium',
-    line: 'A conference: the speakers, the panels and the conversations in between.',
-  },
-  {
-    set: 'hilltop-wedding',
-    lead: 'wedding-field-kiss-2',
-    line: 'A wedding on a hilltop, in natural light.',
-  },
 ];
 
 /**
  * A chapter's frames: the lead (or, with no lead given, the set's first film, else its
  * first landscape photo, else its first photo), then up to `more` others from the set:
- * photos before films, landscape before portrait (2026-11-14: the chapter boxes are
+ * photos before films, landscape before portrait (2026-11-14: the chapter boxes were
  * landscape, and a portrait cropped into one lost its heads on a phone), otherwise in
- * the order given. Empty when the set has no frames.
+ * the order given. Empty when the set has no frames. The mosaic asks for the lead
+ * alone (`more` = 0).
  */
 export function chapterFrames<
   T extends { slug: string; set?: string; video?: string; w?: number; h?: number },

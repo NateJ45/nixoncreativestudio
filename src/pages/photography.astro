@@ -25,7 +25,9 @@
 
    Motion first (prototype, 2026-11-14): the hero is a silent reel cut from the
    best graded films; "Whole days" tells one shoot per chapter (CHAPTERS in
-   src/lib/photo-table.ts); "Everything" opens on the grid with the films playing
+   src/lib/photo-table.ts), since 2026-11-20 as a mosaic reveal: one frame a day,
+   the featured one shrinking to open the other six as you scroll
+   (photo-mosaic.js); "Everything" opens on the grid with the films playing
    in place, and the light table is one press away (or ?view=table). The film
    strip went; "How a shoot works" follows "What I shoot", then "The kit"
    (src/data/photo-kit.ts): camera, lenses with a frame shot on each, gimbal, software.
@@ -153,25 +155,37 @@ const reelStill = await getImage({
   quality: 74,
 });
 
-// Chapters: whole days, each led by its best frame (src/lib/photo-table.ts, CHAPTERS). The lead
-// gets a larger image; a film lead plays while it is on screen.
-const chapters = await Promise.all(
-  CHAPTERS.map(async (c) => {
-    const frames = chapterFrames(prints, c);
-    const leadEntry = dealt.find((d) => d.slug === frames[0]?.slug);
-    const leadImg = leadEntry
-      ? await getImage({ src: leadEntry.image, widths: [640, 960], format: 'webp', quality: 76 })
-      : null;
+// "Whole days" (2026-11-20): the mosaic reveal. Seven days, one frame each, in the tile order
+// CHAPTERS gives (src/lib/photo-table.ts): 2 on top, then a side, the featured frame and a side,
+// then 2 below. The featured frame fills the screen first, so it gets screen-sized images; the
+// rest are never wider than half the screen. No size is ever larger than the photo itself.
+const days = await Promise.all(
+  CHAPTERS.map(async (c, n) => {
+    const lead = chapterFrames(prints, c, 0)[0];
+    const entry = dealt.find((d) => d.slug === lead?.slug);
+    if (!lead || !entry) throw new Error(`Whole days: no frame for ${c.set}`);
+    const featured = n === 3;
+    const want = featured ? [960, 1440, 1920] : [480, 800, 1200];
+    const widths = want.filter((w) => w <= entry.image.width);
+    const img = await getImage({
+      src: entry.image,
+      widths: widths.length ? widths : [entry.image.width],
+      format: 'webp',
+      quality: featured ? 78 : 74,
+    });
     return {
-      ...c,
+      ...lead,
+      featured,
       name: SETS[c.set],
-      count: prints.filter((p) => p.set === c.set).length,
-      frames,
-      leadSrc: leadImg?.src ?? '',
-      leadSet: leadImg?.srcSet.attribute ?? '',
+      line: c.line,
+      src: img.src,
+      srcSet: img.srcSet.attribute,
     };
   }),
-).then((list) => list.filter((c) => c.frames.length >= 3));
+);
+if (days.length !== 7) throw new Error(`Whole days needs seven days, has ${days.length}`);
+// The mosaic's three rows: two, three (side, featured, side) and two.
+const dayRows = [days.slice(0, 2), days.slice(2, 5), days.slice(5, 7)];
 
 // "What I shoot": each row names the filters it leads to and shows three of its frames.
 const rows = [
@@ -303,68 +317,46 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
     </p>
   </header>
 
-  {/* Chapters: one day each, led by its best frame. Every frame is a link to its full-size image
-       and opens the full view (with that day's strip) like any print; a film lead plays while it
-       is on screen. */}
-  <section class="sec pt-days" aria-labelledby="pt-days-title">
-    <div class="wrap">
-      <div class="sec-head">
-        <h2 id="pt-days-title">Whole days</h2>
-        <p>One shoot at a time, the way a church or a couple would book it.</p>
+  {/* Whole days: the mosaic reveal (Details Vault "Mosaic Reveal Scroll", 2026-11-20). One frame
+       from each of seven days. The featured frame fills a sticky, screen-high camera, then shrinks
+       about its centre to half size as you scroll, opening the other six around it, while the
+       headline's two lines are swept in by a band of the studio's blues and settle in bone. All of
+       it follows the scroll (src/scripts/photo-mosaic.js) and reverses on the way back up. With no
+       script, under reduced motion and in print it is simply the finished mosaic, one screen high.
+       Each tile is a link that opens its frame in the full view, with that day's strip, like any
+       print; focusing one shows the finished mosaic first, so the focus is never off camera. */}
+  <section data-mosaic-reveal aria-labelledby="pt-days-title">
+    <div class="mr-camera">
+      <div class="mr-collage" data-collage>
+        {dayRows.map((row, r) => (
+          <div class:list={['mr-row', { 'mr-outer': r !== 1 }]}>
+            {row.map((d) => (
+              <a
+                class:list={['mr-tile', { 'mr-featured': d.featured }]}
+                data-featured={d.featured || undefined}
+                href={d.video || d.large}
+                data-print={d.i}
+                aria-label={`${d.name}. ${d.line} ${d.video ? 'Film: ' : ''}${d.alt}`}
+              >
+                <img
+                  src={d.src}
+                  srcset={d.srcSet}
+                  sizes={d.featured ? '100vw' : '50vw'}
+                  width={d.w}
+                  height={d.h}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+            ))}
+          </div>
+        ))}
       </div>
-      <ol class="pt-chapters">
-        {chapters.map((c) => {
-          const [lead, ...rest] = c.frames;
-          return (
-            <li class="pt-chapter">
-              <div class="pt-chapter-head">
-                <h3>{c.name}</h3>
-                <p>{c.line}</p>
-                <p class="label">{c.count} frames</p>
-              </div>
-              <div class="pt-chapter-frames">
-                <a
-                  class="print pt-chapter-lead"
-                  href={lead.video || lead.large}
-                  data-print={lead.i}
-                  data-reel={lead.video || undefined}
-                  aria-label={`${lead.video ? 'Film ' : ''}${lead.title}. ${lead.alt}`}
-                >
-                  <img
-                    src={c.leadSrc}
-                    srcset={c.leadSet}
-                    sizes="(min-width: 52rem) 60vw, 100vw"
-                    width={lead.w}
-                    height={lead.h}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  {lead.video && <span class="pt-film label">Film</span>}
-                </a>
-                {rest.map((p) => (
-                  <a
-                    class="print"
-                    href={p.video || p.large}
-                    data-print={p.i}
-                    aria-label={`${p.video ? 'Film ' : ''}${p.title}. ${p.alt}`}
-                  >
-                    <img
-                      src={p.small}
-                      width={560}
-                      height={Math.round((560 * p.h) / p.w)}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    {p.video && <span class="pt-film label">Film</span>}
-                  </a>
-                ))}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      <h2 id="pt-days-title" class="mr-headline" data-mosaic-headline data-rise="off">
+        <span class="mr-line">Whole days,</span>
+        <span class="mr-line">one at a time.</span>
+      </h2>
     </div>
   </section>
 
@@ -809,4 +801,5 @@ const heading = 'Photography that matches <b>the website it lives on.</b>';
 
 <script>
   import '../scripts/photo-table.js';
+  import '../scripts/photo-mosaic.js';
 </script>

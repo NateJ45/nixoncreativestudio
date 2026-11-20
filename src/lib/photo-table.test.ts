@@ -198,6 +198,43 @@ test('every chapter is a real set, its lead is in that set, and it has frames to
   }
 });
 
+// A JPEG's width and height, from its first frame header (no image library in the unit tests).
+function jpegSize(url: URL): { w: number; h: number } {
+  const b = readFileSync(url);
+  let i = 2;
+  while (i < b.length) {
+    if (b[i] !== 0xff) {
+      i++;
+      continue;
+    }
+    const m = b[i + 1];
+    if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+      return { h: b.readUInt16BE(i + 5), w: b.readUInt16BE(i + 7) };
+    }
+    i += 2 + b.readUInt16BE(i + 2);
+  }
+  throw new Error(`${url}: no frame header`);
+}
+
+test('"Whole days" fills the mosaic: seven days, tall sides, a still in the middle', () => {
+  // The mosaic reveal (photography.astro, [data-mosaic-reveal]) has exactly seven tiles, in
+  // CHAPTERS order: 2 on top, then side, featured, side, then 2 below.
+  assert.equal(CHAPTERS.length, 7, 'the mosaic has seven tiles, one day each');
+  const lead = (n: number) => entries.find((e) => e.slug === CHAPTERS[n].lead);
+  // The two middle sides are tall windows, so a portrait photo fills them without losing heads.
+  for (const n of [2, 4]) {
+    const e = lead(n);
+    assert.ok(e && !e.video, `tile ${n}: a photo, not a film poster`);
+    const { w, h } = jpegSize(new URL(e.image, dir));
+    assert.ok(h > w, `tile ${n} (${e.slug}) should be portrait, is ${w}x${h}`);
+  }
+  // The featured frame fills the whole screen first, so it is a full-size landscape photo.
+  const f = lead(3);
+  assert.ok(f && !f.video, 'the featured tile is a photo, not a film poster');
+  const { w, h } = jpegSize(new URL(f.image, dir));
+  assert.ok(w > h && w >= 1600, `the featured tile (${f.slug}) is ${w}x${h}`);
+});
+
 test('chapterFrames leads with the named frame, then photos before films', () => {
   const p = [
     { slug: 'a', set: 's', video: '/a.mp4' },
