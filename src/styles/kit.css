@@ -2627,6 +2627,79 @@ h1 b,
   background: var(--fill);
   color: #fff;
 }
+/* Arrow shift (Details Vault button-05), as an effect on the blue link chips only. The outgoing
+   arrow leaves through the right edge, a second comes in from the left 80ms later, and the words
+   step right by one arrow and its gap. The fill stands in for the resource's glass layer: it
+   shrinks to 95.5% of the height on hover and 93% on press, and the chip itself no longer grows.
+   Buttons (Print, Close) keep the plain chip. Reduced motion swaps the arrows without travel. */
+a.chip.go {
+  --motion-curve: cubic-bezier(0.2, 1, 0.25, 1);
+  --motion-time: 620ms;
+  --arrow-lag: 80ms;
+  --edge-space: 1.35rem;
+  --arrow-width: 16px;
+  --arrow-gap: 12px;
+  --arrow-bleed: 4px;
+  --copy-travel: calc(var(--arrow-width) + var(--arrow-gap));
+  position: relative;
+  overflow: hidden;
+  padding-inline: var(--edge-space) calc(var(--edge-space) + var(--copy-travel));
+  background: linear-gradient(var(--go-fill, var(--fill)), var(--go-fill, var(--fill))) center /
+    100% 100% no-repeat;
+  transition:
+    padding var(--motion-time) var(--motion-curve),
+    background-size var(--motion-time) var(--motion-curve);
+}
+a.chip.go::before,
+a.chip.go::after {
+  content: '→' / '';
+  position: absolute;
+  top: 50%;
+  width: var(--arrow-width);
+  text-align: center;
+  line-height: 1.2;
+  transform: translate3d(0, -50%, 0);
+  transition: transform var(--motion-time) var(--motion-curve);
+}
+a.chip.go::before {
+  left: var(--edge-space);
+  transform: translate3d(calc(-100% - var(--edge-space) - var(--arrow-bleed)), -50%, 0);
+  transition-delay: 0s;
+}
+a.chip.go::after {
+  right: var(--edge-space);
+  transition-delay: var(--arrow-lag);
+}
+a.chip.go:hover,
+a.chip.go:focus-visible {
+  --go-fill: color-mix(in srgb, var(--fill) 86%, #000);
+  transform: none;
+  padding-inline: calc(var(--edge-space) + var(--copy-travel)) var(--edge-space);
+  background-size: 100% 95.5%;
+}
+a.chip.go:hover::before,
+a.chip.go:focus-visible::before {
+  transform: translate3d(0, -50%, 0);
+  transition-delay: var(--arrow-lag);
+}
+a.chip.go:hover::after,
+a.chip.go:focus-visible::after {
+  transform: translate3d(calc(100% + var(--edge-space)), -50%, 0);
+  transition-delay: 0s;
+}
+a.chip.go:active {
+  transform: none;
+  padding-inline: calc(var(--edge-space) + var(--copy-travel) + 2px) calc(var(--edge-space) - 2px);
+  background-size: 100% 93%;
+  transition-duration: 210ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  a.chip.go,
+  a.chip.go::before,
+  a.chip.go::after {
+    transition: none;
+  }
+}
 .hand {
   display: flex;
   justify-content: center;
