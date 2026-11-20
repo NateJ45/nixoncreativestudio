@@ -1,6 +1,6 @@
 /* "Whole days" on /photography: the mosaic reveal (Details Vault "Mosaic Reveal Scroll").
 
-   The section is a tall track ([data-mosaic-reveal], 400svh) with a sticky, screen-high camera
+   The section is a tall track ([data-mosaic-reveal], 200svh) with a sticky, screen-high camera
    inside it. As the track scrolls past, one number, the progress p (0 when the track's top meets
    the top of the screen, 1 when the camera lets go at the bottom), drives three things:
 
