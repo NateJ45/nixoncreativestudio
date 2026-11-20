@@ -30,9 +30,9 @@ import { fileURLToPath } from 'node:url';
 const WITH_QUOTES: Record<string, number> = {
   'theology-matters': 2, // plus Richard's Google review (2026-11-16)
   'foundation-for-reformed-theology': 1,
-  'stone-steps-50k': 1,
+  'stone-steps-50k': 1, // now with David's Google review link (2026-11-19)
   'first-baptist-muncie': 2,
-  'first-presbyterian-orangeburg': 1,
+  'first-presbyterian-orangeburg': 2, // plus Clark Remsburg's Google review (2026-11-19)
   // Public Google reviews (2026-11-15), each with its link and photo.
   'reid-design': 1,
   'west-chester-preschool': 1,
