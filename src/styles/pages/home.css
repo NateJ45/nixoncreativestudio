@@ -1,6 +1,6 @@
 /* ============================================================================
-   Home, below the grid: What changed, the photography strip and the four
-   process beats.
+   Home, below the grid: What changed, the photography strip and How it works
+   (the card unfold).
    ============================================================================
    The hero, the work grid, the quote band and the price hand were built first
    and their rules stay in kit.css. This file holds only the sections added
@@ -277,118 +277,291 @@
 }
 
 /* ---------------------------------------------------------------------------
-   The four process beats: small ruled steps, drawn in order.
+   How it works, the card unfold (ProcessBeats.astro, card-unfold.js).
+   The Details Vault "Card Unfold" section. Its geometry is kept exactly: the 420svh track, the
+   100svh sticky stage that is a size container, the panel width, the 3:4 cards, the photo slices
+   and the 1000px breakpoint. Only the colours and type are the studio's.
+
+   With no script or with reduced motion this CSS alone draws the finished deck: fanned and turned
+   over from 1000px, the stacking column below. The script adds .uf-live and then owns the moving
+   parts through inline styles (cover clip, deck scale, each card's turn and fan).
    --------------------------------------------------------------------------- */
-.beats {
-  padding-top: clamp(1rem, 3vh, 2.5rem);
+.unfold {
+  /* 1.25rem, the card radius (DESIGN.md section 5), in px because the script reads it as a number. */
+  --card-radius: 20px;
+  --container-wide: 1440px;
+  --page-gutter: min(4vw, 56px);
+  --resource-media-background: var(--well);
+  /* The fan, and the slight lean each card keeps in the phone stack. */
+  --spread: 0deg;
+  --tilt: 0deg;
+  position: relative;
+  background: inherit;
 }
-.beats-head,
-.beats-list {
-  max-width: 78rem;
-  margin-inline: auto;
+/* The 420svh track is set from the first paint (html.js comes from the head), not when the script
+   arrives, so the page below never jumps. Reduced motion and no script keep the plain section. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .unfold,
+  .unfold.uf-live {
+    height: 420svh;
+  }
 }
-.beats-head a {
+.unfold h3,
+.unfold p {
+  margin: 0;
+}
+.unfold img {
+  display: block;
+}
+.unfold .uf-stage {
+  --panel-w: min(
+    100cqw - 2 * var(--page-gutter) - 64px,
+    var(--container-wide),
+    (100cqh - 160px) * 2.4
+  );
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100svh;
+  container-type: size;
+}
+/* The heading and the link, inside the 160px the panel width leaves free: left-aligned with the
+   deck, just clear of the fan's raised corners. While the photo covers the stage they are under
+   it, and they come into view as it shrinks to the deck. */
+.uf-head {
+  position: absolute;
+  bottom: calc(50cqh + var(--panel-w) / 6 + 2.5rem);
+  left: calc(50cqw - var(--panel-w) / 2);
+  z-index: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 2rem;
+  width: var(--panel-w);
+}
+.uf-head h2 {
+  margin: 0;
+  font-size: var(--type-h2);
+}
+.uf-head a {
   color: var(--ink);
   font-weight: 600;
   text-underline-offset: 0.2em;
 }
-.beats-list {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(1.75rem, 3vw, 3rem) clamp(1.25rem, 2.6vw, 2.75rem);
-  margin-block: 0;
+.unfold .uf-cards {
+  display: flex;
+  width: var(--panel-w);
+  margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: bt;
+  perspective: 1200px;
 }
-.beats-list li {
+.unfold .uf-card {
   position: relative;
-  counter-increment: bt;
-  padding-top: 1.1rem;
+  z-index: 1;
+  flex: 1;
+  aspect-ratio: 3/4;
+  border-radius: var(--card-radius);
+  transform-style: preserve-3d;
+  transform-origin: 50% 70%;
+  transform: rotate(var(--spread));
 }
-/* The hairline over each step. It is a pseudo-element so it can be drawn from the left. */
-.beats-list li::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 1px;
-  background: color-mix(in srgb, var(--ink) 30%, transparent);
-  transform-origin: left center;
+/* The four backs: the studio blue, a white card, an ink card and the soft blue. At night the ink
+   card is a raised card and the soft blue the dimmed bone (DESIGN.md 2a). Pairs:
+   src/lib/kit-tokens.test.ts. */
+.unfold .uf-card:nth-child(1) {
+  --spread: -14deg;
+  --tilt: -2.5deg;
+  --uf-bg: var(--fill);
+  --uf-ink: #fff;
 }
-/* The step's number, in label voice, on the line with its icon. */
-.beats-list li::after {
-  content: counter(bt, decimal-leading-zero);
-  position: absolute;
-  top: 1.2rem;
-  left: 0;
-  font: 500 0.8125rem/2rem var(--body);
-  letter-spacing: 0.07em;
-  font-variant-numeric: tabular-nums;
-  color: var(--soft);
+.unfold .uf-card:nth-child(2) {
+  --spread: -5deg;
+  --tilt: 1.5deg;
+  --uf-bg: var(--card);
+  --uf-ink: var(--ink);
 }
-.bt-ic {
-  display: block;
-  width: 2rem;
-  height: 2rem;
-  margin-left: auto;
-  color: var(--ink);
-  transition: color 0.3s var(--ease);
+.unfold .uf-card:nth-child(3) {
+  --spread: 6deg;
+  --tilt: -1deg;
+  --uf-bg: var(--ink);
+  --uf-ink: var(--on-ink);
 }
-.bt-ic path {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
+.unfold .uf-card:nth-child(4) {
+  --spread: 15deg;
+  --tilt: 2.5deg;
+  --uf-bg: var(--accent-soft);
+  --uf-ink: var(--ink);
 }
-.beats-list h3 {
-  margin-top: 1rem;
-  font-size: clamp(1.25rem, 1.7vw, 1.5rem);
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
-}
-.beats-list p {
-  margin-top: 0.55rem;
-  color: var(--soft);
-  line-height: 1.45;
-}
-/* The drawing (home-more.js adds .bt-wait, then .drawn to each step in turn and .at to the one
-   drawing now). The words are never hidden: only the line and the icon wait. */
-.bt-wait li:not(.drawn)::before {
-  transform: scaleX(0);
-}
-.bt-wait li.drawn::before {
-  transition: transform 0.45s cubic-bezier(0.45, 0.1, 0.35, 1);
-}
-.bt-wait li:not(.drawn) .bt-ic path {
-  stroke-dashoffset: 1;
-}
-.bt-wait li.drawn .bt-ic path {
-  transition: stroke-dashoffset 0.7s var(--ease) 0.3s;
-}
-.bt-wait li.drawn .bt-ic path:nth-child(2) {
-  transition-delay: 0.42s;
-}
-.bt-wait li.drawn .bt-ic path:nth-child(3) {
-  transition-delay: 0.54s;
-}
-.bt-wait li.drawn .bt-ic path:nth-child(4) {
-  transition-delay: 0.66s;
-}
-.beats-list li.at .bt-ic {
-  color: var(--accent);
-}
-@media (max-width: 60rem) {
-  .beats-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media screen {
+  :root[data-theme='dark'] .unfold .uf-card:nth-child(3) {
+    --uf-bg: var(--raise);
+    --uf-ink: var(--ink);
+  }
+  :root[data-theme='dark'] .unfold .uf-card:nth-child(4) {
+    --uf-bg: var(--bone);
+    --uf-ink: var(--on-ink);
   }
 }
-@media (max-width: 34rem) {
-  .beats-list {
-    grid-template-columns: minmax(0, 1fr);
+@media (min-width: 1000px) {
+  .unfold .uf-card:nth-child(2),
+  .unfold .uf-card:nth-child(3) {
+    z-index: 2;
+  }
+}
+.unfold .uf-turn {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  transform: rotateY(180deg);
+}
+.unfold .uf-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  backface-visibility: hidden;
+}
+.unfold .uf-front {
+  background: var(--resource-media-background);
+}
+/* Each front shows its quarter of the same photo, lined up so the four together are the cover. */
+.unfold .uf-front img {
+  position: absolute;
+  top: calc(50% - 50cqh);
+  left: calc((var(--panel-w) - 100cqw) / 2 - var(--i) * var(--panel-w) / 4);
+  width: 100cqw;
+  max-width: none;
+  height: 100cqh;
+  object-fit: cover;
+}
+.unfold .uf-back {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 24px max(24px, 10%);
+  color: var(--uf-ink);
+  background: var(--uf-bg);
+  box-shadow:
+    var(--rim),
+    0 12px 28px -12px rgba(0, 0, 0, 0.35),
+    0 4px 10px -4px rgba(0, 0, 0, 0.2);
+  transform: rotateY(180deg);
+}
+.unfold .uf-number {
+  font-size: min(96px, var(--panel-w) * 0.08);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+/* The card's own heading size, and the body, scaled down with the deck on a narrow desktop so a
+   whole step always fits on its card. */
+.unfold .uf-text h3 {
+  font-size: min(var(--type-h3), var(--panel-w) * 0.021);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.unfold .uf-text p {
+  margin-top: 0.5rem;
+  font-size: clamp(0.8125rem, var(--panel-w) * 0.0135, 1.0625rem);
+  line-height: 1.4;
+}
+.unfold .uf-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  overflow: hidden;
+}
+.unfold.uf-live .uf-cover {
+  display: block;
+}
+.unfold .uf-cover img {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+
+/* Under 1000px: the backs only, a column that stacks as it scrolls (native sticky; the script only
+   turns each card in as it arrives). */
+@media (max-width: 999px) {
+  .unfold {
+    --stack-height: min(440px, max(320px, 60svh));
+    --stack-top: max(24px, calc((100svh - var(--stack-height)) / 2 - 18px));
+    --stack-step: 12px;
+  }
+  .js .unfold,
+  .unfold.uf-live {
+    height: auto;
+  }
+  .unfold .uf-stage {
+    position: relative;
+    flex-direction: column;
+    height: auto;
+    padding: 64px 28px 96px;
+    container-type: normal;
+  }
+  .uf-head {
+    position: static;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 2rem;
+  }
+  .unfold .uf-cards {
+    flex-direction: column;
+    gap: max(80px, 20svh);
+    width: 100%;
+    max-width: 400px;
+    perspective: none;
+  }
+  .unfold .uf-card {
+    position: sticky;
+    top: calc(var(--stack-top) + var(--i) * var(--stack-step));
+    z-index: calc(var(--i) + 1);
+    flex: none;
+    aspect-ratio: auto;
+    min-height: var(--stack-height);
+    transform: none;
+    transform-style: flat;
+  }
+  .unfold .uf-card:last-child {
+    position: relative;
+    top: auto;
+  }
+  .unfold .uf-turn {
+    position: relative;
+    transform: rotate(var(--tilt));
+    transform-style: flat;
+    transform-origin: 50% 50%;
+  }
+  .unfold .uf-front,
+  .unfold .uf-cover,
+  .unfold.uf-live .uf-cover {
+    display: none;
+  }
+  .unfold .uf-back {
+    position: relative;
+    min-height: var(--stack-height);
+    padding: 24px;
+    transform: none;
+  }
+  .unfold .uf-number {
+    font-size: 64px;
+  }
+  .unfold .uf-text h3 {
+    font-size: var(--type-h3);
+  }
+  .unfold .uf-text p {
+    font-size: 1.0625rem;
+    line-height: 1.45;
   }
 }
 
@@ -411,18 +584,10 @@
   .ed-sw-track,
   .ed-sw-track::after,
   .demo-photo img,
-  .demo-events,
-  .bt-ic,
-  .bt-wait li.drawn::before,
-  .bt-wait li.drawn .bt-ic path {
+  .demo-events {
     transition: none;
   }
-  .bt-wait li:not(.drawn)::before {
-    transform: none;
-  }
-  .bt-wait li:not(.drawn) .bt-ic path {
-    stroke-dashoffset: 0;
-  }
+  /* card-unfold.js never adds .uf-live here, so the deck is already finished. */
   .strip-track a {
     transform: translateY(var(--drop, 0)) rotate(var(--tilt, 0deg));
   }
@@ -451,11 +616,25 @@
   .ed-sw input:checked + .ed-sw-track::after {
     background: HighlightText;
   }
-  .beats-list li::before {
-    background: CanvasText;
+  .unfold .uf-back {
+    border: 1px solid CanvasText;
   }
 }
 @media print {
+  /* Paper gets the finished deck as a plain column, however far the scroll had got. */
+  .js .unfold,
+  .unfold.uf-live {
+    height: auto;
+  }
+  .unfold .uf-cover {
+    display: none !important;
+  }
+  .unfold .uf-cards,
+  .unfold .uf-card,
+  .unfold .uf-turn {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
   .chg-card,
   .strip-track a {
     background-image: none;

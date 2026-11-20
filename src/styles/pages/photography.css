@@ -1072,78 +1072,292 @@
   border-inline: 0.14rem solid currentColor;
 }
 
-/* Whole days: a chapter a shoot, the lead large and the rest beside it. */
-.pt-days.sec {
-  padding-top: clamp(2rem, 6vh, 4rem);
+/* ---- Whole days: the mosaic reveal ------------------------------------------------------------
+   Details Vault "Mosaic Reveal Scroll" (2026-11-20). One frame a day from seven days. The
+   featured frame fills a sticky, screen-high camera and shrinks about its centre to half size as
+   the 400svh track scrolls past, opening the six frames around it; the headline's lines are swept
+   in by a band of colour and settle in bone. photo-mosaic.js moves three values with the scroll
+   (--mosaic-scale on the collage, --mosaic-shade on the featured frame, and each line's
+   background-position and blur); everything else here is the resource's geometry, kept as one
+   system: the featured box is the camera times the scale, the outer rows are a quarter screen
+   less a gap, and the middle sides' photos are sized to half the camera times the scale (not to
+   their opening window), so their crop never changes mid-reveal.
+
+   One change of means, not of picture: the resource resizes layout boxes every frame, which
+   Chrome counts as layout shift (CLS 0.25 to 0.49 in tests/cls.spec.ts). Here the layout is
+   built once at the finished scale and the same sizes are drawn with transforms and clip-paths
+   from the same --mosaic-scale, so every frame matches and nothing is laid out again.
+
+   Adapted for this site: the stage is the cobalt "back" (--back, --back-raise, --back-ink, the
+   same on either side, so it reads the same in light and dark), the warm sweep became the
+   studio's blues, the class names carry an mr- prefix (.tile and .line are taken in kit.css),
+   and the tiles are links into the full view. The finished state is the default: the tall track,
+   the sticky camera and the hidden start only apply with script and without reduced motion
+   (html.js, no-preference), so with no script, under reduced motion and in print it is simply
+   the finished mosaic, one screen high, with the headline set. */
+[data-mosaic-reveal],
+[data-mosaic-reveal] * {
+  box-sizing: border-box;
 }
-.pt-chapters {
-  list-style: none;
+
+[data-mosaic-reveal] {
+  --mosaic-gap: 12px;
+  --mosaic-radius: 3px;
+  --mosaic-headline-color: var(--back-ink);
+  --mosaic-sweep-blur: 3px;
+  /* The sweep, lightest at its back edge (where the bone takes over) to deepest at its front. */
+  --mosaic-sweep-color-1: var(--accent-soft);
+  --mosaic-sweep-color-2: var(--back-accent);
+  --mosaic-sweep-color-3: color-mix(in oklab, var(--back-accent), var(--fill));
+  --mosaic-sweep-color-4: var(--fill);
+  --mosaic-sweep-color-5: color-mix(in oklab, var(--fill), var(--back));
+  --mosaic-background: var(--back);
+  --mosaic-tile-background: var(--back-raise);
+  /* The finished scale, which the layout is built at (see the collage). */
+  --mosaic-rest: 0.5;
+
+  position: relative;
+  /* The finished mosaic, one screen high; the 400svh track is in the motion block below. */
+  height: 100svh;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: clamp(3rem, 8vh, 5.5rem);
+  background: var(--mosaic-background);
 }
-.pt-chapter {
-  display: grid;
-  gap: 1rem;
+
+@media (max-width: 767px) {
+  [data-mosaic-reveal] {
+    --mosaic-gap: 4px;
+  }
 }
-.pt-chapter-head {
-  display: grid;
-  gap: 0.35rem;
-  max-width: 44rem;
+
+[data-mosaic-reveal] .mr-camera {
+  container-type: inline-size;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100svh;
+  overflow: clip;
 }
-.pt-chapter-head h3 {
-  font-size: var(--type-h3);
-  line-height: 1.05;
+
+[data-mosaic-reveal] .mr-camera .mr-collage {
+  /* Finished: half size. The motion block starts it at 1 when the track is tall. --mosaic-k is
+     the size the frames are drawn at against their finished layout (1 finished, 2 at the start). */
+  --mosaic-scale: 0.5;
+  --mosaic-k: calc(var(--mosaic-scale) * 2);
+
+  position: absolute;
+  bottom: 50%;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--mosaic-gap);
+  width: 100%;
+  transform: translateY(50%);
 }
-.pt-chapter-head p:not(.label) {
-  color: var(--soft);
+
+@media (max-width: 767px) {
+  [data-mosaic-reveal] .mr-camera .mr-collage {
+    transform: translateY(50%) scale(calc(1 + (1 - var(--mosaic-scale)) * 0.4));
+  }
 }
-.pt-chapter-frames {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--mosaic-gap);
 }
-.pt-chapter-frames .print {
-  aspect-ratio: 3 / 2;
+
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row.mr-outer {
+  height: calc(25svh - var(--mosaic-gap));
 }
-.pt-chapter-frames .print img {
+
+/* The middle row grows from half a screen to a whole one, so the outer rows travel out by a
+   quarter screen for every step of --mosaic-k past 1, exactly where the resource's taller middle
+   row would push them. */
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row.mr-outer:first-child {
+  transform: translateY(calc(-25svh * (var(--mosaic-k) - 1)));
+}
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row.mr-outer:last-child {
+  transform: translateY(calc(25svh * (var(--mosaic-k) - 1)));
+}
+
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: var(--mosaic-radius);
+  overflow: clip;
+  background: var(--mosaic-tile-background);
+}
+
+/* Laid out at the finished half size; drawn at the camera times the scale. Its box keeps the
+   camera's shape, so its photo's crop is the resource's at every step and only its size moves.
+   The corner is divided back so it stays 3px on screen. */
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile.mr-featured {
+  flex: none;
+  width: calc(100% * var(--mosaic-rest));
+  height: calc(100svh * var(--mosaic-rest));
+  transform: scale(var(--mosaic-k));
+  border-radius: calc(var(--mosaic-radius) / var(--mosaic-k));
+}
+
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile.mr-featured::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* The resource shades with black; here it is the stage's own cobalt-black. */
+  background: var(--back);
+  /* Finished: 0.3. The motion block starts it at 0 when the track is tall. */
+  opacity: var(--mosaic-shade, 0.3);
+  pointer-events: none;
+}
+
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  max-width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Faces sit high in a frame: crop from the bottom first, so heads stay in. */
-  object-position: 50% 20%;
 }
-.pt-chapter-lead {
-  grid-column: 1 / -1;
+
+/* The middle sides are windows that open as the featured frame shrinks. Each is laid out at its
+   finished size; its window is a clip-path that starts closed (cut in from both sides by an
+   eighth of the camera for every step of --mosaic-k past 1) and as tall as the middle row
+   (reaching a quarter screen past its box at the top and bottom), and the tile slides out by the
+   same eighth so the window's inner edge stays one gap from the featured frame. The photo is the
+   resource's proportional image box: the finished size times --mosaic-k, centred, so its crop
+   never changes. */
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row:not(.mr-outer) .mr-tile:not(.mr-featured) {
+  overflow: visible;
+  clip-path: inset(
+    calc(-25svh * (var(--mosaic-k) - 1)) calc(12.5cqw * (var(--mosaic-k) - 1)) round
+      var(--mosaic-radius)
+  );
 }
-.pt-chapter-lead.print {
-  aspect-ratio: 16 / 9;
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row:not(.mr-outer) .mr-tile:first-child {
+  transform: translateX(calc(-12.5cqw * (var(--mosaic-k) - 1)));
 }
-@media (min-width: 52rem) {
-  .pt-chapter {
-    grid-template-columns: minmax(0, 1fr);
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row:not(.mr-outer) .mr-tile:last-child {
+  transform: translateX(calc(12.5cqw * (var(--mosaic-k) - 1)));
+}
+
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row:not(.mr-outer) .mr-tile:not(.mr-featured) img {
+  left: 50%;
+  right: auto;
+  width: calc((50cqw - var(--mosaic-gap) * 2) * var(--mosaic-rest));
+  max-width: none;
+  transform: translateX(-50%) scale(var(--mosaic-k));
+}
+
+/* A tile reached with the keyboard: a bone ring with a cobalt edge inside the tile, so the camera
+   never clips it and it shows on a light photo and a dark one. */
+[data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile:focus-visible {
+  outline: 3px solid var(--back-ink);
+  outline-offset: -6px;
+  box-shadow: inset 0 0 0 9px var(--back);
+}
+
+[data-mosaic-reveal] .mr-camera .mr-headline {
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 32px);
+  margin: 0;
+  padding: 0;
+  color: var(--mosaic-headline-color);
+  font-size: min(5.5cqw, 9svh, 80px);
+  line-height: 1.08;
+  text-align: center;
+  pointer-events: none;
+  /* A soft cobalt halo behind the set letters, so bone stays readable where a photo is light.
+     It is a filter on the heading (not a text-shadow), so the hidden part of a line casts none. */
+  filter: drop-shadow(0 0 0.5em color-mix(in srgb, var(--back) 70%, transparent));
+}
+
+@media (max-width: 767px) {
+  [data-mosaic-reveal] .mr-camera .mr-headline {
+    font-size: 40px;
   }
-  .pt-chapter-frames {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: repeat(2, auto);
+}
+
+[data-mosaic-reveal] .mr-camera .mr-headline .mr-line {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  white-space: nowrap;
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--mosaic-headline-color) 0%,
+    var(--mosaic-headline-color) 33.33%,
+    var(--mosaic-sweep-color-1) 40%,
+    var(--mosaic-sweep-color-2) 45%,
+    var(--mosaic-sweep-color-3) 50%,
+    var(--mosaic-sweep-color-4) 55%,
+    var(--mosaic-sweep-color-5) 60%,
+    transparent 66.67%,
+    transparent 100%
+  );
+  /* Finished: swept, sharp, solid bone. */
+  background-position: 0% 0%;
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* The scrub: a tall track, a sticky camera and the start state, only with script and motion.
+   html.js is set in the head before paint, so the start is in place before the first frame. */
+@media (prefers-reduced-motion: no-preference) {
+  :root.js [data-mosaic-reveal] {
+    height: 400svh;
   }
-  .pt-chapter-lead {
-    grid-column: 1 / 3;
-    grid-row: 1 / 3;
+  :root.js [data-mosaic-reveal] .mr-camera {
+    position: sticky;
   }
-  /* The lead takes the height of the two rows beside it, whatever its own shape. */
-  .pt-chapter-lead.print {
-    aspect-ratio: auto;
-    height: 100%;
-    min-height: 100%;
+  :root.js [data-mosaic-reveal] .mr-camera .mr-collage {
+    --mosaic-scale: 1;
   }
-  .pt-chapter-lead img {
-    position: absolute;
-    inset: 0;
+  :root.js [data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile.mr-featured::after {
+    opacity: var(--mosaic-shade, 0);
   }
-  /* Alternate the lead's side so the chapters do not stack like a list. */
-  .pt-chapter:nth-child(even) .pt-chapter-lead {
-    grid-column: 3 / 5;
+  :root.js [data-mosaic-reveal] .mr-camera .mr-headline .mr-line {
+    background-position: 100% 0%;
+    filter: blur(var(--mosaic-sweep-blur));
+  }
+}
+
+/* Forced colours drop the clipped background, so the letters come back in the system's text. */
+@media (forced-colors: active) {
+  [data-mosaic-reveal] .mr-camera .mr-headline .mr-line {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    background: none;
+    filter: none;
+  }
+}
+
+/* Print: the finished mosaic, as it is with no script. */
+@media print {
+  :root.js [data-mosaic-reveal] {
+    height: 100svh;
+  }
+  :root.js [data-mosaic-reveal] .mr-camera {
+    position: relative;
+  }
+  :root.js [data-mosaic-reveal] .mr-camera .mr-collage {
+    --mosaic-scale: 0.5 !important;
+  }
+  :root.js [data-mosaic-reveal] .mr-camera .mr-collage .mr-row .mr-tile.mr-featured::after {
+    opacity: 0.3 !important;
+  }
+  :root.js [data-mosaic-reveal] .mr-camera .mr-headline .mr-line {
+    background-position: 0% 0% !important;
+    filter: none !important;
   }
 }
 

@@ -1,6 +1,6 @@
-/* The homepage's lower sections (home.css): the What changed cards are dealt in, the photography
-   strip drifts and bows with the scroll, and the four process beats draw in order. home.js keeps
-   the hero's deal; this file is everything added below the grid.
+/* The homepage's lower sections (home.css): the What changed cards are dealt in, and the photography
+   strip drifts and bows with the scroll. home.js keeps the hero's deal; How it works has its own
+   script (card-unfold.js); this file is the rest of what was added below the grid.
 
    The same three rules throughout: only something that starts below the fold is ever held back,
    reduced motion gets the finished state with nothing moving, and a page that loaded already
@@ -42,47 +42,6 @@ if (chg && !reduce && canWatch && !ui.restored()) {
     });
   }
 }
-
-/* ---- The process beats (src/components/home/ProcessBeats.astro) -------------------------------
-   The same drawing as "How it works" on the Prices page (prices.js): each step's hairline runs
-   to it and its icon draws, in order, the one drawing now `.at` in the blue. */
-var beats = doc.querySelector('[data-beats]');
-if (beats && !reduce && canWatch && !ui.restored() && belowFold(beats)) {
-  var beatLis = [].slice.call(beats.children);
-  beats.classList.add('bt-wait');
-  var bio = new IntersectionObserver(
-    function (es) {
-      if (!es[0].isIntersecting) return;
-      bio.disconnect();
-      beatLis.forEach(function (li, i) {
-        setTimeout(
-          function () {
-            beatLis.forEach(function (l) {
-              l.classList.remove('at');
-            });
-            li.classList.add('drawn', 'at');
-          },
-          150 + i * 520,
-        );
-      });
-      setTimeout(
-        function () {
-          beatLis[beatLis.length - 1].classList.remove('at');
-        },
-        150 + beatLis.length * 520 + 900,
-      );
-    },
-    { threshold: 0.35 },
-  );
-  bio.observe(beats);
-}
-/* Paper shows every step drawn, however far the drawing had got. */
-addEventListener('beforeprint', function () {
-  if (!beats) return;
-  [].forEach.call(beats.children, function (li) {
-    li.classList.add('drawn');
-  });
-});
 
 /* ---- The photography strip (src/components/home/PhotoStrip.astro) -----------------------------
    Two things, both transforms only:

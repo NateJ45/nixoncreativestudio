@@ -1,62 +1,99 @@
 ---
-/* Home, the four process beats before the closing: the four steps of "How it works" on the
-   Prices page (src/pages/services.astro, #how), with the same headings and the same icons. Each
-   line under a heading is that step's own first sentence, shortened only by cutting, so nothing
-   here says more than the Prices page does. Change a step there and here together.
+/* Home, "How it works" as a deck of four cards (the Details Vault "Card Unfold" section).
 
-   As the row arrives each step's hairline runs to it and its icon draws, in order, the one
-   drawing now in the blue: the same drawing the Prices page does, written again in
-   src/scripts/home-more.js and home.css because that page's copy lives inside its own page
-   script. Reduced motion or no script: everything is simply drawn. */
+   The four steps are the four steps of "How it works" on the Prices page (src/pages/services.astro,
+   #how), with the same headings. Each line under a heading is that step's own first sentence,
+   shortened only by cutting, so nothing here says more than the Prices page does. Change a step
+   there and here together.
+
+   On a wide screen (1000px and up) the section is a tall scroll track with a sticky stage: one of
+   my photographs fills the screen, shrinks into a deck of four cards cut from it, the deck fans
+   out, and the cards turn over (two and four first, then one and three) to show the numbered
+   steps. Under 1000px it is a column of the card backs that stack on top of each other as you
+   scroll. src/scripts/card-unfold.js drives both from the scroll position (no motion library).
+
+   With no script, or with reduced motion, the deck is simply finished: fanned and turned over on a
+   wide screen, the stacking column on a phone. The photo and its four slices are decoration, so
+   their alt is empty and their wrappers are aria-hidden; the steps are a real ordered list.
+   No dates and no years on the photograph (the photography rule). */
+import { getEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
+
 const beats = [
   {
     title: 'Start with a conversation',
     line: "The first conversation is free: text me about what you actually need, and I'll come back with an honest ballpark before anyone is committed.",
-    /* A conversation: two speech bubbles. */
-    paths: [
-      'M4 4.5h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z',
-      'M18.5 8.5H20a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-3.5-3H12',
-    ],
   },
   {
     title: 'Then the plan',
     line: 'I write down who the site is for, how the pages fit together, and what you want visitors to do next.',
-    /* The plan: a written page. */
-    paths: ['M6 2.5h8.5l4 4v15H6z', 'M14.5 2.5v4h4', 'M9 11.5h6.5M9 15h6.5M9 18.5h4'],
   },
   {
     title: 'Then I design and build',
     line: 'I design and build the pages where you can see them. A link to the work so far lands in your inbox at each step.',
-    /* Design and build: a browser window with a layout in it. */
-    paths: ['M2.5 4.5h19v15h-19z', 'M2.5 8.5h19', 'M6 12h5.5v4H6z', 'M14.5 12.5h3.5M14.5 15.5h3.5'],
   },
   {
     title: 'Launch, and follow-through',
     line: 'I launch the site with you, then stay close for the first month to fix anything that surfaces.',
-    /* Launch: a flag planted. */
-    paths: ['M5.5 21.5v-18', 'M5.5 4h12l-2.75 4.25L17.5 12.5h-12'],
   },
 ];
+
+/* Rolling farm fields under big clouds: wide, with something in each quarter, so the four slices
+   each read as a picture of their own. */
+const photo = await getEntry('photos', 'ig-farmland-clouds');
+if (!photo) throw new Error('Card unfold: no photo called ig-farmland-clouds');
+const pic = await getImage({
+  src: photo.data.image,
+  widths: [960, 1280, 1800],
+  format: 'webp',
+});
+/* The photo covers the stage at up to 1.2 times its size. It is 3:2, so on a screen narrower than
+   3:2 its height sets the width (150svh, times 1.2); on a wider one the width does (120vw). */
+const sizes = '(max-aspect-ratio: 3/2) 180svh, 120vw';
+const img = {
+  src: pic.src,
+  srcset: pic.srcSet.attribute,
+  sizes,
+  width: photo.data.image.width,
+  height: photo.data.image.height,
+  alt: '',
+  /* Lazy rather than eager: the section is far down the page, and on a phone (where the photo is
+     never shown) a lazy image that is display: none is never fetched. */
+  loading: 'lazy' as const,
+  decoding: 'async' as const,
+};
 ---
 
-<section class="sec beats" id="process" aria-labelledby="beats-h">
-  <div class="sec-head beats-head">
-    <h2 id="beats-h">How it works</h2>
-    <p>
-      Four steps. <a href="/services/#how">The whole process, with timelines</a>
-    </p>
+<section class="unfold" id="process" aria-labelledby="beats-h" data-fan-split>
+  <div class="uf-stage" data-stage>
+    <div class="uf-head">
+      <h2 id="beats-h" data-rise="off">
+        How it works
+      </h2>
+      <a href="/services/#how">The whole process, with timelines</a>
+    </div>
+    <ol class="uf-cards" data-cards>
+      {beats.map((b, i) => (
+        <li class="uf-card" data-card style={`--i: ${i}`}>
+          <div class="uf-turn" data-turn>
+            <div class="uf-face uf-front" aria-hidden="true">
+              <img {...img} />
+            </div>
+            <div class="uf-face uf-back">
+              <span class="uf-number" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div class="uf-text">
+                <h3>{b.title}</h3>
+                <p>{b.line}</p>
+              </div>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <div class="uf-cover" data-cover aria-hidden="true">
+      <img {...img} />
+    </div>
   </div>
-  <ol class="beats-list" data-beats>
-    {beats.map((b) => (
-      <li>
-        <svg class="bt-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          {b.paths.map((d) => (
-            <path d={d} pathLength="1" />
-          ))}
-        </svg>
-        <h3>{b.title}</h3>
-        <p>{b.line}</p>
-      </li>
-    ))}
-  </ol>
 </section>

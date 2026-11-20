@@ -225,11 +225,14 @@ test.describe('around the table', () => {
     expect(await page.locator('.pt-p').count()).toBeGreaterThan(8);
   });
 
-  test('a chapter lead film and a film in the wall open the full view', async ({ page }) => {
+  test('a day in the mosaic and a film in the wall open the full view', async ({ page }) => {
     await page.goto('/photography/');
     const dlg = page.locator('dialog[data-open]');
-    const lead = page.locator('.pt-chapter-lead[data-reel]').first();
-    await lead.click();
+    // "Whole days": the first tile is a film's day. Focusing it shows the finished mosaic, so
+    // it is on camera to be pressed.
+    const lead = page.locator('[data-mosaic-reveal] a[data-print]').first();
+    await lead.focus();
+    await page.keyboard.press('Enter');
     await expect(dlg.locator('video')).toHaveCount(1);
     await expect(dlg.locator('[data-set-name]')).not.toBeEmpty();
     await page.keyboard.press('Escape');
@@ -241,6 +244,26 @@ test.describe('around the table', () => {
 
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
+
+  test('"Whole days" is the finished mosaic, one screen high, with the headline set', async ({
+    page,
+  }) => {
+    await page.goto('/photography/');
+    const root = page.locator('[data-mosaic-reveal]');
+    const { h, vh, pos, blur } = await root.evaluate((el) => {
+      const line = el.querySelector('.mr-line') as HTMLElement;
+      const cs = getComputedStyle(line);
+      return {
+        h: el.getBoundingClientRect().height,
+        vh: innerHeight,
+        pos: cs.backgroundPosition,
+        blur: cs.filter,
+      };
+    });
+    expect(Math.abs(h - vh)).toBeLessThan(2);
+    expect(['0% 0%', '0px 0px']).toContain(pos);
+    expect(blur).toBe('none');
+  });
 
   test('the table is still laid and still opens, with the lamp and the tilt off', async ({
     page,

@@ -90,7 +90,28 @@ for (const [what, fg, bg] of NIGHT_PAIRS) {
   });
 }
 
+// Home's How it works deck (the card unfold, home.css `.unfold`): the four card backs, each with
+// its own text, on both sides. The ink card is a raised card at night and the soft blue the bone.
+const UNFOLD_BACKS: [string, string, string][] = [
+  ['step 1, white on the blue', '#ffffff', token('fill')],
+  ['step 2, ink on a card', token('ink'), token('card')],
+  ['step 3, text on the ink card', token('on-ink'), token('ink')],
+  ['step 4, ink on the soft blue', token('ink'), token('accent-soft')],
+  ['step 1 at night, white on the cobalt', '#ffffff', night('fill')],
+  ['step 2 at night, ink on a card', night('ink'), night('card')],
+  ['step 3 at night, ink on a raised card', night('ink'), night('raise')],
+  ['step 4 at night, text on the dimmed bone', night('on-ink'), night('bone')],
+];
+
+for (const [what, fg, bg] of UNFOLD_BACKS) {
+  test(`AA text, home deck: ${what}`, () => {
+    const ratio = contrastRatio(fg, bg);
+    assert.ok(ratio >= AA_BODY_TEXT, `${what}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1`);
+  });
+}
+
 // The Lab cards on /work keep the cobalt back on either side, so their pairs hold in both themes.
+// The /photography mosaic uses the same back, so it holds in both themes too.
 const BACK_TEXT: [string, string, string][] = [
   ['lab card text', token('back-ink'), token('back')],
   ['lab card text on its screen', token('back-ink'), token('back-raise')],
@@ -99,6 +120,10 @@ const BACK_TEXT: [string, string, string][] = [
   ['lab card blue (links)', token('back-accent'), token('back')],
   ['lab card blue on its screen', token('back-accent'), token('back-raise')],
   ['lab card button (cobalt on bone)', token('back'), token('back-ink')],
+  // The /photography mosaic ("Whole days") is staged on the same back: its headline at rest, on
+  // the stage and on a tile still loading, and the tile focus ring (bone with a cobalt edge).
+  ['photography mosaic headline on its stage', token('back-ink'), token('back')],
+  ['photography mosaic headline on a loading tile', token('back-ink'), token('back-raise')],
 ];
 
 for (const [what, fg, bg] of BACK_TEXT) {
