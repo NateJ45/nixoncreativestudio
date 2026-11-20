@@ -129,16 +129,18 @@ const figures = [
    and from src/data/quotes.ts. They go in quotation marks, one after every two figures, so the line
    reads as results and voices in turn. A new quote with a highlight joins on its own.
    A phrase too long for a phone's line (hero-proof.js would shrink it below about 12px at 320px
-   wide) gets a shorter cut here, still the client's exact words, checked against the quote. */
+   wide) gets a shorter cut here, still the client's exact words, checked against the quote.
+   Keyed by the highlight, not the study, since a study can carry more than one quote. */
 const heroCut: Record<string, string> = {
-  'first-presbyterian-orangeburg': 'delivered impressive results promptly',
+  'efficient, responsive, and delivered impressive results promptly':
+    'delivered impressive results promptly',
 };
 const voices: { figure: string; what: string; who: string }[] = [];
 for (const study of await getCollection('case-studies')) {
   const who = clients.find((c) => c.slug === study.id)?.name;
   for (const t of study.data.testimonials ?? []) {
     if (!t.highlight || !who) continue;
-    const words = heroCut[study.id] ?? t.highlight;
+    const words = heroCut[t.highlight] ?? t.highlight;
     if (!t.quote.includes(words)) throw new Error(`heroCut for ${study.id} is not in the quote`);
     voices.push({ figure: `“${words}”`, what: '', who });
   }
