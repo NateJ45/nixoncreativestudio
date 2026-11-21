@@ -110,7 +110,8 @@ npx wrangler d1 execute nixoncreativestudio-contact --remote --command "SELECT v
 ```
 
 The same visitor id goes to GA4 as `user_id` (Explore > User explorer finds a lead) and to Clarity
-as its custom id.
+as its custom id. The `user_id` is only queued where the GA4 tag itself runs (the production hostname, a real
+browser), so a local build with `PUBLIC_GA_ID` in `.env` leaves no `dataLayer` on localhost (2026-11-20).
 
 ## 4. Microsoft Clarity: "where do people get stuck?"
 

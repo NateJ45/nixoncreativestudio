@@ -14,15 +14,24 @@
       localStorage, ncs-vid). It ties a person's visits together for the trail,
       goes to GA4 as user_id (so a lead can be found in User explorer) and to
       Clarity as its custom id. It is never a name, address or IP.
+   The user_id goes on the dataLayer only where GoogleAnalytics.astro would run the tag: on the
+   production hostname, in a real browser (its rules 3 and 4, the same host list and the same
+   automated-browser test). Without that, a build with PUBLIC_GA_ID in a local .env left a
+   dataLayer on localhost, which smoke.spec.ts's GA4 test catches (found 2026-11-20). The visitor
+   id itself is made everywhere, because the trail needs it.
    ============================================================================ */
 interface Props {
   /** The GA4 Measurement ID, or '' when GA4 is off. */
   gaId: string;
 }
 const { gaId } = Astro.props;
+// The same hostnames GoogleAnalytics.astro lets the tag fire on, or null to allow anywhere.
+const siteHost = Astro.site?.hostname ?? '';
+const apex = siteHost.replace(/^www./, '');
+const gaHosts: string[] | null = apex ? [apex, `www.${apex}`] : null;
 ---
 
-<script is:inline define:vars={{ gaId }}>
+<script is:inline define:vars={{ gaId, gaHosts }}>
   try {
     var meParam = /[?&]me=([01])(?:&|$)/.exec(location.search);
     if (meParam) {
@@ -38,7 +47,11 @@ const { gaId } = Astro.props;
         vid = crypto.randomUUID();
         localStorage.setItem('ncs-vid', vid);
       }
-      if (gaId) {
+      var automated =
+        navigator.webdriver ||
+        /HeadlessChrome|Lighthouse|PTST|GTmetrix|Speed Insights/i.test(navigator.userAgent);
+      var gaHere = !automated && (!gaHosts || gaHosts.indexOf(location.hostname) !== -1);
+      if (gaId && gaHere) {
         window.dataLayer = window.dataLayer || [];
         // gtag needs a real arguments object, the same shape GoogleAnalytics.astro uses.
         (function () {
