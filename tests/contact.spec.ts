@@ -312,12 +312,32 @@ test.describe('The sent stamp', () => {
     );
     await page.goto('/contact/');
     await fillAll(page);
+    // Record every inline transform the stamp takes from here on. Polling for the mid-press frame
+    // missed it on a busy CI runner (2026-11-20, three workers): the whole press fitted between
+    // two polls. The record cannot miss it.
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-stamp]') as HTMLElement;
+      const seen: string[] = [];
+      (window as unknown as { __stampSeen: string[] }).__stampSeen = seen;
+      new MutationObserver(() => seen.push(el.style.transform)).observe(el, {
+        attributes: true,
+        attributeFilter: ['style'],
+      });
+    });
     await page.getByRole('button', { name: 'Send' }).click();
     const stamp = page.locator('[data-stamp]');
     // Mid-press it is larger and more turned than at rest.
     await expect
-      .poll(() => stamp.evaluate((el) => (el as HTMLElement).style.transform), { timeout: 2000 })
-      .toContain('scale(');
+      .poll(
+        () =>
+          page.evaluate(() =>
+            (window as unknown as { __stampSeen: string[] }).__stampSeen.some((t) =>
+              t.includes('scale('),
+            ),
+          ),
+        { timeout: 4000 },
+      )
+      .toBe(true);
     // Then it lands, the ink spreads once, and the inline motion is cleared.
     await expect
       .poll(() => stamp.evaluate((el) => (el as HTMLElement).style.transform), { timeout: 4000 })

@@ -30,7 +30,7 @@ implementation; reid-design-site and mas-monograms carry the same shape).
 | Uptime      | -                               | `uptime.yml`, hourly                 | The live site's key routes still return 200                                                                                                                                                                                                                                                                                      |
 | Visual      | `gh workflow run visual.yml`    | **no** (manual `visual.yml`)         | Linux full-page baselines: every route, 1440 and 390, light only, motion frozen. Regenerate after a deliberate visual change                                                                                                                                                                                                     |
 
-The `test` job has `timeout-minutes: 30`, and its browser install runs each attempt under `timeout 360`
+The Playwright suite runs as three `e2e (shard N/3)` jobs, each building the site and running a third of the tests with 3 workers; the required `test` check is a small job that passes only when all three do (2026-11-20). Each shard has `timeout-minutes: 30`, and its browser install runs each attempt under `timeout 360`
 inside a 15-minute step (2026-10-26, starter PORTS card 70): a throttled Ubuntu mirror once held that install
 for an hour across the family, and with no timeout a required check can wait for the 6-hour default.
 
