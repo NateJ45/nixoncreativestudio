@@ -1,7 +1,9 @@
 ---
 /* In their words: the client's own words from the frontmatter, character for character. Never
    edit, tidy or paraphrase one here. A quote that is a public review (it has a `source`) also
-   shows the person's face, the stars and a link to the review on Google (ReviewCite). Every
+   shows the person's face, the stars and a link to the review on Google (ReviewCite); an emailed
+   quote with a face shows the face, name and role through ReviewCite too, without stars or link
+   (2026-11-20, as in the home band). Every
    quote's key phrase (`highlight`) is marked (src/lib/highlight.ts; on all quotes since
    2026-11-16, not just reviews). Chapter gives the section id="in-their-words", which the
    review line in the study's opening jumps to.
@@ -52,13 +54,13 @@ const footOf = (card: Quote[]) =>
           ),
         )}
         <figcaption>
-          {foot.source ? (
+          {foot.source || foot.photo ? (
             <ReviewCite
               name={foot.name}
               title={foot.title}
               photo={foot.photo}
-              url={foot.source.url}
-              rating={foot.source.rating}
+              url={foot.source?.url}
+              rating={foot.source?.rating}
               context={many ? undefined : foot.context}
             />
           ) : (
