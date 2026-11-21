@@ -7,6 +7,7 @@
    the file was last brought up to date. */
 import TimeCard from '../ephemera/TimeCard.astro';
 import weeks from '../../data/client-weeks.json';
+import { formatDate, LONG_DATE } from '../../lib/format-date';
 
 interface Props {
   slug: string;
@@ -15,12 +16,7 @@ interface Props {
 const { slug, client } = Astro.props;
 const w = weeks.find((r) => r.slug === slug);
 
-const words = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+const words = (iso: string) => formatDate(iso, LONG_DATE);
 const weekWord = (n: number) => `${n} ${n === 1 ? 'week' : 'weeks'}`;
 ---
 
