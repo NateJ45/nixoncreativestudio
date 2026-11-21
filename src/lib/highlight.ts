@@ -40,5 +40,8 @@ export function excerpt(quote: string, highlight?: string): string {
   const start = [...ends].reverse().find((e) => e.next <= at)?.next ?? 0;
   const stop = ends.find((e) => e.stop >= at + highlight.length)?.stop ?? quote.length;
   const body = quote.slice(start, stop);
-  return (start > 0 ? '… ' : '') + body + (stop < quote.length ? ' …' : '');
+  // A quote already cut with its own ellipsis there (Clark Remsburg's) gets no second one.
+  const before = start > 0 && !body.startsWith('…') ? '… ' : '';
+  const after = stop < quote.length && !body.endsWith('…') ? ' …' : '';
+  return before + body + after;
 }
