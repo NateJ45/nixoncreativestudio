@@ -127,10 +127,9 @@ test('/about/ shows two quote bands', async ({ page }) => {
 test('a quote band never touches the closing', async ({ page }) => {
   for (const route of ['/', '/about/', '/churches/']) {
     await page.goto(route);
+    // The closing is the footer after <main> (2026-11-20), so what touches it is main's last child.
     const touching = await page.evaluate(
-      () =>
-        document.querySelector('[data-end]')?.previousElementSibling?.classList.contains('band') ??
-        false,
+      () => document.querySelector('main')?.lastElementChild?.classList.contains('band') ?? false,
     );
     expect(touching, route).toBe(false);
   }

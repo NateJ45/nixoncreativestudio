@@ -5,7 +5,10 @@
    (ephemera/Signature.astro, writing itself as the card lands), the site index
    (with the light and dark switch in its fine print), and the name at poster size,
    dealt up letter by letter. Everything here is real markup; kit.js only moves things. Keep a neutral
-   section between this and a quote band, so the two colors never touch. */
+   section between this and a quote band, so the two colors never touch.
+   It is the page's <footer>, after <main> (pages pass it as slot="end" to BaseLayout), so it is
+   the footer landmark; its headline keeps the rise with data-rise, since rise.js only finds h2s
+   inside main by itself (2026-11-20). */
 import { site } from '../data/site';
 import { getClients } from '../lib/clients';
 import { getGatedNav } from '../data/nav';
@@ -62,7 +65,7 @@ const elsewhere = [
 ];
 ---
 
-<section data-end class="end" aria-label="Start a project">
+<footer data-end class="end">
   <div class="end-top label">
     {site.bookingOpen && (
       <span class="end-live">
@@ -82,7 +85,7 @@ const elsewhere = [
   </div>
   <div class="end-main">
     <div class="end-say">
-      <h2 set:html={lead} />
+      <h2 set:html={lead} data-rise />
       <p>
         {site.firstConversation} {site.replyPromise}
       </p>
@@ -212,7 +215,7 @@ const elsewhere = [
     </span>
     <a href="#main">Back to top</a>
   </div>
-</section>
+</footer>
 
 <style is:global>
   /* Global on purpose: a scoped style would stamp a data-astro-cid attribute on every element of
