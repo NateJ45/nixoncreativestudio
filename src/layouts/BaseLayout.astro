@@ -5,7 +5,8 @@
    The shell every page renders inside. Owns the document <head> (title,
    description, canonical, Open Graph and share cards, JSON-LD, analytics, the
    Coming Soon gate) and the chrome: the top line, the floating dock and the
-   client sheet. A page brings its own content and usually ends on <Closing />.
+   client sheet. A page brings its own content and usually ends on <Closing slot="end" />,
+   which lands after main as the page's footer landmark.
 
    Two sides, light and dark: ThemeBoot.astro sets one before paint and the flip in the
    dock turns it over. Every other color on the site is a client's. The design rules
@@ -302,6 +303,9 @@ const ogImageUrl = new URL(resolvedOgImage, site.url).toString();
     <main id="main">
       <slot />
     </main>
+    {/* The closing (Closing.astro, passed as slot="end") sits after main, so it is the page's
+        footer landmark (2026-11-20, Lighthouse manual check: it was a section inside main). */}
+    <slot name="end" />
     {/* Details Vault "Progressive Blur", bottom edge only: eight stacked backdrop blurs that
         double in strength, so the page goes soft as it passes under the dock. Decorative and
         CSS-only; styles at .progressive-blur in src/styles/kit.css. */}
