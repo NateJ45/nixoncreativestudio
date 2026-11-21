@@ -18,6 +18,7 @@
    ============================================================================ */
 import weeks from '../data/client-weeks.json';
 import { getClients } from '../lib/clients';
+import { formatDate, LONG_DATE } from '../lib/format-date';
 
 const clients = await getClients();
 // Deck order, and only the clients the script found a repo for.
@@ -40,13 +41,7 @@ const asOf =
     .map((r) => r.asOf)
     .sort()
     .at(-1) ?? '';
-const asOfWords = asOf
-  ? new Date(`${asOf}T12:00:00`).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  : '';
+const asOfWords = asOf ? formatDate(asOf, LONG_DATE) : '';
 const weekWord = (n: number) => `${n} ${n === 1 ? 'week' : 'weeks'}`;
 ---
 
