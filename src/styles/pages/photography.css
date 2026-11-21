@@ -1280,7 +1280,8 @@
 
 @media (max-width: 767px) {
   [data-mosaic-reveal] .mr-camera .mr-headline {
-    font-size: 40px;
+    /* 40px, down to 11vw on the narrowest phones so "I know where to be" fits 320px (2026-11-20). */
+    font-size: min(40px, 11vw);
   }
 }
 
@@ -1365,7 +1366,8 @@
 .pt-all-head {
   display: grid;
   gap: 0.4rem;
-  padding: 0 var(--edge) 1rem;
+  /* Room above, so "Everything" does not sit on the mosaic's last row (2026-11-20). */
+  padding: clamp(3rem, 7vw, 6rem) var(--edge) 1rem;
 }
 .pt-all-head h2 {
   font-size: var(--type-h2);

@@ -564,6 +564,19 @@ h1 b {
 .proof-i.on {
   opacity: 1;
   transform: none;
+  pointer-events: auto;
+}
+/* Each item is a link to where it comes from (2026-11-20). They are stacked in one cell, so only
+   the one showing takes the pointer; the rest, transparent, would otherwise catch its clicks. */
+a.proof-i {
+  text-decoration: none;
+  pointer-events: none;
+  border-radius: 0.3em;
+}
+a.proof-i.on:hover .proof-who,
+a.proof-i.on:focus-visible .proof-who {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 .proof-i.off {
   transform: translateY(-0.9em);

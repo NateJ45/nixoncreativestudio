@@ -950,6 +950,31 @@ dockMeasure();
 addEventListener('resize', dockMeasure);
 if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(dockMeasure);
 
+/* Arriving at a #section from another page lands on it (2026-11-20). The browser's own jump was
+   lost on the way in (a case study opened from the home results line at #q-<name> stayed at the
+   top), so once the page has loaded, a fresh visit whose target is still out of view is taken
+   there. Reloads and Back keep the reader's own place. */
+(function () {
+  var id = location.hash.slice(1);
+  var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+  if (!id || (nav && nav.type !== 'navigate')) return;
+  var land = function () {
+    var el = doc.getElementById(decodeURIComponent(id));
+    if (!el) return;
+    var top = el.getBoundingClientRect().top;
+    if (top > innerHeight * 0.5 || top < 0) el.scrollIntoView({ block: 'start' });
+  };
+  if (doc.readyState === 'complete') requestAnimationFrame(land);
+  else
+    addEventListener(
+      'load',
+      function () {
+        requestAnimationFrame(land);
+      },
+      { once: true },
+    );
+})();
+
 /* Tapping the page you are already on goes back to the top of it, rather than reloading it. */
 dockLinks.forEach(function (a) {
   if (a.getAttribute('aria-current') !== 'page') return;

@@ -1,7 +1,14 @@
 // Safe to edit. Checks the one-card-per-person grouping in src/lib/study-quotes.ts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { byPerson, monthYear, samePerson } from './study-quotes.ts';
+import { byPerson, monthYear, personId, samePerson } from './study-quotes.ts';
+
+test('a person has one card id whatever the spelling', () => {
+  assert.equal(personId('Richard E. Burnett, Ph.D.'), 'q-richard-burnett');
+  assert.equal(personId('Richard Burnett'), 'q-richard-burnett');
+  assert.equal(personId('Kendall Ellis, M.Div., MSW'), 'q-kendall-ellis');
+  assert.equal(personId('Mary Ann Stone'), 'q-mary-stone');
+});
 
 test('the same person under two spellings is one person', () => {
   assert.ok(samePerson('Richard E. Burnett, Ph.D.', 'Richard Burnett'));

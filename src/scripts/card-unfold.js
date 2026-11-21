@@ -4,7 +4,7 @@
    library. Every tween keeps the original's start, length and ease; the scroll position picks the
    moment, so scrolling back up plays it backwards, exactly.
 
-   From 1000px wide: the section is a 420svh track with a sticky 100svh stage. As the section's top
+   From 1000px wide: the section is a 260svh track with a sticky 100svh stage. As the section's top
    comes up the screen the photo settles (a small parallax). Then, over the track:
      0     to 0.28  the photo's clip shrinks to the deck (at 1.08 times its size), power1.in
      0.28           the photo hides and the deck of four slices shows in its place
