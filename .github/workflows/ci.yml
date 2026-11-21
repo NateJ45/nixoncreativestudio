@@ -154,7 +154,18 @@ jobs:
       - name: Check trailing slashes
         run: npm run check:slashes
 
-  test:
+  # The Playwright suite in three shards (2026-11-20, back after the #106 rollback dropped
+  # #86/#88's). One job ran all ~736 tests with Playwright's default 2 workers on a 4-core
+  # runner: 16.6 minutes of tests for the required check. Each shard builds the site itself
+  # (the config's webServer) and runs a third of the tests (fullyParallel is on, so --shard
+  # splits at test level) with 3 workers. The required check is the `test` job below, not
+  # these: never make a shard required, and keep `test` failing when any shard fails.
+  e2e:
+    name: e2e (shard ${{ matrix.shard }}/3)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     # Pinned (2026-10-30): ubuntu-latest moved to 26.04, where Playwright's
     # WebKit fails to launch, so every webkit-iphone test died. Unpin once
     # Playwright supports 26.04.
@@ -221,11 +232,25 @@ jobs:
       # The html reporter is added on the command line so local runs keep the
       # quiet `list` output while CI still produces the report artifact below.
       - name: Run tests (smoke, a11y, reflow and the rest)
-        run: npm test -- --reporter=github,html
+        run: npm test -- --shard=${{ matrix.shard }}/3 --workers=3 --reporter=github,html
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
+
+  # REQUIRED CHECK (the "main: PR + green CI" ruleset asks for `test`). Green only when every
+  # shard is green: a failed, cancelled or skipped shard fails it. `always()` makes it report
+  # even then, because a required check that never reports blocks the merge forever.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ always() }}
+    needs: [e2e]
+    steps:
+      - name: Every shard passed
+        run: |
+          echo "e2e=${{ needs.e2e.result }}"
+          [ "${{ needs.e2e.result }}" = "success" ]
