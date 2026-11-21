@@ -707,6 +707,7 @@ function pressStamp() {
   if (reduce) return;
   var press = ui.spring(230, 13, 0),
     last = 0,
+    start = 0,
     landed = false;
   /* Waiting above the card until the panel has settled into view. */
   stamp.style.opacity = '0';
@@ -715,6 +716,7 @@ function pressStamp() {
     requestAnimationFrame(function frame(now) {
       var dt = Math.min(0.033, last ? (now - last) / 1000 : 0.016);
       last = now;
+      if (!start) start = now;
       var going = press.step(1, dt),
         p = press.x;
       /* Scale 1.6 down to 1, a dip under 1 on the overshoot reads as the press. */
@@ -726,8 +728,15 @@ function pressStamp() {
         if (ui.cue) ui.cue('stamp');
         stamp.classList.add('inked');
       }
-      if (going) requestAnimationFrame(frame);
+      /* The spring settles in about 27 frames, but a starved device (a busy CI runner at a few
+         frames a second, a slow phone) can take far longer, leaving the stamp held by inline
+         styles. So it always lets go by 2 seconds and rests at its CSS place (2026-11-20). */
+      if (going && now - start < 2000) requestAnimationFrame(frame);
       else {
+        if (!landed) {
+          landed = true;
+          stamp.classList.add('inked');
+        }
         stamp.style.transform = '';
         stamp.style.opacity = '';
       }

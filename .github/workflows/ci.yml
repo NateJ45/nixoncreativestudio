@@ -237,7 +237,7 @@ jobs:
         # Playwright's PWTEST_SHARD_WEIGHTS sizes the blocks; a stale weight only unbalances the
         # shards, it can never drop a test.
         env:
-          PWTEST_SHARD_WEIGHTS: 3:4:2
+          PWTEST_SHARD_WEIGHTS: 7:10:4
         run: npm test -- --shard=${{ matrix.shard }}/3 --workers=3 --reporter=github,html
 
       - uses: actions/upload-artifact@v7
