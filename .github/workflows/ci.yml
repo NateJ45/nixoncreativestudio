@@ -232,6 +232,12 @@ jobs:
       # The html reporter is added on the command line so local runs keep the
       # quiet `list` output while CI still produces the report artifact below.
       - name: Run tests (smoke, a11y, reflow and the rest)
+        # Shards get contiguous blocks of the test list, and the slow webkit-iphone tests sit at its
+        # end, so equal blocks left shard 3 at 9.3 minutes against 4.6 for shard 2 (2026-11-20).
+        # Playwright's PWTEST_SHARD_WEIGHTS sizes the blocks; a stale weight only unbalances the
+        # shards, it can never drop a test.
+        env:
+          PWTEST_SHARD_WEIGHTS: 3:4:2
         run: npm test -- --shard=${{ matrix.shard }}/3 --workers=3 --reporter=github,html
 
       - uses: actions/upload-artifact@v7
