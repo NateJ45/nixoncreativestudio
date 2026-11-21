@@ -29,13 +29,23 @@ export function quotesFor(all: readonly Study[], slug: string): StudyQuote[] {
 
 /** The same person under two spellings ("Richard E. Burnett, Ph.D." and "Richard Burnett"):
  *  credentials after the comma and middle names or initials are ignored. */
+const personKey = (n: string) => {
+  const words = n.split(',')[0].trim().toLowerCase().split(/\s+/);
+  return `${words[0]} ${words[words.length - 1]}`;
+};
 export function samePerson(a: string, b: string): boolean {
-  const key = (n: string) => {
-    const words = n.split(',')[0].trim().toLowerCase().split(/\s+/);
-    return `${words[0]} ${words[words.length - 1]}`;
-  };
-  return key(a) === key(b);
+  return personKey(a) === personKey(b);
 }
+
+/** The id of a person's quote card on a study ("q-richard-burnett"), the same for every spelling
+ *  samePerson matches, so a link from the home results line always finds the card (2026-11-20). */
+export const personId = (name: string) =>
+  'q-' +
+  personKey(name)
+    .normalize('NFKD')
+    .replace(/[^a-z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
 
 /** Quotes grouped one card per person, in order of each person's first quote, oldest words
  *  first inside a card. */

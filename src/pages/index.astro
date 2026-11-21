@@ -47,6 +47,7 @@ import BehindIt from '../components/home/BehindIt.astro';
 import '../styles/pages/home.css';
 import { countWord, getClients } from '../lib/clients';
 import { getCollection } from 'astro:content';
+import { personId } from '../lib/study-quotes';
 import { QUOTES } from '../data/quotes';
 import { webTiers } from '../data/pricing';
 import { site } from '../data/site';
@@ -97,8 +98,9 @@ const proof = [
    people, more found on Google, money, craft) and never puts one client twice in a row, the last
    included, since the line wraps back to the first. Keep `what` to about 30 characters or less so
    the line fits a 320px phone. */
-const figures = [
-  { figure: '58%', what: 'more students', who: 'West Chester Preschool' },
+const figures: { figure: string; what: string; who: string; find?: string }[] = [
+  // 58% is worked out (26 students to 41), so its link marks the line it comes from.
+  { figure: '58%', what: 'more students', who: 'West Chester Preschool', find: '41 of 43 places' },
   { figure: '100%', what: 'more clicks from Google', who: 'Reid Design' },
   { figure: '66%', what: 'more visitors a day', who: 'First Baptist Church Muncie' },
   { figure: '94', what: 'journal requests in four weeks', who: 'Theology Matters' },
@@ -139,7 +141,21 @@ const heroCut: Record<string, string> = {
 };
 /* Public Google reviews come first, newest first (2026-11-20), as they lead the home band: a
    stranger can check those, and the newest reviews are the ones to see early in the loop. */
-const studyVoices: { figure: string; what: string; who: string; pub: number; date: number }[] = [];
+/* Every item in the line is a link to where it comes from (2026-11-20). A figure opens its case
+   study with a text fragment (#:~:text=), so the browser scrolls to those words and marks them (one
+   without text fragments opens the study at the top). A quote opens on the person's own card in
+   the study's "In their words" (#q-<name>, study/Quotes.astro), where its phrase is already
+   marked; a standalone quote opens the section it sits in. */
+const fragment = (words: string) =>
+  ':~:text=' + encodeURIComponent(words).replace(/-/g, '%2D').replace(/,/g, '%2C');
+const studyVoices: {
+  figure: string;
+  what: string;
+  who: string;
+  href: string;
+  pub: number;
+  date: number;
+}[] = [];
 for (const study of await getCollection('case-studies')) {
   const who = clients.find((c) => c.slug === study.id)?.name;
   for (const t of study.data.testimonials ?? []) {
@@ -150,17 +166,40 @@ for (const study of await getCollection('case-studies')) {
       figure: `“${words}”`,
       what: '',
       who,
+      href: `/work/${study.id}/#${personId(t.name)}`,
       pub: t.source ? 1 : 0,
       date: t.date.valueOf(),
     });
   }
 }
-const voices: { figure: string; what: string; who: string }[] = studyVoices
+const voices: { figure: string; what: string; who: string; href: string }[] = studyVoices
   .sort((a, b) => b.pub - a.pub || (a.pub ? b.date - a.date : 0))
-  .map(({ figure, what, who }) => ({ figure, what, who }));
+  .map(({ figure, what, who, href }) => ({ figure, what, who, href }));
 for (const q of QUOTES)
-  if (q.highlight) voices.push({ figure: `“${q.highlight}”`, what: '', who: q.org });
-const heroProof = figures.flatMap((p, i) => {
+  if (q.highlight)
+    voices.push({
+      figure: `“${q.highlight}”`,
+      what: '',
+      who: q.org,
+      href: q.sectors[0] === 'churches' ? '/churches/#ch-cam' : `/${q.sectors[0]}/`,
+    });
+/* A figure links to its study, marking the longest run of the line's own words (from the start)
+   that the study's text really contains, so "0 accessibility problems found" lands on that line
+   and not on the first stray 0. Matched against the study's MDX and frontmatter with the markdown
+   marks taken out; when not even the figure is there, the link opens the study at the top. */
+const studies = await getCollection('case-studies');
+const plain = (t: string) => t.replace(/[*_`]/g, '').replace(/\s+/g, ' ').toLowerCase();
+const figureLinks = figures.map((p) => {
+  const slug = clients.find((c) => c.name === p.who)?.slug;
+  if (!slug) throw new Error(`heroProof: no client called "${p.who}"`);
+  const study = studies.find((st) => st.id === slug);
+  const text = plain((study?.body ?? '') + ' ' + JSON.stringify(study?.data ?? {}));
+  const words = (p.find ?? `${p.figure} ${p.what}`).split(' ');
+  let n = words.length;
+  while (n > 0 && !text.includes(plain(words.slice(0, n).join(' ')))) n--;
+  return { ...p, href: `/work/${slug}/${n ? '#' + fragment(words.slice(0, n).join(' ')) : ''}` };
+});
+const heroProof = figureLinks.flatMap((p, i) => {
   const v = i % 2 ? voices[(i - 1) / 2] : undefined;
   return v ? [p, v] : [p];
 });
@@ -238,21 +277,28 @@ const heavy = ['pull', 'their', 'weight.'];
           ></path>
         </svg>
       </button>
+      {/* The list a screen reader hears. Its links keep tabindex -1 like the line's: a sighted
+          keyboard user would otherwise tab through dozens of invisible links. */}
       <ul class="vh">
         {heroProof.map((p) => (
           <li data-copy-ignore={p.what ? undefined : ''}>
-            {p.what ? `${p.figure} ${p.what}, ${p.who}` : `${p.figure}, ${p.who}`}
+            <a href={p.href} tabindex="-1">
+              {p.what ? `${p.figure} ${p.what}, ${p.who}` : `${p.figure}, ${p.who}`}
+            </a>
           </li>
         ))}
       </ul>
       <p class="proof-run" aria-hidden="true">
         {heroProof.map((p, i) => (
-          <span
+          <a
             class:list={['proof-i', { on: i === 0, 'proof-q': !p.what }]}
+            href={p.href}
+            tabindex="-1"
+            data-cta="hero_proof"
             data-copy-ignore={p.what ? undefined : ''}
           >
             <b>{p.figure}</b> {p.what} <span class="proof-who">{p.who}</span>
-          </span>
+          </a>
         ))}
       </p>
     </div>

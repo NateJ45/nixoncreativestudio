@@ -11,11 +11,13 @@
    One card per person (added 2026-11-16): when the same person wrote more than once (Richard
    Burnett's 2025 email quote and his 2026 Google review), their words share a card, oldest first,
    each under a small dated note, with their name, face, stars and Google link once at the foot.
-   That shows a client who came back. People are matched by samePerson (src/lib/study-quotes.ts). */
+   That shows a client who came back. People are matched by samePerson (src/lib/study-quotes.ts).
+   Each card has an id, q-<their name> (2026-11-20), so the home results line can link a quote to
+   the card it comes from. */
 import Chapter from './Chapter.astro';
 import ReviewCite from '../ReviewCite.astro';
 import { markedQuote } from '../../lib/highlight';
-import { byPerson, monthYear } from '../../lib/study-quotes';
+import { byPerson, monthYear, personId } from '../../lib/study-quotes';
 
 interface Quote {
   quote: string;
@@ -39,7 +41,10 @@ const footOf = (card: Quote[]) =>
     const foot = footOf(card);
     const many = card.length > 1;
     return (
-      <figure class:list={['q rv', { 'q-review': foot.source, 'q-thread': many }]}>
+      <figure
+        class:list={['q rv', { 'q-review': foot.source, 'q-thread': many }]}
+        id={personId(foot.name)}
+      >
         {card.map((t) =>
           many ? (
             <div class="q-part">
