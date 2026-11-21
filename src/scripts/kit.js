@@ -953,7 +953,10 @@ if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(dockMeasure);
 /* Arriving at a #section from another page lands on it (2026-11-20). The browser's own jump was
    lost on the way in (a case study opened from the home results line at #q-<name> stayed at the
    top), so once the page has loaded, a fresh visit whose target is still out of view is taken
-   there. Reloads and Back keep the reader's own place. */
+   there. Reloads and Back keep the reader's own place. The jump is instant: html has
+   scroll-behavior smooth, and a smooth scroll stalls in a background tab (found testing in a
+   hidden browser pane), which may be how the browser's own jump was lost too. A timeout, not
+   requestAnimationFrame, because a background tab runs no animation frames. */
 (function () {
   var id = location.hash.slice(1);
   var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
@@ -962,14 +965,15 @@ if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(dockMeasure);
     var el = doc.getElementById(decodeURIComponent(id));
     if (!el) return;
     var top = el.getBoundingClientRect().top;
-    if (top > innerHeight * 0.5 || top < 0) el.scrollIntoView({ block: 'start' });
+    if (top > innerHeight * 0.5 || top < 0)
+      el.scrollIntoView({ block: 'start', behavior: 'instant' });
   };
-  if (doc.readyState === 'complete') requestAnimationFrame(land);
+  if (doc.readyState === 'complete') setTimeout(land, 0);
   else
     addEventListener(
       'load',
       function () {
-        requestAnimationFrame(land);
+        setTimeout(land, 0);
       },
       { once: true },
     );
