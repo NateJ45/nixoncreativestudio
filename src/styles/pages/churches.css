@@ -297,6 +297,21 @@ html:not(.js) .stand {
 .study-cam .pfan:hover > .fan-p:nth-child(2) {
   transform: translate(-9%, -8%) rotate(-12deg);
 }
+/* The right print leans in too (2026-11-20): at the kit's 15% and 9deg it crossed into the text
+   beside it by up to 26px at rest and 62px on hover between 1000 and 1440px wide. With these and
+   the column's right padding it clears the text by 19px or more on hover at every two-column
+   width (measured). Stacked under 62rem there is nothing beside it, so no padding there. */
+.study-cam .pfan > .fan-p:nth-child(3) {
+  transform: translate(5%, 7%) rotate(6deg);
+}
+.study-cam .pfan:hover > .fan-p:nth-child(3) {
+  transform: translate(8%, 9%) rotate(9deg);
+}
+@media (min-width: 62.01rem) {
+  .study-cam .study-w {
+    padding-right: 1.25rem;
+  }
+}
 .study-links {
   display: flex;
   flex-wrap: wrap;
