@@ -112,7 +112,9 @@ test('/churches/ shows the churches I photograph for, quote, name and face', asy
   await page.goto('/churches/');
   const card = page.locator('.study-cam');
   await expect(card).toHaveCount(standalone.length);
-  await expect(card.first().locator('blockquote')).toContainText('Nathan is exceptional');
+  // The key sentence leads; the whole review, with its opening line, is folded under it.
+  await expect(card.first().locator('blockquote')).toContainText('THE best');
+  await expect(card.first().locator('.ch-more')).toContainText('Nathan is exceptional');
   await expect(card.first().locator('.rv-who b')).toHaveText('Jessica Sams');
   await expect(card.first().locator('.rv-face')).toHaveAttribute('src', /jessica-sams-96\.webp$/);
 });

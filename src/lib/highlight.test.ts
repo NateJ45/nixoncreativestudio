@@ -21,6 +21,8 @@ test('an excerpt is the sentence holding the phrase, word for word, cut with an 
     "… Without compromising the integrity of our message, he's made it more attractive.",
   );
   assert.equal(excerpt('One. Two words here. Three.', 'words'), '… Two words here. …');
+  // A quote already shortened with an ellipsis keeps one, not two.
+  assert.equal(excerpt('One. … Two words here.', 'words'), '… Two words here.');
 });
 
 test('with no phrase, or one not in the quote, the quote comes back whole', () => {

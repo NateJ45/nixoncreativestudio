@@ -202,20 +202,79 @@ html:not(.js) .stand {
   font: 500 clamp(1.125rem, 1.5vw, 1.375rem)/1.32 var(--display);
   letter-spacing: -0.015em;
 }
-.study .by {
-  margin-top: 0.8rem;
-  color: var(--soft);
-  font-size: 1rem;
-  line-height: 1.35;
+/* A review on a church card (2026-11-20, as on the lean sector pages): the key sentence above
+   in the card's quote type with the phrase marked like the card's button (client colour, paper text; a tint at night), the whole
+   review folded under it, then the face, stars and Google link (ReviewCite). */
+.ch-rv {
+  margin: 0;
 }
-.study .by .ctx {
-  display: block;
-  margin-top: 0.35rem;
+.ch-rv + .ch-rv {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--cm, var(--c)) 22%, transparent);
 }
-.study .by b {
-  display: block;
+.study .hl {
+  margin-inline: -0.1em;
+  padding: 0.02em 0.1em 0.06em;
+  border-radius: 0.14em;
+  background: var(--c);
+  color: var(--p);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.ch-more {
+  max-width: 42rem;
+  margin-top: 0.6rem;
+}
+.ch-more summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   color: var(--ink);
   font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  list-style: none;
+}
+.ch-more summary::-webkit-details-marker {
+  display: none;
+}
+.ch-more summary::after {
+  content: '+';
+  margin-left: 0.4rem;
+}
+.ch-more[open] summary::after {
+  content: '−';
+}
+.ch-more p {
+  margin-top: 0.25rem;
+  color: var(--soft);
+  font: 400 1rem/1.5 var(--body);
+}
+.ch-rv .rv-cite {
+  margin-top: 1rem;
+  color: var(--soft); /* the cite is cut for a coloured band; on the card it reads like body copy */
+}
+.ch-rv .rv-who b {
+  color: var(--ink);
+}
+.ch-rv .rv-face {
+  box-shadow: 0 0 0 2px var(--cm, var(--c));
+}
+.ch-rv .rv-proof {
+  margin-top: 0.6rem;
+}
+:root[data-theme='dark'] .study .hl {
+  background: color-mix(in srgb, var(--cm, var(--c)) 30%, transparent);
+  color: var(--ink);
+}
+@media (forced-colors: active) {
+  .study .hl {
+    background: Mark;
+    color: MarkText;
+  }
 }
 /* A church I photograph for: one of my photographs where a website card shows the site, a print
    at the same tilt and shadow, and the quote's face and role under it (ReviewCite). */
@@ -238,15 +297,20 @@ html:not(.js) .stand {
 .study-cam .pfan:hover > .fan-p:nth-child(2) {
   transform: translate(-9%, -8%) rotate(-12deg);
 }
-.study-cam .rv-cite {
-  margin-top: 1rem;
-  color: var(--soft); /* the cite is cut for a coloured band; on the card it reads like .by */
+/* The right print leans in too (2026-11-20): at the kit's 15% and 9deg it crossed into the text
+   beside it by up to 26px at rest and 62px on hover between 1000 and 1440px wide. With these and
+   the column's right padding it clears the text by 19px or more on hover at every two-column
+   width (measured). Stacked under 62rem there is nothing beside it, so no padding there. */
+.study-cam .pfan > .fan-p:nth-child(3) {
+  transform: translate(5%, 7%) rotate(6deg);
 }
-.study-cam .rv-who b {
-  color: var(--ink);
+.study-cam .pfan:hover > .fan-p:nth-child(3) {
+  transform: translate(8%, 9%) rotate(9deg);
 }
-.study-cam .rv-face {
-  box-shadow: 0 0 0 2px var(--c);
+@media (min-width: 62.01rem) {
+  .study-cam .study-w {
+    padding-right: 1.25rem;
+  }
 }
 .study-links {
   display: flex;

@@ -5,6 +5,8 @@
    and description live in src/data/sector-pages.ts with the sector path. */
 import { getCollection } from 'astro:content';
 import ReviewCite from '../components/ReviewCite.astro';
+import RatingChip from '../components/RatingChip.astro';
+import { excerpt, markedQuote } from '../lib/highlight';
 import PrintFan from '../components/PrintFan.astro';
 import { QUOTES } from '../data/quotes';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -62,20 +64,40 @@ const sunday = [
     stop: 1700,
   },
 ];
+/* A review reads like the home band and the lean sector pages (2026-11-20): the sentence holding
+   its key phrase, larger, the phrase marked; the whole review folded under "Read the whole review"
+   (data-copy-ignore: it sits outside the blockquote, and the copy rule would read "our" as mine);
+   then the face, stars and Google link (ReviewCite). Cut word for word (lib/highlight.ts). */
+type Quoted = { quote: string; highlight?: string };
+const shape = <T extends Quoted>(t: T) => {
+  const key = excerpt(t.quote, t.highlight);
+  return {
+    ...t,
+    key: markedQuote(key, t.highlight),
+    whole: key === t.quote ? '' : markedQuote(t.quote, t.highlight),
+  };
+};
+/* Public Google reviews lead, newest first, up to two (as on SectorLean.astro); a study with none
+   keeps Kendall Ellis's quote, or its first. */
 const studies = entries
   .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99))
-  .map((entry) => ({
-    entry,
-    s: toClient(entry),
-    t:
-      entry.data.testimonials?.find((q) => q.name.includes('Kendall Ellis')) ??
-      entry.data.testimonials?.[0],
-  }));
+  .map((entry) => {
+    const all = entry.data.testimonials ?? [];
+    const google = all
+      .filter((t) => t.source)
+      .sort((x, y) => y.date.valueOf() - x.date.valueOf())
+      .slice(0, 2);
+    const fallback = all.find((q) => q.name.includes('Kendall Ellis')) ?? all[0];
+    const picked = google.length ? google : fallback ? [fallback] : [];
+    return { entry, s: toClient(entry), quotes: picked.map(shape) };
+  });
 const n = entries.length;
 /* The churches I photograph for rather than build for: a quote that is not about a website
    (src/data/quotes.ts), with a fan of my photographs from them in place of their site
    (PrintFan.astro, which throws on a photograph id that does not exist). */
-const cameraQuotes = QUOTES.filter((q) => q.sectors.includes(CHURCHES.path)).map((q) => ({ q }));
+const cameraQuotes = QUOTES.filter((q) => q.sectors.includes(CHURCHES.path)).map((q) => ({
+  q: shape(q),
+}));
 // Which tier usually fits, the same list the lean sector pages carry (SectorLean.astro), from the
 // church row of SITUATIONS. Situations only: no church is tied to a tier here.
 const situation = SITUATIONS.find((row) => row.sector === CHURCHES.sector);
@@ -260,8 +282,9 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
           <a href="/work/">See all the case studies</a>
         </p>
       </div>
+      <RatingChip cta="google_reviews_sector" />
       <ul class="ch-studies">
-        {studies.map(({ s, entry, t }) => (
+        {studies.map(({ s, entry, quotes }) => (
           <li class="study" style={`--c:${s.accent};--c-night:${s.night};--p:${s.paper}`}>
             <div class="study-w">
               <Tile client={s} lazy />
@@ -270,14 +293,27 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
               <h3>{s.name}</h3>
               <p class="hook">{s.hook}</p>
               <p class="out">{entry.data.outcome}</p>
-              {t && <blockquote>{t.quote}</blockquote>}
-              {t && (
-                <p class="by">
-                  <b>{t.name}</b>
-                  {t.title}
-                  {t.context && <span class="ctx">{t.context}</span>}
-                </p>
-              )}
+              {quotes.map((t) => (
+                <figure class="ch-rv">
+                  <blockquote set:html={t.key} />
+                  {t.whole && (
+                    <details class="ch-more" data-copy-ignore>
+                      <summary>Read the whole review</summary>
+                      <p set:html={t.whole} />
+                    </details>
+                  )}
+                  <figcaption>
+                    <ReviewCite
+                      name={t.name}
+                      title={t.title}
+                      context={t.context}
+                      photo={t.photo}
+                      url={t.source?.url}
+                      rating={t.source?.rating}
+                    />
+                  </figcaption>
+                </figure>
+              ))}
               <div class="study-links">
                 <a class="chip" href={s.study}>
                   Read the case study
@@ -322,14 +358,24 @@ const heading = `Church websites, starting with <b>the first Sunday.</b>`;
               <div class="study-t">
                 <h3>{q.org}</h3>
                 <p class="hook">{q.context}</p>
-                <blockquote>{q.quote}</blockquote>
-                <ReviewCite
-                  name={q.name}
-                  title={q.title}
-                  photo={q.photo}
-                  url={q.source?.url}
-                  rating={q.source?.rating}
-                />
+                <figure class="ch-rv">
+                  <blockquote set:html={q.key} />
+                  {q.whole && (
+                    <details class="ch-more" data-copy-ignore>
+                      <summary>Read the whole review</summary>
+                      <p set:html={q.whole} />
+                    </details>
+                  )}
+                  <figcaption>
+                    <ReviewCite
+                      name={q.name}
+                      title={q.title}
+                      photo={q.photo}
+                      url={q.source?.url}
+                      rating={q.source?.rating}
+                    />
+                  </figcaption>
+                </figure>
                 <div class="study-links">
                   <a class="chip" href={`/photography/?print=${q.shots[0]}`}>
                     See the photographs
